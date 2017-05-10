@@ -17,10 +17,7 @@ namespace MarginTrading.Common.Wamp
         Task<InitAccountInstrumentsLiveDemoClientResponse> AccountInstruments(string token);
 
         [WampProcedure("init.graph")]
-        Task<InitChartDataLiveDemoClientResponse> InitGraph();
-
-        [WampProcedure("init.orderbook")]
-        Task<AggregatedOrderbookLiveDemoClientContract> InitOrderBook(string instrument);
+        Task<InitChartDataClientResponse> InitGraph();
 
         [WampProcedure("account.deposit")]
         Task<MtClientResponse<bool>> AccountDeposit(string requestJson);

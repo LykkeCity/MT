@@ -12,6 +12,5 @@ namespace MarginTrading.Common.ClientContracts
     {
         public MarginTradingAccountClientContract[] Accounts { get; set; }
         public Dictionary<string, MarginTradingAssetClientContract[]> AccountAssetPairs { get; set; }
-        public Dictionary<string, GraphBidAskPairClientContract[]> ChartData { get; set; }
     }
 }

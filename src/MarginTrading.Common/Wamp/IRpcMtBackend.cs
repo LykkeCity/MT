@@ -21,9 +21,6 @@ namespace MarginTrading.Common.Wamp
         [WampProcedure("init.graph")]
         InitChartDataBackendResponse InitGraph();
 
-        [WampProcedure("init.orderbook")]
-        AggregatedOrderbookBackendResponse InitOrderBook(InstrumentBackendRequest request);
-
         [WampProcedure("account.deposit")]
         Task<MtBackendResponse<bool>> AccountDeposit(DepositWithdrawBackendRequest request);
 

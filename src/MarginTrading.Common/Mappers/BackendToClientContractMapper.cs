@@ -67,8 +67,7 @@ namespace MarginTrading.Common.Mappers
             return new InitDataClientResponse
             {
                 Accounts = src.Accounts.Select(item => item.ToClientContract()).ToArray(),
-                AccountAssetPairs = src.AccountAssetPairs.ToDictionary(pair => pair.Key, pair => pair.Value.Select(item => item.ToClientContract()).ToArray()),
-                ChartData = src.ChartData.ToDictionary(pair => pair.Key, pair => pair.Value.Select(item => item.ToClientContract()).ToArray())
+                AccountAssetPairs = src.AccountAssetPairs.ToDictionary(pair => pair.Key, pair => pair.Value.Select(item => item.ToClientContract()).ToArray())
             };
         }
 

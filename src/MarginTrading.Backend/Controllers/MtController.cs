@@ -90,9 +90,8 @@ namespace MarginTrading.Backend.Controllers
                 return InitDataBackendResponse.CreateEmpty();
 
             var assets = _accountAssetsCacheService.GetClientAssets(accounts);
-            var graphData = _micrographCacheService.GetGraphData();
 
-            var result = InitDataBackendResponse.Create(accounts, assets, graphData);
+            var result = InitDataBackendResponse.Create(accounts, assets);
 
             return result;
         }
@@ -141,19 +140,6 @@ namespace MarginTrading.Backend.Controllers
         {
             var chartData = _micrographCacheService.GetGraphData();
             return InitChartDataBackendResponse.Create(chartData);
-        }
-
-        [Route("init.orderbook")]
-        [HttpPost]
-        public AggregatedOrderbookBackendResponse InitOrderBook([FromBody]InstrumentBackendRequest request)
-        {
-            var result = new AggregatedOrderbookBackendResponse
-            {
-                Buy = _aggreagOrderBook.GetBuy(request.Instrument).Select(item => item.ToBackendContract()).ToArray(),
-                Sell = _aggreagOrderBook.GetSell(request.Instrument).Select(item => item.ToBackendContract()).ToArray()
-            };
-
-            return result;
         }
 
         #endregion

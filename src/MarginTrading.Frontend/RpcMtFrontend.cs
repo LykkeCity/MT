@@ -97,29 +97,11 @@ namespace MarginTrading.Frontend
             };
         }
 
-        public async Task<InitChartDataLiveDemoClientResponse> InitGraph()
+        public async Task<InitChartDataClientResponse> InitGraph()
         {
             var initChartDataLiveResponse = await _httpRequestService.RequestAsync<InitChartDataBackendResponse>(null, "init.graph");
-            var initChartDataDemoResponse = await _httpRequestService.RequestAsync<InitChartDataBackendResponse>(null, "init.graph", false);
 
-            return new InitChartDataLiveDemoClientResponse
-            {
-                Live = initChartDataLiveResponse.ToClientContract(),
-                Demo = initChartDataDemoResponse.ToClientContract()
-            };
-        }
-
-        public async Task<AggregatedOrderbookLiveDemoClientContract> InitOrderBook(string instrument)
-        {
-            var aggregatedOrderbookBackendRequest = new InstrumentBackendRequest { Instrument = instrument };
-            var orderbookLiveResponse = await _httpRequestService.RequestAsync<AggregatedOrderbookBackendResponse>(aggregatedOrderbookBackendRequest, "init.orderbook");
-            var orderbookDemoResponse = await _httpRequestService.RequestAsync<AggregatedOrderbookBackendResponse>(aggregatedOrderbookBackendRequest, "init.orderbook", false);
-
-            return new AggregatedOrderbookLiveDemoClientContract
-            {
-                Live = orderbookLiveResponse.ToClientContract(),
-                Demo = orderbookDemoResponse.ToClientContract(),
-            };
+            return initChartDataLiveResponse.ToClientContract();
         }
 
         #endregion
