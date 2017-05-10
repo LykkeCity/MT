@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <AssemblyName>MarginTrading.Services</AssemblyName>
+    <PackageId>MarginTrading.Services</PackageId>
+    <RuntimeFrameworkVersion>1.1.1</RuntimeFrameworkVersion>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MarginTrading.Core\MarginTrading.Core.csproj" />
+    <ProjectReference Include="..\MarginTrading.Common\MarginTrading.Common.csproj" />
+    <ProjectReference Include="..\MarginTrading.AzureRepositories\MarginTrading.AzureRepositories.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="4.1.0" />
+    <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.3" />
+    <PackageReference Include="WampSharp.Default" Version="1.2.5.35-beta" />
+    <PackageReference Include="WampSharp.AspNetCore.WebSockets.Server" Version="1.2.5.35-beta" />
+    <PackageReference Include="WampSharp.NewtonsoftJson" Version="1.2.5.35-beta" />
+    <PackageReference Include="Lykke.RabbitMqBroker" Version="1.0.62" />
+    <PackageReference Include="Lykke.Common" Version="1.1.69" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Generated\SessionServiceApi\" />
+  </ItemGroup>
+
+</Project>

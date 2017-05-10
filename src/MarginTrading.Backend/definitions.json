@@ -1,0 +1,115 @@
+{
+  "users": [
+    {
+      "name": "margintrading",
+      "password": "margintrading",
+      "tags": "administrator"
+    }
+  ],
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "margintrading",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }
+  ],
+  "parameters": [],
+  "policies": [],
+  "queues": [
+    {
+      "name": "mt.accounthistorybroker",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "mt.orderhistorybroker",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "mt.orderrejectedbroker",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "mt.transactionsbroker",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "mt.orderreportbroker",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "lykke.mt",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "lykke.mt",
+      "vhost": "/",
+      "destination": "mt.accounthistorybroker",
+      "destination_type": "queue",
+      "routing_key": "mt.accounthistory",
+      "arguments": {}
+    },
+    {
+      "source": "lykke.mt",
+      "vhost": "/",
+      "destination": "mt.orderhistorybroker",
+      "destination_type": "queue",
+      "routing_key": "mt.orderhistory",
+      "arguments": {}
+    },
+    {
+      "source": "lykke.mt",
+      "vhost": "/",
+      "destination": "mt.orderrejectedbroker",
+      "destination_type": "queue",
+      "routing_key": "mt.orderrejected",
+      "arguments": {}
+    },
+    {
+      "source": "lykke.mt",
+      "vhost": "/",
+      "destination": "mt.transactionsbroker",
+      "destination_type": "queue",
+      "routing_key": "mt.transactions",
+      "arguments": {}
+    },
+    {
+      "source": "lykke.mt",
+      "vhost": "/",
+      "destination": "mt.orderreportbroker",
+      "destination_type": "queue",
+      "routing_key": "mt.orderreport",
+      "arguments": {}
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+version: '2'
+services:
+  margintrading:
+    image: lykkex/margintrading
+    container_name: margintrading
+    environment:
+      - SettingsUrl=${SettingsUrl}
+      - KestrelThreadCount=${KestrelThreadCount}
+      - IsLive=${IsLive}
+      - AutoCreateAccounts=${AutoCreateAccounts}
+    ports:
+      - "5000:5000"
+    networks:
+      mynet:
+        aliases:
+          - margintrading
+
+  rabbitmq:
+     image: rabbitmq:3-management
+     hostname: mtrabbit
+     volumes:
+       - ./definitions.json:/etc/rabbitmq/definitions.json:ro
+       - ./rabbitmq.config:/etc/rabbitmq/rabbitmq.config:ro
+     ports:
+       - "5672:5672"
+       - "15672:15672"
+     networks:
+      mynet:
+        aliases:
+          - mtrabbit
+
+  mtaccounthistorybroker:
+     image: lykkex/mtaccounthistorybroker
+     container_name: mtaccounthistory
+     environment:
+       - SettingsUrl=${SettingsUrl}
+     hostname: mtaccounthistory
+     networks:
+      mynet:
+        aliases:
+          - mtaccounthistory
+
+  mtorderhistorybroker:
+     image: lykkex/mtorderhistorybroker
+     container_name: mtorderhistory
+     environment:
+       - SettingsUrl=${SettingsUrl}
+     hostname: mtorderhistory
+     networks:
+      mynet:
+        aliases:
+          - mtorderhistory
+
+  mtorderrejectedbroker:
+     image: lykkex/mtorderrejectedbroker
+     container_name: mtorderrejected
+     environment:
+       - SettingsUrl=${SettingsUrl}
+     hostname: mtorderrejected
+     networks:
+      mynet:
+        aliases:
+          - mtorderrejected
+  mttransactionbroker:
+     image: lykkex/mttransactionbroker
+     container_name: mttransactions
+     environment:
+       - SettingsUrl=${SettingsUrl}
+     hostname: mttransactions
+     networks:
+      mynet:
+        aliases:
+          - mttransactions
+  mtorderreportbroker:
+     image: lykkex/mtorderreportbroker
+     container_name: mtorderreport
+     environment:
+       - SettingsUrl=${SettingsUrl}
+     hostname: mtorderreport
+     networks:
+      mynet:
+        aliases:
+          - mtorderreport
+networks:
+  mynet:
+    driver: bridge

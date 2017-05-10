@@ -1,0 +1,60 @@
+﻿using MarginTrading.Core.Settings;
+
+namespace MarginTrading.Frontend.Settings
+{
+    public class ApplicationSettings
+    {
+        public MtFrontendSettings MtFrontend {get; set;}
+    }
+
+    public class MtFrontendSettings
+    {
+        public MtSettings MarginTradingLive { get; set; }
+        public MtSettings MarginTradingDemo { get; set; }
+        public MtFrontSettings MarginTradingFront { get; set; }
+    }
+
+    public class MtSettings
+    {
+        public string ApiRootUrl { get; set; }
+        public string ApiKey { get; set; }
+        
+        public MarginTradingRabbitMqSettings MarginTradingRabbitMqSettings { get; set; }
+    }
+
+    public class DbSettings
+    {
+        public string LogsConnString { get; set; }
+        public string MarginTradingConnString { get; set; }
+        public string ClientPersonalInfoConnString { get; set; }
+        public string DictsConnString { get; set; }
+    }
+
+    public class MtQueues
+    {
+        public RabbitMqQueueInfo AccountChanged { get; set; }
+        public RabbitMqQueueInfo OrderChanged { get; set; }
+        public RabbitMqQueueInfo AccountStopout { get; set; }
+        public RabbitMqQueueInfo UserUpdates { get; set; }
+        public RabbitMqQueueInfo OrderbookPrices { get; set; }
+    }
+
+    public class MtFrontSettings
+    {
+        public string SessionServiceApiUrl { get; set; }
+        public string ClientAccountApiUrl { get; set; }
+        public string MetricLoggerLine { get; set; }
+        public string WampPricesTopicName { get; set; }
+        public string DemoAccountIdPrefix { get; set; }
+        public bool RemoteConsoleEnabled { get; set; }
+
+        #region From env variables
+
+        public string Env { get; set; }
+
+        #endregion
+
+        public DbSettings Db { get; set; }
+        public MtQueues RabbitMqQueues { get; set; }
+    }
+}

@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <AssemblyName>MarginTradingTests</AssemblyName>
+    <PackageId>MarginTradingTests</PackageId>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <PackageTargetFallback>$(PackageTargetFallback);dnxcore50;portable-net45+win8</PackageTargetFallback>
+    <RuntimeFrameworkVersion>1.1.1</RuntimeFrameworkVersion>
+    <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json;appsettings.dev.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\MarginTrading.Backend\MarginTrading.Backend.csproj" />
+    <ProjectReference Include="..\..\src\MarginTrading.Common\MarginTrading.Common.csproj" />
+    <ProjectReference Include="..\..\src\MarginTrading.Services\MarginTrading.Services.csproj" />
+    <ProjectReference Include="..\..\src\MarginTrading.AzureRepositories\MarginTrading.AzureRepositories.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.0.0" />
+    <PackageReference Include="Moq" Version="4.7.9" />
+    <PackageReference Include="dotnet-test-nunit" Version="3.4.0-beta-2" />
+    <PackageReference Include="NUnit" Version="3.6.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="1.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="1.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="1.1.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="1.1.1" />
+    <PackageReference Include="Lykke.Common" Version="1.1.69" />
+  </ItemGroup>
+
+</Project>
