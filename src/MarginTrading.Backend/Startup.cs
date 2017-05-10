@@ -76,7 +76,7 @@ namespace MarginTrading.Backend
                 : Configuration["SettingsUrl"].GetJsonAsync<MtBackendSettings>().Result;
 
             bool isLive = Configuration.IsLive();
-            MarginSettings settings = mtSettings.MtBackend;
+            MarginSettings settings = isLive ? mtSettings.MtBackend.MarginTradingLive : mtSettings.MtBackend.MarginTradingDemo;
             settings.IsLive = isLive;
             settings.AutoCreateAccounts = !string.IsNullOrEmpty(Configuration["AutoCreateAccounts"]) && 
                 bool.TryParse(Configuration["AutoCreateAccounts"], out var autoCreateAccounts) && autoCreateAccounts;
