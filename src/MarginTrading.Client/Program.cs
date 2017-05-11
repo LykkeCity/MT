@@ -12,7 +12,6 @@
             //client.InitAccounts();
             //client.AccountInstruments();
             //client.InitGraph();
-            //client.InitOrderBook("EURUSD");
 
             //client.AccountDeposit().Wait();
             //client.AccountWithdraw();
@@ -20,8 +19,8 @@
             //client.GetAccountHistory();
             //client.GetHistory();
 
-            client.PlaceOrder().Wait();
-            client.CloseOrder(true).Wait();
+            //client.PlaceOrder().Wait();
+            //client.CloseOrder(true).Wait();
             //client.CancelOrder();
             //client.GetOpenPositions();
             //client.GetClientOrders();

@@ -2,7 +2,13 @@
 {
     public class MtBackendSettings
     {
-        public MarginSettings MtBackend { get; set; }
+        public MarginTradingSettings MtBackend { get; set; }
+    }
+
+    public class MarginTradingSettings
+    {
+        public MarginSettings MarginTradingLive { get; set; }
+        public MarginSettings MarginTradingDemo { get; set; }
     }
 
     public class MarginSettings

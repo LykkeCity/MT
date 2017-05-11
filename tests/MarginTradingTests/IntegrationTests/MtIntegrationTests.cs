@@ -26,7 +26,6 @@ namespace MarginTradingTests.IntegrationTests
             Assert.IsNotNull(initData);
             Assert.IsNotEmpty(initData.Demo.Accounts);
             Assert.IsNotEmpty(initData.Demo.AccountAssetPairs);
-            //Assert.IsNotEmpty(initData.Demo.ChartData);
 
             foreach (string key in initData.Demo.AccountAssetPairs.Keys)
             {

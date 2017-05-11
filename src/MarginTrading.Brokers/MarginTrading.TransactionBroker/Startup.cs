@@ -55,7 +55,7 @@ namespace MarginTrading.TransactionBroker
                 : Configuration["SettingsUrl"].GetJsonAsync<MtBackendSettings>().Result;
 
             bool isLive = Configuration.IsLive();
-            MarginSettings settings = mtSettings.MtBackend;
+            MarginSettings settings = isLive ? mtSettings.MtBackend.MarginTradingLive : mtSettings.MtBackend.MarginTradingDemo;
             settings.IsLive = isLive;
 
             Console.WriteLine($"IsLive: {settings.IsLive}");
