@@ -18,7 +18,6 @@
 
         public string Env { get; set; }
         public bool IsLive { get; set; }
-        public bool AutoCreateAccounts { get; set; }
 
         #endregion
 
@@ -63,7 +62,7 @@
         public RabbitMqQueueInfo AccountChanged { get; set; }
         public RabbitMqQueueInfo AccountStopout { get; set; }
         public RabbitMqQueueInfo UserUpdates { get; set; }
-        public RabbitMqQueueInfo Transaction { get; set; }
+        public RabbitMqQueueInfo Transaction { get; set; } 
         public RabbitMqQueueInfo OrderReport { get; set; }
     }
 

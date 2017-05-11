@@ -6,6 +6,7 @@ using MarginTrading.Backend.Models;
 using MarginTrading.Common.Models;
 using MarginTrading.Core;
 using MarginTrading.Core.Clients;
+using MarginTrading.Core.Settings;
 using MarginTrading.Services;
 using MarginTrading.Services.Generated.ClientAccountServiceApi;
 using MarginTrading.Services.Generated.ClientAccountServiceApi.Models;
@@ -34,6 +35,8 @@ namespace MarginTrading.Backend.Controllers
         private readonly IClientAccountService _clientAccountService;
         private readonly IOrderReader _ordersReader;
         private readonly OrderBookList _orderBooks;
+        private readonly IClientSettingsRepository _clientSettingsRepository;
+        private readonly MarginSettings _marginSettings;
 
         public BackOfficeController(
             ITradingConditionsCacheService tradingConditionsCacheService,
@@ -50,7 +53,9 @@ namespace MarginTrading.Backend.Controllers
             IMarginTradingAccountsRepository accountsRepository,
             IClientAccountService clientAccountService,
             IOrderReader ordersReader,
-            OrderBookList orderBooks)
+            OrderBookList orderBooks,
+            IClientSettingsRepository clientSettingsRepository,
+            MarginSettings marginSettings)
         {
             _tradingConditionsCacheService = tradingConditionsCacheService;
             _accountGroupCacheService = accountGroupCacheService;
@@ -68,6 +73,8 @@ namespace MarginTrading.Backend.Controllers
             _clientAccountService = clientAccountService;
             _ordersReader = ordersReader;
             _orderBooks = orderBooks;
+            _clientSettingsRepository = clientSettingsRepository;
+            _marginSettings = marginSettings;
         }
 
         /// <summary>
@@ -523,14 +530,40 @@ namespace MarginTrading.Backend.Controllers
         }
 
         [HttpPost]
+        [Route("marginTradingAccounts/init")]
+        public async Task<InitAccountsResponse> InitMarginTradingAccounts([FromBody]InitAccountsRequest request)
+        {
+            var accounts = _accountsCacheService.GetAll(request.ClientId);
+
+            if (accounts.Any())
+            {
+                return new InitAccountsResponse { Status = CreateAccountStatus.Available };
+            }
+
+            if (string.IsNullOrEmpty(request.TradingConditionsId))
+            {
+                return new InitAccountsResponse
+                {
+                    Status = CreateAccountStatus.Error,
+                    Message = "Can't create accounts - no trading condition passed"
+                };
+            }
+
+            await _accountManager.CreateDefaultAccounts(request.ClientId, request.TradingConditionsId);
+
+            return new InitAccountsResponse { Status = CreateAccountStatus.Created};
+        }
+
+        [HttpPost]
         [Route("marginTradingAccounts/add")]
         public async Task<IActionResult> AddMarginTradingAccount([FromBody]MarginTradingAccount account)
         {
-            await _accountManager.AddAccountAsync(account);
+            await _accountManager.AddAccountAsync(account.ClientId, account.BaseAssetId, account.TradingConditionId);
             return Ok();
         }
 
         #endregion
+
 
         #region Matching engine routes
 
@@ -590,6 +623,40 @@ namespace MarginTrading.Backend.Controllers
         public async Task<IActionResult> DeleteLocalRoute(string id)
         {
             await _routesManager.DeleteLocalRouteAsync(id);
+            return Ok();
+        }
+
+        #endregion
+
+
+        #region Settings
+
+        [HttpGet]
+        [Route("settings/enabled/{clientId}")]
+        [ProducesResponseType(typeof(bool), 200)]
+        public async Task<IActionResult> GetMarginTradingIsEnabled(string clientId)
+        {
+            var settings = await _clientSettingsRepository.GetSettings<MarginEnabledSettings>(clientId);
+
+            if (_marginSettings.IsLive)
+                return Ok(settings.EnabledLive);
+
+            return Ok(settings.Enabled);
+        }
+
+        [HttpPost]
+        [Route("settings/enabled/{clientId}")]
+        public async Task<IActionResult> SetMarginTradingIsEnabled(string clientId, [FromBody]bool enabled)
+        {
+            var settings = await _clientSettingsRepository.GetSettings<MarginEnabledSettings>(clientId);
+
+            if (_marginSettings.IsLive)
+                settings.EnabledLive = enabled;
+            else
+                settings.Enabled = enabled;
+
+            await _clientSettingsRepository.SetSettings(clientId, settings);
+
             return Ok();
         }
 

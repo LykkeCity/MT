@@ -292,12 +292,14 @@ namespace MarginTrading.Core.Clients
 		}
 
 		public bool Enabled { get; set; }
+        public bool EnabledLive { get; set; }
 
-		public static MarginEnabledSettings CreateDefault()
+        public static MarginEnabledSettings CreateDefault()
 		{
 			return new MarginEnabledSettings
 			{
-				Enabled = true
+				Enabled = true,
+                EnabledLive = false
 			};
 		}
 	}

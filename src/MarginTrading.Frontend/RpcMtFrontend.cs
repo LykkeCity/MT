@@ -39,26 +39,35 @@ namespace MarginTrading.Frontend
         {
             var clientId = await GetClientId(token);
 
-            var marginTradingEnabled = await _marginTradingSettingsService.IsMargingTradingEnabled(clientId);
+            var marginTradingDemoEnabled = await _marginTradingSettingsService.IsMargingTradingDemoEnabled(clientId);
+            var marginTradingLiveEnabled = await _marginTradingSettingsService.IsMargingTradingLiveEnabled(clientId);
 
-            if (!marginTradingEnabled)
+            if (!marginTradingDemoEnabled && !marginTradingLiveEnabled)
             {
                 throw new Exception("Margin trading is not available");
             }
 
             var initDataBackendRequest = new ClientIdBackendRequest { ClientId = clientId };
 
-            var initDataLiveResponse = await _httpRequestService.RequestAsync<InitDataBackendResponse>(
+            var initData = new InitDataLiveDemoClientResponse();
+
+            if (marginTradingLiveEnabled)
+            {
+                var initDataLiveResponse = await _httpRequestService.RequestAsync<InitDataBackendResponse>(
                     initDataBackendRequest, "init.data");
 
-            var initDataDemoResponse = await _httpRequestService.RequestAsync<InitDataBackendResponse>(
+                initData.Live = initDataLiveResponse.ToClientContract();
+            }
+
+            if (marginTradingLiveEnabled)
+            {
+                var initDataDemoResponse = await _httpRequestService.RequestAsync<InitDataBackendResponse>(
                     initDataBackendRequest, "init.data", false);
 
-            return new InitDataLiveDemoClientResponse
-            {
-                Demo = initDataDemoResponse.ToClientContract(),
-                Live = initDataLiveResponse.ToClientContract()
-            };
+                initData.Demo = initDataDemoResponse.ToClientContract();
+            }
+
+            return initData;
         }
 
         public async Task<InitAccountsLiveDemoClientResponse> InitAccounts(string token)

@@ -78,11 +78,8 @@ namespace MarginTrading.Backend
             bool isLive = Configuration.IsLive();
             MarginSettings settings = mtSettings.MtBackend;
             settings.IsLive = isLive;
-            settings.AutoCreateAccounts = !string.IsNullOrEmpty(Configuration["AutoCreateAccounts"]) && 
-                bool.TryParse(Configuration["AutoCreateAccounts"], out var autoCreateAccounts) && autoCreateAccounts;
 
             Console.WriteLine($"IsLive: {settings.IsLive}");
-            Console.WriteLine($"Auto create accounts: {settings.AutoCreateAccounts}");
 
             RegisterModules(builder, settings, Environment);
 

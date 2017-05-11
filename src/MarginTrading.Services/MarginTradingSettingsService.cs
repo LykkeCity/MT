@@ -17,10 +17,16 @@ namespace MarginTrading.Services
             _appGlobalSettingsRepositry = appGlobalSettingsRepositry;
         }
 
-        public async Task<bool> IsMargingTradingEnabled(string clientId)
+        public async Task<bool> IsMargingTradingDemoEnabled(string clientId)
         {
             return (await _appGlobalSettingsRepositry.GetAsync()).MarginTradingEnabled &&
                    (await _clientSettingsRepository.GetSettings<MarginEnabledSettings>(clientId)).Enabled;
+        }
+
+        public async Task<bool> IsMargingTradingLiveEnabled(string clientId)
+        {
+            return (await _appGlobalSettingsRepositry.GetAsync()).MarginTradingEnabled &&
+                   (await _clientSettingsRepository.GetSettings<MarginEnabledSettings>(clientId)).EnabledLive;
         }
     }
 }

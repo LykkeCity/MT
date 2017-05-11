@@ -79,10 +79,10 @@ namespace MarginTrading.Client
             var data = await _service.InitGraph();
         }
 
-        public async Task InitOrderBook(string instrument)
-        {
-            var data = await _service.InitOrderBook(instrument);
-        }
+        //public async Task InitOrderBook(string instrument)
+        //{
+        //    var data = await _service.InitOrderBook(instrument);
+        //}
 
         public async Task AccountDeposit()
         {

@@ -4,6 +4,7 @@ namespace MarginTrading.Core
 {
     public interface IMarginTradingSettingsService
     {
-        Task<bool> IsMargingTradingEnabled(string clientId);
+        Task<bool> IsMargingTradingDemoEnabled(string clientId);
+        Task<bool> IsMargingTradingLiveEnabled(string clientId);
     }
 }
