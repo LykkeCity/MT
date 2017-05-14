@@ -102,8 +102,8 @@ namespace MarginTrading.OrderReportBroker
                 .As<ILog>()
                 .SingleInstance();
 
-            builder.Register<IMarginTradingOrderActionRepository>(ctx =>
-                AzureRepoFactories.MarginTrading.CreateOrderActionRepository(settings.Db.MarginTradingConnString, log)
+            builder.Register<IMarginTradingTradingOrderRepository>(ctx =>
+                AzureRepoFactories.MarginTrading.CreateTradingOrderRepository(settings.Db.MarginTradingConnString, log)
             ).SingleInstance();
 
             builder.Register<IMarginTradingOrdersHistoryRepository>(ctx =>
@@ -117,8 +117,8 @@ namespace MarginTrading.OrderReportBroker
 
         private void RegisterServices(ContainerBuilder builder)
         {
-            builder.RegisterType<OrderActionService>()
-                .As<IOrderActionService>()
+            builder.RegisterType<TradingOrderService>()
+                .As<ITradingOrderService>()
                 .SingleInstance();
         }
     }

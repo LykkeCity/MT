@@ -18,100 +18,116 @@ namespace MarginTrading.TransactionBroker
         private readonly IMarginTradingOrdersHistoryRepository _orderHistoryRepository;
         private readonly ITransactionService _transactionService;
         private readonly IElementaryTransactionService _elementaryTransactionService;
-        private readonly ILog _logger;
+		private readonly IElementaryTransactionsRepository _elementaryTransactionsRepository;
+		private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
+		private readonly ILog _logger;
         private readonly MarginSettings _settings;
         private RabbitMqSubscriber<string> _connector;
         private const string ServiceName = "MarginTrading.TransactionBroker";
 
-        public Application(
-            IMarginTradingTransactionRepository transactionRepository,
-            IMarginTradingOrdersHistoryRepository orderHistoryRepository,
-            IServiceMonitoringRepository serviceMonitoringRepository,
-            ITransactionService transactionService,
-            IElementaryTransactionService elementaryTransactionService,
-            ILog logger, MarginSettings settings) : base(ServiceName, 30000, logger)
-        {
-            _transactionRepository = transactionRepository;
-            _orderHistoryRepository = orderHistoryRepository;
-            _serviceMonitoringRepository = serviceMonitoringRepository;
-            _elementaryTransactionService = elementaryTransactionService;
-            _transactionService = transactionService;
-            _logger = logger;
-            _settings = settings;
-        }
+		public Application(
+			IMarginTradingTransactionRepository transactionRepository,
+			IElementaryTransactionsRepository elementaryTransactionsRepository,
+			IMarginTradingOrdersHistoryRepository orderHistoryRepository,
+			IServiceMonitoringRepository serviceMonitoringRepository,
+			ITransactionService transactionService,
+			IElementaryTransactionService elementaryTransactionService,
+			IRabbitMqNotifyService rabbitMqNotifyService,
+			ILog logger, MarginSettings settings) : base(ServiceName, 30000, logger)
+		{
+			_transactionRepository = transactionRepository;
+			_elementaryTransactionsRepository = elementaryTransactionsRepository;
+			_orderHistoryRepository = orderHistoryRepository;
+			_serviceMonitoringRepository = serviceMonitoringRepository;
+			_elementaryTransactionService = elementaryTransactionService;
+			_transactionService = transactionService;
+			_rabbitMqNotifyService = rabbitMqNotifyService;
+			_logger = logger;
+			_settings = settings;
+		}
 
-        public async Task RunAsync()
-        {
-            Start();
+		public async Task RunAsync()
+		{
+			Start();
 
-            await _logger.WriteInfoAsync(ServiceName, null, null, "Starting broker");
+			await _logger.WriteInfoAsync(ServiceName, null, null, "Starting broker");
 
-            try
-            {
-                if (!_transactionRepository.Any())
-                {
-                    await _logger.WriteInfoAsync(ServiceName, null, null, "Restoring transactions from order hisorical data");
+			try
+			{
+				if (!_transactionRepository.Any())
+				{
+					await _logger.WriteInfoAsync(ServiceName, null, null, "Restoring transactions from order hisorical data");
 
-                    await _transactionService.CreateTransactionsForOrderHistory(
-                            _orderHistoryRepository.GetHistoryAsync,
-                            _transactionRepository.AddAsync
-                        );
-                }
+					await _transactionService.CreateTransactionsForOrderHistory(
+							_orderHistoryRepository.GetHistoryAsync,
+							_transactionRepository.AddAsync
+						);
+				}
 
-                if (!_elementaryTransactionService.Any())
-                {
-                    await _logger.WriteInfoAsync(ServiceName, null, null, "Restoring elementary transactions from historical data");
+				if (!_elementaryTransactionsRepository.Any())
+				{
+					await _logger.WriteInfoAsync(ServiceName, null, null, "Restoring elementary transactions from historical data");
 
-                    await _elementaryTransactionService.CreateElementaryTransactionsFromTransactionReport();
-                }
+					await _elementaryTransactionService.CreateElementaryTransactionsFromTransactionReport(
+							async () => {
+								return await _transactionRepository.GetTransactionsAsync();
+							},
+							_elementaryTransactionsRepository.AddAsync
+						);
+				}
 
-                _connector = new RabbitMqSubscriber<string>(new RabbitMqSubscriberSettings
-                {
-                    ConnectionString = _settings.MarginTradingRabbitMqSettings.InternalConnectionString,
-                    QueueName = _settings.RabbitMqQueues.Transaction.QueueName,
-                    ExchangeName = _settings.MarginTradingRabbitMqSettings.ExchangeName,
-                    IsDurable = true
-                })
-                    .SetMessageDeserializer(new DefaultStringDeserializer())
-                    .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy(_settings.RabbitMqQueues.Transaction.RoutingKeyName))
-                    .Subscribe(HandleMessage)
-                    .SetLogger(_logger)
-                    .Start();
-            }
-            catch (Exception ex)
-            {
-                await _logger.WriteErrorAsync(ServiceName, "Application.RunAsync", null, ex);
-            }
-        }
+				_connector = new RabbitMqSubscriber<string>(new RabbitMqSubscriberSettings
+				{
+					ConnectionString = _settings.MarginTradingRabbitMqSettings.InternalConnectionString,
+					QueueName = _settings.RabbitMqQueues.Transaction.QueueName,
+					ExchangeName = _settings.MarginTradingRabbitMqSettings.ExchangeName,
+					IsDurable = true
+				})
+					.SetMessageDeserializer(new DefaultStringDeserializer())
+					.SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy(_settings.RabbitMqQueues.Transaction.RoutingKeyName))
+					.Subscribe(HandleMessage)
+					.SetLogger(_logger)
+					.Start();
+			}
+			catch (Exception ex)
+			{
+				await _logger.WriteErrorAsync(ServiceName, "Application.RunAsync", null, ex);
+			}
+		}
 
-        public void StopApplication()
-        {
-            Console.WriteLine($"Closing {ServiceName}...");
-            _logger.WriteInfoAsync(ServiceName, null, null, "Stopping broker").Wait();
-            _connector.Stop();
-        }
+		public void StopApplication()
+		{
+			Console.WriteLine($"Closing {ServiceName}...");
+			_logger.WriteInfoAsync(ServiceName, null, null, "Stopping broker").Wait();
+			_connector.Stop();
+		}
 
-        private async Task HandleMessage(string json)
-        {
-            var transaction = JsonConvert.DeserializeObject<Transaction>(json);
+		private async Task HandleMessage(string json)
+		{
+			var transaction = JsonConvert.DeserializeObject<Transaction>(json);
 
-            await _transactionRepository.AddAsync(transaction);
+			await _transactionRepository.AddAsync(transaction);
 
-            await _elementaryTransactionService.CreateElementaryTransactionsAsync(transaction);
-        }
+			await _elementaryTransactionService.CreateElementaryTransactionsAsync(transaction, async elementaryTransaction =>
+			{
+				await _elementaryTransactionsRepository.AddAsync(elementaryTransaction);
 
-        public override async Task Execute()
-        {
-            var now = DateTime.UtcNow;
+				await _rabbitMqNotifyService.ElementaryTransactionCreated(elementaryTransaction);
+			});
+		}
 
-            var record = new MonitoringRecord
-            {
-                DateTime = now,
-                ServiceName = ServiceName,
-                Version = Microsoft.Extensions.PlatformAbstractions.PlatformServices.Default.Application.ApplicationVersion
-            };
+		public override async Task Execute()
+		{
+			var now = DateTime.UtcNow;
 
-            await _serviceMonitoringRepository.UpdateOrCreate(record);
-        }
-    }
+			var record = new MonitoringRecord
+			{
+				DateTime = now,
+				ServiceName = ServiceName,
+				Version = Microsoft.Extensions.PlatformAbstractions.PlatformServices.Default.Application.ApplicationVersion
+			};
+
+			await _serviceMonitoringRepository.UpdateOrCreate(record);
+		}
+	}
 }

@@ -1,12 +1,13 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace MarginTrading.Core
 {
-    public interface IElementaryTransactionService
-    {
-        Task CreateElementaryTransactionsAsync(ITransaction transaction);
+	public interface IElementaryTransactionService
+	{
+		Task CreateElementaryTransactionsAsync(ITransaction transaction, Func<IElementaryTransaction, Task> destination);
 
-        Task CreateElementaryTransactionsFromTransactionReport();
-        bool Any();
-    }
+		Task CreateElementaryTransactionsFromTransactionReport(Func<Task<IEnumerable<ITransaction>>> source, Func<IElementaryTransaction, Task> destination);
+	}
 }

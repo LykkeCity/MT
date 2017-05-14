@@ -99,13 +99,30 @@ namespace MarginTrading.Backend.Modules
                 AzureRepoFactories.MarginTrading.CreatePositionRepository(_settings.Db.MarginTradingConnString, log)
             ).SingleInstance();
 
-            builder.Register<IMarginTradingOrderActionRepository>(ctx =>
-                AzureRepoFactories.MarginTrading.CreateOrderActionRepository(_settings.Db.MarginTradingConnString, log)
+            builder.Register<IMarginTradingTradingOrderRepository>(ctx =>
+                AzureRepoFactories.MarginTrading.CreateTradingOrderRepository(_settings.Db.MarginTradingConnString, log)
             ).SingleInstance();
 
             builder.Register<IElementaryTransactionsRepository>(ctx =>
                 AzureRepoFactories.MarginTrading.CreateElementaryTransactionsRepository(_settings.Db.MarginTradingConnString, log)
             ).SingleInstance();
-        }
-    }
+
+			builder.Register<ISampleQuoteCacheRepository>(ctx =>
+				AzureRepoFactories.MarginTrading.CreateSampleQuoteCacheRepository(_settings.Db.MarginTradingConnString, log)
+			).SingleInstance();
+
+			builder.Register<IQuoteHistoryRepository>(ctx =>
+				AzureRepoFactories.CreateQuoteHistoryRepository(_settings.Db.MarginTradingConnString, log)
+			).SingleInstance();
+
+			builder.Register<IMarginTradingIndividualValuesAtRiskRepository>(ctx =>
+				AzureRepoFactories.MarginTrading.CreateIndividualValuesAtRiskRepository(_settings.Db.MarginTradingConnString, log)
+			).SingleInstance();
+
+			builder.Register<IMarginTradingAggregateValuesAtRiskRepository>(ctx =>
+				AzureRepoFactories.MarginTrading.CreateAggregateValuesAtRiskRepository(_settings.Db.MarginTradingConnString, log)
+			).SingleInstance();
+
+		}
+	}
 }

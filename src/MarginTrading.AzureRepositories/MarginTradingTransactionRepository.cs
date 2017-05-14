@@ -19,7 +19,7 @@ namespace MarginTrading.AzureRepositories
         public async Task AddAsync(ITransaction transaction)
         {
             var entity = MarginTradingTransactionEntity.Create(transaction);
-            await _tableStorage.InsertOrMergeAsync(entity);
+			await _tableStorage.InsertAsync(entity);
         }
 
         public bool Any()

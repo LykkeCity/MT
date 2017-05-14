@@ -81,6 +81,46 @@ services:
       mynet:
         aliases:
           - mtorderreport
+  mtriskmanagerbroker:
+     image: lykkex/mtriskmanagerbroker
+     container_name: mtriskmanager
+     environment:
+      - SettingsUrl=${SettingsUrl}
+     hostname: mtriskmanager
+     networks:
+      mynet:
+        aliases:
+          - mtriskmanager
+  mtpositionsbroker:
+     image: lykkex/mtpositionsbroker
+     container_name: mtpositions
+     environment:
+      - SettingsUrl=${SettingsUrl}
+     hostname: mtpositions
+     networks:
+      mynet:
+        aliases:
+          - mtpositions
+  mtpvarbroker:
+     image: lykkex/mtpvarbroker
+     container_name: mtpvar
+     environment:
+      - SettingsUrl=${SettingsUrl}
+     hostname: mtpvar
+     networks:
+      mynet:
+        aliases:
+          - mtpvar
+  mtivarbroker:
+     image: lykkex/mtivarbroker
+     container_name: mtivar
+     environment:
+      - SettingsUrl=${SettingsUrl}
+     hostname: mtivar
+     networks:
+      mynet:
+        aliases:
+          - mtivar
 networks:
   mynet:
     driver: bridge

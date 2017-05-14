@@ -22,43 +22,78 @@
   ],
   "parameters": [],
   "policies": [],
-  "queues": [
-    {
-      "name": "mt.accounthistorybroker",
-      "vhost": "/",
-      "durable": true,
-      "auto_delete": false,
-      "arguments": {}
-    },
-    {
-      "name": "mt.orderhistorybroker",
-      "vhost": "/",
-      "durable": true,
-      "auto_delete": false,
-      "arguments": {}
-    },
-    {
-      "name": "mt.orderrejectedbroker",
-      "vhost": "/",
-      "durable": true,
-      "auto_delete": false,
-      "arguments": {}
-    },
-    {
-      "name": "mt.transactionsbroker",
-      "vhost": "/",
-      "durable": true,
-      "auto_delete": false,
-      "arguments": {}
-    },
-    {
-      "name": "mt.orderreportbroker",
-      "vhost": "/",
-      "durable": true,
-      "auto_delete": false,
-      "arguments": {}
-    }
-  ],
+	"queues": [
+		{
+			"name": "mt.accounthistorybroker",
+			"vhost": "/",
+			"durable": true,
+			"auto_delete": false,
+			"arguments": {}
+		},
+		{
+			"name": "mt.orderhistorybroker",
+			"vhost": "/",
+			"durable": true,
+			"auto_delete": false,
+			"arguments": {}
+		},
+		{
+			"name": "mt.orderrejectedbroker",
+			"vhost": "/",
+			"durable": true,
+			"auto_delete": false,
+			"arguments": {}
+		},
+		{
+			"name": "mt.transactionsbroker",
+			"vhost": "/",
+			"durable": true,
+			"auto_delete": false,
+			"arguments": {}
+		},
+		{
+			"name": "mt.orderreportbroker",
+			"vhost": "/",
+			"durable": true,
+			"auto_delete": false,
+			"arguments": {}
+		},
+		{
+			"name": "mt.varlimits",
+			"vhost": "/",
+			"durable": false,
+			"auto_delete": false,
+			"arguments": {}
+		},
+		{
+			"name": "mt.elementarytransactions",
+			"vhost": "/",
+			"durable": true,
+			"auto_delete": false,
+			"arguments": {}
+		},
+		{
+			"name": "mt.ivar",
+			"vhost": "/",
+			"durable": true,
+			"auto_delete": false,
+			"arguments": {}
+		},
+		{
+			"name": "mt.pvar",
+			"vhost": "/",
+			"durable": true,
+			"auto_delete": false,
+			"arguments": {}
+		},
+		{
+			"name": "mt.position.updates",
+			"vhost": "/",
+			"durable": true,
+			"auto_delete": false,
+			"arguments": {}
+		}
+	],
   "exchanges": [
     {
       "name": "lykke.mt",
@@ -70,46 +105,86 @@
       "arguments": {}
     }
   ],
-  "bindings": [
-    {
-      "source": "lykke.mt",
-      "vhost": "/",
-      "destination": "mt.accounthistorybroker",
-      "destination_type": "queue",
-      "routing_key": "mt.accounthistory",
-      "arguments": {}
-    },
-    {
-      "source": "lykke.mt",
-      "vhost": "/",
-      "destination": "mt.orderhistorybroker",
-      "destination_type": "queue",
-      "routing_key": "mt.orderhistory",
-      "arguments": {}
-    },
-    {
-      "source": "lykke.mt",
-      "vhost": "/",
-      "destination": "mt.orderrejectedbroker",
-      "destination_type": "queue",
-      "routing_key": "mt.orderrejected",
-      "arguments": {}
-    },
-    {
-      "source": "lykke.mt",
-      "vhost": "/",
-      "destination": "mt.transactionsbroker",
-      "destination_type": "queue",
-      "routing_key": "mt.transactions",
-      "arguments": {}
-    },
-    {
-      "source": "lykke.mt",
-      "vhost": "/",
-      "destination": "mt.orderreportbroker",
-      "destination_type": "queue",
-      "routing_key": "mt.orderreport",
-      "arguments": {}
-    }
-  ]
+	"bindings": [
+		{
+			"source": "lykke.mt",
+			"vhost": "/",
+			"destination": "mt.accounthistorybroker",
+			"destination_type": "queue",
+			"routing_key": "mt.accounthistory",
+			"arguments": {}
+		},
+		{
+			"source": "lykke.mt",
+			"vhost": "/",
+			"destination": "mt.orderhistorybroker",
+			"destination_type": "queue",
+			"routing_key": "mt.orderhistory",
+			"arguments": {}
+		},
+		{
+			"source": "lykke.mt",
+			"vhost": "/",
+			"destination": "mt.orderrejectedbroker",
+			"destination_type": "queue",
+			"routing_key": "mt.orderrejected",
+			"arguments": {}
+		},
+		{
+			"source": "lykke.mt",
+			"vhost": "/",
+			"destination": "mt.transactionsbroker",
+			"destination_type": "queue",
+			"routing_key": "mt.transactions",
+			"arguments": {}
+		},
+		{
+			"source": "lykke.mt",
+			"vhost": "/",
+			"destination": "mt.orderreportbroker",
+			"destination_type": "queue",
+			"routing_key": "mt.orderreport",
+			"arguments": {}
+		},
+		{
+			"source": "lykke.mt",
+			"vhost": "/",
+			"destination": "mt.varlimits",
+			"destination_type": "queue",
+			"routing_key": "mt.varlimits",
+			"arguments": {}
+		},
+		{
+			"source": "lykke.mt",
+			"vhost": "/",
+			"destination": "mt.elementarytransactions",
+			"destination_type": "queue",
+			"routing_key": "mt.elementarytransactions",
+			"arguments": {}
+		},
+		{
+			"source": "lykke.mt",
+			"vhost": "/",
+			"destination": "mt.ivar",
+			"destination_type": "queue",
+			"routing_key": "mt.ivar",
+			"arguments": {}
+		},
+		{
+			"source": "lykke.mt",
+			"vhost": "/",
+			"destination": "mt.pvar",
+			"destination_type": "queue",
+			"routing_key": "mt.pvar",
+			"arguments": {}
+		},
+		{
+			"source": "lykke.mt",
+			"vhost": "/",
+			"destination": "mt.position.updates",
+			"destination_type": "queue",
+			"routing_key": "mt.position.updates",
+			"arguments": {}
+		}
+	]
 }

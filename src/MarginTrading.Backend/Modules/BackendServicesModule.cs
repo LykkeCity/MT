@@ -123,11 +123,11 @@ namespace MarginTrading.Backend.Modules
                 .As<IStartable>()
                 .SingleInstance();
 
-            builder.Register<IClientAccountService>(ctx =>
-                new ClientAccountService(new Uri(_settings.ClientAccountServiceApiUrl))
-            ).SingleInstance();
+			builder.Register<IClientAccountService>(ctx =>
+				new ClientAccountService(new Uri(_settings.ClientAccountServiceApiUrl))
+			).SingleInstance();
 
-            RegisterPublishers(builder, consoleWriter);
+			RegisterPublishers(builder, consoleWriter);
         }
 
         private void RegisterPublishers(ContainerBuilder builder, IConsole consoleWriter)
@@ -143,7 +143,12 @@ namespace MarginTrading.Backend.Modules
                 _settings.RabbitMqQueues.AccountStopout.RoutingKeyName,
                 _settings.RabbitMqQueues.UserUpdates.RoutingKeyName,
                 _settings.RabbitMqQueues.Transaction.RoutingKeyName,
-                _settings.RabbitMqQueues.OrderReport.RoutingKeyName
+                _settings.RabbitMqQueues.OrderReport.RoutingKeyName,
+				_settings.RabbitMqQueues.ElementaryTransaction.RoutingKeyName,
+				_settings.RabbitMqQueues.AggregateValuesAtRisk.RoutingKeyName,
+				_settings.RabbitMqQueues.IndividualValuesAtRisk.RoutingKeyName,
+				_settings.RabbitMqQueues.PositionUpdates.RoutingKeyName,
+				_settings.RabbitMqQueues.ValueAtRiskLimits.RoutingKeyName
             };
 
             var rabbitMqSettings = new RabbitMqPublisherSettings

@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Core.Settings
+﻿using System.Collections.Generic;
+
+namespace MarginTrading.Core.Settings
 {
     public class MtBackendSettings
     {
@@ -16,13 +18,14 @@
         public string MetricLoggerLine { get; set; }
         public string ApiRootUrl { get; set; }
         public string ApiKey { get; set; }
-        public string DemoAccountIdPrefix { get; set; }
-        public bool RemoteConsoleEnabled { get; set; }
-        public string ClientAccountServiceApiUrl { get; set; }
+		public string DemoAccountIdPrefix { get; set; }
+		public bool RemoteConsoleEnabled { get; set; }
+		public string ClientAccountServiceApiUrl { get; set; }
 
-        #region from Env variables
 
-        public string Env { get; set; }
+		#region from Env variables
+
+		public string Env { get; set; }
         public bool IsLive { get; set; }
         public bool AutoCreateAccounts { get; set; }
 
@@ -34,9 +37,21 @@
         public RabbitMqQueues RabbitMqQueues { get; set; }
         public RabbitMqSettings RabbitMqSettings { get; set; }
         public MarginTradingRabbitMqSettings MarginTradingRabbitMqSettings { get; set; }
-    }
+		public RiskManagementSettings RiskManagement { get; set; }
+	}
 
-    public class NotificationSettings
+	public class RiskManagementSettings
+	{
+		public int QuoteSamplingInterval { get; set; }
+		public int QuoteSampleMaxCount { get; set; }
+		public double SamplingFrequency { get; set; }
+		public bool EnforceCalculation { get; set; }
+		public Dictionary<string, Dictionary<string, double>> CorrelationMatrix { get; set; }
+		public Dictionary<string, double> PVaRSoftLimits { get; set; }
+		public Dictionary<string, double> PVaRHardLimits { get; set; }
+	}
+
+	public class NotificationSettings
     {
         public string HubName { get; set; }
         public string ConnString { get; set; }
@@ -49,6 +64,8 @@
         public string NamespaceUrl { get; set; }
         public string PolicyName { get; set; }
     }
+
+    
 
     public class Db
     {
@@ -70,10 +87,15 @@
         public RabbitMqQueueInfo AccountStopout { get; set; }
         public RabbitMqQueueInfo UserUpdates { get; set; }
         public RabbitMqQueueInfo Transaction { get; set; }
-        public RabbitMqQueueInfo OrderReport { get; set; }
-    }
+		public RabbitMqQueueInfo ElementaryTransaction { get; set; }
+		public RabbitMqQueueInfo OrderReport { get; set; }
+		public RabbitMqQueueInfo ValueAtRiskLimits { get; set; }
+		public RabbitMqQueueInfo PositionUpdates { get; set; }
+		public RabbitMqQueueInfo IndividualValuesAtRisk { get; set; }
+		public RabbitMqQueueInfo AggregateValuesAtRisk { get; set; }
+	}
 
-    public class RabbitMqQueueInfo
+	public class RabbitMqQueueInfo
     {
         public string QueueName { get; set; }
         public string RoutingKeyName { get; set; }
