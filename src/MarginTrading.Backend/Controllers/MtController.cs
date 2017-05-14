@@ -26,16 +26,15 @@ namespace MarginTrading.Backend.Controllers
         private readonly IMicrographCacheService _micrographCacheService;
         private readonly IClientNotifyService _clientNotifyService;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
-        private readonly ITradingConditionsCacheService _tradingConditionsService;
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
         private readonly IMatchingEngine _matchingEngine;
         private readonly ITradingEngine _tradingEngine;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly IMarginTradingOperationsLogService _operationsLogService;
         private readonly IConsole _consoleWriter;
-        private readonly IAggregatedOrderBook _aggreagOrderBook;
         private readonly OrdersCache _ordersCache;
         private readonly MarginSettings _marginSettings;
+        private readonly AccountManager _accountManager;
 
         public MtController(
             IMarginTradingAccountsRepository accountsRepository,
@@ -44,16 +43,15 @@ namespace MarginTrading.Backend.Controllers
             IMicrographCacheService micrographCacheService,
             IClientNotifyService clientNotifyService,
             IRabbitMqNotifyService rabbitMqNotifyService,
-            ITradingConditionsCacheService tradingConditionsService,
             IAccountAssetsCacheService accountAssetsCacheService,
             IMatchingEngine matchingEngine,
             ITradingEngine tradingEngine,
             IAccountsCacheService accountsCacheService,
             IMarginTradingOperationsLogService operationsLogService,
             IConsole consoleWriter,
-            IAggregatedOrderBook aggreagOrderBook,
             OrdersCache ordersCache,
-            MarginSettings marginSettings)
+            MarginSettings marginSettings,
+            AccountManager accountManager)
         {
             _accountsRepository = accountsRepository;
             _accountsHistoryRepository = accountsHistoryRepository;
@@ -61,16 +59,15 @@ namespace MarginTrading.Backend.Controllers
             _micrographCacheService = micrographCacheService;
             _clientNotifyService = clientNotifyService;
             _rabbitMqNotifyService = rabbitMqNotifyService;
-            _tradingConditionsService = tradingConditionsService;
             _accountAssetsCacheService = accountAssetsCacheService;
             _matchingEngine = matchingEngine;
             _tradingEngine = tradingEngine;
             _accountsCacheService = accountsCacheService;
             _operationsLogService = operationsLogService;
             _consoleWriter = consoleWriter;
-            _aggreagOrderBook = aggreagOrderBook;
             _ordersCache = ordersCache;
             _marginSettings = marginSettings;
+            _accountManager = accountManager;
         }
 
         #region Init data
@@ -81,9 +78,9 @@ namespace MarginTrading.Backend.Controllers
         {
             var accounts = _accountsCacheService.GetAll(request.ClientId).ToArray();
 
-            if (accounts.Length == 0 && _marginSettings.AutoCreateAccounts)
+            if (accounts.Length == 0 && !_marginSettings.IsLive)
             {
-                accounts = await CreateMockAccounts(request.ClientId);
+                accounts = await _accountManager.CreateDefaultAccounts(request.ClientId);
             }
 
             if (accounts.Length == 0)
@@ -403,65 +400,6 @@ namespace MarginTrading.Backend.Controllers
         {
             return new MtBackendResponse<string> { Result = $"[{DateTime.UtcNow:u}] Ping!" };
         }
-
-        private async Task<MarginTradingAccount[]> CreateMockAccounts(string clientId)
-        {
-            var existingAccounts = (await _accountsRepository.GetAllAsync(clientId)).ToList();
-
-            if (existingAccounts.Any())
-            {
-                var accounts = existingAccounts.Select(MarginTradingAccount.Create).ToArray();
-                _accountsCacheService.UpdateAccountsCache(clientId, accounts);
-                return accounts;
-            }
-
-            var tradingConditions = _tradingConditionsService.GetAllTradingConditions();
-            string tradingConditionId = tradingConditions.FirstOrDefault(item => item.IsDefault)?.Id ?? string.Empty;
-
-            if (string.IsNullOrEmpty(tradingConditionId))
-            {
-                throw new Exception("Can't create mock accounts - no default trading condition");
-            }
-
-            var newAccounts = new[]
-            {
-                new MarginTradingAccount
-                {
-                    Id = $"{(_marginSettings.IsLive ? string.Empty : _marginSettings.DemoAccountIdPrefix)}{Guid.NewGuid():N}",
-                    BaseAssetId = "EUR",
-                    ClientId = clientId,
-                    Balance = _marginSettings.IsLive ? 0 : 50000,
-                    IsCurrent = true,
-                    TradingConditionId = tradingConditionId
-                },
-                new MarginTradingAccount
-                {
-                    Id = $"{(_marginSettings.IsLive ? string.Empty : _marginSettings.DemoAccountIdPrefix)}{Guid.NewGuid():N}",
-                    BaseAssetId = "USD",
-                    ClientId = clientId,
-                    Balance = _marginSettings.IsLive ? 0 : 50000,
-                    IsCurrent = false,
-                    TradingConditionId = tradingConditionId
-                },
-                new MarginTradingAccount
-                {
-                    Id = $"{(_marginSettings.IsLive ? string.Empty : _marginSettings.DemoAccountIdPrefix)}{Guid.NewGuid():N}",
-                    BaseAssetId = "CHF",
-                    ClientId = clientId,
-                    Balance = _marginSettings.IsLive ? 0 : 50000,
-                    IsCurrent = false,
-                    TradingConditionId = tradingConditionId
-                }
-            };
-
-            foreach (var account in newAccounts)
-            {
-                await _accountsRepository.AddAsync(account);
-            }
-
-            _accountsCacheService.UpdateAccountsCache(clientId, newAccounts);
-
-            return newAccounts;
-        }
+        
     }
 }

@@ -35,4 +35,23 @@ namespace MarginTrading.Backend.Models
         public string BaseAssetId { get; set; }
         public string[] Instruments { get; set; }
     }
+
+    public class InitAccountsRequest
+    {
+        public string ClientId { get; set; }
+        public string TradingConditionsId { get; set; }
+    }
+
+    public class InitAccountsResponse
+    {
+        public CreateAccountStatus Status { get; set; }
+        public string Message { get; set; }
+    }
+
+    public enum CreateAccountStatus
+    {
+        Available,
+        Created,
+        Error
+    }
 }

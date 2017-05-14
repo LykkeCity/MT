@@ -31,11 +31,11 @@ namespace MarginTrading.Services
 
         public async Task AddAccountGroupsForTradingCondition(string tradingConditionId)
         {
-            foreach (var account in LykkeConstants.MarginAccounts)
+            foreach (var asset in LykkeConstants.BaseAssets)
             {
                 await _repository.AddOrReplaceAsync(new MarginTradingAccountGroup
                 {
-                    BaseAssetId = account,
+                    BaseAssetId = asset,
                     MarginCall = LykkeConstants.DefaultMarginCall,
                     StopOut = LykkeConstants.DefaultStopOut,
                     TradingConditionId = tradingConditionId

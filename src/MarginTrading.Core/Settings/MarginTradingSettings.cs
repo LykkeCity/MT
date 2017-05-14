@@ -27,7 +27,6 @@ namespace MarginTrading.Core.Settings
 
 		public string Env { get; set; }
         public bool IsLive { get; set; }
-        public bool AutoCreateAccounts { get; set; }
 
         #endregion
 
