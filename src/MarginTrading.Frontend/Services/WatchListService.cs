@@ -2,50 +2,43 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MarginTrading.Common.BackendContracts;
 using MarginTrading.Core;
 
-namespace MarginTrading.Services
+namespace MarginTrading.Frontend.Services
 {
     public class WatchListService : IWatchListService
     {
-        private readonly IMarginTradingAccountsRepository _accountsRepository;
-        private readonly IMarginTradingAccountAssetRepository _accountAssetRepository;
+        private readonly IHttpRequestService _httpRequestService;
         private readonly IMarginTradingWatchListRepository _watchListRepository;
         private const string AllAssetsWatchListId = "all_assets_watchlist";
 
         public WatchListService(
-            IMarginTradingAccountsRepository accountsRepository,
-            IMarginTradingAccountAssetRepository accountAssetRepository,
+            IHttpRequestService httpRequestService,
             IMarginTradingWatchListRepository watchListRepository)
         {
-            _accountsRepository = accountsRepository;
-            _accountAssetRepository = accountAssetRepository;
+            _httpRequestService = httpRequestService;
             _watchListRepository = watchListRepository;
         }
 
-        public async Task<List<MarginTradingWatchList>> GetAllAsync(string accountId)
+        public async Task<List<MarginTradingWatchList>> GetAllAsync(string clientId)
         {
-            if (IsAccountExists(accountId))
-            {
-                return await GetWatchLists(accountId);
-            }
-
-            return null;
+            return await GetWatchLists(clientId);
         }
 
-        public async Task<IMarginTradingWatchList> GetAsync(string accountId, string id)
+        public async Task<IMarginTradingWatchList> GetAsync(string clientId, string id)
         {
             return id == AllAssetsWatchListId
-                ? await GetAllAssetsWatchList(accountId)
-                : await _watchListRepository.GetAsync(accountId, id);
+                ? await GetAllAssetsWatchList(clientId)
+                : await _watchListRepository.GetAsync(clientId, id);
         }
 
-        public async Task<WatchListResult<IMarginTradingWatchList>> AddAsync(string id, string accountId, string name, List<string> assetIds)
+        public async Task<WatchListResult<IMarginTradingWatchList>> AddAsync(string id, string clientId, string name, List<string> assetIds)
         {
             var result = new WatchListResult<IMarginTradingWatchList>();
             bool isNew = string.IsNullOrEmpty(id);
-            var watchLists = (await GetWatchLists(accountId)).ToList();
-            var allAssets = await GetAccountAssetIds(accountId);
+            var watchLists = (await GetWatchLists(clientId)).ToList();
+            var allAssets = await GetAvailableAssetIds(clientId);
 
             foreach (var assetId in assetIds)
             {
@@ -69,7 +62,7 @@ namespace MarginTrading.Services
             var watchList = new MarginTradingWatchList
             {
                 Id = isNew ? Guid.NewGuid().ToString("N") : id,
-                AccountId = accountId,
+                ClientId = clientId,
                 Name = name,
                 AssetIds = assetIds
             };
@@ -88,11 +81,11 @@ namespace MarginTrading.Services
             return result;
         }
 
-        public async Task<WatchListResult<bool>> DeleteAsync(string accountId, string id)
+        public async Task<WatchListResult<bool>> DeleteAsync(string clientId, string id)
         {
             var result = new WatchListResult<bool>();
 
-            var watchList = await GetAsync(accountId, id);
+            var watchList = await GetAsync(clientId, id);
 
             if (watchList == null)
             {
@@ -106,65 +99,54 @@ namespace MarginTrading.Services
                 return result;
             }
 
-            await _watchListRepository.DeleteAsync(accountId, id);
+            await _watchListRepository.DeleteAsync(clientId, id);
 
             result.Result = true;
             return result;
         }
 
-        private async Task<List<string>> GetAccountAssetIds(string accountId)
+        private async Task<List<string>> GetAvailableAssetIds(string clientId)
         {
-            var result = new List<string>();
+            var request = new ClientIdBackendRequest { ClientId = clientId };
+            var availableAssetsLive = await _httpRequestService.RequestAsync<List<string>>(request, "init.availableassets");
+            var availableAssetsDemo = await _httpRequestService.RequestAsync<List<string>>(request, "init.availableassets", false);
 
-            var account = await _accountsRepository.GetAsync(accountId);
-
-            if (account != null)
-            {
-                var assets = await _accountAssetRepository.GetAllAsync(account.TradingConditionId, account.BaseAssetId);
-                result = assets.Select(item => item.Instrument).ToList();
-            }
-
-            return result;
+            return availableAssetsDemo.Intersect(availableAssetsLive).ToList();
         }
 
-        private bool IsAccountExists(string accountId)
+        private async Task<List<MarginTradingWatchList>> GetWatchLists(string clientId)
         {
-            var account = _accountsRepository.GetAsync(accountId).Result;
-            return account != null;
-        }
+            var availableAssets = await GetAvailableAssetIds(clientId);
 
-        private async Task<List<MarginTradingWatchList>> GetWatchLists(string accountId)
-        {
             var result = new List<MarginTradingWatchList>();
-            var allAssets = await GetAccountAssetIds(accountId);
 
-            var watchLists = (await _watchListRepository.GetAllAsync(accountId)).ToList();
+            var watchLists = (await _watchListRepository.GetAllAsync(clientId)).ToList();
 
             if (watchLists.Any())
             {
                 foreach (var watchlist in watchLists)
                 {
-                    watchlist.AssetIds.RemoveAll(item => !allAssets.Contains(item));
+                    watchlist.AssetIds.RemoveAll(item => !availableAssets.Contains(item));
                 }
 
                 result.AddRange(watchLists.Select(MarginTradingWatchList.Create));
             }
 
-            var watchList = await GetAllAssetsWatchList(accountId);
+            var watchList = await GetAllAssetsWatchList(clientId);
 
             result.Insert(0, watchList);
 
             return result;
         }
 
-        private async Task<MarginTradingWatchList> GetAllAssetsWatchList(string accountId)
+        private async Task<MarginTradingWatchList> GetAllAssetsWatchList(string clientId)
         {
-            var allAssets = await GetAccountAssetIds(accountId);
+            var allAssets = await GetAvailableAssetIds(clientId);
 
             return new MarginTradingWatchList
             {
                 Id = AllAssetsWatchListId,
-                AccountId = accountId,
+                ClientId = clientId,
                 Name = "All assets",
                 AssetIds = allAssets,
                 ReadOnly = true

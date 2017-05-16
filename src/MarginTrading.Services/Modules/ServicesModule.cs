@@ -104,10 +104,6 @@ namespace MarginTrading.Services.Modules
 				.As<IEventConsumer<OrderBookChangeEventArgs>>()
 				.SingleInstance();
 
-			builder.RegisterType<WatchListService>()
-				.As<IWatchListService>()
-				.SingleInstance();
-
 			builder.RegisterType<MarginTradingSettingsService>()
 				.As<IMarginTradingSettingsService>()
 				.SingleInstance();

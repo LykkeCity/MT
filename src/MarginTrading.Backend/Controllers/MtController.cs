@@ -139,6 +139,21 @@ namespace MarginTrading.Backend.Controllers
             return InitChartDataBackendResponse.Create(chartData);
         }
 
+        [Route("init.availableassets")]
+        [HttpPost]
+        public string[] InitAvailableAssets([FromBody]ClientIdBackendRequest request)
+        {
+            var result = new List<string>();
+            var accounts = _accountsCacheService.GetAll(request.ClientId);
+
+            foreach (var account in accounts)
+            {
+                result.AddRange(_accountAssetsCacheService.GetAccountAssetIds(account.TradingConditionId, account.BaseAssetId));
+            }
+
+            return result.Distinct().ToArray();
+        }
+
         #endregion
 
         #region Account
