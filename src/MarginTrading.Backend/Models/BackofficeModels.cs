@@ -54,4 +54,17 @@ namespace MarginTrading.Backend.Models
         Created,
         Error
     }
+
+    public class AccountDepositWithdrawRequest
+    {
+        public string ClientId { get; set; }
+        public string AccountId { get; set; }
+        public double Amount { get; set; }
+    }
+
+    public class AccounResetRequest
+    {
+        public string ClientId { get; set; }
+        public string AccountId { get; set; }
+    }
 }

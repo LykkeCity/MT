@@ -117,26 +117,6 @@ namespace MarginTrading.Frontend
 
         #region Account
 
-        public async Task<MtClientResponse<bool>> AccountDeposit(string requestJson)
-        {
-            var depositWithdrawClientRequest = DeserializeRequest<DepositWithdrawClientRequest>(requestJson);
-            var clientId = await GetClientId(depositWithdrawClientRequest.Token);
-            var depositWithdrawBackendRequest = depositWithdrawClientRequest.ToBackendContract(clientId);
-            var depositWithdrawBackendResponse = await _httpRequestService.RequestAsync<MtBackendResponse<bool>>(depositWithdrawBackendRequest, "account.deposit", 
-                IsDemoAccount(depositWithdrawBackendRequest.AccountId));
-            return depositWithdrawBackendResponse.ToClientContract();
-        }
-
-        public async Task<MtClientResponse<bool>> AccountWithdraw(string requestJson)
-        {
-            var depositWithdrawClientRequest = DeserializeRequest<DepositWithdrawClientRequest>(requestJson);
-            var clientId = await GetClientId(depositWithdrawClientRequest.Token);
-            var depositWithdrawBackendRequest = depositWithdrawClientRequest.ToBackendContract(clientId);
-            var depositWithdrawBackendResponse = await _httpRequestService.RequestAsync<MtBackendResponse<bool>>(depositWithdrawBackendRequest, "account.withdraw",
-                IsDemoAccount(depositWithdrawBackendRequest.AccountId));
-            return depositWithdrawBackendResponse.ToClientContract();
-        }
-
         public async Task<MtClientResponse<bool>> SetActiveAccount(string requestJson)
         {
             var setActiveAccountClientRequest = DeserializeRequest<SetActiveAccountClientRequest>(requestJson);

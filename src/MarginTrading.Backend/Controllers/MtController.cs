@@ -158,60 +158,6 @@ namespace MarginTrading.Backend.Controllers
 
         #region Account
 
-        [Route("account.deposit")]
-        [HttpPost]
-        public async Task<MtBackendResponse<bool>> AccountDeposit([FromBody]DepositWithdrawBackendRequest request)
-        {
-            var updatedAccount = await _accountsRepository.UpdateBalanceAsync(request.ClientId, request.AccountId, Math.Abs(request.Volume));
-            _accountsCacheService.UpdateBalance(updatedAccount);
-
-            await _rabbitMqNotifyService.AccountHistory(request.AccountId, request.ClientId, request.Volume, updatedAccount.Balance, AccountHistoryType.Deposit, "Account deposit");
-            _clientNotifyService.NotifyAccountChanged(updatedAccount);
-
-            var result = new MtBackendResponse<bool> { Result = true};
-
-            _consoleWriter.WriteLine($"action account.deposit for clientId = {request.ClientId}");
-            _operationsLogService.AddLog("action account.deposit", request.ClientId, request.AccountId, request.ToJson(), result.ToJson());
-
-            return result;
-        }
-
-        [Route("account.withdraw")]
-        [HttpPost]
-        public async Task<MtBackendResponse<bool>> AccountWithdraw([FromBody]DepositWithdrawBackendRequest request)
-        {
-            var updatedAccount = await _accountsRepository.UpdateBalanceAsync(request.ClientId, request.AccountId, -Math.Abs(request.Volume));
-            _accountsCacheService.UpdateBalance(updatedAccount);
-
-            await _rabbitMqNotifyService.AccountHistory(request.AccountId, request.ClientId, request.Volume, updatedAccount.Balance, AccountHistoryType.Deposit, "Account withdraw");
-            _clientNotifyService.NotifyAccountChanged(updatedAccount);
-
-            var result = new MtBackendResponse<bool> { Result = true };
-
-            _consoleWriter.WriteLine($"action account.withdraw for clientId = {request.ClientId}");
-            _operationsLogService.AddLog("action account.withdraw", request.ClientId, request.AccountId, request.ToJson(), result.ToJson());
-
-            return result;
-        }
-
-        [Route("account.deposit.demo")]
-        [HttpPost]
-        public async Task<MtBackendResponse<bool>> AccountWithdrawDepositDemo([FromBody]DepositWithdrawBackendRequest request)
-        {
-            var updatedAccount = await _accountsRepository.UpdateBalanceAsync(request.ClientId, request.AccountId, request.Volume);
-            _accountsCacheService.UpdateBalance(updatedAccount);
-
-            await _rabbitMqNotifyService.AccountHistory(request.AccountId, request.ClientId, request.Volume, updatedAccount.Balance, AccountHistoryType.Deposit, "Account deposit");
-            _clientNotifyService.NotifyAccountChanged(updatedAccount);
-
-            var result = new MtBackendResponse<bool> { Result = true };
-
-            _consoleWriter.WriteLine($"action account.deposit for clientId = {request.ClientId}");
-            _operationsLogService.AddLog("action account.deposit", request.ClientId, request.AccountId, request.ToJson(), result.ToJson());
-
-            return result;
-        }
-
         [Route("account.setActive")]
         [HttpPost]
         public async Task<MtBackendResponse<bool>> SetActiveAccount([FromBody]SetActiveAccountBackendRequest request)

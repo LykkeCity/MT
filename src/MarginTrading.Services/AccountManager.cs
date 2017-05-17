@@ -63,16 +63,30 @@ namespace MarginTrading.Services
             _console.WriteLine($"send user updates to queue {_marginSettings.RabbitMqQueues.UserUpdates.QueueName}");
         }
 
-        public async Task UpdateBalance(string clientId, string accountId, double amount)
+        public async Task UpdateBalanceAsync(string clientId, string accountId, double amount, AccountHistoryType historyType, string comment)
         {
             var updatedAccount = await _repository.UpdateBalanceAsync(clientId, accountId, amount);
             _accountsCacheService.UpdateBalance(updatedAccount);
+
+            await _rabbitMqNotifyService.AccountHistory(accountId, clientId, amount, updatedAccount.Balance, historyType, comment);
         }
 
         public async Task DeleteAccountAsync(string clientId, string accountId)
         {
             await _repository.DeleteAndSetActiveIfNeededAsync(clientId, accountId);
             await UpdateAccountsCacheAsync(clientId);
+        }
+
+        //TODO: close/remove all orders
+        public async Task ResetAccountAsync(string clientId, string accountId)
+        {
+            var account = _accountsCacheService.Get(clientId, accountId);
+
+            await UpdateBalanceAsync(clientId, accountId, -account.Balance, AccountHistoryType.Reset,
+                "Reset account");
+
+            await UpdateBalanceAsync(clientId, accountId, LykkeConstants.DefaultDemoBalance, AccountHistoryType.Deposit,
+                "Initial deposit");
         }
 
         public async Task AddAccountAsync(string clientId, string baseAssetId, string tradingConditionId)

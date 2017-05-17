@@ -1273,7 +1273,7 @@ namespace MarginTradingTests
         public void Is_Balance_LessThanZero_On_StopOut_Thru_Big_Spread()
         {
             //set account balance to 50000 eur
-            _accountManager.UpdateBalance(_client1Id, Accounts[1].Id, 49000).Wait();
+            _accountManager.UpdateBalanceAsync(_client1Id, Accounts[1].Id, 49000, AccountHistoryType.Deposit, "").Wait();
 
             var ordersSet = new[]
             {

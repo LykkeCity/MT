@@ -19,12 +19,6 @@ namespace MarginTrading.Common.Wamp
         [WampProcedure("init.graph")]
         Task<InitChartDataClientResponse> InitGraph();
 
-        [WampProcedure("account.deposit")]
-        Task<MtClientResponse<bool>> AccountDeposit(string requestJson);
-
-        [WampProcedure("account.withdraw")]
-        Task<MtClientResponse<bool>> AccountWithdraw(string requestJson);
-
         [WampProcedure("account.setActive")]
         Task<MtClientResponse<bool>> SetActiveAccount(string requestJson);
 

@@ -79,34 +79,6 @@ namespace MarginTrading.Client
             var data = await _service.InitGraph();
         }
 
-        public async Task AccountDeposit()
-        {
-            var data = await _service.InitData(_token);
-
-            var request = new DepositWithdrawClientRequest
-            {
-                AccountId = data.Demo.Accounts[0].Id,
-                Token = _token,
-                Volume = 10
-            };
-
-            var result = await _service.AccountDeposit(request.ToJson());
-        }
-
-        public async Task AccountWithdraw()
-        {
-            var data = await _service.InitData(_token);
-
-            var request = new DepositWithdrawClientRequest
-            {
-                AccountId = data.Demo.Accounts[0].Id,
-                Token = _token,
-                Volume = 10
-            };
-
-            var result = await _service.AccountWithdraw(request.ToJson());
-        }
-
         public async Task SetActiveAccount()
         {
             var data = await _service.InitData(_token);
@@ -125,9 +97,6 @@ namespace MarginTrading.Client
                 Token = _token
             };
 
-            var result = await _service.AccountDeposit(request.ToJson());
-
-            Console.WriteLine(result.Result);
             Console.WriteLine("done...");
             Console.ReadLine();
             subscription.Dispose();
