@@ -59,7 +59,7 @@ namespace MarginTrading.Frontend
                 initData.Live = initDataLiveResponse.ToClientContract();
             }
 
-            if (marginTradingLiveEnabled)
+            if (marginTradingDemoEnabled)
             {
                 var initDataDemoResponse = await _httpRequestService.RequestAsync<InitDataBackendResponse>(
                     initDataBackendRequest, "init.data", false);
