@@ -107,6 +107,9 @@ namespace MarginTrading.Services
                 return accounts;
             }
 
+            if (string.IsNullOrEmpty(tradingConditionsId))
+                tradingConditionsId = GetTradingConditions();
+
             var baseAssets = GetBaseAssets(tradingConditionsId);
 
             var newAccounts = new List<MarginTradingAccount>();
@@ -135,25 +138,6 @@ namespace MarginTrading.Services
 
         private string[] GetBaseAssets(string tradingConditionsId)
         {
-            if (string.IsNullOrEmpty(tradingConditionsId))
-            {
-                //use default trading conditions for demo
-                if (!_marginSettings.IsLive)
-                {
-                    var tradingConditions = _tradingConditionsCacheService.GetAllTradingConditions();
-                    var defaultConditions = tradingConditions.FirstOrDefault(item => item.IsDefault);
-
-                    if (defaultConditions == null)
-                        throw new Exception("No default trading conditions set for demo");
-                    else
-                        tradingConditionsId = defaultConditions.Id;
-                }
-                else
-                {
-                    throw new Exception("No trading conditions found");
-                }
-            }
-
             var accountGroups =
                 _accountGroupCacheService.GetAllAccountGroups().Where(g => g.TradingConditionId == tradingConditionsId);
             var baseAssets = accountGroups.Select(g => g.BaseAssetId).Distinct().ToArray();
@@ -163,6 +147,25 @@ namespace MarginTrading.Services
                     $"No account groups found for trading conditions {tradingConditionsId}");
 
             return baseAssets;
+        }
+
+        private string GetTradingConditions()
+        {
+            //use default trading conditions for demo
+            if (!_marginSettings.IsLive)
+            {
+                var tradingConditions = _tradingConditionsCacheService.GetAllTradingConditions();
+                var defaultConditions = tradingConditions.FirstOrDefault(item => item.IsDefault);
+
+                if (defaultConditions == null)
+                    throw new Exception("No default trading conditions set for demo");
+                else
+                    return defaultConditions.Id;
+            }
+            else
+            {
+                throw new Exception("No trading conditions found");
+            }
         }
 
         private MarginTradingAccount CreateAccount(string clientId, string baseAssetId, string tradingConditionId)
