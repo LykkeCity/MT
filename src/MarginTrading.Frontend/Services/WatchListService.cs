@@ -111,7 +111,9 @@ namespace MarginTrading.Frontend.Services
             var availableAssetsLive = await _httpRequestService.RequestAsync<List<string>>(request, "init.availableassets");
             var availableAssetsDemo = await _httpRequestService.RequestAsync<List<string>>(request, "init.availableassets", false);
 
-            return availableAssetsDemo.Intersect(availableAssetsLive).ToList();
+            availableAssetsDemo.AddRange(availableAssetsLive);
+
+            return availableAssetsDemo.Distinct().ToList();
         }
 
         private async Task<List<MarginTradingWatchList>> GetWatchLists(string clientId)
