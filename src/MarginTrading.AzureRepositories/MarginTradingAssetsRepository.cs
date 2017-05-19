@@ -14,8 +14,6 @@ namespace MarginTrading.AzureRepositories
         public string BaseAssetId { get; set; }
         public string QuoteAssetId { get; set; }
         public int Accuracy { get; set; }
-        public int LeverageInit { get; set; }
-        public int LeverageMaintenance { get; set; }
 
         public static string GeneratePartitionKey()
         {
@@ -36,9 +34,7 @@ namespace MarginTrading.AzureRepositories
                 Name = src.Name,
                 BaseAssetId = src.BaseAssetId,
                 QuoteAssetId = src.QuoteAssetId,
-                Accuracy = src.Accuracy,
-                LeverageMaintenance = src.LeverageMaintenance,
-                LeverageInit = src.LeverageInit
+                Accuracy = src.Accuracy
             };
         }
     }

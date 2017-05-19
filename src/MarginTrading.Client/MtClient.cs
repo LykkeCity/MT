@@ -253,6 +253,19 @@ namespace MarginTrading.Client
             var result = await _service.GetOpenPositions(_token);
         }
 
+        public async Task GetAccountOpenPositions()
+        {
+            var data = await _service.InitData(_token);
+
+            var request = new AccountTokenClientRequest
+            {
+                Token = _token,
+                AccountId = data.Demo.Accounts[0].Id
+            };
+
+            var result = await _service.GetAccountOpenPositions(request.ToJson());
+        }
+
         public async Task GetClientOrders()
         {
             var result = await _service.GetClientOrders(_token);

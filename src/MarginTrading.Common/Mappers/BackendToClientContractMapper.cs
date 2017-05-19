@@ -39,15 +39,29 @@ namespace MarginTrading.Common.Mappers
                 Name = src.Name,
                 BaseAssetId = src.BaseAssetId,
                 QuoteAssetId = src.QuoteAssetId,
-                Accuracy = src.Accuracy,
+                Accuracy = src.Accuracy
+            };
+        }
+
+        public static MarginTradingAccountAssetClientContract ToClientContract(
+            this MarginTradingAccountAssetBackendContract src)
+        {
+            return new MarginTradingAccountAssetClientContract
+            {
+                TradingConditionId = src.TradingConditionId,
+                BaseAssetId = src.BaseAssetId,
+                Instrument = src.Instrument,
                 LeverageInit = src.LeverageInit,
                 LeverageMaintenance = src.LeverageMaintenance,
-                DeltaBid = src.DeltaBid,
-                DeltaAsk = src.DeltaAsk,
-                SwapShort = src.SwapShort,
                 SwapLong = src.SwapLong,
+                SwapShort = src.SwapShort,
                 SwapLongPct = src.SwapLongPct,
-                SwapShortPct = src.SwapShortPct
+                SwapShortPct = src.SwapShortPct,
+                CommissionLong = src.CommissionLong,
+                CommissionShort = src.CommissionShort,
+                CommissionLot = src.CommissionLot,
+                DeltaBid = src.DeltaBid,
+                DeltaAsk = src.DeltaAsk
             };
         }
 
@@ -67,7 +81,7 @@ namespace MarginTrading.Common.Mappers
             return new InitDataClientResponse
             {
                 Accounts = src.Accounts.Select(item => item.ToClientContract()).ToArray(),
-                AccountAssetPairs = src.AccountAssetPairs.ToDictionary(pair => pair.Key, pair => pair.Value.Select(item => item.ToClientContract()).ToArray())
+                TradingConditions = src.AccountAssetPairs.ToDictionary(pair => pair.Key, pair => pair.Value.Select(item => item.ToClientContract()).ToArray())
             };
         }
 
@@ -83,7 +97,7 @@ namespace MarginTrading.Common.Mappers
         {
             return new InitAccountInstrumentsClientResponse
             {
-                AccountAssetPairs = src.AccountAssets.ToDictionary(pair => pair.Key, pair => pair.Value.Select(item => item.ToClientContract()).ToArray())
+                TradingConditions = src.AccountAssets.ToDictionary(pair => pair.Key, pair => pair.Value.Select(item => item.ToClientContract()).ToArray())
             };
         }
 

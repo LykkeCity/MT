@@ -9,14 +9,8 @@ namespace MarginTrading.Services
 {
     public class AccountAssetsCacheService : IAccountAssetsCacheService
     {
-        private readonly IInstrumentsCache _instrumentsCache;
         private List<IMarginTradingAccountAsset> _accountAssets = new List<IMarginTradingAccountAsset>();
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
-
-        public AccountAssetsCacheService(IInstrumentsCache instrumentsCache)
-        {
-            _instrumentsCache = instrumentsCache;
-        }
 
         ~AccountAssetsCacheService()
         {
@@ -78,9 +72,9 @@ namespace MarginTrading.Services
             return accountAsset;
         }
 
-        public Dictionary<string, List<MarginTradingAsset>> GetClientAssets(IEnumerable<MarginTradingAccount> accounts)
+        public Dictionary<string, IMarginTradingAccountAsset[]> GetClientAssets(IEnumerable<MarginTradingAccount> accounts)
         {
-            var result = new Dictionary<string, List<MarginTradingAsset>>();
+            var result = new Dictionary<string, IMarginTradingAccountAsset[]>();
 
             if (accounts == null)
                 return result;
@@ -90,24 +84,7 @@ namespace MarginTrading.Services
             {
                 foreach (var account in accounts)
                 {
-                    var accountAssets = _accountAssets.Where(item => item.TradingConditionId == account.TradingConditionId && item.BaseAssetId == account.BaseAssetId).ToDictionary(item => item.Instrument);
-
-                    var assets =
-                        _instrumentsCache.GetAll()
-                        .Where(item => accountAssets.Keys.Contains(item.Id))
-                        .Select(MarginTradingAsset.Create).ToList();
-
-                    foreach (var asset in assets)
-                    {
-                        asset.LeverageInit = accountAssets[asset.Id].LeverageInit;
-                        asset.LeverageMaintenance = accountAssets[asset.Id].LeverageMaintenance;
-                        asset.DeltaBid = accountAssets[asset.Id].DeltaBid;
-                        asset.DeltaAsk = accountAssets[asset.Id].DeltaAsk;
-                        asset.SwapLong = accountAssets[asset.Id].SwapLong;
-                        asset.SwapShort = accountAssets[asset.Id].SwapShort;
-                    }
-
-                    result.Add(account.Id, assets);
+                    result.Add(account.BaseAssetId, _accountAssets.Where(item => item.TradingConditionId == account.TradingConditionId && item.BaseAssetId == account.BaseAssetId).ToArray());
                 }
             }
             finally

@@ -27,6 +27,7 @@ namespace MarginTrading.Backend.Controllers
         private readonly IClientNotifyService _clientNotifyService;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
+        private readonly IInstrumentsCache _instrumentsCache;
         private readonly IMatchingEngine _matchingEngine;
         private readonly ITradingEngine _tradingEngine;
         private readonly IAccountsCacheService _accountsCacheService;
@@ -44,6 +45,7 @@ namespace MarginTrading.Backend.Controllers
             IClientNotifyService clientNotifyService,
             IRabbitMqNotifyService rabbitMqNotifyService,
             IAccountAssetsCacheService accountAssetsCacheService,
+            IInstrumentsCache instrumentsCache,
             IMatchingEngine matchingEngine,
             ITradingEngine tradingEngine,
             IAccountsCacheService accountsCacheService,
@@ -60,6 +62,7 @@ namespace MarginTrading.Backend.Controllers
             _clientNotifyService = clientNotifyService;
             _rabbitMqNotifyService = rabbitMqNotifyService;
             _accountAssetsCacheService = accountAssetsCacheService;
+            _instrumentsCache = instrumentsCache;
             _matchingEngine = matchingEngine;
             _tradingEngine = tradingEngine;
             _accountsCacheService = accountsCacheService;
@@ -152,6 +155,14 @@ namespace MarginTrading.Backend.Controllers
             }
 
             return result.Distinct().ToArray();
+        }
+
+        [Route("init.assets")]
+        [HttpPost]
+        public MarginTradingAssetBackendContract[] InitAssets()
+        {
+            var instruments = _instrumentsCache.GetAll();
+            return instruments.Select(item => item.ToBackendContract()).ToArray();
         }
 
         #endregion
@@ -296,6 +307,21 @@ namespace MarginTrading.Backend.Controllers
 
             var positions = _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountIds).Select(item => item.ToBackendContract()).ToList();
             var orders = _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(accountIds).Select(item => item.ToBackendContract()).ToList();
+
+            positions.AddRange(orders);
+            var result = positions.ToArray();
+
+            return result;
+        }
+
+        [Route("order.account.list")]
+        [HttpPost]
+        public OrderBackendContract[] GetAccountOpenPositions([FromBody]AccountClientIdBackendRequest request)
+        {
+            var account = _accountsCacheService.Get(request.ClientId, request.AccountId);
+
+            var positions = _ordersCache.ActiveOrders.GetOrdersByAccountIds(account.Id).Select(item => item.ToBackendContract()).ToList();
+            var orders = _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(account.Id).Select(item => item.ToBackendContract()).ToList();
 
             positions.AddRange(orders);
             var result = positions.ToArray();

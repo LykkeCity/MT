@@ -10,8 +10,6 @@ namespace MarginTrading.Core
         string BaseAssetId { get; }
         string QuoteAssetId { get; }
         int Accuracy { get; }
-        int LeverageInit { get; }
-        int LeverageMaintenance { get; }
     }
 
     public class MarginTradingAsset : IMarginTradingAsset
@@ -21,14 +19,6 @@ namespace MarginTrading.Core
         public string BaseAssetId { get; set; }
         public string QuoteAssetId { get; set; }
         public int Accuracy { get; set; }
-        public int LeverageInit { get; set; }
-        public int LeverageMaintenance { get; set; }
-        public double DeltaBid { get; set; }
-        public double DeltaAsk { get; set; }
-        public double SwapLong { get; set; }
-        public double SwapShort { get; set; }
-        public double SwapLongPct { get; set; }
-        public double SwapShortPct { get; set; }
 
         public static MarginTradingAsset Create(IMarginTradingAsset src)
         {
@@ -38,9 +28,7 @@ namespace MarginTrading.Core
                 Name = src.Name,
                 BaseAssetId = src.BaseAssetId,
                 QuoteAssetId = src.QuoteAssetId,
-                Accuracy = src.Accuracy,
-                LeverageMaintenance = src.LeverageMaintenance,
-                LeverageInit = src.LeverageInit
+                Accuracy = src.Accuracy
             };
         }
     }

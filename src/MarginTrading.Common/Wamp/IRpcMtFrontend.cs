@@ -40,6 +40,9 @@ namespace MarginTrading.Common.Wamp
         [WampProcedure("order.list")]
         Task<ClientOrdersLiveDemoClientResponse> GetOpenPositions(string token);
 
+        [WampProcedure("order.account.list")]
+        Task<OrderClientContract[]> GetAccountOpenPositions(string requestJson);
+
         [WampProcedure("order.positions")]
         Task<ClientPositionsLiveDemoClientResponse> GetClientOrders(string token);
 

@@ -50,6 +50,7 @@ namespace MarginTrading.Frontend
             var initDataBackendRequest = new ClientIdBackendRequest { ClientId = clientId };
 
             var initData = new InitDataLiveDemoClientResponse();
+            MarginTradingAssetBackendContract[] assets = null;
 
             if (marginTradingLiveEnabled)
             {
@@ -57,6 +58,8 @@ namespace MarginTrading.Frontend
                     initDataBackendRequest, "init.data");
 
                 initData.Live = initDataLiveResponse.ToClientContract();
+
+                assets = await _httpRequestService.RequestAsync<MarginTradingAssetBackendContract[]>(null, "init.assets");
             }
 
             if (marginTradingDemoEnabled)
@@ -65,7 +68,14 @@ namespace MarginTrading.Frontend
                     initDataBackendRequest, "init.data", false);
 
                 initData.Demo = initDataDemoResponse.ToClientContract();
+
+                if (assets == null)
+                {
+                    assets = await _httpRequestService.RequestAsync<MarginTradingAssetBackendContract[]>(null, "init.assets", false);
+                }
             }
+
+            initData.Assets = assets.Select(item => item.ToClientContract()).ToArray();
 
             return initData;
         }
@@ -193,6 +203,16 @@ namespace MarginTrading.Frontend
                 Live = backendLiveResponse.Select(item => item.ToClientContract()).ToArray(),
                 Demo = backendDemoResponse.Select(item => item.ToClientContract()).ToArray()
             };
+        }
+
+        public async Task<OrderClientContract[]> GetAccountOpenPositions(string requestJson)
+        {
+            var clientRequest = DeserializeRequest<AccountTokenClientRequest>(requestJson);
+            var clientId = await GetClientId(clientRequest.Token);
+            var backendRequest = clientRequest.ToBackendContract(clientId);
+            var backendResponse = await _httpRequestService.RequestAsync<OrderBackendContract[]>(backendRequest, "order.account.list", IsLiveAccount(backendRequest.AccountId));
+
+            return backendResponse.Select(item => item.ToClientContract()).ToArray();
         }
 
         public async Task<ClientPositionsLiveDemoClientResponse> GetClientOrders(string token)

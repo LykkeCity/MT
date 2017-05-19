@@ -29,7 +29,7 @@ namespace MarginTrading.Common.Mappers
             };
         }
 
-        public static MarginTradingAssetBackendContract ToBackendContract(this MarginTradingAsset src)
+        public static MarginTradingAssetBackendContract ToBackendContract(this IMarginTradingAsset src)
         {
             return new MarginTradingAssetBackendContract
             {
@@ -37,15 +37,28 @@ namespace MarginTrading.Common.Mappers
                 Name = src.Name,
                 BaseAssetId = src.BaseAssetId,
                 QuoteAssetId = src.QuoteAssetId,
-                Accuracy = src.Accuracy,
+                Accuracy = src.Accuracy
+            };
+        }
+
+        public static MarginTradingAccountAssetBackendContract ToBackendContract(this IMarginTradingAccountAsset src)
+        {
+            return new MarginTradingAccountAssetBackendContract
+            {
+                TradingConditionId = src.TradingConditionId,
+                BaseAssetId = src.BaseAssetId,
+                Instrument = src.Instrument,
                 LeverageInit = src.LeverageInit,
                 LeverageMaintenance = src.LeverageMaintenance,
-                DeltaBid = src.DeltaBid,
-                DeltaAsk = src.DeltaAsk,
                 SwapLong = src.SwapLong,
                 SwapShort = src.SwapShort,
                 SwapLongPct = src.SwapLongPct,
-                SwapShortPct = src.SwapShortPct
+                SwapShortPct = src.SwapShortPct,
+                CommissionLong = src.CommissionLong,
+                CommissionShort = src.CommissionShort,
+                CommissionLot = src.CommissionLot,
+                DeltaBid = src.DeltaBid,
+                DeltaAsk = src.DeltaAsk
             };
         }
 

@@ -18,6 +18,15 @@ namespace MarginTrading.Common.Mappers
             };
         }
 
+        public static AccountClientIdBackendRequest ToBackendContract(this AccountTokenClientRequest src, string clientId)
+        {
+            return new AccountClientIdBackendRequest
+            {
+                AccountId = src.AccountId,
+                ClientId = clientId
+            };
+        }
+
         public static AccountHistoryBackendRequest ToBackendContract(this AccountHistoryClientRequest src, string clientId)
         {
             return new AccountHistoryBackendRequest
