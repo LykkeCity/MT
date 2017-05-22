@@ -1,15 +1,16 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using MarginTrading.Core;
 
-namespace MarginTrading.Core
+namespace MarginTrading.Frontend.Services
 {
     public interface IWatchListService
     {
-        Task<List<MarginTradingWatchList>> GetAllAsync(string accountId);
-        Task<IMarginTradingWatchList> GetAsync(string accountId, string id);
-        Task<WatchListResult<IMarginTradingWatchList>> AddAsync(string id, string accountId, string name, List<string> assetIds);
+        Task<List<MarginTradingWatchList>> GetAllAsync(string clientId);
+        Task<IMarginTradingWatchList> GetAsync(string clientId, string id);
+        Task<WatchListResult<IMarginTradingWatchList>> AddAsync(string id, string clientId, string name, List<string> assetIds);
 
-        Task<WatchListResult<bool>> DeleteAsync(string accountId, string id);
+        Task<WatchListResult<bool>> DeleteAsync(string clientId, string id);
     }
 
     public class WatchListResult<T>

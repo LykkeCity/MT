@@ -28,10 +28,6 @@ namespace MarginTrading.Services.Modules
 				.As<IAccountAssetsCacheService>()
 				.SingleInstance();
 
-			builder.RegisterType<AccountsCacheService>()
-				.As<IAccountsCacheService>()
-				.SingleInstance();
-
 			builder.RegisterType<AccountGroupCacheService>()
 				.AsSelf()
 				.As<IAccountGroupCacheService>()
@@ -106,10 +102,6 @@ namespace MarginTrading.Services.Modules
 
 			builder.RegisterType<OrderBookChangedConsumer>()
 				.As<IEventConsumer<OrderBookChangeEventArgs>>()
-				.SingleInstance();
-
-			builder.RegisterType<WatchListService>()
-				.As<IWatchListService>()
 				.SingleInstance();
 
 			builder.RegisterType<MarginTradingSettingsService>()

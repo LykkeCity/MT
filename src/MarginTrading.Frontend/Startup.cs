@@ -17,17 +17,20 @@ using MarginTrading.Common.Wamp;
 using MarginTrading.Core;
 using MarginTrading.Core.Clients;
 using MarginTrading.Core.Settings;
+using MarginTrading.Frontend.Infrastructure;
 using MarginTrading.Frontend.Services;
 using MarginTrading.Frontend.Settings;
 using MarginTrading.Services;
 using MarginTrading.Services.Generated.ClientAccountServiceApi;
 using MarginTrading.Services.Generated.SessionServiceApi;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.PlatformAbstractions;
+using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.Swagger.Model;
 using WampSharp.AspNetCore.WebSockets.Server;
 using WampSharp.Binding;
@@ -78,6 +81,7 @@ namespace MarginTrading.Frontend
                     Title = "Api"
                 });
                 options.DescribeAllEnumsAsStrings();
+                options.OperationFilter<AddAuthorizationHeaderParameter>();
             });
 
             var builder = new ContainerBuilder();
@@ -111,6 +115,18 @@ namespace MarginTrading.Frontend
             IWampHost host = ApplicationContainer.Resolve<IWampHost>();
             IWampHostedRealm realm = ApplicationContainer.Resolve<IWampHostedRealm>();
             IDisposable realmMetaService = realm.HostMetaApiService();
+            ISecurityTokenValidator tokenValidator = ApplicationContainer.Resolve<ISecurityTokenValidator>();
+
+            var bearerOptions = new JwtBearerOptions
+            {
+                AutomaticAuthenticate = true,
+                AutomaticChallenge = true,
+                AuthenticationScheme = JwtBearerDefaults.AuthenticationScheme,
+            };
+
+            bearerOptions.SecurityTokenValidators.Clear();
+            bearerOptions.SecurityTokenValidators.Add(tokenValidator);
+            app.UseJwtBearerAuthentication(bearerOptions);
 
             app.UseMvc(routes =>
             {
@@ -253,6 +269,7 @@ namespace MarginTrading.Frontend
                 .SingleInstance();
 
             builder.RegisterType<HttpRequestService>()
+                .As<IHttpRequestService>()
                 .AsSelf()
                 .SingleInstance();
 
@@ -274,6 +291,10 @@ namespace MarginTrading.Frontend
             builder.Register<IClientAccountService>(ctx =>
                 new ClientAccountService(new Uri(settings.MarginTradingFront.ClientAccountApiUrl))
             ).SingleInstance();
+
+            builder.RegisterType<ClientTokenValidator>()
+                .As<ISecurityTokenValidator>()
+                .SingleInstance();
         }
 
         private void SetSubscribers(MtFrontendSettings settings)

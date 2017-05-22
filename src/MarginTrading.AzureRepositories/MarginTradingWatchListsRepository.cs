@@ -11,7 +11,7 @@ namespace MarginTrading.AzureRepositories
     public class MarginTradingWatchListEntity : TableEntity, IMarginTradingWatchList
     {
         public string Id { get; set; }
-        public string AccountId { get; set; }
+        public string ClientId { get; set; }
         public string Name { get; set; }
         public bool ReadOnly { get; set; }
         public int Order { get; set; }
@@ -34,10 +34,10 @@ namespace MarginTrading.AzureRepositories
         {
             return new MarginTradingWatchListEntity
             {
-                PartitionKey = GeneratePartitionKey(src.AccountId),
+                PartitionKey = GeneratePartitionKey(src.ClientId),
                 RowKey = GenerateRowKey(src.Id),
                 Id = src.Id,
-                AccountId = src.AccountId,
+                ClientId = src.ClientId,
                 Name = src.Name,
                 ReadOnly = src.ReadOnly,
                 Order = src.Order,
@@ -59,7 +59,7 @@ namespace MarginTrading.AzureRepositories
         {
             await _tableStorage.InsertOrReplaceAsync(MarginTradingWatchListEntity.Create(watchList));
             var entity =
-                await _tableStorage.GetDataAsync(MarginTradingWatchListEntity.GeneratePartitionKey(watchList.AccountId),
+                await _tableStorage.GetDataAsync(MarginTradingWatchListEntity.GeneratePartitionKey(watchList.ClientId),
                     MarginTradingWatchListEntity.GenerateRowKey(watchList.Id));
 
             return MarginTradingWatchList.Create(entity);

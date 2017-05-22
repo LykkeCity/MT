@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\MarginTrading.Backend\MarginTrading.Backend.csproj" />
     <ProjectReference Include="..\..\src\MarginTrading.Common\MarginTrading.Common.csproj" />
+    <ProjectReference Include="..\..\src\MarginTrading.Frontend\MarginTrading.Frontend.csproj" />
     <ProjectReference Include="..\..\src\MarginTrading.Services\MarginTrading.Services.csproj" />
     <ProjectReference Include="..\..\src\MarginTrading.AzureRepositories\MarginTrading.AzureRepositories.csproj" />
   </ItemGroup>

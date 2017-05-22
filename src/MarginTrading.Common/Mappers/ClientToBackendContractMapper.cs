@@ -9,19 +9,18 @@ namespace MarginTrading.Common.Mappers
 {
     public static class ClientToBackendContractMapper
     {
-        public static DepositWithdrawBackendRequest ToBackendContract(this DepositWithdrawClientRequest src, string clientId)
-        {
-            return new DepositWithdrawBackendRequest
-            {
-                AccountId = src.AccountId,
-                ClientId = clientId,
-                Volume = src.Volume.Value
-            };
-        }
-
         public static SetActiveAccountBackendRequest ToBackendContract(this SetActiveAccountClientRequest src, string clientId)
         {
             return new SetActiveAccountBackendRequest
+            {
+                AccountId = src.AccountId,
+                ClientId = clientId
+            };
+        }
+
+        public static AccountClientIdBackendRequest ToBackendContract(this AccountTokenClientRequest src, string clientId)
+        {
+            return new AccountClientIdBackendRequest
             {
                 AccountId = src.AccountId,
                 ClientId = clientId

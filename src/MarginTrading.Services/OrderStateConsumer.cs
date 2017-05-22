@@ -55,7 +55,8 @@ namespace MarginTrading.Services
 			{
 				var totalFpl = order.GetTotalFpl(order.AssetAccuracy);
 
-				await _accountManager.UpdateBalance(order.ClientId, order.AccountId, totalFpl);
+			    await _accountManager.UpdateBalanceAsync(order.ClientId, order.AccountId, totalFpl, AccountHistoryType.OrderClosed,
+			        $"Balance changed on order close (id = {order.Id})");
 
 				var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
 
@@ -68,9 +69,6 @@ namespace MarginTrading.Services
 
 				await _orderActionService.CreateTradingOrderForClosedTakerPosition(order,
 					_rabbitMqNotifyService.TradingOrderCreated);
-
-				await _rabbitMqNotifyService.AccountHistory(account.Id, account.ClientId, totalFpl,
-					account.Balance, AccountHistoryType.OrderClosed, $"Balance changed on order close (id = {order.Id})");
 
 				await _rabbitMqNotifyService.OrderHistory(order);
 

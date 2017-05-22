@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Common;
+using Common.Log;
 using MarginTrading.Backend.Models;
+using MarginTrading.Common.BackendContracts;
 using MarginTrading.Common.Models;
 using MarginTrading.Core;
 using MarginTrading.Core.Clients;
@@ -37,6 +40,8 @@ namespace MarginTrading.Backend.Controllers
         private readonly OrderBookList _orderBooks;
         private readonly IClientSettingsRepository _clientSettingsRepository;
         private readonly MarginSettings _marginSettings;
+        private readonly IMarginTradingOperationsLogService _operationsLogService;
+        private readonly IConsole _consoleWriter;
 
         public BackOfficeController(
             ITradingConditionsCacheService tradingConditionsCacheService,
@@ -45,7 +50,7 @@ namespace MarginTrading.Backend.Controllers
             IInstrumentsCache instrumentsCache,
             IAccountsCacheService accountsCacheService,
             IMatchingEngineRoutesCacheService routesCacheService,
-            AccountManager accountCacheManager,
+            AccountManager accountManager,
             TradingConditionsManager tradingConditionsManager,
             AccountGroupManager accountGroupManager,
             AccountAssetsManager accountAssetsManager,
@@ -55,7 +60,9 @@ namespace MarginTrading.Backend.Controllers
             IOrderReader ordersReader,
             OrderBookList orderBooks,
             IClientSettingsRepository clientSettingsRepository,
-            MarginSettings marginSettings)
+            MarginSettings marginSettings,
+            IMarginTradingOperationsLogService operationsLogService,
+            IConsole consoleWriter)
         {
             _tradingConditionsCacheService = tradingConditionsCacheService;
             _accountGroupCacheService = accountGroupCacheService;
@@ -64,7 +71,7 @@ namespace MarginTrading.Backend.Controllers
             _accountsCacheService = accountsCacheService;
             _routesCacheService = routesCacheService;
 
-            _accountManager = accountCacheManager;
+            _accountManager = accountManager;
             _tradingConditionsManager = tradingConditionsManager;
             _accountGroupManager = accountGroupManager;
             _accountAssetsManager = accountAssetsManager;
@@ -75,6 +82,8 @@ namespace MarginTrading.Backend.Controllers
             _orderBooks = orderBooks;
             _clientSettingsRepository = clientSettingsRepository;
             _marginSettings = marginSettings;
+            _operationsLogService = operationsLogService;
+            _consoleWriter = consoleWriter;
         }
 
         /// <summary>
@@ -560,6 +569,60 @@ namespace MarginTrading.Backend.Controllers
         {
             await _accountManager.AddAccountAsync(account.ClientId, account.BaseAssetId, account.TradingConditionId);
             return Ok();
+        }
+
+        [Route("marginTradingAccounts/deposit")]
+        [HttpPost]
+        [ProducesResponseType(typeof(bool), 200)]
+        public async Task<IActionResult> AccountDeposit([FromBody]AccountDepositWithdrawRequest request)
+        {
+            if (!_marginSettings.IsLive)
+                return Ok(false);
+
+            await _accountManager.UpdateBalanceAsync(request.ClientId, request.AccountId, Math.Abs(request.Amount), AccountHistoryType.Deposit, "Account deposit");
+
+            _consoleWriter.WriteLine($"account deposit for clientId = {request.ClientId}");
+            _operationsLogService.AddLog("account deposit", request.ClientId, request.AccountId, request.ToJson(), true.ToJson());
+
+            return Ok(true);
+        }
+
+        [Route("marginTradingAccounts/withdraw")]
+        [HttpPost]
+        [ProducesResponseType(typeof(bool), 200)]
+        public async Task<IActionResult> AccountWithdraw([FromBody]AccountDepositWithdrawRequest request)
+        {
+            if (!_marginSettings.IsLive)
+                return Ok(false);
+
+            var account = _accountsCacheService.Get(request.ClientId, request.AccountId);
+            var freeMargin = account.GetFreeMargin();
+
+            if (freeMargin < Math.Abs(request.Amount))
+                return Ok(false);
+
+            await _accountManager.UpdateBalanceAsync(request.ClientId, request.AccountId, -Math.Abs(request.Amount), AccountHistoryType.Deposit, "Account deposit");
+
+            _consoleWriter.WriteLine($"account withdraw for clientId = {request.ClientId}");
+            _operationsLogService.AddLog("account withdraw", request.ClientId, request.AccountId, request.ToJson(), true.ToJson());
+
+            return Ok(true);
+        }
+
+        [Route("marginTradingAccounts/reset")]
+        [HttpPost]
+        [ProducesResponseType(typeof(bool), 200)]
+        public async Task<IActionResult> AccountWithdrawDepositDemo([FromBody]AccounResetRequest request)
+        {
+            if (_marginSettings.IsLive)
+                return Ok(false);
+
+            await _accountManager.ResetAccountAsync(request.ClientId, request.AccountId);
+
+            _consoleWriter.WriteLine($"account reset for clientId = {request.ClientId}");
+            _operationsLogService.AddLog("account reset", request.ClientId, request.AccountId, request.ToJson(), true.ToJson());
+
+            return Ok(true);
         }
 
         #endregion

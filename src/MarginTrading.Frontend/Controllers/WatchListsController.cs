@@ -1,12 +1,17 @@
 ﻿using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using AspNet.Security.OpenIdConnect.Extensions;
 using MarginTrading.Core;
 using MarginTrading.Frontend.Models;
+using MarginTrading.Frontend.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MarginTrading.Frontend.Controllers
 {
     [Route("api/watchlists")]
+    [Authorize]
     public class WatchListsController : Controller
     {
         private readonly IWatchListService _watchListService;
@@ -17,12 +22,19 @@ namespace MarginTrading.Frontend.Controllers
         }
 
         [HttpGet]
-        [Route("{accountId}")]
-        public async Task<ResponseModel<List<MarginTradingWatchList>>> GetWatchLists(string accountId)
+        [Route("")]
+        public async Task<ResponseModel<List<MarginTradingWatchList>>> GetWatchLists()
         {
+            var clientId = User.GetClaim(ClaimTypes.NameIdentifier);
+
+            if (clientId == null)
+            {
+                return ResponseModel<List<MarginTradingWatchList>>.CreateFail(ResponseModel.ErrorCodeType.NoAccess, "Wrong token");
+            }
+
             var result = new ResponseModel<List<MarginTradingWatchList>>
             {
-                Result = await _watchListService.GetAllAsync(accountId)
+                Result = await _watchListService.GetAllAsync(clientId)
             };
 
             return result;
@@ -32,19 +44,21 @@ namespace MarginTrading.Frontend.Controllers
         [Route("")]
         public async Task<ResponseModel<IMarginTradingWatchList>> AddWatchList([FromBody]WatchList model)
         {
-            var result = new ResponseModel<IMarginTradingWatchList>();
+            var clientId = User.GetClaim(ClaimTypes.NameIdentifier);
 
-            if (string.IsNullOrEmpty(model.AccountId))
+            if (clientId == null)
             {
-                return ResponseModel<IMarginTradingWatchList>.CreateInvalidFieldError("AccountId", "AccountId should not be empty");
+                return ResponseModel<IMarginTradingWatchList>.CreateFail(ResponseModel.ErrorCodeType.NoAccess, "Wrong token");
             }
+
+            var result = new ResponseModel<IMarginTradingWatchList>();
 
             if (model.AssetIds == null || model.AssetIds.Count == 0)
             {
                 return ResponseModel<IMarginTradingWatchList>.CreateInvalidFieldError("AssetIds", "AssetIds should not be empty");
             }
 
-            var addResult = await _watchListService.AddAsync(model.Id, model.AccountId, model.Name, model.AssetIds);
+            var addResult = await _watchListService.AddAsync(model.Id, clientId, model.Name, model.AssetIds);
 
             switch (addResult.Status)
             {
@@ -60,10 +74,17 @@ namespace MarginTrading.Frontend.Controllers
         }
 
         [HttpDelete]
-        [Route("{accountId}/{id}")]
-        public async Task<ResponseModel> DeleteWatchList(string accountId, string id)
+        [Route("{id}")]
+        public async Task<ResponseModel> DeleteWatchList(string id)
         {
-            var result = await _watchListService.DeleteAsync(accountId, id);
+            var clientId = User.GetClaim(ClaimTypes.NameIdentifier);
+
+            if (clientId == null)
+            {
+                return ResponseModel<List<MarginTradingWatchList>>.CreateFail(ResponseModel.ErrorCodeType.NoAccess, "Wrong token");
+            }
+
+            var result = await _watchListService.DeleteAsync(clientId, id);
 
             switch (result.Status)
             {

@@ -50,6 +50,7 @@ namespace MarginTrading.Frontend
             var initDataBackendRequest = new ClientIdBackendRequest { ClientId = clientId };
 
             var initData = new InitDataLiveDemoClientResponse();
+            MarginTradingAssetBackendContract[] assets = null;
 
             if (marginTradingLiveEnabled)
             {
@@ -57,15 +58,24 @@ namespace MarginTrading.Frontend
                     initDataBackendRequest, "init.data");
 
                 initData.Live = initDataLiveResponse.ToClientContract();
+
+                assets = await _httpRequestService.RequestAsync<MarginTradingAssetBackendContract[]>(null, "init.assets");
             }
 
-            if (marginTradingLiveEnabled)
+            if (marginTradingDemoEnabled)
             {
                 var initDataDemoResponse = await _httpRequestService.RequestAsync<InitDataBackendResponse>(
                     initDataBackendRequest, "init.data", false);
 
                 initData.Demo = initDataDemoResponse.ToClientContract();
+
+                if (assets == null)
+                {
+                    assets = await _httpRequestService.RequestAsync<MarginTradingAssetBackendContract[]>(null, "init.assets", false);
+                }
             }
+
+            initData.Assets = assets.Select(item => item.ToClientContract()).ToArray();
 
             return initData;
         }
@@ -117,33 +127,13 @@ namespace MarginTrading.Frontend
 
         #region Account
 
-        public async Task<MtClientResponse<bool>> AccountDeposit(string requestJson)
-        {
-            var depositWithdrawClientRequest = DeserializeRequest<DepositWithdrawClientRequest>(requestJson);
-            var clientId = await GetClientId(depositWithdrawClientRequest.Token);
-            var depositWithdrawBackendRequest = depositWithdrawClientRequest.ToBackendContract(clientId);
-            var depositWithdrawBackendResponse = await _httpRequestService.RequestAsync<MtBackendResponse<bool>>(depositWithdrawBackendRequest, "account.deposit", 
-                IsDemoAccount(depositWithdrawBackendRequest.AccountId));
-            return depositWithdrawBackendResponse.ToClientContract();
-        }
-
-        public async Task<MtClientResponse<bool>> AccountWithdraw(string requestJson)
-        {
-            var depositWithdrawClientRequest = DeserializeRequest<DepositWithdrawClientRequest>(requestJson);
-            var clientId = await GetClientId(depositWithdrawClientRequest.Token);
-            var depositWithdrawBackendRequest = depositWithdrawClientRequest.ToBackendContract(clientId);
-            var depositWithdrawBackendResponse = await _httpRequestService.RequestAsync<MtBackendResponse<bool>>(depositWithdrawBackendRequest, "account.withdraw",
-                IsDemoAccount(depositWithdrawBackendRequest.AccountId));
-            return depositWithdrawBackendResponse.ToClientContract();
-        }
-
         public async Task<MtClientResponse<bool>> SetActiveAccount(string requestJson)
         {
             var setActiveAccountClientRequest = DeserializeRequest<SetActiveAccountClientRequest>(requestJson);
             var clientId = await GetClientId(setActiveAccountClientRequest.Token);
             var setActiveAccountBackendRequest = setActiveAccountClientRequest.ToBackendContract(clientId);
             var setActiveAccountBackendResponse = await _httpRequestService.RequestAsync<MtBackendResponse<bool>>(setActiveAccountBackendRequest, "account.setActive",
-                IsDemoAccount(setActiveAccountBackendRequest.AccountId));
+                IsLiveAccount(setActiveAccountBackendRequest.AccountId));
             return setActiveAccountBackendResponse.ToClientContract();
         }
 
@@ -177,7 +167,7 @@ namespace MarginTrading.Frontend
             var clientId = await GetClientId(clientRequest.Token);
             var backendRequest = clientRequest.ToBackendContract(clientId);
             var backendResponse = await _httpRequestService.RequestAsync<OpenOrderBackendResponse>(backendRequest, "order.place",
-                IsDemoAccount(backendRequest.Order.AccountId));
+                IsLiveAccount(backendRequest.Order.AccountId));
             return backendResponse.ToClientContract();
         }
 
@@ -187,7 +177,7 @@ namespace MarginTrading.Frontend
             var clientId = await GetClientId(clientRequest.Token);
             var backendRequest = clientRequest.ToBackendContract(clientId);
             var backendResponse = await _httpRequestService.RequestAsync<MtBackendResponse<bool>>(backendRequest, "order.close",
-                IsDemoAccount(backendRequest.AccountId));
+                IsLiveAccount(backendRequest.AccountId));
             return backendResponse.ToClientContract();
         }
 
@@ -197,7 +187,7 @@ namespace MarginTrading.Frontend
             var clientId = await GetClientId(clientRequest.Token);
             var backendRequest = clientRequest.ToBackendContract(clientId);
             var backendResponse = await _httpRequestService.RequestAsync<MtBackendResponse<bool>>(backendRequest, "order.cancel",
-                IsDemoAccount(backendRequest.AccountId));
+                IsLiveAccount(backendRequest.AccountId));
             return backendResponse.ToClientContract();
         }
 
@@ -213,6 +203,16 @@ namespace MarginTrading.Frontend
                 Live = backendLiveResponse.Select(item => item.ToClientContract()).ToArray(),
                 Demo = backendDemoResponse.Select(item => item.ToClientContract()).ToArray()
             };
+        }
+
+        public async Task<OrderClientContract[]> GetAccountOpenPositions(string requestJson)
+        {
+            var clientRequest = DeserializeRequest<AccountTokenClientRequest>(requestJson);
+            var clientId = await GetClientId(clientRequest.Token);
+            var backendRequest = clientRequest.ToBackendContract(clientId);
+            var backendResponse = await _httpRequestService.RequestAsync<OrderBackendContract[]>(backendRequest, "order.account.list", IsLiveAccount(backendRequest.AccountId));
+
+            return backendResponse.Select(item => item.ToClientContract()).ToArray();
         }
 
         public async Task<ClientPositionsLiveDemoClientResponse> GetClientOrders(string token)
@@ -235,7 +235,7 @@ namespace MarginTrading.Frontend
             var clientId = await GetClientId(clientRequest.Token);
             var backendRequest = clientRequest.ToBackendContract(clientId);
             var backendResponse = await _httpRequestService.RequestAsync<MtBackendResponse<bool>>(backendRequest, "order.changeLimits",
-                IsDemoAccount(backendRequest.AccountId));
+                IsLiveAccount(backendRequest.AccountId));
             return backendResponse.ToClientContract();
         } 
 
@@ -290,9 +290,9 @@ namespace MarginTrading.Frontend
             return clientId;
         }
 
-        private bool IsDemoAccount(string accountId)
+        private bool IsLiveAccount(string accountId)
         {
-            return accountId.StartsWith(_settings.MarginTradingFront.DemoAccountIdPrefix);
+            return !accountId.StartsWith(_settings.MarginTradingFront.DemoAccountIdPrefix);
         }
 
         #endregion

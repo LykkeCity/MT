@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Autofac;
-using MarginTrading.Core;
+using MarginTrading.Frontend.Services;
 using NUnit.Framework;
 
 namespace MarginTradingTests
@@ -21,7 +21,7 @@ namespace MarginTradingTests
         [Test]
         public void Is_AllAssets_Exists()
         {
-            var lists = _watchListService.GetAllAsync(Accounts[0].Id).Result;
+            var lists = _watchListService.GetAllAsync(Accounts[0].ClientId).Result;
             var allAsstsList = lists.FirstOrDefault(item => item.Name == "All assets");
 
             Assert.IsNotNull(allAsstsList);
@@ -31,12 +31,12 @@ namespace MarginTradingTests
         [Test]
         public void Is_AllAssets_NotChanged()
         {
-            var lists = _watchListService.GetAllAsync(Accounts[0].Id).Result;
+            var lists = _watchListService.GetAllAsync(Accounts[0].ClientId).Result;
             var allAsstsList = lists.FirstOrDefault(item => item.Name == "All assets");
 
             Assert.IsNotNull(allAsstsList);
 
-            var result = _watchListService.AddAsync(allAsstsList.Id, Accounts[0].Id, "New all assets", new List<string> { "EURUSD" }).Result;
+            var result = _watchListService.AddAsync(allAsstsList.Id, Accounts[0].ClientId, "New all assets", new List<string> { "EURUSD" }).Result;
 
             Assert.AreEqual(WatchListStatus.ReadOnly, result.Status);
         }
@@ -44,17 +44,17 @@ namespace MarginTradingTests
         [Test]
         public void Is_AllAssets_NotDeleted()
         {
-            var lists = _watchListService.GetAllAsync(Accounts[0].Id).Result;
+            var lists = _watchListService.GetAllAsync(Accounts[0].ClientId).Result;
             var allAsstsList = lists.FirstOrDefault(item => item.Name == "All assets");
 
             Assert.IsNotNull(allAsstsList);
 
-            var result = _watchListService.DeleteAsync(Accounts[0].Id, allAsstsList.Id).Result;
+            var result = _watchListService.DeleteAsync(Accounts[0].ClientId, allAsstsList.Id).Result;
 
             Assert.AreEqual(WatchListStatus.ReadOnly, result.Status);
             Assert.IsFalse(result.Result);
 
-            lists = _watchListService.GetAllAsync(Accounts[0].Id).Result;
+            lists = _watchListService.GetAllAsync(Accounts[0].ClientId).Result;
             allAsstsList = lists.FirstOrDefault(item => item.Name == "All assets");
 
             Assert.IsNotNull(allAsstsList);
@@ -63,8 +63,8 @@ namespace MarginTradingTests
         [Test]
         public void Is_WatchList_Added()
         {
-            var result = _watchListService.AddAsync(string.Empty, Accounts[0].Id, "New list", new List<string> { "BTCCHF", "EURUSD" }).Result;
-            var lists = _watchListService.GetAllAsync(Accounts[0].Id).Result;
+            var result = _watchListService.AddAsync(string.Empty, Accounts[0].ClientId, "New list", new List<string> { "BTCCHF", "EURUSD" }).Result;
+            var lists = _watchListService.GetAllAsync(Accounts[0].ClientId).Result;
 
             Assert.IsNotNull(lists);
             Assert.IsTrue(lists.Count > 0);
@@ -79,7 +79,7 @@ namespace MarginTradingTests
         public void Is_Wrong_AssetId()
         {
             const string notExistsAssetId = "NOTEXISTS";
-            var result = _watchListService.AddAsync(string.Empty, Accounts[0].Id, "New list", new List<string> { "EURUSD", notExistsAssetId }).Result;
+            var result = _watchListService.AddAsync(string.Empty, Accounts[0].ClientId, "New list", new List<string> { "EURUSD", notExistsAssetId }).Result;
 
             Assert.AreEqual(WatchListStatus.AssetNotFound, result.Status);
             Assert.AreEqual(notExistsAssetId, result.Message);
@@ -89,7 +89,7 @@ namespace MarginTradingTests
         [Test]
         public void Is_WatchList_Changed()
         {
-            string accountId = Accounts[0].Id;
+            string accountId = Accounts[0].ClientId;
             var result = _watchListService.AddAsync(string.Empty, accountId, "New list", new List<string> { "EURUSD" }).Result;
 
             Assert.NotNull(result.Result);
@@ -105,7 +105,7 @@ namespace MarginTradingTests
         [Test]
         public void Is_WatchList_Deleted()
         {
-            string accountId = Accounts[0].Id;
+            string accountId = Accounts[0].ClientId;
             var result = _watchListService.AddAsync(string.Empty, accountId, "New list", new List<string> { "EURUSD" }).Result;
 
             Assert.NotNull(result.Result);

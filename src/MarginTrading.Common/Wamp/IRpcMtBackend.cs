@@ -21,11 +21,11 @@ namespace MarginTrading.Common.Wamp
         [WampProcedure("init.graph")]
         InitChartDataBackendResponse InitGraph();
 
-        [WampProcedure("account.deposit")]
-        Task<MtBackendResponse<bool>> AccountDeposit(DepositWithdrawBackendRequest request);
+        [WampProcedure("init.availableassets")]
+        string[] InitAvailableAssets(ClientIdBackendRequest request);
 
-        [WampProcedure("account.withdraw")]
-        Task<MtBackendResponse<bool>> AccountWithdraw(DepositWithdrawBackendRequest request);
+        [WampProcedure("init.assets")]
+        MarginTradingAssetBackendContract[] InitAssets();
 
         [WampProcedure("account.setActive")]
         Task<MtBackendResponse<bool>> SetActiveAccount(SetActiveAccountBackendRequest request);

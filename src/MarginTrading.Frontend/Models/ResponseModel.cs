@@ -7,7 +7,8 @@
             InvalidInputField = 0,
             InconsistentData = 1,
             AssetNotFound = 2,
-            NoData = 3
+            NoData = 3,
+            NoAccess = 4
         }
 
         public class ErrorModel

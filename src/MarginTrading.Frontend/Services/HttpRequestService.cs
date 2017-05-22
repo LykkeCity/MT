@@ -7,7 +7,12 @@ using MarginTrading.Frontend.Settings;
 
 namespace MarginTrading.Frontend.Services
 {
-    public class HttpRequestService
+    public interface IHttpRequestService
+    {
+        Task<TResponse> RequestAsync<TResponse>(object request, string action, bool isLive = true);
+    }
+
+    public class HttpRequestService : IHttpRequestService
     {
         private readonly MtFrontendSettings _settings;
         private readonly ILog _log;

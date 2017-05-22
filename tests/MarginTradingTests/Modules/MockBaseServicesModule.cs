@@ -1,12 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
 using Common.Log;
 using Lykke.Common;
+using MarginTrading.Common.BackendContracts;
 using MarginTrading.Core;
 using MarginTrading.Core.Notifications;
+using MarginTrading.Frontend.Services;
 using MarginTrading.Services.Generated.ClientAccountServiceApi;
 using MarginTrading.Services.Generated.ClientAccountServiceApi.Models;
 using MarginTrading.Services.Generated.SessionServiceApi;
@@ -46,6 +49,11 @@ namespace MarginTradingTests.Modules
                 .Setup(item => item.ApiClientAccountsGetByIdPostWithHttpMessagesAsync(It.IsAny<GetByIdRequest>(), null, It.IsAny<CancellationToken>()))
                 .Returns(() => Task.FromResult(new HttpOperationResponse<IClientAccount> { Body = new IClientAccount(null, null, null, null, null, null, Guid.NewGuid().ToString())}));
 
+            var httpRequestServiceMock = new Mock<IHttpRequestService>();
+            httpRequestServiceMock
+                .Setup(item => item.RequestAsync<List<string>>(It.IsAny<object>(), "init.availableassets", It.IsAny<bool>()))
+                .Returns(() => Task.FromResult(new List<string> { "BTCCHF", "EURUSD" }));
+
             builder.RegisterInstance(emailService.Object).As<IEmailService>();
             builder.RegisterInstance(appNotifications.Object).As<IAppNotifications>();
             builder.RegisterInstance(appNotifications).As<Mock<IAppNotifications>>();
@@ -56,6 +64,7 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(slackNotificationsMock.Object).As<ISlackNotificationsProducer>();
             builder.RegisterInstance(sessionServiceMock.Object).As<ISessionService>();
             builder.RegisterInstance(clientAccountsServiceMock.Object).As<IClientAccountService>();
+            builder.RegisterInstance(httpRequestServiceMock.Object).As<IHttpRequestService>();
         }
     }
 

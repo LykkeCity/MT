@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Autofac;
 using MarginTrading.Core;
+using MarginTrading.Frontend.Services;
 using MarginTrading.Services.Modules;
 using MarginTradingTests.Modules;
 
@@ -34,6 +35,10 @@ namespace MarginTradingTests
             builder.RegisterModule(new CacheModule());
             builder.RegisterModule(new ServicesModule());
             builder.RegisterModule(new ManagersModule());
+
+            builder.RegisterType<WatchListService>()
+                .As<IWatchListService>()
+                .SingleInstance();
 
             Container = builder.Build();
 

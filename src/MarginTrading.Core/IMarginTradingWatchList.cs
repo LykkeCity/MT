@@ -6,7 +6,7 @@ namespace MarginTrading.Core
     public interface IMarginTradingWatchList
     {
         string Id { get; }
-        string AccountId { get; }
+        string ClientId { get; }
         string Name { get; }
         bool ReadOnly { get; set; }
         int Order { get; }
@@ -16,7 +16,7 @@ namespace MarginTrading.Core
     public class MarginTradingWatchList : IMarginTradingWatchList
     {
         public string Id { get; set; }
-        public string AccountId { get; set; }
+        public string ClientId { get; set; }
         public string Name { get; set; }
         public bool ReadOnly { get; set; }
         public int Order { get; set; }
@@ -27,7 +27,7 @@ namespace MarginTrading.Core
             return new MarginTradingWatchList
             {
                 Id = src.Id,
-                AccountId = src.AccountId,
+                ClientId = src.ClientId,
                 AssetIds = src.AssetIds,
                 Order = src.Order,
                 Name = src.Name,
