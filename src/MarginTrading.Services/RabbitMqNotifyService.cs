@@ -194,11 +194,23 @@ namespace MarginTrading.Services
 		{
 			try
 			{
-				await _publishers[_settings.RabbitMqQueues.ValueAtRiskLimits.RoutingKeyName].ProduceAsync(counterPartyId);
+				await _publishers[_settings.RabbitMqQueues.ValueAtRiskLimits.RoutingKeyName].ProduceAsync($"block:{counterPartyId}");
 			}
 			catch (Exception ex)
 			{
 				await _log.WriteErrorAsync(nameof(RabbitMqNotifyService), nameof(HardTradingLimitReached), $"counterPartyId: {counterPartyId}", ex);
+			}
+		}
+
+		public async Task HardTradingLimitCleared(string counterPartyId)
+		{
+			try
+			{
+				await _publishers[_settings.RabbitMqQueues.ValueAtRiskLimits.RoutingKeyName].ProduceAsync($"unblock:{counterPartyId}");
+			}
+			catch (Exception ex)
+			{
+				await _log.WriteErrorAsync(nameof(RabbitMqNotifyService), nameof(HardTradingLimitCleared), $"counterPartyId: {counterPartyId}", ex);
 			}
 		}
 

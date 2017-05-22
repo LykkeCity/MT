@@ -1,6 +1,5 @@
 ﻿using AzureStorage.Queue;
 using AzureStorage.Tables;
-using AzureStorage.Tables.Templates.Index;
 using Common.Log;
 using MarginTrading.AzureRepositories.Clients;
 using MarginTrading.AzureRepositories.Monitoring;
@@ -110,7 +109,6 @@ namespace MarginTrading.AzureRepositories
 					"MatchingEngineRoutes", log));
 			}
 
-
 			public static MarginTradingTransactionRepository CreateTransactionRepository(string connstring, ILog log)
 			{
 				return new MarginTradingTransactionRepository(new AzureTableStorage<MarginTradingTransactionEntity>(connstring,
@@ -151,6 +149,24 @@ namespace MarginTrading.AzureRepositories
 			{
 				return new MarginTradingAggregateValuesAtRiskRepository(new AzureTableStorage<AggregateValueAtRiskEntity>(connstring,
 					"MarginTradingPVaR", log, new System.TimeSpan(1, 0, 0)));
+			}
+
+			public static MarginTradingMeanVectorRepository CreateMeanVectorRepository(string connstring, ILog log)
+			{
+				return new MarginTradingMeanVectorRepository(new AzureTableStorage<MeanEntity>(connstring,
+					"MarginTradingMeanVector", log, new System.TimeSpan(1, 0, 0)));
+			}
+
+			public static MarginTradingStDevVectorRepository CreateStDevVectorRepository(string connstring, ILog log)
+			{
+				return new MarginTradingStDevVectorRepository(new AzureTableStorage<StDevEntity>(connstring,
+					"MarginTradingStDevVector", log, new System.TimeSpan(1, 0, 0)));
+			}
+
+			public static MarginTradingPearsonCoeffMatrixRepository CreatePearsonCoeffMatrixRepository(string connstring, ILog log)
+			{
+				return new MarginTradingPearsonCoeffMatrixRepository(new AzureTableStorage<PearsonCoeffEntity>(connstring,
+					"MarginTradingCorrMatrix", log, new System.TimeSpan(1, 0, 0)));
 			}
 		}
 

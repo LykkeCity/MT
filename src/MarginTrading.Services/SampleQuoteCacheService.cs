@@ -1,6 +1,7 @@
 ﻿using MarginTrading.Core;
 using MarginTrading.Core.Exceptions;
-using System;
+using MarginTrading.Core.Notifications;
+using MarginTrading.Core.Settings;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -14,6 +15,7 @@ namespace MarginTrading.Services
 		private readonly IMarginTradingAssetsRepository _assetsRepository;
 		private readonly IQuoteCacheService _quoteCacheService;
 		private readonly IQuoteHistoryRepository _quoteHistoryRepository;
+		private readonly ISlackNotificationsProducer _slackNotificationProducer;
 		private ISampleQuoteCache _cache;
 
 		public SampleQuoteCacheService(
@@ -22,6 +24,7 @@ namespace MarginTrading.Services
 				IQuoteCacheService quoteCacheService,
 				IQuoteHistoryRepository quoteHistoryRepository,
 				ISampleQuoteCache sampleQuoteCache,
+				ISlackNotificationsProducer slackNotificationProducer,
 				int maxCount,
 				int samplingInterval
 			)
@@ -33,6 +36,7 @@ namespace MarginTrading.Services
 			_cache = sampleQuoteCache;
 			_maxSampleCount = maxCount;
 			_samplingInterval = samplingInterval;
+			_slackNotificationProducer = slackNotificationProducer;
 		}
 
 		public async Task InitializeAsync()
@@ -40,11 +44,6 @@ namespace MarginTrading.Services
 			if (_sampleQuoteCacheRepository.Any() && !(await SettingsChanged()))
 			{
 				await InitializeFromRepositoryAsync();
-			}
-			else
-			{
-				await InitializeFromHistoryAsync();
-				await BackupToRepository();
 			}
 		}
 
@@ -77,8 +76,25 @@ namespace MarginTrading.Services
 					_cache.Enqueue(askQuote);
 				}
 			}
+			CheckDataQuality(instruments);
 
 			await BackupToRepository();
+		}
+
+		private void CheckDataQuality(IEnumerable<IMarginTradingAsset> instruments)
+		{
+			foreach (IMarginTradingAsset instrument in instruments)
+			{
+				if (_cache.GetQuotes(instrument.Id, OrderDirection.Buy) == null || _cache.GetQuotes(instrument.Id, OrderDirection.Buy).Length < _maxSampleCount)
+				{
+					_slackNotificationProducer.SendNotification(ChannelTypes.MarginTrading, $"Quote sample vector for the instrument {instrument.Id} in direction {OrderDirection.Buy} is not filled. iVaR calculation for this instrument may be inaccurate.", "Margin Trading Risk Management Module");
+				}
+
+				if (_cache.GetQuotes(instrument.Id, OrderDirection.Sell) == null || _cache.GetQuotes(instrument.Id, OrderDirection.Sell).Length < _maxSampleCount)
+				{
+					_slackNotificationProducer.SendNotification(ChannelTypes.MarginTrading, $"Quote sample vector for the instrument {instrument.Id} in direction {OrderDirection.Sell} is not filled. iVaR calculation for this instrument may be inaccurate.", "Margin Trading Risk Management Module");
+				}
+			}
 		}
 
 		public double? GetLatestUsdQuote(string asset, OrderDirection side)
@@ -133,7 +149,7 @@ namespace MarginTrading.Services
 
 			usdQuote = _cache.GetLatestQuote(instrument, side);
 
-			return usdQuote != null ? usdQuote.Price : new double?();
+			return usdQuote != null ? 1 / usdQuote.Price : new double?();
 		}
 
 		public double[] GetMeanUsdQuoteVector(string asset)
@@ -239,72 +255,6 @@ namespace MarginTrading.Services
 		private async Task InitializeFromRepositoryAsync()
 		{
 			_cache = await _sampleQuoteCacheRepository.Restore();
-		}
-
-		private async Task InitializeFromHistoryAsync()
-		{
-			IEnumerable<IMarginTradingAsset> instruments = await _assetsRepository.GetAllAsync();
-
-			List<DateTime> samplingPoints = CalculateSamplingPoints();
-
-			foreach (IMarginTradingAsset instrument in instruments)
-			{
-				foreach (DateTime samplingPoint in samplingPoints)
-				{
-					await GetAndEnqueueSamplePointPrice(samplingPoint, instrument.Id, OrderDirection.Sell);
-
-					await GetAndEnqueueSamplePointPrice(samplingPoint, instrument.Id, OrderDirection.Buy);
-				}
-			}
-		}
-
-		private List<DateTime> CalculateSamplingPoints()
-		{
-			List<DateTime> samplingPoints = new List<DateTime>();
-
-			int normalizedSamplingInterval = (_samplingInterval / 60000) * 60000; //Round down to the whole minute
-
-			DateTime lastPoint = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, 0, 0); //Round down to the latest hour
-
-			for (int i = _maxSampleCount - 1; i >= 0; i--)
-			{
-				samplingPoints.Add(lastPoint.AddMilliseconds(-i * normalizedSamplingInterval));
-			}
-
-			return samplingPoints;
-		}
-
-		private async Task GetAndEnqueueSamplePointPrice(DateTime samplingPoint, string instrument, OrderDirection side)
-		{
-			double? sampledPrice = await GetSampledPriceAsync(samplingPoint, instrument, side);
-			if (sampledPrice != null)
-			{
-				_cache.Enqueue(instrument, side, sampledPrice.Value);
-			}
-			else
-			{
-				var lastQuote = _cache.GetLatestQuote(instrument, side);
-				if (lastQuote != null)
-				{
-					_cache.Enqueue(lastQuote);
-				}
-			}
-		}
-
-		private async Task<double?> GetSampledPriceAsync(DateTime samplingPoint, string instrument, OrderDirection direction)
-		{
-			double? price = null;
-
-			for (int i = 0; i < 5; i++)
-			{
-				DateTime sampleTime = samplingPoint.AddMinutes(-i);
-				price = await _quoteHistoryRepository.GetClosestQuoteAsync(instrument, direction, sampleTime.Ticks);
-
-				if (price != null)
-					break;
-			}
-
-			return price;
 		}
 
 		private async Task BackupToRepository()

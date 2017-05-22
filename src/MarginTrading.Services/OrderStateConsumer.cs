@@ -20,6 +20,7 @@ namespace MarginTrading.Services
 		private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
 		private readonly ITransactionService _transactionService;
 		private readonly ITradingOrderService _orderActionService;
+		private readonly IEventChannel<TransactionEventArgs> _transactionEventChannel;
 
 		public OrderStateConsumer(IThreadSwitcher threadSwitcher,
 			IClientSettingsRepository clientSettingsRepository,
@@ -30,7 +31,8 @@ namespace MarginTrading.Services
 			AccountManager accountManager,
 			IRabbitMqNotifyService rabbitMqNotifyService,
 			ITransactionService transactionService,
-			ITradingOrderService orderActionService) : base(clientSettingsRepository,
+			ITradingOrderService orderActionService,
+			IEventChannel<TransactionEventArgs> transactionEventChannel) : base(clientSettingsRepository,
 			appNotifications,
 			clientAccountService)
 		{
@@ -41,6 +43,7 @@ namespace MarginTrading.Services
 			_rabbitMqNotifyService = rabbitMqNotifyService;
 			_transactionService = transactionService;
 			_orderActionService = orderActionService;
+			_transactionEventChannel = transactionEventChannel;
 		}
 
 		int IEventConsumer.ConsumerRank => 100;
@@ -56,8 +59,12 @@ namespace MarginTrading.Services
 
 				var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
 
-				await _transactionService.CreateTransactionsForClosedOrderAsync(order,
-					_rabbitMqNotifyService.TransactionCreated);
+				await _transactionService.CreateTransactionsForClosedOrderAsync(order, async transaction =>
+				{
+					_transactionEventChannel.SendEvent(this, new TransactionEventArgs(transaction));
+
+					await _rabbitMqNotifyService.TransactionCreated(transaction);
+				});
 
 				await _orderActionService.CreateTradingOrderForClosedTakerPosition(order,
 					_rabbitMqNotifyService.TradingOrderCreated);
@@ -79,8 +86,12 @@ namespace MarginTrading.Services
 			var order = ea.Order;
 			_threadSwitcher.SwitchThread(async () =>
 			{
-				await _transactionService.CreateTransactionsForCancelledOrderAsync(order,
-					_rabbitMqNotifyService.TransactionCreated);
+				await _transactionService.CreateTransactionsForCancelledOrderAsync(order, async transaction =>
+				{
+					_transactionEventChannel.SendEvent(this, new TransactionEventArgs(transaction));
+
+					await _rabbitMqNotifyService.TransactionCreated(transaction);
+				});
 
 				await _orderActionService.CreateTradingOrderForCancelledTakerPosition(order,
 					_rabbitMqNotifyService.TradingOrderCreated);
@@ -97,11 +108,17 @@ namespace MarginTrading.Services
 
 			_threadSwitcher.SwitchThread(async () =>
 			{
-				await _transactionService.CreateTransactionsForOpenOrderAsync(order,
-					_rabbitMqNotifyService.TransactionCreated);
+				await _transactionService.CreateTransactionsForOpenOrderAsync(order, async transaction =>
+				{
+					_transactionEventChannel.SendEvent(this, new TransactionEventArgs(transaction));
+
+					await _rabbitMqNotifyService.TransactionCreated(transaction);
+				});
 
 				await _orderActionService.CreateTradingOrderForOpenedTakerPosition(order,
 					_rabbitMqNotifyService.TradingOrderCreated);
+
+				await _rabbitMqNotifyService.OrderHistory(order);
 
 				_clientNotifyService.NotifyOrderChanged(order);
 				await SendNotification(order.ClientId, order.GetPushMessage(), order);

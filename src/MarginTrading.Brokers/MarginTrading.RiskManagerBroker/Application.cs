@@ -9,24 +9,24 @@ using MarginTrading.Core.Monitoring;
 using MarginTrading.Core.Settings;
 using Newtonsoft.Json;
 
-namespace MarginTrading.RiskManagerBroker
+namespace MarginTrading.ElementaryTransactionBroker
 {
 	public class Application : TimerPeriod
 	{
 		private readonly IServiceMonitoringRepository _serviceMonitoringRepository;
-		private readonly IRiskCalculationEngine _riskCalculationEngine;
 		private readonly ILog _logger;
 		private readonly MarginSettings _settings;
 		private RabbitMqSubscriber<string> _connector;
-		private const string ServiceName = "MarginTrading.RiskManagerBroker";
+		private readonly IElementaryTransactionsRepository _elementaryTransactionsRepository;
+		private const string ServiceName = "MarginTrading.ElementaryTransactionBroker";
 
 		public Application(
 			IServiceMonitoringRepository serviceMonitoringRepository,
-			IRiskCalculationEngine riskCalculationEngine,
+			IElementaryTransactionsRepository elementaryTransactionsRepository,
 			ILog logger, MarginSettings settings) : base(ServiceName, settings.RiskManagement.QuoteSamplingInterval, logger)
 		{
 			_serviceMonitoringRepository = serviceMonitoringRepository;
-			_riskCalculationEngine = riskCalculationEngine;
+			_elementaryTransactionsRepository = elementaryTransactionsRepository;
 			_logger = logger;
 			_settings = settings;
 		}
@@ -39,8 +39,6 @@ namespace MarginTrading.RiskManagerBroker
 
 			try
 			{
-				await _riskCalculationEngine.InitializeAsync();
-
 				_connector = new RabbitMqSubscriber<string>(new RabbitMqSubscriberSettings
 				{
 					ConnectionString = _settings.MarginTradingRabbitMqSettings.InternalConnectionString,
@@ -69,17 +67,15 @@ namespace MarginTrading.RiskManagerBroker
 
 		private async Task HandleMessage(string json)
 		{
-			var transaction = JsonConvert.DeserializeObject<ElementaryTransaction>(json);
+			var elementaryTransaction = JsonConvert.DeserializeObject<ElementaryTransaction>(json);
 
-			await _riskCalculationEngine.ProcessTransactionAsync(transaction);
+			await _elementaryTransactionsRepository.AddAsync(elementaryTransaction);
 		}
 
 		public override async Task Execute()
 		{
 			try
 			{
-				await _riskCalculationEngine.UpdateInternalStateAsync();
-
 				var now = DateTime.UtcNow;
 
 				var record = new MonitoringRecord

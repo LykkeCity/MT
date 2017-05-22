@@ -4,6 +4,7 @@ using MarginTrading.Core.Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace MarginTrading.Services
 {
@@ -13,6 +14,7 @@ namespace MarginTrading.Services
 		private readonly double _T;
 		private readonly bool _enforceCalculation;
 		private readonly ISlackNotificationsProducer _slackNotificationProducer;
+		private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
 		private Dictionary<string, double> _s;
 		private Dictionary<string, double> _m;
 		private Dictionary<string, Dictionary<string, double>> _corrMatrix;
@@ -26,6 +28,7 @@ namespace MarginTrading.Services
 			double frequency,
 			bool enforceCalculation,
 			ISlackNotificationsProducer slackNotificationProducer,
+			IRabbitMqNotifyService rabbitMqNotifyService,
 			Dictionary<string, Dictionary<string, double>> corrMatrix = null)
 		{
 			_slackNotificationProducer = slackNotificationProducer;
@@ -40,6 +43,31 @@ namespace MarginTrading.Services
 			{
 				_corrMatrixEnforced = corrMatrix;
 			}
+			_rabbitMqNotifyService = rabbitMqNotifyService;
+		}
+
+		public Dictionary<string, double> StDevLogReturns
+		{
+			get
+			{
+				return _s;
+			}
+		}
+
+		public Dictionary<string, double> MeanLogReturns
+		{
+			get
+			{
+				return _m;
+			}
+		}
+
+		public Dictionary<string, Dictionary<string, double>> PearsonCorrMatrix
+		{
+			get
+			{
+				return _corrMatrix;
+			}
 		}
 
 		public IDictionary<string, double> PVaR
@@ -50,7 +78,9 @@ namespace MarginTrading.Services
 			}
 		}
 
-		public void InitializeAsync(
+		IDictionary<string, Dictionary<string, double>> IRiskCalculator.IVaR => _iVaR;
+
+		public void Initialize(
 			IEnumerable<string> clientIDs,
 			IEnumerable<string> currencies,
 			Func<string, double[]> getMeanUsdQuoteVector,
@@ -91,10 +121,10 @@ namespace MarginTrading.Services
 				_pVaR[client] = 0;
 			}
 
-			UpdateInternalStateAsync(getMeanUsdQuoteVector, getLatestUsdQuote, getEquivalentUsdPosition);
+			UpdateInternalState(getMeanUsdQuoteVector, getLatestUsdQuote, getEquivalentUsdPosition);
 		}
 
-		public void UpdateInternalStateAsync(Func<string, double[]> getMeanUsdQuoteVector,
+		public void UpdateInternalState(Func<string, double[]> getMeanUsdQuoteVector,
 			Func<string, OrderDirection, double?> getLatestUsdQuote,
 			Func<string, string, Func<string, OrderDirection, double?>, double?> getEquivalentUsdPosition)
 		{
@@ -159,7 +189,7 @@ namespace MarginTrading.Services
 			}
 		}
 
-		public void RecalculatePVaR(string counterPartyId, string asset, double? equivalentUsdPositionVolume)
+		public async Task RecalculatePVaRAsync(string counterPartyId, string asset, double? equivalentUsdPositionVolume)
 		{
 			if (equivalentUsdPositionVolume.HasValue)
 			{
@@ -167,6 +197,10 @@ namespace MarginTrading.Services
 
 				CalculatePVaR(counterPartyId);
 			}
+
+			await _rabbitMqNotifyService.IndividualValueAtRiskSet(counterPartyId, asset, _iVaR[counterPartyId][asset]);
+
+			await _rabbitMqNotifyService.AggregateValueAtRiskSet(counterPartyId, _pVaR[counterPartyId]);
 		}
 
 		private void CalculatePVaR(string client)

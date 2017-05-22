@@ -9,7 +9,7 @@ namespace MarginTrading.Services
     public class MarketMakerService : IFeedConsumer
     {
         private readonly IMatchingEngine _matchingEngine;
-        private const string MarketMakerId = "marketMaker1";
+        private const string MarketMakerId = "LykkeMarketMaker1";
 
         public MarketMakerService(IMatchingEngine matchingEngine)
         {

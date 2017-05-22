@@ -16,15 +16,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MarginTrading.Services;
 using Microsoft.Extensions.PlatformAbstractions;
-using MarginTrading.Core.Notifications;
-using Common;
-using Lykke.RabbitMqBroker.Publisher;
-using MarginTrading.Common.RabbitMq;
-using System.Collections.Generic;
 
-namespace MarginTrading.RiskManagerBroker
+namespace MarginTrading.ElementaryTransactionBroker
 {
     public class Startup
     {
@@ -66,8 +60,6 @@ namespace MarginTrading.RiskManagerBroker
             Console.WriteLine($"IsLive: {settings.IsLive}");
 
             RegisterRepositories(builder, settings);
-			RegisterPublishers(builder, settings);
-			RegisterServices(builder, settings);
 
             builder.RegisterInstance(settings).SingleInstance();
             builder.RegisterType<Application>()
@@ -108,10 +100,6 @@ namespace MarginTrading.RiskManagerBroker
 				.As<ILog>()
 				.SingleInstance();
 
-			builder.Register<IMarginTradingPositionRepository>(ctx =>
-				AzureRepoFactories.MarginTrading.CreatePositionRepository(settings.Db.MarginTradingConnString, log)
-			).SingleInstance();
-
 			builder.Register<IElementaryTransactionsRepository>(ctx =>
 				AzureRepoFactories.MarginTrading.CreateElementaryTransactionsRepository(settings.Db.MarginTradingConnString, log)
 			);
@@ -119,109 +107,6 @@ namespace MarginTrading.RiskManagerBroker
 			builder.Register<IServiceMonitoringRepository>(ctx =>
 				AzureRepoFactories.Monitoring.CreateServiceMonitoringRepository(settings.Db.SharedStorageConnString, log)
 			).SingleInstance();
-
-			builder.Register<ISampleQuoteCacheRepository>(ctx =>
-				AzureRepoFactories.MarginTrading.CreateSampleQuoteCacheRepository(settings.Db.MarginTradingConnString, log)
-			).SingleInstance();
-
-			builder.Register<IQuoteHistoryRepository>(ctx =>
-				AzureRepoFactories.CreateQuoteHistoryRepository(settings.Db.MarginTradingConnString, log)
-			).SingleInstance();
-
-			builder.Register<IMarginTradingAssetsRepository>(ctx =>
-				AzureRepoFactories.MarginTrading.CreateAssetsRepository(settings.Db.MarginTradingConnString, log)
-			).SingleInstance();
-
-			builder.Register<ISlackNotificationsProducer>(ctx =>
-				AzureRepoFactories.Notifications.CreateSlackNotificationsProducer(settings.Db.SharedStorageConnString)
-			).SingleInstance();
-		}
-
-        private void RegisterServices(ContainerBuilder builder, MarginSettings settings)
-        {
-			builder.RegisterType<PositionService>()
-				.As<IPositionService>()
-				.SingleInstance();
-
-			builder.RegisterType<PositionCacheService>()
-				.As<IPositionCacheService>()
-				.SingleInstance();
-
-			builder.RegisterType<RiskCalculationEngine>()
-				.As<IRiskCalculationEngine>()
-				.SingleInstance();
-
-			builder.RegisterType<RiskCalculator>()
-				.As<IRiskCalculator>()
-				.WithParameter("frequency", settings.RiskManagement.SamplingFrequency)
-				.WithParameter("enforceCalculation", settings.RiskManagement.EnforceCalculation)
-				.WithParameter("corrMatrix", settings.RiskManagement.CorrelationMatrix)
-				.SingleInstance();
-
-			builder.RegisterType<SampleQuoteCacheService>()
-				.As<ISampleQuoteCacheService>()
-				.WithParameter("maxCount", settings.RiskManagement.QuoteSampleMaxCount)
-				.WithParameter("samplingInterval", settings.RiskManagement.QuoteSamplingInterval)
-				.SingleInstance();
-
-			builder.RegisterType<SampleQuoteCache>()
-				.As<ISampleQuoteCache>()
-				.WithParameter("maxCount", settings.RiskManagement.QuoteSampleMaxCount)
-				.SingleInstance();
-
-			builder.RegisterType<QuoteCacheService>()
-				.As<IQuoteCacheService>()
-				.SingleInstance();
-
-			builder.RegisterType<RiskManager>()
-				.As<IRiskManager>()
-				.WithParameter("pVaRSoftLimits", settings.RiskManagement.PVaRSoftLimits)
-				.WithParameter("pVaRHardLimits", settings.RiskManagement.PVaRHardLimits)
-				.SingleInstance();
-
-			builder.RegisterType<RabbitMqNotifyService>()
-				.As<IRabbitMqNotifyService>()
-				.SingleInstance();
-		}
-
-
-		private void RegisterPublishers(ContainerBuilder builder, MarginSettings settings)
-		{
-			var consoleWriter = new ConsoleLWriter(Console.WriteLine);
-
-			builder.RegisterInstance(consoleWriter)
-				.As<IConsole>()
-				.SingleInstance();
-
-			var publishers = new List<string>
-			{
-				settings.RabbitMqQueues.AggregateValuesAtRisk.RoutingKeyName,
-				settings.RabbitMqQueues.IndividualValuesAtRisk.RoutingKeyName,
-				settings.RabbitMqQueues.PositionUpdates.RoutingKeyName,
-				settings.RabbitMqQueues.ValueAtRiskLimits.RoutingKeyName
-			};
-
-			var rabbitMqSettings = new RabbitMqPublisherSettings
-			{
-				ConnectionString = settings.MarginTradingRabbitMqSettings.InternalConnectionString,
-				ExchangeName = settings.MarginTradingRabbitMqSettings.ExchangeName
-			};
-
-			var bytesSerializer = new BytesStringSerializer();
-
-			foreach (string routingKey in publishers)
-			{
-				var pub = new RabbitMqPublisher<string>(rabbitMqSettings)
-					.SetSerializer(bytesSerializer)
-					.SetPublishStrategy(new TopicPublishStrategy(routingKey))
-					.SetConsole(consoleWriter)
-					.Start();
-
-				builder.RegisterInstance(pub)
-					.Named<IMessageProducer<string>>(routingKey)
-					.As<IStopable>()
-					.SingleInstance();
-			}
 		}
 	}
 }

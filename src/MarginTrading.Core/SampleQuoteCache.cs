@@ -56,10 +56,13 @@ namespace MarginTrading.Core
 
 		public void Enqueue(IQuote quote)
 		{
-			if (quote.Direction == OrderDirection.Buy)
-				EnqueueBuy(quote);
-			else if (quote.Direction == OrderDirection.Sell)
-				EnqueueSell(quote);
+			if(quote != null)
+			{
+				if (quote.Direction == OrderDirection.Buy)
+					EnqueueBuy(quote);
+				else if (quote.Direction == OrderDirection.Sell)
+					EnqueueSell(quote);
+			}
 		}
 
 		private void EnqueueBuy(IQuote quote)
