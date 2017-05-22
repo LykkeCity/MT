@@ -27,7 +27,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.Services", ".
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.AzureRepositories", "..\MarginTrading.AzureRepositories\MarginTrading.AzureRepositories.csproj", "{291399B7-4D6E-4B68-8D94-1D7FA98A0EFC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.ElementaryTransactionBroker", "MarginTrading.RiskManagerBroker\MarginTrading.ElementaryTransactionBroker.csproj", "{FAEAC23E-600A-49B2-B263-C859082AA1BC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.RiskManagerBroker", "MarginTrading.RiskManagerBroker\MarginTrading.RiskManagerBroker.csproj", "{FAEAC23E-600A-49B2-B263-C859082AA1BC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.PositionBroker", "MarginTrading.PositionBroker\MarginTrading.PositionBroker.csproj", "{0F521530-02A4-4D1F-8AD6-D098C4352439}"
 EndProject

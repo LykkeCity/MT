@@ -45,7 +45,6 @@ namespace MarginTrading.Services
 			else if (_elementaryTransactionRepository.Any())
 			{
 				await _positionCache.InitializeFromTransactions(_elementaryTransactionRepository.GetAllAsync);
-				await SavePositions();
 			}
 		}
 

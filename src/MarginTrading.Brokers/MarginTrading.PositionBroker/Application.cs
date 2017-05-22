@@ -14,6 +14,7 @@ namespace MarginTrading.PositionBroker
     public class Application : TimerPeriod
     {
         private readonly IMarginTradingPositionRepository _positionRepository;
+		private readonly IPositionService _positionService;
         private readonly IServiceMonitoringRepository _serviceMonitoringRepository;
 		private readonly ILog _logger;
         private readonly MarginSettings _settings;
@@ -23,9 +24,11 @@ namespace MarginTrading.PositionBroker
 		public Application(
 			IMarginTradingPositionRepository positionRepository,
 			IServiceMonitoringRepository serviceMonitoringRepository,
+			IPositionService positionService,
 			ILog logger, MarginSettings settings) : base(ServiceName, 30000, logger)
 		{
 			_positionRepository = positionRepository;
+			_positionService = positionService;
 			_serviceMonitoringRepository = serviceMonitoringRepository;
 			_logger = logger;
 			_settings = settings;
@@ -39,6 +42,13 @@ namespace MarginTrading.PositionBroker
 
 			try
 			{
+				if (!_positionRepository.Any())
+				{
+					await _positionService.InitializeAsync();
+
+					await _positionService.SavePositions();
+				}
+
 				_connector = new RabbitMqSubscriber<string>(new RabbitMqSubscriberSettings
 				{
 					ConnectionString = _settings.MarginTradingRabbitMqSettings.InternalConnectionString,

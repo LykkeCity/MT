@@ -16,7 +16,6 @@ namespace MarginTrading.Core
 		Task ElementaryTransactionCreated(IElementaryTransaction elementaryTransaction);
 		Task TradingOrderCreated(ITradingOrder order);
 		Task HardTradingLimitReached(string counterPartyId);
-		Task HardTradingLimitCleared(string counterPartyId);
 		Task PositionUpdated(IPosition position);
 		Task IndividualValueAtRiskSet(string counterPartyId, string assetId, double value);
 		Task AggregateValueAtRiskSet(string counterPartyId, double value);

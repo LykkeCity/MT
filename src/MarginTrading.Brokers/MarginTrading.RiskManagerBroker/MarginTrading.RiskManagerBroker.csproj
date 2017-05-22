@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
-    <AssemblyName>MarginTrading.ElementaryTransactionBroker</AssemblyName>
+    <AssemblyName>MarginTrading.RiskManagerBroker</AssemblyName>
     <OutputType>Exe</OutputType>
     <PackageId>MarginTrading.RiskManagerBroker</PackageId>
     <PackageTargetFallback>$(PackageTargetFallback);dnxcore50;portable-net451+win8</PackageTargetFallback>

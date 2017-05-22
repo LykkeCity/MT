@@ -19,6 +19,7 @@ namespace MarginTrading.TransactionBroker
         private readonly ITransactionService _transactionService;
         private readonly IElementaryTransactionService _elementaryTransactionService;
 		private readonly IElementaryTransactionsRepository _elementaryTransactionsRepository;
+		private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
 		private readonly ILog _logger;
         private readonly MarginSettings _settings;
         private RabbitMqSubscriber<string> _connector;
@@ -31,6 +32,7 @@ namespace MarginTrading.TransactionBroker
 			IServiceMonitoringRepository serviceMonitoringRepository,
 			ITransactionService transactionService,
 			IElementaryTransactionService elementaryTransactionService,
+			IRabbitMqNotifyService rabbitMqNotifyService,
 			ILog logger, MarginSettings settings) : base(ServiceName, 30000, logger)
 		{
 			_transactionRepository = transactionRepository;
@@ -39,6 +41,7 @@ namespace MarginTrading.TransactionBroker
 			_serviceMonitoringRepository = serviceMonitoringRepository;
 			_elementaryTransactionService = elementaryTransactionService;
 			_transactionService = transactionService;
+			_rabbitMqNotifyService = rabbitMqNotifyService;
 			_logger = logger;
 			_settings = settings;
 		}
@@ -104,6 +107,13 @@ namespace MarginTrading.TransactionBroker
 			var transaction = JsonConvert.DeserializeObject<Transaction>(json);
 
 			await _transactionRepository.AddAsync(transaction);
+
+			await _elementaryTransactionService.CreateElementaryTransactionsAsync(transaction, async elementaryTransaction =>
+			{
+				await _elementaryTransactionsRepository.AddAsync(elementaryTransaction);
+
+				await _rabbitMqNotifyService.ElementaryTransactionCreated(elementaryTransaction);
+			});
 		}
 
 		public override async Task Execute()

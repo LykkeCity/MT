@@ -9,24 +9,24 @@ using MarginTrading.Core.Monitoring;
 using MarginTrading.Core.Settings;
 using Newtonsoft.Json;
 
-namespace MarginTrading.ElementaryTransactionBroker
+namespace MarginTrading.RiskManagerBroker
 {
 	public class Application : TimerPeriod
 	{
 		private readonly IServiceMonitoringRepository _serviceMonitoringRepository;
+		private readonly IRiskCalculationEngine _riskCalculationEngine;
 		private readonly ILog _logger;
 		private readonly MarginSettings _settings;
 		private RabbitMqSubscriber<string> _connector;
-		private readonly IElementaryTransactionsRepository _elementaryTransactionsRepository;
-		private const string ServiceName = "MarginTrading.ElementaryTransactionBroker";
+		private const string ServiceName = "MarginTrading.RiskManagerBroker";
 
 		public Application(
 			IServiceMonitoringRepository serviceMonitoringRepository,
-			IElementaryTransactionsRepository elementaryTransactionsRepository,
+			IRiskCalculationEngine riskCalculationEngine,
 			ILog logger, MarginSettings settings) : base(ServiceName, settings.RiskManagement.QuoteSamplingInterval, logger)
 		{
 			_serviceMonitoringRepository = serviceMonitoringRepository;
-			_elementaryTransactionsRepository = elementaryTransactionsRepository;
+			_riskCalculationEngine = riskCalculationEngine;
 			_logger = logger;
 			_settings = settings;
 		}
@@ -39,6 +39,8 @@ namespace MarginTrading.ElementaryTransactionBroker
 
 			try
 			{
+				await _riskCalculationEngine.InitializeAsync();
+
 				_connector = new RabbitMqSubscriber<string>(new RabbitMqSubscriberSettings
 				{
 					ConnectionString = _settings.MarginTradingRabbitMqSettings.InternalConnectionString,
@@ -67,15 +69,17 @@ namespace MarginTrading.ElementaryTransactionBroker
 
 		private async Task HandleMessage(string json)
 		{
-			var elementaryTransaction = JsonConvert.DeserializeObject<ElementaryTransaction>(json);
+			var transaction = JsonConvert.DeserializeObject<ElementaryTransaction>(json);
 
-			await _elementaryTransactionsRepository.AddAsync(elementaryTransaction);
+			await _riskCalculationEngine.ProcessTransactionAsync(transaction);
 		}
 
 		public override async Task Execute()
 		{
 			try
 			{
+				await _riskCalculationEngine.UpdateInternalStateAsync();
+
 				var now = DateTime.UtcNow;
 
 				var record = new MonitoringRecord

@@ -60,6 +60,7 @@ namespace MarginTrading.IVaRBroker
             Console.WriteLine($"IsLive: {settings.IsLive}");
 
             RegisterRepositories(builder, settings);
+            RegisterServices(builder);
 
             builder.RegisterInstance(settings).SingleInstance();
             builder.RegisterType<Application>()
@@ -108,5 +109,10 @@ namespace MarginTrading.IVaRBroker
                 AzureRepoFactories.Monitoring.CreateServiceMonitoringRepository(settings.Db.SharedStorageConnString, log)
             ).SingleInstance();
         }
+
+        private void RegisterServices(ContainerBuilder builder)
+        {
+
+		}
 	}
 }

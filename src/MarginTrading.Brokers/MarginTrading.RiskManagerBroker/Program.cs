@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Hosting;
 
-namespace MarginTrading.ElementaryTransactionBroker
+namespace MarginTrading.RiskManagerBroker
 {
     public class Program
     {

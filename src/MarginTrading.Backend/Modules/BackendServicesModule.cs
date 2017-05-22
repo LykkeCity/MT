@@ -59,42 +59,7 @@ namespace MarginTrading.Backend.Modules
                 .As<IStartable>()
                 .SingleInstance();
 
-			builder.RegisterType<RiskCalculator>()
-				.As<IRiskCalculator>()
-				.WithParameter("frequency", _settings.RiskManagement.SamplingFrequency)
-				.WithParameter("enforceCalculation", _settings.RiskManagement.EnforceCalculation)
-				.WithParameter("corrMatrix", _settings.RiskManagement.CorrelationMatrix)
-				.SingleInstance();
-
-			builder.RegisterType<SampleQuoteCacheService>()
-				.As<ISampleQuoteCacheService>()
-				.WithParameter("maxCount", _settings.RiskManagement.QuoteSampleMaxCount)
-				.WithParameter("samplingInterval", _settings.RiskManagement.QuoteSamplingInterval)
-				.SingleInstance();
-
-			builder.RegisterType<SampleQuoteCache>()
-				.As<ISampleQuoteCache>()
-				.WithParameter("maxCount", _settings.RiskManagement.QuoteSampleMaxCount)
-				.SingleInstance();
-
-			builder.RegisterType<QuoteCacheService>()
-				.As<IQuoteCacheService>()
-				.SingleInstance();
-
-			builder.RegisterType<RiskManager>()
-				.As<IRiskManager>()
-				.WithParameter("pVaRSoftLimits", _settings.RiskManagement.PVaRSoftLimits)
-				.WithParameter("pVaRHardLimits", _settings.RiskManagement.PVaRHardLimits)
-				.SingleInstance();
-
-			builder.RegisterType<RiskCalculationEngine>()
-				.As<IRiskCalculationEngine>()
-				.As<IStartable>()
-				.As<IEventConsumer<ElementaryTransactionEventArgs>>()
-				.WithParameter("samplingInterval", _settings.RiskManagement.QuoteSamplingInterval)
-				.SingleInstance();
-
-			builder.Register<IServiceBusEmailSettings>(ctx =>
+            builder.Register<IServiceBusEmailSettings>(ctx =>
                 new ServiceBusEmailSettings
                 {
                     Key = _settings.EmailServiceBus.Key,

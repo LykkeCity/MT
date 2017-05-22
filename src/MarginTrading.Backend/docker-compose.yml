@@ -81,12 +81,12 @@ services:
       mynet:
         aliases:
           - mtorderreport
-  mtelementarytransactionbroker:
-     image: lykkex/mtelementarytransactionbroker
-     container_name: mtelementarytransactions
+  mtriskmanagerbroker:
+     image: lykkex/mtriskmanagerbroker
+     container_name: mtriskmanager
      environment:
       - SettingsUrl=${SettingsUrl}
-     hostname: mtelementarytransactions
+     hostname: mtriskmanager
      networks:
       mynet:
         aliases:

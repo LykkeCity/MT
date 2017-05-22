@@ -10,7 +10,6 @@ namespace MarginTrading.Services
 	{
 		private IDictionary<string, double> _pVaRSoftLimits;
 		private IDictionary<string, double> _pVaRHardLimits;
-		private List<string> _blockedCounterparties;
 
 		private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
 		private readonly ISlackNotificationsProducer _slackNotificationsProducer;
@@ -24,7 +23,6 @@ namespace MarginTrading.Services
 			_pVaRSoftLimits = pVaRSoftLimits;
 			_rabbitMqNotifyService = rabbitMqNotifyService;
 			_slackNotificationsProducer = slackNotificationsProducer;
-			_blockedCounterparties = new List<string>();
 		}
 
 		public async Task CheckLimit(string counterPartyId, double pVaREstimate)
@@ -45,19 +43,10 @@ namespace MarginTrading.Services
 		private async Task CheckHardLimit(string counterPartyId, double pVaREstimate)
 		{
 			if (_pVaRHardLimits.ContainsKey(counterPartyId)
-				&& _pVaRHardLimits[counterPartyId] < pVaREstimate && !_blockedCounterparties.Contains(counterPartyId))
+				&& _pVaRHardLimits[counterPartyId] < pVaREstimate)
 			{
-				_blockedCounterparties.Add(counterPartyId);
 				await _rabbitMqNotifyService.HardTradingLimitReached(counterPartyId);
-				await _slackNotificationsProducer.SendNotification(ChannelTypes.MarginTrading, $"Hard pVaR Limit Reached for the counterparty: { counterPartyId }. Hard limit for the counterparty is set to { _pVaRHardLimits[counterPartyId] }, and actual value at risk is estimated as { pVaREstimate }", "Margin Trading Risk Management Module");
-			}
-
-			if (_pVaRHardLimits.ContainsKey(counterPartyId)
-				&& _pVaRHardLimits[counterPartyId] > pVaREstimate && _blockedCounterparties.Contains(counterPartyId))
-			{
-				_blockedCounterparties.Remove(counterPartyId);
-				await _rabbitMqNotifyService.HardTradingLimitCleared(counterPartyId);
-				await _slackNotificationsProducer.SendNotification(ChannelTypes.MarginTrading, $"Hard pVaR Limit Cleared for the counterparty: { counterPartyId }. Hard limit for the counterparty is set to { _pVaRHardLimits[counterPartyId] }, and actual value at risk is estimated as { pVaREstimate }", "Margin Trading Risk Management Module");
+				await _slackNotificationsProducer.SendNotification(ChannelTypes.MarginTrading, $"Hard pVaR Limit Reached for the client: { counterPartyId }. Hard limit for the client is set to { _pVaRHardLimits[counterPartyId] }, and actual value at risk is estimated as { pVaREstimate }", "Margin Trading Risk Management Module");
 			}
 		}
 

@@ -123,17 +123,6 @@ namespace MarginTrading.Backend.Modules
 				AzureRepoFactories.MarginTrading.CreateAggregateValuesAtRiskRepository(_settings.Db.MarginTradingConnString, log)
 			).SingleInstance();
 
-			builder.Register<IMarginTradingMeanVectorRepository>(ctx =>
-				AzureRepoFactories.MarginTrading.CreateMeanVectorRepository(_settings.Db.MarginTradingConnString, log)
-			).SingleInstance();
-
-			builder.Register<IMarginTradingStDevVectorRepository>(ctx =>
-				AzureRepoFactories.MarginTrading.CreateStDevVectorRepository(_settings.Db.MarginTradingConnString, log)
-			).SingleInstance();
-
-			builder.Register<IMarginTradingPearsonCorrMatrixRepository>(ctx =>
-				AzureRepoFactories.MarginTrading.CreatePearsonCoeffMatrixRepository(_settings.Db.MarginTradingConnString, log)
-			).SingleInstance();
 		}
 	}
 }

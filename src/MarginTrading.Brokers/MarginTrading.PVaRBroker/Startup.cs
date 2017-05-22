@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using MarginTrading.Services;
 using Microsoft.Extensions.PlatformAbstractions;
 
 namespace MarginTrading.PVaRBroker
@@ -60,6 +61,7 @@ namespace MarginTrading.PVaRBroker
             Console.WriteLine($"IsLive: {settings.IsLive}");
 
             RegisterRepositories(builder, settings);
+            RegisterServices(builder);
 
             builder.RegisterInstance(settings).SingleInstance();
             builder.RegisterType<Application>()
@@ -108,5 +110,10 @@ namespace MarginTrading.PVaRBroker
                 AzureRepoFactories.Monitoring.CreateServiceMonitoringRepository(settings.Db.SharedStorageConnString, log)
             ).SingleInstance();
         }
+
+        private void RegisterServices(ContainerBuilder builder)
+        {
+
+		}
 	}
 }

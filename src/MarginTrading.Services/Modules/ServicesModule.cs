@@ -140,6 +140,18 @@ namespace MarginTrading.Services.Modules
 			builder.RegisterType<PositionCacheService>()
 				.As<IPositionCacheService>()
 				.SingleInstance();
+
+			builder.RegisterType<RiskCalculationEngine>()
+				.As<IRiskCalculationEngine>()
+				.SingleInstance();
+
+			builder.RegisterType<RiskCalculator>()
+				.As<IRiskCalculator>()
+				.SingleInstance();
+
+			builder.RegisterType<SampleQuoteCacheService>()
+				.As<ISampleQuoteCacheService>()
+				.SingleInstance();
 		}
 	}
 }

@@ -61,6 +61,7 @@ namespace MarginTrading.PositionBroker
             Console.WriteLine($"IsLive: {settings.IsLive}");
 
             RegisterRepositories(builder, settings);
+            RegisterServices(builder);
 
             builder.RegisterInstance(settings).SingleInstance();
             builder.RegisterType<Application>()
@@ -105,9 +106,28 @@ namespace MarginTrading.PositionBroker
                 AzureRepoFactories.MarginTrading.CreatePositionRepository(settings.Db.MarginTradingConnString, log)
             ).SingleInstance();
 
+			builder.Register<IElementaryTransactionsRepository>(ctx =>
+				AzureRepoFactories.MarginTrading.CreateElementaryTransactionsRepository(settings.Db.MarginTradingConnString, log)
+			).SingleInstance();
+
 			builder.Register<IServiceMonitoringRepository>(ctx =>
                 AzureRepoFactories.Monitoring.CreateServiceMonitoringRepository(settings.Db.SharedStorageConnString, log)
             ).SingleInstance();
         }
+
+        private void RegisterServices(ContainerBuilder builder)
+        {
+			builder.RegisterType<RabbitMqNotifyService>()
+				.As<IRabbitMqNotifyService>()
+				.SingleInstance();
+
+			builder.RegisterType<PositionService>()
+				.As<IPositionService>()
+				.SingleInstance();
+
+			builder.RegisterType<PositionCacheService>()
+				.As<IPositionCacheService>()
+				.SingleInstance();
+		}
 	}
 }

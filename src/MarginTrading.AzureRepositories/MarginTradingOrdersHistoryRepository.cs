@@ -71,7 +71,6 @@ namespace MarginTrading.AzureRepositories
             return new MarginTradingOrderHistoryEntity
             {
                 PartitionKey = GeneratePartitionKey(src.ClientId, src.AccountId),
-				RowKey = src.Id,
                 Id = src.Id,
                 ClientId = src.ClientId,
                 AccountId = src.AccountId,
@@ -107,8 +106,8 @@ namespace MarginTrading.AzureRepositories
                 MatchedCloseVolume = src.MatchedCloseVolume,
                 RejectReason = src.RejectReason.ToString(),
                 RejectReasonText = src.RejectReasonText,
-                Orders = src.MatchedOrders != null ? src.MatchedOrders.SerializeArrayForTableStorage() : null,
-                ClosedOrders = src.MatchedCloseOrders != null ? src.MatchedCloseOrders.SerializeArrayForTableStorage() : null,
+                Orders = src.MatchedOrders.SerializeArrayForTableStorage(),
+                ClosedOrders = src.MatchedCloseOrders.SerializeArrayForTableStorage(),
                 SwapCommission = src.SwapCommission,
                 Comment = src.Comment
             };
@@ -189,7 +188,7 @@ namespace MarginTrading.AzureRepositories
         public async Task AddAsync(IOrderHistory order)
         {
             var entity = MarginTradingOrderHistoryEntity.Create(order);
-            await _tableStorage.InsertOrReplaceAsync(entity);
+            await _tableStorage.InsertAndGenerateRowKeyAsDateTimeAsync(entity, DateTime.UtcNow);
         }
 
         public async Task<IEnumerable<IOrderHistory>> GetHistoryAsync(string clientId, string[] accountIds, DateTime? from, DateTime? to)

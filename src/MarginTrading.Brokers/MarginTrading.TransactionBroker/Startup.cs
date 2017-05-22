@@ -18,6 +18,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MarginTrading.Services;
 using Microsoft.Extensions.PlatformAbstractions;
+using MarginTrading.Services.Events;
+using System.Collections.Generic;
+using Lykke.RabbitMqBroker.Publisher;
+using MarginTrading.Common.RabbitMq;
+using Common;
 
 namespace MarginTrading.TransactionBroker
 {
@@ -60,6 +65,7 @@ namespace MarginTrading.TransactionBroker
 
             Console.WriteLine($"IsLive: {settings.IsLive}");
 
+			RegisterPublishers(builder, settings);
 			RegisterRepositories(builder, settings);
             RegisterServices(builder);
 
@@ -106,6 +112,10 @@ namespace MarginTrading.TransactionBroker
                 AzureRepoFactories.MarginTrading.CreateTransactionRepository(settings.Db.MarginTradingConnString, log)
             ).SingleInstance();
 
+            builder.Register<IMarginTradingPositionRepository>(ctx =>
+                AzureRepoFactories.MarginTrading.CreatePositionRepository(settings.Db.MarginTradingConnString, log)
+            ).SingleInstance();
+
             builder.Register<IMarginTradingOrdersHistoryRepository>(ctx =>
                 AzureRepoFactories.MarginTrading.CreateOrdersHistoryRepository(settings.Db.MarginTradingConnString, log)
             ).SingleInstance();
@@ -148,6 +158,50 @@ namespace MarginTrading.TransactionBroker
 			builder.RegisterType<AccountsCacheService>()
 				.As<IAccountsCacheService>()
 				.SingleInstance();
+
+			builder.RegisterType<EventChannel<PositionUpdateEventArgs>>()
+				.As<IEventChannel<PositionUpdateEventArgs>>()
+				.SingleInstance();
+
+			builder.RegisterType<RabbitMqNotifyService>()
+				.As<IRabbitMqNotifyService>()
+				.SingleInstance();
+		}
+
+		private void RegisterPublishers(ContainerBuilder builder, MarginSettings settings)
+		{
+			var consoleWriter = new ConsoleLWriter(Console.WriteLine);
+
+			builder.RegisterInstance(consoleWriter)
+				.As<IConsole>()
+				.SingleInstance();
+
+			var publishers = new List<string>
+			{
+				settings.RabbitMqQueues.ElementaryTransaction.RoutingKeyName,
+			};
+
+			var rabbitMqSettings = new RabbitMqPublisherSettings
+			{
+				ConnectionString = settings.MarginTradingRabbitMqSettings.InternalConnectionString,
+				ExchangeName = settings.MarginTradingRabbitMqSettings.ExchangeName
+			};
+
+			var bytesSerializer = new BytesStringSerializer();
+
+			foreach (string routingKey in publishers)
+			{
+				var pub = new RabbitMqPublisher<string>(rabbitMqSettings)
+					.SetSerializer(bytesSerializer)
+					.SetPublishStrategy(new TopicPublishStrategy(routingKey))
+					.SetConsole(consoleWriter)
+					.Start();
+
+				builder.RegisterInstance(pub)
+					.Named<IMessageProducer<string>>(routingKey)
+					.As<IStopable>()
+					.SingleInstance();
+			}
 		}
 	}
 }
