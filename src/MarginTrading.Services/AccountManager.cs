@@ -20,6 +20,7 @@ namespace MarginTrading.Services
         private readonly IMarginTradingAccountsRepository _accountsRepository;
         private readonly ITradingConditionsCacheService _tradingConditionsCacheService;
         private readonly ILog _log;
+        private readonly IClientNotifyService _clientNotifyService;
 
 
         public AccountManager(AccountsCacheService accountsCacheService,
@@ -30,7 +31,8 @@ namespace MarginTrading.Services
             IAccountGroupCacheService accountGroupCacheService,
             IMarginTradingAccountsRepository accountsRepository,
             ITradingConditionsCacheService tradingConditionsCacheService,
-            ILog log)
+            ILog log,
+            IClientNotifyService clientNotifyService)
         {
             _accountsCacheService = accountsCacheService;
             _repository = repository;
@@ -41,6 +43,7 @@ namespace MarginTrading.Services
             _accountsRepository = accountsRepository;
             _tradingConditionsCacheService = tradingConditionsCacheService;
             _log = log;
+            _clientNotifyService = clientNotifyService;
         }
 
         public void Start()
@@ -67,6 +70,8 @@ namespace MarginTrading.Services
         {
             var updatedAccount = await _repository.UpdateBalanceAsync(clientId, accountId, amount);
             _accountsCacheService.UpdateBalance(updatedAccount);
+            
+            _clientNotifyService.NotifyAccountChanged(updatedAccount);
 
             await _rabbitMqNotifyService.AccountHistory(accountId, clientId, amount, updatedAccount.Balance, historyType, comment);
         }
