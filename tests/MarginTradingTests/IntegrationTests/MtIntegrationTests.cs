@@ -25,17 +25,17 @@ namespace MarginTradingTests.IntegrationTests
 
             Assert.IsNotNull(initData);
             Assert.IsNotEmpty(initData.Demo.Accounts);
-            Assert.IsNotEmpty(initData.Demo.AccountAssetPairs);
+            Assert.IsNotEmpty(initData.Demo.TradingConditions);
 
-            foreach (string key in initData.Demo.AccountAssetPairs.Keys)
+            foreach (string key in initData.Demo.TradingConditions.Keys)
             {
-                var assets = initData.Demo.AccountAssetPairs[key];
+                var assets = initData.Demo.TradingConditions[key];
                 foreach (var asset in assets)
                 {
-                    Assert.That(asset.LeverageMaintenance > 0, () => $"wrong {nameof(asset.LeverageMaintenance)} for accountId = {key}, {asset.Id}");
-                    Assert.That(asset.LeverageInit > 0, () => $"wrong {nameof(asset.LeverageInit)} for {key}, {asset.Id}");
-                    Assert.That(asset.DeltaAsk > 0, () => $"wrong {nameof(asset.DeltaAsk)} for {key}, {asset.Id}");
-                    Assert.That(asset.DeltaBid > 0, () => $"wrong {nameof(asset.DeltaBid)} for {key}, {asset.Id}");
+                    Assert.That(asset.LeverageMaintenance > 0, () => $"wrong {nameof(asset.LeverageMaintenance)} for accountId = {key}, {asset.BaseAssetId}");
+                    Assert.That(asset.LeverageInit > 0, () => $"wrong {nameof(asset.LeverageInit)} for {key}, {asset.BaseAssetId}");
+                    Assert.That(asset.DeltaAsk > 0, () => $"wrong {nameof(asset.DeltaAsk)} for {key}, {asset.BaseAssetId}");
+                    Assert.That(asset.DeltaBid > 0, () => $"wrong {nameof(asset.DeltaBid)} for {key}, {asset.BaseAssetId}");
                 }
             }
         }
