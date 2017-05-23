@@ -46,6 +46,7 @@ _UpgradeReport_Files/
 
 #ncrunch
 *.*crunch*
+_NCrunch_*
 
 #publish profiles
 *publish.ps1
@@ -60,3 +61,5 @@ node_modules
 **/docker-compose.dev.yml
 **/marginTradingSettings.json
 **/*.ps1
+**/site.min.js
+**/site.min.css
