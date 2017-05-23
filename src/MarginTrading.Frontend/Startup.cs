@@ -26,6 +26,7 @@ using MarginTrading.Services.Generated.SessionServiceApi;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -127,10 +128,12 @@ namespace MarginTrading.Frontend
             bearerOptions.SecurityTokenValidators.Clear();
             bearerOptions.SecurityTokenValidators.Add(tokenValidator);
             app.UseJwtBearerAuthentication(bearerOptions);
+            app.UseStaticFiles();
+
 
             app.UseMvc(routes =>
             {
-                routes.MapRoute(name: "Default", template: "{controller}/{action}/{id?}");
+                routes.MapRoute(name: "Default", template: "{controller=Home}/{action=Index}/{id?}");
             });
 
             app.UseSwagger();

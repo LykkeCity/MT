@@ -1,0 +1,41 @@
+﻿@using MarginTrading.Common.Extensions
+@model MarginTrading.Frontend.Models.MethodInfoModel
+<html>
+<head>
+    <title>Wamp documentation</title>
+    <link href="~/images/favicon.png" rel="shortcut icon" type="image/png" />
+    <environment names="Development">
+        <link rel="stylesheet" href="~/css/bootstrap.css" />
+        <link rel="stylesheet" href="~/css/highlight-vs.css" />
+        <link rel="stylesheet" href="~/css/site.css" />
+    </environment>
+    <environment names="Production">
+        <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
+    </environment>
+</head>
+<body>
+    <div class="alert alert-info alert-link">
+        <i class="glyphicon glyphicon-info-sign"></i> Swagger documentation can be found <a href="/swagger/ui">here</a>
+    </div>
+    <div role="tabpanel">
+        <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="active">
+                <a href="#rpc" aria-controls="rpc" role="tab" data-toggle="tab">rpc</a>
+            </li>
+            <li role="presentation">
+                <a href="#topics" aria-controls="topics" role="tab" data-toggle="tab">topics</a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div role="tabpanel" class="tab-pane active" id="rpc">
+                @Html.Partial("MethodsListPartial", Model.Rpc)
+            </div>
+            <div role="tabpanel" class="tab-pane" id="topics">
+                @Html.Partial("MethodsListPartial", Model.Topic)
+            </div>
+        </div>
+    </div>
+    <script src="~/js/site.min.js" asp-append-version="true"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+</body>
+</html>
