@@ -1,17 +1,10 @@
-﻿@using MarginTrading.Common.Extensions
-@model MarginTrading.Frontend.Models.MethodInfoModel
+﻿@model MarginTrading.Frontend.Models.MethodInfoModel
 <html>
 <head>
     <title>Wamp documentation</title>
     <link href="~/images/favicon.png" rel="shortcut icon" type="image/png" />
-    <environment names="Development">
-        <link rel="stylesheet" href="~/css/bootstrap.css" />
-        <link rel="stylesheet" href="~/css/highlight-vs.css" />
-        <link rel="stylesheet" href="~/css/site.css" />
-    </environment>
-    <environment names="Production">
-        <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
-    </environment>
+    <link rel="stylesheet" href="~/css/bootstrap.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/highlight-vs.css" asp-append-version="true" />
 </head>
 <body>
     <div class="alert alert-info alert-link">
@@ -35,7 +28,9 @@
             </div>
         </div>
     </div>
-    <script src="~/js/site.min.js" asp-append-version="true"></script>
+    <script src="~/js/jquery.min.js" asp-append-version="true"></script>
+    <script src="~/js/bootstrap.min.js" asp-append-version="true"></script>
+    <script src="~/js/highlight.pack.js" asp-append-version="true"></script>
     <script>hljs.initHighlightingOnLoad();</script>
 </body>
 </html>
