@@ -1,14 +1,14 @@
 ﻿using System.Threading.Tasks;
+using Lykke.Service.Session;
 using MarginTrading.Core;
-using MarginTrading.Services.Generated.SessionServiceApi;
 
 namespace MarginTrading.Services
 {
     public class ClientTokenService : IClientTokenService
     {
-        private readonly ISessionService _sessionService;
+        private readonly IClientsSessionsRepository _sessionService;
 
-        public ClientTokenService(ISessionService sessionService)
+        public ClientTokenService(IClientsSessionsRepository sessionService)
         {
             _sessionService = sessionService;
         }
@@ -17,7 +17,7 @@ namespace MarginTrading.Services
         {
             try
             {
-                var sessionModel = await _sessionService.ApiSessionGetPostAsync(token);
+                var sessionModel = await _sessionService.GetAsync(token);
                 return sessionModel?.ClientId;
             }
             catch

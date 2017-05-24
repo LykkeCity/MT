@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="4.1.0" />
+    <PackageReference Include="Lykke.Service.Session" Version="16.0.0" />
     <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.3" />
     <PackageReference Include="WampSharp.Default" Version="1.2.5.35-beta" />
     <PackageReference Include="WampSharp.AspNetCore.WebSockets.Server" Version="1.2.5.35-beta" />

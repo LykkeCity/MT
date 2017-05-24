@@ -8,6 +8,7 @@ using Flurl.Http;
 using Lykke.Common;
 using Lykke.Logs;
 using Lykke.RabbitMqBroker.Subscriber;
+using Lykke.Service.Session;
 using MarginTrading.AzureRepositories;
 using MarginTrading.AzureRepositories.Settings;
 using MarginTrading.Common.BackendContracts;
@@ -287,8 +288,8 @@ namespace MarginTrading.Frontend
             builder.RegisterType<Application>()
                 .SingleInstance();
 
-            builder.Register<ISessionService>(ctx =>
-                new SessionService(new Uri(settings.MarginTradingFront.SessionServiceApiUrl))
+            builder.Register<IClientsSessionsRepository>(ctx =>
+                new ClientSessionsClient(settings.MarginTradingFront.SessionServiceApiUrl, log)
             ).SingleInstance();
 
             builder.Register<IClientAccountService>(ctx =>
