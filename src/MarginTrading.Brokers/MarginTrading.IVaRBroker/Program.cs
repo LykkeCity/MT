@@ -8,7 +8,7 @@ namespace MarginTrading.IVaRBroker
         {
             var host = new WebHostBuilder()
                 .UseKestrel()
-                .UseUrls("http://*:5010")
+                .UseUrls("http://*:5012")
                 .UseStartup<Startup>()
                 .Build();
 

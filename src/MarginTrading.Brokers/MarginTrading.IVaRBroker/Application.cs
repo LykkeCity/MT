@@ -42,11 +42,11 @@ namespace MarginTrading.IVaRBroker
 				{
 					ConnectionString = _settings.MarginTradingRabbitMqSettings.InternalConnectionString,
 					QueueName = _settings.RabbitMqQueues.IndividualValuesAtRisk.QueueName,
-					ExchangeName = _settings.MarginTradingRabbitMqSettings.ExchangeName,
+					ExchangeName = _settings.RabbitMqQueues.IndividualValuesAtRisk.ExchangeName,
 					IsDurable = true
 				})
 					.SetMessageDeserializer(new DefaultStringDeserializer())
-					.SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy(_settings.RabbitMqQueues.IndividualValuesAtRisk.RoutingKeyName))
+					.SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
 					.Subscribe(HandleMessage)
 					.SetLogger(_logger)
 					.Start();

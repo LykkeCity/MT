@@ -84,7 +84,10 @@ namespace MarginTrading.Services
             {
                 foreach (var account in accounts)
                 {
-                    result.Add(account.BaseAssetId, _accountAssets.Where(item => item.TradingConditionId == account.TradingConditionId && item.BaseAssetId == account.BaseAssetId).ToArray());
+                    if (!result.ContainsKey(account.BaseAssetId))
+                    {
+                        result.Add(account.BaseAssetId, _accountAssets.Where(item => item.TradingConditionId == account.TradingConditionId && item.BaseAssetId == account.BaseAssetId).ToArray());
+                    }
                 }
             }
             finally

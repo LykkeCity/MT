@@ -33,12 +33,12 @@ namespace MarginTrading.Public.Services
             _subscriber = new RabbitMqSubscriber<InstrumentBidAskPair>(new RabbitMqSubscriberSettings
             {
                 ConnectionString = _settings.MarginTradingRabbitMqSettings.ConnectionString,
-                ExchangeName = _settings.MarginTradingRabbitMqSettings.ExchangeName,
+                ExchangeName = _settings.RabbitMqQueues.OrderbookPrices.ExchangeName,
                 QueueName = _settings.RabbitMqQueues.OrderbookPrices.QueueName + $".public.{nameof(PricesWampService).ToLower()}",
                 IsDurable = false
             })
                 .SetMessageDeserializer(new FrontEndDeserializer<InstrumentBidAskPair>())
-                .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy(_settings.RabbitMqQueues.OrderbookPrices.RoutingKeyName))
+                .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
                 .SetLogger(_log)
                 .Subscribe(ProcessPrice)
                 .Start();

@@ -28,7 +28,7 @@ namespace MarginTrading.Services
 		{
 			try
 			{
-				await _publishers[_settings.RabbitMqQueues.AccountHistory.RoutingKeyName].ProduceAsync(new MarginTradingAccountHistory
+				await _publishers[_settings.RabbitMqQueues.AccountHistory.ExchangeName].ProduceAsync(new MarginTradingAccountHistory
 				{
 					Id = Guid.NewGuid().ToString("N"),
 					AccountId = accountId,
@@ -52,7 +52,7 @@ namespace MarginTrading.Services
 		{
 			try
 			{
-				await _publishers[_settings.RabbitMqQueues.OrderHistory.RoutingKeyName].ProduceAsync(order.ToFullContract().ToJson());
+				await _publishers[_settings.RabbitMqQueues.OrderHistory.ExchangeName].ProduceAsync(order.ToFullContract().ToJson());
 			}
 			catch (Exception ex)
 			{
@@ -65,7 +65,7 @@ namespace MarginTrading.Services
 		{
 			try
 			{
-				await _publishers[_settings.RabbitMqQueues.OrderRejected.RoutingKeyName].ProduceAsync(order.ToFullContract().ToJson());
+				await _publishers[_settings.RabbitMqQueues.OrderRejected.ExchangeName].ProduceAsync(order.ToFullContract().ToJson());
 			}
 			catch (Exception ex)
 			{
@@ -79,7 +79,7 @@ namespace MarginTrading.Services
 		{
 			try
 			{
-				await _publishers[_settings.RabbitMqQueues.OrderbookPrices.RoutingKeyName].ProduceAsync(quote.ToJson());
+				await _publishers[_settings.RabbitMqQueues.OrderbookPrices.ExchangeName].ProduceAsync(quote.ToJson());
 			}
 			catch (Exception ex)
 			{
@@ -93,7 +93,7 @@ namespace MarginTrading.Services
 		{
 			try
 			{
-				await _publishers[_settings.RabbitMqQueues.OrderChanged.RoutingKeyName].ProduceAsync(order.ToBaseContract().ToJson());
+				await _publishers[_settings.RabbitMqQueues.OrderChanged.ExchangeName].ProduceAsync(order.ToBaseContract().ToJson());
 			}
 			catch (Exception ex)
 			{
@@ -107,7 +107,7 @@ namespace MarginTrading.Services
 		{
 			try
 			{
-				await _publishers[_settings.RabbitMqQueues.AccountChanged.RoutingKeyName].ProduceAsync(account.ToBackendContract().ToJson());
+				await _publishers[_settings.RabbitMqQueues.AccountChanged.ExchangeName].ProduceAsync(account.ToBackendContract().ToJson());
 			}
 			catch (Exception ex)
 			{
@@ -121,7 +121,7 @@ namespace MarginTrading.Services
 		{
 			try
 			{
-				await _publishers[_settings.RabbitMqQueues.AccountStopout.RoutingKeyName].ProduceAsync(new { clientId = clientId, accountId = accountId, positionsCount = positionsCount, totalPnl = totalPnl }.ToJson());
+				await _publishers[_settings.RabbitMqQueues.AccountStopout.ExchangeName].ProduceAsync(new { clientId = clientId, accountId = accountId, positionsCount = positionsCount, totalPnl = totalPnl }.ToJson());
 			}
 			catch (Exception ex)
 			{
@@ -134,7 +134,7 @@ namespace MarginTrading.Services
 		{
 			try
 			{
-				await _publishers[_settings.RabbitMqQueues.UserUpdates.RoutingKeyName].ProduceAsync(new { updateAccountAssetPairs = updateAccountAssets, UpdateAccounts = updateAccounts, clientIds = clientIds }.ToJson());
+				await _publishers[_settings.RabbitMqQueues.UserUpdates.ExchangeName].ProduceAsync(new { updateAccountAssetPairs = updateAccountAssets, UpdateAccounts = updateAccounts, clientIds = clientIds }.ToJson());
 			}
 			catch (Exception ex)
 			{
@@ -146,7 +146,7 @@ namespace MarginTrading.Services
 		{
 			try
 			{
-				await _publishers[_settings.RabbitMqQueues.Transaction.RoutingKeyName].ProduceAsync(transaction.ToJson());
+				await _publishers[_settings.RabbitMqQueues.Transaction.ExchangeName].ProduceAsync(transaction.ToJson());
 			}
 			catch (Exception ex)
 			{
@@ -158,7 +158,7 @@ namespace MarginTrading.Services
 		{
 			try
 			{
-				await _publishers[_settings.RabbitMqQueues.PositionUpdates.RoutingKeyName].ProduceAsync(position.ToJson());
+				await _publishers[_settings.RabbitMqQueues.PositionUpdates.ExchangeName].ProduceAsync(position.ToJson());
 			}
 			catch (Exception ex)
 			{
@@ -170,7 +170,7 @@ namespace MarginTrading.Services
 		{
 			try
 			{
-				await _publishers[_settings.RabbitMqQueues.ElementaryTransaction.RoutingKeyName].ProduceAsync(transaction.ToJson());
+				await _publishers[_settings.RabbitMqQueues.ElementaryTransaction.ExchangeName].ProduceAsync(transaction.ToJson());
 			}
 			catch (Exception ex)
 			{
@@ -182,7 +182,7 @@ namespace MarginTrading.Services
 		{
 			try
 			{
-				await _publishers[_settings.RabbitMqQueues.OrderReport.RoutingKeyName].ProduceAsync(orderAction.ToJson());
+				await _publishers[_settings.RabbitMqQueues.OrderReport.ExchangeName].ProduceAsync(orderAction.ToJson());
 			}
 			catch (Exception ex)
 			{
@@ -194,7 +194,7 @@ namespace MarginTrading.Services
 		{
 			try
 			{
-				await _publishers[_settings.RabbitMqQueues.ValueAtRiskLimits.RoutingKeyName].ProduceAsync(counterPartyId);
+				await _publishers[_settings.RabbitMqQueues.ValueAtRiskLimits.ExchangeName].ProduceAsync(counterPartyId);
 			}
 			catch (Exception ex)
 			{
@@ -206,7 +206,7 @@ namespace MarginTrading.Services
 		{
 			try
 			{
-				await _publishers[_settings.RabbitMqQueues.IndividualValuesAtRisk.RoutingKeyName].ProduceAsync($"{counterPartyId};{assetId};{value}");
+				await _publishers[_settings.RabbitMqQueues.IndividualValuesAtRisk.ExchangeName].ProduceAsync($"{counterPartyId};{assetId};{value}");
 			}
 			catch (Exception ex)
 			{
@@ -218,7 +218,7 @@ namespace MarginTrading.Services
 		{
 			try
 			{
-				await _publishers[_settings.RabbitMqQueues.AggregateValuesAtRisk.RoutingKeyName].ProduceAsync($"{counterPartyId};{value}");
+				await _publishers[_settings.RabbitMqQueues.AggregateValuesAtRisk.ExchangeName].ProduceAsync($"{counterPartyId};{value}");
 			}
 			catch (Exception ex)
 			{
@@ -228,20 +228,20 @@ namespace MarginTrading.Services
 
 		public void Stop()
 		{
-			((IStopable)_publishers[_settings.RabbitMqQueues.AccountHistory.RoutingKeyName]).Stop();
-			((IStopable)_publishers[_settings.RabbitMqQueues.OrderHistory.RoutingKeyName]).Stop();
-			((IStopable)_publishers[_settings.RabbitMqQueues.OrderRejected.RoutingKeyName]).Stop();
-			((IStopable)_publishers[_settings.RabbitMqQueues.OrderbookPrices.RoutingKeyName]).Stop();
-			((IStopable)_publishers[_settings.RabbitMqQueues.AccountStopout.RoutingKeyName]).Stop();
-			((IStopable)_publishers[_settings.RabbitMqQueues.AccountChanged.RoutingKeyName]).Stop();
-			((IStopable)_publishers[_settings.RabbitMqQueues.UserUpdates.RoutingKeyName]).Stop();
-			((IStopable)_publishers[_settings.RabbitMqQueues.Transaction.RoutingKeyName]).Stop();
-			((IStopable)_publishers[_settings.RabbitMqQueues.ElementaryTransaction.RoutingKeyName]).Stop();
-			((IStopable)_publishers[_settings.RabbitMqQueues.OrderReport.RoutingKeyName]).Stop();
-			((IStopable)_publishers[_settings.RabbitMqQueues.ValueAtRiskLimits.RoutingKeyName]).Stop();
-			((IStopable)_publishers[_settings.RabbitMqQueues.IndividualValuesAtRisk.RoutingKeyName]).Stop();
-			((IStopable)_publishers[_settings.RabbitMqQueues.AggregateValuesAtRisk.RoutingKeyName]).Stop();
-			((IStopable)_publishers[_settings.RabbitMqQueues.PositionUpdates.RoutingKeyName]).Stop();
+			((IStopable)_publishers[_settings.RabbitMqQueues.AccountHistory.ExchangeName]).Stop();
+			((IStopable)_publishers[_settings.RabbitMqQueues.OrderHistory.ExchangeName]).Stop();
+			((IStopable)_publishers[_settings.RabbitMqQueues.OrderRejected.ExchangeName]).Stop();
+			((IStopable)_publishers[_settings.RabbitMqQueues.OrderbookPrices.ExchangeName]).Stop();
+			((IStopable)_publishers[_settings.RabbitMqQueues.AccountStopout.ExchangeName]).Stop();
+			((IStopable)_publishers[_settings.RabbitMqQueues.AccountChanged.ExchangeName]).Stop();
+			((IStopable)_publishers[_settings.RabbitMqQueues.UserUpdates.ExchangeName]).Stop();
+			((IStopable)_publishers[_settings.RabbitMqQueues.Transaction.ExchangeName]).Stop();
+			((IStopable)_publishers[_settings.RabbitMqQueues.ElementaryTransaction.ExchangeName]).Stop();
+			((IStopable)_publishers[_settings.RabbitMqQueues.OrderReport.ExchangeName]).Stop();
+			((IStopable)_publishers[_settings.RabbitMqQueues.ValueAtRiskLimits.ExchangeName]).Stop();
+			((IStopable)_publishers[_settings.RabbitMqQueues.IndividualValuesAtRisk.ExchangeName]).Stop();
+			((IStopable)_publishers[_settings.RabbitMqQueues.AggregateValuesAtRisk.ExchangeName]).Stop();
+			((IStopable)_publishers[_settings.RabbitMqQueues.PositionUpdates.ExchangeName]).Stop();
 		}
 	}
 }

@@ -22,169 +22,250 @@
   ],
   "parameters": [],
   "policies": [],
-	"queues": [
-		{
-			"name": "mt.accounthistorybroker",
-			"vhost": "/",
-			"durable": true,
-			"auto_delete": false,
-			"arguments": {}
-		},
-		{
-			"name": "mt.orderhistorybroker",
-			"vhost": "/",
-			"durable": true,
-			"auto_delete": false,
-			"arguments": {}
-		},
-		{
-			"name": "mt.orderrejectedbroker",
-			"vhost": "/",
-			"durable": true,
-			"auto_delete": false,
-			"arguments": {}
-		},
-		{
-			"name": "mt.transactionsbroker",
-			"vhost": "/",
-			"durable": true,
-			"auto_delete": false,
-			"arguments": {}
-		},
-		{
-			"name": "mt.orderreportbroker",
-			"vhost": "/",
-			"durable": true,
-			"auto_delete": false,
-			"arguments": {}
-		},
-		{
-			"name": "mt.varlimits",
-			"vhost": "/",
-			"durable": false,
-			"auto_delete": false,
-			"arguments": {}
-		},
-		{
-			"name": "mt.elementarytransactions",
-			"vhost": "/",
-			"durable": true,
-			"auto_delete": false,
-			"arguments": {}
-		},
-		{
-			"name": "mt.ivar",
-			"vhost": "/",
-			"durable": true,
-			"auto_delete": false,
-			"arguments": {}
-		},
-		{
-			"name": "mt.pvar",
-			"vhost": "/",
-			"durable": true,
-			"auto_delete": false,
-			"arguments": {}
-		},
-		{
-			"name": "mt.position.updates",
-			"vhost": "/",
-			"durable": true,
-			"auto_delete": false,
-			"arguments": {}
-		}
-	],
   "exchanges": [
     {
-      "name": "lykke.mt",
+      "name": "lykke.mt.pricefeed",
       "vhost": "/",
-      "type": "topic",
+      "type": "fanout",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "lykke.mt.accounthistory",
+      "vhost": "/",
+      "type": "fanout",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "lykke.mt.orderhistory",
+      "vhost": "/",
+      "type": "fanout",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "lykke.mt.orderrejected",
+      "vhost": "/",
+      "type": "fanout",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "lykke.mt.transactions",
+      "vhost": "/",
+      "type": "fanout",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "lykke.mt.orderreport",
+      "vhost": "/",
+      "type": "fanout",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "lykke.mt.varlimits",
+      "vhost": "/",
+      "type": "fanout",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "lykke.mt.elementarytransactions",
+      "vhost": "/",
+      "type": "fanout",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "lykke.mt.ivar",
+      "vhost": "/",
+      "type": "fanout",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "lykke.mt.pvar",
+      "vhost": "/",
+      "type": "fanout",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "lykke.mt.positionupdates",
+      "vhost": "/",
+      "type": "fanout",
       "durable": true,
       "auto_delete": false,
       "internal": false,
       "arguments": {}
     }
   ],
-	"bindings": [
-		{
-			"source": "lykke.mt",
-			"vhost": "/",
-			"destination": "mt.accounthistorybroker",
-			"destination_type": "queue",
-			"routing_key": "mt.accounthistory",
-			"arguments": {}
-		},
-		{
-			"source": "lykke.mt",
-			"vhost": "/",
-			"destination": "mt.orderhistorybroker",
-			"destination_type": "queue",
-			"routing_key": "mt.orderhistory",
-			"arguments": {}
-		},
-		{
-			"source": "lykke.mt",
-			"vhost": "/",
-			"destination": "mt.orderrejectedbroker",
-			"destination_type": "queue",
-			"routing_key": "mt.orderrejected",
-			"arguments": {}
-		},
-		{
-			"source": "lykke.mt",
-			"vhost": "/",
-			"destination": "mt.transactionsbroker",
-			"destination_type": "queue",
-			"routing_key": "mt.transactions",
-			"arguments": {}
-		},
-		{
-			"source": "lykke.mt",
-			"vhost": "/",
-			"destination": "mt.orderreportbroker",
-			"destination_type": "queue",
-			"routing_key": "mt.orderreport",
-			"arguments": {}
-		},
-		{
-			"source": "lykke.mt",
-			"vhost": "/",
-			"destination": "mt.varlimits",
-			"destination_type": "queue",
-			"routing_key": "mt.varlimits",
-			"arguments": {}
-		},
-		{
-			"source": "lykke.mt",
-			"vhost": "/",
-			"destination": "mt.elementarytransactions",
-			"destination_type": "queue",
-			"routing_key": "mt.elementarytransactions",
-			"arguments": {}
-		},
-		{
-			"source": "lykke.mt",
-			"vhost": "/",
-			"destination": "mt.ivar",
-			"destination_type": "queue",
-			"routing_key": "mt.ivar",
-			"arguments": {}
-		},
-		{
-			"source": "lykke.mt",
-			"vhost": "/",
-			"destination": "mt.pvar",
-			"destination_type": "queue",
-			"routing_key": "mt.pvar",
-			"arguments": {}
-		},
-		{
-			"source": "lykke.mt",
-			"vhost": "/",
-			"destination": "mt.position.updates",
-			"destination_type": "queue",
-			"routing_key": "mt.position.updates",
-			"arguments": {}
-		}
-	]
+  "queues": [
+    {
+      "name": "accounthistorybroker",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "orderhistorybroker",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "orderrejectedbroker",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "transactionsbroker",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "orderreportbroker",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "varlimits",
+      "vhost": "/",
+      "durable": false,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "elementarytransactions",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "ivar",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "pvar",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "position.updates",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    }
+  ],
+
+  "bindings": [
+    {
+      "source": "lykke.mt.accounthistory",
+      "vhost": "/",
+      "destination": "accounthistorybroker",
+      "destination_type": "queue",
+      "arguments": {}
+    },
+    {
+      "source": "lykke.mt.orderhistory",
+      "vhost": "/",
+      "destination": "orderhistorybroker",
+      "destination_type": "queue",
+      "arguments": {}
+    },
+    {
+      "source": "lykke.mt.orderrejected",
+      "vhost": "/",
+      "destination": "orderrejectedbroker",
+      "destination_type": "queue",
+      "arguments": {}
+    },
+    {
+      "source": "lykke.mt.transactions",
+      "vhost": "/",
+      "destination": "transactionsbroker",
+      "destination_type": "queue",
+      "arguments": {}
+    },
+    {
+      "source": "lykke.mt.orderreport",
+      "vhost": "/",
+      "destination": "orderreportbroker",
+      "destination_type": "queue",
+      "arguments": {}
+    },
+    {
+      "source": "lykke.mt.varlimits",
+      "vhost": "/",
+      "destination": "varlimits",
+      "destination_type": "queue",
+      "arguments": {}
+    },
+    {
+      "source": "lykke.mt.elementarytransactions",
+      "vhost": "/",
+      "destination": "elementarytransactions",
+      "destination_type": "queue",
+      "arguments": {}
+    },
+    {
+      "source": "lykke.mt.ivar",
+      "vhost": "/",
+      "destination": "ivar",
+      "destination_type": "queue",
+      "arguments": {}
+    },
+    {
+      "source": "lykke.mt.pvar",
+      "vhost": "/",
+      "destination": "pvar",
+      "destination_type": "queue",
+      "arguments": {}
+    },
+    {
+      "source": "lykke.mt.positionupdates",
+      "vhost": "/",
+      "destination": "position.updates",
+      "destination_type": "queue",
+      "arguments": {}
+    }
+  ]
 }

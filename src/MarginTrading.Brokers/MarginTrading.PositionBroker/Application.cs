@@ -53,11 +53,11 @@ namespace MarginTrading.PositionBroker
 				{
 					ConnectionString = _settings.MarginTradingRabbitMqSettings.InternalConnectionString,
 					QueueName = _settings.RabbitMqQueues.PositionUpdates.QueueName,
-					ExchangeName = _settings.MarginTradingRabbitMqSettings.ExchangeName,
+					ExchangeName = _settings.RabbitMqQueues.PositionUpdates.ExchangeName,
 					IsDurable = true
 				})
 					.SetMessageDeserializer(new DefaultStringDeserializer())
-					.SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy(_settings.RabbitMqQueues.PositionUpdates.RoutingKeyName))
+					.SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
 					.Subscribe(HandleMessage)
 					.SetLogger(_logger)
 					.Start();

@@ -42,11 +42,11 @@ namespace MarginTrading.AccountHistoryBroker
                     {
                         ConnectionString = _settings.MarginTradingRabbitMqSettings.InternalConnectionString,
                         QueueName = _settings.RabbitMqQueues.AccountHistory.QueueName,
-                        ExchangeName = _settings.MarginTradingRabbitMqSettings.ExchangeName,
+                        ExchangeName = _settings.RabbitMqQueues.AccountHistory.ExchangeName,
                         IsDurable = true
                     })
                     .SetMessageDeserializer(new DefaultStringDeserializer())
-                    .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy(_settings.RabbitMqQueues.AccountHistory.RoutingKeyName))
+                    .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
                     .Subscribe(HandleMessage)
                     .SetLogger(_logger)
                     .Start();

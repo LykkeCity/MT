@@ -23,155 +23,153 @@ using WampSharp.V2.Realm;
 
 namespace MarginTrading.Backend.Modules
 {
-    public class BackendServicesModule : Module
-    {
-        private readonly MarginSettings _settings;
-        private readonly IHostingEnvironment _environment;
+	public class BackendServicesModule : Module
+	{
+		private readonly MarginSettings _settings;
+		private readonly IHostingEnvironment _environment;
 
-        public BackendServicesModule(MarginSettings settings, IHostingEnvironment environment)
-        {
-            _settings = settings;
-            _environment = environment;
-        }
+		public BackendServicesModule(MarginSettings settings, IHostingEnvironment environment)
+		{
+			_settings = settings;
+			_environment = environment;
+		}
 
-        protected override void Load(ContainerBuilder builder)
-        {
-            var host = new WampHost();
-            var realm = host.RealmContainer.GetRealmByName(RealmNames.BackEnd);
+		protected override void Load(ContainerBuilder builder)
+		{
+			var host = new WampHost();
+			var realm = host.RealmContainer.GetRealmByName(RealmNames.BackEnd);
 
-            builder.RegisterInstance(host)
-                .As<IWampHost>()
-                .SingleInstance();
+			builder.RegisterInstance(host)
+				.As<IWampHost>()
+				.SingleInstance();
 
-            builder.RegisterInstance(realm)
-                .As<IWampHostedRealm>()
-                .SingleInstance();
+			builder.RegisterInstance(realm)
+				.As<IWampHostedRealm>()
+				.SingleInstance();
 
-            builder.RegisterType<ApiKeyValidator>()
-                .As<IApiKeyValidator>()
-                .SingleInstance();
+			builder.RegisterType<ApiKeyValidator>()
+				.As<IApiKeyValidator>()
+				.SingleInstance();
 
-            builder.RegisterType<EmailService>()
-                .As<IEmailService>()
-                .SingleInstance();
+			builder.RegisterType<EmailService>()
+				.As<IEmailService>()
+				.SingleInstance();
 
-            builder.RegisterType<OrderBookSaveService>()
-                .As<IStartable>()
-                .SingleInstance();
+			builder.RegisterType<OrderBookSaveService>()
+				.As<IStartable>()
+				.SingleInstance();
 
-            builder.Register<IServiceBusEmailSettings>(ctx =>
-                new ServiceBusEmailSettings
-                {
-                    Key = _settings.EmailServiceBus.Key,
-                    QueueName = _settings.EmailServiceBus.QueueName,
-                    NamespaceUrl = _settings.EmailServiceBus.NamespaceUrl,
-                    PolicyName = _settings.EmailServiceBus.PolicyName
-                }
-            ).SingleInstance();
+			builder.Register<IServiceBusEmailSettings>(ctx =>
+				new ServiceBusEmailSettings
+				{
+					Key = _settings.EmailServiceBus.Key,
+					QueueName = _settings.EmailServiceBus.QueueName,
+					NamespaceUrl = _settings.EmailServiceBus.NamespaceUrl,
+					PolicyName = _settings.EmailServiceBus.PolicyName
+				}
+			).SingleInstance();
 
-            builder.Register<ITemplateGenerator>(ctx =>
-                new MustacheTemplateGenerator(_environment, "Email/Templates")
-            ).SingleInstance();
+			builder.Register<ITemplateGenerator>(ctx =>
+				new MustacheTemplateGenerator(_environment, "Email/Templates")
+			).SingleInstance();
 
-            builder.RegisterType<EmailSenderProducer>()
-                .As<IEmailSender>()
-                .SingleInstance();
+			builder.RegisterType<EmailSenderProducer>()
+				.As<IEmailSender>()
+				.SingleInstance();
 
-            var consoleWriter = _environment.IsProduction()
-                ? new ConsoleLWriter(line =>
-                {
-                    try
-                    {
-                        if (_settings.RemoteConsoleEnabled && !string.IsNullOrEmpty(_settings.MetricLoggerLine))
-                        {
-                            _settings.MetricLoggerLine.PostJsonAsync(
-                                new
-                                {
-                                    Id = "Mt-backend",
-                                    Data =
-                                    new[]
-                                    {
-                                        new { Key = "Version", Value = PlatformServices.Default.Application.ApplicationVersion },
-                                        new { Key = "Data", Value = line }
-                                    }
-                                });
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                    }
+			var consoleWriter = _environment.IsProduction()
+				? new ConsoleLWriter(line =>
+				{
+					try
+					{
+						if (_settings.RemoteConsoleEnabled && !string.IsNullOrEmpty(_settings.MetricLoggerLine))
+						{
+							_settings.MetricLoggerLine.PostJsonAsync(
+								new
+								{
+									Id = "Mt-backend",
+									Data =
+									new[]
+									{
+										new { Key = "Version", Value = PlatformServices.Default.Application.ApplicationVersion },
+										new { Key = "Data", Value = line }
+									}
+								});
+						}
+					}
+					catch (Exception ex)
+					{
+						Console.WriteLine(ex.Message);
+					}
 
-                })
-                : new ConsoleLWriter(Console.WriteLine);
+				})
+				: new ConsoleLWriter(Console.WriteLine);
 
-            builder.RegisterInstance(consoleWriter)
-                .As<IConsole>()
-                .SingleInstance();
+			builder.RegisterInstance(consoleWriter)
+				.As<IConsole>()
+				.SingleInstance();
 
-            builder.RegisterType<MarginTradingOperationsLogService>()
-                .As<IMarginTradingOperationsLogService>()
-                .SingleInstance();
+			builder.RegisterType<MarginTradingOperationsLogService>()
+				.As<IMarginTradingOperationsLogService>()
+				.SingleInstance();
 
-            builder.RegisterType<PricesUpdateRabbitMqNotifier>()
-                .As<IEventConsumer<BestPriceChangeEventArgs>>()
-                .SingleInstance();
+			builder.RegisterType<PricesUpdateRabbitMqNotifier>()
+				.As<IEventConsumer<BestPriceChangeEventArgs>>()
+				.SingleInstance();
 
-            builder.RegisterInstance(_settings).SingleInstance();
-            builder.RegisterType<Application>()
-                .AsSelf()
-                .As<IStartable>()
-                .SingleInstance();
+			builder.RegisterInstance(_settings).SingleInstance();
+			builder.RegisterType<Application>()
+				.AsSelf()
+				.As<IStartable>()
+				.SingleInstance();
 
 			builder.Register<IClientAccountService>(ctx =>
 				new ClientAccountService(new Uri(_settings.ClientAccountServiceApiUrl))
 			).SingleInstance();
 
 			RegisterPublishers(builder, consoleWriter);
-        }
+		}
 
-        private void RegisterPublishers(ContainerBuilder builder, IConsole consoleWriter)
-        {
-            var publishers = new List<string>
-            {
-                _settings.RabbitMqQueues.AccountHistory.RoutingKeyName,
-                _settings.RabbitMqQueues.OrderHistory.RoutingKeyName,
-                _settings.RabbitMqQueues.OrderRejected.RoutingKeyName,
-                _settings.RabbitMqQueues.OrderbookPrices.RoutingKeyName,
-                _settings.RabbitMqQueues.OrderChanged.RoutingKeyName,
-                _settings.RabbitMqQueues.AccountChanged.RoutingKeyName,
-                _settings.RabbitMqQueues.AccountStopout.RoutingKeyName,
-                _settings.RabbitMqQueues.UserUpdates.RoutingKeyName,
-                _settings.RabbitMqQueues.Transaction.RoutingKeyName,
-                _settings.RabbitMqQueues.OrderReport.RoutingKeyName,
-				_settings.RabbitMqQueues.ElementaryTransaction.RoutingKeyName,
-				_settings.RabbitMqQueues.AggregateValuesAtRisk.RoutingKeyName,
-				_settings.RabbitMqQueues.IndividualValuesAtRisk.RoutingKeyName,
-				_settings.RabbitMqQueues.PositionUpdates.RoutingKeyName,
-				_settings.RabbitMqQueues.ValueAtRiskLimits.RoutingKeyName
-            };
+		private void RegisterPublishers(ContainerBuilder builder, IConsole consoleWriter)
+		{
+			var publishers = new List<string>
+			{
+				_settings.RabbitMqQueues.AccountHistory.ExchangeName,
+				_settings.RabbitMqQueues.OrderHistory.ExchangeName,
+				_settings.RabbitMqQueues.OrderRejected.ExchangeName,
+				_settings.RabbitMqQueues.OrderbookPrices.ExchangeName,
+				_settings.RabbitMqQueues.OrderChanged.ExchangeName,
+				_settings.RabbitMqQueues.AccountChanged.ExchangeName,
+				_settings.RabbitMqQueues.AccountStopout.ExchangeName,
+				_settings.RabbitMqQueues.UserUpdates.ExchangeName,
+				_settings.RabbitMqQueues.Transaction.ExchangeName,
+				_settings.RabbitMqQueues.OrderReport.ExchangeName,
+				_settings.RabbitMqQueues.ElementaryTransaction.ExchangeName,
+				_settings.RabbitMqQueues.AggregateValuesAtRisk.ExchangeName,
+				_settings.RabbitMqQueues.IndividualValuesAtRisk.ExchangeName,
+				_settings.RabbitMqQueues.PositionUpdates.ExchangeName,
+				_settings.RabbitMqQueues.ValueAtRiskLimits.ExchangeName
+			};
 
-            var rabbitMqSettings = new RabbitMqPublisherSettings
-            {
-                ConnectionString = _settings.MarginTradingRabbitMqSettings.InternalConnectionString,
-                ExchangeName = _settings.MarginTradingRabbitMqSettings.ExchangeName
-            };
+			var bytesSerializer = new BytesStringSerializer();
 
-            var bytesSerializer = new BytesStringSerializer();
+			foreach (string exchangeName in publishers)
+			{
+				var pub = new RabbitMqPublisher<string>(new RabbitMqPublisherSettings
+				{
+					ConnectionString = _settings.MarginTradingRabbitMqSettings.InternalConnectionString,
+					ExchangeName = exchangeName
+				})
+					.SetSerializer(bytesSerializer)
+					.SetPublishStrategy(new DefaultFnoutPublishStrategy(string.Empty, true))
+					.SetConsole(consoleWriter)
+					.Start();
 
-            foreach (string routingKey in publishers)
-            {
-                var pub = new RabbitMqPublisher<string>(rabbitMqSettings)
-                    .SetSerializer(bytesSerializer)
-                    .SetPublishStrategy(new TopicPublishStrategy(routingKey))
-                    .SetConsole(consoleWriter)
-                    .Start();
-
-                builder.RegisterInstance(pub)
-                    .Named<IMessageProducer<string>>(routingKey)
-                    .As<IStopable>()
-                    .SingleInstance();
-            }
-        }
-    }
+				builder.RegisterInstance(pub)
+					.Named<IMessageProducer<string>>(exchangeName)
+					.As<IStopable>()
+					.SingleInstance();
+			}
+		}
+	}
 }

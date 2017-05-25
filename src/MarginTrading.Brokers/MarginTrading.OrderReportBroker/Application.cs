@@ -59,11 +59,11 @@ namespace MarginTrading.OrderReportBroker
                 {
                     ConnectionString = _settings.MarginTradingRabbitMqSettings.InternalConnectionString,
                     QueueName = _settings.RabbitMqQueues.OrderReport.QueueName,
-                    ExchangeName = _settings.MarginTradingRabbitMqSettings.ExchangeName,
+                    ExchangeName = _settings.RabbitMqQueues.OrderReport.ExchangeName,
                     IsDurable = true
                 })
                     .SetMessageDeserializer(new DefaultStringDeserializer())
-                    .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy(_settings.RabbitMqQueues.OrderReport.RoutingKeyName))
+                    .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
                     .Subscribe(HandleMessage)
                     .SetLogger(_logger)
                     .Start();

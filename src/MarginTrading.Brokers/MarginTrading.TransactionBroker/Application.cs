@@ -80,11 +80,11 @@ namespace MarginTrading.TransactionBroker
 				{
 					ConnectionString = _settings.MarginTradingRabbitMqSettings.InternalConnectionString,
 					QueueName = _settings.RabbitMqQueues.Transaction.QueueName,
-					ExchangeName = _settings.MarginTradingRabbitMqSettings.ExchangeName,
+					ExchangeName = _settings.RabbitMqQueues.Transaction.ExchangeName,
 					IsDurable = true
 				})
 					.SetMessageDeserializer(new DefaultStringDeserializer())
-					.SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy(_settings.RabbitMqQueues.Transaction.RoutingKeyName))
+					.SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
 					.Subscribe(HandleMessage)
 					.SetLogger(_logger)
 					.Start();

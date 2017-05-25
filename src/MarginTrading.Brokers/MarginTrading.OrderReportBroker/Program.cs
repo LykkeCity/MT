@@ -8,7 +8,7 @@ namespace MarginTrading.OrderReportBroker
         {
             var host = new WebHostBuilder()
                 .UseKestrel()
-                .UseUrls("http://*:5006")
+                .UseUrls("http://*:5015")
                 .UseStartup<Startup>()
                 .Build();
 

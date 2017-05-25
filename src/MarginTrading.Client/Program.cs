@@ -19,8 +19,8 @@
             //client.GetAccountHistory();
             //client.GetHistory();
 
-            //client.PlaceOrder().Wait();
-            //client.CloseOrder(true).Wait();
+            client.PlaceOrder().Wait();
+            client.CloseOrder(true).Wait();
             //client.CancelOrder();
             //client.GetAccountOpenPositions().Wait();
             //client.GetOpenPositions();

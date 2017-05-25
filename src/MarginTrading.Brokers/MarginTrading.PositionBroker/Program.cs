@@ -8,7 +8,7 @@ namespace MarginTrading.PositionBroker
         {
             var host = new WebHostBuilder()
                 .UseKestrel()
-                .UseUrls("http://*:5008")
+                .UseUrls("http://*:5016")
                 .UseStartup<Startup>()
                 .Build();
 

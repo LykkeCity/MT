@@ -178,27 +178,25 @@ namespace MarginTrading.TransactionBroker
 
 			var publishers = new List<string>
 			{
-				settings.RabbitMqQueues.ElementaryTransaction.RoutingKeyName,
-			};
-
-			var rabbitMqSettings = new RabbitMqPublisherSettings
-			{
-				ConnectionString = settings.MarginTradingRabbitMqSettings.InternalConnectionString,
-				ExchangeName = settings.MarginTradingRabbitMqSettings.ExchangeName
+				settings.RabbitMqQueues.ElementaryTransaction.ExchangeName,
 			};
 
 			var bytesSerializer = new BytesStringSerializer();
 
-			foreach (string routingKey in publishers)
+			foreach (string exchangeName in publishers)
 			{
-				var pub = new RabbitMqPublisher<string>(rabbitMqSettings)
+				var pub = new RabbitMqPublisher<string>(new RabbitMqPublisherSettings
+				    {
+				        ConnectionString = settings.MarginTradingRabbitMqSettings.InternalConnectionString,
+				        ExchangeName = exchangeName
+				    })
 					.SetSerializer(bytesSerializer)
-					.SetPublishStrategy(new TopicPublishStrategy(routingKey))
+					.SetPublishStrategy(new DefaultFnoutPublishStrategy(string.Empty, true))
 					.SetConsole(consoleWriter)
 					.Start();
 
 				builder.RegisterInstance(pub)
-					.Named<IMessageProducer<string>>(routingKey)
+					.Named<IMessageProducer<string>>(exchangeName)
 					.As<IStopable>()
 					.SingleInstance();
 			}

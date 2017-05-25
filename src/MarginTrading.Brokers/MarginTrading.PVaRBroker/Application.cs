@@ -42,11 +42,11 @@ namespace MarginTrading.PVaRBroker
 				{
 					ConnectionString = _settings.MarginTradingRabbitMqSettings.InternalConnectionString,
 					QueueName = _settings.RabbitMqQueues.AggregateValuesAtRisk.QueueName,
-					ExchangeName = _settings.MarginTradingRabbitMqSettings.ExchangeName,
+					ExchangeName = _settings.RabbitMqQueues.AggregateValuesAtRisk.ExchangeName,
 					IsDurable = true
 				})
 					.SetMessageDeserializer(new DefaultStringDeserializer())
-					.SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy(_settings.RabbitMqQueues.AggregateValuesAtRisk.RoutingKeyName))
+					.SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
 					.Subscribe(HandleMessage)
 					.SetLogger(_logger)
 					.Start();

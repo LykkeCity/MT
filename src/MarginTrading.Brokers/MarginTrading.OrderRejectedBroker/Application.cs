@@ -43,11 +43,11 @@ namespace MarginTrading.OrderRejectedBroker
                     {
                         ConnectionString = _settings.MarginTradingRabbitMqSettings.InternalConnectionString,
                         QueueName = _settings.RabbitMqQueues.OrderRejected.QueueName,
-                        ExchangeName = _settings.MarginTradingRabbitMqSettings.ExchangeName,
+                        ExchangeName = _settings.RabbitMqQueues.OrderRejected.ExchangeName,
                         IsDurable = true
                     })
                     .SetMessageDeserializer(new DefaultStringDeserializer())
-                    .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy(_settings.RabbitMqQueues.OrderRejected.RoutingKeyName))
+                    .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
                     .Subscribe(HandleMessage)
                     .SetLogger(_logger)
                     .Start();
