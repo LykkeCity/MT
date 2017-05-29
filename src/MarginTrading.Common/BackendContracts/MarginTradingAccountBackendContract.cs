@@ -18,5 +18,6 @@
         public double PnL { get; set; }
         public double OpenPositionsCount { get; set; }
         public double MarginUsageLevel { get; set; }
+        public bool IsLive { get; set; }
     }
 }

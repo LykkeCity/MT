@@ -107,7 +107,7 @@ namespace MarginTrading.Services
 		{
 			try
 			{
-				await _publishers[_settings.RabbitMqQueues.AccountChanged.ExchangeName].ProduceAsync(account.ToBackendContract().ToJson());
+				await _publishers[_settings.RabbitMqQueues.AccountChanged.ExchangeName].ProduceAsync(account.ToBackendContract(_settings.IsLive).ToJson());
 			}
 			catch (Exception ex)
 			{

@@ -10,13 +10,14 @@ namespace MarginTrading.Common.BackendContracts
     {
         public MarginTradingAccountBackendContract[] Accounts { get; set; }
         public Dictionary<string, MarginTradingAccountAssetBackendContract[]> AccountAssetPairs { get; set; }
+        public bool IsLive { get; set; }
 
         public static InitDataBackendResponse Create(IEnumerable<IMarginTradingAccount> accounts,
-            Dictionary<string, IMarginTradingAccountAsset[]> accountAssetPairs)
+            Dictionary<string, IMarginTradingAccountAsset[]> accountAssetPairs, bool isLive)
         {
             return new InitDataBackendResponse
             {
-                Accounts = accounts.Select(item => item.ToBackendContract()).ToArray(),
+                Accounts = accounts.Select(item => item.ToBackendContract(isLive)).ToArray(),
                 AccountAssetPairs = accountAssetPairs.ToDictionary(pair => pair.Key, pair => pair.Value.Select(item => item.ToBackendContract()).ToArray()),
             };
         }

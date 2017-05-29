@@ -26,7 +26,8 @@ namespace MarginTrading.Common.Mappers
                 MarginInit = src.MarginInit,
                 PnL = src.PnL,
                 OpenPositionsCount = src.OpenPositionsCount,
-                MarginUsageLevel = src.MarginUsageLevel
+                MarginUsageLevel = src.MarginUsageLevel,
+                IsLive = src.IsLive
             };
         }
 

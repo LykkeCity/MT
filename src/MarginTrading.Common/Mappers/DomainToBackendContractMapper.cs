@@ -6,7 +6,7 @@ namespace MarginTrading.Common.Mappers
 {
     public static class DomainToBackendContractMapper
     {
-        public static MarginTradingAccountBackendContract ToBackendContract(this IMarginTradingAccount src)
+        public static MarginTradingAccountBackendContract ToBackendContract(this IMarginTradingAccount src, bool isLive)
         {
             return new MarginTradingAccountBackendContract
             {
@@ -25,7 +25,8 @@ namespace MarginTrading.Common.Mappers
                 MarginInit = src.GetMarginInit(),
                 PnL = src.GetPnl(),
                 OpenPositionsCount = src.GetOpenPositionsCount(),
-                MarginUsageLevel = src.GetMarginUsageLevel()
+                MarginUsageLevel = src.GetMarginUsageLevel(),
+                IsLive = isLive
             };
         }
 

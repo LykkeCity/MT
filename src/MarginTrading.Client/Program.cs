@@ -8,7 +8,7 @@
 
             client.Connect(ClientEnv.Local);
 
-            //client.InitData().Wait();
+            client.InitData().Wait();
             //client.InitAccounts();
             //client.AccountInstruments();
             //client.InitGraph();
@@ -19,8 +19,8 @@
             //client.GetAccountHistory();
             //client.GetHistory();
 
-            client.PlaceOrder().Wait();
-            client.CloseOrder(true).Wait();
+            //client.PlaceOrder().Wait();
+            //client.CloseOrder(true).Wait();
             //client.CancelOrder();
             //client.GetAccountOpenPositions().Wait();
             //client.GetOpenPositions();

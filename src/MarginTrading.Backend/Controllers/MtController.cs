@@ -91,7 +91,8 @@ namespace MarginTrading.Backend.Controllers
 
             var assets = _accountAssetsCacheService.GetClientAssets(accounts);
 
-            var result = InitDataBackendResponse.Create(accounts, assets);
+            var result = InitDataBackendResponse.Create(accounts, assets, _marginSettings.IsLive);
+            result.IsLive = _marginSettings.IsLive;
 
             return result;
         }
@@ -114,7 +115,7 @@ namespace MarginTrading.Backend.Controllers
         {
             var accounts = _accountsCacheService.GetAll(request.ClientId).ToArray();
 
-            var result = accounts.Select(item => item.ToBackendContract()).ToArray();
+            var result = accounts.Select(item => item.ToBackendContract(_marginSettings.IsLive)).ToArray();
 
             return result;
         }

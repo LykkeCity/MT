@@ -6,6 +6,7 @@ using MarginTrading.Common.BackendContracts;
 using MarginTrading.Common.Mappers;
 using MarginTrading.Core;
 using MarginTrading.Core.Clients;
+using MarginTrading.Core.Settings;
 using MarginTrading.Services;
 using MarginTrading.Services.Generated.ClientAccountServiceApi;
 using MarginTrading.Services.Generated.ClientAccountServiceApi.Models;
@@ -24,19 +25,22 @@ namespace MarginTrading.Backend.Controllers
         private readonly IMarginTradingOrdersHistoryRepository _ordersHistoryRepository;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly OrdersCache _ordersCache;
+        private readonly MarginSettings _settings;
 
         public AccountProfileController(
             IClientAccountService clientAccountService,
             IMarginTradingAccountHistoryRepository accountsHistoryRepository,
             IMarginTradingOrdersHistoryRepository ordersHistoryRepository,
             IAccountsCacheService accountsCacheService,
-            OrdersCache ordersCache)
+            OrdersCache ordersCache,
+            MarginSettings settings)
         {
             _clientAccountService = clientAccountService;
             _accountsHistoryRepository = accountsHistoryRepository;
             _ordersHistoryRepository = ordersHistoryRepository;
             _accountsCacheService = accountsCacheService;
             _ordersCache = ordersCache;
+            _settings = settings;
         }
 
         /// <summary>
@@ -51,7 +55,7 @@ namespace MarginTrading.Backend.Controllers
             var client = await GetClientIdByEmailAsync(email);
             // TODO: Remove ToList
             return client != null 
-                ? _accountsCacheService.GetAll(client.Id).Select(item => item.ToBackendContract()).ToList()
+                ? _accountsCacheService.GetAll(client.Id).Select(item => item.ToBackendContract(_settings.IsLive)).ToList()
                 : null;
         }
 
@@ -65,7 +69,7 @@ namespace MarginTrading.Backend.Controllers
         [Route("account/{clientId}/{accountId}")]
         public MarginTradingAccountBackendContract GetAccount(string clientId, string accountId)
         {
-            return _accountsCacheService.Get(clientId, accountId).ToBackendContract();
+            return _accountsCacheService.Get(clientId, accountId).ToBackendContract(_settings.IsLive);
         }
 
         /// <summary>
