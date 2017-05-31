@@ -41,7 +41,7 @@ namespace MarginTrading.OrderRejectedBroker
             {
                 _connector = new RabbitMqSubscriber<string>(new RabbitMqSubscriberSettings
                     {
-                        ConnectionString = _settings.MarginTradingRabbitMqSettings.InternalConnectionString,
+                        ConnectionString = _settings.MtRabbitMqConnString,
                         QueueName = _settings.RabbitMqQueues.OrderRejected.QueueName,
                         ExchangeName = _settings.RabbitMqQueues.OrderRejected.ExchangeName,
                         IsDurable = true

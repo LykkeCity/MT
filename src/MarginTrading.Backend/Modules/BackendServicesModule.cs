@@ -157,7 +157,7 @@ namespace MarginTrading.Backend.Modules
 			{
 				var pub = new RabbitMqPublisher<string>(new RabbitMqPublisherSettings
 				{
-					ConnectionString = _settings.MarginTradingRabbitMqSettings.InternalConnectionString,
+					ConnectionString = _settings.MtRabbitMqConnString,
 					ExchangeName = exchangeName
 				})
 					.SetSerializer(bytesSerializer)

@@ -40,7 +40,7 @@ namespace MarginTrading.PVaRBroker
 			{
 				_connector = new RabbitMqSubscriber<string>(new RabbitMqSubscriberSettings
 				{
-					ConnectionString = _settings.MarginTradingRabbitMqSettings.InternalConnectionString,
+					ConnectionString = _settings.MtRabbitMqConnString,
 					QueueName = _settings.RabbitMqQueues.AggregateValuesAtRisk.QueueName,
 					ExchangeName = _settings.RabbitMqQueues.AggregateValuesAtRisk.ExchangeName,
 					IsDurable = true

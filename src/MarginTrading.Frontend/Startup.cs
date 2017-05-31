@@ -188,7 +188,7 @@ namespace MarginTrading.Frontend
                 .SingleInstance();
 
             builder.Register<IMarginTradingOperationsLogRepository>(ctx =>
-                new MarginTradingOperationsLogRepository(new AzureTableStorage<OperationLogEntity>(settings.MarginTradingFront.Db.MarginTradingConnString, "MarginTradingFrontendOperationsLog", log))
+                new MarginTradingOperationsLogRepository(new AzureTableStorage<OperationLogEntity>(settings.MarginTradingFront.Db.LogsConnString, "MarginTradingFrontendOperationsLog", log))
             )
             .SingleInstance();
 
@@ -198,18 +198,6 @@ namespace MarginTrading.Frontend
 
             builder.Register<IAppGlobalSettingsRepositry>(ctx =>
                 new AppGlobalSettingsRepository(new AzureTableStorage<AppGlobalSettingsEntity>(settings.MarginTradingFront.Db.ClientPersonalInfoConnString, "Setup", log))
-            ).SingleInstance();
-
-            builder.Register<IMarginTradingAccountsRepository>(ctx =>
-               AzureRepoFactories.MarginTrading.CreateAccountsRepository(settings.MarginTradingFront.Db.MarginTradingConnString, log)
-           ).SingleInstance();
-
-            builder.Register<IMarginTradingConditionRepository>(ctx =>
-               AzureRepoFactories.MarginTrading.CreateTradingConditionsRepository(settings.MarginTradingFront.Db.MarginTradingConnString, log)
-           ).SingleInstance();
-
-            builder.Register<IMarginTradingAccountAssetRepository>(ctx =>
-                AzureRepoFactories.MarginTrading.CreateAccountAssetsRepository(settings.MarginTradingFront.Db.DictsConnString, log)
             ).SingleInstance();
 
             builder.Register<IMarginTradingWatchListRepository>(ctx =>
@@ -309,7 +297,7 @@ namespace MarginTrading.Frontend
 
             MarginTradingBackendServiceLocator.SubscriberPrices = new RabbitMqSubscriber<InstrumentBidAskPair>(new RabbitMqSubscriberSettings
             {
-                ConnectionString = settings.MarginTradingLive.MarginTradingRabbitMqSettings.ConnectionString,
+                ConnectionString = settings.MarginTradingLive.MtRabbitMqConnString,
                 ExchangeName = settings.MarginTradingFront.RabbitMqQueues.OrderbookPrices.ExchangeName,
                 QueueName = settings.MarginTradingFront.RabbitMqQueues.OrderbookPrices.QueueName + ".frontend",
                 IsDurable = false
@@ -323,7 +311,7 @@ namespace MarginTrading.Frontend
 
             MarginTradingBackendServiceLocator.SubscriberAccountChangedDemo = new RabbitMqSubscriber<MarginTradingAccountBackendContract>(new RabbitMqSubscriberSettings
             {
-                ConnectionString = settings.MarginTradingDemo.MarginTradingRabbitMqSettings.ConnectionString,
+                ConnectionString = settings.MarginTradingDemo.MtRabbitMqConnString,
                 ExchangeName = settings.MarginTradingFront.RabbitMqQueues.AccountChanged.ExchangeName,
                 QueueName = settings.MarginTradingFront.RabbitMqQueues.AccountChanged.QueueName + ".frontend",
                 IsDurable = false
@@ -337,7 +325,7 @@ namespace MarginTrading.Frontend
 
             MarginTradingBackendServiceLocator.SubscriberAccountChangedLive = new RabbitMqSubscriber<MarginTradingAccountBackendContract>(new RabbitMqSubscriberSettings
             {
-                ConnectionString = settings.MarginTradingLive.MarginTradingRabbitMqSettings.ConnectionString,
+                ConnectionString = settings.MarginTradingLive.MtRabbitMqConnString,
                 ExchangeName = settings.MarginTradingFront.RabbitMqQueues.AccountChanged.ExchangeName,
                 QueueName = settings.MarginTradingFront.RabbitMqQueues.AccountChanged.QueueName + ".frontend",
                 IsDurable = false
@@ -351,7 +339,7 @@ namespace MarginTrading.Frontend
 
             MarginTradingBackendServiceLocator.SubscriberOrderChangedDemo = new RabbitMqSubscriber<OrderContract>(new RabbitMqSubscriberSettings
             {
-                ConnectionString = settings.MarginTradingDemo.MarginTradingRabbitMqSettings.ConnectionString,
+                ConnectionString = settings.MarginTradingDemo.MtRabbitMqConnString,
                 ExchangeName = settings.MarginTradingFront.RabbitMqQueues.OrderChanged.ExchangeName,
                 QueueName = settings.MarginTradingFront.RabbitMqQueues.OrderChanged.QueueName + ".frontend",
                 IsDurable = false
@@ -365,7 +353,7 @@ namespace MarginTrading.Frontend
 
             MarginTradingBackendServiceLocator.SubscriberOrderChangedLive = new RabbitMqSubscriber<OrderContract>(new RabbitMqSubscriberSettings
             {
-                ConnectionString = settings.MarginTradingLive.MarginTradingRabbitMqSettings.ConnectionString,
+                ConnectionString = settings.MarginTradingLive.MtRabbitMqConnString,
                 ExchangeName = settings.MarginTradingFront.RabbitMqQueues.OrderChanged.ExchangeName,
                 QueueName = settings.MarginTradingFront.RabbitMqQueues.OrderChanged.QueueName + ".frontend",
                 IsDurable = false
@@ -379,7 +367,7 @@ namespace MarginTrading.Frontend
 
             MarginTradingBackendServiceLocator.SubscriberAccountStopoutDemo = new RabbitMqSubscriber<AccountStopoutBackendContract>(new RabbitMqSubscriberSettings
             {
-                ConnectionString = settings.MarginTradingDemo.MarginTradingRabbitMqSettings.ConnectionString,
+                ConnectionString = settings.MarginTradingDemo.MtRabbitMqConnString,
                 ExchangeName = settings.MarginTradingFront.RabbitMqQueues.AccountStopout.ExchangeName,
                 QueueName = settings.MarginTradingFront.RabbitMqQueues.AccountStopout.QueueName + ".frontend",
                 IsDurable = false
@@ -393,7 +381,7 @@ namespace MarginTrading.Frontend
 
             MarginTradingBackendServiceLocator.SubscriberAccountStopoutLive = new RabbitMqSubscriber<AccountStopoutBackendContract>(new RabbitMqSubscriberSettings
             {
-                ConnectionString = settings.MarginTradingLive.MarginTradingRabbitMqSettings.ConnectionString,
+                ConnectionString = settings.MarginTradingLive.MtRabbitMqConnString,
                 ExchangeName = settings.MarginTradingFront.RabbitMqQueues.AccountStopout.ExchangeName,
                 QueueName = settings.MarginTradingFront.RabbitMqQueues.AccountStopout.QueueName + ".frontend",
                 IsDurable = false
@@ -407,7 +395,7 @@ namespace MarginTrading.Frontend
 
             MarginTradingBackendServiceLocator.SubscribeUserUpdatesDemo = new RabbitMqSubscriber<UserUpdateEntityBackendContract>(new RabbitMqSubscriberSettings
             {
-                ConnectionString = settings.MarginTradingDemo.MarginTradingRabbitMqSettings.ConnectionString,
+                ConnectionString = settings.MarginTradingDemo.MtRabbitMqConnString,
                 ExchangeName = settings.MarginTradingFront.RabbitMqQueues.UserUpdates.ExchangeName,
                 QueueName = settings.MarginTradingFront.RabbitMqQueues.UserUpdates.QueueName + ".frontend",
                 IsDurable = false
@@ -421,7 +409,7 @@ namespace MarginTrading.Frontend
 
             MarginTradingBackendServiceLocator.SubscribeUserUpdatesLive = new RabbitMqSubscriber<UserUpdateEntityBackendContract>(new RabbitMqSubscriberSettings
             {
-                ConnectionString = settings.MarginTradingLive.MarginTradingRabbitMqSettings.ConnectionString,
+                ConnectionString = settings.MarginTradingLive.MtRabbitMqConnString,
                 ExchangeName = settings.MarginTradingFront.RabbitMqQueues.UserUpdates.ExchangeName,
                 QueueName = settings.MarginTradingFront.RabbitMqQueues.UserUpdates.QueueName + ".frontend",
                 IsDurable = false

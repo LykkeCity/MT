@@ -19,7 +19,7 @@ namespace MarginTrading.Frontend.Settings
         public string ApiRootUrl { get; set; }
         public string ApiKey { get; set; }
         
-        public MarginTradingRabbitMqSettings MarginTradingRabbitMqSettings { get; set; }
+        public string MtRabbitMqConnString { get; set; }
     }
 
     public class DbSettings
@@ -27,7 +27,6 @@ namespace MarginTrading.Frontend.Settings
         public string LogsConnString { get; set; }
         public string MarginTradingConnString { get; set; }
         public string ClientPersonalInfoConnString { get; set; }
-        public string DictsConnString { get; set; }
     }
 
     public class MtQueues

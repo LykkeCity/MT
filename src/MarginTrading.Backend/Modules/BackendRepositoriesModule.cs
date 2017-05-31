@@ -56,15 +56,15 @@ namespace MarginTrading.Backend.Modules
             ).SingleInstance();
 
             builder.Register<IMarginTradingConditionRepository>(ctx =>
-                AzureRepoFactories.MarginTrading.CreateTradingConditionsRepository(_settings.Db.DictsConnString, log)
+                AzureRepoFactories.MarginTrading.CreateTradingConditionsRepository(_settings.Db.MarginTradingConnString, log)
             ).SingleInstance();
 
             builder.Register<IMarginTradingAccountGroupRepository>(ctx =>
-                AzureRepoFactories.MarginTrading.CreateAccountGroupRepository(_settings.Db.DictsConnString, log)
+                AzureRepoFactories.MarginTrading.CreateAccountGroupRepository(_settings.Db.MarginTradingConnString, log)
             ).SingleInstance();
 
             builder.Register<IMarginTradingAccountAssetRepository>(ctx =>
-                AzureRepoFactories.MarginTrading.CreateAccountAssetsRepository(_settings.Db.DictsConnString, log)
+                AzureRepoFactories.MarginTrading.CreateAccountAssetsRepository(_settings.Db.MarginTradingConnString, log)
             ).SingleInstance();
 
             builder.Register<IMarginTradingAssetsRepository>(ctx =>

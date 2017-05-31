@@ -57,7 +57,7 @@ namespace MarginTrading.OrderReportBroker
 
                 _connector = new RabbitMqSubscriber<string>(new RabbitMqSubscriberSettings
                 {
-                    ConnectionString = _settings.MarginTradingRabbitMqSettings.InternalConnectionString,
+                    ConnectionString = _settings.MtRabbitMqConnString,
                     QueueName = _settings.RabbitMqQueues.OrderReport.QueueName,
                     ExchangeName = _settings.RabbitMqQueues.OrderReport.ExchangeName,
                     IsDurable = true

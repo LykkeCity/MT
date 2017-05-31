@@ -43,7 +43,7 @@ namespace MarginTrading.RiskManagerBroker
 
 				_connector = new RabbitMqSubscriber<string>(new RabbitMqSubscriberSettings
 				{
-					ConnectionString = _settings.MarginTradingRabbitMqSettings.InternalConnectionString,
+					ConnectionString = _settings.MtRabbitMqConnString,
 					QueueName = _settings.RabbitMqQueues.ElementaryTransaction.QueueName,
 					ExchangeName = _settings.RabbitMqQueues.ElementaryTransaction.ExchangeName,
 					IsDurable = true

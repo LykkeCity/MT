@@ -35,7 +35,7 @@ namespace MarginTrading.Core.Settings
 		public Db Db { get; set; }
 		public RabbitMqQueues RabbitMqQueues { get; set; }
 		public RabbitMqSettings RabbitMqSettings { get; set; }
-		public MarginTradingRabbitMqSettings MarginTradingRabbitMqSettings { get; set; }
+		public string MtRabbitMqConnString { get; set; }
 		public RiskManagementSettings RiskManagement { get; set; }
 	}
 
@@ -104,13 +104,6 @@ namespace MarginTrading.Core.Settings
 	{
 		public string ConnectionString { get; set; }
 		public string QueueName { get; set; }
-		public string ExchangeName { get; set; }
-	}
-
-	public class MarginTradingRabbitMqSettings
-	{
-		public string ConnectionString { get; set; }
-		public string InternalConnectionString { get; set; }
 		public string ExchangeName { get; set; }
 	}
 }

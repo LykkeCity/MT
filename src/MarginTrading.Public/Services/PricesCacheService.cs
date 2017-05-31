@@ -35,7 +35,7 @@ namespace MarginTrading.Public.Services
         {
             _subscriber = new RabbitMqSubscriber<InstrumentBidAskPair>(new RabbitMqSubscriberSettings
             {
-                ConnectionString = _settings.MarginTradingRabbitMqSettings.ConnectionString,
+                ConnectionString = _settings.MtRabbitMqConnString,
                 ExchangeName = _settings.RabbitMqQueues.OrderbookPrices.ExchangeName,
                 QueueName = _settings.RabbitMqQueues.OrderbookPrices.QueueName + $".public.{nameof(PricesCacheService).ToLower()}",
                 IsDurable = false

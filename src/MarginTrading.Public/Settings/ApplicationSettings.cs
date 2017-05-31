@@ -11,10 +11,10 @@ namespace MarginTrading.Public.Settings
     {
         public string Env { get; set; }
         public string WampPricesTopicName { get; set; }
+        public string MtRabbitMqConnString { get; set; }
 
         public DbSettings Db { get; set; }
         public MtQueues RabbitMqQueues { get; set; }
-        public MarginTradingRabbitMqSettings MarginTradingRabbitMqSettings { get; set; }
     }
 
     public class DbSettings

@@ -40,7 +40,7 @@ namespace MarginTrading.OrderHistoryBroker
             {
                 _connector = new RabbitMqSubscriber<string>(new RabbitMqSubscriberSettings
                     {
-                        ConnectionString = _settings.MarginTradingRabbitMqSettings.InternalConnectionString,
+                        ConnectionString = _settings.MtRabbitMqConnString,
                         QueueName = _settings.RabbitMqQueues.OrderHistory.QueueName,
                         ExchangeName = _settings.RabbitMqQueues.OrderHistory.ExchangeName,
                         IsDurable = true

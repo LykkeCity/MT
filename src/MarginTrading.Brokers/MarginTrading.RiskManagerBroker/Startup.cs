@@ -207,7 +207,7 @@ namespace MarginTrading.RiskManagerBroker
 			{
 				var pub = new RabbitMqPublisher<string>(new RabbitMqPublisherSettings
 				    {
-				        ConnectionString = settings.MarginTradingRabbitMqSettings.InternalConnectionString,
+				        ConnectionString = settings.MtRabbitMqConnString,
 				        ExchangeName = exchangeName
 				    })
 					.SetSerializer(bytesSerializer)

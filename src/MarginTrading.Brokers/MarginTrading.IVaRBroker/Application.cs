@@ -40,7 +40,7 @@ namespace MarginTrading.IVaRBroker
 			{
 				_connector = new RabbitMqSubscriber<string>(new RabbitMqSubscriberSettings
 				{
-					ConnectionString = _settings.MarginTradingRabbitMqSettings.InternalConnectionString,
+					ConnectionString = _settings.MtRabbitMqConnString,
 					QueueName = _settings.RabbitMqQueues.IndividualValuesAtRisk.QueueName,
 					ExchangeName = _settings.RabbitMqQueues.IndividualValuesAtRisk.ExchangeName,
 					IsDurable = true
