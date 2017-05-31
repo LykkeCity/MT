@@ -10,4 +10,8 @@
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Lykke.Pkg.SettingsReader" Version="1.0.31" />
+  </ItemGroup>
+
 </Project>

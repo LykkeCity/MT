@@ -1,4 +1,5 @@
-﻿using MarginTrading.Core.Settings;
+﻿using Lykke.SettingsReader.Attributes;
+using MarginTrading.Core.Settings;
 
 namespace MarginTrading.Public.Settings
 {
@@ -9,6 +10,7 @@ namespace MarginTrading.Public.Settings
 
     public class MtPublicBaseSettings
     {
+        [Optional]
         public string Env { get; set; }
         public string WampPricesTopicName { get; set; }
         public string MtRabbitMqConnString { get; set; }

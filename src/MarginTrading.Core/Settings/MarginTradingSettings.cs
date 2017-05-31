@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Lykke.SettingsReader.Attributes;
 
 namespace MarginTrading.Core.Settings
 {
@@ -23,10 +24,13 @@ namespace MarginTrading.Core.Settings
 		public string ClientAccountServiceApiUrl { get; set; }
 
 
-		#region from Env variables
+        #region from Env variables
 
-		public string Env { get; set; }
-		public bool IsLive { get; set; }
+        [Optional]
+        public string Env { get; set; }
+
+        [Optional]
+        public bool IsLive { get; set; }
 
 		#endregion
 
@@ -36,18 +40,6 @@ namespace MarginTrading.Core.Settings
 		public RabbitMqQueues RabbitMqQueues { get; set; }
 		public RabbitMqSettings RabbitMqSettings { get; set; }
 		public string MtRabbitMqConnString { get; set; }
-		public RiskManagementSettings RiskManagement { get; set; }
-	}
-
-	public class RiskManagementSettings
-	{
-		public int QuoteSamplingInterval { get; set; }
-		public int QuoteSampleMaxCount { get; set; }
-		public double SamplingFrequency { get; set; }
-		public bool EnforceCalculation { get; set; }
-		public Dictionary<string, Dictionary<string, double>> CorrelationMatrix { get; set; }
-		public Dictionary<string, double> PVaRSoftLimits { get; set; }
-		public Dictionary<string, double> PVaRHardLimits { get; set; }
 	}
 
 	public class NotificationSettings

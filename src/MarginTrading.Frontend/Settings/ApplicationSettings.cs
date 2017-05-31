@@ -1,4 +1,5 @@
-﻿using MarginTrading.Core.Settings;
+﻿using Lykke.SettingsReader.Attributes;
+using MarginTrading.Core.Settings;
 
 namespace MarginTrading.Frontend.Settings
 {
@@ -49,6 +50,7 @@ namespace MarginTrading.Frontend.Settings
 
         #region From env variables
 
+        [Optional]
         public string Env { get; set; }
 
         #endregion
