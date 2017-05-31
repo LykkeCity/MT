@@ -2,6 +2,7 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Flurl.Http;
+using Lykke.SettingsReader;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Public.Modules;
 using MarginTrading.Public.Settings;
@@ -56,7 +57,7 @@ namespace MarginTrading.Public
 
             ApplicationSettings appSettings = Environment.IsDevelopment()
                 ? Configuration.Get<ApplicationSettings>()
-                : Configuration["SettingsUrl"].GetJsonAsync<ApplicationSettings>().Result;
+                : SettingsProcessor.Process<ApplicationSettings>(Configuration["SettingsUrl"].GetStringAsync().Result);
 
             MtPublicBaseSettings settings = appSettings.MtPublic;
 

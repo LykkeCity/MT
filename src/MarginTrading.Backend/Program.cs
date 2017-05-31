@@ -33,7 +33,9 @@ namespace MarginTrading.Backend
                 Console.WriteLine("KestrelThreadsCount is not set. Using default value");
             }
 
-            var host = new WebHostBuilder()
+            try
+            {
+                var host = new WebHostBuilder()
                 .UseKestrel(options =>
                 {
                     if (kestrelThreadsCount > 0)
@@ -45,7 +47,13 @@ namespace MarginTrading.Backend
                 .UseStartup<Startup>()
                 .Build();
 
-            host.Run();
+                host.Run();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
     }
 }

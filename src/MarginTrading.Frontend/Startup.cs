@@ -9,6 +9,7 @@ using Lykke.Common;
 using Lykke.Logs;
 using Lykke.RabbitMqBroker.Subscriber;
 using Lykke.Service.Session;
+using Lykke.SettingsReader;
 using MarginTrading.AzureRepositories;
 using MarginTrading.AzureRepositories.Settings;
 using MarginTrading.Common.BackendContracts;
@@ -90,7 +91,7 @@ namespace MarginTrading.Frontend
 
             ApplicationSettings appSettings = Environment.IsDevelopment()
                 ? Configuration.Get<ApplicationSettings>()
-                : Configuration["SettingsUrl"].GetJsonAsync<ApplicationSettings>().Result;
+                : SettingsProcessor.Process<ApplicationSettings>(Configuration["SettingsUrl"].GetStringAsync().Result);
 
             MtFrontendSettings settings = appSettings.MtFrontend;
 

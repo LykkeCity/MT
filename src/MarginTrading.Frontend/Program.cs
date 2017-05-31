@@ -28,7 +28,9 @@ namespace MarginTrading.Frontend
 
             Console.WriteLine($"Kestrel threads count: {kestrelThreadsCount}");
 
-            var host = new WebHostBuilder()
+            try
+            {
+                var host = new WebHostBuilder()
                 .UseKestrel(options =>
                 {
                     if (kestrelThreadsCount > 0)
@@ -42,7 +44,13 @@ namespace MarginTrading.Frontend
                 .UseStartup<Startup>()
                 .Build();
 
-            host.Run();
+                host.Run();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
     }
 }

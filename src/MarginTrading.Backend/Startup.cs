@@ -4,6 +4,7 @@ using System.IO;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Flurl.Http;
+using Lykke.SettingsReader;
 using MarginTrading.Backend.Infrastructure;
 using MarginTrading.Backend.Middleware;
 using MarginTrading.Backend.Modules;
@@ -73,7 +74,7 @@ namespace MarginTrading.Backend
 
             MtBackendSettings mtSettings = Environment.IsDevelopment()
                 ? Configuration.Get<MtBackendSettings>()
-                : Configuration["SettingsUrl"].GetJsonAsync<MtBackendSettings>().Result;
+                : SettingsProcessor.Process<MtBackendSettings>(Configuration["SettingsUrl"].GetStringAsync().Result);
 
             bool isLive = Configuration.IsLive();
             MarginSettings settings = isLive ? mtSettings.MtBackend.MarginTradingLive : mtSettings.MtBackend.MarginTradingDemo;
