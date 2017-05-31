@@ -6,6 +6,7 @@ using AzureStorage.Tables;
 using Common.Log;
 using Flurl.Http;
 using Lykke.Logs;
+using Lykke.SettingsReader;
 using MarginTrading.AzureRepositories;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Core;
@@ -51,7 +52,7 @@ namespace MarginTrading.IVaRBroker
 
             MtBackendSettings mtSettings = Environment.IsDevelopment()
                 ? Configuration.Get<MtBackendSettings>()
-                : Configuration["SettingsUrl"].GetJsonAsync<MtBackendSettings>().Result;
+                : SettingsProcessor.Process<MtBackendSettings>(Configuration["SettingsUrl"].GetStringAsync().Result);
 
             bool isLive = Configuration.IsLive();
             MarginSettings settings = isLive ? mtSettings.MtBackend.MarginTradingLive : mtSettings.MtBackend.MarginTradingDemo;

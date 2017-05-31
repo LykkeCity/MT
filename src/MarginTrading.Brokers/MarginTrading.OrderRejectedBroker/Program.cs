@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using System;
+using Microsoft.AspNetCore.Hosting;
 
 namespace MarginTrading.OrderRejectedBroker
 {
@@ -6,13 +7,21 @@ namespace MarginTrading.OrderRejectedBroker
     {
         public static void Main(string[] args)
         {
-            var host = new WebHostBuilder()
+            try
+            {
+                var host = new WebHostBuilder()
                 .UseKestrel()
                 .UseUrls("http://*:5014")
                 .UseStartup<Startup>()
                 .Build();
 
-            host.Run();
+                host.Run();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
     }
 }

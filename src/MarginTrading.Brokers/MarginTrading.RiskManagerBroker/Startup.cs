@@ -23,6 +23,7 @@ using Common;
 using Lykke.RabbitMqBroker.Publisher;
 using MarginTrading.Common.RabbitMq;
 using System.Collections.Generic;
+using Lykke.SettingsReader;
 
 namespace MarginTrading.RiskManagerBroker
 {
@@ -57,7 +58,7 @@ namespace MarginTrading.RiskManagerBroker
 
             MtBackendSettings mtSettings = Environment.IsDevelopment()
                 ? Configuration.Get<MtBackendSettings>()
-                : Configuration["SettingsUrl"].GetJsonAsync<MtBackendSettings>().Result;
+                : SettingsProcessor.Process<MtBackendSettings>(Configuration["SettingsUrl"].GetStringAsync().Result);
 
             bool isLive = Configuration.IsLive();
             MarginSettings settings = isLive ? mtSettings.MtBackend.MarginTradingLive : mtSettings.MtBackend.MarginTradingDemo;

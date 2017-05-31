@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using System;
+using Microsoft.AspNetCore.Hosting;
 
 namespace MarginTrading.TransactionBroker
 {
@@ -6,13 +7,21 @@ namespace MarginTrading.TransactionBroker
     {
         public static void Main(string[] args)
         {
-            var host = new WebHostBuilder()
+            try
+            {
+                var host = new WebHostBuilder()
                 .UseKestrel()
                 .UseUrls("http://*:5019")
                 .UseStartup<Startup>()
                 .Build();
 
-            host.Run();
+                host.Run();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
     }
 }

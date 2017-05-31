@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using System;
+using Microsoft.AspNetCore.Hosting;
 
 namespace MarginTrading.PVaRBroker
 {
@@ -6,13 +7,21 @@ namespace MarginTrading.PVaRBroker
     {
         public static void Main(string[] args)
         {
-            var host = new WebHostBuilder()
+            try
+            {
+                var host = new WebHostBuilder()
                 .UseKestrel()
                 .UseUrls("http://*:5017")
                 .UseStartup<Startup>()
                 .Build();
 
-            host.Run();
+                host.Run();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
     }
 }
