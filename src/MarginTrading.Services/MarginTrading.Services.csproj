@@ -28,8 +28,4 @@
     <PackageReference Include="Lykke.Common" Version="1.1.69" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Generated\SessionServiceApi\" />
-  </ItemGroup>
-
 </Project>

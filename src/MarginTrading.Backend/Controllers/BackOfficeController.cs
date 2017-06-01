@@ -5,14 +5,11 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using MarginTrading.Backend.Models;
-using MarginTrading.Common.BackendContracts;
 using MarginTrading.Common.Models;
 using MarginTrading.Core;
 using MarginTrading.Core.Clients;
 using MarginTrading.Core.Settings;
 using MarginTrading.Services;
-using MarginTrading.Services.Generated.ClientAccountServiceApi;
-using MarginTrading.Services.Generated.ClientAccountServiceApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -302,7 +299,7 @@ namespace MarginTrading.Backend.Controllers
 
             if (ModelState.IsValid)
             {
-                IClientAccount client = await _clientAccountService.ApiClientAccountsGetByIdPostAsync(new GetByIdRequest(model.ClientId));
+                IClientAccount client = await _clientAccountService.GetAsync(model.ClientId);
 
                 if (client == null)
                 {

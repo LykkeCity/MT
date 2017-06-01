@@ -17,6 +17,14 @@ namespace MarginTrading.AzureRepositories
 			{
 				return new ClientSettingsRepository(new AzureTableStorage<ClientSettingsEntity>(connString, "TraderSettings", log));
 			}
+
+            public static ClientsRepository CreateClientsRepository(string connString, ILog log)
+			{
+			    const string tableName = "Traders";
+			    return new ClientsRepository(
+			        new AzureTableStorage<ClientAccountEntity>(connString, tableName, log),
+			        new AzureTableStorage<AzureIndex>(connString, tableName, log));
+            }
 		}
 
 		public static class Monitoring

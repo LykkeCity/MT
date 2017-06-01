@@ -3,8 +3,6 @@ using MarginTrading.Core;
 using MarginTrading.Core.Clients;
 using MarginTrading.Core.Messages;
 using MarginTrading.Services.Events;
-using MarginTrading.Services.Generated.ClientAccountServiceApi;
-using MarginTrading.Services.Generated.ClientAccountServiceApi.Models;
 using MarginTrading.Services.Notifications;
 
 namespace MarginTrading.Services
@@ -37,7 +35,7 @@ namespace MarginTrading.Services
                 await SendNotification(account.ClientId, string.Format(MtMessages.Notifications_MarginCall, account.GetMarginUsageLevel(),
                         account.BaseAssetId), null);
 
-                var clientAcc = await _clientAccountService.ApiClientAccountsGetByIdPostAsync(new GetByIdRequest(account.ClientId));
+                var clientAcc = await _clientAccountService.GetAsync(account.ClientId);
 
                 if (clientAcc != null)
                     await _emailService.SendMarginCallEmailAsync(clientAcc.Email, account.BaseAssetId, account.Id);

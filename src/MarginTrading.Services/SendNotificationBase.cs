@@ -1,8 +1,6 @@
 ﻿using System.Threading.Tasks;
 using MarginTrading.Core;
 using MarginTrading.Core.Clients;
-using MarginTrading.Services.Generated.ClientAccountServiceApi;
-using MarginTrading.Services.Generated.ClientAccountServiceApi.Models;
 using MarginTrading.Services.Notifications;
 
 namespace MarginTrading.Services
@@ -30,8 +28,8 @@ namespace MarginTrading.Services
 
             if (pushSettings != null && pushSettings.Enabled)
             {
-                var clientAcc = await _clientAccountService.ApiClientAccountsGetByIdPostAsync(new GetByIdRequest(clientId));
-                await _appNotifications.SendPositionNotification(new[] { clientAcc.NotificationsId }, message, order);
+                var notificationId = await _clientAccountService.GetNotificationId(clientId);
+                await _appNotifications.SendPositionNotification(new[] { notificationId }, message, order);
             }
         }
     }

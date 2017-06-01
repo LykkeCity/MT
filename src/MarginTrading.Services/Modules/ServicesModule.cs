@@ -49,8 +49,8 @@ namespace MarginTrading.Services.Modules
 				.As<IClientTokenService>()
 				.SingleInstance();
 
-			builder.RegisterType<ClientNotificationService>()
-				.As<IClientNotificationService>()
+			builder.RegisterType<ClientAccountService>()
+				.As<IClientAccountService>()
 				.SingleInstance();
 
 			builder.RegisterType<MatchingEngine>()
