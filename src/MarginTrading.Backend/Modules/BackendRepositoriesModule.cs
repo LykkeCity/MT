@@ -39,6 +39,10 @@ namespace MarginTrading.Backend.Modules
                 AzureRepoFactories.Clients.CreateTraderSettingsRepository(_settings.Db.ClientPersonalInfoConnString, log)
             ).SingleInstance();
 
+            builder.Register<IClientAccountsRepository>(ctx =>
+                AzureRepoFactories.Clients.CreateClientsRepository(_settings.Db.ClientPersonalInfoConnString, log)
+            ).SingleInstance();
+
             builder.Register<IMarginTradingAccountsRepository>(ctx =>
                 AzureRepoFactories.MarginTrading.CreateAccountsRepository(_settings.Db.MarginTradingConnString, log)
             ).SingleInstance();
