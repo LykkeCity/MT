@@ -1,7 +1,10 @@
 ﻿using System;
 using Autofac;
-using MarginTrading.Services.Generated.ClientAccountServiceApi;
-using MarginTrading.Services.Generated.SessionServiceApi;
+using Lykke.Service.Session.AutorestClient;
+using MarginTrading.AzureRepositories;
+using MarginTrading.Core;
+using MarginTrading.Core.Clients;
+using MarginTrading.Services;
 using MarginTradingTests.IntegrationTests.Client;
 using Microsoft.Extensions.Configuration;
 using NUnit.Framework;
@@ -26,9 +29,13 @@ namespace MarginTradingTests.IntegrationTests
                 new SessionService(new Uri(configuration["SessionServiceApiUrl"]))
             ).SingleInstance();
 
-            builder.Register<IClientAccountService>(ctx =>
-                new ClientAccountService(new Uri(configuration["ClientAccountServiceApiUrl"]))
+            builder.Register<IClientAccountsRepository>(ctx =>
+               AzureRepoFactories.Clients.CreateClientsRepository(configuration["ClientInfoConnString"], null)
             ).SingleInstance();
+
+            builder.RegisterType<ClientAccountService>()
+                .As<IClientAccountService>()
+                .SingleInstance();
 
             builder.RegisterType<MtClient>()
                 .AsSelf()

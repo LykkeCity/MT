@@ -2,9 +2,10 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Lykke.Service.Session.AutorestClient;
+using Lykke.Service.Session.AutorestClient.Models;
 using MarginTrading.Common.ClientContracts;
 using MarginTrading.Common.Wamp;
-using MarginTrading.Services.Generated.SessionServiceApi;
 using WampSharp.V2;
 using WampSharp.V2.Client;
 
@@ -70,7 +71,7 @@ namespace MarginTradingTests.IntegrationTests.Client
                     throw new ArgumentOutOfRangeException();
             }
 
-            var session = _sessionService.ApiSessionGetByClientPost(_clientId).FirstOrDefault();
+            var session = _sessionService.ApiSessionGetByClientPost(new ClientSessionGetByClientRequest(_clientId)).Sessions.FirstOrDefault();
             _token = session.SessionToken;
         }
 

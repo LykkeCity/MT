@@ -2,7 +2,6 @@ using Lykke.Common;
 using MarginTrading.Core;
 using MarginTrading.Core.Clients;
 using MarginTrading.Services.Events;
-using MarginTrading.Services.Generated.ClientAccountServiceApi;
 using MarginTrading.Services.Notifications;
 
 namespace MarginTrading.Services

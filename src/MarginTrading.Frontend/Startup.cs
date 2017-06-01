@@ -23,12 +23,9 @@ using MarginTrading.Frontend.Infrastructure;
 using MarginTrading.Frontend.Services;
 using MarginTrading.Frontend.Settings;
 using MarginTrading.Services;
-using MarginTrading.Services.Generated.ClientAccountServiceApi;
-using MarginTrading.Services.Generated.SessionServiceApi;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -197,6 +194,10 @@ namespace MarginTrading.Frontend
                 AzureRepoFactories.Clients.CreateTraderSettingsRepository(settings.MarginTradingFront.Db.ClientPersonalInfoConnString, log)
             ).SingleInstance();
 
+            builder.Register<IClientAccountsRepository>(ctx =>
+                AzureRepoFactories.Clients.CreateClientsRepository(settings.MarginTradingFront.Db.ClientPersonalInfoConnString, log)
+            ).SingleInstance();
+
             builder.Register<IAppGlobalSettingsRepositry>(ctx =>
                 new AppGlobalSettingsRepository(new AzureTableStorage<AppGlobalSettingsEntity>(settings.MarginTradingFront.Db.ClientPersonalInfoConnString, "Setup", log))
             ).SingleInstance();
@@ -213,8 +214,8 @@ namespace MarginTrading.Frontend
                 .As<IClientTokenService>()
                 .SingleInstance();
 
-            builder.RegisterType<ClientNotificationService>()
-                .As<IClientNotificationService>()
+            builder.RegisterType<ClientAccountService>()
+                .As<IClientAccountService>()
                 .SingleInstance();
 
             builder.RegisterType<MarginTradingOperationsLogService>()
@@ -279,10 +280,6 @@ namespace MarginTrading.Frontend
 
             builder.Register<IClientsSessionsRepository>(ctx =>
                 new ClientSessionsClient(settings.MarginTradingFront.SessionServiceApiUrl, log)
-            ).SingleInstance();
-
-            builder.Register<IClientAccountService>(ctx =>
-                new ClientAccountService(new Uri(settings.MarginTradingFront.ClientAccountApiUrl))
             ).SingleInstance();
 
             builder.RegisterType<ClientTokenValidator>()

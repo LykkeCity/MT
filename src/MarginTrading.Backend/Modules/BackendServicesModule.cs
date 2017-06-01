@@ -15,7 +15,6 @@ using MarginTrading.Core;
 using MarginTrading.Core.Settings;
 using MarginTrading.Services;
 using MarginTrading.Services.Events;
-using MarginTrading.Services.Generated.ClientAccountServiceApi;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.PlatformAbstractions;
 using WampSharp.V2;
@@ -123,9 +122,9 @@ namespace MarginTrading.Backend.Modules
 				.As<IStartable>()
 				.SingleInstance();
 
-			builder.Register<IClientAccountService>(ctx =>
-				new ClientAccountService(new Uri(_settings.ClientAccountServiceApiUrl))
-			).SingleInstance();
+			builder.RegisterType<ClientAccountService>()
+                .As<IClientAccountService>()
+			    .SingleInstance();
 
 			RegisterPublishers(builder, consoleWriter);
 		}

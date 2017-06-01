@@ -6,18 +6,17 @@ using System.Threading.Tasks;
 using Autofac;
 using Common.Log;
 using Lykke.Common;
-using MarginTrading.Common.BackendContracts;
+using Lykke.Service.Session.AutorestClient;
+using Lykke.Service.Session.AutorestClient.Models;
 using MarginTrading.Core;
+using MarginTrading.Core.Clients;
 using MarginTrading.Core.Notifications;
 using MarginTrading.Frontend.Services;
-using MarginTrading.Services.Generated.ClientAccountServiceApi;
-using MarginTrading.Services.Generated.ClientAccountServiceApi.Models;
-using MarginTrading.Services.Generated.SessionServiceApi;
-using MarginTrading.Services.Generated.SessionServiceApi.Models;
 using Microsoft.Rest;
 using Moq;
 using WampSharp.V2.Realm;
 using IAppNotifications = MarginTrading.Services.Notifications.IAppNotifications;
+using Lykke.Service.Session;
 
 namespace MarginTradingTests.Modules
 {
@@ -41,13 +40,18 @@ namespace MarginTradingTests.Modules
             var sessionServiceMock = new Mock<ISessionService>();
 
             sessionServiceMock
-                .Setup(item => item.ApiSessionGetPostWithHttpMessagesAsync(It.IsAny<string>(), null, It.IsAny<CancellationToken>()))
-                .Returns(() => Task.FromResult(new HttpOperationResponse<ClientSessionModel> { Body = new ClientSessionModel{ClientId = "1"}}));
+                .Setup(item => item.ApiSessionGetPostWithHttpMessagesAsync(It.IsAny<ClientSessionGetRequest>(), null, It.IsAny<CancellationToken>()))
+                .Returns(() => Task.FromResult(new HttpOperationResponse<ClientSessionGetResponse> { Body = new ClientSessionGetResponse { Session = new ClientSessionModel { ClientId = "1" }}}));
+
+            var clientsRepositoryMock = new Mock<IClientsSessionsRepository>();
+            clientsRepositoryMock
+                .Setup(item => item.GetAsync(It.IsAny<string>()))
+                .Returns(() => Task.FromResult((IClientSession)new ClientSession { ClientId = "1" }));
 
             var clientAccountsServiceMock = new Mock<IClientAccountService>();
             clientAccountsServiceMock
-                .Setup(item => item.ApiClientAccountsGetByIdPostWithHttpMessagesAsync(It.IsAny<GetByIdRequest>(), null, It.IsAny<CancellationToken>()))
-                .Returns(() => Task.FromResult(new HttpOperationResponse<IClientAccount> { Body = new IClientAccount(null, null, null, null, null, null, Guid.NewGuid().ToString())}));
+                .Setup(item => item.GetAsync(It.IsAny<string>()))
+                .Returns(() => Task.FromResult((IClientAccount)new ClientAccount{ NotificationsId = Guid.NewGuid().ToString()}));
 
             var httpRequestServiceMock = new Mock<IHttpRequestService>();
             httpRequestServiceMock
@@ -62,6 +66,7 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(rabbitMqNotifyService.Object).As<IRabbitMqNotifyService>();
             builder.RegisterInstance(consoleWriterMock.Object).As<IConsole>();
             builder.RegisterInstance(slackNotificationsMock.Object).As<ISlackNotificationsProducer>();
+            builder.RegisterInstance(clientsRepositoryMock.Object).As<IClientsSessionsRepository>();
             builder.RegisterInstance(sessionServiceMock.Object).As<ISessionService>();
             builder.RegisterInstance(clientAccountsServiceMock.Object).As<IClientAccountService>();
             builder.RegisterInstance(httpRequestServiceMock.Object).As<IHttpRequestService>();

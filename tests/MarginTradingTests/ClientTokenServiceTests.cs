@@ -1,12 +1,7 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Autofac;
-using MarginTrading.AzureRepositories.Clients;
+using Lykke.Service.Session.AutorestClient;
 using MarginTrading.Core;
-using MarginTrading.Core.Clients;
-using MarginTrading.Services.Generated.SessionServiceApi;
-using MarginTrading.Services.Generated.SessionServiceApi.Models;
-using Moq;
 using NUnit.Framework;
 
 namespace MarginTradingTests

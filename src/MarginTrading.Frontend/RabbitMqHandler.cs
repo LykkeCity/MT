@@ -15,7 +15,7 @@ namespace MarginTrading.Frontend
     public class RabbitMqHandler
     {
         private readonly IWampHostedRealm _realm;
-        private readonly IClientNotificationService _clientNotificationService;
+        private readonly IClientAccountService _clientNotificationService;
         private readonly IMarginTradingOperationsLogService _operationsLog;
         private readonly MtFrontendSettings _settings;
         private readonly IConsole _consoleWriter;
@@ -24,7 +24,7 @@ namespace MarginTrading.Frontend
 
         public RabbitMqHandler(
             IWampHostedRealm realm,
-            IClientNotificationService clientNotificationService,
+            IClientAccountService clientNotificationService,
             IMarginTradingOperationsLogService operationsLogService,
             MtFrontendSettings settings,
             MtFrontSettings frontSettings,

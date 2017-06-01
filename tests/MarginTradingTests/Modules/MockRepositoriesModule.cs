@@ -31,6 +31,11 @@ namespace MarginTradingTests.Modules
 
             var blobRepository = new Mock<IMarginTradingBlobRepository>();
             var orderHistoryRepository = new Mock<IMarginTradingOrdersHistoryRepository>();
+            var clientAccountsRepository = new Mock<IClientAccountsRepository>();
+            clientAccountsRepository
+                .Setup(item => item.GetByIdAsync(It.IsAny<string>()))
+                .Returns(() => Task.FromResult((IClientAccount)new ClientAccount { Id = "1", NotificationsId = new Guid().ToString()}));
+
             var clientSettingsRepository = new Mock<IClientSettingsRepository>();
             clientSettingsRepository
                 .Setup(item => item.GetSettings<PushNotificationsSettings>(It.IsAny<string>()))
@@ -50,6 +55,7 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(blobRepository.Object).As<IMarginTradingBlobRepository>().SingleInstance();
             builder.RegisterInstance(orderHistoryRepository.Object).As<IMarginTradingOrdersHistoryRepository>().SingleInstance();
             builder.RegisterInstance(clientSettingsRepository.Object).As<IClientSettingsRepository>().SingleInstance();
+            builder.RegisterInstance(clientAccountsRepository.Object).As<IClientAccountsRepository>().SingleInstance();
         }
     }
 }
