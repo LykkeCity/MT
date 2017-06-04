@@ -117,55 +117,6 @@ namespace MarginTrading.AzureRepositories
 				return new MatchingEngineRoutesRepository(new AzureTableStorage<MatchingEngineRouteEntity>(connstring,
 					"MatchingEngineRoutes", log));
 			}
-
-
-			public static MarginTradingTransactionRepository CreateTransactionRepository(string connstring, ILog log)
-			{
-				return new MarginTradingTransactionRepository(new AzureTableStorage<MarginTradingTransactionEntity>(connstring,
-					"MarginTradingTransactions", log));
-			}
-
-			public static MarginTradingPositionRepository CreatePositionRepository(string connstring, ILog log)
-			{
-				return new MarginTradingPositionRepository(new AzureTableStorage<MarginTradingPositionEntity>(connstring,
-					"MarginTradingPositions", log));
-			}
-
-			public static MarginTradingTradingOrderRepository CreateTradingOrderRepository(string connstring, ILog log)
-			{
-				return new MarginTradingTradingOrderRepository(new AzureTableStorage<TradingOrderEntity>(connstring,
-					"MarginTradingOrderReport", log));
-			}
-
-			public static ElementaryTransactionsRepository CreateElementaryTransactionsRepository(string connstring, ILog log)
-			{
-				return new ElementaryTransactionsRepository(new AzureTableStorage<ElementaryTransactionEntity>(connstring,
-					"MarginTradingElementaryTransactions", log, new System.TimeSpan(1,0,0)));
-			}
-
-			public static SampleQuoteCacheRepository CreateSampleQuoteCacheRepository(string connstring, ILog log)
-			{
-				return new SampleQuoteCacheRepository(new AzureTableStorage<QuoteEntity>(connstring,
-					"MarginTradingHourlyQuotes", log, new System.TimeSpan(1, 0, 0)));
-			}
-
-			public static MarginTradingIndividualValuesAtRiskRepository CreateIndividualValuesAtRiskRepository(string connstring, ILog log)
-			{
-				return new MarginTradingIndividualValuesAtRiskRepository(new AzureTableStorage<IndividualValueAtRiskEntity>(connstring,
-					"MarginTradingIVaR", log, new System.TimeSpan(1, 0, 0)));
-			}
-
-			public static MarginTradingAggregateValuesAtRiskRepository CreateAggregateValuesAtRiskRepository(string connstring, ILog log)
-			{
-				return new MarginTradingAggregateValuesAtRiskRepository(new AzureTableStorage<AggregateValueAtRiskEntity>(connstring,
-					"MarginTradingPVaR", log, new System.TimeSpan(1, 0, 0)));
-			}
-		}
-
-		public static QuoteHistoryRepository CreateQuoteHistoryRepository(string connstring, ILog log)
-		{
-			return new QuoteHistoryRepository(new AzureTableStorage<QuoteHistoryEntity>(connstring,
-				"QuotesHistory", log, new System.TimeSpan(1, 0, 0)));
 		}
 	}
 }
