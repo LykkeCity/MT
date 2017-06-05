@@ -4,12 +4,12 @@ using Microsoft.AspNetCore.Mvc;
 namespace MarginTrading.Backend.Controllers
 {
     [Route("api/[controller]")]
-    public class IsAlive : Controller
+    public class IsAliveController : Controller
     {
         private readonly IMatchingEngine _matchingEngine;
         private readonly ITradingEngine _tradingEngine;
 
-        public IsAlive(
+        public IsAliveController(
             IMatchingEngine matchingEngine,
             ITradingEngine tradingEngine)
         {
