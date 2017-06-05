@@ -36,8 +36,8 @@ namespace MarginTrading.Core.Settings
 
 		public Db Db { get; set; }
 		public RabbitMqQueues RabbitMqQueues { get; set; }
-		public RabbitMqSettings RabbitMqSettings { get; set; }
-		public string MtRabbitMqConnString { get; set; }
+	    public RabbitMqSettings SpotRabbitMqSettings { get; set; }
+	    public string MtRabbitMqConnString { get; set; }
 	}
 
 	public class SlackSettings

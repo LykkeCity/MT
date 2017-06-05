@@ -50,9 +50,9 @@ namespace MarginTrading.Backend
             {
                 _connector = new RabbitMqSubscriber<MarketMakerOrderBook>(new RabbitMqSubscriberSettings
                     {
-                        ConnectionString = _marginSettings.RabbitMqSettings.ConnectionString,
-                        QueueName = _marginSettings.RabbitMqSettings.QueueName,
-                        ExchangeName = _marginSettings.RabbitMqSettings.ExchangeName,
+                        ConnectionString = _marginSettings.SpotRabbitMqSettings.ConnectionString,
+                        QueueName = _marginSettings.SpotRabbitMqSettings.QueueName,
+                        ExchangeName = _marginSettings.SpotRabbitMqSettings.ExchangeName,
                         IsDurable = true
                     })
                     .SetMessageDeserializer(new BackEndDeserializer<MarketMakerOrderBook>())
