@@ -142,90 +142,6 @@ namespace MarginTrading.Services
 			}
 		}
 
-		public async Task TransactionCreated(ITransaction transaction)
-		{
-			try
-			{
-				await _publishers[_settings.RabbitMqQueues.Transaction.ExchangeName].ProduceAsync(transaction.ToJson());
-			}
-			catch (Exception ex)
-			{
-				await _log.WriteErrorAsync(nameof(RabbitMqNotifyService), nameof(TransactionCreated), $"takerOrderId: {transaction.TakerPositionId}, takerAccountId: {transaction.TakerAccountId}, takerId: {transaction.TakerCounterpartyId}, makerOrderId: {transaction.MakerOrderId}, makerId: {transaction.MakerCounterpartyId}", ex);
-			}
-		}
-
-		public async Task PositionUpdated(IPosition position)
-		{
-			try
-			{
-				await _publishers[_settings.RabbitMqQueues.PositionUpdates.ExchangeName].ProduceAsync(position.ToJson());
-			}
-			catch (Exception ex)
-			{
-				await _log.WriteErrorAsync(nameof(RabbitMqNotifyService), nameof(PositionUpdated), $"counterPartyId: {position.ClientId}, assetId: {position.Asset}", ex);
-			}
-		}
-
-		public async Task ElementaryTransactionCreated(IElementaryTransaction transaction)
-		{
-			try
-			{
-				await _publishers[_settings.RabbitMqQueues.ElementaryTransaction.ExchangeName].ProduceAsync(transaction.ToJson());
-			}
-			catch (Exception ex)
-			{
-				await _log.WriteErrorAsync(nameof(RabbitMqNotifyService), nameof(ElementaryTransactionCreated), $"transactionId: {transaction.TradingTransactionId}, counterParty: {transaction.CounterPartyId}, asset: {transaction.Asset}, type: {transaction.SubType}", ex);
-			}
-		}
-
-		public async Task TradingOrderCreated(ITradingOrder orderAction)
-		{
-			try
-			{
-				await _publishers[_settings.RabbitMqQueues.OrderReport.ExchangeName].ProduceAsync(orderAction.ToJson());
-			}
-			catch (Exception ex)
-			{
-				await _log.WriteErrorAsync(nameof(RabbitMqNotifyService), nameof(TradingOrderCreated), $"orderId: {orderAction.TakerPositionId}, traderId: {orderAction.TakerCounterpartyId}", ex);
-			}
-		}
-
-		public async Task HardTradingLimitReached(string counterPartyId)
-		{
-			try
-			{
-				await _publishers[_settings.RabbitMqQueues.ValueAtRiskLimits.ExchangeName].ProduceAsync(counterPartyId);
-			}
-			catch (Exception ex)
-			{
-				await _log.WriteErrorAsync(nameof(RabbitMqNotifyService), nameof(HardTradingLimitReached), $"counterPartyId: {counterPartyId}", ex);
-			}
-		}
-
-		public async Task IndividualValueAtRiskSet(string counterPartyId, string assetId, double value)
-		{
-			try
-			{
-				await _publishers[_settings.RabbitMqQueues.IndividualValuesAtRisk.ExchangeName].ProduceAsync($"{counterPartyId};{assetId};{value}");
-			}
-			catch (Exception ex)
-			{
-				await _log.WriteErrorAsync(nameof(RabbitMqNotifyService), nameof(IndividualValueAtRiskSet), $"counterPartyId: {counterPartyId}, assetId: {assetId}", ex);
-			}
-		}
-
-		public async Task AggregateValueAtRiskSet(string counterPartyId, double value)
-		{
-			try
-			{
-				await _publishers[_settings.RabbitMqQueues.AggregateValuesAtRisk.ExchangeName].ProduceAsync($"{counterPartyId};{value}");
-			}
-			catch (Exception ex)
-			{
-				await _log.WriteErrorAsync(nameof(RabbitMqNotifyService), nameof(AggregateValueAtRiskSet), $"counterPartyId: {counterPartyId}", ex);
-			}
-		}
-
 		public void Stop()
 		{
 			((IStopable)_publishers[_settings.RabbitMqQueues.AccountHistory.ExchangeName]).Stop();
@@ -235,13 +151,6 @@ namespace MarginTrading.Services
 			((IStopable)_publishers[_settings.RabbitMqQueues.AccountStopout.ExchangeName]).Stop();
 			((IStopable)_publishers[_settings.RabbitMqQueues.AccountChanged.ExchangeName]).Stop();
 			((IStopable)_publishers[_settings.RabbitMqQueues.UserUpdates.ExchangeName]).Stop();
-			((IStopable)_publishers[_settings.RabbitMqQueues.Transaction.ExchangeName]).Stop();
-			((IStopable)_publishers[_settings.RabbitMqQueues.ElementaryTransaction.ExchangeName]).Stop();
-			((IStopable)_publishers[_settings.RabbitMqQueues.OrderReport.ExchangeName]).Stop();
-			((IStopable)_publishers[_settings.RabbitMqQueues.ValueAtRiskLimits.ExchangeName]).Stop();
-			((IStopable)_publishers[_settings.RabbitMqQueues.IndividualValuesAtRisk.ExchangeName]).Stop();
-			((IStopable)_publishers[_settings.RabbitMqQueues.AggregateValuesAtRisk.ExchangeName]).Stop();
-			((IStopable)_publishers[_settings.RabbitMqQueues.PositionUpdates.ExchangeName]).Stop();
 		}
 	}
 }

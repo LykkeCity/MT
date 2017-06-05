@@ -25,13 +25,13 @@ namespace MarginTrading.Backend.Modules
 	{
 		private readonly MarginSettings _settings;
 		private readonly IHostingEnvironment _environment;
-	    private readonly ILog _log;
+		private readonly ILog _log;
 
-	    public BackendServicesModule(MarginSettings settings, IHostingEnvironment environment, ILog log)
+		public BackendServicesModule(MarginSettings settings, IHostingEnvironment environment, ILog log)
 		{
 			_settings = settings;
 			_environment = environment;
-		    _log = log;
+			_log = log;
 		}
 
 		protected override void Load(ContainerBuilder builder)
@@ -63,11 +63,11 @@ namespace MarginTrading.Backend.Modules
 				new MustacheTemplateGenerator(_environment, "Email/Templates")
 			).SingleInstance();
 
-		    builder.Register<IEmailSender>(ctx =>
-		        new EmailSenderClient(_settings.EmailSender.ServiceUrl, _log)
-            ).SingleInstance();
+			builder.Register<IEmailSender>(ctx =>
+				new EmailSenderClient(_settings.EmailSender.ServiceUrl, _log)
+			).SingleInstance();
 
-            var consoleWriter = _environment.IsProduction()
+			var consoleWriter = _environment.IsProduction()
 				? new ConsoleLWriter(line =>
 				{
 					try
@@ -131,14 +131,7 @@ namespace MarginTrading.Backend.Modules
 				_settings.RabbitMqQueues.OrderChanged.ExchangeName,
 				_settings.RabbitMqQueues.AccountChanged.ExchangeName,
 				_settings.RabbitMqQueues.AccountStopout.ExchangeName,
-				_settings.RabbitMqQueues.UserUpdates.ExchangeName,
-				_settings.RabbitMqQueues.Transaction.ExchangeName,
-				_settings.RabbitMqQueues.OrderReport.ExchangeName,
-				_settings.RabbitMqQueues.ElementaryTransaction.ExchangeName,
-				_settings.RabbitMqQueues.AggregateValuesAtRisk.ExchangeName,
-				_settings.RabbitMqQueues.IndividualValuesAtRisk.ExchangeName,
-				_settings.RabbitMqQueues.PositionUpdates.ExchangeName,
-				_settings.RabbitMqQueues.ValueAtRiskLimits.ExchangeName
+				_settings.RabbitMqQueues.UserUpdates.ExchangeName
 			};
 
 			var bytesSerializer = new BytesStringSerializer();

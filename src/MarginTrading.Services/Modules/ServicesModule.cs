@@ -116,23 +116,6 @@ namespace MarginTrading.Services.Modules
 				.As<IMatchingEngineRoutesCacheService>()
 				.AsSelf()
 				.SingleInstance();
-
-			builder.RegisterType<TransactionService>()
-				.As<ITransactionService>()
-				.SingleInstance();
-
-			builder.RegisterType<ElementaryTransactionService>()
-				.As<IElementaryTransactionService>()
-				.SingleInstance();
-
-			builder.RegisterType<TradingOrderService>()
-				.As<ITradingOrderService>()
-				.SingleInstance();
-
-			builder.RegisterType<LimitOrderActionHandler>()
-				.As<IEventConsumer<LimitOrderSetEventArgs>>()
-				.SingleInstance();
-
 		}
 	}
 }

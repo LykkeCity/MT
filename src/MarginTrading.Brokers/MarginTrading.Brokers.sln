@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.6
+VisualStudioVersion = 15.0.26430.12
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Brokers", "Brokers", "{F30DE7CA-51CD-47C5-85EB-7156FA9D87E2}"
 EndProject
@@ -15,10 +15,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.OrderHistoryB
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.OrderRejectedBroker", "MarginTrading.OrderRejectedBroker\MarginTrading.OrderRejectedBroker.csproj", "{5595E80D-6703-4EC1-A232-FFBD8F0A1C95}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.OrderReportBroker", "MarginTrading.OrderReportBroker\MarginTrading.OrderReportBroker.csproj", "{3B3CFD97-99B1-4C6D-AD81-F1D07D17BAC6}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.TransactionBroker", "MarginTrading.TransactionBroker\MarginTrading.TransactionBroker.csproj", "{826B243D-95BB-4428-AC9B-4EF443E919FA}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.Common", "..\MarginTrading.Common\MarginTrading.Common.csproj", "{F15AA5FA-BD7C-43AE-8849-4BB7702F4DDA}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.Core", "..\MarginTrading.Core\MarginTrading.Core.csproj", "{F7AAEB5E-0F81-4F2D-9965-7678EC805153}"
@@ -26,12 +22,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.Services", "..\MarginTrading.Services\MarginTrading.Services.csproj", "{B346C9E3-B161-4026-91D7-1A316918AD36}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.AzureRepositories", "..\MarginTrading.AzureRepositories\MarginTrading.AzureRepositories.csproj", "{291399B7-4D6E-4B68-8D94-1D7FA98A0EFC}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.PositionBroker", "MarginTrading.PositionBroker\MarginTrading.PositionBroker.csproj", "{0F521530-02A4-4D1F-8AD6-D098C4352439}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.PVaRBroker", "MarginTrading.PVaRBroker\MarginTrading.PVaRBroker.csproj", "{38444539-1DCA-48C4-B2C6-639A76C5F63D}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.IVaRBroker", "MarginTrading.IVaRBroker\MarginTrading.IVaRBroker.csproj", "{0451A55B-3F3B-4927-B3CF-31B1E176EAF8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,14 +41,6 @@ Global
 		{5595E80D-6703-4EC1-A232-FFBD8F0A1C95}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5595E80D-6703-4EC1-A232-FFBD8F0A1C95}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5595E80D-6703-4EC1-A232-FFBD8F0A1C95}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3B3CFD97-99B1-4C6D-AD81-F1D07D17BAC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3B3CFD97-99B1-4C6D-AD81-F1D07D17BAC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3B3CFD97-99B1-4C6D-AD81-F1D07D17BAC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3B3CFD97-99B1-4C6D-AD81-F1D07D17BAC6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{826B243D-95BB-4428-AC9B-4EF443E919FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{826B243D-95BB-4428-AC9B-4EF443E919FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{826B243D-95BB-4428-AC9B-4EF443E919FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{826B243D-95BB-4428-AC9B-4EF443E919FA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F15AA5FA-BD7C-43AE-8849-4BB7702F4DDA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F15AA5FA-BD7C-43AE-8849-4BB7702F4DDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F15AA5FA-BD7C-43AE-8849-4BB7702F4DDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -75,18 +57,6 @@ Global
 		{291399B7-4D6E-4B68-8D94-1D7FA98A0EFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{291399B7-4D6E-4B68-8D94-1D7FA98A0EFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{291399B7-4D6E-4B68-8D94-1D7FA98A0EFC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0F521530-02A4-4D1F-8AD6-D098C4352439}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0F521530-02A4-4D1F-8AD6-D098C4352439}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0F521530-02A4-4D1F-8AD6-D098C4352439}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0F521530-02A4-4D1F-8AD6-D098C4352439}.Release|Any CPU.Build.0 = Release|Any CPU
-		{38444539-1DCA-48C4-B2C6-639A76C5F63D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{38444539-1DCA-48C4-B2C6-639A76C5F63D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{38444539-1DCA-48C4-B2C6-639A76C5F63D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{38444539-1DCA-48C4-B2C6-639A76C5F63D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0451A55B-3F3B-4927-B3CF-31B1E176EAF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0451A55B-3F3B-4927-B3CF-31B1E176EAF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0451A55B-3F3B-4927-B3CF-31B1E176EAF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0451A55B-3F3B-4927-B3CF-31B1E176EAF8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -95,14 +65,9 @@ Global
 		{36CEACA8-B152-4DDD-AC80-B9BEDBE6DD05} = {F30DE7CA-51CD-47C5-85EB-7156FA9D87E2}
 		{D9475450-FB95-480B-8D77-D9D5B2EAC265} = {F30DE7CA-51CD-47C5-85EB-7156FA9D87E2}
 		{5595E80D-6703-4EC1-A232-FFBD8F0A1C95} = {F30DE7CA-51CD-47C5-85EB-7156FA9D87E2}
-		{3B3CFD97-99B1-4C6D-AD81-F1D07D17BAC6} = {F30DE7CA-51CD-47C5-85EB-7156FA9D87E2}
-		{826B243D-95BB-4428-AC9B-4EF443E919FA} = {F30DE7CA-51CD-47C5-85EB-7156FA9D87E2}
 		{F15AA5FA-BD7C-43AE-8849-4BB7702F4DDA} = {6861CCE5-4A2E-423B-9FAC-6FD3F82B6D87}
 		{F7AAEB5E-0F81-4F2D-9965-7678EC805153} = {6861CCE5-4A2E-423B-9FAC-6FD3F82B6D87}
 		{B346C9E3-B161-4026-91D7-1A316918AD36} = {6861CCE5-4A2E-423B-9FAC-6FD3F82B6D87}
 		{291399B7-4D6E-4B68-8D94-1D7FA98A0EFC} = {AB04641B-CDE2-475F-84BF-D42AA9CD0045}
-		{0F521530-02A4-4D1F-8AD6-D098C4352439} = {F30DE7CA-51CD-47C5-85EB-7156FA9D87E2}
-		{38444539-1DCA-48C4-B2C6-639A76C5F63D} = {F30DE7CA-51CD-47C5-85EB-7156FA9D87E2}
-		{0451A55B-3F3B-4927-B3CF-31B1E176EAF8} = {F30DE7CA-51CD-47C5-85EB-7156FA9D87E2}
 	EndGlobalSection
 EndGlobal

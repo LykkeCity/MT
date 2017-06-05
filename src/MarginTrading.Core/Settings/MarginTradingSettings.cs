@@ -81,13 +81,6 @@ namespace MarginTrading.Core.Settings
 		public RabbitMqQueueInfo AccountChanged { get; set; }
 		public RabbitMqQueueInfo AccountStopout { get; set; }
 		public RabbitMqQueueInfo UserUpdates { get; set; }
-		public RabbitMqQueueInfo Transaction { get; set; }
-		public RabbitMqQueueInfo ElementaryTransaction { get; set; }
-		public RabbitMqQueueInfo OrderReport { get; set; }
-		public RabbitMqQueueInfo ValueAtRiskLimits { get; set; }
-		public RabbitMqQueueInfo PositionUpdates { get; set; }
-		public RabbitMqQueueInfo IndividualValuesAtRisk { get; set; }
-		public RabbitMqQueueInfo AggregateValuesAtRisk { get; set; }
 	}
 
 	public class RabbitMqQueueInfo
