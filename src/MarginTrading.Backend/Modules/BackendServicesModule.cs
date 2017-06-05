@@ -4,8 +4,6 @@ using Autofac;
 using Common;
 using Common.Log;
 using Flurl.Http;
-using Lykke.EmailSenderProducer;
-using Lykke.EmailSenderProducer.Interfaces;
 using Lykke.RabbitMqBroker.Publisher;
 using MarginTrading.Backend.Email;
 using MarginTrading.Backend.Middleware.Validator;
@@ -19,6 +17,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.PlatformAbstractions;
 using WampSharp.V2;
 using WampSharp.V2.Realm;
+using Lykke.Service.EmailSender;
 
 namespace MarginTrading.Backend.Modules
 {
@@ -26,11 +25,13 @@ namespace MarginTrading.Backend.Modules
 	{
 		private readonly MarginSettings _settings;
 		private readonly IHostingEnvironment _environment;
+	    private readonly ILog _log;
 
-		public BackendServicesModule(MarginSettings settings, IHostingEnvironment environment)
+	    public BackendServicesModule(MarginSettings settings, IHostingEnvironment environment, ILog log)
 		{
 			_settings = settings;
 			_environment = environment;
+		    _log = log;
 		}
 
 		protected override void Load(ContainerBuilder builder)
@@ -58,25 +59,15 @@ namespace MarginTrading.Backend.Modules
 				.As<IStartable>()
 				.SingleInstance();
 
-			builder.Register<IServiceBusEmailSettings>(ctx =>
-				new ServiceBusEmailSettings
-				{
-					Key = _settings.EmailServiceBus.Key,
-					QueueName = _settings.EmailServiceBus.QueueName,
-					NamespaceUrl = _settings.EmailServiceBus.NamespaceUrl,
-					PolicyName = _settings.EmailServiceBus.PolicyName
-				}
-			).SingleInstance();
-
 			builder.Register<ITemplateGenerator>(ctx =>
 				new MustacheTemplateGenerator(_environment, "Email/Templates")
 			).SingleInstance();
 
-			builder.RegisterType<EmailSenderProducer>()
-				.As<IEmailSender>()
-				.SingleInstance();
+		    builder.Register<IEmailSender>(ctx =>
+		        new EmailSenderClient(_settings.EmailSender.ServiceUrl, _log)
+            ).SingleInstance();
 
-			var consoleWriter = _environment.IsProduction()
+            var consoleWriter = _environment.IsProduction()
 				? new ConsoleLWriter(line =>
 				{
 					try
@@ -123,8 +114,8 @@ namespace MarginTrading.Backend.Modules
 				.SingleInstance();
 
 			builder.RegisterType<ClientAccountService>()
-                .As<IClientAccountService>()
-			    .SingleInstance();
+				.As<IClientAccountService>()
+				.SingleInstance();
 
 			RegisterPublishers(builder, consoleWriter);
 		}

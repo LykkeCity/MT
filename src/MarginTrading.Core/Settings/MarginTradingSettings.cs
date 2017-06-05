@@ -1,11 +1,12 @@
-﻿using System.Collections.Generic;
-using Lykke.SettingsReader.Attributes;
+﻿using Lykke.SettingsReader.Attributes;
 
 namespace MarginTrading.Core.Settings
 {
 	public class MtBackendSettings
 	{
 		public MarginTradingSettings MtBackend { get; set; }
+		public EmailSenderSettings EmailSender { get; set; }
+		public SlackSettings SlackNotifications { get; set; }
 	}
 
 	public class MarginTradingSettings
@@ -23,40 +24,41 @@ namespace MarginTrading.Core.Settings
 		public bool RemoteConsoleEnabled { get; set; }
 		public string ClientAccountServiceApiUrl { get; set; }
 
+		#region from Env variables
 
-        #region from Env variables
+		[Optional]
+		public string Env { get; set; }
 
-        [Optional]
-        public string Env { get; set; }
-
-        [Optional]
-        public bool IsLive { get; set; }
+		[Optional]
+		public bool IsLive { get; set; }
 
 		#endregion
 
-		public NotificationSettings Notifications { get; set; }
-		public EmailServiceBus EmailServiceBus { get; set; }
+		public EmailSenderSettings EmailSender { get; set; }
+		public SlackSettings SlackNotifications { get; set; }
 		public Db Db { get; set; }
 		public RabbitMqQueues RabbitMqQueues { get; set; }
 		public RabbitMqSettings RabbitMqSettings { get; set; }
 		public string MtRabbitMqConnString { get; set; }
 	}
 
-	public class NotificationSettings
+	public class SlackSettings
 	{
-		public string HubName { get; set; }
-		public string ConnString { get; set; }
+		public AzureQueueSettings AzureQueue { get; set; }
+		public string ThrottlingLimitSeconds { get; set; }
 	}
 
-	public class EmailServiceBus
+	public class AzureQueueSettings
 	{
-		public string Key { get; set; }
+		public string ConnectionString { get; set; }
 		public string QueueName { get; set; }
-		public string NamespaceUrl { get; set; }
-		public string PolicyName { get; set; }
 	}
 
-	
+	public class EmailSenderSettings
+	{
+		public AzureQueueSettings AzureQueue { get; set; }
+		public string ServiceUrl { get; set; }
+	}
 
 	public class Db
 	{
@@ -65,9 +67,9 @@ namespace MarginTrading.Core.Settings
 		public string ClientPersonalInfoConnString { get; set; }
 		public string DictsConnString { get; set; }
 		public string SharedStorageConnString { get; set; }
-        public string HistoryConnString { get; set; }
-        public string StateConnString { get; set; }
-    }
+		public string HistoryConnString { get; set; }
+		public string StateConnString { get; set; }
+	}
 
 	public class RabbitMqQueues
 	{

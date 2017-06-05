@@ -33,6 +33,7 @@
   <ItemGroup>
     <PackageReference Include="Lykke.Logs" Version="1.0.14" />
     <PackageReference Include="Lykke.Pkg.SettingsReader" Version="1.0.31" />
+    <PackageReference Include="Lykke.Service.EmailSender" Version="1.0.7" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="1.1.1" />
@@ -56,7 +57,6 @@
     <PackageReference Include="Swashbuckle.SwaggerUi" Version="6.0.0-beta902" />
     <PackageReference Include="Nustache.Core" Version="1.0.0-alfa2" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="1.1.1" />
-    <PackageReference Include="Lykke.EmailSenderProducer" Version="1.0.4" />
     <PackageReference Include="Lykke.RabbitMqBroker" Version="1.0.62" />
   </ItemGroup>
 

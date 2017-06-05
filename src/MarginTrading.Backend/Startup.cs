@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using AzureStorage.Tables;
 using Flurl.Http;
+using Lykke.Logs;
 using Lykke.SettingsReader;
 using MarginTrading.Backend.Infrastructure;
 using MarginTrading.Backend.Middleware;
@@ -78,6 +80,8 @@ namespace MarginTrading.Backend
 
             bool isLive = Configuration.IsLive();
             MarginSettings settings = isLive ? mtSettings.MtBackend.MarginTradingLive : mtSettings.MtBackend.MarginTradingDemo;
+            settings.EmailSender = mtSettings.EmailSender;
+            settings.SlackNotifications = mtSettings.SlackNotifications;
             settings.IsLive = isLive;
 
             Console.WriteLine($"IsLive: {settings.IsLive}");
@@ -137,13 +141,16 @@ namespace MarginTrading.Backend
 
         private void RegisterModules(ContainerBuilder builder, MarginSettings settings, IHostingEnvironment environment)
         {
-            builder.RegisterModule(new BackendRepositoriesModule(settings));
+            LykkeLogToAzureStorage log = new LykkeLogToAzureStorage(PlatformServices.Default.Application.ApplicationName,
+                new AzureTableStorage<LogEntity>(settings.Db.LogsConnString, "MarginTradingBackendLog", null));
+
+            builder.RegisterModule(new BackendRepositoriesModule(settings, log));
             builder.RegisterModule(new EventModule());
             builder.RegisterModule(new CacheModule());
             builder.RegisterModule(new ManagersModule());
             builder.RegisterModule(new BaseServicesModule(settings));
             builder.RegisterModule(new ServicesModule());
-            builder.RegisterModule(new BackendServicesModule(settings, environment));
+            builder.RegisterModule(new BackendServicesModule(settings, environment, log));
         }
     }
 }
