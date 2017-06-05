@@ -34,8 +34,6 @@ namespace MarginTrading.Core.Settings
 
 		#endregion
 
-		public EmailSenderSettings EmailSender { get; set; }
-		public SlackSettings SlackNotifications { get; set; }
 		public Db Db { get; set; }
 		public RabbitMqQueues RabbitMqQueues { get; set; }
 		public RabbitMqSettings RabbitMqSettings { get; set; }

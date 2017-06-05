@@ -80,13 +80,11 @@ namespace MarginTrading.Backend
 
             bool isLive = Configuration.IsLive();
             MarginSettings settings = isLive ? mtSettings.MtBackend.MarginTradingLive : mtSettings.MtBackend.MarginTradingDemo;
-            settings.EmailSender = mtSettings.EmailSender;
-            settings.SlackNotifications = mtSettings.SlackNotifications;
             settings.IsLive = isLive;
 
             Console.WriteLine($"IsLive: {settings.IsLive}");
 
-            RegisterModules(builder, settings, Environment);
+            RegisterModules(builder, mtSettings, settings, Environment);
 
             builder.Populate(services);
             ApplicationContainer = builder.Build();
@@ -139,18 +137,19 @@ namespace MarginTrading.Backend
             );
         }
 
-        private void RegisterModules(ContainerBuilder builder, MarginSettings settings, IHostingEnvironment environment)
+        private void RegisterModules(ContainerBuilder builder, MtBackendSettings mtSettings, MarginSettings settings, IHostingEnvironment environment)
         {
             LykkeLogToAzureStorage log = new LykkeLogToAzureStorage(PlatformServices.Default.Application.ApplicationName,
                 new AzureTableStorage<LogEntity>(settings.Db.LogsConnString, "MarginTradingBackendLog", null));
 
+            builder.RegisterModule(new BackendSettingsModule(mtSettings, settings));
             builder.RegisterModule(new BackendRepositoriesModule(settings, log));
             builder.RegisterModule(new EventModule());
             builder.RegisterModule(new CacheModule());
             builder.RegisterModule(new ManagersModule());
-            builder.RegisterModule(new BaseServicesModule(settings));
+            builder.RegisterModule(new BaseServicesModule(mtSettings));
             builder.RegisterModule(new ServicesModule());
-            builder.RegisterModule(new BackendServicesModule(settings, environment, log));
+            builder.RegisterModule(new BackendServicesModule(mtSettings, settings, environment, log));
         }
     }
 }

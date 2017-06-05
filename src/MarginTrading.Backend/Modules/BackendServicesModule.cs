@@ -23,13 +23,15 @@ namespace MarginTrading.Backend.Modules
 {
 	public class BackendServicesModule : Module
 	{
-		private readonly MarginSettings _settings;
+	    private readonly MtBackendSettings _mtSettings;
+	    private readonly MarginSettings _settings;
 		private readonly IHostingEnvironment _environment;
 		private readonly ILog _log;
 
-		public BackendServicesModule(MarginSettings settings, IHostingEnvironment environment, ILog log)
+		public BackendServicesModule(MtBackendSettings mtSettings, MarginSettings settings, IHostingEnvironment environment, ILog log)
 		{
-			_settings = settings;
+		    _mtSettings = mtSettings;
+		    _settings = settings;
 			_environment = environment;
 			_log = log;
 		}
@@ -64,7 +66,7 @@ namespace MarginTrading.Backend.Modules
 			).SingleInstance();
 
 			builder.Register<IEmailSender>(ctx =>
-				new EmailSenderClient(_settings.EmailSender.ServiceUrl, _log)
+				new EmailSenderClient(_mtSettings.EmailSender.ServiceUrl, _log)
 			).SingleInstance();
 
 			var consoleWriter = _environment.IsProduction()
@@ -107,7 +109,6 @@ namespace MarginTrading.Backend.Modules
 				.As<IEventConsumer<BestPriceChangeEventArgs>>()
 				.SingleInstance();
 
-			builder.RegisterInstance(_settings).SingleInstance();
 			builder.RegisterType<Application>()
 				.AsSelf()
 				.As<IStartable>()

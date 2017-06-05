@@ -8,11 +8,11 @@ namespace MarginTrading.Services.Modules
 {
     public class BaseServicesModule : Module
     {
-        private readonly MarginSettings _settings;
+        private readonly MtBackendSettings _mtSettings;
 
-        public BaseServicesModule(MarginSettings settings)
+        public BaseServicesModule(MtBackendSettings mtSettings)
         {
-            _settings = settings;
+            _mtSettings = mtSettings;
         }
 
         protected override void Load(ContainerBuilder builder)
@@ -22,7 +22,7 @@ namespace MarginTrading.Services.Modules
                 .SingleInstance();
 
             builder.Register<IAppNotifications>(ctx =>
-                new SrvAppNotifications(_settings.SlackNotifications.AzureQueue.ConnectionString, _settings.SlackNotifications.AzureQueue.QueueName)
+                new SrvAppNotifications(_mtSettings.SlackNotifications.AzureQueue.ConnectionString, _mtSettings.SlackNotifications.AzureQueue.QueueName)
             ).SingleInstance();
 
             builder.RegisterType<ClientNotifyService>()
