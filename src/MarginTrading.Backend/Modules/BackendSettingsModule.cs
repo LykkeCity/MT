@@ -17,7 +17,7 @@ namespace MarginTrading.Backend.Modules
         protected override void Load(ContainerBuilder builder)
         {
             builder.RegisterInstance(_mtSettings.EmailSender).SingleInstance();
-            builder.RegisterInstance(_mtSettings.SlackNotifications).SingleInstance();
+            builder.RegisterInstance(_mtSettings.Jobs).SingleInstance();
             builder.RegisterInstance(_settings).SingleInstance();
         }
     }

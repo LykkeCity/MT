@@ -6,7 +6,7 @@ namespace MarginTrading.Core.Settings
 	{
 		public MarginTradingSettings MtBackend { get; set; }
 		public EmailSenderSettings EmailSender { get; set; }
-		public SlackSettings SlackNotifications { get; set; }
+		public NotificationSettings Jobs { get; set; }
 	}
 
 	public class MarginTradingSettings
@@ -39,21 +39,14 @@ namespace MarginTrading.Core.Settings
 	    public string MtRabbitMqConnString { get; set; }
 	}
 
-	public class SlackSettings
+	public class NotificationSettings
 	{
-		public AzureQueueSettings AzureQueue { get; set; }
-		public string ThrottlingLimitSeconds { get; set; }
-	}
-
-	public class AzureQueueSettings
-	{
-		public string ConnectionString { get; set; }
-		public string QueueName { get; set; }
+		public string NotificationsHubName { get; set; }
+		public string NotificationsHubConnectionString { get; set; }
 	}
 
 	public class EmailSenderSettings
 	{
-		public AzureQueueSettings AzureQueue { get; set; }
 		public string ServiceUrl { get; set; }
 	}
 

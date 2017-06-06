@@ -22,7 +22,7 @@ namespace MarginTrading.Services.Modules
                 .SingleInstance();
 
             builder.Register<IAppNotifications>(ctx =>
-                new SrvAppNotifications(_mtSettings.SlackNotifications.AzureQueue.ConnectionString, _mtSettings.SlackNotifications.AzureQueue.QueueName)
+                new SrvAppNotifications(_mtSettings.Jobs.NotificationsHubConnectionString, _mtSettings.Jobs.NotificationsHubName)
             ).SingleInstance();
 
             builder.RegisterType<ClientNotifyService>()
