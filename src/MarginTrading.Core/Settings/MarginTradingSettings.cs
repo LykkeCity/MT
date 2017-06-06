@@ -22,7 +22,6 @@ namespace MarginTrading.Core.Settings
 		public string ApiKey { get; set; }
 		public string DemoAccountIdPrefix { get; set; }
 		public bool RemoteConsoleEnabled { get; set; }
-		public string ClientAccountServiceApiUrl { get; set; }
 
 		#region from Env variables
 
