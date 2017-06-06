@@ -63,7 +63,6 @@ namespace MarginTrading.Services
             _accountsCacheService.UpdateAccountsCache(clientId, accounts);
 
             await _rabbitMqNotifyService.UserUpdates(false, true, new [] {clientId});
-            _console.WriteLine($"send user updates to queue {_marginSettings.RabbitMqQueues.UserUpdates.QueueName}");
         }
 
         public async Task UpdateBalanceAsync(string clientId, string accountId, double amount, AccountHistoryType historyType, string comment)

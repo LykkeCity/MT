@@ -8,6 +8,7 @@ using MarginTrading.Common.ClientContracts;
 using MarginTrading.Common.Mappers;
 using MarginTrading.Core;
 using MarginTrading.Frontend.Settings;
+using Microsoft.Extensions.PlatformAbstractions;
 using WampSharp.V2.Realm;
 
 namespace MarginTrading.Frontend
@@ -48,7 +49,8 @@ namespace MarginTrading.Frontend
 
         public async Task ProcessAccountChanged(MarginTradingAccountBackendContract account)
         {
-            _consoleWriter.WriteLine($"Get account change from {_settings.MarginTradingFront.RabbitMqQueues.AccountChanged.QueueName} queue for clientId = {account.ClientId}");
+            string queueName = $"{_settings.MarginTradingFront.RabbitMqQueues.AccountChanged.ExchangeName}.{PlatformServices.Default.Application.ApplicationName}";
+            _consoleWriter.WriteLine($"Get account change from {queueName} queue for clientId = {account.ClientId}");
             string notificationId = await _clientNotificationService.GetNotificationId(account.ClientId);
             var userTopic = _realm.Services.GetSubject<NotifyResponse<MarginTradingAccountClientContract>>($"user.{notificationId}");
 
@@ -75,7 +77,8 @@ namespace MarginTrading.Frontend
 
         public async Task ProcessOrderChanged(OrderContract order)
         {
-            _consoleWriter.WriteLine($"Get order change from {_settings.MarginTradingFront.RabbitMqQueues.OrderChanged.QueueName} queue for clientId = {order.ClientId}");
+            string queueName = $"{_settings.MarginTradingFront.RabbitMqQueues.OrderChanged.ExchangeName}.{PlatformServices.Default.Application.ApplicationName}";
+            _consoleWriter.WriteLine($"Get order change from {queueName} queue for clientId = {order.ClientId}");
 
             string notificationId = await _clientNotificationService.GetNotificationId(order.ClientId);
             var userTopic = _realm.Services.GetSubject<NotifyResponse<OrderClientContract>>($"user.{notificationId}");
@@ -102,7 +105,8 @@ namespace MarginTrading.Frontend
 
         public async Task ProcessAccountStopout(AccountStopoutBackendContract stopout)
         {
-            _consoleWriter.WriteLine($"Get account stopout from {_settings.MarginTradingFront.RabbitMqQueues.AccountStopout.QueueName} queue for clientId = {stopout.ClientId}");
+            string queueName = $"{_settings.MarginTradingFront.RabbitMqQueues.AccountStopout.ExchangeName}.{PlatformServices.Default.Application.ApplicationName}";
+            _consoleWriter.WriteLine($"Get account stopout from {queueName} queue for clientId = {stopout.ClientId}");
 
             string notificationId = await _clientNotificationService.GetNotificationId(stopout.ClientId);
             var userTopic = _realm.Services.GetSubject<NotifyResponse<AccountStopoutClientContract>>($"user.{notificationId}");
@@ -129,7 +133,8 @@ namespace MarginTrading.Frontend
 
         public async Task ProcessUserUpdates(UserUpdateEntityBackendContract userUpdate)
         {
-            _consoleWriter.WriteLine($"Get user update from {_settings.MarginTradingFront.RabbitMqQueues.UserUpdates.QueueName} queue for {userUpdate.ClientIds.Length} clients");
+            string queueName = $"{_settings.MarginTradingFront.RabbitMqQueues.UserUpdates.ExchangeName}.{PlatformServices.Default.Application.ApplicationName}";
+            _consoleWriter.WriteLine($"Get user update from {queueName} queue for {userUpdate.ClientIds.Length} clients");
 
             foreach (var clientId in userUpdate.ClientIds)
             {

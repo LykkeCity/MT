@@ -42,7 +42,6 @@ namespace MarginTrading.Frontend.Settings
     public class MtFrontSettings
     {
         public string SessionServiceApiUrl { get; set; }
-        public string ClientAccountApiUrl { get; set; }
         public string MetricLoggerLine { get; set; }
         public string WampPricesTopicName { get; set; }
         public string DemoAccountIdPrefix { get; set; }

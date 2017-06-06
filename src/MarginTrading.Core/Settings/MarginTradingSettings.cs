@@ -82,7 +82,7 @@ namespace MarginTrading.Core.Settings
 
 	public class RabbitMqQueueInfo
 	{
-		public string QueueName { get; set; }
+		//public string QueueName { get; set; }
 		public string ExchangeName { get; set; }
 	}
 
@@ -91,5 +91,6 @@ namespace MarginTrading.Core.Settings
 		public string ConnectionString { get; set; }
 		public string QueueName { get; set; }
 		public string ExchangeName { get; set; }
+		public bool IsDurable { get; set; }
 	}
 }

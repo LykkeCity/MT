@@ -9,6 +9,7 @@ using MarginTrading.Common.Mappers;
 using MarginTrading.Core;
 using MarginTrading.Core.Monitoring;
 using MarginTrading.Core.Settings;
+using Microsoft.Extensions.PlatformAbstractions;
 using Newtonsoft.Json;
 
 namespace MarginTrading.OrderRejectedBroker
@@ -42,7 +43,7 @@ namespace MarginTrading.OrderRejectedBroker
                 _connector = new RabbitMqSubscriber<string>(new RabbitMqSubscriberSettings
                     {
                         ConnectionString = _settings.MtRabbitMqConnString,
-                        QueueName = _settings.RabbitMqQueues.OrderRejected.QueueName,
+                        QueueName = $"{_settings.RabbitMqQueues.OrderRejected.ExchangeName}.{PlatformServices.Default.Application.ApplicationName}",
                         ExchangeName = _settings.RabbitMqQueues.OrderRejected.ExchangeName,
                         IsDurable = true
                     })

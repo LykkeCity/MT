@@ -4,6 +4,7 @@ using Autofac;
 using Common.Log;
 using MarginTrading.Core;
 using MarginTrading.Core.Settings;
+using Microsoft.Extensions.PlatformAbstractions;
 
 namespace MarginTrading.Services
 {
@@ -48,7 +49,7 @@ namespace MarginTrading.Services
                 if (clientIds.Length > 0)
                 {
                     await _rabbitMqNotifyService.UserUpdates(true, false, clientIds);
-                    _console.WriteLine($"send user updates to queue {_marginSettings.RabbitMqQueues.UserUpdates.QueueName}");
+                    _console.WriteLine($"send user updates to queue {_marginSettings.RabbitMqQueues.UserUpdates.ExchangeName}.{PlatformServices.Default.Application.ApplicationName}");
                 }
             }
         }

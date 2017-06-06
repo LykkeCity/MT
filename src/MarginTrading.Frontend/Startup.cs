@@ -297,7 +297,7 @@ namespace MarginTrading.Frontend
             {
                 ConnectionString = settings.MarginTradingLive.MtRabbitMqConnString,
                 ExchangeName = settings.MarginTradingFront.RabbitMqQueues.OrderbookPrices.ExchangeName,
-                QueueName = settings.MarginTradingFront.RabbitMqQueues.OrderbookPrices.QueueName + ".frontend",
+                QueueName = $"{settings.MarginTradingFront.RabbitMqQueues.OrderbookPrices.ExchangeName}.{PlatformServices.Default.Application.ApplicationName}",
                 IsDurable = false
             })
                 .SetMessageDeserializer(new FrontEndDeserializer<InstrumentBidAskPair>())
@@ -311,7 +311,7 @@ namespace MarginTrading.Frontend
             {
                 ConnectionString = settings.MarginTradingDemo.MtRabbitMqConnString,
                 ExchangeName = settings.MarginTradingFront.RabbitMqQueues.AccountChanged.ExchangeName,
-                QueueName = settings.MarginTradingFront.RabbitMqQueues.AccountChanged.QueueName + ".frontend",
+                QueueName = $"{settings.MarginTradingFront.RabbitMqQueues.AccountChanged.ExchangeName}.{PlatformServices.Default.Application.ApplicationName}",
                 IsDurable = false
             })
                 .SetMessageDeserializer(new FrontEndDeserializer<MarginTradingAccountBackendContract>())
@@ -325,7 +325,7 @@ namespace MarginTrading.Frontend
             {
                 ConnectionString = settings.MarginTradingLive.MtRabbitMqConnString,
                 ExchangeName = settings.MarginTradingFront.RabbitMqQueues.AccountChanged.ExchangeName,
-                QueueName = settings.MarginTradingFront.RabbitMqQueues.AccountChanged.QueueName + ".frontend",
+                QueueName = $"{settings.MarginTradingFront.RabbitMqQueues.AccountChanged.ExchangeName}.{PlatformServices.Default.Application.ApplicationName}",
                 IsDurable = false
             })
                 .SetMessageDeserializer(new FrontEndDeserializer<MarginTradingAccountBackendContract>())
@@ -339,7 +339,7 @@ namespace MarginTrading.Frontend
             {
                 ConnectionString = settings.MarginTradingDemo.MtRabbitMqConnString,
                 ExchangeName = settings.MarginTradingFront.RabbitMqQueues.OrderChanged.ExchangeName,
-                QueueName = settings.MarginTradingFront.RabbitMqQueues.OrderChanged.QueueName + ".frontend",
+                QueueName = $"{settings.MarginTradingFront.RabbitMqQueues.OrderChanged.ExchangeName}.{PlatformServices.Default.Application.ApplicationName}",
                 IsDurable = false
             })
                 .SetMessageDeserializer(new FrontEndDeserializer<OrderContract>())
@@ -353,7 +353,7 @@ namespace MarginTrading.Frontend
             {
                 ConnectionString = settings.MarginTradingLive.MtRabbitMqConnString,
                 ExchangeName = settings.MarginTradingFront.RabbitMqQueues.OrderChanged.ExchangeName,
-                QueueName = settings.MarginTradingFront.RabbitMqQueues.OrderChanged.QueueName + ".frontend",
+                QueueName = $"{settings.MarginTradingFront.RabbitMqQueues.OrderChanged.ExchangeName}.{PlatformServices.Default.Application.ApplicationName}",
                 IsDurable = false
             })
                 .SetMessageDeserializer(new FrontEndDeserializer<OrderContract>())
@@ -367,7 +367,7 @@ namespace MarginTrading.Frontend
             {
                 ConnectionString = settings.MarginTradingDemo.MtRabbitMqConnString,
                 ExchangeName = settings.MarginTradingFront.RabbitMqQueues.AccountStopout.ExchangeName,
-                QueueName = settings.MarginTradingFront.RabbitMqQueues.AccountStopout.QueueName + ".frontend",
+                QueueName = $"{settings.MarginTradingFront.RabbitMqQueues.AccountStopout.ExchangeName}.{PlatformServices.Default.Application.ApplicationName}",
                 IsDurable = false
             })
                 .SetMessageDeserializer(new FrontEndDeserializer<AccountStopoutBackendContract>())
@@ -381,7 +381,7 @@ namespace MarginTrading.Frontend
             {
                 ConnectionString = settings.MarginTradingLive.MtRabbitMqConnString,
                 ExchangeName = settings.MarginTradingFront.RabbitMqQueues.AccountStopout.ExchangeName,
-                QueueName = settings.MarginTradingFront.RabbitMqQueues.AccountStopout.QueueName + ".frontend",
+                QueueName = $"{settings.MarginTradingFront.RabbitMqQueues.AccountStopout.ExchangeName}.{PlatformServices.Default.Application.ApplicationName}",
                 IsDurable = false
             })
                 .SetMessageDeserializer(new FrontEndDeserializer<AccountStopoutBackendContract>())
@@ -395,7 +395,7 @@ namespace MarginTrading.Frontend
             {
                 ConnectionString = settings.MarginTradingDemo.MtRabbitMqConnString,
                 ExchangeName = settings.MarginTradingFront.RabbitMqQueues.UserUpdates.ExchangeName,
-                QueueName = settings.MarginTradingFront.RabbitMqQueues.UserUpdates.QueueName + ".frontend",
+                QueueName = $"{settings.MarginTradingFront.RabbitMqQueues.UserUpdates.ExchangeName}.{PlatformServices.Default.Application.ApplicationName}",
                 IsDurable = false
             })
                 .SetMessageDeserializer(new FrontEndDeserializer<UserUpdateEntityBackendContract>())
@@ -409,7 +409,7 @@ namespace MarginTrading.Frontend
             {
                 ConnectionString = settings.MarginTradingLive.MtRabbitMqConnString,
                 ExchangeName = settings.MarginTradingFront.RabbitMqQueues.UserUpdates.ExchangeName,
-                QueueName = settings.MarginTradingFront.RabbitMqQueues.UserUpdates.QueueName + ".frontend",
+                QueueName = $"{settings.MarginTradingFront.RabbitMqQueues.UserUpdates.ExchangeName}.{PlatformServices.Default.Application.ApplicationName}",
                 IsDurable = false
             })
                 .SetMessageDeserializer(new FrontEndDeserializer<UserUpdateEntityBackendContract>())

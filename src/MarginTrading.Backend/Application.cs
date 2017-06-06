@@ -10,6 +10,7 @@ using MarginTrading.Core;
 using MarginTrading.Core.MarketMakerFeed;
 using MarginTrading.Core.Monitoring;
 using MarginTrading.Core.Settings;
+using Microsoft.Extensions.PlatformAbstractions;
 using Newtonsoft.Json;
 #pragma warning disable 1591
 
@@ -51,9 +52,9 @@ namespace MarginTrading.Backend
                 _connector = new RabbitMqSubscriber<MarketMakerOrderBook>(new RabbitMqSubscriberSettings
                     {
                         ConnectionString = _marginSettings.SpotRabbitMqSettings.ConnectionString,
-                        QueueName = _marginSettings.SpotRabbitMqSettings.QueueName,
+                        QueueName = $"{_marginSettings.SpotRabbitMqSettings.ExchangeName}.{PlatformServices.Default.Application.ApplicationName}",
                         ExchangeName = _marginSettings.SpotRabbitMqSettings.ExchangeName,
-                        IsDurable = true
+                        IsDurable = _marginSettings.SpotRabbitMqSettings.IsDurable
                     })
                     .SetMessageDeserializer(new BackEndDeserializer<MarketMakerOrderBook>())
                     .Subscribe(HandleMessage)
@@ -97,7 +98,7 @@ namespace MarginTrading.Backend
             {
                 DateTime = now,
                 ServiceName = ServiceName,
-                Version = Microsoft.Extensions.PlatformAbstractions.PlatformServices.Default.Application.ApplicationVersion
+                Version = PlatformServices.Default.Application.ApplicationVersion
             };
 
             await _serviceMonitoringRepository.UpdateOrCreate(record);

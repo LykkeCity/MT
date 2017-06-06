@@ -9,6 +9,7 @@ using MarginTrading.Common.Mappers;
 using MarginTrading.Core;
 using MarginTrading.Core.Monitoring;
 using MarginTrading.Core.Settings;
+using Microsoft.Extensions.PlatformAbstractions;
 using Newtonsoft.Json;
 
 namespace MarginTrading.AccountHistoryBroker
@@ -41,7 +42,7 @@ namespace MarginTrading.AccountHistoryBroker
                 _connector = new RabbitMqSubscriber<string>(new RabbitMqSubscriberSettings
                     {
                         ConnectionString = _settings.MtRabbitMqConnString,
-                        QueueName = _settings.RabbitMqQueues.AccountHistory.QueueName,
+                        QueueName = $"{_settings.RabbitMqQueues.AccountHistory.ExchangeName}.{PlatformServices.Default.Application.ApplicationName}",
                         ExchangeName = _settings.RabbitMqQueues.AccountHistory.ExchangeName,
                         IsDurable = true
                     })
