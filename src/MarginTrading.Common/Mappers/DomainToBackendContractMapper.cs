@@ -294,6 +294,11 @@ namespace MarginTrading.Common.Mappers
                 orderContract.MatchedOrders.Add(order.ToBackendContract());
             }
 
+            foreach (MatchedOrder order in src.MatchedCloseOrders)
+            {
+                orderContract.MatchedCloseOrders.Add(order.ToBackendContract());
+            }
+
             return orderContract;
         }
 

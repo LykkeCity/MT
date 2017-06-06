@@ -30,5 +30,6 @@ namespace MarginTrading.Common.BackendContracts
         public double CloseCommission { get; set; }
         public double SwapCommission { get; set; }
         public List<MatchedOrderBackendContract> MatchedOrders { get; set; } = new List<MatchedOrderBackendContract>();
+        public List<MatchedOrderBackendContract> MatchedCloseOrders { get; set; } = new List<MatchedOrderBackendContract>();
     }
 }
