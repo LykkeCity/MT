@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
 using Common.Log;
@@ -57,18 +58,16 @@ namespace MarginTrading.Services
         public async Task AddOrReplaceTradingConditionAsync(IMarginTradingCondition tradingCondition)
         {
             var allTradingConditions = (await _repository.GetAllAsync()).ToList();
-            string defaultConditionId = allTradingConditions.FirstOrDefault(item => item.IsDefault)?.Id;
-
+            var defaultTradingCondition = allTradingConditions.FirstOrDefault(item => item.IsDefault);
+            
             if (tradingCondition.IsDefault)
             {
-                var defaultTradingCondition = allTradingConditions.FirstOrDefault(item => item.IsDefault);
-
-                if (defaultTradingCondition?.Id != tradingCondition.Id)
+                if (defaultTradingCondition != null && defaultTradingCondition.Id != tradingCondition.Id)
                 {
                     await SetIsDefault(defaultTradingCondition, false);
                 }
             }
-            else if (defaultConditionId == tradingCondition.Id)
+            else if (defaultTradingCondition?.Id == tradingCondition.Id)
             {
                 var firstNotDefaultCondition = allTradingConditions.FirstOrDefault(item => !item.IsDefault);
 

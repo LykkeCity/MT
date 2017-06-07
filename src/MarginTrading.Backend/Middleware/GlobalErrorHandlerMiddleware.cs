@@ -2,8 +2,10 @@
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Common;
 using Common.Log;
 using MarginTrading.Backend.Infrastructure;
+using MarginTrading.Common.BackendContracts;
 using MarginTrading.Core.Notifications;
 using MarginTrading.Core.Settings;
 using Microsoft.AspNetCore.Http;
@@ -40,6 +42,8 @@ namespace MarginTrading.Backend.Middleware
             catch (Exception ex)
             {
                 await LogError(context, ex, reqBodyStream);
+
+                await SendError(context, ex.Message);
             }
         }
 
@@ -83,6 +87,14 @@ namespace MarginTrading.Backend.Middleware
             await requestReader.ReadAsync(bodyPart, 0, len);
 
             return new string(bodyPart);
+        }
+
+        private async Task SendError(HttpContext ctx, string errorMessage)
+        {
+            ctx.Response.ContentType = "application/json";
+            ctx.Response.StatusCode = 500;
+            var response = new MtBackendResponse<string>() {Result = "Technical problems", Message = errorMessage};
+            await ctx.Response.WriteAsync(response.ToJson());
         }
     }
 }
