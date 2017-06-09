@@ -38,7 +38,7 @@ namespace MarginTrading.Public.Services
             {
                 ConnectionString = _settings.MtRabbitMqConnString,
                 ExchangeName = _settings.RabbitMqQueues.OrderbookPrices.ExchangeName,
-                QueueName = $"{_settings.RabbitMqQueues.OrderbookPrices.ExchangeName}.{PlatformServices.Default.Application.ApplicationName}.{nameof(PricesCacheService)}",
+                QueueName = QueueHelper.BuildQueueName(_settings.RabbitMqQueues.OrderbookPrices.ExchangeName, nameof(PricesCacheService)),
                 IsDurable = false
             })
                 .SetMessageDeserializer(new FrontEndDeserializer<InstrumentBidAskPair>())

@@ -6,10 +6,10 @@ using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Subscriber;
 using MarginTrading.Common.BackendContracts;
 using MarginTrading.Common.Mappers;
+using MarginTrading.Common.RabbitMq;
 using MarginTrading.Core;
 using MarginTrading.Core.Monitoring;
 using MarginTrading.Core.Settings;
-using Microsoft.Extensions.PlatformAbstractions;
 using Newtonsoft.Json;
 
 namespace MarginTrading.AccountHistoryBroker
@@ -42,7 +42,7 @@ namespace MarginTrading.AccountHistoryBroker
                 _connector = new RabbitMqSubscriber<string>(new RabbitMqSubscriberSettings
                     {
                         ConnectionString = _settings.MtRabbitMqConnString,
-                        QueueName = $"{_settings.RabbitMqQueues.AccountHistory.ExchangeName}.{PlatformServices.Default.Application.ApplicationName}",
+                        QueueName = QueueHelper.BuildQueueName(_settings.RabbitMqQueues.AccountHistory.ExchangeName, _settings.Env),
                         ExchangeName = _settings.RabbitMqQueues.AccountHistory.ExchangeName,
                         IsDurable = true
                     })

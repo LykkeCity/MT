@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using Lykke.RabbitMqBroker.Subscriber;
+using MarginTrading.Common.RabbitMq;
 using MarginTrading.Core;
 using MarginTrading.Core.MarketMakerFeed;
 using MarginTrading.Core.Monitoring;
@@ -52,7 +53,7 @@ namespace MarginTrading.Backend
                 _connector = new RabbitMqSubscriber<MarketMakerOrderBook>(new RabbitMqSubscriberSettings
                     {
                         ConnectionString = _marginSettings.SpotRabbitMqSettings.ConnectionString,
-                        QueueName = $"{_marginSettings.SpotRabbitMqSettings.ExchangeName}.{PlatformServices.Default.Application.ApplicationName}.{(_marginSettings.IsLive ? "Live" : "Demo")}",
+                        QueueName = QueueHelper.BuildQueueName(_marginSettings.SpotRabbitMqSettings.ExchangeName, _marginSettings.IsLive ? "Live" : "Demo"),
                         ExchangeName = _marginSettings.SpotRabbitMqSettings.ExchangeName,
                         IsDurable = _marginSettings.SpotRabbitMqSettings.IsDurable
                     })
