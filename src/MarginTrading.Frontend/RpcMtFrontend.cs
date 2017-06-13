@@ -50,7 +50,12 @@ namespace MarginTrading.Frontend
             var initDataBackendRequest = new ClientIdBackendRequest { ClientId = clientId };
 
             var initData = new InitDataLiveDemoClientResponse();
-            MarginTradingAssetBackendContract[] assets = null;
+            var assetsLive = await _httpRequestService.RequestAsync<MarginTradingAssetBackendContract[]>(null,
+                                 "init.assets") ?? new MarginTradingAssetBackendContract[0];
+            var assetsDemo = await _httpRequestService.RequestAsync<MarginTradingAssetBackendContract[]>(null,
+                                 "init.assets", false) ?? new MarginTradingAssetBackendContract[0];
+
+            initData.Assets = assetsLive.Concat(assetsDemo).Select(item => item.ToClientContract()).ToArray();
 
             if (marginTradingLiveEnabled)
             {
@@ -58,8 +63,6 @@ namespace MarginTrading.Frontend
                     initDataBackendRequest, "init.data");
 
                 initData.Live = initDataLiveResponse.ToClientContract();
-
-                assets = await _httpRequestService.RequestAsync<MarginTradingAssetBackendContract[]>(null, "init.assets");
             }
 
             if (marginTradingDemoEnabled)
@@ -68,14 +71,7 @@ namespace MarginTrading.Frontend
                     initDataBackendRequest, "init.data", false);
 
                 initData.Demo = initDataDemoResponse.ToClientContract();
-
-                if (assets == null)
-                {
-                    assets = await _httpRequestService.RequestAsync<MarginTradingAssetBackendContract[]>(null, "init.assets", false);
-                }
             }
-
-            initData.Assets = assets.Select(item => item.ToClientContract()).ToArray();
 
             return initData;
         }
