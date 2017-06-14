@@ -57,12 +57,14 @@ namespace MarginTrading.Backend
             services.AddSingleton(Configuration);
             services.AddMvc();
 
+            bool isLive = Configuration.IsLive();
+
             services.AddSwaggerGen(options =>
             {
                 options.SingleApiVersion(new Info
                 {
                     Version = "v1",
-                    Title = "MarginTrading_Api"
+                    Title = $"MarginTrading_Api_{(isLive ? "Live" : "Demo")}"
                 });
                 options.DescribeAllEnumsAsStrings();
                 var basePath = PlatformServices.Default.Application.ApplicationBasePath;
@@ -78,7 +80,6 @@ namespace MarginTrading.Backend
                 ? Configuration.Get<MtBackendSettings>()
                 : SettingsProcessor.Process<MtBackendSettings>(Configuration["SettingsUrl"].GetStringAsync().Result);
 
-            bool isLive = Configuration.IsLive();
             MarginSettings settings = isLive ? mtSettings.MtBackend.MarginTradingLive : mtSettings.MtBackend.MarginTradingDemo;
             settings.IsLive = isLive;
 

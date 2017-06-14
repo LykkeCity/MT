@@ -33,7 +33,7 @@ namespace MarginTrading.Backend.Controllers
                 TradingEngineAlive = tradingEngineAlive,
                 Version =
                     Microsoft.Extensions.PlatformAbstractions.PlatformServices.Default.Application.ApplicationVersion,
-                Env = _settings.Env
+                Env = _settings.IsLive ? "Live" : "Demo"
             };
         }
     }

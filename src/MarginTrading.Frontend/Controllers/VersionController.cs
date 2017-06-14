@@ -33,7 +33,7 @@ namespace MarginTrading.Frontend.Controllers
 
             try
             {
-                var responce = await _httpRequestService.RequestAsync<IsAliveResponse>(null, "", true, "isAlive");
+                var responce = await _httpRequestService.GetAsync<IsAliveResponse>("isAlive");
                 result.LiveVersion = responce.Version;
             }
             catch
@@ -43,7 +43,7 @@ namespace MarginTrading.Frontend.Controllers
 
             try
             {
-                var responce = await _httpRequestService.RequestAsync<IsAliveResponse>(null, "", false, "isAlive");
+                var responce = await _httpRequestService.GetAsync<IsAliveResponse>("isAlive", false);
                 result.DemoVersion = responce.Version;
             }
             catch
