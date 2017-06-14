@@ -1,6 +1,10 @@
-﻿using MarginTrading.Frontend.Settings;
+﻿using System.Threading.Tasks;
+using MarginTrading.Common.ClientContracts;
+using MarginTrading.Frontend.Services;
+using MarginTrading.Frontend.Settings;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.PlatformAbstractions;
+using IsAliveResponse = MarginTrading.Common.BackendContracts.IsAliveResponse;
 
 namespace MarginTrading.Frontend.Controllers
 {
@@ -9,26 +13,45 @@ namespace MarginTrading.Frontend.Controllers
     public class VersionController : Controller
     {
         private readonly MtFrontendSettings _setings;
+        private readonly IHttpRequestService _httpRequestService;
 
-        public VersionController(MtFrontendSettings setings)
+        public VersionController(MtFrontendSettings setings,
+            IHttpRequestService httpRequestService)
         {
             _setings = setings;
+            _httpRequestService = httpRequestService;
         }
 
         [HttpGet]
-        public VersionModel Get()
+        public async Task<IsAliveExtendedResponse> Get()
         {
-            return new VersionModel
+            var result = new IsAliveExtendedResponse
             {
                 Version = PlatformServices.Default.Application.ApplicationVersion,
                 Env = _setings.MarginTradingFront.Env
             };
-        }
 
-        public class VersionModel
-        {
-            public string Version { get; set; }
-            public string Env { get; set; }
+            try
+            {
+                var responce = await _httpRequestService.RequestAsync<IsAliveResponse>(null, "", true, "isAlive");
+                result.LiveVersion = responce.Version;
+            }
+            catch
+            {
+                result.LiveVersion = "Error";
+            }
+
+            try
+            {
+                var responce = await _httpRequestService.RequestAsync<IsAliveResponse>(null, "", false, "isAlive");
+                result.DemoVersion = responce.Version;
+            }
+            catch
+            {
+                result.DemoVersion = "Error";
+            }
+
+            return result;
         }
     }
 }

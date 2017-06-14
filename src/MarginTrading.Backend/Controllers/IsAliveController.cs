@@ -1,4 +1,6 @@
-﻿using MarginTrading.Core;
+﻿using MarginTrading.Common.BackendContracts;
+using MarginTrading.Core;
+using MarginTrading.Core.Settings;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MarginTrading.Backend.Controllers
@@ -8,13 +10,16 @@ namespace MarginTrading.Backend.Controllers
     {
         private readonly IMatchingEngine _matchingEngine;
         private readonly ITradingEngine _tradingEngine;
+        private readonly MarginSettings _settings;
 
         public IsAliveController(
             IMatchingEngine matchingEngine,
-            ITradingEngine tradingEngine)
+            ITradingEngine tradingEngine,
+            MarginSettings settings)
         {
             _matchingEngine = matchingEngine;
             _tradingEngine = tradingEngine;
+            _settings = settings;
         }
         [HttpGet]
         public IsAliveResponse Get()
@@ -27,15 +32,9 @@ namespace MarginTrading.Backend.Controllers
                 MatchingEngineAlive = matchingEngineAlive,
                 TradingEngineAlive = tradingEngineAlive,
                 Version =
-                    Microsoft.Extensions.PlatformAbstractions.PlatformServices.Default.Application.ApplicationVersion
+                    Microsoft.Extensions.PlatformAbstractions.PlatformServices.Default.Application.ApplicationVersion,
+                Env = _settings.Env
             };
-        }
-
-        public class IsAliveResponse
-        {
-            public bool MatchingEngineAlive { get; set; }
-            public bool TradingEngineAlive { get; set; }
-            public string Version { get; set; }
         }
     }
 }

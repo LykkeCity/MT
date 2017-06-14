@@ -3,11 +3,16 @@ using System.Threading.Tasks;
 using MarginTrading.Common.ClientContracts;
 using MarginTrading.Common.Documentation;
 using WampSharp.V2.Rpc;
+using IsAliveResponse = MarginTrading.Common.ClientContracts.IsAliveResponse;
 
 namespace MarginTrading.Common.Wamp
 {
     public interface IRpcMtFrontend
     {
+        [WampProcedure("is.alive")]
+        [DocMe(Name = "is.alive", Description = "Checks service isAlive")]
+        IsAliveResponse IsAlive();
+
         [WampProcedure("init.data")]
         [DocMe(Name = "init.data", Description = "Gets init data: client accounts and trading conditions")]
         Task<InitDataLiveDemoClientResponse> InitData(string token);

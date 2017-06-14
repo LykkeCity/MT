@@ -59,6 +59,12 @@ namespace MarginTrading.Client
             _serverAddress = config["serverAddress"];
         }
 
+        public void IsAlive()
+        {
+            var data = _service.IsAlive();
+            Console.WriteLine(data.ToJson());
+        }
+
         public async Task InitData()
         {
             var data = await _service.InitData(_token);

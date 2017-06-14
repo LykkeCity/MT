@@ -10,7 +10,9 @@ using MarginTrading.Common.Wamp;
 using MarginTrading.Core;
 using MarginTrading.Frontend.Services;
 using MarginTrading.Frontend.Settings;
+using Microsoft.Extensions.PlatformAbstractions;
 using Newtonsoft.Json;
+using IsAliveResponse = MarginTrading.Common.ClientContracts.IsAliveResponse;
 
 namespace MarginTrading.Frontend
 {
@@ -32,6 +34,19 @@ namespace MarginTrading.Frontend
             _httpRequestService = httpRequestService;
             _marginTradingSettingsService = marginTradingSettingsService;
         }
+
+        #region Service
+
+        public IsAliveResponse IsAlive()
+        {
+            return new IsAliveResponse
+            {
+                Version = PlatformServices.Default.Application.ApplicationVersion,
+                Env = _settings.MarginTradingFront.Env
+            };
+        }
+
+        #endregion
 
         #region Init data
 

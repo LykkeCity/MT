@@ -9,7 +9,7 @@ namespace MarginTrading.Frontend.Services
 {
     public interface IHttpRequestService
     {
-        Task<TResponse> RequestAsync<TResponse>(object request, string action, bool isLive = true);
+        Task<TResponse> RequestAsync<TResponse>(object request, string action, bool isLive = true, string controller = "mt");
     }
 
     public class HttpRequestService : IHttpRequestService
@@ -23,11 +23,11 @@ namespace MarginTrading.Frontend.Services
             _log = log;
         }
 
-        public async Task<TResponse> RequestAsync<TResponse>(object request, string action, bool isLive = true)
+        public async Task<TResponse> RequestAsync<TResponse>(object request, string action, bool isLive = true, string controller = "mt")
         {
             try
             {
-                return await $"{(isLive ? _settings.MarginTradingLive.ApiRootUrl : _settings.MarginTradingDemo.ApiRootUrl)}/api/mt/{action}"
+                return await $"{(isLive ? _settings.MarginTradingLive.ApiRootUrl : _settings.MarginTradingDemo.ApiRootUrl)}/api/{controller}/{action}"
                     .WithHeader("api-key", isLive ? _settings.MarginTradingLive.ApiKey : _settings.MarginTradingDemo.ApiKey)
                     .PostJsonAsync(request)
                     .ReceiveJson<TResponse>();

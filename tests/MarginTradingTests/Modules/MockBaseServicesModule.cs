@@ -55,7 +55,7 @@ namespace MarginTradingTests.Modules
 
             var httpRequestServiceMock = new Mock<IHttpRequestService>();
             httpRequestServiceMock
-                .Setup(item => item.RequestAsync<List<string>>(It.IsAny<object>(), "init.availableassets", It.IsAny<bool>()))
+                .Setup(item => item.RequestAsync<List<string>>(It.IsAny<object>(), "init.availableassets", It.IsAny<bool>(), It.IsAny<string>()))
                 .Returns(() => Task.FromResult(new List<string> { "BTCCHF", "EURUSD" }));
 
             builder.RegisterInstance(emailService.Object).As<IEmailService>();
