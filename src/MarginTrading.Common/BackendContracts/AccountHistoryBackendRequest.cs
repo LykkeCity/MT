@@ -8,6 +8,5 @@ namespace MarginTrading.Common.BackendContracts
         public string AccountId { get; set; }
         public DateTime? From { get; set; }
         public DateTime? To { get; set; }
-        public bool IsLive { get; set; }
     }
 }

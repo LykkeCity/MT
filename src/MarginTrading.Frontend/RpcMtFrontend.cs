@@ -152,9 +152,13 @@ namespace MarginTrading.Frontend
         {
             var accountHistoryClientRequest = DeserializeRequest<AccountHistoryClientRequest>(requestJson);
             var clientId = await GetClientId(accountHistoryClientRequest.Token);
+            var isLive = !string.IsNullOrEmpty(accountHistoryClientRequest.AccountId)
+                ? IsLiveAccount(accountHistoryClientRequest.AccountId)
+                : accountHistoryClientRequest.IsLive;
             var accountHistoryBackendRequest = accountHistoryClientRequest.ToBackendContract(clientId);
-            var accountHistoryBackendResponse = await _httpRequestService.RequestAsync<AccountHistoryBackendResponse>(accountHistoryBackendRequest, "account.history",
-                accountHistoryBackendRequest.IsLive);
+            var accountHistoryBackendResponse =
+                await _httpRequestService.RequestAsync<AccountHistoryBackendResponse>(accountHistoryBackendRequest,
+                    "account.history", isLive);
             return accountHistoryBackendResponse.ToClientContract();
         }
 
@@ -162,9 +166,13 @@ namespace MarginTrading.Frontend
         {
             var accountHistoryClientRequest = DeserializeRequest<AccountHistoryClientRequest>(requestJson);
             var clientId = await GetClientId(accountHistoryClientRequest.Token);
+            var isLive = !string.IsNullOrEmpty(accountHistoryClientRequest.AccountId)
+                ? IsLiveAccount(accountHistoryClientRequest.AccountId)
+                : accountHistoryClientRequest.IsLive;
             var accountHistoryBackendRequest = accountHistoryClientRequest.ToBackendContract(clientId);
-            var accountHistoryBackendResponse = await _httpRequestService.RequestAsync<AccountNewHistoryBackendResponse>(accountHistoryBackendRequest, "account.history.new",
-                accountHistoryBackendRequest.IsLive);
+            var accountHistoryBackendResponse =
+                await _httpRequestService.RequestAsync<AccountNewHistoryBackendResponse>(accountHistoryBackendRequest,
+                    "account.history.new", isLive);
             return accountHistoryBackendResponse.ToClientContract();
         }
 

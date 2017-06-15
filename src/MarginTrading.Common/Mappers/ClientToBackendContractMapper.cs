@@ -34,8 +34,7 @@ namespace MarginTrading.Common.Mappers
                 AccountId = src.AccountId,
                 ClientId = clientId,
                 From = src.From,
-                To = src.To,
-                IsLive = src.IsLive
+                To = src.To
             };
         }
 
