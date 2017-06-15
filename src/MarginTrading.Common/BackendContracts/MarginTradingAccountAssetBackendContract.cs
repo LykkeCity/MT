@@ -16,5 +16,7 @@
         public double CommissionLot { get; set; }
         public double DeltaBid { get; set; }
         public double DeltaAsk { get; set; }
+        public double DealLimit { get; set; }
+        public double PositionLimit { get; set; }
     }
 }

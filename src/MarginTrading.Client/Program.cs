@@ -24,7 +24,7 @@
             //client.CloseOrder(true).Wait();
             //client.CancelOrder();
             //client.GetAccountOpenPositions().Wait();
-            //client.GetOpenPositions();
+            client.GetOpenPositions().Wait();
             //client.GetClientOrders();
             //client.ChangeOrderLimits();
 

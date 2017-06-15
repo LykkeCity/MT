@@ -2,6 +2,7 @@
 using Autofac;
 using MarginTrading.Core;
 using MarginTrading.Core.Exceptions;
+using MarginTrading.Services;
 using MarginTrading.Services.Events;
 using NUnit.Framework;
 
@@ -12,6 +13,7 @@ namespace MarginTradingTests
     {
         private IValidateOrderService _validateOrderService;
         private IEventChannel<BestPriceChangeEventArgs> _bestPriceConsumer;
+        private OrdersCache _ordersCache;
 
         [SetUp]
         public void Setup()
@@ -19,25 +21,101 @@ namespace MarginTradingTests
             RegisterDependencies();
             _validateOrderService = Container.Resolve<IValidateOrderService>();
             _bestPriceConsumer = Container.Resolve<IEventChannel<BestPriceChangeEventArgs>>();
+            _ordersCache = Container.Resolve<OrdersCache>();
         }
 
         [Test]
-        public void Is_Volume_Ivalid()
+        [TestCase(0, false)]
+        [TestCase(1, true)]
+        [TestCase(10, true)]
+        [TestCase(11, false)]
+        public void Is_Volume_Ivalid(double volume, bool isValid)
         {
+            const string instrument = "BTCUSD";
+
+            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 1.55, Ask = 1.57 };
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
+
             var order = new Order
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = Accounts[0].Id,
                 ClientId = Accounts[0].ClientId,
-                Instrument = "EURUSD",
-                Volume = 0,
+                Instrument = instrument,
+                Volume = volume,
                 FillType = OrderFillType.FillOrKill
             };
 
-            var ex = Assert.Throws<ValidateOrderException>(() => _validateOrderService.Validate(order));
+            if (isValid)
+            {
+                Assert.DoesNotThrow(() => _validateOrderService.Validate(order));
+            }
+            else
+            {
+                var ex = Assert.Throws<ValidateOrderException>(() => _validateOrderService.Validate(order));
 
-            Assert.That(ex.RejectReason == OrderRejectReason.InvalidVolume);
+                Assert.That(ex.RejectReason == OrderRejectReason.InvalidVolume);
+            }
+        }
+
+        [Test]
+        [TestCase(1, true)]
+        [TestCase(2, true)]
+        [TestCase(3, false)]
+        public void Is_Summary_Volume_Ivalid(double volume, bool isValid)
+        {
+            const string instrument = "BTCUSD";
+
+            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 1.55, Ask = 1.57 };
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
+
+            var existingLong = new Order
+            {
+                CreateDate = DateTime.UtcNow,
+                Id = Guid.NewGuid().ToString("N"),
+                AccountId = Accounts[0].Id,
+                ClientId = Accounts[0].ClientId,
+                Instrument = instrument,
+                Volume = 49,
+                FillType = OrderFillType.FillOrKill
+            };
+
+            var existingShort = new Order
+            {
+                CreateDate = DateTime.UtcNow,
+                Id = Guid.NewGuid().ToString("N"),
+                AccountId = Accounts[0].Id,
+                ClientId = Accounts[0].ClientId,
+                Instrument = instrument,
+                Volume = -49,
+                FillType = OrderFillType.FillOrKill
+            };
+
+            _ordersCache.ActiveOrders.Add(existingLong);
+            _ordersCache.ActiveOrders.Add(existingShort);
+
+            var order = new Order
+            {
+                CreateDate = DateTime.UtcNow,
+                Id = Guid.NewGuid().ToString("N"),
+                AccountId = Accounts[0].Id,
+                ClientId = Accounts[0].ClientId,
+                Instrument = instrument,
+                Volume = volume,
+                FillType = OrderFillType.FillOrKill
+            };
+
+            if (isValid)
+            {
+                Assert.DoesNotThrow(() => _validateOrderService.Validate(order));
+            }
+            else
+            {
+                var ex = Assert.Throws<ValidateOrderException>(() => _validateOrderService.Validate(order));
+
+                Assert.That(ex.RejectReason == OrderRejectReason.InvalidVolume);
+            }
         }
 
         [Test]

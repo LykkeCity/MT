@@ -6,6 +6,7 @@ using NUnit.Framework;
 namespace MarginTradingTests.IntegrationTests
 {
     [TestFixture]
+    [Ignore("Integration")]
     public class MtIntegrationTests : BaseIntegrationTests
     {
         private MtClient _client;

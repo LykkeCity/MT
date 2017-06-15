@@ -19,6 +19,8 @@ namespace MarginTrading.Core
         double CommissionLot { get; }
         double DeltaBid { get; }
         double DeltaAsk { get; }
+        double DealLimit { get; }
+        double PositionLimit { get; }
     }
 
     public class MarginTradingAccountAsset : IMarginTradingAccountAsset
@@ -37,6 +39,8 @@ namespace MarginTrading.Core
         public double CommissionLot { get; set; }
         public double DeltaBid { get; set; }
         public double DeltaAsk { get; set; }
+        public double DealLimit { get; set; }
+        public double PositionLimit { get; set; }
 
         public static IMarginTradingAccountAsset Create(IMarginTradingAccountAsset src)
         {
@@ -55,7 +59,9 @@ namespace MarginTrading.Core
                 CommissionShort = src.CommissionShort,
                 CommissionLot = src.CommissionLot,
                 DeltaBid = src.DeltaBid,
-                DeltaAsk = src.DeltaAsk
+                DeltaAsk = src.DeltaAsk,
+                DealLimit = src.DealLimit,
+                PositionLimit = src.PositionLimit
             };
         }
     }
