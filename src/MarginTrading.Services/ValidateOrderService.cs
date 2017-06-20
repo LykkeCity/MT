@@ -73,7 +73,7 @@ namespace MarginTrading.Services
 
             var accountAsset = _accountAssetsCacheService.GetAccountAsset(order.TradingConditionId, order.AccountAssetId, order.Instrument);
 
-            if (accountAsset.DealLimit > 0 && order.Volume > accountAsset.DealLimit)
+            if (accountAsset.DealLimit > 0 && Math.Abs(order.Volume) > accountAsset.DealLimit)
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidVolume,
                     $"Volume cannot be more then {accountAsset.DealLimit}");
