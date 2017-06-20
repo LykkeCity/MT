@@ -598,7 +598,7 @@ namespace MarginTrading.Backend.Controllers
             if (freeMargin < Math.Abs(request.Amount))
                 return Ok(false);
 
-            await _accountManager.UpdateBalanceAsync(request.ClientId, request.AccountId, -Math.Abs(request.Amount), AccountHistoryType.Deposit, "Account deposit");
+            await _accountManager.UpdateBalanceAsync(request.ClientId, request.AccountId, -Math.Abs(request.Amount), AccountHistoryType.Withdraw, "Account withdraw");
 
             _consoleWriter.WriteLine($"account withdraw for clientId = {request.ClientId}");
             _operationsLogService.AddLog("account withdraw", request.ClientId, request.AccountId, request.ToJson(), true.ToJson());
