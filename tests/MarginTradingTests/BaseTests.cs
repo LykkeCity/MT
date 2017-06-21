@@ -52,6 +52,8 @@ namespace MarginTradingTests
             MtServiceLocator.AccountUpdateService = Container.Resolve<IAccountUpdateService>();
             MtServiceLocator.AccountsCacheService = Container.Resolve<IAccountsCacheService>();
             MtServiceLocator.SwapCommissionService = Container.Resolve<ISwapCommissionService>();
+
+            Container.Resolve<OrderBookList>().Init(null);
         }
 
         protected List<MarginTradingAccount> Accounts = new List<MarginTradingAccount>
