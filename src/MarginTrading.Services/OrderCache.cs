@@ -15,6 +15,8 @@ namespace MarginTrading.Services
         IEnumerable<Order> GetOrders(params string[] accountIds);
         IEnumerable<Order> GetAll();
         Order GetOrderById(string orderId);
+        IEnumerable<Order> GetActive();
+        IEnumerable<Order> GetPending();
     }
 
     public class OrdersCache : IOrderReader
@@ -36,7 +38,20 @@ namespace MarginTrading.Services
         {
             lock (MarginTradingHelpers.TradingMatchingSync)
                 return ActiveOrders.GetAllOrders()
-                        .Union(WaitingForExecutionOrders.GetAllOrders());
+                        .Union(WaitingForExecutionOrders.GetAllOrders())
+                        .Union(ClosingOrders.GetAllOrders());
+        }
+
+        public IEnumerable<Order> GetActive()
+        {
+            lock (MarginTradingHelpers.TradingMatchingSync)
+                return ActiveOrders.GetAllOrders();
+        }
+
+        public IEnumerable<Order> GetPending()
+        {
+            lock (MarginTradingHelpers.TradingMatchingSync)
+                return ActiveOrders.GetAllOrders();
         }
 
         public Order GetOrderById(string orderId)
@@ -67,27 +82,23 @@ namespace MarginTrading.Services
     {
         private readonly OrdersCache _orderCache;
         private readonly IMarginTradingBlobRepository _marginTradingBlobRepository;
+        private readonly ILog _log;
+        private const string BlobName= "orders";
 
         public OrderCacheManager(OrdersCache orderCache,
             IMarginTradingBlobRepository marginTradingBlobRepository,
-            ILog log) : base(nameof(OrderCacheManager), 1000, log)
+            ILog log) : base(nameof(OrderCacheManager), 5000, log)
         {
             _orderCache = orderCache;
             _marginTradingBlobRepository = marginTradingBlobRepository;
+            _log = log;
         }
 
         public override void Start()
         {
-            // TODO: Restore from storage on start
+            var orders = _marginTradingBlobRepository.Read<List<Order>>(LykkeConstants.StateBlobContainer, BlobName) ?? new List<Order>();
 
-            //var blobRepository = ApplicationContainer.Resolve<IMarginTradingBlobRepository>();
-
-            
-            //string blobKey = "TE_orders";
-            //var orders = blobRepository.Read<List<Order>>(blobContainer, blobKey) ?? new List<Order>();
-
-            //TODO: added for tests, change to restore from storage
-            _orderCache.InitOrders(new List<Order>());
+            _orderCache.InitOrders(orders);
 
             base.Start();
         }
@@ -104,7 +115,20 @@ namespace MarginTrading.Services
 
         private async Task DumpToRepository()
         {
-            // TODO: Implement
+
+            try
+            {
+                var orders = _orderCache.GetAll();
+
+                if (orders != null)
+                {
+                    await _marginTradingBlobRepository.Write(LykkeConstants.StateBlobContainer, BlobName, orders);
+                }
+            }
+            catch (Exception ex)
+            {
+                await _log.WriteErrorAsync(nameof(OrdersCache), "Save orders", "", ex);
+            }
         }
     }
 }

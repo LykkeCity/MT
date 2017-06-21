@@ -72,8 +72,6 @@ namespace MarginTrading.Core
         public List<MatchedOrder> MatchedCloseOrders { get; set; } = new List<MatchedOrder>();
 
         internal FplData FplData { get; set; } = new FplData();
-
-        public double PnL => this.GetTotalFpl(AssetAccuracy);
     }
 
     public enum OrderFillType

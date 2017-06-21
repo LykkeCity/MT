@@ -151,9 +151,9 @@ namespace MarginTrading.Backend.Controllers
         public List<Order> GetPositionsByVolume([FromQuery]double volume)
         {
             var result = new List<Order>();
-            IEnumerable<Order> orders = _ordersReader.GetAll();
+            IEnumerable<Order> orders = _ordersReader.GetActive();
 
-            foreach (var order in orders.Where(item => item.Status == OrderStatus.Active))
+            foreach (var order in orders)
             {
                 if (order.GetMatchedVolume() >= volume)
                 {
@@ -179,9 +179,9 @@ namespace MarginTrading.Backend.Controllers
         public List<Order> GetPendingOrdersByVolume([FromQuery]double volume)
         {
             var result = new List<Order>();
-            IEnumerable<Order> orders = _ordersReader.GetAll();
+            IEnumerable<Order> orders = _ordersReader.GetPending();
 
-            foreach (var order in orders.Where(item => item.Status == OrderStatus.WaitingForExecution))
+            foreach (var order in orders)
             {
                 if (Math.Abs(order.Volume) >= volume)
                 {

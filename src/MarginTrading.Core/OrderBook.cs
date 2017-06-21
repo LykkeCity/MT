@@ -269,15 +269,21 @@ namespace MarginTrading.Core
         }
     }
 
+    //TODO: check concurent work
     public class OrderBookList : IEnumerable<KeyValuePair<string, OrderBook>>
     {
         private readonly IInstrumentsCache _instrumentsCache;
 
-        private readonly Dictionary<string, OrderBook> _orderBooks = new Dictionary<string, OrderBook>();
+        private Dictionary<string, OrderBook> _orderBooks;
 
         public OrderBookList(IInstrumentsCache instrumentsCache)
         {
             _instrumentsCache = instrumentsCache;
+        }
+
+        public Dictionary<string, OrderBook> GetOrderBookState()
+        {
+            return _orderBooks;
         }
 
         public double GetRemainingVolume(string instrumentId, OrderDirection orderType,
@@ -291,9 +297,9 @@ namespace MarginTrading.Core
             return _orderBooks[instrumentId].GetRemainingVolume(orderType, price);
         }
 
-        internal void Init(Dictionary<string, OrderBook> orderBook)
+        public void Init(Dictionary<string, OrderBook> orderBook)
         {
-            // TODO: Make Manager
+            _orderBooks = orderBook ?? new Dictionary<string, OrderBook>();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

@@ -32,5 +32,7 @@ namespace MarginTrading.Core
 
         public static readonly TimeSpan SessionLifetime = TimeSpan.FromDays(3);
         public static readonly TimeSpan SessionRefreshPeriod = TimeSpan.FromDays(1);
+
+        public static string StateBlobContainer = "state";
     }
 }

@@ -10,6 +10,7 @@ namespace MarginTrading.Services.Modules
 		protected override void Load(ContainerBuilder builder)
 		{
 			builder.RegisterType<QuoteCacheService>()
+                .As<IStartable>()
 				.As<IQuoteCacheService>()
 				.As<IEventConsumer<BestPriceChangeEventArgs>>()
 				.SingleInstance();
