@@ -197,9 +197,9 @@ namespace MarginTrading.Services
 
         private void ValidateInstrumentPositionVolume(IMarginTradingAccountAsset asset, Order order)
         {
-            var existingPositionsVolume = _ordersCache.ActiveOrders.GetOrders(asset.Instrument).Sum(o => Math.Abs(o.Volume));
+            var existingPositionsVolume = _ordersCache.ActiveOrders.GetOrders(asset.Instrument, order.AccountId).Sum(o => Math.Abs(o.Volume));
 
-            if (asset.PositionLimit > 0 && existingPositionsVolume + order.Volume > asset.PositionLimit)
+            if (asset.PositionLimit > 0 && existingPositionsVolume + Math.Abs(order.Volume) > asset.PositionLimit)
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidVolume,
                     $"Summary position for instrument can not be more then {asset.PositionLimit}");

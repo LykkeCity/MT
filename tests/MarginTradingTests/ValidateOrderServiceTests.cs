@@ -29,6 +29,9 @@ namespace MarginTradingTests
         [TestCase(1, true)]
         [TestCase(10, true)]
         [TestCase(11, false)]
+        [TestCase(-1, true)]
+        [TestCase(-10, true)]
+        [TestCase(-11, false)]
         public void Is_Volume_Ivalid(double volume, bool isValid)
         {
             const string instrument = "BTCUSD";
@@ -61,8 +64,11 @@ namespace MarginTradingTests
 
         [Test]
         [TestCase(1, true)]
+        [TestCase(-1, true)]
         [TestCase(2, true)]
+        [TestCase(-2, true)]
         [TestCase(3, false)]
+        [TestCase(-3, false)]
         public void Is_Summary_Volume_Ivalid(double volume, bool isValid)
         {
             const string instrument = "BTCUSD";
@@ -92,8 +98,20 @@ namespace MarginTradingTests
                 FillType = OrderFillType.FillOrKill
             };
 
+            var existingOtherAcc = new Order
+            {
+                CreateDate = DateTime.UtcNow,
+                Id = Guid.NewGuid().ToString("N"),
+                AccountId = Accounts[1].Id,
+                ClientId = Accounts[1].ClientId,
+                Instrument = instrument,
+                Volume = 49,
+                FillType = OrderFillType.FillOrKill
+            };
+
             _ordersCache.ActiveOrders.Add(existingLong);
             _ordersCache.ActiveOrders.Add(existingShort);
+            _ordersCache.ActiveOrders.Add(existingOtherAcc);
 
             var order = new Order
             {
