@@ -98,8 +98,6 @@ namespace MarginTrading.Services
             {
                 throw new ValidateOrderException(OrderRejectReason.NotEnoughBalance, MtMessages.Validation_NotEnoughBalance, $"Account available balance is {account.GetTotalCapital()}");
             }
-
-            
         }
 
         public void ValidateOrderStops(OrderDirection type, BidAskPair quote, double deltaBid, double deltaAsk, double? takeProfit,
@@ -195,7 +193,7 @@ namespace MarginTrading.Services
             }
         }
 
-        private void ValidateInstrumentPositionVolume(IMarginTradingAccountAsset asset, Order order)
+        public void ValidateInstrumentPositionVolume(IMarginTradingAccountAsset asset, Order order)
         {
             var existingPositionsVolume = _ordersCache.ActiveOrders.GetOrders(asset.Instrument, order.AccountId).Sum(o => Math.Abs(o.Volume));
 

@@ -111,7 +111,7 @@ namespace MarginTrading.Core
         NoLiquidity,
         NotEnoughBalance,
         LeadToStopOut,
-        AccountStopOut,
+        AccountInvalidState,
         InvalidExpectedOpenPrice,
         InvalidVolume,
         InvalidTakeProfit,

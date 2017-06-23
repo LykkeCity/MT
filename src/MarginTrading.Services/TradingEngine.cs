@@ -117,12 +117,16 @@ namespace MarginTrading.Services
                     return false;
                 }
 
-                if (!CheckIfWeCanOpenPosition(order, matchedOrders))
+                try
+                {
+                    CheckIfWeCanOpenPosition(order, matchedOrders);
+                }
+                catch (ValidateOrderException e)
                 {
                     order.CloseDate = DateTime.UtcNow;
                     order.Status = OrderStatus.Rejected;
-                    order.RejectReason = OrderRejectReason.AccountStopOut;
-                    order.RejectReasonText = "Opening the position will lead to account Stop Out level";
+                    order.RejectReason = e.RejectReason;
+                    order.RejectReasonText = e.Comment;
                     return false;
                 }
 
@@ -213,8 +217,11 @@ namespace MarginTrading.Services
         }
 
         //TODO: do check in other way
-        private bool CheckIfWeCanOpenPosition(Order order, MatchedOrder[] matchedOrders)
+        private void CheckIfWeCanOpenPosition(Order order, MatchedOrder[] matchedOrders)
         {
+            var accountAsset = _accountAssetsCacheService.GetAccountAsset(order.TradingConditionId, order.AccountAssetId, order.Instrument);
+            _validateOrderService.ValidateInstrumentPositionVolume(accountAsset, order);
+
             order.MatchedOrders = matchedOrders.ToList();
             order.OpenPrice = Math.Round(order.MatchedOrders.GetWeightedAveragePrice(), order.AssetAccuracy);
             
@@ -225,12 +232,23 @@ namespace MarginTrading.Services
             }
 
             var guessAccount = _accountUpdateService.GuessAccountWithOrder(order);
+            var guessAccountLevel = guessAccount.GetAccountLevel();
 
             order.OpenPrice = 0;
             order.ClosePrice = 0;
             order.MatchedOrders = new List<MatchedOrder>();
 
-            return guessAccount.GetAccountLevel() != AccountLevel.StopOUt;
+            if (guessAccountLevel == AccountLevel.MarginCall)
+            {
+                throw new ValidateOrderException(OrderRejectReason.AccountInvalidState,
+                    "Opening the position will lead to account Margin Call level");
+            }
+
+            if (guessAccountLevel == AccountLevel.StopOUt)
+            {
+                throw new ValidateOrderException(OrderRejectReason.AccountInvalidState,
+                    "Opening the position will lead to account Stop Out level");
+            }
         }
 
         private void PlacePendingOrder(Order order)
