@@ -117,7 +117,7 @@ namespace MarginTrading.Services
                     return false;
                 }
 
-                if (!CheckIfWeCanOpenPosition(order))
+                if (!CheckIfWeCanOpenPosition(order, matchedOrders))
                 {
                     order.CloseDate = DateTime.UtcNow;
                     order.Status = OrderStatus.Rejected;
@@ -212,9 +212,23 @@ namespace MarginTrading.Services
             ProcessOrderActive(order);
         }
 
-        private bool CheckIfWeCanOpenPosition(Order order)
+        //TODO: do check in other way
+        private bool CheckIfWeCanOpenPosition(Order order, MatchedOrder[] matchedOrders)
         {
+            order.MatchedOrders = matchedOrders.ToList();
+            order.OpenPrice = Math.Round(order.MatchedOrders.GetWeightedAveragePrice(), order.AssetAccuracy);
+            
+            InstrumentBidAskPair quote;
+            if (_quoteCashService.TryGetQuoteById(order.Instrument, out quote))
+            {
+                order.ClosePrice = order.GetOrderType() == OrderDirection.Buy ? quote.Bid : quote.Ask;
+            }
+
             var guessAccount = _accountUpdateService.GuessAccountWithOrder(order);
+
+            order.OpenPrice = 0;
+            order.ClosePrice = 0;
+            order.MatchedOrders = new List<MatchedOrder>();
 
             return guessAccount.GetAccountLevel() != AccountLevel.StopOUt;
         }
