@@ -27,6 +27,7 @@ namespace MarginTradingTests
         private IEventChannel<BestPriceChangeEventArgs> _bestPriceConsumer;
         private Mock<IClientNotifyService> _clientNotifyServiceMock;
         private Mock<IAppNotifications> _appNotificationsMock;
+        private Mock<IEmailService> _emailServiceMock;
 
         [SetUp]
         public void SetUp()
@@ -46,8 +47,10 @@ namespace MarginTradingTests
 
             var clientNotifyService = Container.Resolve<IClientNotifyService>();
             var appNotifications = Container.Resolve<IAppNotifications>();
+            var emailService = Container.Resolve<IEmailService>();
             _clientNotifyServiceMock = Mock.Get(clientNotifyService);
             _appNotificationsMock = Mock.Get(appNotifications);
+            _emailServiceMock = Mock.Get(emailService);
 
             var quote = new InstrumentBidAskPair { Instrument = "BTCUSD", Bid = 829.69, Ask = 829.8 };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
@@ -1199,6 +1202,8 @@ namespace MarginTradingTests
                 It.Is<string>(clientId => account.ClientId == clientId), 
                 It.Is<string>(accountId => account.Id == accountId), It.Is<int>(count => count == 1), It.IsAny<double>()), Times.Once());
             _appNotificationsMock.Verify(x => x.SendPositionNotification(It.IsAny<string[]>(), It.Is<string>(message => message.Contains("Stop out")), It.IsAny<IOrder>()), Times.Once());
+            _emailServiceMock.Verify(
+                x => x.SendStopOutEmailAsync(It.IsAny<string>(), account.BaseAssetId, account.Id), Times.Once);
         }
 
         [Test]
@@ -1245,6 +1250,8 @@ namespace MarginTradingTests
             Assert.AreEqual(AccountLevel.MarginCall, account.GetAccountLevel());
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendPositionNotification(It.IsAny<string[]>(), It.Is<string>(message => message.Contains("Margin used")), It.IsAny<IOrder>()), Times.Once());
+            _emailServiceMock.Verify(
+                x => x.SendMarginCallEmailAsync(It.IsAny<string>(), account.BaseAssetId, account.Id), Times.Once);
         }
 
         [Test]

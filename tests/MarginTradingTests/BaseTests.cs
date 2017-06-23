@@ -5,6 +5,7 @@ using MarginTrading.Core;
 using MarginTrading.Frontend.Services;
 using MarginTrading.Services.Modules;
 using MarginTradingTests.Modules;
+using Moq;
 
 namespace MarginTradingTests
 {
@@ -38,6 +39,10 @@ namespace MarginTradingTests
 
             builder.RegisterType<WatchListService>()
                 .As<IWatchListService>()
+                .SingleInstance();
+
+            builder.RegisterInstance(new Mock<IMarginTradingOperationsLogService>().Object)
+                .As<IMarginTradingOperationsLogService>()
                 .SingleInstance();
 
             Container = builder.Build();

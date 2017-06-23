@@ -28,6 +28,18 @@ namespace MarginTrading.Backend.Email
                 ToEmailAddress = email
             });
         }
+
+        public async Task SendStopOutEmailAsync(string email, string baseAssetId, string accountId)
+        {
+            string message = _templateGenerator.Generate("StopOut", new { BaseAssetId = baseAssetId, AccountId = accountId });
+
+            await _emailSender.SendAsync(new EmailMessage
+            {
+                HtmlBody = message,
+                Subject = "Stop out",
+                ToEmailAddress = email
+            });
+        }
     }
 
 }

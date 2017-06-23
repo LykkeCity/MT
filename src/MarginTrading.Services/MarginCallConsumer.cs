@@ -1,4 +1,5 @@
-﻿using Lykke.Common;
+﻿using Common;
+using Lykke.Common;
 using MarginTrading.Core;
 using MarginTrading.Core.Clients;
 using MarginTrading.Core.Messages;
@@ -13,17 +14,20 @@ namespace MarginTrading.Services
         private readonly IThreadSwitcher _threadSwitcher;
         private readonly IEmailService _emailService;
         private readonly IClientAccountService _clientAccountService;
+        private readonly IMarginTradingOperationsLogService _operationsLogService;
 
         public MarginCallConsumer(IThreadSwitcher threadSwitcher,
             IClientSettingsRepository clientSettingsRepository,
             IAppNotifications appNotifications,
             IEmailService emailService,
-            IClientAccountService clientAccountService) : base(clientSettingsRepository,
+            IClientAccountService clientAccountService,
+            IMarginTradingOperationsLogService operationsLogService) : base(clientSettingsRepository,
             appNotifications, clientAccountService)
         {
             _threadSwitcher = threadSwitcher;
             _emailService = emailService;
             _clientAccountService = clientAccountService;
+            _operationsLogService = operationsLogService;
         }
 
         int IEventConsumer.ConsumerRank => 100;
@@ -32,6 +36,8 @@ namespace MarginTrading.Services
             var account = ea.Account;
             _threadSwitcher.SwitchThread(async () =>
             {
+                _operationsLogService.AddLog("margin call", account.ClientId, account.Id, "", ea.ToJson());
+
                 await SendNotification(account.ClientId, string.Format(MtMessages.Notifications_MarginCall, account.GetMarginUsageLevel(),
                         account.BaseAssetId), null);
 
