@@ -283,7 +283,7 @@ namespace MarginTrading.Core
 
         public Dictionary<string, OrderBook> GetOrderBookState()
         {
-            return _orderBooks;
+            return _orderBooks.ToDictionary(p => p.Key, p => p.Value.Clone());
         }
 
         public double GetRemainingVolume(string instrumentId, OrderDirection orderType,
