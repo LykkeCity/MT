@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using MarginTrading.Core;
+using MarginTradingHelpers = MarginTrading.Services.Helpers.MarginTradingHelpers;
 
 namespace MarginTrading.Services
 {
@@ -32,7 +33,10 @@ namespace MarginTrading.Services
                 _blobRepository.Read<Dictionary<string, OrderBook>>(LykkeConstants.StateBlobContainer, BlobName) ??
                 new Dictionary<string, OrderBook>();
 
-            _orderBookList.Init(state);
+            lock (MarginTradingHelpers.TradingMatchingSync)
+            {
+                _orderBookList.Init(state);
+            }
 
             base.Start();
         }
@@ -41,7 +45,10 @@ namespace MarginTrading.Services
         {
             try
             {
-                var orderbookState = _orderBookList.GetOrderBookState();
+                Dictionary<string, OrderBook> orderbookState;
+
+                lock (MarginTradingHelpers.TradingMatchingSync)
+                    orderbookState = _orderBookList.GetOrderBookState();
 
                 if (orderbookState != null)
                 {

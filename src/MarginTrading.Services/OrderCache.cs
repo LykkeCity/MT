@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
@@ -12,11 +13,10 @@ namespace MarginTrading.Services
 {
     public interface IOrderReader
     {
-        IEnumerable<Order> GetOrders(params string[] accountIds);
-        IEnumerable<Order> GetAll();
+        IImmutableList<Order> GetAll();
         Order GetOrderById(string orderId);
-        IEnumerable<Order> GetActive();
-        IEnumerable<Order> GetPending();
+        IImmutableList<Order> GetActive();
+        IImmutableList<Order> GetPending();
     }
 
     public class OrdersCache : IOrderReader
@@ -25,33 +25,24 @@ namespace MarginTrading.Services
         public OrderCacheGroup WaitingForExecutionOrders { get; private set; }
         public OrderCacheGroup ClosingOrders { get; private set; }
 
-        public IEnumerable<Order> GetOrders(params string[] accountIds)
-        {
-            lock (MarginTradingHelpers.TradingMatchingSync)
-            {
-                return ActiveOrders.GetOrdersByAccountIds(accountIds)
-                        .Union(WaitingForExecutionOrders.GetOrdersByAccountIds(accountIds));
-            }
-        }
-
-        public IEnumerable<Order> GetAll()
+        public IImmutableList<Order> GetAll()
         {
             lock (MarginTradingHelpers.TradingMatchingSync)
                 return ActiveOrders.GetAllOrders()
-                        .Union(WaitingForExecutionOrders.GetAllOrders())
-                        .Union(ClosingOrders.GetAllOrders());
+                    .Union(WaitingForExecutionOrders.GetAllOrders())
+                    .Union(ClosingOrders.GetAllOrders()).ToImmutableList();
         }
 
-        public IEnumerable<Order> GetActive()
+        public IImmutableList<Order> GetActive()
         {
             lock (MarginTradingHelpers.TradingMatchingSync)
-                return ActiveOrders.GetAllOrders();
+                return ActiveOrders.GetAllOrders().ToImmutableList();
         }
 
-        public IEnumerable<Order> GetPending()
+        public IImmutableList<Order> GetPending()
         {
             lock (MarginTradingHelpers.TradingMatchingSync)
-                return ActiveOrders.GetAllOrders();
+                return ActiveOrders.GetAllOrders().ToImmutableList();
         }
 
         public Order GetOrderById(string orderId)
