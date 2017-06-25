@@ -126,7 +126,7 @@ namespace MarginTrading.Services
                     order.CloseDate = DateTime.UtcNow;
                     order.Status = OrderStatus.Rejected;
                     order.RejectReason = e.RejectReason;
-                    order.RejectReasonText = e.Comment;
+                    order.RejectReasonText = e.Message;
                     return false;
                 }
 
