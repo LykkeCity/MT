@@ -26,6 +26,7 @@ namespace MarginTrading.Common.BackendContracts
         public double? TakeProfit { get; set; }
         public double? StopLoss { get; set; }
         public double? Fpl { get; set; }
+        public double? PnL { get; set; }
         public double OpenCommission { get; set; }
         public double CloseCommission { get; set; }
         public double SwapCommission { get; set; }

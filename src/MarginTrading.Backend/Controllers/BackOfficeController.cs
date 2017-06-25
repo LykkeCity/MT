@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using MarginTrading.Backend.Models;
+using MarginTrading.Common.BackendContracts;
+using MarginTrading.Common.Mappers;
 using MarginTrading.Common.Models;
 using MarginTrading.Core;
 using MarginTrading.Core.Clients;
@@ -102,7 +104,7 @@ namespace MarginTrading.Backend.Controllers
         public List<SummaryAssetInfo> GetAssetsInfo()
         {
             var result = new List<SummaryAssetInfo>();
-            IEnumerable<Order> orders = _ordersReader.GetAll().ToList();
+            var orders = _ordersReader.GetAll().ToList();
 
             foreach (var order in orders)
             {
@@ -147,17 +149,17 @@ namespace MarginTrading.Backend.Controllers
         /// <response code="200">Returns opened positions</response>
         [HttpGet]
         [Route("positionsByVolume")]
-        [ProducesResponseType(typeof(List<Order>), 200)]
-        public List<Order> GetPositionsByVolume([FromQuery]double volume)
+        [ProducesResponseType(typeof(List<OrderContract>), 200)]
+        public List<OrderContract> GetPositionsByVolume([FromQuery]double volume)
         {
-            var result = new List<Order>();
-            IEnumerable<Order> orders = _ordersReader.GetActive();
+            var result = new List<OrderContract>();
+            var orders = _ordersReader.GetActive();
 
             foreach (var order in orders)
             {
                 if (order.GetMatchedVolume() >= volume)
                 {
-                    result.Add(order);
+                    result.Add(order.ToBaseContract());
                 }
             }
 
@@ -175,17 +177,17 @@ namespace MarginTrading.Backend.Controllers
         /// <response code="200">Returns pending orders</response>
         [HttpGet]
         [Route("pendingOrdersByVolume")]
-        [ProducesResponseType(typeof(List<Order>), 200)]
-        public List<Order> GetPendingOrdersByVolume([FromQuery]double volume)
+        [ProducesResponseType(typeof(List<OrderContract>), 200)]
+        public List<OrderContract> GetPendingOrdersByVolume([FromQuery]double volume)
         {
-            var result = new List<Order>();
-            IEnumerable<Order> orders = _ordersReader.GetPending();
+            var result = new List<OrderContract>();
+            var orders = _ordersReader.GetPending();
 
             foreach (var order in orders)
             {
                 if (Math.Abs(order.Volume) >= volume)
                 {
-                    result.Add(order);
+                    result.Add(order.ToBaseContract());
                 }
             }
 

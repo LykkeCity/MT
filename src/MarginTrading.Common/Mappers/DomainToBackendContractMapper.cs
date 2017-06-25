@@ -281,6 +281,7 @@ namespace MarginTrading.Common.Mappers
                 TakeProfit = src.TakeProfit,
                 StopLoss = src.StopLoss,
                 Fpl = src.GetFpl(),
+                PnL = src.GetTotalFpl(src.AssetAccuracy),
                 CloseReason = src.CloseReason,
                 RejectReason = src.RejectReason,
                 RejectReasonText = src.RejectReasonText,
