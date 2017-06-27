@@ -160,7 +160,9 @@ namespace MarginTradingTests
                     LeverageInit = 100,
                     LeverageMaintenance = 150,
                     DeltaAsk = 30,
-                    DeltaBid = 30
+                    DeltaBid = 30,
+                    DealLimit = 1000000,
+                    PositionLimit = 10000000
                 },
                 new MarginTradingAccountAsset
                 {
@@ -180,7 +182,9 @@ namespace MarginTradingTests
                     LeverageInit = 10,
                     LeverageMaintenance = 15,
                     DeltaAsk = 30,
-                    DeltaBid = 30
+                    DeltaBid = 30,
+                    DealLimit = 10,
+                    PositionLimit = 100
                 },
                 new MarginTradingAccountAsset
                 {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using MarginTrading.Core;
 using MarginTrading.Core.Exceptions;
 using MarginTrading.Core.Messages;
@@ -13,19 +14,22 @@ namespace MarginTrading.Services
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
         private readonly IInstrumentsCache _instrumentsCache;
+        private readonly OrdersCache _ordersCache;
 
         public ValidateOrderService(
             IQuoteCacheService quoteCashService,
             IAccountUpdateService accountUpdateService,
             IAccountsCacheService accountsCacheService,
             IAccountAssetsCacheService accountAssetsCacheService,
-            IInstrumentsCache instrumentsCache)
+            IInstrumentsCache instrumentsCache,
+            OrdersCache ordersCache)
         {
             _quoteCashService = quoteCashService;
             _accountUpdateService = accountUpdateService;
             _accountsCacheService = accountsCacheService;
             _accountAssetsCacheService = accountAssetsCacheService;
             _instrumentsCache = instrumentsCache;
+            _ordersCache = ordersCache;
         }
 
         //has to be beyond global lock
@@ -69,6 +73,12 @@ namespace MarginTrading.Services
 
             var accountAsset = _accountAssetsCacheService.GetAccountAsset(order.TradingConditionId, order.AccountAssetId, order.Instrument);
 
+            if (accountAsset.DealLimit > 0 && Math.Abs(order.Volume) > accountAsset.DealLimit)
+            {
+                throw new ValidateOrderException(OrderRejectReason.InvalidVolume,
+                    $"Volume cannot be more then {accountAsset.DealLimit}");
+            }
+
             //check TP/SL
             if (order.TakeProfit.HasValue)
             {
@@ -81,6 +91,8 @@ namespace MarginTrading.Services
             }
 
             ValidateOrderStops(order.GetOrderType(), quote, accountAsset.DeltaBid, accountAsset.DeltaAsk, order.TakeProfit, order.StopLoss, order.ExpectedOpenPrice, order.AssetAccuracy);
+
+            ValidateInstrumentPositionVolume(accountAsset, order);
 
             if (!_accountUpdateService.IsEnoughBalance(order))
             {
@@ -178,6 +190,17 @@ namespace MarginTrading.Services
                             $"quote (bid/ask): {quote.Bid}/{quote.Ask}");
                     }
                 }
+            }
+        }
+
+        public void ValidateInstrumentPositionVolume(IMarginTradingAccountAsset asset, Order order)
+        {
+            var existingPositionsVolume = _ordersCache.ActiveOrders.GetOrders(asset.Instrument, order.AccountId).Sum(o => Math.Abs(o.Volume));
+
+            if (asset.PositionLimit > 0 && existingPositionsVolume + Math.Abs(order.Volume) > asset.PositionLimit)
+            {
+                throw new ValidateOrderException(OrderRejectReason.InvalidVolume,
+                    $"Summary position for instrument can not be more then {asset.PositionLimit}");
             }
         }
     }

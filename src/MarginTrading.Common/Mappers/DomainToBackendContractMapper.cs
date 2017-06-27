@@ -59,7 +59,9 @@ namespace MarginTrading.Common.Mappers
                 CommissionShort = src.CommissionShort,
                 CommissionLot = src.CommissionLot,
                 DeltaBid = src.DeltaBid,
-                DeltaAsk = src.DeltaAsk
+                DeltaAsk = src.DeltaAsk,
+                DealLimit = src.DealLimit,
+                PositionLimit = src.PositionLimit
             };
         }
 

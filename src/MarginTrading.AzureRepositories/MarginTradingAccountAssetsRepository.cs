@@ -23,6 +23,8 @@ namespace MarginTrading.AzureRepositories
         public double CommissionLot { get; set; }
         public double DeltaBid { get; set; }
         public double DeltaAsk { get; set; }
+        public double DealLimit { get; set; }
+        public double PositionLimit { get; set; }
 
         public static string GeneratePartitionKey(string tradingConditionId, string baseAssetId)
         {
@@ -52,7 +54,9 @@ namespace MarginTrading.AzureRepositories
                 CommissionShort = src.CommissionShort,
                 CommissionLot = src.CommissionLot,
                 DeltaBid = src.DeltaBid,
-                DeltaAsk = src.DeltaAsk
+                DeltaAsk = src.DeltaAsk,
+                DealLimit = src.DealLimit,
+                PositionLimit = src.PositionLimit
             };
         }
     }
