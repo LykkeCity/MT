@@ -121,10 +121,7 @@ namespace MarginTrading.Services
         {
             try
             {
-                if (_quotes != null)
-                {
-                    await _blobRepository.Write(LykkeConstants.StateBlobContainer, BlobName, _quotes);
-                }
+                await _blobRepository.Write(LykkeConstants.StateBlobContainer, BlobName, GetAllQuotes());
             }
             catch (Exception ex)
             {
