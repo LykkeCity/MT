@@ -1,4 +1,5 @@
-﻿using Lykke.SettingsReader.Attributes;
+﻿using System;
+using Lykke.SettingsReader.Attributes;
 
 namespace MarginTrading.Core.Settings
 {
@@ -7,6 +8,7 @@ namespace MarginTrading.Core.Settings
 		public MarginTradingSettings MtBackend { get; set; }
 		public EmailSenderSettings EmailSender { get; set; }
 		public NotificationSettings Jobs { get; set; }
+        public MarketMakerSettings MtMarketMaker { get; set; }
 	}
 
 	public class MarginTradingSettings
@@ -84,4 +86,13 @@ namespace MarginTrading.Core.Settings
 		public string ExchangeName { get; set; }
 		public bool IsDurable { get; set; }
 	}
+
+    public class MarketMakerSettings
+    {
+        public DayOfWeek DayOffStartDay { get; set; }
+        public int DayOffStartHour { get; set; }
+        public DayOfWeek DayOffEndDay { get; set; }
+        public int DayOffEndHour { get; set; }
+        public string[] AssetsWithoutDayOff { get; set; }
+    }
 }

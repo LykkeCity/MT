@@ -8,6 +8,7 @@ using MarginTrading.Common.BackendContracts;
 using MarginTrading.Common.Mappers;
 using MarginTrading.Common.Wamp;
 using MarginTrading.Core;
+using MarginTrading.Core.Assets;
 using MarginTrading.Core.Exceptions;
 using MarginTrading.Core.Settings;
 using MarginTrading.Services;
@@ -36,6 +37,7 @@ namespace MarginTrading.Backend.Controllers
         private readonly OrdersCache _ordersCache;
         private readonly MarginSettings _marginSettings;
         private readonly AccountManager _accountManager;
+        private readonly IAssetDayOffService _assetDayOffService;
 
         public MtController(
             IMarginTradingAccountsRepository accountsRepository,
@@ -53,7 +55,8 @@ namespace MarginTrading.Backend.Controllers
             IConsole consoleWriter,
             OrdersCache ordersCache,
             MarginSettings marginSettings,
-            AccountManager accountManager)
+            AccountManager accountManager,
+            IAssetDayOffService assetDayOffService)
         {
             _accountsRepository = accountsRepository;
             _accountsHistoryRepository = accountsHistoryRepository;
@@ -71,6 +74,7 @@ namespace MarginTrading.Backend.Controllers
             _ordersCache = ordersCache;
             _marginSettings = marginSettings;
             _accountManager = accountManager;
+            _assetDayOffService = assetDayOffService;
         }
 
         #region Init data
@@ -270,32 +274,46 @@ namespace MarginTrading.Backend.Controllers
 
         [Route("order.close")]
         [HttpPost]
-        public MtBackendResponse<bool> CloseOrder([FromBody]CloseOrderBackendRequest request)
+        public MtBackendResponse<bool> CloseOrder([FromBody] CloseOrderBackendRequest request)
         {
             var order = _ordersCache.ActiveOrders.GetOrderById(request.OrderId);
+
+            if (_assetDayOffService.IsDayOff(order.Instrument))
+            {
+                return new MtBackendResponse<bool> {Message = "Trades for instrument are not available"};
+            }
 
             _tradingEngine.CloseActiveOrderAsync(request.OrderId, OrderCloseReason.Close);
 
             var result = new MtBackendResponse<bool> {Result = true};
 
-            _consoleWriter.WriteLine($"action order.close for clientId = {request.ClientId}, orderId = {request.OrderId}");
-            _operationsLogService.AddLog("action order.close", request.ClientId, order.AccountId, request.ToJson(), result.ToJson());
+            _consoleWriter.WriteLine(
+                $"action order.close for clientId = {request.ClientId}, orderId = {request.OrderId}");
+            _operationsLogService.AddLog("action order.close", request.ClientId, order.AccountId, request.ToJson(),
+                result.ToJson());
 
             return result;
         }
 
         [Route("order.cancel")]
         [HttpPost]
-        public MtBackendResponse<bool> CancelOrder([FromBody]CloseOrderBackendRequest request)
+        public MtBackendResponse<bool> CancelOrder([FromBody] CloseOrderBackendRequest request)
         {
             var order = _ordersCache.WaitingForExecutionOrders.GetOrderById(request.OrderId);
+
+            if (_assetDayOffService.IsDayOff(order.Instrument))
+            {
+                return new MtBackendResponse<bool> {Message = "Trades for instrument are not available"};
+            }
 
             _tradingEngine.CancelPendingOrder(order.Id, OrderCloseReason.Canceled);
 
             var result = new MtBackendResponse<bool> {Result = true};
 
-            _consoleWriter.WriteLine($"action order.cancel for clientId = {request.ClientId}, orderId = {request.OrderId}");
-            _operationsLogService.AddLog("action order.cancel", request.ClientId, order.AccountId, request.ToJson(), result.ToJson());
+            _consoleWriter.WriteLine(
+                $"action order.cancel for clientId = {request.ClientId}, orderId = {request.OrderId}");
+            _operationsLogService.AddLog("action order.cancel", request.ClientId, order.AccountId, request.ToJson(),
+                result.ToJson());
 
             return result;
         }
@@ -349,6 +367,11 @@ namespace MarginTrading.Backend.Controllers
         public MtBackendResponse<bool> ChangeOrderLimits([FromBody]ChangeOrderLimitsBackendRequest request)
         {
             var order = _ordersCache.GetOrderById(request.OrderId);
+
+            if (_assetDayOffService.IsDayOff(order.Instrument))
+            {
+                return new MtBackendResponse<bool> { Message = "Trades for instrument are not available" };
+            }
 
             try
             {

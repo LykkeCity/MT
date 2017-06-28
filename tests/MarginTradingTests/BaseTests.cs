@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Autofac;
 using MarginTrading.Core;
+using MarginTrading.Core.Settings;
 using MarginTrading.Frontend.Services;
 using MarginTrading.Services.Modules;
 using MarginTradingTests.Modules;
@@ -44,6 +45,17 @@ namespace MarginTradingTests
             builder.RegisterInstance(new Mock<IMarginTradingOperationsLogService>().Object)
                 .As<IMarginTradingOperationsLogService>()
                 .SingleInstance();
+
+            var settings = new MarketMakerSettings
+            {
+                DayOffStartDay = DayOfWeek.Sunday,
+                DayOffStartHour = 21,
+                DayOffEndDay = DayOfWeek.Sunday,
+                DayOffEndHour = 21,
+                AssetsWithoutDayOff = new[] { "BTCCHF" }
+            };
+
+            builder.RegisterInstance(settings).SingleInstance();
 
             Container = builder.Build();
 

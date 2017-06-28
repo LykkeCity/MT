@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using MarginTrading.Core;
+using MarginTrading.Core.Assets;
 using MarginTrading.Core.Exceptions;
 using MarginTrading.Core.Messages;
 using MarginTrading.Services.Helpers;
@@ -15,6 +16,7 @@ namespace MarginTrading.Services
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
         private readonly IInstrumentsCache _instrumentsCache;
         private readonly OrdersCache _ordersCache;
+        private readonly IAssetDayOffService _assetDayOffService;
 
         public ValidateOrderService(
             IQuoteCacheService quoteCashService,
@@ -22,7 +24,8 @@ namespace MarginTrading.Services
             IAccountsCacheService accountsCacheService,
             IAccountAssetsCacheService accountAssetsCacheService,
             IInstrumentsCache instrumentsCache,
-            OrdersCache ordersCache)
+            OrdersCache ordersCache,
+            IAssetDayOffService assetDayOffService)
         {
             _quoteCashService = quoteCashService;
             _accountUpdateService = accountUpdateService;
@@ -30,11 +33,17 @@ namespace MarginTrading.Services
             _accountAssetsCacheService = accountAssetsCacheService;
             _instrumentsCache = instrumentsCache;
             _ordersCache = ordersCache;
+            _assetDayOffService = assetDayOffService;
         }
 
         //has to be beyond global lock
         public void Validate(Order order)
         {
+            if (_assetDayOffService.IsDayOff(order.Instrument))
+            {
+                throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Trades for instrument are not available");
+            }
+
             if (order.Volume == 0)
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidVolume, "Volume cannot be 0");
