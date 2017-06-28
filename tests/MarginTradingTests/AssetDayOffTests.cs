@@ -43,9 +43,9 @@ namespace MarginTradingTests
             dateService.Setup(s => s.Now()).Returns(dateTime);
             var settings = new MarketMakerSettings()
             {
-                DayOffStartDay = DayOfWeek.Friday,
+                DayOffStartDay = DayOfWeek.Friday.ToString(),
                 DayOffStartHour = 21,
-                DayOffEndDay = DayOfWeek.Sunday,
+                DayOffEndDay = DayOfWeek.Sunday.ToString(),
                 DayOffEndHour = 21,
                 AssetsWithoutDayOff = new [] {AssetWithoutDayOff,"BTCCHF"}
             };

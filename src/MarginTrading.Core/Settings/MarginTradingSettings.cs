@@ -89,9 +89,9 @@ namespace MarginTrading.Core.Settings
 
     public class MarketMakerSettings
     {
-        public DayOfWeek DayOffStartDay { get; set; }
+        public string DayOffStartDay { get; set; }
         public int DayOffStartHour { get; set; }
-        public DayOfWeek DayOffEndDay { get; set; }
+        public string DayOffEndDay { get; set; }
         public int DayOffEndHour { get; set; }
         public string[] AssetsWithoutDayOff { get; set; }
     }
