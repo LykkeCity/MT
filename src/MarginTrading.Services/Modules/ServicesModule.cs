@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using MarginTrading.Core;
+using MarginTrading.Core.Assets;
 using MarginTrading.Core.MarketMakerFeed;
 using MarginTrading.Services.Events;
 
@@ -117,6 +118,10 @@ namespace MarginTrading.Services.Modules
 				.As<IMatchingEngineRoutesCacheService>()
 				.AsSelf()
 				.SingleInstance();
-		}
+
+		    builder.RegisterType<AssetDayOffService>()
+		        .As<IAssetDayOffService>()
+		        .SingleInstance();
+        }
 	}
 }

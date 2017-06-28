@@ -32,6 +32,10 @@ namespace MarginTrading.Services.Modules
             builder.RegisterType<RabbitMqNotifyService>()
                 .As<IRabbitMqNotifyService>()
                 .SingleInstance();
+
+            builder.RegisterType<DateService>()
+                .As<IDateService>()
+                .SingleInstance();
         }
     }
 }

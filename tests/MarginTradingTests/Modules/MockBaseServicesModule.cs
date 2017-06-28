@@ -17,6 +17,7 @@ using Moq;
 using WampSharp.V2.Realm;
 using IAppNotifications = MarginTrading.Services.Notifications.IAppNotifications;
 using Lykke.Service.Session;
+using MarginTrading.Services;
 
 namespace MarginTradingTests.Modules
 {
@@ -70,6 +71,10 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(sessionServiceMock.Object).As<ISessionService>();
             builder.RegisterInstance(clientAccountsServiceMock.Object).As<IClientAccountService>();
             builder.RegisterInstance(httpRequestServiceMock.Object).As<IHttpRequestService>();
+
+            builder.RegisterType<DateService>()
+                .As<IDateService>()
+                .SingleInstance();
         }
     }
 
