@@ -58,6 +58,7 @@ namespace MarginTrading.Backend.Modules
 				.SingleInstance();
 
 			builder.RegisterType<OrderBookSaveService>()
+                .AsSelf()
 				.As<IStartable>()
 				.SingleInstance();
 

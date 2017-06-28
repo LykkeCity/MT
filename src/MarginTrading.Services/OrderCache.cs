@@ -99,9 +99,14 @@ namespace MarginTrading.Services
             await DumpToRepository();
         }
 
-        public void Dispose()
+        public void StopApplication()
         {
             DumpToRepository().Wait();
+        }
+
+        public void Dispose()
+        {
+            StopApplication();
         }
 
         private async Task DumpToRepository()

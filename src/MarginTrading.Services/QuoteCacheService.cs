@@ -117,7 +117,17 @@ namespace MarginTrading.Services
             base.Start();
         }
 
-        public override async Task Execute()
+        public override Task Execute()
+        {
+            return DumpToRepository();
+        }
+
+        public void StopApplication()
+        {
+            DumpToRepository().Wait();
+        }
+
+        private async Task DumpToRepository()
         {
             try
             {
