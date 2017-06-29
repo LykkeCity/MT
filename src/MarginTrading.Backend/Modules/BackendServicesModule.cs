@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using Autofac;
 using Common;
 using Common.Log;
@@ -64,7 +65,7 @@ namespace MarginTrading.Backend.Modules
 				.SingleInstance();
 
 			builder.Register<ITemplateGenerator>(ctx =>
-				new MustacheTemplateGenerator(_environment, "Email/Templates")
+				new MustacheTemplateGenerator(_environment, Path.Combine("Email","Templates"))
 			).SingleInstance();
 
 			builder.Register<IEmailSender>(ctx =>

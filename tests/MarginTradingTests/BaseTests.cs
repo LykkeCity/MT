@@ -6,6 +6,7 @@ using MarginTrading.Core.Settings;
 using MarginTrading.Frontend.Services;
 using MarginTrading.Services.Modules;
 using MarginTradingTests.Modules;
+using Moq;
 
 namespace MarginTradingTests
 {
@@ -50,6 +51,9 @@ namespace MarginTradingTests
                 AssetsWithoutDayOff = new[] { "BTCCHF" }
             };
 
+            builder.RegisterInstance(new Mock<IMarginTradingOperationsLogService>().Object)
+                .As<IMarginTradingOperationsLogService>()
+                .SingleInstance();
             builder.RegisterInstance(settings).SingleInstance();
 
             Container = builder.Build();
