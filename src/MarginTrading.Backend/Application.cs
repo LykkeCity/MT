@@ -11,6 +11,7 @@ using MarginTrading.Core;
 using MarginTrading.Core.MarketMakerFeed;
 using MarginTrading.Core.Monitoring;
 using MarginTrading.Core.Settings;
+using MarginTrading.Services.Infrastructure;
 using MarginTrading.Services;
 using Microsoft.Extensions.PlatformAbstractions;
 using Newtonsoft.Json;
@@ -31,6 +32,7 @@ namespace MarginTrading.Backend
         private readonly OrderCacheManager _orderCacheManager;
         private readonly OrderBookSaveService _orderBookSaveService;
         private readonly IQuoteCacheService _quoteCacheService;
+        private readonly IMaintenanceModeService _maintenanceModeService;
         private RabbitMqSubscriber<MarketMakerOrderBook> _connector;
         private const string ServiceName = "MarginTrading.Backend";
 
@@ -42,7 +44,8 @@ namespace MarginTrading.Backend
             ILog logger, MarginSettings marginSettings,
             OrderCacheManager orderCacheManager,
             OrderBookSaveService orderBookSaveService,
-            IQuoteCacheService quoteCacheService) : base(ServiceName, 30000, logger)
+            IQuoteCacheService quoteCacheService,
+            IMaintenanceModeService maintenanceModeService) : base(ServiceName, 30000, logger)
         {
             _consumers = consumers.ToList();
             _rabbitMqNotifyService = rabbitMqNotifyService;
@@ -53,6 +56,7 @@ namespace MarginTrading.Backend
             _orderCacheManager = orderCacheManager;
             _orderBookSaveService = orderBookSaveService;
             _quoteCacheService = quoteCacheService;
+            _maintenanceModeService = maintenanceModeService;
         }
 
         public async Task StartApplicatonAsync()
@@ -84,6 +88,8 @@ namespace MarginTrading.Backend
 
         public void StopApplication()
         {
+            _maintenanceModeService.SetMode(true);
+            _consoleWriter.WriteLine($"Maintenance mode enabled for {ServiceName}");
             _consoleWriter.WriteLine($"Closing {ServiceName}");
             _logger.WriteInfoAsync(ServiceName, null, null, "Closing broker").Wait();
             _connector.Stop();

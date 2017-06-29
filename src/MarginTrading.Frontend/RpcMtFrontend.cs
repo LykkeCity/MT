@@ -48,6 +48,7 @@ namespace MarginTrading.Frontend
 
         #endregion
 
+
         #region Init data
 
         public async Task<InitDataLiveDemoClientResponse> InitData(string token)
@@ -136,6 +137,7 @@ namespace MarginTrading.Frontend
 
         #endregion
 
+
         #region Account
 
         public async Task<MtClientResponse<bool>> SetActiveAccount(string requestJson)
@@ -177,6 +179,7 @@ namespace MarginTrading.Frontend
         }
 
         #endregion
+
 
         #region Order
 
@@ -260,6 +263,7 @@ namespace MarginTrading.Frontend
 
         #endregion
 
+
         #region Orderbook
 
         public async Task<Dictionary<string, OrderBookClientContract>> GetOrderBooks()
@@ -269,6 +273,7 @@ namespace MarginTrading.Frontend
         }
 
         #endregion
+
 
         #region Private methods
 
