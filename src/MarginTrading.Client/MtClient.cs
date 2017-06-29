@@ -85,29 +85,6 @@ namespace MarginTrading.Client
             var data = await _service.InitGraph();
         }
 
-        public async Task SetActiveAccount()
-        {
-            var data = await _service.InitData(_token);
-
-            IDisposable subscription = _realmProxy.Services.GetSubject<NotifyResponse>($"user.{_notificationId}")
-                .Subscribe(info =>
-                {
-                    if (info.Account != null)
-                        Console.WriteLine(info.Account.IsCurrent);
-                });
-
-
-            var request = new SetActiveAccountClientRequest
-            {
-                AccountId = data.Demo.Accounts[1].Id,
-                Token = _token
-            };
-
-            Console.WriteLine("done...");
-            Console.ReadLine();
-            subscription.Dispose();
-        }
-
         public async Task GetAccountHistory()
         {
             var request = new AccountHistoryClientRequest

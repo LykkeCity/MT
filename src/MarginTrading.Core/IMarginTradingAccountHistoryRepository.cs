@@ -12,6 +12,7 @@ namespace MarginTrading.Core
         string ClientId { get; }
         double Amount { get; }
         double Balance { get; }
+        double WithdrawTransferLimit { get; }
         string Comment { get; }
         AccountHistoryType Type { get; }
     }
@@ -24,6 +25,7 @@ namespace MarginTrading.Core
         public string ClientId { get; set; }
         public double Amount { get; set; }
         public double Balance { get; set; }
+        public double WithdrawTransferLimit { get; set; }
         public string Comment { get; set; }
         public AccountHistoryType Type { get; set; }
 
@@ -37,6 +39,7 @@ namespace MarginTrading.Core
                 ClientId = src.ClientId,
                 Amount = src.Amount,
                 Balance = src.Balance,
+                WithdrawTransferLimit = src.WithdrawTransferLimit,
                 Comment = src.Comment,
                 Type = src.Type
             };
@@ -54,7 +57,6 @@ namespace MarginTrading.Core
     public interface IMarginTradingAccountHistoryRepository
     {
         Task AddAsync(IMarginTradingAccountHistory accountHistory);
-        Task AddAsync(string accountId, string clientId, double amount, double balance, AccountHistoryType type, string comment = null);
         Task<IEnumerable<IMarginTradingAccountHistory>> GetAsync(string[] accountIds, DateTime? from, DateTime? to);
     }
 }

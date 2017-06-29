@@ -99,6 +99,7 @@ namespace MarginTrading.Common.Mappers
                 Type = src.Type,
                 Date = src.Date,
                 Balance = src.Balance,
+                WithdrawTransferLimit = src.WithdrawTransferLimit,
                 Comment = src.Comment
             };
         }

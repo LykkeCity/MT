@@ -28,37 +28,6 @@ namespace MarginTradingTests
         }
 
         [Test]
-        public void Check_SetActive_Correct()
-        {
-            var account1Usd = _accountsCacheService.Get(Accounts[0].ClientId, Accounts[0].Id); //client1 USD account
-            var account2Usd = _accountsCacheService.Get(Accounts[3].ClientId, Accounts[3].Id); //client2 USD account
-            var account1Eur = _accountsCacheService.Get(Accounts[1].ClientId, Accounts[1].Id); //client1 EUR account
-            var account2Eur = _accountsCacheService.Get(Accounts[4].ClientId, Accounts[4].Id); //client2 EUR account
-
-            //check default values
-            Assert.IsTrue(account1Usd.IsCurrent);
-            Assert.IsTrue(account2Usd.IsCurrent);
-            Assert.IsFalse(account1Eur.IsCurrent);
-            Assert.IsFalse(account2Eur.IsCurrent);
-
-            _accountsCacheService.SetActive("1", Accounts[1].Id); //set EUR account as current for client1
-            var changedAccount1 = _accountsCacheService.Get("1", Accounts[1].Id);
-
-
-            //get client 1 and 2 accounts
-            var client1Accounts = _accountsCacheService.GetAll("1").ToArray();
-            var client2Accounts = _accountsCacheService.GetAll("2").ToArray();
-
-            Assert.IsTrue(changedAccount1.IsCurrent);
-            Assert.AreEqual(3, client1Accounts.Length);
-            Assert.AreEqual(3, client2Accounts.Length);
-            Assert.IsFalse(client1Accounts.First(item => item.BaseAssetId == "USD").IsCurrent);
-            Assert.IsTrue(client1Accounts.First(item => item.BaseAssetId == "EUR").IsCurrent);
-            Assert.IsTrue(client2Accounts.First(item => item.BaseAssetId == "USD").IsCurrent);  //client2 account is not changed
-            Assert.IsFalse(client2Accounts.First(item => item.BaseAssetId == "EUR").IsCurrent); //client2 account is not changed
-        }
-
-        [Test]
         public void Check_Account_Calculations_Correct()
         {
             var order1 = new Order
