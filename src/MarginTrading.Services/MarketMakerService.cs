@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using MarginTrading.Core;
+using MarginTrading.Core.Assets;
 using MarginTrading.Core.MarketMakerFeed;
 
 namespace MarginTrading.Services
@@ -9,11 +10,14 @@ namespace MarginTrading.Services
     public class MarketMakerService : IFeedConsumer
     {
         private readonly IMatchingEngine _matchingEngine;
+        private readonly IAssetDayOffService _assetDayOffService;
         private const string MarketMakerId = "marketMaker1";
 
-        public MarketMakerService(IMatchingEngine matchingEngine)
+        public MarketMakerService(IMatchingEngine matchingEngine,
+            IAssetDayOffService assetDayOffService)
         {
             _matchingEngine = matchingEngine;
+            _assetDayOffService = assetDayOffService;
         }
 
         public void ConsumeFeed(IAssetPairRate[] feedDatas)
@@ -21,6 +25,12 @@ namespace MarginTrading.Services
             var orders = new List<LimitOrder>();
             foreach (var assetPairRate in feedDatas)
             {
+                var volume = _assetDayOffService.IsDayOff(assetPairRate.AssetPairId)
+                    ? 0
+                    : assetPairRate.IsBuy
+                        ? 1000000
+                        : -1000000;
+
                 orders.Add(new LimitOrder
                 {
                     Id = Guid.NewGuid().ToString("N"),
@@ -28,7 +38,7 @@ namespace MarginTrading.Services
                     CreateDate = DateTime.UtcNow,
                     Instrument = assetPairRate.AssetPairId,
                     Price = assetPairRate.Price,
-                    Volume = assetPairRate.IsBuy ? 1000000 : -1000000
+                    Volume = volume
                 });
             }
 
