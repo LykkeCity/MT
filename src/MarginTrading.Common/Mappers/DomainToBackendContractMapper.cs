@@ -272,6 +272,7 @@ namespace MarginTrading.Common.Mappers
                 ClientId = src.ClientId,
                 Instrument = src.Instrument,
                 Status = src.Status,
+                CreateDate = src.CreateDate,
                 OpenDate = src.OpenDate,
                 CloseDate = src.CloseDate,
                 ExpectedOpenPrice = src.ExpectedOpenPrice,
