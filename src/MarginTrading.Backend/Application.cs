@@ -11,6 +11,7 @@ using MarginTrading.Core;
 using MarginTrading.Core.MarketMakerFeed;
 using MarginTrading.Core.Monitoring;
 using MarginTrading.Core.Settings;
+using MarginTrading.Services.Infrastructure;
 using Microsoft.Extensions.PlatformAbstractions;
 using Newtonsoft.Json;
 #pragma warning disable 1591
@@ -25,6 +26,7 @@ namespace MarginTrading.Backend
         private readonly IServiceMonitoringRepository _serviceMonitoringRepository;
         private readonly ILog _logger;
         private readonly MarginSettings _marginSettings;
+        private readonly IMaintenanceModeService _maintenanceModeService;
         private RabbitMqSubscriber<MarketMakerOrderBook> _connector;
         private const string ServiceName = "MarginTrading.Backend";
 
@@ -33,7 +35,8 @@ namespace MarginTrading.Backend
             IConsole consoleWriter,
             IEnumerable<IFeedConsumer> consumers,
             IServiceMonitoringRepository serviceMonitoringRepository,
-            ILog logger, MarginSettings marginSettings) : base(ServiceName, 30000, logger)
+            ILog logger, MarginSettings marginSettings,
+            IMaintenanceModeService maintenanceModeService) : base(ServiceName, 30000, logger)
         {
             _consumers = consumers.ToList();
             _rabbitMqNotifyService = rabbitMqNotifyService;
@@ -41,6 +44,7 @@ namespace MarginTrading.Backend
             _serviceMonitoringRepository = serviceMonitoringRepository;
             _logger = logger;
             _marginSettings = marginSettings;
+            _maintenanceModeService = maintenanceModeService;
         }
 
         public async Task StartApplicatonAsync()
@@ -72,6 +76,8 @@ namespace MarginTrading.Backend
 
         public void StopApplication()
         {
+            _maintenanceModeService.SetMode(true);
+            _consoleWriter.WriteLine($"Maintenance mode enabled for {ServiceName}");
             _consoleWriter.WriteLine($"Closing {ServiceName}");
             _logger.WriteInfoAsync(ServiceName, null, null, "Closing broker").Wait();
             _connector.Stop();

@@ -108,6 +108,7 @@ namespace MarginTrading.Backend
         {
             IWampHost host = app.ApplicationServices.GetService<IWampHost>();
             app.UseMiddleware<GlobalErrorHandlerMiddleware>();
+            app.UseMiddleware<MaintenanceModeMiddleware>();
             app.UseMiddleware<KeyAuthMiddleware>();
             app.UseMvc();
 

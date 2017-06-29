@@ -18,6 +18,7 @@ using Microsoft.Extensions.PlatformAbstractions;
 using WampSharp.V2;
 using WampSharp.V2.Realm;
 using Lykke.Service.EmailSender;
+using MarginTrading.Services.Infrastructure;
 
 namespace MarginTrading.Backend.Modules
 {
@@ -117,6 +118,10 @@ namespace MarginTrading.Backend.Modules
 			builder.RegisterType<ClientAccountService>()
 				.As<IClientAccountService>()
 				.SingleInstance();
+
+		    builder.RegisterType<BackendMaintenanceModeService>()
+		        .As<IMaintenanceModeService>()
+		        .SingleInstance();
 
 			RegisterPublishers(builder, consoleWriter);
 		}

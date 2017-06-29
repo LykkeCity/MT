@@ -12,6 +12,7 @@ using MarginTrading.Core;
 using MarginTrading.Core.Clients;
 using MarginTrading.Core.Settings;
 using MarginTrading.Services;
+using MarginTrading.Services.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -41,6 +42,7 @@ namespace MarginTrading.Backend.Controllers
         private readonly MarginSettings _marginSettings;
         private readonly IMarginTradingOperationsLogService _operationsLogService;
         private readonly IConsole _consoleWriter;
+        private readonly IMaintenanceModeService _maintenanceModeService;
 
         public BackOfficeController(
             ITradingConditionsCacheService tradingConditionsCacheService,
@@ -61,7 +63,8 @@ namespace MarginTrading.Backend.Controllers
             IClientSettingsRepository clientSettingsRepository,
             MarginSettings marginSettings,
             IMarginTradingOperationsLogService operationsLogService,
-            IConsole consoleWriter)
+            IConsole consoleWriter,
+            IMaintenanceModeService maintenanceModeService)
         {
             _tradingConditionsCacheService = tradingConditionsCacheService;
             _accountGroupCacheService = accountGroupCacheService;
@@ -83,7 +86,11 @@ namespace MarginTrading.Backend.Controllers
             _marginSettings = marginSettings;
             _operationsLogService = operationsLogService;
             _consoleWriter = consoleWriter;
+            _maintenanceModeService = maintenanceModeService;
         }
+
+
+        #region Monitoring
 
         /// <summary>
         /// Returns summary asset info 
@@ -249,6 +256,12 @@ namespace MarginTrading.Backend.Controllers
             return result;
         }
 
+
+        #endregion
+
+
+        #region Obsolete
+
         /// <summary>
         /// Updates trading conditions
         /// </summary>
@@ -346,6 +359,11 @@ namespace MarginTrading.Backend.Controllers
             return BadRequest(result);
         }
 
+        #endregion
+
+
+        #region Trading conditions
+
         /// <summary>
         /// Sets trading condition for account
         /// </summary>
@@ -379,8 +397,6 @@ namespace MarginTrading.Backend.Controllers
 
             return Ok(result);
         }
-
-        #region Trading conditions
 
         [HttpGet]
         [Route("tradingConditions/getall")]
@@ -416,6 +432,7 @@ namespace MarginTrading.Backend.Controllers
 
         #endregion
         
+
         #region Account groups
 
         [HttpGet]
@@ -447,6 +464,7 @@ namespace MarginTrading.Backend.Controllers
         }
 
         #endregion
+
 
         #region Account assets
 
@@ -491,6 +509,9 @@ namespace MarginTrading.Backend.Controllers
 
         #endregion
 
+
+        #region Dictionaries
+
         [HttpGet]
         [Route("instruments/getall")]
         [ProducesResponseType(typeof(List<MarginTradingAsset>), 200)]
@@ -517,6 +538,9 @@ namespace MarginTrading.Backend.Controllers
             var orderTypes = Enum.GetNames(typeof(OrderDirection));
             return Ok(orderTypes);
         }
+
+        #endregion
+
 
         #region Accounts
 
@@ -720,6 +744,29 @@ namespace MarginTrading.Backend.Controllers
             await _clientSettingsRepository.SetSettings(clientId, settings);
 
             return Ok();
+        }
+
+        #endregion
+
+
+        #region Service
+
+        [HttpPost]
+        [Route(LykkeConstants.MaintenanceModeRoute)]
+        public IActionResult SetMaintenanceMode([FromBody]bool enabled)
+        {
+            _maintenanceModeService.SetMode(enabled);
+
+            return Ok();
+        }
+
+        [HttpGet]
+        [Route(LykkeConstants.MaintenanceModeRoute)]
+        public IActionResult GetMaintenanceMode()
+        {
+            var result = _maintenanceModeService.CheckIsEnabled();
+
+            return Ok(result);
         }
 
         #endregion
