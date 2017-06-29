@@ -11,8 +11,11 @@ using MarginTrading.Core;
 using MarginTrading.Core.MarketMakerFeed;
 using MarginTrading.Core.Monitoring;
 using MarginTrading.Core.Settings;
+using MarginTrading.Services;
 using Microsoft.Extensions.PlatformAbstractions;
 using Newtonsoft.Json;
+using MarginTradingHelpers = MarginTrading.Services.Helpers.MarginTradingHelpers;
+
 #pragma warning disable 1591
 
 namespace MarginTrading.Backend
@@ -25,6 +28,9 @@ namespace MarginTrading.Backend
         private readonly IServiceMonitoringRepository _serviceMonitoringRepository;
         private readonly ILog _logger;
         private readonly MarginSettings _marginSettings;
+        private readonly OrderCacheManager _orderCacheManager;
+        private readonly OrderBookSaveService _orderBookSaveService;
+        private readonly IQuoteCacheService _quoteCacheService;
         private RabbitMqSubscriber<MarketMakerOrderBook> _connector;
         private const string ServiceName = "MarginTrading.Backend";
 
@@ -33,7 +39,10 @@ namespace MarginTrading.Backend
             IConsole consoleWriter,
             IEnumerable<IFeedConsumer> consumers,
             IServiceMonitoringRepository serviceMonitoringRepository,
-            ILog logger, MarginSettings marginSettings) : base(ServiceName, 30000, logger)
+            ILog logger, MarginSettings marginSettings,
+            OrderCacheManager orderCacheManager,
+            OrderBookSaveService orderBookSaveService,
+            IQuoteCacheService quoteCacheService) : base(ServiceName, 30000, logger)
         {
             _consumers = consumers.ToList();
             _rabbitMqNotifyService = rabbitMqNotifyService;
@@ -41,6 +50,9 @@ namespace MarginTrading.Backend
             _serviceMonitoringRepository = serviceMonitoringRepository;
             _logger = logger;
             _marginSettings = marginSettings;
+            _orderCacheManager = orderCacheManager;
+            _orderBookSaveService = orderBookSaveService;
+            _quoteCacheService = quoteCacheService;
         }
 
         public async Task StartApplicatonAsync()
@@ -75,9 +87,13 @@ namespace MarginTrading.Backend
             _consoleWriter.WriteLine($"Closing {ServiceName}");
             _logger.WriteInfoAsync(ServiceName, null, null, "Closing broker").Wait();
             _connector.Stop();
+            _orderCacheManager.StopApplication();
+            _orderBookSaveService.StopApplication();
             _consumers.ForEach(c => c.ShutdownApplication());
-            _rabbitMqNotifyService.Stop(); 
+            _rabbitMqNotifyService.Stop();
+            _quoteCacheService.StopApplication();
             Stop();
+            _consoleWriter.WriteLine($"Closed {ServiceName}");
         }
 
         private Task HandleMessage(MarketMakerOrderBook orderBook)
