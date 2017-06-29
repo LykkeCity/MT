@@ -86,10 +86,17 @@ namespace MarginTrading.Services
             _lockSlim.EnterReadLock();
             try
             {
-                if (_accounts.ContainsKey(clientId))
-                    return _accounts[clientId];
+                if (clientId != null)
+                {
+                    if (_accounts.ContainsKey(clientId))
+                        return _accounts[clientId];
 
-                return Array.Empty<MarginTradingAccount>();
+                    return Array.Empty<MarginTradingAccount>();
+                }
+                else
+                {
+                    return _accounts.SelectMany(a => a.Value).ToArray();
+                }
             }
             finally
             {
