@@ -12,7 +12,7 @@
             client.InitData().Wait();
             //client.InitAccounts();
             //client.AccountInstruments();
-            //client.InitGraph();
+            client.InitGraph().Wait();
 
             //client.AccountDeposit().Wait();
             //client.AccountWithdraw();
@@ -24,7 +24,7 @@
             //client.CloseOrder(true).Wait();
             //client.CancelOrder();
             //client.GetAccountOpenPositions().Wait();
-            client.GetOpenPositions().Wait();
+            //client.GetOpenPositions().Wait();
             //client.GetClientOrders();
             //client.ChangeOrderLimits();
 

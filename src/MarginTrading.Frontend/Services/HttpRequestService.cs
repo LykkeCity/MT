@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using Flurl.Http;
+using MarginTrading.Common.BackendContracts;
 using MarginTrading.Frontend.Settings;
 
 namespace MarginTrading.Frontend.Services
@@ -35,7 +36,7 @@ namespace MarginTrading.Frontend.Services
             }
             catch (Exception ex)
             {
-                await _log.WriteErrorAsync(nameof(HttpRequestService), action, request.ToJson(), ex);
+                await ProcessException(isLive, action, request.ToJson(), ex);
                 throw;
             }
         }
@@ -50,8 +51,30 @@ namespace MarginTrading.Frontend.Services
             }
             catch (Exception ex)
             {
-                await _log.WriteErrorAsync(nameof(HttpRequestService), path, "GET", ex);
+                await ProcessException(isLive, path, "GET", ex);
                 throw;
+            }
+        }
+
+        public async Task ProcessException(bool isLive, string path, string context, Exception ex)
+        {
+            path = $"{(isLive ? "Live: " : "Demo: ")}{path}";
+
+            await _log.WriteErrorAsync(nameof(HttpRequestService), path, context, ex);
+
+            var flUrlEx = ex as FlurlHttpException;
+
+            var responseBody = flUrlEx?.Call.ErrorResponseBody;
+
+            if (!string.IsNullOrEmpty(responseBody))
+            {
+                var response = responseBody.DeserializeJson<MtBackendResponse<string>>();
+                if (!string.IsNullOrEmpty(response?.Message))
+                {
+                    var newEx = new Exception(response.Message);
+                    await _log.WriteErrorAsync(nameof(HttpRequestService), path, context, newEx);
+                    throw newEx;
+                }
             }
         }
     }
