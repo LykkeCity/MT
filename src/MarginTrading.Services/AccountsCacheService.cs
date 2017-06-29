@@ -40,22 +40,11 @@ namespace MarginTrading.Services
 
         public void UpdateBalance(MarginTradingAccount account)
         {
-            UpdateAccount(account.ClientId, account.Id, x => x.Balance = account.Balance);
-        }
-
-        public IMarginTradingAccount SetActive(string clientId, string accountId)
-        {
-            var accounts = GetClientAccounts(clientId);
-            if (accounts.Length == 0)
-                throw new Exception(string.Format(MtMessages.ClientIdNotFoundInCache, clientId));
-
-            if (accounts.All(x => x.Id != accountId))
-                throw new Exception(string.Format(MtMessages.ClientAccountNotFoundInCache, clientId,
-                    accountId));
-
-            UpdateAccounts(clientId, account => account.IsCurrent = account.Id == accountId);
-
-            return GetClientAccount(clientId, accountId, true);
+            UpdateAccount(account.ClientId, account.Id, x =>
+            {
+                x.Balance = account.Balance;
+                x.WithdrawTransferLimit = account.WithdrawTransferLimit;
+            });
         }
 
         public IMarginTradingAccount SetTradingCondition(string clientId, string accountId, string tradingConditionId)

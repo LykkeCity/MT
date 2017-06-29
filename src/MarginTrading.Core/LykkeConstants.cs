@@ -25,7 +25,6 @@ namespace MarginTrading.Core
         public const int DefaultRefundTimeoutDays = 30;
 
         public static readonly string[] BaseAssets = { "USD", "CHF", "EUR" };
-        public static string DefaultBaseAsset = "EUR";
         public static double DefaultDemoBalance = 50000;
         public const double DefaultMarginCall = 0.8;
         public const double DefaultStopOut = 0.95;

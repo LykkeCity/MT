@@ -9,6 +9,7 @@ namespace MarginTrading.Core
         string BaseAssetId { get; }
         double MarginCall { get; }
         double StopOut { get; }
+        double DepositTransferLimit { get; }
     }
 
     public class MarginTradingAccountGroup : IMarginTradingAccountGroup
@@ -17,6 +18,7 @@ namespace MarginTrading.Core
         public string BaseAssetId { get; set; }
         public double MarginCall { get; set; }
         public double StopOut { get; set; }
+        public double DepositTransferLimit { get; set; }
 
         public static IMarginTradingAccountGroup Create(IMarginTradingAccountGroup src)
         {
@@ -25,7 +27,8 @@ namespace MarginTrading.Core
                 TradingConditionId = src.TradingConditionId,
                 BaseAssetId = src.BaseAssetId,
                 MarginCall = src.MarginCall,
-                StopOut = src.StopOut
+                StopOut = src.StopOut,
+                DepositTransferLimit = src.DepositTransferLimit
             };
         }
     }

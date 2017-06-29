@@ -17,6 +17,7 @@ namespace MarginTrading.AzureRepositories
         public string ClientId { get; set; }
         public double Amount { get; set; }
         public double Balance { get; set; }
+        public double WithdrawTransferLimit { get; set; }
         public string Comment { get; set; }
         public string Type { get; set; }
         AccountHistoryType IMarginTradingAccountHistory.Type => Type.ParseEnum(AccountHistoryType.OrderClosed);
@@ -41,11 +42,13 @@ namespace MarginTrading.AzureRepositories
                 ClientId = src.ClientId,
                 Amount = src.Amount,
                 Balance = src.Balance,
+                WithdrawTransferLimit = src.WithdrawTransferLimit,
                 Comment = src.Comment,
                 Type = src.Type.ToString()
             };
         }
     }
+
     public class MarginTradingAccountHistoryRepository : IMarginTradingAccountHistoryRepository
     {
         private readonly INoSQLTableStorage<MarginTradingAccountHistoryEntity> _tableStorage;
@@ -60,27 +63,13 @@ namespace MarginTrading.AzureRepositories
             await _tableStorage.InsertOrReplaceAsync(MarginTradingAccountHistoryEntity.Create(accountHistory));
         }
 
-        public async Task<IEnumerable<IMarginTradingAccountHistory>> GetAsync(string[] accountIds, DateTime? from, DateTime? to)
+        public async Task<IEnumerable<IMarginTradingAccountHistory>> GetAsync(string[] accountIds, DateTime? from,
+            DateTime? to)
         {
-            var entities = await _tableStorage.GetDataAsync(entity => accountIds.Contains(entity.AccountId) && (entity.Date >= from || from == null) && (entity.Date <= to || to == null));
+            var entities = await _tableStorage.GetDataAsync(
+                entity => accountIds.Contains(entity.AccountId) && (entity.Date >= from || from == null) &&
+                          (entity.Date <= to || to == null));
             return entities.Select(MarginTradingAccountHistory.Create).OrderByDescending(item => item.Date);
-        }
-
-        public async Task AddAsync(string accountId, string clientId, double amount, double balance, AccountHistoryType type, string comment = null)
-        {
-            var entity = new MarginTradingAccountHistoryEntity
-            {
-                PartitionKey = MarginTradingAccountHistoryEntity.GeneratePartitionKey(accountId),
-                RowKey = MarginTradingAccountHistoryEntity.GenerateRowKey(Guid.NewGuid().ToString("N")),
-                Amount = amount,
-                Balance = balance,
-                ClientId = clientId,
-                Comment = comment,
-                Type = type.ToString(),
-                Date = DateTime.UtcNow
-            };
-
-            await _tableStorage.InsertOrReplaceAsync(entity);
         }
     }
 }

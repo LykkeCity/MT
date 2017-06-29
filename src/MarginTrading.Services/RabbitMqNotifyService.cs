@@ -24,27 +24,28 @@ namespace MarginTrading.Services
 			_publishers = publishers;
 			_log = log;
 		}
-		public async Task AccountHistory(string accountId, string clientId, double amount, double balance, AccountHistoryType type, string comment = null)
+		public async Task AccountHistory(string accountId, string clientId, double amount, double balance, double withdrawTransferLimit, AccountHistoryType type, string comment = null)
 		{
-			try
+		    var record = new MarginTradingAccountHistory
+		    {
+		        Id = Guid.NewGuid().ToString("N"),
+		        AccountId = accountId,
+		        ClientId = clientId,
+		        Type = type,
+		        Amount = amount,
+		        Balance = balance,
+		        WithdrawTransferLimit = withdrawTransferLimit,
+		        Date = DateTime.UtcNow,
+		        Comment = comment
+		    };
+
+            try
 			{
-				await _publishers[_settings.RabbitMqQueues.AccountHistory.ExchangeName].ProduceAsync(new MarginTradingAccountHistory
-				{
-					Id = Guid.NewGuid().ToString("N"),
-					AccountId = accountId,
-					ClientId = clientId,
-					Type = type,
-					Amount = amount,
-					Balance = balance,
-					Date = DateTime.UtcNow,
-					Comment = comment
-				}.ToBackendContract().ToJson());
+				await _publishers[_settings.RabbitMqQueues.AccountHistory.ExchangeName].ProduceAsync(record.ToBackendContract().ToJson());
 			}
 			catch (Exception ex)
 			{
-				await _log.WriteErrorAsync(nameof(RabbitMqNotifyService), nameof(AccountHistory),
-					$"accountId: {accountId}, clientId: {clientId}, amount: {amount}, balance: {balance}, type: {type}, comment: {comment}",
-					ex);
+			    await _log.WriteErrorAsync(nameof(RabbitMqNotifyService), nameof(AccountHistory), record.ToJson(), ex);
 			}
 		}
 

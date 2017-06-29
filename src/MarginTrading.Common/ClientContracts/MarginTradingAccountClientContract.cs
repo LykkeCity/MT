@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Common.ClientContracts
+﻿using MarginTrading.Core;
+
+namespace MarginTrading.Common.ClientContracts
 {
     public class InitAccountsLiveDemoClientResponse
     {
@@ -12,7 +14,7 @@
         public string TradingConditionId { get; set; }
         public string BaseAssetId { get; set; }
         public double Balance { get; set; }
-        public bool IsCurrent { get; set; }
+        public double WithdrawTransferLimit { get; set; }
         public double MarginCall { get; set; }
         public double StopOut { get; set; }
         public double TotalCapital { get; set; }

@@ -64,8 +64,7 @@ namespace MarginTradingTests
                 TradingConditionId = "1",
                 BaseAssetId = "USD",
                 ClientId = ClientId1,
-                Balance = 1000,
-                IsCurrent = true
+                Balance = 1000
             },
             new MarginTradingAccount
             {
@@ -90,8 +89,7 @@ namespace MarginTradingTests
                 TradingConditionId = "1",
                 BaseAssetId = "USD",
                 ClientId = ClientId2,
-                Balance = 1000,
-                IsCurrent = true
+                Balance = 1000
             },
             new MarginTradingAccount
             {

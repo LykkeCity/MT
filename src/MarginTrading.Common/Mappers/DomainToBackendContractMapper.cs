@@ -15,7 +15,7 @@ namespace MarginTrading.Common.Mappers
                 TradingConditionId = src.TradingConditionId,
                 BaseAssetId = src.BaseAssetId,
                 Balance = src.Balance,
-                IsCurrent = src.IsCurrent,
+                WithdrawTransferLimit = src.WithdrawTransferLimit,
                 MarginCall = src.GetMarginCall(),
                 StopOut = src.GetStopOut(),
                 TotalCapital = src.GetTotalCapital(),
@@ -94,6 +94,7 @@ namespace MarginTrading.Common.Mappers
                 ClientId = src.ClientId,
                 Amount = src.Amount,
                 Balance = src.Balance,
+                WithdrawTransferLimit = src.WithdrawTransferLimit,
                 Comment = src.Comment,
                 Type = src.Type
             };
