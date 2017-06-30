@@ -14,6 +14,7 @@ namespace MarginTrading.AzureRepositories
 
         public double MarginCall { get; set; }
         public double StopOut { get; set; }
+        public double DepositTransferLimit { get; set; }
 
         public static string GeneratePartitionKey(string tradingConditionId)
         {
@@ -32,7 +33,8 @@ namespace MarginTrading.AzureRepositories
                 PartitionKey = GeneratePartitionKey(src.TradingConditionId),
                 RowKey = GenerateRowKey(src.BaseAssetId),
                 MarginCall = src.MarginCall,
-                StopOut = src.StopOut
+                StopOut = src.StopOut,
+                DepositTransferLimit = src.DepositTransferLimit
             };
         }
     }

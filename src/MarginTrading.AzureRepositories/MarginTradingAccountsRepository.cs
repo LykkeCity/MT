@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using AzureStorage;
+using Common;
 using MarginTrading.Core;
 using Microsoft.WindowsAzure.Storage.Table;
 
@@ -14,7 +15,7 @@ namespace MarginTrading.AzureRepositories
         public string TradingConditionId { get; set; }
         public string BaseAssetId { get; set; }
         public double Balance { get; set; }
-        public bool IsCurrent { get; set; }
+        public double WithdrawTransferLimit { get; set; }
         public double MarginCall { get; set; }
         public double StopOut { get; set; }
 
@@ -37,7 +38,7 @@ namespace MarginTrading.AzureRepositories
                 TradingConditionId = src.TradingConditionId,
                 BaseAssetId = src.BaseAssetId,
                 Balance = src.Balance,
-                IsCurrent = src.IsCurrent
+                WithdrawTransferLimit = src.WithdrawTransferLimit,
             };
         }
     }
@@ -60,13 +61,17 @@ namespace MarginTrading.AzureRepositories
             return entities.Select(MarginTradingAccount.Create);
         }
 
-        public async Task<MarginTradingAccount> UpdateBalanceAsync(string clientId, string accountId, double amount)
+        public async Task<MarginTradingAccount> UpdateBalanceAsync(string clientId, string accountId, double amount, bool changeLimit)
         {
             var account = await _tableStorage.GetDataAsync(MarginTradingAccountEntity.GeneratePartitionKey(clientId), MarginTradingAccountEntity.GenerateRowKey(accountId));
 
             if (account != null)
             {
                 account.Balance += amount;
+
+                if (changeLimit)
+                    account.WithdrawTransferLimit += amount;
+
                 await _tableStorage.InsertOrMergeAsync(account);
                 return MarginTradingAccount.Create(account);
             }
@@ -90,13 +95,6 @@ namespace MarginTrading.AzureRepositories
 
         public async Task AddAsync(MarginTradingAccount account)
         {
-            var accounts = await GetAllAsync(account.ClientId);
-
-            if (!accounts.Any())
-            {
-                account.IsCurrent = true;
-            }
-
             var entity = MarginTradingAccountEntity.Create(account);
             await _tableStorage.InsertOrMergeAsync(entity);
         }
@@ -120,51 +118,10 @@ namespace MarginTrading.AzureRepositories
                 : null;
         }
 
-        public async Task<IMarginTradingAccount> SetActiveAsync(string clientId, string accountId)
+        public async Task DeleteAsync(string clientId, string accountId)
         {
-            var accounts = await _tableStorage.GetDataAsync(MarginTradingAccountEntity.GeneratePartitionKey(clientId));
-
-            IMarginTradingAccount currentAccount = null;
-
-            foreach (var account in accounts)
-            {
-                account.IsCurrent = account.Id == accountId;
-
-                if (account.IsCurrent)
-                {
-                    currentAccount = account;
-                }
-
-                await _tableStorage.InsertOrMergeAsync(account);
-            }
-
-            return currentAccount != null 
-                ? MarginTradingAccount.Create(currentAccount) 
-                : null;
-        }
-
-        public async Task DeleteAndSetActiveIfNeededAsync(string clientId, string accountId)
-        {
-            var accounts = (await GetAllAsync(clientId)).ToArray();
-
-            var accountToDelete = accounts.FirstOrDefault(item => item.ClientId == clientId && item.Id == accountId);
-
-            if (accountToDelete == null)
-                return;
-
             await _tableStorage.DeleteAsync(MarginTradingAccountEntity.GeneratePartitionKey(clientId),
                 MarginTradingAccountEntity.GenerateRowKey(accountId));
-
-            if (accountToDelete.IsCurrent)
-            {
-                var newCurrentAccount = accounts.FirstOrDefault(item => item.Id != accountToDelete.Id);
-
-                if (newCurrentAccount != null)
-                {
-                    await SetActiveAsync(clientId, newCurrentAccount.Id);
-                }
-            }
-
         }
     }
 }

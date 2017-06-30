@@ -174,23 +174,6 @@ namespace MarginTrading.Backend.Controllers
 
         #region Account
 
-        [Route("account.setActive")]
-        [HttpPost]
-        public async Task<MtBackendResponse<bool>> SetActiveAccount([FromBody]SetActiveAccountBackendRequest request)
-        {
-            await _accountsRepository.SetActiveAsync(request.ClientId, request.AccountId);
-            var account = _accountsCacheService.SetActive(request.ClientId, request.AccountId);
-
-            _clientNotifyService.NotifyAccountChanged(account);
-
-            var result = new MtBackendResponse<bool> { Result = true };
-
-            _consoleWriter.WriteLine($"action account.setActive for clientId = {request.ClientId}, accountId = {request.AccountId}");
-            _operationsLogService.AddLog("action account.setActive", request.ClientId, request.AccountId, request.ToJson(), result.ToJson());
-
-            return result;
-        }
-
         [Route("account.history")]
         [HttpPost]
         public async Task<AccountHistoryBackendResponse> GetAccountHistory([FromBody]AccountHistoryBackendRequest request)

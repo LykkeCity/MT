@@ -18,6 +18,7 @@ namespace MarginTrading.Common.BackendContracts
         public double? ExpectedOpenPrice { get; set; }
         public double OpenPrice { get; set; }
         public double ClosePrice { get; set; }
+        public DateTime CreateDate { get; set; }
         public DateTime? OpenDate { get; set; }
         public DateTime? CloseDate { get; set; }
         public double Volume { get; set; }

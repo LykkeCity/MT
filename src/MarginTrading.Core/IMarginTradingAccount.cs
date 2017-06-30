@@ -10,8 +10,8 @@ namespace MarginTrading.Core
         string TradingConditionId { get; }
         string ClientId { get; }
         string BaseAssetId { get; }
-        double Balance { get; set; }
-        bool IsCurrent { get; }
+        double Balance { get; }
+        double WithdrawTransferLimit { get; }
     }
 
     public class MarginTradingAccount : IMarginTradingAccount, IComparable<MarginTradingAccount>
@@ -21,7 +21,7 @@ namespace MarginTrading.Core
         public string TradingConditionId { get; set; }
         public string BaseAssetId { get; set; }
         public double Balance { get; set; }
-        public bool IsCurrent { get; set; }
+        public double WithdrawTransferLimit { get; set; }
        
         internal AccountFpl AccountFpl;
 
@@ -39,7 +39,7 @@ namespace MarginTrading.Core
                 ClientId = src.ClientId,
                 BaseAssetId = src.BaseAssetId,
                 Balance = src.Balance,
-                IsCurrent = src.IsCurrent,
+                WithdrawTransferLimit = src.WithdrawTransferLimit,
                 AccountFpl = accountFpl ?? new AccountFpl()
             };
         }
@@ -71,11 +71,10 @@ namespace MarginTrading.Core
         Task<IEnumerable<IMarginTradingAccount>> GetAllAsync(string clientId = null);
         Task<IMarginTradingAccount> GetAsync(string clientId, string accountId);
         Task<IMarginTradingAccount> GetAsync(string accountId);
-        Task<MarginTradingAccount> UpdateBalanceAsync(string clientId, string accountId, double amount);
+        Task<MarginTradingAccount> UpdateBalanceAsync(string clientId, string accountId, double amount, bool changeLimit);
         Task<bool> UpdateTradingConditionIdAsync(string accountId, string tradingConditionId);
         Task AddAsync(MarginTradingAccount account);
-        Task<IMarginTradingAccount> SetActiveAsync(string clientId, string accountId);
-        Task DeleteAndSetActiveIfNeededAsync(string clientId, string accountId);
+        Task DeleteAsync(string clientId, string accountId);
     }
 
     public static class MarginTradingAccountExtensions

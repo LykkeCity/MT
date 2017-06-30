@@ -67,17 +67,50 @@ namespace MarginTrading.Services
 
         public async Task UpdateBalanceAsync(string clientId, string accountId, double amount, AccountHistoryType historyType, string comment)
         {
-            var updatedAccount = await _repository.UpdateBalanceAsync(clientId, accountId, amount);
+            var changeLimit = false;
+
+            if (historyType == AccountHistoryType.Deposit || historyType == AccountHistoryType.Withdraw)
+            {
+                await CheckLimits(clientId, accountId, amount);
+                changeLimit = true;
+            }
+
+            var updatedAccount = await _repository.UpdateBalanceAsync(clientId, accountId, amount, changeLimit);
             _accountsCacheService.UpdateBalance(updatedAccount);
             
             _clientNotifyService.NotifyAccountChanged(updatedAccount);
 
-            await _rabbitMqNotifyService.AccountHistory(accountId, clientId, amount, updatedAccount.Balance, historyType, comment);
+            await _rabbitMqNotifyService.AccountHistory(accountId, clientId, amount, updatedAccount.Balance, updatedAccount.WithdrawTransferLimit, historyType, comment);
+        }
+
+        private async Task CheckLimits(string clientId, string accountId, double amount)
+        {
+            var account = await _repository.GetAsync(clientId, accountId);
+
+            //withdraw can not be more then limit
+            if (amount < 0 && account.WithdrawTransferLimit < Math.Abs(amount))
+            {
+                throw new Exception(
+                    $"Can not transfer {Math.Abs(amount)}. Current limit is {account.WithdrawTransferLimit}");
+            }
+
+            //limit can not be more then max after deposit
+            if (amount > 0)
+            {
+                var accountGroup =
+                    _accountGroupCacheService.GetAccountGroup(account.TradingConditionId, account.BaseAssetId);
+
+                if (accountGroup.DepositTransferLimit > 0 && accountGroup.DepositTransferLimit < account.Balance + amount)
+                {
+                    throw new Exception(
+                        $"Can deposit {Math.Abs(amount)}. Current deposited value is {account.WithdrawTransferLimit}. Max value is {accountGroup.DepositTransferLimit}");
+                }
+            }
         }
 
         public async Task DeleteAccountAsync(string clientId, string accountId)
         {
-            await _repository.DeleteAndSetActiveIfNeededAsync(clientId, accountId);
+            await _repository.DeleteAsync(clientId, accountId);
             await UpdateAccountsCacheAsync(clientId);
         }
 
@@ -176,7 +209,6 @@ namespace MarginTrading.Services
         {
             var id = $"{(_marginSettings.IsLive ? string.Empty : _marginSettings.DemoAccountIdPrefix)}{Guid.NewGuid():N}";
             var initialBalance = _marginSettings.IsLive ? 0 : LykkeConstants.DefaultDemoBalance;
-            var isCurrent = baseAssetId == LykkeConstants.DefaultBaseAsset;
 
             return new MarginTradingAccount
             {
@@ -184,7 +216,6 @@ namespace MarginTrading.Services
                 BaseAssetId = baseAssetId,
                 ClientId = clientId,
                 Balance = initialBalance,
-                IsCurrent = isCurrent,
                 TradingConditionId = tradingConditionId
             };
         }

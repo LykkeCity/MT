@@ -4,7 +4,7 @@ namespace MarginTrading.Core
 {
 	public interface IRabbitMqNotifyService
 	{
-		Task AccountHistory(string accountId, string clientId, double amount, double balance, AccountHistoryType type, string comment = null);
+		Task AccountHistory(string accountId, string clientId, double amount, double balance, double withdrawTransferLimit, AccountHistoryType type, string comment = null);
 		Task OrderHistory(IOrder order);
 		Task OrdeReject(IOrder order);
 		Task OrderBookPrice(InstrumentBidAskPair quote);
