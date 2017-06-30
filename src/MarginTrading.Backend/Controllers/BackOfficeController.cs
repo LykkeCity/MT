@@ -41,6 +41,7 @@ namespace MarginTrading.Backend.Controllers
         private readonly MarginSettings _marginSettings;
         private readonly IMarginTradingOperationsLogService _operationsLogService;
         private readonly IConsole _consoleWriter;
+        private readonly ILog _log;
 
         public BackOfficeController(
             ITradingConditionsCacheService tradingConditionsCacheService,
@@ -61,7 +62,8 @@ namespace MarginTrading.Backend.Controllers
             IClientSettingsRepository clientSettingsRepository,
             MarginSettings marginSettings,
             IMarginTradingOperationsLogService operationsLogService,
-            IConsole consoleWriter)
+            IConsole consoleWriter,
+            ILog log)
         {
             _tradingConditionsCacheService = tradingConditionsCacheService;
             _accountGroupCacheService = accountGroupCacheService;
@@ -83,6 +85,7 @@ namespace MarginTrading.Backend.Controllers
             _marginSettings = marginSettings;
             _operationsLogService = operationsLogService;
             _consoleWriter = consoleWriter;
+            _log = log;
         }
 
         /// <summary>
@@ -578,7 +581,15 @@ namespace MarginTrading.Backend.Controllers
             if (!_marginSettings.IsLive)
                 return Ok(false);
 
-            await _accountManager.UpdateBalanceAsync(request.ClientId, request.AccountId, Math.Abs(request.Amount), AccountHistoryType.Deposit, "Account deposit");
+            try
+            {
+                await _accountManager.UpdateBalanceAsync(request.ClientId, request.AccountId, Math.Abs(request.Amount), AccountHistoryType.Deposit, "Account deposit");
+            }
+            catch (Exception e)
+            {
+                await _log.WriteErrorAsync(nameof(BackOfficeController), "AccountDeposit", request?.ToJson(), e);
+                return Ok(false);
+            }
 
             _consoleWriter.WriteLine($"account deposit for clientId = {request.ClientId}");
             _operationsLogService.AddLog("account deposit", request.ClientId, request.AccountId, request.ToJson(), true.ToJson());
@@ -600,7 +611,15 @@ namespace MarginTrading.Backend.Controllers
             if (freeMargin < Math.Abs(request.Amount))
                 return Ok(false);
 
-            await _accountManager.UpdateBalanceAsync(request.ClientId, request.AccountId, -Math.Abs(request.Amount), AccountHistoryType.Withdraw, "Account withdraw");
+            try
+            {
+                await _accountManager.UpdateBalanceAsync(request.ClientId, request.AccountId, -Math.Abs(request.Amount), AccountHistoryType.Withdraw, "Account withdraw");
+            }
+            catch (Exception e)
+            {
+                await _log.WriteErrorAsync(nameof(BackOfficeController), "AccountWithdraw", request?.ToJson(), e);
+                return Ok(false);
+            }
 
             _consoleWriter.WriteLine($"account withdraw for clientId = {request.ClientId}");
             _operationsLogService.AddLog("account withdraw", request.ClientId, request.AccountId, request.ToJson(), true.ToJson());
