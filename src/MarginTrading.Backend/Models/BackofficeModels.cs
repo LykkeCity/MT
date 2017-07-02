@@ -59,7 +59,14 @@ namespace MarginTrading.Backend.Models
     {
         public string ClientId { get; set; }
         public string AccountId { get; set; }
+        public PaymentType PaymentType { get; set; }
         public double Amount { get; set; }
+    }
+
+    public enum PaymentType
+    {
+        Transfer,
+        Swift
     }
 
     public class AccounResetRequest
