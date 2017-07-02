@@ -98,7 +98,7 @@ namespace MarginTrading.Services
                 if (accountGroup.DepositTransferLimit > 0 && accountGroup.DepositTransferLimit < account.Balance + amount)
                 {
                     throw new Exception(
-                        $"Can deposit {Math.Abs(amount)}. Current deposited value is {account.WithdrawTransferLimit}. Max value is {accountGroup.DepositTransferLimit}");
+                        $"Can not deposit {Math.Abs(amount)}. Current balance is {account.Balance}. Max value is {accountGroup.DepositTransferLimit}");
                 }
             }
         }
