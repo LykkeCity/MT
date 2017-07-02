@@ -42,10 +42,6 @@ namespace MarginTradingTests
                 .As<IWatchListService>()
                 .SingleInstance();
 
-            builder.RegisterInstance(new Mock<IMarginTradingOperationsLogService>().Object)
-                .As<IMarginTradingOperationsLogService>()
-                .SingleInstance();
-
             var settings = new MarketMakerSettings
             {
                 DayOffStartDay = DayOfWeek.Sunday.ToString(),
@@ -55,6 +51,9 @@ namespace MarginTradingTests
                 AssetsWithoutDayOff = new[] { "BTCCHF" }
             };
 
+            builder.RegisterInstance(new Mock<IMarginTradingOperationsLogService>().Object)
+                .As<IMarginTradingOperationsLogService>()
+                .SingleInstance();
             builder.RegisterInstance(settings).SingleInstance();
 
             Container = builder.Build();

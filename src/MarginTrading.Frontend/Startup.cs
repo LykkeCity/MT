@@ -6,6 +6,7 @@ using AzureStorage.Tables;
 using Common.Log;
 using Flurl.Http;
 using Lykke.Common;
+using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
 using Lykke.RabbitMqBroker.Subscriber;
 using Lykke.Service.Session;
@@ -75,12 +76,7 @@ namespace MarginTrading.Frontend
 
             services.AddSwaggerGen(options =>
             {
-                options.SingleApiVersion(new Info
-                {
-                    Version = "v1",
-                    Title = "Api"
-                });
-                options.DescribeAllEnumsAsStrings();
+                options.DefaultLykkeConfiguration("v1", "MarginTrading_Api");
                 options.OperationFilter<AddAuthorizationHeaderParameter>();
             });
 

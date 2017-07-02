@@ -22,7 +22,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="1.1.1" />
     <PackageReference Include="Lykke.RabbitMqBroker" Version="1.0.63" />
-    <PackageReference Include="Lykke.Common" Version="1.1.69" />
+    <PackageReference Include="Lykke.Common" Version="1.1.76" />
   </ItemGroup>
 
 </Project>
