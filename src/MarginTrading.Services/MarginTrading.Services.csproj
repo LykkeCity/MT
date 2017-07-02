@@ -25,7 +25,7 @@
     <PackageReference Include="WampSharp.AspNetCore.WebSockets.Server" Version="1.2.5.35-beta" />
     <PackageReference Include="WampSharp.NewtonsoftJson" Version="1.2.5.35-beta" />
     <PackageReference Include="Lykke.RabbitMqBroker" Version="1.0.63" />
-    <PackageReference Include="Lykke.Common" Version="1.1.69" />
+    <PackageReference Include="Lykke.Common" Version="1.1.76" />
   </ItemGroup>
 
 </Project>
