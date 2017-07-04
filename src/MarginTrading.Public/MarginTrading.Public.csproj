@@ -44,9 +44,6 @@
     <PackageReference Include="Swashbuckle.SwaggerGen" Version="6.0.0-beta902" />
     <PackageReference Include="Swashbuckle.SwaggerUi" Version="6.0.0-beta902" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics" Version="1.1.1" />
-    <PackageReference Include="WampSharp.Default" Version="1.2.5.35-beta" />
-    <PackageReference Include="WampSharp.AspNetCore.WebSockets.Server" Version="1.2.5.35-beta" />
-    <PackageReference Include="WampSharp.NewtonsoftJson" Version="1.2.5.35-beta" />
     <PackageReference Include="Lykke.RabbitMqBroker" Version="1.0.63" />
   </ItemGroup>
 

@@ -23,17 +23,6 @@ namespace MarginTrading.Public.Modules
 
         protected override void Load(ContainerBuilder builder)
         {
-            var host = new WampHost();
-            var realm = host.RealmContainer.GetRealmByName(RealmNames.Public);
-
-            builder.RegisterInstance(host)
-                .As<IWampHost>()
-                .SingleInstance();
-
-            builder.RegisterInstance(realm)
-                .As<IWampHostedRealm>()
-                .SingleInstance();
-
             LykkeLogToAzureStorage log = new LykkeLogToAzureStorage(PlatformServices.Default.Application.ApplicationName, 
                 new AzureTableStorage<LogEntity>(_settings.Db.LogsConnString, "MarginTradingPublicLog", null));
 

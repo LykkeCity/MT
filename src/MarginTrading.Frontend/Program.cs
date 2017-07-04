@@ -10,7 +10,7 @@ namespace MarginTrading.Frontend
         public static void Main(string[] args)
         {
             var cfgBuilder = new ConfigurationBuilder()
-              .AddEnvironmentVariables();
+                .AddEnvironmentVariables();
 
             var configuration = cfgBuilder.Build();
 
@@ -31,18 +31,18 @@ namespace MarginTrading.Frontend
             try
             {
                 var host = new WebHostBuilder()
-                .UseKestrel(options =>
-                {
-                    if (kestrelThreadsCount > 0)
+                    .UseKestrel(options =>
                     {
-                        options.ThreadCount = kestrelThreadsCount;
-                    }
-                })
-                .UseContentRoot(Directory.GetCurrentDirectory())
-                .UseIISIntegration()
-                .UseUrls("http://*:5005")
-                .UseStartup<Startup>()
-                .Build();
+                        if (kestrelThreadsCount > 0)
+                        {
+                            options.ThreadCount = kestrelThreadsCount;
+                        }
+                    })
+                    .UseContentRoot(Directory.GetCurrentDirectory())
+                    .UseIISIntegration()
+                    .UseUrls("http://*:5005")
+                    .UseStartup<Startup>()
+                    .Build();
 
                 host.Run();
             }

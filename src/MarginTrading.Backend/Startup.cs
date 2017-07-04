@@ -21,9 +21,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.PlatformAbstractions;
 using Swashbuckle.Swagger.Model;
-using WampSharp.AspNetCore.WebSockets.Server;
-using WampSharp.Binding;
-using WampSharp.V2;
 
 #pragma warning disable 1591
 
@@ -106,7 +103,6 @@ namespace MarginTrading.Backend
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, IApplicationLifetime appLifetime)
         {
-            IWampHost host = app.ApplicationServices.GetService<IWampHost>();
             app.UseMiddleware<GlobalErrorHandlerMiddleware>();
             app.UseMiddleware<MaintenanceModeMiddleware>();
             app.UseMiddleware<KeyAuthMiddleware>();
@@ -115,18 +111,7 @@ namespace MarginTrading.Backend
             app.UseSwagger();
             app.UseSwaggerUi();
 
-            app.Map("/ws", builder =>
-            {
-                builder.UseWebSockets();
-
-                host.RegisterTransport(new AspNetCoreWebSocketTransport(builder),
-                                       new JTokenJsonBinding(),
-                                       new JTokenMsgpackBinding());
-            });
-
             appLifetime.ApplicationStopped.Register(() => ApplicationContainer.Dispose());
-
-            host.Open();
 
             Application application = app.ApplicationServices.GetService<Application>();
 

@@ -3,7 +3,6 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Flurl.Http;
 using Lykke.SettingsReader;
-using MarginTrading.Common.Extensions;
 using MarginTrading.Public.Modules;
 using MarginTrading.Public.Settings;
 using Microsoft.AspNetCore.Builder;
@@ -12,9 +11,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Swashbuckle.Swagger.Model;
-using WampSharp.AspNetCore.WebSockets.Server;
-using WampSharp.Binding;
-using WampSharp.V2;
 
 namespace MarginTrading.Public
 {
@@ -78,22 +74,9 @@ namespace MarginTrading.Public
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
-            IWampHost host = ApplicationContainer.Resolve<IWampHost>();
-
             app.UseMvc();
             app.UseSwagger();
             app.UseSwaggerUi();
-
-            app.Map("/ws", builder =>
-            {
-                builder.UseWebSockets(new WebSocketOptions { KeepAliveInterval = TimeSpan.FromMinutes(1) });
-
-                host.RegisterTransport(new AspNetCoreWebSocketTransport(builder),
-                                       new JTokenJsonBinding(),
-                                       new JTokenMsgpackBinding());
-            });
-
-            host.Open();
         }
     }
 }

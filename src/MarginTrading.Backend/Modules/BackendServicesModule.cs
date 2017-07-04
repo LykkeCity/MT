@@ -16,8 +16,6 @@ using MarginTrading.Services;
 using MarginTrading.Services.Events;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.PlatformAbstractions;
-using WampSharp.V2;
-using WampSharp.V2.Realm;
 using Lykke.Service.EmailSender;
 using MarginTrading.Services.Infrastructure;
 
@@ -40,17 +38,6 @@ namespace MarginTrading.Backend.Modules
 
 		protected override void Load(ContainerBuilder builder)
 		{
-			var host = new WampHost();
-			var realm = host.RealmContainer.GetRealmByName(RealmNames.BackEnd);
-
-			builder.RegisterInstance(host)
-				.As<IWampHost>()
-				.SingleInstance();
-
-			builder.RegisterInstance(realm)
-				.As<IWampHostedRealm>()
-				.SingleInstance();
-
 			builder.RegisterType<ApiKeyValidator>()
 				.As<IApiKeyValidator>()
 				.SingleInstance();
