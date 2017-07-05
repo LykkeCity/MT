@@ -2,10 +2,14 @@
 
 namespace MarginTrading.Common.ClientContracts
 {
-    public class ChangeOrderLimitsClientRequest
+    public class ChangeOrderLimitsRpcClientRequest : ChangeOrderLimitsClientRequest
     {
         [Required]
         public string Token { get; set; }
+    }
+
+    public class ChangeOrderLimitsClientRequest
+    {
         [Required]
         public string OrderId { get; set; }
         [Required]

@@ -27,29 +27,26 @@ namespace MarginTrading.Common.Wamp
 
         [WampProcedure("init.graph")]
         [DocMe(Name = "init.graph", Description = "Gets data for micrographics")]
-        Task<InitChartDataClientResponse> InitGraph();
-
-        [WampProcedure("account.setActive")]
-        Task<MtClientResponse<bool>> SetActiveAccount(string requestJson);
+        Task<InitChartDataClientResponse> InitGraph(string token = null);
 
         [WampProcedure("account.history")]
-        [DocMe(Name = "account.history", Description = "Gets account history", InputType = typeof(AccountHistoryClientRequest))]
+        [DocMe(Name = "account.history", Description = "Gets account history", InputType = typeof(AccountHistoryRpcClientRequest))]
         Task<AccountHistoryClientResponse> GetAccountHistory(string requestJson);
 
         [WampProcedure("account.history.new")]
-        [DocMe(Name = "account.history.new", Description = "Gets account history (different format)", InputType = typeof(AccountHistoryClientRequest))]
+        [DocMe(Name = "account.history.new", Description = "Gets account history (different format)", InputType = typeof(AccountHistoryRpcClientRequest))]
         Task<AccountHistoryItemClient[]> GetHistory(string requestJson);
 
         [WampProcedure("order.place")]
-        [DocMe(Name = "order.place", Description = "Places order", InputType = typeof(OpenOrderClientRequest))]
+        [DocMe(Name = "order.place", Description = "Places order", InputType = typeof(OpenOrderRpcClientRequest))]
         Task<MtClientResponse<OrderClientContract>> PlaceOrder(string requestJson);
 
         [WampProcedure("order.close")]
-        [DocMe(Name = "order.close", Description = "Close order", InputType = typeof(CloseOrderClientRequest))]
+        [DocMe(Name = "order.close", Description = "Close order", InputType = typeof(CloseOrderRpcClientRequest))]
         Task<MtClientResponse<bool>> CloseOrder(string requestJson);
 
         [WampProcedure("order.cancel")]
-        [DocMe(Name = "order.cancel", Description = "Cancel order", InputType = typeof(CloseOrderClientRequest))]
+        [DocMe(Name = "order.cancel", Description = "Cancel order", InputType = typeof(CloseOrderRpcClientRequest))]
         Task<MtClientResponse<bool>> CancelOrder(string requestJson);
 
         [WampProcedure("order.list")]
@@ -64,7 +61,7 @@ namespace MarginTrading.Common.Wamp
         Task<ClientPositionsLiveDemoClientResponse> GetClientOrders(string token);
 
         [WampProcedure("order.changeLimits")]
-        [DocMe(Name = "order.changeLimits", Description = "Sets order limits", InputType = typeof(ChangeOrderLimitsClientRequest))]
+        [DocMe(Name = "order.changeLimits", Description = "Sets order limits", InputType = typeof(ChangeOrderLimitsRpcClientRequest))]
         Task<MtClientResponse<bool>> ChangeOrderLimits(string requestJson);
 
         [WampProcedure("orderbooks")]

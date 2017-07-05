@@ -8,7 +8,6 @@ using IsAliveResponse = MarginTrading.Common.BackendContracts.IsAliveResponse;
 
 namespace MarginTrading.Frontend.Controllers
 {
-    [Route("home/[controller]")]
     [Route("api/isAlive")]
     public class VersionController : Controller
     {
