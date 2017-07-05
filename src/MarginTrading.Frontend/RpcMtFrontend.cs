@@ -69,7 +69,7 @@ namespace MarginTrading.Frontend
 
         public async Task<InitChartDataClientResponse> InitGraph(string token = null)
         {
-            var clientId = await GetClientId(token);
+            var clientId = string.IsNullOrEmpty(token) ? null : await GetClientId(token);
 
             return await _rpcFacade.InitGraph(clientId);
         }

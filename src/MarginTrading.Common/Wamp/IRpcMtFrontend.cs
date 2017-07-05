@@ -23,7 +23,7 @@ namespace MarginTrading.Common.Wamp
 
         [WampProcedure("init.accountinstruments")]
         [DocMe(Name = "init.accountinstruments", Description = "Gets trading conditions")]
-        Task<InitAccountInstrumentsLiveDemoClientResponse> AccountInstruments(string token);
+        Task<InitAccountInstrumentsLiveDemoClientResponse> AccountInstruments(string token = null);
 
         [WampProcedure("init.graph")]
         [DocMe(Name = "init.graph", Description = "Gets data for micrographics")]
