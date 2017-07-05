@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
-using MarginTrading.Common.BackendContracts;
 using MarginTrading.Common.ClientContracts;
-using MarginTrading.Common.Mappers;
 using MarginTrading.Common.Wamp;
 using MarginTrading.Core;
 using MarginTrading.Frontend.Services;
@@ -20,19 +18,16 @@ namespace MarginTrading.Frontend
     {
         private readonly MtFrontendSettings _settings;
         private readonly IClientTokenService _clientTokenService;
-        private readonly HttpRequestService _httpRequestService;
-        private readonly IMarginTradingSettingsService _marginTradingSettingsService;
+        private readonly RpcFacade _rpcFacade;
 
         public RpcMtFrontend(
             MtFrontendSettings settings,
             IClientTokenService clientTokenService,
-            HttpRequestService httpRequestService,
-            IMarginTradingSettingsService marginTradingSettingsService)
+            RpcFacade rpcFacade)
         {
             _settings = settings;
             _clientTokenService = clientTokenService;
-            _httpRequestService = httpRequestService;
-            _marginTradingSettingsService = marginTradingSettingsService;
+            _rpcFacade = rpcFacade;
         }
 
         #region Service
@@ -55,85 +50,28 @@ namespace MarginTrading.Frontend
         {
             var clientId = await GetClientId(token);
 
-            var marginTradingDemoEnabled = await _marginTradingSettingsService.IsMargingTradingDemoEnabled(clientId);
-            var marginTradingLiveEnabled = await _marginTradingSettingsService.IsMargingTradingLiveEnabled(clientId);
-
-            if (!marginTradingDemoEnabled && !marginTradingLiveEnabled)
-            {
-                throw new Exception("Margin trading is not available");
-            }
-
-            var initDataBackendRequest = new ClientIdBackendRequest { ClientId = clientId };
-
-            var initData = new InitDataLiveDemoClientResponse();
-            var assetsLive = await _httpRequestService.RequestAsync<MarginTradingAssetBackendContract[]>(null,
-                                 "init.assets") ?? new MarginTradingAssetBackendContract[0];
-            var assetsDemo = await _httpRequestService.RequestAsync<MarginTradingAssetBackendContract[]>(null,
-                                 "init.assets", false) ?? new MarginTradingAssetBackendContract[0];
-
-            initData.Assets = assetsLive.Concat(assetsDemo).GroupBy(a => a.Id)
-                .Select(g => g.First().ToClientContract()).ToArray();
-
-            if (marginTradingLiveEnabled)
-            {
-                var initDataLiveResponse = await _httpRequestService.RequestAsync<InitDataBackendResponse>(
-                    initDataBackendRequest, "init.data");
-
-                initData.Live = initDataLiveResponse.ToClientContract();
-            }
-
-            if (marginTradingDemoEnabled)
-            {
-                var initDataDemoResponse = await _httpRequestService.RequestAsync<InitDataBackendResponse>(
-                    initDataBackendRequest, "init.data", false);
-
-                initData.Demo = initDataDemoResponse.ToClientContract();
-            }
-
-            return initData;
+            return await _rpcFacade.InitData(clientId);
         }
 
         public async Task<InitAccountsLiveDemoClientResponse> InitAccounts(string token)
         {
             var clientId = await GetClientId(token);
-            var initAccountsBackendRequest = new ClientIdBackendRequest { ClientId = clientId };
 
-            var accountsLiveResponse = await _httpRequestService.RequestAsync<MarginTradingAccountBackendContract[]>(
-                initAccountsBackendRequest, "init.accounts");
-
-            var accountsDemoResponse = await _httpRequestService.RequestAsync<MarginTradingAccountBackendContract[]>(
-                initAccountsBackendRequest, "init.accounts", false);
-
-            return new InitAccountsLiveDemoClientResponse
-            {
-                Live = accountsLiveResponse.Select(item => item.ToClientContract()).ToArray(),
-                Demo = accountsDemoResponse.Select(item => item.ToClientContract()).ToArray(),
-            };
+            return await _rpcFacade.InitAccounts(clientId);
         }
 
         public async Task<InitAccountInstrumentsLiveDemoClientResponse> AccountInstruments(string token)
         {
             var clientId = await GetClientId(token);
-            var initAccountInstrumentsBackendRequest = new ClientIdBackendRequest { ClientId = clientId };
 
-            var instrumentsLiveResponse = await _httpRequestService.RequestAsync<InitAccountInstrumentsBackendResponse>(
-                initAccountInstrumentsBackendRequest, "init.accountinstruments");
-
-            var instrumentsDemoResponse = await _httpRequestService.RequestAsync<InitAccountInstrumentsBackendResponse>(
-                initAccountInstrumentsBackendRequest, "init.accountinstruments", false);
-
-            return new InitAccountInstrumentsLiveDemoClientResponse
-            {
-                Live = instrumentsLiveResponse.ToClientContract(),
-                Demo = instrumentsDemoResponse.ToClientContract()
-            };
+            return await _rpcFacade.AccountInstruments(clientId);
         }
 
-        public async Task<InitChartDataClientResponse> InitGraph()
+        public async Task<InitChartDataClientResponse> InitGraph(string token = null)
         {
-            var initChartDataLiveResponse = await _httpRequestService.RequestAsync<InitChartDataBackendResponse>(null, "init.graph");
+            var clientId = await GetClientId(token);
 
-            return initChartDataLiveResponse.ToClientContract();
+            return await _rpcFacade.InitGraph(clientId);
         }
 
         #endregion
@@ -141,42 +79,20 @@ namespace MarginTrading.Frontend
 
         #region Account
 
-        public async Task<MtClientResponse<bool>> SetActiveAccount(string requestJson)
-        {
-            var setActiveAccountClientRequest = DeserializeRequest<SetActiveAccountClientRequest>(requestJson);
-            var clientId = await GetClientId(setActiveAccountClientRequest.Token);
-            var setActiveAccountBackendRequest = setActiveAccountClientRequest.ToBackendContract(clientId);
-            var setActiveAccountBackendResponse = await _httpRequestService.RequestAsync<MtBackendResponse<bool>>(setActiveAccountBackendRequest, "account.setActive",
-                IsLiveAccount(setActiveAccountBackendRequest.AccountId));
-            return setActiveAccountBackendResponse.ToClientContract();
-        }
-
         public async Task<AccountHistoryClientResponse> GetAccountHistory(string requestJson)
         {
-            var accountHistoryClientRequest = DeserializeRequest<AccountHistoryClientRequest>(requestJson);
+            var accountHistoryClientRequest = DeserializeRequest<AccountHistoryRpcClientRequest>(requestJson);
             var clientId = await GetClientId(accountHistoryClientRequest.Token);
-            var isLive = !string.IsNullOrEmpty(accountHistoryClientRequest.AccountId)
-                ? IsLiveAccount(accountHistoryClientRequest.AccountId)
-                : accountHistoryClientRequest.IsLive;
-            var accountHistoryBackendRequest = accountHistoryClientRequest.ToBackendContract(clientId);
-            var accountHistoryBackendResponse =
-                await _httpRequestService.RequestAsync<AccountHistoryBackendResponse>(accountHistoryBackendRequest,
-                    "account.history", isLive);
-            return accountHistoryBackendResponse.ToClientContract();
+
+            return await _rpcFacade.GetAccountHistory(clientId, accountHistoryClientRequest);
         }
 
         public async Task<AccountHistoryItemClient[]> GetHistory(string requestJson)
         {
-            var accountHistoryClientRequest = DeserializeRequest<AccountHistoryClientRequest>(requestJson);
+            var accountHistoryClientRequest = DeserializeRequest<AccountHistoryRpcClientRequest>(requestJson);
             var clientId = await GetClientId(accountHistoryClientRequest.Token);
-            var isLive = !string.IsNullOrEmpty(accountHistoryClientRequest.AccountId)
-                ? IsLiveAccount(accountHistoryClientRequest.AccountId)
-                : accountHistoryClientRequest.IsLive;
-            var accountHistoryBackendRequest = accountHistoryClientRequest.ToBackendContract(clientId);
-            var accountHistoryBackendResponse =
-                await _httpRequestService.RequestAsync<AccountNewHistoryBackendResponse>(accountHistoryBackendRequest,
-                    "account.history.new", isLive);
-            return accountHistoryBackendResponse.ToClientContract();
+
+            return await _rpcFacade.GetAccountHistoryTimeline(clientId, accountHistoryClientRequest);
         }
 
         #endregion
@@ -186,80 +102,56 @@ namespace MarginTrading.Frontend
 
         public async Task<MtClientResponse<OrderClientContract>> PlaceOrder(string requestJson)
         {
-            var clientRequest = DeserializeRequest<OpenOrderClientRequest>(requestJson);
+            var clientRequest = DeserializeRequest<OpenOrderRpcClientRequest>(requestJson);
             var clientId = await GetClientId(clientRequest.Token);
-            var backendRequest = clientRequest.ToBackendContract(clientId);
-            var backendResponse = await _httpRequestService.RequestAsync<OpenOrderBackendResponse>(backendRequest, "order.place",
-                IsLiveAccount(backendRequest.Order.AccountId));
-            return backendResponse.ToClientContract();
+
+            return await _rpcFacade.PlaceOrder(clientId, clientRequest.Order);
         }
 
         public async Task<MtClientResponse<bool>> CloseOrder(string requestJson)
         {
-            var clientRequest = DeserializeRequest<CloseOrderClientRequest>(requestJson);
+            var clientRequest = DeserializeRequest<CloseOrderRpcClientRequest>(requestJson);
             var clientId = await GetClientId(clientRequest.Token);
-            var backendRequest = clientRequest.ToBackendContract(clientId);
-            var backendResponse = await _httpRequestService.RequestAsync<MtBackendResponse<bool>>(backendRequest, "order.close",
-                IsLiveAccount(backendRequest.AccountId));
-            return backendResponse.ToClientContract();
+
+            return await _rpcFacade.CloseOrder(clientId, clientRequest);
         }
 
         public async Task<MtClientResponse<bool>> CancelOrder(string requestJson)
         {
-            var clientRequest = DeserializeRequest<CloseOrderClientRequest>(requestJson);
+            var clientRequest = DeserializeRequest<CloseOrderRpcClientRequest>(requestJson);
             var clientId = await GetClientId(clientRequest.Token);
-            var backendRequest = clientRequest.ToBackendContract(clientId);
-            var backendResponse = await _httpRequestService.RequestAsync<MtBackendResponse<bool>>(backendRequest, "order.cancel",
-                IsLiveAccount(backendRequest.AccountId));
-            return backendResponse.ToClientContract();
+
+            return await _rpcFacade.CancelOrder(clientId, clientRequest);
         }
 
         public async Task<ClientOrdersLiveDemoClientResponse> GetOpenPositions(string token)
         {
             var clientId = await GetClientId(token);
-            var backendRequest = new ClientIdBackendRequest { ClientId = clientId };
-            var backendLiveResponse = await _httpRequestService.RequestAsync<OrderBackendContract[]>(backendRequest, "order.list");
-            var backendDemoResponse = await _httpRequestService.RequestAsync<OrderBackendContract[]>(backendRequest, "order.list", false);
 
-            return new ClientOrdersLiveDemoClientResponse
-            {
-                Live = backendLiveResponse.Select(item => item.ToClientContract()).ToArray(),
-                Demo = backendDemoResponse.Select(item => item.ToClientContract()).ToArray()
-            };
+            return await _rpcFacade.GetOpenPositions(clientId);
         }
 
         public async Task<OrderClientContract[]> GetAccountOpenPositions(string requestJson)
         {
             var clientRequest = DeserializeRequest<AccountTokenClientRequest>(requestJson);
             var clientId = await GetClientId(clientRequest.Token);
-            var backendRequest = clientRequest.ToBackendContract(clientId);
-            var backendResponse = await _httpRequestService.RequestAsync<OrderBackendContract[]>(backendRequest, "order.account.list", IsLiveAccount(backendRequest.AccountId));
 
-            return backendResponse.Select(item => item.ToClientContract()).ToArray();
+            return await _rpcFacade.GetAccountOpenPositions(clientId, clientRequest.AccountId);
         }
 
         public async Task<ClientPositionsLiveDemoClientResponse> GetClientOrders(string token)
         {
             var clientId = await GetClientId(token);
-            var backendRequest = new ClientIdBackendRequest { ClientId = clientId };
-            var backendLiveResponse = await _httpRequestService.RequestAsync<ClientOrdersBackendResponse>(backendRequest, "order.positions");
-            var backendDemoResponse = await _httpRequestService.RequestAsync<ClientOrdersBackendResponse>(backendRequest, "order.positions", false);
 
-            return new ClientPositionsLiveDemoClientResponse
-            {
-                Live = backendLiveResponse.ToClientContract(),
-                Demo = backendDemoResponse.ToClientContract()
-            };
+            return await _rpcFacade.GetClientOrders(clientId);
         }
 
         public async Task<MtClientResponse<bool>> ChangeOrderLimits(string requestJson)
         {
-            var clientRequest = DeserializeRequest<ChangeOrderLimitsClientRequest>(requestJson);
+            var clientRequest = DeserializeRequest<ChangeOrderLimitsRpcClientRequest>(requestJson);
             var clientId = await GetClientId(clientRequest.Token);
-            var backendRequest = clientRequest.ToBackendContract(clientId);
-            var backendResponse = await _httpRequestService.RequestAsync<MtBackendResponse<bool>>(backendRequest, "order.changeLimits",
-                IsLiveAccount(backendRequest.AccountId));
-            return backendResponse.ToClientContract();
+
+            return await _rpcFacade.ChangeOrderLimits(clientId, clientRequest);
         } 
 
         #endregion
@@ -267,10 +159,9 @@ namespace MarginTrading.Frontend
 
         #region Orderbook
 
-        public async Task<Dictionary<string, OrderBookClientContract>> GetOrderBooks()
+        public Task<Dictionary<string, OrderBookClientContract>> GetOrderBooks()
         {
-            var backendResponse = await _httpRequestService.RequestAsync<OrderbooksBackendResponse>(null, "orderbooks");
-            return backendResponse.ToClientContract();
+            return _rpcFacade.GetOrderBooks();
         }
 
         #endregion
@@ -313,11 +204,6 @@ namespace MarginTrading.Frontend
                 throw new KeyNotFoundException($"Can't find session by provided token '{token}'");
 
             return clientId;
-        }
-
-        private bool IsLiveAccount(string accountId)
-        {
-            return !accountId.StartsWith(_settings.MarginTradingFront.DemoAccountIdPrefix);
         }
 
         #endregion

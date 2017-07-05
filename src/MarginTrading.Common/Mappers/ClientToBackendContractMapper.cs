@@ -27,7 +27,7 @@ namespace MarginTrading.Common.Mappers
             };
         }
 
-        public static AccountHistoryBackendRequest ToBackendContract(this AccountHistoryClientRequest src, string clientId)
+        public static AccountHistoryBackendRequest ToBackendContract(this AccountHistoryFiltersClientRequest src, string clientId)
         {
             return new AccountHistoryBackendRequest
             {
@@ -52,12 +52,12 @@ namespace MarginTrading.Common.Mappers
             };
         }
 
-        public static OpenOrderBackendRequest ToBackendContract(this OpenOrderClientRequest src, string clientId)
+        public static OpenOrderBackendRequest ToBackendContract(this NewOrderClientContract src, string clientId)
         {
             return new OpenOrderBackendRequest
             {
                 ClientId = clientId,
-                Order = src.Order.ToBackendContract()
+                Order = src.ToBackendContract()
             };
         }
 

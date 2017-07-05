@@ -19,7 +19,7 @@ namespace MarginTrading.Common.Wamp
         InitAccountInstrumentsBackendResponse AccountInstruments(ClientIdBackendRequest request);
 
         [WampProcedure("init.graph")]
-        InitChartDataBackendResponse InitGraph();
+        InitChartDataBackendResponse InitGraph(ClientIdBackendRequest request);
 
         [WampProcedure("init.availableassets")]
         string[] InitAvailableAssets(ClientIdBackendRequest request);

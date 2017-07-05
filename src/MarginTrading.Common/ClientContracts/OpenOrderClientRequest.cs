@@ -3,7 +3,7 @@ using MarginTrading.Core;
 
 namespace MarginTrading.Common.ClientContracts
 {
-    public class OpenOrderClientRequest
+    public class OpenOrderRpcClientRequest
     {
         [Required]
         public string Token { get; set; }

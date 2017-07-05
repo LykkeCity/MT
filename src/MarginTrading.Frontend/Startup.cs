@@ -20,6 +20,7 @@ using MarginTrading.Core;
 using MarginTrading.Core.Clients;
 using MarginTrading.Core.Settings;
 using MarginTrading.Frontend.Infrastructure;
+using MarginTrading.Frontend.Middleware;
 using MarginTrading.Frontend.Services;
 using MarginTrading.Frontend.Settings;
 using MarginTrading.Services;
@@ -112,6 +113,8 @@ namespace MarginTrading.Frontend
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, IApplicationLifetime appLifetime)
         {
+            app.UseMiddleware<GlobalErrorHandlerMiddleware>();
+
             IWampHost host = ApplicationContainer.Resolve<IWampHost>();
             IWampHostedRealm realm = ApplicationContainer.Resolve<IWampHostedRealm>();
             IDisposable realmMetaService = realm.HostMetaApiService();
@@ -287,6 +290,11 @@ namespace MarginTrading.Frontend
                 .SingleInstance();
 
             builder.RegisterType<WampSessionsService>()
+                .AsSelf()
+                .SingleInstance();
+
+
+            builder.RegisterType<RpcFacade>()
                 .AsSelf()
                 .SingleInstance();
         }
