@@ -4,11 +4,15 @@
     {
         public enum ErrorCodeType
         {
-            InvalidInputField = 0,
-            InconsistentData = 1,
-            AssetNotFound = 2,
-            NoData = 3,
-            NoAccess = 4
+            InconsistentData = 100,
+            InvalidInputField = 101,
+
+            NoData = 200,
+            AssetNotFound = 201,
+            
+            NoAccess = 300,
+
+            RuntimeProblem = 1000
         }
 
         public class ErrorModel

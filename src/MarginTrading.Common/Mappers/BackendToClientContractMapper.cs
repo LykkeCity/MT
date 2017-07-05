@@ -261,6 +261,7 @@ namespace MarginTrading.Common.Mappers
         {
             return new MtClientResponse<OrderClientContract>
             {
+                Message =  src.Order.RejectReasonText,
                 Result = src.Order.ToClientContract()
             };
         }

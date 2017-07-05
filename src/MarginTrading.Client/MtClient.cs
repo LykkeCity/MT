@@ -20,19 +20,20 @@ namespace MarginTrading.Client
         private string _serverAddress;
         private IWampRealmProxy _realmProxy;
         private IRpcMtFrontend _service;
+        private IWampChannel _channel;
 
         public void Connect(ClientEnv env)
         {
             SetEnv(env);
             var factory = new DefaultWampChannelFactory();
-            IWampChannel channel = factory.CreateJsonChannel(_serverAddress, "mtcrossbar");
+            _channel = factory.CreateJsonChannel(_serverAddress, "mtcrossbar");
 
-            while (!channel.RealmProxy.Monitor.IsConnected)
+            while (!_channel.RealmProxy.Monitor.IsConnected)
             {
                 try
                 {
                     Console.WriteLine($"Trying to connect to server {_serverAddress}...");
-                    channel.Open().Wait();
+                    _channel.Open().Wait();
                 }
                 catch
                 {
@@ -42,8 +43,13 @@ namespace MarginTrading.Client
             }
             Console.WriteLine($"Connected to server {_serverAddress}");
 
-            _realmProxy = channel.RealmProxy;
+            _realmProxy = _channel.RealmProxy;
             _service = _realmProxy.Services.GetCalleeProxy<IRpcMtFrontend>();
+        }
+
+        public void Close()
+        {
+            _channel.Close();
         }
 
         public void SetEnv(ClientEnv env)
@@ -87,7 +93,7 @@ namespace MarginTrading.Client
 
         public async Task GetAccountHistory()
         {
-            var request = new AccountHistoryClientRequest
+            var request = new AccountHistoryRpcClientRequest
             {
                 Token = _token
             };
@@ -97,7 +103,7 @@ namespace MarginTrading.Client
 
         public async Task GetHistory()
         {
-            var request = new AccountHistoryClientRequest
+            var request = new AccountHistoryRpcClientRequest
             {
                 Token = _token
             };
@@ -127,7 +133,7 @@ namespace MarginTrading.Client
 
             try
             {
-                var request = new OpenOrderClientRequest
+                var request = new OpenOrderRpcClientRequest
                 {
                     Token = _token,
                     Order = new NewOrderClientContract
@@ -175,7 +181,7 @@ namespace MarginTrading.Client
                 {
                     var order = orders.Demo.First();
 
-                    var request = new CloseOrderClientRequest
+                    var request = new CloseOrderRpcClientRequest
                     {
                         OrderId = order.Id,
                         AccountId = order.AccountId,
@@ -213,7 +219,7 @@ namespace MarginTrading.Client
                 {
                     var order = orders.Demo.First();
 
-                    var request = new CloseOrderClientRequest
+                    var request = new CloseOrderRpcClientRequest
                     {
                         OrderId = order.Id,
                         Token = _token
@@ -256,7 +262,7 @@ namespace MarginTrading.Client
 
         public async Task ChangeOrderLimits()
         {
-            var request = new ChangeOrderLimitsClientRequest
+            var request = new ChangeOrderLimitsRpcClientRequest
             {
                 Token = _token,
                 OrderId = ""
