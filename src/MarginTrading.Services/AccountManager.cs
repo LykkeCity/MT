@@ -67,7 +67,7 @@ namespace MarginTrading.Services
 
         public async Task UpdateBalanceAsync(string clientId, string accountId, double amount, AccountHistoryType historyType, string comment, bool changeTransferLimit = false)
         {
-            if (historyType == AccountHistoryType.Deposit)
+            if (historyType == AccountHistoryType.Deposit && changeTransferLimit)
             {
                 await CheckDepositLimits(clientId, accountId, amount);
             }
