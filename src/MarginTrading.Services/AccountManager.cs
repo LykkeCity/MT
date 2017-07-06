@@ -67,7 +67,7 @@ namespace MarginTrading.Services
 
         public async Task UpdateBalanceAsync(string clientId, string accountId, double amount, AccountHistoryType historyType, string comment, bool changeTransferLimit = false)
         {
-            if (historyType == AccountHistoryType.Deposit)
+            if (historyType == AccountHistoryType.Deposit && changeTransferLimit)
             {
                 await CheckDepositLimits(clientId, accountId, amount);
             }
@@ -98,7 +98,7 @@ namespace MarginTrading.Services
                 if (accountGroup.DepositTransferLimit > 0 && accountGroup.DepositTransferLimit < account.Balance + amount)
                 {
                     throw new Exception(
-                        $"Can deposit {Math.Abs(amount)}. Current deposited value is {account.WithdrawTransferLimit}. Max value is {accountGroup.DepositTransferLimit}");
+                        $"Can not deposit {Math.Abs(amount)}. Current balance is {account.Balance}. Max value is {accountGroup.DepositTransferLimit}");
                 }
             }
         }
