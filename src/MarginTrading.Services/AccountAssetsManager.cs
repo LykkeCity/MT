@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Autofac;
 using MarginTrading.Core;
+using MarginTrading.Core.Settings;
 
 namespace MarginTrading.Services
 {
@@ -9,13 +10,16 @@ namespace MarginTrading.Services
     {
         private readonly AccountAssetsCacheService _accountAssetsCacheService;
         private readonly IMarginTradingAccountAssetRepository _repository;
+        private readonly MarginSettings _settings;
 
         public AccountAssetsManager(
             AccountAssetsCacheService accountAssetsCacheService,
-            IMarginTradingAccountAssetRepository accountAssetRepository)
+            IMarginTradingAccountAssetRepository accountAssetRepository,
+            MarginSettings settings)
         {
             _accountAssetsCacheService = accountAssetsCacheService;
             _repository = accountAssetRepository;
+            _settings = settings;
         }
 
         public void Start()
@@ -31,7 +35,8 @@ namespace MarginTrading.Services
 
         public async Task AssignInstruments(string tradingConditionId, string baseAssetId, string[] instruments)
         {
-            await _repository.AssignInstruments(tradingConditionId, baseAssetId, instruments);
+            var defaults = _settings.DefaultAccountAssetsSettings ?? new AccountAssetsSettings();
+            await _repository.AssignInstruments(tradingConditionId, baseAssetId, instruments, defaults);
             await UpdateAccountAssetsCache();
         }
 

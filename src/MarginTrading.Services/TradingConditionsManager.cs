@@ -42,6 +42,7 @@ namespace MarginTrading.Services
 
         public async Task UpdateTradingConditions(string tradingConditionId = null, string accountId = null)
         {
+            //TODO: for what???
             await UpdateAllTradingConditions();
 
             if (!string.IsNullOrEmpty(tradingConditionId))
