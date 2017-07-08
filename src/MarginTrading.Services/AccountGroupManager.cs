@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Autofac;
 using MarginTrading.Core;
+using MarginTrading.Core.Settings;
 
 namespace MarginTrading.Services
 {
@@ -9,13 +10,16 @@ namespace MarginTrading.Services
     {
         private readonly AccountGroupCacheService _accountGroupCacheService;
         private readonly IMarginTradingAccountGroupRepository _repository;
+        private readonly MarginSettings _settings;
 
         public AccountGroupManager(
             AccountGroupCacheService accountGroupCacheService,
-            IMarginTradingAccountGroupRepository accountGroupRepository)
+            IMarginTradingAccountGroupRepository accountGroupRepository,
+            MarginSettings settings)
         {
             _accountGroupCacheService = accountGroupCacheService;
             _repository = accountGroupRepository;
+            _settings = settings;
         }
 
         public void Start()
@@ -31,7 +35,7 @@ namespace MarginTrading.Services
 
         public async Task AddAccountGroupsForTradingCondition(string tradingConditionId)
         {
-            foreach (var asset in LykkeConstants.BaseAssets)
+            foreach (var asset in _settings.BaseAccountAssets)
             {
                 await _repository.AddOrReplaceAsync(new MarginTradingAccountGroup
                 {

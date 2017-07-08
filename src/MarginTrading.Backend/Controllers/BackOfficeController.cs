@@ -7,7 +7,6 @@ using Common.Log;
 using MarginTrading.Backend.Models;
 using MarginTrading.Common.BackendContracts;
 using MarginTrading.Common.Mappers;
-using MarginTrading.Common.Models;
 using MarginTrading.Core;
 using MarginTrading.Core.Clients;
 using MarginTrading.Core.Settings;
@@ -15,7 +14,6 @@ using MarginTrading.Services;
 using MarginTrading.Services.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace MarginTrading.Backend.Controllers
 {
@@ -35,7 +33,6 @@ namespace MarginTrading.Backend.Controllers
         private readonly AccountAssetsManager _accountAssetsManager;
         private readonly MatchingEngineRoutesManager _routesManager;
         private readonly IMarginTradingAccountsRepository _accountsRepository;
-        private readonly IClientAccountService _clientAccountService;
         private readonly IOrderReader _ordersReader;
         private readonly OrderBookList _orderBooks;
         private readonly IClientSettingsRepository _clientSettingsRepository;
@@ -58,7 +55,6 @@ namespace MarginTrading.Backend.Controllers
             AccountAssetsManager accountAssetsManager,
             MatchingEngineRoutesManager routesManager,
             IMarginTradingAccountsRepository accountsRepository,
-            IClientAccountService clientAccountService,
             IOrderReader ordersReader,
             OrderBookList orderBooks,
             IClientSettingsRepository clientSettingsRepository,
@@ -81,7 +77,6 @@ namespace MarginTrading.Backend.Controllers
             _accountAssetsManager = accountAssetsManager;
             _routesManager = routesManager;
             _accountsRepository = accountsRepository;
-            _clientAccountService = clientAccountService;
             _ordersReader = ordersReader;
             _orderBooks = orderBooks;
             _clientSettingsRepository = clientSettingsRepository;

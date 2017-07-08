@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using MarginTrading.Core.Settings;
 
 namespace MarginTrading.Core
 {
@@ -72,6 +73,6 @@ namespace MarginTrading.Core
         Task<IMarginTradingAccountAsset> GetAsync(string tradingConditionId, string baseAssetId, string instrument);
         Task<IEnumerable<IMarginTradingAccountAsset>> GetAllAsync(string tradingConditionId, string baseAssetId);
         Task<IEnumerable<IMarginTradingAccountAsset>> GetAllAsync();
-        Task AssignInstruments(string tradingConditionId, string baseAssetId, string[] instruments);
+        Task AssignInstruments(string tradingConditionId, string baseAssetId, string[] instruments, AccountAssetsSettings defaults);
     }
 }
