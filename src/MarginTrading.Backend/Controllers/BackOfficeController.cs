@@ -503,7 +503,9 @@ namespace MarginTrading.Backend.Controllers
             if (!_marginSettings.IsLive)
                 return Ok(false);
 
-            var changeTransferLimit = request.PaymentType == PaymentType.Transfer;
+            var account = _accountsCacheService.Get(request.ClientId, request.AccountId);
+
+            var changeTransferLimit = request.PaymentType == PaymentType.Transfer && !IsCrypto(account.BaseAssetId); ;
 
             try
             {
@@ -536,7 +538,7 @@ namespace MarginTrading.Backend.Controllers
             if (freeMargin < Math.Abs(request.Amount))
                 return Ok(false);
 
-            var changeTransferLimit = request.PaymentType == PaymentType.Transfer;
+            var changeTransferLimit = request.PaymentType == PaymentType.Transfer && !IsCrypto(account.BaseAssetId);
 
             try
             {
@@ -553,6 +555,14 @@ namespace MarginTrading.Backend.Controllers
             _operationsLogService.AddLog($"account withdraw {request.PaymentType}", request.ClientId, request.AccountId, request.ToJson(), true.ToJson());
 
             return Ok(true);
+        }
+
+        private bool IsCrypto(string baseAssetId)
+        {
+            return baseAssetId == LykkeConstants.BitcoinAssetId
+                   || baseAssetId == LykkeConstants.LykkeAssetId
+                   || baseAssetId == LykkeConstants.EthAssetId
+                   || baseAssetId == LykkeConstants.SolarAssetId;
         }
 
         [Route("marginTradingAccounts/reset")]
