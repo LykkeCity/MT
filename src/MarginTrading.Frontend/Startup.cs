@@ -115,6 +115,9 @@ namespace MarginTrading.Frontend
         {
             app.UseMiddleware<GlobalErrorHandlerMiddleware>();
 
+            var settings = ApplicationContainer.Resolve<MtFrontSettings>();
+            app.UseCors(builder => builder.WithOrigins(settings.AllowOrigins));
+
             IWampHost host = ApplicationContainer.Resolve<IWampHost>();
             IWampHostedRealm realm = ApplicationContainer.Resolve<IWampHostedRealm>();
             IDisposable realmMetaService = realm.HostMetaApiService();

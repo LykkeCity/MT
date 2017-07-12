@@ -46,6 +46,7 @@ namespace MarginTrading.Frontend.Settings
         public string WampPricesTopicName { get; set; }
         public string DemoAccountIdPrefix { get; set; }
         public bool RemoteConsoleEnabled { get; set; }
+        public string[] AllowOrigins { get; set; }
 
         #region From env variables
 
