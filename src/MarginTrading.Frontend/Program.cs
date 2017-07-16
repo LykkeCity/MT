@@ -54,7 +54,7 @@ namespace MarginTrading.Frontend
                 }
                 catch (Exception e)
                 {
-                    LogLocator.CurrentLog.WriteFatalErrorAsync(
+                    LogLocator.CommonLog.WriteFatalErrorAsync(
                         "MT Frontend", "Restart host", $"Attempts left: {restartAttempsLeft}", e);
                     restartAttempsLeft--;
                     Console.WriteLine($"Error: {e.Message}{Environment.NewLine}Restarting...");
