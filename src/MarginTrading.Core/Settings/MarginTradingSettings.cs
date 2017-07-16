@@ -31,6 +31,7 @@ namespace MarginTrading.Core.Settings
 		public RabbitMqQueues RabbitMqQueues { get; set; }
 	    public RabbitMqSettings SpotRabbitMqSettings { get; set; }
 	    public string MtRabbitMqConnString { get; set; }
+        public RequestLoggerSettings RequestLoggerSettings { get; set; }
 	}
 
 	public class NotificationSettings
