@@ -21,6 +21,7 @@ namespace MarginTrading.Backend.Modules
             builder.RegisterInstance(_mtSettings.Jobs).SingleInstance();
             builder.RegisterInstance(_settings).SingleInstance();
             builder.RegisterInstance(_mtSettings.MtMarketMaker).SingleInstance();
+            builder.RegisterInstance(_settings.RequestLoggerSettings).SingleInstance();
         }
     }
 }

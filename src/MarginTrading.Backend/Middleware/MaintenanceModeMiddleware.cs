@@ -8,7 +8,6 @@ using MarginTrading.Common.BackendContracts;
 using MarginTrading.Core;
 using MarginTrading.Services.Infrastructure;
 using Microsoft.AspNetCore.Http;
-using Swashbuckle.Swagger.Model;
 
 namespace MarginTrading.Backend.Middleware
 {

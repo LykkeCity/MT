@@ -8,6 +8,7 @@ using MarginTrading.Common.BackendContracts;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Core.Notifications;
 using MarginTrading.Core.Settings;
+using MarginTrading.Services.Helpers;
 using Microsoft.AspNetCore.Http;
 
 namespace MarginTrading.Backend.Middleware
@@ -43,25 +44,10 @@ namespace MarginTrading.Backend.Middleware
 
             using (var ms = new MemoryStream())
             {
-                context.Request.Body.CopyTo(ms);
-                ms.Seek(0, SeekOrigin.Begin);
-                bodyPart = await GetBodyPart(ms);
+                bodyPart = await StreamHelpers.GetStreamPart(ms, 1024);
             }
 
             await _log.WriteErrorAsync("GlobalHandler", context.Request.GetUri().AbsoluteUri, bodyPart, ex);
-        }
-
-        private const int PartSize = 1024;
-        private async Task<string> GetBodyPart(Stream stream)
-        {
-            stream.Seek(0, SeekOrigin.Begin);
-
-            var requestReader = new StreamReader(stream);
-            int len = (int)(stream.Length > PartSize ? PartSize : stream.Length);
-            char[] bodyPart = new char[len];
-            await requestReader.ReadAsync(bodyPart, 0, len);
-
-            return new string(bodyPart);
         }
 
         private async Task SendError(HttpContext ctx, string errorMessage)
