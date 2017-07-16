@@ -41,10 +41,6 @@ namespace MarginTrading.Public.Modules
                 .As<IPricesCacheService>()
                 .As<IStartable>()
                 .SingleInstance();
-
-            builder.RegisterType<PricesWampService>()
-                .As<IStartable>()
-                .SingleInstance();
         }
     }
 }
