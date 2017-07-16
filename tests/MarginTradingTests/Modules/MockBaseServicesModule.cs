@@ -37,7 +37,6 @@ namespace MarginTradingTests.Modules
             var notifyService = new Mock<IClientNotifyService>();
             var rabbitMqNotifyService = new Mock<IRabbitMqNotifyService>();
             var consoleWriterMock = new Mock<IConsole>();
-            var slackNotificationsMock = new Mock<ISlackNotificationsProducer>();
             var sessionServiceMock = new Mock<ISessionService>();
 
             sessionServiceMock
@@ -66,7 +65,6 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(notifyService.Object).As<IClientNotifyService>();
             builder.RegisterInstance(rabbitMqNotifyService.Object).As<IRabbitMqNotifyService>();
             builder.RegisterInstance(consoleWriterMock.Object).As<IConsole>();
-            builder.RegisterInstance(slackNotificationsMock.Object).As<ISlackNotificationsProducer>();
             builder.RegisterInstance(clientsRepositoryMock.Object).As<IClientsSessionsRepository>();
             builder.RegisterInstance(sessionServiceMock.Object).As<ISessionService>();
             builder.RegisterInstance(clientAccountsServiceMock.Object).As<IClientAccountService>();
