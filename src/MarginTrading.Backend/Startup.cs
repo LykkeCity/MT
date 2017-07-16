@@ -4,17 +4,23 @@ using System.IO;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using AzureStorage.Tables;
+using Common.Log;
 using Flurl.Http;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
 using Lykke.SettingsReader;
+using Lykke.SlackNotification.AzureQueue;
 using MarginTrading.Backend.Infrastructure;
 using MarginTrading.Backend.Middleware;
 using MarginTrading.Backend.Modules;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Core;
 using MarginTrading.Core.Settings;
+using MarginTrading.Services.Infrastructure;
+using MarginTrading.Services.Middleware;
 using MarginTrading.Services.Modules;
+using MarginTrading.Services.Notifications;
+using MarginTrading.Services.Settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -22,6 +28,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.PlatformAbstractions;
 using Swashbuckle.Swagger.Model;
+using ILoggerFactory = Microsoft.Extensions.Logging.ILoggerFactory;
 
 #pragma warning disable 1591
 
@@ -47,8 +54,8 @@ namespace MarginTrading.Backend
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             ILoggerFactory loggerFactory = new LoggerFactory()
-                .AddConsole()
-                .AddDebug();
+                .AddConsole(LogLevel.Error)
+                .AddDebug(LogLevel.Error);
 
             services.AddSingleton(loggerFactory);
             services.AddLogging();
@@ -71,8 +78,11 @@ namespace MarginTrading.Backend
 
             MarginSettings settings = isLive ? mtSettings.MtBackend.MarginTradingLive : mtSettings.MtBackend.MarginTradingDemo;
             settings.IsLive = isLive;
+            settings.Env = isLive ? "Live" : "Demo";
 
             Console.WriteLine($"IsLive: {settings.IsLive}");
+
+            SetupLoggers(services, mtSettings, settings);
 
             RegisterModules(builder, mtSettings, settings, Environment);
 
@@ -89,13 +99,14 @@ namespace MarginTrading.Backend
             MtServiceLocator.AccountUpdateService = ApplicationContainer.Resolve<IAccountUpdateService>();
             MtServiceLocator.AccountsCacheService = ApplicationContainer.Resolve<IAccountsCacheService>();
             MtServiceLocator.SwapCommissionService = ApplicationContainer.Resolve<ISwapCommissionService>();
-
+            
             return new AutofacServiceProvider(ApplicationContainer);
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, IApplicationLifetime appLifetime)
         {
             app.UseMiddleware<GlobalErrorHandlerMiddleware>();
+            app.UseMiddleware<RequestsLoggingMiddleware>();
             app.UseMiddleware<MaintenanceModeMiddleware>();
             app.UseMiddleware<KeyAuthMiddleware>();
             app.UseMvc();
@@ -118,17 +129,35 @@ namespace MarginTrading.Backend
 
         private void RegisterModules(ContainerBuilder builder, MtBackendSettings mtSettings, MarginSettings settings, IHostingEnvironment environment)
         {
-            LykkeLogToAzureStorage log = new LykkeLogToAzureStorage(PlatformServices.Default.Application.ApplicationName,
-                new AzureTableStorage<LogEntity>(settings.Db.LogsConnString, "MarginTradingBackendLog", null));
-
             builder.RegisterModule(new BackendSettingsModule(mtSettings, settings));
-            builder.RegisterModule(new BackendRepositoriesModule(settings, log));
+            builder.RegisterModule(new BackendRepositoriesModule(settings, LogLocator.CommonLog));
             builder.RegisterModule(new EventModule());
             builder.RegisterModule(new CacheModule());
             builder.RegisterModule(new ManagersModule());
             builder.RegisterModule(new BaseServicesModule(mtSettings));
             builder.RegisterModule(new ServicesModule());
-            builder.RegisterModule(new BackendServicesModule(mtSettings, settings, environment, log));
+            builder.RegisterModule(new BackendServicesModule(mtSettings, settings, environment, LogLocator.CommonLog));
+        }
+
+        private static void SetupLoggers(IServiceCollection services, MtBackendSettings mtSettings,
+            MarginSettings settings)
+        {
+            var comonSlackService =
+                services.UseSlackNotificationsSenderViaAzureQueue(mtSettings.SlackNotifications.AzureQueue,
+                    new LogToConsole());
+
+            var slackService =
+                new MtSlackNotificationsSender(comonSlackService, "MT Backend", settings.Env);
+
+            var log = new LykkeLogToAzureStorage(PlatformServices.Default.Application.ApplicationName,
+                new AzureTableStorage<LogEntity>(settings.Db.LogsConnString, "MarginTradingBackendLog", null),
+                slackService);
+
+            var requestsLog = new LykkeLogToAzureStorage($"MT_Backend_{settings.Env}",
+                new AzureTableStorage<LogEntity>(settings.Db.LogsConnString, "MarginTradingBackendRequestsLog", null));
+
+            LogLocator.CommonLog = log;
+            LogLocator.RequestsLog = requestsLog;
         }
     }
 }

@@ -1,11 +1,14 @@
 ﻿using Lykke.SettingsReader.Attributes;
+using Lykke.SlackNotifications;
 using MarginTrading.Core.Settings;
+using MarginTrading.Services.Settings;
 
 namespace MarginTrading.Frontend.Settings
 {
     public class ApplicationSettings
     {
         public MtFrontendSettings MtFrontend {get; set;}
+        public SlackNotificationSettings SlackNotifications { get; set; }
     }
 
     public class MtFrontendSettings
@@ -57,5 +60,6 @@ namespace MarginTrading.Frontend.Settings
 
         public DbSettings Db { get; set; }
         public MtQueues RabbitMqQueues { get; set; }
+        public RequestLoggerSettings RequestLoggerSettings { get; set; }
     }
 }
