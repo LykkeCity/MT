@@ -24,6 +24,7 @@ using MarginTrading.Frontend.Infrastructure;
 using MarginTrading.Frontend.Services;
 using MarginTrading.Frontend.Settings;
 using MarginTrading.Services;
+using MarginTrading.Services.Infrastructure;
 using MarginTrading.Services.Notifications;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -119,6 +120,8 @@ namespace MarginTrading.Frontend
             ApplicationContainer = builder.Build();
 
             SetSubscribers(settings);
+
+            LogLocator.CurrentLog = ApplicationContainer.Resolve<ILog>();
 
             return new AutofacServiceProvider(ApplicationContainer);
         }

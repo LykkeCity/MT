@@ -15,6 +15,7 @@ using MarginTrading.Backend.Modules;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Core;
 using MarginTrading.Core.Settings;
+using MarginTrading.Services.Infrastructure;
 using MarginTrading.Services.Modules;
 using MarginTrading.Services.Notifications;
 using MarginTrading.Services.Settings;
@@ -114,6 +115,7 @@ namespace MarginTrading.Backend
             MtServiceLocator.AccountUpdateService = ApplicationContainer.Resolve<IAccountUpdateService>();
             MtServiceLocator.AccountsCacheService = ApplicationContainer.Resolve<IAccountsCacheService>();
             MtServiceLocator.SwapCommissionService = ApplicationContainer.Resolve<ISwapCommissionService>();
+            LogLocator.CurrentLog = ApplicationContainer.Resolve<ILog>();
 
             return new AutofacServiceProvider(ApplicationContainer);
         }
