@@ -15,13 +15,11 @@ namespace MarginTrading.Backend.Middleware
     public class GlobalErrorHandlerMiddleware
     {
         private readonly ILog _log;
-        private readonly ISlackNotificationsProducer _slackNotificationsProducer;
         private readonly RequestDelegate _next;
 
-        public GlobalErrorHandlerMiddleware(RequestDelegate next, ILog log, ISlackNotificationsProducer slackNotificationsProducer)
+        public GlobalErrorHandlerMiddleware(RequestDelegate next, ILog log)
         {
             _log = log;
-            _slackNotificationsProducer = slackNotificationsProducer;
             _next = next;
         }
 
@@ -51,22 +49,6 @@ namespace MarginTrading.Backend.Middleware
             }
 
             await _log.WriteErrorAsync("GlobalHandler", context.Request.GetUri().AbsoluteUri, bodyPart, ex);
-
-            var slackMsg = GetSlackMsg(context, ex, bodyPart);
-
-            await
-                _slackNotificationsProducer.SendNotification(ChannelTypes.MarginTrading, slackMsg, "MT Backend");
-        }
-
-        private string GetSlackMsg(HttpContext context, Exception ex, string bodyPart)
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("\n====================================");
-            sb.AppendLine(
-                $"{context.Request.GetUri().AbsoluteUri} *{ex.GetType()}* :\n{bodyPart}\n*{ex.Message}*\n{ex.StackTrace.Substring(0, 300)}...");
-            sb.AppendLine("====================================\n");
-
-            return sb.ToString();
         }
 
         private const int PartSize = 1024;

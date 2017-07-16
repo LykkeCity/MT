@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using MarginTrading.Core.Settings;
+using MarginTrading.Services.Settings;
 
 namespace MarginTrading.Backend.Modules
 {

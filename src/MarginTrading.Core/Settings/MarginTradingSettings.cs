@@ -3,14 +3,6 @@ using Lykke.SettingsReader.Attributes;
 
 namespace MarginTrading.Core.Settings
 {
-    public class MtBackendSettings
-    {
-        public MarginTradingSettings MtBackend { get; set; }
-        public EmailSenderSettings EmailSender { get; set; }
-        public NotificationSettings Jobs { get; set; }
-        public MarketMakerSettings MtMarketMaker { get; set; }
-    }
-
     public class MarginTradingSettings
     {
         public MarginSettings MarginTradingLive { get; set; }

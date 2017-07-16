@@ -3,6 +3,7 @@ using Lykke.Common;
 using MarginTrading.Core;
 using MarginTrading.Core.Settings;
 using MarginTrading.Services.Notifications;
+using MarginTrading.Services.Settings;
 
 namespace MarginTrading.Services.Modules
 {
