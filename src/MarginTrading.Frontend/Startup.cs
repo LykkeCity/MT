@@ -10,6 +10,7 @@ using Lykke.Logs;
 using Lykke.RabbitMqBroker.Subscriber;
 using Lykke.Service.Session;
 using Lykke.SettingsReader;
+using Lykke.SlackNotification.AzureQueue;
 using MarginTrading.AzureRepositories;
 using MarginTrading.AzureRepositories.Settings;
 using MarginTrading.Common.BackendContracts;
@@ -23,6 +24,7 @@ using MarginTrading.Frontend.Infrastructure;
 using MarginTrading.Frontend.Services;
 using MarginTrading.Frontend.Settings;
 using MarginTrading.Services;
+using MarginTrading.Services.Notifications;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -61,8 +63,8 @@ namespace MarginTrading.Frontend
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             ILoggerFactory loggerFactory = new LoggerFactory()
-                .AddConsole()
-                .AddDebug();
+                .AddConsole(LogLevel.Error)
+                .AddDebug(LogLevel.Error);
 
             services.AddSingleton(loggerFactory);
             services.AddLogging();
@@ -99,7 +101,18 @@ namespace MarginTrading.Frontend
 
             Console.WriteLine($"Env: {settings.MarginTradingFront.Env}");
 
-            RegisterDependencies(builder, settings, appSettings.MtFrontend.MarginTradingFront);
+            var comonSlackService =
+                services.UseSlackNotificationsSenderViaAzureQueue(appSettings.SlackNotifications.AzureQueue,
+                    new LogToConsole());
+
+            var slackService =
+                new MtSlackNotificationsSender(comonSlackService, "MT Frontend", settings.MarginTradingFront.Env);
+
+            var log = new LykkeLogToAzureStorage(PlatformServices.Default.Application.ApplicationName,
+                new AzureTableStorage<LogEntity>(settings.MarginTradingFront.Db.LogsConnString,
+                    "MarginTradingFrontendLog", null), slackService);
+
+            RegisterDependencies(builder, settings, log);
 
             builder.Populate(services);
 
@@ -165,7 +178,7 @@ namespace MarginTrading.Frontend
             host.Open();
         }
 
-        private void RegisterDependencies(ContainerBuilder builder, MtFrontendSettings settings, MtFrontSettings frontSettings)
+        private void RegisterDependencies(ContainerBuilder builder, MtFrontendSettings settings, ILog log)
         {
             var host = new WampHost();
             var realm = host.RealmContainer.GetRealmByName(RealmNames.FrontEnd);
@@ -177,9 +190,6 @@ namespace MarginTrading.Frontend
             builder.RegisterInstance(realm)
                 .As<IWampHostedRealm>()
                 .SingleInstance();
-
-            LykkeLogToAzureStorage log = new LykkeLogToAzureStorage(PlatformServices.Default.Application.ApplicationName,
-                new AzureTableStorage<LogEntity>(settings.MarginTradingFront.Db.LogsConnString, "MarginTradingFrontendLog", null));
 
             builder.RegisterInstance((ILog)log)
                 .As<ILog>()
@@ -255,7 +265,7 @@ namespace MarginTrading.Frontend
             builder.RegisterInstance(settings)
                 .SingleInstance();
 
-            builder.RegisterInstance(frontSettings)
+            builder.RegisterInstance(settings.MarginTradingFront)
                 .SingleInstance();
 
             builder.RegisterType<RpcMtFrontend>()

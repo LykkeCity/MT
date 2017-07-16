@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.PlatformAbstractions;
 using Lykke.Service.EmailSender;
 using MarginTrading.Services.Infrastructure;
+using MarginTrading.Services.Settings;
 
 namespace MarginTrading.Backend.Modules
 {

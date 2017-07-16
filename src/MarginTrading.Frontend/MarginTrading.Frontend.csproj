@@ -35,6 +35,8 @@
     <PackageReference Include="Lykke.Logs" Version="1.0.14" />
     <PackageReference Include="Lykke.Pkg.SettingsReader" Version="1.0.31" />
     <PackageReference Include="Lykke.Service.Session" Version="16.0.0" />
+    <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="1.0.4" />
+    <PackageReference Include="Lykke.SlackNotifications" Version="1.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="1.1.1" />

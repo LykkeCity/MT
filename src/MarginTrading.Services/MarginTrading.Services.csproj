@@ -18,7 +18,9 @@
 
   <ItemGroup>
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="4.1.0" />
+    <PackageReference Include="Lykke.AzureQueueIntegration" Version="1.0.7" />
     <PackageReference Include="Lykke.Service.Session" Version="16.0.0" />
+    <PackageReference Include="Lykke.SlackNotifications" Version="1.0.10" />
     <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.8" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
     <PackageReference Include="WampSharp.Default" Version="1.2.5.39-beta" />

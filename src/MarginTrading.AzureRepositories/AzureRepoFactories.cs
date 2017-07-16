@@ -4,7 +4,6 @@ using AzureStorage.Tables.Templates.Index;
 using Common.Log;
 using MarginTrading.AzureRepositories.Clients;
 using MarginTrading.AzureRepositories.Monitoring;
-using MarginTrading.AzureRepositories.Notifications;
 using MarginTrading.AzureRepositories.Settings;
 
 namespace MarginTrading.AzureRepositories
@@ -32,14 +31,6 @@ namespace MarginTrading.AzureRepositories
 			public static ServiceMonitoringRepository CreateServiceMonitoringRepository(string connstring, ILog log)
 			{
 				return new ServiceMonitoringRepository(new AzureTableStorage<MonitoringRecordEntity>(connstring, "Monitoring", log));
-			}
-		}
-
-		public static class Notifications
-		{
-			public static SlackNotificationsProducer CreateSlackNotificationsProducer(string connstring)
-			{
-				return new SlackNotificationsProducer(new AzureQueueExt(connstring, "slack-notifications"));
 			}
 		}
 
