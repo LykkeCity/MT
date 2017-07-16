@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
+using MarginTrading.Services.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 
@@ -28,28 +30,36 @@ namespace MarginTrading.Frontend
 
             Console.WriteLine($"Kestrel threads count: {kestrelThreadsCount}");
 
-            try
-            {
-                var host = new WebHostBuilder()
-                    .UseKestrel(options =>
-                    {
-                        if (kestrelThreadsCount > 0)
-                        {
-                            options.ThreadCount = kestrelThreadsCount;
-                        }
-                    })
-                    .UseContentRoot(Directory.GetCurrentDirectory())
-                    .UseIISIntegration()
-                    .UseUrls("http://*:5005")
-                    .UseStartup<Startup>()
-                    .Build();
+            var restartAttempsLeft = 5;
 
-                host.Run();
-            }
-            catch (Exception e)
+            while (restartAttempsLeft >= 0)
             {
-                Console.WriteLine(e);
-                throw;
+                try
+                {
+                    var host = new WebHostBuilder()
+                        .UseKestrel(options =>
+                        {
+                            if (kestrelThreadsCount > 0)
+                            {
+                                options.ThreadCount = kestrelThreadsCount;
+                            }
+                        })
+                        .UseContentRoot(Directory.GetCurrentDirectory())
+                        .UseIISIntegration()
+                        .UseUrls("http://*:5005")
+                        .UseStartup<Startup>()
+                        .Build();
+
+                    host.Run();
+                }
+                catch (Exception e)
+                {
+                    LogLocator.CurrentLog.WriteFatalErrorAsync(
+                        "MT Frontend", "Restart host", $"Attempts left: {restartAttempsLeft}", e);
+                    restartAttempsLeft--;
+                    Console.WriteLine($"Error: {e.Message}{Environment.NewLine}Restarting...");
+                    Thread.Sleep(10000);
+                }
             }
         }
     }
