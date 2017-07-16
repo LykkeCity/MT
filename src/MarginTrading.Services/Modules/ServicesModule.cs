@@ -102,10 +102,6 @@ namespace MarginTrading.Services.Modules
 				.AsSelf()
 				.SingleInstance();
 
-			builder.RegisterType<OrderBookChangedConsumer>()
-				.As<IEventConsumer<OrderBookChangeEventArgs>>()
-				.SingleInstance();
-
 			builder.RegisterType<MarginTradingSettingsService>()
 				.As<IMarginTradingSettingsService>()
 				.SingleInstance();
