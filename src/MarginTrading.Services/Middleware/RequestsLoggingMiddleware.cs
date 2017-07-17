@@ -15,14 +15,16 @@ namespace MarginTrading.Services.Middleware
         private readonly RequestDelegate _next;
         private readonly RequestLoggerSettings _settings;
         private readonly ILog _log;
+        private readonly ILog _requestsLog;
 
         private const int MaxStorageFieldLength = 2000;
 
-        public RequestsLoggingMiddleware(RequestDelegate next, RequestLoggerSettings settings)
+        public RequestsLoggingMiddleware(RequestDelegate next, RequestLoggerSettings settings, ILog log)
         {
             _next = next;
             _settings = settings;
-            _log = LogLocator.RequestsLog;
+            _log = log;
+            _requestsLog = LogLocator.RequestsLog;
         }
 
         public async Task Invoke(HttpContext context)
@@ -34,21 +36,25 @@ namespace MarginTrading.Services.Middleware
                 if (_settings.Enabled && context.Request.Method.ToUpper() != "GET")
                 {
                     var reqBodyStream = new MemoryStream();
-                    var originalRequestBody = context.Request.Body;
+                    var originalRequestBody = new MemoryStream();
 
                     await context.Request.Body.CopyToAsync(reqBodyStream);
+                    await context.Request.Body.CopyToAsync(originalRequestBody);
                     reqBodyStream.Seek(0, SeekOrigin.Begin);
                     context.Request.Body = reqBodyStream;
 
-                    var body = await StreamHelpers.GetStreamPart(originalRequestBody, _settings.MaxPartSize);
-                    var info =
-                        $"Body: {body} {Environment.NewLine}Headers:{context.Request.Headers.ToJson()}";
-                    if (info.Length > MaxStorageFieldLength)
+                    using (originalRequestBody)
                     {
-                        info = info.Substring(0, MaxStorageFieldLength);
-                    }
+                        var body = await StreamHelpers.GetStreamPart(originalRequestBody, _settings.MaxPartSize);
+                        var info =
+                            $"Body: {body} {Environment.NewLine}Headers:{context.Request.Headers.ToJson()}";
+                        if (info.Length > MaxStorageFieldLength)
+                        {
+                            info = info.Substring(0, MaxStorageFieldLength);
+                        }
 
-                    await _log.WriteInfoAsync("MIDDLEWARE", "RequestsLoggingMiddleware", requestContext, info);
+                        await _requestsLog.WriteInfoAsync("MIDDLEWARE", "RequestsLoggingMiddleware", requestContext, info);
+                    }
                 }
             }
             catch (Exception ex)
