@@ -18,12 +18,13 @@ namespace MarginTrading.AzureRepositories
         public string Type { get; set; }
         OrderDirection? IMatchingEngineRoute.Type => Type?.ParseEnum(OrderDirection.Buy);
         public string MatchingEngineId { get; set; }
-        
-        public static class GlobalRoute
+      
+
+        public static class Route
         {
             public static string GeneratePartitionKey()
             {
-                return "GlobalRule";
+                return "Rule";
             }
 
             public static string GenerateRowKey(string id)
@@ -42,35 +43,8 @@ namespace MarginTrading.AzureRepositories
                     TradingConditionId = route.TradingConditionId,
                     Instrument = route.Instrument,
                     Type = route.Type?.ToString(),
-                    MatchingEngineId = route.MatchingEngineId
-                };
-            }
-        }
-
-        public static class LocalRoute
-        {
-            public static string GeneratePartitionKey()
-            {
-                return "LocalRule";
-            }
-
-            public static string GenerateRowKey(string id)
-            {
-                return id;
-            }
-
-            public static MatchingEngineRouteEntity Create(IMatchingEngineRoute route)
-            {
-                return new MatchingEngineRouteEntity
-                {
-                    PartitionKey = GeneratePartitionKey(),
-                    RowKey = GenerateRowKey(route.Id),
-                    Id = route.Id,
-                    Rank = route.Rank,
-                    ClientId = route.ClientId,
-                    Instrument = route.Instrument,
-                    Type = route.Type?.ToString(),
-                    MatchingEngineId = route.MatchingEngineId
+                    MatchingEngineId = route.MatchingEngineId,
+                    ClientId = route.ClientId
                 };
             }
         }
@@ -85,36 +59,21 @@ namespace MarginTrading.AzureRepositories
             _tableStorage = tableStorage;
         }
 
-        public async Task AddOrReplaceGlobalRouteAsync(IMatchingEngineRoute route)
+        public async Task AddOrReplaceRouteAsync(IMatchingEngineRoute route)
         {
-            await _tableStorage.InsertOrReplaceAsync(MatchingEngineRouteEntity.GlobalRoute.Create(route));
+            await _tableStorage.InsertOrReplaceAsync(MatchingEngineRouteEntity.Route.Create(route));
         }
 
-        public async Task AddOrReplaceLocalRouteAsync(IMatchingEngineRoute route)
+        public async Task DeleteRouteAsync(string id)
         {
-            await _tableStorage.InsertOrReplaceAsync(MatchingEngineRouteEntity.LocalRoute.Create(route));
+            await _tableStorage.DeleteIfExistAsync(MatchingEngineRouteEntity.Route.GeneratePartitionKey(), MatchingEngineRouteEntity.Route.GenerateRowKey(id));
         }
 
-        public async Task DeleteGlobalRouteAsync(string id)
+        public async Task<IEnumerable<IMatchingEngineRoute>> GetAllRoutesAsync()
         {
-            await _tableStorage.DeleteIfExistAsync(MatchingEngineRouteEntity.GlobalRoute.GeneratePartitionKey(), MatchingEngineRouteEntity.GlobalRoute.GenerateRowKey(id));
-        }
-
-        public async Task DeleteLocalRouteAsync(string id)
-        {
-            await _tableStorage.DeleteIfExistAsync(MatchingEngineRouteEntity.LocalRoute.GeneratePartitionKey(), MatchingEngineRouteEntity.LocalRoute.GenerateRowKey(id));
-        }
-
-        public async Task<IEnumerable<IMatchingEngineRoute>> GetAllGlobalRoutesAsync()
-        {
-            var entities = await _tableStorage.GetDataAsync(MatchingEngineRouteEntity.GlobalRoute.GeneratePartitionKey());
+            var entities = await _tableStorage.GetDataAsync(MatchingEngineRouteEntity.Route.GeneratePartitionKey());
             return entities.Select(MatchingEngineRoute.Create);
         }
-
-        public async Task<IEnumerable<IMatchingEngineRoute>> GetAllLocalRoutesAsync()
-        {
-            var entities = await _tableStorage.GetDataAsync(MatchingEngineRouteEntity.LocalRoute.GeneratePartitionKey());
-            return entities.Select(MatchingEngineRoute.Create);
-        }
+        
     }
 }

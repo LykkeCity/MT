@@ -26,34 +26,19 @@ namespace MarginTrading.Services
         public async Task UpdateRoutesCacheAsync()
         {
             var routes = new List<IMatchingEngineRoute>();
-
-            routes.AddRange(await _repository.GetAllGlobalRoutesAsync());
-            routes.AddRange(await _repository.GetAllLocalRoutesAsync());
-
+            routes.AddRange(await _repository.GetAllRoutesAsync());
             _routesCacheService.InitCache(routes);
         }
 
-        public async Task AddOrReplaceGlobalRouteAsync(IMatchingEngineRoute route)
+        public async Task AddOrReplaceRouteAsync(IMatchingEngineRoute route)
         {
-            await _repository.AddOrReplaceGlobalRouteAsync(route);
+            await _repository.AddOrReplaceRouteAsync(route);
             await UpdateRoutesCacheAsync();
-        }
-
-        public async Task AddOrReplaceLocalRouteAsync(IMatchingEngineRoute route)
+        }        
+                
+        public async Task DeleteRouteAsync(string routeId)
         {
-            await _repository.AddOrReplaceLocalRouteAsync(route);
-            await UpdateRoutesCacheAsync();
-        }
-
-        public async Task DeleteGlobalRouteAsync(string routeId)
-        {
-            await _repository.DeleteGlobalRouteAsync(routeId);
-            await UpdateRoutesCacheAsync();
-        }
-
-        public async Task DeleteLocalRouteAsync(string routeId)
-        {
-            await _repository.DeleteLocalRouteAsync(routeId);
+            await _repository.DeleteRouteAsync(routeId);
             await UpdateRoutesCacheAsync();
         }
     }

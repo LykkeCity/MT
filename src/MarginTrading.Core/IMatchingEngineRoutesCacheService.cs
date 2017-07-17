@@ -4,7 +4,7 @@
     {
         IMatchingEngineRoute GetMatchingEngineRoute(string clientId, string tradingConditionId, string instrument, OrderDirection orderType);
         IMatchingEngineRoute GetMatchingEngineRouteById(string id);
-        IMatchingEngineRoute[] GetGlobalRoutes();
-        IMatchingEngineRoute[] GetLocalRoutes();
+        IMatchingEngineRoute[] GetRoutes();
+        IMatchingEngineRoute GetRoute(string id);
     }
 }

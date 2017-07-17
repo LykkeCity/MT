@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using MarginTrading.Core;
 
@@ -29,19 +30,32 @@ namespace MarginTrading.Services
             return _routes.FirstOrDefault(item => item.Id == id);
         }
 
-        public IMatchingEngineRoute[] GetGlobalRoutes()
+        public IMatchingEngineRoute GetRoute(string id)
         {
-            return _routes.Where(item => string.IsNullOrEmpty(item.ClientId))
+            return _routes.Where(item => item.Id == id)
                 .OrderBy(item => item.Rank)
+                .FirstOrDefault();
+        }
+
+        public IMatchingEngineRoute[] GetRoutes()
+        {
+            return _routes.OrderBy(item => item.Rank)
                 .ToArray();
         }
 
-        public IMatchingEngineRoute[] GetLocalRoutes()
-        {
-            return _routes.Where(item => string.IsNullOrEmpty(item.TradingConditionId))
-                .OrderBy(item => item.Rank)
-                .ToArray();
-        }
+        //public IMatchingEngineRoute[] GetGlobalRoutes()
+        //{
+        //    return _routes.Where(item => string.IsNullOrEmpty(item.ClientId))
+        //        .OrderBy(item => item.Rank)
+        //        .ToArray();
+        //}
+
+        //public IMatchingEngineRoute[] GetLocalRoutes()
+        //{
+        //    return _routes.Where(item => string.IsNullOrEmpty(item.TradingConditionId))
+        //        .OrderBy(item => item.Rank)
+        //        .ToArray();
+        //}
 
         internal void InitCache(List<IMatchingEngineRoute> routes)
         {
