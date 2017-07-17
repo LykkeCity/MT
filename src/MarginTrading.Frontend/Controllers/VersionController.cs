@@ -14,12 +14,15 @@ namespace MarginTrading.Frontend.Controllers
     {
         private readonly MtFrontendSettings _setings;
         private readonly IHttpRequestService _httpRequestService;
+        private readonly WampSessionsService _wampSessionsService;
 
         public VersionController(MtFrontendSettings setings,
-            IHttpRequestService httpRequestService)
+            IHttpRequestService httpRequestService,
+            WampSessionsService wampSessionsService)
         {
             _setings = setings;
             _httpRequestService = httpRequestService;
+            _wampSessionsService = wampSessionsService;
         }
 
         [HttpGet]
@@ -50,6 +53,8 @@ namespace MarginTrading.Frontend.Controllers
             {
                 result.DemoVersion = "Error";
             }
+
+            result.WampOpened = _wampSessionsService.OpenedSessionsCount;
 
             return result;
         }

@@ -285,6 +285,10 @@ namespace MarginTrading.Frontend
             builder.RegisterType<ClientTokenValidator>()
                 .As<ISecurityTokenValidator>()
                 .SingleInstance();
+
+            builder.RegisterType<WampSessionsService>()
+                .AsSelf()
+                .SingleInstance();
         }
 
         private void SetSubscribers(MtFrontendSettings settings)
