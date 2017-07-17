@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Autofac;
 using Common.Log;
 using MarginTrading.Common.Wamp;
+using MarginTrading.Frontend.Services;
 using WampSharp.V2.Realm;
 
 namespace MarginTrading.Frontend
@@ -12,16 +13,19 @@ namespace MarginTrading.Frontend
         private readonly IComponentContext _componentContext;
         private readonly IConsole _consoleWriter;
         private readonly ILog _logger;
+        private readonly WampSessionsService _wampSessionsService;
         private const string ServiceName = "MarginTrading.Frontend";
 
         public Application(
             IComponentContext componentContext,
             IConsole consoleWriter,
-            ILog logger)
+            ILog logger,
+            WampSessionsService wampSessionsService)
         {
             _componentContext = componentContext;
             _consoleWriter = consoleWriter;
             _logger = logger;
+            _wampSessionsService = wampSessionsService;
         }
 
         public async Task StartAsync()
@@ -32,6 +36,8 @@ namespace MarginTrading.Frontend
             {
                 var rpcMethods = _componentContext.Resolve<IRpcMtFrontend>();
                 var realm = _componentContext.Resolve<IWampHostedRealm>();
+                realm.SessionCreated += (sender, args) => _wampSessionsService.OpenedSessionsCount++;
+                realm.SessionClosed += (sender, args) => _wampSessionsService.OpenedSessionsCount--;
                 await realm.Services.RegisterCallee(rpcMethods);
             }
             catch (Exception ex)

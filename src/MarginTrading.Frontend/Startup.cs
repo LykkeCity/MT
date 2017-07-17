@@ -296,6 +296,10 @@ namespace MarginTrading.Frontend
                 .As<ISecurityTokenValidator>()
                 .SingleInstance();
 
+            builder.RegisterType<WampSessionsService>()
+                .AsSelf()
+                .SingleInstance();
+
             builder.RegisterType<RpcFacade>()
                 .AsSelf()
                 .SingleInstance();
