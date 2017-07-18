@@ -71,7 +71,8 @@ namespace MarginTrading.Frontend
             var assetsDemo = await _httpRequestService.RequestAsync<MarginTradingAssetBackendContract[]>(null,
                                  "init.assets", false) ?? new MarginTradingAssetBackendContract[0];
 
-            initData.Assets = assetsLive.Concat(assetsDemo).Select(item => item.ToClientContract()).ToArray();
+            initData.Assets = assetsLive.Concat(assetsDemo).GroupBy(a => a.Id)
+                .Select(g => g.First().ToClientContract()).ToArray();
 
             if (marginTradingLiveEnabled)
             {

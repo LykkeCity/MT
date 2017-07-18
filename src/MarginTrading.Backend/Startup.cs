@@ -13,6 +13,7 @@ using MarginTrading.Backend.Modules;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Core;
 using MarginTrading.Core.Settings;
+using MarginTrading.Services;
 using MarginTrading.Services.Modules;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -137,6 +138,11 @@ namespace MarginTrading.Backend
             builder.RegisterModule(new BaseServicesModule(mtSettings));
             builder.RegisterModule(new ServicesModule());
             builder.RegisterModule(new BackendServicesModule(mtSettings, settings, environment, log));
+
+            builder.RegisterBuildCallback(c => c.Resolve<AccountAssetsManager>());
+            builder.RegisterBuildCallback(c => c.Resolve<OrderBookSaveService>());
+            builder.RegisterBuildCallback(c => c.Resolve<MicrographManager>());
+            builder.RegisterBuildCallback(c => c.Resolve<QuoteCacheService>());
         }
     }
 }

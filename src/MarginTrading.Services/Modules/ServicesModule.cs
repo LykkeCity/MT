@@ -11,10 +11,11 @@ namespace MarginTrading.Services.Modules
 		protected override void Load(ContainerBuilder builder)
 		{
 			builder.RegisterType<QuoteCacheService>()
-                .As<IStartable>()
-				.As<IQuoteCacheService>()
+                .AsSelf()
+                .As<IQuoteCacheService>()
 				.As<IEventConsumer<BestPriceChangeEventArgs>>()
-				.SingleInstance();
+				.SingleInstance()
+			    .OnActivated(args => args.Instance.Start());
 
 			builder.RegisterType<FplService>()
 				.As<IFplService>()

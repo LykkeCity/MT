@@ -23,8 +23,8 @@ namespace MarginTrading.Services.Modules
 
             builder.RegisterType<AccountAssetsManager>()
                 .AsSelf()
-                .As<IStartable>()
-                .SingleInstance();
+                .SingleInstance()
+                .OnActivated(args => args.Instance.Start());
 
             builder.RegisterType<AccountGroupManager>()
                 .AsSelf()
@@ -33,8 +33,8 @@ namespace MarginTrading.Services.Modules
 
             builder.RegisterType<MicrographManager>()
                 .AsSelf()
-                .As<IStartable>()
-                .SingleInstance();
+                .SingleInstance()
+                .OnActivated(args => args.Instance.Start());
 
             builder.RegisterType<MatchingEngineRoutesManager>()
                 .AsSelf()

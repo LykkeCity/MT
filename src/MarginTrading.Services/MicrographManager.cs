@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using MarginTrading.Core;
+using System.Linq;
 
 namespace MarginTrading.Services
 {
@@ -10,19 +11,24 @@ namespace MarginTrading.Services
     {
         private readonly MicrographCacheService _micrographCacheService;
         private readonly IMarginTradingBlobRepository _blobRepository;
+        private readonly IAccountAssetsCacheService _accountAssetsCache;
 
         public MicrographManager(
             MicrographCacheService micrographCacheService,
             IMarginTradingBlobRepository blobRepository,
-            ILog log) : base(nameof(MicrographManager), 60000, log)
+            ILog log,
+            IAccountAssetsCacheService accountAssetsCache) : base(nameof(MicrographManager), 60000, log)
         {
             _micrographCacheService = micrographCacheService;
             _blobRepository = blobRepository;
+            _accountAssetsCache = accountAssetsCache;
         }
 
         public override void Start()
         {
-            var graphData = _blobRepository.Read<Dictionary<string, List<GraphBidAskPair>>>("prices", "graph") ??
+            var graphData = _blobRepository.Read<Dictionary<string, List<GraphBidAskPair>>>("prices", "graph")
+                                ?.Where(b => _accountAssetsCache.IsInstrumentSupported(b.Key))
+                                .ToDictionary(d => d.Key, d => d.Value) ??
                             new Dictionary<string, List<GraphBidAskPair>>();
 
             if (graphData.Count > 0)
