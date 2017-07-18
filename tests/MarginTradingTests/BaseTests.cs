@@ -4,6 +4,7 @@ using Autofac;
 using MarginTrading.Core;
 using MarginTrading.Core.Settings;
 using MarginTrading.Frontend.Services;
+using MarginTrading.Services;
 using MarginTrading.Services.Modules;
 using MarginTradingTests.Modules;
 using Moq;
@@ -55,6 +56,8 @@ namespace MarginTradingTests
                 .As<IMarginTradingOperationsLogService>()
                 .SingleInstance();
             builder.RegisterInstance(settings).SingleInstance();
+
+            builder.RegisterBuildCallback(c => c.Resolve<AccountAssetsManager>());
 
             Container = builder.Build();
 

@@ -12,18 +12,20 @@ using MarginTrading.Services.Events;
 
 namespace MarginTrading.Services
 {
-    public class QuoteCacheService : TimerPeriod, IQuoteCacheService,IEventConsumer<BestPriceChangeEventArgs>
+    public class QuoteCacheService : TimerPeriod, IQuoteCacheService, IEventConsumer<BestPriceChangeEventArgs>, IDisposable
     {
         private readonly ILog _log;
         private readonly IMarginTradingBlobRepository _blobRepository;
+        private readonly IAccountAssetsCacheService _accountAssetsCache;
         private Dictionary<string, InstrumentBidAskPair> _quotes;
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
         private static string BlobName = "Quotes";
 
-        public QuoteCacheService(ILog log, IMarginTradingBlobRepository blobRepository) : base(nameof(QuoteCacheService), 10000, log)
+        public QuoteCacheService(ILog log, IMarginTradingBlobRepository blobRepository, IAccountAssetsCacheService accountAssetsCache) : base(nameof(QuoteCacheService), 10000, log)
         {
             _log = log;
             _blobRepository = blobRepository;
+            _accountAssetsCache = accountAssetsCache;
         }
 
         ~QuoteCacheService()
@@ -111,7 +113,10 @@ namespace MarginTrading.Services
         public override void Start()
         {
             _quotes =
-                _blobRepository.Read<Dictionary<string, InstrumentBidAskPair>>(LykkeConstants.StateBlobContainer, BlobName) ??
+                _blobRepository
+                    .Read<Dictionary<string, InstrumentBidAskPair>>(LykkeConstants.StateBlobContainer, BlobName)
+                    ?.Where(b => _accountAssetsCache.IsInstrumentSupported(b.Key))
+                    .ToDictionary(d => d.Key, d => d.Value) ??
                 new Dictionary<string, InstrumentBidAskPair>();
 
             base.Start();
@@ -122,7 +127,7 @@ namespace MarginTrading.Services
             return DumpToRepository();
         }
 
-        public void StopApplication()
+        public void Dispose()
         {
             DumpToRepository().Wait();
         }

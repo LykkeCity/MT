@@ -9,5 +9,6 @@ namespace MarginTrading.Core
         Dictionary<string, IMarginTradingAccountAsset[]> GetClientAssets(IEnumerable<MarginTradingAccount> accounts);
         List<string> GetAccountAssetIds(string tradingConditionId, string accountAssetId);
         List<IMarginTradingAccountAsset> GetAccountAssets(string tradingConditionId, string accountAssetId);
+        bool IsInstrumentSupported(string instrument);
     }
 }

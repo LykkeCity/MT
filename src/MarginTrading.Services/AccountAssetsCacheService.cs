@@ -10,6 +10,7 @@ namespace MarginTrading.Services
     public class AccountAssetsCacheService : IAccountAssetsCacheService
     {
         private List<IMarginTradingAccountAsset> _accountAssets = new List<IMarginTradingAccountAsset>();
+        private HashSet<string> _instruments = new HashSet<string>();
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
 
         ~AccountAssetsCacheService()
@@ -126,12 +127,26 @@ namespace MarginTrading.Services
             }
         }
 
+        public bool IsInstrumentSupported(string instrument)
+        {
+            _lockSlim.EnterReadLock();
+            try
+            {
+                return _instruments.Contains(instrument);
+            }
+            finally
+            {
+                _lockSlim.ExitReadLock();
+            }
+        }
+
         internal void InitAccountAssetsCache(List<IMarginTradingAccountAsset> accountAssets)
         {
             _lockSlim.EnterWriteLock();
             try
             {
                 _accountAssets = accountAssets;
+                _instruments = new HashSet<string>(accountAssets.Select(a => a.Instrument).Distinct());
             }
             finally
             {

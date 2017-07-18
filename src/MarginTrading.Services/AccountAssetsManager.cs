@@ -1,12 +1,11 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using Autofac;
 using MarginTrading.Core;
 using MarginTrading.Core.Settings;
 
 namespace MarginTrading.Services
 {
-    public class AccountAssetsManager : IStartable
+    public class AccountAssetsManager
     {
         private readonly AccountAssetsCacheService _accountAssetsCacheService;
         private readonly IMarginTradingAccountAssetRepository _repository;

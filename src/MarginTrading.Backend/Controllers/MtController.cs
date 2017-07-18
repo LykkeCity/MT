@@ -167,7 +167,8 @@ namespace MarginTrading.Backend.Controllers
         public MarginTradingAssetBackendContract[] InitAssets()
         {
             var instruments = _instrumentsCache.GetAll();
-            return instruments.Select(item => item.ToBackendContract()).ToArray();
+            return instruments.Where(i => _accountAssetsCacheService.IsInstrumentSupported(i.Id))
+                .Select(item => item.ToBackendContract()).ToArray();
         }
 
         #endregion

@@ -11,49 +11,50 @@ namespace MarginTrading.Services
     {
         private readonly IMatchingEngine _matchingEngine;
         private readonly IAssetDayOffService _assetDayOffService;
+        private readonly IAccountAssetsCacheService _assetsCacheService;
         private const string MarketMakerId = "marketMaker1";
 
         public MarketMakerService(IMatchingEngine matchingEngine,
-            IAssetDayOffService assetDayOffService)
+            IAssetDayOffService assetDayOffService,
+            IAccountAssetsCacheService assetsCacheService)
         {
             _matchingEngine = matchingEngine;
             _assetDayOffService = assetDayOffService;
+            _assetsCacheService = assetsCacheService;
         }
 
-        public void ConsumeFeed(IAssetPairRate[] feedDatas)
+        public void ConsumeFeed(IAssetPairRate feedData)
         {
-            var orders = new List<LimitOrder>();
-            foreach (var assetPairRate in feedDatas)
-            {
-                var volume = _assetDayOffService.IsDayOff(assetPairRate.AssetPairId)
-                    ? 0
-                    : assetPairRate.IsBuy
-                        ? 1000000
-                        : -1000000;
+            //if no asset pair ID in trading conditions, no need to process price
+            if (!_assetsCacheService.IsInstrumentSupported(feedData.AssetPairId))
+                return;
 
-                orders.Add(new LimitOrder
+            var direction = feedData.IsBuy ? OrderDirection.Buy : OrderDirection.Sell;
+            LimitOrder order = null;
+
+            if (!_assetDayOffService.IsDayOff(feedData.AssetPairId))
+            {
+                var volume = feedData.IsBuy ? 1000000 : -1000000;
+                order = new LimitOrder
                 {
                     Id = Guid.NewGuid().ToString("N"),
                     MarketMakerId = MarketMakerId,
                     CreateDate = DateTime.UtcNow,
-                    Instrument = assetPairRate.AssetPairId,
-                    Price = assetPairRate.Price,
+                    Instrument = feedData.AssetPairId,
+                    Price = feedData.Price,
                     Volume = volume
-                });
+                };
             }
-
-            var order = orders[0];
 
             var model = new SetOrderModel
             {
                 DeleteByInstrumentsBuy =
-                    order.GetOrderType() == OrderDirection.Buy ? new[] {order.Instrument} : Array.Empty<string>(),
+                    direction == OrderDirection.Buy ? new[] {feedData.AssetPairId} : Array.Empty<string>(),
                 DeleteByInstrumentsSell =
-                    order.GetOrderType() == OrderDirection.Sell ? new[] {order.Instrument} : Array.Empty<string>(),
+                    direction == OrderDirection.Sell ? new[] {feedData.AssetPairId} : Array.Empty<string>(),
                 MarketMakerId = MarketMakerId,
-                OrdersToAdd = orders.ToArray()
+                OrdersToAdd = order != null ? new[] {order} : Array.Empty<LimitOrder>()
             };
-            
 
             _matchingEngine.SetOrders(model);
         }

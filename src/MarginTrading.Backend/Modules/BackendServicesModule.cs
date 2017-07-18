@@ -49,8 +49,8 @@ namespace MarginTrading.Backend.Modules
 
 			builder.RegisterType<OrderBookSaveService>()
                 .AsSelf()
-				.As<IStartable>()
-				.SingleInstance();
+				.SingleInstance()
+		        .OnActivated(args => args.Instance.Start());
 
 			builder.Register<ITemplateGenerator>(ctx =>
 				new MustacheTemplateGenerator(_environment, Path.Combine("Email","Templates"))
