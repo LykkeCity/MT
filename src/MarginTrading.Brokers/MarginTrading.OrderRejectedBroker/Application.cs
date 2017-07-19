@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Common;
 using Common.Log;
 using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Subscriber;
@@ -8,16 +7,14 @@ using MarginTrading.Common.BackendContracts;
 using MarginTrading.Common.Mappers;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Core;
-using MarginTrading.Core.Monitoring;
 using MarginTrading.Core.Settings;
 using Newtonsoft.Json;
 
 namespace MarginTrading.OrderRejectedBroker
 {
-    public class Application : TimerPeriod
+    public class Application
     {
         private readonly IMarginTradingOrdersRejectedRepository _ordersRejectedRepository;
-        private readonly IServiceMonitoringRepository _serviceMonitoringRepository;
         private readonly ILog _logger;
         private readonly MarginSettings _settings;
         private RabbitMqSubscriber<string> _connector;
@@ -25,18 +22,15 @@ namespace MarginTrading.OrderRejectedBroker
 
         public Application(
             IMarginTradingOrdersRejectedRepository ordersRejectedRepository,
-            IServiceMonitoringRepository serviceMonitoringRepository,
-            ILog logger, MarginSettings settings) : base(ServiceName, 30000, logger)
+            ILog logger, MarginSettings settings)
         {
             _ordersRejectedRepository = ordersRejectedRepository;
-            _serviceMonitoringRepository = serviceMonitoringRepository;
             _logger = logger;
             _settings = settings;
         }
 
         public async Task RunAsync()
         {
-            Start();
             await _logger.WriteInfoAsync(ServiceName, null, null, "Starting broker");
             try
             {
@@ -71,20 +65,6 @@ namespace MarginTrading.OrderRejectedBroker
             var order = JsonConvert.DeserializeObject<OrderFullContract>(json);
             var orderHistory = order.ToOrderHistoryDomain();
             await _ordersRejectedRepository.AddAsync(orderHistory);
-        }
-
-        public override async Task Execute()
-        {
-            var now = DateTime.UtcNow;
-
-            var record = new MonitoringRecord
-            {
-                DateTime = now,
-                ServiceName = ServiceName,
-                Version = Microsoft.Extensions.PlatformAbstractions.PlatformServices.Default.Application.ApplicationVersion
-            };
-
-            await _serviceMonitoringRepository.UpdateOrCreate(record);
         }
     }
 }
