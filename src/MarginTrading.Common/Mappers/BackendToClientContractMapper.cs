@@ -348,5 +348,16 @@ namespace MarginTrading.Common.Mappers
         {
             return src.HistoryItems.Select(item => item.ToClientContract()).ToArray();
         }
+
+        public static BidAskClientContract ToClientContract(this InstrumentBidAskPairContract src)
+        {
+            return new BidAskClientContract
+            {
+                Id = src.Id,
+                Date = src.Date,
+                Bid = src.Bid,
+                Ask = src.Ask
+            };
+        }
     }
 }
