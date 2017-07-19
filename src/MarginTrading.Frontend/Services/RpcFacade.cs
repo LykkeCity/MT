@@ -111,6 +111,16 @@ namespace MarginTrading.Frontend.Services
             return initChartDataLiveResponse.ToClientContract();
         }
 
+        public async Task<Dictionary<string, BidAskClientContract>> InitPrices(string clientId = null, string[] assetIds = null)
+        {
+            var request = new InitPricesBackendRequest {ClientId = clientId, AssetIds = assetIds};
+
+            var initPricesResponse = await _httpRequestService
+                .RequestAsync<Dictionary<string, InstrumentBidAskPairContract>>(request, "init.prices");
+
+            return initPricesResponse.ToDictionary(p => p.Key, p => p.Value.ToClientContract());
+        }
+
         #endregion
 
 

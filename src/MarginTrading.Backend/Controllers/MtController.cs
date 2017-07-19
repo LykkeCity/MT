@@ -38,6 +38,7 @@ namespace MarginTrading.Backend.Controllers
         private readonly MarginSettings _marginSettings;
         private readonly AccountManager _accountManager;
         private readonly IAssetDayOffService _assetDayOffService;
+        private readonly IQuoteCacheService _quoteCacheService;
 
         public MtController(
             IMarginTradingAccountsRepository accountsRepository,
@@ -56,7 +57,8 @@ namespace MarginTrading.Backend.Controllers
             OrdersCache ordersCache,
             MarginSettings marginSettings,
             AccountManager accountManager,
-            IAssetDayOffService assetDayOffService)
+            IAssetDayOffService assetDayOffService,
+            IQuoteCacheService quoteCacheService)
         {
             _accountsRepository = accountsRepository;
             _accountsHistoryRepository = accountsHistoryRepository;
@@ -75,6 +77,7 @@ namespace MarginTrading.Backend.Controllers
             _marginSettings = marginSettings;
             _accountManager = accountManager;
             _assetDayOffService = assetDayOffService;
+            _quoteCacheService = quoteCacheService;
         }
 
         #region Init data
@@ -176,6 +179,20 @@ namespace MarginTrading.Backend.Controllers
             var instruments = _instrumentsCache.GetAll();
             return instruments.Where(i => _accountAssetsCacheService.IsInstrumentSupported(i.Id))
                 .Select(item => item.ToBackendContract()).ToArray();
+        }
+
+        [Route("init.prices")]
+        [HttpPost]
+        public Dictionary<string, InstrumentBidAskPairContract> InitPrices([FromBody]InitPricesBackendRequest request)
+        {
+            IEnumerable<KeyValuePair<string, InstrumentBidAskPair>> allQuotes = _quoteCacheService.GetAllQuotes();
+
+            if (request.AssetIds != null && request.AssetIds.Any())
+            {
+                allQuotes = allQuotes.Where(q => request.AssetIds.Contains(q.Key));
+            }
+
+            return allQuotes.ToDictionary(q => q.Key, q => q.Value.ToBackendContract());
         }
 
         #endregion

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using MarginTrading.Common.ClientContracts;
 using MarginTrading.Frontend.Extensions;
 using MarginTrading.Frontend.Models;
@@ -97,6 +98,39 @@ namespace MarginTrading.Frontend.Controllers
             var initGraph = await _rpcFacade.InitGraph(clientId, request?.AssetIds);
 
             return ResponseModel<InitChartDataClientResponse>.CreateOk(initGraph);
+        }
+
+        [Route("prices")]
+        [HttpGet]
+        public async Task<ResponseModel<Dictionary<string, BidAskClientContract>>> InitPrices()
+        {
+            var clientId = this.GetClientId();
+
+            if (clientId == null)
+            {
+                return this.UserNotFoundError<Dictionary<string, BidAskClientContract>>();
+            }
+
+
+            var initPrices = await _rpcFacade.InitPrices(clientId);
+
+            return ResponseModel<Dictionary<string, BidAskClientContract>>.CreateOk(initPrices);
+        }
+
+        [Route("prices/filtered")]
+        [HttpPost]
+        public async Task<ResponseModel<Dictionary<string, BidAskClientContract>>> InitPricesWithFilter([FromBody] InitPricesFilteredRequest request)
+        {
+            var clientId = this.GetClientId();
+
+            if (clientId == null)
+            {
+                return this.UserNotFoundError<Dictionary<string, BidAskClientContract>>();
+            }
+
+            var initPrices = await _rpcFacade.InitPrices(clientId, request?.AssetIds);
+
+            return ResponseModel<Dictionary<string, BidAskClientContract>>.CreateOk(initPrices);
         }
     }
 }
