@@ -12,6 +12,7 @@ using MarginTrading.Common.Extensions;
 using MarginTrading.Core;
 using MarginTrading.Core.Monitoring;
 using MarginTrading.Core.Settings;
+using MarginTrading.Services.Settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
