@@ -272,9 +272,10 @@ namespace MarginTrading.Client
             Console.WriteLine($"result = {result.Result}, message = {result.Message}");
         }
 
-        public void Prices()
+        public void Prices(string instrument = null)
         {
-            IDisposable subscription = _realmProxy.Services.GetSubject<InstrumentBidAskPair>("prices.update")
+            var topicName = !string.IsNullOrEmpty(instrument) ? $"prices.update.{instrument}" : "prices.update";
+            IDisposable subscription = _realmProxy.Services.GetSubject<InstrumentBidAskPair>(topicName)
                 .Subscribe(info =>
                 {
                     Console.WriteLine($"{info.Instrument} {info.Bid}/{info.Ask}");

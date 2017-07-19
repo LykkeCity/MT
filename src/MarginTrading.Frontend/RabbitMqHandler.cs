@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using Common;
@@ -8,9 +9,7 @@ using MarginTrading.Common.ClientContracts;
 using MarginTrading.Common.Mappers;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Core;
-using MarginTrading.Frontend;
 using MarginTrading.Frontend.Settings;
-using Microsoft.Extensions.PlatformAbstractions;
 using WampSharp.V2.Realm;
 
 namespace MarginTrading.Frontend
@@ -21,9 +20,13 @@ namespace MarginTrading.Frontend
         private readonly IClientAccountService _clientNotificationService;
         private readonly IMarginTradingOperationsLogService _operationsLog;
         private readonly MtFrontendSettings _settings;
+        private readonly MtFrontSettings _frontSettings;
         private readonly IConsole _consoleWriter;
         private readonly ILog _log;
-        private readonly ISubject<InstrumentBidAskPair> _subject;
+        private readonly ISubject<InstrumentBidAskPair> _allPairsSubject;
+
+        private readonly ConcurrentDictionary<string, ISubject<InstrumentBidAskPair>> _priceSubjects =
+            new ConcurrentDictionary<string, ISubject<InstrumentBidAskPair>>();
 
         public RabbitMqHandler(
             IWampHostedRealm realm,
@@ -38,14 +41,16 @@ namespace MarginTrading.Frontend
             _clientNotificationService = clientNotificationService;
             _operationsLog = operationsLogService;
             _settings = settings;
+            _frontSettings = frontSettings;
             _consoleWriter = consoleWriter;
             _log = log;
-            _subject = realm.Services.GetSubject<InstrumentBidAskPair>(frontSettings.WampPricesTopicName);
+            _allPairsSubject = realm.Services.GetSubject<InstrumentBidAskPair>(frontSettings.WampPricesTopicName);
         }
 
         public async Task ProcessPrices(InstrumentBidAskPair bidAskPair)
         {
-            _subject.OnNext(bidAskPair);
+            _allPairsSubject.OnNext(bidAskPair);
+            GetInstrumentPriceSubject(bidAskPair.Instrument).OnNext(bidAskPair);
             await Task.FromResult(0);
         }
 
@@ -187,6 +192,13 @@ namespace MarginTrading.Frontend
                     await _log.WriteErrorAsync(nameof(RabbitMqHandler), nameof(ProcessUserUpdates), clientId, ex);
                 }
             }
+        }
+
+        private ISubject<InstrumentBidAskPair> GetInstrumentPriceSubject(string instrument)
+        {
+            return _priceSubjects.GetOrAdd(instrument,
+                i => _realm.Services.GetSubject<InstrumentBidAskPair>(
+                    $"{_frontSettings.WampPricesTopicName}.{instrument}"));
         }
     }
 }
