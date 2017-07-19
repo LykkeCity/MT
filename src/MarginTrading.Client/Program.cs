@@ -30,7 +30,7 @@
                 //client.GetClientOrders();
                 //client.ChangeOrderLimits();
 
-                //client.Prices();
+                client.Prices("EURUSD");
                 //client.UserUpdates();
 
                 client.Close();
