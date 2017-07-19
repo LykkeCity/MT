@@ -41,12 +41,13 @@ namespace MarginTrading.AccountHistoryBroker
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             ILoggerFactory loggerFactory = new LoggerFactory()
-                .AddConsole()
-                .AddDebug();
+                .AddConsole(LogLevel.Error)
+                .AddDebug(LogLevel.Warning);
 
             services.AddSingleton(loggerFactory);
             services.AddLogging();
             services.AddSingleton(Configuration);
+            services.AddMvc();
 
             var builder = new ContainerBuilder();
 
@@ -65,7 +66,6 @@ namespace MarginTrading.AccountHistoryBroker
             builder.RegisterInstance(settings).SingleInstance();
             builder.RegisterType<Application>()
                 .AsSelf()
-                .As<IStartable>()
                 .SingleInstance();
 
             builder.Populate(services);
@@ -76,6 +76,8 @@ namespace MarginTrading.AccountHistoryBroker
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, IApplicationLifetime appLifetime)
         {
+            app.UseMvc();
+
             Application application = app.ApplicationServices.GetService<Application>();
 
             appLifetime.ApplicationStopped.Register(() => ApplicationContainer.Dispose());
@@ -86,7 +88,6 @@ namespace MarginTrading.AccountHistoryBroker
 
             appLifetime.ApplicationStopping.Register(() =>
                 {
-                    application.Stop();
                     application.StopApplication();
                 }
             );
@@ -103,10 +104,6 @@ namespace MarginTrading.AccountHistoryBroker
 
             builder.Register<IMarginTradingAccountHistoryRepository>(ctx =>
                 AzureRepoFactories.MarginTrading.CreateAccountHistoryRepository(settings.Db.MarginTradingConnString, log)
-            ).SingleInstance();
-
-            builder.Register<IServiceMonitoringRepository>(ctx =>
-                AzureRepoFactories.Monitoring.CreateServiceMonitoringRepository(settings.Db.SharedStorageConnString, log)
             ).SingleInstance();
         }
     }
