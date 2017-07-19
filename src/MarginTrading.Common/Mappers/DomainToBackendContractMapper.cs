@@ -342,5 +342,16 @@ namespace MarginTrading.Common.Mappers
                 Sell = orderbook.Sell.ToDictionary(pair => pair.Key, pair => pair.Value.Select(item => item.ToBackendContract()).ToArray()),
             };
         }
+
+        public static InstrumentBidAskPairContract ToBackendContract(this InstrumentBidAskPair src)
+        {
+            return new InstrumentBidAskPairContract
+            {
+                Id = src.Instrument,
+                Date = src.Date,
+                Bid = src.Bid,
+                Ask = src.Ask
+            };
+        }
     }
 }
