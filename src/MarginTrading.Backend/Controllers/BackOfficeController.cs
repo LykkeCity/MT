@@ -25,8 +25,7 @@ namespace MarginTrading.Backend.Controllers
         private readonly IAccountGroupCacheService _accountGroupCacheService;
         private readonly AccountAssetsCacheService _accountAssetsCacheService;
         private readonly IInstrumentsCache _instrumentsCache;
-        private readonly IAccountsCacheService _accountsCacheService;
-        private readonly IMatchingEngineRoutesCacheService _routesCacheService;
+        private readonly IAccountsCacheService _accountsCacheService;        
         private readonly AccountManager _accountManager;
         private readonly TradingConditionsManager _tradingConditionsManager;
         private readonly AccountGroupManager _accountGroupManager;
@@ -47,8 +46,7 @@ namespace MarginTrading.Backend.Controllers
             IAccountGroupCacheService accountGroupCacheService,
             AccountAssetsCacheService accountAssetsCacheService,
             IInstrumentsCache instrumentsCache,
-            IAccountsCacheService accountsCacheService,
-            IMatchingEngineRoutesCacheService routesCacheService,
+            IAccountsCacheService accountsCacheService,            
             AccountManager accountManager,
             TradingConditionsManager tradingConditionsManager,
             AccountGroupManager accountGroupManager,
@@ -69,8 +67,7 @@ namespace MarginTrading.Backend.Controllers
             _accountAssetsCacheService = accountAssetsCacheService;
             _instrumentsCache = instrumentsCache;
             _accountsCacheService = accountsCacheService;
-            _routesCacheService = routesCacheService;
-
+            
             _accountManager = accountManager;
             _tradingConditionsManager = tradingConditionsManager;
             _accountGroupManager = accountGroupManager;
@@ -587,7 +584,7 @@ namespace MarginTrading.Backend.Controllers
         [ProducesResponseType(typeof(List<MatchingEngineRoute>), 200)]
         public IActionResult GetAllRoutes()
         {
-            var routes = _routesCacheService.GetRoutes();
+            var routes = _routesManager.GetRoutes();
             return Ok(routes);
         }
         [HttpGet]
@@ -595,33 +592,45 @@ namespace MarginTrading.Backend.Controllers
         [ProducesResponseType(typeof(MatchingEngineRoute), 200)]
         public IActionResult GetRoute(string id)
         {
-            var routes = _routesCacheService.GetRoute(id);
+            var routes = _routesManager.GetRoute(id);
             return Ok(routes);
         }
 
         [HttpPost]
         [Route("routes")]
-        public async Task<IActionResult> AddRoute([FromBody]NewMatchingEngineRoute route)
+        public async Task<IActionResult> AddRoute([FromBody]NewMatchingEngineRouteRequest request)
         {
-            IMatchingEngineRoute newRoute = NewMatchingEngineRoute.Create(route);
+            IMatchingEngineRoute newRoute = NewMatchingEngineRouteRequest.Create(request);
             await _routesManager.AddOrReplaceRouteAsync(newRoute);
-            return Ok(newRoute.Id);
+            var savedRoute = _routesManager.GetRoute(newRoute.Id);
+            return Ok(newRoute);
         }
 
         [HttpPut]
         [Route("routes/{id}")]
-        public async Task<IActionResult> EditRoute(string id, [FromBody]NewMatchingEngineRoute route)
+        public async Task<IActionResult> EditRoute(string id, [FromBody]NewMatchingEngineRouteRequest request)
         {
-            MatchingEngineRoute existingRoute = (MatchingEngineRoute)_routesCacheService.GetRoute(id);
-            existingRoute.Rank = route.Rank;
-            existingRoute.TradingConditionId = route.TradingConditionId;
-            existingRoute.ClientId = route.ClientId;
-            existingRoute.Instrument = route.Instrument;
-            existingRoute.Type = route.Type;
-            existingRoute.MatchingEngineId = route.MatchingEngineId;
-
-            await _routesManager.AddOrReplaceRouteAsync(existingRoute);
-            return Ok(existingRoute.Id);
+            var existingRoute = _routesManager.GetRoute(id);
+            if (existingRoute != null)
+            {
+                MatchingEngineRoute editRoute = new MatchingEngineRoute()
+                {
+                    Id = id,
+                    Rank = request.Rank,
+                    TradingConditionId = request.TradingConditionId,
+                    ClientId = request.ClientId,
+                    Instrument = request.Instrument,
+                    Type = request.Type,
+                    MatchingEngineId = request.MatchingEngineId,
+                    Asset = request.Asset,
+                    AssetType = request.AssetType
+                };
+                await _routesManager.AddOrReplaceRouteAsync(editRoute);
+                var savedRoute = _routesManager.GetRoute(id);
+                return Ok(savedRoute);
+            }
+            else
+                throw new Exception("MatchingEngine Route not found");
         }
 
         [HttpDelete]
