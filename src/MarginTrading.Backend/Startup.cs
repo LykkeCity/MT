@@ -5,6 +5,7 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using AzureStorage.Tables;
 using Flurl.Http;
+using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
 using Lykke.SettingsReader;
 using MarginTrading.Backend.Infrastructure;
@@ -59,16 +60,7 @@ namespace MarginTrading.Backend
 
             services.AddSwaggerGen(options =>
             {
-                options.SingleApiVersion(new Info
-                {
-                    Version = "v1",
-                    Title = $"MarginTrading_Api_{(isLive ? "Live" : "Demo")}"
-                });
-                options.DescribeAllEnumsAsStrings();
-                var basePath = PlatformServices.Default.Application.ApplicationBasePath;
-                var xmlPath = Path.Combine(basePath, "MarginTrading.Backend.xml");
-                options.IncludeXmlComments(xmlPath);
-
+                options.DefaultLykkeConfiguration("v1", $"MarginTrading_Api_{(isLive ? "Live" : "Demo")}");
                 options.OperationFilter<ApiKeyHeaderOperationFilter>();
             });
 

@@ -32,6 +32,7 @@
 
   <ItemGroup>
     <PackageReference Include="AspNet.Security.OpenIdConnect.Extensions" Version="1.0.0" />
+    <PackageReference Include="Lykke.Common.ApiLibrary" Version="1.0.7" />
     <PackageReference Include="Lykke.Logs" Version="1.0.14" />
     <PackageReference Include="Lykke.Pkg.SettingsReader" Version="1.0.31" />
     <PackageReference Include="Lykke.Service.Session" Version="16.0.0" />

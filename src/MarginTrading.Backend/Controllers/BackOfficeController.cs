@@ -263,108 +263,6 @@ namespace MarginTrading.Backend.Controllers
         #endregion
 
 
-        #region Obsolete
-
-        /// <summary>
-        /// Updates trading conditions
-        /// </summary>
-        /// <remarks>
-        /// Call this method to update trading conditions
-        /// 
-        /// Header "api-key" is required
-        /// </remarks>
-        [HttpPost]
-        [Route("updateTradingConditions")]
-        public async Task<IActionResult> UpdateTradingConditions([FromQuery]string tradingConditionId)
-        {
-            await _tradingConditionsManager.UpdateTradingConditions(tradingConditionId);
-            await _accountGroupManager.UpdateAccountGroupCache();
-            await _accountAssetsManager.UpdateAccountAssetsCache();
-            return Ok();
-        }
-
-
-        /// <summary>
-        /// Updates accounts cache
-        /// </summary>
-        /// <remarks>
-        /// Call this method to update accounts cache
-        /// 
-        /// Header "api-key" is required
-        /// </remarks>
-        [HttpPost]
-        [Route("updateAccounts")]
-        public async Task<IActionResult> UpdateAccountsCache([FromQuery]string clientId)
-        {
-            await _accountManager.UpdateAccountsCacheAsync(clientId);
-
-            return Ok();
-        }
-
-        /// <summary>
-        /// Creates margin trading account
-        /// </summary>
-        /// <remarks>
-        /// Header "api-key" is required
-        /// </remarks>
-        [HttpPost]
-        [Route("createMarginTradingAccount")]
-        [ProducesResponseType(typeof(MtResponse<string>), 200)]
-        [ProducesResponseType(typeof(MtResponse<string>), 400)]
-        public async Task<IActionResult> CreateMarginTradingAccount([FromBody]CreateMarginTradingAccountModel model)
-        {
-            var result = new MtResponse<string>();
-
-            if (ModelState.IsValid)
-            {
-                IClientAccount client = await _clientAccountService.GetAsync(model.ClientId);
-
-                if (client == null)
-                {
-                    result.Message = "Client not found";
-                    return BadRequest(result);
-                }
-
-                var tradingCondition = _tradingConditionsCacheService.GetTradingCondition(model.TradingConditionId);
-
-                if (tradingCondition == null)
-                {
-                    result.Message = "Trading condition not found";
-                    return BadRequest(result);
-                }
-
-                string accountId = Guid.NewGuid().ToString("N");
-
-                var account = new MarginTradingAccount
-                {
-                    Id = accountId,
-                    BaseAssetId = model.AssetId,
-                    ClientId = model.ClientId,
-                    TradingConditionId = model.TradingConditionId
-                };
-
-                await _accountsRepository.AddAsync(account);
-                _accountsCacheService.AddAccount(account);
-                result.Result = accountId;
-                return Ok(result);
-            }
-
-            ModelErrorCollection errors = ModelState.Values.Select(v => v.Errors).FirstOrDefault();
-
-            string error = "Unknown error";
-
-            if (errors != null)
-            {
-                error = errors[0].ErrorMessage;
-            }
-            result.Message = error;
-
-            return BadRequest(result);
-        }
-
-        #endregion
-
-
         #region Trading conditions
 
         /// <summary>
@@ -605,9 +503,12 @@ namespace MarginTrading.Backend.Controllers
             if (!_marginSettings.IsLive)
                 return Ok(false);
 
+            var changeTransferLimit = request.PaymentType == PaymentType.Transfer;
+
             try
             {
-            await _accountManager.UpdateBalanceAsync(request.ClientId, request.AccountId, Math.Abs(request.Amount), AccountHistoryType.Deposit, "Account deposit");
+                await _accountManager.UpdateBalanceAsync(request.ClientId, request.AccountId, Math.Abs(request.Amount),
+                    AccountHistoryType.Deposit, "Account deposit", changeTransferLimit);
             }
             catch (Exception e)
             {
@@ -616,7 +517,7 @@ namespace MarginTrading.Backend.Controllers
             }
 
             _consoleWriter.WriteLine($"account deposit for clientId = {request.ClientId}");
-            _operationsLogService.AddLog("account deposit", request.ClientId, request.AccountId, request.ToJson(), true.ToJson());
+            _operationsLogService.AddLog($"account deposit {request.PaymentType}", request.ClientId, request.AccountId, request.ToJson(), true.ToJson());
 
             return Ok(true);
         }
@@ -635,9 +536,12 @@ namespace MarginTrading.Backend.Controllers
             if (freeMargin < Math.Abs(request.Amount))
                 return Ok(false);
 
+            var changeTransferLimit = request.PaymentType == PaymentType.Transfer;
+
             try
             {
-            await _accountManager.UpdateBalanceAsync(request.ClientId, request.AccountId, -Math.Abs(request.Amount), AccountHistoryType.Withdraw, "Account withdraw");
+                await _accountManager.UpdateBalanceAsync(request.ClientId, request.AccountId, -Math.Abs(request.Amount),
+                    AccountHistoryType.Withdraw, "Account withdraw", changeTransferLimit);
             }
             catch (Exception e)
             {
@@ -646,7 +550,7 @@ namespace MarginTrading.Backend.Controllers
             }
 
             _consoleWriter.WriteLine($"account withdraw for clientId = {request.ClientId}");
-            _operationsLogService.AddLog("account withdraw", request.ClientId, request.AccountId, request.ToJson(), true.ToJson());
+            _operationsLogService.AddLog($"account withdraw {request.PaymentType}", request.ClientId, request.AccountId, request.ToJson(), true.ToJson());
 
             return Ok(true);
         }
