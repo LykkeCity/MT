@@ -103,7 +103,7 @@ namespace MarginTrading.OrderRejectedBroker
                 .SingleInstance();
 
             builder.Register<IMarginTradingOrdersRejectedRepository>(ctx =>
-                AzureRepoFactories.MarginTrading.CreateOrdersRejectedRepository(settings.Db.MarginTradingConnString, log)
+                AzureRepoFactories.MarginTrading.CreateOrdersRejectedRepository(settings.Db.HistoryConnString, log)
             ).SingleInstance();
         }
     }

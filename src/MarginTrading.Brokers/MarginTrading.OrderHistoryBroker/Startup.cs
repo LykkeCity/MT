@@ -103,7 +103,7 @@ namespace MarginTrading.OrderHistoryBroker
                 .SingleInstance();
 
             builder.Register<IMarginTradingOrdersHistoryRepository>(ctx =>
-                AzureRepoFactories.MarginTrading.CreateOrdersHistoryRepository(settings.Db.MarginTradingConnString, log)
+                AzureRepoFactories.MarginTrading.CreateOrdersHistoryRepository(settings.Db.HistoryConnString, log)
             ).SingleInstance();
         }
     }
