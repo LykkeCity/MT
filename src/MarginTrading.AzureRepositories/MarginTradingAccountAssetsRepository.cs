@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AzureStorage;
 using MarginTrading.Core;
+using MarginTrading.Core.Settings;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace MarginTrading.AzureRepositories
@@ -101,7 +102,7 @@ namespace MarginTrading.AzureRepositories
                 : new List<IMarginTradingAccountAsset>();
         }
 
-        public async Task AssignInstruments(string tradingConditionId, string baseAssetId, string[] instruments)
+        public async Task AssignInstruments(string tradingConditionId, string baseAssetId, string[] instruments, AccountAssetsSettings defaults)
         {
             var currentInstruments =
                 (await GetAllAsync(tradingConditionId, baseAssetId)).ToArray();
@@ -119,12 +120,26 @@ namespace MarginTrading.AzureRepositories
             if (instruments.Any())
             {
                 var toAdd = instruments.Where(x => !currentInstruments.Select(y => y.Instrument).Contains(x));
-                var entitiesToAdd = toAdd.Select(x => MarginTradingAccountAssetEntity.Create(new MarginTradingAccountAsset
-                {
-                    BaseAssetId = baseAssetId,
-                    TradingConditionId = tradingConditionId,
-                    Instrument = x
-                }));
+                var entitiesToAdd = toAdd.Select(x => MarginTradingAccountAssetEntity.Create(
+                    new MarginTradingAccountAsset
+                    {
+                        BaseAssetId = baseAssetId,
+                        TradingConditionId = tradingConditionId,
+                        Instrument = x,
+                        CommissionLong = defaults.CommissionLong,
+                        CommissionLot = defaults.CommissionLot,
+                        CommissionShort = defaults.CommissionShort,
+                        DealLimit = defaults.DealLimit,
+                        DeltaAsk = defaults.DeltaAsk,
+                        DeltaBid = defaults.DeltaBid,
+                        LeverageInit = defaults.LeverageInit,
+                        LeverageMaintenance = defaults.LeverageMaintenance,
+                        PositionLimit = defaults.PositionLimit,
+                        SwapLong = defaults.SwapLong,
+                        SwapLongPct = defaults.SwapLongPct,
+                        SwapShort = defaults.SwapShort,
+                        SwapShortPct = defaults.SwapShortPct
+                    }));
                 await _tableStorage.InsertAsync(entitiesToAdd);
             }
         }
