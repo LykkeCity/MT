@@ -67,11 +67,11 @@ namespace MarginTrading.Frontend
             return await _rpcFacade.AccountInstruments(clientId);
         }
 
-        public async Task<InitChartDataClientResponse> InitGraph(string token = null)
+        public async Task<InitChartDataClientResponse> InitGraph(string token = null, string[] assetIds = null)
         {
             var clientId = string.IsNullOrEmpty(token) ? null : await GetClientId(token);
 
-            return await _rpcFacade.InitGraph(clientId);
+            return await _rpcFacade.InitGraph(clientId, assetIds);
         }
 
         #endregion

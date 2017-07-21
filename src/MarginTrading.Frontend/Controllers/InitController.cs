@@ -67,9 +67,9 @@ namespace MarginTrading.Frontend.Controllers
             return ResponseModel<InitAccountInstrumentsLiveDemoClientResponse>.CreateOk(initAccountInstruments);
         }
 
-        [Route("graph")]
+        [Route("chart")]
         [HttpGet]
-        public async Task<ResponseModel<InitChartDataClientResponse>> InitGraph()
+        public async Task<ResponseModel<InitChartDataClientResponse>> InitChart()
         {
             var clientId = this.GetClientId();
 
@@ -79,6 +79,22 @@ namespace MarginTrading.Frontend.Controllers
             }
 
             var initGraph = await _rpcFacade.InitGraph(clientId);
+
+            return ResponseModel<InitChartDataClientResponse>.CreateOk(initGraph);
+        }
+
+        [Route("chart/filtered")]
+        [HttpPost]
+        public async Task<ResponseModel<InitChartDataClientResponse>> InitChartFiltered([FromBody] InitChartDataClientRequest request)
+        {
+            var clientId = this.GetClientId();
+
+            if (clientId == null)
+            {
+                return this.UserNotFoundError<InitChartDataClientResponse>();
+            }
+
+            var initGraph = await _rpcFacade.InitGraph(clientId, request?.AssetIds);
 
             return ResponseModel<InitChartDataClientResponse>.CreateOk(initGraph);
         }
