@@ -108,9 +108,9 @@ namespace MarginTrading.Frontend.Services
             };
         }
 
-        public async Task<InitChartDataClientResponse> InitGraph(string clientId = null)
+        public async Task<InitChartDataClientResponse> InitGraph(string clientId = null, string[] assetIds = null)
         {
-            var request = new ClientIdBackendRequest { ClientId = clientId };
+            var request = new InitChartDataBackendRequest {ClientId = clientId, AssetIds = assetIds};
 
             var initChartDataLiveResponse = await _httpRequestService.RequestAsync<InitChartDataBackendResponse>(request, "init.graph");
 

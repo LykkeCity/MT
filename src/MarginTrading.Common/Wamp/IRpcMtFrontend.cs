@@ -27,7 +27,7 @@ namespace MarginTrading.Common.Wamp
 
         [WampProcedure("init.graph")]
         [DocMe(Name = "init.graph", Description = "Gets data for micrographics")]
-        Task<InitChartDataClientResponse> InitGraph(string token = null);
+        Task<InitChartDataClientResponse> InitGraph(string token = null, string[] assetIds = null);
 
         [WampProcedure("account.history")]
         [DocMe(Name = "account.history", Description = "Gets account history", InputType = typeof(AccountHistoryRpcClientRequest))]
