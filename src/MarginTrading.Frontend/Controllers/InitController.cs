@@ -68,7 +68,7 @@ namespace MarginTrading.Frontend.Controllers
             return ResponseModel<InitAccountInstrumentsLiveDemoClientResponse>.CreateOk(initAccountInstruments);
         }
 
-        [Route("graph")]
+        [Route("chart")]
         [HttpGet]
         public async Task<ResponseModel<InitChartDataClientResponse>> InitGraph()
         {
