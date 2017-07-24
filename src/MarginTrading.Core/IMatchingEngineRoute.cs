@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace MarginTrading.Core
@@ -12,6 +13,8 @@ namespace MarginTrading.Core
         string Instrument { get; }
         OrderDirection? Type { get; }
         string MatchingEngineId { get; }
+        string Asset { get; }
+        AssetType? AssetType { get; }
     }
 
     public class MatchingEngineRoute : IMatchingEngineRoute
@@ -23,8 +26,10 @@ namespace MarginTrading.Core
         public string Instrument { get; set; }
         public OrderDirection? Type { get; set; }
         public string MatchingEngineId { get; set; }
+        public string Asset { get; set; }
+        public AssetType? AssetType { get; set; }
 
-        public static IMatchingEngineRoute Create(IMatchingEngineRoute src)
+        public static MatchingEngineRoute Create(IMatchingEngineRoute src)
         {
             return new MatchingEngineRoute
             {
@@ -34,18 +39,23 @@ namespace MarginTrading.Core
                 ClientId = src.ClientId,
                 Instrument = src.Instrument,
                 Type = src.Type,
-                MatchingEngineId = src.MatchingEngineId
+                MatchingEngineId = src.MatchingEngineId,
+                Asset = src.Asset,
+                AssetType = src.AssetType
             };
         }
     }
 
     public interface IMatchingEngineRoutesRepository
     {
-        Task AddOrReplaceGlobalRouteAsync(IMatchingEngineRoute route);
-        Task AddOrReplaceLocalRouteAsync(IMatchingEngineRoute route);
-        Task DeleteGlobalRouteAsync(string id);
-        Task DeleteLocalRouteAsync(string id);
-        Task<IEnumerable<IMatchingEngineRoute>> GetAllGlobalRoutesAsync();
-        Task<IEnumerable<IMatchingEngineRoute>> GetAllLocalRoutesAsync();
+        Task AddOrReplaceRouteAsync(IMatchingEngineRoute route);
+        Task DeleteRouteAsync(string id);
+        Task<IEnumerable<IMatchingEngineRoute>> GetAllRoutesAsync();
+    }
+
+    public enum AssetType
+    {
+        Base,
+        Quote
     }
 }
