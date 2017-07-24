@@ -29,7 +29,7 @@ namespace MarginTrading.Core
         public string Asset { get; set; }
         public AssetType? AssetType { get; set; }
 
-        public static IMatchingEngineRoute Create(IMatchingEngineRoute src)
+        public static MatchingEngineRoute Create(IMatchingEngineRoute src)
         {
             return new MatchingEngineRoute
             {
@@ -57,32 +57,5 @@ namespace MarginTrading.Core
     {
         Base,
         Quote
-    }
-
-    public static class MatchingEngineRouteExtensions
-    {
-        public static int SpecificationLevel(this IMatchingEngineRoute route)
-        {
-            int specLevel = 0;            
-            specLevel += route.Instrument == "*" ? 0 : 1;
-            specLevel += route.Type == null ? 0 : 1;
-            specLevel += route.TradingConditionId == "*" ? 0 : 1;
-            specLevel += route.ClientId == "*" ? 0 : 1;
-            return specLevel;
-        }
-        
-        public static int SpecificationPriority(this IMatchingEngineRoute route)
-        {
-            //matching field or wildcard in such priority:
-            //instrument, type, trading condition, client.
-            //Flag based 1+2+4+8 >> 1 with Instrument(8) is higher than 1 with Type(4), TradingConditionId(2), ClientId(1) = 7
-
-            int priority = 0;            
-            priority += route.Instrument == "*" ? 0 : 8;
-            priority += route.Type == null ? 0 : 4;
-            priority += route.TradingConditionId == "*" ? 0 : 2;
-            priority += route.ClientId == "*" ? 0 : 1;
-            return priority;
-        }
     }
 }

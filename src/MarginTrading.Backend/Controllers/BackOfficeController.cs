@@ -577,7 +577,6 @@ namespace MarginTrading.Backend.Controllers
 
 
         #region Matching engine routes
-
       
         [HttpGet]
         [Route("routes")]
@@ -587,22 +586,22 @@ namespace MarginTrading.Backend.Controllers
             var routes = _routesManager.GetRoutes();
             return Ok(routes);
         }
+
         [HttpGet]
         [Route("routes/{id}")]
         [ProducesResponseType(typeof(MatchingEngineRoute), 200)]
         public IActionResult GetRoute(string id)
         {
-            var routes = _routesManager.GetRoute(id);
-            return Ok(routes);
+            var route = _routesManager.GetRouteById(id);
+            return Ok(route);
         }
 
         [HttpPost]
         [Route("routes")]
         public async Task<IActionResult> AddRoute([FromBody]NewMatchingEngineRouteRequest request)
         {
-            IMatchingEngineRoute newRoute = NewMatchingEngineRouteRequest.Create(request);
+            IMatchingEngineRoute newRoute = NewMatchingEngineRouteRequest.CreateRoute(request);
             await _routesManager.AddOrReplaceRouteAsync(newRoute);
-            var savedRoute = _routesManager.GetRoute(newRoute.Id);
             return Ok(newRoute);
         }
 
@@ -610,24 +609,12 @@ namespace MarginTrading.Backend.Controllers
         [Route("routes/{id}")]
         public async Task<IActionResult> EditRoute(string id, [FromBody]NewMatchingEngineRouteRequest request)
         {
-            var existingRoute = _routesManager.GetRoute(id);
+            var existingRoute = _routesManager.GetRouteById(id);
             if (existingRoute != null)
             {
-                MatchingEngineRoute editRoute = new MatchingEngineRoute()
-                {
-                    Id = id,
-                    Rank = request.Rank,
-                    TradingConditionId = request.TradingConditionId,
-                    ClientId = request.ClientId,
-                    Instrument = request.Instrument,
-                    Type = request.Type,
-                    MatchingEngineId = request.MatchingEngineId,
-                    Asset = request.Asset,
-                    AssetType = request.AssetType
-                };
-                await _routesManager.AddOrReplaceRouteAsync(editRoute);
-                var savedRoute = _routesManager.GetRoute(id);
-                return Ok(savedRoute);
+                var route = NewMatchingEngineRouteRequest.CreateRoute(request, id);
+                await _routesManager.AddOrReplaceRouteAsync(route);
+                return Ok(_routesManager);
             }
             else
                 throw new Exception("MatchingEngine Route not found");

@@ -14,11 +14,11 @@ namespace MarginTrading.Common.BackendContracts
         public string Asset { get; set; }
         public AssetType? AssetType { get; set; }
 
-        public static IMatchingEngineRoute Create(NewMatchingEngineRouteRequest request)
+        public static IMatchingEngineRoute CreateRoute(NewMatchingEngineRouteRequest request, string id = null)
         {
-            return new MatchingEngineRoute()
+            return new MatchingEngineRoute
             {
-                Id = Guid.NewGuid().ToString().ToUpper(),
+                Id = id ?? Guid.NewGuid().ToString().ToUpper(),
                 Rank = request.Rank,
                 TradingConditionId = request.TradingConditionId,
                 ClientId = request.ClientId,

@@ -73,8 +73,7 @@ namespace MarginTrading.AzureRepositories
 
         public async Task<IEnumerable<IMatchingEngineRoute>> GetAllRoutesAsync()
         {
-            var entities = await _tableStorage.GetDataAsync(MatchingEngineRouteEntity.GeneratePartitionKey());
-            return entities.Select(MatchingEngineRoute.Create);
+            return await _tableStorage.GetDataAsync(MatchingEngineRouteEntity.GeneratePartitionKey());
         }
         
     }

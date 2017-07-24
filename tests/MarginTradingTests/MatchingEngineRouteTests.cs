@@ -1,8 +1,6 @@
 ﻿using MarginTrading.Core;
 using NUnit.Framework;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using Autofac;
 using MarginTrading.Services;
 
@@ -14,7 +12,6 @@ namespace MarginTradingTests
         private IAccountsCacheService _accountsCacheService;
         private TradingConditionsManager _tradingConditionsManager;
         private MatchingEngineRoutesManager _matchingEngineRoutesManager;
-        private MatchingEngineRoutesCacheService _matchingEngineRoutesCacheService;
         
         [OneTimeSetUp]
         public void OneTimeSetUp()
@@ -23,7 +20,6 @@ namespace MarginTradingTests
             _accountsCacheService = Container.Resolve<IAccountsCacheService>();
             _tradingConditionsManager = Container.Resolve<TradingConditionsManager>();
             _matchingEngineRoutesManager = Container.Resolve<MatchingEngineRoutesManager>();
-            _matchingEngineRoutesCacheService = Container.Resolve<MatchingEngineRoutesCacheService>();
             if (_matchingEngineRoutesManager == null)
                 throw new Exception("Unable to resolve MatchingEngineRoutesCacheService");
 
@@ -96,7 +92,7 @@ namespace MarginTradingTests
             // Rules that Apply: (ID=1), (ID=2)
             // More specific rule: (ID=2) (BTCUSD)            
             // Result should be ID=2 (Less Generic)
-            var res = _matchingEngineRoutesCacheService.GetMatchingEngineRoute("CLIENT001", "TCID001", "BTCUSD", OrderDirection.Buy);
+            var res = _matchingEngineRoutesManager.FindRoute("CLIENT001", "TCID001", "BTCUSD", OrderDirection.Buy);
             Assert.AreEqual("2", res.Id);
         }
 
@@ -108,7 +104,7 @@ namespace MarginTradingTests
             // Rules that Apply: (ID=1), (ID=2)
             // More specific rule: (ID=2) (BTCUSD)            
             // Result should be ID=2 (Less Generic)
-            var res = _matchingEngineRoutesCacheService.GetMatchingEngineRoute("CLIENT001", "TCID001", "BTCUSD", OrderDirection.Sell);
+            var res = _matchingEngineRoutesManager.FindRoute("CLIENT001", "TCID001", "BTCUSD", OrderDirection.Sell);
             Assert.AreEqual("2", res.Id);
         }
 
@@ -120,7 +116,7 @@ namespace MarginTradingTests
             // Rules that Apply: (ID=1)            
             // USDBTC has no rule, generic trule applies
             // Result should be ID=1 (Unique Rule)
-            var res = _matchingEngineRoutesCacheService.GetMatchingEngineRoute("CLIENT001", "TCID001", "USDBTC", OrderDirection.Sell);
+            var res = _matchingEngineRoutesManager.FindRoute("CLIENT001", "TCID001", "BTCJPY", OrderDirection.Sell);
             Assert.AreEqual("1", res.Id);
         }
 
@@ -132,7 +128,7 @@ namespace MarginTradingTests
             // Rules that Apply: (ID=1), (ID=3), (ID=6), (ID=7), (ID=8)
             // Client003 has rule 8 but lower ranked, use higher ranked with more parameters (TCID001,EURCHF,BUY)
             // Result should be ID=3 (Less Generic)
-            var res = _matchingEngineRoutesCacheService.GetMatchingEngineRoute("CLIENT003", "TCID001", "EURCHF", OrderDirection.Buy);
+            var res = _matchingEngineRoutesManager.FindRoute("CLIENT003", "TCID001", "EURCHF", OrderDirection.Buy);
             Assert.AreEqual("3", res.Id);
         }
 
@@ -144,7 +140,7 @@ namespace MarginTradingTests
             // Rules that Apply: (ID=1), (ID=6), (ID=7)
             // TCID002 no rule>use generic with more parameters (EURCHF,BUY)
             // Result should be ID=6 (Less Generic)
-            var res = _matchingEngineRoutesCacheService.GetMatchingEngineRoute("CLIENT001", "TCID002", "EURCHF", OrderDirection.Buy);
+            var res = _matchingEngineRoutesManager.FindRoute("CLIENT001", "TCID002", "EURCHF", OrderDirection.Buy);
             Assert.AreEqual("6", res.Id);
         }
 
@@ -156,7 +152,7 @@ namespace MarginTradingTests
             // Rules that Apply: (ID=1), (ID=7)
             // TCID002 has no rule use generic with more parameters (EURCHF)
             // Result should be ID=7 (Less Generic)
-            var res = _matchingEngineRoutesCacheService.GetMatchingEngineRoute("CLIENT001", "TCID002", "EURCHF", OrderDirection.Sell);
+            var res = _matchingEngineRoutesManager.FindRoute("CLIENT001", "TCID002", "EURCHF", OrderDirection.Sell);
             Assert.AreEqual("7", res.Id);
         }
 
@@ -168,7 +164,7 @@ namespace MarginTradingTests
             // Rules that Apply: (ID=1), (ID=3), (ID=5), (ID=6), (ID=7)
             // There is a specific Rule with all these parameters (Id=5) with same rank than generic rules
             // Result should be ID=5 (Specific)
-            var res = _matchingEngineRoutesCacheService.GetMatchingEngineRoute("CLIENT002", "TCID001", "EURCHF", OrderDirection.Buy);
+            var res = _matchingEngineRoutesManager.FindRoute("CLIENT002", "TCID001", "EURCHF", OrderDirection.Buy);
             Assert.AreEqual("5", res.Id);
         }
 
@@ -180,7 +176,7 @@ namespace MarginTradingTests
             // Rules that Apply: (ID=1), (ID=3), (ID=4), (ID=6), (ID=7)
             // There is a specific Rule with all these parameters (Id=4) with higher rank than generic rules
             // Result should be ID=4 (High Rank)
-            var res = _matchingEngineRoutesCacheService.GetMatchingEngineRoute("CLIENT001", "TCID001", "EURCHF", OrderDirection.Buy);
+            var res = _matchingEngineRoutesManager.FindRoute("CLIENT001", "TCID001", "EURCHF", OrderDirection.Buy);
             Assert.AreEqual("4", res.Id);
         }
 
@@ -192,7 +188,7 @@ namespace MarginTradingTests
             // Rules that Apply: (ID=1), (ID=7), (ID=9)
             // There is a specific Rule with all these parameters (Id=9) with lower rank than generic rule
             // Result should be ID=7 (High Rank)
-            var res = _matchingEngineRoutesCacheService.GetMatchingEngineRoute("CLIENT002", "TCID003", "EURCHF", OrderDirection.Sell);
+            var res = _matchingEngineRoutesManager.FindRoute("CLIENT002", "TCID003", "EURCHF", OrderDirection.Sell);
             Assert.AreEqual("7", res.Id);
         }
 
@@ -205,7 +201,7 @@ namespace MarginTradingTests
             // More specific rule: (ID=8) (CLIENT003,EURCHF)
             // Rule (ID=7) applies since it is less specific but with higher rank.
             // Result should be ID=7 (High Rank)
-            var res = _matchingEngineRoutesCacheService.GetMatchingEngineRoute("CLIENT003", "TCID002", "EURCHF", OrderDirection.Sell);
+            var res = _matchingEngineRoutesManager.FindRoute("CLIENT003", "TCID002", "EURCHF", OrderDirection.Sell);
             Assert.AreEqual("7", res.Id);
         }
 
@@ -218,7 +214,7 @@ namespace MarginTradingTests
             // More specific rule: (ID=6) (EURCHF, Buy)            
             // CLIENT003 has rule for EURCHF (ID8) but rules (ID6 and ID7) also apply with higher rank and (ID6) is less generic
             // Result should be ID=6 (High Rank, Less generic)
-            var res = _matchingEngineRoutesCacheService.GetMatchingEngineRoute("CLIENT003", "TCID002", "EURCHF", OrderDirection.Buy);
+            var res = _matchingEngineRoutesManager.FindRoute("CLIENT003", "TCID002", "EURCHF", OrderDirection.Buy);
             Assert.AreEqual("6", res.Id);
         }
 
@@ -230,9 +226,9 @@ namespace MarginTradingTests
             // Rules that Apply: (ID=1), (ID=10), (ID=11)
             // More specific rules: (ID=10) and (ID=11)            
             // Rule (ID=11) takes priority
-            // Same rank, same specific level - Rules 10 and 11 apply with same rank and specific level, priority falls to ID=11 (type over client).
-            var res = _matchingEngineRoutesCacheService.GetMatchingEngineRoute("CLIENT004", "TCID004", "EURJPY", OrderDirection.Buy);
-            Assert.AreEqual("11", res.Id);
+            // Same rank, same specific level - Rules 10 and 11 apply with same rank and specific level, priority falls to ID=10 (client over type).
+            var res = _matchingEngineRoutesManager.FindRoute("CLIENT004", "TCID004", "EURJPY", OrderDirection.Buy);
+            Assert.AreEqual("10", res.Id);
         }
 
         [Test]
@@ -243,10 +239,9 @@ namespace MarginTradingTests
             // TEST 13 >> CID = Client005, TCID = TCID005, INST=EURUSD, Buy
             // Rules that Apply: (ID=1), (ID=12), (ID=13)
             // More specific rule: (ID=12) and (ID=13)            
-            // Same rank, same specific level, same priority - ERROR (Rules 12 and 13 apply with same rank and generic level)            
-            Assert.Throws<InvalidOperationException>(() =>
-                _matchingEngineRoutesCacheService.GetMatchingEngineRoute("CLIENT005", "TCID005", "EURUSD", OrderDirection.Buy),
-                "Could not resolve rule");
+            // Same rank, same specific level, same priority - not defined            
+            var res = _matchingEngineRoutesManager.FindRoute("CLIENT005", "TCID005", "EURUSD", OrderDirection.Buy);
+            Assert.IsNull(res?.Id);
         }
 
         [Test]
@@ -258,7 +253,7 @@ namespace MarginTradingTests
             // More specific rules: (ID=14)            
             // Rule (ID=14) Max Rank
             // There is asset Rule (ID=15) but doesn't apply to SELL
-            var res = _matchingEngineRoutesCacheService.GetMatchingEngineRoute("CLIENT006", "TCID006", "BTCEUR", OrderDirection.Sell);
+            var res = _matchingEngineRoutesManager.FindRoute("CLIENT006", "TCID006", "BTCEUR", OrderDirection.Sell);
             Assert.AreEqual("14", res.Id);
         }
         [Test]
@@ -270,7 +265,7 @@ namespace MarginTradingTests
             // More specific rules: (ID=14)            
             // Rule (ID=15) Max Rank
             // Asset Rule (ID=15) has higher rank
-            var res = _matchingEngineRoutesCacheService.GetMatchingEngineRoute("CLIENT006", "TCID006", "BTCEUR", OrderDirection.Buy);
+            var res = _matchingEngineRoutesManager.FindRoute("CLIENT006", "TCID006", "BTCEUR", OrderDirection.Buy);
             Assert.AreEqual("15", res.Id);
         }
 
@@ -285,7 +280,7 @@ namespace MarginTradingTests
             // Rules that Apply: (ID=1), (ID=2)
             // More specific rule: (ID=2) (BTCUSD)            
             // Result should be ID=2 (Less Generic)
-            //var res = _matchingEngineRoutesCacheService.GetMatchingEngineRoute("CLIENT001", "TCID001", "BTCUSD", OrderDirection.Buy);
+            //var res = _matchingEngineRoutesManager.FindRoute("CLIENT001", "TCID001", "BTCUSD", OrderDirection.Buy);
             //Assert.AreEqual("2", res.Id);
         }
     }
