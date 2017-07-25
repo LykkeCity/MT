@@ -110,6 +110,10 @@ namespace MarginTrading.Frontend
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, IApplicationLifetime appLifetime)
         {
             app.UseMiddleware<GlobalErrorHandlerMiddleware>();
+            app.UseOptions();
+
+            var settings = ApplicationContainer.Resolve<MtFrontSettings>();
+            app.UseCors(builder => builder.WithOrigins(settings.AllowOrigins));
 
             IWampHost host = ApplicationContainer.Resolve<IWampHost>();
             IWampHostedRealm realm = ApplicationContainer.Resolve<IWampHostedRealm>();
