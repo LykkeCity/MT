@@ -21,7 +21,7 @@ namespace MarginTrading.Frontend.Controllers
 
         [Route("")]
         [HttpGet]
-        public async Task<ResponseModel<AccountHistoryClientResponse>> GetAccountHistory(AccountHistoryFiltersClientRequest request)
+        public async Task<ResponseModel<AccountHistoryClientResponse>> GetAccountHistory([FromQuery]AccountHistoryFiltersClientRequest request)
         {
             var clientId = this.GetClientId();
 
@@ -37,7 +37,7 @@ namespace MarginTrading.Frontend.Controllers
 
         [Route("timeline")]
         [HttpGet]
-        public async Task<ResponseModel<AccountHistoryItemClient[]>> GetAccountHistoryTimeline(AccountHistoryFiltersClientRequest request)
+        public async Task<ResponseModel<AccountHistoryItemClient[]>> GetAccountHistoryTimeline([FromQuery]AccountHistoryFiltersClientRequest request)
         {
             var clientId = this.GetClientId();
 
