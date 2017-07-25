@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.AspNetCore.Http;
 
-namespace MarginTrading.Backend.Infrastructure
+namespace MarginTrading.Common.Extensions
 {
     public static class HttpContextExtensions
     {

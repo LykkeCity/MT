@@ -2,10 +2,14 @@
 
 namespace MarginTrading.Common.ClientContracts
 {
-    public class CloseOrderClientRequest
+    public class CloseOrderRpcClientRequest : CloseOrderClientRequest
     {
         [Required]
         public string Token { get; set; }
+    }
+
+    public class CloseOrderClientRequest
+    {
         [Required]
         public string AccountId { get; set; }
         [Required]

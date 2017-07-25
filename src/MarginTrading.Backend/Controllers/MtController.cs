@@ -141,9 +141,16 @@ namespace MarginTrading.Backend.Controllers
 
         [Route("init.graph")]
         [HttpPost]
-        public InitChartDataBackendResponse InitGraph()
+        public InitChartDataBackendResponse InitGraph([FromBody]InitChartDataBackendRequest request)
         {
             var chartData = _micrographCacheService.GetGraphData();
+
+            if (request?.AssetIds?.Length > 0)
+            {
+                chartData = chartData.Where(d => request.AssetIds.Contains(d.Key))
+                    .ToDictionary(k => k.Key, v => v.Value);
+            }
+
             return InitChartDataBackendResponse.Create(chartData);
         }
 

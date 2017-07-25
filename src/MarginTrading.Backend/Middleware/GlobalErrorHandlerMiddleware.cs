@@ -4,8 +4,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
-using MarginTrading.Backend.Infrastructure;
 using MarginTrading.Common.BackendContracts;
+using MarginTrading.Common.Extensions;
 using MarginTrading.Core.Notifications;
 using MarginTrading.Core.Settings;
 using Microsoft.AspNetCore.Http;
@@ -27,33 +27,26 @@ namespace MarginTrading.Backend.Middleware
 
         public async Task Invoke(HttpContext context)
         {
-            var reqBodyStream = new MemoryStream();
-            var originalRequestBody = context.Request.Body;
             try
             {
-                await context.Request.Body.CopyToAsync(reqBodyStream);
-                reqBodyStream.Seek(0, SeekOrigin.Begin);
-                context.Request.Body = reqBodyStream;
-
                 await _next.Invoke(context);
-
-                context.Request.Body = originalRequestBody;
             }
             catch (Exception ex)
             {
-                await LogError(context, ex, reqBodyStream);
+                await LogError(context, ex);
 
                 await SendError(context, ex.Message);
             }
         }
 
-        private async Task LogError(HttpContext context, Exception ex, MemoryStream ms)
+        private async Task LogError(HttpContext context, Exception ex)
         {
-            ms.Seek(0, SeekOrigin.Begin);
-
             string bodyPart;
-            using (ms)
+
+            using (var ms = new MemoryStream())
             {
+                context.Request.Body.CopyTo(ms);
+                ms.Seek(0, SeekOrigin.Begin);
                 bodyPart = await GetBodyPart(ms);
             }
 
