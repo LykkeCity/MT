@@ -182,7 +182,7 @@ namespace MarginTrading.Services
                 Id = route.Id,
                 Rank = route.Rank,
                 MatchingEngineId = route.MatchingEngineId,
-                Asset = route.Asset,
+                Asset = GetEmptyIfAny(route.Asset),
                 AssetType = route.AssetType,
                 ClientId = GetEmptyIfAny(route.ClientId),
                 Instrument = GetEmptyIfAny(route.Instrument),
