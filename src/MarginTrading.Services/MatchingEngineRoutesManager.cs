@@ -57,17 +57,10 @@ namespace MarginTrading.Services
                 .Where(r => EqualsOrAny(r.ClientId, clientId)
                             && EqualsOrAny(r.TradingConditionId, tradingConditionId)
                             && EqualsOrAny(r.Instrument, instrumentId)
-                            && (!r.Type.HasValue || r.Type.Value == orderType)
-                            && (IsAny(r.Asset)
-                                || (!r.AssetType.HasValue &&
-                                    (r.Asset == instrument?.BaseAssetId ||
-                                     r.Asset == instrument?.QuoteAssetId))
-                                || (r.AssetType == AssetType.Base &&
-                                    r.Asset == instrument?.BaseAssetId)
-                                || (r.AssetType == AssetType.Quote &&
-                                    r.Asset == instrument?.QuoteAssetId)))
+                            && (!r.Type.HasValue || IsAny(r.Instrument) || r.Type.Value == orderType)
+                            && IsAssetMatches(r.Asset, instrument, orderType))
                 .GroupBy(r => r.Rank)
-                .OrderByDescending(gr => gr.Key)
+                .OrderBy(gr => gr.Key)
                 .FirstOrDefault()?
                 .Select(gr => gr)
                 .ToArray();
@@ -183,7 +176,6 @@ namespace MarginTrading.Services
                 Rank = route.Rank,
                 MatchingEngineId = route.MatchingEngineId,
                 Asset = GetEmptyIfAny(route.Asset),
-                AssetType = route.AssetType,
                 ClientId = GetEmptyIfAny(route.ClientId),
                 Instrument = GetEmptyIfAny(route.Instrument),
                 TradingConditionId = GetEmptyIfAny(route.TradingConditionId),
@@ -201,6 +193,27 @@ namespace MarginTrading.Services
             return IsAny(sourceValue) || sourceValue == targetValue;
         }
 
+        private static bool IsAssetMatches(string ruleAsset, IMarginTradingAsset instrument,
+            OrderDirection? orderType)
+        {
+            if (IsAny(ruleAsset))
+            {
+                return true;
+            }
+
+            if (orderType == OrderDirection.Buy)
+            {
+                return instrument.QuoteAssetId == ruleAsset;
+            }
+
+            if (orderType == OrderDirection.Sell)
+            {
+                return instrument.BaseAssetId == ruleAsset;
+            }
+
+            return instrument.QuoteAssetId == ruleAsset || instrument.BaseAssetId == ruleAsset;
+        }
+
         public static int GetSpecificationLevel(IMatchingEngineRoute route)
         {
             int specLevel = 0;
@@ -209,7 +222,6 @@ namespace MarginTrading.Services
             specLevel += IsAny(route.TradingConditionId) ? 0 : 1;
             specLevel += IsAny(route.ClientId) ? 0 : 1;
             specLevel += IsAny(route.Asset) ? 0 : 1;
-            specLevel += !route.AssetType.HasValue ? 0 : 1;
             return specLevel;
         }
 
@@ -221,7 +233,6 @@ namespace MarginTrading.Services
 
             int priority = 0;
             priority += IsAny(route.Asset) ? 0 : 1;
-            priority += route.AssetType == null ? 0 : 2;
             priority += IsAny(route.Instrument) ? 0 : 4;
             priority += route.Type == null ? 0 : 8;
             priority += IsAny(route.TradingConditionId) ? 0 : 16;

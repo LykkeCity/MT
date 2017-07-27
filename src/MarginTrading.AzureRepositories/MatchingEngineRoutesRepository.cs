@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using AzureStorage;
 using Common;
@@ -20,8 +18,6 @@ namespace MarginTrading.AzureRepositories
         OrderDirection? IMatchingEngineRoute.Type => Type?.ParseEnum(OrderDirection.Buy);
         public string MatchingEngineId { get; set; }
         public string Asset { get; set; }
-        public string AssetType { get; set; }
-        AssetType? IMatchingEngineRoute.AssetType => AssetType?.ParseEnum(Core.AssetType.Base);
 
         public static string GeneratePartitionKey()
         {
@@ -46,8 +42,7 @@ namespace MarginTrading.AzureRepositories
                 Type = route.Type?.ToString(),
                 MatchingEngineId = route.MatchingEngineId,
                 ClientId = route.ClientId,
-                Asset = route.Asset,
-                AssetType = route.AssetType?.ToString()
+                Asset = route.Asset
             };
         }
     }

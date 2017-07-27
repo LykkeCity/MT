@@ -14,7 +14,6 @@ namespace MarginTrading.Core
         OrderDirection? Type { get; }
         string MatchingEngineId { get; }
         string Asset { get; }
-        AssetType? AssetType { get; }
     }
 
     public class MatchingEngineRoute : IMatchingEngineRoute
@@ -27,7 +26,6 @@ namespace MarginTrading.Core
         public OrderDirection? Type { get; set; }
         public string MatchingEngineId { get; set; }
         public string Asset { get; set; }
-        public AssetType? AssetType { get; set; }
 
         public static MatchingEngineRoute Create(IMatchingEngineRoute src)
         {
@@ -41,7 +39,6 @@ namespace MarginTrading.Core
                 Type = src.Type,
                 MatchingEngineId = src.MatchingEngineId,
                 Asset = src.Asset,
-                AssetType = src.AssetType
             };
         }
     }
@@ -51,11 +48,5 @@ namespace MarginTrading.Core
         Task AddOrReplaceRouteAsync(IMatchingEngineRoute route);
         Task DeleteRouteAsync(string id);
         Task<IEnumerable<IMatchingEngineRoute>> GetAllRoutesAsync();
-    }
-
-    public enum AssetType
-    {
-        Base,
-        Quote
     }
 }
