@@ -12,7 +12,6 @@ namespace MarginTrading.Common.BackendContracts
         public OrderDirection? Type { get; set; }
         public string MatchingEngineId { get; set; }
         public string Asset { get; set; }
-        public AssetType? AssetType { get; set; }
 
         public static IMatchingEngineRoute CreateRoute(NewMatchingEngineRouteRequest request, string id = null)
         {
@@ -25,8 +24,7 @@ namespace MarginTrading.Common.BackendContracts
                 Instrument = request.Instrument,
                 Type = request.Type,
                 MatchingEngineId = request.MatchingEngineId,
-                Asset = request.Asset,
-                AssetType = request.AssetType
+                Asset = request.Asset
             };
         }
 
