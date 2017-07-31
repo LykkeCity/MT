@@ -213,6 +213,7 @@ namespace MarginTrading.Services
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
             _swapCommissionService.SetCommissions(account.TradingConditionId, account.BaseAssetId, order);
             _ordersCache.ActiveOrders.Add(order);
+            _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
         }
 
         //TODO: do check in other way
