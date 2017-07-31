@@ -213,7 +213,6 @@ namespace MarginTrading.Services
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
             _swapCommissionService.SetCommissions(account.TradingConditionId, account.BaseAssetId, order);
             _ordersCache.ActiveOrders.Add(order);
-            ProcessOrderActive(order);
         }
 
         //TODO: do check in other way
@@ -299,13 +298,6 @@ namespace MarginTrading.Services
         #endregion
 
         #region Active orders
-        private void ProcessOrderActive(Order order)
-        {
-            ProcessOrdersActive(order.Instrument);
-
-            if (order.Status != OrderStatus.Rejected)
-                _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
-        }
 
         private void ProcessOrdersActive(string instrument)
         {
