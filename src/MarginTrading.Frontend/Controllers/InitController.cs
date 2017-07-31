@@ -70,7 +70,7 @@ namespace MarginTrading.Frontend.Controllers
 
         [Route("chart")]
         [HttpGet]
-        public async Task<ResponseModel<InitChartDataClientResponse>> InitGraph()
+        public async Task<ResponseModel<InitChartDataClientResponse>> InitChart()
         {
             var clientId = this.GetClientId();
 
@@ -95,7 +95,6 @@ namespace MarginTrading.Frontend.Controllers
                 return this.UserNotFoundError<InitChartDataClientResponse>();
             }
 
-
             var initGraph = await _rpcFacade.InitGraph(clientId, request?.AssetIds);
 
             return ResponseModel<InitChartDataClientResponse>.CreateOk(initGraph);
@@ -111,6 +110,7 @@ namespace MarginTrading.Frontend.Controllers
             {
                 return this.UserNotFoundError<Dictionary<string, BidAskClientContract>>();
             }
+
 
             var initPrices = await _rpcFacade.InitPrices(clientId);
 
