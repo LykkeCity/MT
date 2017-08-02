@@ -2,25 +2,38 @@
 using System.Collections.Generic;
 using System.Linq;
 using Autofac;
+using Common;
+using Common.Log;
 
 namespace MarginTrading.Services.Events
 {
     public class EventChannel<TEventArgs> : IEventChannel<TEventArgs>, IDisposable
     {
         private IComponentContext _container;
+        private readonly ILog _log;
         private IEventConsumer<TEventArgs>[] _consumers;
         private readonly object _sync = new object();
 
-        public EventChannel(IComponentContext container)
+        public EventChannel(IComponentContext container, ILog log)
         {
             _container = container;
+            _log = log;
         }
 
         public void SendEvent(object sender, TEventArgs ea)
         {
             AssertInitialized();
             foreach (var consumer in _consumers)
-                consumer.ConsumeEvent(sender, ea);
+            {
+                try
+                {
+                    consumer.ConsumeEvent(sender, ea);
+                }
+                catch (Exception e)
+                {
+                    _log.WriteErrorAsync($"Event chanel {typeof(TEventArgs).Name}", "SendEvent", ea.ToJson(), e);
+                }
+            }
         }
 
         public void Dispose()
