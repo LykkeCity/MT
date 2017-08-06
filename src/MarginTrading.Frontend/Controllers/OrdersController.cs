@@ -3,6 +3,7 @@ using MarginTrading.Common.ClientContracts;
 using MarginTrading.Frontend.Extensions;
 using MarginTrading.Frontend.Models;
 using MarginTrading.Frontend.Services;
+using MarginTrading.Services.Middleware;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,6 +11,7 @@ namespace MarginTrading.Frontend.Controllers
 {
     [Route("api/orders")]
     [Authorize]
+    [MiddlewareFilter(typeof(RequestLoggingPipeline))]
     public class OrdersController : Controller
     {
         private readonly RpcFacade _rpcFacade;

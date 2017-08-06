@@ -12,6 +12,7 @@ using MarginTrading.Core.Assets;
 using MarginTrading.Core.Exceptions;
 using MarginTrading.Core.Settings;
 using MarginTrading.Services;
+using MarginTrading.Services.Middleware;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -254,6 +255,7 @@ namespace MarginTrading.Backend.Controllers
         #region Order
 
         [Route("order.place")]
+        [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [HttpPost]
         public async Task<OpenOrderBackendResponse> PlaceOrder([FromBody]OpenOrderBackendRequest request)
         {
@@ -281,6 +283,7 @@ namespace MarginTrading.Backend.Controllers
         }
 
         [Route("order.close")]
+        [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [HttpPost]
         public MtBackendResponse<bool> CloseOrder([FromBody] CloseOrderBackendRequest request)
         {
@@ -304,6 +307,7 @@ namespace MarginTrading.Backend.Controllers
         }
 
         [Route("order.cancel")]
+        [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [HttpPost]
         public MtBackendResponse<bool> CancelOrder([FromBody] CloseOrderBackendRequest request)
         {
@@ -371,6 +375,7 @@ namespace MarginTrading.Backend.Controllers
         }
 
         [Route("order.changeLimits")]
+        [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [HttpPost]
         public MtBackendResponse<bool> ChangeOrderLimits([FromBody]ChangeOrderLimitsBackendRequest request)
         {
