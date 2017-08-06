@@ -116,7 +116,6 @@ namespace MarginTrading.Frontend
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, IApplicationLifetime appLifetime)
         {
             app.UseMiddleware<GlobalErrorHandlerMiddleware>();
-            app.UseMiddleware<RequestsLoggingMiddleware>();
             app.UseOptions();
 
             var settings = ApplicationContainer.Resolve<MtFrontSettings>();

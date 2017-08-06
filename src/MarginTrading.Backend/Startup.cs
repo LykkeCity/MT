@@ -107,7 +107,6 @@ namespace MarginTrading.Backend
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, IApplicationLifetime appLifetime)
         {
             app.UseMiddleware<GlobalErrorHandlerMiddleware>();
-            app.UseMiddleware<RequestsLoggingMiddleware>();
             app.UseMiddleware<MaintenanceModeMiddleware>();
             app.UseMiddleware<KeyAuthMiddleware>();
             app.UseMvc();

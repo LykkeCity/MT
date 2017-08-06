@@ -7,6 +7,7 @@ using MarginTrading.Common.BackendContracts;
 using MarginTrading.Common.Mappers;
 using MarginTrading.Core;
 using MarginTrading.Core.Settings;
+using MarginTrading.Services.Middleware;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,6 +15,7 @@ namespace MarginTrading.Backend.Controllers
 {
     [Authorize]
     [Route("api/risks")]
+    [MiddlewareFilter(typeof(RequestLoggingPipeline))]
     public class RisksController : Controller
     {
         private readonly IInstrumentsCache _instrumentsCache;
