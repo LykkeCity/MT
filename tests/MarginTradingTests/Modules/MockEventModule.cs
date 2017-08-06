@@ -35,10 +35,6 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(new Mock<IEventChannel<StopOutEventArgs>>().Object)
                 .As<IEventChannel<StopOutEventArgs>>()
                 .SingleInstance();
-
-            builder.RegisterInstance(new Mock<IEventChannel<LimitOrderSetEventArgs>>().Object)
-                .As<IEventChannel<LimitOrderSetEventArgs>>()
-                .SingleInstance();
         }
     }
 }
