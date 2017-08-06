@@ -28,11 +28,6 @@ namespace MarginTrading.Services
             _accountAssetsCache = accountAssetsCache;
         }
 
-        ~QuoteCacheService()
-        {
-            _lockSlim?.Dispose();
-        }
-
         public InstrumentBidAskPair GetQuote(string instrument)
         {
             _lockSlim.EnterReadLock();
