@@ -5,6 +5,7 @@ using AspNet.Security.OpenIdConnect.Extensions;
 using MarginTrading.Core;
 using MarginTrading.Frontend.Models;
 using MarginTrading.Frontend.Services;
+using MarginTrading.Services.Middleware;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,6 +13,7 @@ namespace MarginTrading.Frontend.Controllers
 {
     [Route("api/watchlists")]
     [Authorize]
+    [MiddlewareFilter(typeof(RequestLoggingPipeline))]
     public class WatchListsController : Controller
     {
         private readonly IWatchListService _watchListService;

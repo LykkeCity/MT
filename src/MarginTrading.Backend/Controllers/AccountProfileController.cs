@@ -7,6 +7,7 @@ using MarginTrading.Common.Mappers;
 using MarginTrading.Core;
 using MarginTrading.Core.Settings;
 using MarginTrading.Services;
+using MarginTrading.Services.Middleware;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MarginTrading.Backend.Controllers
@@ -15,6 +16,7 @@ namespace MarginTrading.Backend.Controllers
     /// 
     /// </summary>
     [Route("api/accountprofile")]
+    [MiddlewareFilter(typeof(RequestLoggingPipeline))]
     public class AccountProfileController : Controller
     {
         private readonly IMarginTradingAccountHistoryRepository _accountsHistoryRepository;
