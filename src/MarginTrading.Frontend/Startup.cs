@@ -117,7 +117,6 @@ namespace MarginTrading.Frontend
         {
             app.UseMiddleware<GlobalErrorHandlerMiddleware>();
             app.UseOptions();
-            app.UseMiddleware<RequestsLoggingMiddleware>();
 
             var settings = ApplicationContainer.Resolve<MtFrontSettings>();
             app.UseCors(builder => builder.WithOrigins(settings.AllowOrigins));
