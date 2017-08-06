@@ -39,7 +39,8 @@ namespace MarginTrading.Services.Middleware
                     var originalRequestBody = new MemoryStream();
 
                     await context.Request.Body.CopyToAsync(reqBodyStream);
-                    await context.Request.Body.CopyToAsync(originalRequestBody);
+                    reqBodyStream.Seek(0, SeekOrigin.Begin);
+                    await reqBodyStream.CopyToAsync(originalRequestBody);
                     reqBodyStream.Seek(0, SeekOrigin.Begin);
                     context.Request.Body = reqBodyStream;
 
