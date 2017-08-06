@@ -35,10 +35,6 @@ namespace MarginTrading.Services.Modules
 				.As<IEventChannel<StopOutEventArgs>>()
 				.SingleInstance();
 
-			builder.RegisterType<EventChannel<LimitOrderSetEventArgs>>()
-				.As<IEventChannel<LimitOrderSetEventArgs>>()
-				.SingleInstance();
-
 			builder.RegisterType<EventChannel<PositionUpdateEventArgs>>()
 				.As<IEventChannel<PositionUpdateEventArgs>>()
 				.SingleInstance();

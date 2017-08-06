@@ -10,17 +10,14 @@ namespace MarginTrading.Services
     public class MatchingEngine : IMatchingEngine
     {
         private readonly IEventChannel<OrderBookChangeEventArgs> _orderbookChangeEventChannel;
-        private readonly IEventChannel<LimitOrderSetEventArgs> _limitOrderSetEventChannel;
         private readonly OrderBookList _orderBooks;
         private long _currentMessageId;
 
         public MatchingEngine(
             IEventChannel<OrderBookChangeEventArgs> orderbookChangeEventChannel,
-            IEventChannel<LimitOrderSetEventArgs> limitOrderSetEventChannel,
             OrderBookList orderBooks)
         {
             _orderbookChangeEventChannel = orderbookChangeEventChannel;
-            _limitOrderSetEventChannel = limitOrderSetEventChannel;
             _orderBooks = orderBooks;
             _currentMessageId = 0;
         }
@@ -32,48 +29,39 @@ namespace MarginTrading.Services
             lock (MarginTradingHelpers.TradingMatchingSync)
             {
                 var changeEventArgs = new OrderBookChangeEventArgs { MessageId = _currentMessageId++ };
-                var limitOrderSetEventArgs = new LimitOrderSetEventArgs();
 
                 if (model.DeleteByInstrumentsBuy?.Length > 0)
                 {
                     var deletedOrders = _orderBooks.DeleteAllBuyOrdersByMarketMaker(model.MarketMakerId, model.DeleteByInstrumentsBuy).ToArray();
                     changeEventArgs.AddOrderBookLevelsToDelete(deletedOrders);
-                    limitOrderSetEventArgs.DeletedLimitOrders = deletedOrders;
                 }
 
                 if (model.DeleteByInstrumentsSell?.Length > 0)
                 {
                     var deletedOrders = _orderBooks.DeleteAllSellOrdersByMarketMaker(model.MarketMakerId, model.DeleteByInstrumentsSell).ToArray();
                     changeEventArgs.AddOrderBookLevelsToDelete(deletedOrders);
-                    limitOrderSetEventArgs.DeletedLimitOrders = deletedOrders;
                 }
 
                 if (model.DeleteAllBuy || model.DeleteAllSell)
                 {
                     var deletedOrders = _orderBooks.DeleteAllOrdersByMarketMaker(model.MarketMakerId, model.DeleteAllBuy, model.DeleteAllSell).ToArray();
                     changeEventArgs.AddOrderBookLevelsToDelete(deletedOrders);
-                    limitOrderSetEventArgs.DeletedLimitOrders = deletedOrders;
                 }
 
                 if (model.OrderIdsToDelete?.Length > 0)
                 {
                     var deletedOrders = _orderBooks.DeleteMarketMakerOrders(model.MarketMakerId, model.OrderIdsToDelete).ToArray();
                     changeEventArgs.AddOrderBookLevelsToDelete(deletedOrders);
-                    limitOrderSetEventArgs.DeletedLimitOrders = deletedOrders;
                 }
 
                 if (model.OrdersToAdd?.Length > 0)
                 {
                     var addedOrders = _orderBooks.AddMarketMakerOrders(model.OrdersToAdd).ToArray();
                     changeEventArgs.AddOrderBookLevels(addedOrders);
-                    limitOrderSetEventArgs.PlacedLimitOrders = addedOrders;
                 }   
 
                 if (changeEventArgs.HasEvents())
                     _orderbookChangeEventChannel.SendEvent(this, changeEventArgs);
-
-                if (limitOrderSetEventArgs.HasEvents())
-                    _limitOrderSetEventChannel.SendEvent(this, limitOrderSetEventArgs);
             }
         }
 
