@@ -102,8 +102,8 @@ namespace MarginTrading.Backend.Modules
 
 			builder.RegisterType<Application>()
 				.AsSelf()
-				.As<IStartable>()
-				.SingleInstance();
+				.SingleInstance()
+                .OnActivated(args => args.Instance.Start());
 
 			builder.RegisterType<ClientAccountService>()
 				.As<IClientAccountService>()
