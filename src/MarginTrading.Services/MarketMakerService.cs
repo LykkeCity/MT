@@ -35,19 +35,31 @@ namespace MarginTrading.Services
             if (!_assetsCacheService.IsInstrumentSupported(feedData.AssetPairId))
                 return;
 
+            var model = new SetOrderModel {MarketMakerId = MarketMakerId};
+
+            if (feedData.IsBuy)
+            {
+                model.DeleteByInstrumentsBuy = new[] {feedData.AssetPairId};
+            }
+            else
+            {
+                model.DeleteByInstrumentsSell = new[] { feedData.AssetPairId };
+            }
+
+            //if day off, just remove all orders
+            if (_assetDayOffService.IsDayOff(feedData.AssetPairId))
+            {
+                _matchingEngine.SetOrders(model);
+                return;
+            }
+
             var orders = CreateLimitOrders(feedData);
 
-            var model = new SetOrderModel
+            if (orders != null)
             {
-                DeleteByInstrumentsBuy =
-                    feedData.IsBuy ? new[] {feedData.AssetPairId} : Array.Empty<string>(),
-                DeleteByInstrumentsSell =
-                    !feedData.IsBuy ? new[] {feedData.AssetPairId} : Array.Empty<string>(),
-                MarketMakerId = MarketMakerId,
-                OrdersToAdd = orders ?? Array.Empty<LimitOrder>()
-            };
-
-            _matchingEngine.SetOrders(model);
+                model.OrdersToAdd = orders;
+                _matchingEngine.SetOrders(model);
+            }
         }
 
         public async Task ShutdownApplication()
@@ -60,11 +72,6 @@ namespace MarginTrading.Services
 
         private LimitOrder[] CreateLimitOrders(IAssetPairRate feedData)
         {
-            if (_assetDayOffService.IsDayOff(feedData.AssetPairId))
-            {
-                return null;
-            }
-
             InstrumentBidAskPair bestBidAsk;
             IAssetPairRate pendingFeed = null;
 
