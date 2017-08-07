@@ -25,7 +25,6 @@ namespace MarginTrading.Services
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly IClientNotifyService _notifyService;
         private readonly IAccountsCacheService _accountsCacheService;
-        private readonly IAggregatedOrderBook _aggregatedOrderBook;
         private readonly OrdersCache _ordersCache;
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
         private readonly IMatchingEngineRouter _meRouter;
@@ -46,7 +45,6 @@ namespace MarginTrading.Services
             IClientNotifyService notifyService,
             IRabbitMqNotifyService rabbitMqNotifyService,
             IAccountsCacheService accountsCacheService,
-            IAggregatedOrderBook aggregatedOrderBook,
             OrdersCache ordersCache,
             IAccountAssetsCacheService accountAssetsCacheService,
             IMatchingEngineRouter meRouter,
@@ -65,7 +63,6 @@ namespace MarginTrading.Services
             _validateOrderService = validateOrderService;
             _rabbitMqNotifyService = rabbitMqNotifyService;
             _accountsCacheService = accountsCacheService;
-            _aggregatedOrderBook = aggregatedOrderBook;
             _ordersCache = ordersCache;
             _accountAssetsCacheService = accountAssetsCacheService;
             _notifyService = notifyService;
@@ -289,10 +286,15 @@ namespace MarginTrading.Services
 
             foreach (var order in pendingOrders)
             {
-                var price = _aggregatedOrderBook.GetPriceFor(order.Instrument, order.GetCloseType());
+                InstrumentBidAskPair pair;
 
-                if (price.HasValue && order.IsSuitablePriceForPendingOrder(price.Value))
-                    yield return order;
+                if (_quoteCashService.TryGetQuoteById(order.Instrument, out pair))
+                {
+                    var price = pair.GetPriceForOrderType(order.GetCloseType());
+
+                    if (order.IsSuitablePriceForPendingOrder(price))
+                        yield return order;
+                }
             }
         }
 
