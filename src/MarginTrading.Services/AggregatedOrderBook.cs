@@ -135,7 +135,7 @@ namespace MarginTrading.Services
                     }
                     else
                     {
-                        _log.WriteWarningAsync(nameof(AggregatedOrderBook), "OrderBookChangeEvent", ea.ToJson(),
+                        _log.WriteInfoAsync(nameof(AggregatedOrderBook), "OrderBookChangeEvent", ea.ToJson(),
                             $"Price for {instrumentId} not changed. Buy: {GetBuy(instrumentId).ToJson()}, Sell: {GetSell(instrumentId).ToJson()}");
                     }
                 }
