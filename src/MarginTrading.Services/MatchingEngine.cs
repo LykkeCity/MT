@@ -122,7 +122,7 @@ namespace MarginTrading.Services
 
                 _orderBooks.Update(order, type.GetOrderTypeToMatchInOrderBook(), matchedOrders);
                 var changeEventArgs = new OrderBookChangeEventArgs { MessageId = _currentMessageId++ };
-                changeEventArgs.AddOrderBookLevels(type, order.Instrument, matchedOrders);
+                changeEventArgs.AddOrderBookLevels(type.GetOrderTypeToMatchInOrderBook(), order.Instrument, matchedOrders);
                 _orderbookChangeEventChannel.SendEvent(this, changeEventArgs);
             } // lock
         }
