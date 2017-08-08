@@ -12,6 +12,7 @@ using MarginTrading.Core.Clients;
 using MarginTrading.Core.Settings;
 using MarginTrading.Services;
 using MarginTrading.Services.Infrastructure;
+using MarginTrading.Services.Middleware;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,6 +20,7 @@ namespace MarginTrading.Backend.Controllers
 {
     [Authorize]
     [Route("api/backoffice")]
+    [MiddlewareFilter(typeof(RequestLoggingPipeline))]
     public class BackOfficeController : Controller
     {
         private readonly ITradingConditionsCacheService _tradingConditionsCacheService;

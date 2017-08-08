@@ -82,10 +82,6 @@ namespace MarginTrading.Backend.Modules
 				AzureRepoFactories.Monitoring.CreateServiceMonitoringRepository(_settings.Db.SharedStorageConnString, _log)
 			).SingleInstance();
 
-			builder.Register<ISlackNotificationsProducer>(ctx =>
-				AzureRepoFactories.Notifications.CreateSlackNotificationsProducer(_settings.Db.SharedStorageConnString)
-			).SingleInstance();
-
 			builder.Register<IAppGlobalSettingsRepositry>(ctx =>
 				AzureRepoFactories.Settings.CreateAppGlobalSettingsRepository(_settings.Db.ClientPersonalInfoConnString, _log)
 			).SingleInstance();

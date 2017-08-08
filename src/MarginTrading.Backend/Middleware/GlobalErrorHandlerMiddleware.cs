@@ -8,6 +8,7 @@ using MarginTrading.Common.BackendContracts;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Core.Notifications;
 using MarginTrading.Core.Settings;
+using MarginTrading.Services.Helpers;
 using Microsoft.AspNetCore.Http;
 
 namespace MarginTrading.Backend.Middleware
@@ -15,13 +16,11 @@ namespace MarginTrading.Backend.Middleware
     public class GlobalErrorHandlerMiddleware
     {
         private readonly ILog _log;
-        private readonly ISlackNotificationsProducer _slackNotificationsProducer;
         private readonly RequestDelegate _next;
 
-        public GlobalErrorHandlerMiddleware(RequestDelegate next, ILog log, ISlackNotificationsProducer slackNotificationsProducer)
+        public GlobalErrorHandlerMiddleware(RequestDelegate next, ILog log)
         {
             _log = log;
-            _slackNotificationsProducer = slackNotificationsProducer;
             _next = next;
         }
 
@@ -45,41 +44,10 @@ namespace MarginTrading.Backend.Middleware
 
             using (var ms = new MemoryStream())
             {
-                context.Request.Body.CopyTo(ms);
-                ms.Seek(0, SeekOrigin.Begin);
-                bodyPart = await GetBodyPart(ms);
+                bodyPart = await StreamHelpers.GetStreamPart(ms, 1024);
             }
 
             await _log.WriteErrorAsync("GlobalHandler", context.Request.GetUri().AbsoluteUri, bodyPart, ex);
-
-            var slackMsg = GetSlackMsg(context, ex, bodyPart);
-
-            await
-                _slackNotificationsProducer.SendNotification(ChannelTypes.MarginTrading, slackMsg, "MT Backend");
-        }
-
-        private string GetSlackMsg(HttpContext context, Exception ex, string bodyPart)
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine("\n====================================");
-            sb.AppendLine(
-                $"{context.Request.GetUri().AbsoluteUri} *{ex.GetType()}* :\n{bodyPart}\n*{ex.Message}*\n{ex.StackTrace.Substring(0, 300)}...");
-            sb.AppendLine("====================================\n");
-
-            return sb.ToString();
-        }
-
-        private const int PartSize = 1024;
-        private async Task<string> GetBodyPart(Stream stream)
-        {
-            stream.Seek(0, SeekOrigin.Begin);
-
-            var requestReader = new StreamReader(stream);
-            int len = (int)(stream.Length > PartSize ? PartSize : stream.Length);
-            char[] bodyPart = new char[len];
-            await requestReader.ReadAsync(bodyPart, 0, len);
-
-            return new string(bodyPart);
         }
 
         private async Task SendError(HttpContext ctx, string errorMessage)

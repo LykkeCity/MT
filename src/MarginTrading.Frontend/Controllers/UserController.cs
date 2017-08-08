@@ -2,6 +2,7 @@
 using MarginTrading.Core;
 using MarginTrading.Frontend.Extensions;
 using MarginTrading.Frontend.Models;
+using MarginTrading.Services.Middleware;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,6 +10,7 @@ namespace MarginTrading.Frontend.Controllers
 {
     [Route("api/user")]
     [Authorize]
+    [MiddlewareFilter(typeof(RequestLoggingPipeline))]
     public class UserController: Controller
     {
         private readonly IClientAccountService _clientNotificationService;
