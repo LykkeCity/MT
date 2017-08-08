@@ -6,6 +6,5 @@ namespace MarginTrading.Core
     {
         List<OrderBookLevel> GetBuy(string instrumentId);
         List<OrderBookLevel> GetSell(string instrumentId);
-        double? GetPriceFor(string orderInstrument, OrderDirection getCloseType);
     }
 }

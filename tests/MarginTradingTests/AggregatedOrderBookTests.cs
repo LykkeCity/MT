@@ -154,8 +154,7 @@ namespace MarginTradingTests
 
             _aggregatedOrderbook.ConsumeEvent(this, changeEventArgs);
 
-            //no event with Bid > Ask
-            _bestPriceChannelMock.Verify(x => x.SendEvent(It.IsAny<object>(), It.Is<BestPriceChangeEventArgs>(price => price.BidAskPair.Ask == 98 && price.BidAskPair.Bid == 99)), Times.Never);
+            _bestPriceChannelMock.Verify(x => x.SendEvent(It.IsAny<object>(), It.Is<BestPriceChangeEventArgs>(price => price.BidAskPair.Ask == 98 && price.BidAskPair.Bid == 99)), Times.Once);
 
             changeEventArgs = new OrderBookChangeEventArgs
             {
