@@ -35,7 +35,7 @@ namespace MarginTrading.Services
             if (!_assetsCacheService.IsInstrumentSupported(feedData.AssetPairId))
                 return;
 
-            var model = new SetOrderModel();
+            var model = new SetOrderModel {MarketMakerId = MarketMakerId};
 
             if (feedData.IsBuy)
             {
