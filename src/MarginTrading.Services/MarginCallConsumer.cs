@@ -1,4 +1,6 @@
-﻿using Common;
+﻿using System;
+using System.Collections.Concurrent;
+using Common;
 using Lykke.Common;
 using MarginTrading.Core;
 using MarginTrading.Core.Clients;
@@ -9,12 +11,18 @@ using MarginTrading.Services.Notifications;
 namespace MarginTrading.Services
 {
     // TODO: Rename by role
-    public class MarginCallConsumer : SendNotificationBase, IEventConsumer<MarginCallEventArgs>
+    public class MarginCallConsumer : SendNotificationBase, 
+        IEventConsumer<MarginCallEventArgs>,
+        IEventConsumer<OrderPlacedEventArgs>,
+        IEventConsumer<OrderClosedEventArgs>,
+        IEventConsumer<OrderCancelledEventArgs>
     {
         private readonly IThreadSwitcher _threadSwitcher;
         private readonly IEmailService _emailService;
         private readonly IClientAccountService _clientAccountService;
         private readonly IMarginTradingOperationsLogService _operationsLogService;
+        private static readonly ConcurrentDictionary<string, DateTime> LastNotifications = new ConcurrentDictionary<string, DateTime>();
+        private const int NotificationsTimeout = 30;
 
         public MarginCallConsumer(IThreadSwitcher threadSwitcher,
             IClientSettingsRepository clientSettingsRepository,
@@ -36,6 +44,14 @@ namespace MarginTrading.Services
             var account = ea.Account;
             _threadSwitcher.SwitchThread(async () =>
             {
+                var now = DateTime.UtcNow;
+                DateTime lastNotification;
+                if (LastNotifications.TryGetValue(account.Id, out lastNotification))
+                {
+                    if (lastNotification.AddMinutes(NotificationsTimeout) > now)
+                        return;
+                }
+
                 _operationsLogService.AddLog("margin call", account.ClientId, account.Id, "", ea.ToJson());
 
                 await SendNotification(account.ClientId, string.Format(MtMessages.Notifications_MarginCall, account.GetMarginUsageLevel(),
@@ -45,7 +61,24 @@ namespace MarginTrading.Services
 
                 if (clientAcc != null)
                     await _emailService.SendMarginCallEmailAsync(clientAcc.Email, account.BaseAssetId, account.Id);
+
+                LastNotifications.AddOrUpdate(account.Id, now, (s, time) => now);
             });
+        }
+
+        public void ConsumeEvent(object sender, OrderPlacedEventArgs ea)
+        {
+            LastNotifications.TryRemove(ea.Order.AccountId, out DateTime tmp);
+        }
+
+        public void ConsumeEvent(object sender, OrderClosedEventArgs ea)
+        {
+            LastNotifications.TryRemove(ea.Order.AccountId, out DateTime tmp);
+        }
+
+        public void ConsumeEvent(object sender, OrderCancelledEventArgs ea)
+        {
+            LastNotifications.TryRemove(ea.Order.AccountId, out DateTime tmp);
         }
     }
 }
