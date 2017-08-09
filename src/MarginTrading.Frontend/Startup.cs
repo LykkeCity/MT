@@ -442,7 +442,7 @@ namespace MarginTrading.Frontend
             var comonSlackService =
                 services.UseSlackNotificationsSenderViaAzureQueue(settings.SlackNotifications.AzureQueue,
                     new LogToConsole());
-        
+
             var slackService =
                 new MtSlackNotificationsSender(comonSlackService, "MT Frontend", settings.MtFrontend.MarginTradingFront.Env);
 
@@ -456,7 +456,7 @@ namespace MarginTrading.Frontend
 
             LogLocator.CommonLog = log;
             LogLocator.RequestsLog = requestsLog;
-    }
+        }
     }
 
     public static class MarginTradingBackendServiceLocator
