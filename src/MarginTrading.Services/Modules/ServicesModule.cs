@@ -67,7 +67,10 @@ namespace MarginTrading.Services.Modules
 
 			builder.RegisterType<MarginCallConsumer>()
 				.As<IEventConsumer<MarginCallEventArgs>>()
-				.SingleInstance();
+                .As<IEventConsumer<OrderPlacedEventArgs>>()
+                .As<IEventConsumer<OrderClosedEventArgs>>()
+                .As<IEventConsumer<OrderCancelledEventArgs>>()
+                .SingleInstance();
 
 			builder.RegisterType<StopOutConsumer>()
 				.As<IEventConsumer<StopOutEventArgs>>()
