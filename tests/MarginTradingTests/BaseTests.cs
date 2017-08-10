@@ -35,6 +35,7 @@ namespace MarginTradingTests
                 builder.RegisterModule(new EventModule());
             }
 
+            builder.RegisterModule(new ManagersModule());
             builder.RegisterModule(new CacheModule());
             builder.RegisterModule(new ServicesModule());
             builder.RegisterModule(new ManagersModule());

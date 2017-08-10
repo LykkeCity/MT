@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using AzureStorage;
 using Common;
@@ -18,61 +17,33 @@ namespace MarginTrading.AzureRepositories
         public string Type { get; set; }
         OrderDirection? IMatchingEngineRoute.Type => Type?.ParseEnum(OrderDirection.Buy);
         public string MatchingEngineId { get; set; }
-        
-        public static class GlobalRoute
+        public string Asset { get; set; }
+
+        public static string GeneratePartitionKey()
         {
-            public static string GeneratePartitionKey()
-            {
-                return "GlobalRule";
-            }
-
-            public static string GenerateRowKey(string id)
-            {
-                return id;
-            }
-
-            public static MatchingEngineRouteEntity Create(IMatchingEngineRoute route)
-            {
-                return new MatchingEngineRouteEntity
-                {
-                    PartitionKey = GeneratePartitionKey(),
-                    RowKey = GenerateRowKey(route.Id),
-                    Id = route.Id,
-                    Rank = route.Rank,
-                    TradingConditionId = route.TradingConditionId,
-                    Instrument = route.Instrument,
-                    Type = route.Type?.ToString(),
-                    MatchingEngineId = route.MatchingEngineId
-                };
-            }
+            return "Rule";
         }
 
-        public static class LocalRoute
+        public static string GenerateRowKey(string id)
         {
-            public static string GeneratePartitionKey()
-            {
-                return "LocalRule";
-            }
+            return id;
+        }
 
-            public static string GenerateRowKey(string id)
+        public static MatchingEngineRouteEntity Create(IMatchingEngineRoute route)
+        {
+            return new MatchingEngineRouteEntity
             {
-                return id;
-            }
-
-            public static MatchingEngineRouteEntity Create(IMatchingEngineRoute route)
-            {
-                return new MatchingEngineRouteEntity
-                {
-                    PartitionKey = GeneratePartitionKey(),
-                    RowKey = GenerateRowKey(route.Id),
-                    Id = route.Id,
-                    Rank = route.Rank,
-                    ClientId = route.ClientId,
-                    Instrument = route.Instrument,
-                    Type = route.Type?.ToString(),
-                    MatchingEngineId = route.MatchingEngineId
-                };
-            }
+                PartitionKey = GeneratePartitionKey(),
+                RowKey = GenerateRowKey(route.Id),
+                Id = route.Id,
+                Rank = route.Rank,
+                TradingConditionId = route.TradingConditionId,
+                Instrument = route.Instrument,
+                Type = route.Type?.ToString(),
+                MatchingEngineId = route.MatchingEngineId,
+                ClientId = route.ClientId,
+                Asset = route.Asset
+            };
         }
     }
 
@@ -85,36 +56,20 @@ namespace MarginTrading.AzureRepositories
             _tableStorage = tableStorage;
         }
 
-        public async Task AddOrReplaceGlobalRouteAsync(IMatchingEngineRoute route)
+        public async Task AddOrReplaceRouteAsync(IMatchingEngineRoute route)
         {
-            await _tableStorage.InsertOrReplaceAsync(MatchingEngineRouteEntity.GlobalRoute.Create(route));
+            await _tableStorage.InsertOrReplaceAsync(MatchingEngineRouteEntity.Create(route));
         }
 
-        public async Task AddOrReplaceLocalRouteAsync(IMatchingEngineRoute route)
+        public async Task DeleteRouteAsync(string id)
         {
-            await _tableStorage.InsertOrReplaceAsync(MatchingEngineRouteEntity.LocalRoute.Create(route));
+            await _tableStorage.DeleteIfExistAsync(MatchingEngineRouteEntity.GeneratePartitionKey(), MatchingEngineRouteEntity.GenerateRowKey(id));
         }
 
-        public async Task DeleteGlobalRouteAsync(string id)
+        public async Task<IEnumerable<IMatchingEngineRoute>> GetAllRoutesAsync()
         {
-            await _tableStorage.DeleteIfExistAsync(MatchingEngineRouteEntity.GlobalRoute.GeneratePartitionKey(), MatchingEngineRouteEntity.GlobalRoute.GenerateRowKey(id));
+            return await _tableStorage.GetDataAsync(MatchingEngineRouteEntity.GeneratePartitionKey());
         }
-
-        public async Task DeleteLocalRouteAsync(string id)
-        {
-            await _tableStorage.DeleteIfExistAsync(MatchingEngineRouteEntity.LocalRoute.GeneratePartitionKey(), MatchingEngineRouteEntity.LocalRoute.GenerateRowKey(id));
-        }
-
-        public async Task<IEnumerable<IMatchingEngineRoute>> GetAllGlobalRoutesAsync()
-        {
-            var entities = await _tableStorage.GetDataAsync(MatchingEngineRouteEntity.GlobalRoute.GeneratePartitionKey());
-            return entities.Select(MatchingEngineRoute.Create);
-        }
-
-        public async Task<IEnumerable<IMatchingEngineRoute>> GetAllLocalRoutesAsync()
-        {
-            var entities = await _tableStorage.GetDataAsync(MatchingEngineRouteEntity.LocalRoute.GeneratePartitionKey());
-            return entities.Select(MatchingEngineRoute.Create);
-        }
+        
     }
 }

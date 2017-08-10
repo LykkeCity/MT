@@ -43,6 +43,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\MarginTrading.AzureRepositories\MarginTrading.AzureRepositories.csproj" />
     <ProjectReference Include="..\..\MarginTrading.Common\MarginTrading.Common.csproj" />
+    <ProjectReference Include="..\..\MarginTrading.Services\MarginTrading.Services.csproj" />
   </ItemGroup>
 
 </Project>
