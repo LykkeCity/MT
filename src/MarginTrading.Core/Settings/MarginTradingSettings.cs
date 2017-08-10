@@ -35,6 +35,8 @@ namespace MarginTrading.Core.Settings
         [Optional]
         public AccountAssetsSettings DefaultAccountAssetsSettings { get; set; }
         public RequestLoggerSettings RequestLoggerSettings { get; set; }
+        [Optional]
+        public string ApplicationInsightsKey { get; set; }
     }
 
     public class NotificationSettings
