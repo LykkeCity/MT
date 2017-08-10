@@ -10,6 +10,7 @@ using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
+using MarginTrading.Backend.Filters;
 using MarginTrading.Backend.Infrastructure;
 using MarginTrading.Backend.Middleware;
 using MarginTrading.Backend.Modules;
@@ -61,7 +62,7 @@ namespace MarginTrading.Backend
             services.AddSingleton(loggerFactory);
             services.AddLogging();
             services.AddSingleton(Configuration);
-            services.AddMvc();
+            services.AddMvc(options => options.Filters.Add(typeof(MarginTradingEnabledFilter)));
 
             bool isLive = Configuration.IsLive();
 
@@ -100,7 +101,7 @@ namespace MarginTrading.Backend
             MtServiceLocator.AccountUpdateService = ApplicationContainer.Resolve<IAccountUpdateService>();
             MtServiceLocator.AccountsCacheService = ApplicationContainer.Resolve<IAccountsCacheService>();
             MtServiceLocator.SwapCommissionService = ApplicationContainer.Resolve<ISwapCommissionService>();
-            
+
             return new AutofacServiceProvider(ApplicationContainer);
         }
 

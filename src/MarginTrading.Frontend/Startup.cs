@@ -37,6 +37,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.PlatformAbstractions;
 using Microsoft.IdentityModel.Tokens;
+using Rocks.Caching;
 using Swashbuckle.Swagger.Model;
 using WampSharp.AspNetCore.WebSockets.Server;
 using WampSharp.Binding;
@@ -310,6 +311,11 @@ namespace MarginTrading.Frontend
             builder.RegisterType<RpcFacade>()
                 .AsSelf()
                 .SingleInstance();
+
+            builder.RegisterType<MemoryCacheProvider>()
+                   .As<ICacheProvider>()
+                   .AsSelf()
+                   .SingleInstance();
         }
 
         private void SetSubscribers(MtFrontendSettings settings)
