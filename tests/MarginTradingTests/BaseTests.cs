@@ -43,6 +43,16 @@ namespace MarginTradingTests
                 .As<IWatchListService>()
                 .SingleInstance();
 
+            var settingsServiceMock = new Mock<IMarginTradingSettingsService>();
+            settingsServiceMock.Setup(s => s.IsMarginTradingDemoEnabled(It.IsAny<string>())).ReturnsAsync(true);
+            settingsServiceMock.Setup(s => s.IsMarginTradingEnabled(It.IsAny<string>(), It.IsAny<bool>())).ReturnsAsync(true);
+            settingsServiceMock.Setup(s => s.IsMarginTradingLiveEnabled(It.IsAny<string>())).ReturnsAsync(true);
+
+
+            builder.RegisterInstance(settingsServiceMock.Object)
+                .As<IMarginTradingSettingsService>()
+                .SingleInstance();
+
             var settings = new MarketMakerSettings
             {
                 DayOffStartDay = DayOfWeek.Sunday.ToString(),
