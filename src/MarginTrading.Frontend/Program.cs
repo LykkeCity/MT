@@ -48,6 +48,7 @@ namespace MarginTrading.Frontend
                         .UseIISIntegration()
                         .UseUrls("http://*:5005")
                         .UseStartup<Startup>()
+                        .UseApplicationInsights()
                         .Build();
 
                     host.Run();

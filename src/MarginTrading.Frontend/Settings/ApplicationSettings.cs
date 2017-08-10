@@ -61,5 +61,7 @@ namespace MarginTrading.Frontend.Settings
         public DbSettings Db { get; set; }
         public MtQueues RabbitMqQueues { get; set; }
         public RequestLoggerSettings RequestLoggerSettings { get; set; }
+        [Optional]
+        public string ApplicationInsightsKey { get; set; }
     }
 }

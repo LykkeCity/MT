@@ -161,8 +161,15 @@ namespace MarginTrading.Frontend
             Application application = app.ApplicationServices.GetService<Application>();
 
             appLifetime.ApplicationStarted.Register(() =>
-                application.StartAsync().Wait()
-            );
+            {
+                if (!string.IsNullOrEmpty(settings.ApplicationInsightsKey))
+                {
+                    Microsoft.ApplicationInsights.Extensibility.TelemetryConfiguration.Active.InstrumentationKey =
+                        settings.ApplicationInsightsKey;
+                }
+
+                application.StartAsync().Wait();
+            });
 
             appLifetime.ApplicationStopping.Register(() =>
                 {
