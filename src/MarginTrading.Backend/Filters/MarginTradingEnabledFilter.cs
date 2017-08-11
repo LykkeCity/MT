@@ -78,7 +78,7 @@ namespace MarginTrading.Backend.Filters
                 var clientId = clientIdGetter(context.ActionArguments);
                 if (string.IsNullOrWhiteSpace(clientId))
                 {
-                    await _log.WriteWarningAsync(nameof(MarginTradingEnabledFilter), nameof(ValidateMarginTradingEnabledAsync), context.ToJson(), "ClientId is null but is expected. No validation will be performed");
+                    await _log.WriteWarningAsync(nameof(MarginTradingEnabledFilter), nameof(ValidateMarginTradingEnabledAsync), context.ActionDescriptor.DisplayName, "ClientId is null but is expected. No validation will be performed");
                 }
                 else if (!await _marginTradingSettingsService.IsMarginTradingEnabled(clientId, _marginSettings.IsLive))
                 {
