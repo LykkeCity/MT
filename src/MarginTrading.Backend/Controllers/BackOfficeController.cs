@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using MarginTrading.Backend.Attributes;
 using MarginTrading.Backend.Models;
 using MarginTrading.Common.BackendContracts;
 using MarginTrading.Common.Mappers;
@@ -653,6 +654,7 @@ namespace MarginTrading.Backend.Controllers
         [HttpGet]
         [Route("settings/enabled/{clientId}")]
         [ProducesResponseType(typeof(bool), 200)]
+        [SkipMarginTradingEnabledCheck]
         public async Task<IActionResult> GetMarginTradingIsEnabled(string clientId)
         {
             var settings = await _clientSettingsRepository.GetSettings<MarginEnabledSettings>(clientId);
@@ -665,6 +667,7 @@ namespace MarginTrading.Backend.Controllers
 
         [HttpPost]
         [Route("settings/enabled/{clientId}")]
+        [SkipMarginTradingEnabledCheck]
         public async Task<IActionResult> SetMarginTradingIsEnabled(string clientId, [FromBody]bool enabled)
         {
             await _marginTradingSettingsService.SetMarginTradingEnabled(clientId, _marginSettings.IsLive, enabled);
