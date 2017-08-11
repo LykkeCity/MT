@@ -41,13 +41,11 @@ namespace MarginTrading.Frontend.Services
             initData.Assets = initAssetsResponses.Live.Concat(initAssetsResponses.Demo).GroupBy(a => a.Id)
                 .Select(g => g.First().ToClientContract()).ToArray();
 
-            var initPricesResponse = await _httpRequestService
-                .RequestWithRetriesAsync<Dictionary<string, InstrumentBidAskPairContract>>(
-                    new InitPricesBackendRequest {ClientId = clientId}, "init.prices");
+            var initPricesResponse = await _httpRequestService.RequestWithRetriesAsync<Dictionary<string, InstrumentBidAskPairContract>>(new InitPricesBackendRequest { ClientId = clientId }, "init.prices");
 
             initData.Prices = initPricesResponse.ToDictionary(p => p.Key, p => p.Value.ToClientContract());
 
-            var initDataResponses = await _httpRequestService.RequestIfAvailableAsync<InitDataBackendResponse>(null, "init.data", null, marginTradingEnabled);
+            var initDataResponses = await _httpRequestService.RequestIfAvailableAsync<InitDataBackendResponse>(new ClientIdBackendRequest { ClientId = clientId }, "init.data", null, marginTradingEnabled);
             initData.Live = initDataResponses.Live?.ToClientContract();
             initData.Demo = initDataResponses.Demo?.ToClientContract();
 
