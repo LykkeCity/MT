@@ -17,6 +17,7 @@ using Moq;
 using WampSharp.V2.Realm;
 using IAppNotifications = MarginTrading.Services.Notifications.IAppNotifications;
 using Lykke.Service.Session;
+using MarginTrading.Core.Models;
 using MarginTrading.Services;
 
 namespace MarginTradingTests.Modules
@@ -55,8 +56,8 @@ namespace MarginTradingTests.Modules
 
             var httpRequestServiceMock = new Mock<IHttpRequestService>();
             httpRequestServiceMock
-                .Setup(item => item.RequestAsync<List<string>>(It.IsAny<object>(), "init.availableassets", It.IsAny<bool>(), It.IsAny<string>()))
-                .Returns(() => Task.FromResult(new List<string> { "BTCCHF", "EURUSD" }));
+                .Setup(item => item.RequestIfAvailableAsync(It.IsAny<object>(), "init.availableassets", It.IsAny<Func<List<string>>>(), It.IsAny<EnabledMarginTradingTypes>(), "mt"))
+                .Returns(() => Task.FromResult((new List<string> { "EURUSD" }, new List<string> { "BTCCHF" })));
 
             builder.RegisterInstance(emailService.Object).As<IEmailService>();
             builder.RegisterInstance(appNotifications.Object).As<IAppNotifications>();

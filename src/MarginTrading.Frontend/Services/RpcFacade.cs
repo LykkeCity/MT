@@ -30,57 +30,37 @@ namespace MarginTrading.Frontend.Services
 
         public async Task<InitDataLiveDemoClientResponse> InitData(string clientId)
         {
-            var marginTradingDemoEnabled = await _marginTradingSettingsService.IsMarginTradingDemoEnabled(clientId);
-            var marginTradingLiveEnabled = await _marginTradingSettingsService.IsMarginTradingLiveEnabled(clientId);
-
-            if (!marginTradingDemoEnabled && !marginTradingLiveEnabled)
+            var marginTradingEnabled = await _marginTradingSettingsService.IsMarginTradingEnabled(clientId);
+            if (!marginTradingEnabled.Demo && !marginTradingEnabled.Live)
             {
                 throw new Exception("Margin trading is not available");
             }
 
-            var initDataBackendRequest = new ClientIdBackendRequest { ClientId = clientId };
-
             var initData = new InitDataLiveDemoClientResponse();
-
-            var assets = await RequestAvailableBackendTypes(clientId,
-                                                               null,
-                                                               "init.assets",
-                                                               Array.Empty<MarginTradingAssetBackendContract>);
-
-            initData.Assets = assets.Live.Concat(assets.Demo).GroupBy(a => a.Id)
+            var initAssetsResponses = await _httpRequestService.RequestIfAvailableAsync(null, "init.assets", Array.Empty<MarginTradingAssetBackendContract>, marginTradingEnabled);
+            initData.Assets = initAssetsResponses.Live.Concat(initAssetsResponses.Demo).GroupBy(a => a.Id)
                 .Select(g => g.First().ToClientContract()).ToArray();
 
             var initPricesResponse = await _httpRequestService
-                .RequestAsync<Dictionary<string, InstrumentBidAskPairContract>>(
+                .RequestWithRetriesAsync<Dictionary<string, InstrumentBidAskPairContract>>(
                     new InitPricesBackendRequest {ClientId = clientId}, "init.prices");
 
             initData.Prices = initPricesResponse.ToDictionary(p => p.Key, p => p.Value.ToClientContract());
 
-            if (marginTradingLiveEnabled)
-            {
-                var initDataLiveResponse = await _httpRequestService.RequestAsync<InitDataBackendResponse>(
-                    initDataBackendRequest, "init.data");
-
-                initData.Live = initDataLiveResponse.ToClientContract();
-            }
-
-            if (marginTradingDemoEnabled)
-            {
-                var initDataDemoResponse = await _httpRequestService.RequestAsync<InitDataBackendResponse>(
-                    initDataBackendRequest, "init.data", false);
-
-                initData.Demo = initDataDemoResponse.ToClientContract();
-            }
+            var initDataResponses = await _httpRequestService.RequestIfAvailableAsync<InitDataBackendResponse>(null, "init.data", null, marginTradingEnabled);
+            initData.Live = initDataResponses.Live?.ToClientContract();
+            initData.Demo = initDataResponses.Demo?.ToClientContract();
 
             return initData;
         }
 
         public async Task<InitAccountsLiveDemoClientResponse> InitAccounts(string clientId)
         {
-            var responses = await RequestAvailableBackendTypes(clientId,
-                                                               new ClientIdBackendRequest { ClientId = clientId },
-                                                               "init.accounts",
-                                                               Array.Empty<MarginTradingAccountBackendContract>);
+            var marginTradingEnabled = await _marginTradingSettingsService.IsMarginTradingEnabled(clientId);
+            var responses = await _httpRequestService.RequestIfAvailableAsync(new ClientIdBackendRequest { ClientId = clientId },
+                                                                              "init.accounts",
+                                                                              Array.Empty<MarginTradingAccountBackendContract>,
+                                                                              marginTradingEnabled);
             return new InitAccountsLiveDemoClientResponse
             {
                 Live = responses.Live.Select(item => item.ToClientContract()).ToArray(),
@@ -90,10 +70,11 @@ namespace MarginTrading.Frontend.Services
 
         public async Task<InitAccountInstrumentsLiveDemoClientResponse> AccountInstruments(string clientId)
         {
-            var responses = await RequestAvailableBackendTypes(clientId,
-                                                               new ClientIdBackendRequest { ClientId = clientId },
-                                                               "init.accountinstruments",
-                                                               InitAccountInstrumentsBackendResponse.CreateEmpty);
+            var marginTradingEnabled = await _marginTradingSettingsService.IsMarginTradingEnabled(clientId);
+            var responses = await _httpRequestService.RequestIfAvailableAsync(new ClientIdBackendRequest { ClientId = clientId },
+                                                                              "init.accountinstruments",
+                                                                              InitAccountInstrumentsBackendResponse.CreateEmpty,
+                                                                              marginTradingEnabled);
 
             return new InitAccountInstrumentsLiveDemoClientResponse
             {
@@ -106,7 +87,7 @@ namespace MarginTrading.Frontend.Services
         {
             var request = new InitChartDataBackendRequest {ClientId = clientId, AssetIds = assetIds};
 
-            var initChartDataLiveResponse = await _httpRequestService.RequestAsync<InitChartDataBackendResponse>(request, "init.graph");
+            var initChartDataLiveResponse = await _httpRequestService.RequestWithRetriesAsync<InitChartDataBackendResponse>(request, "init.graph");
 
             return initChartDataLiveResponse.ToClientContract();
         }
@@ -116,7 +97,7 @@ namespace MarginTrading.Frontend.Services
             var request = new InitPricesBackendRequest {ClientId = clientId, AssetIds = assetIds};
 
             var initPricesResponse = await _httpRequestService
-                .RequestAsync<Dictionary<string, InstrumentBidAskPairContract>>(request, "init.prices");
+                .RequestWithRetriesAsync<Dictionary<string, InstrumentBidAskPairContract>>(request, "init.prices");
 
             return initPricesResponse.ToDictionary(p => p.Key, p => p.Value.ToClientContract());
         }
@@ -133,7 +114,7 @@ namespace MarginTrading.Frontend.Services
                 : request.IsLive;
             var accountHistoryBackendRequest = request.ToBackendContract(clientId);
             var accountHistoryBackendResponse =
-                await _httpRequestService.RequestAsync<AccountHistoryBackendResponse>(accountHistoryBackendRequest,
+                await _httpRequestService.RequestWithRetriesAsync<AccountHistoryBackendResponse>(accountHistoryBackendRequest,
                     "account.history", isLive);
             return accountHistoryBackendResponse.ToClientContract();
         }
@@ -145,7 +126,7 @@ namespace MarginTrading.Frontend.Services
                 : request.IsLive;
             var accountHistoryBackendRequest = request.ToBackendContract(clientId);
             var accountHistoryBackendResponse =
-                await _httpRequestService.RequestAsync<AccountNewHistoryBackendResponse>(accountHistoryBackendRequest,
+                await _httpRequestService.RequestWithRetriesAsync<AccountNewHistoryBackendResponse>(accountHistoryBackendRequest,
                     "account.history.new", isLive);
             return accountHistoryBackendResponse.ToClientContract();
         }
@@ -158,7 +139,7 @@ namespace MarginTrading.Frontend.Services
         public async Task<MtClientResponse<OrderClientContract>> PlaceOrder(string clientId, NewOrderClientContract request)
         {
             var backendRequest = request.ToBackendContract(clientId);
-            var backendResponse = await _httpRequestService.RequestAsync<OpenOrderBackendResponse>(backendRequest, "order.place",
+            var backendResponse = await _httpRequestService.RequestWithRetriesAsync<OpenOrderBackendResponse>(backendRequest, "order.place",
                 IsLiveAccount(backendRequest.Order.AccountId));
             return backendResponse.ToClientContract();
         }
@@ -166,7 +147,7 @@ namespace MarginTrading.Frontend.Services
         public async Task<MtClientResponse<bool>> CloseOrder(string clientId, CloseOrderClientRequest request)
         {
             var backendRequest = request.ToBackendContract(clientId);
-            var backendResponse = await _httpRequestService.RequestAsync<MtBackendResponse<bool>>(backendRequest, "order.close",
+            var backendResponse = await _httpRequestService.RequestWithRetriesAsync<MtBackendResponse<bool>>(backendRequest, "order.close",
                 IsLiveAccount(backendRequest.AccountId));
             return backendResponse.ToClientContract();
         }
@@ -174,17 +155,18 @@ namespace MarginTrading.Frontend.Services
         public async Task<MtClientResponse<bool>> CancelOrder(string clientId, CloseOrderClientRequest request)
         {
             var backendRequest = request.ToBackendContract(clientId);
-            var backendResponse = await _httpRequestService.RequestAsync<MtBackendResponse<bool>>(backendRequest, "order.cancel",
+            var backendResponse = await _httpRequestService.RequestWithRetriesAsync<MtBackendResponse<bool>>(backendRequest, "order.cancel",
                 IsLiveAccount(backendRequest.AccountId));
             return backendResponse.ToClientContract();
         }
 
         public async Task<ClientOrdersLiveDemoClientResponse> GetOpenPositions(string clientId)
         {
-            var responses = await RequestAvailableBackendTypes(clientId,
-                                                               new ClientIdBackendRequest { ClientId = clientId },
-                                                               "order.list",
-                                                               Array.Empty<OrderBackendContract>);
+            var marginTradingEnabled = await _marginTradingSettingsService.IsMarginTradingEnabled(clientId);
+            var responses = await _httpRequestService.RequestIfAvailableAsync(new ClientIdBackendRequest { ClientId = clientId },
+                                                                              "order.list",
+                                                                              Array.Empty<OrderBackendContract>,
+                                                                              marginTradingEnabled);
 
             return new ClientOrdersLiveDemoClientResponse
             {
@@ -196,7 +178,7 @@ namespace MarginTrading.Frontend.Services
         public async Task<OrderClientContract[]> GetAccountOpenPositions(string clientId, string accountId)
         {
             var backendRequest = new AccountClientIdBackendRequest {AccountId = accountId, ClientId = clientId};
-            var backendResponse = await _httpRequestService.RequestAsync<OrderBackendContract[]>(backendRequest,
+            var backendResponse = await _httpRequestService.RequestWithRetriesAsync<OrderBackendContract[]>(backendRequest,
                 "order.account.list", IsLiveAccount(backendRequest.AccountId));
 
             return backendResponse.Select(item => item.ToClientContract()).ToArray();
@@ -204,10 +186,15 @@ namespace MarginTrading.Frontend.Services
 
         public async Task<ClientPositionsLiveDemoClientResponse> GetClientOrders(string clientId)
         {
-            var responses = await RequestAvailableBackendTypes(clientId,
-                                                               new ClientIdBackendRequest { ClientId = clientId },
-                                                               "order.positions",
-                                                               () => new ClientOrdersBackendResponse { Orders = Array.Empty<OrderBackendContract>(), Positions = Array.Empty<OrderBackendContract>() });
+            var marginTradingEnabled = await _marginTradingSettingsService.IsMarginTradingEnabled(clientId);
+            var responses = await _httpRequestService.RequestIfAvailableAsync(new ClientIdBackendRequest { ClientId = clientId },
+                                                                              "order.positions",
+                                                                              () => new ClientOrdersBackendResponse
+                                                                              {
+                                                                                  Orders = Array.Empty<OrderBackendContract>(),
+                                                                                  Positions = Array.Empty<OrderBackendContract>()
+                                                                              },
+                                                                              marginTradingEnabled);
 
             return new ClientPositionsLiveDemoClientResponse
             {
@@ -220,7 +207,7 @@ namespace MarginTrading.Frontend.Services
             ChangeOrderLimitsClientRequest request)
         {
             var backendRequest = request.ToBackendContract(clientId);
-            var backendResponse = await _httpRequestService.RequestAsync<MtBackendResponse<bool>>(backendRequest,
+            var backendResponse = await _httpRequestService.RequestWithRetriesAsync<MtBackendResponse<bool>>(backendRequest,
                 "order.changeLimits",
                 IsLiveAccount(backendRequest.AccountId));
             return backendResponse.ToClientContract();
@@ -233,7 +220,7 @@ namespace MarginTrading.Frontend.Services
 
         public async Task<Dictionary<string, OrderBookClientContract>> GetOrderBooks()
         {
-            var backendResponse = await _httpRequestService.RequestAsync<OrderbooksBackendResponse>(null, "orderbooks");
+            var backendResponse = await _httpRequestService.RequestWithRetriesAsync<OrderbooksBackendResponse>(null, "orderbooks");
             return backendResponse.ToClientContract();
         }
 
@@ -245,22 +232,6 @@ namespace MarginTrading.Frontend.Services
         private bool IsLiveAccount(string accountId)
         {
             return !accountId.StartsWith(_settings.MarginTradingFront.DemoAccountIdPrefix);
-        }
-
-        /// <summary>
-        /// Get responses from backends available for <paramref name="clientId"/> (live/demo).
-        /// If a backend is not available - <paramref name="defaultResult"/> is returned instead.
-        /// </summary>
-        private async Task<(TResponse Demo, TResponse Live)> RequestAvailableBackendTypes<TResponse>(string clientId, object request, string action, Func<TResponse> defaultResult, string controller = "mt")
-            where TResponse: class
-        {
-            async Task<TResponse> Request(bool isLive) => await _marginTradingSettingsService.IsMarginTradingEnabled(clientId, isLive)
-                                                              ? await _httpRequestService.RequestAsync<TResponse>(request, action, isLive, controller)
-                                                              : defaultResult();
-
-            // todo if task failed return default value instead
-            var tasks = await Task.WhenAll(Request(false), Request(true));
-            return (Demo: tasks[0], Live: tasks[1]);
         }
 
         #endregion
