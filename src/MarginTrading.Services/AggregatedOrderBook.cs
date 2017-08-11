@@ -12,18 +12,16 @@ namespace MarginTrading.Services
         IEventConsumer<OrderBookChangeEventArgs>
     {
         private readonly IEventChannel<BestPriceChangeEventArgs> _bestPriceChangEventChannel;
-        private readonly ILog _log;
         private readonly IQuoteCacheService _quoteCache;
         private readonly Dictionary<string, SortedDictionary<double, OrderBookLevel>> _buy = new Dictionary<string, SortedDictionary<double, OrderBookLevel>>();
         private readonly Dictionary<string, SortedDictionary<double, OrderBookLevel>> _sell = new Dictionary<string, SortedDictionary<double, OrderBookLevel>>();
 
         private static readonly object Sync = new object();
 
-        public AggregatedOrderBook(IEventChannel<BestPriceChangeEventArgs> bestPriceEventChannel, ILog log,
+        public AggregatedOrderBook(IEventChannel<BestPriceChangeEventArgs> bestPriceEventChannel,
             IQuoteCacheService quoteCache)
         {
             _bestPriceChangEventChannel = bestPriceEventChannel;
-            _log = log;
             _quoteCache = quoteCache;
         }
 
@@ -64,27 +62,18 @@ namespace MarginTrading.Services
         {
             if (!_buy.ContainsKey(instrumentId) || !_sell.ContainsKey(instrumentId))
             {
-                _log.WriteInfoAsync(nameof(AggregatedOrderBook), "CalculateBidAskPair",
-                    $"Buy: {_buy.ToJson()}, Sell: {_sell.ToJson()}",
-                    $"No full price for {instrumentId}.");
                 return null;
             }
                 
             var buyBook = _buy[instrumentId];
             if (0 == buyBook.Count)
             {
-                _log.WriteInfoAsync(nameof(AggregatedOrderBook), "CalculateBidAskPair",
-                    $"Buy: {_buy.ToJson()}, Sell: {_sell.ToJson()}",
-                    $"BuyBook for {instrumentId} is empty.");
                 return null;
             }
                 
             var sellBook = _sell[instrumentId];
             if (0 == sellBook.Count)
             {
-                _log.WriteInfoAsync(nameof(AggregatedOrderBook), "CalculateBidAskPair",
-                    $"Buy: {_buy.ToJson()}, Sell: {_sell.ToJson()}",
-                    $"SellBook for {instrumentId} is empty.");
                 return null;
             }
 
