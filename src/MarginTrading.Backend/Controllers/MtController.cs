@@ -88,6 +88,11 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         public async Task<InitDataBackendResponse> InitData([FromBody]ClientIdBackendRequest request)
         {
+            if (string.IsNullOrWhiteSpace(request?.ClientId))
+            {
+                throw new ArgumentNullException(nameof(ClientIdBackendRequest.ClientId));
+            }
+
             var accounts = _accountsCacheService.GetAll(request.ClientId).ToArray();
 
             if (accounts.Length == 0 && !_marginSettings.IsLive)
@@ -427,6 +432,6 @@ namespace MarginTrading.Backend.Controllers
         {
             return new MtBackendResponse<string> { Result = $"[{DateTime.UtcNow:u}] Ping!" };
         }
-        
+
     }
 }
