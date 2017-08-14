@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Common;
+using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.Core;
 using MarginTrading.Core.Settings;
@@ -24,15 +26,18 @@ namespace MarginTrading.Backend.Filters
         private readonly MarginSettings _marginSettings;
         private readonly IMarginTradingSettingsService _marginTradingSettingsService;
         private readonly ICacheProvider _cacheProvider;
+        private readonly ILog _log;
 
         public MarginTradingEnabledFilter(
             MarginSettings marginSettings,
             IMarginTradingSettingsService marginTradingSettingsService,
-            ICacheProvider cacheProvider)
+            ICacheProvider cacheProvider,
+            ILog log)
         {
             _marginSettings = marginSettings;
             _marginTradingSettingsService = marginTradingSettingsService;
             _cacheProvider = cacheProvider;
+            _log = log;
         }
 
         /// <inheritdoc />
@@ -71,9 +76,13 @@ namespace MarginTrading.Backend.Filters
             if (clientIdGetter != null)
             {
                 var clientId = clientIdGetter(context.ActionArguments);
-                if (!await _marginTradingSettingsService.IsMarginTradingEnabled(clientId, _marginSettings.IsLive))
+                if (string.IsNullOrWhiteSpace(clientId))
                 {
-                    throw new InvalidOperationException("Using this type of margin trading is restricted for client");
+                    await _log.WriteWarningAsync(nameof(MarginTradingEnabledFilter), nameof(ValidateMarginTradingEnabledAsync), context.ActionDescriptor.DisplayName, "ClientId is null but is expected. No validation will be performed");
+                }
+                else if (!await _marginTradingSettingsService.IsMarginTradingEnabled(clientId, _marginSettings.IsLive))
+                {
+                    throw new InvalidOperationException("Using this type of margin trading is restricted for client " + clientId);
                 }
             }
         }
@@ -121,7 +130,7 @@ namespace MarginTrading.Backend.Filters
                     var clientIdPropertyInfo = parameterDescriptor.ParameterType.GetProperty("ClientId", typeof(string));
                     if (clientIdPropertyInfo != null)
                     {
-                        yield return d => (string) ((dynamic) d[parameterDescriptor.Name]).ClientId;
+                        yield return d => (string) ((dynamic) d[parameterDescriptor.Name])?.ClientId;
                     }
                 }
             }

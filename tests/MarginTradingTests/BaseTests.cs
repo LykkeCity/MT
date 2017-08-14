@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Autofac;
 using MarginTrading.Core;
+using MarginTrading.Core.Models;
 using MarginTrading.Core.Settings;
 using MarginTrading.Frontend.Services;
 using MarginTrading.Services;
@@ -44,9 +45,8 @@ namespace MarginTradingTests
                 .SingleInstance();
 
             var settingsServiceMock = new Mock<IMarginTradingSettingsService>();
-            settingsServiceMock.Setup(s => s.IsMarginTradingDemoEnabled(It.IsAny<string>())).ReturnsAsync(true);
+            settingsServiceMock.Setup(s => s.IsMarginTradingEnabled(It.IsAny<string>())).ReturnsAsync(new EnabledMarginTradingTypes { Live = true, Demo = true });
             settingsServiceMock.Setup(s => s.IsMarginTradingEnabled(It.IsAny<string>(), It.IsAny<bool>())).ReturnsAsync(true);
-            settingsServiceMock.Setup(s => s.IsMarginTradingLiveEnabled(It.IsAny<string>())).ReturnsAsync(true);
 
 
             builder.RegisterInstance(settingsServiceMock.Object)

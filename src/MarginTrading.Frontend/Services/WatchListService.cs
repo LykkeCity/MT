@@ -110,21 +110,13 @@ namespace MarginTrading.Frontend.Services
 
         private async Task<List<string>> GetAvailableAssetIds(string clientId)
         {
-            var marginTradingDemoEnabled = await _marginTradingSettingsService.IsMarginTradingDemoEnabled(clientId);
-            var marginTradingLiveEnabled = await _marginTradingSettingsService.IsMarginTradingLiveEnabled(clientId);
 
-            var request = new ClientIdBackendRequest { ClientId = clientId };
-            var availableAssetsLive = marginTradingLiveEnabled
-                ? await _httpRequestService.RequestAsync<List<string>>(request, "init.availableassets")
-                : new List<string>();
-
-            var availableAssetsDemo = marginTradingDemoEnabled
-                ? await _httpRequestService.RequestAsync<List<string>>(request, "init.availableassets", false)
-                : new List<string>();
-
-            availableAssetsDemo.AddRange(availableAssetsLive);
-
-            return availableAssetsDemo.Distinct().ToList();
+            var marginTradingEnabled = await _marginTradingSettingsService.IsMarginTradingEnabled(clientId);
+            var responses = await _httpRequestService.RequestIfAvailableAsync(new ClientIdBackendRequest { ClientId = clientId },
+                                                                              "init.availableassets",
+                                                                              () => new List<string>(),
+                                                                              marginTradingEnabled);
+            return responses.Live.Concat(responses.Demo).Distinct().ToList();
         }
 
         private async Task<List<MarginTradingWatchList>> GetWatchLists(string clientId)

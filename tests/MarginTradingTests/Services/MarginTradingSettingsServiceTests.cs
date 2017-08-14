@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
-using FluentAssertions;
+﻿using System.Threading.Tasks;
 using MarginTrading.Core.Clients;
 using MarginTrading.Core.Settings;
 using MarginTrading.Services;
+using MarginTradingTests.Helpers;
 using Moq;
-using Newtonsoft.Json;
 using NUnit.Framework;
 using Rocks.Caching;
 // ReSharper disable AssignNullToNotNullAttribute
@@ -34,7 +30,7 @@ namespace MarginTradingTests.Services
 
             //assert
             Mock.Get(clientSettingsRepository).Verify(r => r.SetSettings("id of client", It.Is<MarginEnabledSettings>(s => s.Enabled == true)));
-            dummyCacheProvider.Get("{MarginTradingSettingsService}{GetClientTradingEnabledCacheKey}{False}{id of client}").Should().Be(true);
+            (await sut.IsMarginTradingEnabled("id of client")).Should().Match(t => t.Demo == true);
         }
 
 
@@ -54,7 +50,7 @@ namespace MarginTradingTests.Services
 
             //assert
             Mock.Get(clientSettingsRepository).Verify(r => r.SetSettings("id of client", It.Is<MarginEnabledSettings>(s => s.EnabledLive == true)));
-            dummyCacheProvider.Get("{MarginTradingSettingsService}{GetClientTradingEnabledCacheKey}{True}{id of client}").Should().Be(true);
+            (await sut.IsMarginTradingEnabled("id of client")).Should().Match(t => t.Live == true);
         }
     }
 }

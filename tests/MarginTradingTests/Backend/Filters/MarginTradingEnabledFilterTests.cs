@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
+using Common.Log;
 using FluentAssertions;
 using MarginTrading.Backend.Attributes;
 using MarginTrading.Backend.Filters;
@@ -27,7 +28,7 @@ namespace MarginTradingTests.Backend.Filters
         {
             //arrange
             var marginTradingSettingsService = Mock.Of<IMarginTradingSettingsService>(s => s.IsMarginTradingEnabled("id of client", It.IsAny<bool>()) == Task.FromResult(false));
-            var sut = new MarginTradingEnabledFilter(new MarginSettings(), marginTradingSettingsService, new DummyCacheProvider());
+            var sut = new MarginTradingEnabledFilter(new MarginSettings(), marginTradingSettingsService, new DummyCacheProvider(), new Mock<ILog>().Object);
 
             //act
             var context = new ActionExecutingContext(new ControllerContext
@@ -57,7 +58,7 @@ namespace MarginTradingTests.Backend.Filters
         {
             //arrange
             var marginTradingSettingsService = Mock.Of<IMarginTradingSettingsService>(s => s.IsMarginTradingEnabled("id of client", It.IsAny<bool>()) == Task.FromResult(true));
-            var sut = new MarginTradingEnabledFilter(new MarginSettings(), marginTradingSettingsService, new DummyCacheProvider());
+            var sut = new MarginTradingEnabledFilter(new MarginSettings(), marginTradingSettingsService, new DummyCacheProvider(), new Mock<ILog>().Object);
 
             //act
             var context = new ActionExecutingContext(new ControllerContext
@@ -87,7 +88,7 @@ namespace MarginTradingTests.Backend.Filters
         {
             //arrange
             var marginTradingSettingsService = Mock.Of<IMarginTradingSettingsService>(s => s.IsMarginTradingEnabled("id of client", It.IsAny<bool>()) == Task.FromResult(false));
-            var sut = new MarginTradingEnabledFilter(new MarginSettings(), marginTradingSettingsService, new DummyCacheProvider());
+            var sut = new MarginTradingEnabledFilter(new MarginSettings(), marginTradingSettingsService, new DummyCacheProvider(), new Mock<ILog>().Object);
 
             //act
             var context = new ActionExecutingContext(new ControllerContext
@@ -117,7 +118,7 @@ namespace MarginTradingTests.Backend.Filters
         {
             //arrange
             var marginTradingSettingsService = Mock.Of<IMarginTradingSettingsService>(s => s.IsMarginTradingEnabled("id of client", It.IsAny<bool>()) == Task.FromResult(true));
-            var sut = new MarginTradingEnabledFilter(new MarginSettings(), marginTradingSettingsService, new DummyCacheProvider());
+            var sut = new MarginTradingEnabledFilter(new MarginSettings(), marginTradingSettingsService, new DummyCacheProvider(), new Mock<ILog>().Object);
 
             //act
             var context = new ActionExecutingContext(new ControllerContext
@@ -147,7 +148,7 @@ namespace MarginTradingTests.Backend.Filters
         {
             //arrange
             var marginTradingSettingsService = Mock.Of<IMarginTradingSettingsService>(s => s.IsMarginTradingEnabled("id of client", It.IsAny<bool>()) == Task.FromResult(false));
-            var sut = new MarginTradingEnabledFilter(new MarginSettings(), marginTradingSettingsService, new DummyCacheProvider());
+            var sut = new MarginTradingEnabledFilter(new MarginSettings(), marginTradingSettingsService, new DummyCacheProvider(), new Mock<ILog>().Object);
 
             //act
             var context = new ActionExecutingContext(new ControllerContext
@@ -177,7 +178,7 @@ namespace MarginTradingTests.Backend.Filters
         {
             //arrange
             var marginTradingSettingsService = Mock.Of<IMarginTradingSettingsService>(s => s.IsMarginTradingEnabled("id of client", It.IsAny<bool>()) == Task.FromResult(false));
-            var sut = new MarginTradingEnabledFilter(new MarginSettings(), marginTradingSettingsService, new DummyCacheProvider());
+            var sut = new MarginTradingEnabledFilter(new MarginSettings(), marginTradingSettingsService, new DummyCacheProvider(), new Mock<ILog>().Object);
 
             //act
             var context = new ActionExecutingContext(new ControllerContext
