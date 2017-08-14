@@ -28,13 +28,12 @@ namespace MarginTrading.Backend.Controllers
         private readonly IAccountGroupCacheService _accountGroupCacheService;
         private readonly AccountAssetsCacheService _accountAssetsCacheService;
         private readonly IInstrumentsCache _instrumentsCache;
-        private readonly IAccountsCacheService _accountsCacheService;
-        private readonly IMatchingEngineRoutesCacheService _routesCacheService;
+        private readonly IAccountsCacheService _accountsCacheService;        
         private readonly AccountManager _accountManager;
         private readonly TradingConditionsManager _tradingConditionsManager;
         private readonly AccountGroupManager _accountGroupManager;
         private readonly AccountAssetsManager _accountAssetsManager;
-        private readonly MatchingEngineRoutesManager _routesManager;
+        private readonly MatchingEngineRoutesManager _routesManager;        
         private readonly IMarginTradingAccountsRepository _accountsRepository;
         private readonly IOrderReader _ordersReader;
         private readonly OrderBookList _orderBooks;
@@ -51,8 +50,7 @@ namespace MarginTrading.Backend.Controllers
             IAccountGroupCacheService accountGroupCacheService,
             AccountAssetsCacheService accountAssetsCacheService,
             IInstrumentsCache instrumentsCache,
-            IAccountsCacheService accountsCacheService,
-            IMatchingEngineRoutesCacheService routesCacheService,
+            IAccountsCacheService accountsCacheService,            
             AccountManager accountManager,
             TradingConditionsManager tradingConditionsManager,
             AccountGroupManager accountGroupManager,
@@ -65,7 +63,7 @@ namespace MarginTrading.Backend.Controllers
             MarginSettings marginSettings,
             IMarginTradingOperationsLogService operationsLogService,
             IConsole consoleWriter,
-            IMaintenanceModeService maintenanceModeService,
+            IMaintenanceModeService maintenanceModeService,            
             ILog log,
             IMarginTradingSettingsService marginTradingSettingsService)
         {
@@ -74,8 +72,7 @@ namespace MarginTrading.Backend.Controllers
             _accountAssetsCacheService = accountAssetsCacheService;
             _instrumentsCache = instrumentsCache;
             _accountsCacheService = accountsCacheService;
-            _routesCacheService = routesCacheService;
-
+            
             _accountManager = accountManager;
             _tradingConditionsManager = tradingConditionsManager;
             _accountGroupManager = accountGroupManager;
@@ -424,7 +421,7 @@ namespace MarginTrading.Backend.Controllers
         }
 
         [HttpGet]
-        [Route("matchingengines/getall")]
+        [Route("matchingengines")]
         [ProducesResponseType(typeof(List<string>), 200)]
         public IActionResult GetAllMatchingEngines()
         {
@@ -586,66 +583,57 @@ namespace MarginTrading.Backend.Controllers
 
 
         #region Matching engine routes
-
+      
         [HttpGet]
-        [Route("routes/getallglobal")]
+        [Route("routes")]
         [ProducesResponseType(typeof(List<MatchingEngineRoute>), 200)]
-        public IActionResult GetAllGlobalRoutes()
+        public IActionResult GetAllRoutes()
         {
-            var routes = _routesCacheService.GetGlobalRoutes();
+            var routes = _routesManager.GetRoutes();
             return Ok(routes);
         }
 
         [HttpGet]
-        [Route("routes/getalllocal")]
-        [ProducesResponseType(typeof(List<MatchingEngineRoute>), 200)]
-        public IActionResult GetAllLocalRoutes()
-        {
-            var routes = _routesCacheService.GetLocalRoutes();
-            return Ok(routes);
-        }
-
-        [HttpGet]
-        [Route("routes/get/{id}")]
+        [Route("routes/{id}")]
         [ProducesResponseType(typeof(MatchingEngineRoute), 200)]
         public IActionResult GetRoute(string id)
         {
-            var route = _routesCacheService.GetMatchingEngineRouteById(id);
+            var route = _routesManager.GetRouteById(id);
             return Ok(route);
         }
 
         [HttpPost]
-        [Route("routes/addglobal")]
-        public async Task<IActionResult> AddGlobalRoute([FromBody]MatchingEngineRoute route)
+        [Route("routes")]
+        public async Task<IActionResult> AddRoute([FromBody]NewMatchingEngineRouteRequest request)
         {
-            await _routesManager.AddOrReplaceGlobalRouteAsync(route);
-            return Ok();
+            IMatchingEngineRoute newRoute = NewMatchingEngineRouteRequest.CreateRoute(request);
+            await _routesManager.AddOrReplaceRouteAsync(newRoute);
+            return Ok(newRoute);
         }
 
-        [HttpPost]
-        [Route("routes/addlocal")]
-        public async Task<IActionResult> AddLocalRoute([FromBody]MatchingEngineRoute route)
+        [HttpPut]
+        [Route("routes/{id}")]
+        public async Task<IActionResult> EditRoute(string id, [FromBody]NewMatchingEngineRouteRequest request)
         {
-            await _routesManager.AddOrReplaceLocalRouteAsync(route);
-            return Ok();
+            var existingRoute = _routesManager.GetRouteById(id);
+            if (existingRoute != null)
+            {
+                var route = NewMatchingEngineRouteRequest.CreateRoute(request, id);
+                await _routesManager.AddOrReplaceRouteAsync(route);
+                return Ok(_routesManager);
+            }
+            else
+                throw new Exception("MatchingEngine Route not found");
         }
 
-        [HttpPost]
-        [Route("routes/deleteglobal/{id}")]
-        public async Task<IActionResult> DeleteGlobalRoute(string id)
+        [HttpDelete]
+        [Route("routes/{id}")]
+        public async Task<IActionResult> DeleteRoute(string id)
         {
-            await _routesManager.DeleteGlobalRouteAsync(id);
+            await _routesManager.DeleteRouteAsync(id);
             return Ok();
         }
-
-        [HttpPost]
-        [Route("routes/deletelocal/{id}")]
-        public async Task<IActionResult> DeleteLocalRoute(string id)
-        {
-            await _routesManager.DeleteLocalRouteAsync(id);
-            return Ok();
-        }
-
+               
         #endregion
 
 
