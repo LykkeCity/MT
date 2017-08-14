@@ -109,7 +109,7 @@ namespace MarginTradingTests.Backend.Filters
             Func<Task> invocation = () => sut.OnActionExecutionAsync(context, NextFunc);
 
             //assert
-            invocation.ShouldThrow<InvalidOperationException>().WithMessage("Using this type of margin trading is restricted for client");
+            invocation.ShouldThrow<InvalidOperationException>().WithMessage("Using this type of margin trading is restricted for client id of client");
         }
 
 
@@ -169,7 +169,7 @@ namespace MarginTradingTests.Backend.Filters
             Func<Task> invocation = () => sut.OnActionExecutionAsync(context, NextFunc);
 
             //assert
-            invocation.ShouldThrow<InvalidOperationException>().WithMessage("Using this type of margin trading is restricted for client");
+            invocation.ShouldThrow<InvalidOperationException>().WithMessage("Using this type of margin trading is restricted for client id of client");
         }
 
 
