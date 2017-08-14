@@ -137,7 +137,7 @@ namespace MarginTrading.Backend
                         settings.ApplicationInsightsKey;
                 }
 
-                application.StartApplicatonAsync().Wait();
+                application.StartApplicationAsync().Wait();
             });
 
             appLifetime.ApplicationStopping.Register(() =>

@@ -3,29 +3,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Common;
 using Common.Log;
 using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Subscriber;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Core;
 using MarginTrading.Core.MarketMakerFeed;
-using MarginTrading.Core.Monitoring;
 using MarginTrading.Core.Settings;
 using MarginTrading.Services.Infrastructure;
-using Microsoft.Extensions.PlatformAbstractions;
 using Newtonsoft.Json;
 
 #pragma warning disable 1591
 
 namespace MarginTrading.Backend
 {
-    public sealed class Application : TimerPeriod
+    public sealed class Application
     {
         private readonly List<IFeedConsumer> _consumers;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly IConsole _consoleWriter;
-        private readonly IServiceMonitoringRepository _serviceMonitoringRepository;
         private readonly ILog _logger;
         private readonly MarginSettings _marginSettings;
         private readonly IMaintenanceModeService _maintenanceModeService;
@@ -36,20 +32,18 @@ namespace MarginTrading.Backend
             IRabbitMqNotifyService rabbitMqNotifyService,
             IConsole consoleWriter,
             IEnumerable<IFeedConsumer> consumers,
-            IServiceMonitoringRepository serviceMonitoringRepository,
             ILog logger, MarginSettings marginSettings,
-            IMaintenanceModeService maintenanceModeService) : base(ServiceName, 30000, logger)
+            IMaintenanceModeService maintenanceModeService)
         {
             _consumers = consumers.ToList();
             _rabbitMqNotifyService = rabbitMqNotifyService;
             _consoleWriter = consoleWriter;
-            _serviceMonitoringRepository = serviceMonitoringRepository;
             _logger = logger;
             _marginSettings = marginSettings;
             _maintenanceModeService = maintenanceModeService;
         }
 
-        public async Task StartApplicatonAsync()
+        public async Task StartApplicationAsync()
         {
             _consoleWriter.WriteLine($"Staring {ServiceName}");
             await _logger.WriteInfoAsync(ServiceName, null, null, "Starting broker");
@@ -85,7 +79,6 @@ namespace MarginTrading.Backend
             _logger.WriteInfoAsync(ServiceName, null, null, "Closing broker").Wait();
             _connector.Stop();
             _rabbitMqNotifyService.Stop();
-            Stop();
             _consoleWriter.WriteLine($"Closed {ServiceName}");
         }
 
@@ -93,20 +86,6 @@ namespace MarginTrading.Backend
         {
             _consumers.ForEach(c => c.ConsumeFeed(feedData));
             return Task.CompletedTask;
-        }
-
-        public override async Task Execute()
-        {
-            var now = DateTime.UtcNow;
-
-            var record = new MonitoringRecord
-            {
-                DateTime = now,
-                ServiceName = ServiceName,
-                Version = PlatformServices.Default.Application.ApplicationVersion
-            };
-
-            await _serviceMonitoringRepository.UpdateOrCreate(record);
         }
     }
 
