@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using MarginTrading.Backend.Attributes;
 using MarginTrading.Backend.Models;
 using MarginTrading.Common.BackendContracts;
 using MarginTrading.Common.Mappers;
@@ -43,6 +44,7 @@ namespace MarginTrading.Backend.Controllers
         private readonly IConsole _consoleWriter;
         private readonly IMaintenanceModeService _maintenanceModeService;
         private readonly ILog _log;
+        private readonly IMarginTradingSettingsService _marginTradingSettingsService;
 
         public BackOfficeController(
             ITradingConditionsCacheService tradingConditionsCacheService,
@@ -64,7 +66,8 @@ namespace MarginTrading.Backend.Controllers
             IMarginTradingOperationsLogService operationsLogService,
             IConsole consoleWriter,
             IMaintenanceModeService maintenanceModeService,
-            ILog log)
+            ILog log,
+            IMarginTradingSettingsService marginTradingSettingsService)
         {
             _tradingConditionsCacheService = tradingConditionsCacheService;
             _accountGroupCacheService = accountGroupCacheService;
@@ -87,21 +90,22 @@ namespace MarginTrading.Backend.Controllers
             _consoleWriter = consoleWriter;
             _maintenanceModeService = maintenanceModeService;
             _log = log;
+            _marginTradingSettingsService = marginTradingSettingsService;
         }
 
 
         #region Monitoring
 
         /// <summary>
-        /// Returns summary asset info 
+        /// Returns summary asset info
         /// </summary>
         /// <remarks>
         /// VolumeLong is a sum of long positions volume
-        /// 
+        ///
         /// VolumeShort is a sum of short positions volume
-        /// 
+        ///
         /// PnL is a sum of all positions PnL
-        /// 
+        ///
         /// Header "api-key" is required
         /// </remarks>
         /// <response code="200">Returns summary info by assets</response>
@@ -150,7 +154,7 @@ namespace MarginTrading.Backend.Controllers
         /// </summary>
         /// <remarks>
         /// Returns list of opened positions with matched volume greater or equal provided "volume" parameter
-        /// 
+        ///
         /// Header "api-key" is required
         /// </remarks>
         /// <response code="200">Returns opened positions</response>
@@ -178,7 +182,7 @@ namespace MarginTrading.Backend.Controllers
         /// </summary>
         /// <remarks>
         /// Returns list of pending orders with volume greater or equal provided "volume" parameter
-        /// 
+        ///
         /// Header "api-key" is required
         /// </remarks>
         /// <response code="200">Returns pending orders</response>
@@ -206,7 +210,7 @@ namespace MarginTrading.Backend.Controllers
         /// </summary>
         /// <remarks>
         /// Returns list of orderbooks by instrument (all orderbooks if no instrument is provided)
-        /// 
+        ///
         /// Header "api-key" is required
         /// </remarks>
         /// <response code="200">Returns orderbooks</response>
@@ -266,7 +270,7 @@ namespace MarginTrading.Backend.Controllers
         /// Sets trading condition for account
         /// </summary>
         /// <remarks>
-        /// 
+        ///
         /// Header "api-key" is required
         /// </remarks>
         /// <response code="200">Returns true if trading condition is set</response>
@@ -329,7 +333,7 @@ namespace MarginTrading.Backend.Controllers
         }
 
         #endregion
-        
+
 
         #region Account groups
 
@@ -650,6 +654,7 @@ namespace MarginTrading.Backend.Controllers
         [HttpGet]
         [Route("settings/enabled/{clientId}")]
         [ProducesResponseType(typeof(bool), 200)]
+        [SkipMarginTradingEnabledCheck]
         public async Task<IActionResult> GetMarginTradingIsEnabled(string clientId)
         {
             var settings = await _clientSettingsRepository.GetSettings<MarginEnabledSettings>(clientId);
@@ -662,17 +667,10 @@ namespace MarginTrading.Backend.Controllers
 
         [HttpPost]
         [Route("settings/enabled/{clientId}")]
+        [SkipMarginTradingEnabledCheck]
         public async Task<IActionResult> SetMarginTradingIsEnabled(string clientId, [FromBody]bool enabled)
         {
-            var settings = await _clientSettingsRepository.GetSettings<MarginEnabledSettings>(clientId);
-
-            if (_marginSettings.IsLive)
-                settings.EnabledLive = enabled;
-            else
-                settings.Enabled = enabled;
-
-            await _clientSettingsRepository.SetSettings(clientId, settings);
-
+            await _marginTradingSettingsService.SetMarginTradingEnabled(clientId, _marginSettings.IsLive, enabled);
             return Ok();
         }
 

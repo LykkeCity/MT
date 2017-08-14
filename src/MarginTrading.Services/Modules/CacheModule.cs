@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using MarginTrading.Core;
+using Rocks.Caching;
 
 namespace MarginTrading.Services.Modules
 {
@@ -21,6 +22,11 @@ namespace MarginTrading.Services.Modules
                 .As<IOrderReader>()
                 .AsSelf()
                 .SingleInstance();
+
+            builder.RegisterType<MemoryCacheProvider>()
+                   .As<ICacheProvider>()
+                   .AsSelf()
+                   .SingleInstance();
         }
     }
 }

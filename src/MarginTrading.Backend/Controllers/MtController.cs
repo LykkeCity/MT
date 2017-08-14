@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using MarginTrading.Backend.Attributes;
 using MarginTrading.Common.BackendContracts;
 using MarginTrading.Common.Mappers;
 using MarginTrading.Common.Wamp;
@@ -145,6 +146,7 @@ namespace MarginTrading.Backend.Controllers
 
         [Route("init.graph")]
         [HttpPost]
+        [SkipMarginTradingEnabledCheck]
         public InitChartDataBackendResponse InitGraph([FromBody]InitChartDataBackendRequest request)
         {
             var chartData = _micrographCacheService.GetGraphData();
@@ -184,6 +186,7 @@ namespace MarginTrading.Backend.Controllers
 
         [Route("init.prices")]
         [HttpPost]
+        [SkipMarginTradingEnabledCheck]
         public Dictionary<string, InstrumentBidAskPairContract> InitPrices([FromBody]InitPricesBackendRequest request)
         {
             IEnumerable<KeyValuePair<string, InstrumentBidAskPair>> allQuotes = _quoteCacheService.GetAllQuotes();

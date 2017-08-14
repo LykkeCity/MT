@@ -11,14 +11,17 @@ namespace MarginTrading.Frontend.Services
     {
         private readonly IHttpRequestService _httpRequestService;
         private readonly IMarginTradingWatchListRepository _watchListRepository;
+        private readonly IMarginTradingSettingsService _marginTradingSettingsService;
         private const string AllAssetsWatchListId = "all_assets_watchlist";
 
         public WatchListService(
             IHttpRequestService httpRequestService,
-            IMarginTradingWatchListRepository watchListRepository)
+            IMarginTradingWatchListRepository watchListRepository,
+            IMarginTradingSettingsService marginTradingSettingsService)
         {
             _httpRequestService = httpRequestService;
             _watchListRepository = watchListRepository;
+            _marginTradingSettingsService = marginTradingSettingsService;
         }
 
         public async Task<List<MarginTradingWatchList>> GetAllAsync(string clientId)
@@ -107,9 +110,17 @@ namespace MarginTrading.Frontend.Services
 
         private async Task<List<string>> GetAvailableAssetIds(string clientId)
         {
+            var marginTradingDemoEnabled = await _marginTradingSettingsService.IsMarginTradingDemoEnabled(clientId);
+            var marginTradingLiveEnabled = await _marginTradingSettingsService.IsMarginTradingLiveEnabled(clientId);
+
             var request = new ClientIdBackendRequest { ClientId = clientId };
-            var availableAssetsLive = await _httpRequestService.RequestAsync<List<string>>(request, "init.availableassets");
-            var availableAssetsDemo = await _httpRequestService.RequestAsync<List<string>>(request, "init.availableassets", false);
+            var availableAssetsLive = marginTradingLiveEnabled
+                ? await _httpRequestService.RequestAsync<List<string>>(request, "init.availableassets")
+                : new List<string>();
+
+            var availableAssetsDemo = marginTradingDemoEnabled
+                ? await _httpRequestService.RequestAsync<List<string>>(request, "init.availableassets", false)
+                : new List<string>();
 
             availableAssetsDemo.AddRange(availableAssetsLive);
 

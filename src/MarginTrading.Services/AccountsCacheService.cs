@@ -13,11 +13,6 @@ namespace MarginTrading.Services
         private Dictionary<string, MarginTradingAccount[]> _accounts = new Dictionary<string, MarginTradingAccount[]>();
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
 
-        ~AccountsCacheService()
-        {
-            _lockSlim?.Dispose();
-        }
-
         public void UpdateAccountsCache(string clientId, IEnumerable<MarginTradingAccount> newValues)
         {
             var newInstances = newValues.Select(MarginTradingAccount.Create);
