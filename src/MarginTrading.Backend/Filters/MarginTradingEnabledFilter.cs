@@ -82,7 +82,7 @@ namespace MarginTrading.Backend.Filters
                 }
                 else if (!await _marginTradingSettingsService.IsMarginTradingEnabled(clientId, _marginSettings.IsLive))
                 {
-                    throw new InvalidOperationException("Using this type of margin trading is restricted for client");
+                    throw new InvalidOperationException("Using this type of margin trading is restricted for client " + clientId);
                 }
             }
         }
