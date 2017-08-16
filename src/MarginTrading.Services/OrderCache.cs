@@ -42,7 +42,7 @@ namespace MarginTrading.Services
         public IImmutableList<Order> GetPending()
         {
             lock (MarginTradingHelpers.TradingMatchingSync)
-                return ActiveOrders.GetAllOrders().ToImmutableList();
+                return WaitingForExecutionOrders.GetAllOrders().ToImmutableList();
         }
 
         public Order GetOrderById(string orderId)
