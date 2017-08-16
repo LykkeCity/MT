@@ -19,6 +19,7 @@
   <ItemGroup>
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="4.1.0" />
     <PackageReference Include="Lykke.AzureQueueIntegration" Version="1.0.7" />
+    <PackageReference Include="Lykke.Rocks.Caching" Version="1.0.0" />
     <PackageReference Include="Lykke.Service.Session" Version="16.0.0" />
     <PackageReference Include="Lykke.SlackNotifications" Version="1.0.10" />
     <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.8" />
@@ -26,7 +27,6 @@
     <PackageReference Include="WampSharp.Default" Version="1.2.5.40-beta" />
     <PackageReference Include="WampSharp.AspNetCore.WebSockets.Server" Version="1.2.5.40-beta" />
     <PackageReference Include="WampSharp.NewtonsoftJson" Version="1.2.5.40-beta" />
-    <PackageReference Include="Rocks.Caching.NetStandard16" Version="1.1.1" />
     <PackageReference Include="Lykke.RabbitMqBroker" Version="1.0.63" />
     <PackageReference Include="Lykke.Common" Version="1.1.76" />
   </ItemGroup>
