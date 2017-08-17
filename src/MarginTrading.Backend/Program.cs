@@ -37,7 +37,7 @@ namespace MarginTrading.Backend
 
             var restartAttempsLeft = 5;
 
-            while (restartAttempsLeft >= 0)
+            while (restartAttempsLeft > 0)
             {
                 try
                 {
@@ -55,13 +55,15 @@ namespace MarginTrading.Backend
                         .Build();
 
                     host.Run();
+
+                    restartAttempsLeft = 0;
                 }
                 catch (Exception e)
                 {
-                    LogLocator.CommonLog.WriteFatalErrorAsync(
+                    Console.WriteLine($"Error: {e.Message}{Environment.NewLine}{e.StackTrace}{Environment.NewLine}Restarting...");
+                    LogLocator.CommonLog?.WriteFatalErrorAsync(
                         "MT Backend", "Restart host", $"Attempts left: {restartAttempsLeft}", e);
                     restartAttempsLeft--;
-                    Console.WriteLine($"Error: {e.Message}{Environment.NewLine}Restarting...");
                     Thread.Sleep(10000);
                 }
             }

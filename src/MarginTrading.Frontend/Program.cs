@@ -32,7 +32,7 @@ namespace MarginTrading.Frontend
 
             var restartAttempsLeft = 5;
 
-            while (restartAttempsLeft >= 0)
+            while (restartAttempsLeft > 0)
             {
                 try
                 {
@@ -52,13 +52,15 @@ namespace MarginTrading.Frontend
                         .Build();
 
                     host.Run();
+
+                    restartAttempsLeft = 0;
                 }
                 catch (Exception e)
                 {
-                    LogLocator.CommonLog.WriteFatalErrorAsync(
+                    Console.WriteLine($"Error: {e.Message}{Environment.NewLine}{e.StackTrace}{Environment.NewLine}Restarting...");
+                    LogLocator.CommonLog?.WriteFatalErrorAsync(
                         "MT Frontend", "Restart host", $"Attempts left: {restartAttempsLeft}", e);
                     restartAttempsLeft--;
-                    Console.WriteLine($"Error: {e.Message}{Environment.NewLine}Restarting...");
                     Thread.Sleep(10000);
                 }
             }
