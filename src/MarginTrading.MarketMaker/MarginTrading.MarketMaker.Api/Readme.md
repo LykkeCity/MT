@@ -1,1 +1,0 @@
-﻿Please, read this document https://github.com/LykkeCity/lykke.dotnettemplates/blob/master/Lykke.Service.MarginTrading_MarketMaker_Api/README.md

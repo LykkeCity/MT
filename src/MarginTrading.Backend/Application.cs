@@ -28,7 +28,7 @@ namespace MarginTrading.Backend
         private readonly ILog _logger;
         private readonly MarginSettings _marginSettings;
         private readonly IMaintenanceModeService _maintenanceModeService;
-        private RabbitMqSubscriber<MarketMakerOrderBook> _connector;
+        private RabbitMqSubscriber<MarketMakerOrderCommandsBatchMessage> _connector;
         private const string ServiceName = "MarginTrading.Backend";
 
         public Application(
@@ -55,14 +55,14 @@ namespace MarginTrading.Backend
 
             try
             {
-                _connector = new RabbitMqSubscriber<MarketMakerOrderBook>(new RabbitMqSubscriberSettings
+                _connector = new RabbitMqSubscriber<MarketMakerOrderCommandsBatchMessage>(new RabbitMqSubscriberSettings
                     {
-                        ConnectionString = _marginSettings.SpotRabbitMqSettings.ConnectionString,
-                        QueueName = QueueHelper.BuildQueueName(_marginSettings.SpotRabbitMqSettings.ExchangeName, _marginSettings.IsLive ? "Live" : "Demo"),
-                        ExchangeName = _marginSettings.SpotRabbitMqSettings.ExchangeName,
-                        IsDurable = _marginSettings.SpotRabbitMqSettings.IsDurable
+                        ConnectionString = _marginSettings.MarketMakerOrderCommandsRabbitMqSettings.ConnectionString,
+                        QueueName = QueueHelper.BuildQueueName(_marginSettings.MarketMakerOrderCommandsRabbitMqSettings.ExchangeName, _marginSettings.IsLive ? "Live" : "Demo"),
+                        ExchangeName = _marginSettings.MarketMakerOrderCommandsRabbitMqSettings.ExchangeName,
+                        IsDurable = _marginSettings.MarketMakerOrderCommandsRabbitMqSettings.IsDurable
                     })
-                    .SetMessageDeserializer(new BackEndDeserializer<MarketMakerOrderBook>())
+                    .SetMessageDeserializer(new BackEndDeserializer<MarketMakerOrderCommandsBatchMessage>())
                     .Subscribe(HandleMessage)
                     .SetLogger(_logger)
                     .SetConsole(_consoleWriter)
@@ -88,15 +88,10 @@ namespace MarginTrading.Backend
             _consoleWriter.WriteLine($"Closed {ServiceName}");
         }
 
-        private Task HandleMessage(MarketMakerOrderBook orderBook)
+        private Task HandleMessage(MarketMakerOrderCommandsBatchMessage feedData)
         {
-            if (orderBook.Prices.Any())
-            {
-                IAssetPairRate rate = AssetPairRate.Create(orderBook);
-                _consumers.ForEach(c => c.ConsumeFeed(rate));
-            }
-            
-            return Task.FromResult(0);
+            _consumers.ForEach(c => c.ConsumeFeed(feedData));
+            return Task.CompletedTask;
         }
 
         public override async Task Execute()

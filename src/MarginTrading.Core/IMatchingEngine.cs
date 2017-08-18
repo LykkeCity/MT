@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace MarginTrading.Core
 {
@@ -17,9 +18,12 @@ namespace MarginTrading.Core
         public string MarketMakerId { get; set; }
         public bool DeleteAllBuy { get; set; }
         public bool DeleteAllSell { get; set; }
-        public string[] DeleteByInstrumentsBuy { get; set; }
-        public string[] DeleteByInstrumentsSell { get; set; }
-        public LimitOrder[] OrdersToAdd { get; set; }
+        [CanBeNull]
+        public IReadOnlyList<string> DeleteByInstrumentsBuy { get; set; }
+        [CanBeNull]
+        public IReadOnlyList<string> DeleteByInstrumentsSell { get; set; }
+        [CanBeNull]
+        public IReadOnlyList<LimitOrder> OrdersToAdd { get; set; }
         public string[] OrderIdsToDelete { get; set; }
     }
 }

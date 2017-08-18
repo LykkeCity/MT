@@ -6,7 +6,7 @@ namespace MarginTrading.Common.RabbitMq
     {
         public static string BuildQueueName(string exchangeName, string env)
         {
-            return
+            return 
                 $"{exchangeName}.{PlatformServices.Default.Application.ApplicationName}.{env ?? "DefaultEnv"}";
         }
     }

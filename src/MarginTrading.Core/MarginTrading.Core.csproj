@@ -11,6 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="10.2.1" />
     <PackageReference Include="Lykke.Pkg.SettingsReader" Version="1.0.31" />
   </ItemGroup>
 

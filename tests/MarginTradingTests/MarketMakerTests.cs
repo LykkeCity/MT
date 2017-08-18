@@ -47,13 +47,10 @@ namespace MarginTradingTests
         [Test]
         public void Check_Limit_With_Gap_Buy_Creation()
         {
-            var feedData = new AssetPairRate
+            var feedData = new MarketMakerOrderCommandsBatchMessage
             {
                 AssetPairId = "EURUSD",
-                DateTime = DateTime.Now,
-                IsBuy = true,
-                Price = 1.2,
-                Volume = 10
+                Commands = new List<MarketMakerOrderCommand> { new MarketMakerOrderCommand { Direction = OrderDirection.Buy, Price = 1.2, Volume = 10, CommandType = MarketMakerOrderCommandType.SetOrder } },
             };
 
             _marketMaker.ConsumeFeed(feedData);
@@ -62,13 +59,10 @@ namespace MarginTradingTests
 
             Assert.AreEqual(0, orderBook.Count);
 
-            feedData = new AssetPairRate
+            feedData = new MarketMakerOrderCommandsBatchMessage
             {
                 AssetPairId = "EURUSD",
-                DateTime = DateTime.Now,
-                IsBuy = false,
-                Price = 1.3,
-                Volume = -10
+                Commands = new List<MarketMakerOrderCommand> { new MarketMakerOrderCommand { Direction = OrderDirection.Sell, Price = 1.3, Volume = -10, CommandType = MarketMakerOrderCommandType.SetOrder } },
             };
 
             _marketMaker.ConsumeFeed(feedData);
@@ -83,13 +77,10 @@ namespace MarginTradingTests
         [Test]
         public void Check_Limit_With_Gap_Sell_Creation()
         {
-            var feedData = new AssetPairRate
+            var feedData = new MarketMakerOrderCommandsBatchMessage
             {
                 AssetPairId = "EURUSD",
-                DateTime = DateTime.Now,
-                IsBuy = false,
-                Price = 1.02,
-                Volume = -10
+                Commands = new List<MarketMakerOrderCommand> { new MarketMakerOrderCommand { Direction = OrderDirection.Sell, Price = 1.02, Volume = -10, CommandType = MarketMakerOrderCommandType.SetOrder } },
             };
 
             _marketMaker.ConsumeFeed(feedData);
@@ -98,13 +89,11 @@ namespace MarginTradingTests
 
             Assert.AreEqual(0, orderBook.Count);
 
-            feedData = new AssetPairRate
+
+            feedData = new MarketMakerOrderCommandsBatchMessage
             {
                 AssetPairId = "EURUSD",
-                DateTime = DateTime.Now,
-                IsBuy = true,
-                Price = 1.01,
-                Volume = 10
+                Commands = new List<MarketMakerOrderCommand> { new MarketMakerOrderCommand { Direction = OrderDirection.Buy, Price = 1.01, Volume = 10, CommandType = MarketMakerOrderCommandType.SetOrder } },
             };
 
             _marketMaker.ConsumeFeed(feedData);
