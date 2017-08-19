@@ -6,6 +6,7 @@ using Lykke.RabbitMqBroker.Subscriber;
 using MarginTrading.Common.RabbitMq;
 using System.Collections.Generic;
 using System.Linq;
+using Lykke.RabbitMqBroker;
 using MarginTrading.Core;
 using MarginTrading.Public.Settings;
 using Microsoft.Extensions.PlatformAbstractions;
@@ -34,18 +35,23 @@ namespace MarginTrading.Public.Services
 
         public void Start()
         {
-            _subscriber = new RabbitMqSubscriber<InstrumentBidAskPair>(new RabbitMqSubscriberSettings
+            var settings = new RabbitMqSubscriptionSettings()
             {
                 ConnectionString = _settings.MtRabbitMqConnString,
                 ExchangeName = _settings.RabbitMqQueues.OrderbookPrices.ExchangeName,
-                QueueName = QueueHelper.BuildQueueName(_settings.RabbitMqQueues.OrderbookPrices.ExchangeName, nameof(PricesCacheService)),
+                QueueName =
+                    QueueHelper.BuildQueueName(_settings.RabbitMqQueues.OrderbookPrices.ExchangeName,
+                        nameof(PricesCacheService)),
                 IsDurable = false
-            })
-                .SetMessageDeserializer(new FrontEndDeserializer<InstrumentBidAskPair>())
-                .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
-                .SetLogger(_log)
-                .Subscribe(ProcessPrice)
-                .Start();
+            };
+
+            _subscriber =
+                new RabbitMqSubscriber<InstrumentBidAskPair>(settings, new DefaultErrorHandlingStrategy(_log, settings))
+                    .SetMessageDeserializer(new FrontEndDeserializer<InstrumentBidAskPair>())
+                    .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
+                    .SetLogger(_log)
+                    .Subscribe(ProcessPrice)
+                    .Start();
         }
 
         public InstrumentBidAskPair[] GetPrices()

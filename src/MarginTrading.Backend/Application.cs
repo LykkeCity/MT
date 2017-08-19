@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Subscriber;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Core;
@@ -55,18 +56,24 @@ namespace MarginTrading.Backend
 
             try
             {
-                _connector = new RabbitMqSubscriber<MarketMakerOrderBook>(new RabbitMqSubscriberSettings
-                    {
-                        ConnectionString = _marginSettings.SpotRabbitMqSettings.ConnectionString,
-                        QueueName = QueueHelper.BuildQueueName(_marginSettings.SpotRabbitMqSettings.ExchangeName, _marginSettings.IsLive ? "Live" : "Demo"),
-                        ExchangeName = _marginSettings.SpotRabbitMqSettings.ExchangeName,
-                        IsDurable = _marginSettings.SpotRabbitMqSettings.IsDurable
-                    })
-                    .SetMessageDeserializer(new BackEndDeserializer<MarketMakerOrderBook>())
-                    .Subscribe(HandleMessage)
-                    .SetLogger(_logger)
-                    .SetConsole(_consoleWriter)
-                    .Start();
+                var settings = new RabbitMqSubscriptionSettings
+                {
+                    ConnectionString = _marginSettings.SpotRabbitMqSettings.ConnectionString,
+                    QueueName =
+                        QueueHelper.BuildQueueName(_marginSettings.SpotRabbitMqSettings.ExchangeName,
+                            _marginSettings.IsLive ? "Live" : "Demo"),
+                    ExchangeName = _marginSettings.SpotRabbitMqSettings.ExchangeName,
+                    IsDurable = _marginSettings.SpotRabbitMqSettings.IsDurable
+                };
+
+                _connector =
+                    new RabbitMqSubscriber<MarketMakerOrderBook>(settings,
+                            new DefaultErrorHandlingStrategy(_logger, settings))
+                        .SetMessageDeserializer(new BackEndDeserializer<MarketMakerOrderBook>())
+                        .Subscribe(HandleMessage)
+                        .SetLogger(_logger)
+                        .SetConsole(_consoleWriter)
+                        .Start();
             }
             catch (Exception ex)
             {
