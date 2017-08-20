@@ -49,6 +49,8 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="2.0.0" />
+    <PackageReference Include="Lykke.WampSharp.NewtonsoftJson" Version="0.27.36" />
+	<PackageReference Include="Lykke.WampSharp.AspNetCore.WebSockets.Server" Version="0.27.36" />
     <PackageReference Include="Microsoft.Extensions.PlatformAbstractions" Version="1.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.0.0" />
@@ -56,9 +58,6 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.0.0" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="4.1.0" />
     <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
-    <PackageReference Include="WampSharp.Default" Version="1.2.5.40-beta" />
-    <PackageReference Include="WampSharp.AspNetCore.WebSockets.Server" Version="1.2.5.40-beta" />
-    <PackageReference Include="WampSharp.NewtonsoftJson" Version="1.2.5.40-beta" />
     <PackageReference Include="Swashbuckle.SwaggerGen" Version="6.0.0-beta902" />
     <PackageReference Include="Swashbuckle.SwaggerUi" Version="6.0.0-beta902" />
     <PackageReference Include="Flurl.Http" Version="1.1.2" />
