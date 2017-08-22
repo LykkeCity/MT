@@ -1,7 +1,7 @@
 version: '2'
 services:
   margintradingmarketmaker:
-    image: lykkex/margintradingmarketmaker
+    image: lykkedev/margintradingmarketmaker
     container_name: margintradingmarketmaker
     environment:
       - SettingsUrl=${SettingsUrl}
