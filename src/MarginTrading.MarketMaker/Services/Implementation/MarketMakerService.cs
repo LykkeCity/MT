@@ -47,13 +47,13 @@ namespace MarginTrading.MarketMaker.Services.Implemetation
         public Task ProcessNewSpotOrderBookDataAsync(OrderBookMessage orderBookMessage)
         {
             var quotesSource = _assetPairsSettingsService.GetAssetPairQuotesSource(orderBookMessage.AssetPair);
-            if (quotesSource != AssetPairQuotesSourceEnum.Spot)
+            if (quotesSource == AssetPairQuotesSourceEnum.Spot || quotesSource == null)
             {
-                return Task.CompletedTask;
+                var orderDirection = orderBookMessage.IsBuy ? OrderDirectionEnum.Buy : OrderDirectionEnum.Sell;
+                return SendOrderCommandsAsync(orderBookMessage.AssetPair, orderDirection, orderBookMessage.BestPrice);
             }
 
-            var orderDirection = orderBookMessage.IsBuy ? OrderDirectionEnum.Buy : OrderDirectionEnum.Sell;
-            return SendOrderCommandsAsync(orderBookMessage.AssetPair, orderDirection, orderBookMessage.BestPrice);
+            return Task.CompletedTask;
         }
 
         public async Task ProcessAssetPairSettingsAsync(AssetPairSettingsModel message)

@@ -30,7 +30,6 @@ namespace MarginTrading.MarketMaker.Modules
             builder.RegisterType<AssetsPairsSettingsRepository>().As<IAssetsPairsSettingsRepository>().SingleInstance();
             builder.RegisterType<MarketMakerService>().As<IMarketMakerService>().SingleInstance();
             builder.RegisterType<MemoryCacheProvider>().As<ICacheProvider>().SingleInstance();
-            builder.RegisterType<AzureRepoFactory>().As<IAzureRepoFactory>().SingleInstance();
             builder.RegisterType<RabbitMqService>().As<IRabbitMqService>().SingleInstance();
             builder.RegisterType<AssetPairsSettingsService>().As<IAssetPairsSettingsService>().SingleInstance();
             builder.RegisterType<SystemService>().As<ISystem>().SingleInstance();

@@ -6,7 +6,11 @@ namespace MarginTrading.MarketMaker.AzureRepositories.Entities
 {
     internal class AssetPairSettingsEntity : TableEntity
     {
-        public string AssetName { get; set; }
+        public string AssetName
+        {
+            get => RowKey;
+            set => RowKey = value;
+        }
 
         public AssetPairQuotesSourceEnum QuotesSourceEnum { get; set; }
 

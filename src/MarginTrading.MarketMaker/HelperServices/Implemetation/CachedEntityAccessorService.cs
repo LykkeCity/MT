@@ -14,7 +14,7 @@ namespace MarginTrading.MarketMaker.HelperServices.Implemetation
 
         private readonly ICacheProvider _cacheProvider;
 
-        protected readonly IEntityRepository<TEntity> _repository;
+        private readonly IEntityRepository<TEntity> _repository;
         private readonly string _typeNameKeyPrefix;
 
         protected CachedEntityAccessorService(ICacheProvider cacheProvider, IEntityRepository<TEntity> repository)
