@@ -29,7 +29,7 @@ namespace MarginTrading.Core.Settings
 
         public Db Db { get; set; }
         public RabbitMqQueues RabbitMqQueues { get; set; }
-        public RabbitMqSettings MarketMakerOrderCommandsRabbitMqSettings { get; set; }
+        public RabbitMqSettings MarketMakerRabbitMqSettings { get; set; }
         public string MtRabbitMqConnString { get; set; }
         public string[] BaseAccountAssets { get; set; }
         [Optional]

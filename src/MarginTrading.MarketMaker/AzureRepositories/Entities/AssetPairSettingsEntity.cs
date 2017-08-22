@@ -1,4 +1,4 @@
-﻿using System;
+﻿using Common;
 using MarginTrading.MarketMaker.Enums;
 using Microsoft.WindowsAzure.Storage.Table;
 
@@ -8,16 +8,22 @@ namespace MarginTrading.MarketMaker.AzureRepositories.Entities
     {
         public string AssetName { get; set; }
 
-        public AssetPairQuotesSourceEnum PairQuotesSourceEnum { get; set; }
+        public AssetPairQuotesSourceEnum QuotesSourceEnum { get; set; }
 
         public string QuotesSource
         {
-            get => PairQuotesSourceEnum.ToString();
-            set => PairQuotesSourceEnum = (AssetPairQuotesSourceEnum) Enum.Parse(typeof(AssetPairQuotesSourceEnum), value, true);
+            get => QuotesSourceEnum.ToString();
+            set => QuotesSourceEnum = value.ParseEnum<AssetPairQuotesSourceEnum>();
         }
 
-        public static string GeneratePartitionKey() => "AssetSettings";
+        public static string GeneratePartitionKey()
+        {
+            return "AssetSettings";
+        }
 
-        public static string GenerateRowKey(string assetName) => assetName;
+        public static string GenerateRowKey(string assetName)
+        {
+            return assetName;
+        }
     }
 }

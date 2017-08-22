@@ -4,11 +4,11 @@ using MarginTrading.MarketMaker.AzureRepositories;
 using MarginTrading.MarketMaker.AzureRepositories.Implementation;
 using MarginTrading.MarketMaker.HelperServices;
 using MarginTrading.MarketMaker.Services;
-using MarginTrading.MarketMaker.Services.Implemetation;
 using MarginTrading.MarketMaker.Settings;
 using MarginTrading.MarketMaker.HelperServices.Implemetation;
 using Rocks.Caching;
 using MarginTrading.MarketMaker.Services.Implementation;
+using MarginTrading.MarketMaker.Services.Implemetation;
 
 namespace MarginTrading.MarketMaker.Modules
 {
@@ -25,7 +25,7 @@ namespace MarginTrading.MarketMaker.Modules
 
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterInstance(_settings).SingleInstance();
+            builder.RegisterInstance(_settings.MarginTradingMarketMaker).SingleInstance();
             builder.RegisterInstance(_log).As<ILog>().SingleInstance();
             builder.RegisterType<AssetsPairsSettingsRepository>().As<IAssetsPairsSettingsRepository>().SingleInstance();
             builder.RegisterType<MarketMakerService>().As<IMarketMakerService>().SingleInstance();
@@ -33,7 +33,6 @@ namespace MarginTrading.MarketMaker.Modules
             builder.RegisterType<AzureRepoFactory>().As<IAzureRepoFactory>().SingleInstance();
             builder.RegisterType<RabbitMqService>().As<IRabbitMqService>().SingleInstance();
             builder.RegisterType<AssetPairsSettingsService>().As<IAssetPairsSettingsService>().SingleInstance();
-            builder.RegisterType<MarketMakerService>().As<IMarketMakerService>().SingleInstance();
             builder.RegisterType<SystemService>().As<ISystem>().SingleInstance();
             builder.RegisterType<BrokerService>().As<IBrokerService>().InstancePerDependency();
         }

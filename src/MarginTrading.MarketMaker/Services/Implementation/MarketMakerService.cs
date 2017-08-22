@@ -15,19 +15,16 @@ namespace MarginTrading.MarketMaker.Services.Implemetation
         private const int OrdersVolume = 1000000;
 
         private readonly IAssetPairsSettingsService _assetPairsSettingsService;
-        private readonly ISystem _system;
         private readonly Lazy<IMessageProducer<OrderCommandsBatchMessage>> _messageProducer;
+        private readonly ISystem _system;
 
-        public MarketMakerService(IAssetPairsSettingsService assetPairsSettingsService, AppSettings appSettings, IRabbitMqService rabbitMqService, ISystem system)
+        public MarketMakerService(IAssetPairsSettingsService assetPairsSettingsService, MarginTradingMarketMakerSettings marginTradingMarketMakerSettings,
+            IRabbitMqService rabbitMqService, ISystem system)
         {
             _assetPairsSettingsService = assetPairsSettingsService;
             _system = system;
-            _messageProducer = new Lazy<IMessageProducer<OrderCommandsBatchMessage>>(() => CreateRabbitMqMessageProducer(appSettings, rabbitMqService));
-        }
-
-        private static IMessageProducer<OrderCommandsBatchMessage> CreateRabbitMqMessageProducer(AppSettings appSettings, IRabbitMqService rabbitMqService)
-        {
-            return rabbitMqService.CreateProducer<OrderCommandsBatchMessage>(appSettings.RabbitMq.OrderCommandsConnectionSettings, false);
+            _messageProducer = new Lazy<IMessageProducer<OrderCommandsBatchMessage>>(() =>
+                CreateRabbitMqMessageProducer(marginTradingMarketMakerSettings, rabbitMqService));
         }
 
         public Task ProcessNewIcmBestBidAskAsync(BestBidAskMessage bestBidAsk)
@@ -38,7 +35,8 @@ namespace MarginTrading.MarketMaker.Services.Implemetation
             }
 
             var quotesSource = _assetPairsSettingsService.GetAssetPairQuotesSource(bestBidAsk.Asset);
-            if (quotesSource != AssetPairQuotesSourceEnum.Icm || bestBidAsk.BestBid == null || bestBidAsk.BestAsk == null)
+            if (quotesSource != AssetPairQuotesSourceEnum.Icm || bestBidAsk.BestBid == null ||
+                bestBidAsk.BestAsk == null)
             {
                 return Task.CompletedTask;
             }
@@ -64,25 +62,41 @@ namespace MarginTrading.MarketMaker.Services.Implemetation
             if (message.SetNewQuotesSource != null)
             {
                 quotesSource = message.SetNewQuotesSource.Value;
-                await _assetPairsSettingsService.SetAssetPairQuotesSource(message.AssetPairId, message.SetNewQuotesSource.Value);
+                await _assetPairsSettingsService.SetAssetPairQuotesSource(message.AssetPairId,
+                    message.SetNewQuotesSource.Value);
             }
             else
             {
                 quotesSource = _assetPairsSettingsService.GetAssetPairQuotesSource(message.AssetPairId);
             }
 
-            if (quotesSource == AssetPairQuotesSourceEnum.Manual && message.PriceForBuyOrder != null && message.PriceForSellOrder != null)
+            if (quotesSource == AssetPairQuotesSourceEnum.Manual && message.PriceForBuyOrder != null &&
+                message.PriceForSellOrder != null)
             {
-                await SendOrderCommandsAsync(message.AssetPairId, message.PriceForSellOrder.Value, message.PriceForBuyOrder.Value);
+                await SendOrderCommandsAsync(message.AssetPairId, message.PriceForSellOrder.Value,
+                    message.PriceForBuyOrder.Value);
             }
+        }
+
+        private static IMessageProducer<OrderCommandsBatchMessage> CreateRabbitMqMessageProducer(
+            MarginTradingMarketMakerSettings marginTradingMarketMakerSettings, IRabbitMqService rabbitMqService)
+        {
+            return rabbitMqService.CreateProducer<OrderCommandsBatchMessage>(
+                marginTradingMarketMakerSettings.RabbitMq.OrderCommandsConnectionSettings, false);
         }
 
         private Task SendOrderCommandsAsync(string assetPairId, OrderDirectionEnum orderDirection, double price)
         {
             var commands = new[]
             {
-                new OrderCommand { CommandType = OrderCommandTypeEnum.DeleteOrder },
-                new OrderCommand { CommandType = OrderCommandTypeEnum.SetOrder, Direction = orderDirection, Price = price, Volume = OrdersVolume },
+                new OrderCommand {CommandType = OrderCommandTypeEnum.DeleteOrder},
+                new OrderCommand
+                {
+                    CommandType = OrderCommandTypeEnum.SetOrder,
+                    Direction = orderDirection,
+                    Price = price,
+                    Volume = OrdersVolume
+                },
             };
 
             return SendOrderCommandsAsync(assetPairId, commands);
@@ -92,9 +106,21 @@ namespace MarginTrading.MarketMaker.Services.Implemetation
         {
             var commands = new[]
             {
-                new OrderCommand { CommandType = OrderCommandTypeEnum.DeleteOrder },
-                new OrderCommand { CommandType = OrderCommandTypeEnum.SetOrder, Direction = OrderDirectionEnum.Sell, Price = priceForSellOrder, Volume = OrdersVolume },
-                new OrderCommand { CommandType = OrderCommandTypeEnum.SetOrder, Direction = OrderDirectionEnum.Buy, Price = priceForBuyOrder, Volume = OrdersVolume },
+                new OrderCommand {CommandType = OrderCommandTypeEnum.DeleteOrder},
+                new OrderCommand
+                {
+                    CommandType = OrderCommandTypeEnum.SetOrder,
+                    Direction = OrderDirectionEnum.Sell,
+                    Price = priceForSellOrder,
+                    Volume = OrdersVolume
+                },
+                new OrderCommand
+                {
+                    CommandType = OrderCommandTypeEnum.SetOrder,
+                    Direction = OrderDirectionEnum.Buy,
+                    Price = priceForBuyOrder,
+                    Volume = OrdersVolume
+                },
             };
 
             return SendOrderCommandsAsync(assetPairId, commands);
@@ -105,7 +131,7 @@ namespace MarginTrading.MarketMaker.Services.Implemetation
             return _messageProducer.Value.ProduceAsync(new OrderCommandsBatchMessage
             {
                 AssetPairId = assetPairId,
-                Timestamp = _system.Now,
+                Timestamp = _system.UtcNow,
                 Commands = commands
             });
         }

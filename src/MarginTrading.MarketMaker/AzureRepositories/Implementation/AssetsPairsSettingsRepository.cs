@@ -9,10 +9,18 @@ namespace MarginTrading.MarketMaker.AzureRepositories.Implementation
         private readonly INoSQLTableStorage<AssetPairSettingsEntity> _tableStorage;
 
         public AssetsPairsSettingsRepository(IAzureRepoFactory repoFactory)
-            => _tableStorage = repoFactory.CreateStorage<AssetPairSettingsEntity>("MarketMakerAssetPairsSettings");
+        {
+            _tableStorage = repoFactory.CreateStorage<AssetPairSettingsEntity>("MarketMakerAssetPairsSettings");
+        }
 
-        public Task SetAsync(AssetPairSettingsEntity entity) => _tableStorage.InsertOrReplaceAsync(entity);
+        public Task SetAsync(AssetPairSettingsEntity entity)
+        {
+            return _tableStorage.InsertOrReplaceAsync(entity);
+        }
 
-        public Task<AssetPairSettingsEntity> GetAsync(string partitionKey, string rowKey) => _tableStorage.GetDataAsync(partitionKey, rowKey);
+        public Task<AssetPairSettingsEntity> GetAsync(string partitionKey, string rowKey)
+        {
+            return _tableStorage.GetDataAsync(partitionKey, rowKey);
+        }
     }
 }

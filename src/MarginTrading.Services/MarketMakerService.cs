@@ -53,7 +53,7 @@ namespace MarginTrading.Services
             (model.DeleteByInstrumentsBuy, model.DeleteByInstrumentsSell) = GetOrdersToDelete(batch);
 
             model.OrdersToAdd = GetOrdersToSet(batch);
-            if (model.OrdersToAdd?.Count > 0)
+            if (model.OrdersToAdd?.Count > 0 || model.DeleteByInstrumentsBuy?.Count > 0 || model.DeleteByInstrumentsSell?.Count > 0)
             {
                 _matchingEngine.SetOrders(model);
             }

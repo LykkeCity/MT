@@ -8,16 +8,19 @@ namespace MarginTrading.MarketMaker.AzureRepositories.Implementation
 {
     internal class AzureRepoFactory : IAzureRepoFactory
     {
-        private readonly AppSettings _appSettings;
+        private readonly MarginTradingMarketMakerSettings _marginTradingMarketMakerSettings;
         private readonly ILog _log;
 
-        public AzureRepoFactory(AppSettings appSettings, ILog log)
+        public AzureRepoFactory(MarginTradingMarketMakerSettings marginTradingMarketMakerSettings, ILog log)
         {
-            _appSettings = appSettings;
+            _marginTradingMarketMakerSettings = marginTradingMarketMakerSettings;
             _log = log;
         }
 
-        public INoSQLTableStorage<TEntity> CreateStorage<TEntity>(string tableName) where TEntity : class, ITableEntity, new()
-            => new AzureTableStorage<TEntity>(_appSettings.Db.ConnectionString, tableName, _log);
+        public INoSQLTableStorage<TEntity> CreateStorage<TEntity>(string tableName)
+            where TEntity : class, ITableEntity, new()
+        {
+            return new AzureTableStorage<TEntity>(_marginTradingMarketMakerSettings.Db.ConnectionString, tableName, _log);
+        }
     }
 }

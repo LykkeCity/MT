@@ -21,16 +21,24 @@ namespace MarginTrading.MarketMaker.HelperServices.Implemetation
             _logger = logger;
         }
 
+        public void Dispose()
+        {
+            foreach (var stopable in _stopables)
+                stopable.Stop();
+        }
+
         public IMessageProducer<TMessage> CreateProducer<TMessage>(RabbitConnectionSettings settings, bool isDurable)
         {
             var subscriptionSettings = new RabbitMqSubscriptionSettings
             {
                 ConnectionString = settings.ConnectionString,
                 ExchangeName = settings.ExchangeName,
+                IsDurable = true,
             };
 
             var rabbitMqPublisher = new RabbitMqPublisher<TMessage>(subscriptionSettings)
                 .SetSerializer(new JsonMessageSerializer<TMessage>())
+                .SetLogger(_logger)
                 .Start();
 
             _stopables.Add(rabbitMqPublisher);
@@ -48,21 +56,14 @@ namespace MarginTrading.MarketMaker.HelperServices.Implemetation
                 IsDurable = isDurable,
             };
 
-            var rabbitMqSubscriber = new RabbitMqSubscriber<TMessage>(subscriptionSettings, new DefaultErrorHandlingStrategy(_logger, subscriptionSettings))
+            var rabbitMqSubscriber = new RabbitMqSubscriber<TMessage>(subscriptionSettings,
+                    new DefaultErrorHandlingStrategy(_logger, subscriptionSettings))
                 .SetMessageDeserializer(new JsonMessageDeserializer<TMessage>())
                 .Subscribe(handler)
                 .SetLogger(_logger)
                 .Start();
 
             _stopables.Add(rabbitMqSubscriber);
-        }
-
-        public void Dispose()
-        {
-            foreach (var stopable in _stopables)
-            {
-                stopable.Stop();
-            }
         }
     }
 }

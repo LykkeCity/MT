@@ -21,7 +21,7 @@ namespace MarginTrading.MarketMaker.Controllers
         public async Task<IActionResult> Post([FromBody] AssetPairSettingsModel message)
         {
             await _marketMakerService.ProcessAssetPairSettingsAsync(message);
-            return Ok(new { success = true });
+            return Ok(new {success = true});
         }
     }
 }

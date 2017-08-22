@@ -57,10 +57,10 @@ namespace MarginTrading.Backend
             {
                 _connector = new RabbitMqSubscriber<MarketMakerOrderCommandsBatchMessage>(new RabbitMqSubscriberSettings
                     {
-                        ConnectionString = _marginSettings.MarketMakerOrderCommandsRabbitMqSettings.ConnectionString,
-                        QueueName = QueueHelper.BuildQueueName(_marginSettings.MarketMakerOrderCommandsRabbitMqSettings.ExchangeName, _marginSettings.IsLive ? "Live" : "Demo"),
-                        ExchangeName = _marginSettings.MarketMakerOrderCommandsRabbitMqSettings.ExchangeName,
-                        IsDurable = _marginSettings.MarketMakerOrderCommandsRabbitMqSettings.IsDurable
+                        ConnectionString = _marginSettings.MarketMakerRabbitMqSettings.ConnectionString,
+                        QueueName = QueueHelper.BuildQueueName(_marginSettings.MarketMakerRabbitMqSettings.ExchangeName, _marginSettings.IsLive ? "Live" : "Demo"),
+                        ExchangeName = _marginSettings.MarketMakerRabbitMqSettings.ExchangeName,
+                        IsDurable = _marginSettings.MarketMakerRabbitMqSettings.IsDurable
                     })
                     .SetMessageDeserializer(new BackEndDeserializer<MarketMakerOrderCommandsBatchMessage>())
                     .Subscribe(HandleMessage)
