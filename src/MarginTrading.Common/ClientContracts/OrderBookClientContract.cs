@@ -23,6 +23,7 @@ namespace MarginTrading.Common.ClientContracts
     public class MatchedOrderClientContract
     {
         public string OrderId { get; set; }
+        public string MarketMakerId { get; set; }
         public double LimitOrderLeftToMatch { get; set; }
         public double Volume { get; set; }
         public double Price { get; set; }
