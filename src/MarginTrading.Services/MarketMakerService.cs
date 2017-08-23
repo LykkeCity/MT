@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,13 +12,18 @@ namespace MarginTrading.Services
 {
     public class MarketMakerService : IFeedConsumer
     {
-        private readonly IMatchingEngine _matchingEngine;
+        private const string MarketMakerId = "marketMaker1";
+
+        private static readonly Dictionary<string, IAssetPairRate> _pendingBuyRates =
+            new Dictionary<string, IAssetPairRate>();
+
+        private static readonly Dictionary<string, IAssetPairRate> _pendingSellRates =
+            new Dictionary<string, IAssetPairRate>();
+
         private readonly IAssetDayOffService _assetDayOffService;
         private readonly IAccountAssetsCacheService _assetsCacheService;
+        private readonly IMatchingEngine _matchingEngine;
         private readonly IQuoteCacheService _quoteCache;
-        private const string MarketMakerId = "marketMaker1";
-        private static readonly Dictionary<string, IAssetPairRate> _pendingBuyRates = new Dictionary<string, IAssetPairRate>();
-        private static readonly Dictionary<string, IAssetPairRate> _pendingSellRates = new Dictionary<string, IAssetPairRate>();
 
         public MarketMakerService(IMatchingEngine matchingEngine,
             IAssetDayOffService assetDayOffService,
@@ -43,39 +47,49 @@ namespace MarginTrading.Services
                 return;
             }
 
-            var model = new SetOrderModel { MarketMakerId = MarketMakerId };
+            var model = new SetOrderModel {MarketMakerId = MarketMakerId};
 
             if (DeleteOrdersIfDayOff(batch, model))
             {
                 return;
             }
 
-            (model.DeleteByInstrumentsBuy, model.DeleteByInstrumentsSell) = GetOrdersToDelete(batch);
-
-            model.OrdersToAdd = GetOrdersToSet(batch);
-            if (model.OrdersToAdd?.Count > 0 || model.DeleteByInstrumentsBuy?.Count > 0 || model.DeleteByInstrumentsSell?.Count > 0)
+            ConvertCommandsToOrders(batch, model);
+            if (model.OrdersToAdd?.Count > 0 || model.DeleteByInstrumentsBuy?.Count > 0 ||
+                model.DeleteByInstrumentsSell?.Count > 0)
             {
                 _matchingEngine.SetOrders(model);
             }
         }
 
-        private IReadOnlyList<LimitOrder> GetOrdersToSet(MarketMakerOrderCommandsBatchMessage batch)
+        public async Task ShutdownApplication()
+        {
+            await Task.Run(() => { Console.WriteLine("Processing before shutdown"); });
+        }
+
+        private void ConvertCommandsToOrders(MarketMakerOrderCommandsBatchMessage batch, SetOrderModel model)
         {
             var setCommands = batch.Commands.Where(c => c.CommandType == MarketMakerOrderCommandType.SetOrder).ToList();
-            if (setCommands.All(c => c.Direction == OrderDirection.Buy) || setCommands.All(c => c.Direction == OrderDirection.Sell))
+            if (setCommands.All(c => c.Direction == OrderDirection.Buy) ||
+                setCommands.All(c => c.Direction == OrderDirection.Sell))
             {
                 // it's trickery time
-                return setCommands.Select(c => CreateLimitOrders(new AssetPairRate
-                                  {
-                                      AssetPairId = batch.AssetPairId,
-                                      IsBuy = c.Direction.RequiredNotNull(nameof(c.Direction)) == OrderDirection.Buy,
-                                      Price = c.Price.RequiredNotNull(nameof(c.Price))
-                                  })).Where(a => a?.Length > 0).SelectMany(a => a)
-                                  .ToList();
+                model.OrdersToAdd = setCommands.Select(c => CreateLimitOrders(new AssetPairRate
+                    {
+                        AssetPairId = batch.AssetPairId,
+                        IsBuy = c.Direction.RequiredNotNull(nameof(c.Direction)) == OrderDirection.Buy,
+                        Price = c.Price.RequiredNotNull(nameof(c.Price))
+                    })).Where(a => a?.Length > 0).SelectMany(a => a)
+                    .ToList();
+
+                if (model.OrdersToAdd.Count > 0)
+                {
+                    AddOrdersToDelete(batch, model);
+                }
             }
             else
             {
-                return setCommands
+                model.OrdersToAdd = setCommands
                     .Select(c => new LimitOrder
                     {
                         Id = Guid.NewGuid().ToString("N"),
@@ -83,25 +97,16 @@ namespace MarginTrading.Services
                         CreateDate = DateTime.UtcNow,
                         Instrument = batch.AssetPairId,
                         Price = c.Price.RequiredNotNull(nameof(c.Price)),
-                        Volume = c.Direction.RequiredNotNull(nameof(c.Direction)) == OrderDirection.Buy ? 1000000 : -1000000
+                        Volume = c.Direction.RequiredNotNull(nameof(c.Direction)) == OrderDirection.Buy
+                            ? 1000000
+                            : -1000000
                     }).ToList();
+
+                AddOrdersToDelete(batch, model);
             }
         }
 
-        private bool DeleteOrdersIfDayOff(MarketMakerOrderCommandsBatchMessage batch, SetOrderModel model)
-        {
-            if (_assetDayOffService.IsDayOff(batch.AssetPairId))
-            {
-                model.DeleteByInstrumentsBuy = new[] { batch.AssetPairId };
-                model.DeleteByInstrumentsSell = new[] { batch.AssetPairId };
-                _matchingEngine.SetOrders(model);
-                return true;
-            }
-
-            return false;
-        }
-
-        private static (List<string> Buy, List<string> Sell) GetOrdersToDelete(MarketMakerOrderCommandsBatchMessage batch)
+        private static void AddOrdersToDelete(MarketMakerOrderCommandsBatchMessage batch, SetOrderModel model)
         {
             var buy = new List<string>();
             var sell = new List<string>();
@@ -120,19 +125,26 @@ namespace MarginTrading.Services
                         sell.Add(batch.AssetPairId);
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException(nameof(command.Direction), command.Direction, "This order direction is not supported");
+                        throw new ArgumentOutOfRangeException(nameof(command.Direction), command.Direction,
+                            "This order direction is not supported");
                 }
             }
 
-            return (buy, sell);
+            model.DeleteByInstrumentsBuy = buy;
+            model.DeleteByInstrumentsSell = sell;
         }
 
-        public async Task ShutdownApplication()
+        private bool DeleteOrdersIfDayOff(MarketMakerOrderCommandsBatchMessage batch, SetOrderModel model)
         {
-            await Task.Run(() =>
+            if (_assetDayOffService.IsDayOff(batch.AssetPairId))
             {
-                Console.WriteLine("Processing before shutdown");
-            });
+                model.DeleteByInstrumentsBuy = new[] {batch.AssetPairId};
+                model.DeleteByInstrumentsSell = new[] {batch.AssetPairId};
+                _matchingEngine.SetOrders(model);
+                return true;
+            }
+
+            return false;
         }
 
         [CanBeNull]
@@ -170,7 +182,6 @@ namespace MarginTrading.Services
                     {
                         _pendingSellRates.Remove(feedData.AssetPairId);
                     }
-
                 }
                 else
                 {
