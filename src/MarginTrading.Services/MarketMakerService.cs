@@ -69,9 +69,9 @@ namespace MarginTrading.Services
 
         private void ConvertCommandsToOrders(MarketMakerOrderCommandsBatchMessage batch, SetOrderModel model)
         {
-            var setCommands = batch.Commands.Where(c => c.CommandType == MarketMakerOrderCommandType.SetOrder).ToList();
-            if (setCommands.All(c => c.Direction == OrderDirection.Buy) ||
-                setCommands.All(c => c.Direction == OrderDirection.Sell))
+            var setCommands = batch.Commands.Where(c => c.CommandType == MarketMakerOrderCommandType.SetOrder && c.Direction != null).ToList();
+            var directions = setCommands.Select(c => c.Direction).Distinct().ToList();
+            if (directions.Count == 1)
             {
                 // it's trickery time
                 model.OrdersToAdd = setCommands.Select(c => CreateLimitOrders(new AssetPairRate
@@ -85,6 +85,14 @@ namespace MarginTrading.Services
                 if (model.OrdersToAdd.Count > 0)
                 {
                     AddOrdersToDelete(batch, model);
+                    if (directions[0] == OrderDirection.Buy)
+                    {
+                        model.DeleteByInstrumentsSell = null;
+                    }
+                    else
+                    {
+                        model.DeleteByInstrumentsBuy = null;
+                    }
                 }
             }
             else
