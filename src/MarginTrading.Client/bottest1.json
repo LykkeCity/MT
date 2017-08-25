@@ -1,0 +1,34 @@
+{
+  "MTServerAddress": "wss://mt-api-dev.lykkex.net/ws/",
+  "MTAuthorizationAddress": "https://api-dev.lykkex.net/api/Auth",
+  "NumberOfUsers": 1,
+  "SessionsPerUser": 1,
+  "Users": [
+    {
+      "Number": 2,
+      "Email": "andrey.anokhin@lykke.com",
+      "Password": "testtest",
+      "ClientInfo": "",
+      "PartnerId": "",
+      "ActionScriptInterval": 2000, // Milliseconds
+      "TransactionFrequency": 1000, // Milliseconds
+      "ReconnectFrequency": 300000 // Milliseconds
+    },
+    {
+      "Number": 1,
+      "Email": "nunobaraujo@hotmail.com",
+      "Password": "123456",
+      "ClientInfo": "",
+      "PartnerId": "",
+      "ActionScriptInterval": 3000, // Milliseconds
+      "TransactionFrequency": 2000, // Milliseconds
+      "ReconnectFrequency": 600000 // Milliseconds
+    }
+  ],
+  "Actions": [
+    "InitData", 
+    "PlaceOrder BTCUSD 2",    
+    "CloseOrder BTCUSD 2"
+  ]
+}
+

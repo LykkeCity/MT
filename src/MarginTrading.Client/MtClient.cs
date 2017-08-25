@@ -15,12 +15,12 @@ namespace MarginTrading.Client
 {
     public class MtClient
     {
-        private string _token;
-        private string _notificationId;
-        private string _serverAddress;
-        private IWampRealmProxy _realmProxy;
-        private IRpcMtFrontend _service;
-        private IWampChannel _channel;
+        protected string _token;
+        protected string _notificationId;
+        protected string _serverAddress;
+        protected IWampRealmProxy _realmProxy;
+        protected IRpcMtFrontend _service;
+        protected IWampChannel _channel;
 
         public void Connect(ClientEnv env)
         {
