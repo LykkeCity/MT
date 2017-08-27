@@ -1,11 +1,11 @@
 ﻿using System.Linq;
 using System.Security.Claims;
+using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Middleware.Validator;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.Extensions.Primitives;
-
-#pragma warning disable 1591
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace MarginTrading.Backend.Middleware
 {
@@ -13,15 +13,15 @@ namespace MarginTrading.Backend.Middleware
     {
         private readonly IApiKeyValidator _apiKeyValidator;
 
-        public KeyAuthHandler(IApiKeyValidator apiKeyValidator)
+        public KeyAuthHandler(IOptionsMonitor<KeyAuthOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock, IApiKeyValidator apiKeyValidator)
+            : base(options, logger, encoder, clock)
         {
             _apiKeyValidator = apiKeyValidator;
         }
+
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            StringValues headerValue;
-
-            if (!Context.Request.Headers.TryGetValue(Options.KeyHeaderName, out headerValue))
+            if (!Context.Request.Headers.TryGetValue(KeyAuthOptions.DefaultHeaderName, out var headerValue))
             {
                 return AuthenticateResult.Fail("No api key header.");
             }

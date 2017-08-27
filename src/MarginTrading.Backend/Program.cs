@@ -2,7 +2,6 @@
 using System.Threading;
 using MarginTrading.Services.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 
 #pragma warning disable 1591
 
@@ -12,29 +11,6 @@ namespace MarginTrading.Backend
     {
         public static void Main(string[] args)
         {
-            var cfgBuilder = new ConfigurationBuilder()
-              .AddEnvironmentVariables();
-
-            var configuration = cfgBuilder.Build();
-
-            int kestrelThreadsCount = 0;
-            string threadsCount = configuration["KestrelThreadCount"];
-
-            if (threadsCount != null)
-            {
-                if (!int.TryParse(threadsCount, out kestrelThreadsCount))
-                {
-                    Console.WriteLine($"Can't parse KestrelThreadsCount value '{threadsCount}'");
-                    return;
-                }
-
-                Console.WriteLine($"Kestrel threads count: {kestrelThreadsCount}");
-            }
-            else
-            {
-                Console.WriteLine("KestrelThreadsCount is not set. Using default value");
-            }
-
             var restartAttempsLeft = 5;
 
             while (restartAttempsLeft >= 0)
@@ -42,13 +18,7 @@ namespace MarginTrading.Backend
                 try
                 {
                     var host = new WebHostBuilder()
-                        .UseKestrel(options =>
-                        {
-                            if (kestrelThreadsCount > 0)
-                            {
-                                options.ThreadCount = kestrelThreadsCount;
-                            }
-                        })
+                        .UseKestrel()
                         .UseUrls("http://*:5000")
                         .UseStartup<Startup>()
                         .UseApplicationInsights()

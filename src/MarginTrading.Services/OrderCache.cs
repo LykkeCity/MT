@@ -69,7 +69,7 @@ namespace MarginTrading.Services
         }
     }
 
-    public class OrderCacheManager : TimerPeriod, IDisposable
+    public class OrderCacheManager : TimerPeriod
     {
         private readonly OrdersCache _orderCache;
         private readonly IMarginTradingBlobRepository _marginTradingBlobRepository;
@@ -99,9 +99,10 @@ namespace MarginTrading.Services
             await DumpToRepository();
         }
 
-        public void Dispose()
+        public override void Stop()
         {
             DumpToRepository().Wait();
+            base.Stop();
         }
 
         private async Task DumpToRepository()

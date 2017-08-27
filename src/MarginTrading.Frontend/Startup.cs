@@ -90,6 +90,13 @@ namespace MarginTrading.Frontend
                 options.OperationFilter<AddAuthorizationHeaderParameter>();
             });
 
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.SecurityTokenValidators.Clear();
+                    options.SecurityTokenValidators.Add(ApplicationContainer.Resolve<ISecurityTokenValidator>());
+                });
+            
             var builder = new ContainerBuilder();
 
             ApplicationSettings appSettings = Environment.IsDevelopment()
@@ -129,20 +136,8 @@ namespace MarginTrading.Frontend
             IWampHost host = ApplicationContainer.Resolve<IWampHost>();
             IWampHostedRealm realm = ApplicationContainer.Resolve<IWampHostedRealm>();
             IDisposable realmMetaService = realm.HostMetaApiService();
-            ISecurityTokenValidator tokenValidator = ApplicationContainer.Resolve<ISecurityTokenValidator>();
-
-            var bearerOptions = new JwtBearerOptions
-            {
-                AutomaticAuthenticate = true,
-                AutomaticChallenge = true,
-                AuthenticationScheme = JwtBearerDefaults.AuthenticationScheme,
-            };
-
-            bearerOptions.SecurityTokenValidators.Clear();
-            bearerOptions.SecurityTokenValidators.Add(tokenValidator);
-            app.UseJwtBearerAuthentication(bearerOptions);
-            app.UseStaticFiles();
-
+            
+            app.UseAuthentication();
 
             app.UseMvc(routes =>
             {
@@ -151,6 +146,7 @@ namespace MarginTrading.Frontend
 
             app.UseSwagger();
             app.UseSwaggerUi();
+            app.UseStaticFiles();
 
             app.Map("/ws", builder =>
             {
@@ -204,9 +200,11 @@ namespace MarginTrading.Frontend
                 .SingleInstance();
 
             builder.Register<IMarginTradingOperationsLogRepository>(ctx =>
-                new MarginTradingOperationsLogRepository(new AzureTableStorage<OperationLogEntity>(settings.MarginTradingFront.Db.LogsConnString, "MarginTradingFrontendOperationsLog", LogLocator.CommonLog))
-            )
-            .SingleInstance();
+                    new MarginTradingOperationsLogRepository(AzureTableStorage<OperationLogEntity>.Create(
+                        () => settings.MarginTradingFront.Db.LogsConnString, "MarginTradingFrontendOperationsLog",
+                        LogLocator.CommonLog))
+                )
+                .SingleInstance();
 
             builder.Register<IClientSettingsRepository>(ctx =>
                 AzureRepoFactories.Clients.CreateTraderSettingsRepository(settings.MarginTradingFront.Db.ClientPersonalInfoConnString, LogLocator.CommonLog)
@@ -217,7 +215,8 @@ namespace MarginTrading.Frontend
             ).SingleInstance();
 
             builder.Register<IAppGlobalSettingsRepositry>(ctx =>
-                new AppGlobalSettingsRepository(new AzureTableStorage<AppGlobalSettingsEntity>(settings.MarginTradingFront.Db.ClientPersonalInfoConnString, "Setup", LogLocator.CommonLog))
+                new AppGlobalSettingsRepository(AzureTableStorage<AppGlobalSettingsEntity>.Create(
+                    () => settings.MarginTradingFront.Db.ClientPersonalInfoConnString, "Setup", LogLocator.CommonLog))
             ).SingleInstance();
 
             builder.Register<IMarginTradingWatchListRepository>(ctx =>
@@ -511,20 +510,20 @@ namespace MarginTrading.Frontend
 
         private static void SetupLoggers(IServiceCollection services, ApplicationSettings settings)
         {
+            var consoleLogger = new LogToConsole();
+
             var comonSlackService =
                 services.UseSlackNotificationsSenderViaAzureQueue(settings.SlackNotifications.AzureQueue,
-                    new LogToConsole());
+                    consoleLogger);
 
             var slackService =
                 new MtSlackNotificationsSender(comonSlackService, "MT Frontend", settings.MtFrontend.MarginTradingFront.Env);
 
-            var log = new LykkeLogToAzureStorage(PlatformServices.Default.Application.ApplicationName,
-                new AzureTableStorage<LogEntity>(settings.MtFrontend.MarginTradingFront.Db.LogsConnString,
-                    "MarginTradingFrontendLog", null), slackService);
+            var log = services.UseLogToAzureStorage(settings.MtFrontend.MarginTradingFront.Db.LogsConnString,
+                slackService, "MarginTradingFrontendLog", consoleLogger);
 
-            var requestsLog = new LykkeLogToAzureStorage($"MT_Frontend_{settings.MtFrontend.MarginTradingFront.Env}",
-                new AzureTableStorage<LogEntity>(settings.MtFrontend.MarginTradingFront.Db.LogsConnString,
-                    "MarginTradingFrontendRequestsLog", null));
+            var requestsLog = services.UseLogToAzureStorage(settings.MtFrontend.MarginTradingFront.Db.LogsConnString,
+                slackService, "MarginTradingFrontendRequestsLog", consoleLogger);
 
             LogLocator.CommonLog = log;
             LogLocator.RequestsLog = requestsLog;

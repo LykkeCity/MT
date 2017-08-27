@@ -1,15 +1,12 @@
 ﻿using Autofac;
 using AzureStorage.Tables;
 using Common.Log;
-using Lykke.Logs;
 using MarginTrading.AzureRepositories;
 using MarginTrading.Core;
 using MarginTrading.Core.Clients;
 using MarginTrading.Core.Monitoring;
-using MarginTrading.Core.Notifications;
 using MarginTrading.Core.Settings;
 using MarginTrading.Services;
-using Microsoft.Extensions.PlatformAbstractions;
 
 namespace MarginTrading.Backend.Modules
 {
@@ -30,9 +27,11 @@ namespace MarginTrading.Backend.Modules
 				.As<ILog>()
 				.SingleInstance();
 
-			builder.Register<IMarginTradingOperationsLogRepository>(ctx =>
-				new MarginTradingOperationsLogRepository(new AzureTableStorage<OperationLogEntity>(_settings.Db.LogsConnString, "MarginTradingBackendOperationsLog", _log))
-			).SingleInstance();
+		    builder.Register<IMarginTradingOperationsLogRepository>(ctx =>
+		        new MarginTradingOperationsLogRepository(
+		            AzureTableStorage<OperationLogEntity>.Create(() => _settings.Db.LogsConnString,
+		                "MarginTradingBackendOperationsLog", _log))
+		    ).SingleInstance();
 
 			builder.Register<IClientSettingsRepository>(ctx =>
 				AzureRepoFactories.Clients.CreateTraderSettingsRepository(_settings.Db.ClientPersonalInfoConnString, _log)

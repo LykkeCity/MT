@@ -1,7 +1,10 @@
 ﻿using System;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using AzureStorage.Tables;
+using Common.Log;
 using Flurl.Http;
+using Lykke.Logs;
 using Lykke.SettingsReader;
 using MarginTrading.Public.Modules;
 using MarginTrading.Public.Settings;
@@ -10,6 +13,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.PlatformAbstractions;
 using Swashbuckle.Swagger.Model;
 
 namespace MarginTrading.Public
@@ -62,6 +66,11 @@ namespace MarginTrading.Public
                 settings.Env = Configuration["Env"];
                 Console.WriteLine($"Env: {settings.Env}");
             }
+
+            var consoleLogger = new LogToConsole();
+
+            services.UseLogToAzureStorage(settings.Db.LogsConnString,
+                null, "MarginTradingPublicLog", consoleLogger);
 
             builder.RegisterModule(new PublicApiModule(settings));
 
