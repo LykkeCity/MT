@@ -14,7 +14,8 @@ namespace MarginTrading.MarketMaker.AzureRepositories.Implementation
 
         public AssetsPairsSettingsRepository(MarginTradingMarketMakerSettings settings, ILog log)
         {
-            _tableStorage = new AzureTableStorage<AssetPairSettingsEntity>(settings.Db.ConnectionString, "MarketMakerAssetPairsSettings", log);
+            _tableStorage = AzureTableStorage<AssetPairSettingsEntity>.Create(() => settings.Db.ConnectionString,
+                "MarketMakerAssetPairsSettings", log);
         }
 
         public Task SetAsync(AssetPairSettingsEntity entity)
