@@ -11,7 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Lykke.Pkg.SettingsReader" Version="1.0.31" />
+    <PackageReference Include="Lykke.SettingsReader" Version="1.0.38" />
   </ItemGroup>
 
 </Project>

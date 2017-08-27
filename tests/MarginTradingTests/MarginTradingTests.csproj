@@ -5,7 +5,6 @@
     <AssemblyName>MarginTradingTests</AssemblyName>
     <PackageId>MarginTradingTests</PackageId>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
-    <PackageTargetFallback>$(PackageTargetFallback);dnxcore50;portable-net45+win8</PackageTargetFallback>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>

@@ -19,7 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="Lykke.Logs" Version="1.0.29" />
-    <PackageReference Include="Lykke.Pkg.SettingsReader" Version="1.0.31" />
+    <PackageReference Include="Lykke.SettingsReader" Version="1.0.38" />
     <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="1.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.0.0" />

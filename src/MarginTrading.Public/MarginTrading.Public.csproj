@@ -23,7 +23,7 @@
   <ItemGroup>
     <PackageReference Include="Lykke.Common.ApiLibrary" Version="1.0.11" />
     <PackageReference Include="Lykke.Logs" Version="1.0.29" />
-    <PackageReference Include="Lykke.Pkg.SettingsReader" Version="1.0.31" />
+    <PackageReference Include="Lykke.SettingsReader" Version="1.0.38" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="2.0.0" />
