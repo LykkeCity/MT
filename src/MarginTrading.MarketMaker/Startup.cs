@@ -104,12 +104,17 @@ namespace MarginTrading.MarketMaker
 
             var dbLogConnectionString = settings.MarginTradingMarketMaker.Db.LogsConnString;
 
+            var slackService = settings.SlackNotifications != null
+                ? services.UseSlackNotificationsSenderViaAzureQueue(settings.SlackNotifications.AzureQueue, logToConsole)
+                : null;
+
             // Creating azure storage logger, which logs own messages to concole log
             if (!string.IsNullOrEmpty(dbLogConnectionString) &&
                 !(dbLogConnectionString.StartsWith("${") && dbLogConnectionString.EndsWith("}")))
             {
-                logToAzureStorage = new LykkeLogToAzureStorage(ServiceName, new AzureTableStorage<LogEntity>(
-                    dbLogConnectionString, ServiceName + "Log", logToConsole));
+                logToAzureStorage =
+                    services.UseLogToAzureStorage(dbLogConnectionString, slackService, ServiceName + "Log",
+                        logToConsole);
 
                 logAggregate.AddLogger(logToAzureStorage);
             }
@@ -117,15 +122,7 @@ namespace MarginTrading.MarketMaker
             // Creating aggregate log, which logs to console and to azure storage, if last one specified
             var log = logAggregate.CreateLogger();
 
-            if (settings.SlackNotifications?.AzureQueue != null)
-            {
-                // Creating slack notification service, which logs own azure queue processing messages to aggregate log
-                var slackService =
-                    services.UseSlackNotificationsSenderViaAzureQueue(settings.SlackNotifications.AzureQueue, log);
-
-                // Finally, setting slack notification for azure storage log, which will forward necessary message to slack service
-                logToAzureStorage?.SetSlackNotification(slackService);
-            }
+            
 
             return log;
         }
