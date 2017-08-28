@@ -70,9 +70,10 @@ namespace MarginTrading.Core
     public interface IMarginTradingAccountAssetRepository
     {
         Task AddOrReplaceAsync(IMarginTradingAccountAsset accountAsset);
-        Task<IMarginTradingAccountAsset> GetAsync(string tradingConditionId, string baseAssetId, string instrument);
+        Task<IMarginTradingAccountAsset> GetAsync(string tradingConditionId, string baseAssetId, string assetPairId);
         Task<IEnumerable<IMarginTradingAccountAsset>> GetAllAsync(string tradingConditionId, string baseAssetId);
         Task<IEnumerable<IMarginTradingAccountAsset>> GetAllAsync();
-        Task AssignInstruments(string tradingConditionId, string baseAssetId, string[] instruments, AccountAssetsSettings defaults);
+        Task AssignAssetPairs(string tradingConditionId, string baseAssetId, string[] assetPairsIds, AccountAssetsSettings defaults);
+        Task<IMarginTradingAccountAsset> GetAccountAsset(string tradingConditionId, string baseAssetId, string assetPairId);
     }
 }

@@ -22,7 +22,7 @@ namespace MarginTrading.Services.Helpers
         private static void RegisterCaches(ContainerBuilder builder)
         {
             builder.RegisterType<OrdersCache>().AsSelf().SingleInstance();
-            builder.RegisterType<InstrumentsCache>().AsSelf().SingleInstance();
+            builder.RegisterType<AssetPairsCache>().AsSelf().SingleInstance();
         }
 
         private static void RegisterApplicationServices(ContainerBuilder builder)

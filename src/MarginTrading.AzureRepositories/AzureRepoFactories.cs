@@ -63,9 +63,9 @@ namespace MarginTrading.AzureRepositories
 					"MarginTradingAccountAssets", log));
 			}
 
-			public static MarginTradingAssetsRepository CreateAssetsRepository(string connstring, ILog log)
+			public static MarginTradingAssetPairsRepository CreateAssetsRepository(string connstring, ILog log)
 			{
-				return new MarginTradingAssetsRepository(AzureTableStorage<MarginTradingAssetEntity>.Create(() => connstring,
+				return new MarginTradingAssetPairsRepository(AzureTableStorage<MarginTradingAssetPairEntity>.Create(() => connstring,
 					"MarginTradingAssets", log));
 			}
 

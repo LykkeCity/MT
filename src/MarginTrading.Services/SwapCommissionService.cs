@@ -6,16 +6,16 @@ namespace MarginTrading.Services
 {
     public class SwapCommissionService : ISwapCommissionService
     {
-        private readonly IInstrumentsCache _instrumentsCache;
+        private readonly IAssetPairsCache _assetPairsCache;
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
         private readonly ICfdCalculatorService _calculator;
 
         public SwapCommissionService(
-            IInstrumentsCache instrumentsCache,
+            IAssetPairsCache assetPairsCache,
             IAccountAssetsCacheService accountAssetsCacheService,
             ICfdCalculatorService calculator)
         {
-            _instrumentsCache = instrumentsCache;
+            _assetPairsCache = assetPairsCache;
             _accountAssetsCacheService = accountAssetsCacheService;
             _calculator = calculator;
         }
@@ -33,7 +33,7 @@ namespace MarginTrading.Services
 
             if (openDate.HasValue)
             {
-                var asset = _instrumentsCache.GetInstrumentById(instrument);
+                var asset = _assetPairsCache.GetAssetPairById(instrument);
 
                 var accountAsset = _accountAssetsCacheService.GetAccountAsset(tradingConditionId, accountAssetId, instrument);
 

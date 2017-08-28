@@ -35,7 +35,7 @@ namespace MarginTrading.Services
         public async Task AssignInstruments(string tradingConditionId, string baseAssetId, string[] instruments)
         {
             var defaults = _settings.DefaultAccountAssetsSettings ?? new AccountAssetsSettings();
-            await _repository.AssignInstruments(tradingConditionId, baseAssetId, instruments, defaults);
+            await _repository.AssignAssetPairs(tradingConditionId, baseAssetId, instruments, defaults);
             await UpdateAccountAssetsCache();
         }
 

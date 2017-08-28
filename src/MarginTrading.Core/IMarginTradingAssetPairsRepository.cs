@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace MarginTrading.Core
 {
-    public interface IMarginTradingAsset
+    public interface IMarginTradingAssetPair
     {
         string Id { get; }
         string Name { get; }
@@ -12,7 +12,7 @@ namespace MarginTrading.Core
         int Accuracy { get; }
     }
 
-    public class MarginTradingAsset : IMarginTradingAsset
+    public class MarginTradingAssetPair : IMarginTradingAssetPair
     {
         public string Id { get; set; }
         public string Name { get; set; }
@@ -20,9 +20,9 @@ namespace MarginTrading.Core
         public string QuoteAssetId { get; set; }
         public int Accuracy { get; set; }
 
-        public static MarginTradingAsset Create(IMarginTradingAsset src)
+        public static MarginTradingAssetPair Create(IMarginTradingAssetPair src)
         {
-            return new MarginTradingAsset
+            return new MarginTradingAssetPair
             {
                 Id = src.Id,
                 Name = src.Name,
@@ -33,12 +33,11 @@ namespace MarginTrading.Core
         }
     }
 
-    public interface IMarginTradingAssetsRepository
+    public interface IMarginTradingAssetPairsRepository
     {
-        Task<IEnumerable<IMarginTradingAsset>> GetAllAsync();
-        Task<IEnumerable<MarginTradingAsset>> GetAllAsync(List<string> instruments);
-
-        Task AddAsync(IMarginTradingAsset asset);
-        Task<IMarginTradingAsset> GetAssetAsync(string coreSymbol);
+        Task<IEnumerable<IMarginTradingAssetPair>> GetAllAsync();
+        Task<IEnumerable<MarginTradingAssetPair>> GetAllAsync(List<string> instruments);
+        Task AddAsync(IMarginTradingAssetPair assetPair);
+        Task<IMarginTradingAssetPair> GetAssetAsync(string coreSymbol);
     }
 }

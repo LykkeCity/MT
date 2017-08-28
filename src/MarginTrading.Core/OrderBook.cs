@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using MarginTrading.Core.Helpers;
 
 namespace MarginTrading.Core
 {
@@ -141,8 +142,8 @@ namespace MarginTrading.Core
         public IEnumerable<LimitOrder> DeleteAllOrdersByMarketMaker(string marketMakerId, bool deleteAllBuy, bool deleteAllSell)
         {
             var result = new List<LimitOrder>();
-            var buyOrders = new List<LimitOrder>(); 
-            var sellOrders = new List<LimitOrder>(); 
+            var buyOrders = new List<LimitOrder>();
+            var sellOrders = new List<LimitOrder>();
 
             if (deleteAllBuy)
                 buyOrders = Buy.DeleteAllOrdersByMarketMaker(marketMakerId);
@@ -272,13 +273,13 @@ namespace MarginTrading.Core
     //TODO: check concurent work
     public class OrderBookList : IEnumerable<KeyValuePair<string, OrderBook>>
     {
-        private readonly IInstrumentsCache _instrumentsCache;
+        private readonly IAssetPairsCache _assetPairsCache;
 
         private Dictionary<string, OrderBook> _orderBooks;
 
-        public OrderBookList(IInstrumentsCache instrumentsCache)
+        public OrderBookList(IAssetPairsCache assetPairsCache)
         {
-            _instrumentsCache = instrumentsCache;
+            _assetPairsCache = assetPairsCache;
         }
 
         public Dictionary<string, OrderBook> GetOrderBookState()
@@ -289,7 +290,7 @@ namespace MarginTrading.Core
         public double GetRemainingVolume(string instrumentId, OrderDirection orderType,
             double price)
         {
-            var instrument = _instrumentsCache.GetInstrumentById(instrumentId);
+            var instrument = _assetPairsCache.GetAssetPairById(instrumentId);
 
             if (!_orderBooks.ContainsKey(instrumentId))
                 return 0;
@@ -330,16 +331,11 @@ namespace MarginTrading.Core
 
         public OrderListPair GetAllLimitOrders(string instrumentId)
         {
-            return new OrderListPair()
+            var orderBook = _orderBooks.GetValueOrDefault(instrumentId, k => new OrderBook());
+            return new OrderListPair
             {
-                Buy =
-                    _orderBooks.ContainsKey(instrumentId)
-                        ? _orderBooks[instrumentId].Buy.Values.SelectMany(x => x).ToArray()
-                        : Array.Empty<LimitOrder>(),
-                Sell =
-                    _orderBooks.ContainsKey(instrumentId)
-                        ? _orderBooks[instrumentId].Buy.Values.SelectMany(x => x).ToArray()
-                        : Array.Empty<LimitOrder>()
+                Buy = orderBook.Buy.Values.SelectMany(x => x).ToArray(),
+                Sell = orderBook.Sell.Values.SelectMany(x => x).ToArray(),
             };
         }
 

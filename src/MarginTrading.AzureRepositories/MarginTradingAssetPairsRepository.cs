@@ -7,7 +7,7 @@ using Microsoft.WindowsAzure.Storage.Table;
 
 namespace MarginTrading.AzureRepositories
 {
-    public class MarginTradingAssetEntity : TableEntity, IMarginTradingAsset
+    public class MarginTradingAssetPairEntity : TableEntity, IMarginTradingAssetPair
     {
         public string Id => RowKey;
         public string Name { get; set; }
@@ -25,9 +25,9 @@ namespace MarginTrading.AzureRepositories
             return id;
         }
 
-        public static MarginTradingAssetEntity Create(IMarginTradingAsset src)
+        public static MarginTradingAssetPairEntity Create(IMarginTradingAssetPair src)
         {
-            return new MarginTradingAssetEntity
+            return new MarginTradingAssetPairEntity
             {
                 PartitionKey = GeneratePartitionKey(),
                 RowKey = GenerateRowKey(src.Id),
@@ -39,38 +39,38 @@ namespace MarginTrading.AzureRepositories
         }
     }
 
-    public class MarginTradingAssetsRepository : IMarginTradingAssetsRepository
+    public class MarginTradingAssetPairsRepository : IMarginTradingAssetPairsRepository
     {
-        private readonly INoSQLTableStorage<MarginTradingAssetEntity> _tableStorage;
+        private readonly INoSQLTableStorage<MarginTradingAssetPairEntity> _tableStorage;
 
-        public MarginTradingAssetsRepository(INoSQLTableStorage<MarginTradingAssetEntity> tableStorage)
+        public MarginTradingAssetPairsRepository(INoSQLTableStorage<MarginTradingAssetPairEntity> tableStorage)
         {
             _tableStorage = tableStorage;
         }
 
-        public async Task<IEnumerable<IMarginTradingAsset>> GetAllAsync()
+        public async Task<IEnumerable<IMarginTradingAssetPair>> GetAllAsync()
         {
-            var partitionKey = MarginTradingAssetEntity.GeneratePartitionKey();
+            var partitionKey = MarginTradingAssetPairEntity.GeneratePartitionKey();
             var assets = await _tableStorage.GetDataAsync(partitionKey);
 
-            return assets.Select(MarginTradingAsset.Create);
+            return assets.Select(MarginTradingAssetPair.Create);
         }
 
-        public async Task<IEnumerable<MarginTradingAsset>> GetAllAsync(List<string> instruments)
+        public async Task<IEnumerable<MarginTradingAssetPair>> GetAllAsync(List<string> instruments)
         {
             var assets = await _tableStorage.GetDataAsync(item => instruments.Contains(item.Id));
 
-            return assets.Select(MarginTradingAsset.Create);
+            return assets.Select(MarginTradingAssetPair.Create);
         }
 
-        public async Task AddAsync(IMarginTradingAsset asset)
+        public async Task AddAsync(IMarginTradingAssetPair assetPair)
         {
-            await _tableStorage.InsertOrReplaceAsync(MarginTradingAssetEntity.Create(asset));
+            await _tableStorage.InsertOrReplaceAsync(MarginTradingAssetPairEntity.Create(assetPair));
         }
 
-        public async Task<IMarginTradingAsset> GetAssetAsync(string assetId)
+        public async Task<IMarginTradingAssetPair> GetAssetAsync(string assetId)
         {
-            return await _tableStorage.GetDataAsync(MarginTradingAssetEntity.GeneratePartitionKey(), assetId);
+            return await _tableStorage.GetDataAsync(MarginTradingAssetPairEntity.GeneratePartitionKey(), assetId);
         }
     }
 }

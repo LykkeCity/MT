@@ -42,7 +42,7 @@ namespace MarginTradingTests.Modules
                 .Returns(() => Task.FromResult(new PushNotificationsSettings {Enabled = true}));
 
             builder.RegisterInstance(new LogToMemory()).As<ILog>();
-            builder.RegisterInstance(assetsRepository).As<IMarginTradingAssetsRepository>().SingleInstance();
+            builder.RegisterInstance(assetsRepository).As<IMarginTradingAssetPairsRepository>().SingleInstance();
             builder.RegisterInstance(accountRepository).As<IMarginTradingAccountsRepository>().SingleInstance();
             builder.RegisterInstance(conditionsRepository).As<IMarginTradingConditionRepository>().SingleInstance();
             builder.RegisterInstance(accountGroupRepository).As<IMarginTradingAccountGroupRepository>().SingleInstance();

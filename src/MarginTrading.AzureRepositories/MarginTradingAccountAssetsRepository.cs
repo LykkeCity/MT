@@ -1,8 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AzureStorage;
+using JetBrains.Annotations;
 using MarginTrading.Core;
+using MarginTrading.Core.Messages;
 using MarginTrading.Core.Settings;
 using Microsoft.WindowsAzure.Storage.Table;
 
@@ -76,10 +79,10 @@ namespace MarginTrading.AzureRepositories
             await _tableStorage.InsertOrReplaceAsync(MarginTradingAccountAssetEntity.Create(accountAsset));
         }
 
-        public async Task<IMarginTradingAccountAsset> GetAsync(string tradingConditionId, string baseAssetId, string instrument)
+        public async Task<IMarginTradingAccountAsset> GetAsync(string tradingConditionId, string baseAssetId, string assetPairId)
         {
             MarginTradingAccountAssetEntity entity = await _tableStorage.GetDataAsync(MarginTradingAccountAssetEntity.GeneratePartitionKey(tradingConditionId, baseAssetId),
-                MarginTradingAccountAssetEntity.GenerateRowKey(instrument));
+                MarginTradingAccountAssetEntity.GenerateRowKey(assetPairId));
 
             return entity != null
                 ? MarginTradingAccountAssetEntity.Create(entity)
@@ -97,19 +100,16 @@ namespace MarginTrading.AzureRepositories
         {
             var entity = await _tableStorage.GetDataAsync();
 
-            return entity.Any()
-                ? entity.Select(MarginTradingAccountAsset.Create)
-                : new List<IMarginTradingAccountAsset>();
+            return entity.Select(MarginTradingAccountAsset.Create);
         }
 
-        public async Task AssignInstruments(string tradingConditionId, string baseAssetId, string[] instruments, AccountAssetsSettings defaults)
+        public async Task AssignAssetPairs(string tradingConditionId, string baseAssetId, string[] assetPairsIds, AccountAssetsSettings defaults)
         {
-            var currentInstruments =
-                (await GetAllAsync(tradingConditionId, baseAssetId)).ToArray();
+            var currentInstruments = (await GetAllAsync(tradingConditionId, baseAssetId)).ToArray();
 
-            if (currentInstruments != null && currentInstruments.Any())
+            if (currentInstruments.Any())
             {
-                var toRemove = currentInstruments.Where(x => !instruments.Contains(x.Instrument)).Select(x => (MarginTradingAccountAssetEntity)x);
+                var toRemove = currentInstruments.Where(x => !assetPairsIds.Contains(x.Instrument)).Select(x => (MarginTradingAccountAssetEntity)x);
 
                 foreach (var entity in toRemove)
                 {
@@ -117,9 +117,9 @@ namespace MarginTrading.AzureRepositories
                 }
             }
 
-            if (instruments.Any())
+            if (assetPairsIds.Any())
             {
-                var toAdd = instruments.Where(x => !currentInstruments.Select(y => y.Instrument).Contains(x));
+                var toAdd = assetPairsIds.Where(x => !currentInstruments.Select(y => y.Instrument).Contains(x));
                 var entitiesToAdd = toAdd.Select(x => MarginTradingAccountAssetEntity.Create(
                     new MarginTradingAccountAsset
                     {
@@ -142,6 +142,13 @@ namespace MarginTrading.AzureRepositories
                     }));
                 await _tableStorage.InsertAsync(entitiesToAdd);
             }
+        }
+
+        [ItemCanBeNull]
+        public async Task<IMarginTradingAccountAsset> GetAccountAsset(string tradingConditionId,
+            string accountAssetId, string assetPairId)
+        {
+            return (await GetAllAsync(tradingConditionId, accountAssetId)).FirstOrDefault(i => i.Instrument == assetPairId);
         }
     }
 }

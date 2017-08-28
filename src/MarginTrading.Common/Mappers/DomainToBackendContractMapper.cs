@@ -30,7 +30,7 @@ namespace MarginTrading.Common.Mappers
             };
         }
 
-        public static MarginTradingAssetBackendContract ToBackendContract(this IMarginTradingAsset src)
+        public static MarginTradingAssetBackendContract ToBackendContract(this IMarginTradingAssetPair src)
         {
             return new MarginTradingAssetBackendContract
             {

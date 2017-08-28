@@ -9,69 +9,69 @@ namespace MarginTradingTests
     {
         public const string TradingConditionId = "1";
 
-        public static MarginTradingAssetsRepository GetPopulatedAssetsRepository()
+        public static MarginTradingAssetPairsRepository GetPopulatedAssetsRepository()
         {
-            var assetsRepository = new MarginTradingAssetsRepository(new NoSqlTableInMemory<MarginTradingAssetEntity>());
+            var assetsRepository = new MarginTradingAssetPairsRepository(new NoSqlTableInMemory<MarginTradingAssetPairEntity>());
 
-            var assets = new List<MarginTradingAsset>
+            var assets = new List<MarginTradingAssetPair>
             {
-                new MarginTradingAsset
+                new MarginTradingAssetPair
                 {
                     Id = "EURUSD",
                     Accuracy = 5,
                     BaseAssetId = "EUR",
                     QuoteAssetId = "USD"
                 },
-                new MarginTradingAsset
+                new MarginTradingAssetPair
                 {
                     Id = "BTCEUR",
                     Accuracy = 3,
                     BaseAssetId = "BTC",
                     QuoteAssetId = "EUR"
                 },
-                new MarginTradingAsset
+                new MarginTradingAssetPair
                 {
                     Id = "BTCUSD",
                     Accuracy = 3,
                     BaseAssetId = "BTC",
                     QuoteAssetId = "USD"
                 },
-                new MarginTradingAsset
+                new MarginTradingAssetPair
                 {
                     Id = "BTCCHF",
                     Accuracy = 3,
                     BaseAssetId = "BTC",
                     QuoteAssetId = "CHF"
                 },
-                new MarginTradingAsset
+                new MarginTradingAssetPair
                 {
                     Id = "CHFJPY",
                     Accuracy = 3,
                     BaseAssetId = "CHF",
                     QuoteAssetId = "JPY"
                 },
-                new MarginTradingAsset
+                new MarginTradingAssetPair
                 {
                     Id = "USDCHF",
                     Accuracy = 3,
                     BaseAssetId = "USD",
                     QuoteAssetId = "CHF"
                 },
-                new MarginTradingAsset
+                new MarginTradingAssetPair
                 {
                     Id = "EURCHF",
                     Accuracy = 5,
                     BaseAssetId = "EUR",
                     QuoteAssetId = "CHF"
                 },
-                new MarginTradingAsset
+                new MarginTradingAssetPair
                 {
                     Id = "BTCJPY",
                     Accuracy = 5,
                     BaseAssetId = "BTC",
                     QuoteAssetId = "JPY"
                 },
-                new MarginTradingAsset
+                new MarginTradingAssetPair
                 {
                     Id = "EURJPY",
                     Accuracy = 3,

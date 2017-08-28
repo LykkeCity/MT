@@ -69,7 +69,7 @@ namespace MarginTrading.Backend.Modules
 				AzureRepoFactories.MarginTrading.CreateAccountAssetsRepository(_settings.Db.MarginTradingConnString, _log)
 			).SingleInstance();
 
-			builder.Register<IMarginTradingAssetsRepository>(ctx =>
+			builder.Register<IMarginTradingAssetPairsRepository>(ctx =>
 				AzureRepoFactories.MarginTrading.CreateAssetsRepository(_settings.Db.DictsConnString, _log)
 			).SingleInstance();
 

@@ -1,0 +1,18 @@
+version: '2'
+services:
+  margintrading:
+    image: lykkex/margintradingdatareader
+    container_name: margintradingdatareader
+    environment:
+      - SettingsUrl=${SettingsUrl}
+      - KestrelThreadCount=${KestrelThreadCount}
+      - IsLive=${IsLive}
+    ports:
+      - "5008:5008"
+    networks:
+      mynet:
+        aliases:
+          - margintradingdatareader
+networks:
+  mynet:
+    driver: bridge

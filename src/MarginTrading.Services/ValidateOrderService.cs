@@ -14,7 +14,7 @@ namespace MarginTrading.Services
         private readonly IAccountUpdateService _accountUpdateService;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
-        private readonly IInstrumentsCache _instrumentsCache;
+        private readonly IAssetPairsCache _assetPairsCache;
         private readonly OrdersCache _ordersCache;
         private readonly IAssetDayOffService _assetDayOffService;
 
@@ -23,7 +23,7 @@ namespace MarginTrading.Services
             IAccountUpdateService accountUpdateService,
             IAccountsCacheService accountsCacheService,
             IAccountAssetsCacheService accountAssetsCacheService,
-            IInstrumentsCache instrumentsCache,
+            IAssetPairsCache assetPairsCache,
             OrdersCache ordersCache,
             IAssetDayOffService assetDayOffService)
         {
@@ -31,7 +31,7 @@ namespace MarginTrading.Services
             _accountUpdateService = accountUpdateService;
             _accountsCacheService = accountsCacheService;
             _accountAssetsCacheService = accountAssetsCacheService;
-            _instrumentsCache = instrumentsCache;
+            _assetPairsCache = assetPairsCache;
             _ordersCache = ordersCache;
             _assetDayOffService = assetDayOffService;
         }
@@ -49,7 +49,7 @@ namespace MarginTrading.Services
                 throw new ValidateOrderException(OrderRejectReason.InvalidVolume, "Volume cannot be 0");
             }
 
-            var asset = _instrumentsCache.GetInstrumentById(order.Instrument);
+            var asset = _assetPairsCache.GetAssetPairById(order.Instrument);
             order.AssetAccuracy = asset.Accuracy;
 
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);

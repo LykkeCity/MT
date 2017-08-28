@@ -152,7 +152,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.FillOrKill
             };
 
-            var ex = Assert.Throws<InstrumentNotFoundException>(() => _validateOrderService.Validate(order));
+            var ex = Assert.Throws<AssetPairNotFoundException>(() => _validateOrderService.Validate(order));
 
             Assert.That(ex.InstrumentId == instrument);
         }
