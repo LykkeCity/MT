@@ -2,23 +2,22 @@
 using System.IO;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using AzureStorage.Tables;
 using Common.Log;
 using Flurl.Http;
 using Lykke.Logs;
 using Lykke.SettingsReader;
+using Lykke.SlackNotification.AzureQueue;
 using MarginTrading.AzureRepositories;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Core;
-using MarginTrading.Core.Monitoring;
 using MarginTrading.Core.Settings;
+using MarginTrading.Services.Notifications;
 using MarginTrading.Services.Settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.PlatformAbstractions;
 
 namespace MarginTrading.AccountHistoryBroker
 {
@@ -57,17 +56,10 @@ namespace MarginTrading.AccountHistoryBroker
                 : SettingsProcessor.Process<MtBackendSettings>(Configuration["SettingsUrl"].GetStringAsync().Result);
 
             bool isLive = Configuration.IsLive();
-            MarginSettings settings = isLive ? mtSettings.MtBackend.MarginTradingLive : mtSettings.MtBackend.MarginTradingDemo;
-            settings.IsLive = isLive;
 
-            Console.WriteLine($"IsLive: {settings.IsLive}");
+            Console.WriteLine($"IsLive: {isLive}");
 
-            RegisterRepositories(builder, settings);
-
-            builder.RegisterInstance(settings).SingleInstance();
-            builder.RegisterType<Application>()
-                .AsSelf()
-                .SingleInstance();
+            RegisterServices(services, builder, mtSettings, isLive);
 
             builder.Populate(services);
             ApplicationContainer = builder.Build();
@@ -94,10 +86,27 @@ namespace MarginTrading.AccountHistoryBroker
             );
         }
 
-        private void RegisterRepositories(ContainerBuilder builder, MarginSettings settings)
+        private void RegisterServices(IServiceCollection services, ContainerBuilder builder, MtBackendSettings mtSettings, bool isLive)
         {
-            LykkeLogToAzureStorage log = new LykkeLogToAzureStorage(PlatformServices.Default.Application.ApplicationName,
-                new AzureTableStorage<LogEntity>(settings.Db.LogsConnString, "MarginTradingAccountHistoryBrokerLog", null));
+            MarginSettings settings = isLive ? mtSettings.MtBackend.MarginTradingLive : mtSettings.MtBackend.MarginTradingDemo;
+            settings.IsLive = isLive;
+
+            builder.RegisterInstance(settings).SingleInstance();
+            builder.RegisterType<Application>()
+                .AsSelf()
+                .SingleInstance();
+
+            var consoleLogger = new LogToConsole();
+
+            var comonSlackService =
+                services.UseSlackNotificationsSenderViaAzureQueue(mtSettings.SlackNotifications.AzureQueue,
+                    consoleLogger);
+
+            var slackService =
+                new MtSlackNotificationsSender(comonSlackService, "MT AccountHistoryBroker", settings.Env);
+
+            var log = services.UseLogToAzureStorage(settings.Db.LogsConnString,
+                slackService, "MarginTradingAccountHistoryBrokerLog", consoleLogger);
 
             builder.RegisterInstance((ILog)log)
                 .As<ILog>()

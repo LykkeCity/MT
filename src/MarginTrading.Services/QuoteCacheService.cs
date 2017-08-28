@@ -12,7 +12,7 @@ using MarginTrading.Services.Events;
 
 namespace MarginTrading.Services
 {
-    public class QuoteCacheService : TimerPeriod, IQuoteCacheService, IEventConsumer<BestPriceChangeEventArgs>, IDisposable
+    public class QuoteCacheService : TimerPeriod, IQuoteCacheService, IEventConsumer<BestPriceChangeEventArgs>
     {
         private readonly ILog _log;
         private readonly IMarginTradingBlobRepository _blobRepository;
@@ -33,9 +33,7 @@ namespace MarginTrading.Services
             _lockSlim.EnterReadLock();
             try
             {
-                InstrumentBidAskPair quote;
-
-                if (!_quotes.TryGetValue(instrument, out quote))
+                if (!_quotes.TryGetValue(instrument, out var quote))
                     throw new QuoteNotFoundException(instrument, string.Format(MtMessages.QuoteNotFound, instrument));
 
                 return quote;
@@ -51,9 +49,7 @@ namespace MarginTrading.Services
             _lockSlim.EnterReadLock();
             try
             {
-                InstrumentBidAskPair quote;
-
-                if (!_quotes.TryGetValue(instrument, out quote))
+                if (!_quotes.TryGetValue(instrument, out var quote))
                 {
                     result = null;
                     return false;
@@ -122,9 +118,10 @@ namespace MarginTrading.Services
             return DumpToRepository();
         }
 
-        public void Dispose()
+        public override void Stop()
         {
             DumpToRepository().Wait();
+            base.Stop();
         }
 
         private async Task DumpToRepository()

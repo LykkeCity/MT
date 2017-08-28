@@ -34,18 +34,23 @@ namespace MarginTrading.AccountHistoryBroker
             await _logger.WriteInfoAsync(ServiceName, null, null, "Starting broker");
             try
             {
-                _connector = new RabbitMqSubscriber<string>(new RabbitMqSubscriberSettings
-                    {
-                        ConnectionString = _settings.MtRabbitMqConnString,
-                        QueueName = QueueHelper.BuildQueueName(_settings.RabbitMqQueues.AccountHistory.ExchangeName, _settings.Env),
-                        ExchangeName = _settings.RabbitMqQueues.AccountHistory.ExchangeName,
-                        IsDurable = true
-                    })
-                    .SetMessageDeserializer(new DefaultStringDeserializer())
-                    .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
-                    .Subscribe(HandleMessage)
-                    .SetLogger(_logger)
-                    .Start();
+                var settings = new RabbitMqSubscriptionSettings
+                {
+                    ConnectionString = _settings.MtRabbitMqConnString,
+                    QueueName =
+                        QueueHelper.BuildQueueName(_settings.RabbitMqQueues.AccountHistory.ExchangeName, _settings.Env),
+                    ExchangeName = _settings.RabbitMqQueues.AccountHistory.ExchangeName,
+                    IsDurable = true
+                };
+
+                _connector =
+                    new RabbitMqSubscriber<string>(settings,
+                            new ResilientErrorHandlingStrategy(_logger, settings, TimeSpan.FromSeconds(1)))
+                        .SetMessageDeserializer(new DefaultStringDeserializer())
+                        .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
+                        .Subscribe(HandleMessage)
+                        .SetLogger(_logger)
+                        .Start();
             }
             catch (Exception ex)
             {

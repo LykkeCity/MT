@@ -6,6 +6,7 @@ using Common;
 using Common.Log;
 using Flurl.Http;
 using Lykke.RabbitMqBroker.Publisher;
+using Lykke.RabbitMqBroker.Subscriber;
 using MarginTrading.Backend.Email;
 using MarginTrading.Backend.Middleware.Validator;
 using MarginTrading.Common.RabbitMq;
@@ -134,15 +135,16 @@ namespace MarginTrading.Backend.Modules
 
 			foreach (string exchangeName in publishers)
 			{
-				var pub = new RabbitMqPublisher<string>(new RabbitMqPublisherSettings
-				{
-					ConnectionString = _settings.MtRabbitMqConnString,
-					ExchangeName = exchangeName
-				})
-					.SetSerializer(bytesSerializer)
-					.SetPublishStrategy(new DefaultFnoutPublishStrategy(string.Empty, true))
-					.SetConsole(consoleWriter)
-					.Start();
+			    var pub = new RabbitMqPublisher<string>(new RabbitMqSubscriptionSettings
+			        {
+			            ConnectionString = _settings.MtRabbitMqConnString,
+			            ExchangeName = exchangeName
+			        })
+			        .SetSerializer(bytesSerializer)
+			        .SetPublishStrategy(new DefaultFanoutPublishStrategy(new RabbitMqSubscriptionSettings {IsDurable = true}))
+			        .SetLogger(_log)
+			        .SetConsole(consoleWriter)
+			        .Start();
 
 				builder.RegisterInstance(pub)
 					.Named<IMessageProducer<string>>(exchangeName)
