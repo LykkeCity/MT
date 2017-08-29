@@ -1,14 +1,13 @@
 version: '2'
 services:
   margintrading:
-    image: lykkedev/margintradingdatareader
+    image: lykkedev/margintradingdatareader:dev
     container_name: margintradingdatareader
     environment:
       - SettingsUrl=${SettingsUrl}
-      - KestrelThreadCount=${KestrelThreadCount}
       - IsLive=${IsLive}
     ports:
-      - "5008:5008"
+      - "5000:5000"
     networks:
       mynet:
         aliases:
