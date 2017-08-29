@@ -1,34 +1,56 @@
 {
   "MTServerAddress": "wss://mt-api-dev.lykkex.net/ws/",
   "MTAuthorizationAddress": "https://api-dev.lykkex.net/api/Auth",
-  "NumberOfUsers": 1,
+  "NumberOfUsers": 3,
   "SessionsPerUser": 1,
   "Users": [
     {
-      "Number": 2,
+      "Number": 1,
       "Email": "andrey.anokhin@lykke.com",
       "Password": "testtest",
       "ClientInfo": "",
       "PartnerId": "",
-      "ActionScriptInterval": 2000, // Milliseconds
-      "TransactionFrequency": 1000, // Milliseconds
+      "ActionScriptInterval": 1000, // Milliseconds
+      "TransactionFrequency": 10, // Milliseconds
       "ReconnectFrequency": 300000 // Milliseconds
     },
     {
-      "Number": 1,
+      "Number": 2,
       "Email": "nunobaraujo@hotmail.com",
       "Password": "123456",
       "ClientInfo": "",
       "PartnerId": "",
-      "ActionScriptInterval": 3000, // Milliseconds
-      "TransactionFrequency": 2000, // Milliseconds
+      "ActionScriptInterval": 999, // Milliseconds
+      "TransactionFrequency": 10, // Milliseconds
+      "ReconnectFrequency": 600000 // Milliseconds
+    },
+    {
+      "Number": 3,
+      "Email": "nuno@dev.com",
+      "Password": "123456",
+      "ClientInfo": "",
+      "PartnerId": "",
+      "ActionScriptInterval": 998, // Milliseconds
+      "TransactionFrequency": 10, // Milliseconds
       "ReconnectFrequency": 600000 // Milliseconds
     }
   ],
   "Actions": [
-    "InitData", 
-    "PlaceOrder BTCUSD 2",    
-    "CloseOrder BTCUSD 2"
+    "InitData",
+    "InitGraph",
+    "Subscribe EURUSD",
+    "Subscribe EURCHF",
+    "PlaceOrder BTCUSD 10",
+    "PlaceOrder USDCHF 6",
+    "GetHistory",
+    "GetAccountHistory",
+    "CloseOrder BTCUSD 6",
+    "Reconnect",
+    "CloseOrder USDCHF 6",
+    "CancelOrder BTCUSD 2",
+    "CloseOrder BTCUSD 2",
+    "Unsubscribe EURUSD",
+    "Unsubscribe EURCHF"    
   ]
 }
 

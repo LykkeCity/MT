@@ -72,7 +72,11 @@ namespace MarginTrading.Client
             // Subscribe Notifications
             notificationSubscription = _realmProxy.Services.GetSubject<NotifyResponse>($"user.updates.{_notificationId}").Subscribe(NotificationReceived);
         }
-
+        private void Disconnect()
+        {
+            LogInfo($"Disconnecting from server {_serverAddress}");
+            Close();
+        }
         public async Task Initialize(string serverAddress, string authorizationAddress)
         {
             LogInfo($"Initialing bot {_settings.Number}");
@@ -92,7 +96,12 @@ namespace MarginTrading.Client
             
             Connect();        
         }
-
+        public void Reconnect()
+        {
+            Disconnect();
+            System.Threading.Thread.Sleep(2000);
+            Connect();
+        }
 
         public new void IsAlive()
         {
@@ -160,6 +169,7 @@ namespace MarginTrading.Client
                 };
 
                 var result = await _service.GetAccountHistory(request.ToJson());
+                LogInfo($"GetAccountHistory: Accounts={result.Account.Length}, OpenPositions={result.OpenPositions.Length}, PositionsHistory={result.PositionsHistory.Length}");
                 return result;
             }
             catch (Exception ex)
@@ -177,9 +187,10 @@ namespace MarginTrading.Client
             };
 
             var result = await _service.GetHistory(request.ToJson());
+            LogInfo($"GetHistory: Items={result.Length}");
             return result;
         }
-        public  async Task<IEnumerable<OrderClientContract>> GetOpenPositionsFromDemo()
+        public async Task<IEnumerable<OrderClientContract>> GetOpenPositionsFromDemo()
         {
             var result  = await _service.GetOpenPositions(_token);
             return result.Demo;
@@ -246,13 +257,53 @@ namespace MarginTrading.Client
                     if (orderClosed.Result)
                         LogInfo($"Order Closed Id={order.Id}");
                     else
-                        LogInfo($"Order Close Failed Id={order.Id} Message:{orderClosed.Message}");
-                    processed++;
+                        LogInfo($"Order Close Failed Id={order.Id} Message:{orderClosed.Message}");                    
                 }
                 catch (Exception ex)
                 {
                     LogError(ex);
                 }
+                processed++;
+                // Sleep TransactionFrequency
+                Thread.Sleep(_settings.TransactionFrequency);
+            }
+
+            if (processed < numOrders)
+                LogWarning($"Not enough orders to close requested amount (numOrders)");
+
+            return result;
+        }
+        public async Task<IEnumerable<bool>> CancelOrders(string accountId, string instrument, int numOrders)
+        {
+            List<bool> result = new List<bool>();
+            List<OrderClientContract> orders = (await GetOpenPositionsFromDemo())
+                .Where(x => x.AccountId == accountId && x.Instrument == instrument).ToList();
+            int processed = 0;
+            foreach (var order in orders)
+            {
+                if (processed >= numOrders)
+                    break;
+                try
+                {
+                    LogInfo($"Canceling order {processed + 1}/{numOrders}: [{instrument}] Id={order.Id} Fpl={order.Fpl}");
+                    var request = new CloseOrderRpcClientRequest
+                    {
+                        OrderId = order.Id,
+                        Token = _token
+                    };
+
+                    var ordercanceled = await _service.CancelOrder(request.ToJson());                    
+                    result.Add(ordercanceled.Result);
+                    if (ordercanceled.Result)
+                        LogInfo($"Order Canceled Id={order.Id}");
+                    else
+                        LogInfo($"Order Cancel Failed Id={order.Id} Message:{ordercanceled.Message}");                    
+                }
+                catch (Exception ex)
+                {
+                    LogError(ex);
+                }
+                processed++;
                 // Sleep TransactionFrequency
                 Thread.Sleep(_settings.TransactionFrequency);
             }
@@ -284,6 +335,7 @@ namespace MarginTrading.Client
             {
                 int received = SubscriptionHistory[instrument];
                 LogInfo($"UnsubscribePrice: Instrument={instrument}. Entries received:{received}");
+                SubscriptionHistory.Remove(instrument);
             }
         }
 
@@ -334,7 +386,7 @@ namespace MarginTrading.Client
 
         private void LogInfo(string message)
         {
-            OnLog(new LogEventArgs(DateTime.UtcNow, $"Bot:[{_settings.Number}]-Thread[{Thread.CurrentThread.ManagedThreadId.ToString()}]", "info", message, null));
+            OnLog(new LogEventArgs(DateTime.UtcNow, $"Bot:[{_settings.Number}]", "info", $"Thread[{ Thread.CurrentThread.ManagedThreadId.ToString() }] {message}", null));
         }
         private void LogWarning(string message)
         {

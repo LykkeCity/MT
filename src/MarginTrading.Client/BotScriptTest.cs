@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace MarginTrading.Client
 {
@@ -42,10 +43,10 @@ namespace MarginTrading.Client
             Execute(Actions[currentAction]);
         }
 
-        private async void Execute(string action)
+        private async Task Execute(string action, bool restartTimer = true)
         {
             // do action
-            LogInfo($"Executing Action: {action}");
+            LogInfo($"Action: {action}");
 
             string command = action.Split(' ')[0].ToLower();
 
@@ -66,6 +67,7 @@ namespace MarginTrading.Client
                     Bot.UnsubscribePrice(unsubscribeInstrument);
                     break;
                 case "placeorder":
+                    #region placeorder
                     if (initData == null)
                     {
                         LogInfo("PlaceOrder Failed. InitData not performed, please call InitData before placing orders");
@@ -89,8 +91,10 @@ namespace MarginTrading.Client
                             LogInfo($"PlaceOrder result: Order={item.Id} Instrument={item.Instrument} Status={item.Status}");
                         }
                     }
+                    #endregion
                     break;
                 case "closeorder":
+                    #region closeorder
                     if (initData == null)
                     {
                         LogInfo("CloseOrder Failed. InitData not performed, please call InitData before closing orders");
@@ -114,6 +118,70 @@ namespace MarginTrading.Client
                             LogInfo($"CloseOrder result: Closed={item}");
                         }
                     }
+                    #endregion
+                    break;
+                case "cancelorder":
+                    #region cancelorder
+                    if (initData == null)
+                    {
+                        LogInfo("CancelOrder Failed. InitData not performed, please call InitData before canceling orders");
+                    }
+                    else
+                    {
+                        string cancelOrderInstrument = action.Split(' ')[1].ToUpper();
+                        int cancelOrderCount;
+                        if (action.Split(' ').Length > 2)
+                        {
+                            string orderCount = action.Split(' ')[2].ToUpper();
+                            if (!int.TryParse(orderCount, out cancelOrderCount))
+                                cancelOrderCount = 1;
+                        }
+                        else
+                            cancelOrderCount = 1;
+
+                        var result = await Bot.CancelOrders(initData.Demo.Accounts[0].Id, cancelOrderInstrument, cancelOrderCount);
+                        foreach (var item in result)
+                        {
+                            LogInfo($"CancelOrder result: Closed={item}");
+                        }
+                    }
+                    #endregion
+                    break;
+                case "gethistory":
+                    await Bot.GetHistory();                    
+                    break;
+                case "getaccounthistory":
+                    await Bot.GetAccountHistory();
+                    break;
+                case "repeat":
+                    int repeatCount = 1;
+                    if (action.Split(' ').Length > 1)
+                    {
+                        string rcount = action.Split(' ')[1];
+                        int.TryParse(rcount, out repeatCount);
+                    }
+                    int pos = -repeatCount;
+                    List<string> repeatActions = new List<string>();
+                    while (pos < 0)
+                    {
+                        repeatActions.Add(Actions[currentAction + pos]);
+                        pos++;
+                    }
+                    foreach (var repeatAction in repeatActions)
+                    {
+                        LogInfo($"Repeat: {repeatAction}");
+
+                        await Execute(repeatAction, false);
+                        
+                        LogInfo($"Repeat {repeatAction} Finished");
+                        Thread.Sleep(Bot.ActionScriptInterval);
+                    }
+                    LogInfo("RepeatFinished");
+
+                    break;
+                case "reconnect":
+                    Bot.Reconnect();
+                    LogInfo("Reconnected...");
                     break;
                 default:
                     break;
@@ -121,7 +189,8 @@ namespace MarginTrading.Client
 
 
             // Wait for next action
-            actionTimer.Change(Bot.ActionScriptInterval, 0);
+            if (restartTimer)
+                actionTimer.Change(Bot.ActionScriptInterval, 0);
         }
         private void NextActionTimerCall(object status)
         {
@@ -139,7 +208,7 @@ namespace MarginTrading.Client
 
         private void LogInfo(string message)
         {
-            OnLog(new LogEventArgs(DateTime.UtcNow, $"Bot:[{Bot.Id}]-Thread[{Thread.CurrentThread.ManagedThreadId.ToString()}]", "info", message, null));
+            OnLog(new LogEventArgs(DateTime.UtcNow, $"Bot:[{Bot.Id}]", "info", $"Thread[{ Thread.CurrentThread.ManagedThreadId.ToString() }] {message}", null));
         }
 
         private void OnLog(LogEventArgs e)
