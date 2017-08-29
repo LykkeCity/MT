@@ -1,13 +1,13 @@
 version: '2'
 services:
   margintrading:
-    image: lykkedev/margintradingdatareader:dev
+    image: lykkedev/margintradingdatareader
     container_name: margintradingdatareader
     environment:
       - SettingsUrl=${SettingsUrl}
       - IsLive=${IsLive}
     ports:
-      - "5000:5000"
+      - "5008:5008"
     networks:
       mynet:
         aliases:
