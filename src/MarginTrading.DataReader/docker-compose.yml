@@ -1,7 +1,7 @@
 version: '2'
 services:
   margintrading:
-    image: lykkex/margintradingdatareader
+    image: lykkedev/margintradingdatareader
     container_name: margintradingdatareader
     environment:
       - SettingsUrl=${SettingsUrl}
