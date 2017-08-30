@@ -18,12 +18,12 @@ namespace MarginTrading.Backend.Controllers
     [MiddlewareFilter(typeof(RequestLoggingPipeline))]
     public class RisksController : Controller
     {
-        private readonly IInstrumentsCache _instrumentsCache;
+        private readonly IAssetPairsCache _instrumentsCache;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly MarginSettings _marginSettings;
         private readonly IMarginTradingAccountHistoryRepository _accountHistoryRepository;
 
-        public RisksController(IInstrumentsCache instrumentsCache,
+        public RisksController(IAssetPairsCache instrumentsCache,
             IAccountsCacheService accountsCacheService, 
             MarginSettings marginSettings,
             IMarginTradingAccountHistoryRepository accountHistoryRepository)
