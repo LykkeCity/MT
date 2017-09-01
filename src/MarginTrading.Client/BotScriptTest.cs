@@ -20,7 +20,7 @@ namespace MarginTrading.Client
 
         public BotClient Bot { get; private set; }
         public string[] Actions { get; private set; }
-
+        private string[] processedScript;
         public BotScriptTest(BotClient bot, string[] actions)
         {
             Bot = bot;
@@ -40,7 +40,55 @@ namespace MarginTrading.Client
             if (Actions == null || Actions.Length < 1)
                 throw new ArgumentException("Actions");
 
-            Execute(Actions[currentAction]);
+            // Pre-process script
+            List<string> pscript = new List<string>();
+            for (int i = 0; i < Actions.Length; i++)
+            {
+                if (Actions[i].ToLower().StartsWith("repeat"))
+                {
+                    int repeatCount = 1;
+                    //do repeat stuff
+                    if (Actions[i].Split(' ').Length > 1)
+                    {
+                        string rcount = Actions[i].Split(' ')[1];
+                        if (rcount.ToLower() == "all")
+                        {                                                        
+                            List<string> repeated = new List<string>();
+                            for (int j = 0; j < i; j++)
+                            {
+                                repeated.Add(Actions[j]);
+                            }
+
+                            int repeatAllCount = 1;
+                            if (Actions[i].Split(' ').Length > 2)
+                                int.TryParse(Actions[i].Split(' ')[2], out repeatAllCount);                                    
+                            
+                            for (int k = 0; k < repeatAllCount; k++)
+                            {
+                                pscript.AddRange(repeated);
+                            }
+                        }
+                        else
+                        {
+                            int.TryParse(rcount, out repeatCount);
+                            int pos = -repeatCount;
+                            List<string> repeatActions = new List<string>();
+                            while (pos < 0)
+                            {
+                                repeatActions.Add(Actions[i + pos]);
+                                pos++;
+                            }
+                            pscript.AddRange(repeatActions);
+                        }
+                    }
+                    
+                }
+                else
+                    pscript.Add(Actions[i]);
+            }
+            processedScript = pscript.ToArray();
+
+            Execute(processedScript[currentAction]);
         }
 
         private async Task Execute(string action, bool restartTimer = true)
@@ -153,32 +201,19 @@ namespace MarginTrading.Client
                 case "getaccounthistory":
                     await Bot.GetAccountHistory();
                     break;
-                case "repeat":
-                    int repeatCount = 1;
-                    if (action.Split(' ').Length > 1)
+                case "getaccountopenpositions":
+                    if (initData == null)
                     {
-                        string rcount = action.Split(' ')[1];
-                        int.TryParse(rcount, out repeatCount);
+                        LogInfo("GetAccountOpenPositions Failed. InitData not performed, please call InitData before placing orders");
                     }
-                    int pos = -repeatCount;
-                    List<string> repeatActions = new List<string>();
-                    while (pos < 0)
+                    else
                     {
-                        repeatActions.Add(Actions[currentAction + pos]);
-                        pos++;
+                        var result = await Bot.GetAccountOpenPositions(initData.Demo.Accounts[0].Id);
                     }
-                    foreach (var repeatAction in repeatActions)
-                    {
-                        LogInfo($"Repeat: {repeatAction}");
-
-                        await Execute(repeatAction, false);
-                        
-                        LogInfo($"Repeat {repeatAction} Finished");
-                        Thread.Sleep(Bot.ActionScriptInterval);
-                    }
-                    LogInfo("RepeatFinished");
-
                     break;
+                case "getclientorders":
+                    var GetClientOrdersResult = await Bot.GetClientOrders();
+                    break;              
                 case "reconnect":
                     Bot.Reconnect();
                     LogInfo("Reconnected...");
@@ -196,13 +231,13 @@ namespace MarginTrading.Client
         {
             actionTimer.Change(-1, -1);
             currentAction++;
-            if (currentAction >= Actions.Length)
+            if (currentAction >= processedScript.Length)
             {
                 //script finished
                 OnTestFinished(new EventArgs());            }
             else
             {
-                Execute(Actions[currentAction]);                
+                Execute(processedScript[currentAction]);                
             }
         }
 

@@ -1,56 +1,85 @@
 {
   "MTServerAddress": "wss://mt-api-dev.lykkex.net/ws/",
   "MTAuthorizationAddress": "https://api-dev.lykkex.net/api/Auth",
-  "NumberOfUsers": 3,
-  "SessionsPerUser": 1,
+  "NumberOfUsers": 11,
+  "ActionScriptInterval": 500, // Milliseconds
+  "TransactionFrequencyMin": 10, // Milliseconds
+  "TransactionFrequencyMax": 500, // Milliseconds
   "Users": [
     {
       "Number": 1,
-      "Email": "andrey.anokhin@lykke.com",
-      "Password": "testtest",
-      "ClientInfo": "",
-      "PartnerId": "",
-      "ActionScriptInterval": 1000, // Milliseconds
-      "TransactionFrequency": 10, // Milliseconds
-      "ReconnectFrequency": 300000 // Milliseconds
+      "Email": "nunobaraujo@hotmail.com",
+      "Password": "123456"
     },
     {
       "Number": 2,
-      "Email": "nunobaraujo@hotmail.com",
-      "Password": "123456",
-      "ClientInfo": "",
-      "PartnerId": "",
-      "ActionScriptInterval": 999, // Milliseconds
-      "TransactionFrequency": 10, // Milliseconds
-      "ReconnectFrequency": 600000 // Milliseconds
+      "Email": "nuno@dev.com",
+      "Password": "123456"
     },
     {
       "Number": 3,
-      "Email": "nuno@dev.com",
-      "Password": "123456",
-      "ClientInfo": "",
-      "PartnerId": "",
-      "ActionScriptInterval": 998, // Milliseconds
-      "TransactionFrequency": 10, // Milliseconds
-      "ReconnectFrequency": 600000 // Milliseconds
+      "Email": "nuno1@dev.com",
+      "Password": "123456"
+    },
+    {
+      "Number": 4,
+      "Email": "nuno2@dev.com",
+      "Password": "123456"
+    },
+    {
+      "Number": 5,
+      "Email": "nuno3@dev.com",
+      "Password": "123456"
+    },
+    {
+      "Number": 6,
+      "Email": "nuno4@dev.com",
+      "Password": "123456"
+    },
+    {
+      "Number": 7,
+      "Email": "nuno5@dev.com",
+      "Password": "123456"
+    },
+    {
+      "Number": 8,
+      "Email": "nuno6@dev.com",
+      "Password": "123456"
+    },
+    {
+      "Number": 9,
+      "Email": "nuno7@dev.com",
+      "Password": "123456"
+    },
+    {
+      "Number": 10,
+      "Email": "nuno8@dev.com",
+      "Password": "123456"
+    },
+    {
+      "Number": 11,
+      "Email": "nuno9@dev.com",
+      "Password": "123456"
+    },
+    {
+      "Number": 99,
+      "Email": "andrey.anokhin@lykke.com",
+      "Password": "testtest"
     }
   ],
   "Actions": [
     "InitData",
     "InitGraph",
-    "Subscribe EURUSD",
-    "Subscribe EURCHF",
-    "PlaceOrder BTCUSD 10",
-    "PlaceOrder USDCHF 6",
-    "GetHistory",
-    "GetAccountHistory",
-    "CloseOrder BTCUSD 6",
+    "GetAccountOpenPositions",
+    "GetClientOrders",
+    "PlaceOrder BTCUSD 200",
+    "GetAccountOpenPositions",
+    "CloseOrder BTCUSD 100",
+    "GetClientOrders",
     "Reconnect",
-    "CloseOrder USDCHF 6",
-    "CancelOrder BTCUSD 2",
-    "CloseOrder BTCUSD 2",
-    "Unsubscribe EURUSD",
-    "Unsubscribe EURCHF"    
+    "InitData",
+    "CloseOrder BTCUSD 100",
+    "Repeat All 2"
   ]
 }
 

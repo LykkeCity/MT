@@ -1,0 +1,43 @@
+{
+  "MTServerAddress": "wss://mt-api-dev.lykkex.net/ws/",
+  "MTAuthorizationAddress": "https://api-dev.lykkex.net/api/Auth",
+  "NumberOfUsers": 1,
+  "ActionScriptInterval": 1000, // Milliseconds
+  "TransactionFrequencyMin": 50, // Milliseconds
+  "TransactionFrequencyMax": 1000, // Milliseconds
+  "Users": [
+    {
+      "Number": 2,
+      "Email": "andrey.anokhin@lykke.com",
+      "Password": "testtest"
+    },
+    {
+      "Number": 1,
+      "Email": "nunobaraujo@hotmail.com",
+      "Password": "123456"
+    },
+    {
+      "Number": 3,
+      "Email": "nuno@dev.com",
+      "Password": "123456"
+    }
+  ],
+  "Actions": [
+    "InitData",
+    "InitGraph",
+    "Subscribe EURUSD",
+    "Subscribe EURCHF",
+    "PlaceOrder BTCUSD 10",
+    "PlaceOrder USDCHF 6",
+    "GetHistory",
+    "GetAccountHistory",
+    "CloseOrder BTCUSD 6",
+    "Reconnect",
+    "CloseOrder USDCHF 6",
+    "CancelOrder BTCUSD 2",
+    "CloseOrder BTCUSD 2",
+    "Unsubscribe EURUSD",
+    "Unsubscribe EURCHF"
+  ]
+}
+

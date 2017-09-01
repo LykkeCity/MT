@@ -26,20 +26,28 @@ namespace MarginTrading.Client
         bool _isDisposing = false;
         string _authorizationAddress;
         IDisposable notificationSubscription;
+        Random random;
+
 
         Dictionary<string, IDisposable> PriceSubscription;
         Dictionary<string, int> SubscriptionHistory;
 
         public int Id { get { return _settings.Number; } }
         public string Email { get { return _settings.Email; } }
-        public int ActionScriptInterval { get { return _settings.ActionScriptInterval; } }        
-        public int TransactionFrequency { get { return _settings.TransactionFrequency; } }
+        public string Password { get { return _settings.Password; } }
+
+        public int ActionScriptInterval { get; private set; }
+        public int TransactionFrequencyMin { get; private set; }
+        public int TransactionFrequencyMax { get; private set; }
+        public bool Initialized { get; private set; }
 
         public BotClient(TestBotUserSettings settings)
         {
             _settings = settings;
+            Initialized = false;
             PriceSubscription = new Dictionary<string, IDisposable>();
             SubscriptionHistory = new Dictionary<string, int>();
+            random = new Random();
         }
 
         private void Connect()
@@ -77,16 +85,22 @@ namespace MarginTrading.Client
             LogInfo($"Disconnecting from server {_serverAddress}");
             Close();
         }
-        public async Task Initialize(string serverAddress, string authorizationAddress)
+        public async Task Initialize(string serverAddress, string authorizationAddress, int actionScriptInterval, int transactionFrequencyMin, int transactionFrequencyMax)
         {
+            
             LogInfo($"Initialing bot {_settings.Number}");
             _serverAddress = serverAddress;
             _authorizationAddress = authorizationAddress;
+            ActionScriptInterval = actionScriptInterval;
+            TransactionFrequencyMin = transactionFrequencyMin;
+            TransactionFrequencyMax = transactionFrequencyMax;
+            
             try
             {
                 var res = await AquireTokenData();
                 _token = res.token;
                 _notificationId = res.notificationsId;
+                Initialized = true;
             }
             catch (Exception ex)
             {
@@ -195,6 +209,25 @@ namespace MarginTrading.Client
             var result  = await _service.GetOpenPositions(_token);
             return result.Demo;
         }
+        public async Task<IEnumerable<OrderClientContract>> GetAccountOpenPositions(string accountId)
+        {
+            var request = new AccountTokenClientRequest
+            {
+                Token = _token,
+                AccountId = accountId
+            };
+
+            var result = await _service.GetAccountOpenPositions(request.ToJson());
+            LogInfo($"GetAccountOpenPositions: OpenPositions={result.Length}");
+            return result;
+        }
+        public new async Task<ClientPositionsLiveDemoClientResponse> GetClientOrders()
+        {
+            var result = await _service.GetClientOrders(_token);
+            LogInfo($"GetClientOrders: Orders={result.Demo.Orders.Length}, Positions={result.Demo.Positions.Length}");
+            return result;
+        }
+
         public async Task<IEnumerable<OrderClientContract>> PlaceOrders(string accountId, string instrument, int numOrders)
         {
             List<OrderClientContract> result = new List<OrderClientContract>();
@@ -228,7 +261,7 @@ namespace MarginTrading.Client
                     LogError(ex);
                 }
                 // Sleep TransactionFrequency
-                Thread.Sleep(_settings.TransactionFrequency);
+                Thread.Sleep(GetRandomTransactionInterval());
             }
             return result;
         }
@@ -265,7 +298,7 @@ namespace MarginTrading.Client
                 }
                 processed++;
                 // Sleep TransactionFrequency
-                Thread.Sleep(_settings.TransactionFrequency);
+                Thread.Sleep(GetRandomTransactionInterval());
             }
 
             if (processed < numOrders)
@@ -305,7 +338,7 @@ namespace MarginTrading.Client
                 }
                 processed++;
                 // Sleep TransactionFrequency
-                Thread.Sleep(_settings.TransactionFrequency);
+                Thread.Sleep(GetRandomTransactionInterval());
             }
 
             if (processed < numOrders)
@@ -353,10 +386,10 @@ namespace MarginTrading.Client
         private void NotificationReceived(NotifyResponse info)
         {
             if (info.Account != null)
-                LogInfo($"Notification received: Account changed={info.Account.Id}");            
+                LogInfo($"Notification received: Account changed={info.Account.Id} Balance:{info.Account.Balance}");
 
             if (info.Order != null)
-                LogInfo($"Notification received: Order changed={info.Order.Id}");
+                LogInfo($"Notification received: Order changed={info.Order.Id} Open:{info.Order.OpenDate} Close:{info.Order.CloseDate} Fpl:{info.Order.Fpl}");
 
             if (info.AccountStopout != null)
                 LogInfo($"Notification received: Account stopout={info.AccountStopout.AccountId}");            
@@ -371,9 +404,7 @@ namespace MarginTrading.Client
             var result = await _authorizationAddress.PostJsonAsync(new
             {
                 _settings.Email,
-                _settings.Password,
-                _settings.ClientInfo,
-                _settings.PartnerId
+                _settings.Password                
             })
             .ReceiveJson<ApiAuthResult>();
             if (result.Error != null)
@@ -381,8 +412,11 @@ namespace MarginTrading.Client
 
             return (token: result.Result.Token, notificationsId: result.Result.NotificationsId);
         }
-        
 
+        private int GetRandomTransactionInterval()
+        {
+            return random.Next(TransactionFrequencyMin, TransactionFrequencyMax);
+        }
 
         private void LogInfo(string message)
         {

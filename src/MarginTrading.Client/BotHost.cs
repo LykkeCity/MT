@@ -65,7 +65,7 @@ namespace MarginTrading.Client
             _settings = config.Get<TestBotSettings>();
             if (_settings == null || string.IsNullOrEmpty(_settings.MTAuthorizationAddress) || string.IsNullOrEmpty(_settings.MTServerAddress))
                 throw new ArgumentNullException("Invalid configuration file");
-            LogInfo("LoadSettings", $"Configuration Loaded: {_settingsFile}");
+            LogInfo("BotHost.LoadSettings", $"Configuration Loaded: {_settingsFile}");
             
         }
 
@@ -89,11 +89,43 @@ namespace MarginTrading.Client
         {
             foreach (var bot in Bots)
             {
-                System.Threading.Tasks.Task.Run(async () => 
+                System.Threading.Tasks.Task.Run(async () =>
                 {
-                    await bot.Initialize(_settings.MTServerAddress, _settings.MTAuthorizationAddress);                    
-                });
+                    int tryCount = 0;
+                    while (true)
+                    {
+                        if (tryCount > 3)
+                            break;
+                        tryCount++;
 
+                        bool create = false;
+                        try
+                        {
+                            await bot.Initialize(_settings.MTServerAddress, _settings.MTAuthorizationAddress, _settings.ActionScriptInterval, _settings.TransactionFrequencyMin, _settings.TransactionFrequencyMax);
+                            break;
+                        }
+                        catch (Exception ex)
+                        {
+                            if (ex.Message == "Invalid username or password")
+                            {
+                                create = true;
+                            }
+                        }
+                        if (create)
+                        {
+                            LogInfo("StartBots", $"Creating user: {bot.Email}");
+                            try
+                            {
+                                await MtUserHelper.Registration(bot.Email, bot.Password);
+                            }
+                            catch (Exception ex01)
+                            {
+                                LogError("MtUserHelper.Registration", ex01);
+                                break;
+                            }
+                        }
+                    }
+                });
             }
         }
 
@@ -103,12 +135,19 @@ namespace MarginTrading.Client
             RunningTests = new List<BotScriptTest>();
             foreach (var bot in Bots)
             {
-                BotScriptTest test = new BotScriptTest(bot, _settings.Actions);
-                test.LogEvent += Test_LogEvent;
-                test.TestFinished += Test_TestFinished;
-                RunningTests.Add(test);
-                LogInfo($"Bot:[{bot.Id}]", $"Starting test for Bot: {bot.Email}");
-                test.RunScriptAsync();
+                if (bot.Initialized)
+                {
+                    BotScriptTest test = new BotScriptTest(bot, _settings.Actions);
+                    test.LogEvent += Test_LogEvent;
+                    test.TestFinished += Test_TestFinished;
+                    RunningTests.Add(test);
+                    LogInfo($"Bot:[{bot.Id}]", $"Starting test for Bot: {bot.Email}");
+                    test.RunScriptAsync();
+                }
+                else
+                {
+                    LogWarning($"Bot:[{bot.Id}]", $"Bot initialization failed: {bot.Email}. Not running tests");
+                }
             }
         }
                 
@@ -152,7 +191,10 @@ namespace MarginTrading.Client
         public string MTServerAddress { get; set; }
         public string MTAuthorizationAddress { get; set; }
         public int NumberOfUsers { get; set; }
-        public int SessionsPerUser { get; set; }
+        public int ActionScriptInterval { get; set; }
+        public int TransactionFrequencyMin { get; set; }
+        public int TransactionFrequencyMax { get; set; }
+
         public TestBotUserSettings[] Users { get; set; }
         public string[] Actions { get; set; }
     }
@@ -160,12 +202,7 @@ namespace MarginTrading.Client
     {
         public int Number { get; set; }
         public string Email { get; set; }
-        public string Password { get; set; }
-        public string ClientInfo { get; set; }
-        public string PartnerId { get; set; }
-        public int ActionScriptInterval { get; set; }
-        public int TransactionFrequency { get; set; }
-        public int ReconnectFrequency { get; set; }
+        public string Password { get; set; }        
     }
     
     
