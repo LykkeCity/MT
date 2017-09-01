@@ -193,7 +193,7 @@ namespace MarginTrading.Services
             return IsAny(sourceValue) || sourceValue == targetValue;
         }
 
-        private static bool IsAssetMatches(string ruleAsset, IMarginTradingAssetPair instrument,
+        private static bool IsAssetMatches(string ruleAsset, IAssetPair instrument,
             OrderDirection? orderType)
         {
             if (IsAny(ruleAsset))

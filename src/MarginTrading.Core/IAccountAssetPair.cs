@@ -4,7 +4,7 @@ using MarginTrading.Core.Settings;
 
 namespace MarginTrading.Core
 {
-    public interface IMarginTradingAccountAsset
+    public interface IAccountAssetPair
     {
         string TradingConditionId { get; }
         string BaseAssetId { get; }
@@ -24,7 +24,7 @@ namespace MarginTrading.Core
         double PositionLimit { get; }
     }
 
-    public class MarginTradingAccountAsset : IMarginTradingAccountAsset
+    public class AccountAssetPair : IAccountAssetPair
     {
         public string TradingConditionId { get; set; }
         public string BaseAssetId { get; set; }
@@ -43,9 +43,9 @@ namespace MarginTrading.Core
         public double DealLimit { get; set; }
         public double PositionLimit { get; set; }
 
-        public static MarginTradingAccountAsset Create(IMarginTradingAccountAsset src)
+        public static AccountAssetPair Create(IAccountAssetPair src)
         {
-            return new MarginTradingAccountAsset
+            return new AccountAssetPair
             {
                 TradingConditionId = src.TradingConditionId,
                 BaseAssetId = src.BaseAssetId,
@@ -67,13 +67,12 @@ namespace MarginTrading.Core
         }
     }
 
-    public interface IMarginTradingAccountAssetRepository
+    public interface IAccountAssetPairsRepository
     {
-        Task AddOrReplaceAsync(IMarginTradingAccountAsset accountAsset);
-        Task<IMarginTradingAccountAsset> GetAsync(string tradingConditionId, string baseAssetId, string assetPairId);
-        Task<IEnumerable<IMarginTradingAccountAsset>> GetAllAsync(string tradingConditionId, string baseAssetId);
-        Task<IEnumerable<IMarginTradingAccountAsset>> GetAllAsync();
+        Task AddOrReplaceAsync(IAccountAssetPair accountAssetPair);
+        Task<IAccountAssetPair> GetAsync(string tradingConditionId, string baseAssetId, string assetPairId);
+        Task<IEnumerable<IAccountAssetPair>> GetAllAsync(string tradingConditionId, string baseAssetId);
+        Task<IEnumerable<IAccountAssetPair>> GetAllAsync();
         Task AssignAssetPairs(string tradingConditionId, string baseAssetId, string[] assetPairsIds, AccountAssetsSettings defaults);
-        Task<IMarginTradingAccountAsset> GetAccountAsset(string tradingConditionId, string baseAssetId, string assetPairId);
     }
 }

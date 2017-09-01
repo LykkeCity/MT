@@ -8,16 +8,16 @@ namespace MarginTrading.Services
     public class AccountAssetsManager
     {
         private readonly AccountAssetsCacheService _accountAssetsCacheService;
-        private readonly IMarginTradingAccountAssetRepository _repository;
+        private readonly IAccountAssetPairsRepository _pairsRepository;
         private readonly MarginSettings _settings;
 
         public AccountAssetsManager(
             AccountAssetsCacheService accountAssetsCacheService,
-            IMarginTradingAccountAssetRepository accountAssetRepository,
+            IAccountAssetPairsRepository accountAssetPairsRepository,
             MarginSettings settings)
         {
             _accountAssetsCacheService = accountAssetsCacheService;
-            _repository = accountAssetRepository;
+            _pairsRepository = accountAssetPairsRepository;
             _settings = settings;
         }
 
@@ -28,20 +28,20 @@ namespace MarginTrading.Services
 
         public async Task UpdateAccountAssetsCache()
         {
-            var accountAssets = (await _repository.GetAllAsync()).ToList();
+            var accountAssets = (await _pairsRepository.GetAllAsync()).ToList();
             _accountAssetsCacheService.InitAccountAssetsCache(accountAssets);
         }
 
         public async Task AssignInstruments(string tradingConditionId, string baseAssetId, string[] instruments)
         {
             var defaults = _settings.DefaultAccountAssetsSettings ?? new AccountAssetsSettings();
-            await _repository.AssignAssetPairs(tradingConditionId, baseAssetId, instruments, defaults);
+            await _pairsRepository.AssignAssetPairs(tradingConditionId, baseAssetId, instruments, defaults);
             await UpdateAccountAssetsCache();
         }
 
-        public async Task AddOrReplaceAccountAssetAsync(MarginTradingAccountAsset model)
+        public async Task AddOrReplaceAccountAssetAsync(AccountAssetPair model)
         {
-            await _repository.AddOrReplaceAsync(model);
+            await _pairsRepository.AddOrReplaceAsync(model);
             await UpdateAccountAssetsCache();
         }
     }

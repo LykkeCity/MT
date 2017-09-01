@@ -36,7 +36,7 @@ namespace MarginTrading.Backend.Controllers
 
         [Route("assets")]
         [HttpGet]
-        public MarginTradingAssetBackendContract[] GetAllAssets()
+        public AssetPairBackendContract[] GetAllAssets()
         {
             var instruments = _instrumentsCache.GetAll();
             return instruments.Select(item => item.ToBackendContract()).ToArray();

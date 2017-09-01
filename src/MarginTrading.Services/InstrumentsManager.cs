@@ -7,10 +7,10 @@ namespace MarginTrading.Services
 {
     public class InstrumentsManager : IStartable
     {
-        private readonly IMarginTradingAssetPairsRepository _repository;
+        private readonly IAssetPairsRepository _repository;
         private readonly AssetPairsCache _assetPairsCache;
 
-        public InstrumentsManager(IMarginTradingAssetPairsRepository repository,
+        public InstrumentsManager(IAssetPairsRepository repository,
             AssetPairsCache assetPairsCache)
         {
             _repository = repository;

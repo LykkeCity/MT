@@ -9,69 +9,69 @@ namespace MarginTradingTests
     {
         public const string TradingConditionId = "1";
 
-        public static MarginTradingAssetPairsRepository GetPopulatedAssetsRepository()
+        public static AssetPairsRepository GetPopulatedAssetsRepository()
         {
-            var assetsRepository = new MarginTradingAssetPairsRepository(new NoSqlTableInMemory<MarginTradingAssetPairEntity>());
+            var assetsRepository = new AssetPairsRepository(new NoSqlTableInMemory<AssetPairEntity>());
 
-            var assets = new List<MarginTradingAssetPair>
+            var assets = new List<AssetPair>
             {
-                new MarginTradingAssetPair
+                new AssetPair
                 {
                     Id = "EURUSD",
                     Accuracy = 5,
                     BaseAssetId = "EUR",
                     QuoteAssetId = "USD"
                 },
-                new MarginTradingAssetPair
+                new AssetPair
                 {
                     Id = "BTCEUR",
                     Accuracy = 3,
                     BaseAssetId = "BTC",
                     QuoteAssetId = "EUR"
                 },
-                new MarginTradingAssetPair
+                new AssetPair
                 {
                     Id = "BTCUSD",
                     Accuracy = 3,
                     BaseAssetId = "BTC",
                     QuoteAssetId = "USD"
                 },
-                new MarginTradingAssetPair
+                new AssetPair
                 {
                     Id = "BTCCHF",
                     Accuracy = 3,
                     BaseAssetId = "BTC",
                     QuoteAssetId = "CHF"
                 },
-                new MarginTradingAssetPair
+                new AssetPair
                 {
                     Id = "CHFJPY",
                     Accuracy = 3,
                     BaseAssetId = "CHF",
                     QuoteAssetId = "JPY"
                 },
-                new MarginTradingAssetPair
+                new AssetPair
                 {
                     Id = "USDCHF",
                     Accuracy = 3,
                     BaseAssetId = "USD",
                     QuoteAssetId = "CHF"
                 },
-                new MarginTradingAssetPair
+                new AssetPair
                 {
                     Id = "EURCHF",
                     Accuracy = 5,
                     BaseAssetId = "EUR",
                     QuoteAssetId = "CHF"
                 },
-                new MarginTradingAssetPair
+                new AssetPair
                 {
                     Id = "BTCJPY",
                     Accuracy = 5,
                     BaseAssetId = "BTC",
                     QuoteAssetId = "JPY"
                 },
-                new MarginTradingAssetPair
+                new AssetPair
                 {
                     Id = "EURJPY",
                     Accuracy = 3,
@@ -137,12 +137,12 @@ namespace MarginTradingTests
             return accountGroupRepository;
         }
 
-        public static MarginTradingAccountAssetsRepository GetPopulatedAccountAssetsRepository()
+        public static AccountAssetsPairsRepository GetPopulatedAccountAssetsRepository()
         {
-            var repository = new MarginTradingAccountAssetsRepository(new NoSqlTableInMemory<MarginTradingAccountAssetEntity>());
-            var assets = new List<MarginTradingAccountAsset>
+            var repository = new AccountAssetsPairsRepository(new NoSqlTableInMemory<AccountAssetPairEntity>());
+            var assets = new List<AccountAssetPair>
             {
-                new MarginTradingAccountAsset
+                new AccountAssetPair
                 {
                     TradingConditionId = TradingConditionId,
                     BaseAssetId = "USD",
@@ -152,7 +152,7 @@ namespace MarginTradingTests
                     DeltaAsk = 30,
                     DeltaBid = 30
                 },
-                new MarginTradingAccountAsset
+                new AccountAssetPair
                 {
                     TradingConditionId = TradingConditionId,
                     BaseAssetId = "USD",
@@ -164,7 +164,7 @@ namespace MarginTradingTests
                     DealLimit = 1000000,
                     PositionLimit = 10000000
                 },
-                new MarginTradingAccountAsset
+                new AccountAssetPair
                 {
                     TradingConditionId = TradingConditionId,
                     BaseAssetId = "USD",
@@ -174,7 +174,7 @@ namespace MarginTradingTests
                     DeltaAsk = 30,
                     DeltaBid = 30
                 },
-                new MarginTradingAccountAsset
+                new AccountAssetPair
                 {
                     TradingConditionId = TradingConditionId,
                     BaseAssetId = "USD",
@@ -186,7 +186,7 @@ namespace MarginTradingTests
                     DealLimit = 10,
                     PositionLimit = 100
                 },
-                new MarginTradingAccountAsset
+                new AccountAssetPair
                 {
                     TradingConditionId = TradingConditionId,
                     BaseAssetId = "USD",
@@ -196,7 +196,7 @@ namespace MarginTradingTests
                     DeltaAsk = 30,
                     DeltaBid = 30
                 },
-                new MarginTradingAccountAsset
+                new AccountAssetPair
                 {
                     TradingConditionId = TradingConditionId,
                     BaseAssetId = "USD",
@@ -206,7 +206,7 @@ namespace MarginTradingTests
                     DeltaAsk = 30,
                     DeltaBid = 30
                 },
-                new MarginTradingAccountAsset
+                new AccountAssetPair
                 {
                     TradingConditionId = TradingConditionId,
                     BaseAssetId = "EUR",
@@ -216,7 +216,7 @@ namespace MarginTradingTests
                     DeltaAsk = 30,
                     DeltaBid = 30
                 },
-                new MarginTradingAccountAsset
+                new AccountAssetPair
                 {
                     TradingConditionId = TradingConditionId,
                     BaseAssetId = "EUR",

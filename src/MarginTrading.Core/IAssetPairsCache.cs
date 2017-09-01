@@ -4,8 +4,8 @@ namespace MarginTrading.Core
 {
     public interface IAssetPairsCache
     {
-        IMarginTradingAssetPair GetAssetPairById(string assetPairId);
-        IEnumerable<IMarginTradingAssetPair> GetAll();
-        IMarginTradingAssetPair FindInstrument(string asset1, string asset2);
+        IAssetPair GetAssetPairById(string assetPairId);
+        IEnumerable<IAssetPair> GetAll();
+        IAssetPair FindInstrument(string asset1, string asset2);
     }
 }

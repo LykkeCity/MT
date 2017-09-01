@@ -61,11 +61,11 @@ namespace MarginTrading.DataReader.Modules
 				AzureRepoFactories.MarginTrading.CreateAccountGroupRepository(_settings.Db.MarginTradingConnString, _log)
 			).SingleInstance();
 
-			builder.Register<IMarginTradingAccountAssetRepository>(ctx =>
+			builder.Register<IAccountAssetPairsRepository>(ctx =>
 				AzureRepoFactories.MarginTrading.CreateAccountAssetsRepository(_settings.Db.MarginTradingConnString, _log)
 			).SingleInstance();
 
-			builder.Register<IMarginTradingAssetPairsRepository>(ctx =>
+			builder.Register<IAssetPairsRepository>(ctx =>
 				AzureRepoFactories.MarginTrading.CreateAssetsRepository(_settings.Db.DictsConnString, _log)
 			).SingleInstance();
 

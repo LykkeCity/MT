@@ -7,9 +7,9 @@ namespace MarginTrading.Common.BackendContracts
 {
     public class InitAccountInstrumentsBackendResponse
     {
-        public Dictionary<string, MarginTradingAccountAssetBackendContract[]> AccountAssets { get; set; }
+        public Dictionary<string, AccountAssetPairBackendContract[]> AccountAssets { get; set; }
 
-        public static InitAccountInstrumentsBackendResponse Create(Dictionary<string, IMarginTradingAccountAsset[]> accountAssets)
+        public static InitAccountInstrumentsBackendResponse Create(Dictionary<string, IAccountAssetPair[]> accountAssets)
         {
             return new InitAccountInstrumentsBackendResponse
             {
@@ -21,7 +21,7 @@ namespace MarginTrading.Common.BackendContracts
         {
             return new InitAccountInstrumentsBackendResponse
             {
-                AccountAssets = new Dictionary<string, MarginTradingAccountAssetBackendContract[]>()
+                AccountAssets = new Dictionary<string, AccountAssetPairBackendContract[]>()
             };
         }
     }

@@ -9,31 +9,31 @@ namespace MarginTrading.DataReader.Services.Implementation
 {
     public class AccountAssetsCacheService: IAccountAssetsCacheService
     {
-        private readonly IMarginTradingAccountAssetRepository _repository;
+        private readonly IAccountAssetPairsRepository _pairsRepository;
         private readonly ICacheProvider _cacheProvider;
 
-        public AccountAssetsCacheService(ICacheProvider cacheProvider, IMarginTradingAccountAssetRepository repository)
+        public AccountAssetsCacheService(ICacheProvider cacheProvider, IAccountAssetPairsRepository pairsRepository)
         {
             _cacheProvider = cacheProvider;
-            _repository = repository;
+            _pairsRepository = pairsRepository;
         }
 
-        private List<IMarginTradingAccountAsset> GetAccountAssetsCached()
+        private List<IAccountAssetPair> GetAccountAssetsCached()
         {
             // ReSharper disable once AssignNullToNotNullAttribute
             return _cacheProvider.Get(nameof(AccountAssetsCacheService),
                 () =>
                 {
-                    var readTask = _repository.GetAllAsync();
+                    var readTask = _pairsRepository.GetAllAsync();
                     var accountAssets = readTask.GetAwaiter().GetResult().ToList() ??
-                                         new List<IMarginTradingAccountAsset>();
-                    return new CachableResult<List<IMarginTradingAccountAsset>>(accountAssets, CachingParameters.FromSeconds(10));
+                                         new List<IAccountAssetPair>();
+                    return new CachableResult<List<IAccountAssetPair>>(accountAssets, CachingParameters.FromSeconds(10));
                 });
         }
 
-        private List<IMarginTradingAccountAsset> AccountAssets => GetAccountAssetsCached();
+        private List<IAccountAssetPair> AccountAssets => GetAccountAssetsCached();
 
-        public IMarginTradingAccountAsset GetAccountAsset(string tradingConditionId, string accountAssetId,
+        public IAccountAssetPair GetAccountAsset(string tradingConditionId, string accountAssetId,
             string instrument)
         {
             var accountAsset = AccountAssets.FirstOrDefault(item =>
@@ -61,7 +61,7 @@ namespace MarginTrading.DataReader.Services.Implementation
             return accountAsset;
         }
 
-        public IMarginTradingAccountAsset GetAccountAssetThrowIfNotFound(string tradingConditionId,
+        public IAccountAssetPair GetAccountAssetThrowIfNotFound(string tradingConditionId,
             string accountAssetId, string instrument)
         {
             var accountAsset = AccountAssets.FirstOrDefault(item =>
@@ -77,10 +77,10 @@ namespace MarginTrading.DataReader.Services.Implementation
             return accountAsset;
         }
 
-        public Dictionary<string, IMarginTradingAccountAsset[]> GetClientAssets(
+        public Dictionary<string, IAccountAssetPair[]> GetClientAssets(
             IEnumerable<MarginTradingAccount> accounts)
         {
-            var result = new Dictionary<string, IMarginTradingAccountAsset[]>();
+            var result = new Dictionary<string, IAccountAssetPair[]>();
 
             if (accounts == null)
             {
@@ -108,7 +108,7 @@ namespace MarginTrading.DataReader.Services.Implementation
                 .Select(item => item.Instrument).ToList();
         }
 
-        public List<IMarginTradingAccountAsset> GetAccountAssets(string tradingConditionId, string baseAssetId)
+        public List<IAccountAssetPair> GetAccountAssets(string tradingConditionId, string baseAssetId)
         {
             return AccountAssets.Where(item =>
                     item.TradingConditionId == tradingConditionId && item.BaseAssetId == baseAssetId)

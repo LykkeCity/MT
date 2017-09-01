@@ -11,16 +11,16 @@ namespace MarginTrading.DataReader.Controllers
     [Route("api/dictionaries")]
     public class DictionariesController : Controller
     {
-        private readonly IMarginTradingAssetPairsRepository _assetPairsRepository;
+        private readonly IAssetPairsRepository _assetPairsRepository;
 
-        public DictionariesController(IMarginTradingAssetPairsRepository assetPairsRepository)
+        public DictionariesController(IAssetPairsRepository assetPairsRepository)
         {
             _assetPairsRepository = assetPairsRepository;
         }
 
         [HttpGet]
         [Route("assetPairs")]
-        public Task<IEnumerable<IMarginTradingAssetPair>> GetAllAssetPairs()
+        public Task<IEnumerable<IAssetPair>> GetAllAssetPairs()
         {
             return _assetPairsRepository.GetAllAsync();
         }

@@ -9,10 +9,10 @@ namespace MarginTrading.Services
 {
     public class AssetPairsCache : IAssetPairsCache
     {
-        private Dictionary<string, IMarginTradingAssetPair> _assetPairs = new Dictionary<string, IMarginTradingAssetPair>();
+        private Dictionary<string, IAssetPair> _assetPairs = new Dictionary<string, IAssetPair>();
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
 
-        public IMarginTradingAssetPair GetAssetPairById(string assetPairId)
+        public IAssetPair GetAssetPairById(string assetPairId)
         {
             if (TryGetAssetById(assetPairId, out var result))
             {
@@ -22,7 +22,7 @@ namespace MarginTrading.Services
             throw new AssetPairNotFoundException(assetPairId, string.Format(MtMessages.InstrumentNotFoundInCache, assetPairId));
         }
 
-        public IEnumerable<IMarginTradingAssetPair> GetAll()
+        public IEnumerable<IAssetPair> GetAll()
         {
             _lockSlim.EnterReadLock();
             try
@@ -35,7 +35,7 @@ namespace MarginTrading.Services
             }
         }
 
-        public IMarginTradingAssetPair FindInstrument(string asset1, string asset2)
+        public IAssetPair FindInstrument(string asset1, string asset2)
         {
             //TODO: optimize
             _lockSlim.EnterReadLock();
@@ -62,7 +62,7 @@ namespace MarginTrading.Services
             }
         }
 
-        internal bool TryGetAssetById(string instrumentId, out IMarginTradingAssetPair result)
+        internal bool TryGetAssetById(string instrumentId, out IAssetPair result)
         {
             _lockSlim.EnterReadLock();
             try
@@ -81,7 +81,7 @@ namespace MarginTrading.Services
             }
         }
 
-        internal void InitInstrumentsCache(Dictionary<string, IMarginTradingAssetPair> instruments)
+        internal void InitInstrumentsCache(Dictionary<string, IAssetPair> instruments)
         {
             _lockSlim.EnterWriteLock();
             try

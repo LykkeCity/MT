@@ -202,14 +202,14 @@ namespace MarginTrading.Services
             }
         }
 
-        public void ValidateInstrumentPositionVolume(IMarginTradingAccountAsset asset, Order order)
+        public void ValidateInstrumentPositionVolume(IAccountAssetPair assetPair, Order order)
         {
-            var existingPositionsVolume = _ordersCache.ActiveOrders.GetOrders(asset.Instrument, order.AccountId).Sum(o => Math.Abs(o.Volume));
+            var existingPositionsVolume = _ordersCache.ActiveOrders.GetOrders(assetPair.Instrument, order.AccountId).Sum(o => Math.Abs(o.Volume));
 
-            if (asset.PositionLimit > 0 && existingPositionsVolume + Math.Abs(order.Volume) > asset.PositionLimit)
+            if (assetPair.PositionLimit > 0 && existingPositionsVolume + Math.Abs(order.Volume) > assetPair.PositionLimit)
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidVolume,
-                    $"Margin Trading is in beta testing. The volume of the net open position is temporarily limited to {asset.PositionLimit} {asset.BaseAssetId}. Thank you for using Lykke Margin Trading, the limit will be cancelled soon!");
+                    $"Margin Trading is in beta testing. The volume of the net open position is temporarily limited to {assetPair.PositionLimit} {assetPair.BaseAssetId}. Thank you for using Lykke Margin Trading, the limit will be cancelled soon!");
             }
         }
     }

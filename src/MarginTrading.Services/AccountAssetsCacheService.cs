@@ -9,19 +9,19 @@ namespace MarginTrading.Services
 {
     public class AccountAssetsCacheService : IAccountAssetsCacheService
     {
-        private List<IMarginTradingAccountAsset> _accountAssets = new List<IMarginTradingAccountAsset>();
+        private List<IAccountAssetPair> _accountAssets = new List<IAccountAssetPair>();
         private HashSet<string> _instruments = new HashSet<string>();
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
 
-        public IMarginTradingAccountAsset GetAccountAsset(string tradingConditionId, string accountAssetId,
+        public IAccountAssetPair GetAccountAsset(string tradingConditionId, string accountAssetId,
             string instrument)
         {
-            IMarginTradingAccountAsset accountAsset;
+            IAccountAssetPair accountAssetPair;
 
             _lockSlim.EnterReadLock();
             try
             {
-                accountAsset = _accountAssets.FirstOrDefault(item =>
+                accountAssetPair = _accountAssets.FirstOrDefault(item =>
                     item.TradingConditionId == tradingConditionId && item.BaseAssetId == accountAssetId &&
                     item.Instrument == instrument);
             }
@@ -30,36 +30,36 @@ namespace MarginTrading.Services
                 _lockSlim.ExitReadLock();
             }
 
-            if (accountAsset == null)
+            if (accountAssetPair == null)
             {
                 throw new Exception(string.Format(MtMessages.AccountAssetForTradingConditionNotFound,
                     tradingConditionId, accountAssetId, instrument));
             }
 
-            if (accountAsset.LeverageMaintenance < 1)
+            if (accountAssetPair.LeverageMaintenance < 1)
             {
                 throw new Exception(string.Format(MtMessages.LeverageMaintanceIncorrect, tradingConditionId,
                     accountAssetId, instrument));
             }
 
-            if (accountAsset.LeverageInit < 1)
+            if (accountAssetPair.LeverageInit < 1)
             {
                 throw new Exception(string.Format(MtMessages.LeverageInitIncorrect, tradingConditionId, accountAssetId,
                     instrument));
             }
 
-            return accountAsset;
+            return accountAssetPair;
         }
 
-        public IMarginTradingAccountAsset GetAccountAssetThrowIfNotFound(string tradingConditionId,
+        public IAccountAssetPair GetAccountAssetThrowIfNotFound(string tradingConditionId,
             string accountAssetId, string instrument)
         {
-            IMarginTradingAccountAsset accountAsset;
+            IAccountAssetPair accountAssetPair;
 
             _lockSlim.EnterReadLock();
             try
             {
-                accountAsset = _accountAssets.FirstOrDefault(item =>
+                accountAssetPair = _accountAssets.FirstOrDefault(item =>
                     item.TradingConditionId == tradingConditionId && item.BaseAssetId == accountAssetId &&
                     item.Instrument == instrument);
             }
@@ -68,19 +68,19 @@ namespace MarginTrading.Services
                 _lockSlim.ExitReadLock();
             }
 
-            if (accountAsset == null)
+            if (accountAssetPair == null)
             {
                 throw new Exception(string.Format(MtMessages.AccountAssetForTradingConditionNotFound,
                     tradingConditionId, accountAssetId, instrument));
             }
 
-            return accountAsset;
+            return accountAssetPair;
         }
 
-        public Dictionary<string, IMarginTradingAccountAsset[]> GetClientAssets(
+        public Dictionary<string, IAccountAssetPair[]> GetClientAssets(
             IEnumerable<MarginTradingAccount> accounts)
         {
-            var result = new Dictionary<string, IMarginTradingAccountAsset[]>();
+            var result = new Dictionary<string, IAccountAssetPair[]>();
 
             if (accounts == null)
             {
@@ -124,7 +124,7 @@ namespace MarginTrading.Services
             }
         }
 
-        public List<IMarginTradingAccountAsset> GetAccountAssets(string tradingConditionId, string baseAssetId)
+        public List<IAccountAssetPair> GetAccountAssets(string tradingConditionId, string baseAssetId)
         {
             _lockSlim.EnterReadLock();
             try
@@ -152,7 +152,7 @@ namespace MarginTrading.Services
             }
         }
 
-        internal void InitAccountAssetsCache(List<IMarginTradingAccountAsset> accountAssets)
+        internal void InitAccountAssetsCache(List<IAccountAssetPair> accountAssets)
         {
             _lockSlim.EnterWriteLock();
             try

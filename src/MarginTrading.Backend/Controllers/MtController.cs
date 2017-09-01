@@ -182,7 +182,7 @@ namespace MarginTrading.Backend.Controllers
 
         [Route("init.assets")]
         [HttpPost]
-        public MarginTradingAssetBackendContract[] InitAssets()
+        public AssetPairBackendContract[] InitAssets()
         {
             var instruments = _assetPairsCache.GetAll();
             return instruments.Where(i => _accountAssetsCacheService.IsInstrumentSupported(i.Id))

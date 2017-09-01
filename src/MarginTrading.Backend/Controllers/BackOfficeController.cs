@@ -340,7 +340,7 @@ namespace MarginTrading.Backend.Controllers
 
         [HttpGet]
         [Route("accountAssets/getall/{tradingConditionId}/{baseAssetId}")]
-        [ProducesResponseType(typeof(List<MarginTradingAccountAsset>), 200)]
+        [ProducesResponseType(typeof(List<AccountAssetPair>), 200)]
         public IActionResult GetAllAccountAssets(string tradingConditionId, string baseAssetId)
         {
             var accountAssets = _accountAssetsCacheService.GetAccountAssets(tradingConditionId, baseAssetId);
@@ -349,7 +349,7 @@ namespace MarginTrading.Backend.Controllers
 
         [HttpGet]
         [Route("accountAssets/get/{tradingConditionId}/{baseAssetId}/{instrumet}")]
-        [ProducesResponseType(typeof(MarginTradingAccountAsset), 200)]
+        [ProducesResponseType(typeof(AccountAssetPair), 200)]
         public IActionResult GetAccountAssets(string tradingConditionId, string baseAssetId, string instrumet)
         {
             var accountAsset = _accountAssetsCacheService.GetAccountAssetThrowIfNotFound(tradingConditionId, baseAssetId, instrumet);
@@ -358,7 +358,7 @@ namespace MarginTrading.Backend.Controllers
 
         [HttpPost]
         [Route("accountAssets/assignInstruments")]
-        [ProducesResponseType(typeof(MarginTradingAccountAsset), 200)]
+        [ProducesResponseType(typeof(AccountAssetPair), 200)]
         public async Task<IActionResult> AssignInstruments([FromBody]AssignInstrumentsModel model)
         {
             await _accountAssetsManager.AssignInstruments(model.TradingConditionId, model.BaseAssetId, model.Instruments);
@@ -369,7 +369,7 @@ namespace MarginTrading.Backend.Controllers
 
         [HttpPost]
         [Route("accountAssets/add")]
-        public async Task<IActionResult> AddOrReplaceAccountAsset([FromBody]MarginTradingAccountAsset model)
+        public async Task<IActionResult> AddOrReplaceAccountAsset([FromBody]AccountAssetPair model)
         {
             await _accountAssetsManager.AddOrReplaceAccountAssetAsync(model);
             await _tradingConditionsManager.UpdateTradingConditions(model.TradingConditionId);
@@ -384,7 +384,7 @@ namespace MarginTrading.Backend.Controllers
 
         [HttpGet]
         [Route("instruments/getall")]
-        [ProducesResponseType(typeof(List<MarginTradingAssetPair>), 200)]
+        [ProducesResponseType(typeof(List<AssetPair>), 200)]
         public IActionResult GetAllInstruments()
         {
             var instruments = _assetPairsCache.GetAll();

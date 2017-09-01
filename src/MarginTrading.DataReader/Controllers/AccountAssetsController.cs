@@ -13,35 +13,35 @@ namespace MarginTrading.DataReader.Controllers
     [Route("api/accountAssets")]
     public class AccountAssetsController : Controller
     {
-        private readonly IMarginTradingAccountAssetRepository _accountAssetRepository;
+        private readonly IAccountAssetPairsRepository _accountAssetPairsRepository;
 
-        public AccountAssetsController(IMarginTradingAccountAssetRepository accountAssetRepository)
+        public AccountAssetsController(IAccountAssetPairsRepository accountAssetPairsRepository)
         {
-            _accountAssetRepository = accountAssetRepository;
+            _accountAssetPairsRepository = accountAssetPairsRepository;
         }
 
         [HttpGet]
         [Route("")]
-        public async Task<IEnumerable<MarginTradingAccountAsset>> GetAll()
+        public async Task<IEnumerable<AccountAssetPair>> GetAll()
         {
-            return (await _accountAssetRepository.GetAllAsync()).Select(MarginTradingAccountAsset.Create);
+            return (await _accountAssetPairsRepository.GetAllAsync()).Select(AccountAssetPair.Create);
         }
 
         [HttpGet]
         [Route("byAsset/{tradingConditionId}/{baseAssetId}")]
-        public async Task<IEnumerable<MarginTradingAccountAsset>> GetByAsset(string tradingConditionId, string baseAssetId)
+        public async Task<IEnumerable<AccountAssetPair>> GetByAsset(string tradingConditionId, string baseAssetId)
         {
-            return (await _accountAssetRepository.GetAllAsync(tradingConditionId, baseAssetId)).Select(MarginTradingAccountAsset.Create);
+            return (await _accountAssetPairsRepository.GetAllAsync(tradingConditionId, baseAssetId)).Select(AccountAssetPair.Create);
         }
 
         [HttpGet]
         [Route("byAssetPair/{tradingConditionId}/{baseAssetId}/{assetPairId}")]
-        public async Task<MarginTradingAccountAsset> GetByAssetPairId(string tradingConditionId, string baseAssetId, string assetPairId)
+        public async Task<AccountAssetPair> GetByAssetPairId(string tradingConditionId, string baseAssetId, string assetPairId)
         {
-            var accountAsset = await _accountAssetRepository.GetAccountAsset(tradingConditionId, baseAssetId, assetPairId)
+            var accountAsset = await _accountAssetPairsRepository.GetAsync(tradingConditionId, baseAssetId, assetPairId)
                    ?? throw new Exception(string.Format(MtMessages.AccountAssetForTradingConditionNotFound,
                        tradingConditionId, baseAssetId, assetPairId));
-            return MarginTradingAccountAsset.Create(accountAsset);
+            return AccountAssetPair.Create(accountAsset);
         }
     }
 }
