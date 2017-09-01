@@ -29,7 +29,7 @@ namespace MarginTrading.DataReader.Controllers
             IOrdersSnapshotReaderService ordersSnapshotReaderService)
         {
             _accountsRepository = accountsRepository;
-            _accountsHistoryRepository = accountsHistoryRepository; 
+            _accountsHistoryRepository = accountsHistoryRepository;
             _ordersHistoryRepository = ordersHistoryRepository;
             _ordersSnapshotReaderService = ordersSnapshotReaderService;
         }

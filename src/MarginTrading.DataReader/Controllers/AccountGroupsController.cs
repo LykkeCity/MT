@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using MarginTrading.Core;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 
 namespace MarginTrading.DataReader.Controllers
 {
@@ -24,22 +25,19 @@ namespace MarginTrading.DataReader.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("")]
-        public Task<IEnumerable<IMarginTradingAccountGroup>> GetAll()
+        public async Task<IEnumerable<MarginTradingAccountGroup>> GetAllAsync()
         {
-            return _accountGroupRepository.GetAllAsync();
+            return (await _accountGroupRepository.GetAllAsync()).Select(MarginTradingAccountGroup.Create);
         }
 
         /// <summary>
         /// Returns an account groups by <paramref name="tradingConditionId"/> and <paramref name="baseAssetId"/>
         /// </summary>
-        /// <param name="tradingConditionId"></param>
-        /// <param name="baseAssetId"></param>
-        /// <returns></returns>
         [HttpGet]
         [Route("byBaseAsset/{tradingConditionId}/{baseAssetId}")]
-        public Task<IMarginTradingAccountGroup> Get(string tradingConditionId, string baseAssetId)
+        public async Task<MarginTradingAccountGroup> Get(string tradingConditionId, string baseAssetId)
         {
-            return _accountGroupRepository.GetAsync(tradingConditionId, baseAssetId);
+            return MarginTradingAccountGroup.Create(await _accountGroupRepository.GetAsync(tradingConditionId, baseAssetId));
         }
 
     }

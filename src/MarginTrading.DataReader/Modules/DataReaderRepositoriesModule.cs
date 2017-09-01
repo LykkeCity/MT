@@ -37,10 +37,6 @@ namespace MarginTrading.DataReader.Modules
 				AzureRepoFactories.Clients.CreateTraderSettingsRepository(_settings.Db.ClientPersonalInfoConnString, _log)
 			).SingleInstance();
 
-			builder.Register<IClientAccountsRepository>(ctx =>
-				AzureRepoFactories.Clients.CreateClientsRepository(_settings.Db.ClientPersonalInfoConnString, _log)
-			).SingleInstance();
-
 			builder.Register<IMarginTradingAccountsRepository>(ctx =>
 				AzureRepoFactories.MarginTrading.CreateAccountsRepository(_settings.Db.MarginTradingConnString, _log)
 			).SingleInstance();
@@ -77,17 +73,9 @@ namespace MarginTrading.DataReader.Modules
 				AzureRepoFactories.MarginTrading.CreateBlobRepository(_settings.Db.StateConnString)
 			).SingleInstance();
 
-			builder.Register<IServiceMonitoringRepository>(ctx =>
-				AzureRepoFactories.Monitoring.CreateServiceMonitoringRepository(_settings.Db.SharedStorageConnString, _log)
-			).SingleInstance();
-
 			builder.Register<IAppGlobalSettingsRepositry>(ctx =>
 				AzureRepoFactories.Settings.CreateAppGlobalSettingsRepository(_settings.Db.ClientPersonalInfoConnString, _log)
 			).SingleInstance();
-
-			builder.RegisterType<MatchingEngineInMemoryRepository>()
-				.As<IMatchingEngineRepository>()
-				.SingleInstance();
 		}
 	}
 }

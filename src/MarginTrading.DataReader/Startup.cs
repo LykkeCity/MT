@@ -28,6 +28,8 @@ using MarginTrading.DataReader.Filters;
 using MarginTrading.DataReader.Infrastructure;
 using MarginTrading.DataReader.Middleware;
 using MarginTrading.DataReader.Modules;
+using Microsoft.AspNetCore.Http;
+using Swashbuckle.Swagger.Model;
 
 #pragma warning disable 1591
 
@@ -70,6 +72,7 @@ namespace MarginTrading.DataReader
             {
                 options.DefaultLykkeConfiguration("v1", $"MarginTrading_DataReader_Api_{(isLive ? "Live" : "Demo")}");
                 options.OperationFilter<ApiKeyHeaderOperationFilter>();
+                options.OperationFilter<CustomOperationIdOperationFilter>();
             });
 
             var builder = new ContainerBuilder();
@@ -86,16 +89,10 @@ namespace MarginTrading.DataReader
 
             SetupLoggers(services, mtSettings, settings);
 
-            RegisterModules(builder, mtSettings, settings);
+            RegisterModules(builder, settings);
 
             builder.Populate(services);
             ApplicationContainer = builder.Build();
-
-            MtServiceLocator.FplService = ApplicationContainer.Resolve<IFplService>();
-            MtServiceLocator.AccountUpdateService = ApplicationContainer.Resolve<IAccountUpdateService>();
-            MtServiceLocator.AccountsCacheService = ApplicationContainer.Resolve<IAccountsCacheService>();
-            MtServiceLocator.SwapCommissionService = ApplicationContainer.Resolve<ISwapCommissionService>();
-
             return new AutofacServiceProvider(ApplicationContainer);
         }
 
@@ -129,15 +126,10 @@ namespace MarginTrading.DataReader
             appLifetime.ApplicationStopping.Register(() => { });
         }
 
-        private void RegisterModules(ContainerBuilder builder, MtBackendSettings mtSettings, MarginSettings settings)
+        private void RegisterModules(ContainerBuilder builder, MarginSettings settings)
         {
-            builder.RegisterModule(new DataReaderSettingsModule(mtSettings, settings));
+            builder.RegisterModule(new DataReaderSettingsModule(settings));
             builder.RegisterModule(new DataReaderRepositoriesModule(settings, LogLocator.CommonLog));
-            builder.RegisterModule(new EventModule());
-            builder.RegisterModule(new CacheModule());
-            builder.RegisterModule(new ManagersModule());
-            builder.RegisterModule(new BaseServicesModule(mtSettings));
-            builder.RegisterModule(new ServicesModule());
             builder.RegisterModule(new DataReaderServicesModule());
         }
 
@@ -156,11 +148,7 @@ namespace MarginTrading.DataReader
             var log = services.UseLogToAzureStorage(settings.Db.LogsConnString, slackService,
                 "MarginTradingDataReaderLog", consoleLogger);
 
-            var requestsLog = services.UseLogToAzureStorage(settings.Db.LogsConnString,
-                slackService, "MarginTradingDataReaderRequestsLog", consoleLogger);
-
             LogLocator.CommonLog = log;
-            LogLocator.RequestsLog = requestsLog;
         }
     }
 }

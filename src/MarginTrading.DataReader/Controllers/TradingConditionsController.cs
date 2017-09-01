@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Core;
 using Microsoft.AspNetCore.Authorization;
@@ -22,9 +23,9 @@ namespace MarginTrading.DataReader.Controllers
         /// </summary>
         [HttpGet]
         [Route("")]
-        public Task<IEnumerable<IMarginTradingCondition>> GetAll()
+        public async Task<IEnumerable<MarginTradingCondition>> GetAll()
         {
-            return _conditionsRepository.GetAllAsync();
+            return (await _conditionsRepository.GetAllAsync()).Select(MarginTradingCondition.Create);
         }
 
         /// <summary>
@@ -32,9 +33,9 @@ namespace MarginTrading.DataReader.Controllers
         /// </summary>
         [HttpGet]
         [Route("{id}")]
-        public Task<IMarginTradingCondition> GetById(string id)
+        public async Task<MarginTradingCondition> GetById(string id)
         {
-            return _conditionsRepository.GetAsync(id);
+            return MarginTradingCondition.Create(await _conditionsRepository.GetAsync(id));
         }
     }
 }

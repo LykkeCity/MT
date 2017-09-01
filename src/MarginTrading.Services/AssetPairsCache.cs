@@ -12,11 +12,6 @@ namespace MarginTrading.Services
         private Dictionary<string, IMarginTradingAssetPair> _assetPairs = new Dictionary<string, IMarginTradingAssetPair>();
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
 
-        ~AssetPairsCache()
-        {
-            _lockSlim?.Dispose();
-        }
-
         public IMarginTradingAssetPair GetAssetPairById(string assetPairId)
         {
             if (TryGetAssetById(assetPairId, out var result))

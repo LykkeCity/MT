@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 using MarginTrading.Services.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
@@ -19,6 +20,8 @@ namespace MarginTrading.DataReader
                 {
                     var host = new WebHostBuilder()
                         .UseKestrel()
+                        .UseContentRoot(Directory.GetCurrentDirectory())
+                        .UseIISIntegration()
                         .UseUrls("http://*:5008")
                         .UseStartup<Startup>()
                         .UseApplicationInsights()

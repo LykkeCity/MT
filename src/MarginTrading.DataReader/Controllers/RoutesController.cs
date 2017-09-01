@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Core;
 using Microsoft.AspNetCore.Authorization;
@@ -17,18 +18,45 @@ namespace MarginTrading.DataReader.Controllers
             _routesRepository = routesRepository;
         }
 
+        /// <summary>
+        /// Gets all routes
+        /// </summary>
         [HttpGet]
         [Route("")]
-        public Task<IEnumerable<IMatchingEngineRoute>> GetAll()
+        public async Task<IEnumerable<MatchingEngineRoute>> GetAll()
         {
-            return _routesRepository.GetAllRoutesAsync();
+            return (await _routesRepository.GetAllRoutesAsync()).Select(TransformRoute);
         }
 
+        /// <summary>
+        /// Gets a route by <paramref name="id"/>
+        /// </summary>
         [HttpGet]
         [Route("{id}")]
-        public Task<IMatchingEngineRoute> GetById(string id)
+        public async Task<MatchingEngineRoute> GetById(string id)
         {
-            return _routesRepository.GetRouteByIdAsync(id);
+            return TransformRoute(await _routesRepository.GetRouteByIdAsync(id));
+        }
+
+        private static MatchingEngineRoute TransformRoute(IMatchingEngineRoute route)
+        {
+            string GetEmptyIfAny(string value)
+            {
+                const string AnyValue = "*";
+                return value == AnyValue ? null : value;
+            }
+
+            return new MatchingEngineRoute
+            {
+                Id = route.Id,
+                Rank = route.Rank,
+                MatchingEngineId = route.MatchingEngineId,
+                Asset = GetEmptyIfAny(route.Asset),
+                ClientId = GetEmptyIfAny(route.ClientId),
+                Instrument = GetEmptyIfAny(route.Instrument),
+                TradingConditionId = GetEmptyIfAny(route.TradingConditionId),
+                Type = route.Type
+            };
         }
     }
 }

@@ -91,16 +91,12 @@ namespace MarginTrading.AzureRepositories
 
         public async Task<IEnumerable<IMarginTradingAccountAsset>> GetAllAsync(string tradingConditionId, string baseAssetId)
         {
-            IEnumerable<MarginTradingAccountAssetEntity> entities = await _tableStorage.GetDataAsync(MarginTradingAccountAssetEntity.GeneratePartitionKey(tradingConditionId, baseAssetId));
-
-            return entities.Select(MarginTradingAccountAssetEntity.Create);
+            return await _tableStorage.GetDataAsync(MarginTradingAccountAssetEntity.GeneratePartitionKey(tradingConditionId, baseAssetId));
         }
 
         public async Task<IEnumerable<IMarginTradingAccountAsset>> GetAllAsync()
         {
-            var entity = await _tableStorage.GetDataAsync();
-
-            return entity.Select(MarginTradingAccountAsset.Create);
+            return await _tableStorage.GetDataAsync();
         }
 
         public async Task AssignAssetPairs(string tradingConditionId, string baseAssetId, string[] assetPairsIds, AccountAssetsSettings defaults)

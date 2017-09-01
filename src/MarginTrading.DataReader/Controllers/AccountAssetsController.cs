@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Core;
 using MarginTrading.Core.Messages;
@@ -21,25 +22,26 @@ namespace MarginTrading.DataReader.Controllers
 
         [HttpGet]
         [Route("")]
-        public async Task<IEnumerable<IMarginTradingAccountAsset>> GetAll()
+        public async Task<IEnumerable<MarginTradingAccountAsset>> GetAll()
         {
-            return await _accountAssetRepository.GetAllAsync();
+            return (await _accountAssetRepository.GetAllAsync()).Select(MarginTradingAccountAsset.Create);
         }
 
         [HttpGet]
         [Route("byAsset/{tradingConditionId}/{baseAssetId}")]
-        public async Task<IEnumerable<IMarginTradingAccountAsset>> GetByAsset(string tradingConditionId, string baseAssetId)
+        public async Task<IEnumerable<MarginTradingAccountAsset>> GetByAsset(string tradingConditionId, string baseAssetId)
         {
-            return await _accountAssetRepository.GetAllAsync(tradingConditionId, baseAssetId);
+            return (await _accountAssetRepository.GetAllAsync(tradingConditionId, baseAssetId)).Select(MarginTradingAccountAsset.Create);
         }
 
         [HttpGet]
         [Route("byAssetPair/{tradingConditionId}/{baseAssetId}/{assetPairId}")]
-        public async Task<IMarginTradingAccountAsset> GetByAssetPairId(string tradingConditionId, string baseAssetId, string assetPairId)
+        public async Task<MarginTradingAccountAsset> GetByAssetPairId(string tradingConditionId, string baseAssetId, string assetPairId)
         {
-            return await _accountAssetRepository.GetAccountAsset(tradingConditionId, baseAssetId, assetPairId)
+            var accountAsset = await _accountAssetRepository.GetAccountAsset(tradingConditionId, baseAssetId, assetPairId)
                    ?? throw new Exception(string.Format(MtMessages.AccountAssetForTradingConditionNotFound,
                        tradingConditionId, baseAssetId, assetPairId));
+            return MarginTradingAccountAsset.Create(accountAsset);
         }
     }
 }

@@ -43,7 +43,7 @@ namespace MarginTrading.Core
         public double DealLimit { get; set; }
         public double PositionLimit { get; set; }
 
-        public static IMarginTradingAccountAsset Create(IMarginTradingAccountAsset src)
+        public static MarginTradingAccountAsset Create(IMarginTradingAccountAsset src)
         {
             return new MarginTradingAccountAsset
             {

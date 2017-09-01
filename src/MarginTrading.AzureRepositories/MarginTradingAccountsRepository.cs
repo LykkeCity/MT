@@ -54,11 +54,9 @@ namespace MarginTrading.AzureRepositories
 
         public async Task<IEnumerable<IMarginTradingAccount>> GetAllAsync(string clientId = null)
         {
-            var entities = string.IsNullOrEmpty(clientId)
+            return string.IsNullOrEmpty(clientId)
                 ? await _tableStorage.GetDataAsync()
                 : await _tableStorage.GetDataAsync(MarginTradingAccountEntity.GeneratePartitionKey(clientId));
-
-            return entities.Select(MarginTradingAccount.Create);
         }
 
         public async Task<MarginTradingAccount> UpdateBalanceAsync(string clientId, string accountId, double amount, bool changeLimit)
@@ -101,21 +99,12 @@ namespace MarginTrading.AzureRepositories
 
         public async Task<IMarginTradingAccount> GetAsync(string clientId, string accountId)
         {
-            var account = await _tableStorage.GetDataAsync(MarginTradingAccountEntity.GeneratePartitionKey(clientId), MarginTradingAccountEntity.GenerateRowKey(accountId));
-
-            return account != null
-                ? MarginTradingAccount.Create(account)
-                : null;
+            return await _tableStorage.GetDataAsync(MarginTradingAccountEntity.GeneratePartitionKey(clientId), MarginTradingAccountEntity.GenerateRowKey(accountId));
         }
 
         public async Task<IMarginTradingAccount> GetAsync(string accountId)
         {
-            var entities = await _tableStorage.GetDataAsync(entity => entity.Id == accountId);
-            var account =  entities.FirstOrDefault();
-
-            return account != null
-                ? MarginTradingAccount.Create(account)
-                : null;
+            return (await _tableStorage.GetDataAsync(entity => entity.Id == accountId)).FirstOrDefault();
         }
 
         public async Task DeleteAsync(string clientId, string accountId)
