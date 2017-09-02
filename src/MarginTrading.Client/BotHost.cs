@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace MarginTrading.Client
 {
@@ -41,7 +42,9 @@ namespace MarginTrading.Client
                 throw;
             }
 
-            StartBots();
+            Task.Run(async () => await StartBots())
+                .Wait();
+            
 
         }
         public void Stop()
@@ -71,61 +74,96 @@ namespace MarginTrading.Client
 
         private void CreateEnvironment()
         {
-            if (_settings.NumberOfUsers > _settings.Users.Length)
-                throw new IndexOutOfRangeException("User array does not have enough users for requested NumberOfUsers ");
-
+            
             Bots = new List<BotClient>();
-            var userSettings = _settings.Users.OrderBy(x => x.Number).ToArray();
-            for (int i = 0; i < _settings.NumberOfUsers; i++)
-            {
-                BotClient bot = new BotClient(userSettings[i]);                
-                bot.LogEvent += Bot_LogEvent;
-                Bots.Add(bot);
-            }
 
+            if (string.IsNullOrEmpty(_settings.UsersFile))
+            {
+                if (_settings.NumberOfUsers > _settings.Users.Length)
+                    throw new IndexOutOfRangeException("User array does not have enough users for requested NumberOfUsers ");
+
+                // Load Users Json Array
+                var userSettings = _settings.Users.OrderBy(x => x.Number).ToArray();
+                for (int i = 0; i < _settings.NumberOfUsers; i++)
+                {
+                    BotClient bot = new BotClient(userSettings[i]);
+                    bot.LogEvent += Bot_LogEvent;
+                    Bots.Add(bot);
+                }
+            }
+            else
+            {
+                // Load Users from CSV File
+                FileInfo file = new FileInfo(_settings.UsersFile);
+                if (!file.Exists)
+                    throw new FileNotFoundException(file.FullName);
+
+                using (var fs = new FileStream(file.FullName, FileMode.Open, FileAccess.Read))
+                using (var sr = new StreamReader(fs))
+                {
+                    //Read Header
+                    string header = sr.ReadLine();
+                    int ctr = 0;
+                    do
+                    {
+                        if (ctr >= _settings.NumberOfUsers)
+                            break;
+                        // read csv line
+                        string line = sr.ReadLine();
+                        string[] values = line.Split(';');
+                        string email = values[0];
+                        string pass = values[1];
+
+                        BotClient bot = new BotClient(new TestBotUserSettings() { Number = ++ctr, Email = email, Password = pass });
+                        bot.LogEvent += Bot_LogEvent;
+                        Bots.Add(bot);
+
+                    } while (!sr.EndOfStream);
+                }
+            }
         }
 
-        private void StartBots()
+        private async Task StartBots()
         {
             foreach (var bot in Bots)
             {
-                System.Threading.Tasks.Task.Run(async () =>
-                {
-                    int tryCount = 0;
-                    while (true)
-                    {
-                        if (tryCount > 3)
-                            break;
-                        tryCount++;
 
-                        bool create = false;
-                        try
+                int tryCount = 0;
+                while (true)
+                {
+                    if (tryCount > 3)
+                        break;
+                    tryCount++;
+
+                    bool create = false;
+                    try
+                    {
+                        await bot.Initialize(_settings.MTServerAddress, _settings.MTAuthorizationAddress, _settings.ActionScriptInterval, _settings.TransactionFrequencyMin, _settings.TransactionFrequencyMax);
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        if (ex.Message == "Invalid username or password")
                         {
-                            await bot.Initialize(_settings.MTServerAddress, _settings.MTAuthorizationAddress, _settings.ActionScriptInterval, _settings.TransactionFrequencyMin, _settings.TransactionFrequencyMax);
-                            break;
-                        }
-                        catch (Exception ex)
-                        {
-                            if (ex.Message == "Invalid username or password")
-                            {
-                                create = true;
-                            }
-                        }
-                        if (create)
-                        {
-                            LogInfo("StartBots", $"Creating user: {bot.Email}");
-                            try
-                            {
-                                await MtUserHelper.Registration(bot.Email, bot.Password);
-                            }
-                            catch (Exception ex01)
-                            {
-                                LogError("MtUserHelper.Registration", ex01);
-                                break;
-                            }
+                            create = true;
                         }
                     }
-                });
+                    if (create)
+                    {
+                        LogInfo("StartBots", $"Creating user: {bot.Email}");
+                        try
+                        {
+                            await MtUserHelper.Registration(bot.Email, bot.Password);
+                            System.Threading.Thread.Sleep(1000);
+                        }
+                        catch (Exception ex01)
+                        {
+                            LogError("MtUserHelper.Registration", ex01);
+                            break;
+                        }
+                    }
+                }
+                
             }
         }
 
@@ -194,7 +232,7 @@ namespace MarginTrading.Client
         public int ActionScriptInterval { get; set; }
         public int TransactionFrequencyMin { get; set; }
         public int TransactionFrequencyMax { get; set; }
-
+        public string UsersFile { get; set; } = null;
         public TestBotUserSettings[] Users { get; set; }
         public string[] Actions { get; set; }
     }

@@ -9,14 +9,17 @@ namespace MarginTrading.Client
     static class BotConsole
     {
         static BotHost botHost;
-        static string sessionLogFile;
-        internal static void StartBot(string configFile)
+        static string sessionLogFile;        
+        internal static void StartBot(string configFile, bool autorun)
         {
+            
             sessionLogFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "MTLOG_"+ DateTime.UtcNow.ToString("yyyyMMdd_HHmm") + ".log");
             botHost = new BotHost();
             botHost.LogEvent += Bot_LogEvent;
             botHost.Start(configFile);
             LogInfo("BotConsole.StartBot", $"Log session file: {sessionLogFile}");
+            if (autorun)
+                Run();
             string input = "";
             do
             {

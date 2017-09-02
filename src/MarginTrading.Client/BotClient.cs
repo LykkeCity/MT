@@ -88,7 +88,7 @@ namespace MarginTrading.Client
         public async Task Initialize(string serverAddress, string authorizationAddress, int actionScriptInterval, int transactionFrequencyMin, int transactionFrequencyMax)
         {
             
-            LogInfo($"Initialing bot {_settings.Number}");
+            LogInfo($"Initializing bot {_settings.Number}. AquireTokenData...");
             _serverAddress = serverAddress;
             _authorizationAddress = authorizationAddress;
             ActionScriptInterval = actionScriptInterval;
@@ -424,11 +424,11 @@ namespace MarginTrading.Client
         }
         private void LogWarning(string message)
         {
-            OnLog(new LogEventArgs(DateTime.UtcNow, $"Bot:[{_settings.Number}]-Thread[{Thread.CurrentThread.ManagedThreadId.ToString()}]", "warning", message, null));
+            OnLog(new LogEventArgs(DateTime.UtcNow, $"Bot:[{_settings.Number}]", "warning", $"Thread[{ Thread.CurrentThread.ManagedThreadId.ToString() }] {message}", null));
         }
         private void LogError(Exception error)
         {
-            OnLog(new LogEventArgs(DateTime.UtcNow, $"Bot:[{_settings.Number}]-Thread[{Thread.CurrentThread.ManagedThreadId.ToString()}]", "error", error.Message, error));
+            OnLog(new LogEventArgs(DateTime.UtcNow, $"Bot:[{_settings.Number}]", "error", $"Thread[{ Thread.CurrentThread.ManagedThreadId.ToString() }] {error.Message}", error));
         }
         private void OnLog(LogEventArgs e)
         {

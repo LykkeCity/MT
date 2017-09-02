@@ -8,6 +8,7 @@ namespace MarginTrading.Client
         {
             bool TestBot = false;
             string TestBotSettingsFile = null;
+            bool autorun = false;
             for (int i = 0; i< args.Length; i++)
             {
 
@@ -24,10 +25,14 @@ namespace MarginTrading.Client
                     try { TestBotSettingsFile = args[++i]; }
                     catch { TestBotSettingsFile = ""; }
                 }
+                if (args[i].ToLower() == "-a" || args[i].ToLower() == "--autorun")
+                {
+                    autorun = true;                    
+                }
             }
             if (TestBot)
             {
-                BotConsole.StartBot(TestBotSettingsFile);
+                BotConsole.StartBot(TestBotSettingsFile, autorun);
             }
             else
             {
