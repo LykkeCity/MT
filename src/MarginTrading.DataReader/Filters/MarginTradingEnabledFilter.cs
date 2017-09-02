@@ -6,12 +6,12 @@ using System.Threading.Tasks;
 using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.Core;
-using MarginTrading.Core.Settings;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Rocks.Caching;
 using MarginTrading.DataReader.Attributes;
+using MarginTrading.DataReader.Settings;
 
 namespace MarginTrading.DataReader.Filters
 {

@@ -1,6 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
+using AsyncFriendlyStackTrace;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
@@ -12,24 +12,19 @@ using Lykke.Logs;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
 using MarginTrading.Common.Extensions;
-using MarginTrading.Core;
-using MarginTrading.Core.Settings;
-using MarginTrading.Services;
+using MarginTrading.DataReader.Filters;
+using MarginTrading.DataReader.Infrastructure;
+using MarginTrading.DataReader.Middleware;
+using MarginTrading.DataReader.Modules;
+using MarginTrading.DataReader.Settings;
 using MarginTrading.Services.Infrastructure;
-using MarginTrading.Services.Modules;
 using MarginTrading.Services.Notifications;
-using MarginTrading.Services.Settings;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MarginTrading.DataReader.Filters;
-using MarginTrading.DataReader.Infrastructure;
-using MarginTrading.DataReader.Middleware;
-using MarginTrading.DataReader.Modules;
-using Microsoft.AspNetCore.Http;
-using Swashbuckle.Swagger.Model;
 
 #pragma warning disable 1591
 
@@ -55,7 +50,7 @@ namespace MarginTrading.DataReader
         [UsedImplicitly]
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
-            ILoggerFactory loggerFactory = new LoggerFactory()
+            var loggerFactory = new LoggerFactory()
                 .AddConsole(LogLevel.Error)
                 .AddDebug(LogLevel.Error);
 
@@ -66,7 +61,7 @@ namespace MarginTrading.DataReader
             services.AddAuthentication(KeyAuthOptions.AuthenticationScheme)
                 .AddScheme<KeyAuthOptions, KeyAuthHandler>(KeyAuthOptions.AuthenticationScheme, "", options => { });
 
-            bool isLive = Configuration.IsLive();
+            var isLive = Configuration.IsLive();
 
             services.AddSwaggerGen(options =>
             {
@@ -77,17 +72,19 @@ namespace MarginTrading.DataReader
 
             var builder = new ContainerBuilder();
 
-            MtBackendSettings mtSettings = Environment.IsDevelopment()
-                ? Configuration.Get<MtBackendSettings>()
-                : SettingsProcessor.Process<MtBackendSettings>(Configuration["SettingsUrl"].GetStringAsync().Result);
+            var readerSettings = Environment.IsDevelopment()
+                ? Configuration.Get<DataReaderSettings>()
+                : SettingsProcessor.Process<DataReaderSettings>(Configuration["SettingsUrl"].GetStringAsync().Result);
 
-            MarginSettings settings = isLive ? mtSettings.MtBackend.MarginTradingLive : mtSettings.MtBackend.MarginTradingDemo;
+            var settings = isLive
+                ? readerSettings.MtBackend.MarginTradingLive
+                : readerSettings.MtBackend.MarginTradingDemo;
             settings.IsLive = isLive;
             settings.Env = isLive ? "Live" : "Demo";
 
             Console.WriteLine($"IsLive: {settings.IsLive}");
 
-            SetupLoggers(services, mtSettings, settings);
+            SetupLoggers(services, readerSettings, settings);
 
             RegisterModules(builder, settings);
 
@@ -97,11 +94,12 @@ namespace MarginTrading.DataReader
         }
 
         [UsedImplicitly]
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, IApplicationLifetime appLifetime)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory,
+            IApplicationLifetime appLifetime)
         {
             app.UseLykkeMiddleware("MarginTradingDataReader",
 #if DEBUG
-                ex => new { ErrorMessage = ex.ToString() });
+                ex => ex.ToAsyncString());
 #else
                 ex => new { ErrorMessage = "Technical problem" });
 #endif
@@ -118,7 +116,7 @@ namespace MarginTrading.DataReader
             {
                 if (!string.IsNullOrEmpty(settings.ApplicationInsightsKey))
                 {
-                    Microsoft.ApplicationInsights.Extensibility.TelemetryConfiguration.Active.InstrumentationKey =
+                    TelemetryConfiguration.Active.InstrumentationKey =
                         settings.ApplicationInsightsKey;
                 }
             });
@@ -133,7 +131,7 @@ namespace MarginTrading.DataReader
             builder.RegisterModule(new DataReaderServicesModule());
         }
 
-        private static void SetupLoggers(IServiceCollection services, MtBackendSettings mtSettings,
+        private static void SetupLoggers(IServiceCollection services, DataReaderSettings mtSettings,
             MarginSettings settings)
         {
             var consoleLogger = new LogToConsole();

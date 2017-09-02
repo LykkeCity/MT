@@ -1,5 +1,5 @@
 ﻿using Autofac;
-using MarginTrading.Core.Settings;
+using MarginSettings = MarginTrading.DataReader.Settings.MarginSettings;
 
 namespace MarginTrading.DataReader.Modules
 {

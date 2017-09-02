@@ -25,7 +25,7 @@ namespace MarginTrading.DataReader.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("")]
-        public async Task<IEnumerable<MarginTradingAccountGroup>> GetAllAsync()
+        public async Task<IEnumerable<MarginTradingAccountGroup>> GetAllAccountGroups()
         {
             return (await _accountGroupRepository.GetAllAsync()).Select(MarginTradingAccountGroup.Create);
         }
@@ -35,7 +35,7 @@ namespace MarginTrading.DataReader.Controllers
         /// </summary>
         [HttpGet]
         [Route("byBaseAsset/{tradingConditionId}/{baseAssetId}")]
-        public async Task<MarginTradingAccountGroup> Get(string tradingConditionId, string baseAssetId)
+        public async Task<MarginTradingAccountGroup> GetAccountGroup(string tradingConditionId, string baseAssetId)
         {
             return MarginTradingAccountGroup.Create(await _accountGroupRepository.GetAsync(tradingConditionId, baseAssetId));
         }

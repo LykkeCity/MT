@@ -14,7 +14,7 @@ namespace MarginTrading.DataReader.Controllers
         }
 
         [HttpGet]
-        public IActionResult Get()
+        public IActionResult GetIsAlive()
         {
             return Ok(new
             {

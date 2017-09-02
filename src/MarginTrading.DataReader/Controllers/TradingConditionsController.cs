@@ -23,7 +23,7 @@ namespace MarginTrading.DataReader.Controllers
         /// </summary>
         [HttpGet]
         [Route("")]
-        public async Task<IEnumerable<MarginTradingCondition>> GetAll()
+        public async Task<IEnumerable<MarginTradingCondition>> GetAllTradingConditions()
         {
             return (await _conditionsRepository.GetAllAsync()).Select(MarginTradingCondition.Create);
         }
@@ -33,7 +33,7 @@ namespace MarginTrading.DataReader.Controllers
         /// </summary>
         [HttpGet]
         [Route("{id}")]
-        public async Task<MarginTradingCondition> GetById(string id)
+        public async Task<MarginTradingCondition> GetTradingConditionById(string id)
         {
             return MarginTradingCondition.Create(await _conditionsRepository.GetAsync(id));
         }

@@ -10,33 +10,33 @@ using Microsoft.AspNetCore.Mvc;
 namespace MarginTrading.DataReader.Controllers
 {
     [Authorize]
-    [Route("api/accountAssets")]
-    public class AccountAssetsController : Controller
+    [Route("api/accountAssetPairs")]
+    public class AccountAssetPairsController : Controller
     {
         private readonly IAccountAssetPairsRepository _accountAssetPairsRepository;
 
-        public AccountAssetsController(IAccountAssetPairsRepository accountAssetPairsRepository)
+        public AccountAssetPairsController(IAccountAssetPairsRepository accountAssetPairsRepository)
         {
             _accountAssetPairsRepository = accountAssetPairsRepository;
         }
 
         [HttpGet]
         [Route("")]
-        public async Task<IEnumerable<AccountAssetPair>> GetAll()
+        public async Task<IEnumerable<AccountAssetPair>> GetAllAccountAssetPairs()
         {
             return (await _accountAssetPairsRepository.GetAllAsync()).Select(AccountAssetPair.Create);
         }
 
         [HttpGet]
         [Route("byAsset/{tradingConditionId}/{baseAssetId}")]
-        public async Task<IEnumerable<AccountAssetPair>> GetByAsset(string tradingConditionId, string baseAssetId)
+        public async Task<IEnumerable<AccountAssetPair>> GetAccountAssetPairByAsset(string tradingConditionId, string baseAssetId)
         {
             return (await _accountAssetPairsRepository.GetAllAsync(tradingConditionId, baseAssetId)).Select(AccountAssetPair.Create);
         }
 
         [HttpGet]
         [Route("byAssetPair/{tradingConditionId}/{baseAssetId}/{assetPairId}")]
-        public async Task<AccountAssetPair> GetByAssetPairId(string tradingConditionId, string baseAssetId, string assetPairId)
+        public async Task<AccountAssetPair> GetAccountAssetPairById(string tradingConditionId, string baseAssetId, string assetPairId)
         {
             var accountAsset = await _accountAssetPairsRepository.GetAsync(tradingConditionId, baseAssetId, assetPairId)
                    ?? throw new Exception(string.Format(MtMessages.AccountAssetForTradingConditionNotFound,

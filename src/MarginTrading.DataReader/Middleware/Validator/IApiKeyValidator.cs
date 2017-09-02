@@ -1,6 +1,5 @@
-﻿using MarginTrading.Core.Settings;
-
-#pragma warning disable 1591
+﻿
+using MarginTrading.DataReader.Settings;
 
 namespace MarginTrading.DataReader.Middleware.Validator
 {

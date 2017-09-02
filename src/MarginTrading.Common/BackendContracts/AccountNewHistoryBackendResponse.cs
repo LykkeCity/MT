@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using MarginTrading.Common.Mappers;
 using MarginTrading.Core;
@@ -9,6 +10,7 @@ namespace MarginTrading.Common.BackendContracts
     {
         public AccountHistoryItemBackend[] HistoryItems { get; set; }
 
+        [Obsolete]
         public static AccountNewHistoryBackendResponse Create(IEnumerable<IMarginTradingAccountHistory> accounts, IEnumerable<IOrder> openOrders, IEnumerable<IOrderHistory> historyOrders)
         {
             var items = new List<AccountHistoryItemBackend>();

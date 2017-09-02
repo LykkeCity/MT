@@ -23,7 +23,7 @@ namespace MarginTrading.DataReader.Controllers
         /// </summary>
         [HttpGet]
         [Route("")]
-        public async Task<IEnumerable<MatchingEngineRoute>> GetAll()
+        public async Task<IEnumerable<MatchingEngineRoute>> GetAllRoutes()
         {
             return (await _routesRepository.GetAllRoutesAsync()).Select(TransformRoute);
         }
@@ -33,7 +33,7 @@ namespace MarginTrading.DataReader.Controllers
         /// </summary>
         [HttpGet]
         [Route("{id}")]
-        public async Task<MatchingEngineRoute> GetById(string id)
+        public async Task<MatchingEngineRoute> GetRouteById(string id)
         {
             return TransformRoute(await _routesRepository.GetRouteByIdAsync(id));
         }

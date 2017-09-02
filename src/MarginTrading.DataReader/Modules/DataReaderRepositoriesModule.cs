@@ -4,9 +4,8 @@ using Common.Log;
 using MarginTrading.AzureRepositories;
 using MarginTrading.Core;
 using MarginTrading.Core.Clients;
-using MarginTrading.Core.Monitoring;
 using MarginTrading.Core.Settings;
-using MarginTrading.Services;
+using MarginSettings = MarginTrading.DataReader.Settings.MarginSettings;
 
 namespace MarginTrading.DataReader.Modules
 {
