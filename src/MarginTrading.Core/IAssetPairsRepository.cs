@@ -36,7 +36,7 @@ namespace MarginTrading.Core
     public interface IAssetPairsRepository
     {
         Task<IEnumerable<IAssetPair>> GetAllAsync();
-        Task<IEnumerable<AssetPair>> GetAllAsync(List<string> instruments);
+        Task<IEnumerable<IAssetPair>> GetAllAsync(List<string> instruments);
         Task AddAsync(IAssetPair assetPair);
         Task<IAssetPair> GetAssetAsync(string coreSymbol);
     }

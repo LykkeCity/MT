@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Core;
 using Microsoft.AspNetCore.Authorization;
@@ -20,9 +21,9 @@ namespace MarginTrading.DataReader.Controllers
 
         [HttpGet]
         [Route("assetPairs")]
-        public Task<IEnumerable<IAssetPair>> GetAllAssetPairs()
+        public async Task<IEnumerable<IAssetPair>> GetAllAssetPairs()
         {
-            return _assetPairsRepository.GetAllAsync();
+            return (await _assetPairsRepository.GetAllAsync()).Select(AssetPair.Create);
         }
 
         [HttpGet]

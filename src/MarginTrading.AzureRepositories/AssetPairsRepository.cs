@@ -51,16 +51,12 @@ namespace MarginTrading.AzureRepositories
         public async Task<IEnumerable<IAssetPair>> GetAllAsync()
         {
             var partitionKey = AssetPairEntity.GeneratePartitionKey();
-            var assets = await _tableStorage.GetDataAsync(partitionKey);
-
-            return assets.Select(AssetPair.Create);
+            return await _tableStorage.GetDataAsync(partitionKey);
         }
 
-        public async Task<IEnumerable<AssetPair>> GetAllAsync(List<string> instruments)
+        public async Task<IEnumerable<IAssetPair>> GetAllAsync(List<string> instruments)
         {
-            var assets = await _tableStorage.GetDataAsync(item => instruments.Contains(item.Id));
-
-            return assets.Select(AssetPair.Create);
+            return await _tableStorage.GetDataAsync(item => instruments.Contains(item.Id));
         }
 
         public async Task AddAsync(IAssetPair assetPair)

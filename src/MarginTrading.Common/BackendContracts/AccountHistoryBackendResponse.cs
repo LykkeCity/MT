@@ -11,8 +11,7 @@ namespace MarginTrading.Common.BackendContracts
         public AccountHistoryBackendContract[] Account { get; set; }
         public OrderHistoryBackendContract[] PositionsHistory { get; set; }
         public OrderHistoryBackendContract[] OpenPositions { get; set; }
-
-        [Obsolete]
+        
         public static AccountHistoryBackendResponse Create(IEnumerable<IMarginTradingAccountHistory> accounts, IEnumerable<Order> openPositions, IEnumerable<IOrderHistory> historyOrders)
         {
             return new AccountHistoryBackendResponse

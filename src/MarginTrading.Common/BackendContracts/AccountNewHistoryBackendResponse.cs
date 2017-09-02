@@ -10,7 +10,6 @@ namespace MarginTrading.Common.BackendContracts
     {
         public AccountHistoryItemBackend[] HistoryItems { get; set; }
 
-        [Obsolete]
         public static AccountNewHistoryBackendResponse Create(IEnumerable<IMarginTradingAccountHistory> accounts, IEnumerable<IOrder> openOrders, IEnumerable<IOrderHistory> historyOrders)
         {
             var items = new List<AccountHistoryItemBackend>();
