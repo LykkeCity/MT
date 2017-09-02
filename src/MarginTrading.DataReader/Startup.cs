@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using AsyncFriendlyStackTrace;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
@@ -99,7 +98,7 @@ namespace MarginTrading.DataReader
         {
             app.UseLykkeMiddleware("MarginTradingDataReader",
 #if DEBUG
-                ex => ex.ToAsyncString());
+                ex => ex.ToString());
 #else
                 ex => new { ErrorMessage = "Technical problem" });
 #endif
