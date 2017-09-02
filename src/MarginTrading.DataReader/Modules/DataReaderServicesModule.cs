@@ -6,7 +6,6 @@ using MarginTrading.DataReader.Services;
 using MarginTrading.DataReader.Services.Implementation;
 using MarginTrading.Services;
 using Rocks.Caching;
-using AccountAssetsCacheService = MarginTrading.DataReader.Services.Implementation.AccountAssetsCacheService;
 
 namespace MarginTrading.DataReader.Modules
 {
@@ -19,8 +18,6 @@ namespace MarginTrading.DataReader.Modules
             builder.RegisterType<OrderBookSnapshotReaderService>().As<IOrderBookSnapshotReaderService>()
                 .SingleInstance();
             builder.RegisterType<OrdersSnapshotReaderService>().As<IOrdersSnapshotReaderService>()
-                .SingleInstance();
-            builder.RegisterType<QuotesSnapshotReaderService>().As<IQuoteCacheService>()
                 .SingleInstance();
             builder.RegisterType<AccountAssetsCacheService>().As<IAccountAssetsCacheService>()
                 .SingleInstance();

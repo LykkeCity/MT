@@ -40,7 +40,7 @@ namespace MarginTrading.DataReader.Controllers
         /// </summary>
         [HttpGet]
         [Route("byClient/{clientId}")]
-        public async Task<IEnumerable<MarginTradingAccount>> GetAccountsByClientAsync(string clientId)
+        public async Task<IEnumerable<MarginTradingAccount>> GetAccountsByClient(string clientId)
         {
             return (await _accountsRepository.GetAllAsync(clientId)).Select(MarginTradingAccount.Create);
         }

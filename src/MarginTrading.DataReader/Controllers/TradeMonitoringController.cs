@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Common.BackendContracts;
-using MarginTrading.Common.Mappers;
 using MarginTrading.Core;
+using MarginTrading.DataReader.Helpers;
 using MarginTrading.DataReader.Models;
 using MarginTrading.DataReader.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -52,14 +52,14 @@ namespace MarginTrading.DataReader.Controllers
                     result.Add(new SummaryAssetInfo
                     {
                         AssetPairId = order.Instrument,
-                        PnL = order.GetFpl(),
+                        PnL = order.FplData.Fpl,
                         VolumeLong = order.GetOrderType() == OrderDirection.Buy ? order.GetMatchedVolume() : 0,
                         VolumeShort = order.GetOrderType() == OrderDirection.Sell ? order.GetMatchedVolume() : 0
                     });
                 }
                 else
                 {
-                    assetInfo.PnL += order.GetFpl();
+                    assetInfo.PnL += order.FplData.Fpl;
 
                     if (order.GetOrderType() == OrderDirection.Buy)
                     {
@@ -88,7 +88,7 @@ namespace MarginTrading.DataReader.Controllers
         public async Task<List<OrderContract>> GetPositionsByVolume(double volume = 0)
         {
             return (await _ordersSnapshotReaderService.GetActiveAsync())
-                .Where(order => order.GetMatchedVolume() >= volume).Select(order => order.ToBaseContract())
+                .Where(order => order.GetMatchedVolume() >= volume).Select(OrderExtensions.ToBaseContract)
                 .ToList();
         }
 
@@ -105,7 +105,7 @@ namespace MarginTrading.DataReader.Controllers
         public async Task<List<OrderContract>> GetPendingOrdersByVolume(double volume = 0)
         {
             return (await _ordersSnapshotReaderService.GetPendingAsync())
-                .Where(order => Math.Abs(order.Volume) >= volume).Select(order => order.ToBaseContract())
+                .Where(order => Math.Abs(order.Volume) >= volume).Select(OrderExtensions.ToBaseContract)
                 .ToList();
         }
 

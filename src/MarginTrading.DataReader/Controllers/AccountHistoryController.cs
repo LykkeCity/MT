@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Common;
-using Common.Log;
 using MarginTrading.Common.BackendContracts;
-using MarginTrading.Common.Mappers;
 using MarginTrading.Core;
+using MarginTrading.DataReader.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MarginTrading.DataReader.Services;
@@ -50,7 +48,12 @@ namespace MarginTrading.DataReader.Controllers
 
             var openPositions = await _ordersSnapshotReaderService.GetActiveByAccountIdsAsync(clientAccountIds);
 
-            return AccountHistoryBackendResponse.Create(accounts, openPositions, orders);
+            return new AccountHistoryBackendResponse
+            {
+                Account = accounts.Select(item => item.ToBackendContract()).ToArray(),
+                OpenPositions = openPositions.Select(item => item.ToBackendHistoryContract()).OrderByDescending(item => item.OpenDate).ToArray(),
+                PositionsHistory = orders.Select(item => item.ToBackendHistoryContract()).OrderByDescending(item => item.OpenDate).ToArray(),
+            };
         }
 
         [Route("byAccounts")]
