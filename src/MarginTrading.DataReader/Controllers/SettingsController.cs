@@ -11,10 +11,10 @@ namespace MarginTrading.DataReader.Controllers
     [Route("api/settings")]
     public class SettingsController : Controller
     {
-        private readonly MarginSettings _marginSettings;
+        private readonly Settings.MarginSettings _marginSettings;
         private readonly IClientSettingsRepository _clientSettingsRepository;
 
-        public SettingsController(MarginSettings marginSettings, IClientSettingsRepository clientSettingsRepository)
+        public SettingsController(Settings.MarginSettings marginSettings, IClientSettingsRepository clientSettingsRepository)
         {
             _marginSettings = marginSettings;
             _clientSettingsRepository = clientSettingsRepository;

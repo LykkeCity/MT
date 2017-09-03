@@ -1,12 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using MarginTrading.Common.BackendContracts;
-using MarginTrading.Core;
+
 using MarginTrading.Core.Settings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using MarginTrading.Common.Mappers;
+using MarginTrading.Core;
 
 namespace MarginTrading.DataReader.Controllers
 {
@@ -14,10 +15,10 @@ namespace MarginTrading.DataReader.Controllers
     [Route("api/accounts")]
     public class AccountsController : Controller
     {
-        private readonly MarginSettings _marginSettings;
+        private readonly Settings.MarginSettings _marginSettings;
         private readonly IMarginTradingAccountsRepository _accountsRepository;
 
-        public AccountsController(MarginSettings marginSettings, IMarginTradingAccountsRepository accountsRepository)
+        public AccountsController(Settings.MarginSettings marginSettings, IMarginTradingAccountsRepository accountsRepository)
         {
             _marginSettings = marginSettings;
             _accountsRepository = accountsRepository;
