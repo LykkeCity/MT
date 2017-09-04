@@ -2,11 +2,18 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Common;
 using MarginTrading.Common.BackendContracts;
 using MarginTrading.Common.ClientContracts;
 using MarginTrading.Common.Mappers;
 using MarginTrading.Core;
+using MarginTrading.DataReaderClient;
 using MarginTrading.Frontend.Settings;
+using AccountHistoryBackendResponse = MarginTrading.DataReaderClient.Models.AccountHistoryBackendResponse;
+using AccountHistoryBackendContract = MarginTrading.DataReaderClient.Models.AccountHistoryBackendContract;
+using OrderHistoryBackendContract = MarginTrading.DataReaderClient.Models.OrderHistoryBackendContract;
+using AccountNewHistoryBackendResponse = MarginTrading.DataReaderClient.Models.AccountNewHistoryBackendResponse;
+using AccountHistoryItemBackend = MarginTrading.DataReaderClient.Models.AccountHistoryItemBackend;
 
 namespace MarginTrading.Frontend.Services
 {
@@ -15,15 +22,18 @@ namespace MarginTrading.Frontend.Services
         private readonly MtFrontendSettings _settings;
         private readonly HttpRequestService _httpRequestService;
         private readonly IMarginTradingSettingsService _marginTradingSettingsService;
+        private readonly MarginTradingDataReaderApiClientsPair _dataReaderClients;
 
         public RpcFacade(
             MtFrontendSettings settings,
             HttpRequestService httpRequestService,
-            IMarginTradingSettingsService marginTradingSettingsService)
+            IMarginTradingSettingsService marginTradingSettingsService,
+            MarginTradingDataReaderApiClientsPair dataReaderClients)
         {
             _settings = settings;
             _httpRequestService = httpRequestService;
             _marginTradingSettingsService = marginTradingSettingsService;
+            _dataReaderClients = dataReaderClients;
         }
 
         #region Init data
@@ -110,11 +120,8 @@ namespace MarginTrading.Frontend.Services
             var isLive = !string.IsNullOrEmpty(request.AccountId)
                 ? IsLiveAccount(request.AccountId)
                 : request.IsLive;
-            var accountHistoryBackendRequest = request.ToBackendContract(clientId);
-            var accountHistoryBackendResponse =
-                await _httpRequestService.RequestWithRetriesAsync<AccountHistoryBackendResponse>(accountHistoryBackendRequest,
-                    "account.history", isLive);
-            return accountHistoryBackendResponse.ToClientContract();
+            var accountHistoryBackendResponse = await _dataReaderClients.Get(isLive).GetAccountHistoryByTypesAsync(clientId, request.AccountId, request.From, request.To);
+            return ToClientContract(accountHistoryBackendResponse);
         }
 
         public async Task<AccountHistoryItemClient[]> GetAccountHistoryTimeline(string clientId, AccountHistoryFiltersClientRequest request)
@@ -122,11 +129,8 @@ namespace MarginTrading.Frontend.Services
             var isLive = !string.IsNullOrEmpty(request.AccountId)
                 ? IsLiveAccount(request.AccountId)
                 : request.IsLive;
-            var accountHistoryBackendRequest = request.ToBackendContract(clientId);
-            var accountHistoryBackendResponse =
-                await _httpRequestService.RequestWithRetriesAsync<AccountNewHistoryBackendResponse>(accountHistoryBackendRequest,
-                    "account.history.new", isLive);
-            return accountHistoryBackendResponse.ToClientContract();
+            var accountHistoryBackendResponse = await _dataReaderClients.Get(isLive).GetAccountHistoryTimelineAsync(clientId, request.AccountId, request.From, request.To);
+            return ToClientContract(accountHistoryBackendResponse);
         }
 
         #endregion
@@ -230,6 +234,74 @@ namespace MarginTrading.Frontend.Services
         private bool IsLiveAccount(string accountId)
         {
             return !accountId.StartsWith(_settings.MarginTradingFront.DemoAccountIdPrefix);
+        }
+
+        private static AccountHistoryClientResponse ToClientContract(AccountHistoryBackendResponse src)
+        {
+            return new AccountHistoryClientResponse
+            {
+                Account = src.Account.Select(ToClientContract).OrderByDescending(item => item.Date).ToArray(),
+                OpenPositions = src.OpenPositions.Select(ToClientContract).ToArray(),
+                PositionsHistory = src.PositionsHistory.Select(ToClientContract).ToArray()
+            };
+        }
+
+        private static AccountHistoryClientContract ToClientContract(AccountHistoryBackendContract src)
+        {
+            return new AccountHistoryClientContract
+            {
+                Id = src.Id,
+                Date = src.Date,
+                AccountId = src.AccountId,
+                ClientId = src.ClientId,
+                Amount = src.Amount,
+                Balance = src.Balance,
+                WithdrawTransferLimit = src.WithdrawTransferLimit,
+                Comment = src.Comment,
+                Type = ConvertEnum<AccountHistoryType>(src.Type)
+            };
+        }
+
+        private static OrderHistoryClientContract ToClientContract(OrderHistoryBackendContract src)
+        {
+            return new OrderHistoryClientContract
+            {
+                Id = src.Id,
+                AccountId = src.AccountId,
+                Instrument = src.Instrument,
+                AssetAccuracy = src.AssetAccuracy,
+                Type = ConvertEnum<OrderDirection>(src.Type),
+                Status = ConvertEnum<OrderStatus>(src.Status),
+                CloseReason = ConvertEnum<OrderCloseReason>(src.CloseReason),
+                OpenDate = src.OpenDate,
+                CloseDate = src.CloseDate,
+                OpenPrice = src.OpenPrice,
+                ClosePrice = src.ClosePrice,
+                Volume = src.Volume,
+                TakeProfit = src.TakeProfit,
+                StopLoss = src.StopLoss,
+                Fpl = src.TotalPnl,
+                TotalPnL = src.TotalPnl,
+                PnL = src.Pnl,
+                InterestRateSwap = src.InterestRateSwap,
+                OpenCommission = src.OpenCommission,
+                CloseCommission = src.CloseCommission
+            };
+        }
+
+        public static AccountHistoryItemClient[] ToClientContract(AccountNewHistoryBackendResponse src)
+        {
+            return src.HistoryItems.Select(i => new AccountHistoryItemClient
+            {
+                Date = i.Date,
+                Account = i.Account == null ? null : ToClientContract(i.Account),
+                Position = i.Position == null ? null : ToClientContract(i.Position)
+            }).ToArray();
+        }
+
+        private static TResult ConvertEnum<TResult>(Enum e)
+        {
+            return e.ToString().ParseEnum<TResult>();
         }
 
         #endregion

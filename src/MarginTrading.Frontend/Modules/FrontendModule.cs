@@ -14,12 +14,14 @@ using MarginTrading.Common.Wamp;
 using MarginTrading.Core;
 using MarginTrading.Core.Clients;
 using MarginTrading.Core.Settings;
+using MarginTrading.DataReaderClient;
 using MarginTrading.Frontend.Services;
 using MarginTrading.Frontend.Settings;
 using MarginTrading.Services;
 using MarginTrading.Services.Infrastructure;
 using Microsoft.Extensions.PlatformAbstractions;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Rest;
 using Rocks.Caching;
 using WampSharp.V2;
 using WampSharp.V2.Realm;
@@ -172,6 +174,15 @@ namespace MarginTrading.Frontend.Modules
                    .As<ICacheProvider>()
                    .AsSelf()
                    .SingleInstance();
+
+            builder.Register(context =>
+                    MarginTradingDataReaderApiClientFactory.CreateDefaultClientsPair(
+                        _settings.MarginTradingFront.DataReaderApiSettings.DemoApiUrl,
+                        _settings.MarginTradingFront.DataReaderApiSettings.LiveApiUrl,
+                        _settings.MarginTradingFront.DataReaderApiSettings.DemoApiKey,
+                        _settings.MarginTradingFront.DataReaderApiSettings.LiveApiKey,
+                        "MarginTradingFrontend"))
+                .SingleInstance();
         }
     }
 }
