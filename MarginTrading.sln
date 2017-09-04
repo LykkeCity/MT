@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.8
+VisualStudioVersion = 15.0.26730.12
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1. Infrastructure", "1. Infrastructure", "{84F3857F-CE2C-4A87-ACB2-809570092CF6}"
 EndProject
@@ -45,16 +45,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.OrderRejected
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.DataReader", "src\MarginTrading.DataReader\MarginTrading.DataReader.csproj", "{61657805-B7DA-4B78-9138-3697EA06E46E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.DataReaderClient", "src\MarginTrading.DataReaderClient\MarginTrading.DataReaderClient.csproj", "{ECED4B03-6B04-48CC-B8F4-DA4E2343893C}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "8. ApiClients", "8. ApiClients", "{457774CA-C565-42A2-94EC-CA564AFBF061}"
-EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "MarginTrading.DataReader.Interface", "src\MarginTrading.DataReader.Interface\MarginTrading.DataReader.Interface.shproj", "{0C8D2493-F3C2-48FC-A05A-CFABA2ABBE5B}"
-EndProject
 Global
-	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		src\MarginTrading.DataReader.Interface\MarginTrading.DataReader.Interface.projitems*{0c8d2493-f3c2-48fc-a05a-cfaba2abbe5b}*SharedItemsImports = 13
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -112,10 +103,6 @@ Global
 		{61657805-B7DA-4B78-9138-3697EA06E46E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{61657805-B7DA-4B78-9138-3697EA06E46E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{61657805-B7DA-4B78-9138-3697EA06E46E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{ECED4B03-6B04-48CC-B8F4-DA4E2343893C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{ECED4B03-6B04-48CC-B8F4-DA4E2343893C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{ECED4B03-6B04-48CC-B8F4-DA4E2343893C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{ECED4B03-6B04-48CC-B8F4-DA4E2343893C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -134,8 +121,6 @@ Global
 		{488443F1-4FA4-4F39-9014-09BE2F52FDA9} = {850DBE15-08C0-45BB-8AAF-B2096AAC9667}
 		{25C10FE6-1D1C-4933-9DBB-18B6D2E2A2DD} = {850DBE15-08C0-45BB-8AAF-B2096AAC9667}
 		{61657805-B7DA-4B78-9138-3697EA06E46E} = {A1366CA2-DF4A-4E38-BD6C-895A399118B4}
-		{ECED4B03-6B04-48CC-B8F4-DA4E2343893C} = {457774CA-C565-42A2-94EC-CA564AFBF061}
-		{0C8D2493-F3C2-48FC-A05A-CFABA2ABBE5B} = {457774CA-C565-42A2-94EC-CA564AFBF061}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {16BCEC97-771D-46F8-BD02-379A8FC34CDD}
