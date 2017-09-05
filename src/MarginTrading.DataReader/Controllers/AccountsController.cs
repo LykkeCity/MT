@@ -1,12 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using MarginTrading.Common.BackendContracts;
-
-using MarginTrading.Core.Settings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
-using MarginTrading.Common.Mappers;
 using MarginTrading.Core;
 
 namespace MarginTrading.DataReader.Controllers
@@ -30,10 +27,10 @@ namespace MarginTrading.DataReader.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("")]
-        public async Task<MarginTradingAccountBackendContract[]> GetAllAccounts()
+        public async Task<DataReaderAccountBackendContract[]> GetAllAccounts()
         {
             return (await _accountsRepository.GetAllAsync())
-                .Select(item => item.ToBackendContract(_marginSettings.IsLive)).ToArray();
+                .Select(item => ToBackendContract(item, _marginSettings.IsLive)).ToArray();
         }
 
         /// <summary>
@@ -44,6 +41,20 @@ namespace MarginTrading.DataReader.Controllers
         public async Task<IEnumerable<MarginTradingAccount>> GetAccountsByClientId(string clientId)
         {
             return (await _accountsRepository.GetAllAsync(clientId)).Select(MarginTradingAccount.Create);
+        }
+
+        private static DataReaderAccountBackendContract ToBackendContract(IMarginTradingAccount src, bool isLive)
+        {
+            return new DataReaderAccountBackendContract
+            {
+                Id = src.Id,
+                ClientId = src.ClientId,
+                TradingConditionId = src.TradingConditionId,
+                BaseAssetId = src.BaseAssetId,
+                Balance = src.Balance,
+                WithdrawTransferLimit = src.WithdrawTransferLimit,
+                IsLive = isLive
+            };
         }
     }
 }

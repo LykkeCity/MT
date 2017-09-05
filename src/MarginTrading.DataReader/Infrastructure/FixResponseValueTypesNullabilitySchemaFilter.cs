@@ -20,6 +20,11 @@ namespace MarginTrading.DataReader.Infrastructure
                 .Select(p => p.Name);
 
             schema.Required = schema.Properties.Keys.Intersect(nonNulableValueTypedPropNames, StringComparer.OrdinalIgnoreCase).ToList();
+
+            if (schema.Required.Count == 0)
+            {
+                schema.Required = null;
+            }
         }
     }
 }
