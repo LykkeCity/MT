@@ -32,7 +32,7 @@
     <PackageReference Include="AspNet.Security.OpenIdConnect.Extensions" Version="1.0.0" />
     <PackageReference Include="Lykke.Common.ApiLibrary" Version="1.0.11" />
     <PackageReference Include="Lykke.Logs" Version="1.0.29" />
-    <PackageReference Include="Lykke.MarginTrading.DataReaderClient" Version="1.0.8" />
+    <PackageReference Include="Lykke.MarginTrading.DataReaderClient" Version="1.0.10" />
     <PackageReference Include="Lykke.SettingsReader" Version="1.0.38" />
     <PackageReference Include="Lykke.Service.Session" Version="16.0.0" />
     <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="1.0.4" />
