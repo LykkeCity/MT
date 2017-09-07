@@ -12,8 +12,6 @@ namespace MarginTrading.Services
 {
     public class MarketMakerService : IFeedConsumer
     {
-        private const string MarketMakerId = "marketMaker1";
-
         private static readonly Dictionary<string, IAssetPairRate> _pendingBuyRates =
             new Dictionary<string, IAssetPairRate>();
 
@@ -47,7 +45,7 @@ namespace MarginTrading.Services
                 return;
             }
 
-            var model = new SetOrderModel {MarketMakerId = MarketMakerId};
+            var model = new SetOrderModel {MarketMakerId = batch.MarketMakerId};
 
             if (DeleteOrdersIfDayOff(batch, model))
             {
@@ -79,7 +77,7 @@ namespace MarginTrading.Services
                         AssetPairId = batch.AssetPairId,
                         IsBuy = c.Direction.RequiredNotNull(nameof(c.Direction)) == OrderDirection.Buy,
                         Price = c.Price.RequiredNotNull(nameof(c.Price))
-                    })).Where(a => a?.Length > 0).SelectMany(a => a)
+                    }, batch.MarketMakerId)).Where(a => a?.Length > 0).SelectMany(a => a)
                     .ToList();
 
                 if (model.OrdersToAdd.Count > 0)
@@ -101,7 +99,7 @@ namespace MarginTrading.Services
                     .Select(c => new LimitOrder
                     {
                         Id = Guid.NewGuid().ToString("N"),
-                        MarketMakerId = MarketMakerId,
+                        MarketMakerId = batch.MarketMakerId,
                         CreateDate = DateTime.UtcNow,
                         Instrument = batch.AssetPairId,
                         Price = c.Price.RequiredNotNull(nameof(c.Price)),
@@ -156,7 +154,7 @@ namespace MarginTrading.Services
         }
 
         [CanBeNull]
-        private LimitOrder[] CreateLimitOrders(IAssetPairRate feedData)
+        private LimitOrder[] CreateLimitOrders(IAssetPairRate feedData, string marketMakerId)
         {
             InstrumentBidAskPair bestBidAsk;
             IAssetPairRate pendingFeed = null;
@@ -221,16 +219,16 @@ namespace MarginTrading.Services
                 }
             }
 
-            return new[] {feedData, pendingFeed}.Where(d => d != null).Select(CreateOrder).ToArray();
+            return new[] {feedData, pendingFeed}.Where(d => d != null).Select(rate => CreateOrder(rate, marketMakerId)).ToArray();
         }
 
-        private LimitOrder CreateOrder(IAssetPairRate feedData)
+        private LimitOrder CreateOrder(IAssetPairRate feedData, string marketMakerId)
         {
             var volume = feedData.IsBuy ? 1000000 : -1000000;
             return new LimitOrder
             {
                 Id = Guid.NewGuid().ToString("N"),
-                MarketMakerId = MarketMakerId,
+                MarketMakerId = marketMakerId,
                 CreateDate = DateTime.UtcNow,
                 Instrument = feedData.AssetPairId,
                 Price = feedData.Price,

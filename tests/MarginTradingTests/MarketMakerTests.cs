@@ -51,6 +51,7 @@ namespace MarginTradingTests
             {
                 AssetPairId = "EURUSD",
                 Commands = new List<MarketMakerOrderCommand> { new MarketMakerOrderCommand { Direction = OrderDirection.Buy, Price = 1.2, Volume = 10, CommandType = MarketMakerOrderCommandType.SetOrder } },
+                MarketMakerId = "marketMaker1",
             };
 
             _marketMaker.ConsumeFeed(feedData);
@@ -63,6 +64,7 @@ namespace MarginTradingTests
             {
                 AssetPairId = "EURUSD",
                 Commands = new List<MarketMakerOrderCommand> { new MarketMakerOrderCommand { Direction = OrderDirection.Sell, Price = 1.3, Volume = -10, CommandType = MarketMakerOrderCommandType.SetOrder } },
+                MarketMakerId = "marketMaker1",
             };
 
             _marketMaker.ConsumeFeed(feedData);
@@ -81,6 +83,7 @@ namespace MarginTradingTests
             {
                 AssetPairId = "EURUSD",
                 Commands = new List<MarketMakerOrderCommand> { new MarketMakerOrderCommand { Direction = OrderDirection.Sell, Price = 1.02, Volume = -10, CommandType = MarketMakerOrderCommandType.SetOrder } },
+                MarketMakerId = "marketMaker1",
             };
 
             _marketMaker.ConsumeFeed(feedData);
@@ -94,6 +97,7 @@ namespace MarginTradingTests
             {
                 AssetPairId = "EURUSD",
                 Commands = new List<MarketMakerOrderCommand> { new MarketMakerOrderCommand { Direction = OrderDirection.Buy, Price = 1.01, Volume = 10, CommandType = MarketMakerOrderCommandType.SetOrder } },
+                MarketMakerId = "marketMaker1",
             };
 
             _marketMaker.ConsumeFeed(feedData);
