@@ -16,6 +16,7 @@ namespace MarginTrading.Common.BackendContracts
     public class MatchedOrderBackendContract
     {
         public string OrderId { get; set; }
+        public string MarketMakerId { get; set; }
         public double LimitOrderLeftToMatch { get; set; }
         public double Volume { get; set; }
         public double Price { get; set; }

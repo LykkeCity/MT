@@ -89,6 +89,7 @@ namespace MarginTrading.Common.Mappers
             return new MatchedOrderBackendContract
             {
                 OrderId = src.OrderId,
+                MarketMakerId = src.MarketMakerId,
                 LimitOrderLeftToMatch = src.LimitOrderLeftToMatch,
                 Volume = src.Volume,
                 Price = src.Price,

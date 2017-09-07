@@ -53,6 +53,7 @@ namespace MarginTrading.Core
                                     {
                                         MatchedDate = m.MatchedDate,
                                         OrderId = m.OrderId,
+                                        MarketMakerId = m.MarketMakerId,
                                         Price = m.Price,
                                         Volume = m.Volume
                                     })
@@ -92,6 +93,7 @@ namespace MarginTrading.Core
                     yield return new MatchedOrder
                     {
                         OrderId = limitOrder.Id,
+                        MarketMakerId = limitOrder.MarketMakerId,
                         LimitOrderLeftToMatch = Math.Abs(matchedVolume - limitOrder.GetRemainingVolume()),
                         Volume = matchedVolume,
                         MatchedDate = DateTime.UtcNow,
@@ -115,6 +117,7 @@ namespace MarginTrading.Core
                 bookOrder.MatchedOrders.Add(new MatchedOrder
                 {
                     OrderId = order.Id,
+                    MarketMakerId = matchedOrder.MarketMakerId,
                     Volume = matchedOrder.Volume,
                     MatchedDate = matchedOrder.MatchedDate,
                     Price = matchedOrder.Price,
