@@ -15,6 +15,7 @@ using MarginTrading.Backend.Infrastructure;
 using MarginTrading.Backend.Middleware;
 using MarginTrading.Backend.Modules;
 using MarginTrading.Common.Extensions;
+using MarginTrading.Common.Json;
 using MarginTrading.Core;
 using MarginTrading.Core.Settings;
 using MarginTrading.Services;
@@ -62,7 +63,12 @@ namespace MarginTrading.Backend
             services.AddSingleton(loggerFactory);
             services.AddLogging();
             services.AddSingleton(Configuration);
-            services.AddMvc(options => options.Filters.Add(typeof(MarginTradingEnabledFilter)));
+            services.AddMvc(options => options.Filters.Add(typeof(MarginTradingEnabledFilter)))
+                .AddJsonOptions(
+                    options =>
+                    {
+                        options.SerializerSettings.Converters = SerializerSettings.GetDefaultConverters();
+                    });
             services.AddAuthentication(KeyAuthOptions.AuthenticationScheme)
                 .AddScheme<KeyAuthOptions, KeyAuthHandler>(KeyAuthOptions.AuthenticationScheme, "", options => { });
 
