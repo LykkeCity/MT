@@ -19,6 +19,11 @@ namespace MarginTrading.MarketMaker.Messages
         public DateTime Timestamp { get; set; }
 
         /// <summary>
+        /// Id of market maker which generated the command
+        /// </summary>
+        public string MarketMakerId { get; set; }
+
+        /// <summary>
         /// Commands representing the batch
         /// </summary>
         public IReadOnlyList<OrderCommand> Commands { get; set; }

@@ -17,12 +17,14 @@ namespace MarginTrading.MarketMaker.Services.Implemetation
         private readonly IAssetPairsSettingsService _assetPairsSettingsService;
         private readonly Lazy<IMessageProducer<OrderCommandsBatchMessage>> _messageProducer;
         private readonly ISystem _system;
+        private readonly MarginTradingMarketMakerSettings _settings;
 
         public MarketMakerService(IAssetPairsSettingsService assetPairsSettingsService, MarginTradingMarketMakerSettings marginTradingMarketMakerSettings,
-            IRabbitMqService rabbitMqService, ISystem system)
+            IRabbitMqService rabbitMqService, ISystem system, MarginTradingMarketMakerSettings settings)
         {
             _assetPairsSettingsService = assetPairsSettingsService;
             _system = system;
+            _settings = settings;
             _messageProducer = new Lazy<IMessageProducer<OrderCommandsBatchMessage>>(() =>
                 CreateRabbitMqMessageProducer(marginTradingMarketMakerSettings, rabbitMqService));
         }
@@ -132,7 +134,8 @@ namespace MarginTrading.MarketMaker.Services.Implemetation
             {
                 AssetPairId = assetPairId,
                 Timestamp = _system.UtcNow,
-                Commands = commands
+                Commands = commands,
+                MarketMakerId = _settings.MarketMakerId,
             });
         }
     }

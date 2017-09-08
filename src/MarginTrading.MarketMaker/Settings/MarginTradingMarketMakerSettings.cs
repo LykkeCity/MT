@@ -9,6 +9,8 @@ namespace MarginTrading.MarketMaker.Settings
 
         public RabbitMqSettings RabbitMq { get; set; }
 
+        public string MarketMakerId { get; set; }
+
         [CanBeNull, Optional]
         public string ApplicationInsightsKey { get; set; }
     }
