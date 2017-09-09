@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Common.BackendContracts;
+using MarginTrading.Core;
+using MarginTrading.DataReader.Settings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq;
-using MarginTrading.Core;
 
 namespace MarginTrading.DataReader.Controllers
 {
@@ -12,29 +13,41 @@ namespace MarginTrading.DataReader.Controllers
     [Route("api/accounts")]
     public class AccountsController : Controller
     {
-        private readonly Settings.MarginSettings _marginSettings;
+        private readonly MarginSettings _marginSettings;
         private readonly IMarginTradingAccountsRepository _accountsRepository;
+        private readonly IMarginTradingAccountStatsRepository _accountStatsRepository;
 
-        public AccountsController(Settings.MarginSettings marginSettings, IMarginTradingAccountsRepository accountsRepository)
+        public AccountsController(MarginSettings marginSettings, IMarginTradingAccountsRepository accountsRepository,
+            IMarginTradingAccountStatsRepository accountStatsRepository)
         {
             _marginSettings = marginSettings;
             _accountsRepository = accountsRepository;
+            _accountStatsRepository = accountStatsRepository;
         }
 
         /// <summary>
-        /// Returns all accounts
+        ///     Returns all accounts
         /// </summary>
-        /// <returns></returns>
         [HttpGet]
         [Route("")]
-        public async Task<DataReaderAccountBackendContract[]> GetAllAccounts()
+        public async Task<IEnumerable<DataReaderAccountBackendContract>> GetAllAccounts()
         {
             return (await _accountsRepository.GetAllAsync())
-                .Select(item => ToBackendContract(item, _marginSettings.IsLive)).ToArray();
+                .Select(item => ToBackendContract(item, _marginSettings.IsLive));
         }
 
         /// <summary>
-        /// Returns all accounts by client
+        ///     Returns all account stats
+        /// </summary>
+        [HttpGet]
+        [Route("stats")]
+        public async Task<IEnumerable<MarginTradingAccountStats>> GetAllAccountStats()
+        {
+            return (await _accountStatsRepository.GetAllAsync()).Select(ToBackendContract);
+        }
+
+        /// <summary>
+        ///     Returns all accounts by client
         /// </summary>
         [HttpGet]
         [Route("byClient/{clientId}")]
@@ -54,6 +67,24 @@ namespace MarginTrading.DataReader.Controllers
                 Balance = src.Balance,
                 WithdrawTransferLimit = src.WithdrawTransferLimit,
                 IsLive = isLive
+            };
+        }
+
+        private static MarginTradingAccountStats ToBackendContract(IMarginTradingAccountStats item)
+        {
+            return new MarginTradingAccountStats
+            {
+                AccountId = item.AccountId,
+                MarginCall = item.MarginCall,
+                StopOut = item.StopOut,
+                TotalCapital = item.TotalCapital,
+                FreeMargin = item.FreeMargin,
+                MarginAvailable = item.MarginAvailable,
+                UsedMargin = item.UsedMargin,
+                MarginInit = item.MarginInit,
+                PnL = item.PnL,
+                OpenPositionsCount = item.OpenPositionsCount,
+                MarginUsageLevel = item.MarginUsageLevel,
             };
         }
     }
