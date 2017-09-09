@@ -37,7 +37,7 @@ namespace MarginTrading.DataReader.Controllers
         /// </remarks>
         /// <response code="200">Returns summary info by assets</response>
         [HttpGet]
-        [Route("assetsSummary")]
+        [Route("assets/summary")]
         public async Task<List<SummaryAssetInfo>> GetAssetsSummary()
         {
             var result = new List<SummaryAssetInfo>();
@@ -84,12 +84,27 @@ namespace MarginTrading.DataReader.Controllers
         /// </remarks>
         /// <response code="200">Returns opened positions</response>
         [HttpGet]
-        [Route("positionsByVolume/{volume?}")]
-        public async Task<List<OrderContract>> GetPositionsByVolume(double volume = 0)
+        [Route("openPositions/byVolume/{volume}")]
+        public async Task<List<OrderContract>> GetOpenPositionsByVolume([FromRoute]double volume)
         {
             return (await _ordersSnapshotReaderService.GetActiveAsync())
                 .Where(order => order.GetMatchedVolume() >= volume).Select(OrderExtensions.ToBaseContract)
                 .ToList();
+        }
+
+        /// <summary>
+        ///     Returns list of opened positions from a snapshot (blob)
+        /// </summary>
+        /// <remarks>
+        ///     <p>Returns list of all opened positions</p>
+        ///     <p>Header "api-key" is required</p>
+        /// </remarks>
+        /// <response code="200">Returns opened positions</response>
+        [HttpGet]
+        [Route("openPositions")]
+        public Task<List<OrderContract>> GetAllOpenPositions()
+        {
+            return GetOpenPositionsByVolume(0);
         }
 
         /// <summary>
@@ -101,12 +116,27 @@ namespace MarginTrading.DataReader.Controllers
         /// </remarks>
         /// <response code="200">Returns pending orders</response>
         [HttpGet]
-        [Route("pendingOrdersByVolume/{volume?}")]
-        public async Task<List<OrderContract>> GetPendingOrdersByVolume(double volume = 0)
+        [Route("pendingOrders/byVolume/{volume}")]
+        public async Task<List<OrderContract>> GetPendingOrdersByVolume([FromRoute]double volume)
         {
             return (await _ordersSnapshotReaderService.GetPendingAsync())
                 .Where(order => Math.Abs(order.Volume) >= volume).Select(OrderExtensions.ToBaseContract)
                 .ToList();
+        }
+
+        /// <summary>
+        ///     Returns list of pending orders from a snapshot (blob)
+        /// </summary>
+        /// <remarks>
+        ///     <p>Returns list of all pending orders</p>
+        ///     <p>Header "api-key" is required</p>
+        /// </remarks>
+        /// <response code="200">Returns pending orders</response>
+        [HttpGet]
+        [Route("pendingOrders")]
+        public Task<List<OrderContract>> GetAllPendingOrders()
+        {
+            return GetPendingOrdersByVolume(0);
         }
 
         /// <summary>
@@ -117,7 +147,7 @@ namespace MarginTrading.DataReader.Controllers
         /// </remarks>
         /// <response code="200">Returns orderbooks</response>
         [HttpGet]
-        [Route("orderbooksByInstrument/{instrument}")]
+        [Route("orderbooks/byInstrument/{instrument}")]
         public async Task<List<OrderBookModel>> GetOrderBooks(string instrument)
         {
             var orderbooks = await _orderBookSnapshotReaderService.GetAllLimitOrders(instrument);

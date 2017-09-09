@@ -14,7 +14,7 @@ namespace MarginTrading.DataReader
         {
             var restartAttempsLeft = 5;
 
-            while (restartAttempsLeft >= 0)
+            while (restartAttempsLeft > 0)
             {
                 try
                 {
@@ -28,9 +28,12 @@ namespace MarginTrading.DataReader
                         .Build();
 
                     host.Run();
+
+                    restartAttempsLeft = 0;
                 }
                 catch (Exception e)
                 {
+                    Console.WriteLine($"Error: {e.Message}{Environment.NewLine}{e.StackTrace}{Environment.NewLine}Restarting...");
                     LogLocator.CommonLog.WriteFatalErrorAsync(
                         "MT DataReader", "Restart host", $"Attempts left: {restartAttempsLeft}", e);
                     restartAttempsLeft--;

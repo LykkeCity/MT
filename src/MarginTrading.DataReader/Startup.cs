@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
@@ -21,9 +22,12 @@ using MarginTrading.Services.Notifications;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Swashbuckle.Swagger.Model;
+using Swashbuckle.SwaggerGen.Annotations;
 
 #pragma warning disable 1591
 
@@ -67,6 +71,7 @@ namespace MarginTrading.DataReader
                 options.DefaultLykkeConfiguration("v1", $"MarginTrading_DataReader_Api_{(isLive ? "Live" : "Demo")}");
                 options.OperationFilter<ApiKeyHeaderOperationFilter>();
                 options.OperationFilter<CustomOperationIdOperationFilter>();
+                options.SchemaFilter<FixResponseValueTypesNullabilitySchemaFilter>();
             });
 
             var builder = new ContainerBuilder();
@@ -105,6 +110,7 @@ namespace MarginTrading.DataReader
             app.UseAuthentication();
             app.UseMvc();
             app.UseSwagger();
+            app.UseSwagger(DocumentFilter, "swagger/{apiVersion}/swagger-no-api-key.json");
             app.UseSwaggerUi();
 
             appLifetime.ApplicationStopped.Register(() => ApplicationContainer.Dispose());
@@ -121,6 +127,20 @@ namespace MarginTrading.DataReader
             });
 
             appLifetime.ApplicationStopping.Register(() => { });
+        }
+
+        /// <summary>
+        /// If generating swagger without api-key - strip it.
+        /// </summary>
+        /// <remarks>
+        /// This is a nasty workaround for autorest generator not to create apiKey parameters for every method.
+        /// </remarks>
+        private void DocumentFilter(HttpRequest httpRequest, SwaggerDocument swaggerDocument)
+        {
+            foreach (var path in swaggerDocument.Paths.Values)
+            {
+                path.Get.Parameters?.Remove(path.Get.Parameters.First(p => p.Name == KeyAuthOptions.DefaultHeaderName));
+            }
         }
 
         private void RegisterModules(ContainerBuilder builder, MarginSettings settings)
