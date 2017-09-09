@@ -41,7 +41,7 @@ namespace MarginTrading.DataReader.Modules
             ).SingleInstance();
 
             builder.Register<IMarginTradingAccountStatsRepository>(ctx =>
-                AzureRepoFactories.MarginTrading.CreateAccountStatsRepository(_settings.Db.MarginTradingConnString, _log)
+                AzureRepoFactories.MarginTrading.CreateAccountStatsRepository(_settings.Db.HistoryConnString, _log)
             ).SingleInstance();
 
             builder.Register<IMarginTradingOrdersHistoryRepository>(ctx =>

@@ -37,17 +37,17 @@ namespace MarginTrading.AzureRepositories
         {
             return new Dictionary<string, EntityProperty>
             {
-                {"AccountId", new EntityProperty(AccountId)},
-                {"MarginCall", new EntityProperty(MarginCall)},
-                {"StopOut", new EntityProperty(StopOut)},
-                {"TotalCapital", new EntityProperty(TotalCapital)},
-                {"FreeMargin", new EntityProperty(FreeMargin)},
-                {"MarginAvailable", new EntityProperty(MarginAvailable)},
-                {"UsedMargin", new EntityProperty(UsedMargin)},
-                {"MarginInit", new EntityProperty(MarginInit)},
-                {"PnL", new EntityProperty(PnL)},
-                {"OpenPositionsCount", new EntityProperty(OpenPositionsCount)},
-                {"MarginUsageLevel", new EntityProperty(MarginUsageLevel)},
+                {nameof(AccountId), new EntityProperty(AccountId)},
+                {nameof(MarginCall), new EntityProperty(MarginCall)},
+                {nameof(StopOut), new EntityProperty(StopOut)},
+                {nameof(TotalCapital), new EntityProperty(TotalCapital)},
+                {nameof(FreeMargin), new EntityProperty(FreeMargin)},
+                {nameof(MarginAvailable), new EntityProperty(MarginAvailable)},
+                {nameof(UsedMargin), new EntityProperty(UsedMargin)},
+                {nameof(MarginInit), new EntityProperty(MarginInit)},
+                {nameof(PnL), new EntityProperty(PnL)},
+                {nameof(OpenPositionsCount), new EntityProperty(OpenPositionsCount)},
+                {nameof(MarginUsageLevel), new EntityProperty(MarginUsageLevel)},
             };
         }
     }
