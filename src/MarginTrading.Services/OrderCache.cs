@@ -7,7 +7,7 @@ using Common;
 using Common.Log;
 using MarginTrading.Core;
 using MarginTrading.Core.Messages;
-using MarginTradingHelpers = MarginTrading.Services.Helpers.MarginTradingHelpers;
+using MarginTrading.Services.Infrastructure;
 
 namespace MarginTrading.Services
 {
@@ -21,13 +21,20 @@ namespace MarginTrading.Services
 
     public class OrdersCache : IOrderReader
     {
+        private readonly IContextFactory _contextFactory;
+
+        public OrdersCache(IContextFactory contextFactory)
+        {
+            _contextFactory = contextFactory;
+        }
+
         public OrderCacheGroup ActiveOrders { get; private set; }
         public OrderCacheGroup WaitingForExecutionOrders { get; private set; }
         public OrderCacheGroup ClosingOrders { get; private set; }
 
         public IImmutableList<Order> GetAll()
         {
-            lock (MarginTradingHelpers.TradingMatchingSync)
+            using (_contextFactory.GetReadSyncContext($"{nameof(OrdersCache)}.{nameof(GetAll)}"))
                 return ActiveOrders.GetAllOrders()
                     .Union(WaitingForExecutionOrders.GetAllOrders())
                     .Union(ClosingOrders.GetAllOrders()).ToImmutableList();
@@ -35,19 +42,19 @@ namespace MarginTrading.Services
 
         public IImmutableList<Order> GetActive()
         {
-            lock (MarginTradingHelpers.TradingMatchingSync)
+            using (_contextFactory.GetReadSyncContext($"{nameof(OrdersCache)}.{nameof(GetActive)}"))
                 return ActiveOrders.GetAllOrders().ToImmutableList();
         }
 
         public IImmutableList<Order> GetPending()
         {
-            lock (MarginTradingHelpers.TradingMatchingSync)
+            using (_contextFactory.GetReadSyncContext($"{nameof(OrdersCache)}.{nameof(GetPending)}"))
                 return WaitingForExecutionOrders.GetAllOrders().ToImmutableList();
         }
 
         public Order GetOrderById(string orderId)
         {
-            lock (MarginTradingHelpers.TradingMatchingSync)
+            using (_contextFactory.GetReadSyncContext($"{nameof(OrdersCache)}.{nameof(GetOrderById)}"))
             {
                 Order result;
 
@@ -63,9 +70,9 @@ namespace MarginTrading.Services
 
         public void InitOrders(List<Order> orders)
         {
-            ActiveOrders = new OrderCacheGroup(orders, OrderStatus.Active);
-            WaitingForExecutionOrders = new OrderCacheGroup(orders, OrderStatus.WaitingForExecution);
-            ClosingOrders = new OrderCacheGroup(orders, OrderStatus.Closing);
+            ActiveOrders = new OrderCacheGroup(orders, OrderStatus.Active, _contextFactory);
+            WaitingForExecutionOrders = new OrderCacheGroup(orders, OrderStatus.WaitingForExecution, _contextFactory);
+            ClosingOrders = new OrderCacheGroup(orders, OrderStatus.Closing, _contextFactory);
         }
     }
 

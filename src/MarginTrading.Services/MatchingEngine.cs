@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MarginTrading.Core;
 using MarginTrading.Services.Events;
-using MarginTradingHelpers = MarginTrading.Services.Helpers.MarginTradingHelpers;
+using MarginTrading.Services.Infrastructure;
 
 namespace MarginTrading.Services
 {
@@ -12,13 +12,15 @@ namespace MarginTrading.Services
         private readonly IEventChannel<OrderBookChangeEventArgs> _orderbookChangeEventChannel;
         private readonly OrderBookList _orderBooks;
         private long _currentMessageId;
+        private readonly IContextFactory _contextFactory;
 
         public MatchingEngine(
             IEventChannel<OrderBookChangeEventArgs> orderbookChangeEventChannel,
-            OrderBookList orderBooks)
+            OrderBookList orderBooks, IContextFactory contextFactory)
         {
             _orderbookChangeEventChannel = orderbookChangeEventChannel;
             _orderBooks = orderBooks;
+            _contextFactory = contextFactory;
             _currentMessageId = 0;
         }
 
@@ -26,7 +28,7 @@ namespace MarginTrading.Services
 
         public void SetOrders(SetOrderModel model)
         {
-            lock (MarginTradingHelpers.TradingMatchingSync)
+            using (_contextFactory.GetWriteSyncContext($"{nameof(MatchingEngine)}.{nameof(SetOrders)}"))
             {
                 var changeEventArgs = new OrderBookChangeEventArgs { MessageId = _currentMessageId++ };
 
@@ -67,7 +69,7 @@ namespace MarginTrading.Services
 
         public Dictionary<string, OrderBook> GetOrderBook(List<string> marketMakerIds)
         {
-            lock (MarginTradingHelpers.TradingMatchingSync)
+            using (_contextFactory.GetReadSyncContext($"{nameof(MatchingEngine)}.{nameof(GetOrderBook)}"))
             {
                 var result = new Dictionary<string, OrderBook>();
 
@@ -83,7 +85,7 @@ namespace MarginTrading.Services
 
         public void MatchMarketOrderForOpen(Order order, Func<MatchedOrder[], bool> matchedFunc)
         {
-            lock (MarginTradingHelpers.TradingMatchingSync)
+            using (_contextFactory.GetWriteSyncContext($"{nameof(MatchingEngine)}.{nameof(MatchMarketOrderForOpen)}"))
             {
                 OrderDirection type = order.GetOrderType();
 
@@ -100,7 +102,7 @@ namespace MarginTrading.Services
 
         public void MatchMarketOrderForClose(Order order, Func<MatchedOrder[], bool> matchedAction)
         {
-            lock (MarginTradingHelpers.TradingMatchingSync)
+            using (_contextFactory.GetWriteSyncContext($"{nameof(MatchingEngine)}.{nameof(MatchMarketOrderForClose)}"))
             {
                 OrderDirection type = order.GetCloseType();
 
@@ -117,7 +119,7 @@ namespace MarginTrading.Services
 
         public bool PingLock()
         {
-            lock (MarginTradingHelpers.TradingMatchingSync)
+            using (_contextFactory.GetReadSyncContext($"{nameof(MatchingEngine)}.{nameof(PingLock)}"))
             {
                 return true;
             }
