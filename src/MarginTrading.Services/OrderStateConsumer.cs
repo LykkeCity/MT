@@ -53,7 +53,7 @@ namespace MarginTrading.Services
 				await _rabbitMqNotifyService.OrderHistory(order);
 
 				_clientNotifyService.NotifyOrderChanged(order);
-				_clientNotifyService.NotifyAccountChanged(account);
+				_clientNotifyService.NotifyAccountUpdated(account);
 
 				await SendNotification(order.ClientId, order.GetPushMessage(), order);
 			});

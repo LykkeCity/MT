@@ -19,6 +19,7 @@ using MarginTrading.Common.BackendContracts;
 using MarginTrading.Common.ClientContracts;
 using MarginTrading.Common.Json;
 using MarginTrading.Common.RabbitMq;
+using MarginTrading.Common.RabbitMqMessageModels;
 using MarginTrading.Common.Wamp;
 using MarginTrading.Core;
 using MarginTrading.Core.Clients;
@@ -96,7 +97,7 @@ namespace MarginTrading.Frontend
                     options.SecurityTokenValidators.Clear();
                     options.SecurityTokenValidators.Add(ApplicationContainer.Resolve<ISecurityTokenValidator>());
                 });
-            
+
             var builder = new ContainerBuilder();
 
             ApplicationSettings appSettings = Environment.IsDevelopment()
@@ -136,7 +137,7 @@ namespace MarginTrading.Frontend
             IWampHost host = ApplicationContainer.Resolve<IWampHost>();
             IWampHostedRealm realm = ApplicationContainer.Resolve<IWampHostedRealm>();
             IDisposable realmMetaService = realm.HostMetaApiService();
-            
+
             app.UseAuthentication();
 
             app.UseMvc(routes =>
@@ -366,9 +367,9 @@ namespace MarginTrading.Frontend
             };
 
             MarginTradingBackendServiceLocator.SubscriberAccountChangedDemo =
-                new RabbitMqSubscriber<MarginTradingAccountBackendContract>(accChangeDemoSettings,
+                new RabbitMqSubscriber<AccountChangedMessage>(accChangeDemoSettings,
                         new ResilientErrorHandlingStrategy(log, accChangeDemoSettings, _subscriberRetryTimeout))
-                    .SetMessageDeserializer(new FrontEndDeserializer<MarginTradingAccountBackendContract>())
+                    .SetMessageDeserializer(new FrontEndDeserializer<AccountChangedMessage>())
                     .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
                     .SetLogger(log)
                     .SetConsole(consoleWriter)
@@ -386,9 +387,9 @@ namespace MarginTrading.Frontend
             };
 
             MarginTradingBackendServiceLocator.SubscriberAccountChangedLive =
-                new RabbitMqSubscriber<MarginTradingAccountBackendContract>(accChangedLiveSettings,
+                new RabbitMqSubscriber<AccountChangedMessage>(accChangedLiveSettings,
                         new ResilientErrorHandlingStrategy(log, accChangedLiveSettings, _subscriberRetryTimeout))
-                    .SetMessageDeserializer(new FrontEndDeserializer<MarginTradingAccountBackendContract>())
+                    .SetMessageDeserializer(new FrontEndDeserializer<AccountChangedMessage>())
                     .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
                     .SetLogger(log)
                     .SetConsole(consoleWriter)
@@ -542,8 +543,8 @@ namespace MarginTrading.Frontend
     {
         public static RabbitMqHandler RabbitMqHandler;
         public static RabbitMqSubscriber<InstrumentBidAskPair> SubscriberPrices;
-        public static RabbitMqSubscriber<MarginTradingAccountBackendContract> SubscriberAccountChangedDemo;
-        public static RabbitMqSubscriber<MarginTradingAccountBackendContract> SubscriberAccountChangedLive;
+        public static RabbitMqSubscriber<AccountChangedMessage> SubscriberAccountChangedDemo;
+        public static RabbitMqSubscriber<AccountChangedMessage> SubscriberAccountChangedLive;
         public static RabbitMqSubscriber<OrderContract> SubscriberOrderChangedDemo;
         public static RabbitMqSubscriber<OrderContract> SubscriberOrderChangedLive;
         public static RabbitMqSubscriber<AccountStopoutBackendContract> SubscriberAccountStopoutDemo;

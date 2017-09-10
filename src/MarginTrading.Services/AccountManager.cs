@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
 using Common.Log;
+using JetBrains.Annotations;
 using MarginTrading.Core;
 using MarginTrading.Core.Settings;
 
@@ -79,8 +80,6 @@ namespace MarginTrading.Services
 
             var updatedAccount = await _repository.UpdateBalanceAsync(clientId, accountId, amount, changeTransferLimit);
             _accountsCacheService.UpdateBalance(updatedAccount);
-            
-            _clientNotifyService.NotifyAccountChanged(updatedAccount);
 
             await _rabbitMqNotifyService.AccountHistory(accountId, clientId, amount, updatedAccount.Balance, updatedAccount.WithdrawTransferLimit, historyType, comment);
         }
@@ -117,8 +116,10 @@ namespace MarginTrading.Services
 
         public async Task DeleteAccountAsync(string clientId, string accountId)
         {
+            var account = _accountsCacheService.Get(clientId, accountId);
             await _repository.DeleteAsync(clientId, accountId);
             await UpdateAccountsCacheAsync(clientId);
+            await _rabbitMqNotifyService.AccountDeleted(account);
         }
 
         //TODO: close/remove all orders
@@ -138,6 +139,7 @@ namespace MarginTrading.Services
             var account = CreateAccount(clientId, baseAssetId, tradingConditionId);
             await _repository.AddAsync(account);
             await UpdateAccountsCacheAsync(account.ClientId);
+            await _rabbitMqNotifyService.AccountCreated(account);
         }
 
         public async Task<MarginTradingAccount[]> CreateDefaultAccounts(string clientId, string tradingConditionsId = null)
@@ -164,6 +166,7 @@ namespace MarginTrading.Services
                 {
                     var account = CreateAccount(clientId, baseAsset, tradingConditionsId);
                     await _repository.AddAsync(account);
+                    await _rabbitMqNotifyService.AccountCreated(account);
                     newAccounts.Add(account);
                 }
                 catch (Exception e)
@@ -212,6 +215,7 @@ namespace MarginTrading.Services
             }
         }
 
+        [Pure]
         private MarginTradingAccount CreateAccount(string clientId, string baseAssetId, string tradingConditionId)
         {
             var id = $"{(_marginSettings.IsLive ? string.Empty : _marginSettings.DemoAccountIdPrefix)}{Guid.NewGuid():N}";

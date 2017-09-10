@@ -458,7 +458,7 @@ namespace MarginTradingTests
             Assert.AreEqual(1000.7, account.Balance);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
-            _clientNotifyServiceMock.Verify(x => x.NotifyAccountChanged(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
             _appNotificationsMock.Verify(x => x.SendPositionNotification(It.IsAny<string[]>(), It.Is<string>(message => message == order.GetPushMessage()), It.IsAny<IOrder>()), Times.Once());
         }
 
@@ -499,7 +499,7 @@ namespace MarginTradingTests
             Assert.AreEqual(999.49, account.Balance);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
-            _clientNotifyServiceMock.Verify(x => x.NotifyAccountChanged(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
             _appNotificationsMock.Verify(x => x.SendPositionNotification(It.IsAny<string[]>(), It.Is<string>(message => message == order.GetPushMessage()), It.IsAny<IOrder>()), Times.Once());
         }
 
@@ -544,7 +544,7 @@ namespace MarginTradingTests
             Assert.AreEqual(999.37999, account.Balance);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
-            _clientNotifyServiceMock.Verify(x => x.NotifyAccountChanged(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
             _appNotificationsMock.Verify(x => x.SendPositionNotification(It.IsAny<string[]>(), It.Is<string>(message => message == order.GetPushMessage()), It.IsAny<IOrder>()), Times.Once());
         }
 
@@ -589,7 +589,7 @@ namespace MarginTradingTests
             Assert.AreEqual(999.49, account.Balance);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
-            _clientNotifyServiceMock.Verify(x => x.NotifyAccountChanged(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
             _appNotificationsMock.Verify(x => x.SendPositionNotification(It.IsAny<string[]>(), It.Is<string>(message => message == order.GetPushMessage()), It.IsAny<IOrder>()), Times.Once());
         }
 
@@ -645,7 +645,7 @@ namespace MarginTradingTests
             Assert.AreEqual(-0.60003, order.GetTotalFpl(order.AssetAccuracy));
             Assert.AreEqual(999.39997, account.Balance);
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
-            _clientNotifyServiceMock.Verify(x => x.NotifyAccountChanged(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
             _appNotificationsMock.Verify(x => x.SendPositionNotification(It.IsAny<string[]>(), It.Is<string>(message => message == order.GetPushMessage()), It.IsAny<IOrder>()), Times.Once());
         }
 
@@ -769,7 +769,7 @@ namespace MarginTradingTests
             Assert.AreEqual(1000.7, account.Balance);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
-            _clientNotifyServiceMock.Verify(x => x.NotifyAccountChanged(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
             _appNotificationsMock.Verify(x => x.SendPositionNotification(It.IsAny<string[]>(), It.Is<string>(message => message == order.GetPushMessage()), It.IsAny<IOrder>()), Times.Once());
         }
 
@@ -812,7 +812,7 @@ namespace MarginTradingTests
             Assert.AreEqual(1002.79, account.Balance);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
-            _clientNotifyServiceMock.Verify(x => x.NotifyAccountChanged(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
             _appNotificationsMock.Verify(x => x.SendPositionNotification(It.IsAny<string[]>(), It.Is<string>(message => message == order.GetPushMessage()), It.IsAny<IOrder>()), Times.Once());
         }
 
@@ -855,7 +855,7 @@ namespace MarginTradingTests
             Assert.AreEqual(997.85002, account.Balance);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
-            _clientNotifyServiceMock.Verify(x => x.NotifyAccountChanged(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
             _appNotificationsMock.Verify(x => x.SendPositionNotification(It.IsAny<string[]>(), It.Is<string>(message => message == order.GetPushMessage()), It.IsAny<IOrder>()), Times.Once());
         }
 
@@ -898,7 +898,7 @@ namespace MarginTradingTests
             Assert.AreEqual(998.70992, account.Balance);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
-            _clientNotifyServiceMock.Verify(x => x.NotifyAccountChanged(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
             _appNotificationsMock.Verify(x => x.SendPositionNotification(It.IsAny<string[]>(), It.Is<string>(message => message == order.GetPushMessage()), It.IsAny<IOrder>()), Times.Once());
         }
 
@@ -1197,7 +1197,7 @@ namespace MarginTradingTests
             Assert.AreEqual(0, account.GetOpenPositionsCount()); //all open orders are closed!
             Assert.AreEqual(0, account.GetUsedMargin());
 
-            _clientNotifyServiceMock.Verify(x => x.NotifyAccountChanged(It.Is<MarginTradingAccount>(o => o.GetUsedMargin() == 0 && o.Balance == account.Balance)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<MarginTradingAccount>(o => o.GetUsedMargin() == 0 && o.Balance == account.Balance)));
             _clientNotifyServiceMock.Verify(x => x.NotifyAccountStopout(
                 It.Is<string>(clientId => account.ClientId == clientId), 
                 It.Is<string>(accountId => account.Id == accountId), It.Is<int>(count => count == 1), It.IsAny<double>()), Times.Once());
@@ -1858,7 +1858,7 @@ namespace MarginTradingTests
             Assert.AreEqual(999.9, account.Balance);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
-            _clientNotifyServiceMock.Verify(x => x.NotifyAccountChanged(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
             _appNotificationsMock.Verify(x => x.SendPositionNotification(It.IsAny<string[]>(), It.Is<string>(message => message.Contains("closed")), It.IsAny<IOrder>()), Times.Once());
         }
 

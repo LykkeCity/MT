@@ -6,12 +6,14 @@ namespace MarginTrading.Core
 	{
 		Task AccountHistory(string accountId, string clientId, double amount, double balance, double withdrawTransferLimit, AccountHistoryType type, string comment = null);
 		Task OrderHistory(IOrder order);
-		Task OrdeReject(IOrder order);
+		Task OrderReject(IOrder order);
 		Task OrderBookPrice(InstrumentBidAskPair quote);
 		Task OrderChanged(IOrder order);
-		Task AccountChanged(IMarginTradingAccount account);
+		Task AccountUpdated(IMarginTradingAccount account);
 		Task AccountStopout(string clientId, string accountId, int positionsCount, double totalPnl);
 		Task UserUpdates(bool updateAccountAssets, bool updateAccounts, string[] clientIds);
 		void Stop();
+	    Task AccountCreated(IMarginTradingAccount account);
+	    Task AccountDeleted(IMarginTradingAccount account);
 	}
 }
