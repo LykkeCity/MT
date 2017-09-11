@@ -1,0 +1,13 @@
+﻿version: '2'
+services:
+  margintradingclient:
+    image: lykkex/margintradingclient:dev
+    container_name: margintradingclient   
+    networks:
+      mynet:
+        aliases:
+          - margintradingclient
+
+networks:
+  mynet:
+    driver: bridge
