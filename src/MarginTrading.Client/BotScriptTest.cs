@@ -218,6 +218,33 @@ namespace MarginTrading.Client
                     Bot.Reconnect();
                     LogInfo("Reconnected...");
                     break;
+                case "placependingorder":
+                    #region placependingorder
+                    if (initData == null)
+                    {
+                        LogInfo("PlaceOrder Failed. InitData not performed, please call InitData before placing orders");
+                    }
+                    else
+                    {
+                        string placeOrderInstrument = action.Split(' ')[1].ToUpper();
+                        int placeOrderCount;
+                        if (action.Split(' ').Length > 2)
+                        {
+                            string orderCount = action.Split(' ')[2].ToUpper();
+                            if (!int.TryParse(orderCount, out placeOrderCount))
+                                placeOrderCount = 1;
+                        }
+                        else
+                            placeOrderCount = 1;
+                        var currentBid = initData.Prices[placeOrderInstrument].Bid;
+                        var result = await Bot.PlacePendingOrders(initData.Demo.Accounts[0].Id, placeOrderInstrument, placeOrderCount, currentBid);
+                        foreach (var item in result)
+                        {
+                            LogInfo($"PlacePendingOrders result: Order={item.Id} Instrument={item.Instrument} Status={item.Status}");
+                        }
+                    }
+                    #endregion
+                    break;
                 default:
                     break;
             }

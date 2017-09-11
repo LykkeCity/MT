@@ -265,6 +265,45 @@ namespace MarginTrading.Client
             }
             return result;
         }
+        public async Task<IEnumerable<OrderClientContract>> PlacePendingOrders(string accountId, string instrument, int numOrders, double currentBid)
+        {
+            List<OrderClientContract> result = new List<OrderClientContract>();
+
+            for (int i = 0; i < numOrders; i++)
+            {
+                try
+                {
+                    var request = new OpenOrderRpcClientRequest
+                    {
+                        Token = _token,
+                        Order = new NewOrderClientContract
+                        {
+                            AccountId = accountId,
+                            FillType = OrderFillType.FillOrKill,
+                            Instrument = instrument,
+                            Volume = 1,
+                            ExpectedOpenPrice = currentBid * 0.9
+                        }
+                    };
+
+                    LogInfo($"Placing order {i + 1}/{numOrders}: [{instrument}]");
+                    var order = await _service.PlaceOrder(request.ToJson());
+                    result.Add(order.Result);
+
+                    if (order.Result.Status == 3)
+                        LogInfo($"Order rejected: {order.Result.RejectReason} -> {order.Result.RejectReasonText}");
+                    else
+                        LogInfo($"Order placed: {order.Result.Id} -> Status={order.Result.Status}");
+                }
+                catch (Exception ex)
+                {
+                    LogError(ex);
+                }
+                // Sleep TransactionFrequency
+                Thread.Sleep(GetRandomTransactionInterval());
+            }
+            return result;
+        }
         public async Task<IEnumerable<bool>> CloseOrders(string accountId, string instrument, int numOrders)
         {
             List<bool> result = new List<bool>();
