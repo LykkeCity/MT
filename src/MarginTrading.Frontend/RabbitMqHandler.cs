@@ -62,7 +62,7 @@ namespace MarginTrading.Frontend
             {
                 return;
             }
-            
+
             var account = accountChangedMessage.Account;
             string queueName = QueueHelper.BuildQueueName(_settings.MarginTradingFront.RabbitMqQueues.AccountChanged.ExchangeName, _settings.MarginTradingFront.Env);
             _consoleWriter.WriteLine($"Get account change from {queueName} queue for clientId = {account.ClientId}");
@@ -82,7 +82,7 @@ namespace MarginTrading.Frontend
 
             var userUpdateTopic = _realm.Services.GetSubject<NotifyResponse>($"user.updates.{notificationId}");
             var userUpdateTopicResponse = new NotifyResponse { Account = notifyResponse.Entity, Order = null };
-            
+
             userUpdateTopic.OnNext(userUpdateTopicResponse);
 
             _operationsLog.AddLog($"topic user.updates.{notificationId} (account changed)", account.ClientId,
@@ -111,7 +111,7 @@ namespace MarginTrading.Frontend
 
             var userUpdateTopic = _realm.Services.GetSubject<NotifyResponse>($"user.updates.{notificationId}");
             var userUpdateTopicResponse = new NotifyResponse { Account = null, Order = notifyResponse.Entity };
-            
+
             userUpdateTopic.OnNext(userUpdateTopicResponse);
 
             _operationsLog.AddLog($"topic user.updates.{notificationId} (position changed)", order.ClientId, notifyResponse.Entity.AccountId, null, userUpdateTopicResponse.ToJson());
@@ -139,7 +139,7 @@ namespace MarginTrading.Frontend
 
             var userUpdateTopic = _realm.Services.GetSubject<NotifyResponse>($"user.updates.{notificationId}");
             var userUpdateTopicResponse = new NotifyResponse { Account = null, Order = null, AccountStopout = response.Entity };
-            
+
             userUpdateTopic.OnNext(userUpdateTopicResponse);
 
             _operationsLog.AddLog($"topic user.updates.{notificationId} (account stopout)", stopout.ClientId, response.Entity.AccountId, null, userUpdateTopicResponse.ToJson());

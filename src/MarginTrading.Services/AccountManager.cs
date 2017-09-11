@@ -80,6 +80,7 @@ namespace MarginTrading.Services
 
             var updatedAccount = await _repository.UpdateBalanceAsync(clientId, accountId, amount, changeTransferLimit);
             _accountsCacheService.UpdateBalance(updatedAccount);
+            _clientNotifyService.NotifyAccountUpdated(updatedAccount);
 
             await _rabbitMqNotifyService.AccountHistory(accountId, clientId, amount, updatedAccount.Balance, updatedAccount.WithdrawTransferLimit, historyType, comment);
         }
