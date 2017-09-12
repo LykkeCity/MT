@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Common.Log;
 using Lykke.RabbitMqBroker.Subscriber;
+using MarginTrading.AccountHistoryBroker.AzureRepositories;
 using MarginTrading.BrokerBase;
 using MarginTrading.BrokerBase.Settings;
 using MarginTrading.Common.BackendContracts;
@@ -11,16 +12,20 @@ using MarginTrading.Core.Settings;
 
 namespace MarginTrading.AccountHistoryBroker
 {
-    public class Application : BrokerApplicationBase<AccountHistoryBackendContract>
+    internal class Application : BrokerApplicationBase<AccountHistoryBackendContract>
     {
         private readonly IMarginTradingAccountHistoryRepository _accountHistoryRepository;
+        private readonly IAccountTransactionsReportsRepository _accountTransactionsReportsRepository;
         private readonly MarginSettings _settings;
 
         public Application(IMarginTradingAccountHistoryRepository accountHistoryRepository, ILog logger,
-            MarginSettings settings, CurrentApplicationInfo applicationInfo) : base(logger, applicationInfo)
+            MarginSettings settings, CurrentApplicationInfo applicationInfo,
+            IAccountTransactionsReportsRepository accountTransactionsReportsRepository)
+            : base(logger, applicationInfo)
         {
             _accountHistoryRepository = accountHistoryRepository;
             _settings = settings;
+            _accountTransactionsReportsRepository = accountTransactionsReportsRepository;
         }
 
         protected override RabbitMqSubscriptionSettings GetRabbitMqSubscriptionSettings()
@@ -38,7 +43,22 @@ namespace MarginTrading.AccountHistoryBroker
         protected override Task HandleMessage(AccountHistoryBackendContract accountHistoryContract)
         {
             var accountHistory = accountHistoryContract.ToAccountHistoryContract();
-            return _accountHistoryRepository.AddAsync(accountHistory);
+            var accountTransactionReport = new AccountTransactionsReportsEntity
+            {
+                AccountId = accountHistoryContract.AccountId,
+                ClientId = accountHistoryContract.ClientId,
+                Comment = accountHistoryContract.Comment,
+                Id = accountHistoryContract.Id,
+                Amount = accountHistoryContract.Amount,
+                Balance = accountHistoryContract.Balance,
+                Date = accountHistoryContract.Date,
+                Type = accountHistoryContract.Type.ToString(),
+                WithdrawTransferLimit = accountHistoryContract.WithdrawTransferLimit,
+            };
+            _accountTransactionsReportsRepository.InsertOrReplaceAsync(accountTransactionReport);
+            return Task.WhenAll(
+                _accountHistoryRepository.AddAsync(accountHistory),
+                _accountTransactionsReportsRepository.InsertOrReplaceAsync(accountTransactionReport));
         }
     }
 }

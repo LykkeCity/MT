@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Common.Log;
+using MarginTrading.AccountHistoryBroker.AzureRepositories;
 using MarginTrading.AzureRepositories;
 using MarginTrading.BrokerBase;
 using MarginTrading.Core;
@@ -28,6 +29,9 @@ namespace MarginTrading.AccountHistoryBroker
             builder.Register<IMarginTradingAccountHistoryRepository>(ctx =>
                 AzureRepoFactories.MarginTrading.CreateAccountHistoryRepository(settings.Db.HistoryConnString, log)
             ).SingleInstance();
+
+            builder.RegisterType<AccountTransactionsReportsRepository>().As<IAccountTransactionsReportsRepository>()
+                .SingleInstance();
         }
     }
 }

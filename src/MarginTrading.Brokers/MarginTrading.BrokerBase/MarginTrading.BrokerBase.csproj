@@ -6,7 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="flurl.http" Version="1.2.0" />
-    <PackageReference Include="JetBrains.Annotations" Version="10.2.1" />
+    <PackageReference Include="JetBrains.Annotations" Version="11.0.0" />
     <PackageReference Include="Lykke.Logs" Version="1.0.33" />
     <PackageReference Include="Lykke.RabbitMqBroker" Version="1.0.80" />
     <PackageReference Include="Lykke.SettingsReader" Version="1.0.39" />
