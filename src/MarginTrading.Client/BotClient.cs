@@ -349,7 +349,7 @@ namespace MarginTrading.Client
         {
             List<bool> result = new List<bool>();
             List<OrderClientContract> orders = (await GetOpenPositionsFromDemo())
-                .Where(x => x.AccountId == accountId && x.Instrument == instrument).ToList();
+                .Where(x => x.AccountId == accountId && x.Instrument == instrument && x.Status==0).ToList();
             int processed = 0;
             foreach (var order in orders)
             {
@@ -361,6 +361,7 @@ namespace MarginTrading.Client
                     var request = new CloseOrderRpcClientRequest
                     {
                         OrderId = order.Id,
+                        AccountId = order.AccountId,
                         Token = _token
                     };
 
