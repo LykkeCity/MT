@@ -1,27 +1,12 @@
-﻿using System;
-using Microsoft.AspNetCore.Hosting;
+﻿using MarginTrading.BrokerBase;
 
 namespace MarginTrading.AccountHistoryBroker
 {
-    public class Program
+    public class Program : WebAppProgramBase<Startup>
     {
         public static void Main(string[] args)
         {
-            try
-            {
-                var host = new WebHostBuilder()
-                .UseKestrel()
-                .UseUrls("http://*:5011")
-                .UseStartup<Startup>()
-                .Build();
-
-                host.Run();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-                throw;
-            }
+            RunOnPort(5011);
         }
     }
 }
