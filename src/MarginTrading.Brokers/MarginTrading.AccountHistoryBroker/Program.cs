@@ -2,7 +2,7 @@
 
 namespace MarginTrading.AccountHistoryBroker
 {
-    public class Program: WebAppProgramBase<Startup>
+    public class Program : WebAppProgramBase<Startup>
     {
         public static void Main(string[] args)
         {

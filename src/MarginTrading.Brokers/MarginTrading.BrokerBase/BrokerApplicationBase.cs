@@ -23,9 +23,9 @@ namespace MarginTrading.BrokerBase
             _applicationInfo = applicationInfo;
         }
 
-        public virtual async Task RunAsync()
+        public virtual void Run()
         {
-            await _logger.WriteInfoAsync(_applicationInfo.ApplicationName, null, null, "Starting broker");
+            _logger.WriteInfoAsync(_applicationInfo.ApplicationName, null, null, "Starting broker");
             try
             {
                 var settings = GetRabbitMqSubscriptionSettings();
@@ -37,17 +37,20 @@ namespace MarginTrading.BrokerBase
                         .Subscribe(HandleMessage)
                         .SetLogger(_logger)
                         .Start();
+                _logger.WriteInfoAsync(_applicationInfo.ApplicationName, null, null,
+                    "Broker listening queue " + settings.QueueName);
             }
             catch (Exception ex)
             {
-                await _logger.WriteErrorAsync(_applicationInfo.ApplicationName, "Application.RunAsync", null, ex);
+                _logger.WriteErrorAsync(_applicationInfo.ApplicationName, "Application.RunAsync", null, ex).GetAwaiter()
+                    .GetResult();
             }
         }
 
         public void StopApplication()
         {
             Console.WriteLine($"Closing {_applicationInfo.ApplicationName}...");
-             _logger.WriteInfoAsync(_applicationInfo.ApplicationName, null, null, "Stopping broker").Wait();
+            _logger.WriteInfoAsync(_applicationInfo.ApplicationName, null, null, "Stopping broker").Wait();
             _connector.Stop();
         }
     }

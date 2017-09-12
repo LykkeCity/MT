@@ -1,7 +1,7 @@
 ﻿using MarginTrading.BrokerBase.Settings;
 using MarginTrading.Core.Settings;
 
-namespace MarginTrading.AccountHistoryBroker
+namespace MarginTrading.OrderHistoryBroker
 {
     public class Settings : DefaultBrokerSettings
     {

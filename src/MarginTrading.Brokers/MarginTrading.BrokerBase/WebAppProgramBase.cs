@@ -21,7 +21,7 @@ namespace MarginTrading.BrokerBase
             StartWithRetries(RunHost);
         }
 
-        protected static void StartWithRetries(Action runHost)
+        private static void StartWithRetries(Action runHost)
         {
             var restartAttempsLeft = 5;
             while (restartAttempsLeft > 0)
@@ -33,7 +33,8 @@ namespace MarginTrading.BrokerBase
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"Error: {e.Message}{Environment.NewLine}{e.StackTrace}{Environment.NewLine}Restarting (attempts left: {restartAttempsLeft})...");
+                    Console.WriteLine(
+                        $"Error: {e.Message}{Environment.NewLine}{e.StackTrace}{Environment.NewLine}Restarting (attempts left: {restartAttempsLeft})...");
                     restartAttempsLeft--;
                     Thread.Sleep(10000);
                 }

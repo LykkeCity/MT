@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.PlatformAbstractions;
 
 namespace MarginTrading.BrokerBase
 {
@@ -22,7 +23,7 @@ namespace MarginTrading.BrokerBase
 
         public IConfigurationRoot Configuration { get; }
         public IHostingEnvironment Environment { get; }
-        public IContainer ApplicationContainer { get; set; }
+        public IContainer ApplicationContainer { get; private set; }
 
         protected abstract string ApplicationName { get; }
 
@@ -90,7 +91,7 @@ namespace MarginTrading.BrokerBase
 
             var application = app.ApplicationServices.GetService<IBrokerApplication>();
 
-            appLifetime.ApplicationStarted.Register(() => application.RunAsync().Wait());
+            appLifetime.ApplicationStarted.Register(() => application.Run());
             appLifetime.ApplicationStopping.Register(() => application.StopApplication());
             appLifetime.ApplicationStopped.Register(() => ApplicationContainer.Dispose());
         }
@@ -136,7 +137,7 @@ namespace MarginTrading.BrokerBase
             builder.RegisterInstance(settingsRoot).AsSelf().SingleInstance();
 
             builder.RegisterInstance(new CurrentApplicationInfo(isLive,
-                Microsoft.Extensions.PlatformAbstractions.PlatformServices.Default.Application.ApplicationVersion,
+                PlatformServices.Default.Application.ApplicationVersion,
                 ApplicationName
             )).AsSelf().SingleInstance();
 
