@@ -53,7 +53,15 @@ namespace MarginTrading.Services
 
         public override Task Execute()
         {
-            var statsWritingTasks = _accountsCacheService.GetAll()
+            var accounts = _accountsCacheService.GetAll();
+            var statsWritingTasks = WriteAccountsStats(accounts);
+
+            return Task.WhenAll(statsWritingTasks);
+        }
+
+        private IEnumerable<Task> WriteAccountsStats(IReadOnlyList<MarginTradingAccount> accounts)
+        {
+            return accounts
                 .Select(a => new MarginTradingAccountStats
                 {
                     AccountId = a.Id,
@@ -70,11 +78,7 @@ namespace MarginTrading.Services
                 })
                 .ToChunks(100)
                 .Select(_statsRepository.InsertOrReplaceBatchAsync);
-
-            return Task.WhenAll(statsWritingTasks);
         }
-
-
 
         public override void Start()
         {
