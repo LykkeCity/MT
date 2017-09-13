@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AzureStorage;
 using MarginTrading.AzureRepositories.Helpers;
 using Microsoft.WindowsAzure.Storage.Table;
 
-namespace MarginTrading.AzureRepositories
+namespace MarginTrading.AzureRepositories.Reports
 {
     public class AccountsStatReport : TableEntity
     {
@@ -55,7 +54,9 @@ namespace MarginTrading.AzureRepositories
 
         public Task InsertOrReplaceBatchAsync(IEnumerable<AccountsStatReport> stats)
         {
-            return BatchEntityInsertHelper.InsertOrReplaceBatchAsync(stats, b => _tableStorage.InsertOrReplaceBatchAsync(b));
+            var tasks = BatchEntityInsertHelper.MakeBatchesByPartitionKey(stats)
+                .Select(b => _tableStorage.InsertOrReplaceBatchAsync(b));
+            return Task.WhenAll(tasks);
         }
     }
 }

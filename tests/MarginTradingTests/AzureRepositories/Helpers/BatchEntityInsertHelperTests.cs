@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using FluentAssertions;
 using MarginTrading.AzureRepositories.Helpers;
 using Microsoft.WindowsAzure.Storage.Table;
@@ -40,21 +36,14 @@ namespace MarginTradingTests.AzureRepositories.Helpers
             var srcEntities = Enumerable.Range(0, 400)
                 .Select(i => new TableEntity(GetPartitionKey(i), ""));
 
-            var resultBatches = new List<List<int>>();
-
-            Task SaveBatchFunc(IReadOnlyCollection<TableEntity> b)
-            {
-                resultBatches.Add(b.Select(e => int.Parse(e.PartitionKey)).ToList());
-                return Task.CompletedTask;
-            }
-
             //act
-            BatchEntityInsertHelper.InsertOrReplaceBatchAsync(srcEntities, SaveBatchFunc);
+            var result = BatchEntityInsertHelper.MakeBatchesByPartitionKey(srcEntities);
 
             //assert
-            resultBatches.Should().OnlyContain(b => b.Distinct().Count() == 1);
-            resultBatches.Should().OnlyContain(b => b.Count <= 100);
-            resultBatches.Should().HaveCount(5);
+            var preparedResult = result.Select(b => b.Select(e => int.Parse(e.PartitionKey)).ToList()).ToList();
+            preparedResult.Should().OnlyContain(b => b.Distinct().Count() == 1);
+            preparedResult.Should().OnlyContain(b => b.Count <= 100);
+            preparedResult.Should().HaveCount(5);
         }
 
 
@@ -69,18 +58,11 @@ namespace MarginTradingTests.AzureRepositories.Helpers
             var srcEntities = Enumerable.Range(0, totalEntitiesCount)
                 .Select(i => new TableEntity());
 
-            var resultBatchesSizes = new List<int>();
-
-            Task SaveBatchFunc(IReadOnlyCollection<TableEntity> b)
-            {
-                resultBatchesSizes.Add(b.Count);
-                return Task.CompletedTask;
-            }
-
             //act
-            BatchEntityInsertHelper.InsertOrReplaceBatchAsync(srcEntities, SaveBatchFunc);
+            var result = BatchEntityInsertHelper.MakeBatchesByPartitionKey(srcEntities);
 
             //assert
+            var resultBatchesSizes = result.Select(b => b.Count).ToList();
             resultBatchesSizes.Should().HaveCount(expectedBatchesCount);
             resultBatchesSizes.FirstOrDefault().Should().Be(expectedFirstBatchSize);
             resultBatchesSizes.Skip(1).FirstOrDefault().Should().Be(expectedSecondBatchSize);

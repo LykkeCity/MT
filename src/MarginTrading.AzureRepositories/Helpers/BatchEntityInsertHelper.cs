@@ -1,26 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace MarginTrading.AzureRepositories.Helpers
 {
     public static class BatchEntityInsertHelper
     {
-        public static Task InsertOrReplaceBatchAsync<TEntity>(IEnumerable<TEntity> stats,
-            Func<IReadOnlyCollection<TEntity>, Task> saveBatchFunc) where TEntity : ITableEntity
+        /// <summary>
+        /// Splits <paramref name="entities"/> into batches with max size of 100.
+        /// Each batch contains single PartitionKey.
+        /// </summary>
+        public static IEnumerable<IReadOnlyCollection<TEntity>> MakeBatchesByPartitionKey<TEntity>(IEnumerable<TEntity> entities)
+            where TEntity : ITableEntity
         {
+            if (entities == null)
+            {
+                throw new ArgumentNullException(nameof(entities));
+            }
+
             const int batchSize = 100;
-            var tasks = new List<Task>();
             var batch = new Stack<TEntity>(batchSize);
-            foreach (var stat in stats.OrderBy(s => s.PartitionKey))
+            foreach (var stat in entities.OrderBy(s => s.PartitionKey))
             {
                 if (batch.Count >= batchSize ||
                     batch.Count > 0 && batch.Peek().PartitionKey != stat.PartitionKey)
                 {
-                    tasks.Add(saveBatchFunc(batch));
-                    batch.Clear();
+                    yield return batch;
+                    batch = new Stack<TEntity>(batchSize);
                 }
 
                 batch.Push(stat);
@@ -28,10 +35,8 @@ namespace MarginTrading.AzureRepositories.Helpers
 
             if (batch.Count > 0)
             {
-                tasks.Add(saveBatchFunc(batch));
+                yield return batch;
             }
-
-            return Task.WhenAll(tasks);
         }
     }
 }

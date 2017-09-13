@@ -4,6 +4,7 @@ using AzureStorage.Tables.Templates.Index;
 using Common.Log;
 using MarginTrading.AzureRepositories.Clients;
 using MarginTrading.AzureRepositories.Monitoring;
+using MarginTrading.AzureRepositories.Reports;
 using MarginTrading.AzureRepositories.Settings;
 
 namespace MarginTrading.AzureRepositories
@@ -114,6 +115,12 @@ namespace MarginTrading.AzureRepositories
 			{
 				return new AccountsStatsReportsRepository(AzureTableStorage<AccountsStatReport>.Create(() => connstring,
                     "MarginTradingClientAccountsStatusReport", log));
+			}
+
+			public static AccountsReportsRepository CreateAccountsReportsRepository(string connstring, ILog log)
+			{
+				return new AccountsReportsRepository(AzureTableStorage<AccountsReport>.Create(() => connstring,
+                    "MarginTradingClientAccountsReport", log));
 			}
 		}
 	}
