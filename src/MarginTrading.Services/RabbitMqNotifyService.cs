@@ -4,6 +4,7 @@ using Autofac.Features.Indexed;
 using Common;
 using Common.Log;
 using MarginTrading.Common.Mappers;
+using MarginTrading.Common.RabbitMqMessages;
 using MarginTrading.Core;
 using MarginTrading.Core.Settings;
 
@@ -118,7 +119,14 @@ namespace MarginTrading.Services
 			}
 		}
 
-		public async Task AccountStopout(string clientId, string accountId, int positionsCount, double totalPnl)
+	    public Task AccountMarginEvent(IMarginTradingAccount account, bool isStopout, DateTime eventTime)
+	    {
+	        return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountMarginEvents.ExchangeName,
+	            AccountMarginEventMessage.Create(account, isStopout, eventTime));
+
+	    }
+
+	    public async Task AccountStopout(string clientId, string accountId, int positionsCount, double totalPnl)
 		{
 			try
 			{
@@ -141,9 +149,26 @@ namespace MarginTrading.Services
 			{
 				await _log.WriteErrorAsync(nameof(RabbitMqNotifyService), nameof(UserUpdates), null, ex);
 			}
-		}
+	    }
 
-		public void Stop()
+	    private async Task TryProduceMessageAsync(string exchangeName, object message)
+	    {
+	        string messageStr = null;
+	        try
+	        {
+	            messageStr = message.ToJson();
+	            await _publishers[exchangeName].ProduceAsync(messageStr);
+	        }
+	        catch (Exception ex)
+	        {
+#pragma warning disable 4014
+	            _log.WriteErrorAsync(nameof(RabbitMqNotifyService), exchangeName, messageStr, ex);
+#pragma warning restore 4014
+	        }
+	    }
+
+
+        public void Stop()
 		{
 			((IStopable)_publishers[_settings.RabbitMqQueues.AccountHistory.ExchangeName]).Stop();
 			((IStopable)_publishers[_settings.RabbitMqQueues.OrderHistory.ExchangeName]).Stop();

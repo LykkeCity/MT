@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26730.12
@@ -45,6 +45,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.OrderRejectedBroker", "src\MarginTrading.Brokers\MarginTrading.OrderRejectedBroker\MarginTrading.OrderRejectedBroker.csproj", "{BE0E8F09-2A68-426E-B457-5AA929CD998F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.BrokerBase", "src\MarginTrading.Brokers\MarginTrading.BrokerBase\MarginTrading.BrokerBase.csproj", "{6B4B176C-58E3-4C66-96E2-91330192F238}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.MarginEventsBroker", "src\MarginTrading.Brokers\MarginTrading.MarginEventsBroker\MarginTrading.MarginEventsBroker.csproj", "{2228A223-02B8-472C-98BC-8F71E8F0F604}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -104,6 +106,10 @@ Global
 		{6B4B176C-58E3-4C66-96E2-91330192F238}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6B4B176C-58E3-4C66-96E2-91330192F238}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6B4B176C-58E3-4C66-96E2-91330192F238}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2228A223-02B8-472C-98BC-8F71E8F0F604}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2228A223-02B8-472C-98BC-8F71E8F0F604}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2228A223-02B8-472C-98BC-8F71E8F0F604}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2228A223-02B8-472C-98BC-8F71E8F0F604}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -122,6 +128,7 @@ Global
 		{02819188-B172-400E-9DBA-9A7E5C4F6266} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
 		{BE0E8F09-2A68-426E-B457-5AA929CD998F} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
 		{6B4B176C-58E3-4C66-96E2-91330192F238} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
+		{2228A223-02B8-472C-98BC-8F71E8F0F604} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {76DFEC5B-88FD-425B-A4F9-89E35DACD604}

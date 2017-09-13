@@ -10,7 +10,7 @@ namespace MarginTrading.BrokerBase
     public abstract class BrokerApplicationBase<TMessage> : IBrokerApplication
     {
         private readonly ILog _logger;
-        private readonly CurrentApplicationInfo _applicationInfo;
+        protected readonly CurrentApplicationInfo _applicationInfo;
         private RabbitMqSubscriber<TMessage> _connector;
 
         protected abstract RabbitMqSubscriptionSettings GetRabbitMqSubscriptionSettings();

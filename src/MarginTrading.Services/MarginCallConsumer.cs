@@ -11,7 +11,7 @@ using MarginTrading.Services.Notifications;
 namespace MarginTrading.Services
 {
     // TODO: Rename by role
-    public class MarginCallConsumer : SendNotificationBase, 
+    public class MarginCallConsumer : SendNotificationBase,
         IEventConsumer<MarginCallEventArgs>,
         IEventConsumer<OrderPlacedEventArgs>,
         IEventConsumer<OrderClosedEventArgs>,
@@ -23,22 +23,26 @@ namespace MarginTrading.Services
         private readonly IMarginTradingOperationsLogService _operationsLogService;
         private static readonly ConcurrentDictionary<string, DateTime> LastNotifications = new ConcurrentDictionary<string, DateTime>();
         private const int NotificationsTimeout = 30;
+        private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
 
         public MarginCallConsumer(IThreadSwitcher threadSwitcher,
             IClientSettingsRepository clientSettingsRepository,
             IAppNotifications appNotifications,
             IEmailService emailService,
             IClientAccountService clientAccountService,
-            IMarginTradingOperationsLogService operationsLogService) : base(clientSettingsRepository,
-            appNotifications, clientAccountService)
+            IMarginTradingOperationsLogService operationsLogService,
+            IRabbitMqNotifyService rabbitMqNotifyService)
+            : base(clientSettingsRepository, appNotifications, clientAccountService)
         {
             _threadSwitcher = threadSwitcher;
             _emailService = emailService;
             _clientAccountService = clientAccountService;
             _operationsLogService = operationsLogService;
+            _rabbitMqNotifyService = rabbitMqNotifyService;
         }
 
         int IEventConsumer.ConsumerRank => 100;
+
         void IEventConsumer<MarginCallEventArgs>.ConsumeEvent(object sender, MarginCallEventArgs ea)
         {
             var account = ea.Account;
@@ -63,6 +67,8 @@ namespace MarginTrading.Services
                     await _emailService.SendMarginCallEmailAsync(clientAcc.Email, account.BaseAssetId, account.Id);
 
                 LastNotifications.AddOrUpdate(account.Id, now, (s, time) => now);
+
+                await _rabbitMqNotifyService.AccountMarginEvent(account, true, now);
             });
         }
 
