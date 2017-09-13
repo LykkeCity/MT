@@ -24,6 +24,11 @@ namespace MarginTrading.Services
             return GetClientAccounts(clientId);
         }
 
+        public IReadOnlyList<MarginTradingAccount> GetAll()
+        {
+            return GetClientAccounts(null);
+        }
+
         public MarginTradingAccount Get(string clientId, string accountId)
         {
             var result = GetClientAccount(clientId, accountId);

@@ -85,6 +85,10 @@ namespace MarginTrading.Backend.Modules
 				AzureRepoFactories.Settings.CreateAppGlobalSettingsRepository(_settings.Db.ClientPersonalInfoConnString, _log)
 			).SingleInstance();
 
+			builder.Register<IAccountsStatsReportsRepository>(ctx =>
+				AzureRepoFactories.MarginTrading.CreateAccountsStatsReportsRepository(_settings.Db.ReportsConnString, _log)
+			).SingleInstance();
+
 			builder.RegisterType<MatchingEngineInMemoryRepository>()
 				.As<IMatchingEngineRepository>()
 				.SingleInstance();

@@ -3,13 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
+using Common;
 using Common.Log;
+using MarginTrading.AzureRepositories;
+using MarginTrading.Common.BackendContracts;
+using MarginTrading.Common.Mappers;
 using MarginTrading.Core;
 using MarginTrading.Core.Settings;
 
 namespace MarginTrading.Services
 {
-    public class AccountManager: IStartable
+    public class AccountManager: TimerPeriod
     {
         private readonly AccountsCacheService _accountsCacheService;
         private readonly IMarginTradingAccountsRepository _repository;
@@ -21,6 +25,7 @@ namespace MarginTrading.Services
         private readonly ITradingConditionsCacheService _tradingConditionsCacheService;
         private readonly ILog _log;
         private readonly IClientNotifyService _clientNotifyService;
+        private readonly IAccountsStatsReportsRepository _statsReportsRepository;
 
 
         public AccountManager(AccountsCacheService accountsCacheService,
@@ -32,7 +37,9 @@ namespace MarginTrading.Services
             IMarginTradingAccountsRepository accountsRepository,
             ITradingConditionsCacheService tradingConditionsCacheService,
             ILog log,
-            IClientNotifyService clientNotifyService)
+            IClientNotifyService clientNotifyService,
+            IAccountsStatsReportsRepository statsReportsRepository
+            ) : base(nameof(AccountManager), 10000, log)
         {
             _accountsCacheService = accountsCacheService;
             _repository = repository;
@@ -44,9 +51,51 @@ namespace MarginTrading.Services
             _tradingConditionsCacheService = tradingConditionsCacheService;
             _log = log;
             _clientNotifyService = clientNotifyService;
+            _statsReportsRepository = statsReportsRepository;
         }
 
-        public void Start()
+        public override Task Execute()
+        {
+            var accounts = _accountsCacheService.GetAll();
+            var statsWritingTask = WriteAccountsStats(accounts);
+
+            var writeAccountsStatsReportsTask = WriteAccountsStatsReports(accounts);
+            return Task.WhenAll(statsWritingTask, writeAccountsStatsReportsTask);
+        }
+
+        private Task WriteAccountsStats(IReadOnlyList<MarginTradingAccount> accounts)
+        {
+            // note: this method is a stub to ease merge with LWDEV-2710
+            return Task.CompletedTask;
+        }
+
+        private Task WriteAccountsStatsReports(IReadOnlyList<MarginTradingAccount> accounts)
+        {
+            var stats = accounts.Select(a => new AccountsStatReport
+            {
+                AccountId = a.Id,
+                ClientId = a.ClientId,
+                TradingConditionId = a.TradingConditionId,
+                BaseAssetId = a.BaseAssetId,
+                Balance = a.Balance,
+                WithdrawTransferLimit = a.WithdrawTransferLimit,
+                MarginCall = a.GetMarginCall(),
+                StopOut = a.GetStopOut(),
+                TotalCapital = a.GetTotalCapital(),
+                FreeMargin = a.GetFreeMargin(),
+                MarginAvailable = a.GetMarginAvailable(),
+                UsedMargin = a.GetUsedMargin(),
+                MarginInit = a.GetMarginInit(),
+                PnL = a.GetPnl(),
+                OpenPositionsCount = a.GetOpenPositionsCount(),
+                MarginUsageLevel = a.GetMarginUsageLevel(),
+                IsLive = _marginSettings.IsLive
+            });
+
+            return _statsReportsRepository.InsertOrReplaceBatchAsync(stats);
+        }
+
+        public override void Start()
         {
             var accounts = _repository.GetAllAsync().Result.Select(MarginTradingAccount.Create).GroupBy(x => x.ClientId).ToDictionary(x => x.Key, x => x.ToArray());
 
@@ -79,7 +128,7 @@ namespace MarginTrading.Services
 
             var updatedAccount = await _repository.UpdateBalanceAsync(clientId, accountId, amount, changeTransferLimit);
             _accountsCacheService.UpdateBalance(updatedAccount);
-            
+
             _clientNotifyService.NotifyAccountChanged(updatedAccount);
 
             await _rabbitMqNotifyService.AccountHistory(accountId, clientId, amount, updatedAccount.Balance, updatedAccount.WithdrawTransferLimit, historyType, comment);

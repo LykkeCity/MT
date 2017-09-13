@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Autofac;
 using Common.Log;
+using MarginTrading.AzureRepositories;
 using MarginTrading.Core;
 using MarginTrading.Core.Clients;
 using MarginTrading.Services;
@@ -32,6 +33,7 @@ namespace MarginTradingTests.Modules
             var blobRepository = new Mock<IMarginTradingBlobRepository>();
             var orderHistoryRepository = new Mock<IMarginTradingOrdersHistoryRepository>();
             var clientAccountsRepository = new Mock<IClientAccountsRepository>();
+            var accountsStatsReportsRepository = new Mock<IAccountsStatsReportsRepository>();
             clientAccountsRepository
                 .Setup(item => item.GetByIdAsync(It.IsAny<string>()))
                 .Returns(() => Task.FromResult((IClientAccount)new ClientAccount { Id = "1", NotificationsId = new Guid().ToString()}));
@@ -56,6 +58,7 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(orderHistoryRepository.Object).As<IMarginTradingOrdersHistoryRepository>().SingleInstance();
             builder.RegisterInstance(clientSettingsRepository.Object).As<IClientSettingsRepository>().SingleInstance();
             builder.RegisterInstance(clientAccountsRepository.Object).As<IClientAccountsRepository>().SingleInstance();
+            builder.RegisterInstance(accountsStatsReportsRepository.Object).As<IAccountsStatsReportsRepository>().SingleInstance();
         }
     }
 }

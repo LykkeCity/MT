@@ -109,6 +109,12 @@ namespace MarginTrading.AzureRepositories
 				return new MatchingEngineRoutesRepository(AzureTableStorage<MatchingEngineRouteEntity>.Create(() => connstring,
 					"MatchingEngineRoutes", log));
 			}
+
+			public static AccountsStatsReportsRepository CreateAccountsStatsReportsRepository(string connstring, ILog log)
+			{
+				return new AccountsStatsReportsRepository(AzureTableStorage<AccountsStatReport>.Create(() => connstring,
+                    "MarginTradingClientAccountsStatusReport", log));
+			}
 		}
 	}
 }
