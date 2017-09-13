@@ -8,12 +8,11 @@ namespace MarginTrading.Client
 {
     static class MtUserHelper
     {
-        public static async void ApplicationInfo()
+        public static async void ApplicationInfo(string apiAddress)
         {
             //https://api-dev.lykkex.net/api/ApplicationInfo
-            string address = "https://api-dev.lykkex.net/api/ApplicationInfo";
-
-
+            
+            string address = $"{apiAddress}/ApplicationInfo";
             try
             {
                 var result = await address.GetJsonAsync();
@@ -30,11 +29,10 @@ namespace MarginTrading.Client
 
 
         }
-        public static async void EmailVerification(string email)
+        public static async void EmailVerification(string email, string apiAddress)
         {
             //https://api-test.lykkex.net/api/EmailVerification
-            string address = "https://api-dev.lykkex.net/api/EmailVerification";
-
+            string address = $"{apiAddress}/EmailVerification";
             string Email = email;
             try
             {
@@ -51,17 +49,18 @@ namespace MarginTrading.Client
                 throw ex;
             }
         }
-        public static async Task Registration(string email, string password)
+        public static async Task Registration(string email, string password, string apiAddress)
         {
             //https://api-dev.lykkex.net/api/Registration
-            
+
+            string address = $"{apiAddress}/Registration";
+
             string ClientInfo = "MT Test Bot";
             string ContactPhone = "";
             string Email = email;
             string FullName = "";
             string Hint = "MtBotHint";
-            string Password = HasPass(password);
-            string address = "https://api-dev.lykkex.net/api/Registration";
+            string Password = HasPass(password);            
             var result = await address.PostJsonAsync(
                 new
                 {

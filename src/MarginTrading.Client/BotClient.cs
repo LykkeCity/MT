@@ -129,13 +129,21 @@ namespace MarginTrading.Client
                 LogError(ex);
             }
         }
-        public new async Task<InitDataLiveDemoClientResponse> InitData()
+        public new async Task<OperationResult> InitData()
         {
             try
             {
+                OperationResult res = new OperationResult
+                {
+                    Operation = "InitData",
+                    StartDate = DateTime.UtcNow
+                };                
                 var _initData = await _service.InitData(_token);
-                LogInfo($"InitData: Assets={_initData.Assets.Length} Prices={_initData.Prices.Count}");
-                return _initData;
+                res.EndDate = DateTime.UtcNow;
+                res.Result = _initData;
+                LogInfo($";{res.Duration};InitData: Assets={_initData.Assets.Length} Prices={_initData.Prices.Count}");
+                
+                return res;
             }
             catch (Exception ex)
             {
@@ -143,13 +151,20 @@ namespace MarginTrading.Client
                 return null;
             }
         }
-        public new async Task<InitAccountsLiveDemoClientResponse> InitAccounts()
+        public new async Task<OperationResult> InitAccounts()
         {
             try
             {
+                OperationResult res = new OperationResult
+                {
+                    Operation = "InitAccounts",
+                    StartDate = DateTime.UtcNow
+                };
                 var _initAccounts = await _service.InitAccounts(_token);
-                LogInfo($"InitAccounts: Demo={_initAccounts.Demo.Length} Live={_initAccounts.Live.Length}");
-                return _initAccounts;
+                res.EndDate = DateTime.UtcNow;
+                res.Result = _initAccounts;
+                LogInfo($";{res.Duration};InitAccounts: Demo={_initAccounts.Demo.Length} Live={_initAccounts.Live.Length}");
+                return res;
             }
             catch (Exception ex)
             {
@@ -158,13 +173,20 @@ namespace MarginTrading.Client
             }
         }
                 
-        public new async Task<InitChartDataClientResponse> InitGraph()
+        public new async Task<OperationResult> InitGraph()
         {
             try
             {
-                var _chartData = await _service.InitGraph();
-                LogInfo($"InitGraph: ChartData={_chartData.ChartData.Count}");
-                return _chartData;
+                OperationResult res = new OperationResult
+                {
+                    Operation = "InitGraph",
+                    StartDate = DateTime.UtcNow
+                };
+                InitChartDataClientResponse _chartData = await _service.InitGraph();
+                res.EndDate = DateTime.UtcNow;
+                res.Result = _chartData;
+                LogInfo($";{res.Duration};InitGraph: ChartData={_chartData.ChartData.Count}");
+                return res;
             }
             catch (Exception ex)
             {
@@ -173,18 +195,25 @@ namespace MarginTrading.Client
             }
 
         }
-        public new async Task<AccountHistoryClientResponse> GetAccountHistory()
+        public new async Task<OperationResult> GetAccountHistory()
         {
             try
             {
+                OperationResult res = new OperationResult
+                {
+                    Operation = "GetAccountHistory",
+                    StartDate = DateTime.UtcNow
+                };
+
                 var request = new AccountHistoryRpcClientRequest
                 {
                     Token = _token
                 };
-
-                var result = await _service.GetAccountHistory(request.ToJson());
-                LogInfo($"GetAccountHistory: Accounts={result.Account.Length}, OpenPositions={result.OpenPositions.Length}, PositionsHistory={result.PositionsHistory.Length}");
-                return result;
+                AccountHistoryClientResponse result = await _service.GetAccountHistory(request.ToJson());
+                res.EndDate = DateTime.UtcNow;
+                res.Result = result;
+                LogInfo($";{res.Duration};GetAccountHistory: Accounts={result.Account.Length}, OpenPositions={result.OpenPositions.Length}, PositionsHistory={result.PositionsHistory.Length}");
+                return res;
             }
             catch (Exception ex)
             {
@@ -193,48 +222,78 @@ namespace MarginTrading.Client
             }
         }
 
-        public new async Task<AccountHistoryItemClient[]> GetHistory()
+        public new async Task<OperationResult> GetHistory()
         {
+            OperationResult res = new OperationResult
+            {
+                Operation = "GetHistory",
+                StartDate = DateTime.UtcNow
+            };
+
             var request = new AccountHistoryRpcClientRequest
             {
                 Token = _token
             };
+            AccountHistoryItemClient[] result = await _service.GetHistory(request.ToJson());
+            res.EndDate = DateTime.UtcNow;
+            res.Result = result;
+            LogInfo($";{res.Duration};GetHistory: Items={result.Length}");
+            return res;
+        }
+        public async Task<OperationResult> GetOpenPositionsFromDemo()
+        {
+            OperationResult res = new OperationResult
+            {
+                Operation = "GetOpenPositions",
+                StartDate = DateTime.UtcNow
+            };
 
-            var result = await _service.GetHistory(request.ToJson());
-            LogInfo($"GetHistory: Items={result.Length}");
-            return result;
-        }
-        public async Task<IEnumerable<OrderClientContract>> GetOpenPositionsFromDemo()
-        {
             var result  = await _service.GetOpenPositions(_token);
-            return result.Demo;
+            res.EndDate = DateTime.UtcNow;
+            res.Result = result.Demo;
+            LogInfo($";{res.Duration};GetOpenPositionsFromDemo: Items={result.Demo.Length}");
+            return res;
         }
-        public async Task<IEnumerable<OrderClientContract>> GetAccountOpenPositions(string accountId)
+        public async Task<OperationResult> GetAccountOpenPositions(string accountId)
         {
+            OperationResult res = new OperationResult
+            {
+                Operation = "GetAccountOpenPositions",
+                StartDate = DateTime.UtcNow
+            };
             var request = new AccountTokenClientRequest
             {
                 Token = _token,
                 AccountId = accountId
             };
-
             var result = await _service.GetAccountOpenPositions(request.ToJson());
-            LogInfo($"GetAccountOpenPositions: OpenPositions={result.Length}");
-            return result;
+            res.EndDate = DateTime.UtcNow;
+            res.Result = result;
+            LogInfo($";{res.Duration};GetAccountOpenPositions: OpenPositions={result.Length}");
+            return res;
         }
-        public new async Task<ClientPositionsLiveDemoClientResponse> GetClientOrders()
+        public new async Task<OperationResult> GetClientOrders()
         {
-            var result = await _service.GetClientOrders(_token);
-            LogInfo($"GetClientOrders: Orders={result.Demo.Orders.Length}, Positions={result.Demo.Positions.Length}");
-            return result;
+            OperationResult res = new OperationResult
+            {
+                Operation = "GetClientOrders",
+                StartDate = DateTime.UtcNow
+            };
+            
+            ClientPositionsLiveDemoClientResponse result = await _service.GetClientOrders(_token);
+            res.EndDate = DateTime.UtcNow;
+            res.Result = result;
+            LogInfo($";{res.Duration};GetClientOrders: Orders={result.Demo.Orders.Length}, Positions={result.Demo.Positions.Length}");
+            return res;
         }
 
-        public async Task<IEnumerable<OrderClientContract>> PlaceOrders(string accountId, string instrument, int numOrders)
-        {
-            List<OrderClientContract> result = new List<OrderClientContract>();
+        public async Task<IEnumerable<OperationResult>> PlaceOrders(string accountId, string instrument, int numOrders)
+        {            
+            List<OperationResult> operations = new List<OperationResult>();
             for (int i = 0; i < numOrders; i++)
             {
                 try
-                {
+                {                    
                     var request = new OpenOrderRpcClientRequest
                     {
                         Token = _token,
@@ -246,15 +305,22 @@ namespace MarginTrading.Client
                             Volume = 1
                         }
                     };
-
                     LogInfo($"Placing order {i+1}/{numOrders}: [{instrument}]");
+
+                    OperationResult res = new OperationResult
+                    {
+                        Operation = "PlaceOrders",
+                        StartDate = DateTime.UtcNow
+                    };
                     var order = await _service.PlaceOrder(request.ToJson());
-                    result.Add(order.Result);
+                    res.EndDate = DateTime.UtcNow;
+                    res.Result = order.Result;
+                    operations.Add(res);
 
                     if (order.Result.Status == 3)
-                        LogInfo($"Order rejected: {order.Result.RejectReason} -> {order.Result.RejectReasonText}");
+                        LogInfo($";{res.Duration};Order rejected: {order.Result.RejectReason} -> {order.Result.RejectReasonText}");
                     else
-                        LogInfo($"Order placed: {order.Result.Id} -> Status={order.Result.Status}");                    
+                        LogInfo($";{res.Duration};Order placed: {order.Result.Id} -> Status={order.Result.Status}");
                 }
                 catch (Exception ex)
                 {
@@ -263,12 +329,12 @@ namespace MarginTrading.Client
                 // Sleep TransactionFrequency
                 Thread.Sleep(GetRandomTransactionInterval());
             }
-            return result;
+            return operations;
         }
-        public async Task<IEnumerable<OrderClientContract>> PlacePendingOrders(string accountId, string instrument, int numOrders, double currentBid)
+        public async Task<IEnumerable<OperationResult>> PlacePendingOrders(string accountId, string instrument, int numOrders, double currentBid)
         {
-            List<OrderClientContract> result = new List<OrderClientContract>();
-
+            
+            List<OperationResult> operations = new List<OperationResult>();
             for (int i = 0; i < numOrders; i++)
             {
                 try
@@ -287,13 +353,20 @@ namespace MarginTrading.Client
                     };
 
                     LogInfo($"Placing order {i + 1}/{numOrders}: [{instrument}]");
+                    OperationResult res = new OperationResult
+                    {
+                        Operation = "PlacePendingOrders",
+                        StartDate = DateTime.UtcNow
+                    };
                     var order = await _service.PlaceOrder(request.ToJson());
-                    result.Add(order.Result);
+                    res.EndDate = DateTime.UtcNow;
+                    res.Result = order.Result;
+                    operations.Add(res);
 
                     if (order.Result.Status == 3)
-                        LogInfo($"Order rejected: {order.Result.RejectReason} -> {order.Result.RejectReasonText}");
+                        LogInfo($";{res.Duration};Order rejected: {order.Result.RejectReason} -> {order.Result.RejectReasonText}");
                     else
-                        LogInfo($"Order placed: {order.Result.Id} -> Status={order.Result.Status}");
+                        LogInfo($";{res.Duration};Order placed: {order.Result.Id} -> Status={order.Result.Status}");
                 }
                 catch (Exception ex)
                 {
@@ -302,12 +375,15 @@ namespace MarginTrading.Client
                 // Sleep TransactionFrequency
                 Thread.Sleep(GetRandomTransactionInterval());
             }
-            return result;
+            return operations;
         }
-        public async Task<IEnumerable<bool>> CloseOrders(string accountId, string instrument, int numOrders)
+        public async Task<IEnumerable<OperationResult>> CloseOrders(string accountId, string instrument, int numOrders)
         {
-            List<bool> result = new List<bool>();
-            List<OrderClientContract> orders = (await GetOpenPositionsFromDemo())
+            List<OperationResult> operations = new List<OperationResult>();
+            OperationResult resGetOpenPositions = await GetOpenPositionsFromDemo();
+            operations.Add(resGetOpenPositions);
+
+            List<OrderClientContract> orders = ((OrderClientContract[])resGetOpenPositions.Result)
                 .Where(x => x.AccountId == accountId && x.Instrument == instrument).ToList();
             int processed = 0;
             foreach (var order in orders)
@@ -317,19 +393,26 @@ namespace MarginTrading.Client
                 try
                 {
                     LogInfo($"Closing order {processed + 1}/{numOrders}: [{instrument}] Id={order.Id} Fpl={order.Fpl}");
+                    OperationResult res = new OperationResult
+                    {
+                        Operation = "CloseOrders",
+                        StartDate = DateTime.UtcNow
+                    };                    
                     var request = new CloseOrderRpcClientRequest
                     {
                         OrderId = order.Id,
                         AccountId = order.AccountId,
                         Token = _token
-                    };
-
+                    };                    
                     var orderClosed = await _service.CloseOrder(request.ToJson());
-                    result.Add(orderClosed.Result);
+                    res.EndDate = DateTime.UtcNow;
+                    res.Result = orderClosed;
+                    operations.Add(res);
+                    
                     if (orderClosed.Result)
-                        LogInfo($"Order Closed Id={order.Id}");
+                        LogInfo($";{res.Duration};Order Closed Id={order.Id}");
                     else
-                        LogInfo($"Order Close Failed Id={order.Id} Message:{orderClosed.Message}");                    
+                        LogInfo($";{res.Duration};Order Close Failed Id={order.Id} Message:{orderClosed.Message}");
                 }
                 catch (Exception ex)
                 {
@@ -343,12 +426,15 @@ namespace MarginTrading.Client
             if (processed < numOrders)
                 LogWarning($"Not enough orders to close requested amount (numOrders)");
 
-            return result;
+            return operations;
         }
-        public async Task<IEnumerable<bool>> CancelOrders(string accountId, string instrument, int numOrders)
+        public async Task<IEnumerable<OperationResult>> CancelOrders(string accountId, string instrument, int numOrders)
         {
-            List<bool> result = new List<bool>();
-            List<OrderClientContract> orders = (await GetOpenPositionsFromDemo())
+            List<OperationResult> operations = new List<OperationResult>();
+            OperationResult resGetOpenPositions = await GetOpenPositionsFromDemo();
+            operations.Add(resGetOpenPositions);
+
+            List<OrderClientContract> orders = ((OrderClientContract[])resGetOpenPositions.Result)
                 .Where(x => x.AccountId == accountId && x.Instrument == instrument && x.Status==0).ToList();
             int processed = 0;
             foreach (var order in orders)
@@ -358,19 +444,26 @@ namespace MarginTrading.Client
                 try
                 {
                     LogInfo($"Canceling order {processed + 1}/{numOrders}: [{instrument}] Id={order.Id} Fpl={order.Fpl}");
+                    OperationResult res = new OperationResult
+                    {
+                        Operation = "CancelOrders",
+                        StartDate = DateTime.UtcNow
+                    };                    
                     var request = new CloseOrderRpcClientRequest
                     {
                         OrderId = order.Id,
                         AccountId = order.AccountId,
                         Token = _token
                     };
+                    var ordercanceled = await _service.CancelOrder(request.ToJson());
+                    res.EndDate = DateTime.UtcNow;
+                    res.Result = ordercanceled;
+                    operations.Add(res);
 
-                    var ordercanceled = await _service.CancelOrder(request.ToJson());                    
-                    result.Add(ordercanceled.Result);
                     if (ordercanceled.Result)
-                        LogInfo($"Order Canceled Id={order.Id}");
+                        LogInfo($";{res.Duration};Order Canceled Id={order.Id}");
                     else
-                        LogInfo($"Order Cancel Failed Id={order.Id} Message:{ordercanceled.Message}");                    
+                        LogInfo($";{res.Duration};Order Cancel Failed Id={order.Id} Message:{ordercanceled.Message}");                    
                 }
                 catch (Exception ex)
                 {
@@ -384,7 +477,7 @@ namespace MarginTrading.Client
             if (processed < numOrders)
                 LogWarning($"Not enough orders to close requested amount (numOrders)");
 
-            return result;
+            return operations;
         }
 
         public void SubscribePrice(string instrument)
@@ -441,7 +534,8 @@ namespace MarginTrading.Client
 
         private async Task<(string token, string notificationsId)> AquireTokenData()
         {
-            var result = await _authorizationAddress.PostJsonAsync(new
+            string address = $"{_authorizationAddress}/Auth";
+            var result = await address.PostJsonAsync(new
             {
                 _settings.Email,
                 _settings.Password                
@@ -527,5 +621,15 @@ namespace MarginTrading.Client
         public object Field { get; set; }
         [JsonProperty("Message")]
         public string Message { get; set; }
+    }
+
+    public class OperationResult
+    {
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public string Operation { get; set; }
+        public object Result { get; set; }
+
+        public TimeSpan Duration { get { return EndDate - StartDate; } }
     }
 }

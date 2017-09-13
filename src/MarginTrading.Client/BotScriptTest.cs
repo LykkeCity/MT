@@ -1,6 +1,7 @@
 ﻿using MarginTrading.Common.ClientContracts;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,20 +13,29 @@ namespace MarginTrading.Client
         public event EventHandler<LogEventArgs> LogEvent;
         public event EventHandler<EventArgs> TestFinished;
 
+        List<OperationResult> operations;
+
         int currentAction;
         Timer actionTimer;
 
         InitDataLiveDemoClientResponse initData = null;
         InitChartDataClientResponse initGraph = null;
+        
 
         public BotClient Bot { get; private set; }
         public string[] Actions { get; private set; }
         private string[] processedScript;
+        public bool IsFinished{ get; private set; }
+
+        public List<OperationResult> Operations { get { return operations; } }
+
         public BotScriptTest(BotClient bot, string[] actions)
         {
+            IsFinished = false;
             Bot = bot;
             Actions = actions;
             actionTimer = new Timer(NextActionTimerCall, null, -1, -1);
+            operations = new List<OperationResult>();
         }
 
         public void RunScriptAsync()
@@ -101,10 +111,18 @@ namespace MarginTrading.Client
             switch (command)
             {
                 case "initdata":
-                    initData = await Bot.InitData();
+                    var resinitdata = await Bot.InitData();
+                    initData = (InitDataLiveDemoClientResponse)resinitdata.Result;
+                    operations.Add(resinitdata);
+                    break;
+                case "initaccounts":
+                    var resinitaccounts = await Bot.InitAccounts();                    
+                    operations.Add(resinitaccounts);
                     break;
                 case "initgraph":
-                    initGraph = await Bot.InitGraph();
+                    var resinitGraph = await Bot.InitGraph();
+                    initGraph = (InitChartDataClientResponse)resinitGraph.Result;
+                    operations.Add(resinitGraph);
                     break;
                 case "subscribe":
                     string subscribeInstrument = action.Split(' ')[1].ToUpper();
@@ -134,10 +152,7 @@ namespace MarginTrading.Client
                             placeOrderCount = 1;
 
                         var result = await Bot.PlaceOrders(initData.Demo.Accounts[0].Id, placeOrderInstrument, placeOrderCount);
-                        foreach (var item in result)
-                        {
-                            LogInfo($"PlaceOrder result: Order={item.Id} Instrument={item.Instrument} Status={item.Status}");
-                        }
+                        operations.AddRange(result);                        
                     }
                     #endregion
                     break;
@@ -161,10 +176,7 @@ namespace MarginTrading.Client
                             closeOrderCount = 1;
 
                         var result = await Bot.CloseOrders(initData.Demo.Accounts[0].Id, closeOrderInstrument, closeOrderCount);
-                        foreach (var item in result)
-                        {
-                            LogInfo($"CloseOrder result: Closed={item}");
-                        }
+                        operations.AddRange(result);
                     }
                     #endregion
                     break;
@@ -188,18 +200,17 @@ namespace MarginTrading.Client
                             cancelOrderCount = 1;
 
                         var result = await Bot.CancelOrders(initData.Demo.Accounts[0].Id, cancelOrderInstrument, cancelOrderCount);
-                        foreach (var item in result)
-                        {
-                            LogInfo($"CancelOrder result: Closed={item}");
-                        }
+                        operations.AddRange(result);
                     }
                     #endregion
                     break;
                 case "gethistory":
-                    await Bot.GetHistory();                    
+                    var resgethistory = await Bot.GetHistory();
+                    operations.Add(resgethistory);
                     break;
                 case "getaccounthistory":
-                    await Bot.GetAccountHistory();
+                    var resgetaccounthistory = await Bot.GetAccountHistory();
+                    operations.Add(resgetaccounthistory);
                     break;
                 case "getaccountopenpositions":
                     if (initData == null)
@@ -209,10 +220,12 @@ namespace MarginTrading.Client
                     else
                     {
                         var result = await Bot.GetAccountOpenPositions(initData.Demo.Accounts[0].Id);
+                        operations.Add(result);
                     }
                     break;
                 case "getclientorders":
                     var GetClientOrdersResult = await Bot.GetClientOrders();
+                    operations.Add(GetClientOrdersResult);
                     break;              
                 case "reconnect":
                     Bot.Reconnect();
@@ -238,10 +251,7 @@ namespace MarginTrading.Client
                             placeOrderCount = 1;
                         var currentBid = initData.Prices[placeOrderInstrument].Bid;
                         var result = await Bot.PlacePendingOrders(initData.Demo.Accounts[0].Id, placeOrderInstrument, placeOrderCount, currentBid);
-                        foreach (var item in result)
-                        {
-                            LogInfo($"PlacePendingOrders result: Order={item.Id} Instrument={item.Instrument} Status={item.Status}");
-                        }
+                        operations.AddRange(result);
                     }
                     #endregion
                     break;
@@ -260,12 +270,26 @@ namespace MarginTrading.Client
             currentAction++;
             if (currentAction >= processedScript.Length)
             {
+                IsFinished = true;
+                PrintTestOperations();
                 //script finished
                 OnTestFinished(new EventArgs());            }
             else
             {
                 Execute(processedScript[currentAction]);                
             }
+        }
+
+        private void PrintTestOperations()
+        {
+            var distinct = operations.GroupBy(x => x.Operation);
+            Console.WriteLine(distinct);
+            LogInfo($" == Test Finished for Bot {Bot.Id} ==");
+            foreach (var group in distinct)
+            {
+                LogInfo($"{group.Key}=>Count:{group.Count()} Average Time:{group.Average(x => x.Duration.TotalSeconds)}");
+            }
+            LogInfo($" ==  ==");
         }
 
         private void LogInfo(string message)

@@ -18,16 +18,16 @@ namespace MarginTrading.Client
                     Console.WriteLine("-b\t--bot Run test bot. Usage: -b [json configuration file]");
                     Console.ReadKey();
                     return;
+                }               
+                if (args[i].ToLower() == "-a" || args[i].ToLower() == "--autorun")
+                {
+                    autorun = true;                    
                 }
                 if (args[i].ToLower() == "-b" || args[i].ToLower() == "--bot")
                 {
                     TestBot = true;
                     try { TestBotSettingsFile = args[++i]; }
                     catch { TestBotSettingsFile = ""; }
-                }
-                if (args[i].ToLower() == "-a" || args[i].ToLower() == "--autorun")
-                {
-                    autorun = true;                    
                 }
             }
             if (TestBot)

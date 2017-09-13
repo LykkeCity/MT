@@ -1,8 +1,11 @@
 ﻿version: '2'
 services:
   margintradingclient:
-    image: lykkex/margintradingclient:dev
+    image: lykkex/margintradingclient
     container_name: margintradingclient   
+    command: -b
+    environment:
+      - SettingsUrl=${SettingsUrl}
     networks:
       mynet:
         aliases:

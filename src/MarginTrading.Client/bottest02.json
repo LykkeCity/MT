@@ -1,0 +1,28 @@
+{
+  "Actions": [
+    "InitData",
+    "InitAccounts",
+    "InitGraph",
+    "Subscribe BTCUSD",
+    "GetAccountHistory",
+    "PlaceOrder BTCUSD 100",
+    "CloseOrder BTCUSD 100",
+    "PlacePendingOrder BTCUSD 10",
+    "PlaceOrder BTCUSD 100",
+    "Reconnect",
+    "InitData",
+    "GetClientOrders",
+    "CancelOrder BTCUSD 10",
+    "CloseOrder BTCUSD 100",
+    "GetAccountOpenPositions",
+    "Unsubscribe BTCUSD"
+  ],
+  "Users": [
+    {
+      "Number": 1,
+      "Email": "nuno@dev.com",
+      "Password": "123456"
+    }
+  ]
+}
+

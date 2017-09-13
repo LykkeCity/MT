@@ -1,5 +1,8 @@
-﻿using System;
+﻿using Flurl.Http;
+using Microsoft.Extensions.Configuration;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,16 +12,26 @@ namespace MarginTrading.Client
     static class BotConsole
     {
         static BotHost botHost;
-        static string sessionLogFile;        
+        static string sessionLogFile;
+        static bool isAutoRun;
+        static MtTradingBotSettings _settings;
+        static MtTradingBotTestSettings _testSettings;
+
         internal static void StartBot(string configFile, bool autorun)
         {
-            
+            isAutoRun = autorun;
             sessionLogFile = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "MTLOG_"+ DateTime.UtcNow.ToString("yyyyMMdd_HHmm") + ".log");
+
+            LoadSettings(configFile);
+            if (!string.IsNullOrEmpty(_settings.TestFile))
+                isAutoRun = true;
+
             botHost = new BotHost();
             botHost.LogEvent += Bot_LogEvent;
-            botHost.Start(configFile);
+            botHost.TestFinished += BotHost_TestFinished;
+            botHost.Start(_settings, _testSettings);
             LogInfo("BotConsole.StartBot", $"Log session file: {sessionLogFile}");
-            if (autorun)
+            if (isAutoRun)
                 Run();
             string input = "";
             do
@@ -47,16 +60,16 @@ namespace MarginTrading.Client
                         Run();
                         break;
                     case "appinfo":
-                        MtUserHelper.ApplicationInfo();
+                        MtUserHelper.ApplicationInfo(_settings.MTAuthorizationAddress);
                         break;
                     case "verifyemail":
-                        MtUserHelper.EmailVerification("nem@dev.com");
+                        MtUserHelper.EmailVerification("nem@dev.com", _settings.MTAuthorizationAddress);
                         break;
                     case "register":
                         RegisterUser();
                         break;
                     default:
-                        Console.WriteLine("Unknown command [{0}]", input);
+                        //Console.WriteLine("Unknown command [{0}]", input);
                         break;
                 }
 
@@ -66,13 +79,59 @@ namespace MarginTrading.Client
             FlushLog();
         }
 
+        private static void LoadSettings(string testScriptFile)
+        {
+            IConfigurationRoot config = config = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())                
+                .AddEnvironmentVariables()
+                .Build();
+            
+            TradingBotSettings mtSettings = Lykke.SettingsReader.SettingsProcessor.Process<TradingBotSettings>(config["SettingsUrl"].GetStringAsync().Result);
+            _settings = mtSettings.MtTradingBot;
+
+            string script = null;
+            if (!string.IsNullOrEmpty(_settings.TestFile))
+                script = _settings.TestFile;
+            else if (!string.IsNullOrEmpty(testScriptFile))
+                script = testScriptFile;
+            else
+                throw new ArgumentNullException("Invalid script file");
+
+            FileInfo testFile = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), script));
+            if (!testFile.Exists)
+                throw new FileNotFoundException($"Script file not found: {testFile.Name}");
+
+            config = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile(script, true, true)
+                .AddEnvironmentVariables()
+                .Build();
+
+            _testSettings = config.Get<MtTradingBotTestSettings>();
+
+            if (_settings == null || string.IsNullOrEmpty(_settings.MTAuthorizationAddress) || string.IsNullOrEmpty(_settings.MTServerAddress))
+                throw new ArgumentNullException("Invalid configuration file");
+            LogInfo("LoadSettings", $"Configuration Loaded: {script}");
+
+        }
+
+        private static void BotHost_TestFinished(object sender, EventArgs e)
+        {
+            FlushLog();
+            if (isAutoRun)
+            {
+                botHost.Stop();                
+                Environment.Exit(0);
+            }
+        }
+
         private async static void RegisterUser()
         {
             Console.Write("Email: ");
             string email = Console.ReadLine();
             try
             {
-                MtUserHelper.EmailVerification(email);
+                MtUserHelper.EmailVerification(email, _settings.MTAuthorizationAddress);
             }
             catch (Exception ex)
             {
@@ -83,7 +142,7 @@ namespace MarginTrading.Client
             Console.Write("Password: ");
             string pass = Console.ReadLine();
 
-            await MtUserHelper.Registration(email,pass);
+            await MtUserHelper.Registration(email, pass, _settings.MTAuthorizationAddress);
         }
 
         private static void Run()
