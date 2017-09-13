@@ -7,6 +7,7 @@ namespace MarginTrading.Core
     public interface IMarginTradingAccountStats
     {
         string AccountId { get; set; }
+        string BaseAssetId { get; set; }
         double MarginCall { get; set; }
         double StopOut { get; set; }
         double TotalCapital { get; set; }
@@ -21,6 +22,7 @@ namespace MarginTrading.Core
     public class MarginTradingAccountStats : IMarginTradingAccountStats
     {
         public string AccountId { get; set; }
+        public string BaseAssetId { get; set; }
         public double MarginCall { get; set; }
         public double StopOut { get; set; }
         public double TotalCapital { get; set; }

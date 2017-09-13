@@ -75,6 +75,7 @@ namespace MarginTrading.DataReader.Controllers
             return new MarginTradingAccountStats
             {
                 AccountId = item.AccountId,
+                BaseAssetId = item.BaseAssetId,
                 MarginCall = item.MarginCall,
                 StopOut = item.StopOut,
                 TotalCapital = item.TotalCapital,

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AzureStorage;
+using MarginTrading.AzureRepositories.Helpers;
 using MarginTrading.Core;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
@@ -11,7 +12,18 @@ namespace MarginTrading.AzureRepositories
 {
     public class MarginTradingAccountStatsEntity : TableEntity, IMarginTradingAccountStats
     {
-        public string AccountId { get; set; }
+        public string AccountId
+        {
+            get => RowKey;
+            set => RowKey = value;
+        }
+
+        public string BaseAssetId
+        {
+            get => PartitionKey;
+            set => PartitionKey = value;
+        }
+
         public double MarginCall { get; set; }
         public double StopOut { get; set; }
         public double TotalCapital { get; set; }
@@ -23,21 +35,12 @@ namespace MarginTrading.AzureRepositories
         public double OpenPositionsCount { get; set; }
         public double MarginUsageLevel { get; set; }
 
-        public static string GetPartitionKey()
-        {
-            return "AccountStats";
-        }
-
-        public static string GetRowKey(string accountId)
-        {
-            return accountId;
-        }
-
         public override IDictionary<string, EntityProperty> WriteEntity(OperationContext operationContext)
         {
             return new Dictionary<string, EntityProperty>
             {
                 {nameof(AccountId), new EntityProperty(AccountId)},
+                {nameof(BaseAssetId), new EntityProperty(BaseAssetId)},
                 {nameof(MarginCall), new EntityProperty(MarginCall)},
                 {nameof(StopOut), new EntityProperty(StopOut)},
                 {nameof(TotalCapital), new EntityProperty(TotalCapital)},
@@ -71,6 +74,7 @@ namespace MarginTrading.AzureRepositories
             var entities = stats.Select(item => new MarginTradingAccountStatsEntity
             {
                 AccountId = item.AccountId,
+                BaseAssetId = item.BaseAssetId,
                 MarginCall = item.MarginCall,
                 StopOut = item.StopOut,
                 TotalCapital = item.TotalCapital,
@@ -81,11 +85,11 @@ namespace MarginTrading.AzureRepositories
                 PnL = item.PnL,
                 OpenPositionsCount = item.OpenPositionsCount,
                 MarginUsageLevel = item.MarginUsageLevel,
-                PartitionKey = MarginTradingAccountStatsEntity.GetPartitionKey(),
-                RowKey = MarginTradingAccountStatsEntity.GetRowKey(item.AccountId),
             });
 
-            return _tableStorage.InsertOrReplaceBatchAsync(entities);
+            var tasks = BatchEntityInsertHelper.MakeBatchesByPartitionKey(entities)
+                .Select(b => _tableStorage.InsertOrReplaceBatchAsync(b));
+            return Task.WhenAll(tasks);
         }
     }
 }

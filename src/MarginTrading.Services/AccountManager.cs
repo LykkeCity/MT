@@ -54,17 +54,18 @@ namespace MarginTrading.Services
         public override Task Execute()
         {
             var accounts = _accountsCacheService.GetAll();
-            var statsWritingTasks = WriteAccountsStats(accounts);
+            var statsWritingTask = WriteAccountsStats(accounts);
 
-            return Task.WhenAll(statsWritingTasks);
+            return Task.WhenAll(statsWritingTask); // for easier merge with LWDEV-2929
         }
 
-        private IEnumerable<Task> WriteAccountsStats(IReadOnlyList<MarginTradingAccount> accounts)
+        private Task WriteAccountsStats(IReadOnlyList<MarginTradingAccount> accounts)
         {
-            return accounts
+            var stats = accounts
                 .Select(a => new MarginTradingAccountStats
                 {
                     AccountId = a.Id,
+                    BaseAssetId = a.BaseAssetId,
                     MarginCall = a.GetMarginCall(),
                     StopOut = a.GetStopOut(),
                     TotalCapital = a.GetTotalCapital(),
@@ -75,9 +76,8 @@ namespace MarginTrading.Services
                     PnL = a.GetPnl(),
                     OpenPositionsCount = a.GetOpenPositionsCount(),
                     MarginUsageLevel = a.GetMarginUsageLevel(),
-                })
-                .ToChunks(100)
-                .Select(_statsRepository.InsertOrReplaceBatchAsync);
+                });
+            return _statsRepository.InsertOrReplaceBatchAsync(stats);
         }
 
         public override void Start()
