@@ -1,27 +1,26 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Common.Log;
 using Lykke.RabbitMqBroker.Subscriber;
+using MarginTrading.AccountMarginEventsBroker.AzureRepositories;
 using MarginTrading.BrokerBase;
 using MarginTrading.BrokerBase.Settings;
 using MarginTrading.Common.RabbitMqMessages;
 using MarginTrading.Core.Settings;
-using MarginTrading.MarginEventsBroker.AzureRepositories;
 
-namespace MarginTrading.MarginEventsBroker
+namespace MarginTrading.AccountMarginEventsBroker
 {
     internal class Application : BrokerApplicationBase<AccountMarginEventMessage>
     {
-        private readonly IMarginEventsReportsRepository _marginEventsReportsRepository;
+        private readonly IAccountMarginEventsReportsRepository _accountMarginEventsReportsRepository;
         private readonly MarginSettings _settings;
 
         public Application(ILog logger, MarginSettings settings,
             CurrentApplicationInfo applicationInfo,
-            IMarginEventsReportsRepository marginEventsReportsRepository)
+            IAccountMarginEventsReportsRepository accountMarginEventsReportsRepository)
             : base(logger, applicationInfo)
         {
             _settings = settings;
-            _marginEventsReportsRepository = marginEventsReportsRepository;
+            _accountMarginEventsReportsRepository = accountMarginEventsReportsRepository;
         }
 
         protected override RabbitMqSubscriptionSettings GetRabbitMqSubscriptionSettings()
@@ -38,7 +37,7 @@ namespace MarginTrading.MarginEventsBroker
 
         protected override Task HandleMessage(AccountMarginEventMessage message)
         {
-            return _marginEventsReportsRepository.InsertOrReplaceAsync(new MarginEventReport
+            return _accountMarginEventsReportsRepository.InsertOrReplaceAsync(new AccountMarginEventReportEntity
             {
                 EventId = message.EventId,
                 EventTime = message.EventTime,

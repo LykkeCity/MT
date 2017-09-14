@@ -1,6 +1,6 @@
 ﻿using MarginTrading.BrokerBase;
 
-namespace MarginTrading.MarginEventsBroker
+namespace MarginTrading.AccountMarginEventsBroker
 {
     public class Program : WebAppProgramBase<Startup>
     {

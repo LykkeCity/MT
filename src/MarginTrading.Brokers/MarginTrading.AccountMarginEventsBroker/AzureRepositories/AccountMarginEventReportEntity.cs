@@ -1,9 +1,9 @@
 ﻿using System;
 using Microsoft.WindowsAzure.Storage.Table;
 
-namespace MarginTrading.MarginEventsBroker.AzureRepositories
+namespace MarginTrading.AccountMarginEventsBroker.AzureRepositories
 {
-    internal class MarginEventReport : TableEntity
+    internal class AccountMarginEventReportEntity : TableEntity
     {
         public string EventId
         {
@@ -16,10 +16,10 @@ namespace MarginTrading.MarginEventsBroker.AzureRepositories
             get => PartitionKey;
             set => PartitionKey = value;
         }
-        
+
         public DateTime EventTime { get; set; }
         public bool IsEventStopout { get; set; }
-        
+
         public string ClientId { get; set; }
         public string TradingConditionId { get; set; }
         public string BaseAssetId { get; set; }

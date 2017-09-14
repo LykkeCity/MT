@@ -46,7 +46,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.OrderRejected
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.BrokerBase", "src\MarginTrading.Brokers\MarginTrading.BrokerBase\MarginTrading.BrokerBase.csproj", "{6B4B176C-58E3-4C66-96E2-91330192F238}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.MarginEventsBroker", "src\MarginTrading.Brokers\MarginTrading.MarginEventsBroker\MarginTrading.MarginEventsBroker.csproj", "{2228A223-02B8-472C-98BC-8F71E8F0F604}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.AccountMarginEventsBroker", "src\MarginTrading.Brokers\MarginTrading.AccountMarginEventsBroker\MarginTrading.AccountMarginEventsBroker.csproj", "{2228A223-02B8-472C-98BC-8F71E8F0F604}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

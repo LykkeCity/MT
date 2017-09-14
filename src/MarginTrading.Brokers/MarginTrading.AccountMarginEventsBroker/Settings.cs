@@ -1,7 +1,7 @@
 ﻿using MarginTrading.BrokerBase.Settings;
 using MarginTrading.Core.Settings;
 
-namespace MarginTrading.MarginEventsBroker
+namespace MarginTrading.AccountMarginEventsBroker
 {
     public class Settings : DefaultBrokerSettings
     {
