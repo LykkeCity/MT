@@ -6,9 +6,9 @@ namespace MarginTrading.Client
     {
         public static void Main(string[] args)
         {
-            bool TestBot = false;
+            bool TestBot = true;
             string TestBotSettingsFile = null;
-            bool autorun = false;
+            bool autorun = false;            
             for (int i = 0; i< args.Length; i++)
             {
 
@@ -23,11 +23,11 @@ namespace MarginTrading.Client
                 {
                     autorun = true;                    
                 }
-                if (args[i].ToLower() == "-b" || args[i].ToLower() == "--bot")
+                if (args[i].ToLower() == "-c" || args[i].ToLower() == "--client")
                 {
-                    TestBot = true;
-                    try { TestBotSettingsFile = args[++i]; }
-                    catch { TestBotSettingsFile = ""; }
+                    TestBot = false;
+                    //try { TestBotSettingsFile = args[++i]; }
+                    //catch { TestBotSettingsFile = ""; }
                 }
             }
             if (TestBot)
