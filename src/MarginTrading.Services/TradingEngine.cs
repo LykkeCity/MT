@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Lykke.Common;
@@ -204,7 +205,7 @@ namespace MarginTrading.Services
 
         private void MakeOrderAcitve(Order order, MatchedOrder[] matchedOrders)
         {
-            order.MatchedOrders.AddRange(matchedOrders);
+            order.AddMatchedOrders(matchedOrders);
             order.OpenPrice = Math.Round(order.MatchedOrders.GetWeightedAveragePrice(), order.AssetAccuracy);
             order.OpenDate = DateTime.UtcNow;
             order.Status = OrderStatus.Active;
@@ -283,7 +284,7 @@ namespace MarginTrading.Services
 
         private IEnumerable<Order> GetPendingOrdersToBeExecuted(string instrument)
         {
-            var pendingOrders = _ordersCache.WaitingForExecutionOrders.GetOrders(instrument)
+            var pendingOrders = _ordersCache.WaitingForExecutionOrders.GetOrdersByInstrument(instrument)
                 .OrderBy(item => item.CreateDate);
 
             foreach (var order in pendingOrders)
@@ -310,7 +311,7 @@ namespace MarginTrading.Services
             foreach (var tuple in stopoutAccounts)
                 CommitStopout(tuple.Item1, tuple.Item2);
 
-            foreach (var order in _ordersCache.ActiveOrders.GetOrders(instrument))
+            foreach (var order in _ordersCache.ActiveOrders.GetOrdersByInstrument(instrument))
             {
                 if (order.IsStopLoss())
                     SetOrderToClosingState(order, OrderCloseReason.StopLoss);
@@ -323,7 +324,7 @@ namespace MarginTrading.Services
 
         private IEnumerable<Tuple<MarginTradingAccount, Order[]>> UpdateClosePriceAndDetectStopout(string instrument)
         {
-            var openOrders = _ordersCache.ActiveOrders.GetOrders(instrument).GroupBy(x => x.AccountId).ToDictionary(x => x.Key, x => x.ToArray());
+            var openOrders = _ordersCache.ActiveOrders.GetOrdersByInstrument(instrument).GroupBy(x => x.AccountId).ToDictionary(x => x.Key, x => x.ToArray());
 
             foreach (var accountOrders in openOrders)
             {
@@ -343,7 +344,7 @@ namespace MarginTrading.Services
                         if (matchedOrders.Length == 0)
                             return false;
 
-                        order.UpdateClosePrice(Math.Round(matchedOrders.ToList().GetWeightedAveragePrice(), order.AssetAccuracy));
+                        order.UpdateClosePrice(Math.Round(matchedOrders.ToImmutableList().GetWeightedAveragePrice(), order.AssetAccuracy));
                         return false;
                     });
                 }
@@ -551,7 +552,7 @@ namespace MarginTrading.Services
         // TODO: Resolve situalion when we have no liquidity!
         private void ProcessOrdersClosing(string instrument)
         {
-            var closingOrders = _ordersCache.ClosingOrders.GetOrders(instrument).ToArray();
+            var closingOrders = _ordersCache.ClosingOrders.GetOrdersByInstrument(instrument).ToArray();
 
             if (closingOrders.Length == 0)
                 return;

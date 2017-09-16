@@ -1,48 +1,78 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using MarginTrading.Core;
 using MarginTrading.Core.Messages;
-using MarginTrading.Services.Infrastructure;
 
 namespace MarginTrading.Services
 {
     public class OrderCacheGroup
     {
         private readonly Dictionary<string, Order> _ordersById;
-        private readonly Dictionary<string, Dictionary<string, Order>> _ordersByAccountId;
-        private readonly Dictionary<string, Dictionary<string, Order>> _ordersByInstrumentId;
+        private readonly Dictionary<string, HashSet<string>> _orderIdsByAccountId;
+        private readonly Dictionary<string, HashSet<string>> _ordersIdsByInstrumentId;
+        private readonly Dictionary<(string, string), HashSet<string>> _ordersIdsByAccountIdAndInstrumentId;
         private readonly OrderStatus _status;
-        private readonly IContextFactory _contextFactory;
+        private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
 
-        public OrderCacheGroup(IEnumerable<Order> orders, OrderStatus status, IContextFactory contextFactory)
+        public OrderCacheGroup(IEnumerable<Order> orders, OrderStatus status)
         {
             _status = status;
-            _contextFactory = contextFactory;
 
             var statusOrders = orders.Where(x => x.Status == status).ToList();
 
-            _ordersById = statusOrders.ToDictionary(x => x.Id);
+            _lockSlim.EnterWriteLock();
 
-            _ordersByInstrumentId = statusOrders.GroupBy(x => x.Instrument)
-                .ToDictionary(x => x.Key, x => x.ToDictionary(y => y.Id));
+            try
+            {
+                _ordersById = statusOrders.ToDictionary(x => x.Id);
 
-            _ordersByAccountId = statusOrders.GroupBy(x => x.AccountId)
-                .ToDictionary(x => x.Key, x => x.ToDictionary(y => y.Id));
+                _ordersIdsByInstrumentId = statusOrders.GroupBy(x => x.Instrument)
+                    .ToDictionary(x => x.Key, x => x.Select(o => o.Id).ToHashSet());
+
+                _orderIdsByAccountId = statusOrders.GroupBy(x => x.AccountId)
+                    .ToDictionary(x => x.Key, x => x.Select(o => o.Id).ToHashSet());
+
+                _ordersIdsByAccountIdAndInstrumentId = statusOrders.GroupBy(x => GetAccountInstrumentCacheKey(x.AccountId, x.Instrument))
+                    .ToDictionary(x => x.Key, x => x.Select(o => o.Id).ToHashSet());
+            }
+            finally 
+            {
+                _lockSlim.ExitWriteLock();
+            }
         }
 
+
         #region Setters
+
         public void Add(Order order)
         {
-            if (!_ordersByAccountId.ContainsKey(order.AccountId))
-                _ordersByAccountId.Add(order.AccountId, new Dictionary<string, Order>());
-            _ordersByAccountId[order.AccountId].Add(order.Id, order);
+            _lockSlim.EnterWriteLock();
 
-            if (!_ordersByInstrumentId.ContainsKey(order.Instrument))
-                _ordersByInstrumentId.Add(order.Instrument, new Dictionary<string, Order>());
-            _ordersByInstrumentId[order.Instrument].Add(order.Id, order);
+            try
+            {
+                _ordersById.Add(order.Id, order);
 
-            _ordersById.Add(order.Id, order);
+                if (!_orderIdsByAccountId.ContainsKey(order.AccountId))
+                    _orderIdsByAccountId.Add(order.AccountId, new HashSet<string>());
+                _orderIdsByAccountId[order.AccountId].Add(order.Id);
+
+                if (!_ordersIdsByInstrumentId.ContainsKey(order.Instrument))
+                    _ordersIdsByInstrumentId.Add(order.Instrument, new HashSet<string>());
+                _ordersIdsByInstrumentId[order.Instrument].Add(order.Id);
+
+                var accountInstrumentCacheKey = GetAccountInstrumentCacheKey(order.AccountId, order.Instrument);
+
+                if (!_ordersIdsByAccountIdAndInstrumentId.ContainsKey(accountInstrumentCacheKey))
+                    _ordersIdsByAccountIdAndInstrumentId.Add(accountInstrumentCacheKey, new HashSet<string>());
+                _ordersIdsByAccountIdAndInstrumentId[accountInstrumentCacheKey].Add(order.Id);
+            }
+            finally
+            {
+                _lockSlim.ExitWriteLock();
+            }
 
             var account = MtServiceLocator.AccountsCacheService.Get(order.ClientId, order.AccountId);
             account.CacheNeedsToBeUpdated();
@@ -50,91 +80,150 @@ namespace MarginTrading.Services
 
         public void Remove(Order order)
         {
-            if (_ordersById.Remove(order.Id))
-            {
-                _ordersByInstrumentId[order.Instrument].Remove(order.Id);
-                _ordersByAccountId[order.AccountId].Remove(order.Id);
+            _lockSlim.EnterWriteLock();
 
-                var account = MtServiceLocator.AccountsCacheService.Get(order.ClientId, order.AccountId);
-                account.CacheNeedsToBeUpdated();
+            try
+            {
+                if (_ordersById.Remove(order.Id))
+                {
+                    _ordersIdsByInstrumentId[order.Instrument].Remove(order.Id);
+                    _orderIdsByAccountId[order.AccountId].Remove(order.Id);
+                    _ordersIdsByAccountIdAndInstrumentId[
+                        GetAccountInstrumentCacheKey(order.AccountId, order.Instrument)].Remove(order.Id);
+                }
+                else
+                    throw new Exception(string.Format(MtMessages.CantRemoveOrderWithStatus, order.Id, _status));
             }
-            else
-                throw new Exception(string.Format(MtMessages.CantRemoveOrderWithStatus, order.Id, _status));
+            finally
+            {
+                _lockSlim.ExitWriteLock();
+            }
+
+            var account = MtServiceLocator.AccountsCacheService.Get(order.ClientId, order.AccountId);
+            account.CacheNeedsToBeUpdated();
         }
+
         #endregion
 
+
         #region Getters
+
         public Order GetOrderById(string orderId)
         {
-            using (_contextFactory.GetReadSyncContext($"{nameof(OrderCacheGroup)}.{nameof(GetOrderById)}"))
-            {
-                Order result;
-                if (TryGetOrderById(orderId, out result))
-                    return result;
+            if (TryGetOrderById(orderId, out var result))
+                return result;
 
-                throw new Exception(string.Format(MtMessages.CantGetOrderWithStatus, orderId, _status));
-            }
+            throw new Exception(string.Format(MtMessages.CantGetOrderWithStatus, orderId, _status));
         }
 
         internal bool TryGetOrderById(string orderId, out Order result)
         {
-            if (!_ordersById.ContainsKey(orderId))
+            _lockSlim.EnterReadLock();
+
+            try
             {
-                result = null;
-                return false;
+                if (!_ordersById.ContainsKey(orderId))
+                {
+                    result = null;
+                    return false;
+                }
+                result = _ordersById[orderId];
+                return true;
             }
-            result = _ordersById[orderId];
-            return true;
+            finally
+            {
+                _lockSlim.ExitReadLock();
+            }
         }
 
-        public IEnumerable<Order> GetOrders(string instrument)
+        public IImmutableList<Order> GetOrdersByInstrument(string instrument)
         {
-            using (_contextFactory.GetReadSyncContext($"{nameof(OrderCacheGroup)}.{nameof(GetOrders)}_ByInstrument"))
+            if (string.IsNullOrWhiteSpace(instrument))
+                throw new ArgumentException(nameof(instrument));
+
+            _lockSlim.EnterReadLock();
+
+            try
             {
-                if (string.IsNullOrWhiteSpace(instrument))
-                    throw new ArgumentException(nameof(instrument));
+                if (!_ordersIdsByInstrumentId.ContainsKey(instrument))
+                    return ImmutableList<Order>.Empty;
 
-                if (!_ordersByInstrumentId.ContainsKey(instrument))
-                    return Array.Empty<Order>();
-
-                var result = _ordersByInstrumentId[instrument].Values;
-
-                // TODO: Cache modified ToArray once
-                return result.ToArray();
+                return _ordersIdsByInstrumentId[instrument].Select(id => _ordersById[id]).ToImmutableList();
+            }
+            finally
+            {
+                _lockSlim.ExitReadLock();
             }
         }
 
-        // TODO: Optimize it somehow
-        public IEnumerable<Order> GetOrders(string instrument, string accountId)
+        public IImmutableList<Order> GetOrdersByInstrumentAndAccount(string instrument, string accountId)
         {
-            using (_contextFactory.GetReadSyncContext($"{nameof(OrderCacheGroup)}.{nameof(GetOrders)}_ByInstrumentAndAccount"))
+            if (string.IsNullOrWhiteSpace(instrument))
+                throw new ArgumentException(nameof(instrument));
+
+            if (string.IsNullOrWhiteSpace(accountId))
+                throw new ArgumentException(nameof(instrument));
+
+            var key = GetAccountInstrumentCacheKey(accountId, instrument);
+
+            _lockSlim.EnterReadLock();
+
+            try
             {
-                return GetOrders(instrument).Where(x => x.AccountId == accountId);
+                if (!_ordersIdsByAccountIdAndInstrumentId.ContainsKey(key))
+                    return ImmutableList<Order>.Empty;
+
+                return _ordersIdsByAccountIdAndInstrumentId[key].Select(id => _ordersById[id]).ToImmutableList();
+            }
+            finally
+            {
+                _lockSlim.ExitReadLock();
             }
         }
 
-        public IEnumerable<Order> GetAllOrders()
+        public ICollection<Order> GetAllOrders()
         {
-            using (_contextFactory.GetReadSyncContext($"{nameof(OrderCacheGroup)}.{nameof(GetAllOrders)}"))
+            _lockSlim.EnterReadLock();
+
+            try
             {
-                return _ordersByAccountId.Values.SelectMany(accountId => accountId.Values);
+                return _ordersById.Values;
+            }
+            finally
+            {
+                _lockSlim.ExitReadLock();
             }
         }
 
-        // TODO: Optimize
         public IEnumerable<Order> GetOrdersByAccountIds(params string[] accountIds)
         {
-            using (_contextFactory.GetReadSyncContext($"{nameof(OrderCacheGroup)}.{nameof(GetAllOrders)}_ByAccounts"))
+            _lockSlim.EnterReadLock();
+
+            try
             {
                 foreach (var accountId in accountIds)
                 {
-                    if (!_ordersByAccountId.ContainsKey(accountId))
+                    if (!_orderIdsByAccountId.ContainsKey(accountId))
                         continue;
-                    foreach (var order in _ordersByAccountId[accountId].Values)
-                        yield return order;
+                    foreach (var orderId in _orderIdsByAccountId[accountId])
+                        yield return _ordersById[orderId];
                 }
             }
+            finally
+            {
+                _lockSlim.ExitReadLock();
+            }
         }
+        #endregion
+
+
+        #region Helpers
+
+        private (string, string) GetAccountInstrumentCacheKey(string accountId, string instrumentId)
+        {
+            return (accountId, instrumentId);
+        }
+
         #endregion
     }
 }

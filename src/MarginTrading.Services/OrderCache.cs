@@ -14,7 +14,6 @@ namespace MarginTrading.Services
     public interface IOrderReader
     {
         IImmutableList<Order> GetAll();
-        Order GetOrderById(string orderId);
         IImmutableList<Order> GetActive();
         IImmutableList<Order> GetPending();
     }
@@ -42,37 +41,30 @@ namespace MarginTrading.Services
 
         public IImmutableList<Order> GetActive()
         {
-            using (_contextFactory.GetReadSyncContext($"{nameof(OrdersCache)}.{nameof(GetActive)}"))
-                return ActiveOrders.GetAllOrders().ToImmutableList();
+            return ActiveOrders.GetAllOrders().ToImmutableList();
         }
 
         public IImmutableList<Order> GetPending()
         {
-            using (_contextFactory.GetReadSyncContext($"{nameof(OrdersCache)}.{nameof(GetPending)}"))
-                return WaitingForExecutionOrders.GetAllOrders().ToImmutableList();
+            return WaitingForExecutionOrders.GetAllOrders().ToImmutableList();
         }
 
         public Order GetOrderById(string orderId)
         {
-            using (_contextFactory.GetReadSyncContext($"{nameof(OrdersCache)}.{nameof(GetOrderById)}"))
-            {
-                Order result;
+            if (WaitingForExecutionOrders.TryGetOrderById(orderId, out var result))
+                return result;
 
-                if (WaitingForExecutionOrders.TryGetOrderById(orderId, out result))
-                    return result;
+            if (ActiveOrders.TryGetOrderById(orderId, out result))
+                return result;
 
-                if (ActiveOrders.TryGetOrderById(orderId, out result))
-                    return result;
-
-                throw new Exception(string.Format(MtMessages.OrderNotFound, orderId));
-            }
+            throw new Exception(string.Format(MtMessages.OrderNotFound, orderId));
         }
 
         public void InitOrders(List<Order> orders)
         {
-            ActiveOrders = new OrderCacheGroup(orders, OrderStatus.Active, _contextFactory);
-            WaitingForExecutionOrders = new OrderCacheGroup(orders, OrderStatus.WaitingForExecution, _contextFactory);
-            ClosingOrders = new OrderCacheGroup(orders, OrderStatus.Closing, _contextFactory);
+            ActiveOrders = new OrderCacheGroup(orders, OrderStatus.Active);
+            WaitingForExecutionOrders = new OrderCacheGroup(orders, OrderStatus.WaitingForExecution);
+            ClosingOrders = new OrderCacheGroup(orders, OrderStatus.Closing);
         }
     }
 

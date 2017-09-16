@@ -38,6 +38,9 @@ namespace MarginTrading.Core
 
     public class Order : IOrder
     {
+        private IReadOnlyList<MatchedOrder> _matchedOrders;
+        private double? _remainingVolume;
+
         public string Id { get; set; }
         public string ClientId { get; set; }
         public string AccountId { get; set; }
@@ -68,7 +71,21 @@ namespace MarginTrading.Core
         public OrderRejectReason RejectReason { get; set; }
         public string RejectReasonText { get; set; }
         public string Comment { get; set; }
-        public List<MatchedOrder> MatchedOrders { get; set; } = new List<MatchedOrder>();
+        public IReadOnlyList<MatchedOrder> MatchedOrders
+        {
+            get => _matchedOrders ?? new List<MatchedOrder>();
+            set
+            {
+                _matchedOrders = value;
+
+                _remainingVolume = _matchedOrders?.Count > 0
+                    ? Math.Abs(Volume) - _matchedOrders.Sum(item => item.Volume)
+                    : Math.Abs(Volume);
+            }
+        }
+
+        public double RemainingVolume => _remainingVolume ?? Math.Abs(Volume);
+
         public List<MatchedOrder> MatchedCloseOrders { get; set; } = new List<MatchedOrder>();
 
         public FplData FplData { get; set; } = new FplData();

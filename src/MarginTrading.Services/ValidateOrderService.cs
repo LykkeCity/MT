@@ -204,7 +204,7 @@ namespace MarginTrading.Services
 
         public void ValidateInstrumentPositionVolume(IAccountAssetPair assetPair, Order order)
         {
-            var existingPositionsVolume = _ordersCache.ActiveOrders.GetOrders(assetPair.Instrument, order.AccountId).Sum(o => Math.Abs(o.Volume));
+            var existingPositionsVolume = _ordersCache.ActiveOrders.GetOrdersByInstrumentAndAccount(assetPair.Instrument, order.AccountId).Sum(o => Math.Abs(o.Volume));
 
             if (assetPair.PositionLimit > 0 && existingPositionsVolume + Math.Abs(order.Volume) > assetPair.PositionLimit)
             {

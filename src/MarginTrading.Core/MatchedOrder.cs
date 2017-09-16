@@ -31,7 +31,7 @@ namespace MarginTrading.Core
 
     public static class MatchedOrderExtension
     {
-        public static double GetWeightedAveragePrice(this List<MatchedOrder> orders)
+        public static double GetWeightedAveragePrice(this IReadOnlyCollection<MatchedOrder> orders)
         {
             return orders.Sum(x => x.Price * x.Volume) / orders.Sum(x => x.Volume);
         }

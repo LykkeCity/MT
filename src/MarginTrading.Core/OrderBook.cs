@@ -76,7 +76,7 @@ namespace MarginTrading.Core
             if (!source.ContainsKey(price))
                 return 0;
 
-            return source[price].Sum(x => x.GetRemainingVolume());
+            return source[price].Sum(x => x.RemainingVolume);
         }
 
         public IEnumerable<MatchedOrder> Match(Order order, OrderDirection orderTypeToMatch, double volumeToMatch)
@@ -90,12 +90,12 @@ namespace MarginTrading.Core
             foreach (KeyValuePair<double, List<LimitOrder>> pair in source)
                 foreach (var limitOrder in pair.Value.OrderBy(item => item.CreateDate))
                 {
-                    var matchedVolume = Math.Min(limitOrder.GetRemainingVolume(), volumeToMatch);
+                    var matchedVolume = Math.Min(limitOrder.RemainingVolume, volumeToMatch);
                     yield return new MatchedOrder
                     {
                         OrderId = limitOrder.Id,
                         MarketMakerId = limitOrder.MarketMakerId,
-                        LimitOrderLeftToMatch = Math.Abs(matchedVolume - limitOrder.GetRemainingVolume()),
+                        LimitOrderLeftToMatch = Math.Abs(matchedVolume - limitOrder.RemainingVolume),
                         Volume = matchedVolume,
                         MatchedDate = DateTime.UtcNow,
                         Price = pair.Key,
@@ -115,7 +115,7 @@ namespace MarginTrading.Core
             {
                 var bookOrder = source[matchedOrder.Price].First(item => item.Id == matchedOrder.OrderId);
 
-                bookOrder.MatchedOrders.Add(new MatchedOrder
+                bookOrder.AddMatchedOrders(new MatchedOrder
                 {
                     OrderId = order.Id,
                     MarketMakerId = matchedOrder.MarketMakerId,
