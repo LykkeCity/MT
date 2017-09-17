@@ -136,7 +136,7 @@ namespace MarginTrading.Services
             }
         }
 
-        public IImmutableList<Order> GetOrdersByInstrument(string instrument)
+        public ICollection<Order> GetOrdersByInstrument(string instrument)
         {
             if (string.IsNullOrWhiteSpace(instrument))
                 throw new ArgumentException(nameof(instrument));
@@ -146,9 +146,9 @@ namespace MarginTrading.Services
             try
             {
                 if (!_ordersIdsByInstrumentId.ContainsKey(instrument))
-                    return ImmutableList<Order>.Empty;
+                    return new List<Order>();
 
-                return _ordersIdsByInstrumentId[instrument].Select(id => _ordersById[id]).ToImmutableList();
+                return _ordersIdsByInstrumentId[instrument].Select(id => _ordersById[id]).ToList();
             }
             finally
             {
@@ -156,7 +156,7 @@ namespace MarginTrading.Services
             }
         }
 
-        public IImmutableList<Order> GetOrdersByInstrumentAndAccount(string instrument, string accountId)
+        public ICollection<Order> GetOrdersByInstrumentAndAccount(string instrument, string accountId)
         {
             if (string.IsNullOrWhiteSpace(instrument))
                 throw new ArgumentException(nameof(instrument));
@@ -171,9 +171,9 @@ namespace MarginTrading.Services
             try
             {
                 if (!_ordersIdsByAccountIdAndInstrumentId.ContainsKey(key))
-                    return ImmutableList<Order>.Empty;
+                    return new List<Order>();
 
-                return _ordersIdsByAccountIdAndInstrumentId[key].Select(id => _ordersById[id]).ToImmutableList();
+                return _ordersIdsByAccountIdAndInstrumentId[key].Select(id => _ordersById[id]).ToList();
             }
             finally
             {
@@ -195,9 +195,11 @@ namespace MarginTrading.Services
             }
         }
 
-        public IEnumerable<Order> GetOrdersByAccountIds(params string[] accountIds)
+        public ICollection<Order> GetOrdersByAccountIds(params string[] accountIds)
         {
             _lockSlim.EnterReadLock();
+
+            var result = new List<Order>();
 
             try
             {
@@ -205,9 +207,12 @@ namespace MarginTrading.Services
                 {
                     if (!_orderIdsByAccountId.ContainsKey(accountId))
                         continue;
+
                     foreach (var orderId in _orderIdsByAccountId[accountId])
-                        yield return _ordersById[orderId];
+                        result.Add(_ordersById[orderId]);
                 }
+
+                return result;
             }
             finally
             {

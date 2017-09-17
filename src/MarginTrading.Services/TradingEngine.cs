@@ -552,9 +552,9 @@ namespace MarginTrading.Services
         // TODO: Resolve situalion when we have no liquidity!
         private void ProcessOrdersClosing(string instrument)
         {
-            var closingOrders = _ordersCache.ClosingOrders.GetOrdersByInstrument(instrument).ToArray();
+            var closingOrders = _ordersCache.ClosingOrders.GetOrdersByInstrument(instrument);
 
-            if (closingOrders.Length == 0)
+            if (closingOrders.Count == 0)
                 return;
 
             var meProxyList = new List<Tuple<Order, IMatchingEngineProxy>>();
