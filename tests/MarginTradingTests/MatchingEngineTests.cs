@@ -255,7 +255,7 @@ namespace MarginTradingTests
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "3"));
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "4"));
             Assert.AreEqual(order.Volume, order.GetMatchedVolume());
-            Assert.AreEqual(6, orderBooks["EURUSD"].Sell[1.15].First(item => item.Id == "4").RemainingVolume);
+            Assert.AreEqual(6, orderBooks["EURUSD"].Sell[1.15].First(item => item.Id == "4").GetRemainingVolume());
         }
 
         [Test]
@@ -283,7 +283,7 @@ namespace MarginTradingTests
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "1"));
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "2"));
             Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
-            Assert.AreEqual(3, orderBooks["EURUSD"].Buy[1.04].First(item => item.Id == "1").RemainingVolume);
+            Assert.AreEqual(3, orderBooks["EURUSD"].Buy[1.04].First(item => item.Id == "1").GetRemainingVolume());
             Assert.IsFalse(orderBooks["EURUSD"].Buy.ContainsKey(1.5));
         }
 
@@ -393,8 +393,8 @@ namespace MarginTradingTests
             Assert.AreEqual(OrderStatus.Rejected, order.Status);
             Assert.AreEqual(OrderRejectReason.NoLiquidity, order.RejectReason);
             Assert.IsNotNull(order.CloseDate);
-            Assert.AreEqual(6, orderBooks["EURUSD"].Sell[1.1].First(item => item.Id == "3").RemainingVolume);
-            Assert.AreEqual(8, orderBooks["EURUSD"].Sell[1.15].First(item => item.Id == "4").RemainingVolume);
+            Assert.AreEqual(6, orderBooks["EURUSD"].Sell[1.1].First(item => item.Id == "3").GetRemainingVolume());
+            Assert.AreEqual(8, orderBooks["EURUSD"].Sell[1.15].First(item => item.Id == "4").GetRemainingVolume());
         }
 
         [Test]
@@ -421,8 +421,8 @@ namespace MarginTradingTests
             Assert.AreEqual(OrderStatus.Rejected, order.Status);
             Assert.AreEqual(OrderRejectReason.NoLiquidity, order.RejectReason);
             Assert.IsNotNull(order.CloseDate);
-            Assert.AreEqual(4, orderBooks["EURUSD"].Buy[1.04].First(item => item.Id == "1").RemainingVolume);
-            Assert.AreEqual(7, orderBooks["EURUSD"].Buy[1.05].First(item => item.Id == "2").RemainingVolume);
+            Assert.AreEqual(4, orderBooks["EURUSD"].Buy[1.04].First(item => item.Id == "1").GetRemainingVolume());
+            Assert.AreEqual(7, orderBooks["EURUSD"].Buy[1.05].First(item => item.Id == "2").GetRemainingVolume());
         }
 
         [Test]
@@ -451,7 +451,7 @@ namespace MarginTradingTests
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "4"));
             Assert.AreEqual(1, orderBooks["EURUSD"].Sell.Count);
             Assert.IsFalse(orderBooks["EURUSD"].Sell.ContainsKey(1.1));
-            Assert.AreEqual(5, orderBooks["EURUSD"].Sell[1.15][0].RemainingVolume);
+            Assert.AreEqual(5, orderBooks["EURUSD"].Sell[1.15][0].GetRemainingVolume());
         }
 
         [Test]
@@ -480,7 +480,7 @@ namespace MarginTradingTests
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "2"));
             Assert.AreEqual(1, orderBooks["EURUSD"].Buy.Count);
             Assert.IsFalse(orderBooks["EURUSD"].Buy.ContainsKey(1.05));
-            Assert.AreEqual(3, orderBooks["EURUSD"].Buy[1.04][0].RemainingVolume);
+            Assert.AreEqual(3, orderBooks["EURUSD"].Buy[1.04][0].GetRemainingVolume());
         }
 
         #endregion
@@ -512,7 +512,7 @@ namespace MarginTradingTests
             Assert.AreEqual(2, order.MatchedOrders.Count);
             Assert.AreEqual(OrderStatus.Active, order.Status);
             Assert.IsFalse(orderBooks["EURUSD"].Sell.ContainsKey(1.1));
-            Assert.AreEqual(6, orderBooks["EURUSD"].Sell[1.15][0].RemainingVolume);
+            Assert.AreEqual(6, orderBooks["EURUSD"].Sell[1.15][0].GetRemainingVolume());
         }
 
         [Test]
@@ -565,7 +565,7 @@ namespace MarginTradingTests
             Assert.AreEqual(1, order.MatchedOrders.Count);
             Assert.AreEqual(OrderStatus.Active, order.Status);
             Assert.AreEqual(1.05, order.OpenPrice);
-            Assert.AreEqual(2, orderBooks["EURUSD"].Buy[1.05][0].RemainingVolume);
+            Assert.AreEqual(2, orderBooks["EURUSD"].Buy[1.05][0].GetRemainingVolume());
         }
 
         [Test]
@@ -593,12 +593,12 @@ namespace MarginTradingTests
             Assert.AreEqual(1, order.MatchedOrders.Count);
             Assert.AreEqual(OrderStatus.Active, order.Status);
             Assert.AreEqual(1.05, order.OpenPrice);
-            Assert.AreEqual(2, orderBooks["EURUSD"].Buy[1.05][0].RemainingVolume);
+            Assert.AreEqual(2, orderBooks["EURUSD"].Buy[1.05][0].GetRemainingVolume());
         }
 
         #endregion
 
-        private bool ProcessOrders(Order order, MatchedOrder[] matchedOrders)
+        private bool ProcessOrders(Order order, MatchedOrderCollection matchedOrders)
         {
             if (!matchedOrders.Any())
             {
@@ -609,7 +609,7 @@ namespace MarginTradingTests
                 return false;
             }
 
-            if (matchedOrders.GetTotalVolume() < Math.Abs(order.Volume) && order.FillType == OrderFillType.FillOrKill)
+            if (matchedOrders.SummaryVolume < Math.Abs(order.Volume) && order.FillType == OrderFillType.FillOrKill)
             {
                 order.CloseDate = DateTime.UtcNow;
                 order.Status = OrderStatus.Rejected;
@@ -626,8 +626,8 @@ namespace MarginTradingTests
             //    return false;
             //}
 
-            order.AddMatchedOrders(matchedOrders);
-            order.OpenPrice = Math.Round(order.MatchedOrders.GetWeightedAveragePrice(), order.AssetAccuracy);
+            order.MatchedOrders = matchedOrders;
+            order.OpenPrice = Math.Round(order.MatchedOrders.WeightedAveragePrice, order.AssetAccuracy);
             order.OpenDate = DateTime.UtcNow;
             order.Status = OrderStatus.Active;
             return true;

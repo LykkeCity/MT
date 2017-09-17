@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using MarginTrading.Core.Messages;
 
@@ -32,15 +31,12 @@ namespace MarginTrading.Core
         OrderRejectReason RejectReason { get; }
         string RejectReasonText { get; }
         string Comment { get; }
-        List<MatchedOrder> MatchedCloseOrders { get; }
+        MatchedOrderCollection MatchedCloseOrders { get; }
         double SwapCommission { get; }
     }
 
     public class Order : IOrder
     {
-        private IReadOnlyList<MatchedOrder> _matchedOrders;
-        private double? _remainingVolume;
-
         public string Id { get; set; }
         public string ClientId { get; set; }
         public string AccountId { get; set; }
@@ -71,22 +67,8 @@ namespace MarginTrading.Core
         public OrderRejectReason RejectReason { get; set; }
         public string RejectReasonText { get; set; }
         public string Comment { get; set; }
-        public IReadOnlyList<MatchedOrder> MatchedOrders
-        {
-            get => _matchedOrders ?? new List<MatchedOrder>();
-            set
-            {
-                _matchedOrders = value;
-
-                _remainingVolume = _matchedOrders?.Count > 0
-                    ? Math.Abs(Volume) - _matchedOrders.Sum(item => item.Volume)
-                    : Math.Abs(Volume);
-            }
-        }
-
-        public double RemainingVolume => _remainingVolume ?? Math.Abs(Volume);
-
-        public List<MatchedOrder> MatchedCloseOrders { get; set; } = new List<MatchedOrder>();
+        public MatchedOrderCollection MatchedOrders { get; set; } = new MatchedOrderCollection();
+        public MatchedOrderCollection MatchedCloseOrders { get; set; } = new MatchedOrderCollection();
 
         public FplData FplData { get; set; } = new FplData();
     }
@@ -232,12 +214,12 @@ namespace MarginTrading.Core
 
         public static double GetMatchedVolume(this IOrder order)
         {
-            return order.MatchedOrders.Sum(x => x.Volume);
+            return order.MatchedOrders.SummaryVolume;
         }
 
         public static double GetMatchedCloseVolume(this IOrder order)
         {
-            return order.MatchedCloseOrders.Sum(x => x.Volume);
+            return order.MatchedCloseOrders.SummaryVolume;
         }
 
         public static double GetRemainingCloseVolume(this IOrder order)

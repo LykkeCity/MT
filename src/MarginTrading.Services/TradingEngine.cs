@@ -108,7 +108,7 @@ namespace MarginTrading.Services
                     return false;
                 }
 
-                if (matchedOrders.GetTotalVolume() < Math.Abs(order.Volume) && order.FillType == OrderFillType.FillOrKill)
+                if (matchedOrders.SummaryVolume < Math.Abs(order.Volume) && order.FillType == OrderFillType.FillOrKill)
                 {
                     order.CloseDate = DateTime.UtcNow;
                     order.Status = OrderStatus.Rejected;
@@ -203,10 +203,10 @@ namespace MarginTrading.Services
             }
         }
 
-        private void MakeOrderAcitve(Order order, MatchedOrder[] matchedOrders)
+        private void MakeOrderAcitve(Order order, MatchedOrderCollection matchedOrders)
         {
-            order.AddMatchedOrders(matchedOrders);
-            order.OpenPrice = Math.Round(order.MatchedOrders.GetWeightedAveragePrice(), order.AssetAccuracy);
+            order.MatchedOrders.AddRange(matchedOrders);
+            order.OpenPrice = Math.Round(order.MatchedOrders.WeightedAveragePrice, order.AssetAccuracy);
             order.OpenDate = DateTime.UtcNow;
             order.Status = OrderStatus.Active;
 
@@ -217,13 +217,13 @@ namespace MarginTrading.Services
         }
 
         //TODO: do check in other way
-        private void CheckIfWeCanOpenPosition(Order order, MatchedOrder[] matchedOrders)
+        private void CheckIfWeCanOpenPosition(Order order, MatchedOrderCollection matchedOrders)
         {
             var accountAsset = _accountAssetsCacheService.GetAccountAsset(order.TradingConditionId, order.AccountAssetId, order.Instrument);
             _validateOrderService.ValidateInstrumentPositionVolume(accountAsset, order);
 
-            order.MatchedOrders = matchedOrders.ToList();
-            order.OpenPrice = Math.Round(order.MatchedOrders.GetWeightedAveragePrice(), order.AssetAccuracy);
+            order.MatchedOrders.AddRange(matchedOrders);
+            order.OpenPrice = Math.Round(order.MatchedOrders.WeightedAveragePrice, order.AssetAccuracy);
             
             InstrumentBidAskPair quote;
             if (_quoteCashService.TryGetQuoteById(order.Instrument, out quote))
@@ -341,10 +341,10 @@ namespace MarginTrading.Services
                 {
                     defaultMatchingEngine.MatchMarketOrderForClose(order, matchedOrders =>
                     {
-                        if (matchedOrders.Length == 0)
+                        if (matchedOrders.Count == 0)
                             return false;
 
-                        order.UpdateClosePrice(Math.Round(matchedOrders.ToImmutableList().GetWeightedAveragePrice(), order.AssetAccuracy));
+                        order.UpdateClosePrice(Math.Round(matchedOrders.WeightedAveragePrice, order.AssetAccuracy));
                         return false;
                     });
                 }
@@ -593,7 +593,7 @@ namespace MarginTrading.Services
         {
             var matchedOrders = await meProxy.GetMatchedOrdersForCloseAsync(order);
 
-            if (matchedOrders.Length == 0)
+            if (matchedOrders.Count == 0)
                 return;
 
             using (_contextFactory.GetWriteSyncContext($"{nameof(TradingEngine)}.{nameof(ProcessOrdersClosingByMatchingEngineProxyAsync)}"))
@@ -604,7 +604,7 @@ namespace MarginTrading.Services
         {
             matchingEngine.MatchMarketOrderForClose(order, matchedOrders =>
             {
-                if (matchedOrders.Length == 0)
+                if (matchedOrders.Count == 0)
                     return false;
 
                 MakeOrderClosed(order, matchedOrders);
@@ -613,7 +613,7 @@ namespace MarginTrading.Services
             });
         }
 
-        private void MakeOrderClosed(Order order, MatchedOrder[] matchedOrders)
+        private void MakeOrderClosed(Order order, MatchedOrderCollection matchedOrders)
         {
             order.MatchedCloseOrders.AddRange(matchedOrders);
 

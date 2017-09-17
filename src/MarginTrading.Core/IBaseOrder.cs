@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
 
 namespace MarginTrading.Core
 {
@@ -11,34 +8,16 @@ namespace MarginTrading.Core
         string Instrument { get; }
         double Volume { get; }
         DateTime CreateDate { get; }
-        IReadOnlyList<MatchedOrder> MatchedOrders { get; set; }
-        double RemainingVolume { get; }
+        MatchedOrderCollection MatchedOrders { get; set; }
     }
 
     public class BaseOrder : IBaseOrder
     {
-        private IReadOnlyList<MatchedOrder> _matchedOrders;
-        private double? _remainingVolume;
-
         public string Id { get; set; } = Guid.NewGuid().ToString("N");
         public string Instrument { get; set; }
         public double Volume { get; set; }
         public DateTime CreateDate { get; set; } = DateTime.UtcNow;
-
-        public IReadOnlyList<MatchedOrder> MatchedOrders
-        {
-            get => _matchedOrders ?? new List<MatchedOrder>();
-            set
-            {
-                _matchedOrders = value;
-
-                _remainingVolume = _matchedOrders?.Count > 0
-                    ? Math.Abs(Volume) - _matchedOrders.Sum(item => item.Volume)
-                    : Math.Abs(Volume);
-            }
-        }
-
-        public double RemainingVolume => _remainingVolume ?? Math.Abs(Volume);
+        public MatchedOrderCollection MatchedOrders { get; set; } = new MatchedOrderCollection();
     }
 
     public static class BaseOrderExtension
@@ -55,12 +34,12 @@ namespace MarginTrading.Core
 
         public static bool GetIsFullfilled(this IBaseOrder order)
         {
-            return 0 == Math.Round(order.RemainingVolume, MarginTradingHelpers.VolumeAccuracy);
+            return 0 == Math.Round(order.GetRemainingVolume(), MarginTradingHelpers.VolumeAccuracy);
         }
 
-        public static void AddMatchedOrders(this IBaseOrder order, params MatchedOrder[] orders)
+        public static double GetRemainingVolume(this IBaseOrder order)
         {
-            order.MatchedOrders = orders.Union(order.MatchedOrders ?? new MatchedOrder[0]).ToImmutableList();
+            return Math.Abs(order.Volume) - order.MatchedOrders.SummaryVolume;
         }
     }
 }

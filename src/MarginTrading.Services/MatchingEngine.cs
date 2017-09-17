@@ -83,13 +83,15 @@ namespace MarginTrading.Services
             }
         }
 
-        public void MatchMarketOrderForOpen(Order order, Func<MatchedOrder[], bool> matchedFunc)
+        public void MatchMarketOrderForOpen(Order order, Func<MatchedOrderCollection, bool> matchedFunc)
         {
             using (_contextFactory.GetWriteSyncContext($"{nameof(MatchingEngine)}.{nameof(MatchMarketOrderForOpen)}"))
             {
                 OrderDirection type = order.GetOrderType();
 
-                var matchedOrders = _orderBooks.Match(order, type.GetOrderTypeToMatchInOrderBook(), Math.Abs(order.Volume)).ToArray();
+                var matchedOrders =
+                    _orderBooks.Match(order, type.GetOrderTypeToMatchInOrderBook(), Math.Abs(order.Volume));
+
                 if (matchedFunc(matchedOrders))
                 {
                     _orderBooks.Update(order, type.GetOrderTypeToMatchInOrderBook(), matchedOrders);
@@ -100,19 +102,21 @@ namespace MarginTrading.Services
             }
         }
 
-        public void MatchMarketOrderForClose(Order order, Func<MatchedOrder[], bool> matchedAction)
+        public void MatchMarketOrderForClose(Order order, Func<MatchedOrderCollection, bool> matchedAction)
         {
             using (_contextFactory.GetWriteSyncContext($"{nameof(MatchingEngine)}.{nameof(MatchMarketOrderForClose)}"))
             {
                 OrderDirection type = order.GetCloseType();
 
-                var matchedOrders = _orderBooks.Match(order, type.GetOrderTypeToMatchInOrderBook(), Math.Abs(order.GetRemainingCloseVolume())).ToArray();
+                var matchedOrders = _orderBooks.Match(order, type.GetOrderTypeToMatchInOrderBook(),
+                    Math.Abs(order.GetRemainingCloseVolume()));
+
                 if (!matchedAction(matchedOrders))
                     return;
 
                 _orderBooks.Update(order, type.GetOrderTypeToMatchInOrderBook(), matchedOrders);
                 var changeEventArgs = new OrderBookChangeEventArgs { MessageId = _currentMessageId++ };
-                changeEventArgs.AddOrderBookLevels(type.GetOrderTypeToMatchInOrderBook(), order.Instrument, matchedOrders);
+                changeEventArgs.AddOrderBookLevels(type.GetOrderTypeToMatchInOrderBook(), order.Instrument, matchedOrders.ToArray());
                 _orderbookChangeEventChannel.SendEvent(this, changeEventArgs);
             } // lock
         }
