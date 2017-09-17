@@ -53,10 +53,12 @@ namespace MarginTrading.Services
             return result;
         }
 
+        //TODO: fix swap calculation algorithm and performance in task LWDEV-3087
         public double GetSwaps(IOrder order)
         {
-            return GetSwaps(order.TradingConditionId, order.AccountId, order.AccountAssetId, order.Instrument,
-                order.GetOrderType(), order.OpenDate, order.CloseDate, order.GetMatchedVolume());
+            return 0;
+            //return GetSwaps(order.TradingConditionId, order.AccountId, order.AccountAssetId, order.Instrument,
+            //    order.GetOrderType(), order.OpenDate, order.CloseDate, order.GetMatchedVolume());
         }
 
         public void SetCommissions(string tradingConditionId, string accountAssetId, Order order)
