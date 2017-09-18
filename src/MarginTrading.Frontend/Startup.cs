@@ -4,7 +4,6 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using AzureStorage.Tables;
 using Common.Log;
-using Common.PasswordTools;
 using Flurl.Http;
 using Lykke.Common;
 using Lykke.Common.ApiLibrary.Swagger;
@@ -18,6 +17,7 @@ using MarginTrading.AzureRepositories;
 using MarginTrading.AzureRepositories.Settings;
 using MarginTrading.Common.BackendContracts;
 using MarginTrading.Common.ClientContracts;
+using MarginTrading.Common.Json;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Wamp;
 using MarginTrading.Core;
@@ -30,7 +30,6 @@ using MarginTrading.Frontend.Services;
 using MarginTrading.Frontend.Settings;
 using MarginTrading.Services;
 using MarginTrading.Services.Infrastructure;
-using MarginTrading.Services.Middleware;
 using MarginTrading.Services.Notifications;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -40,8 +39,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.PlatformAbstractions;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 using Rocks.Caching;
-using Swashbuckle.Swagger.Model;
 using WampSharp.AspNetCore.WebSockets.Server;
 using WampSharp.Binding;
 using WampSharp.V2;
@@ -83,6 +82,7 @@ namespace MarginTrading.Frontend
                 .AddJsonOptions(options =>
                 {
                     options.SerializerSettings.ContractResolver = new Newtonsoft.Json.Serialization.DefaultContractResolver();
+                    options.SerializerSettings.Converters = SerializerSettings.GetDefaultConverters();
                 });
 
             services.AddSwaggerGen(options =>
@@ -153,9 +153,13 @@ namespace MarginTrading.Frontend
             {
                 builder.UseWebSockets(new WebSocketOptions {KeepAliveInterval = TimeSpan.FromMinutes(1)});
 
+                var jsonSettings =
+                    new JsonSerializerSettings() {Converters = SerializerSettings.GetDefaultConverters()};
+                var jsonSerializer = JsonSerializer.Create(jsonSettings);
+
                 host.RegisterTransport(new AspNetCoreWebSocketTransport(builder),
-                                       new JTokenJsonBinding(),
-                                       new JTokenMsgpackBinding());
+                                       new JTokenJsonBinding(jsonSerializer),
+                                       new JTokenMsgpackBinding(jsonSerializer));
             });
 
             appLifetime.ApplicationStopped.Register(() => ApplicationContainer.Dispose());
@@ -186,6 +190,10 @@ namespace MarginTrading.Frontend
         private void RegisterModules(ContainerBuilder builder, MtFrontendSettings settings)
         {
             builder.RegisterModule(new FrontendModule(settings));
+
+            builder.RegisterType<DateService>()
+                .As<IDateService>()
+                .SingleInstance();
         }
 
         private void SetSubscribers(MtFrontendSettings settings)

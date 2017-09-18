@@ -1,9 +1,12 @@
-﻿namespace MarginTrading.Common.ClientContracts
+﻿using System;
+
+namespace MarginTrading.Common.ClientContracts
 {
     public class IsAliveResponse
     {
         public string Version { get; set; }
         public string Env { get; set; }
+        public DateTime ServerTime { get; set; }
     }
 
     public class IsAliveExtendedResponse : IsAliveResponse
