@@ -34,13 +34,17 @@ namespace MarginTrading.OrderHistoryBroker
             await _logger.WriteInfoAsync(ServiceName, null, null, "Starting broker");
             try
             {
-                _connector = new RabbitMqSubscriber<string>(new RabbitMqSubscriberSettings
-                    {
-                        ConnectionString = _settings.MtRabbitMqConnString,
-                        QueueName = QueueHelper.BuildQueueName(_settings.RabbitMqQueues.OrderHistory.ExchangeName, _settings.Env),
-                        ExchangeName = _settings.RabbitMqQueues.OrderHistory.ExchangeName,
-                        IsDurable = true
-                    })
+                var settings = new RabbitMqSubscriptionSettings
+                {
+                    ConnectionString = _settings.MtRabbitMqConnString,
+                    QueueName =
+                        QueueHelper.BuildQueueName(_settings.RabbitMqQueues.OrderHistory.ExchangeName, _settings.Env),
+                    ExchangeName = _settings.RabbitMqQueues.OrderHistory.ExchangeName,
+                    IsDurable = true
+                };
+
+                _connector = new RabbitMqSubscriber<string>(settings,
+                        new ResilientErrorHandlingStrategy(_logger, settings, TimeSpan.FromSeconds(1)))
                     .SetMessageDeserializer(new DefaultStringDeserializer())
                     .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
                     .Subscribe(HandleMessage)

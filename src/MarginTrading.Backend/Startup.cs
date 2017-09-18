@@ -15,6 +15,7 @@ using MarginTrading.Backend.Infrastructure;
 using MarginTrading.Backend.Middleware;
 using MarginTrading.Backend.Modules;
 using MarginTrading.Common.Extensions;
+using MarginTrading.Common.Json;
 using MarginTrading.Core;
 using MarginTrading.Core.Settings;
 using MarginTrading.Services;
@@ -62,7 +63,14 @@ namespace MarginTrading.Backend
             services.AddSingleton(loggerFactory);
             services.AddLogging();
             services.AddSingleton(Configuration);
-            services.AddMvc(options => options.Filters.Add(typeof(MarginTradingEnabledFilter)));
+            services.AddMvc(options => options.Filters.Add(typeof(MarginTradingEnabledFilter)))
+                .AddJsonOptions(
+                    options =>
+                    {
+                        options.SerializerSettings.Converters = SerializerSettings.GetDefaultConverters();
+                    });
+            services.AddAuthentication(KeyAuthOptions.AuthenticationScheme)
+                .AddScheme<KeyAuthOptions, KeyAuthHandler>(KeyAuthOptions.AuthenticationScheme, "", options => { });
 
             bool isLive = Configuration.IsLive();
 
@@ -109,7 +117,7 @@ namespace MarginTrading.Backend
         {
             app.UseMiddleware<GlobalErrorHandlerMiddleware>();
             app.UseMiddleware<MaintenanceModeMiddleware>();
-            app.UseMiddleware<KeyAuthMiddleware>();
+            app.UseAuthentication();
             app.UseMvc();
 
             app.UseSwagger();
@@ -157,19 +165,20 @@ namespace MarginTrading.Backend
         private static void SetupLoggers(IServiceCollection services, MtBackendSettings mtSettings,
             MarginSettings settings)
         {
+            var consoleLogger = new LogToConsole();
+
             var comonSlackService =
                 services.UseSlackNotificationsSenderViaAzureQueue(mtSettings.SlackNotifications.AzureQueue,
-                    new LogToConsole());
+                    consoleLogger);
 
             var slackService =
                 new MtSlackNotificationsSender(comonSlackService, "MT Backend", settings.Env);
 
-            var log = new LykkeLogToAzureStorage(PlatformServices.Default.Application.ApplicationName,
-                new AzureTableStorage<LogEntity>(settings.Db.LogsConnString, "MarginTradingBackendLog", null),
-                slackService);
+            var log = services.UseLogToAzureStorage(settings.Db.LogsConnString,
+                slackService, "MarginTradingBackendLog", consoleLogger);
 
-            var requestsLog = new LykkeLogToAzureStorage($"MT_Backend_{settings.Env}",
-                new AzureTableStorage<LogEntity>(settings.Db.LogsConnString, "MarginTradingBackendRequestsLog", null));
+            var requestsLog = services.UseLogToAzureStorage(settings.Db.LogsConnString,
+                slackService, "MarginTradingBackendRequestsLog", consoleLogger);
 
             LogLocator.CommonLog = log;
             LogLocator.RequestsLog = requestsLog;

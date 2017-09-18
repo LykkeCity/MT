@@ -9,7 +9,7 @@ using MarginTradingHelpers = MarginTrading.Services.Helpers.MarginTradingHelpers
 
 namespace MarginTrading.Services
 {
-    public class OrderBookSaveService : TimerPeriod, IDisposable
+    public class OrderBookSaveService : TimerPeriod
     {
         private readonly IMarginTradingBlobRepository _blobRepository;
         private readonly OrderBookList _orderBookList;
@@ -52,9 +52,10 @@ namespace MarginTrading.Services
             return DumpToRepository();
         }
 
-        public void Dispose()
+        public override void Stop()
         {
             DumpToRepository().Wait();
+            base.Stop();
         }
 
         private async Task DumpToRepository()

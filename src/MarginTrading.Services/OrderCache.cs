@@ -42,7 +42,7 @@ namespace MarginTrading.Services
         public IImmutableList<Order> GetPending()
         {
             lock (MarginTradingHelpers.TradingMatchingSync)
-                return ActiveOrders.GetAllOrders().ToImmutableList();
+                return WaitingForExecutionOrders.GetAllOrders().ToImmutableList();
         }
 
         public Order GetOrderById(string orderId)
@@ -69,7 +69,7 @@ namespace MarginTrading.Services
         }
     }
 
-    public class OrderCacheManager : TimerPeriod, IDisposable
+    public class OrderCacheManager : TimerPeriod
     {
         private readonly OrdersCache _orderCache;
         private readonly IMarginTradingBlobRepository _marginTradingBlobRepository;
@@ -99,9 +99,10 @@ namespace MarginTrading.Services
             await DumpToRepository();
         }
 
-        public void Dispose()
+        public override void Stop()
         {
             DumpToRepository().Wait();
+            base.Stop();
         }
 
         private async Task DumpToRepository()

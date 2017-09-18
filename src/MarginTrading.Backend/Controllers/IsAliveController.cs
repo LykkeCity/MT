@@ -11,15 +11,18 @@ namespace MarginTrading.Backend.Controllers
         private readonly IMatchingEngine _matchingEngine;
         private readonly ITradingEngine _tradingEngine;
         private readonly MarginSettings _settings;
+        private readonly IDateService _dateService;
 
         public IsAliveController(
             IMatchingEngine matchingEngine,
             ITradingEngine tradingEngine,
-            MarginSettings settings)
+            MarginSettings settings,
+            IDateService dateService)
         {
             _matchingEngine = matchingEngine;
             _tradingEngine = tradingEngine;
             _settings = settings;
+            _dateService = dateService;
         }
         [HttpGet]
         public IsAliveResponse Get()
@@ -33,7 +36,8 @@ namespace MarginTrading.Backend.Controllers
                 TradingEngineAlive = tradingEngineAlive,
                 Version =
                     Microsoft.Extensions.PlatformAbstractions.PlatformServices.Default.Application.ApplicationVersion,
-                Env = _settings.IsLive ? "Live" : "Demo"
+                Env = _settings.IsLive ? "Live" : "Demo",
+                ServerTime = _dateService.Now()
             };
         }
     }

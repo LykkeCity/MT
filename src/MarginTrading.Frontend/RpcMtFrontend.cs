@@ -19,15 +19,18 @@ namespace MarginTrading.Frontend
         private readonly MtFrontendSettings _settings;
         private readonly IClientTokenService _clientTokenService;
         private readonly RpcFacade _rpcFacade;
+        private readonly IDateService _dateService;
 
         public RpcMtFrontend(
             MtFrontendSettings settings,
             IClientTokenService clientTokenService,
-            RpcFacade rpcFacade)
+            RpcFacade rpcFacade,
+            IDateService dateService)
         {
             _settings = settings;
             _clientTokenService = clientTokenService;
             _rpcFacade = rpcFacade;
+            _dateService = dateService;
         }
 
         #region Service
@@ -37,7 +40,8 @@ namespace MarginTrading.Frontend
             return new IsAliveResponse
             {
                 Version = PlatformServices.Default.Application.ApplicationVersion,
-                Env = _settings.MarginTradingFront.Env
+                Env = _settings.MarginTradingFront.Env,
+                ServerTime = _dateService.Now()
             };
         }
 

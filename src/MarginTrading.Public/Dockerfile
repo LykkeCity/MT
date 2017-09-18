@@ -1,4 +1,4 @@
-FROM microsoft/aspnetcore:1.1.1
+FROM microsoft/aspnetcore:2.0
 WORKDIR /app
 COPY . .
 ENTRYPOINT ["dotnet", "MarginTrading.Public.dll"]

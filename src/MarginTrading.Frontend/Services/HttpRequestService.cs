@@ -8,6 +8,7 @@ using MarginTrading.Common.BackendContracts;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Core.Models;
 using MarginTrading.Frontend.Settings;
+using System.Linq;
 
 namespace MarginTrading.Frontend.Services
 {
@@ -67,11 +68,12 @@ namespace MarginTrading.Frontend.Services
                 var flurlClient = $"{(isLive ? _settings.MarginTradingLive.ApiRootUrl : _settings.MarginTradingDemo.ApiRootUrl)}/api/{controller}/{action}"
                     .WithHeader("api-key", isLive ? _settings.MarginTradingLive.ApiKey : _settings.MarginTradingDemo.ApiKey);
 
-                return await ActionExtensions.RetryOnExceptionAsync(() => flurlClient.PostJsonAsync(request).ReceiveJson<TResponse>(),
-                                                                    ex => ex is FlurlHttpException,
-                                                                    6,
-                                                                    TimeSpan.FromSeconds(5),
-                                                                    ex => ProcessException(isLive, action, request.ToJson(), ex, true));
+                return await ActionExtensions.RetryOnExceptionAsync(
+                    () => flurlClient.PostJsonAsync(request).ReceiveJson<TResponse>(),
+                    ex => ex is FlurlHttpException && !new int?[] {400, 500}.Contains((int?) ((FlurlHttpException) ex).Call.HttpStatus),
+                    6,
+                    TimeSpan.FromSeconds(5),
+                    ex => ProcessException(isLive, action, request.ToJson(), ex, true));
             }
             catch (Exception ex)
             {
