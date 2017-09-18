@@ -118,11 +118,6 @@ namespace MarginTrading.Client
         private static void BotHost_TestFinished(object sender, EventArgs e)
         {
             FlushLog();
-            if (isAutoRun)
-            {
-                botHost.Stop();                
-                Environment.Exit(0);
-            }
         }
 
         private async static void RegisterUser()
