@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using MarginTrading.MarketMaker.Enums;
@@ -7,10 +8,9 @@ namespace MarginTrading.MarketMaker.Services
 {
     public interface IAssetPairsSettingsService
     {
-        [CanBeNull]
-        AssetPairQuotesSourceEnum? GetAssetPairQuotesSource(string assetPairId);
+        (AssetPairQuotesSourceTypeEnum? SourceType, string ExternalExchange) GetAssetPairQuotesSource(string assetPairId);
 
-        Task SetAssetPairQuotesSource(string assetPairId, AssetPairQuotesSourceEnum assetPairQuotesSource);
+        Task SetAssetPairQuotesSource(string assetPairId, AssetPairQuotesSourceTypeEnum assetPairQuotesSourceType, [CanBeNull] string externalExchange);
 
         Task<IReadOnlyDictionary<string, string>> GetAllPairsSources();
     }

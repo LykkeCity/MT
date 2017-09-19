@@ -6,8 +6,8 @@ namespace MarginTrading.MarketMaker.Services
 {
     public interface IMarketMakerService
     {
-        Task ProcessNewIcmBestBidAskAsync(BestBidAskMessage bestBidAsk);
-        Task ProcessNewSpotOrderBookDataAsync(OrderBookMessage orderBookMessage);
-        Task ProcessAssetPairSettingsAsync(AssetPairSettingsModel message);
+        Task ProcessNewExternalOrderbookAsync(ExternalExchangeOrderbookMessage orderbook);
+        Task ProcessNewSpotOrderBookDataAsync(SpotOrderbookMessage spotOrderbookMessage);
+        Task ProcessAssetPairSettingsAsync(AssetPairSettingsModel model);
     }
 }

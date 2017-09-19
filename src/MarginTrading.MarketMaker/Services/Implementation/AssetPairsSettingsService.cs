@@ -21,20 +21,28 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             _assetsPairsSettingsRepository = assetsPairsSettingsRepository;
         }
 
-        public Task SetAssetPairQuotesSource(string assetPairId, AssetPairQuotesSourceEnum assetPairQuotesSource)
+        public Task SetAssetPairQuotesSource(string assetPairId, AssetPairQuotesSourceTypeEnum assetPairQuotesSourceType, string externalExchange)
         {
-            return UpdateByKey(GetKeys(assetPairId), e => e.QuotesSourceEnum = assetPairQuotesSource);
+            return UpdateByKey(GetKeys(assetPairId), e =>
+            {
+                e.QuotesSourceType = assetPairQuotesSourceType;
+                if (externalExchange != null)
+                {
+                    e.ExternalExchange = externalExchange;
+                }
+            });
         }
 
         public async Task<IReadOnlyDictionary<string, string>> GetAllPairsSources()
         {
             return (await _assetsPairsSettingsRepository.GetAll())
-                .ToDictionary(s => s.AssetName, c => c.QuotesSourceEnum.ToString());
+                .ToDictionary(s => s.AssetName, c => c.QuotesSourceType.ToString());
         }
 
-        public AssetPairQuotesSourceEnum? GetAssetPairQuotesSource(string assetPairId)
+        public (AssetPairQuotesSourceTypeEnum? SourceType, string ExternalExchange) GetAssetPairQuotesSource(string assetPairId)
         {
-            return GetByKey(GetKeys(assetPairId))?.QuotesSourceEnum;
+            var entity = GetByKey(GetKeys(assetPairId));
+            return (entity?.QuotesSourceType, entity?.ExternalExchange);
         }
 
         private static EntityKeys GetKeys(string assetPairId)

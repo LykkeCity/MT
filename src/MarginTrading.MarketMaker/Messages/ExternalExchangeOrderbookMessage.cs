@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace MarginTrading.MarketMaker.Messages
@@ -6,27 +7,27 @@ namespace MarginTrading.MarketMaker.Messages
     /// <summary>
     /// Info about best bid and ask for an asset
     /// </summary>
-    public class BestBidAskMessage
+    public class ExternalExchangeOrderbookMessage
     {
         /// <summary>
-        /// Source - in our case it's "ICM"
+        /// Source
         /// </summary>
         [JsonProperty("source")]
         public string Source { get; set; }
 
         /// <summary>
-        /// This actualy is an asset pair id
+        /// Asset pair id
         /// </summary>
         [JsonProperty("asset")]
-        public string Asset { get; set; }
+        public string AssetPairId { get; set; }
 
         [JsonProperty("timestamp")]
         public DateTime Timestamp { get; set; }
 
-        [JsonProperty("bestAsk")]
-        public double? BestAsk { get; set; }
+        [JsonProperty("asks")]
+        public IReadOnlyList<VolumePrice> Asks { get; set; }
 
-        [JsonProperty("bestBid")]
-        public double? BestBid { get; set; }
+        [JsonProperty("bids")]
+        public IReadOnlyList<VolumePrice> Bids { get; set; }
     }
 }

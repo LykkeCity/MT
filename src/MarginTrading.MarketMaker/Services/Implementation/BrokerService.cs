@@ -27,9 +27,11 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             _logger.WriteInfoAsync(Startup.ServiceName, null, null, "Starting broker").Wait();
             try
             {
-                _rabbitMqService.Subscribe<BestBidAskMessage>(_settings.RabbitMq.IcmQuotesConnectionSettings, false,
-                    _marketMakerService.ProcessNewIcmBestBidAskAsync);
-                _rabbitMqService.Subscribe<OrderBookMessage>(_settings.RabbitMq.SpotOrderBookConnectionSettings, false,
+                _rabbitMqService.Subscribe<ExternalExchangeOrderbookMessage>(_settings.RabbitMq.FiatOrderbooksConnectionSettings, false,
+                    _marketMakerService.ProcessNewExternalOrderbookAsync);
+                _rabbitMqService.Subscribe<ExternalExchangeOrderbookMessage>(_settings.RabbitMq.CryptoOrderbooksConnectionSettings, false,
+                    _marketMakerService.ProcessNewExternalOrderbookAsync);
+                _rabbitMqService.Subscribe<SpotOrderbookMessage>(_settings.RabbitMq.SpotOrderBookConnectionSettings, false,
                     _marketMakerService.ProcessNewSpotOrderBookDataAsync);
             }
             catch (Exception ex)

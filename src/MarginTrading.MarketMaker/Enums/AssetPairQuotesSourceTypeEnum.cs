@@ -3,7 +3,7 @@
     /// <summary>
     /// The quotes source for the asset pair
     /// </summary>
-    public enum AssetPairQuotesSourceEnum
+    public enum AssetPairQuotesSourceTypeEnum
     {
         /// <summary>
         /// Quotes are provided only manually - used for test purposes
@@ -11,9 +11,9 @@
         Manual = 1,
 
         /// <summary>
-        /// Quotes are provided only from ICM
+        /// Quotes are provided only from external exchange
         /// </summary>
-        Icm = 2,
+        External = 2,
 
         /// <summary>
         /// Quotes are provided from the spot orderbook

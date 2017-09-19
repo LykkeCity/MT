@@ -8,7 +8,7 @@ using MarginTrading.MarketMaker.Messages;
 using MarginTrading.MarketMaker.Models;
 using MarginTrading.MarketMaker.Settings;
 
-namespace MarginTrading.MarketMaker.Services.Implemetation
+namespace MarginTrading.MarketMaker.Services.Implementation
 {
     internal class MarketMakerService : IMarketMakerService
     {
@@ -29,54 +29,104 @@ namespace MarginTrading.MarketMaker.Services.Implemetation
                 CreateRabbitMqMessageProducer(marginTradingMarketMakerSettings, rabbitMqService));
         }
 
-        public Task ProcessNewIcmBestBidAskAsync(BestBidAskMessage bestBidAsk)
+        public Task ProcessNewExternalOrderbookAsync(ExternalExchangeOrderbookMessage orderbook)
         {
-            if (bestBidAsk.Source != "ICM")
-            {
-                throw new InvalidOperationException("An invalid non-ICM message was received: " + bestBidAsk.ToJson());
-            }
-
-            var quotesSource = _assetPairsSettingsService.GetAssetPairQuotesSource(bestBidAsk.Asset);
-            if (quotesSource != AssetPairQuotesSourceEnum.Icm || bestBidAsk.BestBid == null ||
-                bestBidAsk.BestAsk == null)
+            var quotesSource = _assetPairsSettingsService.GetAssetPairQuotesSource(orderbook.AssetPairId);
+            if (quotesSource.SourceType != AssetPairQuotesSourceTypeEnum.External || quotesSource.ExternalExchange != orderbook.Source)
             {
                 return Task.CompletedTask;
             }
 
-            return SendOrderCommandsAsync(bestBidAsk.Asset, bestBidAsk.BestBid.Value, bestBidAsk.BestAsk.Value);
-        }
-
-        public Task ProcessNewSpotOrderBookDataAsync(OrderBookMessage orderBookMessage)
-        {
-            var quotesSource = _assetPairsSettingsService.GetAssetPairQuotesSource(orderBookMessage.AssetPair);
-            if (quotesSource == AssetPairQuotesSourceEnum.Spot || quotesSource == null)
+            var commands = new List<OrderCommand>
             {
-                var orderDirection = orderBookMessage.IsBuy ? OrderDirectionEnum.Buy : OrderDirectionEnum.Sell;
-                return SendOrderCommandsAsync(orderBookMessage.AssetPair, orderDirection, orderBookMessage.BestPrice);
+                new OrderCommand {CommandType = OrderCommandTypeEnum.DeleteOrder}
+            };
+
+            foreach (var bid in orderbook.Bids)
+            {
+                commands.Add(new OrderCommand
+                {
+                    CommandType = OrderCommandTypeEnum.SetOrder,
+                    Direction = OrderDirectionEnum.Sell,
+                    Price = bid.Price,
+                    Volume = bid.Volume
+                });
             }
 
-            return Task.CompletedTask;
+            foreach (var ask in orderbook.Asks)
+            {
+                commands.Add(new OrderCommand
+                {
+                    CommandType = OrderCommandTypeEnum.SetOrder,
+                    Direction = OrderDirectionEnum.Buy,
+                    Price = ask.Price,
+                    Volume = ask.Volume
+                });
+            }
+
+            return SendOrderCommandsAsync(orderbook.AssetPairId, commands);
         }
 
-        public async Task ProcessAssetPairSettingsAsync(AssetPairSettingsModel message)
+        public Task ProcessNewSpotOrderBookDataAsync(SpotOrderbookMessage spotOrderbookMessage)
         {
-            AssetPairQuotesSourceEnum? quotesSource;
-            if (message.SetNewQuotesSource != null)
+            var quotesSource = _assetPairsSettingsService.GetAssetPairQuotesSource(spotOrderbookMessage.AssetPair).SourceType;
+            if (quotesSource != AssetPairQuotesSourceTypeEnum.Spot && quotesSource != null)
             {
-                quotesSource = message.SetNewQuotesSource.Value;
-                await _assetPairsSettingsService.SetAssetPairQuotesSource(message.AssetPairId,
-                    message.SetNewQuotesSource.Value);
+                return Task.CompletedTask;
+            }
+
+            var orderDirection = spotOrderbookMessage.IsBuy ? OrderDirectionEnum.Buy : OrderDirectionEnum.Sell;
+            var commands = new[]
+            {
+                new OrderCommand {CommandType = OrderCommandTypeEnum.DeleteOrder},
+                new OrderCommand
+                {
+                    CommandType = OrderCommandTypeEnum.SetOrder,
+                    Direction = orderDirection,
+                    Price = spotOrderbookMessage.Prices[0].Price,
+                    Volume = OrdersVolume
+                },
+            };
+
+            return SendOrderCommandsAsync(spotOrderbookMessage.AssetPair, commands);
+        }
+
+        public async Task ProcessAssetPairSettingsAsync(AssetPairSettingsModel model)
+        {
+            AssetPairQuotesSourceTypeEnum? quotesSourceType;
+            if (model.SetNewQuotesSourceType != null)
+            {
+                quotesSourceType = model.SetNewQuotesSourceType.Value;
+                await _assetPairsSettingsService.SetAssetPairQuotesSource(model.AssetPairId,
+                    model.SetNewQuotesSourceType.Value, model.SetNewQuotesExternalExhange);
             }
             else
             {
-                quotesSource = _assetPairsSettingsService.GetAssetPairQuotesSource(message.AssetPairId);
+                quotesSourceType = _assetPairsSettingsService.GetAssetPairQuotesSource(model.AssetPairId).SourceType;
             }
 
-            if (quotesSource == AssetPairQuotesSourceEnum.Manual && message.PriceForBuyOrder != null &&
-                message.PriceForSellOrder != null)
+            if (quotesSourceType == AssetPairQuotesSourceTypeEnum.Manual && model.PriceForBuyOrder != null &&
+                model.PriceForSellOrder != null)
             {
-                await SendOrderCommandsAsync(message.AssetPairId, message.PriceForSellOrder.Value,
-                    message.PriceForBuyOrder.Value);
+                var commands = new[]
+                {
+                    new OrderCommand {CommandType = OrderCommandTypeEnum.DeleteOrder},
+                    new OrderCommand
+                    {
+                        CommandType = OrderCommandTypeEnum.SetOrder,
+                        Direction = OrderDirectionEnum.Sell,
+                        Price = model.PriceForSellOrder.Value,
+                        Volume = OrdersVolume
+                    },
+                    new OrderCommand
+                    {
+                        CommandType = OrderCommandTypeEnum.SetOrder,
+                        Direction = OrderDirectionEnum.Buy,
+                        Price = model.PriceForBuyOrder.Value,
+                        Volume = OrdersVolume
+                    },
+                };
+                await SendOrderCommandsAsync(model.AssetPairId, commands);
             }
         }
 
@@ -85,47 +135,6 @@ namespace MarginTrading.MarketMaker.Services.Implemetation
         {
             return rabbitMqService.CreateProducer<OrderCommandsBatchMessage>(
                 marginTradingMarketMakerSettings.RabbitMq.OrderCommandsConnectionSettings, false);
-        }
-
-        private Task SendOrderCommandsAsync(string assetPairId, OrderDirectionEnum orderDirection, double price)
-        {
-            var commands = new[]
-            {
-                new OrderCommand {CommandType = OrderCommandTypeEnum.DeleteOrder},
-                new OrderCommand
-                {
-                    CommandType = OrderCommandTypeEnum.SetOrder,
-                    Direction = orderDirection,
-                    Price = price,
-                    Volume = OrdersVolume
-                },
-            };
-
-            return SendOrderCommandsAsync(assetPairId, commands);
-        }
-
-        private Task SendOrderCommandsAsync(string assetPairId, double priceForSellOrder, double priceForBuyOrder)
-        {
-            var commands = new[]
-            {
-                new OrderCommand {CommandType = OrderCommandTypeEnum.DeleteOrder},
-                new OrderCommand
-                {
-                    CommandType = OrderCommandTypeEnum.SetOrder,
-                    Direction = OrderDirectionEnum.Sell,
-                    Price = priceForSellOrder,
-                    Volume = OrdersVolume
-                },
-                new OrderCommand
-                {
-                    CommandType = OrderCommandTypeEnum.SetOrder,
-                    Direction = OrderDirectionEnum.Buy,
-                    Price = priceForBuyOrder,
-                    Volume = OrdersVolume
-                },
-            };
-
-            return SendOrderCommandsAsync(assetPairId, commands);
         }
 
         private Task SendOrderCommandsAsync(string assetPairId, IReadOnlyList<OrderCommand> commands)

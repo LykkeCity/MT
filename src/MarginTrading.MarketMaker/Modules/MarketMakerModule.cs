@@ -8,7 +8,6 @@ using MarginTrading.MarketMaker.Settings;
 using MarginTrading.MarketMaker.HelperServices.Implemetation;
 using Rocks.Caching;
 using MarginTrading.MarketMaker.Services.Implementation;
-using MarginTrading.MarketMaker.Services.Implemetation;
 
 namespace MarginTrading.MarketMaker.Modules
 {
