@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using MarginTrading.MarketMaker.Enums;
@@ -38,8 +39,9 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         public Task ProcessNewExternalOrderbookAsync(ExternalExchangeOrderbookMessage orderbook)
         {
             var quotesSource = _assetPairsSettingsService.GetAssetPairQuotesSource(orderbook.AssetPairId);
-            if (quotesSource.SourceType != AssetPairQuotesSourceTypeEnum.External ||
-                !string.Equals(orderbook.Source, quotesSource.ExternalExchange, StringComparison.OrdinalIgnoreCase))
+            if (quotesSource.SourceType != AssetPairQuotesSourceTypeEnum.External
+                || !string.Equals(orderbook.Source, quotesSource.ExternalExchange, StringComparison.OrdinalIgnoreCase)
+                || orderbook.Bids == null || orderbook.Asks == null)
             {
                 return Task.CompletedTask;
             }
@@ -49,7 +51,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 new OrderCommand {CommandType = OrderCommandTypeEnum.DeleteOrder}
             };
 
-            foreach (var bid in orderbook.Bids)
+            foreach (var bid in orderbook.Bids.Where(b => b != null))
             {
                 commands.Add(new OrderCommand
                 {
@@ -60,7 +62,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 });
             }
 
-            foreach (var ask in orderbook.Asks)
+            foreach (var ask in orderbook.Asks.Where(b => b != null))
             {
                 commands.Add(new OrderCommand
                 {

@@ -8,6 +8,7 @@ using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
+using MarginTrading.MarketMaker.HelperServices.Implemetation;
 using MarginTrading.MarketMaker.Models;
 using MarginTrading.MarketMaker.Modules;
 using MarginTrading.MarketMaker.Services;
@@ -111,6 +112,9 @@ namespace MarginTrading.MarketMaker
             var slackService = settings.SlackNotifications != null
                 ? services.UseSlackNotificationsSenderViaAzureQueue(settings.SlackNotifications.AzureQueue, logToConsole)
                 : null;
+
+            slackService =
+                new MtSlackNotificationsSender(slackService, ServiceName);
 
             // Creating azure storage logger, which logs own messages to concole log
             if (!string.IsNullOrEmpty(dbLogConnectionString) &&

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using Newtonsoft.Json;
 
 namespace MarginTrading.MarketMaker.Messages
@@ -12,22 +13,22 @@ namespace MarginTrading.MarketMaker.Messages
         /// <summary>
         /// Source
         /// </summary>
-        [JsonProperty("source")]
+        [JsonProperty("source"), CanBeNull]
         public string Source { get; set; }
 
         /// <summary>
         /// Asset pair id
         /// </summary>
-        [JsonProperty("asset")]
+        [JsonProperty("asset"), CanBeNull]
         public string AssetPairId { get; set; }
 
         [JsonProperty("timestamp")]
         public DateTime Timestamp { get; set; }
 
-        [JsonProperty("asks")]
+        [JsonProperty("asks"), CanBeNull, ItemCanBeNull]
         public IReadOnlyList<VolumePrice> Asks { get; set; }
 
-        [JsonProperty("bids")]
+        [JsonProperty("bids"), CanBeNull, ItemCanBeNull]
         public IReadOnlyList<VolumePrice> Bids { get; set; }
     }
 }
