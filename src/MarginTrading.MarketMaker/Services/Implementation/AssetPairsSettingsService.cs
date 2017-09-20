@@ -5,6 +5,7 @@ using MarginTrading.MarketMaker.AzureRepositories;
 using MarginTrading.MarketMaker.AzureRepositories.Entities;
 using MarginTrading.MarketMaker.Enums;
 using MarginTrading.MarketMaker.HelperServices.Implemetation;
+using MarginTrading.MarketMaker.Models;
 using Rocks.Caching;
 
 namespace MarginTrading.MarketMaker.Services.Implementation
@@ -33,10 +34,16 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             });
         }
 
-        public async Task<IReadOnlyDictionary<string, string>> GetAllPairsSources()
+        public async Task<List<AssetPairSettings>> GetAllPairsSources()
         {
             return (await _assetsPairsSettingsRepository.GetAll())
-                .ToDictionary(s => s.AssetName, c => c.QuotesSourceType.ToString());
+                .Select(s => new AssetPairSettings
+                {
+                    ExternalExchange = s.ExternalExchange,
+                    AssetName = s.AssetName,
+                    QuotesSourceType = s.QuotesSourceType,
+                    Timestamp = s.Timestamp,
+                }).ToList();
         }
 
         public (AssetPairQuotesSourceTypeEnum? SourceType, string ExternalExchange) GetAssetPairQuotesSource(string assetPairId)

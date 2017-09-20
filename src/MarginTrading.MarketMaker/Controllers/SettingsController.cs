@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.MarketMaker.Enums;
@@ -31,10 +32,9 @@ namespace MarginTrading.MarketMaker.Controllers
 
         [HttpGet]
         [SwaggerOperation("GetSettingsList")]
-        public async Task<IActionResult> GetCurrentSettingsList()
+        public Task<List<AssetPairSettings>> GetCurrentSettingsList()
         {
-            var result = await _assetPairsSettingsService.GetAllPairsSources();
-            return Ok(result);
+            return _assetPairsSettingsService.GetAllPairsSources();
         }
     }
 }

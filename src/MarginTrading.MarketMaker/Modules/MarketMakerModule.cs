@@ -32,6 +32,7 @@ namespace MarginTrading.MarketMaker.Modules
             builder.RegisterType<RabbitMqService>().As<IRabbitMqService>().SingleInstance();
             builder.RegisterType<AssetPairsSettingsService>().As<IAssetPairsSettingsService>().SingleInstance();
             builder.RegisterType<SystemService>().As<ISystem>().SingleInstance();
+            builder.RegisterType<SpotOrderCommandsGeneratorService>().As<ISpotOrderCommandsGeneratorService>().SingleInstance();
             builder.RegisterType<BrokerService>().As<IBrokerService>().InstancePerDependency();
         }
     }

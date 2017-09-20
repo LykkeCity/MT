@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using MarginTrading.MarketMaker.Enums;
+using MarginTrading.MarketMaker.Models;
 
 namespace MarginTrading.MarketMaker.Services
 {
@@ -12,6 +13,6 @@ namespace MarginTrading.MarketMaker.Services
 
         Task SetAssetPairQuotesSource(string assetPairId, AssetPairQuotesSourceTypeEnum assetPairQuotesSourceType, [CanBeNull] string externalExchange);
 
-        Task<IReadOnlyDictionary<string, string>> GetAllPairsSources();
+        Task<List<AssetPairSettings>> GetAllPairsSources();
     }
 }

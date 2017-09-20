@@ -73,7 +73,11 @@ namespace MarginTrading.MarketMaker
                 app.UseDeveloperExceptionPage();
             }
 
+#if DEBUG
+            app.UseLykkeMiddleware(ServiceName, ex => ex.ToString());
+#else
             app.UseLykkeMiddleware(ServiceName, ex => new ErrorResponse {ErrorMessage = "Technical problem"});
+#endif
 
             app.UseMvc();
             app.UseSwagger();
@@ -122,7 +126,7 @@ namespace MarginTrading.MarketMaker
             // Creating aggregate log, which logs to console and to azure storage, if last one specified
             var log = logAggregate.CreateLogger();
 
-            
+
 
             return log;
         }

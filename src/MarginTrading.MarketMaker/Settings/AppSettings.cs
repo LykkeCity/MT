@@ -13,5 +13,8 @@ namespace MarginTrading.MarketMaker.Settings
         [CanBeNull, Optional]
         public SlackNotificationsSettings SlackNotifications { get; set; }
 
+        [CanBeNull, Optional]
+        public string AppNameSuffix { get; set; }
+
     }
 }

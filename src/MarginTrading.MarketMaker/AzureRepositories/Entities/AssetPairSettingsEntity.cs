@@ -1,12 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Common;
 using MarginTrading.MarketMaker.Enums;
+using MarginTrading.MarketMaker.Models;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace MarginTrading.MarketMaker.AzureRepositories.Entities
 {
-    internal class AssetPairSettingsEntity : TableEntity
+    internal class AssetPairSettingsEntity : TableEntity, IAssetPairSettingsEntity
     {
         public AssetPairSettingsEntity()
         {
@@ -20,14 +22,10 @@ namespace MarginTrading.MarketMaker.AzureRepositories.Entities
             set => RowKey = value;
         }
 
-        /// <summary>
-        /// Quotes source type
-        /// </summary>
+        /// <inheritdoc />
         public AssetPairQuotesSourceTypeEnum QuotesSourceType { get; set; }
 
-        /// <summary>
-        /// External exchange which will be used for getting quotes, if <see cref="QuotesSourceType"/> is set to <see cref="AssetPairQuotesSourceTypeEnum.External"/>
-        /// </summary>
+        /// <inheritdoc />
         public string ExternalExchange { get; set; }
 
         public override IDictionary<string, EntityProperty> WriteEntity(OperationContext operationContext)
@@ -43,9 +41,22 @@ namespace MarginTrading.MarketMaker.AzureRepositories.Entities
 
         public override void ReadEntity(IDictionary<string, EntityProperty> properties, OperationContext operationContext)
         {
-            AssetName = properties[nameof(RowKey)].StringValue;
-            QuotesSourceType = properties[nameof(QuotesSourceType)].StringValue.ParseEnum<AssetPairQuotesSourceTypeEnum>();
-            ExternalExchange = properties[nameof(ExternalExchange)].StringValue;
+            foreach (var entityProperty in properties)
+            {
+                var propValue = entityProperty.Value.StringValue;
+                switch (entityProperty.Key)
+                {
+                    case nameof(RowKey):
+                        AssetName = propValue;
+                        break;
+                    case nameof(QuotesSourceType):
+                        QuotesSourceType = propValue.ParseEnum<AssetPairQuotesSourceTypeEnum>();
+                        break;
+                    case nameof(ExternalExchange):
+                        ExternalExchange = propValue;
+                        break;
+                }
+            }
         }
 
         public static string GeneratePartitionKey()

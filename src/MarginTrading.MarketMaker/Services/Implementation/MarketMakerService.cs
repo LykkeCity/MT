@@ -18,13 +18,19 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         private readonly Lazy<IMessageProducer<OrderCommandsBatchMessage>> _messageProducer;
         private readonly ISystem _system;
         private readonly MarginTradingMarketMakerSettings _settings;
+        private readonly ISpotOrderCommandsGeneratorService _spotOrderCommandsGeneratorService;
 
-        public MarketMakerService(IAssetPairsSettingsService assetPairsSettingsService, MarginTradingMarketMakerSettings marginTradingMarketMakerSettings,
-            IRabbitMqService rabbitMqService, ISystem system, MarginTradingMarketMakerSettings settings)
+        public MarketMakerService(IAssetPairsSettingsService assetPairsSettingsService,
+            MarginTradingMarketMakerSettings marginTradingMarketMakerSettings,
+            IRabbitMqService rabbitMqService,
+            ISystem system,
+            MarginTradingMarketMakerSettings settings,
+            ISpotOrderCommandsGeneratorService spotOrderCommandsGeneratorService)
         {
             _assetPairsSettingsService = assetPairsSettingsService;
             _system = system;
             _settings = settings;
+            _spotOrderCommandsGeneratorService = spotOrderCommandsGeneratorService;
             _messageProducer = new Lazy<IMessageProducer<OrderCommandsBatchMessage>>(() =>
                 CreateRabbitMqMessageProducer(marginTradingMarketMakerSettings, rabbitMqService));
         }
@@ -32,7 +38,8 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         public Task ProcessNewExternalOrderbookAsync(ExternalExchangeOrderbookMessage orderbook)
         {
             var quotesSource = _assetPairsSettingsService.GetAssetPairQuotesSource(orderbook.AssetPairId);
-            if (quotesSource.SourceType != AssetPairQuotesSourceTypeEnum.External || quotesSource.ExternalExchange != orderbook.Source)
+            if (quotesSource.SourceType != AssetPairQuotesSourceTypeEnum.External ||
+                !string.Equals(orderbook.Source, quotesSource.ExternalExchange, StringComparison.OrdinalIgnoreCase))
             {
                 return Task.CompletedTask;
             }
@@ -47,7 +54,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 commands.Add(new OrderCommand
                 {
                     CommandType = OrderCommandTypeEnum.SetOrder,
-                    Direction = OrderDirectionEnum.Sell,
+                    Direction = OrderDirectionEnum.Buy,
                     Price = bid.Price,
                     Volume = bid.Volume
                 });
@@ -58,7 +65,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 commands.Add(new OrderCommand
                 {
                     CommandType = OrderCommandTypeEnum.SetOrder,
-                    Direction = OrderDirectionEnum.Buy,
+                    Direction = OrderDirectionEnum.Sell,
                     Price = ask.Price,
                     Volume = ask.Volume
                 });
@@ -67,28 +74,19 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             return SendOrderCommandsAsync(orderbook.AssetPairId, commands);
         }
 
-        public Task ProcessNewSpotOrderBookDataAsync(SpotOrderbookMessage spotOrderbookMessage)
+        public Task ProcessNewSpotOrderBookDataAsync(SpotOrderbookMessage orderbook)
         {
-            var quotesSource = _assetPairsSettingsService.GetAssetPairQuotesSource(spotOrderbookMessage.AssetPair).SourceType;
-            if (quotesSource != AssetPairQuotesSourceTypeEnum.Spot && quotesSource != null)
+            var quotesSource = _assetPairsSettingsService.GetAssetPairQuotesSource(orderbook.AssetPair)
+                .SourceType;
+            if (quotesSource != AssetPairQuotesSourceTypeEnum.Spot)
             {
                 return Task.CompletedTask;
             }
 
-            var orderDirection = spotOrderbookMessage.IsBuy ? OrderDirectionEnum.Buy : OrderDirectionEnum.Sell;
-            var commands = new[]
-            {
-                new OrderCommand {CommandType = OrderCommandTypeEnum.DeleteOrder},
-                new OrderCommand
-                {
-                    CommandType = OrderCommandTypeEnum.SetOrder,
-                    Direction = orderDirection,
-                    Price = spotOrderbookMessage.Prices[0].Price,
-                    Volume = OrdersVolume
-                },
-            };
+            var commands = _spotOrderCommandsGeneratorService.GenerateOrderCommands(orderbook.AssetPair, orderbook.IsBuy,
+                orderbook.Prices[0].Price, OrdersVolume);
 
-            return SendOrderCommandsAsync(spotOrderbookMessage.AssetPair, commands);
+            return SendOrderCommandsAsync(orderbook.AssetPair, commands);
         }
 
         public async Task ProcessAssetPairSettingsAsync(AssetPairSettingsModel model)
@@ -139,6 +137,11 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
         private Task SendOrderCommandsAsync(string assetPairId, IReadOnlyList<OrderCommand> commands)
         {
+            if (commands.Count == 0)
+            {
+                return Task.CompletedTask;
+            }
+
             return _messageProducer.Value.ProduceAsync(new OrderCommandsBatchMessage
             {
                 AssetPairId = assetPairId,
