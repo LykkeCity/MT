@@ -132,6 +132,7 @@ namespace MarginTrading.Client
                         try
                         {
                             await MtUserHelper.Registration(bot.Email, bot.Password, _settings.MTAuthorizationAddress);
+                            LogInfo("StartBots", $"User {bot.Email} created successfully");
                             System.Threading.Thread.Sleep(1000);
                         }
                         catch (Exception ex01)

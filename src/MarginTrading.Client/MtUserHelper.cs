@@ -8,7 +8,7 @@ namespace MarginTrading.Client
 {
     static class MtUserHelper
     {
-        public static async void ApplicationInfo(string apiAddress)
+        public static async Task ApplicationInfo(string apiAddress)
         {
             //https://api-dev.lykkex.net/api/ApplicationInfo
             
@@ -29,7 +29,7 @@ namespace MarginTrading.Client
 
 
         }
-        public static async void EmailVerification(string email, string apiAddress)
+        public static async Task EmailVerification(string email, string apiAddress)
         {
             //https://api-test.lykkex.net/api/EmailVerification
             string address = $"{apiAddress}/EmailVerification";

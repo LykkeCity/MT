@@ -88,7 +88,7 @@ namespace MarginTrading.Client
         public async Task Initialize(string serverAddress, string authorizationAddress, int actionScriptInterval, int transactionFrequencyMin, int transactionFrequencyMax)
         {
             
-            LogInfo($"Initializing bot {_settings.Number}. AquireTokenData...");
+            LogInfo($"Initializing bot {_settings.Number} ({_settings.Email}). AquireTokenData...");
             _serverAddress = serverAddress;
             _authorizationAddress = authorizationAddress;
             ActionScriptInterval = actionScriptInterval;

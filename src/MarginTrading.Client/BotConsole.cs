@@ -82,11 +82,17 @@ namespace MarginTrading.Client
         private static void LoadSettings(string testScriptFile)
         {
             IConfigurationRoot config = config = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())                
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.dev.json", true, true)
                 .AddEnvironmentVariables()
                 .Build();
-            
-            TradingBotSettings mtSettings = Lykke.SettingsReader.SettingsProcessor.Process<TradingBotSettings>(config["SettingsUrl"].GetStringAsync().Result);
+
+            var env =  Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+
+            TradingBotSettings mtSettings = (env == "Development") ?
+                    config.Get<TradingBotSettings>() :
+                    Lykke.SettingsReader.SettingsProcessor.Process<TradingBotSettings>(config["SettingsUrl"].GetStringAsync().Result);
+
             _settings = mtSettings.MtTradingBot;
 
             string script = null;
@@ -103,6 +109,7 @@ namespace MarginTrading.Client
 
             config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.dev.json", true, true)
                 .AddJsonFile(script, true, true)
                 .AddEnvironmentVariables()
                 .Build();
