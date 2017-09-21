@@ -18,12 +18,12 @@ namespace MarginTrading.MarketMaker.Models
         /// If this property is set - the quotes source for the asset pair will be changed to the passed value
         /// </summary>
         [JsonConverter(typeof(StringEnumConverter))]
-        public AssetPairQuotesSourceTypeEnum? SetNewQuotesSourceType { get; set; }
+        public AssetPairQuotesSourceTypeEnum? SetSourceType { get; set; }
 
         /// <summary>
         /// If set - changes external exchange which will be used for getting quotes, if QuotesSourceType is set to <see cref="AssetPairQuotesSourceTypeEnum.External"/>
         /// </summary>
-        public string SetNewQuotesExternalExhange { get; set; }
+        public string SetExternalExhange { get; set; }
 
         /// <summary>
         /// The price for sell order to create. Used only if the quotes source for the asset pair is manual

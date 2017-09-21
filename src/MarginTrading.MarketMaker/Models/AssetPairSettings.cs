@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using MarginTrading.MarketMaker.Enums;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -9,7 +7,7 @@ namespace MarginTrading.MarketMaker.Models
 {
     internal interface IAssetPairSettingsEntity
     {
-        string AssetName { get; set; }
+        string AssetPairId { get; set; }
 
         /// <summary>
         /// Quotes source type
@@ -27,7 +25,7 @@ namespace MarginTrading.MarketMaker.Models
 
     public class AssetPairSettings: IAssetPairSettingsEntity
     {
-        public string AssetName { get; set; }
+        public string AssetPairId { get; set; }
         [JsonConverter(typeof(StringEnumConverter))]
         public AssetPairQuotesSourceTypeEnum QuotesSourceType { get; set; }
         public string ExternalExchange { get; set; }

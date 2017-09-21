@@ -1,7 +1,6 @@
 ﻿using System;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using AzureStorage.Tables;
 using Common.Log;
 using Lykke.Common.ApiLibrary.Middleware;
 using Lykke.Common.ApiLibrary.Swagger;
@@ -9,7 +8,6 @@ using Lykke.Logs;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
 using MarginTrading.MarketMaker.HelperServices.Implemetation;
-using MarginTrading.MarketMaker.Models;
 using MarginTrading.MarketMaker.Modules;
 using MarginTrading.MarketMaker.Services;
 using MarginTrading.MarketMaker.Settings;

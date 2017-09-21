@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using MarginTrading.MarketMaker.Enums;
+using JetBrains.Annotations;
 using MarginTrading.MarketMaker.Models;
 using MarginTrading.MarketMaker.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -22,19 +20,52 @@ namespace MarginTrading.MarketMaker.Controllers
             _assetPairsSettingsService = assetPairsSettingsService;
         }
 
+        /// <summary>
+        /// Inserts or updates settings for an asset pair
+        /// </summary>
         [HttpPost]
+        [Route("set")]
         [SwaggerOperation("SetSettings")]
-        public async Task<IActionResult> Post([FromBody] AssetPairSettingsModel settings)
+        public async Task<IActionResult> Set([FromBody] AssetPairSettingsModel settings)
         {
             await _marketMakerService.ProcessAssetPairSettingsAsync(settings);
             return Ok(new {success = true});
         }
 
-        [HttpGet]
-        [SwaggerOperation("GetSettingsList")]
-        public Task<List<AssetPairSettings>> GetCurrentSettingsList()
+
+        /// <summary>
+        /// Deletes settings for an asset pair. This makes the pair get ignored.
+        /// </summary>
+        [HttpPost]
+        [Route("delete/{assetPairId}")]
+        [SwaggerOperation("DeleteSettings")]
+        public async Task<IActionResult> Delete(string assetPairId)
         {
-            return _assetPairsSettingsService.GetAllPairsSources();
+            await _assetPairsSettingsService.DeleteAsync(assetPairId);
+            return Ok(new {success = true});
+        }
+
+        /// <summary>
+        /// Gets all existing settings
+        /// </summary>
+        [HttpGet]
+        [Route("")]
+        [SwaggerOperation("GetAllsettings")]
+        public Task<List<AssetPairSettings>> GetAll()
+        {
+            return _assetPairsSettingsService.GetAllPairsSourcesAsync();
+        }
+
+        /// <summary>
+        /// Set settings for a single asset pair
+        /// </summary>
+        [HttpGet]
+        [Route("{assetPairId}")]
+        [SwaggerOperation("GetSettings")]
+        [CanBeNull]
+        public AssetPairSettings Get(string assetPairId)
+        {
+            return _assetPairsSettingsService.Get(assetPairId);
         }
     }
 }

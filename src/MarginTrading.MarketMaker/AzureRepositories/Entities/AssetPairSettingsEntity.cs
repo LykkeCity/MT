@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Common;
 using MarginTrading.MarketMaker.Enums;
 using MarginTrading.MarketMaker.Models;
@@ -16,7 +15,7 @@ namespace MarginTrading.MarketMaker.AzureRepositories.Entities
         }
 
 
-        public string AssetName
+        public string AssetPairId
         {
             get => RowKey;
             set => RowKey = value;
@@ -33,7 +32,7 @@ namespace MarginTrading.MarketMaker.AzureRepositories.Entities
             return new Dictionary<string, EntityProperty>
             {
                 {nameof(PartitionKey), new EntityProperty(PartitionKey) },
-                {nameof(RowKey), new EntityProperty(AssetName) },
+                {nameof(RowKey), new EntityProperty(AssetPairId) },
                 {nameof(QuotesSourceType), new EntityProperty(QuotesSourceType.ToString()) },
                 {nameof(ExternalExchange), new EntityProperty(ExternalExchange) },
             };
@@ -47,7 +46,7 @@ namespace MarginTrading.MarketMaker.AzureRepositories.Entities
                 switch (entityProperty.Key)
                 {
                     case nameof(RowKey):
-                        AssetName = propValue;
+                        AssetPairId = propValue;
                         break;
                     case nameof(QuotesSourceType):
                         QuotesSourceType = propValue.ParseEnum<AssetPairQuotesSourceTypeEnum>();

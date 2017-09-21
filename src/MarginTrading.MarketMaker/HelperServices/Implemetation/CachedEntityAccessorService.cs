@@ -27,12 +27,17 @@ namespace MarginTrading.MarketMaker.HelperServices.Implemetation
 
         protected virtual CachingParameters CachingParameters => InfiniteCachingParameters;
 
-        protected Task UpdateByKey(EntityKeys keys, Action<TEntity> updateFieldFunc)
+        protected Task UpdateByKeyAsync(EntityKeys keys, Action<TEntity> updateFieldFunc)
         {
-            return UpdateByKey(keys, updateFieldFunc, k => new TEntity());
+            return UpdateByKeyAsync(keys, updateFieldFunc, k => new TEntity());
         }
 
-        protected async Task UpdateByKey(EntityKeys keys, Action<TEntity> updateFieldFunc,
+        protected void DeleteByKey(EntityKeys keys)
+        {
+            _cacheProvider.Remove(GetCacheKey(keys));
+        }
+
+        protected async Task UpdateByKeyAsync(EntityKeys keys, Action<TEntity> updateFieldFunc,
             Func<EntityKeys, TEntity> createIfNotExists)
         {
             var currentEntity = await GetByKeyAsync(keys) ?? createIfNotExists(keys);

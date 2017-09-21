@@ -6,6 +6,7 @@
     <Version>1.0.1</Version>
     <AssemblyName>MarginTrading.MarketMaker</AssemblyName>
     <RootNamespace>MarginTrading.MarketMaker</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

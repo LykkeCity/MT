@@ -32,5 +32,10 @@ namespace MarginTrading.MarketMaker.AzureRepositories.Implementation
         {
             return _tableStorage.GetDataAsync();
         }
+
+        public Task DeleteAsync(string partitionKey, string rowKey)
+        {
+            return _tableStorage.DeleteIfExistAsync(partitionKey, rowKey);
+        }
     }
 }

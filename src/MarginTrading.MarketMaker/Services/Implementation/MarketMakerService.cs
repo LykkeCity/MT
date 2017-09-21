@@ -94,11 +94,11 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         public async Task ProcessAssetPairSettingsAsync(AssetPairSettingsModel model)
         {
             AssetPairQuotesSourceTypeEnum? quotesSourceType;
-            if (model.SetNewQuotesSourceType != null)
+            if (model.SetSourceType != null)
             {
-                quotesSourceType = model.SetNewQuotesSourceType.Value;
-                await _assetPairsSettingsService.SetAssetPairQuotesSource(model.AssetPairId,
-                    model.SetNewQuotesSourceType.Value, model.SetNewQuotesExternalExhange);
+                quotesSourceType = model.SetSourceType.Value;
+                await _assetPairsSettingsService.SetAssetPairQuotesSourceAsync(model.AssetPairId,
+                    model.SetSourceType.Value, model.SetExternalExhange);
             }
             else
             {

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using MarginTrading.MarketMaker.AzureRepositories;
 using MarginTrading.MarketMaker.AzureRepositories.Entities;
 using MarginTrading.MarketMaker.Enums;
@@ -22,9 +23,9 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             _assetsPairsSettingsRepository = assetsPairsSettingsRepository;
         }
 
-        public Task SetAssetPairQuotesSource(string assetPairId, AssetPairQuotesSourceTypeEnum assetPairQuotesSourceType, string externalExchange)
+        public Task SetAssetPairQuotesSourceAsync(string assetPairId, AssetPairQuotesSourceTypeEnum assetPairQuotesSourceType, string externalExchange)
         {
-            return UpdateByKey(GetKeys(assetPairId), e =>
+            return UpdateByKeyAsync(GetKeys(assetPairId), e =>
             {
                 e.QuotesSourceType = assetPairQuotesSourceType;
                 if (externalExchange != null)
@@ -34,16 +35,41 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             });
         }
 
-        public async Task<List<AssetPairSettings>> GetAllPairsSources()
+        public async Task<List<AssetPairSettings>> GetAllPairsSourcesAsync()
         {
             return (await _assetsPairsSettingsRepository.GetAll())
                 .Select(s => new AssetPairSettings
                 {
                     ExternalExchange = s.ExternalExchange,
-                    AssetName = s.AssetName,
+                    AssetPairId = s.AssetPairId,
                     QuotesSourceType = s.QuotesSourceType,
                     Timestamp = s.Timestamp,
                 }).ToList();
+        }
+
+        [CanBeNull]
+        public AssetPairSettings Get(string assetPairId)
+        {
+            var entity = GetByKey(GetKeys(assetPairId));
+            if (entity == null)
+            {
+                return null;
+            }
+            
+            return new AssetPairSettings
+            {
+                ExternalExchange = entity.ExternalExchange,
+                AssetPairId = entity.AssetPairId,
+                QuotesSourceType = entity.QuotesSourceType,
+                Timestamp = entity.Timestamp,
+            };
+        }
+
+        public async Task DeleteAsync(string assetPairId)
+        {
+            var keys = GetKeys(assetPairId);
+            await _assetsPairsSettingsRepository.DeleteAsync(keys.PartitionKey, keys.RowKey);
+            DeleteByKey(keys);
         }
 
         public (AssetPairQuotesSourceTypeEnum? SourceType, string ExternalExchange) GetAssetPairQuotesSource(string assetPairId)
