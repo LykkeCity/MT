@@ -17,5 +17,8 @@ namespace MarginTrading.DataReader.Settings
 
         [Optional]
         public string ApplicationInsightsKey { get; set; }
+
+        [Optional]
+        public string DataReaderApplicationInsightsKey { get; set; }
     }
 }

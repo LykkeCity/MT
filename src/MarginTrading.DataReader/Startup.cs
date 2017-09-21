@@ -122,7 +122,7 @@ namespace MarginTrading.DataReader
                 if (!string.IsNullOrEmpty(settings.ApplicationInsightsKey))
                 {
                     TelemetryConfiguration.Active.InstrumentationKey =
-                        settings.ApplicationInsightsKey;
+                        settings.DataReaderApplicationInsightsKey;
                 }
             });
 
