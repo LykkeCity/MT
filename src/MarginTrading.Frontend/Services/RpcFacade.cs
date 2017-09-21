@@ -120,6 +120,18 @@ namespace MarginTrading.Frontend.Services
             var isLive = !string.IsNullOrEmpty(request.AccountId)
                 ? IsLiveAccount(request.AccountId)
                 : request.IsLive;
+
+            var marginTradingEnabled = await _marginTradingSettingsService.IsMarginTradingEnabled(clientId, isLive);
+            if (!marginTradingEnabled)
+            {
+                return new AccountHistoryClientResponse
+                {
+                    Account = Array.Empty<AccountHistoryClientContract>(),
+                    OpenPositions = Array.Empty<OrderHistoryClientContract>(),
+                    PositionsHistory = Array.Empty<OrderHistoryClientContract>(),
+                };
+            }
+
             var accountHistoryBackendResponse = await _dataReaderClients.Get(isLive).GetAccountHistoryByTypesAsync(clientId, request.AccountId, request.From, request.To);
             return ToClientContract(accountHistoryBackendResponse);
         }
@@ -129,6 +141,12 @@ namespace MarginTrading.Frontend.Services
             var isLive = !string.IsNullOrEmpty(request.AccountId)
                 ? IsLiveAccount(request.AccountId)
                 : request.IsLive;
+
+            var marginTradingEnabled = await _marginTradingSettingsService.IsMarginTradingEnabled(clientId, isLive);
+            if (!marginTradingEnabled)
+            {
+                return Array.Empty<AccountHistoryItemClient>();
+            }
             var accountHistoryBackendResponse = await _dataReaderClients.Get(isLive).GetAccountHistoryTimelineAsync(clientId, request.AccountId, request.From, request.To);
             return ToClientContract(accountHistoryBackendResponse);
         }

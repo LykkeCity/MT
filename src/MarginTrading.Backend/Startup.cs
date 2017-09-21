@@ -174,14 +174,13 @@ namespace MarginTrading.Backend
             var slackService =
                 new MtSlackNotificationsSender(commonSlackService, "MT Backend", settings.Env);
 
-            var log = services.UseLogToAzureStorage(settings.Db.LogsConnString,
-                slackService, "MarginTradingBackendLog", consoleLogger);
-
-            var requestsLog = services.UseLogToAzureStorage(settings.Db.LogsConnString,
+            // Order of logs registration is important - UseLogToAzureStorage() registers ILog in container. 
+            // Last registration wins.
+            LogLocator.RequestsLog = services.UseLogToAzureStorage(settings.Db.LogsConnString,
                 slackService, "MarginTradingBackendRequestsLog", consoleLogger);
 
-            LogLocator.CommonLog = log;
-            LogLocator.RequestsLog = requestsLog;
+            LogLocator.CommonLog = services.UseLogToAzureStorage(settings.Db.LogsConnString,
+                slackService, "MarginTradingBackendLog", consoleLogger);
         }
     }
 }
