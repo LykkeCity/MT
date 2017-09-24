@@ -6,6 +6,6 @@ namespace MarginTrading.Core
     {
         IAssetPair GetAssetPairById(string assetPairId);
         IEnumerable<IAssetPair> GetAll();
-        IAssetPair FindInstrument(string asset1, string asset2);
+        IAssetPair FindAssetPair(string asset1, string asset2);
     }
 }

@@ -54,8 +54,6 @@ namespace MarginTrading.Common.Mappers
                 LeverageMaintenance = src.LeverageMaintenance,
                 SwapLong = src.SwapLong,
                 SwapShort = src.SwapShort,
-                SwapLongPct = src.SwapLongPct,
-                SwapShortPct = src.SwapShortPct,
                 CommissionLong = src.CommissionLong,
                 CommissionShort = src.CommissionShort,
                 CommissionLot = src.CommissionLot,

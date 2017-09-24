@@ -26,7 +26,7 @@ namespace MarginTrading.Services
                 return 1;
             }
 
-            var inst = _assetPairsCache.FindInstrument(baseAssetId, accountAssetId);
+            var inst = _assetPairsCache.FindAssetPair(baseAssetId, accountAssetId);
             var quote = _quoteCacheService.GetQuote(inst.Id);
 
             if (inst.BaseAssetId == baseAssetId)
@@ -37,21 +37,21 @@ namespace MarginTrading.Services
             return 1.0M / quote.Ask;
         }
 
-        public decimal GetQuoteRateForQuoteAsset(string accountAssetId, string instrument)
+        public decimal GetQuoteRateForQuoteAsset(string accountAssetId, string assetPairId)
         {
-            var asset = _assetPairsCache.GetAssetPairById(instrument);
+            var assetPair = _assetPairsCache.GetAssetPairById(assetPairId);
 
-            string quoteAssetId = asset.QuoteAssetId;
+            string quoteAssetId = assetPair.QuoteAssetId;
 
             if (accountAssetId == quoteAssetId)
             {
                 return 1;
             }
 
-            var inst = _assetPairsCache.FindInstrument(quoteAssetId, accountAssetId);
-            var quote = _quoteCacheService.GetQuote(inst.Id);
+            var crossAssetPair = _assetPairsCache.FindAssetPair(quoteAssetId, accountAssetId);
+            var quote = _quoteCacheService.GetQuote(crossAssetPair.Id);
 
-            if (inst.BaseAssetId == quoteAssetId)
+            if (crossAssetPair.BaseAssetId == quoteAssetId)
             {
                 return quote.Bid;
             }
@@ -64,8 +64,8 @@ namespace MarginTrading.Services
             var inst = _assetPairsCache.GetAssetPairById(instrument);
             var instrumentQuote = _quoteCacheService.GetQuote(instrument);
 
-            decimal rate = GetQuoteRateForQuoteAsset(accountAssetId, inst.Id);
-            decimal price = instrumentQuote.GetPriceForOrderType(direction == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy);
+            var rate = GetQuoteRateForQuoteAsset(accountAssetId, inst.Id);
+            var price = instrumentQuote.GetPriceForOrderType(direction == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy);
 
             return volume * rate * price;
         }
