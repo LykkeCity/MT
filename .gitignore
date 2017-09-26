@@ -64,3 +64,4 @@ node_modules
 **/site.min.js
 **/site.min.css
 .env
+*.userprefs
