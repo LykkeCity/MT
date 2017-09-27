@@ -6,16 +6,6 @@ namespace MarginTrading.DataReader.Helpers
 {
     internal static class OrderExtensions
     {
-        public static double GetOpenCommission(this IOrder order)
-        {
-            return order.CommissionLot == 0 ? 0 : order.Volume / order.CommissionLot * order.OpenCommission;
-        }
-
-        public static double GetCloseCommission(this IOrder order)
-        {
-            return order.CommissionLot == 0 ? 0 : order.GetMatchedCloseVolume() / order.CommissionLot * order.CloseCommission;
-        }
-
         public static OrderContract ToBaseContract(this Order src)
         {
             MatchedOrderBackendContract MatchedOrderToBackendContract(MatchedOrder o)

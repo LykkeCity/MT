@@ -6,9 +6,9 @@ namespace MarginTrading.DataReader.Controllers
     [Route("api/[controller]")]
     public class IsAliveController : Controller
     {
-        private readonly Settings.MarginSettings _settings;
+        private readonly Settings.DataReaderSettings _settings;
 
-        public IsAliveController(Settings.MarginSettings settings)
+        public IsAliveController(Settings.DataReaderSettings settings)
         {
             _settings = settings;
         }

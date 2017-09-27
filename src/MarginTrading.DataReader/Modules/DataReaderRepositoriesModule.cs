@@ -5,16 +5,16 @@ using MarginTrading.AzureRepositories;
 using MarginTrading.Core;
 using MarginTrading.Core.Clients;
 using MarginTrading.Core.Settings;
-using MarginSettings = MarginTrading.DataReader.Settings.MarginSettings;
+using MarginTrading.DataReader.Settings;
 
 namespace MarginTrading.DataReader.Modules
 {
     public class DataReaderRepositoriesModule : Module
     {
-        private readonly MarginSettings _settings;
+        private readonly DataReaderSettings _settings;
         private readonly ILog _log;
 
-        public DataReaderRepositoriesModule(MarginSettings settings, ILog log)
+        public DataReaderRepositoriesModule(DataReaderSettings settings, ILog log)
         {
             _settings = settings;
             _log = log;
@@ -25,12 +25,6 @@ namespace MarginTrading.DataReader.Modules
             builder.RegisterInstance(_log)
                 .As<ILog>()
                 .SingleInstance();
-
-            builder.Register<IMarginTradingOperationsLogRepository>(ctx =>
-                new MarginTradingOperationsLogRepository(
-                    AzureTableStorage<OperationLogEntity>.Create(() => _settings.Db.LogsConnString,
-                        "MarginTradingDataReaderOperationsLog", _log))
-            ).SingleInstance();
 
             builder.Register<IClientSettingsRepository>(ctx =>
                 AzureRepoFactories.Clients.CreateTraderSettingsRepository(_settings.Db.ClientPersonalInfoConnString, _log)

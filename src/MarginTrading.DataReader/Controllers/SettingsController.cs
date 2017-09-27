@@ -11,12 +11,12 @@ namespace MarginTrading.DataReader.Controllers
     [Route("api/settings")]
     public class SettingsController : Controller
     {
-        private readonly Settings.MarginSettings _marginSettings;
+        private readonly Settings.DataReaderSettings _dataReaderSettings;
         private readonly IClientSettingsRepository _clientSettingsRepository;
 
-        public SettingsController(Settings.MarginSettings marginSettings, IClientSettingsRepository clientSettingsRepository)
+        public SettingsController(Settings.DataReaderSettings dataReaderSettings, IClientSettingsRepository clientSettingsRepository)
         {
-            _marginSettings = marginSettings;
+            _dataReaderSettings = dataReaderSettings;
             _clientSettingsRepository = clientSettingsRepository;
         }
 
@@ -26,7 +26,7 @@ namespace MarginTrading.DataReader.Controllers
         public async Task<bool> GetIsMarginTradingEnabled(string clientId)
         {
             var settings = await _clientSettingsRepository.GetSettings<MarginEnabledSettings>(clientId);
-            return _marginSettings.IsLive
+            return _dataReaderSettings.IsLive
                 ? settings.EnabledLive
                 : settings.Enabled;
         }

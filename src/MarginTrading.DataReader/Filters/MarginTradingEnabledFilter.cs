@@ -22,18 +22,18 @@ namespace MarginTrading.DataReader.Filters
     /// </summary>
     public class MarginTradingEnabledFilter: ActionFilterAttribute
     {
-        private readonly MarginSettings _marginSettings;
+        private readonly DataReaderSettings _dataReaderSettings;
         private readonly IMarginTradingSettingsService _marginTradingSettingsService;
         private readonly ICacheProvider _cacheProvider;
         private readonly ILog _log;
 
         public MarginTradingEnabledFilter(
-            MarginSettings marginSettings,
+            DataReaderSettings dataReaderSettings,
             IMarginTradingSettingsService marginTradingSettingsService,
             ICacheProvider cacheProvider,
             ILog log)
         {
-            _marginSettings = marginSettings;
+            _dataReaderSettings = dataReaderSettings;
             _marginTradingSettingsService = marginTradingSettingsService;
             _cacheProvider = cacheProvider;
             _log = log;
@@ -79,7 +79,7 @@ namespace MarginTrading.DataReader.Filters
                 {
                     await _log.WriteWarningAsync(nameof(MarginTradingEnabledFilter), nameof(ValidateMarginTradingEnabledAsync), context.ActionDescriptor.DisplayName, "ClientId is null but is expected. No validation will be performed");
                 }
-                else if (!await _marginTradingSettingsService.IsMarginTradingEnabled(clientId, _marginSettings.IsLive))
+                else if (!await _marginTradingSettingsService.IsMarginTradingEnabled(clientId, _dataReaderSettings.IsLive))
                 {
                     throw new InvalidOperationException("Using this type of margin trading is restricted for client " + clientId);
                 }

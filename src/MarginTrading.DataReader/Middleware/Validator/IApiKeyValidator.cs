@@ -10,9 +10,9 @@ namespace MarginTrading.DataReader.Middleware.Validator
 
     public class ApiKeyValidator : IApiKeyValidator
     {
-        private readonly MarginSettings _settings;
+        private readonly DataReaderSettings _settings;
 
-        public ApiKeyValidator(MarginSettings settings)
+        public ApiKeyValidator(DataReaderSettings settings)
         {
             _settings = settings;
         }

@@ -1,13 +1,13 @@
 ﻿using Autofac;
-using MarginSettings = MarginTrading.DataReader.Settings.MarginSettings;
+using MarginTrading.DataReader.Settings;
 
 namespace MarginTrading.DataReader.Modules
 {
     public class DataReaderSettingsModule : Module
     {
-        private readonly MarginSettings _settings;
+        private readonly DataReaderSettings _settings;
 
-        public DataReaderSettingsModule(MarginSettings settings)
+        public DataReaderSettingsModule(DataReaderSettings settings)
         {
             _settings = settings;
         }

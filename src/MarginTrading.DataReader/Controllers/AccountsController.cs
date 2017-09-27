@@ -13,14 +13,14 @@ namespace MarginTrading.DataReader.Controllers
     [Route("api/accounts")]
     public class AccountsController : Controller
     {
-        private readonly MarginSettings _marginSettings;
+        private readonly DataReaderSettings _dataReaderSettings;
         private readonly IMarginTradingAccountsRepository _accountsRepository;
         private readonly IMarginTradingAccountStatsRepository _accountStatsRepository;
 
-        public AccountsController(MarginSettings marginSettings, IMarginTradingAccountsRepository accountsRepository,
+        public AccountsController(DataReaderSettings dataReaderSettings, IMarginTradingAccountsRepository accountsRepository,
             IMarginTradingAccountStatsRepository accountStatsRepository)
         {
-            _marginSettings = marginSettings;
+            _dataReaderSettings = dataReaderSettings;
             _accountsRepository = accountsRepository;
             _accountStatsRepository = accountStatsRepository;
         }
@@ -33,7 +33,7 @@ namespace MarginTrading.DataReader.Controllers
         public async Task<IEnumerable<DataReaderAccountBackendContract>> GetAllAccounts()
         {
             return (await _accountsRepository.GetAllAsync())
-                .Select(item => ToBackendContract(item, _marginSettings.IsLive));
+                .Select(item => ToBackendContract(item, _dataReaderSettings.IsLive));
         }
 
         /// <summary>

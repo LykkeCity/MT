@@ -77,12 +77,12 @@ namespace MarginTrading.DataReader
             var builder = new ContainerBuilder();
 
             var readerSettings = Environment.IsDevelopment()
-                ? Configuration.Get<DataReaderSettings>()
-                : SettingsProcessor.Process<DataReaderSettings>(Configuration["SettingsUrl"].GetStringAsync().Result);
+                ? Configuration.Get<AppSettings>()
+                : SettingsProcessor.Process<AppSettings>(Configuration["SettingsUrl"].GetStringAsync().Result);
 
             var settings = isLive
-                ? readerSettings.MtBackend.MarginTradingLive
-                : readerSettings.MtBackend.MarginTradingDemo;
+                ? readerSettings.MtDataReader.Live
+                : readerSettings.MtDataReader.Demo;
             settings.IsLive = isLive;
             settings.Env = isLive ? "Live" : "Demo";
 
@@ -115,14 +115,14 @@ namespace MarginTrading.DataReader
 
             appLifetime.ApplicationStopped.Register(() => ApplicationContainer.Dispose());
 
-            var settings = app.ApplicationServices.GetService<MarginSettings>();
+            var settings = app.ApplicationServices.GetService<DataReaderSettings>();
 
             appLifetime.ApplicationStarted.Register(() =>
             {
                 if (!string.IsNullOrEmpty(settings.ApplicationInsightsKey))
                 {
                     TelemetryConfiguration.Active.InstrumentationKey =
-                        settings.DataReaderApplicationInsightsKey;
+                        settings.ApplicationInsightsKey;
                 }
             });
 
@@ -143,15 +143,15 @@ namespace MarginTrading.DataReader
             }
         }
 
-        private void RegisterModules(ContainerBuilder builder, MarginSettings settings)
+        private void RegisterModules(ContainerBuilder builder, DataReaderSettings settings)
         {
             builder.RegisterModule(new DataReaderSettingsModule(settings));
             builder.RegisterModule(new DataReaderRepositoriesModule(settings, LogLocator.CommonLog));
             builder.RegisterModule(new DataReaderServicesModule());
         }
 
-        private static void SetupLoggers(IServiceCollection services, DataReaderSettings mtSettings,
-            MarginSettings settings)
+        private static void SetupLoggers(IServiceCollection services, AppSettings mtSettings,
+            DataReaderSettings settings)
         {
             var consoleLogger = new LogToConsole();
 

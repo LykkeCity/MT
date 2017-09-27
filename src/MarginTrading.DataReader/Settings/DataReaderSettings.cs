@@ -1,8 +1,20 @@
-﻿namespace MarginTrading.DataReader.Settings
+﻿using Lykke.SettingsReader.Attributes;
+
+namespace MarginTrading.DataReader.Settings
 {
     public class DataReaderSettings
     {
-        public MarginTradingSettings MtBackend { get; set; }
-        public SlackNotificationSettings SlackNotifications { get; set; }
+        public string ApiKey { get; set; }
+
+        [Optional]
+        public string Env { get; set; }
+
+        [Optional]
+        public bool IsLive { get; set; }
+
+        public Db Db { get; set; }
+
+        [Optional]
+        public string ApplicationInsightsKey { get; set; }
     }
 }
