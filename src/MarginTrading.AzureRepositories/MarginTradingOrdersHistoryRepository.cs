@@ -8,7 +8,6 @@ using Common;
 using MarginTrading.Core;
 using MarginTrading.Core.MatchedOrders;
 using Microsoft.WindowsAzure.Storage.Table;
-using Newtonsoft.Json;
 
 namespace MarginTrading.AzureRepositories
 {
@@ -132,77 +131,7 @@ namespace MarginTrading.AzureRepositories
                 Comment = src.Comment
             };
         }
-
-
-        public static IOrder Restore(IOrderHistory historyOrder)
-        {
-            Order order = new Order();
-
-            if (historyOrder == null)
-                return order;
-
-            order.Id = historyOrder.Id;
-            order.ClientId = historyOrder.ClientId;
-            order.AccountId = historyOrder.AccountId;
-            order.TradingConditionId = historyOrder.TradingConditionId;
-            order.AccountAssetId = historyOrder.AccountAssetId;
-            order.Instrument = historyOrder.Instrument;
-            order.CreateDate = historyOrder.CreateDate;
-            order.OpenDate = historyOrder.OpenDate;
-            order.CloseDate = historyOrder.CloseDate;
-            order.ExpectedOpenPrice = historyOrder.ExpectedOpenPrice;
-            order.OpenPrice = historyOrder.OpenPrice;
-            order.TakeProfit = historyOrder.TakeProfit;
-            order.StopLoss = historyOrder.StopLoss;
-            order.OpenCommission = historyOrder.OpenCommission;
-            order.CloseCommission = historyOrder.CloseCommission;
-            order.QuoteRate = historyOrder.QuoteRate;
-            order.AssetAccuracy = historyOrder.AssetAccuracy;
-            order.StartClosingDate = historyOrder.StartClosingDate;
-            order.Volume = historyOrder.Volume;
-            order.SwapCommission = historyOrder.SwapCommission;
-            order.Comment = historyOrder.Comment;
-            order.ClosePrice = historyOrder.ClosePrice;
-            order.RejectReasonText = historyOrder.RejectReasonText;
-
-            if (historyOrder is MarginTradingOrderHistoryEntity)
-            {
-                OrderStatus status;
-                if (Enum.TryParse(((MarginTradingOrderHistoryEntity)historyOrder).Status, out status))
-                {
-                    order.Status = status;
-                }
-                OrderCloseReason closeReason;
-                if (Enum.TryParse(((MarginTradingOrderHistoryEntity)historyOrder).CloseReason, out closeReason))
-                {
-                    order.CloseReason = closeReason;
-                }
-                OrderFillType fillType;
-                if (Enum.TryParse(((MarginTradingOrderHistoryEntity)historyOrder).FillType, out fillType))
-                {
-                    order.FillType = fillType;
-                }
-                OrderRejectReason rejectReason;
-                if (Enum.TryParse(((MarginTradingOrderHistoryEntity)historyOrder).RejectReason, out rejectReason))
-                {
-                    order.RejectReason = rejectReason;
-                }
-
-                order.MatchedOrders = new MatchedOrderCollection(
-                    ((MarginTradingOrderHistoryEntity) historyOrder).Orders != null
-                        ? JsonConvert.DeserializeObject<List<MatchedOrder>>(
-                            ((MarginTradingOrderHistoryEntity) historyOrder).Orders)
-                        : new List<MatchedOrder>());
-                order.MatchedCloseOrders = new MatchedOrderCollection(
-                    ((MarginTradingOrderHistoryEntity) historyOrder).ClosedOrders != null
-                        ? JsonConvert.DeserializeObject<List<MatchedOrder>>(
-                            ((MarginTradingOrderHistoryEntity) historyOrder).ClosedOrders)
-                        : new List<MatchedOrder>());
-            }
-
-            return order;
-        }
-    } 
+    }
 
     public class MarginTradingOrdersHistoryRepository : IMarginTradingOrdersHistoryRepository
     {
@@ -213,24 +142,18 @@ namespace MarginTrading.AzureRepositories
             _tableStorage = tableStorage;
         }
 
-        public async Task AddAsync(IOrderHistory order)
+        public Task AddAsync(IOrderHistory order)
         {
             var entity = MarginTradingOrderHistoryEntity.Create(order);
-            await _tableStorage.InsertAndGenerateRowKeyAsDateTimeAsync(entity, DateTime.UtcNow);
+            // ReSharper disable once RedundantArgumentDefaultValue
+            return _tableStorage.InsertAndGenerateRowKeyAsDateTimeAsync(entity, entity.CloseDate ?? entity.OpenDate.Value, RowKeyDateTimeFormat.Iso);
         }
 
-        public async Task<IEnumerable<IOrderHistory>> GetHistoryAsync(string clientId, string[] accountIds, DateTime? from, DateTime? to)
+        public async Task<IReadOnlyList<IOrderHistory>> GetHistoryAsync(string clientId, string[] accountIds, DateTime? from, DateTime? to)
         {
-            var partitionKeys = new List<string>();
-
-            foreach (var accountId in accountIds)
-                partitionKeys.Add(MarginTradingOrderHistoryEntity.GeneratePartitionKey(clientId, accountId));
-
-            var entities = (await _tableStorage.GetDataAsync(partitionKeys, int.MaxValue, 
-                entity => ((entity.CloseDate ?? entity.OpenDate) >= from || from == null) && ((entity.CloseDate ?? entity.OpenDate) <= to || to == null)))
-                .OrderByDescending(item => item.Timestamp);
-
-            return entities;
+            return (await _tableStorage.WhereAsync(accountIds.Select(a => clientId + '_' + a),
+                    from ?? DateTime.MinValue, to ?? DateTime.MaxValue, ToIntervalOption.IncludeTo))
+                .OrderByDescending(item => item.RowKey).ToList();
         }
 
         public async Task<IEnumerable<IOrderHistory>> GetHistoryAsync()

@@ -8,6 +8,6 @@ namespace MarginTrading.Core
     {
         Task AddAsync(IOrderHistory order);
         Task<IEnumerable<IOrderHistory>> GetHistoryAsync();
-        Task<IEnumerable<IOrderHistory>> GetHistoryAsync(string clientId, string[] accountIds, DateTime? from, DateTime? to);
+        Task<IReadOnlyList<IOrderHistory>> GetHistoryAsync(string clientId, string[] accountIds, DateTime? from, DateTime? to);
     }
 }

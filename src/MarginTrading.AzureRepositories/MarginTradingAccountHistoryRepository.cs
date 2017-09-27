@@ -1,17 +1,19 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AzureStorage;
 using Common;
 using MarginTrading.Core;
+using MarginTrading.Core.Helpers;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace MarginTrading.AzureRepositories
 {
     public class MarginTradingAccountHistoryEntity : TableEntity, IMarginTradingAccountHistory
     {
-        public string Id => RowKey;
+        public string Id { get; set; }
         public DateTime Date { get; set; }
         public string AccountId => PartitionKey;
         public string ClientId { get; set; }
@@ -23,6 +25,7 @@ namespace MarginTrading.AzureRepositories
         public double WithdrawTransferLimit { get; set; }
         public string Comment { get; set; }
         public string Type { get; set; }
+        public int? EntityVersion { get; set; }
         AccountHistoryType IMarginTradingAccountHistory.Type => Type.ParseEnum(AccountHistoryType.OrderClosed);
 
         public static string GeneratePartitionKey(string accountId)
@@ -30,16 +33,11 @@ namespace MarginTrading.AzureRepositories
             return accountId;
         }
 
-        public static string GenerateRowKey(string id)
-        {
-            return id;
-        }
-
         public static MarginTradingAccountHistoryEntity Create(IMarginTradingAccountHistory src)
         {
             return new MarginTradingAccountHistoryEntity
             {
-                RowKey = GenerateRowKey(src.Id),
+                Id = src.Id,
                 PartitionKey = GeneratePartitionKey(src.AccountId),
                 Date = src.Date,
                 ClientId = src.ClientId,
@@ -63,16 +61,17 @@ namespace MarginTrading.AzureRepositories
 
         public async Task AddAsync(IMarginTradingAccountHistory accountHistory)
         {
-            await _tableStorage.InsertOrReplaceAsync(MarginTradingAccountHistoryEntity.Create(accountHistory));
+            var entity = MarginTradingAccountHistoryEntity.Create(accountHistory);
+            entity.EntityVersion = 2;
+            // ReSharper disable once RedundantArgumentDefaultValue
+            await _tableStorage.InsertAndGenerateRowKeyAsDateTimeAsync(entity, entity.Date, RowKeyDateTimeFormat.Iso);
         }
 
-        public async Task<IEnumerable<IMarginTradingAccountHistory>> GetAsync(string[] accountIds, DateTime? from,
+        public async Task<IReadOnlyList<IMarginTradingAccountHistory>> GetAsync(string[] accountIds, DateTime? from,
             DateTime? to)
         {
-            var entities = await _tableStorage.GetDataAsync(
-                entity => accountIds.Contains(entity.AccountId) && (entity.Date >= from || from == null) &&
-                          (entity.Date <= to || to == null));
-            return entities.Select(MarginTradingAccountHistory.Create).OrderByDescending(item => item.Date);
+            return (await _tableStorage.WhereAsync(accountIds, from ?? DateTime.MinValue, to ?? DateTime.MaxValue, ToIntervalOption.IncludeTo))
+                .OrderByDescending(item => item.RowKey).ToList();
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MarginTrading.Core.Helpers;
 
 namespace MarginTrading.Core
 {
@@ -57,6 +58,6 @@ namespace MarginTrading.Core
     public interface IMarginTradingAccountHistoryRepository
     {
         Task AddAsync(IMarginTradingAccountHistory accountHistory);
-        Task<IEnumerable<IMarginTradingAccountHistory>> GetAsync(string[] accountIds, DateTime? from, DateTime? to);
+        Task<IReadOnlyList<IMarginTradingAccountHistory>> GetAsync(string[] accountIds, DateTime? from, DateTime? to);
     }
 }
