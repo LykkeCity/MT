@@ -2,11 +2,11 @@
 
 namespace MarginTrading.Core.Exceptions
 {
-    public class InstrumentNotFoundException : Exception
+    public class AssetPairNotFoundException : Exception
     {
         public string InstrumentId { get; private set; }
 
-        public InstrumentNotFoundException(string instrumentId, string message):base(message)
+        public AssetPairNotFoundException(string instrumentId, string message):base(message)
         {
             InstrumentId = instrumentId;
         }

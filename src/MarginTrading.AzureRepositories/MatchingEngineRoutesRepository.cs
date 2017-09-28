@@ -70,6 +70,10 @@ namespace MarginTrading.AzureRepositories
         {
             return await _tableStorage.GetDataAsync(MatchingEngineRouteEntity.GeneratePartitionKey());
         }
-        
+
+        public async Task<IMatchingEngineRoute> GetRouteByIdAsync(string id)
+        {
+            return await _tableStorage.GetDataAsync(MatchingEngineRouteEntity.GeneratePartitionKey(), MatchingEngineRouteEntity.GenerateRowKey(id));
+        }
     }
 }

@@ -25,7 +25,7 @@ namespace MarginTrading.Common.Wamp
         string[] InitAvailableAssets(ClientIdBackendRequest request);
 
         [WampProcedure("init.assets")]
-        MarginTradingAssetBackendContract[] InitAssets();
+        AssetPairBackendContract[] InitAssets();
 
         [WampProcedure("account.history")]
         Task<AccountHistoryBackendResponse> GetAccountHistory(AccountHistoryBackendRequest request);

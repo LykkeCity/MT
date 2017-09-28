@@ -1,6 +1,6 @@
 ﻿namespace MarginTrading.Common.ClientContracts
 {
-    public class MarginTradingAssetClientContract
+    public class AssetPairClientContract
     {
         public string Id { get; set; }
         public string Name { get; set; }

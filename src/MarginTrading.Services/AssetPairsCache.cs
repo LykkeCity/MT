@@ -7,31 +7,27 @@ using MarginTrading.Core.Messages;
 
 namespace MarginTrading.Services
 {
-    public class InstrumentsCache : IInstrumentsCache
+    public class AssetPairsCache : IAssetPairsCache
     {
-        private Dictionary<string, IMarginTradingAsset> _instruments = new Dictionary<string, IMarginTradingAsset>();
+        private Dictionary<string, IAssetPair> _assetPairs = new Dictionary<string, IAssetPair>();
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
-         
-        ~InstrumentsCache()
-        {
-            _lockSlim?.Dispose();
-        }
 
-        public IMarginTradingAsset GetInstrumentById(string instrumentId)
+        public IAssetPair GetAssetPairById(string assetPairId)
         {
-            IMarginTradingAsset result;
-            if (TryGetAssetById(instrumentId, out result))
+            if (TryGetAssetById(assetPairId, out var result))
+            {
                 return result;
+            }
 
-            throw new InstrumentNotFoundException(instrumentId, string.Format(MtMessages.InstrumentNotFoundInCache, instrumentId));
+            throw new AssetPairNotFoundException(assetPairId, string.Format(MtMessages.InstrumentNotFoundInCache, assetPairId));
         }
 
-        public IEnumerable<IMarginTradingAsset> GetAll()
+        public IEnumerable<IAssetPair> GetAll()
         {
             _lockSlim.EnterReadLock();
             try
             {
-                return _instruments.Values.ToArray();
+                return _assetPairs.Values.ToArray();
             }
             finally
             {
@@ -39,13 +35,13 @@ namespace MarginTrading.Services
             }
         }
 
-        public IMarginTradingAsset FindInstrument(string asset1, string asset2)
+        public IAssetPair FindInstrument(string asset1, string asset2)
         {
             //TODO: optimize
             _lockSlim.EnterReadLock();
             try
             {
-                foreach (var instrument in _instruments.Values)
+                foreach (var instrument in _assetPairs.Values)
                 {
                     if (instrument.BaseAssetId == asset1 && instrument.QuoteAssetId == asset2)
                     {
@@ -66,17 +62,17 @@ namespace MarginTrading.Services
             }
         }
 
-        internal bool TryGetAssetById(string instrumentId, out IMarginTradingAsset result)
+        internal bool TryGetAssetById(string instrumentId, out IAssetPair result)
         {
             _lockSlim.EnterReadLock();
             try
             {
-                if (!_instruments.ContainsKey(instrumentId))
+                if (!_assetPairs.ContainsKey(instrumentId))
                 {
                     result = null;
                     return false;
                 }
-                result = _instruments[instrumentId];
+                result = _assetPairs[instrumentId];
                 return true;
             }
             finally
@@ -85,12 +81,12 @@ namespace MarginTrading.Services
             }
         }
 
-        internal void InitInstrumentsCache(Dictionary<string, IMarginTradingAsset> instruments)
+        internal void InitInstrumentsCache(Dictionary<string, IAssetPair> instruments)
         {
             _lockSlim.EnterWriteLock();
             try
             {
-                _instruments = instruments;
+                _assetPairs = instruments;
             }
             finally
             {

@@ -25,6 +25,7 @@ using MarginTrading.Core.Clients;
 using MarginTrading.Core.Settings;
 using MarginTrading.Frontend.Infrastructure;
 using MarginTrading.Frontend.Middleware;
+using MarginTrading.Frontend.Modules;
 using MarginTrading.Frontend.Services;
 using MarginTrading.Frontend.Settings;
 using MarginTrading.Services;
@@ -114,7 +115,7 @@ namespace MarginTrading.Frontend
 
             SetupLoggers(services, appSettings);
 
-            RegisterDependencies(builder, settings);
+            RegisterModules(builder, settings);
 
             builder.Populate(services);
 
@@ -186,143 +187,9 @@ namespace MarginTrading.Frontend
             host.Open();
         }
 
-        private void RegisterDependencies(ContainerBuilder builder, MtFrontendSettings settings)
+        private void RegisterModules(ContainerBuilder builder, MtFrontendSettings settings)
         {
-            var host = new WampHost();
-            var realm = host.RealmContainer.GetRealmByName(RealmNames.FrontEnd);
-
-            builder.RegisterInstance(host)
-                .As<IWampHost>()
-                .SingleInstance();
-
-            builder.RegisterInstance(realm)
-                .As<IWampHostedRealm>()
-                .SingleInstance();
-
-            builder.RegisterInstance(LogLocator.CommonLog)
-                .As<ILog>()
-                .SingleInstance();
-
-            builder.Register<IMarginTradingOperationsLogRepository>(ctx =>
-                    new MarginTradingOperationsLogRepository(AzureTableStorage<OperationLogEntity>.Create(
-                        () => settings.MarginTradingFront.Db.LogsConnString, "MarginTradingFrontendOperationsLog",
-                        LogLocator.CommonLog))
-                )
-                .SingleInstance();
-
-            builder.Register<IClientSettingsRepository>(ctx =>
-                AzureRepoFactories.Clients.CreateTraderSettingsRepository(settings.MarginTradingFront.Db.ClientPersonalInfoConnString, LogLocator.CommonLog)
-            ).SingleInstance();
-
-            builder.Register<IClientAccountsRepository>(ctx =>
-                AzureRepoFactories.Clients.CreateClientsRepository(settings.MarginTradingFront.Db.ClientPersonalInfoConnString, LogLocator.CommonLog)
-            ).SingleInstance();
-
-            builder.Register<IAppGlobalSettingsRepositry>(ctx =>
-                new AppGlobalSettingsRepository(AzureTableStorage<AppGlobalSettingsEntity>.Create(
-                    () => settings.MarginTradingFront.Db.ClientPersonalInfoConnString, "Setup", LogLocator.CommonLog))
-            ).SingleInstance();
-
-            builder.Register<IMarginTradingWatchListRepository>(ctx =>
-               AzureRepoFactories.MarginTrading.CreateWatchListsRepository(settings.MarginTradingFront.Db.MarginTradingConnString, LogLocator.CommonLog)
-           ).SingleInstance();
-
-            builder.RegisterType<WatchListService>()
-                .As<IWatchListService>()
-                .SingleInstance();
-
-            builder.RegisterType<ClientTokenService>()
-                .As<IClientTokenService>()
-                .SingleInstance();
-
-            builder.RegisterType<ClientAccountService>()
-                .As<IClientAccountService>()
-                .SingleInstance();
-
-            builder.RegisterType<MarginTradingOperationsLogService>()
-                .As<IMarginTradingOperationsLogService>()
-                .SingleInstance();
-
-            var consoleWriter = new ConsoleLWriter(line =>
-                {
-                    try
-                    {
-                        if (settings.MarginTradingFront.RemoteConsoleEnabled && !string.IsNullOrEmpty(settings.MarginTradingFront.MetricLoggerLine))
-                        {
-                            settings.MarginTradingFront.MetricLoggerLine.PostJsonAsync(
-                                new
-                                {
-                                    Id = "Mt-frontend",
-                                    Data =
-                                    new[]
-                                    {
-                                        new { Key = "Version", Value = PlatformServices.Default.Application.ApplicationVersion },
-                                        new { Key = "Data", Value = line }
-                                    }
-                                });
-                        }
-                    }
-                    catch { }
-                });
-
-            builder.RegisterInstance(consoleWriter)
-                .As<IConsole>()
-                .SingleInstance();
-
-            builder.RegisterType<RabbitMqHandler>()
-                .AsSelf()
-                .SingleInstance();
-
-            builder.RegisterInstance(settings)
-                .SingleInstance();
-
-            builder.RegisterInstance(settings.MarginTradingFront)
-                .SingleInstance();
-
-            builder.RegisterInstance(settings.MarginTradingFront.RequestLoggerSettings)
-                .SingleInstance();
-
-            builder.RegisterType<RpcMtFrontend>()
-                .As<IRpcMtFrontend>()
-                .SingleInstance();
-
-            builder.RegisterType<HttpRequestService>()
-                .As<IHttpRequestService>()
-                .AsSelf()
-                .SingleInstance();
-
-            builder.RegisterType<MarginTradingSettingsService>()
-               .As<IMarginTradingSettingsService>()
-               .SingleInstance();
-
-            builder.RegisterType<ThreadSwitcherToNewTask>()
-                .As<IThreadSwitcher>()
-                .SingleInstance();
-
-            builder.RegisterType<Application>()
-                .SingleInstance();
-
-            builder.Register<IClientsSessionsRepository>(ctx =>
-                new ClientSessionsClient(settings.MarginTradingFront.SessionServiceApiUrl, LogLocator.CommonLog)
-            ).SingleInstance();
-
-            builder.RegisterType<ClientTokenValidator>()
-                .As<ISecurityTokenValidator>()
-                .SingleInstance();
-
-            builder.RegisterType<WampSessionsService>()
-                .AsSelf()
-                .SingleInstance();
-
-
-            builder.RegisterType<RpcFacade>()
-                .AsSelf()
-                .SingleInstance();
-
-            builder.RegisterType<MemoryCacheProvider>()
-                   .As<ICacheProvider>()
-                   .AsSelf()
-                   .SingleInstance();
+            builder.RegisterModule(new FrontendModule(settings));
 
             builder.RegisterType<DateService>()
                 .As<IDateService>()

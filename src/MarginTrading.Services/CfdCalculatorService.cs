@@ -4,20 +4,20 @@ namespace MarginTrading.Services
 {
     public class CfdCalculatorService : ICfdCalculatorService
     {
-        private readonly IInstrumentsCache _instrumentsCache;
+        private readonly IAssetPairsCache _assetPairsCache;
         private readonly IQuoteCacheService _quoteCacheService;
 
         public CfdCalculatorService(
-            IInstrumentsCache instrumentsCache,
+            IAssetPairsCache assetPairsCache,
             IQuoteCacheService quoteCacheService)
         {
-            _instrumentsCache = instrumentsCache;
+            _assetPairsCache = assetPairsCache;
             _quoteCacheService = quoteCacheService;
         }
 
         public double GetQuoteRateForBaseAsset(string accountAssetId, string instrument)
         {
-            var asset = _instrumentsCache.GetInstrumentById(instrument);
+            var asset = _assetPairsCache.GetAssetPairById(instrument);
 
             string baseAssetId = asset.BaseAssetId;
 
@@ -26,7 +26,7 @@ namespace MarginTrading.Services
                 return 1;
             }
 
-            var inst = _instrumentsCache.FindInstrument(baseAssetId, accountAssetId);
+            var inst = _assetPairsCache.FindInstrument(baseAssetId, accountAssetId);
             var quote = _quoteCacheService.GetQuote(inst.Id);
 
             if (inst.BaseAssetId == baseAssetId)
@@ -39,7 +39,7 @@ namespace MarginTrading.Services
 
         public double GetQuoteRateForQuoteAsset(string accountAssetId, string instrument)
         {
-            var asset = _instrumentsCache.GetInstrumentById(instrument);
+            var asset = _assetPairsCache.GetAssetPairById(instrument);
 
             string quoteAssetId = asset.QuoteAssetId;
 
@@ -48,7 +48,7 @@ namespace MarginTrading.Services
                 return 1;
             }
 
-            var inst = _instrumentsCache.FindInstrument(quoteAssetId, accountAssetId);
+            var inst = _assetPairsCache.FindInstrument(quoteAssetId, accountAssetId);
             var quote = _quoteCacheService.GetQuote(inst.Id);
 
             if (inst.BaseAssetId == quoteAssetId)
@@ -61,7 +61,7 @@ namespace MarginTrading.Services
 
         public double GetVolumeInAccountAsset(OrderDirection direction, string accountAssetId, string instrument, double volume)
         {
-            var inst = _instrumentsCache.GetInstrumentById(instrument);
+            var inst = _assetPairsCache.GetAssetPairById(instrument);
             var instrumentQuote = _quoteCacheService.GetQuote(instrument);
 
             double rate = GetQuoteRateForQuoteAsset(accountAssetId, inst.Id);

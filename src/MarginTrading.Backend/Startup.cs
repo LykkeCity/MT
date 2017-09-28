@@ -167,12 +167,12 @@ namespace MarginTrading.Backend
         {
             var consoleLogger = new LogToConsole();
 
-            var comonSlackService =
+            var commonSlackService =
                 services.UseSlackNotificationsSenderViaAzureQueue(mtSettings.SlackNotifications.AzureQueue,
                     consoleLogger);
 
             var slackService =
-                new MtSlackNotificationsSender(comonSlackService, "MT Backend", settings.Env);
+                new MtSlackNotificationsSender(commonSlackService, "MT Backend", settings.Env);
 
             // Order of logs registration is important - UseLogToAzureStorage() registers ILog in container. 
             // Last registration wins.

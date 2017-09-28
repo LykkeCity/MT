@@ -31,10 +31,10 @@ namespace MarginTrading.Common.Mappers
             };
         }
 
-        public static MarginTradingAssetClientContract ToClientContract(
-            this MarginTradingAssetBackendContract src)
+        public static AssetPairClientContract ToClientContract(
+            this AssetPairBackendContract src)
         {
-            return new MarginTradingAssetClientContract
+            return new AssetPairClientContract
             {
                 Id = src.Id,
                 Name = src.Name,
@@ -44,10 +44,10 @@ namespace MarginTrading.Common.Mappers
             };
         }
 
-        public static MarginTradingAccountAssetClientContract ToClientContract(
-            this MarginTradingAccountAssetBackendContract src)
+        public static AccountAssetPairClientContract ToClientContract(
+            this AccountAssetPairBackendContract src)
         {
-            return new MarginTradingAccountAssetClientContract
+            return new AccountAssetPairClientContract
             {
                 TradingConditionId = src.TradingConditionId,
                 BaseAssetId = src.BaseAssetId,

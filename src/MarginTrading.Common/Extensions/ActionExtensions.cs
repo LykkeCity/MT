@@ -26,7 +26,7 @@ namespace MarginTrading.Common.Extensions
                                                                 [NotNull] Func<Exception, bool> isRetriableException,
                                                                 int maxRetries,
                                                                 TimeSpan? backoffTime = null,
-                                                                Func<Exception, Task> logException = null)
+                                                                Action<Exception> logException = null)
         {
             action.RequiredNotNull(nameof(action));
             isRetriableException.RequiredNotNull(nameof(isRetriableException));
@@ -47,10 +47,7 @@ namespace MarginTrading.Common.Extensions
                         throw;
                     }
 
-                    if (logException != null)
-                    {
-                        await logException(ex);
-                    }
+                    logException?.Invoke(ex);
                 }
 
                 if (backoffTime != null)

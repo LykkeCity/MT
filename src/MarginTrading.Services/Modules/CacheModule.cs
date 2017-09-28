@@ -8,8 +8,8 @@ namespace MarginTrading.Services.Modules
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterType<InstrumentsCache>()
-                .As<IInstrumentsCache>()
+            builder.RegisterType<AssetPairsCache>()
+                .As<IAssetPairsCache>()
                 .AsSelf()
                 .SingleInstance();
 

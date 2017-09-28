@@ -1,7 +1,6 @@
-﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26403.7
+VisualStudioVersion = 15.0.26730.12
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "1. Infrastructure", "1. Infrastructure", "{84F3857F-CE2C-4A87-ACB2-809570092CF6}"
 EndProject
@@ -34,7 +33,17 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.AzureReposito
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "5. Wamp test client", "5. Wamp test client", "{18A6F48C-BAC6-4D92-A9AD-764E4F8BEB82}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.Client", "src\MarginTrading.Client\MarginTrading.Client.csproj", "{47A3C5B2-289D-41B9-8B73-F2C5995227A9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.Client", "src\MarginTrading.Client\MarginTrading.Client.csproj", "{47A3C5B2-289D-41B9-8B73-F2C5995227A9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "6. Brokers", "6. Brokers", "{850DBE15-08C0-45BB-8AAF-B2096AAC9667}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.AccountHistoryBroker", "src\MarginTrading.Brokers\MarginTrading.AccountHistoryBroker\MarginTrading.AccountHistoryBroker.csproj", "{A2031066-540E-4E0D-97AD-F9D1E7E27142}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.OrderHistoryBroker", "src\MarginTrading.Brokers\MarginTrading.OrderHistoryBroker\MarginTrading.OrderHistoryBroker.csproj", "{488443F1-4FA4-4F39-9014-09BE2F52FDA9}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.OrderRejectedBroker", "src\MarginTrading.Brokers\MarginTrading.OrderRejectedBroker\MarginTrading.OrderRejectedBroker.csproj", "{25C10FE6-1D1C-4933-9DBB-18B6D2E2A2DD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.DataReader", "src\MarginTrading.DataReader\MarginTrading.DataReader.csproj", "{61657805-B7DA-4B78-9138-3697EA06E46E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -78,6 +87,22 @@ Global
 		{47A3C5B2-289D-41B9-8B73-F2C5995227A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{47A3C5B2-289D-41B9-8B73-F2C5995227A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{47A3C5B2-289D-41B9-8B73-F2C5995227A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A2031066-540E-4E0D-97AD-F9D1E7E27142}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A2031066-540E-4E0D-97AD-F9D1E7E27142}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A2031066-540E-4E0D-97AD-F9D1E7E27142}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A2031066-540E-4E0D-97AD-F9D1E7E27142}.Release|Any CPU.Build.0 = Release|Any CPU
+		{488443F1-4FA4-4F39-9014-09BE2F52FDA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{488443F1-4FA4-4F39-9014-09BE2F52FDA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{488443F1-4FA4-4F39-9014-09BE2F52FDA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{488443F1-4FA4-4F39-9014-09BE2F52FDA9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{25C10FE6-1D1C-4933-9DBB-18B6D2E2A2DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{25C10FE6-1D1C-4933-9DBB-18B6D2E2A2DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{25C10FE6-1D1C-4933-9DBB-18B6D2E2A2DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{25C10FE6-1D1C-4933-9DBB-18B6D2E2A2DD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{61657805-B7DA-4B78-9138-3697EA06E46E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{61657805-B7DA-4B78-9138-3697EA06E46E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{61657805-B7DA-4B78-9138-3697EA06E46E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{61657805-B7DA-4B78-9138-3697EA06E46E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -92,5 +117,12 @@ Global
 		{A3E8A724-1ACD-4C92-AC1E-91D4AFFD17FE} = {84F3857F-CE2C-4A87-ACB2-809570092CF6}
 		{C78B5B26-4078-47FE-BCD1-CF6F9886A4FC} = {5AD188EF-3F19-4527-816C-A361746EE9C2}
 		{47A3C5B2-289D-41B9-8B73-F2C5995227A9} = {18A6F48C-BAC6-4D92-A9AD-764E4F8BEB82}
+		{A2031066-540E-4E0D-97AD-F9D1E7E27142} = {850DBE15-08C0-45BB-8AAF-B2096AAC9667}
+		{488443F1-4FA4-4F39-9014-09BE2F52FDA9} = {850DBE15-08C0-45BB-8AAF-B2096AAC9667}
+		{25C10FE6-1D1C-4933-9DBB-18B6D2E2A2DD} = {850DBE15-08C0-45BB-8AAF-B2096AAC9667}
+		{61657805-B7DA-4B78-9138-3697EA06E46E} = {A1366CA2-DF4A-4E38-BD6C-895A399118B4}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {16BCEC97-771D-46F8-BD02-379A8FC34CDD}
 	EndGlobalSection
 EndGlobal

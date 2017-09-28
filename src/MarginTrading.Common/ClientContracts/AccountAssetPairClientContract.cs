@@ -1,6 +1,6 @@
-﻿namespace MarginTrading.Common.BackendContracts
+﻿namespace MarginTrading.Common.ClientContracts
 {
-    public class MarginTradingAccountAssetBackendContract
+    public class AccountAssetPairClientContract
     {
         public string TradingConditionId { get; set; }
         public string BaseAssetId { get; set; }
