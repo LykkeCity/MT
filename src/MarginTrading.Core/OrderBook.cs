@@ -362,7 +362,7 @@ namespace MarginTrading.Core
             }
         }
 
-        public IEnumerable<LimitOrder> DeleteAllBuyOrdersByMarketMaker(string marketMakerId, string[] instruments)
+        public IEnumerable<LimitOrder> DeleteAllBuyOrdersByMarketMaker(string marketMakerId, IReadOnlyList<string> instruments)
         {
             foreach (var instrument in instruments)
             {
@@ -375,7 +375,7 @@ namespace MarginTrading.Core
             }
         }
 
-        public IEnumerable<LimitOrder> DeleteAllSellOrdersByMarketMaker(string marketMakerId, string[] instruments)
+        public IEnumerable<LimitOrder> DeleteAllSellOrdersByMarketMaker(string marketMakerId, IReadOnlyList<string> instruments)
         {
             foreach (var instrument in instruments)
             {
@@ -388,7 +388,7 @@ namespace MarginTrading.Core
             }
         }
 
-        public List<LimitOrder> AddMarketMakerOrders(LimitOrder[] ordersToAdd)
+        public List<LimitOrder> AddMarketMakerOrders(IReadOnlyList<LimitOrder> ordersToAdd)
         {
             var result = new List<LimitOrder>();
 

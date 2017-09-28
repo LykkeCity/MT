@@ -30,13 +30,13 @@ namespace MarginTrading.Services
             {
                 var changeEventArgs = new OrderBookChangeEventArgs { MessageId = _currentMessageId++ };
 
-                if (model.DeleteByInstrumentsBuy?.Length > 0)
+                if (model.DeleteByInstrumentsBuy?.Count > 0)
                 {
                     var deletedOrders = _orderBooks.DeleteAllBuyOrdersByMarketMaker(model.MarketMakerId, model.DeleteByInstrumentsBuy).ToArray();
                     changeEventArgs.AddOrderBookLevelsToDelete(deletedOrders);
                 }
 
-                if (model.DeleteByInstrumentsSell?.Length > 0)
+                if (model.DeleteByInstrumentsSell?.Count > 0)
                 {
                     var deletedOrders = _orderBooks.DeleteAllSellOrdersByMarketMaker(model.MarketMakerId, model.DeleteByInstrumentsSell).ToArray();
                     changeEventArgs.AddOrderBookLevelsToDelete(deletedOrders);
@@ -54,11 +54,11 @@ namespace MarginTrading.Services
                     changeEventArgs.AddOrderBookLevelsToDelete(deletedOrders);
                 }
 
-                if (model.OrdersToAdd?.Length > 0)
+                if (model.OrdersToAdd?.Count > 0)
                 {
                     var addedOrders = _orderBooks.AddMarketMakerOrders(model.OrdersToAdd).ToArray();
                     changeEventArgs.AddOrderBookLevels(addedOrders);
-                }   
+                }
 
                 if (changeEventArgs.HasEvents())
                     _orderbookChangeEventChannel.SendEvent(this, changeEventArgs);
@@ -95,7 +95,7 @@ namespace MarginTrading.Services
                     changeEventArgs.AddOrderBookLevelsToDeletePartial(matchedOrders.Select(item => item.CreateLimit(order.Instrument, type.GetOrderTypeToMatchInOrderBook())).ToArray());
                     _orderbookChangeEventChannel.SendEvent(this, changeEventArgs);
                 }
-            } 
+            }
         }
 
         public void MatchMarketOrderForClose(Order order, Func<MatchedOrder[], bool> matchedAction)

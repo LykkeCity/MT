@@ -1,0 +1,18 @@
+version: '2'
+services:
+  margintradingmarketmaker:
+    image: lykkedev/margintradingmarketmaker
+    container_name: margintradingmarketmaker
+    environment:
+      - SettingsUrl=${SettingsUrl}
+      - Env=${Env}
+    ports:
+      - "5007:5007"
+    networks:
+      mynet:
+        aliases:
+          - margintradingmarketmaker
+
+networks:
+  mynet:
+    driver: bridge
