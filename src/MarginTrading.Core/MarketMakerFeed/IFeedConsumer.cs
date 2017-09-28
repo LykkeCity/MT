@@ -6,7 +6,6 @@ namespace MarginTrading.Core.MarketMakerFeed
     public interface IFeedConsumer
     {
         void ConsumeFeed(MarketMakerOrderCommandsBatchMessage batch);
-        Task ShutdownApplication();
     }
 
     public interface IAssetPairRate

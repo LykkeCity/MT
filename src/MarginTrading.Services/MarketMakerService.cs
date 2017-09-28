@@ -31,11 +31,6 @@ namespace MarginTrading.Services
             }
         }
 
-        public Task ShutdownApplication()
-        {
-           return Task.CompletedTask;
-        }
-
         private void ConvertCommandsToOrders(MarketMakerOrderCommandsBatchMessage batch, SetOrderModel model)
         {
             var setCommands = batch.Commands.Where(c => c.CommandType == MarketMakerOrderCommandType.SetOrder && c.Direction != null).ToList();

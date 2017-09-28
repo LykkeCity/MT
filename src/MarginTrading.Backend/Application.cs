@@ -84,7 +84,6 @@ namespace MarginTrading.Backend
             _consoleWriter.WriteLine($"Closing {ServiceName}");
             _logger.WriteInfoAsync(ServiceName, null, null, "Closing broker").Wait();
             _connector.Stop();
-            _consumers.ForEach(c => c.ShutdownApplication());
             _rabbitMqNotifyService.Stop();
             Stop();
             _consoleWriter.WriteLine($"Closed {ServiceName}");
