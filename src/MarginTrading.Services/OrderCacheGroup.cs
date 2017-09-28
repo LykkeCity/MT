@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MarginTrading.Core;
 using MarginTrading.Core.Messages;
-using MarginTradingHelpers = MarginTrading.Services.Helpers.MarginTradingHelpers;
+using MarginTrading.Services.Infrastructure;
 
 namespace MarginTrading.Services
 {
@@ -13,10 +13,12 @@ namespace MarginTrading.Services
         private readonly Dictionary<string, Dictionary<string, Order>> _ordersByAccountId;
         private readonly Dictionary<string, Dictionary<string, Order>> _ordersByInstrumentId;
         private readonly OrderStatus _status;
+        private readonly IContextFactory _contextFactory;
 
-        public OrderCacheGroup(IEnumerable<Order> orders, OrderStatus status)
+        public OrderCacheGroup(IEnumerable<Order> orders, OrderStatus status, IContextFactory contextFactory)
         {
             _status = status;
+            _contextFactory = contextFactory;
 
             var statusOrders = orders.Where(x => x.Status == status).ToList();
 
@@ -64,7 +66,7 @@ namespace MarginTrading.Services
         #region Getters
         public Order GetOrderById(string orderId)
         {
-            lock (MarginTradingHelpers.TradingMatchingSync)
+            using (_contextFactory.GetReadSyncContext($"{nameof(OrderCacheGroup)}.{nameof(GetOrderById)}"))
             {
                 Order result;
                 if (TryGetOrderById(orderId, out result))
@@ -87,7 +89,7 @@ namespace MarginTrading.Services
 
         public IEnumerable<Order> GetOrders(string instrument)
         {
-            lock (MarginTradingHelpers.TradingMatchingSync)
+            using (_contextFactory.GetReadSyncContext($"{nameof(OrderCacheGroup)}.{nameof(GetOrders)}_ByInstrument"))
             {
                 if (string.IsNullOrWhiteSpace(instrument))
                     throw new ArgumentException(nameof(instrument));
@@ -105,7 +107,7 @@ namespace MarginTrading.Services
         // TODO: Optimize it somehow
         public IEnumerable<Order> GetOrders(string instrument, string accountId)
         {
-            lock (MarginTradingHelpers.TradingMatchingSync)
+            using (_contextFactory.GetReadSyncContext($"{nameof(OrderCacheGroup)}.{nameof(GetOrders)}_ByInstrumentAndAccount"))
             {
                 return GetOrders(instrument).Where(x => x.AccountId == accountId);
             }
@@ -113,7 +115,7 @@ namespace MarginTrading.Services
 
         public IEnumerable<Order> GetAllOrders()
         {
-            lock (MarginTradingHelpers.TradingMatchingSync)
+            using (_contextFactory.GetReadSyncContext($"{nameof(OrderCacheGroup)}.{nameof(GetAllOrders)}"))
             {
                 return _ordersByAccountId.Values.SelectMany(accountId => accountId.Values);
             }
@@ -122,7 +124,7 @@ namespace MarginTrading.Services
         // TODO: Optimize
         public IEnumerable<Order> GetOrdersByAccountIds(params string[] accountIds)
         {
-            lock (MarginTradingHelpers.TradingMatchingSync)
+            using (_contextFactory.GetReadSyncContext($"{nameof(OrderCacheGroup)}.{nameof(GetAllOrders)}_ByAccounts"))
             {
                 foreach (var accountId in accountIds)
                 {
