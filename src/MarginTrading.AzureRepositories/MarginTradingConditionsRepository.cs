@@ -51,17 +51,12 @@ namespace MarginTrading.AzureRepositories
 
         public async Task<IMarginTradingCondition> GetAsync(string tradingConditionId)
         {
-            var entity = await _tableStorage.GetDataAsync(MarginTradingConditionEntity.GeneratePartitionKey(), MarginTradingConditionEntity.GenerateRowKey(tradingConditionId));
-
-            return entity != null
-                ? MarginTradingConditionEntity.Create(entity)
-                : null;
+            return await _tableStorage.GetDataAsync(MarginTradingConditionEntity.GeneratePartitionKey(), MarginTradingConditionEntity.GenerateRowKey(tradingConditionId));
         }
 
         public async Task<IEnumerable<IMarginTradingCondition>> GetAllAsync()
         {
-            var entities = await _tableStorage.GetDataAsync();
-            return entities.Select(MarginTradingCondition.Create);
+            return await _tableStorage.GetDataAsync();
         }
     }
 }

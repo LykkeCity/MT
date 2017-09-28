@@ -13,20 +13,20 @@ namespace MarginTrading.Services
 
         private readonly MatchingEngineRoutesCacheService _routesCacheService;
         private readonly IMatchingEngineRoutesRepository _repository;
-        private readonly IInstrumentsCache _instrumentsCache;
+        private readonly IAssetPairsCache _assetPairsCache;
         private readonly ITradingConditionsCacheService _tradingConditionsCacheService;
         private readonly IAccountsCacheService _accountsCacheService;
 
         public MatchingEngineRoutesManager(
             MatchingEngineRoutesCacheService routesCacheService,
             IMatchingEngineRoutesRepository repository,
-            IInstrumentsCache instrumentsCache,
+            IAssetPairsCache assetPairsCache,
             ITradingConditionsCacheService tradingConditionsCacheService,
             IAccountsCacheService accountsCacheService)
         {
             _routesCacheService = routesCacheService;
             _repository = repository;            
-            _instrumentsCache = instrumentsCache;
+            _assetPairsCache = assetPairsCache;
             _tradingConditionsCacheService = tradingConditionsCacheService;
             _accountsCacheService = accountsCacheService;
         }
@@ -51,7 +51,7 @@ namespace MarginTrading.Services
             var routes = _routesCacheService.GetRoutes();
             var instrument = string.IsNullOrEmpty(instrumentId)
                 ? null
-                : _instrumentsCache.GetInstrumentById(instrumentId);
+                : _assetPairsCache.GetAssetPairById(instrumentId);
 
             var topRankRoutes = routes
                 .Where(r => EqualsOrAny(r.ClientId, clientId)
@@ -152,7 +152,7 @@ namespace MarginTrading.Services
 
         private void ValidateInstrument(string instrumentId)
         {
-            var instrument = _instrumentsCache.GetInstrumentById(instrumentId);
+            var instrument = _assetPairsCache.GetAssetPairById(instrumentId);
 
             if (instrument == null)
                 throw new ArgumentException("Invalid Instrument");
@@ -193,7 +193,7 @@ namespace MarginTrading.Services
             return IsAny(sourceValue) || sourceValue == targetValue;
         }
 
-        private static bool IsAssetMatches(string ruleAsset, IMarginTradingAsset instrument,
+        private static bool IsAssetMatches(string ruleAsset, IAssetPair instrument,
             OrderDirection? orderType)
         {
             if (IsAny(ruleAsset))

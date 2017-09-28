@@ -8,18 +8,18 @@ namespace MarginTrading.Services
     public class FplService : IFplService
     {
         private readonly ICfdCalculatorService _cfdCalculatorService;
-        private readonly IInstrumentsCache _instrumentsCache;
+        private readonly IAssetPairsCache _assetPairsCache;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
 
         public FplService(
             ICfdCalculatorService cfdCalculatorService,
-            IInstrumentsCache instrumentsCache,
+            IAssetPairsCache assetPairsCache,
             IAccountsCacheService accountsCacheService,
             IAccountAssetsCacheService accountAssetsCacheService)
         {
             _cfdCalculatorService = cfdCalculatorService;
-            _instrumentsCache = instrumentsCache;
+            _assetPairsCache = assetPairsCache;
             _accountsCacheService = accountsCacheService;
             _accountAssetsCacheService = accountAssetsCacheService;
         }
@@ -42,6 +42,8 @@ namespace MarginTrading.Services
 
             fplData.OpenPrice = order.OpenPrice;
             fplData.ClosePrice = order.ClosePrice;
+            fplData.SwapsSnapshot = order.GetSwaps();
+            fplData.TotalFplSnapshot = order.GetTotalFpl(fplData.SwapsSnapshot);
 
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
             account.CacheNeedsToBeUpdated();
@@ -54,7 +56,7 @@ namespace MarginTrading.Services
                 return 0;
             }
 
-            int accuracy = _instrumentsCache.GetInstrumentById(instrument).Accuracy;
+            int accuracy = _assetPairsCache.GetAssetPairById(instrument).Accuracy;
 
             return Math.Round(matchedOrders.Sum(item => item.Price * item.Volume) /
                               matchedOrders.Sum(item => item.Volume), accuracy);

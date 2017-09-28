@@ -27,13 +27,13 @@ namespace MarginTrading.Backend.Controllers
         private readonly ITradingConditionsCacheService _tradingConditionsCacheService;
         private readonly IAccountGroupCacheService _accountGroupCacheService;
         private readonly AccountAssetsCacheService _accountAssetsCacheService;
-        private readonly IInstrumentsCache _instrumentsCache;
-        private readonly IAccountsCacheService _accountsCacheService;        
+        private readonly IAssetPairsCache _assetPairsCache;
+        private readonly IAccountsCacheService _accountsCacheService;
         private readonly AccountManager _accountManager;
         private readonly TradingConditionsManager _tradingConditionsManager;
         private readonly AccountGroupManager _accountGroupManager;
         private readonly AccountAssetsManager _accountAssetsManager;
-        private readonly MatchingEngineRoutesManager _routesManager;        
+        private readonly MatchingEngineRoutesManager _routesManager;
         private readonly IMarginTradingAccountsRepository _accountsRepository;
         private readonly IOrderReader _ordersReader;
         private readonly OrderBookList _orderBooks;
@@ -49,8 +49,8 @@ namespace MarginTrading.Backend.Controllers
             ITradingConditionsCacheService tradingConditionsCacheService,
             IAccountGroupCacheService accountGroupCacheService,
             AccountAssetsCacheService accountAssetsCacheService,
-            IInstrumentsCache instrumentsCache,
-            IAccountsCacheService accountsCacheService,            
+            IAssetPairsCache assetPairsCache,
+            IAccountsCacheService accountsCacheService,
             AccountManager accountManager,
             TradingConditionsManager tradingConditionsManager,
             AccountGroupManager accountGroupManager,
@@ -63,16 +63,16 @@ namespace MarginTrading.Backend.Controllers
             MarginSettings marginSettings,
             IMarginTradingOperationsLogService operationsLogService,
             IConsole consoleWriter,
-            IMaintenanceModeService maintenanceModeService,            
+            IMaintenanceModeService maintenanceModeService,
             ILog log,
             IMarginTradingSettingsService marginTradingSettingsService)
         {
             _tradingConditionsCacheService = tradingConditionsCacheService;
             _accountGroupCacheService = accountGroupCacheService;
             _accountAssetsCacheService = accountAssetsCacheService;
-            _instrumentsCache = instrumentsCache;
+            _assetPairsCache = assetPairsCache;
             _accountsCacheService = accountsCacheService;
-            
+
             _accountManager = accountManager;
             _tradingConditionsManager = tradingConditionsManager;
             _accountGroupManager = accountGroupManager;
@@ -206,8 +206,6 @@ namespace MarginTrading.Backend.Controllers
         /// Returns list of orderbooks
         /// </summary>
         /// <remarks>
-        /// Returns list of orderbooks by instrument (all orderbooks if no instrument is provided)
-        ///
         /// Header "api-key" is required
         /// </remarks>
         /// <response code="200">Returns orderbooks</response>
@@ -218,9 +216,7 @@ namespace MarginTrading.Backend.Controllers
         {
             // TODO: return aggregated order book
             var result = new List<OrderBookModel>();
-
             var orderbooks = _orderBooks.GetAllLimitOrders(instrument);
-
             result.Add(
                 new OrderBookModel
                 {
@@ -228,31 +224,6 @@ namespace MarginTrading.Backend.Controllers
                     Buy = orderbooks.Buy.ToList(),
                     Sell = orderbooks.Sell.ToList()
                 });
-
-            /*
-            foreach (var orderbook in orderbooks)
-            {
-                var model = new OrderBookModel
-                {
-                    Instrument = orderbook.Instrument
-                };
-
-                foreach (var orders in orderbook.Buy.Values)
-                {
-                    model.Buy.AddRange(orders);
-                }
-
-                foreach (var orders in orderbook.Sell.Values)
-                {
-                    model.Sell.AddRange(orders);
-                }
-
-                model.Buy = model.Buy.OrderByDescending(item => item.Price).ToList();
-                model.Sell = model.Sell.OrderBy(item => item.Price).ToList();
-
-                result.Add(model);
-            }
-            */
 
             return result;
         }
@@ -368,26 +339,26 @@ namespace MarginTrading.Backend.Controllers
         #region Account assets
 
         [HttpGet]
-        [Route("accountAssets/getall/{tradingConditionId}/{accountAssetId}")]
-        [ProducesResponseType(typeof(List<MarginTradingAccountAsset>), 200)]
-        public IActionResult GetAllAccountAssets(string tradingConditionId, string accountAssetId)
+        [Route("accountAssets/getall/{tradingConditionId}/{baseAssetId}")]
+        [ProducesResponseType(typeof(List<AccountAssetPair>), 200)]
+        public IActionResult GetAllAccountAssets(string tradingConditionId, string baseAssetId)
         {
-            var accountAssets = _accountAssetsCacheService.GetAccountAssets(tradingConditionId, accountAssetId);
+            var accountAssets = _accountAssetsCacheService.GetAccountAssets(tradingConditionId, baseAssetId);
             return Ok(accountAssets);
         }
 
         [HttpGet]
         [Route("accountAssets/get/{tradingConditionId}/{baseAssetId}/{instrumet}")]
-        [ProducesResponseType(typeof(MarginTradingAccountAsset), 200)]
+        [ProducesResponseType(typeof(AccountAssetPair), 200)]
         public IActionResult GetAccountAssets(string tradingConditionId, string baseAssetId, string instrumet)
         {
-            var accountAsset = _accountAssetsCacheService.GetAccountAssetNoThrowExceptionOnInvalidData(tradingConditionId, baseAssetId, instrumet);
+            var accountAsset = _accountAssetsCacheService.GetAccountAssetThrowIfNotFound(tradingConditionId, baseAssetId, instrumet);
             return Ok(accountAsset);
         }
 
         [HttpPost]
         [Route("accountAssets/assignInstruments")]
-        [ProducesResponseType(typeof(MarginTradingAccountAsset), 200)]
+        [ProducesResponseType(typeof(AccountAssetPair), 200)]
         public async Task<IActionResult> AssignInstruments([FromBody]AssignInstrumentsModel model)
         {
             await _accountAssetsManager.AssignInstruments(model.TradingConditionId, model.BaseAssetId, model.Instruments);
@@ -398,7 +369,7 @@ namespace MarginTrading.Backend.Controllers
 
         [HttpPost]
         [Route("accountAssets/add")]
-        public async Task<IActionResult> AddOrReplaceAccountAsset([FromBody]MarginTradingAccountAsset model)
+        public async Task<IActionResult> AddOrReplaceAccountAsset([FromBody]AccountAssetPair model)
         {
             await _accountAssetsManager.AddOrReplaceAccountAssetAsync(model);
             await _tradingConditionsManager.UpdateTradingConditions(model.TradingConditionId);
@@ -413,10 +384,10 @@ namespace MarginTrading.Backend.Controllers
 
         [HttpGet]
         [Route("instruments/getall")]
-        [ProducesResponseType(typeof(List<MarginTradingAsset>), 200)]
+        [ProducesResponseType(typeof(List<AssetPair>), 200)]
         public IActionResult GetAllInstruments()
         {
-            var instruments = _instrumentsCache.GetAll();
+            var instruments = _assetPairsCache.GetAll();
             return Ok(instruments);
         }
 
@@ -583,7 +554,7 @@ namespace MarginTrading.Backend.Controllers
 
 
         #region Matching engine routes
-      
+
         [HttpGet]
         [Route("routes")]
         [ProducesResponseType(typeof(List<MatchingEngineRoute>), 200)]
@@ -633,7 +604,7 @@ namespace MarginTrading.Backend.Controllers
             await _routesManager.DeleteRouteAsync(id);
             return Ok();
         }
-               
+
         #endregion
 
 

@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace MarginTrading.Backend.Controllers
 {
     /// <summary>
-    /// 
+    ///
     /// </summary>
     [Route("api/accountprofile")]
     [MiddlewareFilter(typeof(RequestLoggingPipeline))]

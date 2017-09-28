@@ -30,7 +30,7 @@ namespace MarginTrading.Backend.Controllers
         private readonly IClientNotifyService _clientNotifyService;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
-        private readonly IInstrumentsCache _instrumentsCache;
+        private readonly IAssetPairsCache _assetPairsCache;
         private readonly IMatchingEngine _matchingEngine;
         private readonly ITradingEngine _tradingEngine;
         private readonly IAccountsCacheService _accountsCacheService;
@@ -50,7 +50,7 @@ namespace MarginTrading.Backend.Controllers
             IClientNotifyService clientNotifyService,
             IRabbitMqNotifyService rabbitMqNotifyService,
             IAccountAssetsCacheService accountAssetsCacheService,
-            IInstrumentsCache instrumentsCache,
+            IAssetPairsCache assetPairsCache,
             IMatchingEngine matchingEngine,
             ITradingEngine tradingEngine,
             IAccountsCacheService accountsCacheService,
@@ -69,7 +69,7 @@ namespace MarginTrading.Backend.Controllers
             _clientNotifyService = clientNotifyService;
             _rabbitMqNotifyService = rabbitMqNotifyService;
             _accountAssetsCacheService = accountAssetsCacheService;
-            _instrumentsCache = instrumentsCache;
+            _assetPairsCache = assetPairsCache;
             _matchingEngine = matchingEngine;
             _tradingEngine = tradingEngine;
             _accountsCacheService = accountsCacheService;
@@ -182,9 +182,9 @@ namespace MarginTrading.Backend.Controllers
 
         [Route("init.assets")]
         [HttpPost]
-        public MarginTradingAssetBackendContract[] InitAssets()
+        public AssetPairBackendContract[] InitAssets()
         {
-            var instruments = _instrumentsCache.GetAll();
+            var instruments = _assetPairsCache.GetAll();
             return instruments.Where(i => _accountAssetsCacheService.IsInstrumentSupported(i.Id))
                 .Select(item => item.ToBackendContract()).ToArray();
         }

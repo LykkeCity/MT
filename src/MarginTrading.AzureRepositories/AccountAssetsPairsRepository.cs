@@ -8,7 +8,7 @@ using Microsoft.WindowsAzure.Storage.Table;
 
 namespace MarginTrading.AzureRepositories
 {
-    public class MarginTradingAccountAssetEntity : TableEntity, IMarginTradingAccountAsset
+    public class AccountAssetPairEntity : TableEntity, IAccountAssetPair
     {
         public string TradingConditionId { get; set; }
         public string BaseAssetId { get; set; }
@@ -37,9 +37,9 @@ namespace MarginTrading.AzureRepositories
             return instrument;
         }
 
-        public static MarginTradingAccountAssetEntity Create(IMarginTradingAccountAsset src)
+        public static AccountAssetPairEntity Create(IAccountAssetPair src)
         {
-            return new MarginTradingAccountAssetEntity
+            return new AccountAssetPairEntity
             {
                 PartitionKey = GeneratePartitionKey(src.TradingConditionId, src.BaseAssetId),
                 RowKey = GenerateRowKey(src.Instrument),
@@ -62,54 +62,43 @@ namespace MarginTrading.AzureRepositories
         }
     }
 
-    public class MarginTradingAccountAssetsRepository : IMarginTradingAccountAssetRepository
+    public class AccountAssetsPairsRepository : IAccountAssetPairsRepository
     {
-        private readonly INoSQLTableStorage<MarginTradingAccountAssetEntity> _tableStorage;
+        private readonly INoSQLTableStorage<AccountAssetPairEntity> _tableStorage;
 
-        public MarginTradingAccountAssetsRepository(INoSQLTableStorage<MarginTradingAccountAssetEntity> tableStorage)
+        public AccountAssetsPairsRepository(INoSQLTableStorage<AccountAssetPairEntity> tableStorage)
         {
             _tableStorage = tableStorage;
         }
 
-        public async Task AddOrReplaceAsync(IMarginTradingAccountAsset accountAsset)
+        public async Task AddOrReplaceAsync(IAccountAssetPair accountAssetPair)
         {
-            await _tableStorage.InsertOrReplaceAsync(MarginTradingAccountAssetEntity.Create(accountAsset));
+            await _tableStorage.InsertOrReplaceAsync(AccountAssetPairEntity.Create(accountAssetPair));
         }
 
-        public async Task<IMarginTradingAccountAsset> GetAsync(string tradingConditionId, string baseAssetId, string instrument)
+        public async Task<IAccountAssetPair> GetAsync(string tradingConditionId, string baseAssetId, string assetPairId)
         {
-            MarginTradingAccountAssetEntity entity = await _tableStorage.GetDataAsync(MarginTradingAccountAssetEntity.GeneratePartitionKey(tradingConditionId, baseAssetId),
-                MarginTradingAccountAssetEntity.GenerateRowKey(instrument));
-
-            return entity != null
-                ? MarginTradingAccountAssetEntity.Create(entity)
-                : null;
+            return await _tableStorage.GetDataAsync(AccountAssetPairEntity.GeneratePartitionKey(tradingConditionId, baseAssetId),
+                AccountAssetPairEntity.GenerateRowKey(assetPairId));
         }
 
-        public async Task<IEnumerable<IMarginTradingAccountAsset>> GetAllAsync(string tradingConditionId, string baseAssetId)
+        public async Task<IEnumerable<IAccountAssetPair>> GetAllAsync(string tradingConditionId, string baseAssetId)
         {
-            IEnumerable<MarginTradingAccountAssetEntity> entities = await _tableStorage.GetDataAsync(MarginTradingAccountAssetEntity.GeneratePartitionKey(tradingConditionId, baseAssetId));
-
-            return entities.Select(MarginTradingAccountAssetEntity.Create);
+            return await _tableStorage.GetDataAsync(AccountAssetPairEntity.GeneratePartitionKey(tradingConditionId, baseAssetId));
         }
 
-        public async Task<IEnumerable<IMarginTradingAccountAsset>> GetAllAsync()
+        public async Task<IEnumerable<IAccountAssetPair>> GetAllAsync()
         {
-            var entity = await _tableStorage.GetDataAsync();
-
-            return entity.Any()
-                ? entity.Select(MarginTradingAccountAsset.Create)
-                : new List<IMarginTradingAccountAsset>();
+            return await _tableStorage.GetDataAsync();
         }
 
-        public async Task AssignInstruments(string tradingConditionId, string baseAssetId, string[] instruments, AccountAssetsSettings defaults)
+        public async Task AssignAssetPairs(string tradingConditionId, string baseAssetId, string[] assetPairsIds, AccountAssetsSettings defaults)
         {
-            var currentInstruments =
-                (await GetAllAsync(tradingConditionId, baseAssetId)).ToArray();
+            var currentInstruments = (await GetAllAsync(tradingConditionId, baseAssetId)).ToArray();
 
-            if (currentInstruments != null && currentInstruments.Any())
+            if (currentInstruments.Any())
             {
-                var toRemove = currentInstruments.Where(x => !instruments.Contains(x.Instrument)).Select(x => (MarginTradingAccountAssetEntity)x);
+                var toRemove = currentInstruments.Where(x => !assetPairsIds.Contains(x.Instrument)).Select(x => (AccountAssetPairEntity)x);
 
                 foreach (var entity in toRemove)
                 {
@@ -117,11 +106,11 @@ namespace MarginTrading.AzureRepositories
                 }
             }
 
-            if (instruments.Any())
+            if (assetPairsIds.Any())
             {
-                var toAdd = instruments.Where(x => !currentInstruments.Select(y => y.Instrument).Contains(x));
-                var entitiesToAdd = toAdd.Select(x => MarginTradingAccountAssetEntity.Create(
-                    new MarginTradingAccountAsset
+                var toAdd = assetPairsIds.Where(x => !currentInstruments.Select(y => y.Instrument).Contains(x));
+                var entitiesToAdd = toAdd.Select(x => AccountAssetPairEntity.Create(
+                    new AccountAssetPair
                     {
                         BaseAssetId = baseAssetId,
                         TradingConditionId = tradingConditionId,

@@ -22,7 +22,7 @@ namespace MarginTrading.Frontend.Settings
     {
         public string ApiRootUrl { get; set; }
         public string ApiKey { get; set; }
-        
+
         public string MtRabbitMqConnString { get; set; }
     }
 
@@ -50,6 +50,7 @@ namespace MarginTrading.Frontend.Settings
         public string DemoAccountIdPrefix { get; set; }
         public bool RemoteConsoleEnabled { get; set; }
         public string[] AllowOrigins { get; set; }
+        public DataReaderApiSettings DataReaderApiSettings { get; set; }
 
         #region From env variables
 
@@ -63,5 +64,13 @@ namespace MarginTrading.Frontend.Settings
         public RequestLoggerSettings RequestLoggerSettings { get; set; }
         [Optional]
         public string ApplicationInsightsKey { get; set; }
+    }
+
+    public class DataReaderApiSettings
+    {
+        public string DemoApiUrl { get; set; }
+        public string LiveApiUrl { get; set; }
+        public string DemoApiKey { get; set; }
+        public string LiveApiKey { get; set; }
     }
 }
