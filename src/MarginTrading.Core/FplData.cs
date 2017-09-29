@@ -10,5 +10,7 @@
         public double CloseCrossPrice { get; set; }
         public double OpenPrice { get; set; }
         public double ClosePrice { get; set; }
+        public double TotalFplSnapshot { get; set; }
+        public double SwapsSnapshot { get; set; }
     }
 }

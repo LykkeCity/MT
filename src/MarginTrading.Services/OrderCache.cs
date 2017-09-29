@@ -7,27 +7,33 @@ using Common;
 using Common.Log;
 using MarginTrading.Core;
 using MarginTrading.Core.Messages;
-using MarginTradingHelpers = MarginTrading.Services.Helpers.MarginTradingHelpers;
+using MarginTrading.Services.Infrastructure;
 
 namespace MarginTrading.Services
 {
     public interface IOrderReader
     {
         IImmutableList<Order> GetAll();
-        Order GetOrderById(string orderId);
         IImmutableList<Order> GetActive();
         IImmutableList<Order> GetPending();
     }
 
     public class OrdersCache : IOrderReader
     {
+        private readonly IContextFactory _contextFactory;
+
+        public OrdersCache(IContextFactory contextFactory)
+        {
+            _contextFactory = contextFactory;
+        }
+
         public OrderCacheGroup ActiveOrders { get; private set; }
         public OrderCacheGroup WaitingForExecutionOrders { get; private set; }
         public OrderCacheGroup ClosingOrders { get; private set; }
 
         public IImmutableList<Order> GetAll()
         {
-            lock (MarginTradingHelpers.TradingMatchingSync)
+            using (_contextFactory.GetReadSyncContext($"{nameof(OrdersCache)}.{nameof(GetAll)}"))
                 return ActiveOrders.GetAllOrders()
                     .Union(WaitingForExecutionOrders.GetAllOrders())
                     .Union(ClosingOrders.GetAllOrders()).ToImmutableList();
@@ -35,30 +41,23 @@ namespace MarginTrading.Services
 
         public IImmutableList<Order> GetActive()
         {
-            lock (MarginTradingHelpers.TradingMatchingSync)
-                return ActiveOrders.GetAllOrders().ToImmutableList();
+            return ActiveOrders.GetAllOrders().ToImmutableList();
         }
 
         public IImmutableList<Order> GetPending()
         {
-            lock (MarginTradingHelpers.TradingMatchingSync)
-                return WaitingForExecutionOrders.GetAllOrders().ToImmutableList();
+            return WaitingForExecutionOrders.GetAllOrders().ToImmutableList();
         }
 
         public Order GetOrderById(string orderId)
         {
-            lock (MarginTradingHelpers.TradingMatchingSync)
-            {
-                Order result;
+            if (WaitingForExecutionOrders.TryGetOrderById(orderId, out var result))
+                return result;
 
-                if (WaitingForExecutionOrders.TryGetOrderById(orderId, out result))
-                    return result;
+            if (ActiveOrders.TryGetOrderById(orderId, out result))
+                return result;
 
-                if (ActiveOrders.TryGetOrderById(orderId, out result))
-                    return result;
-
-                throw new Exception(string.Format(MtMessages.OrderNotFound, orderId));
-            }
+            throw new Exception(string.Format(MtMessages.OrderNotFound, orderId));
         }
 
         public void InitOrders(List<Order> orders)

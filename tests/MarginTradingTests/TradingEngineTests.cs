@@ -17,7 +17,7 @@ namespace MarginTradingTests
     {
         private ITradingEngine _tradingEngine;
         private IMatchingEngine _matchingEngine;
-        private IMarginTradingAccountAssetRepository _accountAssetRepository;
+        private IAccountAssetPairsRepository _accountAssetPairsRepository;
         private const string MarketMaker1Id = "1";
         private string _acount1Id;
         private string _client1Id;
@@ -55,7 +55,7 @@ namespace MarginTradingTests
             var quote = new InstrumentBidAskPair { Instrument = "BTCUSD", Bid = 829.69, Ask = 829.8 };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
-            _accountAssetRepository = Container.Resolve<IMarginTradingAccountAssetRepository>();
+            _accountAssetPairsRepository = Container.Resolve<IAccountAssetPairsRepository>();
 
             var ordersSet1 = new []
             {
@@ -916,7 +916,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.PartialFill
             };
 
-            _accountAssetRepository.AddOrReplaceAsync(new MarginTradingAccountAsset
+            _accountAssetPairsRepository.AddOrReplaceAsync(new AccountAssetPair
             {
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 BaseAssetId = "USD",

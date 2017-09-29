@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using MarginTrading.Common.BackendContracts;
 using MarginTrading.Core;
+using MarginTrading.Core.MatchedOrders;
 
 namespace MarginTrading.Common.Mappers
 {
@@ -30,9 +31,9 @@ namespace MarginTrading.Common.Mappers
             };
         }
 
-        public static MarginTradingAssetBackendContract ToBackendContract(this IMarginTradingAsset src)
+        public static AssetPairBackendContract ToBackendContract(this IAssetPair src)
         {
-            return new MarginTradingAssetBackendContract
+            return new AssetPairBackendContract
             {
                 Id = src.Id,
                 Name = src.Name,
@@ -42,9 +43,9 @@ namespace MarginTrading.Common.Mappers
             };
         }
 
-        public static MarginTradingAccountAssetBackendContract ToBackendContract(this IMarginTradingAccountAsset src)
+        public static AccountAssetPairBackendContract ToBackendContract(this IAccountAssetPair src)
         {
-            return new MarginTradingAccountAssetBackendContract
+            return new AccountAssetPairBackendContract
             {
                 TradingConditionId = src.TradingConditionId,
                 BaseAssetId = src.BaseAssetId,

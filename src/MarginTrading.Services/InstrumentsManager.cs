@@ -7,14 +7,14 @@ namespace MarginTrading.Services
 {
     public class InstrumentsManager : IStartable
     {
-        private readonly IMarginTradingAssetsRepository _repository;
-        private readonly InstrumentsCache _instrumentsCache;
+        private readonly IAssetPairsRepository _repository;
+        private readonly AssetPairsCache _assetPairsCache;
 
-        public InstrumentsManager(IMarginTradingAssetsRepository repository,
-            InstrumentsCache instrumentsCache)
+        public InstrumentsManager(IAssetPairsRepository repository,
+            AssetPairsCache assetPairsCache)
         {
             _repository = repository;
-            _instrumentsCache = instrumentsCache;
+            _assetPairsCache = assetPairsCache;
         }
 
         public void Start()
@@ -25,7 +25,7 @@ namespace MarginTrading.Services
         public async Task UpdateInstrumentsCache()
         {
             var instruments = (await _repository.GetAllAsync()).ToDictionary(x => x.Id);
-            _instrumentsCache.InitInstrumentsCache(instruments);
+            _assetPairsCache.InitInstrumentsCache(instruments);
         }
     }
 }

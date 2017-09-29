@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using MarginTrading.Core.MatchedOrders;
 
 namespace MarginTrading.Core
 {
@@ -10,7 +9,7 @@ namespace MarginTrading.Core
         string Instrument { get; }
         double Volume { get; }
         DateTime CreateDate { get; }
-        List<MatchedOrder> MatchedOrders { get; }
+        MatchedOrderCollection MatchedOrders { get; set; }
     }
 
     public class BaseOrder : IBaseOrder
@@ -19,7 +18,7 @@ namespace MarginTrading.Core
         public string Instrument { get; set; }
         public double Volume { get; set; }
         public DateTime CreateDate { get; set; } = DateTime.UtcNow;
-        public List<MatchedOrder> MatchedOrders { get; set; } = new List<MatchedOrder>();
+        public MatchedOrderCollection MatchedOrders { get; set; } = new MatchedOrderCollection();
     }
 
     public static class BaseOrderExtension
@@ -34,16 +33,14 @@ namespace MarginTrading.Core
             return order.Volume >= 0 ? OrderDirection.Sell : OrderDirection.Buy;
         }
 
-        public static double GetRemainingVolume(this IBaseOrder order)
-        {
-            return order.MatchedOrders.Count > 0
-                ? Math.Abs(order.Volume) - order.MatchedOrders.Sum(item => item.Volume)
-                : Math.Abs(order.Volume);
-        }
-
         public static bool GetIsFullfilled(this IBaseOrder order)
         {
             return 0 == Math.Round(order.GetRemainingVolume(), MarginTradingHelpers.VolumeAccuracy);
+        }
+
+        public static double GetRemainingVolume(this IBaseOrder order)
+        {
+            return Math.Abs(order.Volume) - order.MatchedOrders.SummaryVolume;
         }
     }
 }

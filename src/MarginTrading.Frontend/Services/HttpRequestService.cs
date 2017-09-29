@@ -77,7 +77,7 @@ namespace MarginTrading.Frontend.Services
             }
             catch (Exception ex)
             {
-                await ProcessException(isLive, action, request.ToJson(), ex, false);
+                ProcessException(isLive, action, request.ToJson(), ex, false);
                 throw;
             }
         }
@@ -92,20 +92,29 @@ namespace MarginTrading.Frontend.Services
             }
             catch (Exception ex)
             {
-                await ProcessException(isLive, path, "GET", ex, false);
+                ProcessException(isLive, path, "GET", ex, false);
                 throw;
             }
         }
 
-        public async Task ProcessException(bool isLive, string path, string context, Exception ex, bool willBeRetried)
+        public void ProcessException(bool isLive, string path, string context, Exception ex, bool willBeRetried)
         {
             path = $"{(isLive ? "Live: " : "Demo: ")}{path}";
 
-            Task WriteLog(Exception e) => willBeRetried
-                                              ? _log.WriteWarningAsync(nameof(HttpRequestService), path, context, "An exception has been encountered but will be retried: " + e)
-                                              : _log.WriteErrorAsync(nameof(HttpRequestService), path, context, e);
+            void WriteLog(Exception e)
+            {
+                if (willBeRetried)
+                {
+                    _log.WriteWarningAsync(nameof(HttpRequestService), path, context,
+                        "An exception has been encountered but will be retried: " + e);
+                }
+                else
+                {
+                    _log.WriteErrorAsync(nameof(HttpRequestService), path, context, e);
+                }
+            }
 
-            await WriteLog(ex);
+            WriteLog(ex);
 
             var responseBody = (ex as FlurlHttpException)?.Call.ErrorResponseBody;
             if (!string.IsNullOrEmpty(responseBody))
@@ -114,7 +123,7 @@ namespace MarginTrading.Frontend.Services
                 if (!string.IsNullOrEmpty(response?.Message))
                 {
                     var newEx = new Exception(response.Message);
-                    await WriteLog(newEx);
+                    WriteLog(newEx);
                     throw newEx;
                 }
             }

@@ -12,7 +12,7 @@ namespace MarginTradingTests
     public class SwapCommissionServiceTests : BaseTests
     {
         private ISwapCommissionService _swapService;
-        private IMarginTradingAccountAssetRepository _accountAssetsRepository;
+        private IAccountAssetPairsRepository _accountAssetsPairsRepository;
         private string _accountId;
         private string _accountAssetId;
         private string _tradingConditionId;
@@ -29,7 +29,7 @@ namespace MarginTradingTests
 
             _accountAssetsManager = Container.Resolve<AccountAssetsManager>();
             _swapService = Container.Resolve<ISwapCommissionService>();
-            _accountAssetsRepository = Container.Resolve<IMarginTradingAccountAssetRepository>();
+            _accountAssetsPairsRepository = Container.Resolve<IAccountAssetPairsRepository>();
             _bestPriceConsumer = Container.Resolve<IEventChannel<BestPriceChangeEventArgs>>();
         }
 
@@ -70,7 +70,7 @@ namespace MarginTradingTests
         {
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "EURUSD", Bid = 1.02, Ask = 1.04 }));
 
-            _accountAssetsRepository.AddOrReplaceAsync(new MarginTradingAccountAsset
+            _accountAssetsPairsRepository.AddOrReplaceAsync(new AccountAssetPair
             {
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 BaseAssetId = "USD",
@@ -98,7 +98,7 @@ namespace MarginTradingTests
         {
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "EURUSD", Bid = 1.02, Ask = 1.04}));
 
-            await _accountAssetsRepository.AddOrReplaceAsync(new MarginTradingAccountAsset
+            await _accountAssetsPairsRepository.AddOrReplaceAsync(new AccountAssetPair
             {
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 BaseAssetId = "USD",

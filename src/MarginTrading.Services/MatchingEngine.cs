@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using MarginTrading.Core;
+using MarginTrading.Core.MatchedOrders;
 using MarginTrading.Services.Events;
-using MarginTradingHelpers = MarginTrading.Services.Helpers.MarginTradingHelpers;
+using MarginTrading.Services.Infrastructure;
 
 namespace MarginTrading.Services
 {
@@ -12,13 +13,15 @@ namespace MarginTrading.Services
         private readonly IEventChannel<OrderBookChangeEventArgs> _orderbookChangeEventChannel;
         private readonly OrderBookList _orderBooks;
         private long _currentMessageId;
+        private readonly IContextFactory _contextFactory;
 
         public MatchingEngine(
             IEventChannel<OrderBookChangeEventArgs> orderbookChangeEventChannel,
-            OrderBookList orderBooks)
+            OrderBookList orderBooks, IContextFactory contextFactory)
         {
             _orderbookChangeEventChannel = orderbookChangeEventChannel;
             _orderBooks = orderBooks;
+            _contextFactory = contextFactory;
             _currentMessageId = 0;
         }
 
@@ -26,17 +29,17 @@ namespace MarginTrading.Services
 
         public void SetOrders(SetOrderModel model)
         {
-            lock (MarginTradingHelpers.TradingMatchingSync)
+            using (_contextFactory.GetWriteSyncContext($"{nameof(MatchingEngine)}.{nameof(SetOrders)}"))
             {
                 var changeEventArgs = new OrderBookChangeEventArgs { MessageId = _currentMessageId++ };
 
-                if (model.DeleteByInstrumentsBuy?.Length > 0)
+                if (model.DeleteByInstrumentsBuy?.Count > 0)
                 {
                     var deletedOrders = _orderBooks.DeleteAllBuyOrdersByMarketMaker(model.MarketMakerId, model.DeleteByInstrumentsBuy).ToArray();
                     changeEventArgs.AddOrderBookLevelsToDelete(deletedOrders);
                 }
 
-                if (model.DeleteByInstrumentsSell?.Length > 0)
+                if (model.DeleteByInstrumentsSell?.Count > 0)
                 {
                     var deletedOrders = _orderBooks.DeleteAllSellOrdersByMarketMaker(model.MarketMakerId, model.DeleteByInstrumentsSell).ToArray();
                     changeEventArgs.AddOrderBookLevelsToDelete(deletedOrders);
@@ -54,11 +57,11 @@ namespace MarginTrading.Services
                     changeEventArgs.AddOrderBookLevelsToDelete(deletedOrders);
                 }
 
-                if (model.OrdersToAdd?.Length > 0)
+                if (model.OrdersToAdd?.Count > 0)
                 {
                     var addedOrders = _orderBooks.AddMarketMakerOrders(model.OrdersToAdd).ToArray();
                     changeEventArgs.AddOrderBookLevels(addedOrders);
-                }   
+                }
 
                 if (changeEventArgs.HasEvents())
                     _orderbookChangeEventChannel.SendEvent(this, changeEventArgs);
@@ -67,7 +70,7 @@ namespace MarginTrading.Services
 
         public Dictionary<string, OrderBook> GetOrderBook(List<string> marketMakerIds)
         {
-            lock (MarginTradingHelpers.TradingMatchingSync)
+            using (_contextFactory.GetReadSyncContext($"{nameof(MatchingEngine)}.{nameof(GetOrderBook)}"))
             {
                 var result = new Dictionary<string, OrderBook>();
 
@@ -81,13 +84,15 @@ namespace MarginTrading.Services
             }
         }
 
-        public void MatchMarketOrderForOpen(Order order, Func<MatchedOrder[], bool> matchedFunc)
+        public void MatchMarketOrderForOpen(Order order, Func<MatchedOrderCollection, bool> matchedFunc)
         {
-            lock (MarginTradingHelpers.TradingMatchingSync)
+            using (_contextFactory.GetWriteSyncContext($"{nameof(MatchingEngine)}.{nameof(MatchMarketOrderForOpen)}"))
             {
                 OrderDirection type = order.GetOrderType();
 
-                var matchedOrders = _orderBooks.Match(order, type.GetOrderTypeToMatchInOrderBook(), Math.Abs(order.Volume)).ToArray();
+                var matchedOrders =
+                    _orderBooks.Match(order, type.GetOrderTypeToMatchInOrderBook(), Math.Abs(order.Volume));
+
                 if (matchedFunc(matchedOrders))
                 {
                     _orderBooks.Update(order, type.GetOrderTypeToMatchInOrderBook(), matchedOrders);
@@ -95,29 +100,31 @@ namespace MarginTrading.Services
                     changeEventArgs.AddOrderBookLevelsToDeletePartial(matchedOrders.Select(item => item.CreateLimit(order.Instrument, type.GetOrderTypeToMatchInOrderBook())).ToArray());
                     _orderbookChangeEventChannel.SendEvent(this, changeEventArgs);
                 }
-            } 
+            }
         }
 
-        public void MatchMarketOrderForClose(Order order, Func<MatchedOrder[], bool> matchedAction)
+        public void MatchMarketOrderForClose(Order order, Func<MatchedOrderCollection, bool> matchedAction)
         {
-            lock (MarginTradingHelpers.TradingMatchingSync)
+            using (_contextFactory.GetWriteSyncContext($"{nameof(MatchingEngine)}.{nameof(MatchMarketOrderForClose)}"))
             {
                 OrderDirection type = order.GetCloseType();
 
-                var matchedOrders = _orderBooks.Match(order, type.GetOrderTypeToMatchInOrderBook(), Math.Abs(order.GetRemainingCloseVolume())).ToArray();
+                var matchedOrders = _orderBooks.Match(order, type.GetOrderTypeToMatchInOrderBook(),
+                    Math.Abs(order.GetRemainingCloseVolume()));
+
                 if (!matchedAction(matchedOrders))
                     return;
 
                 _orderBooks.Update(order, type.GetOrderTypeToMatchInOrderBook(), matchedOrders);
                 var changeEventArgs = new OrderBookChangeEventArgs { MessageId = _currentMessageId++ };
-                changeEventArgs.AddOrderBookLevels(type.GetOrderTypeToMatchInOrderBook(), order.Instrument, matchedOrders);
+                changeEventArgs.AddOrderBookLevels(type.GetOrderTypeToMatchInOrderBook(), order.Instrument, matchedOrders.ToArray());
                 _orderbookChangeEventChannel.SendEvent(this, changeEventArgs);
             } // lock
         }
 
         public bool PingLock()
         {
-            lock (MarginTradingHelpers.TradingMatchingSync)
+            using (_contextFactory.GetReadSyncContext($"{nameof(MatchingEngine)}.{nameof(PingLock)}"))
             {
                 return true;
             }

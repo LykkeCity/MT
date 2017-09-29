@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Autofac;
 using MarginTrading.Core;
+using MarginTrading.Core.MatchedOrders;
 using NUnit.Framework;
 
 namespace MarginTradingTests
@@ -598,7 +599,7 @@ namespace MarginTradingTests
 
         #endregion
 
-        private bool ProcessOrders(Order order, MatchedOrder[] matchedOrders)
+        private bool ProcessOrders(Order order, MatchedOrderCollection matchedOrders)
         {
             if (!matchedOrders.Any())
             {
@@ -609,7 +610,7 @@ namespace MarginTradingTests
                 return false;
             }
 
-            if (matchedOrders.GetTotalVolume() < Math.Abs(order.Volume) && order.FillType == OrderFillType.FillOrKill)
+            if (matchedOrders.SummaryVolume < Math.Abs(order.Volume) && order.FillType == OrderFillType.FillOrKill)
             {
                 order.CloseDate = DateTime.UtcNow;
                 order.Status = OrderStatus.Rejected;
@@ -626,8 +627,8 @@ namespace MarginTradingTests
             //    return false;
             //}
 
-            order.MatchedOrders.AddRange(matchedOrders);
-            order.OpenPrice = Math.Round(order.MatchedOrders.GetWeightedAveragePrice(), order.AssetAccuracy);
+            order.MatchedOrders = matchedOrders;
+            order.OpenPrice = Math.Round(order.MatchedOrders.WeightedAveragePrice, order.AssetAccuracy);
             order.OpenDate = DateTime.UtcNow;
             order.Status = OrderStatus.Active;
             return true;

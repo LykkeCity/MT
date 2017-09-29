@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MarginTrading.Common.Extensions;
 using MarginTrading.Core;
-using MarginTrading.Core.Assets;
 using MarginTrading.Core.MarketMakerFeed;
 
 namespace MarginTrading.Services
@@ -11,146 +10,51 @@ namespace MarginTrading.Services
     public class MarketMakerService : IFeedConsumer
     {
         private readonly IMatchingEngine _matchingEngine;
-        private readonly IAssetDayOffService _assetDayOffService;
-        private readonly IAccountAssetsCacheService _assetsCacheService;
-        private readonly IQuoteCacheService _quoteCache;
-        private const string MarketMakerId = "marketMaker1";
-        private static Dictionary<string, IAssetPairRate> _pendingBuyRates = new Dictionary<string, IAssetPairRate>();
-        private static Dictionary<string, IAssetPairRate> _pendingSellRates = new Dictionary<string, IAssetPairRate>();
 
-        public MarketMakerService(IMatchingEngine matchingEngine,
-            IAssetDayOffService assetDayOffService,
-            IAccountAssetsCacheService assetsCacheService,
-            IQuoteCacheService quoteCache)
+        public MarketMakerService(IMatchingEngine matchingEngine)
         {
             _matchingEngine = matchingEngine;
-            _assetDayOffService = assetDayOffService;
-            _assetsCacheService = assetsCacheService;
-            _quoteCache = quoteCache;
         }
 
-        public void ConsumeFeed(IAssetPairRate feedData)
+        public void ConsumeFeed(MarketMakerOrderCommandsBatchMessage batch)
         {
-            //if no asset pair ID in trading conditions, no need to process price
-            if (!_assetsCacheService.IsInstrumentSupported(feedData.AssetPairId))
-                return;
+            batch.AssetPairId.RequiredNotNullOrWhiteSpace(nameof(batch.AssetPairId));
+            batch.Commands.RequiredNotNull(nameof(batch.Commands));
 
-            var model = new SetOrderModel {MarketMakerId = MarketMakerId};
+            var model = new SetOrderModel {MarketMakerId = batch.MarketMakerId};
 
-            if (feedData.IsBuy)
+            ConvertCommandsToOrders(batch, model);
+            if (model.OrdersToAdd?.Count > 0 || model.DeleteByInstrumentsBuy?.Count > 0 ||
+                model.DeleteByInstrumentsSell?.Count > 0)
             {
-                model.DeleteByInstrumentsBuy = new[] {feedData.AssetPairId};
-            }
-            else
-            {
-                model.DeleteByInstrumentsSell = new[] { feedData.AssetPairId };
-            }
-
-            //if day off, just remove all orders
-            if (_assetDayOffService.IsDayOff(feedData.AssetPairId))
-            {
-                _matchingEngine.SetOrders(model);
-                return;
-            }
-
-            var orders = CreateLimitOrders(feedData);
-
-            if (orders != null)
-            {
-                model.OrdersToAdd = orders;
                 _matchingEngine.SetOrders(model);
             }
         }
 
-        public async Task ShutdownApplication()
+        private void ConvertCommandsToOrders(MarketMakerOrderCommandsBatchMessage batch, SetOrderModel model)
         {
-            await Task.Run(() =>
-            {
-                Console.WriteLine("Processing before shutdown");
-            });
+            var setCommands = batch.Commands.Where(c => c.CommandType == MarketMakerOrderCommandType.SetOrder && c.Direction != null).ToList();
+            model.OrdersToAdd = setCommands
+                .Select(c => new LimitOrder
+                {
+                    Id = Guid.NewGuid().ToString("N"),
+                    MarketMakerId = batch.MarketMakerId,
+                    CreateDate = DateTime.UtcNow,
+                    Instrument = batch.AssetPairId,
+                    Price = c.Price.RequiredNotNull(nameof(c.Price)),
+                    Volume = c.Direction.RequiredNotNull(nameof(c.Direction)) == OrderDirection.Buy
+                        ? c.Volume.Value
+                        : -c.Volume.Value
+                }).ToList();
+
+            AddOrdersToDelete(batch, model);
         }
 
-        private LimitOrder[] CreateLimitOrders(IAssetPairRate feedData)
+        private static void AddOrdersToDelete(MarketMakerOrderCommandsBatchMessage batch, SetOrderModel model)
         {
-            InstrumentBidAskPair bestBidAsk;
-            IAssetPairRate pendingFeed = null;
-
-            if (_quoteCache.TryGetQuoteById(feedData.AssetPairId, out bestBidAsk))
-            {
-                if (feedData.IsBuy)
-                {
-                    var bid = feedData.Price;
-                    var ask = bestBidAsk.Ask;
-                    _pendingSellRates.TryGetValue(feedData.AssetPairId, out pendingFeed);
-
-                    if (bid >= ask)
-                    {
-                        if (pendingFeed != null)
-                        {
-                            if (bid >= pendingFeed.Price)
-                            {
-                                _pendingBuyRates[feedData.AssetPairId] = feedData;
-                                return null;
-                            }
-                        }
-                        else
-                        {
-                            _pendingBuyRates[feedData.AssetPairId] = feedData;
-                            return null;
-                        }
-                    }
-
-                    if (pendingFeed != null)
-                    {
-                        _pendingSellRates.Remove(feedData.AssetPairId);
-                    }
-
-                }
-                else
-                {
-                    var bid = bestBidAsk.Bid;
-                    var ask = feedData.Price;
-                    _pendingBuyRates.TryGetValue(feedData.AssetPairId, out pendingFeed);
-
-                    if (bid >= ask)
-                    {
-                        if (pendingFeed != null)
-                        {
-                            if (bid >= pendingFeed.Price)
-                            {
-                                _pendingSellRates[feedData.AssetPairId] = feedData;
-                                return null;
-                            }
-                        }
-                        else
-                        {
-                            _pendingSellRates[feedData.AssetPairId] = feedData;
-                            return null;
-                        }
-                    }
-
-                    if (pendingFeed != null)
-                    {
-                        _pendingBuyRates.Remove(feedData.AssetPairId);
-                    }
-                }
-            }
-
-            return new[] {feedData, pendingFeed}.Where(d => d != null).Select(CreateOrder).ToArray();
-        }
-
-        private LimitOrder CreateOrder(IAssetPairRate feedData)
-        {
-            var volume = feedData.IsBuy ? 1000000 : -1000000;
-            return new LimitOrder
-            {
-                Id = Guid.NewGuid().ToString("N"),
-                MarketMakerId = MarketMakerId,
-                CreateDate = DateTime.UtcNow,
-                Instrument = feedData.AssetPairId,
-                Price = feedData.Price,
-                Volume = volume
-            };
+            var directions = batch.Commands.Where(c => c.CommandType == MarketMakerOrderCommandType.DeleteOrder).Select(c => c.Direction).Distinct().ToList();
+            model.DeleteByInstrumentsBuy = directions.Where(d => d == OrderDirection.Buy || d == null).Select(d => batch.AssetPairId).ToList();
+            model.DeleteByInstrumentsSell = directions.Where(d => d == OrderDirection.Sell || d == null).Select(d => batch.AssetPairId).ToList();
         }
     }
 }

@@ -9,11 +9,11 @@ namespace MarginTrading.Common.BackendContracts
     public class InitDataBackendResponse
     {
         public MarginTradingAccountBackendContract[] Accounts { get; set; }
-        public Dictionary<string, MarginTradingAccountAssetBackendContract[]> AccountAssetPairs { get; set; }
+        public Dictionary<string, AccountAssetPairBackendContract[]> AccountAssetPairs { get; set; }
         public bool IsLive { get; set; }
 
         public static InitDataBackendResponse Create(IEnumerable<IMarginTradingAccount> accounts,
-            Dictionary<string, IMarginTradingAccountAsset[]> accountAssetPairs, bool isLive)
+            Dictionary<string, IAccountAssetPair[]> accountAssetPairs, bool isLive)
         {
             return new InitDataBackendResponse
             {
@@ -27,7 +27,7 @@ namespace MarginTrading.Common.BackendContracts
             return new InitDataBackendResponse
             {
                 Accounts = Array.Empty<MarginTradingAccountBackendContract>(),
-                AccountAssetPairs = new Dictionary<string, MarginTradingAccountAssetBackendContract[]>(),
+                AccountAssetPairs = new Dictionary<string, AccountAssetPairBackendContract[]>(),
             };
         }
     }

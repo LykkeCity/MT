@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 
 namespace MarginTrading.Core
@@ -20,7 +21,7 @@ namespace MarginTrading.Core
         public double StopOut { get; set; }
         public double DepositTransferLimit { get; set; }
 
-        public static IMarginTradingAccountGroup Create(IMarginTradingAccountGroup src)
+        public static MarginTradingAccountGroup Create(IMarginTradingAccountGroup src)
         {
             return new MarginTradingAccountGroup
             {
