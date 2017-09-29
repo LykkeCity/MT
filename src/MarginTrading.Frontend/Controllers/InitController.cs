@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Common.ClientContracts;
+using MarginTrading.Core;
 using MarginTrading.Frontend.Extensions;
 using MarginTrading.Frontend.Models;
 using MarginTrading.Frontend.Services;
@@ -14,10 +16,12 @@ namespace MarginTrading.Frontend.Controllers
     public class InitController : Controller
     {
         private readonly RpcFacade _rpcFacade;
+        private readonly IDateService _dateService;
 
-        public InitController(RpcFacade rpcFacade)
+        public InitController(RpcFacade rpcFacade, IDateService dateService)
         {
             _rpcFacade = rpcFacade;
+            _dateService = dateService;
         }
 
         [Route("data")]
@@ -131,6 +135,40 @@ namespace MarginTrading.Frontend.Controllers
             var initPrices = await _rpcFacade.InitPrices(clientId, request?.AssetIds);
 
             return ResponseModel<Dictionary<string, BidAskClientContract>>.CreateOk(initPrices);
+        }
+
+        [Route("~/api/v2/init/prices")]
+        [HttpGet]
+        public async Task<ResponseModel<InitPricesResponse>> InitPricesV2()
+        {
+            var clientId = this.GetClientId();
+
+            if (clientId == null)
+            {
+                return this.UserNotFoundError<InitPricesResponse>();
+            }
+
+            var initPrices = await _rpcFacade.InitPrices(clientId);
+            var result = new InitPricesResponse { Prices = initPrices.Values.ToArray(), ServerTime = _dateService.Now() };
+
+            return ResponseModel<InitPricesResponse>.CreateOk(result);
+        }
+
+        [Route("~/api/v2/init/prices/filtered")]
+        [HttpPost]
+        public async Task<ResponseModel<InitPricesResponse>> InitPricesWithFilterV2([FromBody] InitPricesFilteredRequest request)
+        {
+            var clientId = this.GetClientId();
+
+            if (clientId == null)
+            {
+                return this.UserNotFoundError<InitPricesResponse>();
+            }
+
+            var initPrices = await _rpcFacade.InitPrices(clientId, request?.AssetIds);
+            var result = new InitPricesResponse { Prices = initPrices.Values.ToArray(), ServerTime = _dateService.Now() };
+
+            return ResponseModel<InitPricesResponse>.CreateOk(result);
         }
     }
 }
