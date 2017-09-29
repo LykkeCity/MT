@@ -66,7 +66,7 @@ namespace MarginTrading.Services
             var accountFpl = new AccountFpl();
             var newInstance = MarginTradingAccount.Create(_accountsCacheService.Get(order.ClientId, order.AccountId), accountFpl);
 
-            var orders = _ordersCache.ActiveOrders.GetOrders(order.Instrument, order.AccountId).ToList();
+            var orders = _ordersCache.ActiveOrders.GetOrdersByInstrumentAndAccount(order.Instrument, order.AccountId).ToList();
             orders.Add(order);
 
             UpdateAccount(newInstance, accountFpl, orders.ToArray());

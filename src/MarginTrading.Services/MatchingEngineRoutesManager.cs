@@ -136,9 +136,9 @@ namespace MarginTrading.Services
 
         private void ValidateClient(string clientId)
         {
-            var userAccount = _accountsCacheService.GetAll().FirstOrDefault(a => a.ClientId == clientId);
+            var userAccounts = _accountsCacheService.GetAll(clientId);
                 
-            if (userAccount == null)
+            if (!userAccounts.Any())
                 throw new ArgumentException("Invalid ClientId");
         }
 

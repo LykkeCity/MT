@@ -1,4 +1,4 @@
-﻿    using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -9,21 +9,24 @@ namespace MarginTrading.Services
 {
     public class AccountAssetsCacheService : IAccountAssetsCacheService
     {
-        private List<IAccountAssetPair> _accountAssets = new List<IAccountAssetPair>();
+        private Dictionary<(string, string), IAccountAssetPair[]> _accountGroupCache =
+            new Dictionary<(string, string), IAccountAssetPair[]>();
+        private Dictionary<(string, string, string), IAccountAssetPair> _instrumentsCache =
+            new Dictionary<(string, string, string), IAccountAssetPair>();
         private HashSet<string> _instruments = new HashSet<string>();
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
 
-        public IAccountAssetPair GetAccountAsset(string tradingConditionId, string accountAssetId,
-            string instrument)
+        public IAccountAssetPair GetAccountAsset(string tradingConditionId, string accountAssetId, string instrument)
         {
-            IAccountAssetPair accountAssetPair;
+            IAccountAssetPair accountAssetPair = null;
 
             _lockSlim.EnterReadLock();
             try
             {
-                accountAssetPair = _accountAssets.FirstOrDefault(item =>
-                    item.TradingConditionId == tradingConditionId && item.BaseAssetId == accountAssetId &&
-                    item.Instrument == instrument);
+                var key = GetInstrumentCacheKey(tradingConditionId, accountAssetId, instrument);
+
+                if (_instrumentsCache.ContainsKey(key))
+                    accountAssetPair = _instrumentsCache[key];
             }
             finally
             {
@@ -54,14 +57,15 @@ namespace MarginTrading.Services
         public IAccountAssetPair GetAccountAssetThrowIfNotFound(string tradingConditionId,
             string accountAssetId, string instrument)
         {
-            IAccountAssetPair accountAssetPair;
+            IAccountAssetPair accountAssetPair = null;
 
             _lockSlim.EnterReadLock();
             try
             {
-                accountAssetPair = _accountAssets.FirstOrDefault(item =>
-                    item.TradingConditionId == tradingConditionId && item.BaseAssetId == accountAssetId &&
-                    item.Instrument == instrument);
+                var key = GetInstrumentCacheKey(tradingConditionId, accountAssetId, instrument);
+
+                if (_instrumentsCache.ContainsKey(key))
+                    accountAssetPair = _instrumentsCache[key];
             }
             finally
             {
@@ -92,12 +96,11 @@ namespace MarginTrading.Services
             {
                 foreach (var account in accounts)
                 {
-                    if (!result.ContainsKey(account.BaseAssetId))
+                    var key = GetAccountGroupCacheKey(account.TradingConditionId, account.BaseAssetId);
+
+                    if (!result.ContainsKey(account.BaseAssetId) && _accountGroupCache.ContainsKey(key))
                     {
-                        result.Add(account.BaseAssetId,
-                            _accountAssets.Where(item =>
-                                item.TradingConditionId == account.TradingConditionId &&
-                                item.BaseAssetId == account.BaseAssetId).ToArray());
+                        result.Add(account.BaseAssetId, _accountGroupCache[key]);
                     }
                 }
             }
@@ -105,33 +108,16 @@ namespace MarginTrading.Services
             {
                 _lockSlim.ExitReadLock();
             }
-
+            
             return result;
         }
 
-        public List<string> GetAccountAssetIds(string tradingConditionId, string baseAssetId)
+        public ICollection<IAccountAssetPair> GetAccountAssets(string tradingConditionId, string baseAssetId)
         {
             _lockSlim.EnterReadLock();
             try
             {
-                return _accountAssets.Where(item =>
-                        item.TradingConditionId == tradingConditionId && item.BaseAssetId == baseAssetId)
-                    .Select(item => item.Instrument).ToList();
-            }
-            finally
-            {
-                _lockSlim.ExitReadLock();
-            }
-        }
-
-        public List<IAccountAssetPair> GetAccountAssets(string tradingConditionId, string baseAssetId)
-        {
-            _lockSlim.EnterReadLock();
-            try
-            {
-                return _accountAssets.Where(item =>
-                        item.TradingConditionId == tradingConditionId && item.BaseAssetId == baseAssetId)
-                    .ToList();
+                return _accountGroupCache[GetAccountGroupCacheKey(tradingConditionId, baseAssetId)].ToList();
             }
             finally
             {
@@ -157,13 +143,30 @@ namespace MarginTrading.Services
             _lockSlim.EnterWriteLock();
             try
             {
-                _accountAssets = accountAssets;
+                _accountGroupCache = accountAssets
+                    .GroupBy(a => GetAccountGroupCacheKey(a.TradingConditionId, a.BaseAssetId))
+                    .ToDictionary(g => g.Key, g => g.ToArray());
+
+                _instrumentsCache = accountAssets
+                    .GroupBy(a => GetInstrumentCacheKey(a.TradingConditionId, a.BaseAssetId, a.Instrument))
+                    .ToDictionary(g => g.Key, g => g.SingleOrDefault());
+
                 _instruments = new HashSet<string>(accountAssets.Select(a => a.Instrument).Distinct());
             }
             finally
             {
                 _lockSlim.ExitWriteLock();
             }
+        }
+
+        private (string, string) GetAccountGroupCacheKey(string tradingCondition, string assetId)
+        {
+            return (tradingCondition, assetId);
+        }
+
+        private (string, string, string) GetInstrumentCacheKey(string tradingCondition, string assetId, string instrument)
+        {
+            return (tradingCondition, assetId, instrument);
         }
     }
 }

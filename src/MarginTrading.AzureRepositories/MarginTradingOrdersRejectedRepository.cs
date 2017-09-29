@@ -6,6 +6,7 @@ using AzureStorage;
 using AzureStorage.Tables;
 using Common;
 using MarginTrading.Core;
+using MarginTrading.Core.MatchedOrders;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace MarginTrading.AzureRepositories
