@@ -10,8 +10,15 @@ namespace MarginTrading.Services.Infrastructure
 {
     /// <summary>
     /// Context for synchronization of trade operations.
-    /// Usage of async/await inside context is prohibited.
-    /// </summary>
+    /// Usage of async/await inside context is prohibited:
+    /// under the hood it uses the Monitor.Enter() & Exit(), which are broken by awaits.
+    /// </summary>    
+    ///     
+    /// <remarks>
+    /// If async continuation happens to execute on a different thread - 
+    /// monitor will not be able to perform Exit(), and nested Enter() will lead to a deadlock.
+    /// This is because monitor tracks the thread which entered the lock.
+    /// Such code can work on dev environment, but can cause "magic" issues on production.
     public class TradingSyncContext : IDisposable
     {
         private readonly string _contextType;
