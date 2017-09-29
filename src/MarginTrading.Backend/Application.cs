@@ -29,7 +29,7 @@ namespace MarginTrading.Backend
         private readonly ILog _logger;
         private readonly MarginSettings _marginSettings;
         private readonly IMaintenanceModeService _maintenanceModeService;
-        private RabbitMqSubscriber<MarketMakerOrderBook> _connector;
+        private RabbitMqSubscriber<MarketMakerOrderCommandsBatchMessage> _connector;
         private const string ServiceName = "MarginTrading.Backend";
 
         public Application(
@@ -58,22 +58,17 @@ namespace MarginTrading.Backend
             {
                 var settings = new RabbitMqSubscriptionSettings
                 {
-                    ConnectionString = _marginSettings.SpotRabbitMqSettings.ConnectionString,
-                    QueueName =
-                        QueueHelper.BuildQueueName(_marginSettings.SpotRabbitMqSettings.ExchangeName,
-                            _marginSettings.IsLive ? "Live" : "Demo"),
-                    ExchangeName = _marginSettings.SpotRabbitMqSettings.ExchangeName,
-                    IsDurable = _marginSettings.SpotRabbitMqSettings.IsDurable
+                    ConnectionString = _marginSettings.MarketMakerRabbitMqSettings.ConnectionString,
+                    QueueName = QueueHelper.BuildQueueName(_marginSettings.MarketMakerRabbitMqSettings.ExchangeName, _marginSettings.IsLive ? "Live" : "Demo"),
+                    ExchangeName = _marginSettings.MarketMakerRabbitMqSettings.ExchangeName,
+                    IsDurable = _marginSettings.MarketMakerRabbitMqSettings.IsDurable
                 };
-
-                _connector =
-                    new RabbitMqSubscriber<MarketMakerOrderBook>(settings,
-                            new DefaultErrorHandlingStrategy(_logger, settings))
-                        .SetMessageDeserializer(new BackEndDeserializer<MarketMakerOrderBook>())
-                        .Subscribe(HandleMessage)
-                        .SetLogger(_logger)
-                        .SetConsole(_consoleWriter)
-                        .Start();
+                _connector = new RabbitMqSubscriber<MarketMakerOrderCommandsBatchMessage>(settings, new DefaultErrorHandlingStrategy(_logger, settings))
+                    .SetMessageDeserializer(new BackEndDeserializer<MarketMakerOrderCommandsBatchMessage>())
+                    .Subscribe(HandleMessage)
+                    .SetLogger(_logger)
+                    .SetConsole(_consoleWriter)
+                    .Start();
             }
             catch (Exception ex)
             {
@@ -89,21 +84,15 @@ namespace MarginTrading.Backend
             _consoleWriter.WriteLine($"Closing {ServiceName}");
             _logger.WriteInfoAsync(ServiceName, null, null, "Closing broker").Wait();
             _connector.Stop();
-            _consumers.ForEach(c => c.ShutdownApplication());
             _rabbitMqNotifyService.Stop();
             Stop();
             _consoleWriter.WriteLine($"Closed {ServiceName}");
         }
 
-        private Task HandleMessage(MarketMakerOrderBook orderBook)
+        private Task HandleMessage(MarketMakerOrderCommandsBatchMessage feedData)
         {
-            if (orderBook.Prices.Any())
-            {
-                IAssetPairRate rate = AssetPairRate.Create(orderBook);
-                _consumers.ForEach(c => c.ConsumeFeed(rate));
-            }
-            
-            return Task.FromResult(0);
+            _consumers.ForEach(c => c.ConsumeFeed(feedData));
+            return Task.CompletedTask;
         }
 
         public override async Task Execute()

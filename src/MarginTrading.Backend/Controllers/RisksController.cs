@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,12 +18,12 @@ namespace MarginTrading.Backend.Controllers
     [MiddlewareFilter(typeof(RequestLoggingPipeline))]
     public class RisksController : Controller
     {
-        private readonly IInstrumentsCache _instrumentsCache;
+        private readonly IAssetPairsCache _instrumentsCache;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly MarginSettings _marginSettings;
         private readonly IMarginTradingAccountHistoryRepository _accountHistoryRepository;
 
-        public RisksController(IInstrumentsCache instrumentsCache,
+        public RisksController(IAssetPairsCache instrumentsCache,
             IAccountsCacheService accountsCacheService, 
             MarginSettings marginSettings,
             IMarginTradingAccountHistoryRepository accountHistoryRepository)
@@ -36,7 +36,7 @@ namespace MarginTrading.Backend.Controllers
 
         [Route("assets")]
         [HttpGet]
-        public MarginTradingAssetBackendContract[] GetAllAssets()
+        public AssetPairBackendContract[] GetAllAssets()
         {
             var instruments = _instrumentsCache.GetAll();
             return instruments.Select(item => item.ToBackendContract()).ToArray();

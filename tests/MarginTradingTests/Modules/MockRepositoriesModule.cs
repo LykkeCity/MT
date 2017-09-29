@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Autofac;
+using AzureStorage.Tables;
 using Common.Log;
+using MarginTrading.AzureRepositories;
 using MarginTrading.Core;
 using MarginTrading.Core.Clients;
 using MarginTrading.Services;
@@ -34,7 +36,9 @@ namespace MarginTradingTests.Modules
             var clientAccountsRepository = new Mock<IClientAccountsRepository>();
             clientAccountsRepository
                 .Setup(item => item.GetByIdAsync(It.IsAny<string>()))
-                .Returns(() => Task.FromResult((IClientAccount)new ClientAccount { Id = "1", NotificationsId = new Guid().ToString()}));
+                .Returns(() =>
+                    Task.FromResult(
+                        (IClientAccount) new ClientAccount {Id = "1", NotificationsId = new Guid().ToString()}));
 
             var clientSettingsRepository = new Mock<IClientSettingsRepository>();
             clientSettingsRepository
@@ -42,18 +46,23 @@ namespace MarginTradingTests.Modules
                 .Returns(() => Task.FromResult(new PushNotificationsSettings {Enabled = true}));
 
             builder.RegisterInstance(new LogToMemory()).As<ILog>();
-            builder.RegisterInstance(assetsRepository).As<IMarginTradingAssetsRepository>().SingleInstance();
+            builder.RegisterInstance(assetsRepository).As<IAssetPairsRepository>().SingleInstance();
             builder.RegisterInstance(accountRepository).As<IMarginTradingAccountsRepository>().SingleInstance();
+            builder.RegisterInstance(
+                    new MarginTradingAccountStatsRepository(new NoSqlTableInMemory<MarginTradingAccountStatsEntity>()))
+                .As<IMarginTradingAccountStatsRepository>().SingleInstance();
             builder.RegisterInstance(conditionsRepository).As<IMarginTradingConditionRepository>().SingleInstance();
-            builder.RegisterInstance(accountGroupRepository).As<IMarginTradingAccountGroupRepository>().SingleInstance();
-            builder.RegisterInstance(accountAssetsRepository).As<IMarginTradingAccountAssetRepository>().SingleInstance();
+            builder.RegisterInstance(accountGroupRepository).As<IMarginTradingAccountGroupRepository>()
+                .SingleInstance();
+            builder.RegisterInstance(accountAssetsRepository).As<IAccountAssetPairsRepository>().SingleInstance();
             builder.RegisterInstance(watchListRepository).As<IMarginTradingWatchListRepository>().SingleInstance();
             builder.RegisterInstance(meRoutesRepository).As<IMatchingEngineRoutesRepository>().SingleInstance();
             builder.RegisterType<MatchingEngineInMemoryRepository>().As<IMatchingEngineRepository>().SingleInstance();
 
             //mocks
             builder.RegisterInstance(blobRepository.Object).As<IMarginTradingBlobRepository>().SingleInstance();
-            builder.RegisterInstance(orderHistoryRepository.Object).As<IMarginTradingOrdersHistoryRepository>().SingleInstance();
+            builder.RegisterInstance(orderHistoryRepository.Object).As<IMarginTradingOrdersHistoryRepository>()
+                .SingleInstance();
             builder.RegisterInstance(clientSettingsRepository.Object).As<IClientSettingsRepository>().SingleInstance();
             builder.RegisterInstance(clientAccountsRepository.Object).As<IClientAccountsRepository>().SingleInstance();
         }

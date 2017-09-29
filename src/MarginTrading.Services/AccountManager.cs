@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
+using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.Core;
@@ -10,7 +11,7 @@ using MarginTrading.Core.Settings;
 
 namespace MarginTrading.Services
 {
-    public class AccountManager: IStartable
+    public class AccountManager: TimerPeriod
     {
         private readonly AccountsCacheService _accountsCacheService;
         private readonly IMarginTradingAccountsRepository _repository;
@@ -22,6 +23,7 @@ namespace MarginTrading.Services
         private readonly ITradingConditionsCacheService _tradingConditionsCacheService;
         private readonly ILog _log;
         private readonly IClientNotifyService _clientNotifyService;
+        private readonly IMarginTradingAccountStatsRepository _statsRepository;
 
 
         public AccountManager(AccountsCacheService accountsCacheService,
@@ -33,7 +35,9 @@ namespace MarginTrading.Services
             IMarginTradingAccountsRepository accountsRepository,
             ITradingConditionsCacheService tradingConditionsCacheService,
             ILog log,
-            IClientNotifyService clientNotifyService)
+            IClientNotifyService clientNotifyService,
+            IMarginTradingAccountStatsRepository statsRepository)
+            : base(nameof(AccountManager), 10000, log)
         {
             _accountsCacheService = accountsCacheService;
             _repository = repository;
@@ -45,15 +49,45 @@ namespace MarginTrading.Services
             _tradingConditionsCacheService = tradingConditionsCacheService;
             _log = log;
             _clientNotifyService = clientNotifyService;
+            _statsRepository = statsRepository;
         }
 
-        public void Start()
+        public override Task Execute()
+        {
+            var accounts = _accountsCacheService.GetAll();
+            var statsWritingTask = WriteAccountsStats(accounts);
+
+            return Task.WhenAll(statsWritingTask); // for easier merge with LWDEV-2929
+        }
+
+        private Task WriteAccountsStats(IReadOnlyList<MarginTradingAccount> accounts)
+        {
+            var stats = accounts
+                .Select(a => new MarginTradingAccountStats
+                {
+                    AccountId = a.Id,
+                    BaseAssetId = a.BaseAssetId,
+                    MarginCall = a.GetMarginCall(),
+                    StopOut = a.GetStopOut(),
+                    TotalCapital = a.GetTotalCapital(),
+                    FreeMargin = a.GetFreeMargin(),
+                    MarginAvailable = a.GetMarginAvailable(),
+                    UsedMargin = a.GetUsedMargin(),
+                    MarginInit = a.GetMarginInit(),
+                    PnL = a.GetPnl(),
+                    OpenPositionsCount = a.GetOpenPositionsCount(),
+                    MarginUsageLevel = a.GetMarginUsageLevel(),
+                });
+            return _statsRepository.InsertOrReplaceBatchAsync(stats);
+        }
+
+        public override void Start()
         {
             var accounts = _repository.GetAllAsync().Result.Select(MarginTradingAccount.Create).GroupBy(x => x.ClientId).ToDictionary(x => x.Key, x => x.ToArray());
-
             _accountsCacheService.InitAccountsCache(accounts);
-
             _console.WriteLine($"InitAccountsCache (clients count:{accounts.Count})");
+
+            base.Start();
         }
 
         public async Task UpdateAccountsCacheAsync(string clientId, IEnumerable<MarginTradingAccount> accounts = null)

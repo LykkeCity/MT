@@ -14,7 +14,7 @@ namespace MarginTrading.Services
         private readonly IAccountUpdateService _accountUpdateService;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
-        private readonly IInstrumentsCache _instrumentsCache;
+        private readonly IAssetPairsCache _assetPairsCache;
         private readonly OrdersCache _ordersCache;
         private readonly IAssetDayOffService _assetDayOffService;
 
@@ -23,7 +23,7 @@ namespace MarginTrading.Services
             IAccountUpdateService accountUpdateService,
             IAccountsCacheService accountsCacheService,
             IAccountAssetsCacheService accountAssetsCacheService,
-            IInstrumentsCache instrumentsCache,
+            IAssetPairsCache assetPairsCache,
             OrdersCache ordersCache,
             IAssetDayOffService assetDayOffService)
         {
@@ -31,7 +31,7 @@ namespace MarginTrading.Services
             _accountUpdateService = accountUpdateService;
             _accountsCacheService = accountsCacheService;
             _accountAssetsCacheService = accountAssetsCacheService;
-            _instrumentsCache = instrumentsCache;
+            _assetPairsCache = assetPairsCache;
             _ordersCache = ordersCache;
             _assetDayOffService = assetDayOffService;
         }
@@ -49,7 +49,7 @@ namespace MarginTrading.Services
                 throw new ValidateOrderException(OrderRejectReason.InvalidVolume, "Volume cannot be 0");
             }
 
-            var asset = _instrumentsCache.GetInstrumentById(order.Instrument);
+            var asset = _assetPairsCache.GetAssetPairById(order.Instrument);
             order.AssetAccuracy = asset.Accuracy;
 
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
@@ -202,14 +202,14 @@ namespace MarginTrading.Services
             }
         }
 
-        public void ValidateInstrumentPositionVolume(IMarginTradingAccountAsset asset, Order order)
+        public void ValidateInstrumentPositionVolume(IAccountAssetPair assetPair, Order order)
         {
-            var existingPositionsVolume = _ordersCache.ActiveOrders.GetOrders(asset.Instrument, order.AccountId).Sum(o => Math.Abs(o.Volume));
+            var existingPositionsVolume = _ordersCache.ActiveOrders.GetOrdersByInstrumentAndAccount(assetPair.Instrument, order.AccountId).Sum(o => Math.Abs(o.Volume));
 
-            if (asset.PositionLimit > 0 && existingPositionsVolume + Math.Abs(order.Volume) > asset.PositionLimit)
+            if (assetPair.PositionLimit > 0 && existingPositionsVolume + Math.Abs(order.Volume) > assetPair.PositionLimit)
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidVolume,
-                    $"Margin Trading is in beta testing. The volume of the net open position is temporarily limited to {asset.PositionLimit} {asset.BaseAssetId}. Thank you for using Lykke Margin Trading, the limit will be cancelled soon!");
+                    $"Margin Trading is in beta testing. The volume of the net open position is temporarily limited to {assetPair.PositionLimit} {assetPair.BaseAssetId}. Thank you for using Lykke Margin Trading, the limit will be cancelled soon!");
             }
         }
     }

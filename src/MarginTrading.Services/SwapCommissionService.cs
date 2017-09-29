@@ -6,16 +6,16 @@ namespace MarginTrading.Services
 {
     public class SwapCommissionService : ISwapCommissionService
     {
-        private readonly IInstrumentsCache _instrumentsCache;
+        private readonly IAssetPairsCache _assetPairsCache;
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
         private readonly ICfdCalculatorService _calculator;
 
         public SwapCommissionService(
-            IInstrumentsCache instrumentsCache,
+            IAssetPairsCache assetPairsCache,
             IAccountAssetsCacheService accountAssetsCacheService,
             ICfdCalculatorService calculator)
         {
-            _instrumentsCache = instrumentsCache;
+            _assetPairsCache = assetPairsCache;
             _accountAssetsCacheService = accountAssetsCacheService;
             _calculator = calculator;
         }
@@ -33,7 +33,7 @@ namespace MarginTrading.Services
 
             if (openDate.HasValue)
             {
-                var asset = _instrumentsCache.GetInstrumentById(instrument);
+                var asset = _assetPairsCache.GetAssetPairById(instrument);
 
                 var accountAsset = _accountAssetsCacheService.GetAccountAsset(tradingConditionId, accountAssetId, instrument);
 
@@ -53,10 +53,12 @@ namespace MarginTrading.Services
             return result;
         }
 
+        //TODO: fix swap calculation algorithm and performance in task LWDEV-3087
         public double GetSwaps(IOrder order)
         {
-            return GetSwaps(order.TradingConditionId, order.AccountId, order.AccountAssetId, order.Instrument,
-                order.GetOrderType(), order.OpenDate, order.CloseDate, order.GetMatchedVolume());
+            return 0;
+            //return GetSwaps(order.TradingConditionId, order.AccountId, order.AccountAssetId, order.Instrument,
+            //    order.GetOrderType(), order.OpenDate, order.CloseDate, order.GetMatchedVolume());
         }
 
         public void SetCommissions(string tradingConditionId, string accountAssetId, Order order)

@@ -24,6 +24,11 @@ namespace MarginTrading.Services
             return GetClientAccounts(clientId);
         }
 
+        public IReadOnlyList<MarginTradingAccount> GetAll()
+        {
+            return GetClientAccounts(null);
+        }
+
         public MarginTradingAccount Get(string clientId, string accountId)
         {
             var result = GetClientAccount(clientId, accountId);
@@ -63,17 +68,6 @@ namespace MarginTrading.Services
             {
                 _lockSlim.ExitReadLock();
             }
-        }
-
-        public void AddAccount(MarginTradingAccount account)
-        {
-            var accounts = GetClientAccounts(account.ClientId).ToList();
-            if (accounts.Exists(existingAccount => existingAccount.Id == account.Id))
-                throw new Exception(string.Format(MtMessages.ClientHasAccountInCache, account.ClientId,
-                    account.Id));
-
-            accounts.Add(account);
-            UpdateClientAccounts(account.ClientId, accounts);
         }
 
         private MarginTradingAccount[] GetClientAccounts(string clientId)
@@ -150,14 +144,6 @@ namespace MarginTrading.Services
         {
             var account = GetClientAccount(clientId, accountId, true);
             updateAction(account);
-        }
-
-        private void UpdateAccounts(string clientId, Action<MarginTradingAccount> updateAction)
-        {
-            var accounts = GetClientAccounts(clientId);
-
-            foreach (var marginTradingAccount in accounts)
-                updateAction(marginTradingAccount);
         }
 
         internal void InitAccountsCache(Dictionary<string, MarginTradingAccount[]> accounts)

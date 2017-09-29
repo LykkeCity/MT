@@ -29,7 +29,7 @@ namespace MarginTrading.Core.Settings
 
         public Db Db { get; set; }
         public RabbitMqQueues RabbitMqQueues { get; set; }
-        public RabbitMqSettings SpotRabbitMqSettings { get; set; }
+        public RabbitMqSettings MarketMakerRabbitMqSettings { get; set; }
         public string MtRabbitMqConnString { get; set; }
         public string[] BaseAccountAssets { get; set; }
         [Optional]
@@ -37,6 +37,8 @@ namespace MarginTrading.Core.Settings
         public RequestLoggerSettings RequestLoggerSettings { get; set; }
         [Optional]
         public string ApplicationInsightsKey { get; set; }
+        [Optional]
+        public virtual TelemetrySettings Telemetry { get; set; }
     }
 
     public class NotificationSettings
@@ -134,5 +136,16 @@ namespace MarginTrading.Core.Settings
 
         [Optional]
         public double PositionLimit { get; set; }
+    }
+
+    /// <summary>
+    /// Telementry settings
+    /// </summary>
+    public class TelemetrySettings
+    {
+        /// <summary>
+        /// Minimal duration of lock in ms to send event to telemetry
+        /// </summary>
+        public int LockMetricThreshold { get; set; }
     }
 }

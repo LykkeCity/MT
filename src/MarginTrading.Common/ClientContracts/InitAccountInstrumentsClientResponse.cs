@@ -10,6 +10,6 @@ namespace MarginTrading.Common.ClientContracts
 
     public class InitAccountInstrumentsClientResponse
     {
-        public Dictionary<string, MarginTradingAccountAssetClientContract[]> TradingConditions { get; set; }
+        public Dictionary<string, AccountAssetPairClientContract[]> TradingConditions { get; set; }
     }
 }

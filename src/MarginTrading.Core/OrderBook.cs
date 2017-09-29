@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using MarginTrading.Core.Helpers;
+using MarginTrading.Core.MatchedOrders;
 
 namespace MarginTrading.Core
 {
@@ -46,7 +48,7 @@ namespace MarginTrading.Core
                         Instrument = order.Instrument,
                         Volume = order.Volume,
                         Price = order.Price,
-                        MatchedOrders = order.MatchedOrders
+                        MatchedOrders = new MatchedOrderCollection(order.MatchedOrders
                             .Select(
                                 m =>
                                     new MatchedOrder
@@ -56,8 +58,7 @@ namespace MarginTrading.Core
                                         MarketMakerId = m.MarketMakerId,
                                         Price = m.Price,
                                         Volume = m.Volume
-                                    })
-                            .ToList(),
+                                    })),
                         CreateDate = order.CreateDate,
                         MarketMakerId = order.MarketMakerId
 
@@ -66,16 +67,6 @@ namespace MarginTrading.Core
 
                 dst.Add(pair.Key, orders);
             }
-        }
-
-        public double GetRemainingVolume(OrderDirection orderType, double price)
-        {
-            var source = orderType == OrderDirection.Buy ? Buy : Sell;
-
-            if (!source.ContainsKey(price))
-                return 0;
-
-            return source[price].Sum(x => x.GetRemainingVolume());
         }
 
         public IEnumerable<MatchedOrder> Match(Order order, OrderDirection orderTypeToMatch, double volumeToMatch)
@@ -144,8 +135,8 @@ namespace MarginTrading.Core
         public IEnumerable<LimitOrder> DeleteAllOrdersByMarketMaker(string marketMakerId, bool deleteAllBuy, bool deleteAllSell)
         {
             var result = new List<LimitOrder>();
-            var buyOrders = new List<LimitOrder>(); 
-            var sellOrders = new List<LimitOrder>(); 
+            var buyOrders = new List<LimitOrder>();
+            var sellOrders = new List<LimitOrder>();
 
             if (deleteAllBuy)
                 buyOrders = Buy.DeleteAllOrdersByMarketMaker(marketMakerId);
@@ -275,29 +266,18 @@ namespace MarginTrading.Core
     //TODO: check concurent work
     public class OrderBookList : IEnumerable<KeyValuePair<string, OrderBook>>
     {
-        private readonly IInstrumentsCache _instrumentsCache;
+        private readonly IAssetPairsCache _assetPairsCache;
 
         private Dictionary<string, OrderBook> _orderBooks;
 
-        public OrderBookList(IInstrumentsCache instrumentsCache)
+        public OrderBookList(IAssetPairsCache assetPairsCache)
         {
-            _instrumentsCache = instrumentsCache;
+            _assetPairsCache = assetPairsCache;
         }
 
         public Dictionary<string, OrderBook> GetOrderBookState()
         {
             return _orderBooks.ToDictionary(p => p.Key, p => p.Value.Clone());
-        }
-
-        public double GetRemainingVolume(string instrumentId, OrderDirection orderType,
-            double price)
-        {
-            var instrument = _instrumentsCache.GetInstrumentById(instrumentId);
-
-            if (!_orderBooks.ContainsKey(instrumentId))
-                return 0;
-
-            return _orderBooks[instrumentId].GetRemainingVolume(orderType, price);
         }
 
         public void Init(Dictionary<string, OrderBook> orderBook)
@@ -315,12 +295,13 @@ namespace MarginTrading.Core
             return _orderBooks.GetEnumerator();
         }
 
-        public IEnumerable<MatchedOrder> Match(Order order, OrderDirection orderTypeToMatch, double volumeToMatch)
+        public MatchedOrderCollection Match(Order order, OrderDirection orderTypeToMatch, double volumeToMatch)
         {
             if (!_orderBooks.ContainsKey(order.Instrument))
-                return Array.Empty<MatchedOrder>();
+                return new MatchedOrderCollection();
 
-            return _orderBooks[order.Instrument].Match(order, orderTypeToMatch, volumeToMatch);
+            return new MatchedOrderCollection(_orderBooks[order.Instrument]
+                .Match(order, orderTypeToMatch, volumeToMatch).ToList());
         }
 
         public void Update(Order order, OrderDirection orderTypeToMatch, IEnumerable<MatchedOrder> matchedOrders)
@@ -333,16 +314,11 @@ namespace MarginTrading.Core
 
         public OrderListPair GetAllLimitOrders(string instrumentId)
         {
-            return new OrderListPair()
+            var orderBook = _orderBooks.GetValueOrDefault(instrumentId, k => new OrderBook());
+            return new OrderListPair
             {
-                Buy =
-                    _orderBooks.ContainsKey(instrumentId)
-                        ? _orderBooks[instrumentId].Buy.Values.SelectMany(x => x).ToArray()
-                        : Array.Empty<LimitOrder>(),
-                Sell =
-                    _orderBooks.ContainsKey(instrumentId)
-                        ? _orderBooks[instrumentId].Buy.Values.SelectMany(x => x).ToArray()
-                        : Array.Empty<LimitOrder>()
+                Buy = orderBook.Buy.Values.SelectMany(x => x).ToArray(),
+                Sell = orderBook.Sell.Values.SelectMany(x => x).ToArray(),
             };
         }
 
@@ -366,7 +342,7 @@ namespace MarginTrading.Core
             }
         }
 
-        public IEnumerable<LimitOrder> DeleteAllBuyOrdersByMarketMaker(string marketMakerId, string[] instruments)
+        public IEnumerable<LimitOrder> DeleteAllBuyOrdersByMarketMaker(string marketMakerId, IReadOnlyList<string> instruments)
         {
             foreach (var instrument in instruments)
             {
@@ -379,7 +355,7 @@ namespace MarginTrading.Core
             }
         }
 
-        public IEnumerable<LimitOrder> DeleteAllSellOrdersByMarketMaker(string marketMakerId, string[] instruments)
+        public IEnumerable<LimitOrder> DeleteAllSellOrdersByMarketMaker(string marketMakerId, IReadOnlyList<string> instruments)
         {
             foreach (var instrument in instruments)
             {
@@ -392,7 +368,7 @@ namespace MarginTrading.Core
             }
         }
 
-        public List<LimitOrder> AddMarketMakerOrders(LimitOrder[] ordersToAdd)
+        public List<LimitOrder> AddMarketMakerOrders(IReadOnlyList<LimitOrder> ordersToAdd)
         {
             var result = new List<LimitOrder>();
 

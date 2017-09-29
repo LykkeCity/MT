@@ -2,7 +2,10 @@
 using MarginTrading.Core;
 using MarginTrading.Core.Assets;
 using MarginTrading.Core.MarketMakerFeed;
+using MarginTrading.Core.Telemetry;
 using MarginTrading.Services.Events;
+using MarginTrading.Services.Infrastructure;
+using MarginTrading.Services.Infrastructure.Telemetry;
 
 namespace MarginTrading.Services.Modules
 {
@@ -121,6 +124,14 @@ namespace MarginTrading.Services.Modules
 
 		    builder.RegisterType<AssetDayOffService>()
 		        .As<IAssetDayOffService>()
+		        .SingleInstance();
+
+		    builder.RegisterType<TelemetryPublisher>()
+		        .As<ITelemetryPublisher>()
+		        .SingleInstance();
+
+		    builder.RegisterType<ContextFactory>()
+		        .As<IContextFactory>()
 		        .SingleInstance();
         }
 	}

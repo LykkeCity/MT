@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using MarginTrading.Core.MatchedOrders;
 
 namespace MarginTrading.Core
 {

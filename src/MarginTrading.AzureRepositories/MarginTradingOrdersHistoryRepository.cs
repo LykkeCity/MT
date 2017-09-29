@@ -6,6 +6,7 @@ using AzureStorage;
 using AzureStorage.Tables;
 using Common;
 using MarginTrading.Core;
+using MarginTrading.Core.MatchedOrders;
 using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
 
@@ -168,8 +169,16 @@ namespace MarginTrading.AzureRepositories
                     order.RejectReason = rejectReason;
                 }
 
-                order.MatchedOrders = ((MarginTradingOrderHistoryEntity)historyOrder).Orders != null ? JsonConvert.DeserializeObject<List<MatchedOrder>>(((MarginTradingOrderHistoryEntity)historyOrder).Orders) : new List<MatchedOrder>();
-                order.MatchedCloseOrders = ((MarginTradingOrderHistoryEntity)historyOrder).ClosedOrders != null ? JsonConvert.DeserializeObject<List<MatchedOrder>>(((MarginTradingOrderHistoryEntity)historyOrder).ClosedOrders) : new List<MatchedOrder>();
+                order.MatchedOrders = new MatchedOrderCollection(
+                    ((MarginTradingOrderHistoryEntity) historyOrder).Orders != null
+                        ? JsonConvert.DeserializeObject<List<MatchedOrder>>(
+                            ((MarginTradingOrderHistoryEntity) historyOrder).Orders)
+                        : new List<MatchedOrder>());
+                order.MatchedCloseOrders = new MatchedOrderCollection(
+                    ((MarginTradingOrderHistoryEntity) historyOrder).ClosedOrders != null
+                        ? JsonConvert.DeserializeObject<List<MatchedOrder>>(
+                            ((MarginTradingOrderHistoryEntity) historyOrder).ClosedOrders)
+                        : new List<MatchedOrder>());
             }
 
             return order;

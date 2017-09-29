@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace MarginTrading.Core
 {
@@ -22,7 +23,7 @@ namespace MarginTrading.Core
         public string BaseAssetId { get; set; }
         public double Balance { get; set; }
         public double WithdrawTransferLimit { get; set; }
-       
+
         internal AccountFpl AccountFpl;
 
         public static MarginTradingAccount Create(IMarginTradingAccount src)
@@ -69,7 +70,9 @@ namespace MarginTrading.Core
     public interface IMarginTradingAccountsRepository
     {
         Task<IEnumerable<IMarginTradingAccount>> GetAllAsync(string clientId = null);
+        [ItemCanBeNull]
         Task<IMarginTradingAccount> GetAsync(string clientId, string accountId);
+        [ItemCanBeNull]
         Task<IMarginTradingAccount> GetAsync(string accountId);
         Task<MarginTradingAccount> UpdateBalanceAsync(string clientId, string accountId, double amount, bool changeLimit);
         Task<bool> UpdateTradingConditionIdAsync(string accountId, string tradingConditionId);
