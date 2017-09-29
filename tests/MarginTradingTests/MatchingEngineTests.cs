@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Autofac;
 using MarginTrading.Core;
+using MarginTrading.Core.MatchedOrders;
 using NUnit.Framework;
 
 namespace MarginTradingTests

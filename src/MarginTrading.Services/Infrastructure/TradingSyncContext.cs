@@ -8,6 +8,10 @@ using MarginTradingHelpers = MarginTrading.Services.Helpers.MarginTradingHelpers
 
 namespace MarginTrading.Services.Infrastructure
 {
+    /// <summary>
+    /// Context for synchronization of trade operations.
+    /// Usage of async/await inside context is prohibited.
+    /// </summary>
     public class TradingSyncContext : IDisposable
     {
         private readonly string _contextType;

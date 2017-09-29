@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using MarginTrading.Core.MatchedOrders;
 using MarginTrading.Core.Messages;
 
 namespace MarginTrading.Core

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using MarginTrading.Core.Helpers;
+using MarginTrading.Core.MatchedOrders;
 
 namespace MarginTrading.Core
 {
@@ -47,7 +48,7 @@ namespace MarginTrading.Core
                         Instrument = order.Instrument,
                         Volume = order.Volume,
                         Price = order.Price,
-                        MatchedOrders = order.MatchedOrders
+                        MatchedOrders = new MatchedOrderCollection(order.MatchedOrders
                             .Select(
                                 m =>
                                     new MatchedOrder
@@ -57,8 +58,7 @@ namespace MarginTrading.Core
                                         MarketMakerId = m.MarketMakerId,
                                         Price = m.Price,
                                         Volume = m.Volume
-                                    })
-                            .ToList(),
+                                    })),
                         CreateDate = order.CreateDate,
                         MarketMakerId = order.MarketMakerId
 
@@ -300,7 +300,8 @@ namespace MarginTrading.Core
             if (!_orderBooks.ContainsKey(order.Instrument))
                 return new MatchedOrderCollection();
 
-            return _orderBooks[order.Instrument].Match(order, orderTypeToMatch, volumeToMatch).ToList();
+            return new MatchedOrderCollection(_orderBooks[order.Instrument]
+                .Match(order, orderTypeToMatch, volumeToMatch).ToList());
         }
 
         public void Update(Order order, OrderDirection orderTypeToMatch, IEnumerable<MatchedOrder> matchedOrders)

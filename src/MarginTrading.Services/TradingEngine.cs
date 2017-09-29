@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Lykke.Common;
 using MarginTrading.Core;
 using MarginTrading.Core.Exceptions;
+using MarginTrading.Core.MatchedOrders;
 using MarginTrading.Services.Events;
 using MarginTrading.Services.Infrastructure;
 
@@ -236,7 +237,7 @@ namespace MarginTrading.Services
 
             order.OpenPrice = 0;
             order.ClosePrice = 0;
-            order.MatchedOrders = new List<MatchedOrder>();
+            order.MatchedOrders = new MatchedOrderCollection();
 
             if (guessAccountLevel == AccountLevel.MarginCall)
             {

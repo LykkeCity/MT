@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using MarginTrading.Core.MatchedOrders;
 
 namespace MarginTrading.Core
 {

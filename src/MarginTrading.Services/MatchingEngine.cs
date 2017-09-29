@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using MarginTrading.Core;
+using MarginTrading.Core.MatchedOrders;
 using MarginTrading.Services.Events;
 using MarginTrading.Services.Infrastructure;
 
