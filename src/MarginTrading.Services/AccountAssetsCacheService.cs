@@ -125,19 +125,6 @@ namespace MarginTrading.Services
             }
         }
 
-        public bool IsInstrumentSupported(string instrument)
-        {
-            _lockSlim.EnterReadLock();
-            try
-            {
-                return _instruments.Contains(instrument);
-            }
-            finally
-            {
-                _lockSlim.ExitReadLock();
-            }
-        }
-
         internal void InitAccountAssetsCache(List<IAccountAssetPair> accountAssets)
         {
             _lockSlim.EnterWriteLock();

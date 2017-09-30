@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
+using Common.Log;
 using MarginTrading.MarketMaker.Enums;
 using MarginTrading.MarketMaker.HelperServices;
 using MarginTrading.MarketMaker.Messages;
@@ -20,18 +21,21 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         private readonly ISystem _system;
         private readonly MarginTradingMarketMakerSettings _settings;
         private readonly ISpotOrderCommandsGeneratorService _spotOrderCommandsGeneratorService;
+        private readonly ILog _log;
 
         public MarketMakerService(IAssetPairsSettingsService assetPairsSettingsService,
             MarginTradingMarketMakerSettings marginTradingMarketMakerSettings,
             IRabbitMqService rabbitMqService,
             ISystem system,
             MarginTradingMarketMakerSettings settings,
-            ISpotOrderCommandsGeneratorService spotOrderCommandsGeneratorService)
+            ISpotOrderCommandsGeneratorService spotOrderCommandsGeneratorService,
+            ILog log)
         {
             _assetPairsSettingsService = assetPairsSettingsService;
             _system = system;
             _settings = settings;
             _spotOrderCommandsGeneratorService = spotOrderCommandsGeneratorService;
+            _log = log;
             _messageProducer = new Lazy<IMessageProducer<OrderCommandsBatchMessage>>(() =>
                 CreateRabbitMqMessageProducer(marginTradingMarketMakerSettings, rabbitMqService));
         }
@@ -41,8 +45,19 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             var quotesSource = _assetPairsSettingsService.GetAssetPairQuotesSource(orderbook.AssetPairId);
             if (quotesSource.SourceType != AssetPairQuotesSourceTypeEnum.External
                 || !string.Equals(orderbook.Source, quotesSource.ExternalExchange, StringComparison.OrdinalIgnoreCase)
-                || orderbook.Bids == null || orderbook.Asks == null)
+                || (orderbook.Bids?.Count ?? 0) == 0 || (orderbook.Asks?.Count ?? 0) == 0)
             {
+                return Task.CompletedTask;
+            }
+
+            var bestAsk = orderbook.Asks.Min(a => a.Price);
+            var bestBid = orderbook.Bids.Max(b => b.Price);
+            if (bestBid >= bestAsk)
+            {
+                var context = $"assetPairId: {orderbook.AssetPairId}, orderbook.Source: {orderbook.Source}, bestBid: {bestBid}, bestAsk: {bestAsk}";
+                _log.WriteWarningAsync(nameof(MarketMaker), nameof(ProcessNewExternalOrderbookAsync),
+                    context,
+                    "Detected negative spread, skipping orderbook. Context: " + context);
                 return Task.CompletedTask;
             }
 
