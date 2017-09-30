@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Autofac;
 using MarginTrading.Core;
+using MarginTrading.Core.MatchedOrders;
 using MarginTrading.Services;
 using MarginTrading.Services.Events;
 using NUnit.Framework;
@@ -39,7 +40,7 @@ namespace MarginTradingTests
                 TradingConditionId = Accounts[0].TradingConditionId,
                 Instrument = instrument,
                 Volume = 10,
-                MatchedOrders = new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 10 } }, //need for GetMatchedVolume()
+                MatchedOrders = new MatchedOrderCollection( new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 10 } }), //need for GetMatchedVolume()
                 OpenPrice = 790
             };
 
@@ -63,7 +64,7 @@ namespace MarginTradingTests
                 TradingConditionId = Accounts[0].TradingConditionId,
                 Instrument = instrument,
                 Volume = -10,
-                MatchedOrders = new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 10 } }, //need for GetMatchedVolume()
+                MatchedOrders = new MatchedOrderCollection( new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 10 } }), //need for GetMatchedVolume()
                 OpenPrice = 790
             };
 
@@ -87,7 +88,7 @@ namespace MarginTradingTests
                 TradingConditionId = Accounts[0].TradingConditionId,
                 Instrument = instrument,
                 Volume = 10,
-                MatchedOrders = new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 10 } }, //need for GetMatchedVolume()
+                MatchedOrders = new MatchedOrderCollection( new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 10 } }), //need for GetMatchedVolume()
                 OpenPrice = 790,
                 OpenCommission = 2,
                 CommissionLot = 10
@@ -114,7 +115,7 @@ namespace MarginTradingTests
                 TradingConditionId = Accounts[0].TradingConditionId,
                 Instrument = instrument,
                 Volume = 1000,
-                MatchedOrders = new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 1000 } }, //need for GetMatchedVolume()
+                MatchedOrders = new MatchedOrderCollection( new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 1000 } }), //need for GetMatchedVolume()
                 OpenPrice = 935.461
             };
 
@@ -139,7 +140,7 @@ namespace MarginTradingTests
                 TradingConditionId = Accounts[0].TradingConditionId,
                 Instrument = instrument,
                 Volume = -1000,
-                MatchedOrders = new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 1000 } }, //need for GetMatchedVolume()
+                MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 1000 } }), //need for GetMatchedVolume()
                 OpenPrice = 935.461,
             };
 
@@ -172,7 +173,7 @@ namespace MarginTradingTests
                     AssetAccuracy = 5,
                     Instrument = "EURUSD",
                     Volume = 100000,
-                    MatchedOrders = new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 100000 } }, //need for GetMatchedVolume()
+                    MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 100000 } }), //need for GetMatchedVolume()
                     OpenPrice = 1.05,
                     FillType = OrderFillType.FillOrKill
                 },
@@ -187,7 +188,7 @@ namespace MarginTradingTests
                     AssetAccuracy = 5,
                     Instrument = "EURUSD",
                     Volume = -200000,
-                    MatchedOrders = new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 200000 } }, //need for GetMatchedVolume()
+                    MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 200000 } }), //need for GetMatchedVolume()
                     OpenPrice = 1.04,
                     FillType = OrderFillType.FillOrKill
                 },
@@ -202,7 +203,7 @@ namespace MarginTradingTests
                     AssetAccuracy = 5,
                     Instrument = "EURUSD",
                     Volume = 50000,
-                    MatchedOrders = new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 50000 } }, //need for GetMatchedVolume()
+                    MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 50000 } }), //need for GetMatchedVolume()
                     OpenPrice = 1.061,
                     FillType = OrderFillType.FillOrKill
                 },
@@ -217,7 +218,7 @@ namespace MarginTradingTests
                     AssetAccuracy = 3,
                     Instrument = "BTCEUR",
                     Volume = 100,
-                    MatchedOrders = new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 100 } }, //need for GetMatchedVolume()
+                    MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 100 } }), //need for GetMatchedVolume()
                     OpenPrice = 1120,
                     FillType = OrderFillType.FillOrKill
                 }

@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using MarginTrading.Core.MatchedOrders;
 
 namespace MarginTrading.Core
 {
     public interface IMatchingEngine : IMatchingEngineBase
     {
         void SetOrders(SetOrderModel model);
-        void MatchMarketOrderForOpen(Order order, Func<MatchedOrder[], bool> orderProcessed);
-        void MatchMarketOrderForClose(Order order, Func<MatchedOrder[], bool> orderProcessed);
+        void MatchMarketOrderForOpen(Order order, Func<MatchedOrderCollection, bool> orderProcessed);
+        void MatchMarketOrderForClose(Order order, Func<MatchedOrderCollection, bool> orderProcessed);
         Dictionary<string, OrderBook> GetOrderBook(List<string> marketMakerIds);
         bool PingLock();
     }

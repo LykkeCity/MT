@@ -18,8 +18,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Lykke.Logs" Version="1.0.29" />
-    <PackageReference Include="Lykke.SettingsReader" Version="1.0.38" />
+    <PackageReference Include="Lykke.Logs" Version="1.0.33" />
+    <PackageReference Include="Lykke.SettingsReader" Version="1.0.39" />
     <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="1.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.0.0" />
@@ -34,8 +34,8 @@
     <PackageReference Include="Microsoft.Extensions.PlatformAbstractions" Version="1.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.0.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
-    <PackageReference Include="Lykke.RabbitMqBroker" Version="1.0.77" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+    <PackageReference Include="Lykke.RabbitMqBroker" Version="1.0.80" />
   </ItemGroup>
 
   <ItemGroup>

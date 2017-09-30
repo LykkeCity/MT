@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <AssemblyName>MarginTrading.Common</AssemblyName>
@@ -9,22 +8,21 @@
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
     <Version>1.0.1</Version>
   </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\MarginTrading.Core\MarginTrading.Core.csproj" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Flurl.Http" Version="1.1.2" />
     <PackageReference Include="JetBrains.Annotations" Version="11.0.0" />
+    <PackageReference Include="SuperSocket.ClientEngine" Version="0.8.0.13" />
     <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
-    <PackageReference Include="WampSharp.Default" Version="1.2.5.40-beta" />
+    <PackageReference Include="Lykke.WampSharp" Version="0.27.36" />
+    <PackageReference Include="Lykke.WampSharp.Default.Client" Version="0.27.36" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.0.0" />
-    <PackageReference Include="Lykke.RabbitMqBroker" Version="1.0.77" />
-    <PackageReference Include="Lykke.Common" Version="1.1.93" />
+    <PackageReference Include="Lykke.RabbitMqBroker" Version="1.0.80" />
+    <PackageReference Include="Lykke.Common" Version="1.1.95" />
   </ItemGroup>
-
 </Project>

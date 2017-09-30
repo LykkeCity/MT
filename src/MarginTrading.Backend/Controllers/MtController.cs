@@ -174,7 +174,7 @@ namespace MarginTrading.Backend.Controllers
 
             foreach (var account in accounts)
             {
-                result.AddRange(_accountAssetsCacheService.GetAccountAssetIds(account.TradingConditionId, account.BaseAssetId));
+                result.AddRange(_accountAssetsCacheService.GetAccountAssets(account.TradingConditionId, account.BaseAssetId).Select(a => a.Instrument));
             }
 
             return result.Distinct().ToArray();

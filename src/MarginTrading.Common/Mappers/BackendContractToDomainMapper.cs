@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using MarginTrading.Common.BackendContracts;
 using MarginTrading.Core;
+using MarginTrading.Core.MatchedOrders;
 
 namespace MarginTrading.Common.Mappers
 {
@@ -16,7 +17,7 @@ namespace MarginTrading.Common.Mappers
                 Volume = src.Volume,
                 Price = src.Price,
                 CreateDate = src.CreateDate,
-                MatchedOrders = src.MatchedOrders.Select(ToDomain).ToList()
+                MatchedOrders = new MatchedOrderCollection(src.MatchedOrders.Select(ToDomain))
             };
         }
 

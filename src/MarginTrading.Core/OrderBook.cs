@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using MarginTrading.Core.Helpers;
+using MarginTrading.Core.MatchedOrders;
 
 namespace MarginTrading.Core
 {
@@ -47,7 +48,7 @@ namespace MarginTrading.Core
                         Instrument = order.Instrument,
                         Volume = order.Volume,
                         Price = order.Price,
-                        MatchedOrders = order.MatchedOrders
+                        MatchedOrders = new MatchedOrderCollection(order.MatchedOrders
                             .Select(
                                 m =>
                                     new MatchedOrder
@@ -57,8 +58,7 @@ namespace MarginTrading.Core
                                         MarketMakerId = m.MarketMakerId,
                                         Price = m.Price,
                                         Volume = m.Volume
-                                    })
-                            .ToList(),
+                                    })),
                         CreateDate = order.CreateDate,
                         MarketMakerId = order.MarketMakerId
 
@@ -67,16 +67,6 @@ namespace MarginTrading.Core
 
                 dst.Add(pair.Key, orders);
             }
-        }
-
-        public double GetRemainingVolume(OrderDirection orderType, double price)
-        {
-            var source = orderType == OrderDirection.Buy ? Buy : Sell;
-
-            if (!source.ContainsKey(price))
-                return 0;
-
-            return source[price].Sum(x => x.GetRemainingVolume());
         }
 
         public IEnumerable<MatchedOrder> Match(Order order, OrderDirection orderTypeToMatch, double volumeToMatch)
@@ -290,17 +280,6 @@ namespace MarginTrading.Core
             return _orderBooks.ToDictionary(p => p.Key, p => p.Value.Clone());
         }
 
-        public double GetRemainingVolume(string instrumentId, OrderDirection orderType,
-            double price)
-        {
-            var instrument = _assetPairsCache.GetAssetPairById(instrumentId);
-
-            if (!_orderBooks.ContainsKey(instrumentId))
-                return 0;
-
-            return _orderBooks[instrumentId].GetRemainingVolume(orderType, price);
-        }
-
         public void Init(Dictionary<string, OrderBook> orderBook)
         {
             _orderBooks = orderBook ?? new Dictionary<string, OrderBook>();
@@ -316,12 +295,13 @@ namespace MarginTrading.Core
             return _orderBooks.GetEnumerator();
         }
 
-        public IEnumerable<MatchedOrder> Match(Order order, OrderDirection orderTypeToMatch, double volumeToMatch)
+        public MatchedOrderCollection Match(Order order, OrderDirection orderTypeToMatch, double volumeToMatch)
         {
             if (!_orderBooks.ContainsKey(order.Instrument))
-                return Array.Empty<MatchedOrder>();
+                return new MatchedOrderCollection();
 
-            return _orderBooks[order.Instrument].Match(order, orderTypeToMatch, volumeToMatch);
+            return new MatchedOrderCollection(_orderBooks[order.Instrument]
+                .Match(order, orderTypeToMatch, volumeToMatch).ToList());
         }
 
         public void Update(Order order, OrderDirection orderTypeToMatch, IEnumerable<MatchedOrder> matchedOrders)

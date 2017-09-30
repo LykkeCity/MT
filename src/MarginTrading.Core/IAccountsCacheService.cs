@@ -12,6 +12,5 @@ namespace MarginTrading.Core
         IMarginTradingAccount SetTradingCondition(string clientId, string accountId, string tradingConditionId);
         IEnumerable<string> GetClientIdsByTradingConditionId(string tradingConditionId, string accountId = null);
         void UpdateAccountsCache(string clientId, IEnumerable<MarginTradingAccount> newValues);
-        void AddAccount(MarginTradingAccount account);
     }
 }

@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
-
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <NoWarn>$(NoWarn);1591</NoWarn>
@@ -13,7 +12,6 @@
     <Version>1.0.1</Version>
     <Authors>MarginTrading.DataReader</Authors>
   </PropertyGroup>
-
   <ItemGroup>
     <None Update="Controllers\AccountGroupsController.cs.orig">
       <DependentUpon>AccountGroupsController.cs</DependentUpon>
@@ -22,13 +20,11 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\MarginTrading.Common\MarginTrading.Common.csproj" />
     <ProjectReference Include="..\MarginTrading.AzureRepositories\MarginTrading.AzureRepositories.csproj" />
     <ProjectReference Include="..\MarginTrading.Services\MarginTrading.Services.csproj" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="11.0.0" />
     <PackageReference Include="Lykke.Common.ApiLibrary" Version="1.0.11" />
@@ -53,23 +49,22 @@
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.0.0" />
-    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="4.1.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="4.2.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="RabbitMQ.Client" Version="5.0.1" />
+    <PackageReference Include="SuperSocket.ClientEngine" Version="0.8.0.13" />
     <PackageReference Include="Swashbuckle.SwaggerGen" Version="6.0.0-beta902" />
     <PackageReference Include="Swashbuckle.SwaggerUi" Version="6.0.0-beta902" />
     <PackageReference Include="Nustache.Core" Version="1.0.0-alfa2" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.0.0" />
-    <PackageReference Include="Lykke.RabbitMqBroker" Version="1.0.77" />
+    <PackageReference Include="Lykke.RabbitMqBroker" Version="1.0.80" />
   </ItemGroup>
-
   <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
     <ItemGroup>
       <DocFile Include="bin\*\*\MarginTrading.DataReader.xml" />
     </ItemGroup>
     <Copy SourceFiles="@(DocFile)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="false" />
   </Target>
-
   <ItemGroup>
     <WCFMetadata Include="Connected Services" />
   </ItemGroup>

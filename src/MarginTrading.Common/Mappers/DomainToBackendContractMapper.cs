@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using MarginTrading.Common.BackendContracts;
 using MarginTrading.Core;
+using MarginTrading.Core.MatchedOrders;
 
 namespace MarginTrading.Common.Mappers
 {
