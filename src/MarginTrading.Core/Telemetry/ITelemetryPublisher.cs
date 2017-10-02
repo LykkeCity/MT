@@ -11,7 +11,6 @@ namespace MarginTrading.Core.Telemetry
         /// <param name="signalSource">Name of process where event was started</param>
         /// <param name="metrics">Collection of event metrics</param>
         /// <param name="additionalProperties">Collection of additional event properties</param>
-        void PublishEventMetrics(string eventName, string signalSource, 
-            IDictionary<string, double> metrics, IDictionary<string, string> additionalProperties = null);
+        void PublishEventMetrics(string eventName, string signalSource, IDictionary<string, double> metrics, IDictionary<string, string> additionalProperties = null);
     }
 }

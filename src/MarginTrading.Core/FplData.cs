@@ -2,15 +2,15 @@
 {
     public class FplData
     {
-        public double Fpl { get; set; }
-        public double QuoteRate { get; set; }
-        public double MarginInit { get; set; }
-        public double MarginMaintenance { get; set; }
-        public double OpenCrossPrice { get; set; }
-        public double CloseCrossPrice { get; set; }
-        public double OpenPrice { get; set; }
-        public double ClosePrice { get; set; }
-        public double TotalFplSnapshot { get; set; }
-        public double SwapsSnapshot { get; set; }
+        public decimal Fpl { get; set; }
+        public decimal QuoteRate { get; set; }
+        public decimal MarginInit { get; set; }
+        public decimal MarginMaintenance { get; set; }
+        public decimal OpenCrossPrice { get; set; }
+        public decimal CloseCrossPrice { get; set; }
+        public decimal OpenPrice { get; set; }
+        public decimal ClosePrice { get; set; }
+        public decimal TotalFplSnapshot { get; set; }
+        public decimal SwapsSnapshot { get; set; }
     }
 }

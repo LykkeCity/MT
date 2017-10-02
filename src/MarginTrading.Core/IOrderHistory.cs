@@ -16,17 +16,17 @@ namespace MarginTrading.Core
         DateTime CreateDate { get; }
         DateTime? OpenDate { get; }
         DateTime? CloseDate { get; }
-        double? ExpectedOpenPrice { get; }
-        double OpenPrice { get; }
-        double ClosePrice { get; }
-        double QuoteRate { get; }
+        decimal? ExpectedOpenPrice { get; }
+        decimal OpenPrice { get; }
+        decimal ClosePrice { get; }
+        decimal QuoteRate { get; }
         int AssetAccuracy { get; }
-        double Volume { get; }
-        double? TakeProfit { get; }
-        double? StopLoss { get; }
-        double OpenCommission { get; }
-        double CloseCommission { get; }
-        double SwapCommission { get; }
+        decimal Volume { get; }
+        decimal? TakeProfit { get; }
+        decimal? StopLoss { get; }
+        decimal OpenCommission { get; }
+        decimal CloseCommission { get; }
+        decimal SwapCommission { get; }
         DateTime? StartClosingDate { get; }
         OrderStatus Status { get; }
         OrderCloseReason CloseReason { get; }
@@ -37,15 +37,15 @@ namespace MarginTrading.Core
         List<MatchedOrder> MatchedOrders { get; }
         List<MatchedOrder> MatchedCloseOrders { get; }
 
-        double MatchedVolume { get; }
-        double MatchedCloseVolume { get; }
-        double Fpl { get; }
-        double PnL { get; }
-        double InterestRateSwap { get; }
-        double MarginInit { get; }
-        double MarginMaintenance { get; }
-        double OpenCrossPrice { get; }
-        double CloseCrossPrice { get; }
+        decimal MatchedVolume { get; }
+        decimal MatchedCloseVolume { get; }
+        decimal Fpl { get; }
+        decimal PnL { get; }
+        decimal InterestRateSwap { get; }
+        decimal MarginInit { get; }
+        decimal MarginMaintenance { get; }
+        decimal OpenCrossPrice { get; }
+        decimal CloseCrossPrice { get; }
     }
 
     public class OrderHistory : IOrderHistory
@@ -60,17 +60,17 @@ namespace MarginTrading.Core
         public DateTime CreateDate { get; set; }
         public DateTime? OpenDate { get; set; }
         public DateTime? CloseDate { get; set; }
-        public double? ExpectedOpenPrice { get; set; }
-        public double OpenPrice { get; set; }
-        public double ClosePrice { get; set; }
-        public double QuoteRate { get; set; }
+        public decimal? ExpectedOpenPrice { get; set; }
+        public decimal OpenPrice { get; set; }
+        public decimal ClosePrice { get; set; }
+        public decimal QuoteRate { get; set; }
         public int AssetAccuracy { get; set; }
-        public double Volume { get; set; }
-        public double? TakeProfit { get; set; }
-        public double? StopLoss { get; set; }
-        public double OpenCommission { get; set; }
-        public double CloseCommission { get; set; }
-        public double SwapCommission { get; set; }
+        public decimal Volume { get; set; }
+        public decimal? TakeProfit { get; set; }
+        public decimal? StopLoss { get; set; }
+        public decimal OpenCommission { get; set; }
+        public decimal CloseCommission { get; set; }
+        public decimal SwapCommission { get; set; }
         public DateTime? StartClosingDate { get; set; }
         public OrderStatus Status { get; set; }
         public OrderCloseReason CloseReason { get; set; }
@@ -80,14 +80,14 @@ namespace MarginTrading.Core
         public string Comment { get; set; }
         public List<MatchedOrder> MatchedOrders { get; set; } = new List<MatchedOrder>();
         public List<MatchedOrder> MatchedCloseOrders { get; set; } = new List<MatchedOrder>();
-        public double MatchedVolume { get; set; }
-        public double MatchedCloseVolume { get; set; }
-        public double Fpl { get; set; }
-        public double PnL { get; set; }
-        public double InterestRateSwap { get; set; }
-        public double MarginInit { get; set; }
-        public double MarginMaintenance { get; set; }
-        public double OpenCrossPrice { get; set; }
-        public double CloseCrossPrice { get; set; }
+        public decimal MatchedVolume { get; set; }
+        public decimal MatchedCloseVolume { get; set; }
+        public decimal Fpl { get; set; }
+        public decimal PnL { get; set; }
+        public decimal InterestRateSwap { get; set; }
+        public decimal MarginInit { get; set; }
+        public decimal MarginMaintenance { get; set; }
+        public decimal OpenCrossPrice { get; set; }
+        public decimal CloseCrossPrice { get; set; }
     }
 }

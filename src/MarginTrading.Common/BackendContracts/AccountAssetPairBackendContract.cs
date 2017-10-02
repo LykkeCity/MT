@@ -7,16 +7,16 @@
         public string Instrument { get; set; }
         public int LeverageInit { get; set; }
         public int LeverageMaintenance { get; set; }
-        public double SwapLong { get; set; }
-        public double SwapShort { get; set; }
-        public double SwapLongPct { get; set; }
-        public double SwapShortPct { get; set; }
-        public double CommissionLong { get; set; }
-        public double CommissionShort { get; set; }
-        public double CommissionLot { get; set; }
-        public double DeltaBid { get; set; }
-        public double DeltaAsk { get; set; }
-        public double DealLimit { get; set; }
-        public double PositionLimit { get; set; }
+        public decimal SwapLong { get; set; }
+        public decimal SwapShort { get; set; }
+        public decimal SwapLongPct { get; set; }
+        public decimal SwapShortPct { get; set; }
+        public decimal CommissionLong { get; set; }
+        public decimal CommissionShort { get; set; }
+        public decimal CommissionLot { get; set; }
+        public decimal DeltaBid { get; set; }
+        public decimal DeltaAsk { get; set; }
+        public decimal DealLimit { get; set; }
+        public decimal PositionLimit { get; set; }
     }
 }

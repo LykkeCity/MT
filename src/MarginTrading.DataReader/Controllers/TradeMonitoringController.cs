@@ -85,7 +85,7 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns opened positions</response>
         [HttpGet]
         [Route("openPositions/byVolume/{volume}")]
-        public async Task<List<OrderContract>> GetOpenPositionsByVolume([FromRoute]double volume)
+        public async Task<List<OrderContract>> GetOpenPositionsByVolume([FromRoute]decimal volume)
         {
             return (await _ordersSnapshotReaderService.GetActiveAsync())
                 .Where(order => order.GetMatchedVolume() >= volume).Select(OrderExtensions.ToBaseContract)
@@ -117,7 +117,7 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns pending orders</response>
         [HttpGet]
         [Route("pendingOrders/byVolume/{volume}")]
-        public async Task<List<OrderContract>> GetPendingOrdersByVolume([FromRoute]double volume)
+        public async Task<List<OrderContract>> GetPendingOrdersByVolume([FromRoute]decimal volume)
         {
             return (await _ordersSnapshotReaderService.GetPendingAsync())
                 .Where(order => Math.Abs(order.Volume) >= volume).Select(OrderExtensions.ToBaseContract)

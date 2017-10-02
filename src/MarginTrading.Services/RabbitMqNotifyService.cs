@@ -24,7 +24,7 @@ namespace MarginTrading.Services
 			_publishers = publishers;
 			_log = log;
 		}
-		public async Task AccountHistory(string accountId, string clientId, double amount, double balance, double withdrawTransferLimit, AccountHistoryType type, string comment = null)
+		public async Task AccountHistory(string accountId, string clientId, decimal amount, decimal balance, decimal withdrawTransferLimit, AccountHistoryType type, string comment = null)
 		{
 		    var record = new MarginTradingAccountHistory
 		    {
@@ -118,7 +118,7 @@ namespace MarginTrading.Services
 			}
 		}
 
-		public async Task AccountStopout(string clientId, string accountId, int positionsCount, double totalPnl)
+		public async Task AccountStopout(string clientId, string accountId, int positionsCount, decimal totalPnl)
 		{
 			try
 			{

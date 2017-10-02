@@ -27,7 +27,7 @@ namespace MarginTradingTests
         {
             const string instrument = "EURUSD";
 
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = instrument, Ask = 1.05, Bid = 1.04 }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = instrument, Ask = 1.05M, Bid = 1.04M }));
 
             var quote = _quoteCacheService.GetQuote(instrument);
 
@@ -41,7 +41,7 @@ namespace MarginTradingTests
         {
             const string instrument = "BTCUSD";
 
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = instrument, Ask = 905.35, Bid = 905.1 }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = instrument, Ask = 905.35M, Bid = 905.1M }));
 
             var quote = _quoteCacheService.GetQuote(instrument);
 
@@ -59,7 +59,7 @@ namespace MarginTradingTests
         {
             const string instrument = "BTCUSD";
 
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = instrument, Ask = 905.35, Bid = 905.1 }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = instrument, Ask = 905.35M, Bid = 905.1M }));
 
             var quote = _quoteCacheService.GetQuote(instrument);
 
@@ -75,9 +75,9 @@ namespace MarginTradingTests
         [Test]
         public void Is_Volume_In_Accont_Asset_Correct()
         {
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Ask = 1044.92, Bid = 1044.90 }));
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 0.9982, Bid = 0.9980 }));
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCUSD", Ask = 1041.41, Bid = 1040.69 }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Ask = 1044.92M, Bid = 1044.90M }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 0.9982M, Bid = 0.9980M }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCUSD", Ask = 1041.41M, Bid = 1040.69M }));
 
             var accountVolume = _cfdCalculatorService.GetVolumeInAccountAsset(OrderDirection.Buy, Accounts[0].BaseAssetId, "BTCCHF", 1);
             Assert.AreEqual(1046.804, Math.Round(accountVolume, 3));

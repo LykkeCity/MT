@@ -8,15 +8,15 @@ namespace MarginTrading.Services.Events
     public class OrderBookChangeEventArgs
     {
         public long MessageId { get; set; }
-        public Dictionary<string, Dictionary<double, OrderBookLevel>> Buy = new Dictionary<string, Dictionary<double, OrderBookLevel>>();
-        public Dictionary<string, Dictionary<double, OrderBookLevel>> Sell = new Dictionary<string, Dictionary<double, OrderBookLevel>>();
+        public Dictionary<string, Dictionary<decimal, OrderBookLevel>> Buy = new Dictionary<string, Dictionary<decimal, OrderBookLevel>>();
+        public Dictionary<string, Dictionary<decimal, OrderBookLevel>> Sell = new Dictionary<string, Dictionary<decimal, OrderBookLevel>>();
 
         public void AddOrderBookLevel(OrderBookLevel level)
         {
             var dict = level.Direction == OrderDirection.Buy ? Buy : Sell;
 
             if (!dict.ContainsKey(level.Instrument))
-                dict.Add(level.Instrument, new Dictionary<double, OrderBookLevel>());
+                dict.Add(level.Instrument, new Dictionary<decimal, OrderBookLevel>());
 
             var levelDict = dict[level.Instrument];
 

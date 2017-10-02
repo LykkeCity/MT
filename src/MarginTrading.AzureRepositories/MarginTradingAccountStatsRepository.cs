@@ -24,15 +24,25 @@ namespace MarginTrading.AzureRepositories
             set => PartitionKey = value;
         }
 
+        decimal IMarginTradingAccountStats.MarginCall => (decimal) MarginCall;
         public double MarginCall { get; set; }
+        decimal IMarginTradingAccountStats.StopOut  => (decimal) StopOut;
         public double StopOut { get; set; }
+        decimal IMarginTradingAccountStats.TotalCapital  => (decimal) TotalCapital;
         public double TotalCapital { get; set; }
+        decimal IMarginTradingAccountStats.FreeMargin  => (decimal) FreeMargin;
         public double FreeMargin { get; set; }
+        decimal IMarginTradingAccountStats.MarginAvailable  => (decimal) MarginAvailable;
         public double MarginAvailable { get; set; }
+        decimal IMarginTradingAccountStats.UsedMargin  => (decimal) UsedMargin;
         public double UsedMargin { get; set; }
+        decimal IMarginTradingAccountStats.MarginInit  => (decimal) MarginInit;
         public double MarginInit { get; set; }
+        decimal IMarginTradingAccountStats.PnL  => (decimal) PnL;
         public double PnL { get; set; }
+        decimal IMarginTradingAccountStats.OpenPositionsCount  => (decimal) OpenPositionsCount;
         public double OpenPositionsCount { get; set; }
+        decimal IMarginTradingAccountStats.MarginUsageLevel  => (decimal) MarginUsageLevel;
         public double MarginUsageLevel { get; set; }
 
         public override IDictionary<string, EntityProperty> WriteEntity(OperationContext operationContext)
@@ -75,16 +85,16 @@ namespace MarginTrading.AzureRepositories
             {
                 AccountId = item.AccountId,
                 BaseAssetId = item.BaseAssetId,
-                MarginCall = item.MarginCall,
-                StopOut = item.StopOut,
-                TotalCapital = item.TotalCapital,
-                FreeMargin = item.FreeMargin,
-                MarginAvailable = item.MarginAvailable,
-                UsedMargin = item.UsedMargin,
-                MarginInit = item.MarginInit,
-                PnL = item.PnL,
-                OpenPositionsCount = item.OpenPositionsCount,
-                MarginUsageLevel = item.MarginUsageLevel,
+                MarginCall = (double) item.MarginCall,
+                StopOut = (double) item.StopOut,
+                TotalCapital = (double) item.TotalCapital,
+                FreeMargin = (double) item.FreeMargin,
+                MarginAvailable = (double) item.MarginAvailable,
+                UsedMargin = (double) item.UsedMargin,
+                MarginInit = (double) item.MarginInit,
+                PnL = (double) item.PnL,
+                OpenPositionsCount = (double) item.OpenPositionsCount,
+                MarginUsageLevel = (double) item.MarginUsageLevel,
             });
 
             var tasks = BatchEntityInsertHelper.MakeBatchesByPartitionKey(entities)

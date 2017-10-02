@@ -7,7 +7,7 @@ namespace MarginTrading.Core
     {
         string Id { get; }
         string Instrument { get; }
-        double Volume { get; }
+        decimal Volume { get; }
         DateTime CreateDate { get; }
         MatchedOrderCollection MatchedOrders { get; set; }
     }
@@ -16,7 +16,7 @@ namespace MarginTrading.Core
     {
         public string Id { get; set; } = Guid.NewGuid().ToString("N");
         public string Instrument { get; set; }
-        public double Volume { get; set; }
+        public decimal Volume { get; set; }
         public DateTime CreateDate { get; set; } = DateTime.UtcNow;
         public MatchedOrderCollection MatchedOrders { get; set; } = new MatchedOrderCollection();
     }
@@ -38,7 +38,7 @@ namespace MarginTrading.Core
             return 0 == Math.Round(order.GetRemainingVolume(), MarginTradingHelpers.VolumeAccuracy);
         }
 
-        public static double GetRemainingVolume(this IBaseOrder order)
+        public static decimal GetRemainingVolume(this IBaseOrder order)
         {
             return Math.Abs(order.Volume) - order.MatchedOrders.SummaryVolume;
         }

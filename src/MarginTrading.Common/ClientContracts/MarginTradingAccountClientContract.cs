@@ -13,18 +13,18 @@ namespace MarginTrading.Common.ClientContracts
         public string Id { get; set; }
         public string TradingConditionId { get; set; }
         public string BaseAssetId { get; set; }
-        public double Balance { get; set; }
-        public double WithdrawTransferLimit { get; set; }
-        public double MarginCall { get; set; }
-        public double StopOut { get; set; }
-        public double TotalCapital { get; set; }
-        public double FreeMargin { get; set; }
-        public double MarginAvailable { get; set; }
-        public double UsedMargin { get; set; }
-        public double MarginInit { get; set; }
-        public double PnL { get; set; }
-        public double OpenPositionsCount { get; set; }
-        public double MarginUsageLevel { get; set; }
+        public decimal Balance { get; set; }
+        public decimal WithdrawTransferLimit { get; set; }
+        public decimal MarginCall { get; set; }
+        public decimal StopOut { get; set; }
+        public decimal TotalCapital { get; set; }
+        public decimal FreeMargin { get; set; }
+        public decimal MarginAvailable { get; set; }
+        public decimal UsedMargin { get; set; }
+        public decimal MarginInit { get; set; }
+        public decimal PnL { get; set; }
+        public decimal OpenPositionsCount { get; set; }
+        public decimal MarginUsageLevel { get; set; }
         public bool IsLive { get; set; }
     }
 }

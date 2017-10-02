@@ -7,9 +7,9 @@ namespace MarginTrading.Backend.Models
     public class SummaryAssetInfo
     {
         public string AssetPairId { get; set; }
-        public double VolumeLong { get; set; }
-        public double VolumeShort { get; set; }
-        public double PnL { get; set; }
+        public decimal VolumeLong { get; set; }
+        public decimal VolumeShort { get; set; }
+        public decimal PnL { get; set; }
     }
 
     public class SetTradingConditionModel
@@ -60,7 +60,7 @@ namespace MarginTrading.Backend.Models
         public string ClientId { get; set; }
         public string AccountId { get; set; }
         public PaymentType PaymentType { get; set; }
-        public double Amount { get; set; }
+        public decimal Amount { get; set; }
     }
 
     public enum PaymentType

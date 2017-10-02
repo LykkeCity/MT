@@ -6,33 +6,33 @@ namespace MarginTrading.Core
 {
     public interface IMarginTradingAccountStats
     {
-        string AccountId { get; set; }
-        string BaseAssetId { get; set; }
-        double MarginCall { get; set; }
-        double StopOut { get; set; }
-        double TotalCapital { get; set; }
-        double FreeMargin { get; set; }
-        double MarginAvailable { get; set; }
-        double UsedMargin { get; set; }
-        double MarginInit { get; set; }
-        double PnL { get; set; }
-        double OpenPositionsCount { get; set; }
-        double MarginUsageLevel { get; set; }
+        string AccountId { get; }
+        string BaseAssetId { get; }
+        decimal MarginCall { get; }
+        decimal StopOut { get; }
+        decimal TotalCapital { get; }
+        decimal FreeMargin { get; }
+        decimal MarginAvailable { get; }
+        decimal UsedMargin { get; }
+        decimal MarginInit { get; }
+        decimal PnL { get; }
+        decimal OpenPositionsCount { get; }
+        decimal MarginUsageLevel { get; }
     }
     public class MarginTradingAccountStats : IMarginTradingAccountStats
     {
         public string AccountId { get; set; }
         public string BaseAssetId { get; set; }
-        public double MarginCall { get; set; }
-        public double StopOut { get; set; }
-        public double TotalCapital { get; set; }
-        public double FreeMargin { get; set; }
-        public double MarginAvailable { get; set; }
-        public double UsedMargin { get; set; }
-        public double MarginInit { get; set; }
-        public double PnL { get; set; }
-        public double OpenPositionsCount { get; set; }
-        public double MarginUsageLevel { get; set; }
+        public decimal MarginCall { get; set; }
+        public decimal StopOut { get; set; }
+        public decimal TotalCapital { get; set; }
+        public decimal FreeMargin { get; set; }
+        public decimal MarginAvailable { get; set; }
+        public decimal UsedMargin { get; set; }
+        public decimal MarginInit { get; set; }
+        public decimal PnL { get; set; }
+        public decimal OpenPositionsCount { get; set; }
+        public decimal MarginUsageLevel { get; set; }
     }
 
     public interface IMarginTradingAccountStatsRepository

@@ -5,10 +5,10 @@ namespace MarginTrading.MarketMaker.Messages
     public class VolumePrice
     {
         [JsonProperty("volume")]
-        public double Volume { get; set; }
+        public decimal Volume { get; set; }
 
         [JsonProperty("price")]
-        public double Price { get; set; }
+        public decimal Price { get; set; }
 
     }
 }

@@ -24,8 +24,8 @@ namespace MarginTradingTests
             _ordersCache = Container.Resolve<OrdersCache>();
             var bestPriceConsumer = Container.Resolve<IEventChannel<BestPriceChangeEventArgs>>();
 
-            bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "EURUSD", Bid = 1.02, Ask = 1.04 }));
-            bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCUSD", Bid = 905.1, Ask = 905.35 }));
+            bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "EURUSD", Bid = 1.02M, Ask = 1.04M }));
+            bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCUSD", Bid = 905.1M, Ask = 905.35M }));
         }
 
         [Test]
@@ -46,11 +46,11 @@ namespace MarginTradingTests
                     {
                         new MatchedOrder {MatchedDate = DateTime.UtcNow, Volume = 1000}
                     }), //need for GetMatchedVolume()
-                OpenPrice = 1.02
+                OpenPrice = 1.02M
             };
 
             _ordersCache.ActiveOrders.Add(order1);
-            order1.UpdateClosePrice(1.04);
+            order1.UpdateClosePrice(1.04M);
 
             order1.GetFpl();
             var account = _accountsCacheService.Get(order1.ClientId, order1.AccountId);
@@ -61,7 +61,7 @@ namespace MarginTradingTests
             Assert.AreEqual(1020, account.GetTotalCapital());
             Assert.AreEqual(6.93333, account.GetUsedMargin());
             Assert.AreEqual(1009.6, account.GetMarginAvailable());
-            Assert.AreEqual(0.0067973823529411765, account.GetMarginUsageLevel());
+            Assert.AreEqual(0.0067973823529411764705882353m, account.GetMarginUsageLevel());
 
             var order2 = new Order
             {
@@ -74,11 +74,11 @@ namespace MarginTradingTests
                 AssetAccuracy = 5,
                 Volume = -30000,
                 MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 30000 } }), //need for GetMatchedVolume()
-                OpenPrice = 1.02
+                OpenPrice = 1.02M
             };
 
             _ordersCache.ActiveOrders.Add(order2);
-            order2.UpdateClosePrice(1.04);
+            order2.UpdateClosePrice(1.04M);
             order2.GetFpl();
 
             Assert.IsNotNull(account);
@@ -104,16 +104,16 @@ namespace MarginTradingTests
                 AssetAccuracy = 5,
                 Volume = 130000,
                 MatchedOrders = new MatchedOrderCollection( new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 130000} }), //need for GetMatchedVolume()
-                OpenPrice = 1.02
+                OpenPrice = 1.02M
             };
 
             _ordersCache.ActiveOrders.Add(order);
-            order.UpdateClosePrice(1.02);
+            order.UpdateClosePrice(1.02M);
             order.GetFpl();
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
 
             Assert.IsNotNull(account);
-            Assert.IsTrue(account.GetMarginUsageLevel() >= 0.8);
+            Assert.IsTrue(account.GetMarginUsageLevel() >= 0.8M);
         }
     }
 }
