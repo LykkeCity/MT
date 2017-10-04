@@ -110,22 +110,22 @@ namespace MarginTradingTests
                 {
                     TradingConditionId = TradingConditionId,
                     BaseAssetId = "USD",
-                    MarginCall = 0.8,
-                    StopOut = 0.95
+                    MarginCall = 0.8M,
+                    StopOut = 0.95M
                 },
                 new MarginTradingAccountGroup
                 {
                     TradingConditionId = TradingConditionId,
                     BaseAssetId = "EUR",
-                    MarginCall = 0.8,
-                    StopOut = 0.95
+                    MarginCall = 0.8M,
+                    StopOut = 0.95M
                 },
                 new MarginTradingAccountGroup
                 {
                     TradingConditionId = TradingConditionId,
                     BaseAssetId = "CHF",
-                    MarginCall = 0.8,
-                    StopOut = 0.95
+                    MarginCall = 0.8M,
+                    StopOut = 0.95M
                 }
             };
 

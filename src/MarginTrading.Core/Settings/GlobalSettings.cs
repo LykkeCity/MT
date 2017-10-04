@@ -9,7 +9,7 @@ namespace MarginTrading.Core.Settings
 
 
 
-        public static string ToAssetMultiplierString(this double src)
+        public static string ToAssetMultiplierString(this decimal src)
         {
             return src.ToString(AssetAccuracyMask);
         }

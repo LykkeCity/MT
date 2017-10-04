@@ -14,16 +14,16 @@ namespace MarginTrading.Common.ClientContracts
         public OrderCloseReason CloseReason { get; set; }
         public DateTime? OpenDate { get; set; }
         public DateTime? CloseDate { get; set; }
-        public double OpenPrice { get; set; }
-        public double ClosePrice { get; set; }
-        public double Volume { get; set; }
-        public double? TakeProfit { get; set; }
-        public double? StopLoss { get; set; }
-        public double Fpl { get; set; }
-        public double TotalPnL { get; set; }
-        public double PnL { get; set; }
-        public double InterestRateSwap { get; set; }
-        public double OpenCommission { get; set; }
-        public double CloseCommission { get; set; }
+        public decimal OpenPrice { get; set; }
+        public decimal ClosePrice { get; set; }
+        public decimal Volume { get; set; }
+        public decimal? TakeProfit { get; set; }
+        public decimal? StopLoss { get; set; }
+        public decimal Fpl { get; set; }
+        public decimal TotalPnL { get; set; }
+        public decimal PnL { get; set; }
+        public decimal InterestRateSwap { get; set; }
+        public decimal OpenCommission { get; set; }
+        public decimal CloseCommission { get; set; }
     }
 }

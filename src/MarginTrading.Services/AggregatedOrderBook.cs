@@ -13,8 +13,8 @@ namespace MarginTrading.Services
     {
         private readonly IEventChannel<BestPriceChangeEventArgs> _bestPriceChangEventChannel;
         private readonly IQuoteCacheService _quoteCache;
-        private readonly Dictionary<string, SortedDictionary<double, OrderBookLevel>> _buy = new Dictionary<string, SortedDictionary<double, OrderBookLevel>>();
-        private readonly Dictionary<string, SortedDictionary<double, OrderBookLevel>> _sell = new Dictionary<string, SortedDictionary<double, OrderBookLevel>>();
+        private readonly Dictionary<string, SortedDictionary<decimal, OrderBookLevel>> _buy = new Dictionary<string, SortedDictionary<decimal, OrderBookLevel>>();
+        private readonly Dictionary<string, SortedDictionary<decimal, OrderBookLevel>> _sell = new Dictionary<string, SortedDictionary<decimal, OrderBookLevel>>();
 
         private static readonly object Sync = new object();
 
@@ -44,9 +44,9 @@ namespace MarginTrading.Services
             if (!source.ContainsKey(orderBookItem.Instrument))
                 source.Add(orderBookItem.Instrument,
                     orderBookItem.Direction == OrderDirection.Buy
-                        ? new SortedDictionary<double, OrderBookLevel>(
-                            new ReverseComparer<double>(Comparer<double>.Default))
-                        : new SortedDictionary<double, OrderBookLevel>());
+                        ? new SortedDictionary<decimal, OrderBookLevel>(
+                            new ReverseComparer<decimal>(Comparer<decimal>.Default))
+                        : new SortedDictionary<decimal, OrderBookLevel>());
 
             var orderBookItems = source[orderBookItem.Instrument];
 

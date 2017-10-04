@@ -23,24 +23,42 @@ namespace MarginTrading.AzureRepositories
         public DateTime CreateDate { get; set; }
         public DateTime? OpenDate { get; set; }
         public DateTime? CloseDate { get; set; }
+        decimal? IOrderHistory.ExpectedOpenPrice => (decimal?) ExpectedOpenPrice;
         public double? ExpectedOpenPrice { get; set; }
+        decimal IOrderHistory.OpenPrice => (decimal) OpenPrice;
         public double OpenPrice { get; set; }
+        decimal IOrderHistory.OpenCrossPrice => (decimal) OpenCrossPrice;
         public double OpenCrossPrice { get; set; }
+        decimal IOrderHistory.ClosePrice => (decimal) ClosePrice;
         public double ClosePrice { get; set; }
+        decimal IOrderHistory.CloseCrossPrice => (decimal) CloseCrossPrice;
         public double CloseCrossPrice { get; set; }
+        decimal IOrderHistory.Volume => (decimal) Volume;
         public double Volume { get; set; }
+        decimal IOrderHistory.MatchedVolume => (decimal) MatchedVolume;
         public double MatchedVolume { get; set; }
+        decimal IOrderHistory.MatchedCloseVolume => (decimal) MatchedCloseVolume;
         public double MatchedCloseVolume { get; set; }
+        decimal? IOrderHistory.TakeProfit => (decimal?) TakeProfit;
         public double? TakeProfit { get; set; }
+        decimal? IOrderHistory.StopLoss => (decimal?) StopLoss;
         public double? StopLoss { get; set; }
+        decimal IOrderHistory.Fpl => (decimal) Fpl;
         public double Fpl { get; set; }
+        decimal IOrderHistory.PnL => (decimal) PnL;
         public double PnL { get; set; }
+        decimal IOrderHistory.InterestRateSwap => (decimal) InterestRateSwap;
         public double InterestRateSwap { get; set; }
+        decimal IOrderHistory.OpenCommission => (decimal) OpenCommission;
         public double OpenCommission { get; set; }
+        decimal IOrderHistory.CloseCommission => (decimal) CloseCommission;
         public double CloseCommission { get; set; }
+        decimal IOrderHistory.QuoteRate  => (decimal) QuoteRate;
         public double QuoteRate { get; set; }
         public int AssetAccuracy { get; set; }
+        decimal IOrderHistory.MarginInit => (decimal) MarginInit;
         public double MarginInit { get; set; }
+        decimal IOrderHistory.MarginMaintenance  => (decimal) MarginMaintenance;
         public double MarginMaintenance { get; set; }
         public DateTime? StartClosingDate { get; set; }
         public string Type { get; set; }
@@ -57,6 +75,7 @@ namespace MarginTrading.AzureRepositories
         public string Comment { get; set; }
         public List<MatchedOrder> MatchedOrders { get; set; } = new List<MatchedOrder>();
         public List<MatchedOrder> MatchedCloseOrders { get; set; } = new List<MatchedOrder>();
+        decimal IOrderHistory.SwapCommission => (decimal) SwapCommission;
         public double SwapCommission { get; set; }
 
         public string Orders { get; set; }
@@ -82,34 +101,34 @@ namespace MarginTrading.AzureRepositories
                 CreateDate = src.CreateDate,
                 OpenDate = src.OpenDate,
                 CloseDate = src.CloseDate,
-                ExpectedOpenPrice = src.ExpectedOpenPrice,
-                OpenPrice = src.OpenPrice,
-                OpenCrossPrice = src.OpenCrossPrice,
-                ClosePrice = src.ClosePrice,
-                CloseCrossPrice = src.CloseCrossPrice,
-                TakeProfit = src.TakeProfit,
-                StopLoss = src.StopLoss,
-                Fpl = src.Fpl,
-                PnL = src.PnL,
-                InterestRateSwap = src.InterestRateSwap,
-                OpenCommission = src.OpenCommission,
-                CloseCommission = src.CloseCommission,
-                QuoteRate = src.QuoteRate,
+                ExpectedOpenPrice = (double?) src.ExpectedOpenPrice,
+                OpenPrice = (double) src.OpenPrice,
+                OpenCrossPrice = (double) src.OpenCrossPrice,
+                ClosePrice = (double) src.ClosePrice,
+                CloseCrossPrice = (double) src.CloseCrossPrice,
+                TakeProfit = (double?) src.TakeProfit,
+                StopLoss = (double?) src.StopLoss,
+                Fpl = (double) src.Fpl,
+                PnL = (double) src.PnL,
+                InterestRateSwap = (double) src.InterestRateSwap,
+                OpenCommission = (double) src.OpenCommission,
+                CloseCommission = (double) src.CloseCommission,
+                QuoteRate = (double) src.QuoteRate,
                 AssetAccuracy = src.AssetAccuracy,
-                MarginInit = src.MarginInit,
-                MarginMaintenance = src.MarginMaintenance,
+                MarginInit = (double) src.MarginInit,
+                MarginMaintenance = (double) src.MarginMaintenance,
                 StartClosingDate = src.StartClosingDate,
                 Status = src.Status.ToString(),
                 CloseReason = src.CloseReason.ToString(),
                 FillType = src.FillType.ToString(),
-                Volume = src.Volume,
-                MatchedVolume = src.MatchedVolume,
-                MatchedCloseVolume = src.MatchedCloseVolume,
+                Volume = (double) src.Volume,
+                MatchedVolume = (double) src.MatchedVolume,
+                MatchedCloseVolume = (double) src.MatchedCloseVolume,
                 RejectReason = src.RejectReason.ToString(),
                 RejectReasonText = src.RejectReasonText,
                 Orders = src.MatchedOrders.SerializeArrayForTableStorage(),
                 ClosedOrders = src.MatchedCloseOrders.SerializeArrayForTableStorage(),
-                SwapCommission = src.SwapCommission,
+                SwapCommission = (double) src.SwapCommission,
                 Comment = src.Comment
             };
         }

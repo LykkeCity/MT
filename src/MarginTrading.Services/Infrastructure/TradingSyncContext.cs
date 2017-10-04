@@ -19,6 +19,7 @@ namespace MarginTrading.Services.Infrastructure
     /// monitor will not be able to perform Exit(), and nested Enter() will lead to a deadlock.
     /// This is because monitor tracks the thread which entered the lock.
     /// Such code can work on dev environment, but can cause "magic" issues on production.
+    /// </remarks>
     public class TradingSyncContext : IDisposable
     {
         private readonly string _contextType;

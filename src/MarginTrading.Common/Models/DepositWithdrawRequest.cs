@@ -9,6 +9,6 @@ namespace MarginTrading.Common.Models
         [Required]
         public string AccountId { get; set; }
         [Required]
-        public double? Volume { get; set; }
+        public decimal? Volume { get; set; }
     }
 }

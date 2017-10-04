@@ -28,11 +28,11 @@ namespace MarginTrading.MarketMaker.Models
         /// <summary>
         /// The price for sell order to create. Used only if the quotes source for the asset pair is manual
         /// </summary>
-        public double? PriceForSellOrder { get; set; }
+        public decimal? PriceForSellOrder { get; set; }
 
         /// <summary>
         /// The price for buy order to create. Used only if the quotes source for the asset pair is manual
         /// </summary>
-        public double? PriceForBuyOrder { get; set; }
+        public decimal? PriceForBuyOrder { get; set; }
     }
 }

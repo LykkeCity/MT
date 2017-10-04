@@ -22,13 +22,13 @@ namespace MarginTrading.Core.MarketMakerFeed
 
     public class VolumePrice
     {
-        public double Volume { get; set; }
-        public double Price { get; set; }
+        public decimal Volume { get; set; }
+        public decimal Price { get; set; }
     }
 
     public static class OrderBookExt
     {
-        public static double GetPrice(this IMarketMakerOrderBook src)
+        public static decimal GetPrice(this IMarketMakerOrderBook src)
         {
             return src.IsBuy
                 ? src.Prices.Max(item => item.Price)

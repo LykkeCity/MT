@@ -130,7 +130,7 @@ namespace MarginTradingTests
         }
 
         private string VerifyPublishMetrics(string eventName, string signalSource,
-            double depth, double minPending, double minProcessing)
+            decimal depth, decimal minPending, decimal minProcessing)
         {
             var actualDepth = _actualMetrics[TelemetryConstants.ContextDepthPropName];
             var actualPending = _actualMetrics[TelemetryConstants.PendingTimePropName];

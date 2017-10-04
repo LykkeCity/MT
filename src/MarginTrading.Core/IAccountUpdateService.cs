@@ -9,12 +9,12 @@
 
     public class AccountFpl
     {
-        public double PnL { get; set; }
-        public double UsedMargin { get; set; }
-        public double MarginInit { get; set; }
-        public double OpenPositionsCount { get; set; }
-        public double MarginCall { get; set; }
-        public double Stopout { get; set; }
+        public decimal PnL { get; set; }
+        public decimal UsedMargin { get; set; }
+        public decimal MarginInit { get; set; }
+        public decimal OpenPositionsCount { get; set; }
+        public decimal MarginCall { get; set; }
+        public decimal Stopout { get; set; }
 
         public int CalculatedHash { get; set; }
         public int ActualHash { get; set; }

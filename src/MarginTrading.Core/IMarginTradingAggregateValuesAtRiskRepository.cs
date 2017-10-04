@@ -4,6 +4,6 @@ namespace MarginTrading.Core
 {
     public interface IMarginTradingAggregateValuesAtRiskRepository
     {
-		Task InsertOrUpdateAsync(string counterPartyId, double value);
+		Task InsertOrUpdateAsync(string counterPartyId, decimal value);
     }
 }

@@ -11,8 +11,8 @@ namespace MarginTrading.Core
         string TradingConditionId { get; }
         string ClientId { get; }
         string BaseAssetId { get; }
-        double Balance { get; }
-        double WithdrawTransferLimit { get; }
+        decimal Balance { get; }
+        decimal WithdrawTransferLimit { get; }
     }
 
     public class MarginTradingAccount : IMarginTradingAccount, IComparable<MarginTradingAccount>
@@ -21,8 +21,8 @@ namespace MarginTrading.Core
         public string ClientId { get; set; }
         public string TradingConditionId { get; set; }
         public string BaseAssetId { get; set; }
-        public double Balance { get; set; }
-        public double WithdrawTransferLimit { get; set; }
+        public decimal Balance { get; set; }
+        public decimal WithdrawTransferLimit { get; set; }
 
         internal AccountFpl AccountFpl;
 
@@ -74,7 +74,7 @@ namespace MarginTrading.Core
         Task<IMarginTradingAccount> GetAsync(string clientId, string accountId);
         [ItemCanBeNull]
         Task<IMarginTradingAccount> GetAsync(string accountId);
-        Task<MarginTradingAccount> UpdateBalanceAsync(string clientId, string accountId, double amount, bool changeLimit);
+        Task<MarginTradingAccount> UpdateBalanceAsync(string clientId, string accountId, decimal amount, bool changeLimit);
         Task<bool> UpdateTradingConditionIdAsync(string accountId, string tradingConditionId);
         Task AddAsync(MarginTradingAccount account);
         Task DeleteAsync(string clientId, string accountId);
@@ -121,58 +121,58 @@ namespace MarginTrading.Core
             return AccountLevel.None;
         }
 
-        public static double GetMarginUsageLevel(this MarginTradingAccount account)
+        public static decimal GetMarginUsageLevel(this MarginTradingAccount account)
         {
             var totalCapital = account.GetTotalCapital();
             return totalCapital == 0 ? 0 : Math.Abs(account.GetUsedMargin() / totalCapital);
         }
 
-        public static double GetTotalCapital(this IMarginTradingAccount account)
+        public static decimal GetTotalCapital(this IMarginTradingAccount account)
         {
             return account.Balance + account.GetPnl();
         }
 
-        public static double GetPnl(this IMarginTradingAccount account)
+        public static decimal GetPnl(this IMarginTradingAccount account)
         {
             return account.GetAccountFpl().PnL;
         }
 
-        public static double GetUsedMargin(this IMarginTradingAccount account)
+        public static decimal GetUsedMargin(this IMarginTradingAccount account)
         {
             return account.GetAccountFpl().UsedMargin;
         }
 
-        public static double GetFreeMargin(this IMarginTradingAccount account)
+        public static decimal GetFreeMargin(this IMarginTradingAccount account)
         {
             return account.GetTotalCapital() - account.GetUsedMargin();
         }
 
-        public static double GetMarginInit(this IMarginTradingAccount account)
+        public static decimal GetMarginInit(this IMarginTradingAccount account)
         {
             return account.GetAccountFpl().MarginInit;
         }
 
-        public static double GetMarginAvailable(this IMarginTradingAccount account)
+        public static decimal GetMarginAvailable(this IMarginTradingAccount account)
         {
             return account.GetTotalCapital() - account.GetMarginInit();
         }
 
-        public static double GetMarginCall(this IMarginTradingAccount account)
+        public static decimal GetMarginCall(this IMarginTradingAccount account)
         {
             return account.GetAccountFpl().MarginCall;
         }
 
-        public static double GetStopOut(this IMarginTradingAccount account)
+        public static decimal GetStopOut(this IMarginTradingAccount account)
         {
             return account.GetAccountFpl().Stopout;
         }
 
-        public static double GetOpenPositionsCount(this IMarginTradingAccount account)
+        public static decimal GetOpenPositionsCount(this IMarginTradingAccount account)
         {
             return account.GetAccountFpl().OpenPositionsCount;
         }
 
-        public static double GetMarginUsageLevel(this IMarginTradingAccount account)
+        public static decimal GetMarginUsageLevel(this IMarginTradingAccount account)
         {
             return account.GetTotalCapital() == 0 ? 0 : Math.Abs(account.GetUsedMargin() / account.GetTotalCapital());
         }

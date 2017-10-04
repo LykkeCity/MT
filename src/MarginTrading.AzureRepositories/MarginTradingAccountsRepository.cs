@@ -14,7 +14,9 @@ namespace MarginTrading.AzureRepositories
         public string ClientId => PartitionKey;
         public string TradingConditionId { get; set; }
         public string BaseAssetId { get; set; }
+        decimal IMarginTradingAccount.Balance => (decimal) Balance;
         public double Balance { get; set; }
+        decimal IMarginTradingAccount.WithdrawTransferLimit => (decimal) WithdrawTransferLimit;
         public double WithdrawTransferLimit { get; set; }
         public double MarginCall { get; set; }
         public double StopOut { get; set; }
@@ -37,8 +39,8 @@ namespace MarginTrading.AzureRepositories
                 RowKey = GenerateRowKey(src.Id),
                 TradingConditionId = src.TradingConditionId,
                 BaseAssetId = src.BaseAssetId,
-                Balance = src.Balance,
-                WithdrawTransferLimit = src.WithdrawTransferLimit,
+                Balance = (double) src.Balance,
+                WithdrawTransferLimit = (double) src.WithdrawTransferLimit,
             };
         }
     }
@@ -59,16 +61,16 @@ namespace MarginTrading.AzureRepositories
                 : await _tableStorage.GetDataAsync(MarginTradingAccountEntity.GeneratePartitionKey(clientId));
         }
 
-        public async Task<MarginTradingAccount> UpdateBalanceAsync(string clientId, string accountId, double amount, bool changeLimit)
+        public async Task<MarginTradingAccount> UpdateBalanceAsync(string clientId, string accountId, decimal amount, bool changeLimit)
         {
             var account = await _tableStorage.GetDataAsync(MarginTradingAccountEntity.GeneratePartitionKey(clientId), MarginTradingAccountEntity.GenerateRowKey(accountId));
 
             if (account != null)
             {
-                account.Balance += amount;
+                account.Balance += (double) amount;
 
                 if (changeLimit)
-                    account.WithdrawTransferLimit += amount;
+                    account.WithdrawTransferLimit += (double) amount;
 
                 await _tableStorage.InsertOrMergeAsync(account);
                 return MarginTradingAccount.Create(account);

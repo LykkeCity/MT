@@ -5,8 +5,8 @@ namespace MarginTrading.Common.ClientContracts
 {
     public class OrderBookClientContract
     {
-        public Dictionary<double, LimitOrderClientContract[]> Buy { get; set; }
-        public Dictionary<double, LimitOrderClientContract[]> Sell { get; set; }
+        public Dictionary<decimal, LimitOrderClientContract[]> Buy { get; set; }
+        public Dictionary<decimal, LimitOrderClientContract[]> Sell { get; set; }
     }
 
     public class LimitOrderClientContract
@@ -14,8 +14,8 @@ namespace MarginTrading.Common.ClientContracts
         public string Id { get; set; }
         public string MarketMakerId { get; set; }
         public string Instrument { get; set; }
-        public double Volume { get; set; }
-        public double Price { get; set; }
+        public decimal Volume { get; set; }
+        public decimal Price { get; set; }
         public DateTime CreateDate { get; set; }
         public MatchedOrderClientContract[] MatchedOrders { get; set; }
     }
@@ -24,9 +24,9 @@ namespace MarginTrading.Common.ClientContracts
     {
         public string OrderId { get; set; }
         public string MarketMakerId { get; set; }
-        public double LimitOrderLeftToMatch { get; set; }
-        public double Volume { get; set; }
-        public double Price { get; set; }
+        public decimal LimitOrderLeftToMatch { get; set; }
+        public decimal Volume { get; set; }
+        public decimal Price { get; set; }
         public DateTime MatchedDate { get; set; }
     }
 }

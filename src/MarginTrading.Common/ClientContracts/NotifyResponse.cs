@@ -19,14 +19,14 @@
         public string ClientId { get; set; }
         public string AccountId { get; set; }
         public int PositionsCount { get; set; }
-        public double TotalPnl { get; set; }
+        public decimal TotalPnl { get; set; }
     }
 
     public class AccountStopoutClientContract
     {
         public string AccountId { get; set; }
         public int PositionsCount { get; set; }
-        public double TotalPnl { get; set; }
+        public decimal TotalPnl { get; set; }
     }
 
     public class UserUpdateEntityBackendContract

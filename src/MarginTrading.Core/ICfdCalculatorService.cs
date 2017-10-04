@@ -2,8 +2,8 @@
 {
     public interface ICfdCalculatorService
     {
-        double GetQuoteRateForBaseAsset(string accountAssetId, string instrument);
-        double GetQuoteRateForQuoteAsset(string accountAssetId, string instrument);
-        double GetVolumeInAccountAsset(OrderDirection direction, string accountAssetId, string instrument, double volume);
+        decimal GetQuoteRateForBaseAsset(string accountAssetId, string instrument);
+        decimal GetQuoteRateForQuoteAsset(string accountAssetId, string instrument);
+        decimal GetVolumeInAccountAsset(OrderDirection direction, string accountAssetId, string instrument, decimal volume);
     }
 }

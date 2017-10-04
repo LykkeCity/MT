@@ -8,18 +8,18 @@ namespace MarginTrading.Core
     {
         string TradingConditionId { get; }
         string BaseAssetId { get; }
-        double MarginCall { get; }
-        double StopOut { get; }
-        double DepositTransferLimit { get; }
+        decimal MarginCall { get; }
+        decimal StopOut { get; }
+        decimal DepositTransferLimit { get; }
     }
 
     public class MarginTradingAccountGroup : IMarginTradingAccountGroup
     {
         public string TradingConditionId { get; set; }
         public string BaseAssetId { get; set; }
-        public double MarginCall { get; set; }
-        public double StopOut { get; set; }
-        public double DepositTransferLimit { get; set; }
+        public decimal MarginCall { get; set; }
+        public decimal StopOut { get; set; }
+        public decimal DepositTransferLimit { get; set; }
 
         public static MarginTradingAccountGroup Create(IMarginTradingAccountGroup src)
         {

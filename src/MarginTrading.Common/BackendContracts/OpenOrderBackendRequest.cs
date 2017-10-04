@@ -12,10 +12,10 @@ namespace MarginTrading.Common.BackendContracts
     {
         public string AccountId { get; set; }
         public string Instrument { get; set; }
-        public double? ExpectedOpenPrice { get; set; }
-        public double Volume { get; set; }
-        public double? TakeProfit { get; set; }
-        public double? StopLoss { get; set; }
+        public decimal? ExpectedOpenPrice { get; set; }
+        public decimal Volume { get; set; }
+        public decimal? TakeProfit { get; set; }
+        public decimal? StopLoss { get; set; }
         public OrderFillType FillType { get; set; }
     }
 }

@@ -2,8 +2,8 @@
 {
     public class FloatngProfitLoss
     {
-        public double Fpl { get; set; }
-        public double QuoteRate { get; set; }
+        public decimal Fpl { get; set; }
+        public decimal QuoteRate { get; set; }
         public int Accuracy { get; set; }
     }
 }

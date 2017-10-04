@@ -20,16 +20,16 @@ namespace MarginTrading.Services
             _calculator = calculator;
         }
 
-        public double GetSwapCount(DateTime startDate, DateTime endDate)
+        public decimal GetSwapCount(DateTime startDate, DateTime endDate)
         {
             var delta = startDate <= startDate.Date.AddHours(21) && endDate >= endDate.Date.AddHours(21) ? 1 : 0;
 
             return (int)(endDate - startDate).TotalHours / 24 + delta;
         }
 
-        public double GetSwaps(string tradingConditionId, string accountId, string accountAssetId, string instrument, OrderDirection type, DateTime? openDate, DateTime? closeDate, double volume)
+        public decimal GetSwaps(string tradingConditionId, string accountId, string accountAssetId, string instrument, OrderDirection type, DateTime? openDate, DateTime? closeDate, decimal volume)
         {
-            double result = 0;
+            decimal result = 0;
 
             if (openDate.HasValue)
             {
@@ -38,7 +38,7 @@ namespace MarginTrading.Services
                 var accountAsset = _accountAssetsCacheService.GetAccountAsset(tradingConditionId, accountAssetId, instrument);
 
                 var close = closeDate ?? DateTime.UtcNow;
-                var seconds = (close - openDate.Value).TotalSeconds;
+                var seconds = (decimal)(close - openDate.Value).TotalSeconds;
 
                 var swaps = type == OrderDirection.Buy ? accountAsset.SwapLong : accountAsset.SwapShort;
                 var swapsPct = type == OrderDirection.Buy ? accountAsset.SwapLongPct : accountAsset.SwapShortPct;
@@ -54,7 +54,7 @@ namespace MarginTrading.Services
         }
 
         //TODO: fix swap calculation algorithm and performance in task LWDEV-3087
-        public double GetSwaps(IOrder order)
+        public decimal GetSwaps(IOrder order)
         {
             return 0;
             //return GetSwaps(order.TradingConditionId, order.AccountId, order.AccountAssetId, order.Instrument,

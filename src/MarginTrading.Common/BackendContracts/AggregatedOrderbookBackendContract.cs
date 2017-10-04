@@ -8,7 +8,7 @@
 
     public class AggregatedOrderBookItemBackendContract
     {
-        public double Price { get; set; }
-        public double Volume { get; set; }
+        public decimal Price { get; set; }
+        public decimal Volume { get; set; }
     }
 }

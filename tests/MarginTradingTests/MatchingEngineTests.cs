@@ -33,10 +33,10 @@ namespace MarginTradingTests
         {
             var ordersSet = new[]
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "EURUSD", MarketMakerId = _marketMakerId1, Price = 1.04, Volume = 4 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "2", Instrument = "EURUSD", MarketMakerId = _marketMakerId1, Price = 1.05, Volume = 7 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "3", Instrument = "EURUSD", MarketMakerId = _marketMakerId1, Price = 1.1, Volume = -6 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "4", Instrument = "EURUSD", MarketMakerId = _marketMakerId1, Price = 1.15, Volume = -8 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "EURUSD", MarketMakerId = _marketMakerId1, Price = 1.04M, Volume = 4 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "2", Instrument = "EURUSD", MarketMakerId = _marketMakerId1, Price = 1.05M, Volume = 7 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "3", Instrument = "EURUSD", MarketMakerId = _marketMakerId1, Price = 1.1M, Volume = -6 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "4", Instrument = "EURUSD", MarketMakerId = _marketMakerId1, Price = 1.15M, Volume = -8 }
             };
 
             _matchingEngine.SetOrders(_marketMakerId1, ordersSet);
@@ -113,15 +113,15 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(_marketMakerId1, new[]
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = instrument, MarketMakerId = "1", Price = 1.15, Volume = -4 } //should replace volume for order id = 4 from -8 to -4
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = instrument, MarketMakerId = "1", Price = 1.15M, Volume = -4 } //should replace volume for order id = 4 from -8 to -4
             });
 
             var sellLevels = _aggregatedOrderBook.GetSell(instrument);
             var quote = _quoteCashService.GetQuote(instrument);
 
             Assert.AreEqual(2, sellLevels.Count);
-            Assert.AreEqual(1, sellLevels.Count(item => item.Price == 1.15));
-            Assert.AreEqual(-4, sellLevels.First(item => item.Price == 1.15).Volume); //replaced volume
+            Assert.AreEqual(1, sellLevels.Count(item => item.Price == 1.15M));
+            Assert.AreEqual(-4, sellLevels.First(item => item.Price == 1.15M).Volume); //replaced volume
 
             Assert.AreEqual(1.05, quote.Bid);
             Assert.AreEqual(1.1, quote.Ask);
@@ -169,14 +169,14 @@ namespace MarginTradingTests
 
             Assert.AreEqual(2, buyLevels.Count);
             Assert.AreEqual(2, sellLevels.Count);
-            Assert.IsTrue(sellLevels.Any(item => item.Price == 1.15 && item.Volume == -8));
-            Assert.IsTrue(sellLevels.Any(item => item.Price == 1.1 && item.Volume == -6));
-            Assert.IsTrue(buyLevels.Any(item => item.Price == 1.04 && item.Volume == 4));
-            Assert.IsTrue(buyLevels.Any(item => item.Price == 1.05 && item.Volume == 7));
+            Assert.IsTrue(sellLevels.Any(item => item.Price == 1.15M && item.Volume == -8));
+            Assert.IsTrue(sellLevels.Any(item => item.Price == 1.1M && item.Volume == -6));
+            Assert.IsTrue(buyLevels.Any(item => item.Price == 1.04M && item.Volume == 4));
+            Assert.IsTrue(buyLevels.Any(item => item.Price == 1.05M && item.Volume == 7));
 
             _matchingEngine.SetOrders(_marketMakerId1, new[]
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = "1", Price = 1.15, Volume = -4}
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = "1", Price = 1.15M, Volume = -4}
             });
 
             buyLevels = _aggregatedOrderBook.GetBuy(instrument);
@@ -184,7 +184,7 @@ namespace MarginTradingTests
 
             Assert.AreEqual(2, buyLevels.Count);
             Assert.AreEqual(2, sellLevels.Count);
-            Assert.IsTrue(sellLevels.Any(item => item.Price == 1.15 && item.Volume == -4));
+            Assert.IsTrue(sellLevels.Any(item => item.Price == 1.15M && item.Volume == -4));
         }
 
         [Test]
@@ -195,7 +195,7 @@ namespace MarginTradingTests
                 MarketMakerId = _marketMakerId1,
                 OrdersToAdd = new []
                 {
-                    new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = "1", Price = 1.16, Volume = -10}
+                    new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = "1", Price = 1.16M, Volume = -10}
                 },
                 DeleteByInstrumentsSell = new[] {"EURUSD"}
             });
@@ -215,7 +215,7 @@ namespace MarginTradingTests
                 MarketMakerId = _marketMakerId1,
                 OrdersToAdd = new []
                 {
-                    new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = "1", Price = 1.07, Volume = 10}
+                    new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = "1", Price = 1.07M, Volume = 10}
                 },
                 DeleteByInstrumentsBuy = new[] {"EURUSD"}
             });
@@ -256,7 +256,7 @@ namespace MarginTradingTests
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "3"));
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "4"));
             Assert.AreEqual(order.Volume, order.GetMatchedVolume());
-            Assert.AreEqual(6, orderBooks["EURUSD"].Sell[1.15].First(item => item.Id == "4").GetRemainingVolume());
+            Assert.AreEqual(6, orderBooks["EURUSD"].Sell[1.15M].First(item => item.Id == "4").GetRemainingVolume());
         }
 
         [Test]
@@ -284,8 +284,8 @@ namespace MarginTradingTests
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "1"));
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "2"));
             Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
-            Assert.AreEqual(3, orderBooks["EURUSD"].Buy[1.04].First(item => item.Id == "1").GetRemainingVolume());
-            Assert.IsFalse(orderBooks["EURUSD"].Buy.ContainsKey(1.5));
+            Assert.AreEqual(3, orderBooks["EURUSD"].Buy[1.04M].First(item => item.Id == "1").GetRemainingVolume());
+            Assert.IsFalse(orderBooks["EURUSD"].Buy.ContainsKey(1.5M));
         }
 
         [Test]
@@ -313,8 +313,8 @@ namespace MarginTradingTests
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "3"));
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "4"));
             Assert.AreEqual(1, order.Volume - order.GetMatchedVolume());
-            Assert.IsFalse(orderBooks["EURUSD"].Sell.ContainsKey(1.1));
-            Assert.IsFalse(orderBooks["EURUSD"].Sell.ContainsKey(1.15));
+            Assert.IsFalse(orderBooks["EURUSD"].Sell.ContainsKey(1.1M));
+            Assert.IsFalse(orderBooks["EURUSD"].Sell.ContainsKey(1.15M));
         }
 
         [Test]
@@ -342,8 +342,8 @@ namespace MarginTradingTests
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "1"));
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "2"));
             Assert.AreEqual(2, Math.Abs(order.Volume) - order.GetMatchedVolume());
-            Assert.IsFalse(orderBooks["EURUSD"].Buy.ContainsKey(1.05));
-            Assert.IsFalse(orderBooks["EURUSD"].Buy.ContainsKey(1.04));
+            Assert.IsFalse(orderBooks["EURUSD"].Buy.ContainsKey(1.05M));
+            Assert.IsFalse(orderBooks["EURUSD"].Buy.ContainsKey(1.04M));
         }
 
         [Test]
@@ -394,8 +394,8 @@ namespace MarginTradingTests
             Assert.AreEqual(OrderStatus.Rejected, order.Status);
             Assert.AreEqual(OrderRejectReason.NoLiquidity, order.RejectReason);
             Assert.IsNotNull(order.CloseDate);
-            Assert.AreEqual(6, orderBooks["EURUSD"].Sell[1.1].First(item => item.Id == "3").GetRemainingVolume());
-            Assert.AreEqual(8, orderBooks["EURUSD"].Sell[1.15].First(item => item.Id == "4").GetRemainingVolume());
+            Assert.AreEqual(6, orderBooks["EURUSD"].Sell[1.1M].First(item => item.Id == "3").GetRemainingVolume());
+            Assert.AreEqual(8, orderBooks["EURUSD"].Sell[1.15M].First(item => item.Id == "4").GetRemainingVolume());
         }
 
         [Test]
@@ -422,8 +422,8 @@ namespace MarginTradingTests
             Assert.AreEqual(OrderStatus.Rejected, order.Status);
             Assert.AreEqual(OrderRejectReason.NoLiquidity, order.RejectReason);
             Assert.IsNotNull(order.CloseDate);
-            Assert.AreEqual(4, orderBooks["EURUSD"].Buy[1.04].First(item => item.Id == "1").GetRemainingVolume());
-            Assert.AreEqual(7, orderBooks["EURUSD"].Buy[1.05].First(item => item.Id == "2").GetRemainingVolume());
+            Assert.AreEqual(4, orderBooks["EURUSD"].Buy[1.04M].First(item => item.Id == "1").GetRemainingVolume());
+            Assert.AreEqual(7, orderBooks["EURUSD"].Buy[1.05M].First(item => item.Id == "2").GetRemainingVolume());
         }
 
         [Test]
@@ -451,8 +451,8 @@ namespace MarginTradingTests
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "3"));
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "4"));
             Assert.AreEqual(1, orderBooks["EURUSD"].Sell.Count);
-            Assert.IsFalse(orderBooks["EURUSD"].Sell.ContainsKey(1.1));
-            Assert.AreEqual(5, orderBooks["EURUSD"].Sell[1.15][0].GetRemainingVolume());
+            Assert.IsFalse(orderBooks["EURUSD"].Sell.ContainsKey(1.1M));
+            Assert.AreEqual(5, orderBooks["EURUSD"].Sell[1.15M][0].GetRemainingVolume());
         }
 
         [Test]
@@ -480,8 +480,8 @@ namespace MarginTradingTests
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "1"));
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "2"));
             Assert.AreEqual(1, orderBooks["EURUSD"].Buy.Count);
-            Assert.IsFalse(orderBooks["EURUSD"].Buy.ContainsKey(1.05));
-            Assert.AreEqual(3, orderBooks["EURUSD"].Buy[1.04][0].GetRemainingVolume());
+            Assert.IsFalse(orderBooks["EURUSD"].Buy.ContainsKey(1.05M));
+            Assert.AreEqual(3, orderBooks["EURUSD"].Buy[1.04M][0].GetRemainingVolume());
         }
 
         #endregion
@@ -502,7 +502,7 @@ namespace MarginTradingTests
                 AssetAccuracy = 5,
                 Instrument = "EURUSD",
                 Volume = 8,
-                ExpectedOpenPrice = 1.12,
+                ExpectedOpenPrice = 1.12M,
                 FillType = OrderFillType.PartialFill
             };
 
@@ -512,8 +512,8 @@ namespace MarginTradingTests
 
             Assert.AreEqual(2, order.MatchedOrders.Count);
             Assert.AreEqual(OrderStatus.Active, order.Status);
-            Assert.IsFalse(orderBooks["EURUSD"].Sell.ContainsKey(1.1));
-            Assert.AreEqual(6, orderBooks["EURUSD"].Sell[1.15][0].GetRemainingVolume());
+            Assert.IsFalse(orderBooks["EURUSD"].Sell.ContainsKey(1.1M));
+            Assert.AreEqual(6, orderBooks["EURUSD"].Sell[1.15M][0].GetRemainingVolume());
         }
 
         [Test]
@@ -530,7 +530,7 @@ namespace MarginTradingTests
                 AssetAccuracy = 5,
                 Instrument = "EURUSD",
                 Volume = 1,
-                ExpectedOpenPrice = 1.12,
+                ExpectedOpenPrice = 1.12M,
                 FillType = OrderFillType.FillOrKill
             };
 
@@ -555,7 +555,7 @@ namespace MarginTradingTests
                 AssetAccuracy = 5,
                 Instrument = "EURUSD",
                 Volume = -5,
-                ExpectedOpenPrice = 1.04,
+                ExpectedOpenPrice = 1.04M,
                 FillType = OrderFillType.PartialFill
             };
 
@@ -566,7 +566,7 @@ namespace MarginTradingTests
             Assert.AreEqual(1, order.MatchedOrders.Count);
             Assert.AreEqual(OrderStatus.Active, order.Status);
             Assert.AreEqual(1.05, order.OpenPrice);
-            Assert.AreEqual(2, orderBooks["EURUSD"].Buy[1.05][0].GetRemainingVolume());
+            Assert.AreEqual(2, orderBooks["EURUSD"].Buy[1.05M][0].GetRemainingVolume());
         }
 
         [Test]
@@ -583,7 +583,7 @@ namespace MarginTradingTests
                 AssetAccuracy = 5,
                 Instrument = "EURUSD",
                 Volume = -5,
-                ExpectedOpenPrice = 1.04,
+                ExpectedOpenPrice = 1.04M,
                 FillType = OrderFillType.FillOrKill
             };
 
@@ -594,7 +594,7 @@ namespace MarginTradingTests
             Assert.AreEqual(1, order.MatchedOrders.Count);
             Assert.AreEqual(OrderStatus.Active, order.Status);
             Assert.AreEqual(1.05, order.OpenPrice);
-            Assert.AreEqual(2, orderBooks["EURUSD"].Buy[1.05][0].GetRemainingVolume());
+            Assert.AreEqual(2, orderBooks["EURUSD"].Buy[1.05M][0].GetRemainingVolume());
         }
 
         #endregion

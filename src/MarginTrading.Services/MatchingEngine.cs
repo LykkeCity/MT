@@ -134,7 +134,7 @@ namespace MarginTrading.Services
         {
             var ordersList = type == OrderDirection.Buy ? pair.Value.Buy : pair.Value.Sell;
 
-            foreach (KeyValuePair<double, List<LimitOrder>> orderData in ordersList)
+            foreach (KeyValuePair<decimal, List<LimitOrder>> orderData in ordersList)
             {
                 var orders = orderData.Value.Where(item => marketMakerIds.Contains(item.MarketMakerId)).ToList();
 

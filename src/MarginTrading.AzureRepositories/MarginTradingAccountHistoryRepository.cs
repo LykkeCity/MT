@@ -15,8 +15,11 @@ namespace MarginTrading.AzureRepositories
         public DateTime Date { get; set; }
         public string AccountId => PartitionKey;
         public string ClientId { get; set; }
+        decimal IMarginTradingAccountHistory.Amount => (decimal) Amount;
         public double Amount { get; set; }
+        decimal IMarginTradingAccountHistory.Balance => (decimal) Balance;
         public double Balance { get; set; }
+        decimal IMarginTradingAccountHistory.WithdrawTransferLimit => (decimal) WithdrawTransferLimit;
         public double WithdrawTransferLimit { get; set; }
         public string Comment { get; set; }
         public string Type { get; set; }
@@ -40,9 +43,9 @@ namespace MarginTrading.AzureRepositories
                 PartitionKey = GeneratePartitionKey(src.AccountId),
                 Date = src.Date,
                 ClientId = src.ClientId,
-                Amount = src.Amount,
-                Balance = src.Balance,
-                WithdrawTransferLimit = src.WithdrawTransferLimit,
+                Amount = (double) src.Amount,
+                Balance = (double) src.Balance,
+                WithdrawTransferLimit = (double) src.WithdrawTransferLimit,
                 Comment = src.Comment,
                 Type = src.Type.ToString()
             };
