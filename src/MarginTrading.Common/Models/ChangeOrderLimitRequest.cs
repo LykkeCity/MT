@@ -9,8 +9,8 @@ namespace MarginTrading.Common.Models
     {
         [Required]
         public string OrderId { get; set; }
-        public double TakeProfit { get; set; }
-        public double StopLoss { get; set; }
-        public double ExpectedOpenPrice { get; set; }
+        public decimal TakeProfit { get; set; }
+        public decimal StopLoss { get; set; }
+        public decimal ExpectedOpenPrice { get; set; }
     }
 }

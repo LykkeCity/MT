@@ -50,7 +50,7 @@ namespace MarginTrading.Services
             account.CacheNeedsToBeUpdated();
         }
 
-        public double GetMatchedOrdersPrice(List<MatchedOrder> matchedOrders, string instrument)
+        public decimal GetMatchedOrdersPrice(List<MatchedOrder> matchedOrders, string instrument)
         {
             if (matchedOrders.Count == 0)
             {

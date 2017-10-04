@@ -13,8 +13,8 @@ namespace MarginTrading.Core.MarketMakerFeed
         string AssetPairId { get; }
         DateTime DateTime { get; }
         bool IsBuy { get; }
-        double Price { get; }
-        double Volume { get; }
+        decimal Price { get; }
+        decimal Volume { get; }
     }
 
     
@@ -23,8 +23,8 @@ namespace MarginTrading.Core.MarketMakerFeed
         public string AssetPairId { get; set; }
         public DateTime DateTime { get; set; }
         public bool IsBuy { get; set; }
-        public double Price { get; set; }
-        public double Volume { get; set; }
+        public decimal Price { get; set; }
+        public decimal Volume { get; set; }
 
         public static IAssetPairRate Create(IMarketMakerOrderBook src)
         {

@@ -109,16 +109,16 @@ namespace MarginTrading.Services
             }
         }
 
-        public void ValidateOrderStops(OrderDirection type, BidAskPair quote, double deltaBid, double deltaAsk, double? takeProfit,
-            double? stopLoss, double? expectedOpenPrice, int assetAccuracy)
+        public void ValidateOrderStops(OrderDirection type, BidAskPair quote, decimal deltaBid, decimal deltaAsk, decimal? takeProfit,
+            decimal? stopLoss, decimal? expectedOpenPrice, int assetAccuracy)
         {
-            double deltaBidValue = MarginTradingCalculations.GetVolumeFromPoints(deltaBid, assetAccuracy);
-            double deltaAskValue = MarginTradingCalculations.GetVolumeFromPoints(deltaAsk, assetAccuracy);
+            decimal deltaBidValue = MarginTradingCalculations.GetVolumeFromPoints(deltaBid, assetAccuracy);
+            decimal deltaAskValue = MarginTradingCalculations.GetVolumeFromPoints(deltaAsk, assetAccuracy);
 
             if (expectedOpenPrice.HasValue)
             {
-                double minGray;
-                double maxGray;
+                decimal minGray;
+                decimal maxGray;
 
                 //check TP/SL for pending order
                 if (type == OrderDirection.Buy)
@@ -129,14 +129,14 @@ namespace MarginTrading.Services
                     if (takeProfit.HasValue && takeProfit > 0 && takeProfit < maxGray)
                     {
                         throw new ValidateOrderException(OrderRejectReason.InvalidTakeProfit,
-                            string.Format(MtMessages.Validation_TakeProfitMustBeMore, Math.Round((double) takeProfit, assetAccuracy), maxGray),
+                            string.Format(MtMessages.Validation_TakeProfitMustBeMore, Math.Round((decimal) takeProfit, assetAccuracy), maxGray),
                             $"quote (bid/ask): {quote.Bid}/{quote.Ask}");
                     }
 
                     if (stopLoss.HasValue && stopLoss > 0 && stopLoss > minGray)
                     {
                         throw new ValidateOrderException(OrderRejectReason.InvalidStoploss,
-                            string.Format(MtMessages.Validation_StopLossMustBeLess, Math.Round((double) stopLoss, assetAccuracy), minGray),
+                            string.Format(MtMessages.Validation_StopLossMustBeLess, Math.Round((decimal) stopLoss, assetAccuracy), minGray),
                             $"quote (bid/ask): {quote.Bid}/{quote.Ask}");
                     }
                 }
@@ -148,14 +148,14 @@ namespace MarginTrading.Services
                     if (takeProfit.HasValue && takeProfit > 0 && takeProfit > minGray)
                     {
                         throw new ValidateOrderException(OrderRejectReason.InvalidTakeProfit,
-                            string.Format(MtMessages.Validation_TakeProfitMustBeLess, Math.Round((double) takeProfit, assetAccuracy), minGray),
+                            string.Format(MtMessages.Validation_TakeProfitMustBeLess, Math.Round((decimal) takeProfit, assetAccuracy), minGray),
                             $"quote (bid/ask): {quote.Bid}/{quote.Ask}");
                     }
 
                     if (stopLoss.HasValue && stopLoss > 0 && stopLoss < maxGray)
                     {
                         throw new ValidateOrderException(OrderRejectReason.InvalidStoploss,
-                            string.Format(MtMessages.Validation_StopLossMustBeMore, Math.Round((double) stopLoss, assetAccuracy), maxGray),
+                            string.Format(MtMessages.Validation_StopLossMustBeMore, Math.Round((decimal) stopLoss, assetAccuracy), maxGray),
                             $"quote (bid/ask): {quote.Bid}/{quote.Ask}");
                     }
                 }
@@ -163,22 +163,22 @@ namespace MarginTrading.Services
             else
             {
                 //check TP/SL for market order
-                double minGray = Math.Round(quote.Bid - deltaBidValue, assetAccuracy);
-                double maxGray = Math.Round(quote.Ask + deltaAskValue, assetAccuracy);
+                decimal minGray = Math.Round(quote.Bid - deltaBidValue, assetAccuracy);
+                decimal maxGray = Math.Round(quote.Ask + deltaAskValue, assetAccuracy);
 
                 if (type == OrderDirection.Buy)
                 {
                     if (takeProfit.HasValue && takeProfit > 0 && takeProfit < maxGray)
                     {
                         throw new ValidateOrderException(OrderRejectReason.InvalidTakeProfit,
-                            string.Format(MtMessages.Validation_TakeProfitMustBeMore, Math.Round((double) takeProfit, assetAccuracy), maxGray),
+                            string.Format(MtMessages.Validation_TakeProfitMustBeMore, Math.Round((decimal) takeProfit, assetAccuracy), maxGray),
                             $"quote (bid/ask): {quote.Bid}/{quote.Ask}");
                     }
 
                     if (stopLoss.HasValue && stopLoss > 0 && stopLoss > minGray)
                     {
                         throw new ValidateOrderException(OrderRejectReason.InvalidStoploss,
-                            string.Format(MtMessages.Validation_StopLossMustBeLess, Math.Round((double) stopLoss, assetAccuracy), minGray),
+                            string.Format(MtMessages.Validation_StopLossMustBeLess, Math.Round((decimal) stopLoss, assetAccuracy), minGray),
                             $"quote (bid/ask): {quote.Bid}/{quote.Ask}");
                     }
                 }
@@ -187,7 +187,7 @@ namespace MarginTrading.Services
                     if (takeProfit.HasValue && takeProfit > 0 && takeProfit > minGray)
                     {
                         throw new ValidateOrderException(OrderRejectReason.InvalidTakeProfit,
-                            string.Format(MtMessages.Validation_TakeProfitMustBeLess, Math.Round((double) takeProfit, assetAccuracy), minGray),
+                            string.Format(MtMessages.Validation_TakeProfitMustBeLess, Math.Round((decimal) takeProfit, assetAccuracy), minGray),
                             $"quote (bid/ask): {quote.Bid}/{quote.Ask}");
                     }
 
@@ -195,7 +195,7 @@ namespace MarginTrading.Services
                     {
                         throw new ValidateOrderException(OrderRejectReason.InvalidStoploss,
                             string.Format(MtMessages.Validation_StopLossMustBeMore,
-                                Math.Round((double) stopLoss, assetAccuracy), maxGray),
+                                Math.Round((decimal) stopLoss, assetAccuracy), maxGray),
                             $"quote (bid/ask): {quote.Bid}/{quote.Ask}");
                     }
                 }

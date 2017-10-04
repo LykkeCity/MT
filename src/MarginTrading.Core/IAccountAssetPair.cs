@@ -11,17 +11,17 @@ namespace MarginTrading.Core
         string Instrument { get; }
         int LeverageInit { get; }
         int LeverageMaintenance { get; }
-        double SwapLong { get; }
-        double SwapShort { get; }
-        double SwapLongPct { get; }
-        double SwapShortPct { get; }
-        double CommissionLong { get; }
-        double CommissionShort { get; }
-        double CommissionLot { get; }
-        double DeltaBid { get; }
-        double DeltaAsk { get; }
-        double DealLimit { get; }
-        double PositionLimit { get; }
+        decimal SwapLong { get; }
+        decimal SwapShort { get; }
+        decimal SwapLongPct { get; }
+        decimal SwapShortPct { get; }
+        decimal CommissionLong { get; }
+        decimal CommissionShort { get; }
+        decimal CommissionLot { get; }
+        decimal DeltaBid { get; }
+        decimal DeltaAsk { get; }
+        decimal DealLimit { get; }
+        decimal PositionLimit { get; }
     }
 
     public class AccountAssetPair : IAccountAssetPair
@@ -31,17 +31,17 @@ namespace MarginTrading.Core
         public string Instrument { get; set; }
         public int LeverageInit { get; set; }
         public int LeverageMaintenance { get; set; }
-        public double SwapLong { get; set; }
-        public double SwapShort { get; set; }
-        public double SwapLongPct { get; set; }
-        public double SwapShortPct { get; set; }
-        public double CommissionLong { get; set; }
-        public double CommissionShort { get; set; }
-        public double CommissionLot { get; set; }
-        public double DeltaBid { get; set; }
-        public double DeltaAsk { get; set; }
-        public double DealLimit { get; set; }
-        public double PositionLimit { get; set; }
+        public decimal SwapLong { get; set; }
+        public decimal SwapShort { get; set; }
+        public decimal SwapLongPct { get; set; }
+        public decimal SwapShortPct { get; set; }
+        public decimal CommissionLong { get; set; }
+        public decimal CommissionShort { get; set; }
+        public decimal CommissionLot { get; set; }
+        public decimal DeltaBid { get; set; }
+        public decimal DeltaAsk { get; set; }
+        public decimal DealLimit { get; set; }
+        public decimal PositionLimit { get; set; }
 
         public static AccountAssetPair Create(IAccountAssetPair src)
         {

@@ -14,6 +14,6 @@ namespace MarginTrading.MarketMaker.Services
     /// </remarks>
     internal interface ISpotOrderCommandsGeneratorService
     {
-        IReadOnlyList<OrderCommand> GenerateOrderCommands(string assetPairId, bool isBuy, double newBestPrice, double ordersVolume);
+        IReadOnlyList<OrderCommand> GenerateOrderCommands(string assetPairId, bool isBuy, decimal newBestPrice, decimal ordersVolume);
     }
 }

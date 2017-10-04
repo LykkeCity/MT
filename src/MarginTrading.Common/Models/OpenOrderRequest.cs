@@ -17,11 +17,11 @@ namespace MarginTrading.Common.Models
         public string AccountId { get; set; }
         [Required]
         public string Instrument { get; set; }
-        public double? ExpectedOpenPrice { get; set; }
+        public decimal? ExpectedOpenPrice { get; set; }
         [Required]
-        public double? Volume { get; set; }
-        public double? TakeProfit { get; set; }
-        public double? StopLoss { get; set; }
+        public decimal? Volume { get; set; }
+        public decimal? TakeProfit { get; set; }
+        public decimal? StopLoss { get; set; }
         [Required]
         public OrderFillType FillType { get; set; }
     }

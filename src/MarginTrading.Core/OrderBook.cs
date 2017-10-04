@@ -11,11 +11,11 @@ namespace MarginTrading.Core
     {
         public string Instrument { get; set; }
 
-        public SortedDictionary<double, List<LimitOrder>> Buy { get; set; } =
-            new SortedDictionary<double, List<LimitOrder>>(new ReverseComparer<double>(Comparer<double>.Default));
+        public SortedDictionary<decimal, List<LimitOrder>> Buy { get; set; } =
+            new SortedDictionary<decimal, List<LimitOrder>>(new ReverseComparer<decimal>(Comparer<decimal>.Default));
 
-        public SortedDictionary<double, List<LimitOrder>> Sell { get; set; } =
-            new SortedDictionary<double, List<LimitOrder>>();
+        public SortedDictionary<decimal, List<LimitOrder>> Sell { get; set; } =
+            new SortedDictionary<decimal, List<LimitOrder>>();
 
         public OrderBook Clone()
         {
@@ -23,8 +23,8 @@ namespace MarginTrading.Core
             {
                 Instrument = Instrument,
                 Buy =
-                    new SortedDictionary<double, List<LimitOrder>>(new ReverseComparer<double>(Comparer<double>.Default)),
-                Sell = new SortedDictionary<double, List<LimitOrder>>()
+                    new SortedDictionary<decimal, List<LimitOrder>>(new ReverseComparer<decimal>(Comparer<decimal>.Default)),
+                Sell = new SortedDictionary<decimal, List<LimitOrder>>()
             };
 
             FillOrders(res.Buy, Buy);
@@ -33,8 +33,8 @@ namespace MarginTrading.Core
             return res;
         }
 
-        private void FillOrders(SortedDictionary<double, List<LimitOrder>> dst,
-            SortedDictionary<double, List<LimitOrder>> src)
+        private void FillOrders(SortedDictionary<decimal, List<LimitOrder>> dst,
+            SortedDictionary<decimal, List<LimitOrder>> src)
         {
             foreach (var pair in src)
             {
@@ -69,7 +69,7 @@ namespace MarginTrading.Core
             }
         }
 
-        public IEnumerable<MatchedOrder> Match(Order order, OrderDirection orderTypeToMatch, double volumeToMatch)
+        public IEnumerable<MatchedOrder> Match(Order order, OrderDirection orderTypeToMatch, decimal volumeToMatch)
         {
             if (volumeToMatch == 0)
                 yield break;
@@ -77,7 +77,7 @@ namespace MarginTrading.Core
             var source = orderTypeToMatch == OrderDirection.Buy ? Buy : Sell;
             volumeToMatch = Math.Abs(volumeToMatch);
 
-            foreach (KeyValuePair<double, List<LimitOrder>> pair in source)
+            foreach (KeyValuePair<decimal, List<LimitOrder>> pair in source)
                 foreach (var limitOrder in pair.Value.OrderBy(item => item.CreateDate))
                 {
                     var matchedVolume = Math.Min(limitOrder.GetRemainingVolume(), volumeToMatch);
@@ -168,15 +168,15 @@ namespace MarginTrading.Core
 
     public class AggregatedOrderInfo
     {
-        public double Price { get; set; }
-        public double Volume { get; set; }
+        public decimal Price { get; set; }
+        public decimal Volume { get; set; }
         public bool IsBuy { get; set; }
     }
 
     public class AggregatedOrderBookItem
     {
-        public double Price { get; set; }
-        public double Volume { get; set; }
+        public decimal Price { get; set; }
+        public decimal Volume { get; set; }
     }
 
     public static class OrderBookExt
@@ -187,7 +187,7 @@ namespace MarginTrading.Core
                 ? src.Buy.Keys.FirstOrDefault()
                 : src.Sell.Keys.FirstOrDefault();
 
-            double volume = direction == OrderDirection.Buy
+            decimal volume = direction == OrderDirection.Buy
                 ? src.Buy.Values.FirstOrDefault()?.Sum(item => item.Volume) ?? 0
                 : src.Sell.Values.FirstOrDefault()?.Sum(item => item.Volume) ?? 0;
 
@@ -199,7 +199,7 @@ namespace MarginTrading.Core
             };
         }
 
-        public static List<LimitOrder> DeleteMarketMakerOrders(this SortedDictionary<double, List<LimitOrder>> src,
+        public static List<LimitOrder> DeleteMarketMakerOrders(this SortedDictionary<decimal, List<LimitOrder>> src,
             string marketMakerId, string[] idsToDelete)
         {
             var result = new List<LimitOrder>();
@@ -215,7 +215,7 @@ namespace MarginTrading.Core
             return result;
         }
 
-        public static List<LimitOrder> DeleteAllOrdersByMarketMaker(this SortedDictionary<double, List<LimitOrder>> src,
+        public static List<LimitOrder> DeleteAllOrdersByMarketMaker(this SortedDictionary<decimal, List<LimitOrder>> src,
             string marketMakerId)
         {
             var result = new List<LimitOrder>();
@@ -231,7 +231,7 @@ namespace MarginTrading.Core
             return result;
         }
 
-        public static LimitOrder AddMarketMakerOrder(this SortedDictionary<double, List<LimitOrder>> src,
+        public static LimitOrder AddMarketMakerOrder(this SortedDictionary<decimal, List<LimitOrder>> src,
             LimitOrder order)
         {
             if (!src.ContainsKey(order.Price))
@@ -250,7 +250,7 @@ namespace MarginTrading.Core
             return order;
         }
 
-        public static void RemoveEmptyKeys(this SortedDictionary<double, List<LimitOrder>> src)
+        public static void RemoveEmptyKeys(this SortedDictionary<decimal, List<LimitOrder>> src)
         {
             var emptyKeys = src.Where(pair => pair.Value.Count == 0)
                     .Select(pair => pair.Key)
@@ -295,7 +295,7 @@ namespace MarginTrading.Core
             return _orderBooks.GetEnumerator();
         }
 
-        public MatchedOrderCollection Match(Order order, OrderDirection orderTypeToMatch, double volumeToMatch)
+        public MatchedOrderCollection Match(Order order, OrderDirection orderTypeToMatch, decimal volumeToMatch)
         {
             if (!_orderBooks.ContainsKey(order.Instrument))
                 return new MatchedOrderCollection();
@@ -401,8 +401,8 @@ namespace MarginTrading.Core
     public class OrderBookLevel
     {
         public string Instrument { get; set; }
-        public double Price { get; set; }
-        public double Volume { get; set; }
+        public decimal Price { get; set; }
+        public decimal Volume { get; set; }
         public OrderDirection Direction { get; set; }
 
         public static OrderBookLevel Create(LimitOrder order)

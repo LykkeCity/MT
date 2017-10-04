@@ -106,8 +106,7 @@ namespace MarginTrading.Services
             _quotes =
                 _blobRepository
                     .Read<Dictionary<string, InstrumentBidAskPair>>(LykkeConstants.StateBlobContainer, BlobName)
-                    ?.Where(b => _accountAssetsCache.IsInstrumentSupported(b.Key))
-                    .ToDictionary(d => d.Key, d => d.Value) ??
+                    ?.ToDictionary(d => d.Key, d => d.Value) ??
                 new Dictionary<string, InstrumentBidAskPair>();
 
             base.Start();

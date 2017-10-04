@@ -52,17 +52,17 @@ namespace MarginTradingTests
             _appNotificationsMock = Mock.Get(appNotifications);
             _emailServiceMock = Mock.Get(emailService);
 
-            var quote = new InstrumentBidAskPair { Instrument = "BTCUSD", Bid = 829.69, Ask = 829.8 };
+            var quote = new InstrumentBidAskPair { Instrument = "BTCUSD", Bid = 829.69M, Ask = 829.8M };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
             _accountAssetPairsRepository = Container.Resolve<IAccountAssetPairsRepository>();
 
             var ordersSet1 = new []
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.04, Volume = 4 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "2", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.05, Volume = 7 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "3", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.1, Volume = -6 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "4", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.15, Volume = -8 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.04M, Volume = 4 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "2", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.05M, Volume = 7 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "3", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.1M, Volume = -6 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "4", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.15M, Volume = -8 }
             };
 
             _matchingEngine.SetOrders(MarketMaker1Id, ordersSet1);
@@ -75,11 +75,11 @@ namespace MarginTradingTests
         {
             var ordersSet = new[]
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.370, Volume = -15000 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286, Volume = 10000 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.370M, Volume = -15000 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286M, Volume = 10000 }
             };
 
-            var quote = new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0082, Ask = 1.0083 };
+            var quote = new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0082M, Ask = 1.0083M };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
             _matchingEngine.SetOrders(MarketMaker1Id, ordersSet);
@@ -106,13 +106,13 @@ namespace MarginTradingTests
         {
             var ordersSet = new[]
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.370, Volume = -15 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286, Volume = 10000 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.370M, Volume = -15 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286M, Volume = 10000 }
             };
 
             _matchingEngine.SetOrders(MarketMaker1Id, ordersSet);
 
-            var quote = new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0082, Ask = 1.0083 };
+            var quote = new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0082M, Ask = 1.0083M };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
             var order = new Order
@@ -217,7 +217,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders("1", new[]
             {
-               new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2, Volume = 8}
+               new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2M, Volume = 8}
             });
 
             Assert.AreEqual(1.2, order.ClosePrice);
@@ -252,7 +252,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders("1", new[]
             {
-               new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 0.8, Volume = -8}
+               new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 0.8M, Volume = -8}
             });
 
             Assert.AreEqual(0.8, order.ClosePrice);
@@ -444,7 +444,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders("1", new[]
             {
-               new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2, Volume = 8 }
+               new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2M, Volume = 8 }
             });
 
             Assert.AreEqual(1.2, order.ClosePrice);
@@ -628,7 +628,7 @@ namespace MarginTradingTests
             //add new limit order, so active order waiting for close can be matched
             _matchingEngine.SetOrders("1", new[]
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.04, Volume = 1}
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.04M, Volume = 1}
             });
 
             Assert.AreEqual(8, order.GetMatchedCloseVolume());
@@ -636,7 +636,7 @@ namespace MarginTradingTests
             //adding another order which should fill the active order
             _matchingEngine.SetOrders("1", new[]
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.04, Volume = 1}
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.04M, Volume = 1}
             });
 
             //order should now be fully matched and closed
@@ -683,7 +683,7 @@ namespace MarginTradingTests
             //add new limit order, so active order waiting for close can be matched
             _matchingEngine.SetOrders("1", new[]
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.1, Volume = -1}
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.1M, Volume = -1}
             });
 
             Assert.AreEqual(7, order.GetMatchedCloseVolume());
@@ -691,7 +691,7 @@ namespace MarginTradingTests
             //adding another order which should fill the active order
             _matchingEngine.SetOrders("1", new[]
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.1, Volume = -1}
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.1M, Volume = -1}
             });
 
             ////order should fully matched and closed
@@ -723,7 +723,7 @@ namespace MarginTradingTests
             Assert.IsNull(order.TakeProfit);
             Assert.AreEqual(OrderStatus.Active, order.Status);
 
-           _tradingEngine.ChangeOrderLimits(order.Id, 0.99, 1.3);
+           _tradingEngine.ChangeOrderLimits(order.Id, 0.99M, 1.3M);
 
             Assert.AreEqual(0.99, order.StopLoss);
             Assert.AreEqual(1.3, order.TakeProfit);
@@ -740,7 +740,7 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 8,
-                TakeProfit = 1.16,
+                TakeProfit = 1.16M,
                 FillType = OrderFillType.PartialFill
             };
 
@@ -760,7 +760,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders("1", new[]
             {
-               new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2, Volume = 8}
+               new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2M, Volume = 8}
             });
 
             Assert.AreEqual(OrderStatus.Closed, order.Status); //order should be closed on TakeProfit
@@ -784,7 +784,7 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -8,
-                TakeProfit = 0.8,
+                TakeProfit = 0.8M,
                 FillType = OrderFillType.PartialFill
             };
 
@@ -803,7 +803,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders("1", new[]
             {
-               new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 0.7, Volume = -8}
+               new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 0.7M, Volume = -8}
             });
 
             Assert.AreEqual(OrderStatus.Closed, order.Status); //order should be closed on TakeProfit
@@ -827,7 +827,7 @@ namespace MarginTradingTests
                 ClientId = _client1Id, 
                 Instrument = "EURUSD",
                 Volume = 14,
-                StopLoss = 0.98,
+                StopLoss = 0.98M,
                 FillType = OrderFillType.FillOrKill
             };
 
@@ -846,7 +846,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders("1", new[]
             {
-               new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 0.9, Volume = 20}
+               new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 0.9M, Volume = 20}
             }, new[] { "1"});
 
             Assert.AreEqual(OrderStatus.Closed, order.Status); //order is closed now on StopLoss
@@ -870,7 +870,7 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -11,
-                StopLoss = 1.15,
+                StopLoss = 1.15M,
                 FillType = OrderFillType.FillOrKill
             };
 
@@ -889,7 +889,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders("1", new []
             {
-               new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2, Volume = -8}
+               new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2M, Volume = -8}
             }, new [] { "3" });
 
             Assert.AreEqual(OrderStatus.Closed, order.Status); //order should be closed on StopLoss
@@ -925,7 +925,7 @@ namespace MarginTradingTests
                 LeverageMaintenance = 150,
                 DeltaAsk = 30,
                 DeltaBid = 30,
-                CommissionShort = 0.5,
+                CommissionShort = 0.5M,
                 CommissionLong = 1,
                 CommissionLot = 8
             }).Wait();
@@ -951,14 +951,14 @@ namespace MarginTradingTests
         {
             var ordersSet = new []
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 838.371, Volume = -15 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286, Volume = 10 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 838.371M, Volume = -15 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286M, Volume = 10 }
             };
 
             _matchingEngine.SetOrders(MarketMaker1Id, ordersSet);
 
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0122, Ask = 1.0124 }));
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Bid = 905.57, Ask = 905.67 }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0122M, Ask = 1.0124M }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Bid = 905.57M, Ask = 905.67M }));
 
             var order = new Order
             {
@@ -995,14 +995,14 @@ namespace MarginTradingTests
         {
             var ordersSet = new []
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 838.371, Volume = -15 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286, Volume = 10 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 838.371M, Volume = -15 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286M, Volume = 10 }
             };
 
             _matchingEngine.SetOrders(MarketMaker1Id, ordersSet);
 
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0122, Ask = 1.0124 }));
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Bid = 905.57, Ask = 905.67 }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0122M, Ask = 1.0124M }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Bid = 905.57M, Ask = 905.67M }));
 
             var order = new Order
             {
@@ -1040,13 +1040,13 @@ namespace MarginTradingTests
         {
             var ordersSet = new []
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 838.371, Volume = -15 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286, Volume = 10 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 838.371M, Volume = -15 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286M, Volume = 10 }
             };
 
             _matchingEngine.SetOrders(MarketMaker1Id, ordersSet);
 
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0122, Ask = 1.0124}));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0122M, Ask = 1.0124M}));
 
             var order = new Order
             {
@@ -1084,13 +1084,13 @@ namespace MarginTradingTests
         {
             var ordersSet = new []
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 838.371, Volume = -15 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286, Volume = 10 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 838.371M, Volume = -15 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286M, Volume = 10 }
             };
 
             _matchingEngine.SetOrders(MarketMaker1Id, ordersSet);
 
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0122, Ask = 1.0124 }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0122M, Ask = 1.0124M }));
 
             var order = new Order
             {
@@ -1128,14 +1128,14 @@ namespace MarginTradingTests
         {
             var ordersSet = new []
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.370, Volume = -15000 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286, Volume = 10000 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.370M, Volume = -15000 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286M, Volume = 10000 }
             };
 
             _matchingEngine.SetOrders(MarketMaker1Id, ordersSet);
 
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Bid = 905.57, Ask = 905.67 }));
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF",  Bid = 1.0092, Ask = 1.0095}));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Bid = 905.57M, Ask = 905.67M }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF",  Bid = 1.0092M, Ask = 1.0095M}));
 
             var order = new Order
             {
@@ -1144,7 +1144,7 @@ namespace MarginTradingTests
                 AccountId = _acount1Id,
                 ClientId = _client1Id,
                 Instrument = "BTCCHF",
-                Volume = 11.14644406903176,  //10000 USD (with leverage)
+                Volume = 11.14644406903176M,  //10000 USD (with leverage)
                 FillType = OrderFillType.FillOrKill
             };
 
@@ -1159,14 +1159,14 @@ namespace MarginTradingTests
         {
             var ordersSet = new []
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.370, Volume = -15000 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286, Volume = 10000 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.370M, Volume = -15000 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286M, Volume = 10000 }
             };
 
             _matchingEngine.SetOrders(MarketMaker1Id, ordersSet);
 
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Bid = 905.57, Ask = 905.67 }));
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0092, Ask = 1.0095 }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Bid = 905.57M, Ask = 905.67M }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0092M, Ask = 1.0095M }));
 
             var order = new Order
             {
@@ -1175,7 +1175,7 @@ namespace MarginTradingTests
                 AccountId = _acount1Id,
                 ClientId = _client1Id,
                 Instrument = "BTCCHF",
-                Volume = 11.14644406903176,  //10000 USD (with leverage)
+                Volume = 11.14644406903176M,  //10000 USD (with leverage)
                 FillType = OrderFillType.FillOrKill
             };
 
@@ -1189,7 +1189,7 @@ namespace MarginTradingTests
 
             //add new order which will set account to stop out
             _matchingEngine.SetOrders(MarketMaker1Id,
-                new []{new LimitOrder { CreateDate = DateTime.UtcNow, Id = "7", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 790.286, Volume = 15000 }
+                new []{new LimitOrder { CreateDate = DateTime.UtcNow, Id = "7", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 790.286M, Volume = 15000 }
             }, new[] { "6" });
 
             account = _accountsCacheService.Get(order.ClientId, order.AccountId);
@@ -1200,7 +1200,7 @@ namespace MarginTradingTests
             _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<MarginTradingAccount>(o => o.GetUsedMargin() == 0 && o.Balance == account.Balance)));
             _clientNotifyServiceMock.Verify(x => x.NotifyAccountStopout(
                 It.Is<string>(clientId => account.ClientId == clientId), 
-                It.Is<string>(accountId => account.Id == accountId), It.Is<int>(count => count == 1), It.IsAny<double>()), Times.Once());
+                It.Is<string>(accountId => account.Id == accountId), It.Is<int>(count => count == 1), It.IsAny<decimal>()), Times.Once());
             _appNotificationsMock.Verify(x => x.SendPositionNotification(It.IsAny<string[]>(), It.Is<string>(message => message.Contains("Stop out")), It.IsAny<IOrder>()), Times.Once());
             _emailServiceMock.Verify(
                 x => x.SendStopOutEmailAsync(It.IsAny<string>(), account.BaseAssetId, account.Id), Times.Once);
@@ -1211,14 +1211,14 @@ namespace MarginTradingTests
         {
             var ordersSet = new []
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.370, Volume = -15000 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286, Volume = 10000 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.370M, Volume = -15000 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286M, Volume = 10000 }
             };
 
             _matchingEngine.SetOrders(MarketMaker1Id, ordersSet);
 
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Bid = 905.57, Ask = 905.67 }));
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0092, Ask = 1.0095 }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Bid = 905.57M, Ask = 905.67M }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0092M, Ask = 1.0095M }));
 
             var order = new Order
             {
@@ -1227,7 +1227,7 @@ namespace MarginTradingTests
                 AccountId = _acount1Id,
                 ClientId = _client1Id,
                 Instrument = "BTCCHF",
-                Volume = 11.14644406903176,  //10000 USD (with leverage)
+                Volume = 11.14644406903176M,  //10000 USD (with leverage)
                 FillType = OrderFillType.FillOrKill
             };
 
@@ -1242,7 +1242,7 @@ namespace MarginTradingTests
 
             //add new order which will set account to stop out
             _matchingEngine.SetOrders(MarketMaker1Id,
-                new []{new LimitOrder { CreateDate = DateTime.UtcNow, Id = "7", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 808.286, Volume = 15000 }
+                new []{new LimitOrder { CreateDate = DateTime.UtcNow, Id = "7", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 808.286M, Volume = 15000 }
             }, new[] { "6" });
 
             account = _accountsCacheService.Get(order.ClientId, order.AccountId);
@@ -1257,7 +1257,7 @@ namespace MarginTradingTests
         [Test]
         public void Check_No_Quote()
         {
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCJPY", Bid = 109.857, Ask = 130.957 }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCJPY", Bid = 109.857M, Ask = 130.957M }));
 
             var order = new Order
             {
@@ -1284,8 +1284,8 @@ namespace MarginTradingTests
 
             var ordersSet = new[]
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 1097.315, Volume = 100000 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "2", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 1125.945, Volume = -100000 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 1097.315M, Volume = 100000 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "2", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 1125.945M, Volume = -100000 },
             };
 
             _matchingEngine.SetOrders(MarketMaker1Id, ordersSet, deleteAll: true);
@@ -1314,8 +1314,8 @@ namespace MarginTradingTests
 
             ordersSet = new[]
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 1125.039, Volume = 100000 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "2", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 1126.039, Volume = -100000 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 1125.039M, Volume = 100000 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "2", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 1126.039M, Volume = -100000 }
             };
 
             _matchingEngine.SetOrders(MarketMaker1Id, ordersSet, deleteAll: true);
@@ -1345,8 +1345,8 @@ namespace MarginTradingTests
             //add orders to create big spread
             ordersSet = new[]
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 1097.315, Volume = 100000 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "2", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 1126.039, Volume = -100000 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 1097.315M, Volume = 100000 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "2", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 1126.039M, Volume = -100000 }
             };
 
             _matchingEngine.SetOrders(MarketMaker1Id, ordersSet, deleteAll: true);
@@ -1390,7 +1390,7 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 8,
-                ExpectedOpenPrice = 1.1,
+                ExpectedOpenPrice = 1.1M,
                 FillType = OrderFillType.PartialFill
             };
 
@@ -1400,7 +1400,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(MarketMaker1Id, new[]
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2, Volume = 6 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2M, Volume = 6 }
             });
 
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
@@ -1424,7 +1424,7 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 8,
-                ExpectedOpenPrice = 1.055,
+                ExpectedOpenPrice = 1.055M,
                 FillType = OrderFillType.PartialFill
             };
 
@@ -1439,7 +1439,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(MarketMaker1Id, new []
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06, Volume = -6 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = -6 }
             });
 
             Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //still not active
@@ -1447,7 +1447,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(MarketMaker1Id, new []
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.055, Volume = -6 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.055M, Volume = -6 }
             });
 
             Assert.AreEqual(OrderStatus.Active, order.Status); //now its active
@@ -1470,7 +1470,7 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -5,
-                ExpectedOpenPrice = 1.05,
+                ExpectedOpenPrice = 1.05M,
                 FillType = OrderFillType.PartialFill
             };
 
@@ -1478,7 +1478,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(MarketMaker1Id, new[]
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06, Volume = 6 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = 6 }
             });
 
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
@@ -1502,7 +1502,7 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -1,
-                ExpectedOpenPrice = 1.07,
+                ExpectedOpenPrice = 1.07M,
                 FillType = OrderFillType.PartialFill
             };
 
@@ -1518,7 +1518,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(MarketMaker1Id, new []
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06, Volume = 6 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = 6 }
             });
 
             Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //still not active
@@ -1526,7 +1526,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(MarketMaker1Id, new []
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.08, Volume = 10 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.08M, Volume = 10 }
             });
 
             Assert.AreEqual(OrderStatus.Active, order.Status); //now its active
@@ -1547,7 +1547,7 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 1,
-                ExpectedOpenPrice = 1.1,
+                ExpectedOpenPrice = 1.1M,
                 FillType = OrderFillType.FillOrKill
             };
 
@@ -1557,7 +1557,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(MarketMaker1Id, new[]
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2, Volume = 6 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2M, Volume = 6 }
             });
 
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
@@ -1582,7 +1582,7 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 1,
-                ExpectedOpenPrice = 1.055,
+                ExpectedOpenPrice = 1.055M,
                 FillType = OrderFillType.FillOrKill
             };
 
@@ -1597,7 +1597,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(MarketMaker1Id, new []
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06, Volume = -6 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = -6 }
             });
 
             Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //still not active
@@ -1605,7 +1605,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(MarketMaker1Id, new []
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.055, Volume = -4 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.055M, Volume = -4 }
             });
 
             Assert.AreEqual(OrderStatus.Active, order.Status); //now its active
@@ -1626,7 +1626,7 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -1,
-                ExpectedOpenPrice = 1.05,
+                ExpectedOpenPrice = 1.05M,
                 FillType = OrderFillType.FillOrKill
             };
 
@@ -1634,7 +1634,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(MarketMaker1Id, new[]
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06, Volume = 6 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = 6 }
             });
 
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
@@ -1658,7 +1658,7 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -1,
-                ExpectedOpenPrice = 1.07,
+                ExpectedOpenPrice = 1.07M,
                 FillType = OrderFillType.FillOrKill
             };
 
@@ -1673,7 +1673,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(MarketMaker1Id, new []
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06, Volume = 6 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = 6 }
             });
 
             Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //still not active
@@ -1681,7 +1681,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(MarketMaker1Id, new []
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.08, Volume = 10 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.08M, Volume = 10 }
             });
 
             Assert.AreEqual(OrderStatus.Active, order.Status); //now its active
@@ -1702,7 +1702,7 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 8,
-                ExpectedOpenPrice = 1.12,
+                ExpectedOpenPrice = 1.12M,
                 FillType = OrderFillType.PartialFill
             };
 
@@ -1724,7 +1724,7 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -8,
-                ExpectedOpenPrice = 1.04,
+                ExpectedOpenPrice = 1.04M,
                 FillType = OrderFillType.PartialFill
             };
 
@@ -1746,7 +1746,7 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -1,
-                ExpectedOpenPrice = 1.07,
+                ExpectedOpenPrice = 1.07M,
                 FillType = OrderFillType.FillOrKill
             };
 
@@ -1779,7 +1779,7 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -10000,
-                ExpectedOpenPrice = 1.07,
+                ExpectedOpenPrice = 1.07M,
                 FillType = OrderFillType.FillOrKill
             };
 
@@ -1794,7 +1794,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(MarketMaker1Id, new[]
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06, Volume = 6 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = 6 }
             });
 
             Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //still not active
@@ -1802,7 +1802,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(MarketMaker1Id, new[]
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.08, Volume = 10 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.08M, Volume = 10 }
             });
 
             Assert.AreEqual(OrderStatus.Rejected, order.Status); //should be rejected 
@@ -1821,7 +1821,7 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -5,
-                ExpectedOpenPrice = 1.07,
+                ExpectedOpenPrice = 1.07M,
                 FillType = OrderFillType.FillOrKill
             };
 
@@ -1836,7 +1836,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(MarketMaker1Id, new[]
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06, Volume = 6 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = 6 }
             });
 
             Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //still not active
@@ -1844,7 +1844,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(MarketMaker1Id, new[]
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.08, Volume = 10 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.08M, Volume = 10 }
             });
 
             Assert.AreEqual(OrderStatus.Active, order.Status); //should be active 

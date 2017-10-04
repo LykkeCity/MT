@@ -43,7 +43,7 @@ namespace MarginTrading.Services
             _operationsLogService.AddLog($"queue {queueName}", account.ClientId, account.Id, null, account.ToJson());
         }
 
-        public void NotifyAccountStopout(string clientId, string accountId, int positionsCount, double totalPnl)
+        public void NotifyAccountStopout(string clientId, string accountId, int positionsCount, decimal totalPnl)
         {
             _rabbitMqNotifyService.AccountStopout(clientId, accountId, positionsCount, totalPnl);
             string queueName = QueueHelper.BuildQueueName(_marginSettings.RabbitMqQueues.AccountStopout.ExchangeName, _marginSettings.Env);

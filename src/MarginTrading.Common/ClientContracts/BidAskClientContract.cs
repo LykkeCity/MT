@@ -6,7 +6,7 @@ namespace MarginTrading.Common.ClientContracts
     {
         public string Id { get; set; }
         public DateTime Date { get; set; }
-        public double Bid { get; set; }
-        public double Ask { get; set; }
+        public decimal Bid { get; set; }
+        public decimal Ask { get; set; }
     }
 }

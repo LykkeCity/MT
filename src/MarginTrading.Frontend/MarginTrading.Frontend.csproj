@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
-
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <PreserveCompilationContext>true</PreserveCompilationContext>
@@ -11,29 +10,25 @@
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
     <Version>1.0.1</Version>
   </PropertyGroup>
-
   <ItemGroup>
     <None Include="Views\**\*.cshtml" />
   </ItemGroup>
-
   <ItemGroup>
     <None Update="Dockerfile">
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\MarginTrading.Common\MarginTrading.Common.csproj" />
     <ProjectReference Include="..\MarginTrading.Services\MarginTrading.Services.csproj" />
     <ProjectReference Include="..\MarginTrading.AzureRepositories\MarginTrading.AzureRepositories.csproj" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="AspNet.Security.OpenIdConnect.Extensions" Version="1.0.0" />
-    <PackageReference Include="Lykke.Common.ApiLibrary" Version="1.0.11" />
-    <PackageReference Include="Lykke.Logs" Version="1.0.29" />
+    <PackageReference Include="Lykke.Common.ApiLibrary" Version="1.0.12" />
+    <PackageReference Include="Lykke.Logs" Version="1.0.33" />
     <PackageReference Include="Lykke.MarginTrading.DataReaderClient" Version="1.0.10" />
-    <PackageReference Include="Lykke.SettingsReader" Version="1.0.38" />
+    <PackageReference Include="Lykke.SettingsReader" Version="1.0.39" />
     <PackageReference Include="Lykke.Service.Session" Version="16.0.0" />
     <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="1.0.4" />
     <PackageReference Include="Lykke.SlackNotifications" Version="1.0.11" />
@@ -49,23 +44,22 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="2.0.0" />
+    <PackageReference Include="Lykke.WampSharp.NewtonsoftJson" Version="0.27.36" />
+    <PackageReference Include="Lykke.WampSharp.AspNetCore.WebSockets.Server" Version="0.27.36" />
     <PackageReference Include="Microsoft.Extensions.PlatformAbstractions" Version="1.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Server.IISIntegration" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.0.0" />
-    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="4.1.0" />
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="4.2.0" />
+    <PackageReference Include="SuperSocket.ClientEngine" Version="0.8.0.13" />
     <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
-    <PackageReference Include="WampSharp.Default" Version="1.2.5.40-beta" />
-    <PackageReference Include="WampSharp.AspNetCore.WebSockets.Server" Version="1.2.5.40-beta" />
-    <PackageReference Include="WampSharp.NewtonsoftJson" Version="1.2.5.40-beta" />
     <PackageReference Include="Swashbuckle.SwaggerGen" Version="6.0.0-beta902" />
     <PackageReference Include="Swashbuckle.SwaggerUi" Version="6.0.0-beta902" />
     <PackageReference Include="Flurl.Http" Version="1.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics" Version="2.0.0" />
-    <PackageReference Include="Lykke.RabbitMqBroker" Version="1.0.77" />
+    <PackageReference Include="Lykke.RabbitMqBroker" Version="1.0.80" />
   </ItemGroup>
-
   <ItemGroup>
     <WCFMetadata Include="Connected Services" />
   </ItemGroup>

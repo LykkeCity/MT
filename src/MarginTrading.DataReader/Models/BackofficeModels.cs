@@ -3,8 +3,8 @@
     public class SummaryAssetInfo
     {
         public string AssetPairId { get; set; }
-        public double VolumeLong { get; set; }
-        public double VolumeShort { get; set; }
-        public double PnL { get; set; }
+        public decimal VolumeLong { get; set; }
+        public decimal VolumeShort { get; set; }
+        public decimal PnL { get; set; }
     }
 }

@@ -513,7 +513,7 @@ namespace MarginTrading.Services
             _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order));
         }
 
-        public void ChangeOrderLimits(string orderId, double stopLoss, double takeProfit, double expectedOpenPrice = 0)
+        public void ChangeOrderLimits(string orderId, decimal stopLoss, decimal takeProfit, decimal expectedOpenPrice = 0)
         {
             using (_contextFactory.GetWriteSyncContext($"{nameof(TradingEngine)}.{nameof(ChangeOrderLimits)}"))
             {
@@ -525,9 +525,9 @@ namespace MarginTrading.Services
                 }
 
                 var quote = _quoteCashService.GetQuote(order.Instrument);
-                double? tp = takeProfit == 0 ? (double?)null : takeProfit;
-                double? sl = stopLoss == 0 ? (double?)null : stopLoss;
-                double? expOpenPrice = expectedOpenPrice == 0 ? (double?)null : expectedOpenPrice;
+                decimal? tp = takeProfit == 0 ? (decimal?)null : takeProfit;
+                decimal? sl = stopLoss == 0 ? (decimal?)null : stopLoss;
+                decimal? expOpenPrice = expectedOpenPrice == 0 ? (decimal?)null : expectedOpenPrice;
 
                 var accountAsset = _accountAssetsCacheService.GetAccountAsset(order.TradingConditionId,
                     order.AccountAssetId, order.Instrument);
@@ -535,9 +535,9 @@ namespace MarginTrading.Services
                 _validateOrderService.ValidateOrderStops(order.GetOrderType(), quote,
                     accountAsset.DeltaBid, accountAsset.DeltaAsk, tp, sl, expOpenPrice, order.AssetAccuracy);
 
-                order.TakeProfit = tp.HasValue ? Math.Round(tp.Value, order.AssetAccuracy) : (double?)null;
-                order.StopLoss = sl.HasValue ? Math.Round(sl.Value, order.AssetAccuracy) : (double?)null;
-                order.ExpectedOpenPrice = expOpenPrice.HasValue ? Math.Round(expOpenPrice.Value, order.AssetAccuracy) : (double?)null;
+                order.TakeProfit = tp.HasValue ? Math.Round(tp.Value, order.AssetAccuracy) : (decimal?)null;
+                order.StopLoss = sl.HasValue ? Math.Round(sl.Value, order.AssetAccuracy) : (decimal?)null;
+                order.ExpectedOpenPrice = expOpenPrice.HasValue ? Math.Round(expOpenPrice.Value, order.AssetAccuracy) : (decimal?)null;
                 _notifyService.NotifyOrderChanged(order);
             }
         }

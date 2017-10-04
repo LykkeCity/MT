@@ -4,20 +4,20 @@ namespace MarginTrading.Core
 {
     public interface IBidAskPair
     {
-        double Bid { get; }
-        double Ask { get; }
+        decimal Bid { get; }
+        decimal Ask { get; }
     }
 
     public class BidAskPair : IBidAskPair
     {
-        public double Bid { get; set; }
-        public double Ask { get; set; }
+        public decimal Bid { get; set; }
+        public decimal Ask { get; set; }
     }
 
     public class GraphBidAskPair : IBidAskPair
     {
-        public double Bid { get; set; }
-        public double Ask { get; set; }
+        public decimal Bid { get; set; }
+        public decimal Ask { get; set; }
         public DateTime Date { get; set; }
     }
 
@@ -29,7 +29,7 @@ namespace MarginTrading.Core
 
     public static class BidAskPairExtetsion
     {
-        public static double GetPriceForOrderType(this IBidAskPair bidAskPair, OrderDirection orderType)
+        public static decimal GetPriceForOrderType(this IBidAskPair bidAskPair, OrderDirection orderType)
         {
             return orderType == OrderDirection.Buy ? bidAskPair.Bid : bidAskPair.Ask;
         }

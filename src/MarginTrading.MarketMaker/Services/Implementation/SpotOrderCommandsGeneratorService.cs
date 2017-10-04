@@ -22,7 +22,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         private readonly ConcurrentDictionary<string, object> _locksByAssetPairId =
             new ConcurrentDictionary<string, object>();
 
-        public IReadOnlyList<OrderCommand> GenerateOrderCommands(string assetPairId, bool isBuy, double newBestPrice, double ordersVolume)
+        public IReadOnlyList<OrderCommand> GenerateOrderCommands(string assetPairId, bool isBuy, decimal newBestPrice, decimal ordersVolume)
         {
             lock (_locksByAssetPairId.GetOrAdd(assetPairId, k => new object()))
             {
@@ -32,7 +32,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         }
 
         [CanBeNull]
-        private IReadOnlyList<OrderCommand> FixNegativeSpreadAndCreateOrderCommands(double ordersVolume, string assetPairId, bool isBuy, double newBestPrice)
+        private IReadOnlyList<OrderCommand> FixNegativeSpreadAndCreateOrderCommands(decimal ordersVolume, string assetPairId, bool isBuy, decimal newBestPrice)
         {
             AssetPairRate feedData = new AssetPairRate
             {
@@ -43,14 +43,14 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
             AssetPairRate pendingFeedData;
 
-            double bid;
-            double ask;
+            decimal bid;
+            decimal ask;
             _quotes.TryGetValue(assetPairId, out var bestBidAsk);
 
             if (isBuy)
             {
                 bid = newBestPrice;
-                ask = bestBidAsk?.Ask ?? double.MaxValue;
+                ask = bestBidAsk?.Ask ?? decimal.MaxValue;
                 _pendingSellRates.TryGetValue(assetPairId, out pendingFeedData);
 
                 if (bid >= ask)
@@ -77,7 +77,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             }
             else
             {
-                bid = bestBidAsk?.Bid ?? double.MinValue;
+                bid = bestBidAsk?.Bid ?? decimal.MinValue;
                 ask = newBestPrice;
                 _pendingBuyRates.TryGetValue(assetPairId, out pendingFeedData);
 
@@ -132,7 +132,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             }
         }
 
-        private static OrderCommand CreateCommand(AssetPairRate feedData, double volume)
+        private static OrderCommand CreateCommand(AssetPairRate feedData, decimal volume)
         {
             return new OrderCommand
             {
@@ -145,15 +145,15 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
         private class AssetPairBidAsk
         {
-            public double Bid { get; set; }
-            public double Ask { get; set; }
+            public decimal Bid { get; set; }
+            public decimal Ask { get; set; }
         }
 
         private class AssetPairRate
         {
             public string AssetPairId { get; set; }
             public bool IsBuy { get; set; }
-            public double BestPrice { get; set; }
+            public decimal BestPrice { get; set; }
         }
     }
 }

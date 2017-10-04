@@ -7,9 +7,9 @@ namespace MarginTrading.Core.MatchedOrders
     {
         public string OrderId { get; set; }
         public string MarketMakerId { get; set; }
-        public double LimitOrderLeftToMatch { get; set; }
-        public double Volume { get; set; }
-        public double Price { get; set; }
+        public decimal LimitOrderLeftToMatch { get; set; }
+        public decimal Volume { get; set; }
+        public decimal Price { get; set; }
         public string ClientId { get; set; }
         public DateTime MatchedDate { get; set; }
 

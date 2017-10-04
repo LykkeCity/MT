@@ -15,16 +15,27 @@ namespace MarginTrading.AzureRepositories
         public string Instrument => RowKey;
         public int LeverageInit { get; set; }
         public int LeverageMaintenance { get; set; }
+        decimal IAccountAssetPair.SwapLong => (decimal) SwapLong;
         public double SwapLong { get; set; }
+        decimal IAccountAssetPair.SwapShort => (decimal) SwapShort;
         public double SwapShort { get; set; }
+        decimal IAccountAssetPair.SwapLongPct => (decimal) SwapLongPct;
         public double SwapLongPct { get; set; }
+        decimal IAccountAssetPair.SwapShortPct => (decimal) SwapShortPct;
         public double SwapShortPct { get; set; }
+        decimal IAccountAssetPair.CommissionLong => (decimal) CommissionLong;
         public double CommissionLong { get; set; }
+        decimal IAccountAssetPair.CommissionShort => (decimal) CommissionShort;
         public double CommissionShort { get; set; }
+        decimal IAccountAssetPair.CommissionLot => (decimal) CommissionLot;
         public double CommissionLot { get; set; }
+        decimal IAccountAssetPair.DeltaBid => (decimal) DeltaBid;
         public double DeltaBid { get; set; }
+        decimal IAccountAssetPair.DeltaAsk => (decimal) DeltaAsk;
         public double DeltaAsk { get; set; }
+        decimal IAccountAssetPair.DealLimit => (decimal) DealLimit;
         public double DealLimit { get; set; }
+        decimal IAccountAssetPair.PositionLimit => (decimal) PositionLimit;
         public double PositionLimit { get; set; }
 
         public static string GeneratePartitionKey(string tradingConditionId, string baseAssetId)
@@ -47,17 +58,17 @@ namespace MarginTrading.AzureRepositories
                 BaseAssetId = src.BaseAssetId,
                 LeverageInit = src.LeverageInit,
                 LeverageMaintenance = src.LeverageMaintenance,
-                SwapLong = src.SwapLong,
-                SwapShort = src.SwapShort,
-                SwapLongPct = src.SwapLongPct,
-                SwapShortPct = src.SwapShortPct,
-                CommissionLong = src.CommissionLong,
-                CommissionShort = src.CommissionShort,
-                CommissionLot = src.CommissionLot,
-                DeltaBid = src.DeltaBid,
-                DeltaAsk = src.DeltaAsk,
-                DealLimit = src.DealLimit,
-                PositionLimit = src.PositionLimit
+                SwapLong = (double) src.SwapLong,
+                SwapShort = (double) src.SwapShort,
+                SwapLongPct = (double) src.SwapLongPct,
+                SwapShortPct = (double) src.SwapShortPct,
+                CommissionLong = (double) src.CommissionLong,
+                CommissionShort = (double) src.CommissionShort,
+                CommissionLot = (double) src.CommissionLot,
+                DeltaBid = (double) src.DeltaBid,
+                DeltaAsk = (double) src.DeltaAsk,
+                DealLimit = (double) src.DealLimit,
+                PositionLimit = (double) src.PositionLimit
             };
         }
     }
