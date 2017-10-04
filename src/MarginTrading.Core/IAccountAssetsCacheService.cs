@@ -8,6 +8,5 @@ namespace MarginTrading.Core
         IAccountAssetPair GetAccountAssetThrowIfNotFound(string tradingConditionId, string accountAssetId, string instrument);
         Dictionary<string, IAccountAssetPair[]> GetClientAssets(IEnumerable<MarginTradingAccount> accounts);
         ICollection<IAccountAssetPair> GetAccountAssets(string tradingConditionId, string accountAssetId);
-        bool IsInstrumentSupported(string instrument);
     }
 }

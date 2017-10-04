@@ -23,9 +23,9 @@ namespace MarginTradingTests
 
             var changeEventArgs = new OrderBookChangeEventArgs
             {
-                Buy = new Dictionary<string, Dictionary<double, OrderBookLevel>>
+                Buy = new Dictionary<string, Dictionary<decimal, OrderBookLevel>>
                 {
-                    { "BTCUSD", new Dictionary<double, OrderBookLevel>
+                    { "BTCUSD", new Dictionary<decimal, OrderBookLevel>
                     {
                         { 100, new OrderBookLevel {Instrument = "BTCUSD", Volume = 10, Price = 100, Direction = OrderDirection.Buy} },
                         { 120, new OrderBookLevel {Instrument = "BTCUSD", Volume = 5, Price = 120, Direction = OrderDirection.Sell} }
@@ -50,9 +50,9 @@ namespace MarginTradingTests
 
             var changeEventArgs = new OrderBookChangeEventArgs
             {
-                Buy = new Dictionary<string, Dictionary<double, OrderBookLevel>>
+                Buy = new Dictionary<string, Dictionary<decimal, OrderBookLevel>>
                 {
-                    { "BTCUSD", new Dictionary<double, OrderBookLevel>
+                    { "BTCUSD", new Dictionary<decimal, OrderBookLevel>
                     {
                         { 100, new OrderBookLevel {Instrument = "BTCUSD", Volume = 10, Price = 100, Direction = OrderDirection.Buy} },
                         { 120, new OrderBookLevel {Instrument = "BTCUSD", Volume = 5, Price = 120, Direction = OrderDirection.Sell} }
@@ -64,9 +64,9 @@ namespace MarginTradingTests
 
             changeEventArgs = new OrderBookChangeEventArgs
             {
-                Buy = new Dictionary<string, Dictionary<double, OrderBookLevel>>
+                Buy = new Dictionary<string, Dictionary<decimal, OrderBookLevel>>
                 {
-                    { "BTCUSD", new Dictionary<double, OrderBookLevel>
+                    { "BTCUSD", new Dictionary<decimal, OrderBookLevel>
                     {
                         { 100, new OrderBookLevel {Instrument = "BTCUSD", Volume = 0, Price = 100, Direction = OrderDirection.Buy} },
                         { 99, new OrderBookLevel {Instrument = "BTCUSD", Volume = 5, Price = 99, Direction = OrderDirection.Buy} }
@@ -78,9 +78,9 @@ namespace MarginTradingTests
 
             changeEventArgs = new OrderBookChangeEventArgs
             {
-                Buy = new Dictionary<string, Dictionary<double, OrderBookLevel>>
+                Buy = new Dictionary<string, Dictionary<decimal, OrderBookLevel>>
                 {
-                    { "BTCUSD", new Dictionary<double, OrderBookLevel>
+                    { "BTCUSD", new Dictionary<decimal, OrderBookLevel>
                     {
                         { 120, new OrderBookLevel {Instrument = "BTCUSD", Volume = 0, Price = 120, Direction = OrderDirection.Sell} },
                         { 119, new OrderBookLevel {Instrument = "BTCUSD", Volume = 5, Price = 119, Direction = OrderDirection.Sell} }
@@ -110,9 +110,9 @@ namespace MarginTradingTests
 
             var changeEventArgs = new OrderBookChangeEventArgs
             {
-                Buy = new Dictionary<string, Dictionary<double, OrderBookLevel>>
+                Buy = new Dictionary<string, Dictionary<decimal, OrderBookLevel>>
                 {
-                    { "BTCUSD", new Dictionary<double, OrderBookLevel>
+                    { "BTCUSD", new Dictionary<decimal, OrderBookLevel>
                     {
                         { 100, new OrderBookLevel {Instrument = "BTCUSD", Volume = 10, Price = 100, Direction = OrderDirection.Buy} },
                         { 120, new OrderBookLevel {Instrument = "BTCUSD", Volume = 5, Price = 120, Direction = OrderDirection.Sell} }
@@ -126,9 +126,9 @@ namespace MarginTradingTests
 
             changeEventArgs = new OrderBookChangeEventArgs
             {
-                Buy = new Dictionary<string, Dictionary<double, OrderBookLevel>>
+                Buy = new Dictionary<string, Dictionary<decimal, OrderBookLevel>>
                 {
-                    { "BTCUSD", new Dictionary<double, OrderBookLevel>
+                    { "BTCUSD", new Dictionary<decimal, OrderBookLevel>
                     {
                         { 100, new OrderBookLevel {Instrument = "BTCUSD", Volume = 0, Price = 100, Direction = OrderDirection.Buy} },
                         { 99, new OrderBookLevel {Instrument = "BTCUSD", Volume = 5, Price = 99, Direction = OrderDirection.Buy} }
@@ -142,9 +142,9 @@ namespace MarginTradingTests
 
             changeEventArgs = new OrderBookChangeEventArgs
             {
-                Buy = new Dictionary<string, Dictionary<double, OrderBookLevel>>
+                Buy = new Dictionary<string, Dictionary<decimal, OrderBookLevel>>
                 {
-                    { "BTCUSD", new Dictionary<double, OrderBookLevel>
+                    { "BTCUSD", new Dictionary<decimal, OrderBookLevel>
                     {
                         { 120, new OrderBookLevel {Instrument = "BTCUSD", Volume = 0, Price = 120, Direction = OrderDirection.Sell} },
                         { 119, new OrderBookLevel {Instrument = "BTCUSD", Volume = 5, Price = 98, Direction = OrderDirection.Sell} }
@@ -158,9 +158,9 @@ namespace MarginTradingTests
 
             changeEventArgs = new OrderBookChangeEventArgs
             {
-                Buy = new Dictionary<string, Dictionary<double, OrderBookLevel>>
+                Buy = new Dictionary<string, Dictionary<decimal, OrderBookLevel>>
                 {
-                    { "BTCUSD", new Dictionary<double, OrderBookLevel>
+                    { "BTCUSD", new Dictionary<decimal, OrderBookLevel>
                     {
                         { 120, new OrderBookLevel {Instrument = "BTCUSD", Volume = 0, Price = 98, Direction = OrderDirection.Sell} },
                         { 119, new OrderBookLevel {Instrument = "BTCUSD", Volume = 5, Price = 119, Direction = OrderDirection.Sell} }

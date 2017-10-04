@@ -74,21 +74,25 @@ namespace MarginTrading.Client
         public async Task InitData()
         {
             var data = await _service.InitData(_token);
+            Console.WriteLine(data.ToJson());
         }
 
         public async Task InitAccounts()
         {
             var data = await _service.InitAccounts(_token);
+            Console.WriteLine(data.ToJson());
         }
 
         public async Task AccountInstruments()
         {
             var data = await _service.AccountInstruments(_token);
+            Console.WriteLine(data.ToJson());
         }
 
         public async Task InitGraph()
         {
             var data = await _service.InitGraph();
+            Console.WriteLine(data.ChartData.Count);
         }
 
         public async Task GetAccountHistory()

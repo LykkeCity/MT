@@ -32,11 +32,11 @@ namespace MarginTradingTests
         [TestCase(-1, true)]
         [TestCase(-10, true)]
         [TestCase(-11, false)]
-        public void Is_Volume_Ivalid(double volume, bool isValid)
+        public void Is_Volume_Ivalid(decimal volume, bool isValid)
         {
             const string instrument = "BTCUSD";
 
-            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 1.55, Ask = 1.57 };
+            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 1.55M, Ask = 1.57M };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
             var order = new Order
@@ -69,11 +69,11 @@ namespace MarginTradingTests
         [TestCase(-2, true)]
         [TestCase(3, false)]
         [TestCase(-3, false)]
-        public void Is_Summary_Volume_Ivalid(double volume, bool isValid)
+        public void Is_Summary_Volume_Ivalid(decimal volume, bool isValid)
         {
             const string instrument = "BTCUSD";
 
-            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 1.55, Ask = 1.57 };
+            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 1.55M, Ask = 1.57M };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
             var existingLong = new Order
@@ -202,7 +202,7 @@ namespace MarginTradingTests
         public void Is_Buy_Order_ExpectedOpenPrice_Invalid()
         {
             const string instrument = "EURUSD";
-            var quote = new InstrumentBidAskPair {Instrument = instrument, Bid = 1.55, Ask = 1.57};
+            var quote = new InstrumentBidAskPair {Instrument = instrument, Bid = 1.55M, Ask = 1.57M};
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
             var order = new Order
@@ -215,7 +215,7 @@ namespace MarginTradingTests
                 AccountAssetId = Accounts[0].BaseAssetId,
                 Instrument = instrument,
                 Volume = 10,
-                ExpectedOpenPrice = 1.58567459,
+                ExpectedOpenPrice = 1.58567459M,
                 FillType = OrderFillType.FillOrKill
             };
 
@@ -229,7 +229,7 @@ namespace MarginTradingTests
         public void Is_Sell_Order_ExpectedOpenPrice_Invalid()
         {
             const string instrument = "EURUSD";
-            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 1.55, Ask = 1.57 };
+            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 1.55M, Ask = 1.57M };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
             var order = new Order
@@ -242,7 +242,7 @@ namespace MarginTradingTests
                 AccountAssetId = Accounts[0].BaseAssetId,
                 Instrument = instrument,
                 Volume = -10,
-                ExpectedOpenPrice = 1.54532567434,
+                ExpectedOpenPrice = 1.54532567434M,
                 FillType = OrderFillType.FillOrKill
             };
 
@@ -256,7 +256,7 @@ namespace MarginTradingTests
         public void Is_MarketOrder_Buy_TakeProfit_Invalid()
         {
             const string instrument = "BTCCHF";
-            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 963.633, Ask = 964.228 };
+            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 963.633M, Ask = 964.228M };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
             var order = new Order
@@ -269,7 +269,7 @@ namespace MarginTradingTests
                 AccountAssetId = Accounts[0].BaseAssetId,
                 Instrument = instrument,
                 Volume = 10,
-                TakeProfit = 964.2551256546,
+                TakeProfit = 964.2551256546M,
                 FillType = OrderFillType.FillOrKill
             };
 
@@ -284,7 +284,7 @@ namespace MarginTradingTests
         public void Is_MarketOrder_Sell_TakeProfit_Invalid()
         {
             const string instrument = "BTCCHF";
-            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 963.633, Ask = 964.228 };
+            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 963.633M, Ask = 964.228M };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
             var order = new Order
@@ -297,7 +297,7 @@ namespace MarginTradingTests
                 AccountAssetId = Accounts[0].BaseAssetId,
                 Instrument = instrument,
                 Volume = -10,
-                TakeProfit = 963.6051356785,
+                TakeProfit = 963.6051356785M,
                 FillType = OrderFillType.FillOrKill
             };
 
@@ -313,7 +313,7 @@ namespace MarginTradingTests
         public void Is_MarketOrder_Buy_StopLoss_Invalid()
         {
             const string instrument = "BTCCHF";
-            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 963.633, Ask = 964.228 };
+            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 963.633M, Ask = 964.228M };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
             var order = new Order
@@ -326,7 +326,7 @@ namespace MarginTradingTests
                 AccountAssetId = Accounts[0].BaseAssetId,
                 Instrument = instrument,
                 Volume = 10,
-                StopLoss = 963.6051245765,
+                StopLoss = 963.6051245765M,
                 FillType = OrderFillType.FillOrKill
             };
 
@@ -341,7 +341,7 @@ namespace MarginTradingTests
         public void Is_MarketOrder_Sell_StopLoss_Invalid()
         {
             const string instrument = "BTCCHF";
-            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 963.633, Ask = 964.228 };
+            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 963.633M, Ask = 964.228M };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
             var order = new Order
@@ -354,7 +354,7 @@ namespace MarginTradingTests
                 AccountAssetId = Accounts[0].BaseAssetId,
                 Instrument = instrument,
                 Volume = -10,
-                StopLoss = 964.2553256564,
+                StopLoss = 964.2553256564M,
                 FillType = OrderFillType.FillOrKill
             };
 
@@ -369,7 +369,7 @@ namespace MarginTradingTests
         public void Is_Not_Enought_Balance()
         {
             const string instrument = "EURUSD";
-            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 1.55, Ask = 1.57 };
+            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 1.55M, Ask = 1.57M };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
             var order = new Order

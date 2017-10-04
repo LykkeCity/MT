@@ -272,9 +272,9 @@ namespace MarginTrading.Frontend.Services
                 Date = src.Date,
                 AccountId = src.AccountId,
                 ClientId = src.ClientId,
-                Amount = src.Amount,
-                Balance = src.Balance,
-                WithdrawTransferLimit = src.WithdrawTransferLimit,
+                Amount = (decimal) src.Amount,
+                Balance = (decimal) src.Balance,
+                WithdrawTransferLimit = (decimal) src.WithdrawTransferLimit,
                 Comment = src.Comment,
                 Type = ConvertEnum<AccountHistoryType>(src.Type)
             };
@@ -293,17 +293,17 @@ namespace MarginTrading.Frontend.Services
                 CloseReason = ConvertEnum<OrderCloseReason>(src.CloseReason),
                 OpenDate = src.OpenDate,
                 CloseDate = src.CloseDate,
-                OpenPrice = src.OpenPrice,
-                ClosePrice = src.ClosePrice,
-                Volume = src.Volume,
-                TakeProfit = src.TakeProfit,
-                StopLoss = src.StopLoss,
-                Fpl = src.TotalPnl,
-                TotalPnL = src.TotalPnl,
-                PnL = src.Pnl,
-                InterestRateSwap = src.InterestRateSwap,
-                OpenCommission = src.OpenCommission,
-                CloseCommission = src.CloseCommission
+                OpenPrice = (decimal) src.OpenPrice,
+                ClosePrice = (decimal) src.ClosePrice,
+                Volume = (decimal) src.Volume,
+                TakeProfit = (decimal?) src.TakeProfit,
+                StopLoss = (decimal?) src.StopLoss,
+                Fpl = (decimal) src.TotalPnl,
+                TotalPnL = (decimal) src.TotalPnl,
+                PnL = (decimal) src.Pnl,
+                InterestRateSwap = (decimal) src.InterestRateSwap,
+                OpenCommission = (decimal) src.OpenCommission,
+                CloseCommission = (decimal) src.CloseCommission
             };
         }
 

@@ -27,8 +27,7 @@ namespace MarginTrading.Services
         public override void Start()
         {
             var graphData = _blobRepository.Read<Dictionary<string, List<GraphBidAskPair>>>("prices", "graph")
-                                ?.Where(b => _accountAssetsCache.IsInstrumentSupported(b.Key))
-                                .ToDictionary(d => d.Key, d => d.Value) ??
+                                ?.ToDictionary(d => d.Key, d => d.Value) ??
                             new Dictionary<string, List<GraphBidAskPair>>();
 
             if (graphData.Count > 0)

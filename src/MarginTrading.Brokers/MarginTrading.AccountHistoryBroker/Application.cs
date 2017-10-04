@@ -49,11 +49,11 @@ namespace MarginTrading.AccountHistoryBroker
                 ClientId = accountHistoryContract.ClientId,
                 Comment = accountHistoryContract.Comment,
                 Id = accountHistoryContract.Id,
-                Amount = accountHistoryContract.Amount,
-                Balance = accountHistoryContract.Balance,
+                Amount = (double) accountHistoryContract.Amount,
+                Balance = (double) accountHistoryContract.Balance,
                 Date = accountHistoryContract.Date,
                 Type = accountHistoryContract.Type.ToString(),
-                WithdrawTransferLimit = accountHistoryContract.WithdrawTransferLimit,
+                WithdrawTransferLimit = (double) accountHistoryContract.WithdrawTransferLimit,
             };
             _accountTransactionsReportsRepository.InsertOrReplaceAsync(accountTransactionReport);
             return Task.WhenAll(

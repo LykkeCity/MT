@@ -12,8 +12,8 @@ namespace MarginTrading.Core.MatchedOrders
     {
         private IReadOnlyList<MatchedOrder> _items;
 
-        public double SummaryVolume { get; private set; }
-        public double WeightedAveragePrice { get; private set; }
+        public decimal SummaryVolume { get; private set; }
+        public decimal WeightedAveragePrice { get; private set; }
 
         public IReadOnlyList<MatchedOrder> Items
         {
@@ -22,7 +22,7 @@ namespace MarginTrading.Core.MatchedOrders
             {
                 _items = value;
 
-                SummaryVolume = _items.Sum(item => Math.Abs((double) item.Volume));
+                SummaryVolume = _items.Sum(item => Math.Abs(item.Volume));
 
                 if (SummaryVolume > 0)
                 {

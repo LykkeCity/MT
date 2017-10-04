@@ -25,9 +25,9 @@ namespace MarginTrading.Core
         public const int DefaultRefundTimeoutDays = 30;
 
         public static readonly string[] BaseAssets = { "USD", "CHF", "EUR" };
-        public static double DefaultDemoBalance = 50000;
-        public const double DefaultMarginCall = 0.8;
-        public const double DefaultStopOut = 0.95;
+        public static decimal DefaultDemoBalance = 50000;
+        public const decimal DefaultMarginCall = 0.8M;
+        public const decimal DefaultStopOut = 0.95M;
 
         public static readonly TimeSpan SessionLifetime = TimeSpan.FromDays(3);
         public static readonly TimeSpan SessionRefreshPeriod = TimeSpan.FromDays(1);

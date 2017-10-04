@@ -10,9 +10,9 @@ namespace MarginTrading.Core
         DateTime Date { get; }
         string AccountId { get; }
         string ClientId { get; }
-        double Amount { get; }
-        double Balance { get; }
-        double WithdrawTransferLimit { get; }
+        decimal Amount { get; }
+        decimal Balance { get; }
+        decimal WithdrawTransferLimit { get; }
         string Comment { get; }
         AccountHistoryType Type { get; }
     }
@@ -23,9 +23,9 @@ namespace MarginTrading.Core
         public DateTime Date { get; set; }
         public string AccountId { get; set; }
         public string ClientId { get; set; }
-        public double Amount { get; set; }
-        public double Balance { get; set; }
-        public double WithdrawTransferLimit { get; set; }
+        public decimal Amount { get; set; }
+        public decimal Balance { get; set; }
+        public decimal WithdrawTransferLimit { get; set; }
         public string Comment { get; set; }
         public AccountHistoryType Type { get; set; }
 

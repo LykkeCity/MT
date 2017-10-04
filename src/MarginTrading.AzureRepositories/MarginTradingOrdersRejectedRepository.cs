@@ -22,25 +22,25 @@ namespace MarginTrading.AzureRepositories
         public DateTime CreateDate { get; set; }
         public DateTime? OpenDate { get; set; }
         public DateTime? CloseDate { get; set; }
-        public double? ExpectedOpenPrice { get; set; }
-        public double OpenPrice { get; set; }
-        public double OpenCrossPrice { get; set; }
-        public double ClosePrice { get; set; }
-        public double CloseCrossPrice { get; set; }
-        public double Volume { get; set; }
-        public double MatchedVolume { get; set; }
-        public double MatchedCloseVolume { get; set; }
-        public double? TakeProfit { get; set; }
-        public double? StopLoss { get; set; }
-        public double Fpl { get; set; }
-        public double PnL { get; set; }
-        public double InterestRateSwap { get; set; }
-        public double OpenCommission { get; set; }
-        public double CloseCommission { get; set; }
-        public double QuoteRate { get; set; }
+        public decimal? ExpectedOpenPrice { get; set; }
+        public decimal OpenPrice { get; set; }
+        public decimal OpenCrossPrice { get; set; }
+        public decimal ClosePrice { get; set; }
+        public decimal CloseCrossPrice { get; set; }
+        public decimal Volume { get; set; }
+        public decimal MatchedVolume { get; set; }
+        public decimal MatchedCloseVolume { get; set; }
+        public decimal? TakeProfit { get; set; }
+        public decimal? StopLoss { get; set; }
+        public decimal Fpl { get; set; }
+        public decimal PnL { get; set; }
+        public decimal InterestRateSwap { get; set; }
+        public decimal OpenCommission { get; set; }
+        public decimal CloseCommission { get; set; }
+        public decimal QuoteRate { get; set; }
         public int AssetAccuracy { get; set; }
-        public double MarginInit { get; set; }
-        public double MarginMaintenance { get; set; }
+        public decimal MarginInit { get; set; }
+        public decimal MarginMaintenance { get; set; }
         public DateTime? StartClosingDate { get; set; }
         public string Type { get; set; }
         OrderDirection IOrderHistory.Type => Type.ParseEnum(OrderDirection.Buy);
@@ -56,7 +56,7 @@ namespace MarginTrading.AzureRepositories
         public string Comment { get; set; }
         public List<MatchedOrder> MatchedOrders { get; set; } = new List<MatchedOrder>();
         public List<MatchedOrder> MatchedCloseOrders { get; set; } = new List<MatchedOrder>();
-        public double SwapCommission { get; set; }
+        public decimal SwapCommission { get; set; }
 
         public string Orders { get; set; }
         public string ClosedOrders { get; set; }

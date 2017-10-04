@@ -15,15 +15,15 @@ namespace MarginTrading.Core
         string CloseOrderbookId { get; }
         DateTime? OpenDate { get; }
         DateTime? CloseDate { get; }
-        double? ExpectedOpenPrice { get; }
-        double OpenPrice { get; }
-        double ClosePrice { get; }
-        double? TakeProfit { get; }
-        double? StopLoss { get; }
-        double OpenCommission { get; }
-        double CloseCommission { get; }
-        double CommissionLot { get; }
-        double QuoteRate { get; }
+        decimal? ExpectedOpenPrice { get; }
+        decimal OpenPrice { get; }
+        decimal ClosePrice { get; }
+        decimal? TakeProfit { get; }
+        decimal? StopLoss { get; }
+        decimal OpenCommission { get; }
+        decimal CloseCommission { get; }
+        decimal CommissionLot { get; }
+        decimal QuoteRate { get; }
         int AssetAccuracy { get; }
         DateTime? StartClosingDate { get; }
         OrderStatus Status { get; }
@@ -33,7 +33,7 @@ namespace MarginTrading.Core
         string RejectReasonText { get; }
         string Comment { get; }
         MatchedOrderCollection MatchedCloseOrders { get; }
-        double SwapCommission { get; }
+        decimal SwapCommission { get; }
     }
 
     public class Order : IOrder
@@ -49,18 +49,18 @@ namespace MarginTrading.Core
         public DateTime CreateDate { get; set; }
         public DateTime? OpenDate { get; set; }
         public DateTime? CloseDate { get; set; }
-        public double? ExpectedOpenPrice { get; set; }
-        public double OpenPrice { get; set; }
-        public double ClosePrice { get; set; }
-        public double QuoteRate { get; set; }
+        public decimal? ExpectedOpenPrice { get; set; }
+        public decimal OpenPrice { get; set; }
+        public decimal ClosePrice { get; set; }
+        public decimal QuoteRate { get; set; }
         public int AssetAccuracy { get; set; }
-        public double Volume { get; set; }
-        public double? TakeProfit { get; set; }
-        public double? StopLoss { get; set; }
-        public double OpenCommission { get; set; }
-        public double CloseCommission { get; set; }
-        public double CommissionLot { get; set; }
-        public double SwapCommission { get; set; }
+        public decimal Volume { get; set; }
+        public decimal? TakeProfit { get; set; }
+        public decimal? StopLoss { get; set; }
+        public decimal OpenCommission { get; set; }
+        public decimal CloseCommission { get; set; }
+        public decimal CommissionLot { get; set; }
+        public decimal SwapCommission { get; set; }
         public DateTime? StartClosingDate { get; set; }
         public OrderStatus Status { get; set; }
         public OrderCloseReason CloseReason { get; set; }
@@ -135,7 +135,7 @@ namespace MarginTrading.Core
 
     public static class OrderExt
     {
-        public static bool IsSuitablePriceForPendingOrder(this IOrder order, double price)
+        public static bool IsSuitablePriceForPendingOrder(this IOrder order, decimal price)
         {
             return order.ExpectedOpenPrice.HasValue && (order.GetOrderType() == OrderDirection.Buy && price <= order.ExpectedOpenPrice
                 || order.GetOrderType() == OrderDirection.Sell && price >= order.ExpectedOpenPrice);
@@ -158,7 +158,7 @@ namespace MarginTrading.Core
         public static string GetPushMessage(this IOrder order)
         {
             string message = string.Empty;
-            double volume = Math.Abs(order.Volume);
+            decimal volume = Math.Abs(order.Volume);
             string type = order.GetOrderType() == OrderDirection.Buy ? "Long" : "Short";
 
             switch (order.Status)
@@ -198,32 +198,32 @@ namespace MarginTrading.Core
             return message;
         }
 
-        public static double GetTotalFpl(this IOrder order)
+        public static decimal GetTotalFpl(this IOrder order)
         {
             return GetTotalFpl(order, order.GetSwaps());
         }
 
-        public static double GetTotalFpl(this IOrder order, double swaps)
+        public static decimal GetTotalFpl(this IOrder order, decimal swaps)
         {
             return order.GetFpl() - order.GetOpenCommission() - order.GetCloseCommission() - order.SwapCommission - swaps;
         }
 
-        public static double GetTotalFpl(this IOrder order, int accuracy)
+        public static decimal GetTotalFpl(this IOrder order, int accuracy)
         {
             return Math.Round(order.GetTotalFpl(), accuracy);
         }
 
-        public static double GetMatchedVolume(this IOrder order)
+        public static decimal GetMatchedVolume(this IOrder order)
         {
             return order.MatchedOrders.SummaryVolume;
         }
 
-        public static double GetMatchedCloseVolume(this IOrder order)
+        public static decimal GetMatchedCloseVolume(this IOrder order)
         {
             return order.MatchedCloseOrders.SummaryVolume;
         }
 
-        public static double GetRemainingCloseVolume(this IOrder order)
+        public static decimal GetRemainingCloseVolume(this IOrder order)
         {
             return order.GetMatchedVolume() - order.GetMatchedCloseVolume();
         }
@@ -254,37 +254,37 @@ namespace MarginTrading.Core
             return fplData;
         }
 
-        public static double GetFpl(this IOrder order)
+        public static decimal GetFpl(this IOrder order)
         {
             return order.GetFplData().Fpl;
         }
 
-        public static double GetQuoteRate(this IOrder order)
+        public static decimal GetQuoteRate(this IOrder order)
         {
             return order.GetFplData().QuoteRate;
         }
 
-        public static double GetMarginMaintenance(this IOrder order)
+        public static decimal GetMarginMaintenance(this IOrder order)
         {
             return order.GetFplData().MarginMaintenance;
         }
 
-        public static double GetMarginInit(this IOrder order)
+        public static decimal GetMarginInit(this IOrder order)
         {
             return order.GetFplData().MarginInit;
         }
 
-        public static double GetOpenCrossPrice(this IOrder order)
+        public static decimal GetOpenCrossPrice(this IOrder order)
         {
             return order.GetFplData().OpenCrossPrice;
         }
 
-        public static double GetCloseCrossPrice(this IOrder order)
+        public static decimal GetCloseCrossPrice(this IOrder order)
         {
             return order.GetFplData().CloseCrossPrice;
         }
 
-        public static void UpdateClosePrice(this IOrder order, double closePrice)
+        public static void UpdateClosePrice(this IOrder order, decimal closePrice)
         {
             var orderInstance = order as Order;
 
@@ -296,17 +296,17 @@ namespace MarginTrading.Core
             }
         }
 
-        public static double GetSwaps(this IOrder order)
+        public static decimal GetSwaps(this IOrder order)
         {
             return MtServiceLocator.SwapCommissionService.GetSwaps(order);
         }
 
-        public static double GetOpenCommission(this IOrder order)
+        public static decimal GetOpenCommission(this IOrder order)
         {
             return order.CommissionLot == 0 ? 0 : order.Volume / order.CommissionLot * order.OpenCommission;
         }
 
-        public static double GetCloseCommission(this IOrder order)
+        public static decimal GetCloseCommission(this IOrder order)
         {
             return order.CommissionLot == 0 ? 0 : order.GetMatchedCloseVolume() / order.CommissionLot * order.CloseCommission;
         }

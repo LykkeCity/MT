@@ -13,20 +13,20 @@ namespace MarginTrading.Common.BackendContracts
         public OrderCloseReason CloseReason { get; set; }
         public OrderRejectReason RejectReason { get; set; }
         public string RejectReasonText { get; set; }
-        public double? ExpectedOpenPrice { get; set; }
-        public double OpenPrice { get; set; }
-        public double ClosePrice { get; set; }
+        public decimal? ExpectedOpenPrice { get; set; }
+        public decimal OpenPrice { get; set; }
+        public decimal ClosePrice { get; set; }
         public DateTime? OpenDate { get; set; }
         public DateTime? CloseDate { get; set; }
-        public double Volume { get; set; }
-        public double MatchedVolume { get; set; }
-        public double MatchedCloseVolume { get; set; }
-        public double? TakeProfit { get; set; }
-        public double? StopLoss { get; set; }
-        public double? Fpl { get; set; }
-        public double OpenCommission { get; set; }
-        public double CloseCommission { get; set; }
-        public double SwapCommission { get; set; }
+        public decimal Volume { get; set; }
+        public decimal MatchedVolume { get; set; }
+        public decimal MatchedCloseVolume { get; set; }
+        public decimal? TakeProfit { get; set; }
+        public decimal? StopLoss { get; set; }
+        public decimal? Fpl { get; set; }
+        public decimal OpenCommission { get; set; }
+        public decimal CloseCommission { get; set; }
+        public decimal SwapCommission { get; set; }
 
     }
 }

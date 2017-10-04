@@ -3,12 +3,12 @@
     public interface ILimitOrder
     {
         string MarketMakerId { get; }
-        double Price { get; }
+        decimal Price { get; }
     }
 
     public class LimitOrder : BaseOrder, ILimitOrder
     {
         public string MarketMakerId { get; set; }
-        public double Price { get; set; }
+        public decimal Price { get; set; }
     }
 }

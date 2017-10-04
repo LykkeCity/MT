@@ -96,18 +96,18 @@ namespace MarginTrading.Services
                 ClientId = a.ClientId,
                 TradingConditionId = a.TradingConditionId,
                 BaseAssetId = a.BaseAssetId,
-                Balance = a.Balance,
-                WithdrawTransferLimit = a.WithdrawTransferLimit,
-                MarginCall = a.GetMarginCall(),
-                StopOut = a.GetStopOut(),
-                TotalCapital = a.GetTotalCapital(),
-                FreeMargin = a.GetFreeMargin(),
-                MarginAvailable = a.GetMarginAvailable(),
-                UsedMargin = a.GetUsedMargin(),
-                MarginInit = a.GetMarginInit(),
-                PnL = a.GetPnl(),
-                OpenPositionsCount = a.GetOpenPositionsCount(),
-                MarginUsageLevel = a.GetMarginUsageLevel(),
+                Balance = (double) a.Balance,
+                WithdrawTransferLimit = (double) a.WithdrawTransferLimit,
+                MarginCall = (double) a.GetMarginCall(),
+                StopOut = (double) a.GetStopOut(),
+                TotalCapital = (double) a.GetTotalCapital(),
+                FreeMargin = (double) a.GetFreeMargin(),
+                MarginAvailable = (double) a.GetMarginAvailable(),
+                UsedMargin = (double) a.GetUsedMargin(),
+                MarginInit = (double) a.GetMarginInit(),
+                PnL = (double) a.GetPnl(),
+                OpenPositionsCount = (double) a.GetOpenPositionsCount(),
+                MarginUsageLevel = (double) a.GetMarginUsageLevel(),
                 IsLive = _marginSettings.IsLive
             });
 
@@ -151,7 +151,7 @@ namespace MarginTrading.Services
                 _rabbitMqNotifyService.UserUpdates(false, true, new[] { clientId }));
         }
 
-        public async Task UpdateBalanceAsync(string clientId, string accountId, double amount, AccountHistoryType historyType, string comment, bool changeTransferLimit = false)
+        public async Task UpdateBalanceAsync(string clientId, string accountId, decimal amount, AccountHistoryType historyType, string comment, bool changeTransferLimit = false)
         {
             if (historyType == AccountHistoryType.Deposit && changeTransferLimit)
             {
@@ -171,7 +171,7 @@ namespace MarginTrading.Services
             await _rabbitMqNotifyService.AccountHistory(accountId, clientId, amount, updatedAccount.Balance, updatedAccount.WithdrawTransferLimit, historyType, comment);
         }
 
-        private async Task CheckDepositLimits(string clientId, string accountId, double amount)
+        private async Task CheckDepositLimits(string clientId, string accountId, decimal amount)
         {
             var account = await _repository.GetAsync(clientId, accountId);
 
@@ -189,7 +189,7 @@ namespace MarginTrading.Services
             }
         }
 
-        private async Task CheckTransferLimits(string clientId, string accountId, double amount)
+        private async Task CheckTransferLimits(string clientId, string accountId, decimal amount)
         {
             var account = await _repository.GetAsync(clientId, accountId);
 

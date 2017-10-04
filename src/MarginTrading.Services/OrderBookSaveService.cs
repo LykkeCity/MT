@@ -37,8 +37,7 @@ namespace MarginTrading.Services
         {
             var state =
                 _blobRepository.Read<Dictionary<string, OrderBook>>(LykkeConstants.StateBlobContainer, BlobName)
-                    ?.Where(b => _accountAssetsCache.IsInstrumentSupported(b.Key))
-                    .ToDictionary(d => d.Key, d => d.Value) ??
+                    ?.ToDictionary(d => d.Key, d => d.Value) ??
                 new Dictionary<string, OrderBook>();
 
             using (_contextFactory.GetWriteSyncContext($"{nameof(OrderBookSaveService)}.{nameof(Start)}"))

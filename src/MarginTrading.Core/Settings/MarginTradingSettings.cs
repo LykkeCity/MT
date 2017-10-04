@@ -107,37 +107,37 @@ namespace MarginTrading.Core.Settings
         public int LeverageMaintenance { get; set; }
 
         [Optional]
-        public double SwapLong { get; set; }
+        public decimal SwapLong { get; set; }
 
         [Optional]
-        public double SwapShort { get; set; }
+        public decimal SwapShort { get; set; }
 
         [Optional]
-        public double SwapLongPct { get; set; }
+        public decimal SwapLongPct { get; set; }
 
         [Optional]
-        public double SwapShortPct { get; set; }
+        public decimal SwapShortPct { get; set; }
 
         [Optional]
-        public double CommissionLong { get; set; }
+        public decimal CommissionLong { get; set; }
 
         [Optional]
-        public double CommissionShort { get; set; }
+        public decimal CommissionShort { get; set; }
 
         [Optional]
-        public double CommissionLot { get; set; }
+        public decimal CommissionLot { get; set; }
 
         [Optional]
-        public double DeltaBid { get; set; }
+        public decimal DeltaBid { get; set; }
 
         [Optional]
-        public double DeltaAsk { get; set; }
+        public decimal DeltaAsk { get; set; }
 
         [Optional]
-        public double DealLimit { get; set; }
+        public decimal DealLimit { get; set; }
 
         [Optional]
-        public double PositionLimit { get; set; }
+        public decimal PositionLimit { get; set; }
     }
 
     /// <summary>

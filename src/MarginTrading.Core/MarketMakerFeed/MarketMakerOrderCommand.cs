@@ -23,11 +23,11 @@ namespace MarginTrading.Core.MarketMakerFeed
         /// <summary>
         /// Order volume. Null is used to remove orders with any volume.
         /// </summary>
-        public double? Volume { get; set; }
+        public decimal? Volume { get; set; }
 
         /// <summary>
         /// Order price. Null is used to remove orders with any price.
         /// </summary>
-        public double? Price { get; set; }
+        public decimal? Price { get; set; }
     }
 }

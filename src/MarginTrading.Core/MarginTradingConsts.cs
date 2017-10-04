@@ -3,7 +3,7 @@
     public static class MarginTradingHelpers
     {
         // TODO: Rethink
-        public const int VolumeAccuracy = 2;
+        public const int VolumeAccuracy = 8;
     }
 
     public static class MatchingEngines

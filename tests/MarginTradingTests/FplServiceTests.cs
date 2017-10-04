@@ -104,7 +104,7 @@ namespace MarginTradingTests
         {
             const string instrument = "BTCCHF";
 
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 1.072030, Bid = 1.071940 }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 1.072030M, Bid = 1.071940M }));
 
             var order = new Order
             {
@@ -116,10 +116,10 @@ namespace MarginTradingTests
                 Instrument = instrument,
                 Volume = 1000,
                 MatchedOrders = new MatchedOrderCollection( new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 1000 } }), //need for GetMatchedVolume()
-                OpenPrice = 935.461
+                OpenPrice = 935.461M
             };
 
-            order.UpdateClosePrice(935.61);
+            order.UpdateClosePrice(935.61M);
 
             Assert.AreEqual(138.989, Math.Round(order.GetFpl(), 3));
         }
@@ -129,7 +129,7 @@ namespace MarginTradingTests
         {
             const string instrument = "BTCCHF";
 
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 1.072030, Bid = 1.071940 }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 1.072030M, Bid = 1.071940M }));
 
             var order = new Order
             {
@@ -141,10 +141,10 @@ namespace MarginTradingTests
                 Instrument = instrument,
                 Volume = -1000,
                 MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 1000 } }), //need for GetMatchedVolume()
-                OpenPrice = 935.461,
+                OpenPrice = 935.461M,
             };
 
-            order.UpdateClosePrice(935.61);
+            order.UpdateClosePrice(935.61M);
             var quoteRate = order.GetQuoteRate();
 
             Assert.AreEqual(0.93280971614600339, quoteRate);
@@ -157,8 +157,8 @@ namespace MarginTradingTests
             Accounts[0].Balance = 50000;
             _accountsCacheService.UpdateBalance(Accounts[0]);
 
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "EURUSD", Ask = 1.061, Bid = 1.06 }));
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCEUR", Ask = 1092, Bid = 1091 }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "EURUSD", Ask = 1.061M, Bid = 1.06M }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCEUR", Ask = 1092M, Bid = 1091M }));
 
             var orders = new List<Order>
             {
@@ -174,7 +174,7 @@ namespace MarginTradingTests
                     Instrument = "EURUSD",
                     Volume = 100000,
                     MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 100000 } }), //need for GetMatchedVolume()
-                    OpenPrice = 1.05,
+                    OpenPrice = 1.05M,
                     FillType = OrderFillType.FillOrKill
                 },
                 new Order
@@ -189,7 +189,7 @@ namespace MarginTradingTests
                     Instrument = "EURUSD",
                     Volume = -200000,
                     MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 200000 } }), //need for GetMatchedVolume()
-                    OpenPrice = 1.04,
+                    OpenPrice = 1.04M,
                     FillType = OrderFillType.FillOrKill
                 },
                 new Order
@@ -204,7 +204,7 @@ namespace MarginTradingTests
                     Instrument = "EURUSD",
                     Volume = 50000,
                     MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 50000 } }), //need for GetMatchedVolume()
-                    OpenPrice = 1.061,
+                    OpenPrice = 1.061M,
                     FillType = OrderFillType.FillOrKill
                 },
                 new Order
@@ -229,10 +229,10 @@ namespace MarginTradingTests
                 _ordersCache.ActiveOrders.Add(order);
             }
 
-            orders[0].UpdateClosePrice(1.06);
-            orders[1].UpdateClosePrice(1.061);
-            orders[2].UpdateClosePrice(1.06);
-            orders[3].UpdateClosePrice(1091);
+            orders[0].UpdateClosePrice(1.06M);
+            orders[1].UpdateClosePrice(1.061M);
+            orders[2].UpdateClosePrice(1.06M);
+            orders[3].UpdateClosePrice(1091M);
 
             var account = Accounts[0];
 

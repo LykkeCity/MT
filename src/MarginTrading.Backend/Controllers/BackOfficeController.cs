@@ -158,7 +158,7 @@ namespace MarginTrading.Backend.Controllers
         [HttpGet]
         [Route("positionsByVolume")]
         [ProducesResponseType(typeof(List<OrderContract>), 200)]
-        public List<OrderContract> GetPositionsByVolume([FromQuery]double volume)
+        public List<OrderContract> GetPositionsByVolume([FromQuery]decimal volume)
         {
             var result = new List<OrderContract>();
             var orders = _ordersReader.GetActive();
@@ -186,7 +186,7 @@ namespace MarginTrading.Backend.Controllers
         [HttpGet]
         [Route("pendingOrdersByVolume")]
         [ProducesResponseType(typeof(List<OrderContract>), 200)]
-        public List<OrderContract> GetPendingOrdersByVolume([FromQuery]double volume)
+        public List<OrderContract> GetPendingOrdersByVolume([FromQuery]decimal volume)
         {
             var result = new List<OrderContract>();
             var orders = _ordersReader.GetPending();

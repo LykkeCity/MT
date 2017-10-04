@@ -68,7 +68,7 @@ namespace MarginTradingTests
         [Test]
         public async Task Is_Swaps_Correct()
         {
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "EURUSD", Bid = 1.02, Ask = 1.04 }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "EURUSD", Bid = 1.02M, Ask = 1.04M }));
 
             _accountAssetsPairsRepository.AddOrReplaceAsync(new AccountAssetPair
             {
@@ -96,7 +96,7 @@ namespace MarginTradingTests
         [Test]
         public async Task Is_Swaps_Pct_Correct()
         {
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "EURUSD", Bid = 1.02, Ask = 1.04}));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "EURUSD", Bid = 1.02M, Ask = 1.04M}));
 
             await _accountAssetsPairsRepository.AddOrReplaceAsync(new AccountAssetPair
             {

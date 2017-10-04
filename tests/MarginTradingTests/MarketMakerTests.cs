@@ -13,7 +13,6 @@ namespace MarginTradingTests
     public class MarketMakerTests : BaseTests
     {
         private IEventConsumer<BestPriceChangeEventArgs> _quoteCashService;
-        private IFeedConsumer _marketMaker;
         private IMatchingEngine _matchingEngine;
 
         [OneTimeSetUp]
@@ -21,7 +20,6 @@ namespace MarginTradingTests
         {
             RegisterDependencies();
             _quoteCashService = Container.Resolve<IQuoteCacheService>() as IEventConsumer<BestPriceChangeEventArgs>;
-            _marketMaker = Container.Resolve<IFeedConsumer>();
             _matchingEngine = Container.Resolve<IMatchingEngine>();
         }
 
@@ -33,8 +31,8 @@ namespace MarginTradingTests
                 {
                     Instrument = "EURUSD",
                     Date = DateTime.Now,
-                    Bid = 1.04,
-                    Ask = 1.1
+                    Bid = 1.04M,
+                    Ask = 1.1M
                 }));
         }
 
