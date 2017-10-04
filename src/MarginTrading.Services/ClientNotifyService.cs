@@ -2,6 +2,7 @@
 using Common.Log;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Core;
+using MarginTrading.Core.Enums;
 using MarginTrading.Core.Settings;
 using Microsoft.Extensions.PlatformAbstractions;
 
@@ -34,9 +35,9 @@ namespace MarginTrading.Services
             _operationsLogService.AddLog($"queue {queueName}", order.ClientId, order.AccountId, null, order.ToJson());
         }
 
-        public void NotifyAccountChanged(IMarginTradingAccount account)
+        public void NotifyAccountUpdated(IMarginTradingAccount account)
         {
-            _rabbitMqNotifyService.AccountChanged(account);
+            _rabbitMqNotifyService.AccountUpdated(account);
             string queueName = QueueHelper.BuildQueueName(_marginSettings.RabbitMqQueues.AccountChanged.ExchangeName, _marginSettings.Env);
             _consoleWriter.WriteLine($"send account changed to queue {queueName}");
             _operationsLogService.AddLog($"queue {queueName}", account.ClientId, account.Id, null, account.ToJson());

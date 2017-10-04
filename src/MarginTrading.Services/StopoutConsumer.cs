@@ -48,7 +48,7 @@ namespace MarginTrading.Services
                 var totalPnl = orders.Sum(x => x.GetFpl());
 
                 _notifyService.NotifyAccountStopout(account.ClientId, account.Id, orders.Length, totalPnl);
-                _notifyService.NotifyAccountChanged(account);
+                _notifyService.NotifyAccountUpdated(account);
 
                 await SendNotification(account.ClientId, string.Format(MtMessages.Notifications_StopOutNotification, orders.Length, totalPnl, account.BaseAssetId), null);
 

@@ -138,7 +138,7 @@ namespace MarginTrading.Services
 
             if (order.Status == OrderStatus.Rejected)
             {
-                _rabbitMqNotifyService.OrdeReject(order);
+                _rabbitMqNotifyService.OrderReject(order);
             }
 
             return order;
@@ -164,7 +164,7 @@ namespace MarginTrading.Services
             order.RejectReasonText = message;
             order.Comment = comment;
 
-            _rabbitMqNotifyService.OrdeReject(order);
+            _rabbitMqNotifyService.OrderReject(order);
         }
 
         private async Task<Order> PlaceOrderByMarketPrice(Order order)
