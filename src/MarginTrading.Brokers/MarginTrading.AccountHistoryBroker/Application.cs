@@ -30,12 +30,12 @@ namespace MarginTrading.AccountHistoryBroker
 
         protected override RabbitMqSubscriptionSettings GetRabbitMqSubscriptionSettings()
         {
+            var exchangeName = _settings.RabbitMqQueues.AccountHistory.ExchangeName;
             return new RabbitMqSubscriptionSettings
             {
                 ConnectionString = _settings.MtRabbitMqConnString,
-                QueueName =
-                    QueueHelper.BuildQueueName(_settings.RabbitMqQueues.AccountHistory.ExchangeName, _settings.Env),
-                ExchangeName = _settings.RabbitMqQueues.AccountHistory.ExchangeName,
+                QueueName = QueueHelper.BuildQueueName(exchangeName, _settings.Env),
+                ExchangeName = exchangeName,
                 IsDurable = true
             };
         }

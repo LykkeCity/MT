@@ -26,12 +26,12 @@ namespace MarginTrading.OrderRejectedBroker
 
         protected override RabbitMqSubscriptionSettings GetRabbitMqSubscriptionSettings()
         {
+            var exchangeName = _settings.RabbitMqQueues.OrderRejected.ExchangeName;
             return new RabbitMqSubscriptionSettings
             {
                 ConnectionString = _settings.MtRabbitMqConnString,
-                QueueName =
-                    QueueHelper.BuildQueueName(_settings.RabbitMqQueues.OrderRejected.ExchangeName, _settings.Env),
-                ExchangeName = _settings.RabbitMqQueues.OrderRejected.ExchangeName,
+                QueueName = QueueHelper.BuildQueueName(exchangeName, _settings.Env),
+                ExchangeName = exchangeName,
                 IsDurable = true
             };
         }

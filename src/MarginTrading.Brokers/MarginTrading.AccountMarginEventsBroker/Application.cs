@@ -30,7 +30,7 @@ namespace MarginTrading.AccountMarginEventsBroker
             {
                 ConnectionString = _settings.MtRabbitMqConnString,
                 QueueName = $"{exchangeName}.{_applicationInfo.ApplicationName}.{_settings.Env ?? "DefaultEnv"}",
-                ExchangeName = _settings.RabbitMqQueues.AccountHistory.ExchangeName,
+                ExchangeName = exchangeName,
                 IsDurable = true
             };
         }
