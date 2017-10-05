@@ -4,7 +4,9 @@ using Autofac.Features.Indexed;
 using Common;
 using Common.Log;
 using MarginTrading.Common.Mappers;
+using MarginTrading.Common.RabbitMqMessageModels;
 using MarginTrading.Core;
+using MarginTrading.Core.Enums;
 using MarginTrading.Core.RabbitMqMessages;
 using MarginTrading.Core.Settings;
 
@@ -25,7 +27,7 @@ namespace MarginTrading.Services
             _publishers = publishers;
             _log = log;
         }
-        public async Task AccountHistory(string accountId, string clientId, decimal amount, decimal balance, decimal withdrawTransferLimit, AccountHistoryType type, string comment = null)
+        public Task AccountHistory(string accountId, string clientId, decimal amount, decimal balance, decimal withdrawTransferLimit, AccountHistoryType type, string comment = null)
         {
             var record = new MarginTradingAccountHistory
             {
@@ -40,83 +42,54 @@ namespace MarginTrading.Services
                 Comment = comment
             };
 
-            try
-            {
-                await _publishers[_settings.RabbitMqQueues.AccountHistory.ExchangeName].ProduceAsync(record.ToBackendContract().ToJson());
-            }
-            catch (Exception ex)
-            {
-                await _log.WriteErrorAsync(nameof(RabbitMqNotifyService), nameof(AccountHistory), record.ToJson(), ex);
-            }
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountHistory.ExchangeName, record.ToBackendContract());
         }
 
-        public async Task OrderHistory(IOrder order)
+        public Task OrderHistory(IOrder order)
         {
-            try
-            {
-                await _publishers[_settings.RabbitMqQueues.OrderHistory.ExchangeName].ProduceAsync(order.ToFullContract().ToJson());
-            }
-            catch (Exception ex)
-            {
-                await _log.WriteErrorAsync(nameof(RabbitMqNotifyService), nameof(OrderHistory), $"orderId: {order.Id}, accountId: {order.AccountId}, clientId: {order.ClientId}",
-                    ex);
-            }
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderHistory.ExchangeName, order.ToFullContract());
         }
 
-        public async Task OrdeReject(IOrder order)
+        public Task OrderReject(IOrder order)
         {
-            try
-            {
-                await _publishers[_settings.RabbitMqQueues.OrderRejected.ExchangeName].ProduceAsync(order.ToFullContract().ToJson());
-            }
-            catch (Exception ex)
-            {
-                await _log.WriteErrorAsync(nameof(RabbitMqNotifyService), nameof(OrdeReject),
-                    $"orderId: {order.Id}, accountId: {order.AccountId}, clientId: {order.ClientId}",
-                    ex);
-            }
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderRejected.ExchangeName, order.ToFullContract());
         }
 
-        public async Task OrderBookPrice(InstrumentBidAskPair quote)
+        public Task OrderBookPrice(InstrumentBidAskPair quote)
         {
-            try
-            {
-                await _publishers[_settings.RabbitMqQueues.OrderbookPrices.ExchangeName].ProduceAsync(quote.ToJson());
-            }
-            catch (Exception ex)
-            {
-                await _log.WriteErrorAsync(nameof(RabbitMqNotifyService), nameof(OrderBookPrice),
-                    $"instrument: {quote.Instrument}, bid: {quote.Bid}, ask: {quote.Ask}, data: {quote.Date:u}",
-                    ex);
-            }
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderbookPrices.ExchangeName, quote);
         }
 
-        public async Task OrderChanged(IOrder order)
+        public Task OrderChanged(IOrder order)
         {
-            try
-            {
-                await _publishers[_settings.RabbitMqQueues.OrderChanged.ExchangeName].ProduceAsync(order.ToBaseContract().ToJson());
-            }
-            catch (Exception ex)
-            {
-                await _log.WriteErrorAsync(nameof(RabbitMqNotifyService), nameof(OrderChanged),
-                    $"orderId: {order.Id}, accountId: {order.AccountId}, clientId: {order.ClientId}",
-                    ex);
-            }
+            var message = order.ToBaseContract();
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderChanged.ExchangeName, message);
         }
 
-        public async Task AccountChanged(IMarginTradingAccount account)
+        public Task AccountUpdated(IMarginTradingAccount account)
         {
-            try
+            return AccountChanged(account, AccountEventTypeEnum.Updated);
+        }
+
+        public Task AccountDeleted(IMarginTradingAccount account)
+        {
+            return AccountChanged(account, AccountEventTypeEnum.Deleted);
+        }
+
+        public Task AccountCreated(IMarginTradingAccount account)
+        {
+            return AccountChanged(account, AccountEventTypeEnum.Created);
+        }
+
+        private Task AccountChanged(IMarginTradingAccount account, AccountEventTypeEnum eventType)
+        {
+            var message = new AccountChangedMessage
             {
-                await _publishers[_settings.RabbitMqQueues.AccountChanged.ExchangeName].ProduceAsync(account.ToBackendContract(_settings.IsLive).ToJson());
-            }
-            catch (Exception ex)
-            {
-                await _log.WriteErrorAsync(nameof(RabbitMqNotifyService), nameof(AccountChanged),
-                    $"accountId: {account.Id}, clientId: {account.ClientId}",
-                    ex);
-            }
+                Account = account.ToBackendContract(_settings.IsLive),
+                EventType = eventType,
+            };
+
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountChanged.ExchangeName, message);
         }
 
         public Task AccountMarginEvent(AccountMarginEventMessage eventMessage)
@@ -125,29 +98,16 @@ namespace MarginTrading.Services
 
         }
 
-        public async Task AccountStopout(string clientId, string accountId, int positionsCount, decimal totalPnl)
+        public Task AccountStopout(string clientId, string accountId, int positionsCount, decimal totalPnl)
         {
-            try
-            {
-                await _publishers[_settings.RabbitMqQueues.AccountStopout.ExchangeName].ProduceAsync(new { clientId = clientId, accountId = accountId, positionsCount = positionsCount, totalPnl = totalPnl }.ToJson());
-            }
-            catch (Exception ex)
-            {
-                await _log.WriteErrorAsync(nameof(RabbitMqNotifyService), nameof(AccountStopout),
-                    $"accountId: {accountId}, positions count: {positionsCount}, total PnL: {totalPnl}", ex);
-            }
+            var message = new { clientId, accountId, positionsCount, totalPnl };
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountStopout.ExchangeName, message);
         }
 
-        public async Task UserUpdates(bool updateAccountAssets, bool updateAccounts, string[] clientIds)
+        public Task UserUpdates(bool updateAccountAssets, bool updateAccounts, string[] clientIds)
         {
-            try
-            {
-                await _publishers[_settings.RabbitMqQueues.UserUpdates.ExchangeName].ProduceAsync(new { updateAccountAssetPairs = updateAccountAssets, UpdateAccounts = updateAccounts, clientIds = clientIds }.ToJson());
-            }
-            catch (Exception ex)
-            {
-                await _log.WriteErrorAsync(nameof(RabbitMqNotifyService), nameof(UserUpdates), null, ex);
-            }
+            var message = new { updateAccountAssetPairs = updateAccountAssets, UpdateAccounts = updateAccounts, clientIds };
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.UserUpdates.ExchangeName, message);
         }
 
         private async Task TryProduceMessageAsync(string exchangeName, object message)
@@ -165,7 +125,6 @@ namespace MarginTrading.Services
 #pragma warning restore 4014
             }
         }
-
 
         public void Stop()
         {

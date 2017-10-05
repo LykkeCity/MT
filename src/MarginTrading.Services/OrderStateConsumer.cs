@@ -44,17 +44,11 @@ namespace MarginTrading.Services
 			_threadSwitcher.SwitchThread(async () =>
 			{
 				var totalFpl = order.GetTotalFpl(order.AssetAccuracy);
-
 			    await _accountManager.UpdateBalanceAsync(order.ClientId, order.AccountId, totalFpl, AccountHistoryType.OrderClosed,
 			        $"Balance changed on order close (id = {order.Id})");
 
-				var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
-
 				await _rabbitMqNotifyService.OrderHistory(order);
-
 				_clientNotifyService.NotifyOrderChanged(order);
-				_clientNotifyService.NotifyAccountChanged(account);
-
 				await SendNotification(order.ClientId, order.GetPushMessage(), order);
 			});
 		}
