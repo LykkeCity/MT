@@ -17,29 +17,30 @@ namespace MarginTrading.Services
         private readonly IIndex<string, IMessageProducer<string>> _publishers;
         private readonly ILog _log;
 
-		public RabbitMqNotifyService(
-			MarginSettings settings,
-			IIndex<string, IMessageProducer<string>> publishers,
-			ILog log)
-		{
-			_settings = settings;
-			_publishers = publishers;
-			_log = log;
-		}
-		public async Task AccountHistory(string accountId, string clientId, decimal amount, decimal balance, decimal withdrawTransferLimit, AccountHistoryType type, string comment = null)
-		{
-		    var record = new MarginTradingAccountHistory
-		    {
-		        Id = Guid.NewGuid().ToString("N"),
-		        AccountId = accountId,
-		        ClientId = clientId,
-		        Type = type,
-		        Amount = amount,
-		        Balance = balance,
-		        WithdrawTransferLimit = withdrawTransferLimit,
-		        Date = DateTime.UtcNow,
-		        Comment = comment
-		    };
+        public RabbitMqNotifyService(
+            MarginSettings settings,
+            IIndex<string, IMessageProducer<string>> publishers,
+            ILog log)
+        {
+            _settings = settings;
+            _publishers = publishers;
+            _log = log;
+        }
+
+        public Task AccountHistory(string accountId, string clientId, decimal amount, decimal balance, decimal withdrawTransferLimit, AccountHistoryType type, string comment = null)
+        {
+            var record = new MarginTradingAccountHistory
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                AccountId = accountId,
+                ClientId = clientId,
+                Type = type,
+                Amount = amount,
+                Balance = balance,
+                WithdrawTransferLimit = withdrawTransferLimit,
+                Date = DateTime.UtcNow,
+                Comment = comment
+            };
 
             return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountHistory.ExchangeName, record.ToBackendContract());
         }
@@ -91,7 +92,7 @@ namespace MarginTrading.Services
             return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountChanged.ExchangeName, message);
         }
 
-        public Task AccountStopout(string clientId, string accountId, int positionsCount, double totalPnl)
+        public Task AccountStopout(string clientId, string accountId, int positionsCount, decimal totalPnl)
         {
             var message = new { clientId, accountId, positionsCount, totalPnl };
             return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountStopout.ExchangeName, message);
