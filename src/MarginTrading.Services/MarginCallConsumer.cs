@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
 using Common;
 using Lykke.Common;
 using MarginTrading.Core;
@@ -24,6 +25,7 @@ namespace MarginTrading.Services
         private static readonly ConcurrentDictionary<string, DateTime> LastNotifications = new ConcurrentDictionary<string, DateTime>();
         private const int NotificationsTimeout = 30;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
+        private readonly IDateService _dateService;
 
         public MarginCallConsumer(IThreadSwitcher threadSwitcher,
             IClientSettingsRepository clientSettingsRepository,
@@ -31,7 +33,8 @@ namespace MarginTrading.Services
             IEmailService emailService,
             IClientAccountService clientAccountService,
             IMarginTradingOperationsLogService operationsLogService,
-            IRabbitMqNotifyService rabbitMqNotifyService)
+            IRabbitMqNotifyService rabbitMqNotifyService,
+            IDateService dateService)
             : base(clientSettingsRepository, appNotifications, clientAccountService)
         {
             _threadSwitcher = threadSwitcher;
@@ -39,6 +42,7 @@ namespace MarginTrading.Services
             _clientAccountService = clientAccountService;
             _operationsLogService = operationsLogService;
             _rabbitMqNotifyService = rabbitMqNotifyService;
+            _dateService = dateService;
         }
 
         int IEventConsumer.ConsumerRank => 100;
@@ -46,29 +50,32 @@ namespace MarginTrading.Services
         void IEventConsumer<MarginCallEventArgs>.ConsumeEvent(object sender, MarginCallEventArgs ea)
         {
             var account = ea.Account;
+            var eventTime = _dateService.Now();
+            var accountMarginEventMessage = AccountMarginEventMessageConverter.Create(account, true, eventTime);
             _threadSwitcher.SwitchThread(async () =>
             {
-                var now = DateTime.UtcNow;
-                DateTime lastNotification;
-                if (LastNotifications.TryGetValue(account.Id, out lastNotification))
+                if (LastNotifications.TryGetValue(account.Id, out var lastNotification)
+                    && lastNotification.AddMinutes(NotificationsTimeout) > eventTime)
                 {
-                    if (lastNotification.AddMinutes(NotificationsTimeout) > now)
-                        return;
+                    return;
                 }
+
+                var marginEventTask = _rabbitMqNotifyService.AccountMarginEvent(accountMarginEventMessage);
 
                 _operationsLogService.AddLog("margin call", account.ClientId, account.Id, "", ea.ToJson());
 
-                await SendNotification(account.ClientId, string.Format(MtMessages.Notifications_MarginCall, account.GetMarginUsageLevel(),
+                var notificationTask = SendNotification(account.ClientId, string.Format(MtMessages.Notifications_MarginCall, account.GetMarginUsageLevel(),
                         account.BaseAssetId), null);
 
                 var clientAcc = await _clientAccountService.GetAsync(account.ClientId);
 
-                if (clientAcc != null)
-                    await _emailService.SendMarginCallEmailAsync(clientAcc.Email, account.BaseAssetId, account.Id);
+                var emailTask = clientAcc != null
+                    ? _emailService.SendMarginCallEmailAsync(clientAcc.Email, account.BaseAssetId, account.Id)
+                    : Task.CompletedTask;
 
-                LastNotifications.AddOrUpdate(account.Id, now, (s, time) => now);
+                await Task.WhenAll(marginEventTask, notificationTask, emailTask);
 
-                await _rabbitMqNotifyService.AccountMarginEvent(account, true, now);
+                LastNotifications.AddOrUpdate(account.Id, eventTime, (s, time) => eventTime);
             });
         }
 

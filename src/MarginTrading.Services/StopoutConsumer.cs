@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Threading.Tasks;
 using Common;
 using Lykke.Common;
 using MarginTrading.Core;
@@ -48,28 +49,30 @@ namespace MarginTrading.Services
             var account = ea.Account;
             var orders = ea.Orders;
             var eventTime = _dateService.Now();
-                _threadSwitcher.SwitchThread(async () =>
-                {
-                    _operationsLogService.AddLog("stopout", account.ClientId, account.Id, "", ea.ToJson());
+            var accountMarginEventMessage = AccountMarginEventMessageConverter.Create(account, true, eventTime);
+            var totalPnl = orders.Sum(x => x.GetFpl());
 
-                    var totalPnl = orders.Sum(x => x.GetFpl());
+            _threadSwitcher.SwitchThread(async () =>
+            {
+                _operationsLogService.AddLog("stopout", account.ClientId, account.Id, "", ea.ToJson());
 
-                    _notifyService.NotifyAccountStopout(account.ClientId, account.Id, orders.Length, totalPnl);
-                    _notifyService.NotifyAccountChanged(account);
+                var marginEventTask = _rabbitMqNotifyService.AccountMarginEvent(accountMarginEventMessage);
 
-                    await SendNotification(account.ClientId,
-                        string.Format(MtMessages.Notifications_StopOutNotification, orders.Length, totalPnl,
-                            account.BaseAssetId), null);
+                _notifyService.NotifyAccountStopout(account.ClientId, account.Id, orders.Length, totalPnl);
+                _notifyService.NotifyAccountChanged(account);
 
-                    var clientAcc = await _clientAccountService.GetAsync(account.ClientId);
+                var notificationTask = SendNotification(account.ClientId,
+                    string.Format(MtMessages.Notifications_StopOutNotification, orders.Length, totalPnl,
+                        account.BaseAssetId), null);
 
-                    if (clientAcc != null)
-                    {
-                        await _emailService.SendStopOutEmailAsync(clientAcc.Email, account.BaseAssetId, account.Id);
-                    }
+                var clientAcc = await _clientAccountService.GetAsync(account.ClientId);
 
-                    await _rabbitMqNotifyService.AccountMarginEvent(account, true, eventTime);
-                });
+                var emailTask = clientAcc != null
+                    ? _emailService.SendStopOutEmailAsync(clientAcc.Email, account.BaseAssetId, account.Id)
+                    : Task.CompletedTask;
+
+                await Task.WhenAll(marginEventTask, notificationTask, emailTask);
+            });
         }
     }
 }

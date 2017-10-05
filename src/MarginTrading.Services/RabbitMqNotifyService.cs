@@ -4,8 +4,8 @@ using Autofac.Features.Indexed;
 using Common;
 using Common.Log;
 using MarginTrading.Common.Mappers;
-using MarginTrading.Common.RabbitMqMessages;
 using MarginTrading.Core;
+using MarginTrading.Core.RabbitMqMessages;
 using MarginTrading.Core.Settings;
 
 namespace MarginTrading.Services
@@ -119,10 +119,9 @@ namespace MarginTrading.Services
             }
         }
 
-        public Task AccountMarginEvent(IMarginTradingAccount account, bool isStopout, DateTime eventTime)
+        public Task AccountMarginEvent(AccountMarginEventMessage eventMessage)
         {
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountMarginEvents.ExchangeName,
-                AccountMarginEventMessage.Create(account, isStopout, eventTime));
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountMarginEvents.ExchangeName, eventMessage);
 
         }
 

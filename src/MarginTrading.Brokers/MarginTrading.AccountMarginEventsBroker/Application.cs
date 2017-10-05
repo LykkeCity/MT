@@ -4,7 +4,7 @@ using Lykke.RabbitMqBroker.Subscriber;
 using MarginTrading.AccountMarginEventsBroker.AzureRepositories;
 using MarginTrading.BrokerBase;
 using MarginTrading.BrokerBase.Settings;
-using MarginTrading.Common.RabbitMqMessages;
+using MarginTrading.Core.RabbitMqMessages;
 using MarginTrading.Core.Settings;
 
 namespace MarginTrading.AccountMarginEventsBroker

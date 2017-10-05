@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using MarginTrading.Core.RabbitMqMessages;
 
 namespace MarginTrading.Core
 {
@@ -14,6 +15,6 @@ namespace MarginTrading.Core
 		Task AccountStopout(string clientId, string accountId, int positionsCount, decimal totalPnl);
 		Task UserUpdates(bool updateAccountAssets, bool updateAccounts, string[] clientIds);
 		void Stop();
-	    Task AccountMarginEvent(IMarginTradingAccount account, bool isStopout, DateTime eventTime);
+	    Task AccountMarginEvent(AccountMarginEventMessage eventMessage);
 	}
 }
