@@ -27,6 +27,7 @@ namespace MarginTrading.Services
             _publishers = publishers;
             _log = log;
         }
+
         public Task AccountHistory(string accountId, string clientId, decimal amount, decimal balance, decimal withdrawTransferLimit, AccountHistoryType type, string comment = null)
         {
             var record = new MarginTradingAccountHistory

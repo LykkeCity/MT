@@ -9,6 +9,7 @@ namespace MarginTrading.Common.BackendContracts
         public string Id { get; set; }
         public string ClientId { get; set; }
         public string AccountId { get; set; }
+        public string AccountAssetId { get; set; }
         public string Instrument { get; set; }
         public OrderDirection Type { get; set; }
         public OrderStatus Status { get; set; }
