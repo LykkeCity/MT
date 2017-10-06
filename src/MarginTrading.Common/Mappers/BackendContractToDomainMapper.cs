@@ -68,7 +68,7 @@ namespace MarginTrading.Common.Mappers
                 Comment = src.Comment,
                 MatchedVolume = src.MatchedVolume,
                 MatchedCloseVolume = src.MatchedCloseVolume,
-                Fpl = src.TotalPnL,
+                Fpl = src.Fpl,
                 PnL = src.PnL,
                 InterestRateSwap = src.InterestRateSwap,
                 MarginInit = src.MarginInit,

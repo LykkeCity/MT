@@ -23,6 +23,7 @@ namespace MarginTrading.DataReader.Helpers
             {
                 Id = src.Id,
                 AccountId = src.AccountId,
+                AccountAssetId = src.AccountAssetId,
                 ClientId = src.ClientId,
                 Instrument = src.Instrument,
                 Status = src.Status,
@@ -47,7 +48,7 @@ namespace MarginTrading.DataReader.Helpers
                 CloseCommission = src.GetCloseCommission(),
                 SwapCommission = src.SwapCommission,
                 MatchedOrders = src.MatchedOrders.Select(MatchedOrderToBackendContract).ToList(),
-                MatchedCloseOrders = src.MatchedCloseOrders.Select(MatchedOrderToBackendContract).ToList(),
+                MatchedCloseOrders = src.MatchedCloseOrders.Select(MatchedOrderToBackendContract).ToList()
             };
         }
 

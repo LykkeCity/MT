@@ -242,8 +242,8 @@ namespace MarginTrading.Common.Mappers
                 Comment = src.Comment,
                 MatchedVolume = src.GetMatchedVolume(),
                 MatchedCloseVolume = src.GetMatchedCloseVolume(),
-                TotalPnL = src.GetTotalFpl(),
-                PnL = src.GetFpl(),
+                PnL = src.GetTotalFpl(),
+                Fpl = src.GetFpl(),
                 InterestRateSwap = src.GetSwaps(),
                 MarginInit = src.GetMarginInit(),
                 MarginMaintenance = src.GetMarginMaintenance(),
@@ -270,6 +270,7 @@ namespace MarginTrading.Common.Mappers
             {
                 Id = src.Id,
                 AccountId = src.AccountId,
+                AccountAssetId = src.AccountAssetId,
                 ClientId = src.ClientId,
                 Instrument = src.Instrument,
                 Status = src.Status,
