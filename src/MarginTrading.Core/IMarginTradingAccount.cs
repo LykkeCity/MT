@@ -124,7 +124,19 @@ namespace MarginTrading.Core
         public static decimal GetMarginUsageLevel(this MarginTradingAccount account)
         {
             var totalCapital = account.GetTotalCapital();
-            return totalCapital == 0 ? 0 : Math.Abs(account.GetUsedMargin() / totalCapital);
+
+            if (totalCapital < 0)
+                return decimal.MaxValue;
+
+            if (totalCapital == 0)
+            {
+                if (account.Balance == 0)
+                    return 0;
+
+                return decimal.MaxValue;
+            }
+
+            return account.GetUsedMargin() / totalCapital;
         }
 
         public static decimal GetTotalCapital(this IMarginTradingAccount account)
