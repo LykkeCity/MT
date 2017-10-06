@@ -51,7 +51,7 @@ namespace MarginTrading.Services
         {
             var account = ea.Account;
             var eventTime = _dateService.Now();
-            var accountMarginEventMessage = AccountMarginEventMessageConverter.Create(account, true, eventTime);
+            var accountMarginEventMessage = AccountMarginEventMessageConverter.Create(account, false, eventTime);
             _threadSwitcher.SwitchThread(async () =>
             {
                 if (LastNotifications.TryGetValue(account.Id, out var lastNotification)
