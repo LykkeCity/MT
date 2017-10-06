@@ -43,7 +43,7 @@ namespace MarginTrading.Services
 			var order = ea.Order;
 			_threadSwitcher.SwitchThread(async () =>
 			{
-				var totalFpl = order.GetTotalFpl(order.AssetAccuracy);
+				var totalFpl = order.GetTotalFpl();
 			    await _accountManager.UpdateBalanceAsync(order.ClientId, order.AccountId, totalFpl, AccountHistoryType.OrderClosed,
 			        $"Balance changed on order close (id = {order.Id})");
 

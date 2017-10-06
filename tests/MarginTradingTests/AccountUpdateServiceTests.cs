@@ -59,9 +59,9 @@ namespace MarginTradingTests
             Assert.AreEqual(1000, account.Balance);
             Assert.AreEqual(20, Math.Round(account.GetPnl(), 5));
             Assert.AreEqual(1020, account.GetTotalCapital());
-            Assert.AreEqual(6.93333, account.GetUsedMargin());
+            Assert.AreEqual(6.93333333m, account.GetUsedMargin());
             Assert.AreEqual(1009.6, account.GetMarginAvailable());
-            Assert.AreEqual(0.0067973823529411764705882353m, account.GetMarginUsageLevel());
+            Assert.AreEqual(0.0067973856176470588235294118m, account.GetMarginUsageLevel());
 
             var order2 = new Order
             {
@@ -85,7 +85,7 @@ namespace MarginTradingTests
             Assert.AreEqual(1000, account.Balance);
             Assert.AreEqual(-580, Math.Round(account.GetPnl(), 5));
             Assert.AreEqual(420, Math.Round(account.GetTotalCapital(), 5));
-            Assert.AreEqual(214.93333, account.GetUsedMargin());
+            Assert.AreEqual(214.93333333m, account.GetUsedMargin());
             Assert.AreEqual(97.6, Math.Round(account.GetMarginAvailable(), 5));
             Assert.AreEqual(0.51175, Math.Round(account.GetMarginUsageLevel(), 5));
         }

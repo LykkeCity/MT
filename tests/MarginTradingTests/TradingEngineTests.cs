@@ -454,7 +454,7 @@ namespace MarginTradingTests
             Assert.AreEqual(OrderStatus.Closed, order.Status);
             Assert.AreEqual(OrderCloseReason.Close, order.CloseReason);
             Assert.AreEqual(1, order.MatchedCloseOrders.Count);
-            Assert.AreEqual(0.7, order.GetTotalFpl(order.AssetAccuracy));
+            Assert.AreEqual(0.7, order.GetTotalFpl());
             Assert.AreEqual(1000.7, account.Balance);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
@@ -495,7 +495,7 @@ namespace MarginTradingTests
             Assert.AreEqual(OrderStatus.Closed, order.Status);
             Assert.AreEqual(OrderCloseReason.Close, order.CloseReason);
             Assert.AreEqual(2, order.MatchedCloseOrders.Count);
-            Assert.AreEqual(-0.51, order.GetTotalFpl(order.AssetAccuracy));
+            Assert.AreEqual(-0.51, order.GetTotalFpl());
             Assert.AreEqual(999.49, account.Balance);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
@@ -642,7 +642,7 @@ namespace MarginTradingTests
             //order should now be fully matched and closed
             Assert.AreEqual(OrderStatus.Closed, order.Status);
             Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedCloseVolume());
-            Assert.AreEqual(-0.60003, order.GetTotalFpl(order.AssetAccuracy));
+            Assert.AreEqual(-0.60003, order.GetTotalFpl());
             Assert.AreEqual(999.39997, account.Balance);
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
             _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
@@ -765,7 +765,7 @@ namespace MarginTradingTests
 
             Assert.AreEqual(OrderStatus.Closed, order.Status); //order should be closed on TakeProfit
             Assert.AreEqual(OrderCloseReason.TakeProfit, order.CloseReason);
-            Assert.AreEqual(0.7, order.GetTotalFpl(order.AssetAccuracy));
+            Assert.AreEqual(0.7, order.GetTotalFpl());
             Assert.AreEqual(1000.7, account.Balance);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
@@ -808,7 +808,7 @@ namespace MarginTradingTests
 
             Assert.AreEqual(OrderStatus.Closed, order.Status); //order should be closed on TakeProfit
             Assert.AreEqual(OrderCloseReason.TakeProfit, order.CloseReason);
-            Assert.AreEqual(2.79, order.GetTotalFpl(order.AssetAccuracy));
+            Assert.AreEqual(2.79, order.GetTotalFpl());
             Assert.AreEqual(1002.79, account.Balance);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
@@ -851,7 +851,7 @@ namespace MarginTradingTests
 
             Assert.AreEqual(OrderStatus.Closed, order.Status); //order is closed now on StopLoss
             Assert.AreEqual(OrderCloseReason.StopLoss, order.CloseReason);
-            Assert.AreEqual(-2.14998, order.GetTotalFpl(order.AssetAccuracy));
+            Assert.AreEqual(-2.14998, order.GetTotalFpl());
             Assert.AreEqual(997.85002, account.Balance);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
@@ -894,7 +894,7 @@ namespace MarginTradingTests
 
             Assert.AreEqual(OrderStatus.Closed, order.Status); //order should be closed on StopLoss
             Assert.AreEqual(OrderCloseReason.StopLoss, order.CloseReason);
-            Assert.AreEqual(-1.29008, order.GetTotalFpl(order.AssetAccuracy));
+            Assert.AreEqual(-1.29008, order.GetTotalFpl());
             Assert.AreEqual(998.70992, account.Balance);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
@@ -1854,7 +1854,7 @@ namespace MarginTradingTests
             var closedOrder = _tradingEngine.CloseActiveOrderAsync(order.Id, OrderCloseReason.Close).Result;
 
             Assert.AreEqual(OrderStatus.Closed, closedOrder.Status); //should be closed 
-            Assert.AreEqual(-0.1, order.GetTotalFpl(order.AssetAccuracy));
+            Assert.AreEqual(-0.1, order.GetTotalFpl());
             Assert.AreEqual(999.9, account.Balance);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
