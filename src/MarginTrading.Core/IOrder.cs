@@ -200,7 +200,7 @@ namespace MarginTrading.Core
 
         public static decimal GetTotalFpl(this IOrder order, decimal swaps)
         {
-            return order.GetFpl() - order.GetOpenCommission() - order.GetCloseCommission() - order.SwapCommission - swaps;
+            return order.GetFpl() - order.GetOpenCommission() - order.GetCloseCommission() - swaps;
         }
 
         public static decimal GetTotalFpl(this IOrder order)
