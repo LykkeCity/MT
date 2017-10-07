@@ -416,12 +416,12 @@ namespace MarginTrading.Core
             };
         }
 
-        public static OrderBookLevel Create(MatchedOrder order, OrderDirection direction, string instrument)
+        public static OrderBookLevel Create(LimitOrder order, OrderDirection direction)
         {
             return new OrderBookLevel
             {
                 Direction = direction,
-                Instrument = instrument,
+                Instrument = order.Instrument,
                 Volume = order.Volume,
                 Price = order.Price
             };
