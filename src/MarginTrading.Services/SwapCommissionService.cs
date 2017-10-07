@@ -58,8 +58,8 @@ namespace MarginTrading.Services
                     order.SwapCommission = accountAsset.SwapLong;
                     break;
                 case OrderDirection.Sell:
-                    order.OpenCommission = order.GetOrderType() == OrderDirection.Buy ? accountAsset.CommissionLong : accountAsset.CommissionShort;
-                    order.CloseCommission = order.GetOrderType() == OrderDirection.Buy ? accountAsset.CommissionShort : accountAsset.CommissionLong;
+                    order.OpenCommission = accountAsset.CommissionShort;
+                    order.CloseCommission = accountAsset.CommissionLong;
                     order.SwapCommission = accountAsset.SwapShort;
                     break;
             }
