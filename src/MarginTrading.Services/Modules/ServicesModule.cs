@@ -47,8 +47,8 @@ namespace MarginTrading.Services.Modules
 				.As<IValidateOrderService>()
 				.SingleInstance();
 
-			builder.RegisterType<SwapCommissionService>()
-				.As<ISwapCommissionService>()
+			builder.RegisterType<CommissionService>()
+				.As<ICommissionService>()
 				.SingleInstance();
 
 			builder.RegisterType<ClientTokenService>()
