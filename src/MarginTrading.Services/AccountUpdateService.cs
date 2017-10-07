@@ -34,10 +34,12 @@ namespace MarginTrading.Services
                 orders = _ordersCache.ActiveOrders.GetOrdersByAccountIds(account.Id).ToArray();
             }
 
-            accountFpl.PnL = orders.Sum(x=> x.GetTotalFpl());
+            accountFpl.PnL = Math.Round(orders.Sum(x => x.GetTotalFpl()), MarginTradingHelpers.DefaultAssetAccuracy);
 
-            accountFpl.UsedMargin = orders.Sum(item => item.GetMarginMaintenance());
-            accountFpl.MarginInit = orders.Sum(item => item.GetMarginInit());
+            accountFpl.UsedMargin = Math.Round(orders.Sum(item => item.GetMarginMaintenance()),
+                MarginTradingHelpers.DefaultAssetAccuracy);
+            accountFpl.MarginInit = Math.Round(orders.Sum(item => item.GetMarginInit()),
+                MarginTradingHelpers.DefaultAssetAccuracy);
             accountFpl.OpenPositionsCount = orders.Length;
 
             var accountGroup = _accountGroupCacheService.GetAccountGroup(account.TradingConditionId, account.BaseAssetId);

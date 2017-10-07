@@ -189,7 +189,7 @@ namespace MarginTrading.Core
                     message = order.ExpectedOpenPrice.HasValue && order.CloseReason == OrderCloseReason.Canceled
                         ? string.Format(MtMessages.Notifications_PendingOrderCanceled, type, order.Instrument, volume)
                         : string.Format(MtMessages.Notifications_OrderClosed, type, order.Instrument, volume, reason,
-                            Math.Round(order.GetTotalFpl(), order.AssetAccuracy).ToString($"F{order.AssetAccuracy}"));
+                            order.GetTotalFpl().ToString($"F{MarginTradingHelpers.DefaultAssetAccuracy}"));
                     break;
                 case OrderStatus.Rejected:
                     break;
@@ -198,19 +198,14 @@ namespace MarginTrading.Core
             return message;
         }
 
-        public static decimal GetTotalFpl(this IOrder order)
-        {
-            return order.GetTotalFpl(order.GetSwaps());
-        }
-
         public static decimal GetTotalFpl(this IOrder order, decimal swaps)
         {
             return order.GetFpl() - order.GetOpenCommission() - order.GetCloseCommission() - swaps;
         }
 
-        public static decimal GetTotalFpl(this IOrder order, int accuracy)
+        public static decimal GetTotalFpl(this IOrder order)
         {
-            return Math.Round(order.GetTotalFpl(), accuracy);
+            return Math.Round(GetTotalFpl(order, order.GetSwaps()), MarginTradingHelpers.DefaultAssetAccuracy);
         }
 
         public static decimal GetMatchedVolume(this IOrder order)
@@ -303,12 +298,12 @@ namespace MarginTrading.Core
 
         public static decimal GetOpenCommission(this IOrder order)
         {
-            return order.CommissionLot == 0 ? 0 : order.Volume / order.CommissionLot * order.OpenCommission;
+            return order.CommissionLot == 0 ? 0 : Math.Abs(order.Volume) / order.CommissionLot * order.OpenCommission;
         }
 
         public static decimal GetCloseCommission(this IOrder order)
         {
-            return order.CommissionLot == 0 ? 0 : order.GetMatchedCloseVolume() / order.CommissionLot * order.CloseCommission;
+            return order.CommissionLot == 0 ? 0 : Math.Abs(order.GetMatchedCloseVolume()) / order.CommissionLot * order.CloseCommission;
         }
     }
 
