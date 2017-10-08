@@ -119,13 +119,13 @@ namespace MarginTrading.AzureRepositories
 
             public static AccountsStatsReportsRepository CreateAccountsStatsReportsRepository(string connstring, ILog log)
             {
-                return new AccountsStatsReportsRepository(AzureTableStorage<AccountsStatReport>.Create(() => connstring,
+                return new AccountsStatsReportsRepository(AzureTableStorage<AccountsStatReportEntity>.Create(() => connstring,
                     "ClientAccountsStatusReports", log));
             }
 
             public static AccountsReportsRepository CreateAccountsReportsRepository(string connstring, ILog log)
             {
-                return new AccountsReportsRepository(AzureTableStorage<AccountsReport>.Create(() => connstring,
+                return new AccountsReportsRepository(AzureTableStorage<AccountsReportEntity>.Create(() => connstring,
                     "ClientAccountsReports", log));
             }
         }

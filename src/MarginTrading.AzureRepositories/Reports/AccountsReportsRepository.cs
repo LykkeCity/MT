@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace MarginTrading.AzureRepositories.Reports
 {
-    public class AccountsReport : TableEntity
+    public class AccountsReportEntity : TableEntity
     {
         public string TakerCounterpartyId
         {
@@ -27,19 +27,19 @@ namespace MarginTrading.AzureRepositories.Reports
 
     public interface IAccountsReportsRepository
     {
-        Task InsertOrReplaceBatchAsync(IEnumerable<AccountsReport> stats);
+        Task InsertOrReplaceBatchAsync(IEnumerable<AccountsReportEntity> stats);
     }
 
     public class AccountsReportsRepository : IAccountsReportsRepository
     {
-        private readonly INoSQLTableStorage<AccountsReport> _tableStorage;
+        private readonly INoSQLTableStorage<AccountsReportEntity> _tableStorage;
 
-        public AccountsReportsRepository(INoSQLTableStorage<AccountsReport> tableStorage)
+        public AccountsReportsRepository(INoSQLTableStorage<AccountsReportEntity> tableStorage)
         {
             _tableStorage = tableStorage;
         }
 
-        public Task InsertOrReplaceBatchAsync(IEnumerable<AccountsReport> stats)
+        public Task InsertOrReplaceBatchAsync(IEnumerable<AccountsReportEntity> stats)
         {
             var tasks = BatchEntityInsertHelper.MakeBatchesByPartitionKey(stats)
                 .Select(b => _tableStorage.InsertOrReplaceBatchAsync(b));

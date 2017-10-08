@@ -7,7 +7,7 @@ using Microsoft.WindowsAzure.Storage.Table;
 
 namespace MarginTrading.AzureRepositories.Reports
 {
-    public class AccountsStatReport : TableEntity
+    public class AccountsStatReportEntity : TableEntity
     {
         public string BaseAssetId
         {
@@ -40,19 +40,19 @@ namespace MarginTrading.AzureRepositories.Reports
 
     public interface IAccountsStatsReportsRepository
     {
-        Task InsertOrReplaceBatchAsync(IEnumerable<AccountsStatReport> stats);
+        Task InsertOrReplaceBatchAsync(IEnumerable<AccountsStatReportEntity> stats);
     }
 
     public class AccountsStatsReportsRepository : IAccountsStatsReportsRepository
     {
-        private readonly INoSQLTableStorage<AccountsStatReport> _tableStorage;
+        private readonly INoSQLTableStorage<AccountsStatReportEntity> _tableStorage;
 
-        public AccountsStatsReportsRepository(INoSQLTableStorage<AccountsStatReport> tableStorage)
+        public AccountsStatsReportsRepository(INoSQLTableStorage<AccountsStatReportEntity> tableStorage)
         {
             _tableStorage = tableStorage;
         }
 
-        public Task InsertOrReplaceBatchAsync(IEnumerable<AccountsStatReport> stats)
+        public Task InsertOrReplaceBatchAsync(IEnumerable<AccountsStatReportEntity> stats)
         {
             var tasks = BatchEntityInsertHelper.MakeBatchesByPartitionKey(stats)
                 .Select(b => _tableStorage.InsertOrReplaceBatchAsync(b));

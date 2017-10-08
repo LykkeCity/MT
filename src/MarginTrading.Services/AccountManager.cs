@@ -87,7 +87,7 @@ namespace MarginTrading.Services
                 .ToList();
         }
 
-        private Task WriteAccountsStats(List<AccountsStatReport> accountsStatReports)
+        private Task WriteAccountsStats(List<AccountsStatReportEntity> accountsStatReports)
         {
             var stats = accountsStatReports
                 .Select(a => new MarginTradingAccountStatsEntity
@@ -108,14 +108,14 @@ namespace MarginTrading.Services
             return _statsRepository.InsertOrReplaceBatchAsync(stats);
         }
 
-        private Task WriteAccountsStatsReports(List<AccountsStatReport> generateAccountsStatsReports)
+        private Task WriteAccountsStatsReports(List<AccountsStatReportEntity> accountsStatsReports)
         {
-            return _accountsStatsReportsRepository.InsertOrReplaceBatchAsync(generateAccountsStatsReports);
+            return _accountsStatsReportsRepository.InsertOrReplaceBatchAsync(accountsStatsReports);
         }
 
-        private List<AccountsStatReport> GenerateAccountsStatsReports(IReadOnlyList<MarginTradingAccount> accounts)
+        private List<AccountsStatReportEntity> GenerateAccountsStatsReports(IReadOnlyList<MarginTradingAccount> accounts)
         {
-            return accounts.Select(a => new AccountsStatReport
+            return accounts.Select(a => new AccountsStatReportEntity
             {
                 AccountId = a.Id,
                 ClientId = a.ClientId,
@@ -139,7 +139,7 @@ namespace MarginTrading.Services
 
         private Task WriteAccountsReports(IEnumerable<MarginTradingAccount> accounts)
         {
-            var reports = accounts.Select(a => new AccountsReport
+            var reports = accounts.Select(a => new AccountsReportEntity
             {
                 TakerAccountId = a.Id,
                 TakerCounterpartyId = a.ClientId,

@@ -20,15 +20,15 @@ namespace MarginTrading.Services
         IUpdatedAccountsTrackingService
     {
         private readonly object _lock = new object();
-        private ConcurrentDictionary<string, string> _updatedAccounts = new ConcurrentDictionary<string, string>();
+        private Dictionary<string, string> _updatedAccounts = new Dictionary<string, string>();
 
         public IReadOnlyList<string> GetAccounts()
         {
-            ConcurrentDictionary<string, string> oldDict;
+            Dictionary<string, string> oldDict;
             lock (_lock)
             {
                 oldDict = _updatedAccounts;
-                _updatedAccounts = new ConcurrentDictionary<string, string>();
+                _updatedAccounts = new Dictionary<string, string>();
             }
 
             return oldDict.Keys.ToList();
@@ -36,7 +36,10 @@ namespace MarginTrading.Services
 
         public void ConsumeEvent(object sender, AccountBalanceChangedEventArgs ea)
         {
-            _updatedAccounts[ea.Account.Id] = ea.Account.Id;
+            lock (_lock)
+            {
+                _updatedAccounts[ea.Account.Id] = ea.Account.Id;
+            }
         }
 
         public int ConsumerRank => 101;

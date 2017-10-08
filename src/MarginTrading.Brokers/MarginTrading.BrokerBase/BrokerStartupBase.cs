@@ -99,7 +99,7 @@ namespace MarginTrading.BrokerBase
         protected abstract void RegisterCustomServices(IServiceCollection services, ContainerBuilder builder,
             TSettingsRoot settingsRoot, ILog log, bool isLive);
 
-        protected virtual ILog CreateLogWithSlack(IServiceCollection services, TSettingsRoot settings)
+        protected virtual ILog CreateLogWithSlack(IServiceCollection services, TSettingsRoot settings, bool isLive)
         {
             var logToConsole = new LogToConsole();
             var logAggregate = new LogAggregate();
@@ -117,7 +117,7 @@ namespace MarginTrading.BrokerBase
                 !(dbLogConnectionString.StartsWith("${") && dbLogConnectionString.EndsWith("}")))
             {
                 var logToAzureStorage = services.UseLogToAzureStorage(dbLogConnectionString, slackService,
-                    ApplicationName + "Log",
+                    ApplicationName + (isLive ? "Live" : "Demo") + "Log",
                     logToConsole);
 
                 logAggregate.AddLogger(logToAzureStorage);
@@ -132,7 +132,7 @@ namespace MarginTrading.BrokerBase
             ContainerBuilder builder,
             bool isLive)
         {
-            var log = CreateLogWithSlack(services, settingsRoot);
+            var log = CreateLogWithSlack(services, settingsRoot, isLive);
             builder.RegisterInstance(log).As<ILog>().SingleInstance();
             builder.RegisterInstance(settingsRoot).AsSelf().SingleInstance();
 
