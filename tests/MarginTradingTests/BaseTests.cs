@@ -6,6 +6,7 @@ using MarginTrading.Core.Models;
 using MarginTrading.Core.Settings;
 using MarginTrading.Frontend.Services;
 using MarginTrading.Services;
+using MarginTrading.Services.Events;
 using MarginTrading.Services.Modules;
 using MarginTradingTests.Modules;
 using Moq;
@@ -43,6 +44,14 @@ namespace MarginTradingTests
 
             builder.RegisterType<WatchListService>()
                 .As<IWatchListService>()
+                .SingleInstance();
+
+            builder.RegisterType<UpdatedAccountsTrackingService>()
+                .As<IUpdatedAccountsTrackingService>()
+                .SingleInstance();
+
+            builder.RegisterType<EventChannel<AccountBalanceChangedEventArgs>>()
+                .As<IEventChannel<AccountBalanceChangedEventArgs>>()
                 .SingleInstance();
 
             var settingsServiceMock = new Mock<IMarginTradingSettingsService>();
