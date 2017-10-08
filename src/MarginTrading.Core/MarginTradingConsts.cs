@@ -2,8 +2,10 @@
 {
     public static class MarginTradingHelpers
     {
-        // TODO: Rethink
+        // TODO: need to use different accuracy for different asset pairs
         public const int VolumeAccuracy = 8;
+        // TODO: need to use different accuracy for different assets
+        public const int DefaultAssetAccuracy = 8;
     }
 
     public static class MatchingEngines

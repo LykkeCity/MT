@@ -108,7 +108,7 @@ namespace MarginTrading.Backend
             MtServiceLocator.FplService = ApplicationContainer.Resolve<IFplService>();
             MtServiceLocator.AccountUpdateService = ApplicationContainer.Resolve<IAccountUpdateService>();
             MtServiceLocator.AccountsCacheService = ApplicationContainer.Resolve<IAccountsCacheService>();
-            MtServiceLocator.SwapCommissionService = ApplicationContainer.Resolve<ISwapCommissionService>();
+            MtServiceLocator.SwapCommissionService = ApplicationContainer.Resolve<ICommissionService>();
 
             return new AutofacServiceProvider(ApplicationContainer);
         }

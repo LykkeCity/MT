@@ -32,22 +32,16 @@ namespace MarginTrading.Services.Events
                 AddOrderBookLevel(OrderBookLevel.Create(order));
         }
 
-        public void AddOrderBookLevels(OrderDirection direction, string instrument, params MatchedOrder[] orders)
+        public void AddOrderBookLevelsToUpdate(OrderDirection direction, string instrument, MatchedOrderCollection matchedOrders)
         {
-            foreach (var order in orders)
-                AddOrderBookLevel(OrderBookLevel.Create(order, direction, instrument));
+            foreach (var order in matchedOrders.Items)
+                AddOrderBookLevel(OrderBookLevel.Create(order.CreateLimit(instrument, direction), direction));
         }
 
         public void AddOrderBookLevelsToDelete(params LimitOrder[] orders)
         {
             foreach (var order in orders)
                 AddOrderBookLevel(OrderBookLevel.CreateDeleted(order));
-        }
-
-        public void AddOrderBookLevelsToDeletePartial(params LimitOrder[] orders)
-        {
-            foreach (var order in orders)
-                AddOrderBookLevel(OrderBookLevel.Create(order));
         }
 
         public bool HasEvents()

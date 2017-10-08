@@ -14,12 +14,20 @@ namespace MarginTrading.Services
 
         public IAssetPair GetAssetPairById(string assetPairId)
         {
-            if (TryGetAssetById(assetPairId, out var result))
-            {
-                return result;
-            }
+            _lockSlim.EnterReadLock();
 
-            throw new AssetPairNotFoundException(assetPairId, string.Format(MtMessages.InstrumentNotFoundInCache, assetPairId));
+            try
+            {
+                if (_assetPairs.TryGetValue(assetPairId, out var result))
+                    return result;
+
+                throw new AssetPairNotFoundException(assetPairId,
+                    string.Format(MtMessages.InstrumentNotFoundInCache, assetPairId));
+            }
+            finally
+            {
+                _lockSlim.ExitReadLock();
+            }
         }
 
         public IEnumerable<IAssetPair> GetAll()
@@ -35,24 +43,16 @@ namespace MarginTrading.Services
             }
         }
 
-        public IAssetPair FindInstrument(string asset1, string asset2)
+        public IAssetPair FindAssetPair(string asset1, string asset2)
         {
-            //TODO: optimize
             _lockSlim.EnterReadLock();
             try
             {
-                foreach (var instrument in _assetPairs.Values)
-                {
-                    if (instrument.BaseAssetId == asset1 && instrument.QuoteAssetId == asset2)
-                    {
-                        return instrument;
-                    }
+                if (_assetPairs.TryGetValue(GetAssetPairId(asset1, asset2), out var result))
+                    return result;
 
-                    if (instrument.BaseAssetId == asset2 && instrument.QuoteAssetId == asset1)
-                    {
-                        return instrument;
-                    }
-                }
+                if (_assetPairs.TryGetValue(GetAssetPairId(asset2, asset1), out result))
+                    return result;
 
                 throw new InstrumentByAssetsNotFoundException(asset1, asset2, string.Format(MtMessages.InstrumentWithAssetsNotFound, asset1, asset2));
             }
@@ -62,24 +62,6 @@ namespace MarginTrading.Services
             }
         }
 
-        internal bool TryGetAssetById(string instrumentId, out IAssetPair result)
-        {
-            _lockSlim.EnterReadLock();
-            try
-            {
-                if (!_assetPairs.ContainsKey(instrumentId))
-                {
-                    result = null;
-                    return false;
-                }
-                result = _assetPairs[instrumentId];
-                return true;
-            }
-            finally
-            {
-                _lockSlim.ExitReadLock();
-            }
-        }
 
         internal void InitInstrumentsCache(Dictionary<string, IAssetPair> instruments)
         {
@@ -92,6 +74,11 @@ namespace MarginTrading.Services
             {
                 _lockSlim.ExitWriteLock();
             }
+        }
+
+        private string GetAssetPairId(string asset1, string asset2)
+        {
+            return $"{asset1}{asset2}";
         }
     }
 }

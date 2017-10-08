@@ -22,7 +22,7 @@ namespace MarginTrading.Services
 
         private readonly IQuoteCacheService _quoteCashService;
         private readonly IAccountUpdateService _accountUpdateService;
-        private readonly ISwapCommissionService _swapCommissionService;
+        private readonly ICommissionService _swapCommissionService;
         private readonly IValidateOrderService _validateOrderService;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly IClientNotifyService _notifyService;
@@ -44,7 +44,7 @@ namespace MarginTrading.Services
             IValidateOrderService validateOrderService,
             IQuoteCacheService quoteCashService,
             IAccountUpdateService accountUpdateService,
-            ISwapCommissionService swapCommissionService,
+            ICommissionService swapCommissionService,
             IClientNotifyService notifyService,
             IRabbitMqNotifyService rabbitMqNotifyService,
             IAccountsCacheService accountsCacheService,
@@ -212,7 +212,7 @@ namespace MarginTrading.Services
             order.Status = OrderStatus.Active;
 
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
-            _swapCommissionService.SetCommissions(account.TradingConditionId, account.BaseAssetId, order);
+            _swapCommissionService.SetCommissionRates(account.TradingConditionId, account.BaseAssetId, order);
             _ordersCache.ActiveOrders.Add(order);
             _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
         }

@@ -1,12 +1,8 @@
-﻿using System;
-
-namespace MarginTrading.Core
+﻿namespace MarginTrading.Core
 {
-    public interface ISwapCommissionService
+    public interface ICommissionService
     {
-        void SetCommissions(string accountAssetId, string tradingConditionId, Order order);
-        decimal GetSwapCount(DateTime startDate, DateTime endDate);
-        decimal GetSwaps(string tradingConditionId, string accountId, string accountAssetId, string instrument, OrderDirection type, DateTime? openDate, DateTime? closeDate, decimal volume);
+        void SetCommissionRates(string accountAssetId, string tradingConditionId, Order order);
         decimal GetSwaps(IOrder order);
     }
 }

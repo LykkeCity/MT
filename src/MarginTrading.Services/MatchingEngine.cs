@@ -88,16 +88,16 @@ namespace MarginTrading.Services
         {
             using (_contextFactory.GetWriteSyncContext($"{nameof(MatchingEngine)}.{nameof(MatchMarketOrderForOpen)}"))
             {
-                OrderDirection type = order.GetOrderType();
+                OrderDirection orderBookTypeToMatch = order.GetOrderType().GetOrderTypeToMatchInOrderBook();
 
                 var matchedOrders =
-                    _orderBooks.Match(order, type.GetOrderTypeToMatchInOrderBook(), Math.Abs(order.Volume));
+                    _orderBooks.Match(order, orderBookTypeToMatch, Math.Abs(order.Volume));
 
                 if (matchedFunc(matchedOrders))
                 {
-                    _orderBooks.Update(order, type.GetOrderTypeToMatchInOrderBook(), matchedOrders);
+                    _orderBooks.Update(order, orderBookTypeToMatch, matchedOrders);
                     var changeEventArgs = new OrderBookChangeEventArgs { MessageId = _currentMessageId++ };
-                    changeEventArgs.AddOrderBookLevelsToDeletePartial(matchedOrders.Select(item => item.CreateLimit(order.Instrument, type.GetOrderTypeToMatchInOrderBook())).ToArray());
+                    changeEventArgs.AddOrderBookLevelsToUpdate(orderBookTypeToMatch, order.Instrument, matchedOrders);
                     _orderbookChangeEventChannel.SendEvent(this, changeEventArgs);
                 }
             }
@@ -107,17 +107,16 @@ namespace MarginTrading.Services
         {
             using (_contextFactory.GetWriteSyncContext($"{nameof(MatchingEngine)}.{nameof(MatchMarketOrderForClose)}"))
             {
-                OrderDirection type = order.GetCloseType();
+                OrderDirection orderBookTypeToMatch = order.GetCloseType().GetOrderTypeToMatchInOrderBook();
 
-                var matchedOrders = _orderBooks.Match(order, type.GetOrderTypeToMatchInOrderBook(),
-                    Math.Abs(order.GetRemainingCloseVolume()));
+                var matchedOrders = _orderBooks.Match(order, orderBookTypeToMatch, Math.Abs(order.GetRemainingCloseVolume()));
 
                 if (!matchedAction(matchedOrders))
                     return;
 
-                _orderBooks.Update(order, type.GetOrderTypeToMatchInOrderBook(), matchedOrders);
+                _orderBooks.Update(order, orderBookTypeToMatch, matchedOrders);
                 var changeEventArgs = new OrderBookChangeEventArgs { MessageId = _currentMessageId++ };
-                changeEventArgs.AddOrderBookLevels(type.GetOrderTypeToMatchInOrderBook(), order.Instrument, matchedOrders.ToArray());
+                changeEventArgs.AddOrderBookLevelsToUpdate(orderBookTypeToMatch, order.Instrument, matchedOrders);
                 _orderbookChangeEventChannel.SendEvent(this, changeEventArgs);
             } // lock
         }
