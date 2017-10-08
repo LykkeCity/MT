@@ -114,23 +114,28 @@ namespace MarginTrading.Backend.Modules
                 .As<IMaintenanceModeService>()
                 .SingleInstance();
 
+            builder.RegisterType<UpdatedAccountsTrackingService>()
+                .As<IUpdatedAccountsTrackingService>()
+                .As<IEventConsumer<AccountBalanceChangedEventArgs>>()
+                .SingleInstance();
+
             RegisterPublishers(builder, consoleWriter);
         }
 
-		private void RegisterPublishers(ContainerBuilder builder, IConsole consoleWriter)
-		{
-			var publishers = new List<string>
-			{
-				_settings.RabbitMqQueues.AccountHistory.ExchangeName,
-				_settings.RabbitMqQueues.OrderHistory.ExchangeName,
-				_settings.RabbitMqQueues.OrderRejected.ExchangeName,
-				_settings.RabbitMqQueues.OrderbookPrices.ExchangeName,
-				_settings.RabbitMqQueues.OrderChanged.ExchangeName,
-				_settings.RabbitMqQueues.AccountChanged.ExchangeName,
-				_settings.RabbitMqQueues.AccountStopout.ExchangeName,
-				_settings.RabbitMqQueues.UserUpdates.ExchangeName,
-				_settings.RabbitMqQueues.AccountMarginEvents.ExchangeName
-			};
+        private void RegisterPublishers(ContainerBuilder builder, IConsole consoleWriter)
+        {
+            var publishers = new List<string>
+            {
+                _settings.RabbitMqQueues.AccountHistory.ExchangeName,
+                _settings.RabbitMqQueues.OrderHistory.ExchangeName,
+                _settings.RabbitMqQueues.OrderRejected.ExchangeName,
+                _settings.RabbitMqQueues.OrderbookPrices.ExchangeName,
+                _settings.RabbitMqQueues.OrderChanged.ExchangeName,
+                _settings.RabbitMqQueues.AccountChanged.ExchangeName,
+                _settings.RabbitMqQueues.AccountStopout.ExchangeName,
+                _settings.RabbitMqQueues.UserUpdates.ExchangeName,
+                _settings.RabbitMqQueues.AccountMarginEvents.ExchangeName
+            };
 
             var bytesSerializer = new BytesStringSerializer();
 

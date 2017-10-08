@@ -34,10 +34,4 @@ namespace MarginTrading.Core
         public decimal OpenPositionsCount { get; set; }
         public decimal MarginUsageLevel { get; set; }
     }
-
-    public interface IMarginTradingAccountStatsRepository
-    {
-        Task<IEnumerable<IMarginTradingAccountStats>> GetAllAsync();
-        Task InsertOrReplaceBatchAsync(IEnumerable<IMarginTradingAccountStats> stats);
-    }
 }

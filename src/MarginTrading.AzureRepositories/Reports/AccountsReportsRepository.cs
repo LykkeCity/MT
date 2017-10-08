@@ -1,58 +1,45 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using AzureStorage;
 using MarginTrading.AzureRepositories.Helpers;
 using Microsoft.WindowsAzure.Storage.Table;
+using System.Linq;
 
 namespace MarginTrading.AzureRepositories.Reports
 {
-    public class AccountsStatReport : TableEntity
+    public class AccountsReport : TableEntity
     {
-        public string BaseAssetId
+        public string TakerCounterpartyId
         {
             get => PartitionKey;
             set => PartitionKey = value;
         }
 
-        public string AccountId
+        public string TakerAccountId
         {
             get => RowKey;
             set => RowKey = value;
         }
 
-        public string ClientId { get; set; }
-        public string TradingConditionId { get; set; }
-        public double Balance { get; set; }
-        public double WithdrawTransferLimit { get; set; }
-        public double MarginCall { get; set; }
-        public double StopOut { get; set; }
-        public double TotalCapital { get; set; }
-        public double FreeMargin { get; set; }
-        public double MarginAvailable { get; set; }
-        public double UsedMargin { get; set; }
-        public double MarginInit { get; set; }
-        public double PnL { get; set; }
-        public double OpenPositionsCount { get; set; }
-        public double MarginUsageLevel { get; set; }
+        public string BaseAssetId { get; set; }
         public bool IsLive { get; set; }
     }
 
-    public interface IAccountsStatsReportsRepository
+    public interface IAccountsReportsRepository
     {
-        Task InsertOrReplaceBatchAsync(IEnumerable<AccountsStatReport> stats);
+        Task InsertOrReplaceBatchAsync(IEnumerable<AccountsReport> stats);
     }
 
-    public class AccountsStatsReportsRepository : IAccountsStatsReportsRepository
+    public class AccountsReportsRepository : IAccountsReportsRepository
     {
-        private readonly INoSQLTableStorage<AccountsStatReport> _tableStorage;
+        private readonly INoSQLTableStorage<AccountsReport> _tableStorage;
 
-        public AccountsStatsReportsRepository(INoSQLTableStorage<AccountsStatReport> tableStorage)
+        public AccountsReportsRepository(INoSQLTableStorage<AccountsReport> tableStorage)
         {
             _tableStorage = tableStorage;
         }
 
-        public Task InsertOrReplaceBatchAsync(IEnumerable<AccountsStatReport> stats)
+        public Task InsertOrReplaceBatchAsync(IEnumerable<AccountsReport> stats)
         {
             var tasks = BatchEntityInsertHelper.MakeBatchesByPartitionKey(stats)
                 .Select(b => _tableStorage.InsertOrReplaceBatchAsync(b));

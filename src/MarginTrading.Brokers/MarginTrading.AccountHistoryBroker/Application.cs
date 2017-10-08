@@ -55,7 +55,7 @@ namespace MarginTrading.AccountHistoryBroker
                 Type = accountHistoryContract.Type.ToString(),
                 WithdrawTransferLimit = (double) accountHistoryContract.WithdrawTransferLimit,
             };
-            _accountTransactionsReportsRepository.InsertOrReplaceAsync(accountTransactionReport);
+            
             return Task.WhenAll(
                 _accountHistoryRepository.AddAsync(accountHistory),
                 _accountTransactionsReportsRepository.InsertOrReplaceAsync(accountTransactionReport));
