@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
+using MarginTrading.Core.RabbitMqMessages;
 
 namespace MarginTrading.Core
 {
@@ -15,5 +17,6 @@ namespace MarginTrading.Core
 		void Stop();
 	    Task AccountCreated(IMarginTradingAccount account);
 	    Task AccountDeleted(IMarginTradingAccount account);
+	    Task AccountMarginEvent(AccountMarginEventMessage eventMessage);
 	}
 }

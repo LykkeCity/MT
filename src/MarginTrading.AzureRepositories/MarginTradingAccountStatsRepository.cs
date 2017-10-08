@@ -65,6 +65,12 @@ namespace MarginTrading.AzureRepositories
         }
     }
 
+    public interface IMarginTradingAccountStatsRepository
+    {
+        Task<IEnumerable<IMarginTradingAccountStats>> GetAllAsync();
+        Task InsertOrReplaceBatchAsync(IEnumerable<MarginTradingAccountStatsEntity> stats);
+    }
+
     public class MarginTradingAccountStatsRepository : IMarginTradingAccountStatsRepository
     {
         private readonly INoSQLTableStorage<MarginTradingAccountStatsEntity> _tableStorage;
@@ -79,25 +85,9 @@ namespace MarginTrading.AzureRepositories
             return await _tableStorage.GetDataAsync();
         }
 
-        public Task InsertOrReplaceBatchAsync(IEnumerable<IMarginTradingAccountStats> stats)
+        public Task InsertOrReplaceBatchAsync(IEnumerable<MarginTradingAccountStatsEntity> stats)
         {
-            var entities = stats.Select(item => new MarginTradingAccountStatsEntity
-            {
-                AccountId = item.AccountId,
-                BaseAssetId = item.BaseAssetId,
-                MarginCall = (double) item.MarginCall,
-                StopOut = (double) item.StopOut,
-                TotalCapital = (double) item.TotalCapital,
-                FreeMargin = (double) item.FreeMargin,
-                MarginAvailable = (double) item.MarginAvailable,
-                UsedMargin = (double) item.UsedMargin,
-                MarginInit = (double) item.MarginInit,
-                PnL = (double) item.PnL,
-                OpenPositionsCount = (double) item.OpenPositionsCount,
-                MarginUsageLevel = (double) item.MarginUsageLevel,
-            });
-
-            var tasks = BatchEntityInsertHelper.MakeBatchesByPartitionKey(entities)
+            var tasks = BatchEntityInsertHelper.MakeBatchesByPartitionKey(stats)
                 .Select(b => _tableStorage.InsertOrReplaceBatchAsync(b));
             return Task.WhenAll(tasks);
         }

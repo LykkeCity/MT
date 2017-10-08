@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MarginTrading.AzureRepositories;
 using MarginTrading.Common.BackendContracts;
 using MarginTrading.Core;
 using MarginTrading.DataReader.Settings;

@@ -225,7 +225,7 @@ namespace MarginTrading.Services
 
             order.MatchedOrders.AddRange(matchedOrders);
             order.OpenPrice = Math.Round(order.MatchedOrders.WeightedAveragePrice, order.AssetAccuracy);
-            
+
             InstrumentBidAskPair quote;
             if (_quoteCashService.TryGetQuoteById(order.Instrument, out quote))
             {
@@ -364,11 +364,10 @@ namespace MarginTrading.Services
 
         private void CommitStopout(MarginTradingAccount account, Order[] orders)
         {
+            _stopoutEventChannel.SendEvent(this, new StopOutEventArgs(account, orders));
+
             foreach (var order in orders)
                 SetOrderToClosingState(order, OrderCloseReason.StopOut);
-
-            //TODO: figure out when we send this event - when we here or when we closed orders
-            _stopoutEventChannel.SendEvent(this, new StopOutEventArgs(account, orders));
         }
 
         private void SetOrderToClosingState(Order order, OrderCloseReason reason)

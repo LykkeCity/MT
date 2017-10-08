@@ -43,11 +43,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.AccountHistor
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.OrderHistoryBroker", "src\MarginTrading.Brokers\MarginTrading.OrderHistoryBroker\MarginTrading.OrderHistoryBroker.csproj", "{02819188-B172-400E-9DBA-9A7E5C4F6266}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.DataReader", "src\MarginTrading.DataReader\MarginTrading.DataReader.csproj", "{61657805-B7DA-4B78-9138-3697EA06E46E}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.OrderRejectedBroker", "src\MarginTrading.Brokers\MarginTrading.OrderRejectedBroker\MarginTrading.OrderRejectedBroker.csproj", "{BE0E8F09-2A68-426E-B457-5AA929CD998F}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.BrokerBase", "src\MarginTrading.Brokers\MarginTrading.BrokerBase\MarginTrading.BrokerBase.csproj", "{6B4B176C-58E3-4C66-96E2-91330192F238}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.AccountMarginEventsBroker", "src\MarginTrading.Brokers\MarginTrading.AccountMarginEventsBroker\MarginTrading.AccountMarginEventsBroker.csproj", "{2228A223-02B8-472C-98BC-8F71E8F0F604}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.MarketMaker", "src\MarginTrading.MarketMaker\MarginTrading.MarketMaker.csproj", "{4FD63863-A3DF-436E-96AC-3010F807F5B0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.DataReader", "src\MarginTrading.DataReader\MarginTrading.DataReader.csproj", "{88F0B500-1119-4292-A721-15B13BB1A4BA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -99,18 +103,26 @@ Global
 		{02819188-B172-400E-9DBA-9A7E5C4F6266}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{02819188-B172-400E-9DBA-9A7E5C4F6266}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{02819188-B172-400E-9DBA-9A7E5C4F6266}.Release|Any CPU.Build.0 = Release|Any CPU
-		{61657805-B7DA-4B78-9138-3697EA06E46E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{61657805-B7DA-4B78-9138-3697EA06E46E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{61657805-B7DA-4B78-9138-3697EA06E46E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{61657805-B7DA-4B78-9138-3697EA06E46E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BE0E8F09-2A68-426E-B457-5AA929CD998F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BE0E8F09-2A68-426E-B457-5AA929CD998F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BE0E8F09-2A68-426E-B457-5AA929CD998F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BE0E8F09-2A68-426E-B457-5AA929CD998F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B4B176C-58E3-4C66-96E2-91330192F238}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B4B176C-58E3-4C66-96E2-91330192F238}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B4B176C-58E3-4C66-96E2-91330192F238}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B4B176C-58E3-4C66-96E2-91330192F238}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2228A223-02B8-472C-98BC-8F71E8F0F604}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2228A223-02B8-472C-98BC-8F71E8F0F604}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2228A223-02B8-472C-98BC-8F71E8F0F604}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2228A223-02B8-472C-98BC-8F71E8F0F604}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4FD63863-A3DF-436E-96AC-3010F807F5B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4FD63863-A3DF-436E-96AC-3010F807F5B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4FD63863-A3DF-436E-96AC-3010F807F5B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4FD63863-A3DF-436E-96AC-3010F807F5B0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{88F0B500-1119-4292-A721-15B13BB1A4BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{88F0B500-1119-4292-A721-15B13BB1A4BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{88F0B500-1119-4292-A721-15B13BB1A4BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{88F0B500-1119-4292-A721-15B13BB1A4BA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -127,9 +139,11 @@ Global
 		{47A3C5B2-289D-41B9-8B73-F2C5995227A9} = {18A6F48C-BAC6-4D92-A9AD-764E4F8BEB82}
 		{08FFD2CD-50C4-4B84-BA9E-27667677E20C} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
 		{02819188-B172-400E-9DBA-9A7E5C4F6266} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
-		{61657805-B7DA-4B78-9138-3697EA06E46E} = {A1366CA2-DF4A-4E38-BD6C-895A399118B4}
 		{BE0E8F09-2A68-426E-B457-5AA929CD998F} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
+		{6B4B176C-58E3-4C66-96E2-91330192F238} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
+		{2228A223-02B8-472C-98BC-8F71E8F0F604} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
 		{4FD63863-A3DF-436E-96AC-3010F807F5B0} = {9B4094F0-73BB-424A-8C27-177F010F7722}
+		{88F0B500-1119-4292-A721-15B13BB1A4BA} = {A1366CA2-DF4A-4E38-BD6C-895A399118B4}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {16BCEC97-771D-46F8-BD02-379A8FC34CDD}

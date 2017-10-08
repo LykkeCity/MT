@@ -61,6 +61,7 @@ namespace MarginTrading.Core.Settings
         public string SharedStorageConnString { get; set; }
         public string HistoryConnString { get; set; }
         public string StateConnString { get; set; }
+        public string ReportsConnString { get; set; }
     }
 
     public class RabbitMqQueues
@@ -73,6 +74,7 @@ namespace MarginTrading.Core.Settings
         public RabbitMqQueueInfo AccountChanged { get; set; }
         public RabbitMqQueueInfo AccountStopout { get; set; }
         public RabbitMqQueueInfo UserUpdates { get; set; }
+        public RabbitMqQueueInfo AccountMarginEvents { get; set; }
     }
 
     public class RabbitMqQueueInfo

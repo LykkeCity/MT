@@ -7,6 +7,7 @@ using MarginTrading.Common.Mappers;
 using MarginTrading.Common.RabbitMqMessageModels;
 using MarginTrading.Core;
 using MarginTrading.Core.Enums;
+using MarginTrading.Core.RabbitMqMessages;
 using MarginTrading.Core.Settings;
 
 namespace MarginTrading.Services
@@ -92,6 +93,12 @@ namespace MarginTrading.Services
             return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountChanged.ExchangeName, message);
         }
 
+        public Task AccountMarginEvent(AccountMarginEventMessage eventMessage)
+        {
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountMarginEvents.ExchangeName, eventMessage);
+
+        }
+
         public Task AccountStopout(string clientId, string accountId, int positionsCount, decimal totalPnl)
         {
             var message = new { clientId, accountId, positionsCount, totalPnl };
@@ -129,6 +136,7 @@ namespace MarginTrading.Services
             ((IStopable)_publishers[_settings.RabbitMqQueues.AccountStopout.ExchangeName]).Stop();
             ((IStopable)_publishers[_settings.RabbitMqQueues.AccountChanged.ExchangeName]).Stop();
             ((IStopable)_publishers[_settings.RabbitMqQueues.UserUpdates.ExchangeName]).Stop();
+            ((IStopable)_publishers[_settings.RabbitMqQueues.AccountMarginEvents.ExchangeName]).Stop();
         }
     }
 }

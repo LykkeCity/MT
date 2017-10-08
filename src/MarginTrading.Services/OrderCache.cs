@@ -66,7 +66,7 @@ namespace MarginTrading.Services
             WaitingForExecutionOrders = new OrderCacheGroup(orders, OrderStatus.WaitingForExecution);
             ClosingOrders = new OrderCacheGroup(orders, OrderStatus.Closing);
         }
-    }
+    } 
 
     public class OrderCacheManager : TimerPeriod
     {
