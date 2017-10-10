@@ -5,7 +5,6 @@ using MarginTrading.AzureRepositories;
 using MarginTrading.AzureRepositories.Reports;
 using MarginTrading.Core;
 using MarginTrading.Core.Clients;
-using MarginTrading.Core.Monitoring;
 using MarginTrading.Core.Settings;
 using MarginTrading.Services;
 
@@ -80,10 +79,6 @@ namespace MarginTrading.Backend.Modules
 
 			builder.Register<IMarginTradingBlobRepository>(ctx =>
 				AzureRepoFactories.MarginTrading.CreateBlobRepository(_settings.Db.StateConnString)
-			).SingleInstance();
-
-			builder.Register<IServiceMonitoringRepository>(ctx =>
-				AzureRepoFactories.Monitoring.CreateServiceMonitoringRepository(_settings.Db.SharedStorageConnString, _log)
 			).SingleInstance();
 
 			builder.Register<IAppGlobalSettingsRepositry>(ctx =>
