@@ -5,7 +5,6 @@ using MarginTrading.AzureRepositories;
 using MarginTrading.AzureRepositories.Reports;
 using MarginTrading.Core;
 using MarginTrading.Core.Clients;
-using MarginTrading.Core.Monitoring;
 using MarginTrading.Core.Settings;
 using MarginTrading.Services;
 
