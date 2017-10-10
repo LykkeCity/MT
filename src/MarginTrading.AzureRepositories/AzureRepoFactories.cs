@@ -3,7 +3,6 @@ using AzureStorage.Tables;
 using AzureStorage.Tables.Templates.Index;
 using Common.Log;
 using MarginTrading.AzureRepositories.Clients;
-using MarginTrading.AzureRepositories.Monitoring;
 using MarginTrading.AzureRepositories.Reports;
 using MarginTrading.AzureRepositories.Settings;
 
@@ -25,14 +24,6 @@ namespace MarginTrading.AzureRepositories
                 return new ClientsRepository(
                     AzureTableStorage<ClientAccountEntity>.Create(() => connString, tableName, log),
                     AzureTableStorage<AzureIndex>.Create(() => connString, tableName, log));
-            }
-        }
-
-        public static class Monitoring
-        {
-            public static ServiceMonitoringRepository CreateServiceMonitoringRepository(string connstring, ILog log)
-            {
-                return new ServiceMonitoringRepository(AzureTableStorage<MonitoringRecordEntity>.Create(() => connstring, "Monitoring", log));
             }
         }
 

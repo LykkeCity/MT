@@ -12,7 +12,6 @@ namespace MarginTrading.Core.Settings
     public class MarginSettings
     {
         public string MetricLoggerLine { get; set; }
-        public string ApiRootUrl { get; set; }
         public string ApiKey { get; set; }
         public string DemoAccountIdPrefix { get; set; }
         public bool RemoteConsoleEnabled { get; set; }
@@ -58,7 +57,6 @@ namespace MarginTrading.Core.Settings
         public string MarginTradingConnString { get; set; }
         public string ClientPersonalInfoConnString { get; set; }
         public string DictsConnString { get; set; }
-        public string SharedStorageConnString { get; set; }
         public string HistoryConnString { get; set; }
         public string StateConnString { get; set; }
         public string ReportsConnString { get; set; }

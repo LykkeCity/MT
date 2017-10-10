@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace MarginTrading.Core.Monitoring
 {
@@ -34,13 +32,5 @@ namespace MarginTrading.Core.Monitoring
                 Version = version
             };
         }
-    }
-
-    public interface IServiceMonitoringRepository
-    {
-
-        Task<IEnumerable<IMonitoringRecord>> GetAllAsync();
-        Task ScanAllAsync(Func<IEnumerable<IMonitoringRecord>, Task> chunk);
-        Task UpdateOrCreate(IMonitoringRecord record);
     }
 }

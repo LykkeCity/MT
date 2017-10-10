@@ -82,10 +82,6 @@ namespace MarginTrading.Backend.Modules
 				AzureRepoFactories.MarginTrading.CreateBlobRepository(_settings.Db.StateConnString)
 			).SingleInstance();
 
-			builder.Register<IServiceMonitoringRepository>(ctx =>
-				AzureRepoFactories.Monitoring.CreateServiceMonitoringRepository(_settings.Db.SharedStorageConnString, _log)
-			).SingleInstance();
-
 			builder.Register<IAppGlobalSettingsRepositry>(ctx =>
 				AzureRepoFactories.Settings.CreateAppGlobalSettingsRepository(_settings.Db.ClientPersonalInfoConnString, _log)
 			).SingleInstance();
