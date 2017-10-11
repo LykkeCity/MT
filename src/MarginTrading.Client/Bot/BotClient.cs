@@ -341,7 +341,7 @@ namespace MarginTrading.Client.Bot
             }
             return operations;
         }
-        public async Task<IEnumerable<OperationResult>> PlacePendingOrders(string accountId, string instrument, int numOrders, double currentBid)
+        public async Task<IEnumerable<OperationResult>> PlacePendingOrders(string accountId, string instrument, int numOrders, decimal currentBid)
         {
             
             List<OperationResult> operations = new List<OperationResult>();
@@ -358,7 +358,7 @@ namespace MarginTrading.Client.Bot
                             FillType = OrderFillType.FillOrKill,
                             Instrument = instrument,
                             Volume = 1,
-                            ExpectedOpenPrice = currentBid * 0.9
+                            ExpectedOpenPrice = currentBid * 0.9m
                         }
                     };
 
