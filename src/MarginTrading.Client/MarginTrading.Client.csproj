@@ -8,9 +8,12 @@
 
   <ItemGroup>
     <PackageReference Include="Lykke.Common" Version="1.1.95" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.0.0" />
     <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
     <PackageReference Include="Lykke.WampSharp" Version="0.27.36" />
     <PackageReference Include="Lykke.WampSharp.Default.Client" Version="0.27.36" />
+    <PackageReference Include="Flurl.Http" Version="1.2.0" />
   </ItemGroup>
 
   <ItemGroup>

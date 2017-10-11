@@ -1,0 +1,15 @@
+{
+  "Actions": [
+    "InitData",    
+    "PlaceOrder BTCUSD 5",
+    "CloseOrder BTCUSD 5"
+  ],
+  "Users": [
+    {
+      "Number": 1,
+      "Email": "nuno@dev.com",
+      "Password": "123456"
+    }
+  ]
+}
+

@@ -1,0 +1,19 @@
+{
+  "Actions": [
+    "InitData",
+    "InitAccounts",
+    "InitGraph",    
+    "PlaceOrder BTCUSD 1",    
+    "Reconnect",
+    "InitData",    
+    "CloseOrder BTCUSD 1"
+  ],
+  "Users": [
+    {
+      "Number": 1,
+      "Email": "nuno@dev.com",
+      "Password": "123456"
+    }
+  ]
+}
+

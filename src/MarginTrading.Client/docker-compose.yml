@@ -1,0 +1,16 @@
+﻿version: '2'
+services:
+  margintradingclient:
+    image: lykkedev/margintradingclient    
+    container_name: margintradingclient   
+    command: -b
+    environment:
+      - SettingsUrl=${SettingsUrl}
+    networks:
+      mynet:
+        aliases:
+          - margintradingclient
+
+networks:
+  mynet:
+    driver: bridge
