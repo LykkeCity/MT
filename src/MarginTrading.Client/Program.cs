@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MarginTrading.Client.Bot;
+using System;
 
 namespace MarginTrading.Client
 {
@@ -6,10 +7,10 @@ namespace MarginTrading.Client
     {
         public static void Main(string[] args)
         {
-            bool TestBot = false;
-            string TestBotSettingsFile = null;
-            bool autorun = false;            
-            for (int i = 0; i< args.Length; i++)
+            var testBot = false;
+            string testBotSettingsFile = null;
+            var autorun = false;            
+            for (var i = 0; i< args.Length; i++)
             {
 
                 if (args[i].ToLower() == "-h" || args[i].ToLower() == "--help")
@@ -25,17 +26,17 @@ namespace MarginTrading.Client
                 }
                 if (args[i].ToLower() == "-b" || args[i].ToLower() == "--bot")
                 {
-                    TestBot = true;
+                    testBot = true;
                     if (args.Length > i + 1 && !args[i + 1].StartsWith('-'))
                     {
-                        try { TestBotSettingsFile = args[++i]; }
-                        catch { TestBotSettingsFile = ""; }
+                        try { testBotSettingsFile = args[++i]; }
+                        catch { testBotSettingsFile = ""; }
                     }
                 }
             }
-            if (TestBot)
+            if (testBot)
             {
-                BotConsole.StartBot(TestBotSettingsFile, autorun);
+                BotConsole.StartBotHost(testBotSettingsFile, autorun);
             }
             else
             {

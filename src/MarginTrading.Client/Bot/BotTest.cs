@@ -2,103 +2,98 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MarginTrading.Client
+namespace MarginTrading.Client.Bot
 {
-    class BotScriptTest
+    class BotTest
     {
         public event EventHandler<LogEventArgs> LogEvent;
         public event EventHandler<EventArgs> TestFinished;
 
-        List<OperationResult> operations;
+        readonly List<OperationResult> _operations;
+        private string[] _processedScript;
 
-        int currentAction;
-        Timer actionTimer;
+        int _currentAction;
+        readonly Timer _actionTimer;
 
-        InitDataLiveDemoClientResponse initData = null;
-        InitChartDataClientResponse initGraph = null;
-        
+        private InitDataLiveDemoClientResponse _initData;
+        private InitChartDataClientResponse _initGraph;
 
-        public BotClient Bot { get; private set; }
-        public string[] Actions { get; private set; }
-        private string[] processedScript;
+        public BotClient Bot { get; }
+        public string[] Actions { get; }
         public bool IsFinished{ get; private set; }
 
-        public List<OperationResult> Operations { get { return operations; } }
+        public List<OperationResult> Operations => _operations;
 
-        public BotScriptTest(BotClient bot, string[] actions)
+        public BotTest(BotClient bot, string[] actions)
         {
             IsFinished = false;
             Bot = bot;
             Actions = actions;
-            actionTimer = new Timer(NextActionTimerCall, null, -1, -1);
-            operations = new List<OperationResult>();
+            _actionTimer = new Timer(NextActionTimerCall, null, -1, -1);
+            _operations = new List<OperationResult>();
         }
 
         public void RunScriptAsync()
         {
-            Thread t = new Thread(new System.Threading.ThreadStart(RunScript));
+            var t = new Thread(RunScript);
             t.Start();
-
         }
         private void RunScript()
         {
-            currentAction = 0;
+            _currentAction = 0;
             if (Actions == null || Actions.Length < 1)
                 throw new ArgumentException("Actions");
 
             // Pre-process script
-            List<string> pscript = new List<string>();
-            for (int i = 0; i < Actions.Length; i++)
+            var pscript = new List<string>();
+            for (var i = 0; i < Actions.Length; i++)
             {
                 if (Actions[i].ToLower().StartsWith("repeat"))
                 {
-                    int repeatCount = 1;
                     //do repeat stuff
-                    if (Actions[i].Split(' ').Length > 1)
-                    {
-                        string rcount = Actions[i].Split(' ')[1];
-                        if (rcount.ToLower() == "all")
-                        {                                                        
-                            List<string> repeated = new List<string>();
-                            for (int j = 0; j < i; j++)
-                            {
-                                repeated.Add(Actions[j]);
-                            }
+                    if (Actions[i].Split(' ').Length <= 1)
+                        continue;
 
-                            int repeatAllCount = 1;
-                            if (Actions[i].Split(' ').Length > 2)
-                                int.TryParse(Actions[i].Split(' ')[2], out repeatAllCount);                                    
-                            
-                            for (int k = 0; k < repeatAllCount; k++)
-                            {
-                                pscript.AddRange(repeated);
-                            }
-                        }
-                        else
+                    var rcount = Actions[i].Split(' ')[1];
+                    if (rcount.ToLower() == "all")
+                    {                                                        
+                        var repeated = new List<string>();
+                        for (var j = 0; j < i; j++)
                         {
-                            int.TryParse(rcount, out repeatCount);
-                            int pos = -repeatCount;
-                            List<string> repeatActions = new List<string>();
-                            while (pos < 0)
-                            {
-                                repeatActions.Add(Actions[i + pos]);
-                                pos++;
-                            }
-                            pscript.AddRange(repeatActions);
+                            repeated.Add(Actions[j]);
+                        }
+
+                        int repeatAllCount = 1;
+                        if (Actions[i].Split(' ').Length > 2)
+                            int.TryParse(Actions[i].Split(' ')[2], out repeatAllCount);                                    
+                            
+                        for (var k = 0; k < repeatAllCount; k++)
+                        {
+                            pscript.AddRange(repeated);
                         }
                     }
-                    
+                    else
+                    {
+                        int.TryParse(rcount, out var repeatCount);
+                        var pos = -repeatCount;
+                        var repeatActions = new List<string>();
+                        while (pos < 0)
+                        {
+                            repeatActions.Add(Actions[i + pos]);
+                            pos++;
+                        }
+                        pscript.AddRange(repeatActions);
+                    }
                 }
                 else
                     pscript.Add(Actions[i]);
             }
-            processedScript = pscript.ToArray();
+            _processedScript = pscript.ToArray();
 
-            Execute(processedScript[currentAction]);
+            Execute(_processedScript[_currentAction]);
         }
 
         private async Task Execute(string action, bool restartTimer = true)
@@ -106,41 +101,46 @@ namespace MarginTrading.Client
             // do action
             LogInfo($"Action: {action}");
 
-            string command = action.Split(' ')[0].ToLower();
+            var command = action.Split(' ')[0].ToLower();
 
             switch (command)
             {
                 case "initdata":
                     var resinitdata = await Bot.InitData();
-                    initData = (InitDataLiveDemoClientResponse)resinitdata.Result;
-                    operations.Add(resinitdata);
+                    _initData = (InitDataLiveDemoClientResponse)resinitdata.Result;
+                    _operations.Add(resinitdata);
                     break;
                 case "initaccounts":
                     var resinitaccounts = await Bot.InitAccounts();                    
-                    operations.Add(resinitaccounts);
+                    _operations.Add(resinitaccounts);
                     break;
                 case "initgraph":
                     var resinitGraph = await Bot.InitGraph();
-                    initGraph = (InitChartDataClientResponse)resinitGraph.Result;
-                    operations.Add(resinitGraph);
+                    _initGraph = (InitChartDataClientResponse)resinitGraph.Result;
+                    _operations.Add(resinitGraph);
+                    foreach (var graphRow in _initGraph.ChartData)
+                    {
+                        LogInfo($"ChartRow: {graphRow.Key}:{graphRow.Value}");
+                    }
+                    
                     break;
                 case "subscribe":
-                    string subscribeInstrument = action.Split(' ')[1].ToUpper();
+                    var subscribeInstrument = action.Split(' ')[1].ToUpper();
                     Bot.SubscribePrice(subscribeInstrument);
                     break;
                 case "unsubscribe":
-                    string unsubscribeInstrument = action.Split(' ')[1].ToUpper();
+                    var unsubscribeInstrument = action.Split(' ')[1].ToUpper();
                     Bot.UnsubscribePrice(unsubscribeInstrument);
                     break;
                 case "placeorder":
                     #region placeorder
-                    if (initData == null)
+                    if (_initData == null)
                     {
                         LogInfo("PlaceOrder Failed. InitData not performed, please call InitData before placing orders");
                     }
                     else
                     {
-                        string placeOrderInstrument = action.Split(' ')[1].ToUpper();
+                        var placeOrderInstrument = action.Split(' ')[1].ToUpper();
                         int placeOrderCount;
                         if (action.Split(' ').Length > 2)
                         {
@@ -151,14 +151,14 @@ namespace MarginTrading.Client
                         else
                             placeOrderCount = 1;
 
-                        var result = await Bot.PlaceOrders(initData.Demo.Accounts[0].Id, placeOrderInstrument, placeOrderCount);
-                        operations.AddRange(result);                        
+                        var result = await Bot.PlaceOrders(_initData.Demo.Accounts[0].Id, placeOrderInstrument, placeOrderCount);
+                        _operations.AddRange(result);                        
                     }
                     #endregion
                     break;
                 case "closeorder":
                     #region closeorder
-                    if (initData == null)
+                    if (_initData == null)
                     {
                         LogInfo("CloseOrder Failed. InitData not performed, please call InitData before closing orders");
                     }
@@ -175,14 +175,14 @@ namespace MarginTrading.Client
                         else
                             closeOrderCount = 1;
 
-                        var result = await Bot.CloseOrders(initData.Demo.Accounts[0].Id, closeOrderInstrument, closeOrderCount);
-                        operations.AddRange(result);
+                        var result = await Bot.CloseOrders(_initData.Demo.Accounts[0].Id, closeOrderInstrument, closeOrderCount);
+                        _operations.AddRange(result);
                     }
                     #endregion
                     break;
                 case "cancelorder":
                     #region cancelorder
-                    if (initData == null)
+                    if (_initData == null)
                     {
                         LogInfo("CancelOrder Failed. InitData not performed, please call InitData before canceling orders");
                     }
@@ -199,33 +199,33 @@ namespace MarginTrading.Client
                         else
                             cancelOrderCount = 1;
 
-                        var result = await Bot.CancelOrders(initData.Demo.Accounts[0].Id, cancelOrderInstrument, cancelOrderCount);
-                        operations.AddRange(result);
+                        var result = await Bot.CancelOrders(_initData.Demo.Accounts[0].Id, cancelOrderInstrument, cancelOrderCount);
+                        _operations.AddRange(result);
                     }
                     #endregion
                     break;
                 case "gethistory":
                     var resgethistory = await Bot.GetHistory();
-                    operations.Add(resgethistory);
+                    _operations.Add(resgethistory);
                     break;
                 case "getaccounthistory":
                     var resgetaccounthistory = await Bot.GetAccountHistory();
-                    operations.Add(resgetaccounthistory);
+                    _operations.Add(resgetaccounthistory);
                     break;
                 case "getaccountopenpositions":
-                    if (initData == null)
+                    if (_initData == null)
                     {
                         LogInfo("GetAccountOpenPositions Failed. InitData not performed, please call InitData before placing orders");
                     }
                     else
                     {
-                        var result = await Bot.GetAccountOpenPositions(initData.Demo.Accounts[0].Id);
-                        operations.Add(result);
+                        var result = await Bot.GetAccountOpenPositions(_initData.Demo.Accounts[0].Id);
+                        _operations.Add(result);
                     }
                     break;
                 case "getclientorders":
-                    var GetClientOrdersResult = await Bot.GetClientOrders();
-                    operations.Add(GetClientOrdersResult);
+                    var getClientOrdersResult = await Bot.GetClientOrders();
+                    _operations.Add(getClientOrdersResult);
                     break;              
                 case "reconnect":
                     Bot.Reconnect();
@@ -233,7 +233,7 @@ namespace MarginTrading.Client
                     break;
                 case "placependingorder":
                     #region placependingorder
-                    if (initData == null)
+                    if (_initData == null)
                     {
                         LogInfo("PlaceOrder Failed. InitData not performed, please call InitData before placing orders");
                     }
@@ -249,26 +249,24 @@ namespace MarginTrading.Client
                         }
                         else
                             placeOrderCount = 1;
-                        var currentBid = initData.Prices[placeOrderInstrument].Bid;
-                        var result = await Bot.PlacePendingOrders(initData.Demo.Accounts[0].Id, placeOrderInstrument, placeOrderCount, currentBid);
-                        operations.AddRange(result);
+                        var currentBid = _initData.Prices[placeOrderInstrument].Bid;
+                        var result = await Bot.PlacePendingOrders(_initData.Demo.Accounts[0].Id, placeOrderInstrument, placeOrderCount, currentBid);
+                        _operations.AddRange(result);
                     }
                     #endregion
-                    break;
-                default:
                     break;
             }
 
 
             // Wait for next action
             if (restartTimer)
-                actionTimer.Change(Bot.ActionScriptInterval, 0);
+                _actionTimer.Change(Bot.ActionScriptInterval, 0);
         }
         private void NextActionTimerCall(object status)
         {
-            actionTimer.Change(-1, -1);
-            currentAction++;
-            if (currentAction >= processedScript.Length)
+            _actionTimer.Change(-1, -1);
+            _currentAction++;
+            if (_currentAction >= _processedScript.Length)
             {
                 IsFinished = true;
                 PrintTestOperations();
@@ -276,20 +274,20 @@ namespace MarginTrading.Client
                 OnTestFinished(new EventArgs());            }
             else
             {
-                Execute(processedScript[currentAction]);                
+                Execute(_processedScript[_currentAction]);                
             }
         }
 
         private void PrintTestOperations()
         {
-            var distinct = operations.GroupBy(x => x.Operation);
+            var distinct = _operations.GroupBy(x => x.Operation);
             Console.WriteLine(distinct);
             LogInfo($" == Test Finished for Bot {Bot.Id} ==");
             foreach (var group in distinct)
             {
                 LogInfo($"{group.Key}=>Count:{group.Count()} Average Time:{group.Average(x => x.Duration.TotalSeconds)}");
             }
-            LogInfo($" ==  ==");
+            LogInfo(" ==  ==");
         }
 
         private void LogInfo(string message)

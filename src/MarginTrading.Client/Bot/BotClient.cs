@@ -1,55 +1,66 @@
 ﻿using Common;
-using Flurl;
 using Flurl.Http;
+using MarginTrading.Client.JsonResults;
+using MarginTrading.Client.Settings;
 using MarginTrading.Common.ClientContracts;
 using MarginTrading.Common.Wamp;
 using MarginTrading.Core;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using WampSharp.V2;
+using WampSharp.V2.Client;
 
-namespace MarginTrading.Client
+namespace MarginTrading.Client.Bot
 {
-    class BotClient : MtClient, IDisposable
+    class BotClient : IDisposable
     {
         public event EventHandler<LogEventArgs> LogEvent;
 
-        TestBotUserSettings _settings;
-        Timer _transactionTimer = null;
-        Timer _connectTimer = null;
-        bool _isDisposing = false;
-        string _authorizationAddress;
-        IDisposable notificationSubscription;
-        Random random;
+        #region vars
+        private readonly TestBotUserSettings _settings;
 
+        private Timer _transactionTimer;
+        private Timer _connectTimer;
+        private bool _isDisposing;
+        private string _authorizationAddress;
+        private IDisposable _notificationSubscription;
+        private readonly Random _random;
+        private string _serverAddress;
+        private IWampChannel _channel;
+        private IWampRealmProxy _realmProxy;
+        private string _token;
+        private IRpcMtFrontend _service;
+        private string _notificationId;
 
-        Dictionary<string, IDisposable> PriceSubscription;
-        Dictionary<string, int> SubscriptionHistory;
+        private readonly Dictionary<string, IDisposable> _priceSubscription;
+        private readonly Dictionary<string, int> _subscriptionHistory;
 
-        public int Id { get { return _settings.Number; } }
-        public string Email { get { return _settings.Email; } }
-        public string Password { get { return _settings.Password; } }
+        #endregion
+
+        #region Properties
+        public int Id => _settings.Number;
+        public string Email => _settings.Email;
+        public string Password => _settings.Password;
 
         public int ActionScriptInterval { get; private set; }
         public int TransactionFrequencyMin { get; private set; }
         public int TransactionFrequencyMax { get; private set; }
         public bool Initialized { get; private set; }
+        #endregion 
 
         public BotClient(TestBotUserSettings settings)
         {
             _settings = settings;
             Initialized = false;
-            PriceSubscription = new Dictionary<string, IDisposable>();
-            SubscriptionHistory = new Dictionary<string, int>();
-            random = new Random();
+            _priceSubscription = new Dictionary<string, IDisposable>();
+            _subscriptionHistory = new Dictionary<string, int>();
+            _random = new Random();
         }
 
+        #region Methods
         private void Connect()
         {
             var factory = new DefaultWampChannelFactory();
@@ -78,12 +89,12 @@ namespace MarginTrading.Client
             _service = _realmProxy.Services.GetCalleeProxy<IRpcMtFrontend>();
 
             // Subscribe Notifications
-            notificationSubscription = _realmProxy.Services.GetSubject<NotifyResponse>($"user.updates.{_notificationId}").Subscribe(NotificationReceived);
+            _notificationSubscription = _realmProxy.Services.GetSubject<NotifyResponse>($"user.updates.{_notificationId}").Subscribe(NotificationReceived);
         }
         private void Disconnect()
         {
             LogInfo($"Disconnecting from server {_serverAddress}");
-            Close();
+            _channel.Close();
         }
         public async Task Initialize(string serverAddress, string authorizationAddress, int actionScriptInterval, int transactionFrequencyMin, int transactionFrequencyMax)
         {
@@ -113,11 +124,11 @@ namespace MarginTrading.Client
         public void Reconnect()
         {
             Disconnect();
-            System.Threading.Thread.Sleep(2000);
+            Thread.Sleep(2000);
             Connect();
         }
 
-        public new void IsAlive()
+        public void IsAlive()
         {
             try
             {
@@ -129,7 +140,7 @@ namespace MarginTrading.Client
                 LogError(ex);
             }
         }
-        public new async Task<OperationResult> InitData()
+        public async Task<OperationResult> InitData()
         {
             try
             {
@@ -138,10 +149,10 @@ namespace MarginTrading.Client
                     Operation = "InitData",
                     StartDate = DateTime.UtcNow
                 };                
-                var _initData = await _service.InitData(_token);
+                var initData = await _service.InitData(_token);
                 res.EndDate = DateTime.UtcNow;
-                res.Result = _initData;
-                LogInfo($";{res.Duration};InitData: Assets={_initData.Assets.Length} Prices={_initData.Prices.Count}");
+                res.Result = initData;
+                LogInfo($";{res.Duration};InitData: Assets={initData.Assets.Length} Prices={initData.Prices.Count}");
                 
                 return res;
             }
@@ -151,7 +162,7 @@ namespace MarginTrading.Client
                 return null;
             }
         }
-        public new async Task<OperationResult> InitAccounts()
+        public async Task<OperationResult> InitAccounts()
         {
             try
             {
@@ -160,10 +171,10 @@ namespace MarginTrading.Client
                     Operation = "InitAccounts",
                     StartDate = DateTime.UtcNow
                 };
-                var _initAccounts = await _service.InitAccounts(_token);
+                var initAccounts = await _service.InitAccounts(_token);
                 res.EndDate = DateTime.UtcNow;
-                res.Result = _initAccounts;
-                LogInfo($";{res.Duration};InitAccounts: Demo={_initAccounts.Demo.Length} Live={_initAccounts.Live.Length}");
+                res.Result = initAccounts;
+                LogInfo($";{res.Duration};InitAccounts: Demo={initAccounts.Demo.Length} Live={initAccounts.Live.Length}");
                 return res;
             }
             catch (Exception ex)
@@ -173,7 +184,7 @@ namespace MarginTrading.Client
             }
         }
                 
-        public new async Task<OperationResult> InitGraph()
+        public async Task<OperationResult> InitGraph()
         {
             try
             {
@@ -182,10 +193,10 @@ namespace MarginTrading.Client
                     Operation = "InitGraph",
                     StartDate = DateTime.UtcNow
                 };
-                InitChartDataClientResponse _chartData = await _service.InitGraph();
+                var chartData = await _service.InitGraph();
                 res.EndDate = DateTime.UtcNow;
-                res.Result = _chartData;
-                LogInfo($";{res.Duration};InitGraph: ChartData={_chartData.ChartData.Count}");
+                res.Result = chartData;
+                LogInfo($";{res.Duration};InitGraph: ChartData={chartData.ChartData.Count}");
                 return res;
             }
             catch (Exception ex)
@@ -195,7 +206,7 @@ namespace MarginTrading.Client
             }
 
         }
-        public new async Task<OperationResult> GetAccountHistory()
+        public async Task<OperationResult> GetAccountHistory()
         {
             try
             {
@@ -222,7 +233,7 @@ namespace MarginTrading.Client
             }
         }
 
-        public new async Task<OperationResult> GetHistory()
+        public async Task<OperationResult> GetHistory()
         {
             OperationResult res = new OperationResult
             {
@@ -272,7 +283,7 @@ namespace MarginTrading.Client
             LogInfo($";{res.Duration};GetAccountOpenPositions: OpenPositions={result.Length}");
             return res;
         }
-        public new async Task<OperationResult> GetClientOrders()
+        public async Task<OperationResult> GetClientOrders()
         {
             OperationResult res = new OperationResult
             {
@@ -317,10 +328,9 @@ namespace MarginTrading.Client
                     res.Result = order.Result;
                     operations.Add(res);
 
-                    if (order.Result.Status == 3)
-                        LogInfo($";{res.Duration};Order rejected: {order.Result.RejectReason} -> {order.Result.RejectReasonText}");
-                    else
-                        LogInfo($";{res.Duration};Order placed: {order.Result.Id} -> Status={order.Result.Status}");
+                    LogInfo(order.Result.Status == 3
+                        ? $";{res.Duration};Order rejected: {order.Result.RejectReason} -> {order.Result.RejectReasonText}"
+                        : $";{res.Duration};Order placed: {order.Result.Id} -> Status={order.Result.Status}");
                 }
                 catch (Exception ex)
                 {
@@ -363,10 +373,9 @@ namespace MarginTrading.Client
                     res.Result = order.Result;
                     operations.Add(res);
 
-                    if (order.Result.Status == 3)
-                        LogInfo($";{res.Duration};Order rejected: {order.Result.RejectReason} -> {order.Result.RejectReasonText}");
-                    else
-                        LogInfo($";{res.Duration};Order placed: {order.Result.Id} -> Status={order.Result.Status}");
+                    LogInfo(order.Result.Status == 3
+                        ? $";{res.Duration};Order rejected: {order.Result.RejectReason} -> {order.Result.RejectReasonText}"
+                        : $";{res.Duration};Order placed: {order.Result.Id} -> Status={order.Result.Status}");
                 }
                 catch (Exception ex)
                 {
@@ -408,11 +417,10 @@ namespace MarginTrading.Client
                     res.EndDate = DateTime.UtcNow;
                     res.Result = orderClosed;
                     operations.Add(res);
-                    
-                    if (orderClosed.Result)
-                        LogInfo($";{res.Duration};Order Closed Id={order.Id}");
-                    else
-                        LogInfo($";{res.Duration};Order Close Failed Id={order.Id} Message:{orderClosed.Message}");
+
+                    LogInfo(orderClosed.Result
+                        ? $";{res.Duration};Order Closed Id={order.Id}"
+                        : $";{res.Duration};Order Close Failed Id={order.Id} Message:{orderClosed.Message}");
                 }
                 catch (Exception ex)
                 {
@@ -424,7 +432,7 @@ namespace MarginTrading.Client
             }
 
             if (processed < numOrders)
-                LogWarning($"Not enough orders to close requested amount (numOrders)");
+                LogWarning($"Not enough orders to close requested amount {numOrders}");
 
             return operations;
         }
@@ -460,10 +468,9 @@ namespace MarginTrading.Client
                     res.Result = ordercanceled;
                     operations.Add(res);
 
-                    if (ordercanceled.Result)
-                        LogInfo($";{res.Duration};Order Canceled Id={order.Id}");
-                    else
-                        LogInfo($";{res.Duration};Order Cancel Failed Id={order.Id} Message:{ordercanceled.Message}");                    
+                    LogInfo(ordercanceled.Result
+                        ? $";{res.Duration};Order Canceled Id={order.Id}"
+                        : $";{res.Duration};Order Cancel Failed Id={order.Id} Message:{ordercanceled.Message}");
                 }
                 catch (Exception ex)
                 {
@@ -475,7 +482,7 @@ namespace MarginTrading.Client
             }
 
             if (processed < numOrders)
-                LogWarning($"Not enough orders to close requested amount (numOrders)");
+                LogWarning($"Not enough orders to close requested amount {numOrders}");
 
             return operations;
         }
@@ -486,50 +493,22 @@ namespace MarginTrading.Client
             IDisposable subscription = _realmProxy.Services.GetSubject<InstrumentBidAskPair>(topicName)
                 .Subscribe(PriceReceived);
 
-            PriceSubscription.Add(instrument, subscription);
+            _priceSubscription.Add(instrument, subscription);
             LogInfo($"SubscribePrice: Instrument={instrument}");
 
             //subscription.Dispose();
         }
         public void UnsubscribePrice(string instrument)
         {
-            IDisposable subscription = PriceSubscription[instrument];
-            if (subscription != null)
-                subscription.Dispose();
+            IDisposable subscription = _priceSubscription[instrument];
+            subscription?.Dispose();
 
-            if (SubscriptionHistory.ContainsKey(instrument))
+            if (_subscriptionHistory.ContainsKey(instrument))
             {
-                int received = SubscriptionHistory[instrument];
+                int received = _subscriptionHistory[instrument];
                 LogInfo($"UnsubscribePrice: Instrument={instrument}. Entries received:{received}");
-                SubscriptionHistory.Remove(instrument);
+                _subscriptionHistory.Remove(instrument);
             }
-        }
-
-        private void PriceReceived(InstrumentBidAskPair price)
-        {
-            if (!SubscriptionHistory.ContainsKey(price.Instrument))
-                SubscriptionHistory.Add(price.Instrument, 0);
-
-            int received = SubscriptionHistory[price.Instrument];
-            SubscriptionHistory[price.Instrument] = received + 1;
-
-            //LogInfo($"Price received:{price.Instrument} Ask/Bid:{price.Ask}/{price.Bid}");
-        }
-
-        private void NotificationReceived(NotifyResponse info)
-        {
-            if (info.Account != null)
-                LogInfo($"Notification received: Account changed={info.Account.Id} Balance:{info.Account.Balance}");
-
-            if (info.Order != null)
-                LogInfo($"Notification received: Order changed={info.Order.Id} Open:{info.Order.OpenDate} Close:{info.Order.CloseDate} Fpl:{info.Order.Fpl}");
-
-            if (info.AccountStopout != null)
-                LogInfo($"Notification received: Account stopout={info.AccountStopout.AccountId}");            
-
-            if (info.UserUpdate != null)
-                LogInfo($"Notification received: User update={info.UserUpdate.UpdateAccountAssetPairs}, accounts = {info.UserUpdate.UpdateAccounts}");
-            
         }
 
         private async Task<(string token, string notificationsId)> AquireTokenData()
@@ -549,9 +528,61 @@ namespace MarginTrading.Client
 
         private int GetRandomTransactionInterval()
         {
-            return random.Next(TransactionFrequencyMin, TransactionFrequencyMax);
+            return _random.Next(TransactionFrequencyMin, TransactionFrequencyMax);
+        }
+                
+        public void Dispose()
+        {
+            if (_isDisposing)
+                return;
+            _isDisposing = true;
+
+            _notificationSubscription?.Dispose();
+            _channel?.Close();
+
+            if (_transactionTimer != null)
+            {
+                _transactionTimer.Dispose();
+                _transactionTimer = null;
+            }
+
+            if (_connectTimer != null)
+            {
+                _connectTimer.Dispose();
+                _connectTimer = null;
+            }
         }
 
+
+        #region CallBacks
+        private void PriceReceived(InstrumentBidAskPair price)
+        {
+            if (!_subscriptionHistory.ContainsKey(price.Instrument))
+                _subscriptionHistory.Add(price.Instrument, 0);
+
+            int received = _subscriptionHistory[price.Instrument];
+            _subscriptionHistory[price.Instrument] = received + 1;
+
+            //LogInfo($"Price received:{price.Instrument} Ask/Bid:{price.Ask}/{price.Bid}");
+        }
+        private void NotificationReceived(NotifyResponse info)
+        {
+            if (info.Account != null)
+                LogInfo($"Notification received: Account changed={info.Account.Id} Balance:{info.Account.Balance}");
+
+            if (info.Order != null)
+                LogInfo($"Notification received: Order changed={info.Order.Id} Open:{info.Order.OpenDate} Close:{info.Order.CloseDate} Fpl:{info.Order.Fpl}");
+
+            if (info.AccountStopout != null)
+                LogInfo($"Notification received: Account stopout={info.AccountStopout.AccountId}");
+
+            if (info.UserUpdate != null)
+                LogInfo($"Notification received: User update={info.UserUpdate.UpdateAccountAssetPairs}, accounts = {info.UserUpdate.UpdateAccounts}");
+
+        }
+        #endregion
+
+        #region Logging
         private void LogInfo(string message)
         {
             OnLog(new LogEventArgs(DateTime.UtcNow, $"Bot:[{_settings.Number}]", "info", $"Thread[{ Thread.CurrentThread.ManagedThreadId.ToString() }] {message}", null));
@@ -568,68 +599,9 @@ namespace MarginTrading.Client
         {
             LogEvent?.Invoke(this, e);
         }
+        #endregion
 
-        public void Dispose()
-        {
-            if (_isDisposing)
-                return;
-            _isDisposing = true;
-
-            if (notificationSubscription != null)
-                notificationSubscription.Dispose();
-
-            if (_channel != null)
-                Close();
-            if (_transactionTimer != null)
-            {
-                _transactionTimer.Dispose();
-                _transactionTimer = null;
-            }
-
-            if (_connectTimer != null)
-            {
-                _connectTimer.Dispose();
-                _connectTimer = null;
-            }
-        }
+        #endregion
     }
-
-    class ApiAuthResult
-    {
-        [JsonProperty("Result")]
-        public AuthResult Result { get; set; }
-        [JsonProperty("Error")]
-        public AuthError Error { get; set; }
-    }
-    class AuthResult
-    {
-
-        [JsonProperty("KycStatus")]
-        public string KycStatus { get; set; }
-        [JsonProperty("PinIsEntered ")]
-        public bool PinIsEntered { get; set; }
-        [JsonProperty("Token")]
-        public string Token { get; set; }
-        [JsonProperty("NotificationsId")]
-        public string NotificationsId { get; set; }
-    }
-    class AuthError
-    {
-        [JsonProperty("Code")]
-        public int Code { get; set; }
-        [JsonProperty("Field ")]
-        public object Field { get; set; }
-        [JsonProperty("Message")]
-        public string Message { get; set; }
-    }
-
-    public class OperationResult
-    {
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
-        public string Operation { get; set; }
-        public object Result { get; set; }
-
-        public TimeSpan Duration { get { return EndDate - StartDate; } }
-    }
+   
 }

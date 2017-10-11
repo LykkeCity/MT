@@ -1,40 +1,46 @@
-﻿using System;
+﻿using MarginTrading.Client.Settings;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
-
-namespace MarginTrading.Client
+namespace MarginTrading.Client.Bot
 {
-
-
     class BotHost
     {
         public event EventHandler<LogEventArgs> LogEvent;
         public event EventHandler TestFinished;
-                
+        
+        #region vars
         private MtTradingBotSettings _settings;
         private MtTradingBotTestSettings _testSettings;
 
-        public List<BotClient> Bots { get; private set; }        
-                
+        private List<BotTest> _runningTests;
+        private List<BotTest> _finishedTests;
+        #endregion
+
+        #region Properties
+        public List<BotClient> Bots { get; private set; }
+        #endregion
+
+        #region Methods
         public void Start(MtTradingBotSettings settings, MtTradingBotTestSettings testSettings)
         {
             _settings = settings;
             _testSettings = testSettings;
 
-            try { CreateEnvironment(); }
+            // Create Bots
+            try { CreateBots(); }
             catch (Exception ex01)
             {
                 LogError("CreateEnvironment", ex01);
                 throw;
             }
 
+            // Initialize Bots
             Task.Run(async () => await StartBots())
                 .Wait();
-            
-
         }
         public void Stop()
         {
@@ -46,11 +52,8 @@ namespace MarginTrading.Client
                 }                
             }
         }
-
-
-       
-
-        private void CreateEnvironment()
+        
+        private void CreateBots()
         {
             
             Bots = new List<BotClient>();
@@ -62,9 +65,9 @@ namespace MarginTrading.Client
 
                 // Load Users Json Array
                 var userSettings = _testSettings.Users.OrderBy(x => x.Number).ToArray();
-                for (int i = 0; i < _settings.NumberOfUsers; i++)
+                for (var i = 0; i < _settings.NumberOfUsers; i++)
                 {
-                    BotClient bot = new BotClient(userSettings[i]);
+                    var bot = new BotClient(userSettings[i]);
                     bot.LogEvent += Bot_LogEvent;
                     Bots.Add(bot);
                 }
@@ -72,7 +75,7 @@ namespace MarginTrading.Client
             else
             {
                 // Load Users from CSV File
-                FileInfo file = new FileInfo(_settings.UsersFile);
+                var file = new FileInfo(_settings.UsersFile);
                 if (!file.Exists)
                     throw new FileNotFoundException(file.FullName);
 
@@ -80,19 +83,19 @@ namespace MarginTrading.Client
                 using (var sr = new StreamReader(fs))
                 {
                     //Read Header
-                    string header = sr.ReadLine();
-                    int ctr = 0;
+                    sr.ReadLine();
+                    var ctr = 0;
                     do
                     {
                         if (ctr >= _settings.NumberOfUsers)
                             break;
                         // read csv line
-                        string line = sr.ReadLine();
-                        string[] values = line.Split(';');
-                        string email = values[0];
-                        string pass = values[1];
+                        var line = sr.ReadLine();
+                        var values = line.Split(';');
+                        var email = values[0];
+                        var pass = values[1];
 
-                        BotClient bot = new BotClient(new TestBotUserSettings() { Number = ++ctr, Email = email, Password = pass });
+                        var bot = new BotClient(new TestBotUserSettings() { Number = ++ctr, Email = email, Password = pass });
                         bot.LogEvent += Bot_LogEvent;
                         Bots.Add(bot);
 
@@ -100,20 +103,18 @@ namespace MarginTrading.Client
                 }
             }
         }
-
         private async Task StartBots()
         {
             foreach (var bot in Bots)
             {
-
-                int tryCount = 0;
+                var tryCount = 0;
                 while (true)
                 {
-                    if (tryCount > 3)
+                    if (tryCount >= 3)
                         break;
                     tryCount++;
 
-                    bool create = false;
+                    var createUser = false;
                     try
                     {
                         await bot.Initialize(_settings.MTServerAddress, _settings.MTAuthorizationAddress, _settings.ActionScriptInterval, _settings.TransactionFrequencyMin, _settings.TransactionFrequencyMax);
@@ -122,11 +123,9 @@ namespace MarginTrading.Client
                     catch (Exception ex)
                     {
                         if (ex.Message == "Invalid username or password")
-                        {
-                            create = true;
-                        }
+                            createUser = true;
                     }
-                    if (create)
+                    if (createUser)
                     {
                         LogInfo("StartBots", $"Creating user: {bot.Email}");
                         try
@@ -146,20 +145,18 @@ namespace MarginTrading.Client
             }
         }
 
-        List<BotScriptTest> RunningTests;
-        List<BotScriptTest> FinishedTests;
-        public void RunActions()
+        public void RunScript()
         {
-            RunningTests = new List<BotScriptTest>();
-            FinishedTests = new List<BotScriptTest>();
+            _runningTests = new List<BotTest>();
+            _finishedTests = new List<BotTest>();
             foreach (var bot in Bots)
             {
                 if (bot.Initialized)
                 {
-                    BotScriptTest test = new BotScriptTest(bot, _testSettings.Actions);
+                    var test = new BotTest(bot, _testSettings.Actions);
                     test.LogEvent += Test_LogEvent;
                     test.TestFinished += Test_TestFinished;
-                    RunningTests.Add(test);
+                    _runningTests.Add(test);
                     LogInfo($"Bot:[{bot.Id}]", $"Starting test for Bot: {bot.Email}");
                     test.RunScriptAsync();
                 }
@@ -169,46 +166,32 @@ namespace MarginTrading.Client
                 }
             }
         }
-                
-        private void Test_LogEvent(object sender, LogEventArgs e)
+
+        private void PrintSummary()
         {
-            OnLog(sender, e);
-        }
-        private void Test_TestFinished(object sender, EventArgs e)
-        {
-            BotScriptTest sdr = sender as BotScriptTest;
-            LogInfo($"Bot:[{sdr.Bot.Id}]", $"Test Finished! Bot: {sdr.Bot.Email}");
-            RunningTests.Remove(sdr);
-            FinishedTests.Add(sdr);
-            if (RunningTests.Count == 0)
+            LogInfo("BotHost", ";BOT;OPERATION;COUNT;AVERAGE");
+
+            var totalOperations = new List<OperationResult>();
+            foreach (var item in _finishedTests)
             {
-                string[] methods = FinishedTests.First().Operations.Select(x => x.Operation).ToArray();
-                LogInfo("BotHost", ";BOT;OPERATION;COUNT;AVERAGE");
-
-                List<OperationResult> TotalOperations = new List<OperationResult>();
-                foreach (var item in FinishedTests)
+                totalOperations.AddRange(item.Operations);
+                var grouped = item.Operations.GroupBy(x => x.Operation);
+                foreach (var group in grouped)
                 {
-                    TotalOperations.AddRange(item.Operations);
-                    var grouped = item.Operations.GroupBy(x => x.Operation);                    
-                    foreach (var group in grouped)
-                    {
-                        string Line = $";{item.Bot.Id};{group.Key};{group.Count()};{group.Average(x => x.Duration.TotalSeconds)}";
-                        LogInfo("BotHost", Line);
-                    }                    
+                    var line = $";{item.Bot.Id};{group.Key};{group.Count()};{group.Average(x => x.Duration.TotalSeconds)}";
+                    LogInfo("BotHost", line);
                 }
-
-                LogInfo("BotHost", " === Total Averages === ");
-                LogInfo("BotHost", "OPERATION;COUNT;AVERAGE");
-                var totalgrouped = TotalOperations.GroupBy(x => x.Operation);
-                foreach (var group in totalgrouped)
-                {
-                    string Line = $";{group.Key};{group.Count()};{group.Average(x => x.Duration.TotalSeconds)}";
-                    LogInfo("BotHost", Line);
-                }
-                LogInfo("BotHost", " === Total Averages === ");
-
-                OnTestFinished(this, new EventArgs());
             }
+
+            LogInfo("BotHost", " === Total Averages === ");
+            LogInfo("BotHost", "OPERATION;COUNT;AVERAGE");
+            var totalgrouped = totalOperations.GroupBy(x => x.Operation);
+            foreach (var group in totalgrouped)
+            {
+                var line = $";{group.Key};{group.Count()};{group.Average(x => x.Duration.TotalSeconds)}";
+                LogInfo("BotHost", line);
+            }
+            LogInfo("BotHost", " === Total Averages === ");
         }
 
         private void LogInfo(string origin, string message)
@@ -223,6 +206,9 @@ namespace MarginTrading.Client
         {
             OnLog(this, new LogEventArgs(DateTime.UtcNow, origin, "error", error.Message, error));
         }
+        #endregion
+
+        #region Event Raising
         private void OnTestFinished(object sender, EventArgs e)
         {
             TestFinished?.Invoke(sender, e);
@@ -231,63 +217,36 @@ namespace MarginTrading.Client
         {
             LogEvent?.Invoke(sender, e);
         }
+        #endregion
 
+        #region Event Handlers
+        private void Test_LogEvent(object sender, LogEventArgs e)
+        {
+            OnLog(sender, e);
+        }
         private void Bot_LogEvent(object sender, LogEventArgs e)
         {
-            OnLog(sender,e);
+            OnLog(sender, e);
         }
-
-        
-    }
-    class TradingBotSettings
-    {        
-            public MtTradingBotSettings MtTradingBot { get; set; }
-    }
-    class MtTradingBotSettings
-    {
-        public string MTServerAddress { get; set; }
-        public string MTAuthorizationAddress { get; set; }
-        public int NumberOfUsers { get; set; }
-        public int ActionScriptInterval { get; set; }
-        public int TransactionFrequencyMin { get; set; }
-        public int TransactionFrequencyMax { get; set; }
-        public string UsersFile { get; set; } = null;
-        public string TestFile { get; set; } = null;
-    }
-    class MtTradingBotTestSettings
-    {        
-        public TestBotUserSettings[] Users { get; set; }
-        public string[] Actions { get; set; }
-    }
-    class TestBotUserSettings
-    {
-        public int Number { get; set; }
-        public string Email { get; set; }
-        public string Password { get; set; }        
-    }
-    
-    
-    public class LogEventArgs : EventArgs
-    {
-        DateTime date;
-        string origin;
-        string type;
-        string message;
-        Exception exception;
-
-        public LogEventArgs(DateTime date, string origin, string type, string message, Exception exception)
+        private void Test_TestFinished(object sender, EventArgs e)
         {
-            this.date = date;
-            this.origin = origin;
-            this.type = type;
-            this.message = message;
-            this.exception = exception;
+            var sdr = sender as BotTest;
+            LogInfo($"Bot:[{sdr?.Bot.Id}]", $"Test Finished! Bot: {sdr?.Bot.Email}");
+            _runningTests.Remove(sdr);
+            _finishedTests.Add(sdr);
+            if (_runningTests.Count == 0)
+            {
+                PrintSummary();
+                OnTestFinished(this, new EventArgs());
+            }
         }
+        #endregion
 
-        public DateTime Date { get => date; }
-        public string Origin { get => origin; }
-        public string Type { get => type; }
-        public string Message { get => message; }
-        public Exception Exception { get => exception; }
     }
+    
+        
+  
+    
+    
+    
 }
