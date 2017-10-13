@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using AzureStorage;
 using Common;
 using MarginTrading.Core;
+using MarginTrading.Core.MatchingEngines;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace MarginTrading.AzureRepositories

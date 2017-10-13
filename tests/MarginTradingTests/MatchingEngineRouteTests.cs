@@ -2,7 +2,9 @@
 using NUnit.Framework;
 using System;
 using Autofac;
+using MarginTrading.Core.MatchingEngines;
 using MarginTrading.Services;
+using MarginTrading.Services.MatchingEngines;
 
 namespace MarginTradingTests
 {

@@ -2,10 +2,12 @@
 using MarginTrading.Core;
 using MarginTrading.Core.Assets;
 using MarginTrading.Core.MarketMakerFeed;
+using MarginTrading.Core.MatchingEngines;
 using MarginTrading.Core.Telemetry;
 using MarginTrading.Services.Events;
 using MarginTrading.Services.Infrastructure;
 using MarginTrading.Services.Infrastructure.Telemetry;
+using MarginTrading.Services.MatchingEngines;
 
 namespace MarginTrading.Services.Modules
 {
@@ -59,8 +61,8 @@ namespace MarginTrading.Services.Modules
 				.As<IClientAccountService>()
 				.SingleInstance();
 
-			builder.RegisterType<MatchingEngine>()
-				.As<IMatchingEngine>()
+			builder.RegisterType<InternalMatchingEngine>()
+				.As<IInternalMatchingEngine>()
 				.SingleInstance();
 
 			builder.RegisterType<TradingEngine>()

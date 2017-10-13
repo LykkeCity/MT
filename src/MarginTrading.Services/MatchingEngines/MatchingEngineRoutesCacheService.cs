@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using MarginTrading.Core;
+using MarginTrading.Core.MatchingEngines;
 
-namespace MarginTrading.Services
+namespace MarginTrading.Services.MatchingEngines
 {
     public class MatchingEngineRoutesCacheService : IMatchingEngineRoutesCacheService
     {

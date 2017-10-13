@@ -8,7 +8,9 @@ using MarginTrading.AzureRepositories;
 using MarginTrading.AzureRepositories.Reports;
 using MarginTrading.Core;
 using MarginTrading.Core.Clients;
+using MarginTrading.Core.MatchingEngines;
 using MarginTrading.Services;
+using MarginTrading.Services.MatchingEngines;
 using Moq;
 
 namespace MarginTradingTests.Modules

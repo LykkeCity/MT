@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <AssemblyName>MarginTrading.Services</AssemblyName>
@@ -9,13 +8,11 @@
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
     <Version>1.0.1</Version>
   </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\MarginTrading.Core\MarginTrading.Core.csproj" />
     <ProjectReference Include="..\MarginTrading.Common\MarginTrading.Common.csproj" />
     <ProjectReference Include="..\MarginTrading.AzureRepositories\MarginTrading.AzureRepositories.csproj" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="4.2.0" />
     <PackageReference Include="Lykke.AzureQueueIntegration" Version="1.0.7" />
@@ -24,12 +21,11 @@
     <PackageReference Include="Lykke.SlackNotifications" Version="1.0.11" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.1.1" />
     <PackageReference Include="Lykke.WampSharp.NewtonsoftJson" Version="0.27.36" />
-	<PackageReference Include="Lykke.WampSharp.AspNetCore.WebSockets.Server" Version="0.27.36" />
+    <PackageReference Include="Lykke.WampSharp.AspNetCore.WebSockets.Server" Version="0.27.36" />
     <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.8" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
     <PackageReference Include="Lykke.RabbitMqBroker" Version="1.0.80" />
     <PackageReference Include="Lykke.Common" Version="1.1.95" />
   </ItemGroup>
-
 </Project>

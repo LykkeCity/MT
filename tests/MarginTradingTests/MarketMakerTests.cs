@@ -4,6 +4,7 @@ using System.Text;
 using Autofac;
 using MarginTrading.Core;
 using MarginTrading.Core.MarketMakerFeed;
+using MarginTrading.Core.MatchingEngines;
 using MarginTrading.Services.Events;
 using NUnit.Framework;
 
@@ -13,14 +14,14 @@ namespace MarginTradingTests
     public class MarketMakerTests : BaseTests
     {
         private IEventConsumer<BestPriceChangeEventArgs> _quoteCashService;
-        private IMatchingEngine _matchingEngine;
+        private IInternalMatchingEngine _matchingEngine;
 
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
             RegisterDependencies();
             _quoteCashService = Container.Resolve<IQuoteCacheService>() as IEventConsumer<BestPriceChangeEventArgs>;
-            _matchingEngine = Container.Resolve<IMatchingEngine>();
+            _matchingEngine = Container.Resolve<IInternalMatchingEngine>();
         }
 
         [SetUp]

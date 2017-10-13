@@ -30,7 +30,7 @@ namespace MarginTrading.DataReader.Controllers
         [Route("matchingEngines")]
         public string[] GetAllMatchingEngines()
         {
-            return MatchingEngines.All;
+            return MatchingEngineConstants.All;
         }
 
         [HttpGet]

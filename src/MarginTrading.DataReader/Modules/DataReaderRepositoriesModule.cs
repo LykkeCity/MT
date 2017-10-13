@@ -4,6 +4,7 @@ using Common.Log;
 using MarginTrading.AzureRepositories;
 using MarginTrading.Core;
 using MarginTrading.Core.Clients;
+using MarginTrading.Core.MatchingEngines;
 using MarginTrading.Core.Settings;
 using MarginTrading.DataReader.Settings;
 

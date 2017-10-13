@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace MarginTrading.Core
+namespace MarginTrading.Core.MatchingEngines
 {
     public interface IMatchingEngineRoute
     {

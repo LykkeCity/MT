@@ -1,4 +1,4 @@
-﻿namespace MarginTrading.Core
+﻿namespace MarginTrading.Core.MatchingEngines
 {
     public interface IMatchingEngineRoutesCacheService
     {
