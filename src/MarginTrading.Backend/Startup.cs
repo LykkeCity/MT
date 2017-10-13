@@ -91,7 +91,12 @@ namespace MarginTrading.Backend
             MarginSettings settings = isLive ? mtSettings.MtBackend.MarginTradingLive : mtSettings.MtBackend.MarginTradingDemo;
             settings.IsLive = isLive;
             settings.Env = isLive ? "Live" : "Demo";
-
+            
+            if (!string.IsNullOrEmpty(Configuration["Env"]))
+            {
+                settings.Env += "." + Configuration["Env"];
+            }
+            
             Console.WriteLine($"IsLive: {settings.IsLive}");
 
             SetupLoggers(services, mtSettings, settings);
@@ -139,8 +144,6 @@ namespace MarginTrading.Backend
                     Microsoft.ApplicationInsights.Extensibility.TelemetryConfiguration.Active.InstrumentationKey =
                         settings.ApplicationInsightsKey;
                 }
-
-                application.StartApplicationAsync().Wait();
             });
 
             appLifetime.ApplicationStopping.Register(() =>

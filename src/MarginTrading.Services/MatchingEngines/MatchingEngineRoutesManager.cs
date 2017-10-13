@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
+using Common;
+using MarginTrading.Common.Extensions;
 using MarginTrading.Core;
 using MarginTrading.Core.MatchingEngines;
 
@@ -32,11 +35,24 @@ namespace MarginTrading.Services.MatchingEngines
             _accountsCacheService = accountsCacheService;
         }
 
+        
+        #region Init
+        
         public void Start()
         {
             UpdateRoutesCacheAsync().Wait();
         }
+        
+        public async Task UpdateRoutesCacheAsync()
+        {
+            var routes = await _repository.GetAllRoutesAsync();
+            
+            _routesCacheService.InitCache(routes);
+        }
+        
+        #endregion
 
+        
         public IEnumerable<IMatchingEngineRoute> GetRoutes()
         {
             return _routesCacheService.GetRoutes().Select(ToViewModel);
@@ -95,14 +111,7 @@ namespace MarginTrading.Services.MatchingEngines
             return null;
         }
 
-        public async Task UpdateRoutesCacheAsync()
-        {
-            var routes = new List<IMatchingEngineRoute>();
-            routes.AddRange(await _repository.GetAllRoutesAsync());
-            _routesCacheService.InitCache(routes);
-        }
-
-        public async Task AddOrReplaceRouteAsync(IMatchingEngineRoute route)
+       public async Task AddOrReplaceRouteAsync(IMatchingEngineRoute route)
         {            
             // Create Editable Object 
             var matchingEngineRoute = MatchingEngineRoute.Create(route);
@@ -113,18 +122,94 @@ namespace MarginTrading.Services.MatchingEngines
             matchingEngineRoute.Asset = GetValueOrAnyIfValid(route.Asset, null);
 
             await _repository.AddOrReplaceRouteAsync(matchingEngineRoute);
-            await UpdateRoutesCacheAsync();
+            _routesCacheService.SaveRoute(matchingEngineRoute);
         }        
                 
         public async Task DeleteRouteAsync(string routeId)
         {
             await _repository.DeleteRouteAsync(routeId);
-            await UpdateRoutesCacheAsync();
+            _routesCacheService.DeleteRoute(routeId);
         }
 
+        public Task HandleRiskManagerCommand(MatchingEngineRouteRisksCommand command)
+        {
+            switch (command.RequiredNotNull(nameof(command)).ActionType)
+            {
+                case RiskManagerActionType.BlockTradingForNewOrders:
+                    return HandleRiskManagerBlockTradingCommand(command);
+                    
+                case RiskManagerActionType.ExternalExchangePassThrough:
+                    return HandleRiskManagerHedgingCommand(command);
+                    
+                default:
+                    throw new NotSupportedException($"Command of type [{command.ActionType}] from risk manager is not supported");
+            }
+        }
 
+        private Task HandleRiskManagerBlockTradingCommand(MatchingEngineRouteRisksCommand command)
+        {
+            if (command.ActionType != RiskManagerActionType.BlockTradingForNewOrders)
+                return Task.CompletedTask;
+
+            switch (command.Action)
+            {
+                case RiskManagerAction.On:
+
+                    var newRoute = new MatchingEngineRoute
+                    {
+                        Id = Guid.NewGuid().ToString().ToUpper(),
+                        Rank = command.Rank,
+                        Asset = command.Asset,
+                        ClientId = command.ClientId,
+                        Instrument = command.Instrument,
+                        TradingConditionId = command.TradingConditionId,
+                        Type = GetOrderDirection(command.Direction),
+                        MatchingEngineId = MatchingEngineConstants.Reject,
+                        RiskSystemLimitType = command.LimitType,
+                        RiskSystemMetricType = command.Type
+                    };
+
+                    return AddOrReplaceRouteAsync(newRoute);
+                    
+                case RiskManagerAction.Off:
+
+                    var allRoutes = _routesCacheService.GetRoutes();
+                    var existingRoutes = allRoutes.Where(r => r.Rank == command.Rank &&
+                                                              r.Asset == GetValueOrAny(command.Asset) &&
+                                                              r.ClientId == GetValueOrAny(command.ClientId) &&
+                                                              r.Instrument == GetValueOrAny(command.Instrument) &&
+                                                              r.TradingConditionId ==
+                                                              GetValueOrAny(command.TradingConditionId) &&
+                                                              r.Type == GetOrderDirection(command.Direction) &&
+                                                              r.MatchingEngineId == MatchingEngineConstants.Reject &&
+                                                              r.RiskSystemLimitType == command.LimitType &&
+                                                              r.RiskSystemMetricType == command.Type).ToArray();
+
+                    if (existingRoutes.Count() != 1)
+                        throw new Exception(
+                            $"Cannot disable BlockTradingForNewOrders route for command: {command.ToJson()}. Existing routes found for command: {existingRoutes.ToJson()}");
+
+                    return DeleteRouteAsync(existingRoutes[0].Id);
+                    
+                default:
+                    throw new NotSupportedException($"Action [{command.Action}] from risk managment system is not supported.");
+                    
+            }
+        }
+        
+        private Task HandleRiskManagerHedgingCommand(MatchingEngineRouteRisksCommand command)
+        {
+            return Task.CompletedTask;
+        }
+        
+        
         #region RouteValidation
 
+        private string GetValueOrAny(string value)
+        {
+            return string.IsNullOrEmpty(value) ? AnyValue : value;
+        }
+        
         private string GetValueOrAnyIfValid(string value, Action<string> validationAction)
         {
             if (string.IsNullOrEmpty(value))
@@ -239,6 +324,24 @@ namespace MarginTrading.Services.MatchingEngines
             priority += IsAny(route.TradingConditionId) ? 0 : 16;
             priority += IsAny(route.ClientId) ? 0 : 32;
             return priority;
+        }
+
+        private OrderDirection? GetOrderDirection(RouteDirection? routeDirection)
+        {
+            switch (routeDirection)
+            {
+                case null:
+                    return null;
+                
+                case RouteDirection.Buy:
+                    return OrderDirection.Buy;
+                    
+                case RouteDirection.Sell:
+                    return OrderDirection.Sell;
+                    
+                default:
+                    throw new NotSupportedException($"Route direction [{routeDirection}] is not supported");
+            }
         }
 
         #endregion

@@ -13,6 +13,8 @@ namespace MarginTrading.Core.MatchingEngines
         OrderDirection? Type { get; }
         string MatchingEngineId { get; }
         string Asset { get; }
+        string RiskSystemLimitType { get; set; }
+        string RiskSystemMetricType { get; set; }
     }
 
     public class MatchingEngineRoute : IMatchingEngineRoute
@@ -25,6 +27,8 @@ namespace MarginTrading.Core.MatchingEngines
         public OrderDirection? Type { get; set; }
         public string MatchingEngineId { get; set; }
         public string Asset { get; set; }
+        public string RiskSystemLimitType { get; set; }
+        public string RiskSystemMetricType { get; set; }
 
         public static MatchingEngineRoute Create(IMatchingEngineRoute src)
         {
@@ -38,6 +42,8 @@ namespace MarginTrading.Core.MatchingEngines
                 Type = src.Type,
                 MatchingEngineId = src.MatchingEngineId,
                 Asset = src.Asset,
+                RiskSystemLimitType = src.RiskSystemLimitType,
+                RiskSystemMetricType = src.RiskSystemMetricType
             };
         }
     }

@@ -135,6 +135,10 @@ namespace MarginTrading.Services.Modules
 		    builder.RegisterType<ContextFactory>()
 		        .As<IContextFactory>()
 		        .SingleInstance();
+			
+			builder.RegisterType<RabbitMqService>()
+				.As<IRabbitMqService>()
+				.SingleInstance();
         }
 	}
 }

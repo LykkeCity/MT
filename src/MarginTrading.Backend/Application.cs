@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Common.Log;
-using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Subscriber;
-using MarginTrading.Common.RabbitMq;
 using MarginTrading.Core;
 using MarginTrading.Core.MarketMakerFeed;
+using MarginTrading.Core.MatchingEngines;
 using MarginTrading.Core.Settings;
 using MarginTrading.Services.Infrastructure;
+using MarginTrading.Services.MatchingEngines;
 using Newtonsoft.Json;
 
 #pragma warning disable 1591
@@ -25,7 +25,8 @@ namespace MarginTrading.Backend
         private readonly ILog _logger;
         private readonly MarginSettings _marginSettings;
         private readonly IMaintenanceModeService _maintenanceModeService;
-        private RabbitMqSubscriber<MarketMakerOrderCommandsBatchMessage> _connector;
+        private readonly IRabbitMqService _rabbitMqService;
+        private readonly MatchingEngineRoutesManager _matchingEngineRoutesManager;
         private const string ServiceName = "MarginTrading.Backend";
 
         public Application(
@@ -33,7 +34,9 @@ namespace MarginTrading.Backend
             IConsole consoleWriter,
             IEnumerable<IFeedConsumer> consumers,
             ILog logger, MarginSettings marginSettings,
-            IMaintenanceModeService maintenanceModeService)
+            IMaintenanceModeService maintenanceModeService,
+            IRabbitMqService rabbitMqService,
+            MatchingEngineRoutesManager matchingEngineRoutesManager)
         {
             _consumers = consumers.ToList();
             _rabbitMqNotifyService = rabbitMqNotifyService;
@@ -41,28 +44,23 @@ namespace MarginTrading.Backend
             _logger = logger;
             _marginSettings = marginSettings;
             _maintenanceModeService = maintenanceModeService;
+            _rabbitMqService = rabbitMqService;
+            _matchingEngineRoutesManager = matchingEngineRoutesManager;
         }
 
         public async Task StartApplicationAsync()
         {
-            _consoleWriter.WriteLine($"Staring {ServiceName}");
+            _consoleWriter.WriteLine($"Starting {ServiceName}");
             await _logger.WriteInfoAsync(ServiceName, null, null, "Starting broker");
 
             try
             {
-                var settings = new RabbitMqSubscriptionSettings
-                {
-                    ConnectionString = _marginSettings.MarketMakerRabbitMqSettings.ConnectionString,
-                    QueueName = QueueHelper.BuildQueueName(_marginSettings.MarketMakerRabbitMqSettings.ExchangeName, _marginSettings.IsLive ? "Live" : "Demo"),
-                    ExchangeName = _marginSettings.MarketMakerRabbitMqSettings.ExchangeName,
-                    IsDurable = _marginSettings.MarketMakerRabbitMqSettings.IsDurable
-                };
-                _connector = new RabbitMqSubscriber<MarketMakerOrderCommandsBatchMessage>(settings, new DefaultErrorHandlingStrategy(_logger, settings))
-                    .SetMessageDeserializer(new BackEndDeserializer<MarketMakerOrderCommandsBatchMessage>())
-                    .Subscribe(HandleMessage)
-                    .SetLogger(_logger)
-                    .SetConsole(_consoleWriter)
-                    .Start();
+                _rabbitMqService.Subscribe<MarketMakerOrderCommandsBatchMessage>(
+                    _marginSettings.MarketMakerRabbitMqSettings, _marginSettings.Env, HandleNewOrdersMessage);
+
+                _rabbitMqService.Subscribe<MatchingEngineRouteRisksCommand>(_marginSettings.RisksRabbitMqSettings,
+                    _marginSettings.Env, _matchingEngineRoutesManager.HandleRiskManagerCommand);
+
             }
             catch (Exception ex)
             {
@@ -77,12 +75,11 @@ namespace MarginTrading.Backend
             _consoleWriter.WriteLine($"Maintenance mode enabled for {ServiceName}");
             _consoleWriter.WriteLine($"Closing {ServiceName}");
             _logger.WriteInfoAsync(ServiceName, null, null, "Closing broker").Wait();
-            _connector.Stop();
             _rabbitMqNotifyService.Stop();
             _consoleWriter.WriteLine($"Closed {ServiceName}");
         }
 
-        private Task HandleMessage(MarketMakerOrderCommandsBatchMessage feedData)
+        private Task HandleNewOrdersMessage(MarketMakerOrderCommandsBatchMessage feedData)
         {
             _consumers.ForEach(c => c.ConsumeFeed(feedData));
             return Task.CompletedTask;

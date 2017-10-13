@@ -23,7 +23,7 @@ namespace MarginTrading.Services.MatchingEngines
                 _lockSlim.ExitReadLock();
             }
         }
-
+        
         public IMatchingEngineRoute[] GetRoutes()
         {
             _lockSlim.EnterReadLock();
@@ -37,8 +37,37 @@ namespace MarginTrading.Services.MatchingEngines
                 _lockSlim.ExitReadLock();
             }
         }
+        
+        public void SaveRoute(IMatchingEngineRoute route)
+        {
+            _lockSlim.EnterWriteLock();
 
-        internal void InitCache(List<IMatchingEngineRoute> routes)
+            try
+            {
+                _routes[route.Id] = route;
+            }
+            finally
+            {
+                _lockSlim.ExitWriteLock();
+            }
+        }
+        
+        public void DeleteRoute(string id)
+        {
+            _lockSlim.EnterWriteLock();
+
+            try
+            {
+                if (_routes.ContainsKey(id))
+                    _routes.Remove(id);
+            }
+            finally
+            {
+                _lockSlim.ExitWriteLock();
+            }
+        }
+
+        internal void InitCache(IEnumerable<IMatchingEngineRoute> routes)
         {
             _lockSlim.EnterWriteLock();
 

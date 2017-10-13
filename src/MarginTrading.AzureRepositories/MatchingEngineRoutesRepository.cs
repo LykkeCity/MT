@@ -19,6 +19,8 @@ namespace MarginTrading.AzureRepositories
         OrderDirection? IMatchingEngineRoute.Type => Type?.ParseEnum(OrderDirection.Buy);
         public string MatchingEngineId { get; set; }
         public string Asset { get; set; }
+        public string RiskSystemLimitType { get; set; }
+        public string RiskSystemMetricType { get; set; }
 
         public static string GeneratePartitionKey()
         {
@@ -43,7 +45,9 @@ namespace MarginTrading.AzureRepositories
                 Type = route.Type?.ToString(),
                 MatchingEngineId = route.MatchingEngineId,
                 ClientId = route.ClientId,
-                Asset = route.Asset
+                Asset = route.Asset,
+                RiskSystemLimitType = route.RiskSystemLimitType,
+                RiskSystemMetricType = route.RiskSystemMetricType
             };
         }
     }
