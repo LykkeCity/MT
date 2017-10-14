@@ -76,10 +76,15 @@ namespace MarginTrading.Core
 
             var source = orderTypeToMatch == OrderDirection.Buy ? Buy : Sell;
             volumeToMatch = Math.Abs(volumeToMatch);
+            var minMarketMakerOrderDate = DateTime.UtcNow.AddSeconds(-MarginTradingHelpers.MaxMarketMakerLimitOrderAgeInSec);
 
             foreach (KeyValuePair<decimal, List<LimitOrder>> pair in source)
                 foreach (var limitOrder in pair.Value.OrderBy(item => item.CreateDate))
                 {
+                    if (!string.IsNullOrEmpty(limitOrder.MarketMakerId) &&
+                        limitOrder.CreateDate < minMarketMakerOrderDate)
+                        continue;
+                    
                     var matchedVolume = Math.Min(limitOrder.GetRemainingVolume(), volumeToMatch);
                     yield return new MatchedOrder
                     {

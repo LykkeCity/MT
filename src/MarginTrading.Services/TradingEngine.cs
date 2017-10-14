@@ -409,6 +409,9 @@ namespace MarginTrading.Services
 
             matchingEngine.MatchMarketOrderForClose(order, matchedOrders =>
             {
+                if (!matchedOrders.Any())
+                    return false;
+                
                 order.MatchedCloseOrders.AddRange(matchedOrders);
 
                 if (!order.GetIsCloseFullfilled())
@@ -605,7 +608,19 @@ namespace MarginTrading.Services
             matchingEngine.MatchMarketOrderForClose(order, matchedOrders =>
             {
                 if (matchedOrders.Count == 0)
+                {
+                    //if order did not started to close yet and for any reason we did not close it now - make active
+                    if (!order.MatchedCloseOrders.Any())
+                    {
+                        order.Status = OrderStatus.Active;
+                        order.RejectReasonText = "No orders found to match for close.";
+                        
+                        _ordersCache.ActiveOrders.Add(order);
+                        _ordersCache.ClosingOrders.Remove(order);
+                    }
+
                     return false;
+                }
 
                 MakeOrderClosed(order, matchedOrders);
 

@@ -6,6 +6,8 @@
         public const int VolumeAccuracy = 8;
         // TODO: need to use different accuracy for different assets
         public const int DefaultAssetAccuracy = 8;
+
+        public const int MaxMarketMakerLimitOrderAgeInSec = 30;
     }
 
     public static class MatchingEngines
