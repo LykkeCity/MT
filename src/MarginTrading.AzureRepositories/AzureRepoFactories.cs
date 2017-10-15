@@ -76,7 +76,7 @@ namespace MarginTrading.AzureRepositories
             public static MarginTradingAccountHistoryRepository CreateAccountHistoryRepository(string connstring, ILog log)
             {
                 return new MarginTradingAccountHistoryRepository(AzureTableStorage<MarginTradingAccountHistoryEntity>.Create(() => connstring,
-                    "MarginTradingAccountsHistory", log));
+                    "AccountsHistory", log));
             }
 
             public static MarginTradingAccountsRepository CreateAccountsRepository(string connstring, ILog log)
