@@ -71,7 +71,7 @@ namespace MarginTrading.AzureRepositories
             DateTime? to)
         {
             return (await _tableStorage.WhereAsync(accountIds, from ?? DateTime.MinValue, to ?? DateTime.MaxValue, ToIntervalOption.IncludeTo))
-                .OrderByDescending(item => item.RowKey).ToList();
+                .OrderByDescending(item => item.Date).ToList();
         }
     }
 }

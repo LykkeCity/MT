@@ -153,7 +153,7 @@ namespace MarginTrading.AzureRepositories
         {
             return (await _tableStorage.WhereAsync(accountIds.Select(a => clientId + '_' + a),
                     from ?? DateTime.MinValue, to ?? DateTime.MaxValue, ToIntervalOption.IncludeTo))
-                .OrderByDescending(item => item.RowKey).ToList();
+                .OrderByDescending(entity => entity.CloseDate ?? entity.OpenDate.Value).ToList();
         }
 
         public async Task<IEnumerable<IOrderHistory>> GetHistoryAsync()
