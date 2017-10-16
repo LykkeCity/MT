@@ -55,7 +55,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             if (bestBid >= bestAsk)
             {
                 var context = $"assetPairId: {orderbook.AssetPairId}, orderbook.Source: {orderbook.Source}, bestBid: {bestBid}, bestAsk: {bestAsk}";
-                _log.WriteWarningAsync(nameof(MarketMaker), nameof(ProcessNewExternalOrderbookAsync),
+                _log.WriteInfoAsync(nameof(MarketMaker), nameof(ProcessNewExternalOrderbookAsync),
                     context,
                     "Detected negative spread, skipping orderbook. Context: " + context);
                 return Task.CompletedTask;
@@ -95,7 +95,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         {
             var quotesSource = _assetPairsSettingsService.GetAssetPairQuotesSource(orderbook.AssetPair)
                 .SourceType;
-            if (quotesSource != AssetPairQuotesSourceTypeEnum.Spot)
+            if (quotesSource != AssetPairQuotesSourceTypeEnum.Spot || (orderbook.Prices?.Count ?? 0) == 0)
             {
                 return Task.CompletedTask;
             }
