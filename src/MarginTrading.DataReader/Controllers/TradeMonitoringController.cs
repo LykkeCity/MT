@@ -108,6 +108,42 @@ namespace MarginTrading.DataReader.Controllers
         }
 
         /// <summary>
+        ///     Returns list of opened positions from a snapshot (blob) filtered by a date interval
+        /// </summary>
+        /// <remarks>
+        ///     <p>Returns list of date filtered opened positions</p>
+        ///     <p>Header "api-key" is required</p>
+        /// </remarks>
+        /// <response code="200">Returns opened positions</response>
+        [HttpGet]
+        [Route("openPositions/byDate")]
+        public async Task<List<OrderContract>> GetOpenPositionsByDate([FromQuery] DateTime from, [FromQuery] DateTime to)
+        {
+            return (await _ordersSnapshotReaderService.GetActiveAsync())
+                .Where(order => order.OpenDate >= from.Date && order.OpenDate< to.Date)
+                .Select(OrderExtensions.ToBaseContract)
+                .ToList();
+        }
+
+        /// <summary>
+        ///     Returns list of opened positions from a snapshot (blob) filtered by client
+        /// </summary>
+        /// <remarks>
+        ///     <p>Returns list of client filtered opened positions</p>
+        ///     <p>Header "api-key" is required</p>
+        /// </remarks>
+        /// <response code="200">Returns opened positions</response>
+        [HttpGet]
+        [Route("openPositions/byClient/{clientId}")]
+        public async Task<List<OrderContract>> GetOpenPositionsByClient([FromRoute]string clientId)
+        {
+            return (await _ordersSnapshotReaderService.GetActiveAsync())
+                .Where(order => order.ClientId == clientId)
+                .Select(OrderExtensions.ToBaseContract)
+                .ToList();
+        }
+
+        /// <summary>
         ///     Returns list of pending orders from a snapshot (blob)
         /// </summary>
         /// <remarks>
@@ -138,6 +174,43 @@ namespace MarginTrading.DataReader.Controllers
         {
             return GetPendingOrdersByVolume(0);
         }
+
+        /// <summary>
+        ///     Returns list of pending orders from a snapshot (blob) filtered by a date interval
+        /// </summary>
+        /// <remarks>
+        ///     <p>Returns list of date filtered pending orders</p>
+        ///     <p>Header "api-key" is required</p>
+        /// </remarks>
+        /// <response code="200">Returns pending orders</response>
+        [HttpGet]
+        [Route("pendingOrders/byDate")]
+        public async Task<List<OrderContract>> GetPendingOrdersByDate([FromQuery] DateTime from, [FromQuery] DateTime to)
+        {
+            return (await _ordersSnapshotReaderService.GetPendingAsync())
+                .Where(order => order.CreateDate >= from && order.CreateDate < to)
+                .Select(OrderExtensions.ToBaseContract)
+                .ToList();
+        }
+
+        /// <summary>
+        ///     Returns list of pending orders from a snapshot (blob) filtered by client
+        /// </summary>
+        /// <remarks>
+        ///     <p>Returns list of client filtered pending orders</p>
+        ///     <p>Header "api-key" is required</p>
+        /// </remarks>
+        /// <response code="200">Returns pending orders</response>
+        [HttpGet]
+        [Route("pendingOrders/byClient/{clientId}")]
+        public async Task<List<OrderContract>> GetPendingOrdersByClient([FromRoute]string clientId)
+        {
+            return (await _ordersSnapshotReaderService.GetPendingAsync())
+                .Where(order => order.ClientId == clientId)
+                .Select(OrderExtensions.ToBaseContract)
+                .ToList();
+        }
+
 
         /// <summary>
         ///     Returns list of orderbooks from a snapshot (blob)
