@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
@@ -8,6 +9,7 @@ using Lykke.RabbitMqBroker.Publisher;
 using Lykke.RabbitMqBroker.Subscriber;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Core.Settings;
+using Newtonsoft.Json;
 
 namespace MarginTrading.Services.Infrastructure
 {
@@ -62,7 +64,7 @@ namespace MarginTrading.Services.Infrastructure
 
             var rabbitMqSubscriber = new RabbitMqSubscriber<TMessage>(subscriptionSettings,
                     new DefaultErrorHandlingStrategy(_logger, subscriptionSettings))
-                .SetMessageDeserializer(new JsonMessageDeserializer<TMessage>())
+                .SetMessageDeserializer(new ErrorLoggingJsonMessageDeserializer<TMessage>(_logger))
                 .Subscribe(handler)
                 .SetLogger(_logger)
                 .SetConsole(_consoleWriter)

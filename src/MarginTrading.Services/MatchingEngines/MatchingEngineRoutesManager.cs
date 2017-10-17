@@ -5,9 +5,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
 using Common;
+using MarginTrading.AzureRepositories.Logs;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Core;
 using MarginTrading.Core.MatchingEngines;
+using Microsoft.AspNetCore.Server.Kestrel.Core.Adapter.Internal;
 
 namespace MarginTrading.Services.MatchingEngines
 {
@@ -20,19 +22,22 @@ namespace MarginTrading.Services.MatchingEngines
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly ITradingConditionsCacheService _tradingConditionsCacheService;
         private readonly IAccountsCacheService _accountsCacheService;
+        private readonly IRiskSystemCommandsLogRepository _riskSystemCommandsLogRepository;
 
         public MatchingEngineRoutesManager(
             MatchingEngineRoutesCacheService routesCacheService,
             IMatchingEngineRoutesRepository repository,
             IAssetPairsCache assetPairsCache,
             ITradingConditionsCacheService tradingConditionsCacheService,
-            IAccountsCacheService accountsCacheService)
+            IAccountsCacheService accountsCacheService,
+            IRiskSystemCommandsLogRepository riskSystemCommandsLogRepository)
         {
             _routesCacheService = routesCacheService;
             _repository = repository;            
             _assetPairsCache = assetPairsCache;
             _tradingConditionsCacheService = tradingConditionsCacheService;
             _accountsCacheService = accountsCacheService;
+            _riskSystemCommandsLogRepository = riskSystemCommandsLogRepository;
         }
 
         
@@ -131,18 +136,32 @@ namespace MarginTrading.Services.MatchingEngines
             _routesCacheService.DeleteRoute(routeId);
         }
 
-        public Task HandleRiskManagerCommand(MatchingEngineRouteRisksCommand command)
+        public async Task HandleRiskManagerCommand(MatchingEngineRouteRisksCommand command)
         {
-            switch (command.RequiredNotNull(nameof(command)).ActionType)
+            try
             {
-                case RiskManagerActionType.BlockTradingForNewOrders:
-                    return HandleRiskManagerBlockTradingCommand(command);
+                switch (command.RequiredNotNull(nameof(command)).ActionType)
+                {
+                    case RiskManagerActionType.BlockTradingForNewOrders:
+                        await HandleRiskManagerBlockTradingCommand(command);
+                        break;
                     
-                case RiskManagerActionType.ExternalExchangePassThrough:
-                    return HandleRiskManagerHedgingCommand(command);
+                    case RiskManagerActionType.ExternalExchangePassThrough:
+                        await HandleRiskManagerHedgingCommand(command);
+                        break;
                     
-                default:
-                    throw new NotSupportedException($"Command of type [{command.ActionType}] from risk manager is not supported");
+                    default:
+                        throw new NotSupportedException($"Command of type [{command.ActionType}] from risk manager is not supported");
+                }
+
+                await _riskSystemCommandsLogRepository.AddProcessedAsync(command.ActionType.ToString(),
+                    command.ToJson());
+            }
+            catch (Exception e)
+            {
+                await _riskSystemCommandsLogRepository.AddErrorAsync(command.ActionType.ToString(), command.ToJson(),
+                    e.Message);
+                throw;
             }
         }
 

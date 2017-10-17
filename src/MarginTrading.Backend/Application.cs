@@ -85,13 +85,4 @@ namespace MarginTrading.Backend
             return Task.CompletedTask;
         }
     }
-
-    public class BackEndDeserializer<T> : IMessageDeserializer<T>
-    {
-        public T Deserialize(byte[] data)
-        {
-            string json = Encoding.UTF8.GetString(data);
-            return JsonConvert.DeserializeObject<T>(json);
-        }
-    }
 }

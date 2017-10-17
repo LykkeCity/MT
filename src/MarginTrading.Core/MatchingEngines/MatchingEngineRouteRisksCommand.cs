@@ -8,12 +8,12 @@
         /// <summary>
         /// Here id for required action is passed
         /// </summary>
-        public RiskManagerActionType ActionType { get; set; }
+        public RiskManagerActionType? ActionType { get; set; }
         
         /// <summary>
         /// ON / OFF
         /// </summary>
-        public RiskManagerAction Action { get; set; }
+        public RiskManagerAction? Action { get; set; }
         
         /// <summary>
         /// Breached metric type
