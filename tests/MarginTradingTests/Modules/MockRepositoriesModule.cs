@@ -5,6 +5,7 @@ using Autofac;
 using AzureStorage.Tables;
 using Common.Log;
 using MarginTrading.AzureRepositories;
+using MarginTrading.AzureRepositories.Logs;
 using MarginTrading.AzureRepositories.Reports;
 using MarginTrading.Core;
 using MarginTrading.Core.Clients;
@@ -38,6 +39,7 @@ namespace MarginTradingTests.Modules
             var orderHistoryRepository = new Mock<IMarginTradingOrdersHistoryRepository>();
             var clientAccountsRepository = new Mock<IClientAccountsRepository>();
             var accountsStatsReportsRepository = new Mock<IAccountsStatsReportsRepository>();
+            var riskSystemCommandsLogRepository = new Mock<IRiskSystemCommandsLogRepository>();
             var accountsReportsRepository = new Mock<IAccountsReportsRepository>();
             clientAccountsRepository
                 .Setup(item => item.GetByIdAsync(It.IsAny<string>()))
@@ -72,6 +74,8 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(clientAccountsRepository.Object).As<IClientAccountsRepository>().SingleInstance();
             builder.RegisterInstance(accountsStatsReportsRepository.Object).As<IAccountsStatsReportsRepository>().SingleInstance();
             builder.RegisterInstance(accountsReportsRepository.Object).As<IAccountsReportsRepository>().SingleInstance();
+            builder.RegisterInstance(riskSystemCommandsLogRepository.Object).As<IRiskSystemCommandsLogRepository>()
+                .SingleInstance();
         }
     }
 }
