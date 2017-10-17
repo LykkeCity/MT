@@ -28,9 +28,10 @@ namespace MarginTrading.Services
         private readonly IAccountsStatsReportsRepository _accountsStatsReportsRepository;
         private readonly IAccountsReportsRepository _accountsReportsRepository;
         private readonly IMarginTradingAccountStatsRepository _statsRepository;
-        private readonly IOrderReader _ordersReader;
+        private readonly OrdersCache _ordersCache;
         private readonly IUpdatedAccountsTrackingService _updatedAccountsTrackingService;
         private readonly IEventChannel<AccountBalanceChangedEventArgs> _acountBalanceChangedEventChannel;
+        private readonly ITradingEngine _tradingEngine;
 
 
         public AccountManager(AccountsCacheService accountsCacheService,
@@ -46,9 +47,10 @@ namespace MarginTrading.Services
             IAccountsStatsReportsRepository accountsStatsReportsRepository,
             IAccountsReportsRepository accountsReportsRepository,
             IMarginTradingAccountStatsRepository statsRepository,
-            IOrderReader ordersReader,
+            OrdersCache ordersCache,
             IUpdatedAccountsTrackingService updatedAccountsTrackingService,
-            IEventChannel<AccountBalanceChangedEventArgs> acountBalanceChangedEventChannel)
+            IEventChannel<AccountBalanceChangedEventArgs> acountBalanceChangedEventChannel,
+            ITradingEngine tradingEngine)
             : base(nameof(AccountManager), 10000, log)
         {
             _accountsCacheService = accountsCacheService;
@@ -64,9 +66,10 @@ namespace MarginTrading.Services
             _accountsStatsReportsRepository = accountsStatsReportsRepository;
             _accountsReportsRepository = accountsReportsRepository;
             _statsRepository = statsRepository;
-            _ordersReader = ordersReader;
+            _ordersCache = ordersCache;
             _updatedAccountsTrackingService = updatedAccountsTrackingService;
             _acountBalanceChangedEventChannel = acountBalanceChangedEventChannel;
+            _tradingEngine = tradingEngine;
         }
 
         public override Task Execute()
@@ -80,7 +83,7 @@ namespace MarginTrading.Services
 
         private IReadOnlyList<MarginTradingAccount> GetAccountsToWriteStats()
         {
-            var accountsIdsToWrite = _ordersReader.GetActive().Select(a => a.AccountId)
+            var accountsIdsToWrite = _ordersCache.GetActive().Select(a => a.AccountId)
                 .Concat(_updatedAccountsTrackingService.GetAccounts())
                 .Distinct();
             return _accountsCacheService.GetAll().Join(accountsIdsToWrite, a => a.Id, a => a, (account, id) => account)
@@ -290,6 +293,28 @@ namespace MarginTrading.Services
             await ProcessAccountsSetChange(clientId, newAccounts);
 
             return newAccounts.ToArray();
+        }
+
+        public async Task<List<IOrder>> CloseAccountOrders(string accountId, OrderCloseReason reason)
+        {
+            var openedOrders = _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountId).ToArray();
+            var closedOrders = new List<IOrder>();
+
+            foreach (var order in openedOrders)
+            {
+                try
+                {
+                    var closedOrder = await _tradingEngine.CloseActiveOrderAsync(order.Id, reason);
+                    closedOrders.Add(closedOrder);
+                }
+                catch (Exception e)
+                {
+                    await _log.WriteWarningAsync(nameof(AccountManager), "CloseAccountActiveOrders",
+                        $"AccountId: {accountId}, OrderId: {order.Id}", $"Error closing order: {e.Message}");
+                }
+            }
+
+            return closedOrders;
         }
 
         #region Helpers

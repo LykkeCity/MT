@@ -179,7 +179,7 @@ namespace MarginTrading.Core
             return account.GetAccountFpl().Stopout;
         }
 
-        public static decimal GetOpenPositionsCount(this IMarginTradingAccount account)
+        public static int GetOpenPositionsCount(this IMarginTradingAccount account)
         {
             return account.GetAccountFpl().OpenPositionsCount;
         }

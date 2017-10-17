@@ -23,7 +23,7 @@ namespace MarginTrading.Common.ClientContracts
         public decimal UsedMargin { get; set; }
         public decimal MarginInit { get; set; }
         public decimal PnL { get; set; }
-        public decimal OpenPositionsCount { get; set; }
+        public int OpenPositionsCount { get; set; }
         public decimal MarginUsageLevel { get; set; }
         public bool IsLive { get; set; }
     }
