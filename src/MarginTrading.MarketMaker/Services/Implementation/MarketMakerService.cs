@@ -148,7 +148,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         private static IMessageProducer<OrderCommandsBatchMessage> CreateRabbitMqMessageProducer(
             MarginTradingMarketMakerSettings marginTradingMarketMakerSettings, IRabbitMqService rabbitMqService)
         {
-            return rabbitMqService.CreateProducer<OrderCommandsBatchMessage>(
+            return rabbitMqService.GetProducer<OrderCommandsBatchMessage>(
                 marginTradingMarketMakerSettings.RabbitMq.OrderCommandsConnectionSettings, false);
         }
 

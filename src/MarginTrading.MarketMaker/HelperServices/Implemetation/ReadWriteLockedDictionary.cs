@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,8 +11,18 @@ namespace MarginTrading.MarketMaker.HelperServices.Implemetation
 {
     internal class ReadWriteLockedDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IDisposable
     {
-        private readonly IDictionary<TKey, TValue> _dictionary = new Dictionary<TKey, TValue>();
+        private readonly IDictionary<TKey, TValue> _dictionary;
         private readonly Lock _lock = new Lock();
+
+        public ReadWriteLockedDictionary()
+        {
+            _dictionary = new Dictionary<TKey, TValue>();
+        }
+
+        public ReadWriteLockedDictionary(IEqualityComparer<TKey> equalityComparer)
+        {
+            _dictionary = new Dictionary<TKey, TValue>(equalityComparer);
+        }
 
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
@@ -128,7 +139,7 @@ namespace MarginTrading.MarketMaker.HelperServices.Implemetation
             get
             {
                 using (_lock.EnterReadLock())
-                    return _dictionary.Keys;
+                    return _dictionary.Keys.ToImmutableArray();
             }
         }
 
@@ -137,7 +148,7 @@ namespace MarginTrading.MarketMaker.HelperServices.Implemetation
             get
             {
                 using (_lock.EnterReadLock())
-                    return _dictionary.Values;
+                    return _dictionary.Values.ToImmutableArray();
             }
         }
 

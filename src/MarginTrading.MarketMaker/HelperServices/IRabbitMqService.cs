@@ -7,7 +7,7 @@ namespace MarginTrading.MarketMaker.HelperServices
 {
     public interface IRabbitMqService
     {
-        IMessageProducer<TMessage> CreateProducer<TMessage>(RabbitConnectionSettings settings, bool isDurable);
+        IMessageProducer<TMessage> GetProducer<TMessage>(RabbitConnectionSettings settings, bool isDurable);
         void Subscribe<TMessage>(RabbitConnectionSettings settings, bool isDurable, Func<TMessage, Task> handler);
     }
 }
