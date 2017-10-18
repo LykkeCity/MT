@@ -1,5 +1,6 @@
 ﻿using System;
 using MarginTrading.MarketMaker.Enums;
+using MarginTrading.MarketMaker.Models;
 
 namespace MarginTrading.MarketMaker.Services
 {
@@ -9,8 +10,7 @@ namespace MarginTrading.MarketMaker.Services
         string GetPresetPrimaryExchange(string assetPairId);
         decimal GetVolumeMultiplier(string assetPairId, string exchangeName);
         TimeSpan GetOrderbookAgeThreshold(string assetPairId, string exchangeName, DateTime now);
-        TimeSpan GetMaxOutlierEventsAge();
-        int GetMaxOutlierSequenceLength();
-        TimeSpan GetMaxOutlierSequenceAge();
+        RepeatedOutliersParams GetRepeatedOutliersParams(string assetPairId);
+        decimal GetOutlierThreshold(string assetPairId);
     }
 }

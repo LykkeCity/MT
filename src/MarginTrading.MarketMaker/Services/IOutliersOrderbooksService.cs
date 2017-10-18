@@ -6,6 +6,6 @@ namespace MarginTrading.MarketMaker.Services
 {
     public interface IOutliersOrderbooksService
     {
-        IReadOnlyList<ExternalOrderbook> FindOutliers(ImmutableDictionary<string, ExternalOrderbook> validOrderbooks);
+        IReadOnlyList<ExternalOrderbook> FindOutliers(string assetPairId, ImmutableDictionary<string, ExternalOrderbook> validOrderbooks);
     }
 }

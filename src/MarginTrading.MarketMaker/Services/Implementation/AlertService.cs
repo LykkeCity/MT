@@ -30,7 +30,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
         public Task AlertStopping()
         {
-            
+            throw new System.NotImplementedException();
         }
     }
 }

@@ -155,7 +155,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 return (ImmutableHashSet<string>.Empty, upToDateOrderbooks);
             }
 
-            var outliersExchanges = _outliersOrderbooksService.FindOutliers(upToDateOrderbooks)
+            var outliersExchanges = _outliersOrderbooksService.FindOutliers(assetPairId, upToDateOrderbooks)
                 .Select(o => o.ExchangeName)
                 .ToImmutableHashSet();
             var upToDateNotoutlierOrderbooks = upToDateOrderbooks.RemoveRange(outliersExchanges);

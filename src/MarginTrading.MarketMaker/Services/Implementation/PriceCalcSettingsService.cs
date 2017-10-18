@@ -1,5 +1,6 @@
 ﻿using System;
 using MarginTrading.MarketMaker.Enums;
+using MarginTrading.MarketMaker.Models;
 
 namespace MarginTrading.MarketMaker.Services.Implementation
 {
@@ -27,12 +28,12 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             throw new NotImplementedException();
         }
 
-        public TimeSpan GetMaxOutlierEventsAge()
+        public RepeatedOutliersParams GetRepeatedOutliersParams(string assetPairId)
         {
             throw new NotImplementedException();
         }
 
-        public int GetMaxOutlierSequenceLength()
+        public decimal GetOutlierThreshold(string assetPairId)
         {
             throw new NotImplementedException();
         }

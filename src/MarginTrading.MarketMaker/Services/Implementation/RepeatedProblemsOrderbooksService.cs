@@ -21,47 +21,53 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         public bool IsRepeatedProblemsOrderbook(ExternalOrderbook orderbook, bool isOutdated, bool isOutlier,
             DateTime now)
         {
-
-            TimeSpan maxEventsAge = _priceCalcSettingsService.GetMaxOutlierEventsAge();
+            var repeatedOutliersParams = _priceCalcSettingsService.GetRepeatedOutliersParams(orderbook.AssetPairId);
+            DateTime outlierSequenceStart = now - repeatedOutliersParams.MaxSequenceAge;
+            DateTime outlierAvgStart = now - repeatedOutliersParams.MaxAvgAge;
+            DateTime minEventTime = outlierSequenceStart < outlierAvgStart ? outlierSequenceStart : outlierAvgStart;
             var newEvent = new Event(now, isOutdated, isOutlier);
             var actualProblems = _lastEvents.AddOrUpdate((orderbook.AssetPairId, orderbook.ExchangeName),
                 k => ImmutableSortedSet.Create(newEvent),
-                (k, old) => AddEventAndCleanOld(old, newEvent, maxEventsAge));
+                (k, old) => AddEventAndCleanOld(old, newEvent, minEventTime));
 
             //currently we process only Outlier
             if (isOutlier)
             {
-                int maxOutlierSequenceLength = _priceCalcSettingsService.GetMaxOutlierSequenceLength();
-                int maxOutlierSequenceAge = _priceCalcSettingsService.GetMaxOutlierSequenceAge();
                 int outliersInRow = 0;
-                decimal stats;
+                int statsCount = 0;
+                int outliersCount = 0;
                 foreach (var e in actualProblems)
                 {
-                    if (e.IsOutlier)
+                    if (e.IsOutlier && e.Time >= outlierSequenceStart)
                         outliersInRow++;
                     else
                         outliersInRow = 0;
 
-                    if (outliersInRow > maxOutlierSequenceLength)
+                    if (outliersInRow > repeatedOutliersParams.MaxSequenceLength)
                         return true;
 
-                    if ()
+                    if (e.Time >= outlierSequenceStart)
+                    {
+                        statsCount++;
+                        if (e.IsOutlier)
+                            outliersCount++;
+                    }
                 }
+
+                if (outliersCount / (decimal)statsCount > repeatedOutliersParams.MaxAvg)
+                    return true;
             }
+
+            return false;
         }
 
         private static ImmutableSortedSet<Event> AddEventAndCleanOld(ImmutableSortedSet<Event> events, Event ev,
-            TimeSpan maxEventsAge)
+            DateTime minEventTime)
         {
-            var minTime = ev.Time - maxEventsAge;
-            if (events[0].Time < minTime)
-            {
-                return events.SkipWhile(e => e.Time < minTime).Concat(new[] { ev }).ToImmutableSortedSet();
-            }
+            if (events[0].Time < minEventTime)
+                return events.SkipWhile(e => e.Time < minEventTime).Concat(new[] { ev }).ToImmutableSortedSet();
             else
-            {
                 return events.Add(ev);
-            }
         }
 
         private class Event
