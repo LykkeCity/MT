@@ -28,14 +28,15 @@
 
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="11.0.0" />
-    <PackageReference Include="Lykke.Common" Version="1.1.93" />
-    <PackageReference Include="Lykke.Common.ApiLibrary" Version="1.0.11" />
-    <PackageReference Include="Lykke.JobTriggers" Version="1.1.11" />
-    <PackageReference Include="Lykke.Logs" Version="1.0.29" />
-    <PackageReference Include="Lykke.RabbitMqBroker" Version="1.0.77" />
+    <PackageReference Include="Lykke.Common" Version="3.0.2" />
+    <PackageReference Include="Lykke.Common.ApiLibrary" Version="1.0.13" />
+    <PackageReference Include="Lykke.JobTriggers" Version="1.1.19" />
+    <PackageReference Include="Lykke.Logs" Version="3.2.2" />
+    <PackageReference Include="Lykke.RabbitMq.Azure" Version="3.1.0" />
+    <PackageReference Include="Lykke.RabbitMqBroker" Version="4.0.1" />
     <PackageReference Include="Lykke.Rocks.Caching" Version="1.0.0" />
-    <PackageReference Include="Lykke.SettingsReader" Version="1.0.38" />
-    <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="1.0.4" />
+    <PackageReference Include="Lykke.SettingsReader" Version="1.0.42" />
+    <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="1.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.0.0" />

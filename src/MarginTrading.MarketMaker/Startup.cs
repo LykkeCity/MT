@@ -1,13 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using AzureStorage.Tables;
 using Common.Log;
+using JetBrains.Annotations;
+using Lykke.AzureQueueIntegration;
 using Lykke.Common.ApiLibrary.Middleware;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
-using MarginTrading.MarketMaker.HelperServices.Implemetation;
 using MarginTrading.MarketMaker.Modules;
 using MarginTrading.MarketMaker.Services;
 using MarginTrading.MarketMaker.Settings;
@@ -26,10 +31,8 @@ namespace MarginTrading.MarketMaker
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
-                .AddJsonFile("appsettings.json", true, true)
-                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", true)
+                .AddInMemoryCollection(new Dictionary<string, string> { { "SettingsUrl", Path.Combine(env.ContentRootPath, $"appsettings.{env.EnvironmentName}.json") } })
                 .AddEnvironmentVariables();
-
             Configuration = builder.Build();
             Environment = env;
         }
@@ -38,52 +41,78 @@ namespace MarginTrading.MarketMaker
         public IHostingEnvironment Environment { get; }
         public IContainer ApplicationContainer { get; set; }
         public IConfigurationRoot Configuration { get; }
+        [CanBeNull]
+        public ILog Log { get; private set; }
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc()
-                .AddJsonOptions(options =>
-                {
-                    options.SerializerSettings.ContractResolver =
-                        new DefaultContractResolver();
-                });
+            try
+            {
+                services.AddMvc()
+                    .AddJsonOptions(options =>
+                    {
+                        options.SerializerSettings.ContractResolver =
+                            new DefaultContractResolver();
+                    });
 
-            services.AddSwaggerGen(options => { options.DefaultLykkeConfiguration("v1", ServiceName + " API"); });
+                services.AddSwaggerGen(options => { options.DefaultLykkeConfiguration("v1", ServiceName + " API"); });
 
-            var builder = new ContainerBuilder();
-            var appSettings = Environment.IsDevelopment()
-                ? Configuration.Get<AppSettings>()
-                : HttpSettingsLoader.Load<AppSettings>(Configuration.GetValue<string>("SettingsUrl"));
-            var log = CreateLogWithSlack(services, appSettings);
+                var builder = new ContainerBuilder();
+                var appSettings = Configuration.LoadSettings<AppSettings>();
+                Log = CreateLogWithSlack(services, appSettings);
 
-            builder.RegisterModule(new MarketMakerModule(appSettings, log));
+                builder.RegisterModule(new MarketMakerModule(appSettings, Log));
 
-            builder.Populate(services);
+                builder.Populate(services);
 
-            ApplicationContainer = builder.Build();
+                ApplicationContainer = builder.Build();
 
-            return new AutofacServiceProvider(ApplicationContainer);
+                return new AutofacServiceProvider(ApplicationContainer);
+            }
+            catch (Exception ex)
+            {
+                Log?.WriteFatalErrorAsync(nameof(Startup), nameof(ConfigureServices), "", ex).Wait();
+                throw;
+            }
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime appLifetime)
         {
-            if (env.IsDevelopment())
+            try
             {
-                app.UseDeveloperExceptionPage();
-            }
+                if (env.IsDevelopment())
+                {
+                    app.UseDeveloperExceptionPage();
+                }
 
 #if DEBUG
-            app.UseLykkeMiddleware(ServiceName, ex => ex.ToString());
+                app.UseLykkeMiddleware(ServiceName, ex => ex.ToString());
 #else
-            app.UseLykkeMiddleware(ServiceName, ex => new ErrorResponse {ErrorMessage = "Technical problem"});
+                app.UseLykkeMiddleware(ServiceName, ex => new ErrorResponse {ErrorMessage = "Technical problem"});
 #endif
 
-            app.UseMvc();
-            app.UseSwagger();
-            app.UseSwaggerUi();
+                app.UseMvc();
+                app.UseSwagger();
+                app.UseSwaggerUi();
 
-            appLifetime.ApplicationStarted.Register(() =>
+                appLifetime.ApplicationStarted.Register(() => StartApplication().Wait());
+                appLifetime.ApplicationStopping.Register(() => StopApplication().Wait());
+                appLifetime.ApplicationStopped.Register(() => CleanUp().Wait());
+            }
+            catch (Exception ex)
             {
+                Log?.WriteFatalErrorAsync(nameof(Startup), nameof(ConfigureServices), "", ex).Wait();
+                throw;
+            }
+        }
+
+
+        private async Task StartApplication()
+        {
+            try
+            {
+                // NOTE: Service not yet recieve and process requests here
+
                 var settings = ApplicationContainer.Resolve<MarginTradingMarketMakerSettings>();
                 if (!string.IsNullOrEmpty(settings.ApplicationInsightsKey))
                 {
@@ -91,46 +120,95 @@ namespace MarginTrading.MarketMaker
                 }
 
                 ApplicationContainer.Resolve<IBrokerService>().Run();
-            });
 
-            appLifetime.ApplicationStopped.Register(() => { ApplicationContainer.Dispose(); });
+                await Log.WriteMonitorAsync("", "", "Started");
+            }
+            catch (Exception ex)
+            {
+                await Log.WriteFatalErrorAsync(nameof(Startup), nameof(StartApplication), "", ex);
+                throw;
+            }
         }
 
-        private static ILog CreateLogWithSlack(IServiceCollection services, AppSettings settings)
+        private async Task StopApplication()
         {
-            LykkeLogToAzureStorage logToAzureStorage = null;
+            try
+            {
+                // NOTE: Service still can recieve and process requests here, so take care about it if you add logic here.
+            }
+            catch (Exception ex)
+            {
+                if (Log != null)
+                {
+                    await Log.WriteFatalErrorAsync(nameof(Startup), nameof(StopApplication), "", ex);
+                }
+                throw;
+            }
+        }
 
-            var logToConsole = new LogToConsole();
-            var logAggregate = new LogAggregate();
+        private async Task CleanUp()
+        {
+            try
+            {
+                // NOTE: Service can't recieve and process requests here, so you can destroy all resources
 
-            logAggregate.AddLogger(logToConsole);
+                if (Log != null)
+                {
+                    await Log.WriteMonitorAsync("", "", "Terminating");
+                }
 
-            var dbLogConnectionString = settings.MarginTradingMarketMaker.Db.LogsConnString;
+                ApplicationContainer.Dispose();
+            }
+            catch (Exception ex)
+            {
+                if (Log != null)
+                {
+                    await Log.WriteFatalErrorAsync(nameof(Startup), nameof(CleanUp), "", ex);
+                    (Log as IDisposable)?.Dispose();
+                }
+                throw;
+            }
+        }
 
-            var slackService = settings.SlackNotifications != null
-                ? services.UseSlackNotificationsSenderViaAzureQueue(settings.SlackNotifications.AzureQueue, logToConsole)
-                : null;
+        private static ILog CreateLogWithSlack(IServiceCollection services, IReloadingManager<AppSettings> settings)
+        {
+            var consoleLogger = new LogToConsole();
+            var aggregateLogger = new AggregateLogger();
 
-            slackService =
-                new MtSlackNotificationsSender(slackService, ServiceName);
+            aggregateLogger.AddLog(consoleLogger);
+
+            // Creating slack notification service, which logs own azure queue processing messages to aggregate log
+            var slackService = settings.CurrentValue.SlackNotifications == null
+                ? null
+                : services.UseSlackNotificationsSenderViaAzureQueue(new AzureQueueSettings
+                {
+                    ConnectionString = settings.CurrentValue.SlackNotifications.AzureQueue.ConnectionString,
+                    QueueName = settings.CurrentValue.SlackNotifications.AzureQueue.QueueName
+                }, aggregateLogger);
+
+            var dbLogConnectionStringManager = settings.Nested(x => x.MarginTradingMarketMaker.Db.LogsConnString);
+            var dbLogConnectionString = dbLogConnectionStringManager.CurrentValue;
 
             // Creating azure storage logger, which logs own messages to concole log
-            if (!string.IsNullOrEmpty(dbLogConnectionString) &&
-                !(dbLogConnectionString.StartsWith("${") && dbLogConnectionString.EndsWith("}")))
+            if (!string.IsNullOrEmpty(dbLogConnectionString) && !(dbLogConnectionString.StartsWith("${") && dbLogConnectionString.EndsWith("}")))
             {
-                logToAzureStorage =
-                    services.UseLogToAzureStorage(dbLogConnectionString, slackService, ServiceName + "Log",
-                        logToConsole);
+                var persistenceManager = new LykkeLogToAzureStoragePersistenceManager(
+                    AzureTableStorage<LogEntity>.Create(dbLogConnectionStringManager, ServiceName + "Log", consoleLogger),
+                    consoleLogger);
 
-                logAggregate.AddLogger(logToAzureStorage);
+                var slackNotificationsManager = new LykkeLogToAzureSlackNotificationsManager(slackService, consoleLogger);
+
+                var azureStorageLogger = new LykkeLogToAzureStorage(
+                    persistenceManager,
+                    slackNotificationsManager,
+                    consoleLogger);
+
+                azureStorageLogger.Start();
+
+                aggregateLogger.AddLog(azureStorageLogger);
             }
 
-            // Creating aggregate log, which logs to console and to azure storage, if last one specified
-            var log = logAggregate.CreateLogger();
-
-
-
-            return log;
+            return aggregateLogger;
         }
     }
 }

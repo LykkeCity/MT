@@ -2,11 +2,15 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AzureStorage;
+using AzureStorage.Blob;
 using Common;
 using Common.Log;
+using Lykke.RabbitMq.Azure;
 using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Publisher;
 using Lykke.RabbitMqBroker.Subscriber;
+using Lykke.SettingsReader;
 using MarginTrading.MarketMaker.Settings;
 using Microsoft.Extensions.PlatformAbstractions;
 
@@ -22,9 +26,16 @@ namespace MarginTrading.MarketMaker.HelperServices.Implemetation
         private readonly ConcurrentDictionary<RabbitMqSubscriptionSettings, Lazy<IStopable>> _producers =
             new ConcurrentDictionary<RabbitMqSubscriptionSettings, Lazy<IStopable>>(new SubscriptionSettingsEqualityComparer());
 
-        public RabbitMqService(ILog logger)
+        private readonly Lazy<MessagePackBlobPublishingQueueRepository> _queueRepository;
+
+        public RabbitMqService(ILog logger, IReloadingManager<string> queueRepositoryConnectionString)
         {
             _logger = logger;
+            _queueRepository = new Lazy<MessagePackBlobPublishingQueueRepository>(() =>
+            {
+                var blob = AzureBlobStorage.Create(queueRepositoryConnectionString);
+                return new MessagePackBlobPublishingQueueRepository(blob);
+            });
         }
 
         public void Dispose()
@@ -35,12 +46,14 @@ namespace MarginTrading.MarketMaker.HelperServices.Implemetation
                 stopable.Value.Stop();
         }
 
-        public IMessageProducer<TMessage> GetProducer<TMessage>(RabbitConnectionSettings settings, bool isDurable)
+        public IMessageProducer<TMessage> GetProducer<TMessage>(IReloadingManager<RabbitConnectionSettings> settings, bool isDurable)
         {
+            // on-the fly connection strings switch is not supported currently for rabbitMq
+            var currSettings = settings.CurrentValue;
             var subscriptionSettings = new RabbitMqSubscriptionSettings
             {
-                ConnectionString = settings.ConnectionString,
-                ExchangeName = settings.ExchangeName,
+                ConnectionString = currSettings.ConnectionString,
+                ExchangeName = currSettings.ExchangeName,
                 IsDurable = isDurable,
             };
 
@@ -50,20 +63,32 @@ namespace MarginTrading.MarketMaker.HelperServices.Implemetation
             {
                 // Lazy ensures RabbitMqPublisher will be created and started only once
                 // https://andrewlock.net/making-getoradd-on-concurrentdictionary-thread-safe-using-lazy/
-                return new Lazy<IStopable>(() => new RabbitMqPublisher<TMessage>(s)
-                    .SetSerializer(new JsonMessageSerializer<TMessage>())
-                    .SetLogger(_logger)
-                    .Start());
+                return new Lazy<IStopable>(() =>
+                {
+                    var publisher = new RabbitMqPublisher<TMessage>(s);
+
+                    if (isDurable)
+                        publisher.SetQueueRepository(_queueRepository.Value);
+                    else
+                        publisher.DisableInMemoryQueuePersistence();
+
+                    return publisher
+                        .SetSerializer(new JsonMessageSerializer<TMessage>())
+                        .SetLogger(_logger)
+                        .Start();
+                });
             }
         }
 
-        public void Subscribe<TMessage>(RabbitConnectionSettings settings, bool isDurable, Func<TMessage, Task> handler)
+        public void Subscribe<TMessage>(IReloadingManager<RabbitConnectionSettings> settings, bool isDurable, Func<TMessage, Task> handler)
         {
+            // on-the fly connection strings switch is not supported currently for rabbitMq
+            var currSettings = settings.CurrentValue;
             var subscriptionSettings = new RabbitMqSubscriptionSettings
             {
-                ConnectionString = settings.ConnectionString,
-                QueueName = $"{settings.ExchangeName}.{PlatformServices.Default.Application.ApplicationName}",
-                ExchangeName = settings.ExchangeName,
+                ConnectionString = currSettings.ConnectionString,
+                QueueName = $"{currSettings.ExchangeName}.{PlatformServices.Default.Application.ApplicationName}",
+                ExchangeName = currSettings.ExchangeName,
                 IsDurable = isDurable,
             };
 

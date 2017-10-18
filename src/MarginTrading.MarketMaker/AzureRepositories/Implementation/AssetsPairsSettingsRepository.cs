@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using AzureStorage;
 using AzureStorage.Tables;
 using Common.Log;
+using Lykke.SettingsReader;
 using MarginTrading.MarketMaker.AzureRepositories.Entities;
 using MarginTrading.MarketMaker.Settings;
 
@@ -12,9 +13,10 @@ namespace MarginTrading.MarketMaker.AzureRepositories.Implementation
     {
         private readonly INoSQLTableStorage<AssetPairSettingsEntity> _tableStorage;
 
-        public AssetsPairsSettingsRepository(MarginTradingMarketMakerSettings settings, ILog log)
+        public AssetsPairsSettingsRepository(IReloadingManager<MarginTradingMarketMakerSettings> settings, ILog log)
         {
-            _tableStorage = AzureTableStorage<AssetPairSettingsEntity>.Create(() => settings.Db.ConnectionString,
+            _tableStorage = AzureTableStorage<AssetPairSettingsEntity>.Create(
+                settings.Nested(s => s.Db.ConnectionString),
                 "MarketMakerAssetPairsSettings", log);
         }
 

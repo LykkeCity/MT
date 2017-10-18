@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using Lykke.SettingsReader;
 using MarginTrading.MarketMaker.Enums;
 using MarginTrading.MarketMaker.HelperServices;
 using MarginTrading.MarketMaker.Messages;
@@ -19,15 +20,14 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         private readonly IAssetPairsSettingsService _assetPairsSettingsService;
         private readonly Lazy<IMessageProducer<OrderCommandsBatchMessage>> _messageProducer;
         private readonly ISystem _system;
-        private readonly MarginTradingMarketMakerSettings _settings;
+        private readonly IReloadingManager<MarginTradingMarketMakerSettings> _settings;
         private readonly ISpotOrderCommandsGeneratorService _spotOrderCommandsGeneratorService;
         private readonly ILog _log;
 
         public MarketMakerService(IAssetPairsSettingsService assetPairsSettingsService,
-            MarginTradingMarketMakerSettings marginTradingMarketMakerSettings,
             IRabbitMqService rabbitMqService,
             ISystem system,
-            MarginTradingMarketMakerSettings settings,
+            IReloadingManager<MarginTradingMarketMakerSettings> settings,
             ISpotOrderCommandsGeneratorService spotOrderCommandsGeneratorService,
             ILog log)
         {
@@ -37,7 +37,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             _spotOrderCommandsGeneratorService = spotOrderCommandsGeneratorService;
             _log = log;
             _messageProducer = new Lazy<IMessageProducer<OrderCommandsBatchMessage>>(() =>
-                CreateRabbitMqMessageProducer(marginTradingMarketMakerSettings, rabbitMqService));
+                CreateRabbitMqMessageProducer(settings, rabbitMqService));
         }
 
         public Task ProcessNewExternalOrderbookAsync(ExternalExchangeOrderbookMessage orderbook)
@@ -146,10 +146,10 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         }
 
         private static IMessageProducer<OrderCommandsBatchMessage> CreateRabbitMqMessageProducer(
-            MarginTradingMarketMakerSettings marginTradingMarketMakerSettings, IRabbitMqService rabbitMqService)
+            IReloadingManager<MarginTradingMarketMakerSettings> settings, IRabbitMqService rabbitMqService)
         {
             return rabbitMqService.GetProducer<OrderCommandsBatchMessage>(
-                marginTradingMarketMakerSettings.RabbitMq.OrderCommandsConnectionSettings, false);
+                settings.Nested(s => s.RabbitMq.OrderCommandsConnectionSettings), false);
         }
 
         private Task SendOrderCommandsAsync(string assetPairId, IReadOnlyList<OrderCommand> commands)
@@ -164,7 +164,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 AssetPairId = assetPairId,
                 Timestamp = _system.UtcNow,
                 Commands = commands,
-                MarketMakerId = _settings.MarketMakerId,
+                MarketMakerId = _settings.CurrentValue.MarketMakerId,
             });
         }
     }
