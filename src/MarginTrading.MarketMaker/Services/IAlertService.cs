@@ -1,13 +1,14 @@
 ﻿using System.Threading.Tasks;
 using MarginTrading.MarketMaker.Enums;
+using MarginTrading.MarketMaker.Messages;
 
 namespace MarginTrading.MarketMaker.Services
 {
     public interface IAlertService
     {
-        void AlertPrimaryExchangeSwitched(string assetPairId, string newPrimaryExchange, ExchangeErrorState state, decimal preference);
+        void AlertPrimaryExchangeSwitched(PrimaryExchangeSwitchedMessage message);
         void AlertStopNewTrades(string assetPairId);
-        void AlertRiskOfficer(string message, object context);
+        void AlertRiskOfficer(string message);
         void AlertStarted();
         Task AlertStopping();
     }

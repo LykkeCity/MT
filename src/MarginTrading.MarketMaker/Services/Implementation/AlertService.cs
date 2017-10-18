@@ -1,11 +1,12 @@
 ﻿using System.Threading.Tasks;
 using MarginTrading.MarketMaker.Enums;
+using MarginTrading.MarketMaker.Messages;
 
 namespace MarginTrading.MarketMaker.Services.Implementation
 {
     public class AlertService : IAlertService
     {
-        public void AlertPrimaryExchangeSwitched(string assetPairId, string newPrimaryExchange, ExchangeErrorState state, decimal preference)
+        public void AlertPrimaryExchangeSwitched(PrimaryExchangeSwitchedMessage message)
         {
             // todo SendPrimaryExchangeSwitchedMessage
             // no alert to risk officer here
@@ -17,7 +18,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             // also AlertRiskOfficer
         }
 
-        public void AlertRiskOfficer(string message, object context)
+        public void AlertRiskOfficer(string message)
         {
             // todo AlertRiskOfficer
         }
