@@ -59,7 +59,6 @@ namespace MarginTrading.Services
                 var marginEventTask = _rabbitMqNotifyService.AccountMarginEvent(accountMarginEventMessage);
 
                 _notifyService.NotifyAccountStopout(account.ClientId, account.Id, orders.Length, totalPnl);
-                _notifyService.NotifyAccountUpdated(account);
 
                 var notificationTask = SendNotification(account.ClientId,
                     string.Format(MtMessages.Notifications_StopOutNotification, orders.Length, totalPnl,

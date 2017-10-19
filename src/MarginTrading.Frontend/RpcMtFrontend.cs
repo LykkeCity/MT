@@ -163,9 +163,9 @@ namespace MarginTrading.Frontend
 
         #region Orderbook
 
-        public Task<Dictionary<string, OrderBookClientContract>> GetOrderBooks()
+        public Task<OrderBookClientContract> GetOrderBook(string instrument)
         {
-            return _rpcFacade.GetOrderBooks();
+            return _rpcFacade.GetOrderBook(instrument);
         }
 
         #endregion

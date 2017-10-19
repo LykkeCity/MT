@@ -24,6 +24,7 @@ namespace MarginTrading.Core
         decimal Volume { get; }
         decimal? TakeProfit { get; }
         decimal? StopLoss { get; }
+        decimal CommissionLot { get; }
         decimal OpenCommission { get; }
         decimal CloseCommission { get; }
         decimal SwapCommission { get; }
@@ -68,6 +69,7 @@ namespace MarginTrading.Core
         public decimal Volume { get; set; }
         public decimal? TakeProfit { get; set; }
         public decimal? StopLoss { get; set; }
+        public decimal CommissionLot { get; set; }
         public decimal OpenCommission { get; set; }
         public decimal CloseCommission { get; set; }
         public decimal SwapCommission { get; set; }

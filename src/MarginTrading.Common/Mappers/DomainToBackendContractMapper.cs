@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Security.Cryptography;
 using MarginTrading.Common.BackendContracts;
 using MarginTrading.Core;
 using MarginTrading.Core.MatchedOrders;
@@ -120,6 +121,7 @@ namespace MarginTrading.Common.Mappers
                 TotalPnl = src.GetTotalFpl(),
                 Pnl = src.GetFpl(),
                 InterestRateSwap = src.GetSwaps(),
+                CommissionLot = src.CommissionLot,
                 OpenCommission = src.GetOpenCommission(),
                 CloseCommission = src.GetCloseCommission()
             };
@@ -146,6 +148,7 @@ namespace MarginTrading.Common.Mappers
                 Pnl = src.PnL,
                 TotalPnl = src.Fpl,
                 InterestRateSwap = src.InterestRateSwap,
+                CommissionLot = src.CommissionLot,
                 OpenCommission = src.OpenCommission,
                 CloseCommission = src.CloseCommission
             };
@@ -172,6 +175,7 @@ namespace MarginTrading.Common.Mappers
                 TotalPnl = src.Fpl,
                 Pnl = src.PnL,
                 InterestRateSwap = src.InterestRateSwap,
+                CommissionLot = src.CommissionLot,
                 OpenCommission = src.OpenCommission,
                 CloseCommission = src.CloseCommission
             };
@@ -200,6 +204,7 @@ namespace MarginTrading.Common.Mappers
                 TakeProfit = src.TakeProfit,
                 StopLoss = src.StopLoss,
                 Fpl = src.GetTotalFpl(),
+                CommissionLot = src.CommissionLot,
                 OpenCommission = src.GetOpenCommission(),
                 CloseCommission = src.GetCloseCommission(),
                 SwapCommission = src.SwapCommission
@@ -228,6 +233,7 @@ namespace MarginTrading.Common.Mappers
                 Volume = src.Volume,
                 TakeProfit = src.TakeProfit,
                 StopLoss = src.StopLoss,
+                CommissionLot = src.CommissionLot,
                 OpenCommission = src.GetOpenCommission(),
                 CloseCommission = src.GetCloseCommission(),
                 SwapCommission = src.SwapCommission,
@@ -289,6 +295,7 @@ namespace MarginTrading.Common.Mappers
                 CloseReason = src.CloseReason,
                 RejectReason = src.RejectReason,
                 RejectReasonText = src.RejectReasonText,
+                CommissionLot = src.CommissionLot,
                 OpenCommission = src.GetOpenCommission(),
                 CloseCommission = src.GetCloseCommission(),
                 SwapCommission = src.SwapCommission

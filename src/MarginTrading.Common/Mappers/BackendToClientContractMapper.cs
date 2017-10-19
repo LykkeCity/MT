@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using MarginTrading.Common.BackendContracts;
 using MarginTrading.Common.ClientContracts;
@@ -266,45 +267,22 @@ namespace MarginTrading.Common.Mappers
             };
         }
 
-        public static MatchedOrderClientContract ToClientContract(this MatchedOrderBackendContract src)
-        {
-            return new MatchedOrderClientContract
-            {
-                OrderId = src.OrderId,
-                MarketMakerId = src.MarketMakerId,
-                LimitOrderLeftToMatch = src.LimitOrderLeftToMatch,
-                Volume = src.Volume,
-                Price = src.Price,
-                MatchedDate = src.MatchedDate
-            };
-        }
-
-        public static LimitOrderClientContract ToClientContract(this LimitOrderBackendContract src)
-        {
-            return new LimitOrderClientContract
-            {
-                Id = src.Id,
-                MarketMakerId = src.MarketMakerId,
-                Instrument = src.Instrument,
-                Volume = src.Volume,
-                Price = src.Price,
-                CreateDate = src.CreateDate,
-                MatchedOrders = src.MatchedOrders.Select(item => item.ToClientContract()).ToArray()
-            };
-        }
-
         public static OrderBookClientContract ToClientContract(this OrderBookBackendContract src)
         {
             return new OrderBookClientContract
             {
-                Buy = src.Buy.ToDictionary(pair => pair.Key, pair => pair.Value.Select(item => item.ToClientContract()).ToArray()),
-                Sell = src.Sell.ToDictionary(pair => pair.Key, pair => pair.Value.Select(item => item.ToClientContract()).ToArray())
+                Buy = src.Buy.Values.SelectMany(o => o.Select(l => l.ToClientContract())).ToArray(),
+                Sell = src.Sell.Values.SelectMany(o => o.Select(l => l.ToClientContract())).ToArray()
             };
         }
 
-        public static Dictionary<string, OrderBookClientContract> ToClientContract(this OrderbooksBackendResponse src)
+        public static OrderBookLevelClientContract ToClientContract(this LimitOrderBackendContract src)
         {
-            return src.Orderbooks.ToDictionary(pair => pair.Key, pair => pair.Value.ToClientContract());
+            return new OrderBookLevelClientContract
+            {
+                Price = src.Price,
+                Volume = Math.Abs(src.Volume) - src.MatchedOrders?.Sum(o => Math.Abs(o.Volume)) ?? 0
+            };
         }
 
         public static AccountStopoutClientContract ToClientContract(this AccountStopoutBackendContract src)

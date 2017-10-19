@@ -202,33 +202,6 @@ namespace MarginTrading.Backend.Controllers
             return result;
         }
 
-        /// <summary>
-        /// Returns list of orderbooks
-        /// </summary>
-        /// <remarks>
-        /// Header "api-key" is required
-        /// </remarks>
-        /// <response code="200">Returns orderbooks</response>
-        [HttpGet]
-        [Route("orderbooks")]
-        [ProducesResponseType(typeof(List<OrderBookModel>), 200)]
-        public List<OrderBookModel> GetOrderBooks([FromQuery] string instrument = null)
-        {
-            // TODO: return aggregated order book
-            var result = new List<OrderBookModel>();
-            var orderbooks = _orderBooks.GetAllLimitOrders(instrument);
-            result.Add(
-                new OrderBookModel
-                {
-                    Instrument = instrument,
-                    Buy = orderbooks.Buy.ToList(),
-                    Sell = orderbooks.Sell.ToList()
-                });
-
-            return result;
-        }
-
-
         #endregion
 
 

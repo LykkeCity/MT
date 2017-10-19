@@ -44,6 +44,7 @@ namespace MarginTrading.DataReader.Helpers
                 CloseReason = src.CloseReason,
                 RejectReason = src.RejectReason,
                 RejectReasonText = src.RejectReasonText,
+                CommissionLot = src.CommissionLot,
                 OpenCommission = src.GetOpenCommission(),
                 CloseCommission = src.GetCloseCommission(),
                 SwapCommission = src.SwapCommission,
@@ -73,6 +74,7 @@ namespace MarginTrading.DataReader.Helpers
                 TotalPnl = src.FplData.TotalFplSnapshot,
                 Pnl = src.FplData.Fpl,
                 InterestRateSwap = src.FplData.SwapsSnapshot,
+                CommissionLot = src.CommissionLot,
                 OpenCommission = src.GetOpenCommission(),
                 CloseCommission = src.GetCloseCommission()
             };

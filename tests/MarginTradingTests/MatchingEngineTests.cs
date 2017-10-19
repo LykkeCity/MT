@@ -200,11 +200,11 @@ namespace MarginTradingTests
                 DeleteByInstrumentsSell = new[] {"EURUSD"}
             });
 
-           var orderBook = _matchingEngine.GetOrderBook(new List<string> {_marketMakerId1});
+           var orderBook = _matchingEngine.GetOrderBook("EURUSD");
 
-            Assert.AreEqual(1, orderBook["EURUSD"].Sell.Count);
-            Assert.AreEqual(1, orderBook["EURUSD"].Sell.Count);
-            Assert.AreEqual(1, orderBook["EURUSD"].Sell.First().Value.Count);
+            Assert.AreEqual(1, orderBook.Sell.Count);
+            Assert.AreEqual(1, orderBook.Sell.Count);
+            Assert.AreEqual(1, orderBook.Sell.First().Value.Count);
         }
 
         [Test]
@@ -220,11 +220,11 @@ namespace MarginTradingTests
                 DeleteByInstrumentsBuy = new[] {"EURUSD"}
             });
 
-           var orderBook = _matchingEngine.GetOrderBook(new List<string> {_marketMakerId1});
+           var orderBook = _matchingEngine.GetOrderBook("EURUSD");
 
-            Assert.AreEqual(1, orderBook["EURUSD"].Buy.Count);
-            Assert.AreEqual(1, orderBook["EURUSD"].Buy.Count);
-            Assert.AreEqual(1, orderBook["EURUSD"].Buy.First().Value.Count);
+            Assert.AreEqual(1, orderBook.Buy.Count);
+            Assert.AreEqual(1, orderBook.Buy.Count);
+            Assert.AreEqual(1, orderBook.Buy.First().Value.Count);
         }
 
         #region Market orders
@@ -250,13 +250,13 @@ namespace MarginTradingTests
 
             _matchingEngine.MatchMarketOrderForOpen(order, orders => ProcessOrders(order, orders));
 
-            var orderBooks = _matchingEngine.GetOrderBook(new List<string> { _marketMakerId1 });
+            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
             Assert.AreEqual(2, order.MatchedOrders.Count);
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "3"));
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "4"));
             Assert.AreEqual(order.Volume, order.GetMatchedVolume());
-            Assert.AreEqual(6, orderBooks["EURUSD"].Sell[1.15M].First(item => item.Id == "4").GetRemainingVolume());
+            Assert.AreEqual(6, orderBooks.Sell[1.15M].First(item => item.Id == "4").GetRemainingVolume());
         }
 
         [Test]
@@ -278,14 +278,14 @@ namespace MarginTradingTests
 
             _matchingEngine.MatchMarketOrderForOpen(order, orders => ProcessOrders(order, orders));
 
-            var orderBooks = _matchingEngine.GetOrderBook(new List<string> { _marketMakerId1 });
+            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
             Assert.AreEqual(2, order.MatchedOrders.Count);
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "1"));
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "2"));
             Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
-            Assert.AreEqual(3, orderBooks["EURUSD"].Buy[1.04M].First(item => item.Id == "1").GetRemainingVolume());
-            Assert.IsFalse(orderBooks["EURUSD"].Buy.ContainsKey(1.5M));
+            Assert.AreEqual(3, orderBooks.Buy[1.04M].First(item => item.Id == "1").GetRemainingVolume());
+            Assert.IsFalse(orderBooks.Buy.ContainsKey(1.5M));
         }
 
         [Test]
@@ -307,14 +307,14 @@ namespace MarginTradingTests
 
             _matchingEngine.MatchMarketOrderForOpen(order, orders => ProcessOrders(order, orders));
 
-            var orderBooks = _matchingEngine.GetOrderBook(new List<string> { _marketMakerId1 });
+            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
             Assert.AreEqual(2, order.MatchedOrders.Count);
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "3"));
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "4"));
             Assert.AreEqual(1, order.Volume - order.GetMatchedVolume());
-            Assert.IsFalse(orderBooks["EURUSD"].Sell.ContainsKey(1.1M));
-            Assert.IsFalse(orderBooks["EURUSD"].Sell.ContainsKey(1.15M));
+            Assert.IsFalse(orderBooks.Sell.ContainsKey(1.1M));
+            Assert.IsFalse(orderBooks.Sell.ContainsKey(1.15M));
         }
 
         [Test]
@@ -336,14 +336,14 @@ namespace MarginTradingTests
 
             _matchingEngine.MatchMarketOrderForOpen(order, orders => ProcessOrders(order, orders));
 
-            var orderBooks = _matchingEngine.GetOrderBook(new List<string> { _marketMakerId1 });
+            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
             Assert.AreEqual(2, order.MatchedOrders.Count);
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "1"));
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "2"));
             Assert.AreEqual(2, Math.Abs(order.Volume) - order.GetMatchedVolume());
-            Assert.IsFalse(orderBooks["EURUSD"].Buy.ContainsKey(1.05M));
-            Assert.IsFalse(orderBooks["EURUSD"].Buy.ContainsKey(1.04M));
+            Assert.IsFalse(orderBooks.Buy.ContainsKey(1.05M));
+            Assert.IsFalse(orderBooks.Buy.ContainsKey(1.04M));
         }
 
         [Test]
@@ -388,14 +388,14 @@ namespace MarginTradingTests
 
             _matchingEngine.MatchMarketOrderForOpen(order, orders => ProcessOrders(order, orders));
 
-            var orderBooks = _matchingEngine.GetOrderBook(new List<string> { _marketMakerId1 });
+            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
             Assert.AreEqual(0, order.MatchedOrders.Count);
             Assert.AreEqual(OrderStatus.Rejected, order.Status);
             Assert.AreEqual(OrderRejectReason.NoLiquidity, order.RejectReason);
             Assert.IsNotNull(order.CloseDate);
-            Assert.AreEqual(6, orderBooks["EURUSD"].Sell[1.1M].First(item => item.Id == "3").GetRemainingVolume());
-            Assert.AreEqual(8, orderBooks["EURUSD"].Sell[1.15M].First(item => item.Id == "4").GetRemainingVolume());
+            Assert.AreEqual(6, orderBooks.Sell[1.1M].First(item => item.Id == "3").GetRemainingVolume());
+            Assert.AreEqual(8, orderBooks.Sell[1.15M].First(item => item.Id == "4").GetRemainingVolume());
         }
 
         [Test]
@@ -416,14 +416,14 @@ namespace MarginTradingTests
 
             _matchingEngine.MatchMarketOrderForOpen(order, orders => ProcessOrders(order, orders));
 
-            var orderBooks = _matchingEngine.GetOrderBook(new List<string> { _marketMakerId1 });
+            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
             Assert.AreEqual(0, order.MatchedOrders.Count);
             Assert.AreEqual(OrderStatus.Rejected, order.Status);
             Assert.AreEqual(OrderRejectReason.NoLiquidity, order.RejectReason);
             Assert.IsNotNull(order.CloseDate);
-            Assert.AreEqual(4, orderBooks["EURUSD"].Buy[1.04M].First(item => item.Id == "1").GetRemainingVolume());
-            Assert.AreEqual(7, orderBooks["EURUSD"].Buy[1.05M].First(item => item.Id == "2").GetRemainingVolume());
+            Assert.AreEqual(4, orderBooks.Buy[1.04M].First(item => item.Id == "1").GetRemainingVolume());
+            Assert.AreEqual(7, orderBooks.Buy[1.05M].First(item => item.Id == "2").GetRemainingVolume());
         }
 
         [Test]
@@ -445,14 +445,14 @@ namespace MarginTradingTests
 
             _matchingEngine.MatchMarketOrderForOpen(order, orders => ProcessOrders(order, orders));
 
-            var orderBooks = _matchingEngine.GetOrderBook(new List<string> { _marketMakerId1 });
+            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
             Assert.AreEqual(2, order.MatchedOrders.Count);
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "3"));
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "4"));
-            Assert.AreEqual(1, orderBooks["EURUSD"].Sell.Count);
-            Assert.IsFalse(orderBooks["EURUSD"].Sell.ContainsKey(1.1M));
-            Assert.AreEqual(5, orderBooks["EURUSD"].Sell[1.15M][0].GetRemainingVolume());
+            Assert.AreEqual(1, orderBooks.Sell.Count);
+            Assert.IsFalse(orderBooks.Sell.ContainsKey(1.1M));
+            Assert.AreEqual(5, orderBooks.Sell[1.15M][0].GetRemainingVolume());
         }
 
         [Test]
@@ -474,14 +474,14 @@ namespace MarginTradingTests
 
             _matchingEngine.MatchMarketOrderForOpen(order, orders => ProcessOrders(order, orders));
 
-            var orderBooks = _matchingEngine.GetOrderBook(new List<string> { _marketMakerId1 });
+            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
             Assert.AreEqual(2, order.MatchedOrders.Count);
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "1"));
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "2"));
-            Assert.AreEqual(1, orderBooks["EURUSD"].Buy.Count);
-            Assert.IsFalse(orderBooks["EURUSD"].Buy.ContainsKey(1.05M));
-            Assert.AreEqual(3, orderBooks["EURUSD"].Buy[1.04M][0].GetRemainingVolume());
+            Assert.AreEqual(1, orderBooks.Buy.Count);
+            Assert.IsFalse(orderBooks.Buy.ContainsKey(1.05M));
+            Assert.AreEqual(3, orderBooks.Buy[1.04M][0].GetRemainingVolume());
         }
 
         #endregion
@@ -508,12 +508,12 @@ namespace MarginTradingTests
 
             _matchingEngine.MatchMarketOrderForOpen(order, orders => ProcessOrders(order, orders));
 
-            var orderBooks = _matchingEngine.GetOrderBook(new List<string> { _marketMakerId1 });
+            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
             Assert.AreEqual(2, order.MatchedOrders.Count);
             Assert.AreEqual(OrderStatus.Active, order.Status);
-            Assert.IsFalse(orderBooks["EURUSD"].Sell.ContainsKey(1.1M));
-            Assert.AreEqual(6, orderBooks["EURUSD"].Sell[1.15M][0].GetRemainingVolume());
+            Assert.IsFalse(orderBooks.Sell.ContainsKey(1.1M));
+            Assert.AreEqual(6, orderBooks.Sell[1.15M][0].GetRemainingVolume());
         }
 
         [Test]
@@ -561,12 +561,12 @@ namespace MarginTradingTests
 
             _matchingEngine.MatchMarketOrderForOpen(order, orders => ProcessOrders(order, orders));
 
-            var orderBooks = _matchingEngine.GetOrderBook(new List<string> { _marketMakerId1 });
+            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
             Assert.AreEqual(1, order.MatchedOrders.Count);
             Assert.AreEqual(OrderStatus.Active, order.Status);
             Assert.AreEqual(1.05, order.OpenPrice);
-            Assert.AreEqual(2, orderBooks["EURUSD"].Buy[1.05M][0].GetRemainingVolume());
+            Assert.AreEqual(2, orderBooks.Buy[1.05M][0].GetRemainingVolume());
         }
 
         [Test]
@@ -589,12 +589,12 @@ namespace MarginTradingTests
 
             _matchingEngine.MatchMarketOrderForOpen(order, orders => ProcessOrders(order, orders));
 
-            var orderBooks = _matchingEngine.GetOrderBook(new List<string> { _marketMakerId1 });
+            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
             Assert.AreEqual(1, order.MatchedOrders.Count);
             Assert.AreEqual(OrderStatus.Active, order.Status);
             Assert.AreEqual(1.05, order.OpenPrice);
-            Assert.AreEqual(2, orderBooks["EURUSD"].Buy[1.05M][0].GetRemainingVolume());
+            Assert.AreEqual(2, orderBooks.Buy[1.05M][0].GetRemainingVolume());
         }
 
         #endregion

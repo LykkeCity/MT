@@ -1,19 +1,17 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using MarginTrading.Common.Mappers;
+﻿using MarginTrading.Common.Mappers;
 using MarginTrading.Core;
 
 namespace MarginTrading.Common.BackendContracts
 {
     public class OrderbooksBackendResponse
     {
-        public Dictionary<string, OrderBookBackendContract> Orderbooks { get; set; }
+        public OrderBookBackendContract Orderbook { get; set; }
 
-        public static OrderbooksBackendResponse Create(Dictionary<string, OrderBook> orderbooks)
+        public static OrderbooksBackendResponse Create(OrderBook orderbook)
         {
             return new OrderbooksBackendResponse
             {
-                Orderbooks = orderbooks.ToDictionary(pair => pair.Key, pair => pair.Value.ToBackendContract())
+                Orderbook = orderbook.ToBackendContract()
             };
         }
     }

@@ -121,7 +121,12 @@ namespace MarginTrading.Core
                 });
 
                 if (bookOrder.GetIsFullfilled())
+                {
                     source[matchedOrder.Price].Remove(bookOrder);
+                    
+                    if (!source[matchedOrder.Price].Any())
+                        source.Remove(matchedOrder.Price);
+                }
             }
         }
 
@@ -268,17 +273,15 @@ namespace MarginTrading.Core
         }
     }
 
-    //TODO: check concurent work
+    /// <summary>
+    /// List of order books
+    /// </summary>
+    /// <remarks>
+    /// Not thread-safe!
+    /// </remarks>
     public class OrderBookList : IEnumerable<KeyValuePair<string, OrderBook>>
     {
-        private readonly IAssetPairsCache _assetPairsCache;
-
         private Dictionary<string, OrderBook> _orderBooks;
-
-        public OrderBookList(IAssetPairsCache assetPairsCache)
-        {
-            _assetPairsCache = assetPairsCache;
-        }
 
         public Dictionary<string, OrderBook> GetOrderBookState()
         {
@@ -317,14 +320,11 @@ namespace MarginTrading.Core
             _orderBooks[order.Instrument].Update(order, orderTypeToMatch, matchedOrders);
         }
 
-        public OrderListPair GetAllLimitOrders(string instrumentId)
+        public OrderBook GetOrderBook(string instrumentId)
         {
-            var orderBook = _orderBooks.GetValueOrDefault(instrumentId, k => new OrderBook());
-            return new OrderListPair
-            {
-                Buy = orderBook.Buy.Values.SelectMany(x => x).ToArray(),
-                Sell = orderBook.Sell.Values.SelectMany(x => x).ToArray(),
-            };
+            var orderbook = _orderBooks.GetValueOrDefault(instrumentId, k => new OrderBook());
+
+            return orderbook.Clone();
         }
 
         public IEnumerable<LimitOrder> DeleteMarketMakerOrders(string marketMakerId, string[] idsToDelete)
@@ -395,12 +395,6 @@ namespace MarginTrading.Core
 
             return result;
         }
-    }
-
-    public class OrderListPair
-    {
-        public LimitOrder[] Buy { get; set; }
-        public LimitOrder[] Sell { get; set; }
     }
 
     public class OrderBookLevel

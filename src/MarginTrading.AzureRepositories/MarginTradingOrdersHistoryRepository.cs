@@ -48,6 +48,8 @@ namespace MarginTrading.AzureRepositories
         public double PnL { get; set; }
         decimal IOrderHistory.InterestRateSwap => (decimal) InterestRateSwap;
         public double InterestRateSwap { get; set; }
+        decimal IOrderHistory.CommissionLot => (decimal) ComissionLot;
+        public double ComissionLot { get; set; }
         decimal IOrderHistory.OpenCommission => (decimal) OpenCommission;
         public double OpenCommission { get; set; }
         decimal IOrderHistory.CloseCommission => (decimal) CloseCommission;
@@ -110,6 +112,7 @@ namespace MarginTrading.AzureRepositories
                 Fpl = (double) src.Fpl,
                 PnL = (double) src.PnL,
                 InterestRateSwap = (double) src.InterestRateSwap,
+                ComissionLot = (double) src.CommissionLot,
                 OpenCommission = (double) src.OpenCommission,
                 CloseCommission = (double) src.CloseCommission,
                 QuoteRate = (double) src.QuoteRate,

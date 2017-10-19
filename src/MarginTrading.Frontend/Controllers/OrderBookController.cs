@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using MarginTrading.Common.ClientContracts;
 using MarginTrading.Frontend.Models;
 using MarginTrading.Frontend.Services;
@@ -20,11 +19,12 @@ namespace MarginTrading.Frontend.Controllers
         }
 
         [HttpGet]
-        public async Task<ResponseModel<Dictionary<string, OrderBookClientContract>>> GetOrderBooks()
+        [Route("{instrument}")]
+        public async Task<ResponseModel<OrderBookClientContract>> GetOrderBook(string instrument)
         {
-            var result = await _rpcFacade.GetOrderBooks();
+            var result = await _rpcFacade.GetOrderBook(instrument);
 
-            return ResponseModel<Dictionary<string, OrderBookClientContract>>.CreateOk(result);
+            return ResponseModel<OrderBookClientContract>.CreateOk(result);
         }
     }
 }

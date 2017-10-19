@@ -238,10 +238,12 @@ namespace MarginTrading.Frontend.Services
 
         #region Orderbook
 
-        public async Task<Dictionary<string, OrderBookClientContract>> GetOrderBooks()
+        public async Task<OrderBookClientContract> GetOrderBook(string instrument)
         {
-            var backendResponse = await _httpRequestService.RequestWithRetriesAsync<OrderbooksBackendResponse>(null, "orderbooks");
-            return backendResponse.ToClientContract();
+            var backendResponse =
+                await _httpRequestService.RequestWithRetriesAsync<OrderbooksBackendResponse>(
+                    new OrderbooksBackendRequest {Instrument = instrument}, "orderbooks");
+            return backendResponse.Orderbook.ToClientContract();
         }
 
         #endregion

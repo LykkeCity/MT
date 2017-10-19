@@ -32,6 +32,7 @@ namespace MarginTrading.Common.BackendContracts
         /// <summary> Total profit </summary>
         /// <remarks> Fpl + comissions </remarks>
         public decimal PnL { get; set; }
+        public decimal CommissionLot { get; set; }
         public decimal OpenCommission { get; set; }
         public decimal CloseCommission { get; set; }
         public decimal SwapCommission { get; set; }
