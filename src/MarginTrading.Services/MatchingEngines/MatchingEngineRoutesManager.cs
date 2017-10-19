@@ -218,7 +218,8 @@ namespace MarginTrading.Services.MatchingEngines
         
         private Task HandleRiskManagerHedgingCommand(MatchingEngineRouteRisksCommand command)
         {
-            return Task.CompletedTask;
+            //TODO: change when 1 to 1 hedging will be implemented
+            return HandleRiskManagerBlockTradingCommand(command);
         }
         
         
