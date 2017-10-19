@@ -2,7 +2,7 @@
 
 namespace MarginTrading.MarketMaker.Services
 {
-    public interface IHedgingPriorityService
+    public interface IHedgingPreferenceService
     {
         /// <summary>
         /// Returns exchanges available for hedging with their preference amount from 0 to 1.

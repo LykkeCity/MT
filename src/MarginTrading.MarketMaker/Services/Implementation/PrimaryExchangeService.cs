@@ -15,14 +15,14 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             new ReadWriteLockedDictionary<string, string>();
 
         private readonly IAlertService _alertService;
-        private readonly IHedgingPriorityService _hedgingPriorityService;
+        private readonly IHedgingPreferenceService _hedgingPreferenceService;
         private readonly IPriceCalcSettingsService _priceCalcSettingsService;
 
-        public PrimaryExchangeService(IAlertService alertService, IHedgingPriorityService hedgingPriorityService,
+        public PrimaryExchangeService(IAlertService alertService, IHedgingPreferenceService hedgingPreferenceService,
             IPriceCalcSettingsService priceCalcSettingsService)
         {
             _alertService = alertService;
-            _hedgingPriorityService = hedgingPriorityService;
+            _hedgingPreferenceService = hedgingPreferenceService;
             _priceCalcSettingsService = priceCalcSettingsService;
         }
 
@@ -34,13 +34,15 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             }
 
             var primaryExchange = _primaryExchanges.GetOrDefault(assetPairId);
+            var hedgingPreferences = _hedgingPreferenceService.Get(assetPairId);
 
             void SwitchPrimaryExchange()
             {
-                var (newPrimary, all) = ChooseBackupExchange(assetPairId, exchanges);
+                var (newPrimary, all) = ChooseBackupExchange(assetPairId, exchanges, hedgingPreferences);
                 primaryExchange = newPrimary.Exchange;
                 _primaryExchanges[assetPairId] = primaryExchange;
-                _alertService.AlertPrimaryExchangeSwitched(new PrimaryExchangeSwitchedMessage(assetPairId, newPrimary, all));
+                _alertService.AlertPrimaryExchangeSwitched(
+                    new PrimaryExchangeSwitchedMessage(assetPairId, newPrimary, all));
             }
 
             if (primaryExchange == null)
@@ -52,6 +54,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             }
 
             var primaryExchangeState = exchanges[primaryExchange];
+            var primaryPreference = hedgingPreferences.GetValueOrDefault(primaryExchange);
             var originalPrimaryExchange = primaryExchange;
             var cycleCounter = 0;
             do
@@ -64,26 +67,19 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
                 switch (primaryExchangeState)
                 {
-                    case ExchangeErrorState.None:
+                    case ExchangeErrorState.None when primaryPreference > 0:
                         break;
-                    case ExchangeErrorState.Outlier:
-                    {
+                    case ExchangeErrorState.Outlier when primaryPreference > 0:
                         _alertService.AlertRiskOfficer(
                             $"Primary exchange {primaryExchange} for {assetPairId} is an outlier. Skipping price update.");
-                    }
                         return null;
-                    case ExchangeErrorState.Outdated:
-                    case ExchangeErrorState.Disabled:
+                    default:
                         SwitchPrimaryExchange();
-                    {
                         _alertService.AlertRiskOfficer(
                             $"Primary exchange {originalPrimaryExchange} for {assetPairId} is not usable any more " +
-                            $"because it became {primaryExchangeState}.\r\n" +
+                            $"because it became {primaryExchangeState} with hedgind priority {primaryPreference}.\r\n" +
                             $"A new primary exchange has been chosen: {primaryExchange}");
-                    }
                         break;
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(primaryExchangeState), primaryExchangeState, null);
                 }
             } while (originalPrimaryExchange != primaryExchange);
 
@@ -92,7 +88,8 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
         [Pure]
         private (ExchangeQuality primary, ImmutableArray<ExchangeQuality> exchangeQualities)
-            ChooseBackupExchange(string assetPairId, ImmutableDictionary<string, ExchangeErrorState> exchangesErrors)
+            ChooseBackupExchange(string assetPairId, ImmutableDictionary<string, ExchangeErrorState> exchangesErrors,
+                ImmutableDictionary<string, decimal> hedgingPriorities)
         {
             ExchangeQuality GetExchangeQuality(string exchange, decimal preference)
             {
@@ -100,11 +97,12 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 return new ExchangeQuality(exchange, preference, state, orderbookReceived);
             }
 
-            var exchangeQualities = _hedgingPriorityService.Get(assetPairId)
+            var exchangeQualities = hedgingPriorities
                 .Select(p => GetExchangeQuality(p.Key, p.Value))
                 .ToImmutableArray();
             var allHedgingPriorities = exchangeQualities
                 .Where(p => p.State != null && p.State != ExchangeErrorState.Disabled)
+                // ReSharper disable once PossibleInvalidOperationException
                 .ToLookup(t => t.State.Value);
 
             var primary = allHedgingPriorities[ExchangeErrorState.None]
@@ -127,6 +125,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 }
             }
 
+            // this may spam shortly after service start
             throw new InvalidOperationException("Unable to choose backup exchange for assetPair " + assetPairId);
         }
     }

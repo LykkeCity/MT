@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 using MarginTrading.MarketMaker.Enums;
 using MarginTrading.MarketMaker.Models;
 
@@ -34,6 +35,11 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         }
 
         public decimal GetOutlierThreshold(string assetPairId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ImmutableDictionary<string, decimal> GetHedgingPreferences(string assetPairId)
         {
             throw new NotImplementedException();
         }

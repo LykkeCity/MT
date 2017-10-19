@@ -10,13 +10,16 @@ namespace MarginTrading.MarketMaker.Services.Implementation
     {
         private readonly IBestPricesService _bestPricesService;
         private readonly IPriceCalcSettingsService _priceCalcSettingsService;
+        private readonly IPrimaryExchangeService _primaryExchangeService;
 
         public OutliersOrderbooksService(
             IBestPricesService bestPricesService,
-            IPriceCalcSettingsService priceCalcSettingsService)
+            IPriceCalcSettingsService priceCalcSettingsService, 
+            IPrimaryExchangeService primaryExchangeService)
         {
             _bestPricesService = bestPricesService;
             _priceCalcSettingsService = priceCalcSettingsService;
+            _primaryExchangeService = primaryExchangeService;
         }
 
         public IReadOnlyList<ExternalOrderbook> FindOutliers(string assetPairId, ImmutableDictionary<string, ExternalOrderbook> validOrderbooks)
