@@ -14,8 +14,8 @@ namespace MarginTrading.Services.Modules
 
             builder.RegisterType<OrderCacheManager>()
                 .AsSelf()
-                .As<IStartable>()
-                .SingleInstance();
+                .SingleInstance()
+                .OnActivated(args => args.Instance.Start());
 
             builder.RegisterType<TradingConditionsManager>()
                 .AsSelf()
@@ -46,6 +46,11 @@ namespace MarginTrading.Services.Modules
                 .AsSelf()
                 .As<IStartable>()
                 .SingleInstance();
+            
+            builder.RegisterType<PendingOrdersCleaningService>()
+                .AsSelf()
+                .SingleInstance()
+                .OnActivated(args => args.Instance.Start());
         }
     }
 }

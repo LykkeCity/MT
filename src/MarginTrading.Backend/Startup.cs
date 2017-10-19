@@ -166,6 +166,8 @@ namespace MarginTrading.Backend
             builder.RegisterBuildCallback(c => c.Resolve<OrderBookSaveService>());
             builder.RegisterBuildCallback(c => c.Resolve<MicrographManager>());
             builder.RegisterBuildCallback(c => c.Resolve<QuoteCacheService>());
+            builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
+            builder.RegisterBuildCallback(c => c.Resolve<PendingOrdersCleaningService>());
         }
 
         private static void SetupLoggers(IServiceCollection services, MtBackendSettings mtSettings,

@@ -99,8 +99,8 @@ namespace MarginTrading.Services
                 _lockSlim.ExitWriteLock();
             }
 
-            var account = MtServiceLocator.AccountsCacheService.Get(order.ClientId, order.AccountId);
-            account.CacheNeedsToBeUpdated();
+            var account = MtServiceLocator.AccountsCacheService?.Get(order.ClientId, order.AccountId);
+            account?.CacheNeedsToBeUpdated();
         }
 
         #endregion
