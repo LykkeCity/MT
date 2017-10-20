@@ -10,16 +10,21 @@ namespace MarginTrading.Services
     public class MarketMakerService : IFeedConsumer
     {
         private readonly IInternalMatchingEngine _matchingEngine;
+        private readonly AssetPairDayOffService _assetPairDayOffService;
 
-        public MarketMakerService(IInternalMatchingEngine matchingEngine)
+        public MarketMakerService(IInternalMatchingEngine matchingEngine, AssetPairDayOffService assetPairDayOffService)
         {
             _matchingEngine = matchingEngine;
+            _assetPairDayOffService = assetPairDayOffService;
         }
 
         public void ConsumeFeed(MarketMakerOrderCommandsBatchMessage batch)
         {
             batch.AssetPairId.RequiredNotNullOrWhiteSpace(nameof(batch.AssetPairId));
             batch.Commands.RequiredNotNull(nameof(batch.Commands));
+            
+            if (_assetPairDayOffService.IsDayOff(batch.AssetPairId))
+                return;
 
             var model = new SetOrderModel {MarketMakerId = batch.MarketMakerId};
 
