@@ -80,6 +80,7 @@ namespace MarginTradingTests
             builder.RegisterInstance(settings).SingleInstance();
 
             builder.RegisterBuildCallback(c => c.Resolve<AccountAssetsManager>());
+            builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
 
             Container = builder.Build();
 

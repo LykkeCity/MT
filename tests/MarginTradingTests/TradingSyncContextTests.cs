@@ -97,38 +97,6 @@ namespace MarginTradingTests
             Assert.AreEqual(1, _callbacksCount);
         }
 
-        [Test]
-        public void Check_Multithread_Context_Access()
-        {
-            var resuls = new List<string>();
-
-            var task1 = new Task(() => {
-                using (_contextFactory.GetWriteSyncContext("task1"))
-                {
-                    resuls.Add("Enter write context task1");
-                    Thread.Sleep(50);
-                }
-                resuls.Add(VerifyPublishMetrics(TelemetryConstants.WriteTradingContext, "task1", 1, 0, 10));
-            });
-
-            var task2 = new Task(() => {
-                using (_contextFactory.GetWriteSyncContext("task2"))
-                {
-                    resuls.Add("Enter write context task2");
-                    Thread.Sleep(50);
-                }
-                resuls.Add(VerifyPublishMetrics(TelemetryConstants.WriteTradingContext, "task2", 1, 39, 50));
-            });
-
-            task1.Start();
-            Thread.Sleep(10);
-            task2.Start();
-
-            Task.WaitAll(task1, task2);
-
-            resuls.ForEach(Console.WriteLine);
-        }
-
         private string VerifyPublishMetrics(string eventName, string signalSource,
             decimal depth, decimal minPending, decimal minProcessing)
         {

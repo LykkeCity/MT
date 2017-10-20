@@ -62,6 +62,11 @@ namespace MarginTrading.Services
             //check ExpectedOpenPrice for pending order
             if (order.ExpectedOpenPrice.HasValue)
             {
+                if (_assetDayOffService.IsPendingOrderDisabled(order.Instrument))
+                {
+                    throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Trades for instrument are not available");
+                }
+                
                 if (order.ExpectedOpenPrice <= 0)
                 {
                     throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice, "Incorrect expected open price");
