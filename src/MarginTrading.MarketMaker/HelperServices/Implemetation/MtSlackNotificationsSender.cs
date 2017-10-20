@@ -7,16 +7,18 @@ namespace MarginTrading.MarketMaker.HelperServices.Implemetation
     {
         private readonly ISlackNotificationsSender _sender;
         private readonly string _appName;
+        private readonly string _channelType;
 
-        public MtSlackNotificationsSender(ISlackNotificationsSender sender, string appName)
+        public MtSlackNotificationsSender(ISlackNotificationsSender sender, string appName, string channelType)
         {
             _sender = sender;
             _appName = appName;
+            _channelType = channelType;
         }
 
         public async Task SendAsync(string type, string sender, string message)
         {
-            await _sender.SendAsync("MarginTrading", sender, GetSlackMsg(message));
+            await _sender.SendAsync(_channelType, sender, GetSlackMsg(message));
         }
 
         private string GetSlackMsg(string message)
