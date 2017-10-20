@@ -36,7 +36,7 @@ namespace MarginTrading.Backend.Controllers
         
         
         /// <summary>
-        /// Get all accounts where Used margin / (balance + pnl) more than threshold value
+        /// Get all accounts where (balance + pnl) / Used margin less or equal than threshold value
         /// </summary>
         /// <param name="threshold">Minimal margin usege level</param>
         [ProducesResponseType(typeof(AccountsMarginLevelResponse), 200)]
@@ -56,7 +56,7 @@ namespace MarginTrading.Backend.Controllers
                         MarginLevel = a.GetMarginUsageLevel(),
                         OpenedPositionsCount = a.GetOpenPositionsCount()
                     })
-                .Where(a => a.MarginLevel > threshold)
+                .Where(a => a.MarginLevel <= threshold)
                 .ToArray();
 
             return new AccountsMarginLevelResponse
@@ -90,14 +90,14 @@ namespace MarginTrading.Backend.Controllers
                         _accountGroupCacheService.GetAccountGroup(account.TradingConditionId, account.BaseAssetId);
                     var accountMarginUsageLevel = account.GetMarginUsageLevel();
 
-                    if (accountMarginUsageLevel < accountGroup.MarginCall)
+                    if (accountMarginUsageLevel > accountGroup.MarginCall)
                     {
                         result.Results.Add(new CloseAccountPositionsResult
                         {
                             AccountId = accountId,
                             ClosedPositions = new OrderFullContract[0],
                             ErrorMessage =
-                                $"Account margin usage level [{accountMarginUsageLevel}] is lower then margin call level [{accountGroup.MarginCall}]"
+                                $"Account margin usage level [{accountMarginUsageLevel}] is grater then margin call level [{accountGroup.MarginCall}]"
                         });
 
                         continue;

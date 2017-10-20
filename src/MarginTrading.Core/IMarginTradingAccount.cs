@@ -112,10 +112,10 @@ namespace MarginTrading.Core
         {
             var marginUsageLevel = account.GetMarginUsageLevel();
 
-            if (marginUsageLevel >= account.GetStopOut())
+            if (marginUsageLevel <= account.GetStopOut())
                 return AccountLevel.StopOUt;
 
-            if (marginUsageLevel >= account.GetMarginCall())
+            if (marginUsageLevel <= account.GetMarginCall())
                 return AccountLevel.MarginCall;
 
             return AccountLevel.None;
@@ -124,19 +124,14 @@ namespace MarginTrading.Core
         public static decimal GetMarginUsageLevel(this MarginTradingAccount account)
         {
             var totalCapital = account.GetTotalCapital();
+            
+            var usedMargin = account.GetUsedMargin();
 
-            if (totalCapital < 0)
-                return decimal.MaxValue;
+            //Anton Belkin said 100 is ok )
+            if (usedMargin <= 0)
+                return 100;
 
-            if (totalCapital == 0)
-            {
-                if (account.Balance == 0)
-                    return 0;
-
-                return decimal.MaxValue;
-            }
-
-            return account.GetUsedMargin() / totalCapital;
+            return totalCapital / account.GetUsedMargin();
         }
 
         public static decimal GetTotalCapital(this IMarginTradingAccount account)
