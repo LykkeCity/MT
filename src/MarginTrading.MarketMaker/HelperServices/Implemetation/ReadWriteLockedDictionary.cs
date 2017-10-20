@@ -171,20 +171,6 @@ namespace MarginTrading.MarketMaker.HelperServices.Implemetation
             }
         }
 
-        public async Task<TValue> GetOrAddAsync(TKey key, Func<TKey, Task<TValue>> valueFactory)
-        {
-            using (_lock.EnterUpgradeableReadLock())
-            {
-                if (!_dictionary.TryGetValue(key, out var value))
-                {
-                    value = await valueFactory(key);
-                    Add(key, value);
-                }
-
-                return value;
-            }
-        }
-
         public TValue AddOrUpdate(TKey key, Func<TKey, TValue> valueFactory,
             Func<TKey, TValue, TValue> updateValueFactory)
         {
@@ -193,19 +179,6 @@ namespace MarginTrading.MarketMaker.HelperServices.Implemetation
                 var value = !_dictionary.TryGetValue(key, out var oldValue)
                     ? valueFactory(key)
                     : updateValueFactory(key, oldValue);
-                this[key] = value;
-                return value;
-            }
-        }
-
-        public async Task<TValue> AddOrUpdateAsync(TKey key, Func<TKey, Task<TValue>> valueFactory,
-            Func<TKey, TValue, Task<TValue>> updateValueFactory)
-        {
-            using (_lock.EnterUpgradeableReadLock())
-            {
-                var value = await (!_dictionary.TryGetValue(key, out var oldValue)
-                    ? valueFactory(key)
-                    : updateValueFactory(key, oldValue));
                 this[key] = value;
                 return value;
             }

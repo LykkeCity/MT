@@ -87,7 +87,7 @@ namespace MarginTrading.MarketMaker.HelperServices.Implemetation
             var subscriptionSettings = new RabbitMqSubscriptionSettings
             {
                 ConnectionString = currSettings.ConnectionString,
-                QueueName = $"{currSettings.ExchangeName}.{PlatformServices.Default.Application.ApplicationName}",
+                QueueName = $"{currSettings.ExchangeName}.{PlatformServices.Default.Application.ApplicationName}{currSettings.AdditionalQueueSuffix}",
                 ExchangeName = currSettings.ExchangeName,
                 IsDurable = isDurable,
             };

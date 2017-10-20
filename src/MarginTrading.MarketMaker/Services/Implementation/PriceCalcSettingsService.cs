@@ -1,47 +1,202 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
+using System.Threading.Tasks;
+using MarginTrading.MarketMaker.AzureRepositories;
+using MarginTrading.MarketMaker.AzureRepositories.Entities;
 using MarginTrading.MarketMaker.Enums;
+using MarginTrading.MarketMaker.HelperServices.Implemetation;
 using MarginTrading.MarketMaker.Models;
+using MarginTrading.MarketMaker.Models.Api;
+using Rocks.Caching;
 
 namespace MarginTrading.MarketMaker.Services.Implementation
 {
     class PriceCalcSettingsService : IPriceCalcSettingsService
     {
+        private readonly ReadWriteLockedDictionary<string, ImmutableDictionary<string, ExchangeExtPriceSettingsEntity>> _exchangesCache
+            = new ReadWriteLockedDictionary<string, ImmutableDictionary<string, ExchangeExtPriceSettingsEntity>>();
+        private readonly CachedEntityAccessorService<AssetPairExtPriceSettingsEntity> _assetPairsCachedAccessor;
+        private readonly IExchangeExtPriceSettingsRepository _exchangesRepository;
+        private readonly IAssetsPairsExtPriceSettingsRepository _assetPairsRepository;
+
+        public PriceCalcSettingsService(ICacheProvider cache, IAssetsPairsExtPriceSettingsRepository assetPairsRepository, IExchangeExtPriceSettingsRepository exchangesRepository)
+        {
+            _exchangesRepository = exchangesRepository;
+            _assetPairsRepository = assetPairsRepository;
+            _assetPairsCachedAccessor = new CachedEntityAccessorService<AssetPairExtPriceSettingsEntity>(cache, assetPairsRepository);
+        }
+
         public bool IsStepEnabled(OrderbookGeneratorStepEnum step, string assetPairId)
         {
-            // todo check if is fiat
-            // todo check settings
-            throw new System.NotImplementedException();
+            return Asset(assetPairId).Steps.GetValueOrDefault(step, true);
         }
 
         public string GetPresetPrimaryExchange(string assetPairId)
         {
-            throw new System.NotImplementedException();
+            return Asset(assetPairId).PresetDefaultExchange;
         }
 
         public decimal GetVolumeMultiplier(string assetPairId, string exchangeName)
         {
-            throw new System.NotImplementedException();
+            return (decimal)Exchange(assetPairId, exchangeName).OrderGeneration.VolumeMultiplier;
         }
 
-        public TimeSpan GetOrderbookAgeThreshold(string assetPairId, string exchangeName, DateTime now)
+        public TimeSpan GetOrderbookOutdatingThreshold(string assetPairId, string exchangeName, DateTime now)
         {
-            throw new NotImplementedException();
+            return Exchange(assetPairId, exchangeName).OrderbookOutdatingThreshold;
         }
 
         public RepeatedOutliersParams GetRepeatedOutliersParams(string assetPairId)
         {
-            throw new NotImplementedException();
+            var p = Asset(assetPairId).RepeatedOutliers;
+            return new RepeatedOutliersParams(p.MaxSequenceLength, p.MaxSequenceAge, (decimal) p.MaxAvg, p.MaxAvgAge);
         }
 
         public decimal GetOutlierThreshold(string assetPairId)
         {
-            throw new NotImplementedException();
+            return (decimal) Asset(assetPairId).OutlierThreshold;
         }
 
         public ImmutableDictionary<string, decimal> GetHedgingPreferences(string assetPairId)
         {
-            throw new NotImplementedException();
+            return AllExchanges(assetPairId).ToImmutableDictionary(e => e.Key, e => (decimal)e.Value.Hedging.DefaultPriority);
+        }
+
+        public async Task<IReadOnlyList<AssetPairExtPriceSettingsModel>> GetAllAsync(string assetPairId = null)
+        {
+            IList<AssetPairExtPriceSettingsEntity> assetPairsEntities;
+            if (assetPairId == null)
+                assetPairsEntities = await _assetPairsRepository.GetAllAsync();
+            else
+                assetPairsEntities = new[] {_assetPairsCachedAccessor.GetByKey(GetAssetPairKeys(assetPairId))};
+
+            return assetPairsEntities
+                .GroupJoin(await _exchangesRepository.GetAllAsync(), ap => ap.AssetPairId, e => e.AssetPairId,
+                    (assetPair, exchange) => new AssetPairExtPriceSettingsModel
+                    {
+                        AssetPairId = assetPair.AssetPairId,
+                        Timestamp = assetPair.Timestamp,
+                        PresetDefaultExchange = assetPair.PresetDefaultExchange,
+                        RepeatedOutliers = new RepeatedOutliersParamsModel
+                        {
+                            MaxSequenceLength = assetPair.RepeatedOutliers.MaxSequenceLength,
+                            MaxSequenceAge = assetPair.RepeatedOutliers.MaxSequenceAge,
+                            MaxAvg = (decimal) assetPair.RepeatedOutliers.MaxAvg,
+                            MaxAvgAge = assetPair.RepeatedOutliers.MaxAvgAge,
+                        },
+                        AskMarkup = assetPair.AskMarkup,
+                        BidMarkup = assetPair.BidMarkup,
+                        OutlierThreshold = assetPair.OutlierThreshold,
+                        Steps = assetPair.Steps,
+                        Exchanges = exchange.Select(e => new ExchangeExtPriceSettingsModel
+                        {
+                            Exchange = e.Exchange,
+                            Hedging = new HedgingSettingsModel
+                            {
+                                DefaultPriority = e.Hedging.DefaultPriority,
+                                IsTemporarilyUnavailable = e.Hedging.IsTemporarilyUnavailable,
+                            },
+                            OrderGeneration = new OrderGenerationSettingsModel
+                            {
+                                VolumeMultiplier = (decimal) e.OrderGeneration.VolumeMultiplier,
+                                OrderRenewalDelay = e.OrderGeneration.OrderRenewalDelay,
+                            },
+                            OrderbookOutdatingThreshold = e.OrderbookOutdatingThreshold,
+                            Disabled = new DisabledSettingsModel
+                            {
+                                IsTemporarilyDisabled = e.Disabled.IsTemporarilyDisabled,
+                                Reason = e.Disabled.Reason,
+                            }
+                        }).ToList()
+                    }).ToList();
+        }
+
+        public Task Set(AssetPairExtPriceSettingsModel model)
+        {
+            var entity = new AssetPairExtPriceSettingsEntity
+            {
+                AssetPairId = model.AssetPairId,
+                Timestamp = model.Timestamp,
+                PresetDefaultExchange = model.PresetDefaultExchange,
+                RepeatedOutliers = new AssetPairExtPriceSettingsEntity.RepeatedOutliersParams
+                {
+                    MaxSequenceLength = model.RepeatedOutliers.MaxSequenceLength,
+                    MaxSequenceAge = model.RepeatedOutliers.MaxSequenceAge,
+                    MaxAvg = (double) model.RepeatedOutliers.MaxAvg,
+                    MaxAvgAge = model.RepeatedOutliers.MaxAvgAge,
+                },
+                AskMarkup = model.AskMarkup,
+                BidMarkup = model.BidMarkup,
+                OutlierThreshold = model.OutlierThreshold,
+                Steps = model.Steps,
+            };
+
+            var upsertAssetPairTask = _assetPairsCachedAccessor.Upsert(entity);
+
+            var exchangesEntities = model.Exchanges.Select(e => new ExchangeExtPriceSettingsEntity
+            {
+                Exchange = e.Exchange,
+                AssetPairId = model.AssetPairId,
+                Hedging = new ExchangeExtPriceSettingsEntity.HedgingSettings
+                {
+                    DefaultPriority = e.Hedging.DefaultPriority,
+                    IsTemporarilyUnavailable = e.Hedging.IsTemporarilyUnavailable,
+                },
+                OrderGeneration = new ExchangeExtPriceSettingsEntity.OrderGenerationSettings
+                {
+                    VolumeMultiplier = (double) e.OrderGeneration.VolumeMultiplier,
+                    OrderRenewalDelay = e.OrderGeneration.OrderRenewalDelay,
+                },
+                OrderbookOutdatingThreshold = e.OrderbookOutdatingThreshold,
+                Disabled = new ExchangeExtPriceSettingsEntity.DisabledSettings
+                {
+                    IsTemporarilyDisabled = e.Disabled.IsTemporarilyDisabled,
+                    Reason = e.Disabled.Reason,
+                }
+            }).ToImmutableDictionary(e => e.Exchange);
+
+            _exchangesCache.AddOrUpdate(entity.AssetPairId,
+                    k =>
+                    {
+                        _exchangesRepository.InsertOrReplaceAsync(exchangesEntities.Values).GetAwaiter().GetResult();
+                        return exchangesEntities;
+                    },
+                    (k, old) =>
+                    {
+                        Task.WaitAll(
+                            _exchangesRepository.InsertOrReplaceAsync(exchangesEntities.Values),
+                            _exchangesRepository.DeleteAsync(old.Values.Where(o =>
+                                !exchangesEntities.ContainsKey(o.Exchange))));
+                        return exchangesEntities;
+                    });
+
+            return upsertAssetPairTask;
+        }
+
+        private ImmutableDictionary<string, ExchangeExtPriceSettingsEntity> AllExchanges(string assetPairId)
+        {
+            return _exchangesCache.GetOrAdd(assetPairId,
+                k => _exchangesRepository.GetAsync(k).GetAwaiter().GetResult().ToImmutableDictionary(e => e.Exchange));
+        }
+
+        private ExchangeExtPriceSettingsEntity Exchange(string assetPairId, string exchange)
+        {
+            return AllExchanges(assetPairId).GetValueOrDefault(exchange)
+                   ?? throw new InvalidOperationException($"Settings for exchange {exchange} for asset pair {assetPairId} not found");
+        }
+
+        private AssetPairExtPriceSettingsEntity Asset(string assetPairId)
+        {
+            return _assetPairsCachedAccessor.GetByKey(GetAssetPairKeys(assetPairId))
+                   ?? throw new InvalidOperationException($"Settings for asset pair {assetPairId} not found");
+        }
+
+        private static CachedEntityAccessorService.EntityKeys GetAssetPairKeys(string assetPairId)
+        {
+            return new CachedEntityAccessorService.EntityKeys(AssetPairExtPriceSettingsEntity.GeneratePartitionKey(), AssetPairExtPriceSettingsEntity
+                .GenerateRowKey(assetPairId));
         }
     }
 }

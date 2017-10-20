@@ -7,17 +7,18 @@ using Rocks.Caching;
 
 namespace MarginTrading.MarketMaker.HelperServices.Implemetation
 {
-    internal abstract class CachedEntityAccessorService<TEntity> where TEntity : class, ITableEntity, new()
+    internal class CachedEntityAccessorService<TEntity> : CachedEntityAccessorService
+        where TEntity : class, ITableEntity, new()
     {
         // ReSharper disable once StaticMemberInGenericType
         private static readonly CachingParameters InfiniteCachingParameters = CachingParameters.InfiniteCache;
 
         private readonly ICacheProvider _cacheProvider;
-
-        private readonly IEntityRepository<TEntity> _repository;
         private readonly string _typeNameKeyPrefix;
 
-        protected CachedEntityAccessorService(ICacheProvider cacheProvider, IEntityRepository<TEntity> repository)
+        private IAbstractRepository<TEntity> _repository { get; }
+
+        public CachedEntityAccessorService(ICacheProvider cacheProvider, IAbstractRepository<TEntity> repository)
         {
             _typeNameKeyPrefix =
                 $"{{{typeof(CachedEntityAccessorService<>).Name}}}{{{typeof(TEntity).AssemblyQualifiedName}}}";
@@ -27,32 +28,38 @@ namespace MarginTrading.MarketMaker.HelperServices.Implemetation
 
         protected virtual CachingParameters CachingParameters => InfiniteCachingParameters;
 
-        protected Task UpdateByKeyAsync(EntityKeys keys, Action<TEntity> updateFieldFunc)
+        public Task UpdateByKeyAsync(EntityKeys keys, Action<TEntity> updateFieldFunc)
         {
             return UpdateByKeyAsync(keys, updateFieldFunc, k => new TEntity());
         }
 
-        protected void DeleteByKey(EntityKeys keys)
+        public void DeleteByKey(EntityKeys keys)
         {
             _cacheProvider.Remove(GetCacheKey(keys));
         }
 
-        protected async Task UpdateByKeyAsync(EntityKeys keys, Action<TEntity> updateFieldFunc,
+        public async Task UpdateByKeyAsync(EntityKeys keys, Action<TEntity> updateFieldFunc,
             Func<EntityKeys, TEntity> createIfNotExists)
         {
             var currentEntity = await GetByKeyAsync(keys) ?? createIfNotExists(keys);
             updateFieldFunc(currentEntity);
             currentEntity.PartitionKey = keys.PartitionKey;
             currentEntity.RowKey = keys.RowKey;
-            await _repository.SetAsync(currentEntity);
+            await _repository.InsertOrReplaceAsync(currentEntity);
             _cacheProvider.Add(GetCacheKey(keys), currentEntity, CachingParameters);
         }
 
+        public async Task Upsert(TEntity entity)
+        {
+            await _repository.InsertOrReplaceAsync(entity);
+            _cacheProvider.Add(GetCacheKey(new EntityKeys(entity.PartitionKey, entity.RowKey)), entity, CachingParameters);
+        }
+
         [CanBeNull]
-        protected TEntity GetByKey(EntityKeys keys)
+        public TEntity GetByKey(EntityKeys keys)
         {
             return _cacheProvider.Get(GetCacheKey(keys),
-                () => new CachableResult<TEntity>(_repository.GetAsync(keys.PartitionKey, keys.RowKey).Result,
+                () => new CachableResult<TEntity>(_repository.GetAsync(keys.PartitionKey, keys.RowKey).GetAwaiter().GetResult(),
                     CachingParameters));
         }
 
@@ -68,8 +75,11 @@ namespace MarginTrading.MarketMaker.HelperServices.Implemetation
         {
             return _typeNameKeyPrefix + '{' + keys.PartitionKey + '}' + '{' + keys.RowKey + '}';
         }
+    }
 
-        protected struct EntityKeys
+    internal class CachedEntityAccessorService
+    {
+        public struct EntityKeys
         {
             public string PartitionKey { get; }
             public string RowKey { get; }

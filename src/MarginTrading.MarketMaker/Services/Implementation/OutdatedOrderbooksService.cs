@@ -15,8 +15,8 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         public bool IsOutdated(ExternalOrderbook orderbook, DateTime now)
         {
             var age = now - orderbook.LastUpdatedTime;
-            var ageThreshold = _priceCalcSettingsService.GetOrderbookAgeThreshold(orderbook.AssetPairId, orderbook.ExchangeName, now);
-            return age > ageThreshold;
+            var threshold = _priceCalcSettingsService.GetOrderbookOutdatingThreshold(orderbook.AssetPairId, orderbook.ExchangeName, now);
+            return age > threshold;
         }
     }
 }

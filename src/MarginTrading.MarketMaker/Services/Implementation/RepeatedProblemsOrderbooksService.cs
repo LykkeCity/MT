@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using MarginTrading.MarketMaker.HelperServices.Implemetation;
@@ -27,7 +28,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             DateTime minEventTime = outlierSequenceStart < outlierAvgStart ? outlierSequenceStart : outlierAvgStart;
             var newEvent = new Event(now, isOutdated, isOutlier);
             var actualProblems = _lastEvents.AddOrUpdate((orderbook.AssetPairId, orderbook.ExchangeName),
-                k => ImmutableSortedSet.Create(newEvent),
+                k => ImmutableSortedSet.Create(Event.TimeComparer, newEvent),
                 (k, old) => AddEventAndCleanOld(old, newEvent, minEventTime));
 
             //currently we process only Outlier
@@ -65,7 +66,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             DateTime minEventTime)
         {
             if (events[0].Time < minEventTime)
-                return events.SkipWhile(e => e.Time < minEventTime).Concat(new[] { ev }).ToImmutableSortedSet();
+                return events.SkipWhile(e => e.Time < minEventTime).Concat(new[] { ev }).ToImmutableSortedSet(Event.TimeComparer);
             else
                 return events.Add(ev);
         }
@@ -82,6 +83,16 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 IsOutdated = isOutdated;
                 IsOutlier = isOutlier;
             }
+
+            private sealed class TimeEqualityComparer : IComparer<Event>
+            {
+                public int Compare(Event x, Event y)
+                {
+                    return DateTime.Compare(x.Time, y.Time);
+                }
+            }
+
+            public static IComparer<Event> TimeComparer { get; } = new TimeEqualityComparer();
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using MarginTrading.MarketMaker.Models;
+using MarginTrading.MarketMaker.Models.Api;
 using MarginTrading.MarketMaker.Services;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.SwaggerGen.Annotations;
@@ -50,7 +51,7 @@ namespace MarginTrading.MarketMaker.Controllers
         /// </summary>
         [HttpGet]
         [Route("")]
-        [SwaggerOperation("GetAllsettings")]
+        [SwaggerOperation("GetAllSettings")]
         public Task<List<AssetPairSettings>> GetAll()
         {
             return _assetPairsSettingsService.GetAllPairsSourcesAsync();

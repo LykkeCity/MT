@@ -2,7 +2,7 @@
 
 namespace MarginTrading.MarketMaker.AzureRepositories
 {
-    internal interface IAssetsPairsSettingsRepository: IAbstractRepository<AssetPairSettingsEntity>
+    internal interface IAssetsPairsExtPriceSettingsRepository : IAbstractRepository<AssetPairExtPriceSettingsEntity>
     {
     }
 }

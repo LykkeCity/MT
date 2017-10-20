@@ -12,8 +12,8 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         public ImmutableDictionary<string, ExternalOrderbook> AddAndGetByAssetPair(ExternalOrderbook orderbook)
         {
             return _orderbooks.AddOrUpdate(orderbook.AssetPairId,
-                k => ImmutableDictionary.Create<string, ExternalOrderbook>().Add(k, orderbook),
-                (k, dict) => dict.SetItem(k, orderbook));
+                k => ImmutableDictionary.Create<string, ExternalOrderbook>().Add(orderbook.ExchangeName, orderbook),
+                (k, dict) => dict.SetItem(orderbook.ExchangeName, orderbook));
         }
     }
 }

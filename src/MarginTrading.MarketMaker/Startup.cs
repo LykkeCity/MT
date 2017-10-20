@@ -13,6 +13,7 @@ using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
+using MarginTrading.MarketMaker.HelperServices.Implemetation;
 using MarginTrading.MarketMaker.Modules;
 using MarginTrading.MarketMaker.Services;
 using MarginTrading.MarketMaker.Settings;
@@ -113,7 +114,7 @@ namespace MarginTrading.MarketMaker
             {
                 // NOTE: Service not yet recieve and process requests here
 
-                var settings = ApplicationContainer.Resolve<MarginTradingMarketMakerSettings>();
+                var settings = ApplicationContainer.Resolve<IReloadingManager<MarginTradingMarketMakerSettings>>().CurrentValue;
                 if (!string.IsNullOrEmpty(settings.ApplicationInsightsKey))
                 {
                     TelemetryConfiguration.Active.InstrumentationKey = settings.ApplicationInsightsKey;
@@ -178,13 +179,7 @@ namespace MarginTrading.MarketMaker
             aggregateLogger.AddLog(consoleLogger);
 
             // Creating slack notification service, which logs own azure queue processing messages to aggregate log
-            var slackService = settings.CurrentValue.SlackNotifications == null
-                ? null
-                : services.UseSlackNotificationsSenderViaAzureQueue(new AzureQueueSettings
-                {
-                    ConnectionString = settings.CurrentValue.SlackNotifications.AzureQueue.ConnectionString,
-                    QueueName = settings.CurrentValue.SlackNotifications.AzureQueue.QueueName
-                }, aggregateLogger);
+            var slackService = CreateSlackService(services, settings, aggregateLogger);
 
             var dbLogConnectionStringManager = settings.Nested(x => x.MarginTradingMarketMaker.Db.LogsConnString);
             var dbLogConnectionString = dbLogConnectionStringManager.CurrentValue;
@@ -209,6 +204,18 @@ namespace MarginTrading.MarketMaker
             }
 
             return aggregateLogger;
+        }
+
+        [CanBeNull]
+        private static MtSlackNotificationsSender CreateSlackService(IServiceCollection services, IReloadingManager<AppSettings> settings, AggregateLogger aggregateLogger)
+        {
+            return settings.CurrentValue.SlackNotifications == null
+                ? null
+                : new MtSlackNotificationsSender(services.UseSlackNotificationsSenderViaAzureQueue(new AzureQueueSettings
+                {
+                    ConnectionString = settings.CurrentValue.SlackNotifications.AzureQueue.ConnectionString,
+                    QueueName = settings.CurrentValue.SlackNotifications.AzureQueue.QueueName
+                }, aggregateLogger), ServiceName);
         }
     }
 }

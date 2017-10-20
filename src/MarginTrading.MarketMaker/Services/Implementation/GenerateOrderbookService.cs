@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using Autofac;
+using Common;
+using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.MarketMaker.Enums;
 using MarginTrading.MarketMaker.HelperServices;
 using MarginTrading.MarketMaker.HelperServices.Implemetation;
 using MarginTrading.MarketMaker.Models;
+using Trace = MarginTrading.MarketMaker.HelperServices.Implemetation.Trace;
 
 namespace MarginTrading.MarketMaker.Services.Implementation
 {
@@ -16,7 +20,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
     /// <remarks>
     ///     https://lykkex.atlassian.net/wiki/spaces/MW/pages/84607035/Price+setting
     /// </remarks>
-    public class GenerateOrderbookService : IStartable, IDisposable
+    public class GenerateOrderbookService : IStartable, IDisposable, IGenerateOrderbookService
     {
         private readonly IOrderbooksService _orderbooksService;
         private readonly IDisabledOrderbooksService _disabledOrderbooksService;
@@ -29,6 +33,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         private readonly IPrimaryExchangeService _primaryExchangeService;
         private readonly IArbitrageFreeSpreadService _arbitrageFreeSpreadService;
         private readonly IBestPricesService _bestPricesService;
+        private readonly ILog _log;
 
 
         public GenerateOrderbookService(
@@ -42,7 +47,8 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             IAlertService alertService,
             IPrimaryExchangeService primaryExchangeService,
             IArbitrageFreeSpreadService arbitrageFreeSpreadService,
-            IBestPricesService bestPricesService)
+            IBestPricesService bestPricesService,
+            ILog log)
         {
             _orderbooksService = orderbooksService;
             _disabledOrderbooksService = disabledOrderbooksService;
@@ -55,21 +61,31 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             _primaryExchangeService = primaryExchangeService;
             _arbitrageFreeSpreadService = arbitrageFreeSpreadService;
             _bestPricesService = bestPricesService;
+            _log = log;
         }
 
-        [CanBeNull]
         public Orderbook OnNewOrderbook(ExternalOrderbook orderbook)
         {
+            Trace.Write($"GOS: Received {orderbook.AssetPairId} from {orderbook.ExchangeName}");
             var assetPairId = orderbook.AssetPairId;
             var allOrderbooks = _orderbooksService.AddAndGetByAssetPair(orderbook);
+            Trace.Write(new { allOrderbooks });
             var (exchangesErrors, validOrderbooks) = MarkExchangesErrors(assetPairId, allOrderbooks);
+            Trace.Write(new { exchangesErrors, validOrderbooks });
             var primaryExchange = _primaryExchangeService.GetPrimaryExchange(assetPairId, exchangesErrors);
+            Trace.Write(new { primaryExchange });
             if (primaryExchange == null)
             {
                 return null;
             }
 
-            return Transform(allOrderbooks[primaryExchange], validOrderbooks);
+            if (!allOrderbooks.TryGetValue(primaryExchange, out var externalOrderbook))
+            {
+                _log.WriteWarningAsync(nameof(GenerateOrderbookService), null, $"{primaryExchange} not found in allOrderbooks ({allOrderbooks.Keys.ToJson()})");
+                return null;
+            }
+
+            return Transform(externalOrderbook, validOrderbooks);
         }
 
         /// <summary>
@@ -151,7 +167,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
             if (upToDateOrderbooks.Count < 3)
             {
-                _alertService.AlertStopNewTrades(assetPairId);
+                _alertService.AlertStopNewTrades(assetPairId, $"Up to date orderbooks count < 3: only {upToDateOrderbooks.Keys.ToJson()}");
                 return (ImmutableHashSet<string>.Empty, upToDateOrderbooks);
             }
 

@@ -1,4 +1,4 @@
-﻿namespace MarginTrading.MarketMaker.Models
+﻿namespace MarginTrading.MarketMaker.Models.Api
 {
     public class IsAliveResponse
     {

@@ -28,11 +28,11 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             _logger.WriteInfoAsync(Startup.ServiceName, null, null, "Starting broker").Wait();
             try
             {
-                _rabbitMqService.Subscribe<ExternalExchangeOrderbookMessage>(_settings.Nested(s => s.RabbitMq.FiatOrderbooksConnectionSettings), false,
+                _rabbitMqService.Subscribe<ExternalExchangeOrderbookMessage>(_settings.Nested(s => s.RabbitMq.Consumers.FiatOrderbooks), false,
                     _marketMakerService.ProcessNewExternalOrderbookAsync);
-                _rabbitMqService.Subscribe<ExternalExchangeOrderbookMessage>(_settings.Nested(s => s.RabbitMq.CryptoOrderbooksConnectionSettings), false,
+                _rabbitMqService.Subscribe<ExternalExchangeOrderbookMessage>(_settings.Nested(s => s.RabbitMq.Consumers.CryptoOrderbooks), false,
                     _marketMakerService.ProcessNewExternalOrderbookAsync);
-                _rabbitMqService.Subscribe<SpotOrderbookMessage>(_settings.Nested(s => s.RabbitMq.SpotOrderBookConnectionSettings), false,
+                _rabbitMqService.Subscribe<SpotOrderbookMessage>(_settings.Nested(s => s.RabbitMq.Consumers.SpotOrderBook), false,
                     _marketMakerService.ProcessNewSpotOrderBookDataAsync);
             }
             catch (Exception ex)

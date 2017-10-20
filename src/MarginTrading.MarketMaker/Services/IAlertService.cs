@@ -7,7 +7,7 @@ namespace MarginTrading.MarketMaker.Services
     public interface IAlertService
     {
         void AlertPrimaryExchangeSwitched(PrimaryExchangeSwitchedMessage message);
-        void AlertStopNewTrades(string assetPairId);
+        void AlertStopNewTrades(string assetPairId, string reason);
         void AlertRiskOfficer(string message);
         void AlertStarted();
         Task AlertStopping();

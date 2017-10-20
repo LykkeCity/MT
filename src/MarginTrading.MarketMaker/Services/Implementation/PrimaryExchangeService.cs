@@ -42,7 +42,12 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 primaryExchange = newPrimary.Exchange;
                 _primaryExchanges[assetPairId] = primaryExchange;
                 _alertService.AlertPrimaryExchangeSwitched(
-                    new PrimaryExchangeSwitchedMessage(assetPairId, newPrimary, all));
+                    new PrimaryExchangeSwitchedMessage
+                    {
+                        AssetPairId = assetPairId,
+                        AllExchangesStates = all,
+                        NewPrimaryExchange = newPrimary,
+                    });
             }
 
             if (primaryExchange == null)
@@ -94,7 +99,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             ExchangeQuality GetExchangeQuality(string exchange, decimal preference)
             {
                 var orderbookReceived = exchangesErrors.TryGetValue(exchange, out var state);
-                return new ExchangeQuality(exchange, preference, state, orderbookReceived);
+                return new ExchangeQuality(exchange, preference, orderbookReceived ? state : (ExchangeErrorState?) null, orderbookReceived);
             }
 
             var exchangeQualities = hedgingPriorities
@@ -114,7 +119,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 return (primary, exchangeQualities);
             }
 
-            _alertService.AlertStopNewTrades(assetPairId);
+            _alertService.AlertStopNewTrades(assetPairId, "Couldn't find a valid backup exchange");
 
             foreach (var state in new[] {ExchangeErrorState.None, ExchangeErrorState.Outlier})
             {
