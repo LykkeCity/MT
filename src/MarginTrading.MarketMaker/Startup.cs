@@ -14,6 +14,7 @@ using Lykke.Logs;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
 using MarginTrading.MarketMaker.HelperServices.Implemetation;
+using MarginTrading.MarketMaker.Models.Api;
 using MarginTrading.MarketMaker.Modules;
 using MarginTrading.MarketMaker.Services;
 using MarginTrading.MarketMaker.Settings;
@@ -215,7 +216,7 @@ namespace MarginTrading.MarketMaker
                 {
                     ConnectionString = settings.CurrentValue.SlackNotifications.AzureQueue.ConnectionString,
                     QueueName = settings.CurrentValue.SlackNotifications.AzureQueue.QueueName
-                }, aggregateLogger), ServiceName);
+                }, aggregateLogger), ServiceName, "MarginTrading");
         }
     }
 }
