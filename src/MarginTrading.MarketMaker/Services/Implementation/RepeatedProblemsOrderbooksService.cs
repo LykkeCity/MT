@@ -45,7 +45,10 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                         outliersInRow = 0;
 
                     if (outliersInRow > repeatedOutliersParams.MaxSequenceLength)
+                    {
+                        Trace.Write("Repeated outlier (sequence)", new { orderbook.AssetPairId, orderbook.ExchangeName, outliersInRow, repeatedOutliersParams.MaxSequenceLength });
                         return true;
+                    }
 
                     if (e.Time >= outlierSequenceStart)
                     {
@@ -55,8 +58,12 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                     }
                 }
 
-                if (outliersCount / (decimal)statsCount > repeatedOutliersParams.MaxAvg)
+                var avg = outliersCount / (decimal) statsCount;
+                if (avg > repeatedOutliersParams.MaxAvg)
+                {
+                    Trace.Write("Repeated outlier (avg)", new { orderbook.AssetPairId, orderbook.ExchangeName, outliersCount, statsCount, avg, repeatedOutliersParams.MaxAvg });
                     return true;
+                }
             }
 
             return false;

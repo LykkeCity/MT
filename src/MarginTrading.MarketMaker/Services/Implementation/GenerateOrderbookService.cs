@@ -66,14 +66,12 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
         public Orderbook OnNewOrderbook(ExternalOrderbook orderbook)
         {
-            Trace.Write($"GOS: Received {orderbook.AssetPairId} from {orderbook.ExchangeName}");
             var assetPairId = orderbook.AssetPairId;
+            
             var allOrderbooks = _orderbooksService.AddAndGetByAssetPair(orderbook);
-            Trace.Write(new { allOrderbooks });
             var (exchangesErrors, validOrderbooks) = MarkExchangesErrors(assetPairId, allOrderbooks);
-            Trace.Write(new { exchangesErrors, validOrderbooks });
             var primaryExchange = _primaryExchangeService.GetPrimaryExchange(assetPairId, exchangesErrors);
-            Trace.Write(new { primaryExchange });
+            Trace.Write($"Received {orderbook.AssetPairId} from {orderbook.ExchangeName}, primary: {primaryExchange}");
             if (primaryExchange == null)
             {
                 return null;
@@ -130,7 +128,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             }
 
             var bestPrices =
-                upToDateNotoutlierOrderbooks.Values.ToDictionary(o => o.ExchangeName, _bestPricesService.Calc);
+                upToDateNotoutlierOrderbooks.Values.ToDictionary(o => o.ExchangeName, orderbook => _bestPricesService.Calc(orderbook));
             return _arbitrageFreeSpreadService.Transform(primaryOrderbook, bestPrices);
         }
 

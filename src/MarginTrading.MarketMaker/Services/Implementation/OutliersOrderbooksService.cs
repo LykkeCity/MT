@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using MarginTrading.MarketMaker.HelperServices.Implemetation;
 using MarginTrading.MarketMaker.Models;
 
 namespace MarginTrading.MarketMaker.Services.Implementation
@@ -14,7 +15,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
         public OutliersOrderbooksService(
             IBestPricesService bestPricesService,
-            IPriceCalcSettingsService priceCalcSettingsService, 
+            IPriceCalcSettingsService priceCalcSettingsService,
             IPrimaryExchangeService primaryExchangeService)
         {
             _bestPricesService = bestPricesService;
@@ -35,9 +36,33 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             foreach (var (orderbook, prices) in bestPrices)
             {
                 if (Math.Abs(prices.BestBid - medianBid) > threshold * medianBid)
+                {
+                    Trace.Write("Outlier (bid)", new
+                    {
+                        orderbook.AssetPairId,
+                        orderbook.ExchangeName,
+                        prices.BestBid,
+                        medianBid,
+                        deviation = Math.Abs(prices.BestBid - medianBid),
+                        threshold,
+                        thresholdBid = threshold * medianBid
+                    });
                     result.Add(orderbook);
+                }
                 else if (Math.Abs(prices.BestAsk - medianAsk) > threshold * medianAsk)
+                {
+                    Trace.Write("Outlier (ask)", new
+                    {
+                        orderbook.AssetPairId,
+                        orderbook.ExchangeName,
+                        prices.BestAsk,
+                        medianAsk,
+                        deviation = Math.Abs(prices.BestAsk - medianAsk),
+                        threshold,
+                        thresholdAsk = threshold * medianAsk
+                    });
                     result.Add(orderbook);
+                }
             }
 
             return result;
@@ -50,6 +75,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
         private static decimal GetMedian(IEnumerable<decimal> src, bool onEvenCountGetLesser)
         {
+            // todo: choose using "2d ranked range median" algo
             var sorted = src.OrderBy(e => e).ToList();
             int mid = sorted.Count / 2;
             if (sorted.Count % 2 != 0)

@@ -56,20 +56,9 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 return Task.CompletedTask;
             }
 
-            var bestAsk = orderbook.Asks.Min(a => a.Price);
-            var bestBid = orderbook.Bids.Max(b => b.Price);
-            if (bestBid >= bestAsk)
-            {
-                var context = $"assetPairId: {orderbook.AssetPairId}, orderbook.Source: {orderbook.Source}, bestBid: {bestBid}, bestAsk: {bestAsk}";
-                _log.WriteInfoAsync(nameof(MarketMaker), nameof(ProcessNewExternalOrderbookAsync),
-                    context,
-                    "Detected negative or zero spread, skipping orderbook. Context: " + context);
-                return Task.CompletedTask;
-            }
-
             var externalOrderbook = new ExternalOrderbook(orderbook.AssetPairId, orderbook.Source, _system.UtcNow,
                 orderbook.Bids.Select(b => new OrderbookPosition(b.Price, b.Volume)).ToImmutableArray(),
-                orderbook.Bids.Select(b => new OrderbookPosition(b.Price, b.Volume)).ToImmutableArray());
+                orderbook.Asks.Select(b => new OrderbookPosition(b.Price, b.Volume)).ToImmutableArray());
             var resultingOrderbook = _generateOrderbookService.OnNewOrderbook(externalOrderbook);
 
             var commands = new List<OrderCommand>

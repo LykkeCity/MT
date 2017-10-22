@@ -35,9 +35,11 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
             var primaryExchange = _primaryExchanges.GetOrDefault(assetPairId);
             var hedgingPreferences = _hedgingPreferenceService.Get(assetPairId);
+            var originalPrimaryExchange = primaryExchange;
 
             void SwitchPrimaryExchange()
             {
+                originalPrimaryExchange = primaryExchange;
                 var (newPrimary, all) = ChooseBackupExchange(assetPairId, exchanges, hedgingPreferences);
                 primaryExchange = newPrimary.Exchange;
                 _primaryExchanges[assetPairId] = primaryExchange;
@@ -60,7 +62,6 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
             var primaryExchangeState = exchanges[primaryExchange];
             var primaryPreference = hedgingPreferences.GetValueOrDefault(primaryExchange);
-            var originalPrimaryExchange = primaryExchange;
             var cycleCounter = 0;
             do
             {
@@ -106,9 +107,9 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 .Select(p => GetExchangeQuality(p.Key, p.Value))
                 .ToImmutableArray();
             var allHedgingPriorities = exchangeQualities
-                .Where(p => p.State != null && p.State != ExchangeErrorState.Disabled)
+                .Where(p => p.Error != null && p.Error != ExchangeErrorState.Disabled)
                 // ReSharper disable once PossibleInvalidOperationException
-                .ToLookup(t => t.State.Value);
+                .ToLookup(t => t.Error.Value);
 
             var primary = allHedgingPriorities[ExchangeErrorState.None]
                 .OrderByDescending(p => p.Preference)

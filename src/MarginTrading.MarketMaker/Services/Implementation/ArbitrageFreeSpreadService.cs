@@ -29,7 +29,14 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
         private static (decimal WorstBid, decimal WorstAsk) GetArbitrageFreeSpread(IReadOnlyDictionary<string, BestPrices> bestPrices)
         {
-            return (bestPrices.Values.Min(p => p.BestBid), bestPrices.Values.Max(p => p.BestAsk));
+            var worstBid = bestPrices.Values.Min(p => p.BestBid);
+            var worstAsk = bestPrices.Values.Max(p => p.BestAsk);
+            if (worstBid == worstAsk)
+            {
+                worstBid -= 0.00000001m; // hello crutches
+            }
+
+            return (worstBid, worstAsk);
         }
     }
 }

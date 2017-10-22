@@ -3,6 +3,7 @@ using System.Linq;
 using Autofac;
 using Common.Log;
 using Lykke.SettingsReader;
+using Lykke.SlackNotifications;
 using MarginTrading.MarketMaker.HelperServices;
 using MarginTrading.MarketMaker.HelperServices.Implemetation;
 using MarginTrading.MarketMaker.Services;

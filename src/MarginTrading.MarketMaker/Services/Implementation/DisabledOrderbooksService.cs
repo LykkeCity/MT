@@ -12,6 +12,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         public ImmutableHashSet<string> GetDisabledExchanges(string assetPairId)
         {
             return _disabledOrderbooks.GetOrDefault(assetPairId, k => ImmutableHashSet<string>.Empty) ?? throw new Exception("wtf");
+            //todo extract from settings
         }
 
         public void Disable(string assetPairId, ImmutableHashSet<string> exchanges)

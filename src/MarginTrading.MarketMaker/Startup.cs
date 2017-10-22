@@ -13,6 +13,7 @@ using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
+using Lykke.SlackNotifications;
 using MarginTrading.MarketMaker.HelperServices.Implemetation;
 using MarginTrading.MarketMaker.Models.Api;
 using MarginTrading.MarketMaker.Modules;
@@ -210,13 +211,23 @@ namespace MarginTrading.MarketMaker
         [CanBeNull]
         private static MtSlackNotificationsSender CreateSlackService(IServiceCollection services, IReloadingManager<AppSettings> settings, AggregateLogger aggregateLogger)
         {
-            return settings.CurrentValue.SlackNotifications == null
-                ? null
-                : new MtSlackNotificationsSender(services.UseSlackNotificationsSenderViaAzureQueue(new AzureQueueSettings
-                {
-                    ConnectionString = settings.CurrentValue.SlackNotifications.AzureQueue.ConnectionString,
-                    QueueName = settings.CurrentValue.SlackNotifications.AzureQueue.QueueName
-                }, aggregateLogger), ServiceName, "MarginTrading");
+            if (settings.CurrentValue.SlackNotifications == null)
+            {
+                return null;
+            }
+            else
+            {
+                var rootSlackSender = services.UseSlackNotificationsSenderViaAzureQueue(
+                    new AzureQueueSettings
+                    {
+                        ConnectionString = settings.CurrentValue.SlackNotifications.AzureQueue.ConnectionString,
+                        QueueName = settings.CurrentValue.SlackNotifications.AzureQueue.QueueName
+                    }, aggregateLogger);
+
+                services.AddSingleton((IMtMmRisksSlackNotificationsSender)new MtMmRisksSlackNotificationsSender(rootSlackSender, ServiceName));
+
+                return new MtSlackNotificationsSender(rootSlackSender, ServiceName, "MarginTrading");
+            }
         }
     }
 }

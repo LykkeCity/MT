@@ -5,7 +5,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 {
     public class BestPricesService : IBestPricesService
     {
-        public BestPrices Calc(ExternalOrderbook orderbook)
+        public BestPrices Calc(Orderbook orderbook)
         {
             return new BestPrices(
                 orderbook.Bids.Max(b => b.Price),

@@ -36,14 +36,15 @@ namespace MarginTrading.MarketMaker.AzureRepositories.Entities
 
         [CanBeNull]
         private ImmutableDictionary<OrderbookGeneratorStepEnum, bool> _stepsCache;
-
+        
+        [IgnoreProperty]
         public ImmutableDictionary<OrderbookGeneratorStepEnum, bool> Steps
         {
             get => _stepsCache ?? (_stepsCache = StepsStr == null
                        ? ImmutableDictionary<OrderbookGeneratorStepEnum, bool>.Empty
                        : JsonConvert.DeserializeObject<ImmutableDictionary<OrderbookGeneratorStepEnum, bool>>(StepsStr));
-            
-            set => StepsStr = JsonConvert.SerializeObject(_stepsCache = value);
+
+            set => StepsStr = JsonConvert.SerializeObject(_stepsCache = value ?? ImmutableDictionary<OrderbookGeneratorStepEnum, bool>.Empty);
         }
 
         /// <inheritdoc />

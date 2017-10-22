@@ -23,6 +23,7 @@
   <ItemGroup>
     <None Update="Dockerfile">
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
@@ -33,7 +34,7 @@
     <PackageReference Include="Lykke.JobTriggers" Version="1.1.19" />
     <PackageReference Include="Lykke.Logs" Version="3.2.2" />
     <PackageReference Include="Lykke.RabbitMq.Azure" Version="3.1.0" />
-    <PackageReference Include="Lykke.RabbitMqBroker" Version="4.0.1" />
+    <PackageReference Include="Lykke.RabbitMqBroker" Version="4.0.2" />
     <PackageReference Include="Lykke.Rocks.Caching" Version="1.0.0" />
     <PackageReference Include="Lykke.SettingsReader" Version="1.0.42" />
     <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="1.0.5" />

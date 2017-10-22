@@ -4,6 +4,6 @@ namespace MarginTrading.MarketMaker.Services
 {
     public interface IBestPricesService
     {
-        BestPrices Calc(ExternalOrderbook orderbook);
+        BestPrices Calc(Orderbook orderbook);
     }
 }

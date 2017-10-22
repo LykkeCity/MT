@@ -61,7 +61,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
         public ImmutableDictionary<string, decimal> GetHedgingPreferences(string assetPairId)
         {
-            return AllExchanges(assetPairId).ToImmutableDictionary(e => e.Key, e => (decimal)e.Value.Hedging.DefaultPriority);
+            return AllExchanges(assetPairId).ToImmutableDictionary(e => e.Key, e => e.Value.Hedging.IsTemporarilyUnavailable ? 0m : (decimal)e.Value.Hedging.DefaultPriority);
         }
 
         public async Task<IReadOnlyList<AssetPairExtPriceSettingsModel>> GetAllAsync(string assetPairId = null)

@@ -10,14 +10,14 @@ namespace MarginTrading.MarketMaker.Models
         public decimal Preference { get; }
 
         [JsonConverter(typeof(StringEnumConverter))]
-        public ExchangeErrorState? State { get; }
+        public ExchangeErrorState? Error { get; }
         public bool OrderbookReceived { get; }
 
-        public ExchangeQuality(string exchange, decimal preference, ExchangeErrorState? state, bool orderbookReceived)
+        public ExchangeQuality(string exchange, decimal preference, ExchangeErrorState? error, bool orderbookReceived)
         {
             Exchange = exchange;
             Preference = preference;
-            State = state;
+            Error = error;
             OrderbookReceived = orderbookReceived;
         }
     }
