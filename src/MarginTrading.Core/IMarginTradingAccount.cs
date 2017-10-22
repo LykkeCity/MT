@@ -108,7 +108,7 @@ namespace MarginTrading.Core
             return account.GetAccountFpl();
         }
 
-        public static AccountLevel GetAccountLevel(this MarginTradingAccount account)
+        public static AccountLevel GetAccountLevel(this IMarginTradingAccount account)
         {
             var marginUsageLevel = account.GetMarginUsageLevel();
 
@@ -121,7 +121,7 @@ namespace MarginTrading.Core
             return AccountLevel.None;
         }
 
-        public static decimal GetMarginUsageLevel(this MarginTradingAccount account)
+        public static decimal GetMarginUsageLevel(this IMarginTradingAccount account)
         {
             var totalCapital = account.GetTotalCapital();
             
@@ -177,11 +177,6 @@ namespace MarginTrading.Core
         public static int GetOpenPositionsCount(this IMarginTradingAccount account)
         {
             return account.GetAccountFpl().OpenPositionsCount;
-        }
-
-        public static decimal GetMarginUsageLevel(this IMarginTradingAccount account)
-        {
-            return account.GetTotalCapital() == 0 ? 0 : Math.Abs(account.GetUsedMargin() / account.GetTotalCapital());
         }
 
         public static void CacheNeedsToBeUpdated(this IMarginTradingAccount account)
