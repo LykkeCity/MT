@@ -19,7 +19,7 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
             "[Date] [datetime] NOT NULL," +
             "[ClientId] [nvarchar] (32) NOT NULL, "+
             "[AccountId] [nvarchar] (32) NOT NULL, "+
-            "[PositionId] [text] NOT NULL, "+
+            "[PositionId] [text] NULL, "+
             "[Amount] [numeric] (18, 18) NOT NULL, " +
             "[Balance] [numeric] (18, 18) NOT NULL, "+
             "[Type] [nvarchar] (50) NOT NULL, "+
@@ -43,7 +43,16 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
         
         public async Task InsertOrReplaceAsync(IAccountTransactionsReport entity)
         {
-            await _connection.QueryAsync<IAccountTransactionsReport>($"insert into {TableName} Id = @Id, ", entity);
+            string query = $"insert into {TableName}" +
+                "(Id, Date, AccountId, ClientId, Amount, Balance, WithdrawTransferLimit, Comment, Type, PositionId) " +
+                " values " +
+                "(@Id ,@Date, @AccountId, @ClientId, @Amount, @Balance, @WithdrawTransferLimit, @Comment, @Type, @PositionId)";
+
+            try { await _connection.ExecuteAsync(query, entity); }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
         }
 
         private void CreateTableIfDoesntExists()
