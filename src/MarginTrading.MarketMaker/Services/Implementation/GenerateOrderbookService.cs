@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
@@ -34,6 +35,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         private readonly IArbitrageFreeSpreadService _arbitrageFreeSpreadService;
         private readonly IBestPricesService _bestPricesService;
         private readonly ILog _log;
+        private readonly ITelemetryService _telemetryService;
 
 
         public GenerateOrderbookService(
@@ -48,7 +50,8 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             IPrimaryExchangeService primaryExchangeService,
             IArbitrageFreeSpreadService arbitrageFreeSpreadService,
             IBestPricesService bestPricesService,
-            ILog log)
+            ILog log,
+            ITelemetryService telemetryService)
         {
             _orderbooksService = orderbooksService;
             _disabledOrderbooksService = disabledOrderbooksService;
@@ -62,16 +65,16 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             _arbitrageFreeSpreadService = arbitrageFreeSpreadService;
             _bestPricesService = bestPricesService;
             _log = log;
+            _telemetryService = telemetryService;
         }
 
         public Orderbook OnNewOrderbook(ExternalOrderbook orderbook)
         {
+            var watch = Stopwatch.StartNew();
             var assetPairId = orderbook.AssetPairId;
-            
             var allOrderbooks = _orderbooksService.AddAndGetByAssetPair(orderbook);
             var (exchangesErrors, validOrderbooks) = MarkExchangesErrors(assetPairId, allOrderbooks);
             var primaryExchange = _primaryExchangeService.GetPrimaryExchange(assetPairId, exchangesErrors);
-            Trace.Write($"Received {orderbook.AssetPairId} from {orderbook.ExchangeName}, primary: {primaryExchange}");
             if (primaryExchange == null)
             {
                 return null;
@@ -83,7 +86,19 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 return null;
             }
 
-            return Transform(externalOrderbook, validOrderbooks);
+            var result = Transform(externalOrderbook, validOrderbooks);
+            LogCycle(orderbook, watch, primaryExchange);
+            return result;
+        }
+
+        public void Start()
+        {
+            _alertService.AlertStarted();
+        }
+
+        public void Dispose()
+        {
+            _alertService.AlertStopping().GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -196,14 +211,17 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             return (outdatedExchanges, upToDateOrderbooks);
         }
 
-        public void Start()
+        private void LogCycle(ExternalOrderbook orderbook, Stopwatch watch, string primaryExchange)
         {
-            _alertService.AlertStarted();
-        }
-
-        public void Dispose()
-        {
-            _alertService.AlertStopping().GetAwaiter().GetResult();
+            _telemetryService.PublishEventMetrics(nameof(GenerateOrderbookService) + '.' + nameof(OnNewOrderbook), null,
+                new Dictionary<string, double> { { "ProcessingTime", watch.ElapsedMilliseconds } },
+                new Dictionary<string, string>
+                {
+                    {"AssetPairId", orderbook.AssetPairId},
+                    {"Exchange", orderbook.ExchangeName},
+                });
+            Trace.Write(
+                $"Processed {orderbook.AssetPairId} from {orderbook.ExchangeName}, primary: {primaryExchange}, time: {watch.ElapsedMilliseconds} ms");
         }
     }
 }

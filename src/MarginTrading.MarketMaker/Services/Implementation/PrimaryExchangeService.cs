@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.Linq;
+using Common;
 using JetBrains.Annotations;
 using MarginTrading.MarketMaker.Enums;
 using MarginTrading.MarketMaker.HelperServices.Implemetation;
@@ -60,8 +61,6 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 return primaryExchange;
             }
 
-            var primaryExchangeState = exchanges[primaryExchange];
-            var primaryPreference = hedgingPreferences.GetValueOrDefault(primaryExchange);
             var cycleCounter = 0;
             do
             {
@@ -71,6 +70,8 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                     throw new InvalidOperationException("Unable to get primary exchange for assetPair " + assetPairId);
                 }
 
+                var primaryExchangeState = exchanges[primaryExchange];
+                var primaryPreference = hedgingPreferences.GetValueOrDefault(primaryExchange);
                 switch (primaryExchangeState)
                 {
                     case ExchangeErrorState.None when primaryPreference > 0:
@@ -83,7 +84,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                         SwitchPrimaryExchange();
                         _alertService.AlertRiskOfficer(
                             $"Primary exchange {originalPrimaryExchange} for {assetPairId} is not usable any more " +
-                            $"because it became {primaryExchangeState} with hedgind priority {primaryPreference}.\r\n" +
+                            $"because it has error state {primaryExchangeState} and hedging priority {primaryPreference}.\r\n" +
                             $"A new primary exchange has been chosen: {primaryExchange}");
                         break;
                 }
@@ -117,6 +118,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
             if (primary != null && primary.Preference > 0)
             {
+                _alertService.AlertAllowNewTrades(assetPairId, "Switched to a good exchange: " + primary.ToJson());
                 return (primary, exchangeQualities);
             }
 

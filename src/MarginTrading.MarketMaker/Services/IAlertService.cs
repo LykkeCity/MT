@@ -11,5 +11,6 @@ namespace MarginTrading.MarketMaker.Services
         void AlertRiskOfficer(string message);
         void AlertStarted();
         Task AlertStopping();
+        void AlertAllowNewTrades(string assetPairId, string reason);
     }
 }

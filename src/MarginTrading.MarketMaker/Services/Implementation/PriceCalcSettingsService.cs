@@ -64,6 +64,12 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             return AllExchanges(assetPairId).ToImmutableDictionary(e => e.Key, e => e.Value.Hedging.IsTemporarilyUnavailable ? 0m : (decimal)e.Value.Hedging.DefaultPriority);
         }
 
+        public (decimal Bid, decimal Ask) GetPriceMarkups(string assetPairId)
+        {
+            var markups = Asset(assetPairId).Markups;
+            return ((decimal)markups.Bid, (decimal)markups.Ask);
+        }
+
         public async Task<IReadOnlyList<AssetPairExtPriceSettingsModel>> GetAllAsync(string assetPairId = null)
         {
             IList<AssetPairExtPriceSettingsEntity> assetPairsEntities;
@@ -86,8 +92,11 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                             MaxAvg = (decimal) assetPair.RepeatedOutliers.MaxAvg,
                             MaxAvgAge = assetPair.RepeatedOutliers.MaxAvgAge,
                         },
-                        AskMarkup = assetPair.AskMarkup,
-                        BidMarkup = assetPair.BidMarkup,
+                        Markups = new MarkupsModel
+                        {
+                            Bid = (decimal) assetPair.Markups.Bid,
+                            Ask = (decimal) assetPair.Markups.Ask,
+                        },
                         OutlierThreshold = assetPair.OutlierThreshold,
                         Steps = assetPair.Steps,
                         Exchanges = exchange.Select(e => new ExchangeExtPriceSettingsModel
@@ -127,8 +136,11 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                     MaxAvg = (double) model.RepeatedOutliers.MaxAvg,
                     MaxAvgAge = model.RepeatedOutliers.MaxAvgAge,
                 },
-                AskMarkup = model.AskMarkup,
-                BidMarkup = model.BidMarkup,
+                Markups = new AssetPairExtPriceSettingsEntity.MarkupsParams
+                {
+                    Bid = (double)model.Markups.Bid,
+                    Ask = (double)model.Markups.Ask,
+                },
                 OutlierThreshold = model.OutlierThreshold,
                 Steps = model.Steps,
             };
@@ -174,6 +186,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
             return upsertAssetPairTask;
         }
+
 
         private ImmutableDictionary<string, ExchangeExtPriceSettingsEntity> AllExchanges(string assetPairId)
         {

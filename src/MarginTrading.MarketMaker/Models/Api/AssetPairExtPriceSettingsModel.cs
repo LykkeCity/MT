@@ -9,8 +9,7 @@ namespace MarginTrading.MarketMaker.Models.Api
     {
         public string AssetPairId { get; set; }
         public DateTimeOffset Timestamp { get; set; }
-        public double AskMarkup { get; set; }
-        public double BidMarkup { get; set; }
+        public MarkupsModel Markups { get; set; }
         public string PresetDefaultExchange { get; set; }
         public double OutlierThreshold { get; set; }
         public RepeatedOutliersParamsModel RepeatedOutliers { get; set; }

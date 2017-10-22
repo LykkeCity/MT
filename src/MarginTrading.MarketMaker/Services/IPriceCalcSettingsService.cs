@@ -19,5 +19,6 @@ namespace MarginTrading.MarketMaker.Services
         ImmutableDictionary<string, decimal> GetHedgingPreferences(string assetPairId);
         Task<IReadOnlyList<AssetPairExtPriceSettingsModel>> GetAllAsync(string assetPairId = null);
         Task Set(AssetPairExtPriceSettingsModel model);
+        (decimal Bid, decimal Ask) GetPriceMarkups(string assetPairId);
     }
 }

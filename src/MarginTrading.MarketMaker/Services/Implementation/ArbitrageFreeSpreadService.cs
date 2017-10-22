@@ -19,12 +19,13 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         {
             var arbitrageFreeSpread = GetArbitrageFreeSpread(bestPrices);
             var primaryBestPrices = bestPrices[primaryOrderbook.ExchangeName];
-            var bidShift = primaryBestPrices.BestBid - arbitrageFreeSpread.WorstBid;
-            var askShift = arbitrageFreeSpread.WorstAsk - primaryBestPrices.BestAsk;
+            var bidShift = arbitrageFreeSpread.WorstBid - primaryBestPrices.BestBid; // negative
+            var askShift = arbitrageFreeSpread.WorstAsk - primaryBestPrices.BestAsk; // positive
             var volumeMultiplier = _priceCalcSettingsService.GetVolumeMultiplier(primaryOrderbook.AssetPairId, primaryOrderbook.ExchangeName);
+            var priceMarkups = _priceCalcSettingsService.GetPriceMarkups(primaryOrderbook.AssetPairId);
             return new Orderbook(
-                primaryOrderbook.Bids.Select(b => new OrderbookPosition(b.Price - bidShift, b.Volume * volumeMultiplier)).ToImmutableArray(),
-                primaryOrderbook.Asks.Select(b => new OrderbookPosition(b.Price + askShift, b.Volume * volumeMultiplier)).ToImmutableArray());
+                primaryOrderbook.Bids.Select(b => new OrderbookPosition(b.Price + bidShift + priceMarkups.Bid, b.Volume * volumeMultiplier)).ToImmutableArray(),
+                primaryOrderbook.Asks.Select(b => new OrderbookPosition(b.Price + askShift + priceMarkups.Ask, b.Volume * volumeMultiplier)).ToImmutableArray());
         }
 
         private static (decimal WorstBid, decimal WorstAsk) GetArbitrageFreeSpread(IReadOnlyDictionary<string, BestPrices> bestPrices)
