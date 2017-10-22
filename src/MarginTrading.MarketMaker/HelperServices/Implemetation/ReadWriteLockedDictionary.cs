@@ -9,7 +9,7 @@ using JetBrains.Annotations;
 
 namespace MarginTrading.MarketMaker.HelperServices.Implemetation
 {
-    internal class ReadWriteLockedDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IDisposable
+    public class ReadWriteLockedDictionary<TKey, TValue> : IDictionary<TKey, TValue>, IReadOnlyDictionary<TKey, TValue>, IDisposable
     {
         private readonly IDictionary<TKey, TValue> _dictionary;
         private readonly Lock _lock = new Lock();
@@ -120,6 +120,10 @@ namespace MarginTrading.MarketMaker.HelperServices.Implemetation
                     _dictionary[key] = value;
             }
         }
+
+        IEnumerable<TKey> IReadOnlyDictionary<TKey, TValue>.Keys => Keys;
+
+        IEnumerable<TValue> IReadOnlyDictionary<TKey, TValue>.Values => Values;
 
         [CanBeNull]
         public TValue GetOrDefault(TKey key)

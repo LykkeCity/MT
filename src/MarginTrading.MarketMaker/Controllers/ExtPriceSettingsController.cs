@@ -23,7 +23,7 @@ namespace MarginTrading.MarketMaker.Controllers
         /// </summary>
         [HttpPost]
         [Route("set")]
-        [SwaggerOperation("SetSettings")]
+        [SwaggerOperation("SetExtPriceSettings")]
         public async Task<IActionResult> Set([FromBody] AssetPairExtPriceSettingsModel settings)
         {
             await _priceCalcSettingsService.Set(settings);
@@ -35,7 +35,7 @@ namespace MarginTrading.MarketMaker.Controllers
         /// </summary>
         [HttpGet]
         [Route("")]
-        [SwaggerOperation("GetAllSettings")]
+        [SwaggerOperation("GetAllExtPriceSettings")]
         public Task<IReadOnlyList<AssetPairExtPriceSettingsModel>> GetAll()
         {
             return _priceCalcSettingsService.GetAllAsync();
@@ -46,7 +46,7 @@ namespace MarginTrading.MarketMaker.Controllers
         /// </summary>
         [HttpGet]
         [Route("{assetPairId}")]
-        [SwaggerOperation("GetSettings")]
+        [SwaggerOperation("GetExtPriceSettings")]
         [CanBeNull]
         public Task<IReadOnlyList<AssetPairExtPriceSettingsModel>> Get(string assetPairId)
         {

@@ -60,6 +60,10 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 orderbook.Bids.Select(b => new OrderbookPosition(b.Price, b.Volume)).ToImmutableArray(),
                 orderbook.Asks.Select(b => new OrderbookPosition(b.Price, b.Volume)).ToImmutableArray());
             var resultingOrderbook = _generateOrderbookService.OnNewOrderbook(externalOrderbook);
+            if (resultingOrderbook == null)
+            {
+                return Task.CompletedTask;
+            }
 
             var commands = new List<OrderCommand>
             {

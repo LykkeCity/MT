@@ -36,6 +36,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         private readonly IBestPricesService _bestPricesService;
         private readonly ILog _log;
         private readonly ITelemetryService _telemetryService;
+        private readonly ITestingHelperService _testingHelperService;
 
 
         public GenerateOrderbookService(
@@ -51,7 +52,8 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             IArbitrageFreeSpreadService arbitrageFreeSpreadService,
             IBestPricesService bestPricesService,
             ILog log,
-            ITelemetryService telemetryService)
+            ITelemetryService telemetryService,
+            ITestingHelperService testingHelperService)
         {
             _orderbooksService = orderbooksService;
             _disabledOrderbooksService = disabledOrderbooksService;
@@ -66,11 +68,18 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             _bestPricesService = bestPricesService;
             _log = log;
             _telemetryService = telemetryService;
+            _testingHelperService = testingHelperService;
         }
 
         public Orderbook OnNewOrderbook(ExternalOrderbook orderbook)
         {
             var watch = Stopwatch.StartNew();
+            orderbook = _testingHelperService.ModifyOrderbookIfNeeded(orderbook);
+            if (orderbook == null)
+            {
+                return null;
+            }
+
             var assetPairId = orderbook.AssetPairId;
             var allOrderbooks = _orderbooksService.AddAndGetByAssetPair(orderbook);
             var (exchangesErrors, validOrderbooks) = MarkExchangesErrors(assetPairId, allOrderbooks);
