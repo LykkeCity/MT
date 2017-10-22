@@ -6,6 +6,7 @@ using AzureStorage;
 using AzureStorage.Blob;
 using Common;
 using Common.Log;
+using JetBrains.Annotations;
 using Lykke.RabbitMq.Azure;
 using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Publisher;
@@ -26,6 +27,7 @@ namespace MarginTrading.MarketMaker.HelperServices.Implemetation
         private readonly ConcurrentDictionary<RabbitMqSubscriptionSettings, Lazy<IStopable>> _producers =
             new ConcurrentDictionary<RabbitMqSubscriptionSettings, Lazy<IStopable>>(new SubscriptionSettingsEqualityComparer());
 
+        [ItemCanBeNull]
         private readonly Lazy<MessagePackBlobPublishingQueueRepository> _queueRepository;
 
         public RabbitMqService(ILog logger, IReloadingManager<string> queueRepositoryConnectionString)
@@ -33,6 +35,11 @@ namespace MarginTrading.MarketMaker.HelperServices.Implemetation
             _logger = logger;
             _queueRepository = new Lazy<MessagePackBlobPublishingQueueRepository>(() =>
             {
+                if (string.IsNullOrWhiteSpace(queueRepositoryConnectionString.CurrentValue))
+                {
+                    return null;
+                }
+
                 var blob = AzureBlobStorage.Create(queueRepositoryConnectionString);
                 return new MessagePackBlobPublishingQueueRepository(blob);
             });
@@ -67,7 +74,7 @@ namespace MarginTrading.MarketMaker.HelperServices.Implemetation
                 {
                     var publisher = new RabbitMqPublisher<TMessage>(s);
 
-                    if (isDurable)
+                    if (isDurable && _queueRepository.Value != null)
                         publisher.SetQueueRepository(_queueRepository.Value);
                     else
                         publisher.DisableInMemoryQueuePersistence();

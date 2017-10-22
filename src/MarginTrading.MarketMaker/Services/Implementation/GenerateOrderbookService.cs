@@ -213,15 +213,20 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
         private void LogCycle(ExternalOrderbook orderbook, Stopwatch watch, string primaryExchange)
         {
-            _telemetryService.PublishEventMetrics(nameof(GenerateOrderbookService) + '.' + nameof(OnNewOrderbook), null,
-                new Dictionary<string, double> { { "ProcessingTime", watch.ElapsedMilliseconds } },
-                new Dictionary<string, string>
-                {
-                    {"AssetPairId", orderbook.AssetPairId},
-                    {"Exchange", orderbook.ExchangeName},
-                });
+            var elapsedMilliseconds = watch.ElapsedMilliseconds;
+            if (elapsedMilliseconds > 20)
+            {
+                _telemetryService.PublishEventMetrics(nameof(GenerateOrderbookService) + '.' + nameof(OnNewOrderbook),
+                    null,
+                    new Dictionary<string, double> {{"ProcessingTime", elapsedMilliseconds}},
+                    new Dictionary<string, string>
+                    {
+                        {"AssetPairId", orderbook.AssetPairId},
+                        {"Exchange", orderbook.ExchangeName},
+                    });
+            }
             Trace.Write(
-                $"Processed {orderbook.AssetPairId} from {orderbook.ExchangeName}, primary: {primaryExchange}, time: {watch.ElapsedMilliseconds} ms");
+                $"Processed {orderbook.AssetPairId} from {orderbook.ExchangeName}, primary: {primaryExchange}, time: {elapsedMilliseconds} ms");
         }
     }
 }

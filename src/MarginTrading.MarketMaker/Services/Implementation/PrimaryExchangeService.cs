@@ -67,7 +67,8 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 if (cycleCounter++ >= 2)
                 {
                     // Guard - in case somehow an Outdated or Disabled exchange gets chosen second time - restrict endless loop
-                    throw new InvalidOperationException("Unable to get primary exchange for assetPair " + assetPairId);
+                    throw new InvalidOperationException(
+                        $"Unable to get primary exchange for assetPair {assetPairId} after {cycleCounter - 1} cycles");
                 }
 
                 var primaryExchangeState = exchanges[primaryExchange];

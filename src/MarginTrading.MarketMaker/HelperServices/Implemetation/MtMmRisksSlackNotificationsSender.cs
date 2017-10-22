@@ -1,15 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Lykke.SlackNotifications;
 
 namespace MarginTrading.MarketMaker.HelperServices.Implemetation
 {
-    public class MtMmRisksSlackNotificationsSender: MtSlackNotificationsSender, IMtMmRisksSlackNotificationsSender
+    public class MtMmRisksSlackNotificationsSender : IMtMmRisksSlackNotificationsSender
     {
-        public MtMmRisksSlackNotificationsSender(ISlackNotificationsSender sender, string appName) : base(sender, appName, "MtMmRisks")
+        private readonly ISlackNotificationsSender _sender;
+
+        public MtMmRisksSlackNotificationsSender(ISlackNotificationsSender sender)
         {
+            _sender = sender;
+        }
+
+        public async Task SendAsync(string type, string sender, string message)
+        {
+            await _sender.SendAsync("MtMmRisks", sender, message);
         }
     }
 }

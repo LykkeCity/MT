@@ -224,7 +224,7 @@ namespace MarginTrading.MarketMaker
                         QueueName = settings.CurrentValue.SlackNotifications.AzureQueue.QueueName
                     }, aggregateLogger);
 
-                services.AddSingleton((IMtMmRisksSlackNotificationsSender)new MtMmRisksSlackNotificationsSender(rootSlackSender, ServiceName));
+                services.AddSingleton((IMtMmRisksSlackNotificationsSender)new MtMmRisksSlackNotificationsSender(rootSlackSender));
 
                 return new MtSlackNotificationsSender(rootSlackSender, ServiceName, "MarginTrading");
             }
