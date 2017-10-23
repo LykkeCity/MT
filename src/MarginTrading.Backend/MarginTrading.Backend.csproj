@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
-
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <NoWarn>$(NoWarn);1591</NoWarn>
@@ -12,7 +11,6 @@
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
     <Version>1.0.1</Version>
   </PropertyGroup>
-
   <ItemGroup>
     <None Update="Email\Templates\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -22,13 +20,11 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\MarginTrading.Common\MarginTrading.Common.csproj" />
     <ProjectReference Include="..\MarginTrading.AzureRepositories\MarginTrading.AzureRepositories.csproj" />
     <ProjectReference Include="..\MarginTrading.Services\MarginTrading.Services.csproj" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="11.0.0" />
     <PackageReference Include="Lykke.Common.ApiLibrary" Version="1.0.12" />
@@ -61,14 +57,12 @@
     <PackageReference Include="Lykke.RabbitMqBroker" Version="1.0.80" />
     <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
   </ItemGroup>
-
   <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">
     <ItemGroup>
       <DocFile Include="bin\*\*\MarginTrading.Backend.xml" />
     </ItemGroup>
     <Copy SourceFiles="@(DocFile)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="false" />
   </Target>
-
   <ItemGroup>
     <WCFMetadata Include="Connected Services" />
   </ItemGroup>

@@ -102,7 +102,8 @@ namespace MarginTrading.Core
         StopLoss,
         TakeProfit,
         StopOut,
-        Canceled
+        Canceled,
+        ClosedByBroker
     }
 
     public enum OrderRejectReason

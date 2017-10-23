@@ -12,7 +12,7 @@
         public decimal PnL { get; set; }
         public decimal UsedMargin { get; set; }
         public decimal MarginInit { get; set; }
-        public decimal OpenPositionsCount { get; set; }
+        public int OpenPositionsCount { get; set; }
         public decimal MarginCall { get; set; }
         public decimal Stopout { get; set; }
 
