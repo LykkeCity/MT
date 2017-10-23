@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Lykke.Common;
@@ -50,7 +51,7 @@ namespace MarginTrading.Services
             var orders = ea.Orders;
             var eventTime = _dateService.Now();
             var accountMarginEventMessage = AccountMarginEventMessageConverter.Create(account, true, eventTime);
-            var totalPnl = orders.Sum(x => x.GetFpl());
+            var totalPnl = Math.Round(orders.Sum(x => x.GetTotalFpl()), MarginTradingHelpers.DefaultAssetAccuracy);
 
             _threadSwitcher.SwitchThread(async () =>
             {

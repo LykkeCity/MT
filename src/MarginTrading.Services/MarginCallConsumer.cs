@@ -64,8 +64,12 @@ namespace MarginTrading.Services
 
                 _operationsLogService.AddLog("margin call", account.ClientId, account.Id, "", ea.ToJson());
 
-                var notificationTask = SendNotification(account.ClientId, string.Format(MtMessages.Notifications_MarginCall, account.GetMarginUsageLevel(),
-                        account.BaseAssetId), null);
+                var marginUsageLevel = account.GetMarginUsageLevel();
+                var marginUsedPerc = marginUsageLevel == 0 ? 0 : 1 / marginUsageLevel;
+
+                var notificationTask = SendNotification(account.ClientId, string.Format(
+                    MtMessages.Notifications_MarginCall, marginUsedPerc,
+                    account.BaseAssetId), null);
 
                 var clientAcc = await _clientAccountService.GetAsync(account.ClientId);
 

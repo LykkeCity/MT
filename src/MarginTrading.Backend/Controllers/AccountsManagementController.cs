@@ -74,14 +74,18 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         public async Task<CloseAccountPositionsResponse> GetAccountsMarginLevels([FromBody] CloseAccountPositionsRequest request)
         {
-            var accounts = request.IgnoreMarginLevel ? null : _accountsCacheService.GetAll().ToDictionary(a => a.Id);
+            request.RequiredNotNull(nameof(request));
+            
+            var accounts = request.IgnoreMarginLevel
+                ? null
+                : _accountsCacheService.GetAll().ToDictionary(a => a.Id);
             
             var result = new CloseAccountPositionsResponse()
             {
                 Results = new List<CloseAccountPositionsResult>()
             };
             
-            foreach (var accountId in request.RequiredNotNull(nameof(request)).AccountIds)    
+            foreach (var accountId in request.AccountIds)    
             {
                 if (!request.IgnoreMarginLevel)
                 {
@@ -97,7 +101,7 @@ namespace MarginTrading.Backend.Controllers
                             AccountId = accountId,
                             ClosedPositions = new OrderFullContract[0],
                             ErrorMessage =
-                                $"Account margin usage level [{accountMarginUsageLevel}] is grater then margin call level [{accountGroup.MarginCall}]"
+                                $"Account margin usage level [{accountMarginUsageLevel}] is greater then margin call level [{accountGroup.MarginCall}]"
                         });
 
                         continue;
