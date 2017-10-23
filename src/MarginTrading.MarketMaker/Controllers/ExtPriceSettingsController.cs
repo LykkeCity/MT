@@ -13,7 +13,8 @@ namespace MarginTrading.MarketMaker.Controllers
     {
         private readonly IPriceCalcSettingsService _priceCalcSettingsService;
 
-        public ExtPriceSettingsController(IPriceCalcSettingsService priceCalcSettingsService)
+        public ExtPriceSettingsController(
+            IPriceCalcSettingsService priceCalcSettingsService)
         {
             _priceCalcSettingsService = priceCalcSettingsService;
         }
@@ -51,6 +52,17 @@ namespace MarginTrading.MarketMaker.Controllers
         public Task<IReadOnlyList<AssetPairExtPriceSettingsModel>> Get(string assetPairId)
         {
             return _priceCalcSettingsService.GetAllAsync(assetPairId);
+        }
+
+        /// <summary>
+        /// Gets all hedging preferences
+        /// </summary>
+        [HttpGet]
+        [Route("hedging-preferences")]
+        [SwaggerOperation("GetAllExtHedgingPreferences")]
+        public IReadOnlyList<HedgingPreferenceModel> GetAllHedgingPreferences()
+        {
+            return _priceCalcSettingsService.GetAllHedgingPreferences();
         }
     }
 }

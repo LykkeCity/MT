@@ -70,6 +70,18 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             return ((decimal)markups.Bid, (decimal)markups.Ask);
         }
 
+        public IReadOnlyList<HedgingPreferenceModel> GetAllHedgingPreferences()
+        {
+            return _exchangesCache.Values.SelectMany(ap =>
+                ap.Values.Select(e => new HedgingPreferenceModel
+                {
+                    AssetPairId = e.AssetPairId,
+                    Exchange = e.Exchange,
+                    Preference = (decimal) e.Hedging.DefaultPriority,
+                    HedgingTemporarilyDisabled = e.Hedging.IsTemporarilyUnavailable,
+                })).ToList();
+        }
+
         public async Task<IReadOnlyList<AssetPairExtPriceSettingsModel>> GetAllAsync(string assetPairId = null)
         {
             IList<AssetPairExtPriceSettingsEntity> assetPairsEntities;

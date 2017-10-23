@@ -20,5 +20,6 @@ namespace MarginTrading.MarketMaker.Services
         Task<IReadOnlyList<AssetPairExtPriceSettingsModel>> GetAllAsync(string assetPairId = null);
         Task Set(AssetPairExtPriceSettingsModel model);
         (decimal Bid, decimal Ask) GetPriceMarkups(string assetPairId);
+        IReadOnlyList<HedgingPreferenceModel> GetAllHedgingPreferences();
     }
 }
