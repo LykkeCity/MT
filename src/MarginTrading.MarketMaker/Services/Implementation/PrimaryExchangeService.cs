@@ -27,7 +27,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             _priceCalcSettingsService = priceCalcSettingsService;
         }
 
-        public string GetPrimaryExchange(string assetPairId, ImmutableDictionary<string, ExchangeErrorState> exchanges)
+        public string GetPrimaryExchange(string assetPairId, ImmutableDictionary<string, ExchangeErrorState> errors)
         {
             if (!_priceCalcSettingsService.IsStepEnabled(OrderbookGeneratorStepEnum.ChoosePrimary, assetPairId))
             {
@@ -40,8 +40,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
             void SwitchPrimaryExchange()
             {
-                originalPrimaryExchange = primaryExchange;
-                var (newPrimary, all) = ChooseBackupExchange(assetPairId, exchanges, hedgingPreferences);
+                var (newPrimary, all) = ChooseBackupExchange(assetPairId, errors, hedgingPreferences);
                 primaryExchange = newPrimary.Exchange;
                 _primaryExchanges[assetPairId] = primaryExchange;
                 _alertService.AlertPrimaryExchangeSwitched(
@@ -61,37 +60,26 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 return primaryExchange;
             }
 
-            var cycleCounter = 0;
-            do
+            var primaryExchangeState = errors[primaryExchange];
+            var primaryPreference = hedgingPreferences.GetValueOrDefault(primaryExchange);
+            switch (primaryExchangeState)
             {
-                if (cycleCounter++ >= 2)
-                {
-                    // Guard - in case somehow an Outdated or Disabled exchange gets chosen second time - restrict endless loop
-                    throw new InvalidOperationException(
-                        $"Unable to get primary exchange for assetPair {assetPairId} after {cycleCounter - 1} cycles");
-                }
-
-                var primaryExchangeState = exchanges[primaryExchange];
-                var primaryPreference = hedgingPreferences.GetValueOrDefault(primaryExchange);
-                switch (primaryExchangeState)
-                {
-                    case ExchangeErrorState.None when primaryPreference > 0:
-                        break;
-                    case ExchangeErrorState.Outlier when primaryPreference > 0:
-                        _alertService.AlertRiskOfficer(
-                            $"Primary exchange {primaryExchange} for {assetPairId} is an outlier. Skipping price update.");
-                        return null;
-                    default:
-                        SwitchPrimaryExchange();
-                        _alertService.AlertRiskOfficer(
-                            $"Primary exchange {originalPrimaryExchange} for {assetPairId} is not usable any more " +
-                            $"because it has error state {primaryExchangeState} and hedging priority {primaryPreference}.\r\n" +
-                            $"A new primary exchange has been chosen: {primaryExchange}");
-                        break;
-                }
-            } while (originalPrimaryExchange != primaryExchange);
-
-            return primaryExchange;
+                case ExchangeErrorState.None when primaryPreference > 0:
+                    return primaryExchange;
+                case ExchangeErrorState.Outlier when primaryPreference > 0:
+                    _alertService.AlertRiskOfficer(
+                        $"Primary exchange {primaryExchange} for {assetPairId} is an outlier. Skipping price update.");
+                    return null;
+                default:
+                    SwitchPrimaryExchange();
+                    _alertService.AlertRiskOfficer(
+                        $"Primary exchange {originalPrimaryExchange} for {assetPairId} was changed.\r\n" +
+                        $"It had error state {primaryExchangeState} and hedging priority {primaryPreference}.\r\n" +
+                        $"New primary exchange: {primaryExchange}");
+                    return errors[primaryExchange] == ExchangeErrorState.Outlier
+                        ? null
+                        : primaryExchange;
+            }
         }
 
         [Pure]
@@ -119,7 +107,13 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
             if (primary != null && primary.Preference > 0)
             {
-                _alertService.AlertAllowNewTrades(assetPairId, "Switched to a good exchange: " + primary.ToJson());
+                if (exchangesErrors.Values.Count(e => e == ExchangeErrorState.None || e == ExchangeErrorState.Outdated) >= 3)
+                {
+                    // todo: make up a mechanism to enable trades, which takes in account all checks like this in the price cycle and decides in the end
+                    // without it we cannot add new checks
+                    _alertService.AlertAllowNewTrades(assetPairId, "Switched to a good exchange: " + primary.ToJson());
+                }
+
                 return (primary, exchangeQualities);
             }
 

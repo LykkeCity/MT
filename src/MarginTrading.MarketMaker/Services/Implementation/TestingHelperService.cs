@@ -58,7 +58,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             {
                 if (IsActive(s.Disable, now))
                 {
-                    return null;
+                    return null; // skip orderbook
                 }
 
                 if (IsActive(s.BidModification, now))
