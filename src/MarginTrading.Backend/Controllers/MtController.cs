@@ -318,7 +318,7 @@ namespace MarginTrading.Backend.Controllers
                 return new MtBackendResponse<bool> {Message = "Trades for instrument are not available"};
             }
 
-            _tradingEngine.CancelPendingOrder(order.Id, OrderCloseReason.CanceledByUser);
+            _tradingEngine.CancelPendingOrder(order.Id, OrderCloseReason.Canceled);
 
             var result = new MtBackendResponse<bool> {Result = true};
 

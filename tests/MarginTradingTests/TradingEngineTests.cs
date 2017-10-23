@@ -1760,10 +1760,10 @@ namespace MarginTradingTests
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.WaitingForExecution)));
             _appNotificationsMock.Verify(x => x.SendPositionNotification(It.IsAny<string[]>(), It.Is<string>(message => message == order.GetPushMessage()), It.IsAny<IOrder>()), Times.Once());
 
-            _tradingEngine.CancelPendingOrder(order.Id, OrderCloseReason.CanceledByUser);
+            _tradingEngine.CancelPendingOrder(order.Id, OrderCloseReason.Canceled);
 
             Assert.AreEqual(OrderStatus.Closed, order.Status);
-            Assert.AreEqual(OrderCloseReason.CanceledByUser, order.CloseReason);
+            Assert.AreEqual(OrderCloseReason.Canceled, order.CloseReason);
             Assert.IsNotNull(order.CloseDate);
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
             _appNotificationsMock.Verify(x => x.SendPositionNotification(It.IsAny<string[]>(), It.Is<string>(message => message == order.GetPushMessage()), It.IsAny<IOrder>()), Times.Once());
