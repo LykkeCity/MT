@@ -15,16 +15,16 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
     {
         private const string TableName = "MarginTradingAccountTransactionsReports";
         private const string CreateTableScript = "CREATE TABLE [{0}](" +
-            "[Id] [nvarchar](32) NOT NULL, " +
+            "[Id] [nvarchar](64) NOT NULL, " +
             "[Date] [datetime] NOT NULL," +
-            "[ClientId] [nvarchar] (32) NOT NULL, "+
-            "[AccountId] [nvarchar] (32) NOT NULL, "+
+            "[ClientId] [nvarchar] (64) NOT NULL, "+
+            "[AccountId] [nvarchar] (64) NOT NULL, "+
             "[PositionId] [text] NULL, "+
-            "[Amount] [numeric] (18, 18) NOT NULL, " +
-            "[Balance] [numeric] (18, 18) NOT NULL, "+
+            "[Amount] [numeric] (18, 6) NOT NULL, " +
+            "[Balance] [numeric] (18, 6) NOT NULL, "+
             "[Type] [nvarchar] (50) NOT NULL, "+
             "[Comment] [text] NOT NULL, "+
-            "[WithdrawTransferLimit] [numeric] (18, 18) NOT NULL, " +
+            "[WithdrawTransferLimit] [numeric] (18, 6) NOT NULL, " +
             "CONSTRAINT[PK_{0}] PRIMARY KEY CLUSTERED ([Id] ASC)" +
             ");";
 
@@ -34,7 +34,7 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
         public AccountTransactionsReportsSqlRepository(MarginSettings settings, ILog log)
         {
 #if DEBUG
-            _connection = new SqlConnection(@"Server=.\SQLEXPRESS1;Database=WampTlsLogs;User Id=sa;Password = na123456;");
+            _connection = new SqlConnection(@"Server=.\SQLEXPRESS;Database=StockExchange;User Id=sa;Password = na123456;");
 #else
             _connection = new SqlConnection(settings.Db.ReportsConnString);
 #endif
@@ -42,17 +42,13 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
         }
         
         public async Task InsertOrReplaceAsync(IAccountTransactionsReport entity)
-        {
-            string query = $"insert into {TableName}" +
-                "(Id, Date, AccountId, ClientId, Amount, Balance, WithdrawTransferLimit, Comment, Type, PositionId) " +
+        {    
+            string query = $"insert into {TableName} " +
+                "(Id, Date, AccountId, ClientId, Amount, Balance, WithdrawTransferLimit, Comment, Type) " +
                 " values " +
-                "(@Id ,@Date, @AccountId, @ClientId, @Amount, @Balance, @WithdrawTransferLimit, @Comment, @Type, @PositionId)";
+                "(@Id ,@Date, @AccountId, @ClientId, @Amount, @Balance, @WithdrawTransferLimit, @Comment, @Type)";
 
-            try { await _connection.ExecuteAsync(query, entity); }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
+           await _connection.ExecuteAsync(query, entity);
         }
 
         private void CreateTableIfDoesntExists()
