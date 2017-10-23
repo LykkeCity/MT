@@ -20,11 +20,11 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
             "[ClientId] [nvarchar] (64) NOT NULL, " +
             "[AccountId] [nvarchar] (64) NOT NULL, " +
             "[PositionId] [text] NULL, " +
-            "[Amount] [numeric] (18, 6) NOT NULL, " +
-            "[Balance] [numeric] (18, 6) NOT NULL, " +
+            "[Amount] [numeric] (20, 10) NOT NULL, " +
+            "[Balance] [numeric] (20, 10) NOT NULL, " +
             "[Type] [nvarchar] (50) NOT NULL, " +
             "[Comment] [text] NOT NULL, " +
-            "[WithdrawTransferLimit] [numeric] (18, 6) NOT NULL, " +
+            "[WithdrawTransferLimit] [numeric] (20, 10) NOT NULL, " +
             "CONSTRAINT[PK_{0}] PRIMARY KEY CLUSTERED ([Id] ASC)" +
             ");";
 
