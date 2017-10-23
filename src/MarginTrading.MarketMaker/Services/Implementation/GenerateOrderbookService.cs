@@ -25,7 +25,6 @@ namespace MarginTrading.MarketMaker.Services.Implementation
     {
         private readonly IOrderbooksService _orderbooksService;
         private readonly IDisabledOrderbooksService _disabledOrderbooksService;
-        private readonly ISystem _system;
         private readonly IOutdatedOrderbooksService _outdatedOrderbooksService;
         private readonly IOutliersOrderbooksService _outliersOrderbooksService;
         private readonly IRepeatedProblemsOrderbooksService _repeatedProblemsOrderbooksService;
@@ -37,12 +36,12 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         private readonly ILog _log;
         private readonly ITelemetryService _telemetryService;
         private readonly ITestingHelperService _testingHelperService;
+        private readonly IStopTradesService _stopTradesService;
 
 
         public GenerateOrderbookService(
             IOrderbooksService orderbooksService,
             IDisabledOrderbooksService disabledOrderbooksService,
-            ISystem system,
             IOutdatedOrderbooksService outdatedOrderbooksService,
             IOutliersOrderbooksService outliersOrderbooksService,
             IRepeatedProblemsOrderbooksService repeatedProblemsOrderbooksService,
@@ -53,11 +52,11 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             IBestPricesService bestPricesService,
             ILog log,
             ITelemetryService telemetryService,
-            ITestingHelperService testingHelperService)
+            ITestingHelperService testingHelperService,
+            IStopTradesService stopTradesService)
         {
             _orderbooksService = orderbooksService;
             _disabledOrderbooksService = disabledOrderbooksService;
-            _system = system;
             _outdatedOrderbooksService = outdatedOrderbooksService;
             _outliersOrderbooksService = outliersOrderbooksService;
             _repeatedProblemsOrderbooksService = repeatedProblemsOrderbooksService;
@@ -69,6 +68,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             _log = log;
             _telemetryService = telemetryService;
             _testingHelperService = testingHelperService;
+            _stopTradesService = stopTradesService;
         }
 
         public Orderbook OnNewOrderbook(ExternalOrderbook orderbook)
@@ -82,20 +82,23 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
             var assetPairId = orderbook.AssetPairId;
             var allOrderbooks = _orderbooksService.AddAndGetByAssetPair(orderbook);
-            var (exchangesErrors, validOrderbooks) = MarkExchangesErrors(assetPairId, allOrderbooks);
-            var primaryExchange = _primaryExchangeService.GetPrimaryExchange(assetPairId, exchangesErrors);
-            if (primaryExchange == null)
+            var now = orderbook.LastUpdatedTime;
+            var (exchangesErrors, validOrderbooks) = MarkExchangesErrors(assetPairId, allOrderbooks, now);
+            var primaryExchange = _primaryExchangeService.GetPrimaryExchange(assetPairId, exchangesErrors, now);
+            if (primaryExchange == null || primaryExchange != orderbook.ExchangeName)
             {
                 return null;
             }
 
-            if (!allOrderbooks.TryGetValue(primaryExchange, out var externalOrderbook))
+            if (!allOrderbooks.TryGetValue(primaryExchange, out var primaryOrderbook))
             {
-                _log.WriteWarningAsync(nameof(GenerateOrderbookService), null, $"{primaryExchange} not found in allOrderbooks ({allOrderbooks.Keys.ToJson()})");
+                _log.WriteWarningAsync(nameof(GenerateOrderbookService), null,
+                    $"{primaryExchange} not found in allOrderbooks ({allOrderbooks.Keys.ToJson()})");
                 return null;
             }
 
-            var result = Transform(externalOrderbook, validOrderbooks);
+            _stopTradesService.FinishCycle(primaryOrderbook, now);
+            var result = Transform(primaryOrderbook, validOrderbooks);
             LogCycle(orderbook, watch, primaryExchange);
             return result;
         }
@@ -114,13 +117,12 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         ///     Detects exchanges errors and disables thm if they get repeated
         /// </summary>
         private (ImmutableDictionary<string, ExchangeErrorState>, ImmutableDictionary<string, ExternalOrderbook>)
-            MarkExchangesErrors(string assetPairId, ImmutableDictionary<string, ExternalOrderbook> allOrderbooks)
+            MarkExchangesErrors(string assetPairId, ImmutableDictionary<string, ExternalOrderbook> allOrderbooks, DateTime now)
         {
-            var now = _system.UtcNow;
             var disabledExchanges = _disabledOrderbooksService.GetDisabledExchanges(assetPairId);
             var enabledOrderbooks = allOrderbooks.RemoveRange(disabledExchanges);
-            var (outdatedExchanges, upToDateOrderbooks) = FindOutdated(assetPairId, enabledOrderbooks, now);
-            var (outliersExchanges, validOrderbooks) = FindOutliers(assetPairId, upToDateOrderbooks);
+            var (outdatedExchanges, freshOrderbooks) = FindOutdated(assetPairId, enabledOrderbooks, now);
+            var (outliersExchanges, validOrderbooks) = FindOutliers(assetPairId, freshOrderbooks, now);
 
             var repeatedProblemsExchanges = GetRepeatedProblemsExchanges(assetPairId, enabledOrderbooks,
                 outdatedExchanges, outliersExchanges, now);
@@ -143,7 +145,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         [CanBeNull]
         private Orderbook Transform(
             ExternalOrderbook primaryOrderbook,
-            ImmutableDictionary<string, ExternalOrderbook> upToDateNotoutlierOrderbooks)
+            ImmutableDictionary<string, ExternalOrderbook> validOrderbooks)
         {
             if (!_priceCalcSettingsService.IsStepEnabled(OrderbookGeneratorStepEnum.Transform,
                 primaryOrderbook.AssetPairId))
@@ -152,7 +154,8 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             }
 
             var bestPrices =
-                upToDateNotoutlierOrderbooks.Values.ToDictionary(o => o.ExchangeName, orderbook => _bestPricesService.Calc(orderbook));
+                validOrderbooks.Values.ToDictionary(o => o.ExchangeName,
+                    orderbook => _bestPricesService.Calc(orderbook));
             return _arbitrageFreeSpreadService.Transform(primaryOrderbook, bestPrices);
         }
 
@@ -180,24 +183,24 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         ///     Detects outlier exchanges
         /// </summary>
         private (ImmutableHashSet<string>, ImmutableDictionary<string, ExternalOrderbook>) FindOutliers(
-            string assetPairId, ImmutableDictionary<string, ExternalOrderbook> upToDateOrderbooks)
+            string assetPairId, ImmutableDictionary<string, ExternalOrderbook> freshOrderbooks, DateTime now)
         {
             if (!_priceCalcSettingsService.IsStepEnabled(OrderbookGeneratorStepEnum.FindOutliers, assetPairId))
             {
-                return (ImmutableHashSet<string>.Empty, upToDateOrderbooks);
+                return (ImmutableHashSet<string>.Empty, freshOrderbooks);
             }
 
-            if (upToDateOrderbooks.Count < 3)
+            _stopTradesService.SetFreshOrderbooksState(freshOrderbooks, now);
+            if (freshOrderbooks.Count < 3)
             {
-                _alertService.AlertStopNewTrades(assetPairId, $"Up to date orderbooks count < 3: only {upToDateOrderbooks.Keys.ToJson()}");
-                return (ImmutableHashSet<string>.Empty, upToDateOrderbooks);
+                return (ImmutableHashSet<string>.Empty, freshOrderbooks);
             }
 
-            var outliersExchanges = _outliersOrderbooksService.FindOutliers(assetPairId, upToDateOrderbooks)
+            var outliersExchanges = _outliersOrderbooksService.FindOutliers(assetPairId, freshOrderbooks)
                 .Select(o => o.ExchangeName)
                 .ToImmutableHashSet();
-            var upToDateNotoutlierOrderbooks = upToDateOrderbooks.RemoveRange(outliersExchanges);
-            return (outliersExchanges, upToDateNotoutlierOrderbooks);
+            var freshNotOutlierOrderbooks = freshOrderbooks.RemoveRange(outliersExchanges);
+            return (outliersExchanges, freshNotOutlierOrderbooks);
         }
 
 
@@ -216,8 +219,8 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             var outdatedExchanges = orderbooksByExchanges.Values
                 .Where(o => _outdatedOrderbooksService.IsOutdated(o, now)).Select(o => o.ExchangeName)
                 .ToImmutableHashSet();
-            var upToDateOrderbooks = orderbooksByExchanges.RemoveRange(outdatedExchanges);
-            return (outdatedExchanges, upToDateOrderbooks);
+            var freshOrderbooks = orderbooksByExchanges.RemoveRange(outdatedExchanges);
+            return (outdatedExchanges, freshOrderbooks);
         }
 
         private void LogCycle(ExternalOrderbook orderbook, Stopwatch watch, string primaryExchange)

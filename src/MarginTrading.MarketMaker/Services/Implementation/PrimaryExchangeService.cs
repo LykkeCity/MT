@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.Linq;
-using Common;
 using JetBrains.Annotations;
 using MarginTrading.MarketMaker.Enums;
 using MarginTrading.MarketMaker.HelperServices.Implemetation;
@@ -18,25 +17,47 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         private readonly IAlertService _alertService;
         private readonly IHedgingPreferenceService _hedgingPreferenceService;
         private readonly IPriceCalcSettingsService _priceCalcSettingsService;
+        private readonly IStopTradesService _stopTradesService;
 
         public PrimaryExchangeService(IAlertService alertService, IHedgingPreferenceService hedgingPreferenceService,
-            IPriceCalcSettingsService priceCalcSettingsService)
+            IPriceCalcSettingsService priceCalcSettingsService, IStopTradesService stopTradesService)
         {
             _alertService = alertService;
             _hedgingPreferenceService = hedgingPreferenceService;
             _priceCalcSettingsService = priceCalcSettingsService;
+            _stopTradesService = stopTradesService;
         }
 
-        public string GetPrimaryExchange(string assetPairId, ImmutableDictionary<string, ExchangeErrorState> errors)
+        public string GetPrimaryExchange(string assetPairId, ImmutableDictionary<string, ExchangeErrorState> errors,
+            DateTime now)
         {
             if (!_priceCalcSettingsService.IsStepEnabled(OrderbookGeneratorStepEnum.ChoosePrimary, assetPairId))
             {
                 return _priceCalcSettingsService.GetPresetPrimaryExchange(assetPairId);
             }
 
-            var primaryExchange = _primaryExchanges.GetOrDefault(assetPairId);
             var hedgingPreferences = _hedgingPreferenceService.Get(assetPairId);
+            var result = CheckPrimaryStatusAndSwitchIfNeeded(assetPairId, errors, hedgingPreferences);
+            _stopTradesService.SetPrimaryOrderbookState(assetPairId, result, now,
+                hedgingPreferences.GetValueOrDefault(result), errors[result]);
+            return result;
+        }
+
+        [CanBeNull]
+        private string CheckPrimaryStatusAndSwitchIfNeeded(string assetPairId,
+            ImmutableDictionary<string, ExchangeErrorState> errors,
+            ImmutableDictionary<string, decimal> hedgingPreferences)
+        {
+            var primaryExchange = _primaryExchanges.GetOrDefault(assetPairId);
             var originalPrimaryExchange = primaryExchange;
+
+            if (primaryExchange == null)
+            {
+                SwitchPrimaryExchange();
+                _alertService.AlertRiskOfficer(
+                    $"{primaryExchange} is has been chosen as an initial primary exchange for {assetPairId}.");
+                return primaryExchange;
+            }
 
             void SwitchPrimaryExchange()
             {
@@ -52,17 +73,9 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                     });
             }
 
-            if (primaryExchange == null)
-            {
-                SwitchPrimaryExchange();
-                _alertService.AlertRiskOfficer(
-                    $"{primaryExchange} is has been chosen as an initial primary exchange for {assetPairId}.");
-                return primaryExchange;
-            }
-
-            var primaryExchangeState = errors[primaryExchange];
+            var primaryExchangeErrorState = errors[primaryExchange];
             var primaryPreference = hedgingPreferences.GetValueOrDefault(primaryExchange);
-            switch (primaryExchangeState)
+            switch (primaryExchangeErrorState)
             {
                 case ExchangeErrorState.None when primaryPreference > 0:
                     return primaryExchange;
@@ -74,7 +87,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                     SwitchPrimaryExchange();
                     _alertService.AlertRiskOfficer(
                         $"Primary exchange {originalPrimaryExchange} for {assetPairId} was changed.\r\n" +
-                        $"It had error state {primaryExchangeState} and hedging priority {primaryPreference}.\r\n" +
+                        $"It had error state {primaryExchangeErrorState} and hedging priority {primaryPreference}.\r\n" +
                         $"New primary exchange: {primaryExchange}");
                     return errors[primaryExchange] == ExchangeErrorState.Outlier
                         ? null
@@ -83,14 +96,15 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         }
 
         [Pure]
-        private (ExchangeQuality primary, ImmutableArray<ExchangeQuality> exchangeQualities)
+        private static (ExchangeQuality primary, ImmutableArray<ExchangeQuality> exchangeQualities)
             ChooseBackupExchange(string assetPairId, ImmutableDictionary<string, ExchangeErrorState> exchangesErrors,
                 ImmutableDictionary<string, decimal> hedgingPriorities)
         {
             ExchangeQuality GetExchangeQuality(string exchange, decimal preference)
             {
                 var orderbookReceived = exchangesErrors.TryGetValue(exchange, out var state);
-                return new ExchangeQuality(exchange, preference, orderbookReceived ? state : (ExchangeErrorState?) null, orderbookReceived);
+                return new ExchangeQuality(exchange, preference, orderbookReceived ? state : (ExchangeErrorState?) null,
+                    orderbookReceived);
             }
 
             var exchangeQualities = hedgingPriorities
@@ -107,17 +121,8 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
             if (primary != null && primary.Preference > 0)
             {
-                if (exchangesErrors.Values.Count(e => e == ExchangeErrorState.None || e == ExchangeErrorState.Outdated) >= 3)
-                {
-                    // todo: make up a mechanism to enable trades, which takes in account all checks like this in the price cycle and decides in the end
-                    // without it we cannot add new checks
-                    _alertService.AlertAllowNewTrades(assetPairId, "Switched to a good exchange: " + primary.ToJson());
-                }
-
                 return (primary, exchangeQualities);
             }
-
-            _alertService.AlertStopNewTrades(assetPairId, "Couldn't find a valid backup exchange");
 
             foreach (var state in new[] {ExchangeErrorState.None, ExchangeErrorState.Outlier})
             {

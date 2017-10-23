@@ -72,7 +72,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 }
             }
 
-            return new ExternalOrderbook(orderbook.AssetPairId, orderbook.ExchangeName, orderbook.LastUpdatedTime, bids, asks);
+            return new ExternalOrderbook(orderbook.AssetPairId, orderbook.ExchangeName, now, bids, asks);
         }
 
         [ContractAnnotation("r:null => false")]
