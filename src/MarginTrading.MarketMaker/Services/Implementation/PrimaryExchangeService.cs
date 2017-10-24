@@ -28,6 +28,16 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             _stopTradesService = stopTradesService;
         }
 
+        public string GetLastPrimaryExchange(string assetPairId)
+        {
+            if (!_priceCalcSettingsService.IsStepEnabled(OrderbookGeneratorStepEnum.ChoosePrimary, assetPairId))
+            {
+                return _priceCalcSettingsService.GetPresetPrimaryExchange(assetPairId);
+            }
+
+            return _primaryExchanges.GetOrDefault(assetPairId);
+        }
+
         public string GetPrimaryExchange(string assetPairId, ImmutableDictionary<string, ExchangeErrorState> errors,
             DateTime now)
         {

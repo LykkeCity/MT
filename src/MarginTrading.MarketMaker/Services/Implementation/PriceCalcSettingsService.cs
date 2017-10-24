@@ -61,7 +61,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
         public ImmutableDictionary<string, decimal> GetHedgingPreferences(string assetPairId)
         {
-            return AllExchanges(assetPairId).ToImmutableDictionary(e => e.Key, e => e.Value.Hedging.IsTemporarilyUnavailable ? 0m : (decimal)e.Value.Hedging.DefaultPriority);
+            return AllExchanges(assetPairId).ToImmutableDictionary(e => e.Key, e => e.Value.Hedging.IsTemporarilyUnavailable ? 0m : (decimal)e.Value.Hedging.DefaultPreference);
         }
 
         public (decimal Bid, decimal Ask) GetPriceMarkups(string assetPairId)
@@ -77,7 +77,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 {
                     AssetPairId = e.AssetPairId,
                     Exchange = e.Exchange,
-                    Preference = (decimal) e.Hedging.DefaultPriority,
+                    Preference = (decimal) e.Hedging.DefaultPreference,
                     HedgingTemporarilyDisabled = e.Hedging.IsTemporarilyUnavailable,
                 })).ToList();
         }
@@ -116,7 +116,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                             Exchange = e.Exchange,
                             Hedging = new HedgingSettingsModel
                             {
-                                DefaultPriority = e.Hedging.DefaultPriority,
+                                DefaultPreference = e.Hedging.DefaultPreference,
                                 IsTemporarilyUnavailable = e.Hedging.IsTemporarilyUnavailable,
                             },
                             OrderGeneration = new OrderGenerationSettingsModel
@@ -165,7 +165,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 AssetPairId = model.AssetPairId,
                 Hedging = new ExchangeExtPriceSettingsEntity.HedgingSettings
                 {
-                    DefaultPriority = e.Hedging.DefaultPriority,
+                    DefaultPreference = e.Hedging.DefaultPreference,
                     IsTemporarilyUnavailable = e.Hedging.IsTemporarilyUnavailable,
                 },
                 OrderGeneration = new ExchangeExtPriceSettingsEntity.OrderGenerationSettings

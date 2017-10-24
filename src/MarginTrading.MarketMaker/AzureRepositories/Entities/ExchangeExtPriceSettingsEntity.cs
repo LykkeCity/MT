@@ -55,7 +55,7 @@ namespace MarginTrading.MarketMaker.AzureRepositories.Entities
 
         public class HedgingSettings
         {
-            public double DefaultPriority { get; set; }
+            public double DefaultPreference { get; set; }
             public bool IsTemporarilyUnavailable { get; set; }
         }
 

@@ -9,5 +9,8 @@ namespace MarginTrading.MarketMaker.Services
     {
         [CanBeNull]
         string GetPrimaryExchange(string assetPairId, ImmutableDictionary<string, ExchangeErrorState> errors, DateTime now);
+
+        [CanBeNull]
+        string GetLastPrimaryExchange(string assetPairId);
     }
 }

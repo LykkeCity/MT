@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using MarginTrading.MarketMaker.Models.Api;
@@ -25,9 +26,9 @@ namespace MarginTrading.MarketMaker.Controllers
         [HttpPost]
         [Route("set")]
         [SwaggerOperation("SetExtPriceSettings")]
-        public async Task<IActionResult> Set([FromBody] AssetPairExtPriceSettingsModel settings)
+        public async Task<IActionResult> Set([FromBody] IEnumerable<AssetPairExtPriceSettingsModel> settings)
         {
-            await _priceCalcSettingsService.Set(settings);
+            await Task.WhenAll(settings.Select(s => _priceCalcSettingsService.Set(s)));
             return Ok(new {success = true});
         }
 
