@@ -9,11 +9,6 @@ namespace MarginTrading.MarketMaker.HelperServices.Implemetation
     {
         public static void Write(string str)
         {
-            //if (str.Length > 140)
-            //{
-            //    str = str.Substring(0, 140);
-            //}
-
             Console.WriteLine(str);
         }
 

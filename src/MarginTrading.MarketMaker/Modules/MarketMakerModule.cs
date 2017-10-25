@@ -47,6 +47,7 @@ namespace MarginTrading.MarketMaker.Modules
         /// - are the only implementations of the 'ISmthService' interface <br/>
         /// - are not generic <br/><br/>
         /// Types like SmthRepository are also supported.
+        /// Also autoregisters <see cref="IStartable"/>'s.
         /// </summary>
         private void RegisterDefaultImplementions(ContainerBuilder builder)
         {
@@ -55,11 +56,12 @@ namespace MarginTrading.MarketMaker.Modules
                 .Where(t => !t.IsInterface && !t.IsGenericType && (t.Name.EndsWith("Service") || t.Name.EndsWith("Repository")))
                 .SelectMany(t =>
                     t.GetInterfaces()
-                        .Where(i => i.Name.StartsWith('I') && i.Name.Substring(1) == t.Name && t.Assembly == assembly || t == typeof(IStartable))
+                        .Where(i => i.Name.StartsWith('I') && i.Name.Substring(1) == t.Name && i.Assembly == assembly || i == typeof(IStartable))
                         .Select(i => (Implementation: t, Interface: i)))
                 .GroupBy(t => t.Interface)
-                .Where(gr => gr.Count() == 1)
-                .Select(gr => gr.First());
+                .Where(gr => gr.Count() == 1 || gr.Key == typeof(IStartable))
+                .SelectMany(gr => gr)
+                .ToList();
 
             foreach (var (impl, service) in implementations)
             {

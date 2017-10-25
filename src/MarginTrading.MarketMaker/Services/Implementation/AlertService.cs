@@ -46,15 +46,14 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             AlertRiskOfficer($"{(stop ? "Stop" : "Allow")}NewTrades for {assetPairId} because: {reason}");
         }
 
-        public void AlertRiskOfficer(string message)
+        public Task AlertRiskOfficer(string message)
         {
             Trace.Write($"{nameof(AlertRiskOfficer)}: {message}");
-            _slack.SendAsync(null, "MarginTrading.MarketMaker.AlertService", message);
+            return _slack.SendAsync(null, "MarketMaker", message);
         }
 
         public void AlertStarted()
         {
-            Trace.Write($"{nameof(AlertStarted)}");
             AlertRiskOfficer("Market maker started");
             _rabbitMqService.GetProducer<StartedMessage>(
                     _settings.Nested(s => s.RabbitMq.Publishers.Started), true)
@@ -63,11 +62,11 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
         public Task AlertStopping()
         {
-            Trace.Write($"{nameof(AlertStopping)}");
-            AlertRiskOfficer("Market maker stopping");
-            return _rabbitMqService.GetProducer<StoppingMessage>(
-                    _settings.Nested(s => s.RabbitMq.Publishers.Stopping), true)
-                .ProduceAsync(new StoppingMessage {MarketMakerId = GetMarketMakerId()});
+            return Task.WhenAll(
+                AlertRiskOfficer("Market maker stopping"),
+                _rabbitMqService.GetProducer<StoppingMessage>(
+                        _settings.Nested(s => s.RabbitMq.Publishers.Stopping), true)
+                    .ProduceAsync(new StoppingMessage {MarketMakerId = GetMarketMakerId()}));
         }
 
         private string GetMarketMakerId()
