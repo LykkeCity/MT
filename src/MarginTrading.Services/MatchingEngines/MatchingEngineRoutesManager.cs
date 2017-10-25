@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
 using Common;
+using Common.Log;
 using MarginTrading.AzureRepositories.Logs;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Core;
 using MarginTrading.Core.MatchingEngines;
-using Microsoft.AspNetCore.Server.Kestrel.Core.Adapter.Internal;
 
 namespace MarginTrading.Services.MatchingEngines
 {
@@ -23,6 +22,7 @@ namespace MarginTrading.Services.MatchingEngines
         private readonly ITradingConditionsCacheService _tradingConditionsCacheService;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly IRiskSystemCommandsLogRepository _riskSystemCommandsLogRepository;
+        private readonly ILog _log;
 
         public MatchingEngineRoutesManager(
             MatchingEngineRoutesCacheService routesCacheService,
@@ -30,7 +30,8 @@ namespace MarginTrading.Services.MatchingEngines
             IAssetPairsCache assetPairsCache,
             ITradingConditionsCacheService tradingConditionsCacheService,
             IAccountsCacheService accountsCacheService,
-            IRiskSystemCommandsLogRepository riskSystemCommandsLogRepository)
+            IRiskSystemCommandsLogRepository riskSystemCommandsLogRepository,
+            ILog log)
         {
             _routesCacheService = routesCacheService;
             _repository = repository;            
@@ -38,6 +39,7 @@ namespace MarginTrading.Services.MatchingEngines
             _tradingConditionsCacheService = tradingConditionsCacheService;
             _accountsCacheService = accountsCacheService;
             _riskSystemCommandsLogRepository = riskSystemCommandsLogRepository;
+            _log = log;
         }
 
         
@@ -165,15 +167,28 @@ namespace MarginTrading.Services.MatchingEngines
             }
         }
 
-        private Task HandleRiskManagerBlockTradingCommand(MatchingEngineRouteRisksCommand command)
+        private async Task HandleRiskManagerBlockTradingCommand(MatchingEngineRouteRisksCommand command)
         {
             if (command.ActionType != RiskManagerActionType.BlockTradingForNewOrders)
-                return Task.CompletedTask;
+                return;
 
             switch (command.Action)
             {
                 case RiskManagerAction.On:
 
+                    var routes = FindRejectRoutes(command);
+
+                    if (routes.Any())
+                    {
+                        await _riskSystemCommandsLogRepository.AddErrorAsync(command.ActionType.ToString(),
+                            command.ToJson(),
+                            $"Route already exists: {routes.ToJson()}");
+                        await _log.WriteWarningAsync(nameof(MatchingEngineRoutesManager),
+                            nameof(HandleRiskManagerBlockTradingCommand), routes.ToJson(),
+                            $"Route already exists. Command from risk system is not processed: {command.ToJson()} ");
+                        return;
+                    }
+                    
                     var newRoute = new MatchingEngineRoute
                     {
                         Id = Guid.NewGuid().ToString().ToUpper(),
@@ -188,34 +203,42 @@ namespace MarginTrading.Services.MatchingEngines
                         RiskSystemMetricType = command.Type
                     };
 
-                    return AddOrReplaceRouteAsync(newRoute);
+                    await AddOrReplaceRouteAsync(newRoute);
+                    break;
                     
                 case RiskManagerAction.Off:
 
-                    var allRoutes = _routesCacheService.GetRoutes();
-                    var existingRoutes = allRoutes.Where(r => r.Rank == command.Rank &&
-                                                              r.Asset == GetValueOrAny(command.Asset) &&
-                                                              r.ClientId == GetValueOrAny(command.ClientId) &&
-                                                              r.Instrument == GetValueOrAny(command.Instrument) &&
-                                                              r.TradingConditionId ==
-                                                              GetValueOrAny(command.TradingConditionId) &&
-                                                              r.Type == GetOrderDirection(command.Direction) &&
-                                                              r.MatchingEngineId == MatchingEngineConstants.Reject &&
-                                                              r.RiskSystemLimitType == command.LimitType &&
-                                                              r.RiskSystemMetricType == command.Type).ToArray();
+                    var existingRoutes = FindRejectRoutes(command);
 
-                    if (existingRoutes.Count() != 1)
+                    if (existingRoutes.Length != 1)
                         throw new Exception(
                             $"Cannot disable BlockTradingForNewOrders route for command: {command.ToJson()}. Existing routes found for command: {existingRoutes.ToJson()}");
 
-                    return DeleteRouteAsync(existingRoutes[0].Id);
+                    await DeleteRouteAsync(existingRoutes[0].Id);
+                    break;
                     
                 default:
                     throw new NotSupportedException($"Action [{command.Action}] from risk managment system is not supported.");
                     
             }
         }
-        
+
+        private IMatchingEngineRoute[] FindRejectRoutes(MatchingEngineRouteRisksCommand command)
+        {
+            var allRoutes = _routesCacheService.GetRoutes();
+
+            return allRoutes.Where(r => r.Rank == command.Rank &&
+                                        r.Asset == GetValueOrAny(command.Asset) &&
+                                        r.ClientId == GetValueOrAny(command.ClientId) &&
+                                        r.Instrument == GetValueOrAny(command.Instrument) &&
+                                        r.TradingConditionId ==
+                                        GetValueOrAny(command.TradingConditionId) &&
+                                        r.Type == GetOrderDirection(command.Direction) &&
+                                        r.MatchingEngineId == MatchingEngineConstants.Reject &&
+                                        r.RiskSystemLimitType == command.LimitType &&
+                                        r.RiskSystemMetricType == command.Type).ToArray();
+        }
+
         private Task HandleRiskManagerHedgingCommand(MatchingEngineRouteRisksCommand command)
         {
             //TODO: change when 1 to 1 hedging will be implemented
