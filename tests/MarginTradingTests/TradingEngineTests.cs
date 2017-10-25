@@ -1183,7 +1183,7 @@ namespace MarginTradingTests
             var account = _accountsCacheService.Get(_client1Id, _acount1Id);
 
             Assert.AreEqual(OrderStatus.Active, order.Status);
-            Assert.AreEqual(0.61469, Math.Round(account.GetMarginUsageLevel(), 5));
+            Assert.AreEqual(1.62683m, Math.Round(account.GetMarginUsageLevel(), 5));
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendPositionNotification(It.IsAny<string[]>(), It.Is<string>(message => message == order.GetPushMessage()), It.IsAny<IOrder>()), Times.Once());
 
@@ -1235,7 +1235,7 @@ namespace MarginTradingTests
             var account = _accountsCacheService.Get(_client1Id, _acount1Id);
 
             Assert.AreEqual(OrderStatus.Active, order.Status);
-            Assert.AreEqual(0.61469d, Math.Round(account.GetMarginUsageLevel(), 5));
+            Assert.AreEqual(1.62683m, Math.Round(account.GetMarginUsageLevel(), 5));
             Assert.AreEqual(AccountLevel.None, account.GetAccountLevel()); //no margin call yet
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendPositionNotification(It.IsAny<string[]>(), It.Is<string>(message => message == order.GetPushMessage()), It.IsAny<IOrder>()), Times.Once());

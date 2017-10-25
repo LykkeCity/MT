@@ -61,7 +61,7 @@ namespace MarginTradingTests
             Assert.AreEqual(1020, account.GetTotalCapital());
             Assert.AreEqual(6.93333333m, account.GetUsedMargin());
             Assert.AreEqual(1009.6, account.GetMarginAvailable());
-            Assert.AreEqual(0.0067973856176470588235294118m, account.GetMarginUsageLevel());
+            Assert.AreEqual(147.11538468611316571447748352m, account.GetMarginUsageLevel());
 
             var order2 = new Order
             {
@@ -87,7 +87,7 @@ namespace MarginTradingTests
             Assert.AreEqual(420, Math.Round(account.GetTotalCapital(), 5));
             Assert.AreEqual(214.93333333m, account.GetUsedMargin());
             Assert.AreEqual(97.6, Math.Round(account.GetMarginAvailable(), 5));
-            Assert.AreEqual(0.51175, Math.Round(account.GetMarginUsageLevel(), 5));
+            Assert.AreEqual(1.95409m, Math.Round(account.GetMarginUsageLevel(), 5));
         }
 
         [Test]
@@ -113,7 +113,7 @@ namespace MarginTradingTests
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
 
             Assert.IsNotNull(account);
-            Assert.IsTrue(account.GetMarginUsageLevel() >= 0.8M);
+            Assert.IsTrue(account.GetMarginUsageLevel() <= 1.25M);
         }
     }
 }

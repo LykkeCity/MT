@@ -108,35 +108,30 @@ namespace MarginTrading.Core
             return account.GetAccountFpl();
         }
 
-        public static AccountLevel GetAccountLevel(this MarginTradingAccount account)
+        public static AccountLevel GetAccountLevel(this IMarginTradingAccount account)
         {
             var marginUsageLevel = account.GetMarginUsageLevel();
 
-            if (marginUsageLevel >= account.GetStopOut())
+            if (marginUsageLevel <= account.GetStopOut())
                 return AccountLevel.StopOUt;
 
-            if (marginUsageLevel >= account.GetMarginCall())
+            if (marginUsageLevel <= account.GetMarginCall())
                 return AccountLevel.MarginCall;
 
             return AccountLevel.None;
         }
 
-        public static decimal GetMarginUsageLevel(this MarginTradingAccount account)
+        public static decimal GetMarginUsageLevel(this IMarginTradingAccount account)
         {
             var totalCapital = account.GetTotalCapital();
+            
+            var usedMargin = account.GetUsedMargin();
 
-            if (totalCapital < 0)
-                return decimal.MaxValue;
+            //Anton Belkin said 100 is ok )
+            if (usedMargin <= 0)
+                return 100;
 
-            if (totalCapital == 0)
-            {
-                if (account.Balance == 0)
-                    return 0;
-
-                return decimal.MaxValue;
-            }
-
-            return account.GetUsedMargin() / totalCapital;
+            return totalCapital / account.GetUsedMargin();
         }
 
         public static decimal GetTotalCapital(this IMarginTradingAccount account)
@@ -182,11 +177,6 @@ namespace MarginTrading.Core
         public static int GetOpenPositionsCount(this IMarginTradingAccount account)
         {
             return account.GetAccountFpl().OpenPositionsCount;
-        }
-
-        public static decimal GetMarginUsageLevel(this IMarginTradingAccount account)
-        {
-            return account.GetTotalCapital() == 0 ? 0 : Math.Abs(account.GetUsedMargin() / account.GetTotalCapital());
         }
 
         public static void CacheNeedsToBeUpdated(this IMarginTradingAccount account)
