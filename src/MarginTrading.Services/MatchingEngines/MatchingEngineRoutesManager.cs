@@ -112,8 +112,11 @@ namespace MarginTrading.Services.MatchingEngines
                 .Select(gr => gr)
                 .ToArray();
 
-            if (highestPriorityRoutes.Length == 1)
+            if (highestPriorityRoutes.Length >= 1 &&
+                highestPriorityRoutes.Select(r => r.MatchingEngineId).Distinct().Count() == 1)
+            {
                 return highestPriorityRoutes[0];
+            }
 
             return null;
         }
