@@ -188,6 +188,21 @@ namespace MarginTrading.MarketMaker.HelperServices.Implemetation
             }
         }
 
+        public bool UpdateIfExists(TKey key, Func<TKey, TValue, TValue> updateValueFactory)
+        {
+            using (_lock.EnterUpgradeableReadLock())
+            {
+                if (_dictionary.TryGetValue(key, out var oldValue))
+                {
+                    var value = updateValueFactory(key, oldValue);
+                    this[key] = value;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         private class Lock : IDisposable
         {
             private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);

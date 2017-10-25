@@ -7,16 +7,16 @@ namespace MarginTrading.MarketMaker.Models
     public class ExchangeQuality
     {
         public string Exchange { get; }
-        public decimal Preference { get; }
+        public decimal HedgingPreference { get; }
 
         [JsonConverter(typeof(StringEnumConverter))]
         public ExchangeErrorState? Error { get; }
         public bool OrderbookReceived { get; }
 
-        public ExchangeQuality(string exchange, decimal preference, ExchangeErrorState? error, bool orderbookReceived)
+        public ExchangeQuality(string exchange, decimal hedgingPreference, ExchangeErrorState? error, bool orderbookReceived)
         {
             Exchange = exchange;
-            Preference = preference;
+            HedgingPreference = hedgingPreference;
             Error = error;
             OrderbookReceived = orderbookReceived;
         }

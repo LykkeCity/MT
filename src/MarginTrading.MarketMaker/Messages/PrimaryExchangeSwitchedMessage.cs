@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using MarginTrading.MarketMaker.Models;
 
 namespace MarginTrading.MarketMaker.Messages
 {
@@ -7,7 +6,7 @@ namespace MarginTrading.MarketMaker.Messages
     {
         public string MarketMakerId { get; set; }
         public string AssetPairId { get; set; }
-        public ExchangeQuality NewPrimaryExchange { get; set; }
-        public IReadOnlyCollection<ExchangeQuality> AllExchangesStates { get; set; }
+        public ExchangeQualityMessage NewPrimaryExchange { get; set; }
+        public IReadOnlyCollection<ExchangeQualityMessage> AllExchangesStates { get; set; }
     }
 }

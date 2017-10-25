@@ -21,5 +21,7 @@ namespace MarginTrading.MarketMaker.Services
         Task Set(AssetPairExtPriceSettingsModel model);
         (decimal Bid, decimal Ask) GetPriceMarkups(string assetPairId);
         IReadOnlyList<HedgingPreferenceModel> GetAllHedgingPreferences();
+        ImmutableHashSet<string> GetDisabledExchanges(string assetPairId);
+        void ChangeExchangesTemporarilyDisabled(string assetPairId, ImmutableHashSet<string> exchanges, bool disable);
     }
 }

@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using JetBrains.Annotations;
 using MarginTrading.MarketMaker.Enums;
+using MarginTrading.MarketMaker.Models;
 
 namespace MarginTrading.MarketMaker.Services
 {
@@ -10,7 +12,10 @@ namespace MarginTrading.MarketMaker.Services
         [CanBeNull]
         string GetPrimaryExchange(string assetPairId, ImmutableDictionary<string, ExchangeErrorState> errors, DateTime now);
 
-        [CanBeNull]
+        [CanBeNull, Pure]
         string GetLastPrimaryExchange(string assetPairId);
+
+        [Pure]
+        IReadOnlyDictionary<string, ImmutableDictionary<string, ExchangeQuality>> GetQualities();
     }
 }

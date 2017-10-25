@@ -7,5 +7,6 @@
         FindRepeatedProblems = 50,
         ChoosePrimary = 60,
         Transform = 80,
+        GetArbitrageFreeSpread = 90,
     }
 }

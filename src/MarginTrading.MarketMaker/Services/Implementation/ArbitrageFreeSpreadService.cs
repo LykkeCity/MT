@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using MarginTrading.MarketMaker.Enums;
 using MarginTrading.MarketMaker.Models;
+using MoreLinq;
 
 namespace MarginTrading.MarketMaker.Services.Implementation
 {
@@ -17,7 +19,13 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
         public Orderbook Transform(ExternalOrderbook primaryOrderbook, IReadOnlyDictionary<string, BestPrices> bestPrices)
         {
-            var arbitrageFreeSpread = GetArbitrageFreeSpread(bestPrices);
+            var isArbitrageFreeSpreadEnabled = _priceCalcSettingsService.IsStepEnabled(OrderbookGeneratorStepEnum.GetArbitrageFreeSpread,
+                primaryOrderbook.AssetPairId);
+
+            var arbitrageFreeSpread = isArbitrageFreeSpreadEnabled
+                ? GetArbitrageFreeSpread(bestPrices)
+                : GetArbitrageFreeSpread(
+                    ImmutableDictionary.CreateRange(bestPrices.Where(p => p.Key == primaryOrderbook.ExchangeName)));
             var primaryBestPrices = bestPrices[primaryOrderbook.ExchangeName];
             var bidShift = arbitrageFreeSpread.WorstBid - primaryBestPrices.BestBid; // negative
             var askShift = arbitrageFreeSpread.WorstAsk - primaryBestPrices.BestAsk; // positive
@@ -32,9 +40,9 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         {
             var worstBid = bestPrices.Values.Min(p => p.BestBid);
             var worstAsk = bestPrices.Values.Max(p => p.BestAsk);
-            if (worstBid == worstAsk)
+            if (worstBid >= worstAsk)
             {
-                worstBid -= 0.00000001m; // hello crutches
+                worstBid = worstAsk - 0.00000001m; // hello crutches
             }
 
             return (worstBid, worstAsk);

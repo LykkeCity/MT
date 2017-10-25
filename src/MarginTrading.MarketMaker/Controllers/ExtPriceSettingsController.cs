@@ -14,8 +14,7 @@ namespace MarginTrading.MarketMaker.Controllers
     {
         private readonly IPriceCalcSettingsService _priceCalcSettingsService;
 
-        public ExtPriceSettingsController(
-            IPriceCalcSettingsService priceCalcSettingsService)
+        public ExtPriceSettingsController(IPriceCalcSettingsService priceCalcSettingsService)
         {
             _priceCalcSettingsService = priceCalcSettingsService;
         }
