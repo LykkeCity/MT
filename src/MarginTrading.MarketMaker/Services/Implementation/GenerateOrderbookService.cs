@@ -190,7 +190,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 return (ImmutableHashSet<string>.Empty, freshOrderbooks);
             }
 
-            _stopTradesService.SetFreshOrderbooksState(freshOrderbooks, now);
+            _stopTradesService.SetFreshOrderbooksState(assetPairId, freshOrderbooks, now);
             if (freshOrderbooks.Count < 3)
             {
                 return (ImmutableHashSet<string>.Empty, freshOrderbooks);

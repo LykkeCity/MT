@@ -12,8 +12,8 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 {
     public class StopTradesService : IStopTradesService
     {
-        private readonly ReadWriteLockedDictionary<(string, string), State> _lastStates =
-            new ReadWriteLockedDictionary<(string, string), State>();
+        private readonly ReadWriteLockedDictionary<string, ImmutableSortedDictionary<DateTime, State>> _lastStates =
+            new ReadWriteLockedDictionary<string, ImmutableSortedDictionary<DateTime, State>>();
 
         private readonly ReadWriteLockedDictionary<string, bool> _stoppedTradesAssetPairs
             = new ReadWriteLockedDictionary<string, bool>();
@@ -25,33 +25,30 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             _alertService = alertService;
         }
 
-        public void SetPrimaryOrderbookState(string assetPairId, string exchange, DateTime now, decimal hedgingPriority, ExchangeErrorState? errorState)
+        public void SetPrimaryOrderbookState(string assetPairId, string exchange, DateTime now,
+            decimal hedgingPreference, ExchangeErrorState? errorState)
         {
-            var primaryState = new PrimaryState(exchange, errorState, hedgingPriority);
-            _lastStates.AddOrUpdate((assetPairId, exchange),
-                k => new State(null, now, primaryState: primaryState),
-                (k, old) => new State(old, now, primaryState: primaryState));
+            var state = new State(primaryState: new PrimaryState(exchange, errorState, hedgingPreference));
+            AddOrUpdateState(assetPairId, now, state);
         }
 
-        public void SetFreshOrderbooksState(ImmutableDictionary<string, ExternalOrderbook> freshOrderbooks, DateTime now)
+        public void SetFreshOrderbooksState(string assetPairId, ImmutableDictionary<string, ExternalOrderbook> freshOrderbooks,
+            DateTime now)
         {
-            var freshOrderbooksState = new FreshOrderbooksState(freshOrderbooks.Keys);
-            var first = freshOrderbooks.Values.First();
-            _lastStates.AddOrUpdate((first.AssetPairId, first.ExchangeName),
-                k => new State(null, now, freshOrderbooksState),
-                (k, old) => new State(old, now, freshOrderbooksState));
+            var state = new State(freshOrderbooksState: new FreshOrderbooksState(freshOrderbooks.Keys));
+            AddOrUpdateState(assetPairId, now, state);
         }
 
         public void FinishCycle(ExternalOrderbook primaryOrderbook, DateTime now)
         {
-            if (!_lastStates.TryGetValue((primaryOrderbook.AssetPairId, primaryOrderbook.ExchangeName), out var state) ||
-                now != state.Time)
+            if (!_lastStates.TryGetValue(primaryOrderbook.AssetPairId, out var dict) ||
+                !dict.TryGetValue(now, out var state))
             {
                 return;
             }
 
             var isPrimaryOk = state.PrimaryState == null ||
-                              state.PrimaryState.HedgingPriority > 0 &&
+                              state.PrimaryState.HedgingPreference > 0 &&
                               (state.PrimaryState.ErrorState == ExchangeErrorState.None ||
                                state.PrimaryState.ErrorState == ExchangeErrorState.Outlier);
 
@@ -72,7 +69,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 if (state.PrimaryState != null)
                 {
                     reason +=
-                        $"Primary exchange \"{state.PrimaryState.Name}\" has hedging priority \"{state.PrimaryState.HedgingPriority}\" and error state \"{state.PrimaryState.ErrorState}\". ";
+                        $"Primary exchange \"{state.PrimaryState.Name}\" has hedging preference \"{state.PrimaryState.HedgingPreference}\" and error state \"{state.PrimaryState.ErrorState}\". ";
                 }
 
                 if (state.FreshOrderbooksState != null)
@@ -84,19 +81,37 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 reason = reason ?? "Everything is ok";
                 _alertService.StopOrAllowNewTrades(primaryOrderbook.AssetPairId, reason, stop);
             }
+        }
+        private void AddOrUpdateState(string assetPairId, DateTime now, State state)
+        {
+            _lastStates.AddOrUpdate(assetPairId,
+                k => ImmutableSortedDictionary.Create<DateTime, State>().Add(now, state),
+                (k, old) => AddOrUpdateStatesDictAndCleanOld(old, state, now));
+        }
 
+        private static ImmutableSortedDictionary<DateTime, State> AddOrUpdateStatesDictAndCleanOld(
+            ImmutableSortedDictionary<DateTime, State> states, State newState,
+            DateTime now)
+        {
+            var minEventTime = now - TimeSpan.FromMinutes(1);
+            var old = states.Keys.SkipWhile(e => e < minEventTime);
+            states = states.RemoveRange(old);
+            if (states.TryGetValue(now, out var oldState))
+                newState = new State(oldState, newState);
+
+            return states.SetItem(now, newState);
         }
 
         private class PrimaryState
         {
             public string Name { get; }
             public ExchangeErrorState? ErrorState { get; }
-            public decimal HedgingPriority { get; }
+            public decimal HedgingPreference { get; }
 
-            public PrimaryState(string name, ExchangeErrorState? errorState, decimal hedgingPriority)
+            public PrimaryState(string name, ExchangeErrorState? errorState, decimal hedgingPreference)
             {
                 ErrorState = errorState;
-                HedgingPriority = hedgingPriority;
+                HedgingPreference = hedgingPreference;
                 Name = name;
             }
         }
@@ -113,29 +128,23 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
         private class State
         {
-            public State([CanBeNull] State old, DateTime time,
-                FreshOrderbooksState freshOrderbooksState = null, PrimaryState primaryState = null)
-            {
-                Time = time;
-
-                if (old?.Time == time)
-                {
-                    FreshOrderbooksState = freshOrderbooksState ?? old.FreshOrderbooksState;
-                    PrimaryState = primaryState ?? old.PrimaryState;
-                }
-                else
-                {
-                    FreshOrderbooksState = freshOrderbooksState;
-                    PrimaryState = primaryState;
-                }
-            }
-
-            public DateTime Time { get; }
-
             [CanBeNull]
             public FreshOrderbooksState FreshOrderbooksState { get; }
+
             [CanBeNull]
             public PrimaryState PrimaryState { get; }
+
+            public State(FreshOrderbooksState freshOrderbooksState = null, PrimaryState primaryState = null)
+            {
+                FreshOrderbooksState = freshOrderbooksState;
+                PrimaryState = primaryState;
+            }
+
+            public State(State oldState, State newState)
+            {
+                FreshOrderbooksState = newState.FreshOrderbooksState ?? oldState.FreshOrderbooksState;
+                PrimaryState = newState.PrimaryState ?? oldState.PrimaryState;
+            }
         }
     }
 }

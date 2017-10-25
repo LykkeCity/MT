@@ -21,7 +21,7 @@ namespace MarginTrading.MarketMaker.Models.Api
 
             public TimeSpan Duration
             {
-                set => End = DateTime.UtcNow + value;
+                set => End = (Start ?? DateTime.UtcNow) + value;
             }
         }
 

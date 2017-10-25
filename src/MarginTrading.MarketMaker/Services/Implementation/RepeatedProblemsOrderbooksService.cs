@@ -13,10 +13,12 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             _lastEvents = new ReadWriteLockedDictionary<(string, string), ImmutableSortedSet<Event>>();
 
         private readonly IPriceCalcSettingsService _priceCalcSettingsService;
+        private readonly IAlertService _alertService;
 
-        public RepeatedProblemsOrderbooksService(IPriceCalcSettingsService priceCalcSettingsService)
+        public RepeatedProblemsOrderbooksService(IPriceCalcSettingsService priceCalcSettingsService, IAlertService alertService)
         {
             _priceCalcSettingsService = priceCalcSettingsService;
+            _alertService = alertService;
         }
 
         public bool IsRepeatedProblemsOrderbook(ExternalOrderbook orderbook, bool isOutdated, bool isOutlier,
@@ -28,7 +30,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             DateTime minEventTime = outlierSequenceStart < outlierAvgStart ? outlierSequenceStart : outlierAvgStart;
             var newEvent = new Event(now, isOutdated, isOutlier);
             var actualProblems = _lastEvents.AddOrUpdate((orderbook.AssetPairId, orderbook.ExchangeName),
-                k => ImmutableSortedSet.Create(Event.TimeComparer, newEvent),
+                k => ImmutableSortedSet.Create(Event.ComparerByTime, newEvent),
                 (k, old) => AddEventAndCleanOld(old, newEvent, minEventTime));
 
             //currently we process only Outlier
@@ -46,11 +48,14 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
                     if (outliersInRow > repeatedOutliersParams.MaxSequenceLength)
                     {
+                        _alertService.AlertRiskOfficer(
+                            $"{orderbook.ExchangeName} is a repeated outlier exchange for {orderbook.AssetPairId}.\r\n" +
+                            $"It had {outliersInRow} outlier orderbooks in a row during last {repeatedOutliersParams.MaxSequenceAge.TotalSeconds:f0} secs.");
                         Trace.Write("Repeated outlier (sequence)", new { orderbook.AssetPairId, orderbook.ExchangeName, outliersInRow, repeatedOutliersParams.MaxSequenceLength });
                         return true;
                     }
 
-                    if (e.Time >= outlierSequenceStart)
+                    if (e.Time >= outlierAvgStart)
                     {
                         statsCount++;
                         if (e.IsOutlier)
@@ -61,6 +66,9 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 var avg = outliersCount / (decimal) statsCount;
                 if (avg > repeatedOutliersParams.MaxAvg)
                 {
+                    _alertService.AlertRiskOfficer(
+                        $"{orderbook.ExchangeName} is a repeated outlier exchange for {orderbook.AssetPairId}.\r\n" +
+                        $"It had {avg * 100:f4}% (i.e. {outliersCount} / {statsCount}) of max {repeatedOutliersParams.MaxAvg * 100:f4}% outlier orderbooks during last {repeatedOutliersParams.MaxAvgAge.TotalSeconds:f0} secs.");
                     Trace.Write("Repeated outlier (avg)", new { orderbook.AssetPairId, orderbook.ExchangeName, outliersCount, statsCount, avg, repeatedOutliersParams.MaxAvg });
                     return true;
                 }
@@ -73,7 +81,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             DateTime minEventTime)
         {
             if (events[0].Time < minEventTime)
-                return events.SkipWhile(e => e.Time < minEventTime).Concat(new[] { ev }).ToImmutableSortedSet(Event.TimeComparer);
+                return events.SkipWhile(e => e.Time < minEventTime).Concat(new[] { ev }).ToImmutableSortedSet(Event.ComparerByTime);
             else
                 return events.Add(ev);
         }
@@ -91,15 +99,15 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 IsOutlier = isOutlier;
             }
 
-            private sealed class TimeEqualityComparer : IComparer<Event>
+            private sealed class TimeComparer : IComparer<Event>
             {
                 public int Compare(Event x, Event y)
                 {
-                    return DateTime.Compare(x.Time, y.Time);
+                    return Comparer<DateTime?>.Default.Compare(x?.Time, y?.Time);
                 }
             }
 
-            public static IComparer<Event> TimeComparer { get; } = new TimeEqualityComparer();
+            public static IComparer<Event> ComparerByTime { get; } = new TimeComparer();
         }
     }
 }

@@ -8,9 +8,9 @@ namespace MarginTrading.MarketMaker.Services
 {
     public interface IStopTradesService
     {
-        void SetPrimaryOrderbookState(string assetPairId, string exchange, DateTime now, decimal hedgingPriority, ExchangeErrorState? errorState);
+        void SetPrimaryOrderbookState(string assetPairId, string exchange, DateTime now, decimal hedgingPreference, ExchangeErrorState? errorState);
 
-        void SetFreshOrderbooksState(ImmutableDictionary<string, ExternalOrderbook> freshOrderbooks, DateTime now);
+        void SetFreshOrderbooksState(string assetPairId, ImmutableDictionary<string, ExternalOrderbook> freshOrderbooks, DateTime now);
 
         void FinishCycle(ExternalOrderbook primaryOrderbook, DateTime now);
     }

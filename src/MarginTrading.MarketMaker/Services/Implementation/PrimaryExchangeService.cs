@@ -73,7 +73,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             {
                 var result = SwitchPrimaryExchange(assetPairId, null, exchangeQualities,
                     newPrimary => $"{newPrimary.Exchange} has been chosen as an initial primary exchange for {assetPairId}. " +
-                                  $"It has error state \"{newPrimary.Error}\" and hedging priority \"{newPrimary.HedgingPreference}\".");
+                                  $"It has error state \"{newPrimary.Error}\" and hedging preference \"{newPrimary.HedgingPreference}\".");
                 return result;
             }
 
@@ -92,8 +92,8 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                     primaryQuality = SwitchPrimaryExchange(assetPairId, primaryQuality, exchangeQualities,
                         newPrimary =>
                             $"Primary exchange {originalPrimaryExchange} for {assetPairId} was changed.\r\n" +
-                            $"It had error state \"{primaryError}\" and hedging priority \"{primaryPreference}\".\r\n" +
-                            $"New primary exchange: \"{newPrimary.Exchange}\". It has error state \"{newPrimary.Error}\" and hedging priority \"{newPrimary.HedgingPreference}\".");
+                            $"It had error state \"{primaryError}\" and hedging preference \"{primaryPreference}\".\r\n" +
+                            $"New primary exchange: \"{newPrimary.Exchange}\". It has error state \"{newPrimary.Error}\" and hedging preference \"{newPrimary.HedgingPreference}\".");
                     return primaryQuality;
             }
         }
@@ -104,7 +104,10 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         {
             var newPrimary = ChooseBackupExchange(assetPairId, exchangeQualities);
             if (newPrimary.Exchange == oldPrimary?.Exchange)
+            {
+                Trace.Write("Could not switch exhange", new { assetPairId, newPrimary, exchangeQualities });
                 return oldPrimary;
+            }
 
             _primaryExchanges[assetPairId] = newPrimary.Exchange;
             _alertService.AlertPrimaryExchangeSwitched(
