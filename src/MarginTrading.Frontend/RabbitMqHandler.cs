@@ -25,6 +25,7 @@ namespace MarginTrading.Frontend
         private readonly MtFrontSettings _frontSettings;
         private readonly IConsole _consoleWriter;
         private readonly ILog _log;
+        private readonly IMarginTradingSettingsService _marginTradingSettingsService;
         private readonly ISubject<InstrumentBidAskPair> _allPairsSubject;
 
         private readonly ConcurrentDictionary<string, ISubject<InstrumentBidAskPair>> _priceSubjects =
@@ -37,7 +38,8 @@ namespace MarginTrading.Frontend
             MtFrontendSettings settings,
             MtFrontSettings frontSettings,
             IConsole consoleWriter,
-            ILog log)
+            ILog log,
+            IMarginTradingSettingsService marginTradingSettingsService)
         {
             _realm = realm;
             _clientNotificationService = clientNotificationService;
@@ -46,6 +48,7 @@ namespace MarginTrading.Frontend
             _frontSettings = frontSettings;
             _consoleWriter = consoleWriter;
             _log = log;
+            _marginTradingSettingsService = marginTradingSettingsService;
             _allPairsSubject = realm.Services.GetSubject<InstrumentBidAskPair>(frontSettings.WampPricesTopicName);
         }
 
@@ -60,6 +63,7 @@ namespace MarginTrading.Frontend
         {
             if (accountChangedMessage.EventType != AccountEventTypeEnum.Updated)
             {
+                _marginTradingSettingsService.ResetCacheForClient(accountChangedMessage.Account?.ClientId);
                 return;
             }
 

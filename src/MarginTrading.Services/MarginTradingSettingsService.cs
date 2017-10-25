@@ -60,6 +60,14 @@ namespace MarginTrading.Services
                                ClientTradingEnabledCachingParameters);
         }
 
+        public void ResetCacheForClient(string clientId)
+        {
+            if (string.IsNullOrEmpty(clientId))
+                return;
+            
+            _cacheProvider.Remove(GetClientTradingEnabledCacheKey(clientId));
+        }
+
         private Task<EnabledMarginTradingTypes> IsMarginTradingEnabledInternal(string clientId)
         {
             async Task<EnabledMarginTradingTypes> MarginEnabled()

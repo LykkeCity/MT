@@ -22,5 +22,10 @@ namespace MarginTrading.Core
         /// Enables or disables margin trading of specified type <paramref name="isLive"/> for specified <paramref name="clientId"/>
         /// </summary>
         Task SetMarginTradingEnabled(string clientId, bool isLive, bool enabled);
+
+        /// <summary>
+        /// Removes from cache value for user
+        /// </summary>
+        void ResetCacheForClient(string clientId);
     }
 }
