@@ -20,5 +20,10 @@ namespace MarginTrading.MarketMaker.Models
             Error = error;
             OrderbookReceived = orderbookReceived;
         }
+
+        public override string ToString()
+        {
+            return $"{Exchange} ({Error?.ToString() ?? "null"}, {HedgingPreference:N4})";
+        }
     }
 }

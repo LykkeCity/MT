@@ -32,20 +32,21 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         }
 
         [Pure]
+        public IReadOnlyDictionary<string, string> GetLastPrimaryExchanges()
+        {
+            return _primaryExchanges.ToImmutableDictionary();
+        }
+
+        [Pure]
         public string GetLastPrimaryExchange(string assetPairId)
         {
-            if (!_priceCalcSettingsService.IsStepEnabled(OrderbookGeneratorStepEnum.ChoosePrimary, assetPairId))
-            {
-                return _priceCalcSettingsService.GetPresetPrimaryExchange(assetPairId);
-            }
-
             return _primaryExchanges.GetOrDefault(assetPairId);
         }
 
         [Pure]
         public IReadOnlyDictionary<string, ImmutableDictionary<string, ExchangeQuality>> GetQualities()
         {
-            return _exchangesQualities;
+            return _exchangesQualities.ToImmutableDictionary();
         }
 
         public string GetPrimaryExchange(string assetPairId, ImmutableDictionary<string, ExchangeErrorState> errors,
@@ -53,7 +54,9 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         {
             if (!_priceCalcSettingsService.IsStepEnabled(OrderbookGeneratorStepEnum.ChoosePrimary, assetPairId))
             {
-                return _priceCalcSettingsService.GetPresetPrimaryExchange(assetPairId);
+                var presetPrimaryExchange = _priceCalcSettingsService.GetPresetPrimaryExchange(assetPairId);
+                _primaryExchanges[assetPairId] = presetPrimaryExchange;
+                return presetPrimaryExchange;
             }
 
             var exchangeQualities = CalcExchangeQualities(assetPairId, errors);
@@ -105,7 +108,8 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             var newPrimary = ChooseBackupExchange(assetPairId, exchangeQualities);
             if (newPrimary.Exchange == oldPrimary?.Exchange)
             {
-                Trace.Write("Could not switch exhange", new { assetPairId, newPrimary, exchangeQualities });
+                var exchanges = string.Join(", ", exchangeQualities.OrderByDescending(q=>q.Value.HedgingPreference).Select(q => q.Value.ToString()));
+                Trace.Write($"Current exchange {oldPrimary.Exchange} for {assetPairId} is bad, but switch failed. Exchanges: {exchanges}");
                 return oldPrimary;
             }
 

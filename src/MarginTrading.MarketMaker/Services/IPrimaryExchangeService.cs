@@ -17,5 +17,7 @@ namespace MarginTrading.MarketMaker.Services
 
         [Pure]
         IReadOnlyDictionary<string, ImmutableDictionary<string, ExchangeQuality>> GetQualities();
+
+        IReadOnlyDictionary<string, string> GetLastPrimaryExchanges();
     }
 }

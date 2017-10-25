@@ -16,5 +16,7 @@ namespace MarginTrading.MarketMaker.Models.Api
 
         [JsonConverter(typeof(StringEnumConverter))]
         public ExchangeErrorState? Error { get; set; }
+
+        public bool IsPrimary { get; set; }
     }
 }

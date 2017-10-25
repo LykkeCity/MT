@@ -20,15 +20,21 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         public IReadOnlyDictionary<string, IReadOnlyList<ExtPriceStatusModel>> GetAll()
         {
             var qualities = _primaryExchangeService.GetQualities();
+            var primaryExchanges = _primaryExchangeService.GetLastPrimaryExchanges();
             var result = qualities.ToDictionary(p => p.Key,
-                p => (IReadOnlyList<ExtPriceStatusModel>) p.Value.Values
-                    .Select(q => new ExtPriceStatusModel
-                    {
-                        Exchange = q.Exchange,
-                        Error = q.Error,
-                        OrderbookReceived = q.OrderbookReceived,
-                        HedgingPreference = q.HedgingPreference
-                    }).ToList());
+                p =>
+                {
+                    var primary = primaryExchanges.GetValueOrDefault(p.Key);
+                    return (IReadOnlyList<ExtPriceStatusModel>) p.Value.Values
+                        .Select(q => new ExtPriceStatusModel
+                        {
+                            Exchange = q.Exchange,
+                            Error = q.Error,
+                            OrderbookReceived = q.OrderbookReceived,
+                            HedgingPreference = q.HedgingPreference,
+                            IsPrimary = q.Exchange == primary,
+                        }).ToList();
+                });
 
             var bestPrices = _bestPricesService.GetLastCalculated();
             foreach (var asset in result)

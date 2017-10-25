@@ -63,7 +63,7 @@ namespace MarginTrading.MarketMaker.Controllers
         public IReadOnlyDictionary<(string AssetPairId, string Exchange), ImmutableList<TestSetting>> GetAll() => _testingHelperService.GetAll();
 
         /// <summary>
-        /// Set settings
+        /// Get settings
         /// </summary>
         [HttpGet]
         [Route("{assetPairId}/{exchange}")]

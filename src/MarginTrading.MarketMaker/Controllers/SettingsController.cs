@@ -58,7 +58,7 @@ namespace MarginTrading.MarketMaker.Controllers
         }
 
         /// <summary>
-        /// Set settings for a single asset pair
+        /// Gets settings for a single asset pair
         /// </summary>
         [HttpGet]
         [Route("{assetPairId}")]

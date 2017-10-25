@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using JetBrains.Annotations;
+using MarginTrading.MarketMaker.HelperServices.Implemetation;
 using MarginTrading.MarketMaker.Models.Api;
 using MarginTrading.MarketMaker.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -29,7 +30,7 @@ namespace MarginTrading.MarketMaker.Controllers
         }
 
         /// <summary>
-        /// Set status for a single asset pair
+        /// Gets status for a single asset pair
         /// </summary>
         [HttpGet]
         [Route("{assetPairId}")]
@@ -38,6 +39,18 @@ namespace MarginTrading.MarketMaker.Controllers
         public IReadOnlyList<ExtPriceStatusModel> GetStatus(string assetPairId)
         {
             return _extPricesStatusService.Get(assetPairId);
+        }
+
+        /// <summary>
+        /// Gets logs
+        /// </summary>
+        [HttpGet]
+        [Route("logs")]
+        [SwaggerOperation("GetLogs")]
+        [CanBeNull]
+        public string GetLogs()
+        {
+            return string.Join("\r\n", Trace.GetLast());
         }
     }
 }
