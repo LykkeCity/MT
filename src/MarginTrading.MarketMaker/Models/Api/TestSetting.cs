@@ -16,8 +16,13 @@ namespace MarginTrading.MarketMaker.Models.Api
 
         public class Range
         {
-            public DateTime Start { get; set; }
-            public DateTime End { get; set; }
+            public DateTime? Start { get; set; }
+            public DateTime? End { get; set; }
+
+            public TimeSpan Duration
+            {
+                set => End = DateTime.UtcNow + value;
+            }
         }
 
         public class RangeWithAmount<T>: Range

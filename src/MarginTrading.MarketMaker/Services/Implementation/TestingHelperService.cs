@@ -78,7 +78,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         [ContractAnnotation("r:null => false")]
         private static bool IsActive([CanBeNull] TestSetting.Range r, DateTime now)
         {
-            return r != null && r.Start <= now && r.End >= now;
+            return r != null && (r.Start <= now || r.Start == null) && (r.End >= now || r.End == null);
         }
 
         private static ImmutableArray<OrderbookPosition> Shift(ImmutableArray<OrderbookPosition> positions, decimal amount)

@@ -57,14 +57,13 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             }
 
             var exchangeQualities = CalcExchangeQualities(assetPairId, errors);
-            var result = CheckPrimaryStatusAndSwitchIfNeeded(assetPairId, exchangeQualities);
-            _stopTradesService.SetPrimaryOrderbookState(assetPairId, result, now,
-                exchangeQualities[result].HedgingPreference, errors[result]);
-            return result;
+            var primaryQuality = CheckPrimaryStatusAndSwitchIfNeeded(assetPairId, exchangeQualities);
+            _stopTradesService.SetPrimaryOrderbookState(assetPairId, primaryQuality.Exchange, now,
+                primaryQuality.HedgingPreference, primaryQuality.Error);
+            return primaryQuality.Error == ExchangeErrorState.Outlier ? null : primaryQuality.Exchange;
         }
 
-        [CanBeNull]
-        private string CheckPrimaryStatusAndSwitchIfNeeded(string assetPairId,
+        private ExchangeQuality CheckPrimaryStatusAndSwitchIfNeeded(string assetPairId,
             ImmutableDictionary<string, ExchangeQuality> exchangeQualities)
         {
             var primaryExchange = _primaryExchanges.GetOrDefault(assetPairId);
@@ -72,43 +71,41 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
             if (primaryExchange == null)
             {
-                SwitchPrimaryExchange(assetPairId, ref primaryExchange, exchangeQualities,
+                var result = SwitchPrimaryExchange(assetPairId, null, exchangeQualities,
                     newPrimary => $"{newPrimary.Exchange} has been chosen as an initial primary exchange for {assetPairId}. " +
                                   $"It has error state \"{newPrimary.Error}\" and hedging priority \"{newPrimary.HedgingPreference}\".");
-                return primaryExchange;
+                return result;
             }
 
             var primaryQuality = exchangeQualities.GetValueOrDefault(primaryExchange);
-            var primaryPreference = primaryQuality?.HedgingPreference;
-            var primaryError = primaryQuality?.Error;
+            var primaryPreference = primaryQuality.HedgingPreference;
+            var primaryError = primaryQuality.Error;
             switch (primaryError)
             {
                 case ExchangeErrorState.None when primaryPreference > 0:
-                    return primaryExchange;
+                    return primaryQuality;
                 case ExchangeErrorState.Outlier when primaryPreference > 0:
                     _alertService.AlertRiskOfficer(
                         $"Primary exchange {primaryExchange} for {assetPairId} is an outlier. Skipping price update.");
-                    return null;
+                    return primaryQuality;
                 default:
-                    SwitchPrimaryExchange(assetPairId, ref primaryExchange, exchangeQualities,
+                    primaryQuality = SwitchPrimaryExchange(assetPairId, primaryQuality, exchangeQualities,
                         newPrimary =>
                             $"Primary exchange {originalPrimaryExchange} for {assetPairId} was changed.\r\n" +
                             $"It had error state \"{primaryError}\" and hedging priority \"{primaryPreference}\".\r\n" +
                             $"New primary exchange: \"{newPrimary.Exchange}\". It has error state \"{newPrimary.Error}\" and hedging priority \"{newPrimary.HedgingPreference}\".");
-                    return exchangeQualities[primaryExchange].Error == ExchangeErrorState.Outlier
-                        ? null
-                        : primaryExchange;
+                    return primaryQuality;
             }
         }
 
-        private void SwitchPrimaryExchange(string assetPairId, ref string primaryExchange,
-            ImmutableDictionary<string, ExchangeQuality> exchangeQualities, Func<ExchangeQuality, string> alertMessage)
+        private ExchangeQuality SwitchPrimaryExchange(string assetPairId, [CanBeNull] ExchangeQuality oldPrimary,
+            ImmutableDictionary<string, ExchangeQuality> exchangeQualities,
+            Func<ExchangeQuality, string> alertMessage)
         {
             var newPrimary = ChooseBackupExchange(assetPairId, exchangeQualities);
-            if (newPrimary.Exchange == primaryExchange)
-                return;
+            if (newPrimary.Exchange == oldPrimary?.Exchange)
+                return oldPrimary;
 
-            primaryExchange = newPrimary.Exchange;
             _primaryExchanges[assetPairId] = newPrimary.Exchange;
             _alertService.AlertPrimaryExchangeSwitched(
                 new PrimaryExchangeSwitchedMessage
@@ -118,6 +115,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                     NewPrimaryExchange = Convert(newPrimary),
                 });
             _alertService.AlertRiskOfficer(alertMessage(newPrimary));
+            return newPrimary;
         }
 
         [Pure]
@@ -148,7 +146,6 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 }
             }
 
-            // this may spam shortly after service start
             throw new InvalidOperationException("Unable to choose backup exchange for assetPair " + assetPairId);
         }
 

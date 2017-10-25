@@ -25,8 +25,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             _alertService = alertService;
         }
 
-        public void SetPrimaryOrderbookState(string assetPairId, string exchange, DateTime now, decimal hedgingPriority,
-            ExchangeErrorState errorState)
+        public void SetPrimaryOrderbookState(string assetPairId, string exchange, DateTime now, decimal hedgingPriority, ExchangeErrorState? errorState)
         {
             var primaryState = new PrimaryState(exchange, errorState, hedgingPriority);
             _lastStates.AddOrUpdate((assetPairId, exchange),
@@ -73,7 +72,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 if (state.PrimaryState != null)
                 {
                     reason +=
-                        $"Primary exchange {state.PrimaryState.Name} has hedging priority {state.PrimaryState.HedgingPriority} and error state {state.PrimaryState.ErrorState}. ";
+                        $"Primary exchange \"{state.PrimaryState.Name}\" has hedging priority \"{state.PrimaryState.HedgingPriority}\" and error state \"{state.PrimaryState.ErrorState}\". ";
                 }
 
                 if (state.FreshOrderbooksState != null)
@@ -91,10 +90,10 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         private class PrimaryState
         {
             public string Name { get; }
-            public ExchangeErrorState ErrorState { get; }
+            public ExchangeErrorState? ErrorState { get; }
             public decimal HedgingPriority { get; }
 
-            public PrimaryState(string name, ExchangeErrorState errorState, decimal hedgingPriority)
+            public PrimaryState(string name, ExchangeErrorState? errorState, decimal hedgingPriority)
             {
                 ErrorState = errorState;
                 HedgingPriority = hedgingPriority;
