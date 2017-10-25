@@ -65,6 +65,6 @@ namespace MarginTrading.Common.Wamp
         Task<MtClientResponse<bool>> ChangeOrderLimits(string requestJson);
 
         [WampProcedure("orderbooks")]
-        Task<Dictionary<string, OrderBookClientContract>> GetOrderBooks();
+        Task<OrderBookClientContract> GetOrderBook(string instrument);
     }
 }

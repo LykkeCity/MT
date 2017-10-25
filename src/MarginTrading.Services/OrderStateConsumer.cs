@@ -43,12 +43,13 @@ namespace MarginTrading.Services
 			var order = ea.Order;
 			_threadSwitcher.SwitchThread(async () =>
 			{
+				await _rabbitMqNotifyService.OrderHistory(order);
+				_clientNotifyService.NotifyOrderChanged(order);
+				
 				var totalFpl = order.GetTotalFpl();
 			    await _accountManager.UpdateBalanceAsync(order.ClientId, order.AccountId, totalFpl, AccountHistoryType.OrderClosed,
 			        $"Balance changed on order close (id = {order.Id})");
 
-				await _rabbitMqNotifyService.OrderHistory(order);
-				_clientNotifyService.NotifyOrderChanged(order);
 				await SendNotification(order.ClientId, order.GetPushMessage(), order);
 			});
 		}

@@ -83,46 +83,5 @@ namespace MarginTrading.Common.Mappers
                 StopLoss = src.StopLoss
             };
         }
-
-        public static MatchedOrderBackendContract ToBackendContract(this MatchedOrderClientContract src)
-        {
-            return new MatchedOrderBackendContract
-            {
-                OrderId = src.OrderId,
-                MarketMakerId = src.MarketMakerId,
-                LimitOrderLeftToMatch = src.LimitOrderLeftToMatch,
-                Volume = src.Volume,
-                Price = src.Price,
-                MatchedDate = src.MatchedDate
-            };
-        }
-
-        public static LimitOrderBackendContract ToBackendContract(this LimitOrderClientContract src)
-        {
-            return new LimitOrderBackendContract
-            {
-                Id = src.Id,
-                MarketMakerId = src.MarketMakerId,
-                Instrument = src.Instrument,
-                Volume = src.Volume,
-                Price = src.Price,
-                CreateDate = src.CreateDate,
-                MatchedOrders = src.MatchedOrders.Select(item => item.ToBackendContract()).ToArray()
-            };
-        }
-
-        public static AddLimitOrdersBackendRequest ToBackendContract(this AddLimitOrdersClientRequest src, string clientId)
-        {
-            return new AddLimitOrdersBackendRequest
-            {
-                ClientId = clientId,
-                MarketMakerId = src.MarketMakerId,
-                DeleteAllBuy = src.DeleteAllBuy,
-                DeleteAllSell = src.DeleteAllSell,
-                DeleteByInstrumentsBuy = src.DeleteByInstrumentsBuy,
-                DeleteByInstrumentsSell = src.DeleteByInstrumentsSell,
-                OrdersToAdd = src.OrdersToAdd.Select(item => item.ToBackendContract()).ToArray()
-            };
-        }
     }
 }

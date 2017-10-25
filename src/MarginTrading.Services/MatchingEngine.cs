@@ -68,19 +68,11 @@ namespace MarginTrading.Services
             }
         }
 
-        public Dictionary<string, OrderBook> GetOrderBook(List<string> marketMakerIds)
+        public OrderBook GetOrderBook(string instrument)
         {
             using (_contextFactory.GetReadSyncContext($"{nameof(MatchingEngine)}.{nameof(GetOrderBook)}"))
             {
-                var result = new Dictionary<string, OrderBook>();
-
-                foreach (KeyValuePair<string, OrderBook> pair in _orderBooks)
-                {
-                    GetOrders(marketMakerIds, pair, OrderDirection.Buy, result);
-                    GetOrders(marketMakerIds, pair, OrderDirection.Sell, result);
-                }
-
-                return result;
+                 return _orderBooks.GetOrderBook(instrument);
             }
         }
 
@@ -126,33 +118,6 @@ namespace MarginTrading.Services
             using (_contextFactory.GetReadSyncContext($"{nameof(MatchingEngine)}.{nameof(PingLock)}"))
             {
                 return true;
-            }
-        }
-
-        private void GetOrders(List<string> marketMakerIds, KeyValuePair<string, OrderBook> pair, OrderDirection type, Dictionary<string, OrderBook> result)
-        {
-            var ordersList = type == OrderDirection.Buy ? pair.Value.Buy : pair.Value.Sell;
-
-            foreach (KeyValuePair<decimal, List<LimitOrder>> orderData in ordersList)
-            {
-                var orders = orderData.Value.Where(item => marketMakerIds.Contains(item.MarketMakerId)).ToList();
-
-                if (orders.Any())
-                {
-                    if (!result.ContainsKey(pair.Key))
-                    {
-                        result.Add(pair.Key, new OrderBook());
-                    }
-
-                    var resultOrderBook = type == OrderDirection.Buy ? result[pair.Key].Buy : result[pair.Key].Sell;
-
-                    if (!resultOrderBook.ContainsKey(orderData.Key))
-                    {
-                        resultOrderBook.Add(orderData.Key, new List<LimitOrder>());
-                    }
-
-                    resultOrderBook[orderData.Key].AddRange(orders);
-                }
             }
         }
     }

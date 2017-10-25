@@ -10,7 +10,7 @@ namespace MarginTrading.Core
         void SetOrders(SetOrderModel model);
         void MatchMarketOrderForOpen(Order order, Func<MatchedOrderCollection, bool> orderProcessed);
         void MatchMarketOrderForClose(Order order, Func<MatchedOrderCollection, bool> orderProcessed);
-        Dictionary<string, OrderBook> GetOrderBook(List<string> marketMakerIds);
+        OrderBook GetOrderBook(string instrument);
         bool PingLock();
     }
 

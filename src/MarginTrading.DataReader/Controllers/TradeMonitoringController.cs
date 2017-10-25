@@ -223,14 +223,14 @@ namespace MarginTrading.DataReader.Controllers
         [Route("orderbooks/byInstrument/{instrument}")]
         public async Task<List<OrderBookModel>> GetOrderBooks(string instrument)
         {
-            var orderbooks = await _orderBookSnapshotReaderService.GetAllLimitOrders(instrument);
+            var orderbooks = await _orderBookSnapshotReaderService.GetOrderBook(instrument);
             return new List<OrderBookModel>
             {
                 new OrderBookModel
                 {
                     Instrument = instrument,
-                    Buy = orderbooks.Buy.ToList(),
-                    Sell = orderbooks.Sell.ToList()
+                    Buy = orderbooks.Buy.Values.SelectMany(o => o).ToList(),
+                    Sell = orderbooks.Sell.Values.SelectMany(o => o).ToList()
                 }
             };
         }

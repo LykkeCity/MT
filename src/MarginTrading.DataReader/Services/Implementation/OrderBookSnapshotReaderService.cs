@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Core;
 using MarginTrading.Core.Helpers;
@@ -19,15 +18,10 @@ namespace MarginTrading.DataReader.Services.Implementation
             _cacheProvider = cacheProvider;
         }
 
-        public async Task<OrderListPair> GetAllLimitOrders(string instrument)
+        public async Task<OrderBook> GetOrderBook(string instrument)
         {
             var orderbookState = await GetOrderBookStateAsync();
-            var orderBook = orderbookState.GetValueOrDefault(instrument, k => new OrderBook());
-            return new OrderListPair
-            {
-                Buy = orderBook.Buy.Values.SelectMany(x => x).ToArray(),
-                Sell = orderBook.Sell.Values.SelectMany(x => x).ToArray(),
-            };
+            return orderbookState.GetValueOrDefault(instrument, k => new OrderBook());
         }
 
         private Task<Dictionary<string, OrderBook>> GetOrderBookStateAsync()

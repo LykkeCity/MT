@@ -22,6 +22,7 @@ namespace MarginTrading.Common.BackendContracts
         public decimal TotalPnl { get; set; }
         public decimal Pnl { get; set; }
         public decimal InterestRateSwap { get; set; }
+        public decimal CommissionLot { get; set; }
         public decimal OpenCommission { get; set; }
         public decimal CloseCommission { get; set; }
     }

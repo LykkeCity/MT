@@ -56,6 +56,7 @@ namespace MarginTrading.Common.Mappers
                 Volume = src.Volume,
                 TakeProfit = src.TakeProfit,
                 StopLoss = src.StopLoss,
+                CommissionLot = src.CommissionLot,
                 OpenCommission = src.OpenCommission,
                 CloseCommission = src.CloseCommission,
                 SwapCommission = src.SwapCommission,

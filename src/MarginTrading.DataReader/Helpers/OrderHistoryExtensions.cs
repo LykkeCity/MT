@@ -26,6 +26,7 @@ namespace MarginTrading.DataReader.Helpers
                 Pnl = src.PnL,
                 TotalPnl = src.Fpl,
                 InterestRateSwap = src.InterestRateSwap,
+                CommissionLot = src.CommissionLot,
                 OpenCommission = src.OpenCommission,
                 CloseCommission = src.CloseCommission
             };
@@ -52,6 +53,7 @@ namespace MarginTrading.DataReader.Helpers
                 TotalPnl = src.Fpl,
                 Pnl = src.PnL,
                 InterestRateSwap = src.InterestRateSwap,
+                CommissionLot = src.CommissionLot,
                 OpenCommission = src.OpenCommission,
                 CloseCommission = src.CloseCommission
             };

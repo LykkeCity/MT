@@ -21,14 +21,11 @@ namespace MarginTrading.Backend.Controllers
 {
     [Authorize]
     [Route("api/mt")]
-    public class MtController : Controller, IRpcMtBackend
+    public class MtController : Controller
     {
-        private readonly IMarginTradingAccountsRepository _accountsRepository;
         private readonly IMarginTradingAccountHistoryRepository _accountsHistoryRepository;
         private readonly IMarginTradingOrdersHistoryRepository _ordersHistoryRepository;
         private readonly IMicrographCacheService _micrographCacheService;
-        private readonly IClientNotifyService _clientNotifyService;
-        private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly IMatchingEngine _matchingEngine;
@@ -43,12 +40,9 @@ namespace MarginTrading.Backend.Controllers
         private readonly IQuoteCacheService _quoteCacheService;
 
         public MtController(
-            IMarginTradingAccountsRepository accountsRepository,
             IMarginTradingAccountHistoryRepository accountsHistoryRepository,
             IMarginTradingOrdersHistoryRepository ordersHistoryRepository,
             IMicrographCacheService micrographCacheService,
-            IClientNotifyService clientNotifyService,
-            IRabbitMqNotifyService rabbitMqNotifyService,
             IAccountAssetsCacheService accountAssetsCacheService,
             IAssetPairsCache assetPairsCache,
             IMatchingEngine matchingEngine,
@@ -62,12 +56,9 @@ namespace MarginTrading.Backend.Controllers
             IAssetDayOffService assetDayOffService,
             IQuoteCacheService quoteCacheService)
         {
-            _accountsRepository = accountsRepository;
             _accountsHistoryRepository = accountsHistoryRepository;
             _ordersHistoryRepository = ordersHistoryRepository;
             _micrographCacheService = micrographCacheService;
-            _clientNotifyService = clientNotifyService;
-            _rabbitMqNotifyService = rabbitMqNotifyService;
             _accountAssetsCacheService = accountAssetsCacheService;
             _assetPairsCache = assetPairsCache;
             _matchingEngine = matchingEngine;
@@ -418,10 +409,9 @@ namespace MarginTrading.Backend.Controllers
 
         [Route("orderbooks")]
         [HttpPost]
-        public OrderbooksBackendResponse GetOrderBooks()
+        public OrderbooksBackendResponse GetOrderBooks([FromBody] OrderbooksBackendRequest request)
         {
-            //TODO: move markerMakers to parameters
-            return OrderbooksBackendResponse.Create(_matchingEngine.GetOrderBook(new List<string> { "marketMaker1" }));
+            return OrderbooksBackendResponse.Create(_matchingEngine.GetOrderBook(request.Instrument));
         }
 
         #endregion
