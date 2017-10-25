@@ -55,6 +55,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         public void AlertStarted()
         {
             Trace.Write($"{nameof(AlertStarted)}");
+            AlertRiskOfficer("Market maker started");
             _rabbitMqService.GetProducer<StartedMessage>(
                     _settings.Nested(s => s.RabbitMq.Publishers.Started), true)
                 .ProduceAsync(new StartedMessage {MarketMakerId = GetMarketMakerId()});
@@ -63,6 +64,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         public Task AlertStopping()
         {
             Trace.Write($"{nameof(AlertStopping)}");
+            AlertRiskOfficer("Market maker stopping");
             return _rabbitMqService.GetProducer<StoppingMessage>(
                     _settings.Nested(s => s.RabbitMq.Publishers.Stopping), true)
                 .ProduceAsync(new StoppingMessage {MarketMakerId = GetMarketMakerId()});
