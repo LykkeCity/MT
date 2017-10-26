@@ -132,7 +132,7 @@ namespace MarginTrading.Services
                     return false;
                 }
 
-                MakeOrderActive(order, matchedOrders);
+                MakeOrderActive(order);
 
                 return true;
             });
@@ -181,10 +181,8 @@ namespace MarginTrading.Services
             }
         }
 
-        private void MakeOrderActive(Order order, MatchedOrderCollection matchedOrders)
+        private void MakeOrderActive(Order order)
         {
-            order.MatchedOrders.AddRange(matchedOrders);
-            order.OpenPrice = Math.Round(order.MatchedOrders.WeightedAveragePrice, order.AssetAccuracy);
             order.OpenDate = DateTime.UtcNow;
             order.Status = OrderStatus.Active;
 
@@ -202,19 +200,27 @@ namespace MarginTrading.Services
 
             order.MatchedOrders.AddRange(matchedOrders);
             order.OpenPrice = Math.Round(order.MatchedOrders.WeightedAveragePrice, order.AssetAccuracy);
-
-            InstrumentBidAskPair quote;
-            if (_quoteCashService.TryGetQuoteById(order.Instrument, out quote))
+            
+            var defaultMatchingEngine = _meRepository.GetDefaultMatchingEngine();
+            
+            defaultMatchingEngine.MatchMarketOrderForClose(order, matchedOrdersForClose =>
             {
-                order.ClosePrice = order.GetOrderType() == OrderDirection.Buy ? quote.Bid : quote.Ask;
-            }
+                if (matchedOrdersForClose.Count == 0)
+                    throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "No orders to match for close");
+
+                order.UpdateClosePrice(Math.Round(matchedOrders.WeightedAveragePrice, order.AssetAccuracy));
+                return false;
+            });
 
             var guessAccount = _accountUpdateService.GuessAccountWithOrder(order);
             var guessAccountLevel = guessAccount.GetAccountLevel();
 
-            order.OpenPrice = 0;
-            order.ClosePrice = 0;
-            order.MatchedOrders = new MatchedOrderCollection();
+            if (guessAccountLevel != AccountLevel.None)
+            {
+                order.OpenPrice = 0;
+                order.ClosePrice = 0;
+                order.MatchedOrders = new MatchedOrderCollection();
+            }
 
             if (guessAccountLevel == AccountLevel.MarginCall)
             {
