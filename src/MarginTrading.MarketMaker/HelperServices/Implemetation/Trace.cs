@@ -9,7 +9,7 @@ namespace MarginTrading.MarketMaker.HelperServices.Implemetation
     internal static class Trace
     {
         private static readonly BlockingCollection<string> _consoleQueue = new BlockingCollection<string>(10000);
-        private static readonly ConcurrentStack<string> _lastElemsStack = new ConcurrentStack<string>();
+        private static readonly ConcurrentQueue<string> _lastElemsQueue = new ConcurrentQueue<string>();
 
         static Trace()
         {
@@ -23,9 +23,9 @@ namespace MarginTrading.MarketMaker.HelperServices.Implemetation
 
         public static void Write(string str)
         {
-            _lastElemsStack.Push(str);
-            if (_lastElemsStack.Count > 500)
-                _lastElemsStack.TryPop(out var _);
+            _lastElemsQueue.Enqueue(str);
+            if (_lastElemsQueue.Count > 500)
+                _lastElemsQueue.TryDequeue(out var _);
 
             _consoleQueue.Add(str);
         }
@@ -42,7 +42,7 @@ namespace MarginTrading.MarketMaker.HelperServices.Implemetation
 
         public static IReadOnlyList<string> GetLast()
         {
-            return _lastElemsStack.ToArray();
+            return _lastElemsQueue.ToArray();
         }
     }
 }
