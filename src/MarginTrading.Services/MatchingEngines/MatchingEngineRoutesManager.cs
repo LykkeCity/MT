@@ -82,7 +82,7 @@ namespace MarginTrading.Services.MatchingEngines
                             && EqualsOrAny(r.TradingConditionId, tradingConditionId)
                             && EqualsOrAny(r.Instrument, instrumentId)
                             && (!r.Type.HasValue || IsAny(r.Instrument) || r.Type.Value == orderType)
-                            && IsAssetMatches(r.Asset, instrument, orderType))
+                            && IsAssetMatches(r.Asset, r.Type, instrument, orderType))
                 .GroupBy(r => r.Rank)
                 .OrderBy(gr => gr.Key)
                 .FirstOrDefault()?
@@ -325,25 +325,29 @@ namespace MarginTrading.Services.MatchingEngines
             return IsAny(sourceValue) || sourceValue == targetValue;
         }
 
-        private static bool IsAssetMatches(string ruleAsset, IAssetPair instrument,
-            OrderDirection? orderType)
+        private static bool IsAssetMatches(string ruleAsset, OrderDirection? ruleType, IAssetPair instrument,
+            OrderDirection orderType)
         {
             if (IsAny(ruleAsset))
             {
                 return true;
             }
 
-            if (orderType == OrderDirection.Buy)
+            switch (ruleType)
             {
-                return instrument.QuoteAssetId == ruleAsset;
+                case OrderDirection.Buy:
+                    return (orderType == OrderDirection.Buy && instrument.BaseAssetId == ruleAsset) ||
+                           (orderType == OrderDirection.Sell && instrument.QuoteAssetId == ruleAsset);
+                    
+                case OrderDirection.Sell:
+                    return (orderType == OrderDirection.Sell && instrument.BaseAssetId == ruleAsset) ||
+                           (orderType == OrderDirection.Buy && instrument.QuoteAssetId == ruleAsset);
+                    
+                case null:
+                    return instrument.QuoteAssetId == ruleAsset || instrument.BaseAssetId == ruleAsset;
             }
 
-            if (orderType == OrderDirection.Sell)
-            {
-                return instrument.BaseAssetId == ruleAsset;
-            }
-
-            return instrument.QuoteAssetId == ruleAsset || instrument.BaseAssetId == ruleAsset;
+            return false;
         }
 
         public static int GetSpecificationLevel(IMatchingEngineRoute route)
