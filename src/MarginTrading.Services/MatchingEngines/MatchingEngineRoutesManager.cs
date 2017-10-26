@@ -172,9 +172,6 @@ namespace MarginTrading.Services.MatchingEngines
 
         private async Task HandleRiskManagerBlockTradingCommand(MatchingEngineRouteRisksCommand command)
         {
-            if (command.ActionType != RiskManagerActionType.BlockTradingForNewOrders)
-                return;
-
             switch (command.Action)
             {
                 case RiskManagerAction.On:
