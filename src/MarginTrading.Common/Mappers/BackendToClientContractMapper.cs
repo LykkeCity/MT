@@ -222,7 +222,9 @@ namespace MarginTrading.Common.Mappers
                 MatchedCloseVolume = src.MatchedCloseVolume,
                 TakeProfit = src.TakeProfit,
                 StopLoss = src.StopLoss,
+                //TODO: fix Fpl value in OrderBackendContract in task LWDEV-3661
                 Fpl = src.Fpl,
+                TotalPnl = src.Fpl,
                 OpenCommission = src.OpenCommission,
                 CloseCommission = src.CloseCommission,
                 SwapCommission = src.SwapCommission
@@ -252,6 +254,7 @@ namespace MarginTrading.Common.Mappers
                 TakeProfit = src.TakeProfit,
                 StopLoss = src.StopLoss,
                 Fpl = src.Fpl,
+                TotalPnl = src.PnL,
                 OpenCommission = src.OpenCommission,
                 CloseCommission = src.CloseCommission,
                 SwapCommission = src.SwapCommission

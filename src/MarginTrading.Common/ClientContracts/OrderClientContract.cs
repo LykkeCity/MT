@@ -29,6 +29,7 @@ namespace MarginTrading.Common.ClientContracts
         public decimal? TakeProfit { get; set; }
         public decimal? StopLoss { get; set; }
         public decimal? Fpl { get; set; }
+        public decimal? TotalPnl { get; set; }
         public decimal OpenCommission { get; set; }
         public decimal CloseCommission { get; set; }
         public decimal SwapCommission { get; set; }
