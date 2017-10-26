@@ -115,7 +115,7 @@ namespace MarginTrading.Services
                     order.CloseDate = DateTime.UtcNow;
                     order.Status = OrderStatus.Rejected;
                     order.RejectReason = OrderRejectReason.NoLiquidity;
-                    order.RejectReasonText = "No orders to match or not fully matched";
+                    order.RejectReasonText = "Not fully matched";
                     return false;
                 }
 
@@ -192,7 +192,7 @@ namespace MarginTrading.Services
             _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
         }
 
-        //TODO: do check in other way
+        //TODO: do check in other way??
         private void CheckIfWeCanOpenPosition(Order order, MatchedOrderCollection matchedOrders)
         {
             var accountAsset = _accountAssetsCacheService.GetAccountAsset(order.TradingConditionId, order.AccountAssetId, order.Instrument);
@@ -392,7 +392,10 @@ namespace MarginTrading.Services
             matchingEngine.MatchMarketOrderForClose(order, matchedOrders =>
             {
                 if (!matchedOrders.Any())
+                {
+                    order.CloseRejectReasonText = "No orders to match";
                     return false;
+                }
                 
                 order.MatchedCloseOrders.AddRange(matchedOrders);
 
@@ -532,7 +535,7 @@ namespace MarginTrading.Services
                     if (!order.MatchedCloseOrders.Any())
                     {
                         order.Status = OrderStatus.Active;
-                        order.RejectReasonText = "No orders found to match for close.";
+                        order.CloseRejectReasonText = "No orders to match";
                         
                         _ordersCache.ActiveOrders.Add(order);
                         _ordersCache.ClosingOrders.Remove(order);

@@ -116,7 +116,7 @@ namespace MarginTrading.Services
             throw new Exception(string.Format(MtMessages.CantGetOrderWithStatus, orderId, _status));
         }
 
-        internal bool TryGetOrderById(string orderId, out Order result)
+        public bool TryGetOrderById(string orderId, out Order result)
         {
             _lockSlim.EnterReadLock();
 

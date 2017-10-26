@@ -30,6 +30,7 @@ namespace MarginTrading.Core
         OrderCloseReason CloseReason { get; }
         OrderFillType FillType { get; }
         OrderRejectReason RejectReason { get; }
+        string CloseRejectReasonText { get; }
         string RejectReasonText { get; }
         string Comment { get; }
         MatchedOrderCollection MatchedCloseOrders { get; }
@@ -66,6 +67,7 @@ namespace MarginTrading.Core
         public OrderCloseReason CloseReason { get; set; }
         public OrderFillType FillType { get; set; }
         public OrderRejectReason RejectReason { get; set; }
+        public string CloseRejectReasonText { get; set; }
         public string RejectReasonText { get; set; }
         public string Comment { get; set; }
         public MatchedOrderCollection MatchedOrders { get; set; } = new MatchedOrderCollection();
