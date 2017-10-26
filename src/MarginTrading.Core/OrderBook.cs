@@ -90,7 +90,8 @@ namespace MarginTrading.Core
                     {
                         OrderId = limitOrder.Id,
                         MarketMakerId = limitOrder.MarketMakerId,
-                        LimitOrderLeftToMatch = Math.Abs(matchedVolume - limitOrder.GetRemainingVolume()),
+                        LimitOrderLeftToMatch = Math.Round(Math.Abs(matchedVolume - limitOrder.GetRemainingVolume()),
+                            MarginTradingHelpers.VolumeAccuracy),
                         Volume = matchedVolume,
                         MatchedDate = DateTime.UtcNow,
                         Price = pair.Key,

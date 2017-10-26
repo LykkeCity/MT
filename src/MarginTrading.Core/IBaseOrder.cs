@@ -40,7 +40,8 @@ namespace MarginTrading.Core
 
         public static decimal GetRemainingVolume(this IBaseOrder order)
         {
-            return Math.Abs(order.Volume) - order.MatchedOrders.SummaryVolume;
+            return Math.Round(Math.Abs(order.Volume) - order.MatchedOrders.SummaryVolume,
+                MarginTradingHelpers.VolumeAccuracy);
         }
     }
 }
