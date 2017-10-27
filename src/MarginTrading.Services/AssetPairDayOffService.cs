@@ -64,14 +64,16 @@ namespace MarginTrading.Services
                                     .Add(_scheduleSettings.DayOffStartTime.Subtract(scheduleCutOff));
 
             var closestDayOffEnd = GetNextWeekday(currentDateTime, _scheduleSettings.DayOffEndDay)
-                                    .Add(_scheduleSettings.DayOffStartTime.Add(scheduleCutOff));
+                                    .Add(_scheduleSettings.DayOffEndTime.Add(scheduleCutOff));
 
             if (closestDayOffStart > closestDayOffEnd)
             {
                 closestDayOffStart = closestDayOffEnd.AddDays(-7);
             }
 
-            return currentDateTime >= closestDayOffStart && currentDateTime < closestDayOffEnd;
+            return (currentDateTime >= closestDayOffStart && currentDateTime < closestDayOffEnd)
+                   //don't even try to understand
+                   || currentDateTime < closestDayOffEnd.AddDays(-7);
         }
         
         private static DateTime GetNextWeekday(DateTime start, DayOfWeek day)
