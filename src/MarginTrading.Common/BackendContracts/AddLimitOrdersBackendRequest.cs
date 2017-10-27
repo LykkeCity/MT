@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using MarginTrading.Common.Mappers;
-using MarginTrading.Core;
+using MarginTrading.Core.MatchingEngines;
 
 namespace MarginTrading.Common.BackendContracts
 {

@@ -1,6 +1,7 @@
 ﻿using MarginTrading.Core;
+using MarginTrading.Core.MatchingEngines;
 
-namespace MarginTrading.Services
+namespace MarginTrading.Services.MatchingEngines
 {
     public class MatchingEngineRouter : IMatchingEngineRouter
     {
@@ -15,11 +16,11 @@ namespace MarginTrading.Services
             _matchingEngineRepository = matchingEngineRepository;
         }
 
-        public object GetMatchingEngine(string clientId, string tradingConditionId, string instrument, OrderDirection orderType)
+        public IMatchingEngineBase GetMatchingEngine(string clientId, string tradingConditionId, string instrument, OrderDirection orderType)
         {
             var route = _routesManager.FindRoute(clientId, tradingConditionId, instrument, orderType);
 
-            return _matchingEngineRepository.GetMatchingEngineById(route?.MatchingEngineId ?? MatchingEngines.Lykke);
+            return _matchingEngineRepository.GetMatchingEngineById(route?.MatchingEngineId ?? MatchingEngineConstants.Lykke);
         }
     }
 }

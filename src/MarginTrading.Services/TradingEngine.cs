@@ -7,6 +7,7 @@ using Lykke.Common;
 using MarginTrading.Core;
 using MarginTrading.Core.Exceptions;
 using MarginTrading.Core.MatchedOrders;
+using MarginTrading.Core.MatchingEngines;
 using MarginTrading.Services.Events;
 using MarginTrading.Services.Infrastructure;
 
@@ -96,7 +97,7 @@ namespace MarginTrading.Services
             }
         }
 
-        private Order PlaceMarketOrderByMatchingEngine(Order order, IMatchingEngine matchingEngine)
+        private Task<Order> PlaceMarketOrderByMatchingEngineAsync(Order order, IMatchingEngineBase matchingEngine)
         {
             matchingEngine.MatchMarketOrderForOpen(order, matchedOrders =>
             {
@@ -131,7 +132,7 @@ namespace MarginTrading.Services
                     return false;
                 }
 
-                MakeOrderAcitve(order, matchedOrders);
+                MakeOrderActive(order, matchedOrders);
 
                 return true;
             });
@@ -141,19 +142,7 @@ namespace MarginTrading.Services
                 _rabbitMqNotifyService.OrderReject(order);
             }
 
-            return order;
-        }
-
-        private async Task<Order> PlaceMarketOrderByMatchingEngineProxy(Order order, IMatchingEngineProxy meProxy)
-        {
-            var matchedOrders = await meProxy.GetMatchedOrdersForOpenAsync(order);
-
-            using (_contextFactory.GetWriteSyncContext($"{nameof(TradingEngine)}.{nameof(PlaceMarketOrderByMatchingEngineProxy)}"))
-            {
-                MakeOrderAcitve(order, matchedOrders);
-            }
-
-            return order;
+            return Task.FromResult(order);
         }
 
         private void RejectOrder(Order order, OrderRejectReason reason, string message, string comment = null)
@@ -167,44 +156,32 @@ namespace MarginTrading.Services
             _rabbitMqNotifyService.OrderReject(order);
         }
 
-        private async Task<Order> PlaceOrderByMarketPrice(Order order)
+        private Task<Order> PlaceOrderByMarketPrice(Order order)
         {
             try
             {
                 var me = _meRouter.GetMatchingEngine(order.ClientId, order.TradingConditionId, order.Instrument, order.GetOrderType());
-
-                var meBase = me as IMatchingEngineBase;
-
-                if (meBase == null)
+                if (me == null)
                     throw new Exception("Orderbook not found");
 
-                order.OpenOrderbookId = meBase.Id;
+                order.OpenOrderbookId = me.Id;
+                order.CloseOrderbookId = me.Id;
 
-                var matchingEngine = meBase as IMatchingEngine;
-
-                if (matchingEngine != null)
-                    return PlaceMarketOrderByMatchingEngine(order, matchingEngine);
-
-                var orderbookProxy = meBase as IMatchingEngineProxy;
-
-                if (orderbookProxy != null)
-                    return await PlaceMarketOrderByMatchingEngineProxy(order, orderbookProxy);
-
-                throw new Exception("Orderbook not found");
+                return PlaceMarketOrderByMatchingEngineAsync(order, me);
             }
             catch (QuoteNotFoundException ex)
             {
                 RejectOrder(order, OrderRejectReason.NoLiquidity, ex.Message);
-                return order;
+                return Task.FromResult(order);
             }
             catch (Exception ex)
             {
                 RejectOrder(order, OrderRejectReason.TechnicalError, ex.Message);
-                return order;
+                return Task.FromResult(order);
             }
         }
 
-        private void MakeOrderAcitve(Order order, MatchedOrderCollection matchedOrders)
+        private void MakeOrderActive(Order order, MatchedOrderCollection matchedOrders)
         {
             order.MatchedOrders.AddRange(matchedOrders);
             order.OpenPrice = Math.Round(order.MatchedOrders.WeightedAveragePrice, order.AssetAccuracy);
@@ -261,6 +238,7 @@ namespace MarginTrading.Services
         }
 
         #region Orders waition for execution
+        
         private void ProcessOrdersWaitingForExecution(string instrument)
         {
             var orders = GetPendingOrdersToBeExecuted(instrument).ToArray();
@@ -380,12 +358,10 @@ namespace MarginTrading.Services
             {
                 var me = _meRouter.GetMatchingEngine(order.ClientId, order.TradingConditionId, order.Instrument, order.GetCloseType());
 
-                var meBase = me as IMatchingEngineBase;
-
-                if (meBase == null)
+                if (me == null)
                     throw new Exception("Orderbook not found");
 
-                order.CloseOrderbookId = meBase.Id;
+                order.CloseOrderbookId = me.Id;
             }
 
             _ordersCache.ClosingOrders.Add(order);
@@ -402,7 +378,7 @@ namespace MarginTrading.Services
             }
         }
 
-        private Order CloseActiveOrderByMatchingEngine(Order order, OrderCloseReason reason, IMatchingEngine matchingEngine)
+        private Task<Order> CloseActiveOrderByMatchingEngineAsync(Order order, OrderCloseReason reason, IMatchingEngineBase matchingEngine)
         {
             order.StartClosingDate = DateTime.UtcNow;
             order.CloseReason = reason;
@@ -431,59 +407,30 @@ namespace MarginTrading.Services
                 return true;
             });
 
-            return order;
+            return Task.FromResult(order);
         }
 
-        private async Task<Order> CloseActiveOrderByMatchingEngineProxyAsync(Order order, OrderCloseReason reason, IMatchingEngineProxy orderbookProxy)
+        public Task<Order> CloseActiveOrderAsync(string orderId, OrderCloseReason reason)
         {
-            order.StartClosingDate = DateTime.UtcNow;
-            order.CloseReason = reason;
+            var order = GetActiveOrderForClose(orderId);
+            IMatchingEngineBase me;
 
-            var matchedOrders = await orderbookProxy.GetMatchedOrdersForCloseAsync(order);
-
-            order.MatchedCloseOrders.AddRange(matchedOrders);
-
-            if (!order.GetIsCloseFullfilled())
+            if (string.IsNullOrEmpty(order.CloseOrderbookId))
             {
-                order.Status = OrderStatus.Closing;
-                _ordersCache.ActiveOrders.Remove(order);
-                _ordersCache.ClosingOrders.Add(order);
+                me = _meRouter.GetMatchingEngine(order.ClientId, order.TradingConditionId, order.Instrument,
+                    order.GetCloseType());
+
+                if (me == null)
+                    throw new Exception("Orderbook not found");
+
+                order.CloseOrderbookId = me.Id;
             }
             else
             {
-                order.Status = OrderStatus.Closed;
-                order.CloseDate = DateTime.UtcNow;
-                _ordersCache.ActiveOrders.Remove(order);
-                _orderClosedEventChannel.SendEvent(this, new OrderClosedEventArgs(order));
+                me = _meRepository.GetMatchingEngineById(order.CloseOrderbookId);
             }
 
-            return order;
-        }
-
-        public async Task<Order> CloseActiveOrderAsync(string orderId, OrderCloseReason reason)
-        {
-            var order = GetActiveOrderForClose(orderId);
-
-            var me = _meRouter.GetMatchingEngine(order.ClientId, order.TradingConditionId, order.Instrument, order.GetCloseType());
-
-            var meBase = me as IMatchingEngineBase;
-
-            if (meBase == null)
-                throw new Exception("Orderbook not found");
-
-            order.CloseOrderbookId = meBase.Id;
-
-            var matchingEngine = meBase as IMatchingEngine;
-
-            if (matchingEngine != null)
-                return CloseActiveOrderByMatchingEngine(order, reason, matchingEngine);
-
-            var meProxy = meBase as IMatchingEngineProxy;
-
-            if (meProxy != null)
-                return await CloseActiveOrderByMatchingEngineProxyAsync(order, reason, meProxy);
-
-            throw new Exception("Orderbook not found");
+            return CloseActiveOrderByMatchingEngineAsync(order, reason, me);
         }
 
         public Order CancelPendingOrder(string orderId, OrderCloseReason reason)
@@ -560,50 +507,16 @@ namespace MarginTrading.Services
             if (closingOrders.Count == 0)
                 return;
 
-            var meProxyList = new List<Tuple<Order, IMatchingEngineProxy>>();
-
             foreach (var order in closingOrders)
             {
-                var meBase = _meRepository.GetMatchingEngineById(order.CloseOrderbookId);
-                var me = meBase as IMatchingEngine;
+                var me = _meRepository.GetMatchingEngineById(order.CloseOrderbookId);
 
-                if (me != null)
-                {
-                    ProcessOrdersClosingByMatchingEngine(order, me);
-                    continue;
-                }
+                ProcessOrdersClosingByMatchingEngine(order, me);
 
-                var meProxy = meBase as IMatchingEngineProxy;
-
-                if (meProxy != null)
-                {
-                    meProxyList.Add(new Tuple<Order, IMatchingEngineProxy>(order, meProxy));
-                }
-            }
-
-            if (meProxyList.Count > 0)
-            {
-                _threadSwitcher.SwitchThread(async () =>
-                {
-                    foreach (var tuple in meProxyList)
-                        await ProcessOrdersClosingByMatchingEngineProxyAsync(tuple.Item1, tuple.Item2);
-                });
             }
         }
 
-        //TODO: check if order can't be closed from different thread simultaniously
-        private async Task ProcessOrdersClosingByMatchingEngineProxyAsync(Order order, IMatchingEngineProxy meProxy)
-        {
-            var matchedOrders = await meProxy.GetMatchedOrdersForCloseAsync(order);
-
-            if (matchedOrders.Count == 0)
-                return;
-
-            using (_contextFactory.GetWriteSyncContext($"{nameof(TradingEngine)}.{nameof(ProcessOrdersClosingByMatchingEngineProxyAsync)}"))
-                MakeOrderClosed(order, matchedOrders);
-        }
-
-        private void ProcessOrdersClosingByMatchingEngine(Order order, IMatchingEngine matchingEngine)
+        private void ProcessOrdersClosingByMatchingEngine(Order order, IMatchingEngineBase matchingEngine)
         {
             matchingEngine.MatchMarketOrderForClose(order, matchedOrders =>
             {

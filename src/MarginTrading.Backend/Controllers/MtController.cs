@@ -11,6 +11,7 @@ using MarginTrading.Common.Wamp;
 using MarginTrading.Core;
 using MarginTrading.Core.Assets;
 using MarginTrading.Core.Exceptions;
+using MarginTrading.Core.MatchingEngines;
 using MarginTrading.Core.Settings;
 using MarginTrading.Services;
 using MarginTrading.Services.Middleware;
@@ -28,7 +29,7 @@ namespace MarginTrading.Backend.Controllers
         private readonly IMicrographCacheService _micrographCacheService;
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
         private readonly IAssetPairsCache _assetPairsCache;
-        private readonly IMatchingEngine _matchingEngine;
+        private readonly IInternalMatchingEngine _matchingEngine;
         private readonly ITradingEngine _tradingEngine;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly IMarginTradingOperationsLogService _operationsLogService;
@@ -45,7 +46,7 @@ namespace MarginTrading.Backend.Controllers
             IMicrographCacheService micrographCacheService,
             IAccountAssetsCacheService accountAssetsCacheService,
             IAssetPairsCache assetPairsCache,
-            IMatchingEngine matchingEngine,
+            IInternalMatchingEngine matchingEngine,
             ITradingEngine tradingEngine,
             IAccountsCacheService accountsCacheService,
             IMarginTradingOperationsLogService operationsLogService,
@@ -284,7 +285,7 @@ namespace MarginTrading.Backend.Controllers
         [Route("order.close")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [HttpPost]
-        public MtBackendResponse<bool> CloseOrder([FromBody] CloseOrderBackendRequest request)
+        public async Task<MtBackendResponse<bool>> CloseOrder([FromBody] CloseOrderBackendRequest request)
         {
             var order = _ordersCache.ActiveOrders.GetOrderById(request.OrderId);
 
@@ -293,9 +294,9 @@ namespace MarginTrading.Backend.Controllers
                 return new MtBackendResponse<bool> {Message = "Trades for instrument are not available"};
             }
 
-            _tradingEngine.CloseActiveOrderAsync(request.OrderId, OrderCloseReason.Close);
+            order = await _tradingEngine.CloseActiveOrderAsync(request.OrderId, OrderCloseReason.Close);
 
-            var result = new MtBackendResponse<bool> {Result = true};
+            var result = new MtBackendResponse<bool> {Result = order.Status == OrderStatus.Closed};
 
             _consoleWriter.WriteLine(
                 $"action order.close for clientId = {request.ClientId}, orderId = {request.OrderId}");

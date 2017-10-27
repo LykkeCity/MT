@@ -2,11 +2,14 @@
 using AzureStorage.Tables;
 using Common.Log;
 using MarginTrading.AzureRepositories;
+using MarginTrading.AzureRepositories.Logs;
 using MarginTrading.AzureRepositories.Reports;
 using MarginTrading.Core;
 using MarginTrading.Core.Clients;
+using MarginTrading.Core.MatchingEngines;
 using MarginTrading.Core.Settings;
 using MarginTrading.Services;
+using MarginTrading.Services.MatchingEngines;
 
 namespace MarginTrading.Backend.Modules
 {
@@ -91,6 +94,10 @@ namespace MarginTrading.Backend.Modules
 
 			builder.Register<IAccountsReportsRepository>(ctx =>
 				AzureRepoFactories.MarginTrading.CreateAccountsReportsRepository(_settings.Db.ReportsConnString, _log)
+			).SingleInstance();
+			
+			builder.Register<IRiskSystemCommandsLogRepository>(ctx =>
+				AzureRepoFactories.MarginTrading.CreateRiskSystemCommandsLogRepository(_settings.Db.LogsConnString, _log)
 			).SingleInstance();
 
 			builder.RegisterType<MatchingEngineInMemoryRepository>()

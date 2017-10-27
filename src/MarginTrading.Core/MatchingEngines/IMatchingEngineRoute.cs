@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace MarginTrading.Core
+namespace MarginTrading.Core.MatchingEngines
 {
     public interface IMatchingEngineRoute
     {
@@ -14,6 +13,8 @@ namespace MarginTrading.Core
         OrderDirection? Type { get; }
         string MatchingEngineId { get; }
         string Asset { get; }
+        string RiskSystemLimitType { get; set; }
+        string RiskSystemMetricType { get; set; }
     }
 
     public class MatchingEngineRoute : IMatchingEngineRoute
@@ -26,6 +27,8 @@ namespace MarginTrading.Core
         public OrderDirection? Type { get; set; }
         public string MatchingEngineId { get; set; }
         public string Asset { get; set; }
+        public string RiskSystemLimitType { get; set; }
+        public string RiskSystemMetricType { get; set; }
 
         public static MatchingEngineRoute Create(IMatchingEngineRoute src)
         {
@@ -39,6 +42,8 @@ namespace MarginTrading.Core
                 Type = src.Type,
                 MatchingEngineId = src.MatchingEngineId,
                 Asset = src.Asset,
+                RiskSystemLimitType = src.RiskSystemLimitType,
+                RiskSystemMetricType = src.RiskSystemMetricType
             };
         }
     }

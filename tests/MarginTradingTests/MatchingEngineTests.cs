@@ -4,6 +4,7 @@ using System.Linq;
 using Autofac;
 using MarginTrading.Core;
 using MarginTrading.Core.MatchedOrders;
+using MarginTrading.Core.MatchingEngines;
 using NUnit.Framework;
 
 namespace MarginTradingTests
@@ -12,7 +13,7 @@ namespace MarginTradingTests
     public class MatchingEngineTests : BaseTests
     {
         private IQuoteCacheService _quoteCashService;
-        private IMatchingEngine _matchingEngine;
+        private IInternalMatchingEngine _matchingEngine;
         private string _marketMakerId1;
         private IAggregatedOrderBook _aggregatedOrderBook;
 
@@ -23,7 +24,7 @@ namespace MarginTradingTests
             _marketMakerId1 = "1";
 
             _quoteCashService = Container.Resolve<IQuoteCacheService>();
-            _matchingEngine = Container.Resolve<IMatchingEngine>();
+            _matchingEngine = Container.Resolve<IInternalMatchingEngine>();
             _aggregatedOrderBook = Container.Resolve<IAggregatedOrderBook>();
 
         }

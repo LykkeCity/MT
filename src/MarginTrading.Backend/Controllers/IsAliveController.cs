@@ -1,5 +1,6 @@
 ﻿using MarginTrading.Common.BackendContracts;
 using MarginTrading.Core;
+using MarginTrading.Core.MatchingEngines;
 using MarginTrading.Core.Settings;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,13 +9,13 @@ namespace MarginTrading.Backend.Controllers
     [Route("api/[controller]")]
     public class IsAliveController : Controller
     {
-        private readonly IMatchingEngine _matchingEngine;
+        private readonly IInternalMatchingEngine _matchingEngine;
         private readonly ITradingEngine _tradingEngine;
         private readonly MarginSettings _settings;
         private readonly IDateService _dateService;
 
         public IsAliveController(
-            IMatchingEngine matchingEngine,
+            IInternalMatchingEngine matchingEngine,
             ITradingEngine tradingEngine,
             MarginSettings settings,
             IDateService dateService)

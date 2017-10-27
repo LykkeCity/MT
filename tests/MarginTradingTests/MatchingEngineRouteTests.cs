@@ -2,7 +2,9 @@
 using NUnit.Framework;
 using System;
 using Autofac;
+using MarginTrading.Core.MatchingEngines;
 using MarginTrading.Services;
+using MarginTrading.Services.MatchingEngines;
 
 namespace MarginTradingTests
 {
@@ -254,27 +256,23 @@ namespace MarginTradingTests
         {
             // TEST 14 >> CID = Client006, TCID = TCID006, INST=BTCEUR, Sell
             // Rules that Apply: (ID=1), (ID=14)
-            // More specific rules: (ID=14)            
-            // Rule (ID=14) Max Rank
-            // There is asset Rule (ID=15) but doesn't apply to SELL
+            // More specific rules: (ID=14, ID=15)            
+            // Rule (ID=15) Max Rank
             var res = _matchingEngineRoutesManager.FindRoute("CLIENT006", "TCID006", "BTCEUR", OrderDirection.Sell);
-            Assert.AreEqual("14", res.Id);
+            Assert.AreEqual("15", res.Id);
         }
         [Test]
         [Category("MatchingEngineRouter")]
         public void Check_Route_Test15_Asset_MaxRanked()
         {
             // TEST 15 >> CID = Client006, TCID = TCID006, INST=BTCEUR, Buy
-            // Rules that Apply: (ID=1), (ID=14), (ID=15)
-            // More specific rules: (ID=14)            
-            // Rule (ID=15) Max Rank
-            // Asset Rule (ID=15) has higher rank
+            // Rules that Apply: (ID=1), (ID=14), (ID=16)
+            // More specific rules: (ID=16)            
+            // Rule (ID=16) Max Rank
+            // Asset Rule (ID=15) doesn't apply to Buy
             var res = _matchingEngineRoutesManager.FindRoute("CLIENT006", "TCID006", "BTCEUR", OrderDirection.Buy);
-            Assert.AreEqual("15", res.Id);
+            Assert.AreEqual("16", res.Id);
         }
-
-
-
 
         [Test]
         [Category("MatchingEngineRouterManager")]

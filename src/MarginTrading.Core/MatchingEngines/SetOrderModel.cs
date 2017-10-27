@@ -1,19 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using JetBrains.Annotations;
-using MarginTrading.Core.MatchedOrders;
 
-namespace MarginTrading.Core
+namespace MarginTrading.Core.MatchingEngines
 {
-    public interface IMatchingEngine : IMatchingEngineBase
-    {
-        void SetOrders(SetOrderModel model);
-        void MatchMarketOrderForOpen(Order order, Func<MatchedOrderCollection, bool> orderProcessed);
-        void MatchMarketOrderForClose(Order order, Func<MatchedOrderCollection, bool> orderProcessed);
-        OrderBook GetOrderBook(string instrument);
-        bool PingLock();
-    }
-
     public class SetOrderModel
     {
         public string MarketMakerId { get; set; }

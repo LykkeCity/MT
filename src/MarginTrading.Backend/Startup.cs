@@ -17,9 +17,11 @@ using MarginTrading.Backend.Modules;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Json;
 using MarginTrading.Core;
+using MarginTrading.Core.MatchingEngines;
 using MarginTrading.Core.Settings;
 using MarginTrading.Services;
 using MarginTrading.Services.Infrastructure;
+using MarginTrading.Services.MatchingEngines;
 using MarginTrading.Services.Middleware;
 using MarginTrading.Services.Modules;
 using MarginTrading.Services.Notifications;
@@ -89,7 +91,12 @@ namespace MarginTrading.Backend
             MarginSettings settings = isLive ? mtSettings.MtBackend.MarginTradingLive : mtSettings.MtBackend.MarginTradingDemo;
             settings.IsLive = isLive;
             settings.Env = isLive ? "Live" : "Demo";
-
+            
+            if (!string.IsNullOrEmpty(Configuration["Env"]))
+            {
+                settings.Env += "." + Configuration["Env"];
+            }
+            
             Console.WriteLine($"IsLive: {settings.IsLive}");
 
             SetupLoggers(services, mtSettings, settings);
@@ -100,9 +107,10 @@ namespace MarginTrading.Backend
             ApplicationContainer = builder.Build();
 
             var meRepository = ApplicationContainer.Resolve<IMatchingEngineRepository>();
-            meRepository.InitMatchingEngines(new List<object> {
-                ApplicationContainer.Resolve<IMatchingEngine>(),
-                new MatchingEngineBase { Id = MatchingEngines.Icm }
+            meRepository.InitMatchingEngines(new List<IMatchingEngineBase>
+            {
+                ApplicationContainer.Resolve<IInternalMatchingEngine>(),
+                new RejectMatchingEngine()
             });
 
             MtServiceLocator.FplService = ApplicationContainer.Resolve<IFplService>();
@@ -136,8 +144,6 @@ namespace MarginTrading.Backend
                     Microsoft.ApplicationInsights.Extensibility.TelemetryConfiguration.Active.InstrumentationKey =
                         settings.ApplicationInsightsKey;
                 }
-
-                application.StartApplicationAsync().Wait();
             });
 
             appLifetime.ApplicationStopping.Register(() =>

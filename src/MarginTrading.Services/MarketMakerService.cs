@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Linq;
-using System.Threading.Tasks;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Core;
 using MarginTrading.Core.MarketMakerFeed;
+using MarginTrading.Core.MatchingEngines;
 
 namespace MarginTrading.Services
 {
     public class MarketMakerService : IFeedConsumer
     {
-        private readonly IMatchingEngine _matchingEngine;
+        private readonly IInternalMatchingEngine _matchingEngine;
 
-        public MarketMakerService(IMatchingEngine matchingEngine)
+        public MarketMakerService(IInternalMatchingEngine matchingEngine)
         {
             _matchingEngine = matchingEngine;
         }

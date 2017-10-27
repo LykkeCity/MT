@@ -9,10 +9,12 @@ using MarginTrading.Backend.Models;
 using MarginTrading.Common.BackendContracts;
 using MarginTrading.Common.Mappers;
 using MarginTrading.Core;
+using MarginTrading.Core.MatchingEngines;
 using MarginTrading.Core.Clients;
 using MarginTrading.Core.Settings;
 using MarginTrading.Services;
 using MarginTrading.Services.Infrastructure;
+using MarginTrading.Services.MatchingEngines;
 using MarginTrading.Services.Middleware;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -369,7 +371,7 @@ namespace MarginTrading.Backend.Controllers
         [ProducesResponseType(typeof(List<string>), 200)]
         public IActionResult GetAllMatchingEngines()
         {
-            var matchingEngines = MatchingEngines.All;
+            var matchingEngines = MatchingEngineConstants.All;
             return Ok(matchingEngines);
         }
 

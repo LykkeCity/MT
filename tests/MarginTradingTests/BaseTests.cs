@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using Autofac;
 using MarginTrading.Core;
+using MarginTrading.Core.MatchingEngines;
 using MarginTrading.Core.Models;
 using MarginTrading.Core.Settings;
 using MarginTrading.Frontend.Services;
 using MarginTrading.Services;
 using MarginTrading.Services.Events;
+using MarginTrading.Services.MatchingEngines;
 using MarginTrading.Services.Modules;
 using MarginTradingTests.Modules;
 using Moq;
@@ -82,9 +84,9 @@ namespace MarginTradingTests
             Container = builder.Build();
 
             var meRepository = Container.Resolve<IMatchingEngineRepository>();
-            meRepository.InitMatchingEngines(new List<object> {
-                Container.Resolve<IMatchingEngine>(),
-                new MatchingEngineBase { Id = MatchingEngines.Icm }
+            meRepository.InitMatchingEngines(new List<IMatchingEngineBase> {
+                Container.Resolve<IInternalMatchingEngine>(),
+                new RejectMatchingEngine()
             });
 
             MtServiceLocator.FplService = Container.Resolve<IFplService>();

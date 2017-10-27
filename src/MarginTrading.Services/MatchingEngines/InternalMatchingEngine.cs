@@ -3,19 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using MarginTrading.Core;
 using MarginTrading.Core.MatchedOrders;
+using MarginTrading.Core.MatchingEngines;
 using MarginTrading.Services.Events;
 using MarginTrading.Services.Infrastructure;
 
-namespace MarginTrading.Services
+namespace MarginTrading.Services.MatchingEngines
 {
-    public class MatchingEngine : IMatchingEngine
+    public class InternalMatchingEngine : IInternalMatchingEngine
     {
         private readonly IEventChannel<OrderBookChangeEventArgs> _orderbookChangeEventChannel;
         private readonly OrderBookList _orderBooks;
         private long _currentMessageId;
         private readonly IContextFactory _contextFactory;
 
-        public MatchingEngine(
+        public InternalMatchingEngine(
             IEventChannel<OrderBookChangeEventArgs> orderbookChangeEventChannel,
             OrderBookList orderBooks, IContextFactory contextFactory)
         {
@@ -25,11 +26,11 @@ namespace MarginTrading.Services
             _currentMessageId = 0;
         }
 
-        public string Id => MatchingEngines.Lykke;
+        public string Id => MatchingEngineConstants.Lykke;
 
         public void SetOrders(SetOrderModel model)
         {
-            using (_contextFactory.GetWriteSyncContext($"{nameof(MatchingEngine)}.{nameof(SetOrders)}"))
+            using (_contextFactory.GetWriteSyncContext($"{nameof(InternalMatchingEngine)}.{nameof(SetOrders)}"))
             {
                 var changeEventArgs = new OrderBookChangeEventArgs { MessageId = _currentMessageId++ };
 
@@ -70,7 +71,7 @@ namespace MarginTrading.Services
 
         public OrderBook GetOrderBook(string instrument)
         {
-            using (_contextFactory.GetReadSyncContext($"{nameof(MatchingEngine)}.{nameof(GetOrderBook)}"))
+            using (_contextFactory.GetReadSyncContext($"{nameof(InternalMatchingEngine)}.{nameof(GetOrderBook)}"))
             {
                  return _orderBooks.GetOrderBook(instrument);
             }
@@ -78,7 +79,7 @@ namespace MarginTrading.Services
 
         public void MatchMarketOrderForOpen(Order order, Func<MatchedOrderCollection, bool> matchedFunc)
         {
-            using (_contextFactory.GetWriteSyncContext($"{nameof(MatchingEngine)}.{nameof(MatchMarketOrderForOpen)}"))
+            using (_contextFactory.GetWriteSyncContext($"{nameof(InternalMatchingEngine)}.{nameof(MatchMarketOrderForOpen)}"))
             {
                 OrderDirection orderBookTypeToMatch = order.GetOrderType().GetOrderTypeToMatchInOrderBook();
 
@@ -97,7 +98,7 @@ namespace MarginTrading.Services
 
         public void MatchMarketOrderForClose(Order order, Func<MatchedOrderCollection, bool> matchedAction)
         {
-            using (_contextFactory.GetWriteSyncContext($"{nameof(MatchingEngine)}.{nameof(MatchMarketOrderForClose)}"))
+            using (_contextFactory.GetWriteSyncContext($"{nameof(InternalMatchingEngine)}.{nameof(MatchMarketOrderForClose)}"))
             {
                 OrderDirection orderBookTypeToMatch = order.GetCloseType().GetOrderTypeToMatchInOrderBook();
 
@@ -115,7 +116,7 @@ namespace MarginTrading.Services
 
         public bool PingLock()
         {
-            using (_contextFactory.GetReadSyncContext($"{nameof(MatchingEngine)}.{nameof(PingLock)}"))
+            using (_contextFactory.GetReadSyncContext($"{nameof(InternalMatchingEngine)}.{nameof(PingLock)}"))
             {
                 return true;
             }
