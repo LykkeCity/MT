@@ -1,63 +1,67 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using Lykke.SettingsReader;
 using MarginTrading.MarketMaker.Enums;
 using MarginTrading.MarketMaker.HelperServices;
+using MarginTrading.MarketMaker.HelperServices.Implemetation;
 using MarginTrading.MarketMaker.Messages;
 using MarginTrading.MarketMaker.Models;
+using MarginTrading.MarketMaker.Models.Api;
 using MarginTrading.MarketMaker.Settings;
 
 namespace MarginTrading.MarketMaker.Services.Implementation
 {
-    internal class MarketMakerService : IMarketMakerService
+    internal class MarketMakerService : IMarketMakerService, IDisposable
     {
         private const int OrdersVolume = 1000000;
 
         private readonly IAssetPairsSettingsService _assetPairsSettingsService;
         private readonly Lazy<IMessageProducer<OrderCommandsBatchMessage>> _messageProducer;
         private readonly ISystem _system;
-        private readonly MarginTradingMarketMakerSettings _settings;
+        private readonly IReloadingManager<MarginTradingMarketMakerSettings> _settings;
         private readonly ISpotOrderCommandsGeneratorService _spotOrderCommandsGeneratorService;
         private readonly ILog _log;
+        private readonly IGenerateOrderbookService _generateOrderbookService;
 
         public MarketMakerService(IAssetPairsSettingsService assetPairsSettingsService,
-            MarginTradingMarketMakerSettings marginTradingMarketMakerSettings,
             IRabbitMqService rabbitMqService,
             ISystem system,
-            MarginTradingMarketMakerSettings settings,
+            IReloadingManager<MarginTradingMarketMakerSettings> settings,
             ISpotOrderCommandsGeneratorService spotOrderCommandsGeneratorService,
-            ILog log)
+            ILog log,
+            IGenerateOrderbookService generateOrderbookService)
         {
             _assetPairsSettingsService = assetPairsSettingsService;
             _system = system;
             _settings = settings;
             _spotOrderCommandsGeneratorService = spotOrderCommandsGeneratorService;
             _log = log;
+            _generateOrderbookService = generateOrderbookService;
             _messageProducer = new Lazy<IMessageProducer<OrderCommandsBatchMessage>>(() =>
-                CreateRabbitMqMessageProducer(marginTradingMarketMakerSettings, rabbitMqService));
+                CreateRabbitMqMessageProducer(settings, rabbitMqService));
         }
 
         public Task ProcessNewExternalOrderbookAsync(ExternalExchangeOrderbookMessage orderbook)
         {
             var quotesSource = _assetPairsSettingsService.GetAssetPairQuotesSource(orderbook.AssetPairId);
-            if (quotesSource.SourceType != AssetPairQuotesSourceTypeEnum.External
-                || !string.Equals(orderbook.Source, quotesSource.ExternalExchange, StringComparison.OrdinalIgnoreCase)
+            //Trace.Write($"MMS: Received {orderbook.AssetPairId} from {orderbook.Source}. Settings: {quotesSource.ToString()}");
+            if (quotesSource != AssetPairQuotesSourceTypeEnum.External
                 || (orderbook.Bids?.Count ?? 0) == 0 || (orderbook.Asks?.Count ?? 0) == 0)
             {
                 return Task.CompletedTask;
             }
 
-            var bestAsk = orderbook.Asks.Min(a => a.Price);
-            var bestBid = orderbook.Bids.Max(b => b.Price);
-            if (bestBid >= bestAsk)
+            var externalOrderbook = new ExternalOrderbook(orderbook.AssetPairId, orderbook.Source, _system.UtcNow,
+                orderbook.Bids.Select(b => new OrderbookPosition(b.Price, b.Volume)).ToImmutableArray(),
+                orderbook.Asks.Select(b => new OrderbookPosition(b.Price, b.Volume)).ToImmutableArray());
+            var resultingOrderbook = _generateOrderbookService.OnNewOrderbook(externalOrderbook);
+            if (resultingOrderbook == null)
             {
-                var context = $"assetPairId: {orderbook.AssetPairId}, orderbook.Source: {orderbook.Source}, bestBid: {bestBid}, bestAsk: {bestAsk}";
-                _log.WriteInfoAsync(nameof(MarketMaker), nameof(ProcessNewExternalOrderbookAsync),
-                    context,
-                    "Detected negative spread, skipping orderbook. Context: " + context);
                 return Task.CompletedTask;
             }
 
@@ -66,7 +70,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 new OrderCommand {CommandType = OrderCommandTypeEnum.DeleteOrder}
             };
 
-            foreach (var bid in orderbook.Bids.Where(b => b != null))
+            foreach (var bid in resultingOrderbook.Bids)
             {
                 commands.Add(new OrderCommand
                 {
@@ -77,7 +81,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 });
             }
 
-            foreach (var ask in orderbook.Asks.Where(b => b != null))
+            foreach (var ask in resultingOrderbook.Asks)
             {
                 commands.Add(new OrderCommand
                 {
@@ -93,8 +97,7 @@ namespace MarginTrading.MarketMaker.Services.Implementation
 
         public Task ProcessNewSpotOrderBookDataAsync(SpotOrderbookMessage orderbook)
         {
-            var quotesSource = _assetPairsSettingsService.GetAssetPairQuotesSource(orderbook.AssetPair)
-                .SourceType;
+            var quotesSource = _assetPairsSettingsService.GetAssetPairQuotesSource(orderbook.AssetPair);
             if (quotesSource != AssetPairQuotesSourceTypeEnum.Spot || (orderbook.Prices?.Count ?? 0) == 0)
             {
                 return Task.CompletedTask;
@@ -113,11 +116,11 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             {
                 quotesSourceType = model.SetSourceType.Value;
                 await _assetPairsSettingsService.SetAssetPairQuotesSourceAsync(model.AssetPairId,
-                    model.SetSourceType.Value, model.SetExternalExhange);
+                    model.SetSourceType.Value);
             }
             else
             {
-                quotesSourceType = _assetPairsSettingsService.GetAssetPairQuotesSource(model.AssetPairId).SourceType;
+                quotesSourceType = _assetPairsSettingsService.GetAssetPairQuotesSource(model.AssetPairId);
             }
 
             if (quotesSourceType == AssetPairQuotesSourceTypeEnum.Manual && model.PriceForBuyOrder != null &&
@@ -146,10 +149,10 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         }
 
         private static IMessageProducer<OrderCommandsBatchMessage> CreateRabbitMqMessageProducer(
-            MarginTradingMarketMakerSettings marginTradingMarketMakerSettings, IRabbitMqService rabbitMqService)
+            IReloadingManager<MarginTradingMarketMakerSettings> settings, IRabbitMqService rabbitMqService)
         {
-            return rabbitMqService.CreateProducer<OrderCommandsBatchMessage>(
-                marginTradingMarketMakerSettings.RabbitMq.OrderCommandsConnectionSettings, false);
+            return rabbitMqService.GetProducer<OrderCommandsBatchMessage>(
+                settings.Nested(s => s.RabbitMq.Publishers.OrderCommands), false);
         }
 
         private Task SendOrderCommandsAsync(string assetPairId, IReadOnlyList<OrderCommand> commands)
@@ -164,8 +167,16 @@ namespace MarginTrading.MarketMaker.Services.Implementation
                 AssetPairId = assetPairId,
                 Timestamp = _system.UtcNow,
                 Commands = commands,
-                MarketMakerId = _settings.MarketMakerId,
+                MarketMakerId = _settings.CurrentValue.MarketMakerId,
             });
+        }
+
+        public void Dispose()
+        {
+            var tasks = _assetPairsSettingsService.GetAllPairsSourcesAsync().GetAwaiter().GetResult()
+                .Select(p => SendOrderCommandsAsync(p.AssetPairId, new []{ new OrderCommand { CommandType = OrderCommandTypeEnum.DeleteOrder } }))
+                .ToArray();
+            Task.WaitAll(tasks);
         }
     }
 }

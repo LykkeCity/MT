@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-namespace MarginTrading.MarketMaker.Models
+namespace MarginTrading.MarketMaker.Models.Api
 {
     /// <summary>
     /// Message for controlling asset pair settings
@@ -19,11 +19,6 @@ namespace MarginTrading.MarketMaker.Models
         /// </summary>
         [JsonConverter(typeof(StringEnumConverter))]
         public AssetPairQuotesSourceTypeEnum? SetSourceType { get; set; }
-
-        /// <summary>
-        /// If set - changes external exchange which will be used for getting quotes, if QuotesSourceType is set to <see cref="AssetPairQuotesSourceTypeEnum.External"/>
-        /// </summary>
-        public string SetExternalExhange { get; set; }
 
         /// <summary>
         /// The price for sell order to create. Used only if the quotes source for the asset pair is manual

@@ -1,16 +1,19 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using MarginTrading.MarketMaker.Enums;
 using MarginTrading.MarketMaker.Models;
+using MarginTrading.MarketMaker.Models.Api;
 
 namespace MarginTrading.MarketMaker.Services
 {
     public interface IAssetPairsSettingsService
     {
-        (AssetPairQuotesSourceTypeEnum? SourceType, string ExternalExchange) GetAssetPairQuotesSource(string assetPairId);
+        [CanBeNull]
+        AssetPairQuotesSourceTypeEnum? GetAssetPairQuotesSource(string assetPairId);
 
-        Task SetAssetPairQuotesSourceAsync(string assetPairId, AssetPairQuotesSourceTypeEnum assetPairQuotesSourceType, [CanBeNull] string externalExchange);
+        Task SetAssetPairQuotesSourceAsync(string assetPairId, AssetPairQuotesSourceTypeEnum assetPairQuotesSourceType);
 
         Task<List<AssetPairSettings>> GetAllPairsSourcesAsync();
 

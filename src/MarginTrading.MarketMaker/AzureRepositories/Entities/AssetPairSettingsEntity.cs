@@ -24,9 +24,6 @@ namespace MarginTrading.MarketMaker.AzureRepositories.Entities
         /// <inheritdoc />
         public AssetPairQuotesSourceTypeEnum QuotesSourceType { get; set; }
 
-        /// <inheritdoc />
-        public string ExternalExchange { get; set; }
-
         public override IDictionary<string, EntityProperty> WriteEntity(OperationContext operationContext)
         {
             return new Dictionary<string, EntityProperty>
@@ -34,7 +31,6 @@ namespace MarginTrading.MarketMaker.AzureRepositories.Entities
                 {nameof(PartitionKey), new EntityProperty(PartitionKey) },
                 {nameof(RowKey), new EntityProperty(AssetPairId) },
                 {nameof(QuotesSourceType), new EntityProperty(QuotesSourceType.ToString()) },
-                {nameof(ExternalExchange), new EntityProperty(ExternalExchange) },
             };
         }
 
@@ -50,9 +46,6 @@ namespace MarginTrading.MarketMaker.AzureRepositories.Entities
                         break;
                     case nameof(QuotesSourceType):
                         QuotesSourceType = propValue.ParseEnum<AssetPairQuotesSourceTypeEnum>();
-                        break;
-                    case nameof(ExternalExchange):
-                        ExternalExchange = propValue;
                         break;
                 }
             }

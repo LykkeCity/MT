@@ -2,7 +2,7 @@
 
 namespace MarginTrading.MarketMaker.HelperServices
 {
-    internal interface ISystem
+    public interface ISystem
     {
         DateTime UtcNow { get; }
     }

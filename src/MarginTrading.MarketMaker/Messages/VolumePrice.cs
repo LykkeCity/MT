@@ -9,6 +9,5 @@ namespace MarginTrading.MarketMaker.Messages
 
         [JsonProperty("price")]
         public decimal Price { get; set; }
-
     }
 }

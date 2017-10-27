@@ -6,7 +6,7 @@ using MarginTrading.MarketMaker.AzureRepositories;
 using MarginTrading.MarketMaker.AzureRepositories.Entities;
 using MarginTrading.MarketMaker.Enums;
 using MarginTrading.MarketMaker.HelperServices.Implemetation;
-using MarginTrading.MarketMaker.Models;
+using MarginTrading.MarketMaker.Models.Api;
 using Rocks.Caching;
 
 namespace MarginTrading.MarketMaker.Services.Implementation
@@ -16,31 +16,23 @@ namespace MarginTrading.MarketMaker.Services.Implementation
     {
         private readonly IAssetsPairsSettingsRepository _assetsPairsSettingsRepository;
 
-        public AssetPairsSettingsService(ICacheProvider cacheProvider,
+        public AssetPairsSettingsService(ICacheProvider cache,
             IAssetsPairsSettingsRepository assetsPairsSettingsRepository)
-            : base(cacheProvider, assetsPairsSettingsRepository)
+            : base(cache, assetsPairsSettingsRepository)
         {
             _assetsPairsSettingsRepository = assetsPairsSettingsRepository;
         }
 
-        public Task SetAssetPairQuotesSourceAsync(string assetPairId, AssetPairQuotesSourceTypeEnum assetPairQuotesSourceType, string externalExchange)
+        public Task SetAssetPairQuotesSourceAsync(string assetPairId, AssetPairQuotesSourceTypeEnum assetPairQuotesSourceType)
         {
-            return UpdateByKeyAsync(GetKeys(assetPairId), e =>
-            {
-                e.QuotesSourceType = assetPairQuotesSourceType;
-                if (externalExchange != null)
-                {
-                    e.ExternalExchange = externalExchange;
-                }
-            });
+            return UpdateByKeyAsync(GetKeys(assetPairId), e => e.QuotesSourceType = assetPairQuotesSourceType);
         }
 
         public async Task<List<AssetPairSettings>> GetAllPairsSourcesAsync()
         {
-            return (await _assetsPairsSettingsRepository.GetAll())
+            return (await _assetsPairsSettingsRepository.GetAllAsync())
                 .Select(s => new AssetPairSettings
                 {
-                    ExternalExchange = s.ExternalExchange,
                     AssetPairId = s.AssetPairId,
                     QuotesSourceType = s.QuotesSourceType,
                     Timestamp = s.Timestamp,
@@ -55,10 +47,9 @@ namespace MarginTrading.MarketMaker.Services.Implementation
             {
                 return null;
             }
-            
+
             return new AssetPairSettings
             {
-                ExternalExchange = entity.ExternalExchange,
                 AssetPairId = entity.AssetPairId,
                 QuotesSourceType = entity.QuotesSourceType,
                 Timestamp = entity.Timestamp,
@@ -68,14 +59,14 @@ namespace MarginTrading.MarketMaker.Services.Implementation
         public async Task DeleteAsync(string assetPairId)
         {
             var keys = GetKeys(assetPairId);
-            await _assetsPairsSettingsRepository.DeleteAsync(keys.PartitionKey, keys.RowKey);
+            await _assetsPairsSettingsRepository.DeleteIfExistAsync(keys.PartitionKey, keys.RowKey);
             DeleteByKey(keys);
         }
 
-        public (AssetPairQuotesSourceTypeEnum? SourceType, string ExternalExchange) GetAssetPairQuotesSource(string assetPairId)
+        public AssetPairQuotesSourceTypeEnum? GetAssetPairQuotesSource(string assetPairId)
         {
             var entity = GetByKey(GetKeys(assetPairId));
-            return (entity?.QuotesSourceType, entity?.ExternalExchange);
+            return entity?.QuotesSourceType;
         }
 
         private static EntityKeys GetKeys(string assetPairId)
