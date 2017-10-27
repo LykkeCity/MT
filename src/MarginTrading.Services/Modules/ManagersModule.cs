@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using MarginTrading.Services.Infrastructure;
 using MarginTrading.Services.MatchingEngines;
 
 namespace MarginTrading.Services.Modules

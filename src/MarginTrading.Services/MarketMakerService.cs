@@ -11,9 +11,9 @@ namespace MarginTrading.Services
     public class MarketMakerService : IFeedConsumer
     {
         private readonly IInternalMatchingEngine _matchingEngine;
-        private readonly AssetPairDayOffService _assetPairDayOffService;
+        private readonly IAssetPairDayOffService _assetPairDayOffService;
 
-        public MarketMakerService(IInternalMatchingEngine matchingEngine, AssetPairDayOffService assetPairDayOffService)
+        public MarketMakerService(IInternalMatchingEngine matchingEngine, IAssetPairDayOffService assetPairDayOffService)
         {
             _matchingEngine = matchingEngine;
             _assetPairDayOffService = assetPairDayOffService;
