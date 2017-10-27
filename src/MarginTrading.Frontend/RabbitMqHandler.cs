@@ -63,6 +63,7 @@ namespace MarginTrading.Frontend
         {
             if (accountChangedMessage.EventType != AccountEventTypeEnum.Updated)
             {
+                // Adding/deleting accounts usually means activation/deactivation of live trading
                 _marginTradingSettingsService.ResetCacheForClient(accountChangedMessage.Account?.ClientId);
                 return;
             }
