@@ -218,10 +218,6 @@ namespace MarginTrading.Backend.Controllers
 
             var result = AccountHistoryBackendResponse.Create(accounts, openPositions, orders);
 
-            _consoleWriter.WriteLine($"action account.history for clientId = {request.ClientId}");
-            _operationsLogService.AddLog("action account.history", request.ClientId, request.AccountId,
-                request.ToJson(), $"Account items: {result.Account.Length}, open positions count: {result.OpenPositions.Length}, history items: {result.PositionsHistory.Length}");
-
             return result;
         }
 
@@ -242,10 +238,6 @@ namespace MarginTrading.Backend.Controllers
                 .Where(item => item.Status != OrderStatus.Rejected);
 
             var result = AccountNewHistoryBackendResponse.Create(accounts, openOrders, historyOrders);
-
-            _consoleWriter.WriteLine($"action account.history.new for clientId = {request.ClientId}");
-            _operationsLogService.AddLog("action account.history.new", request.ClientId, request.AccountId,
-                request.ToJson(), $"history items count: {result.HistoryItems.Length}");
 
             return result;
         }
@@ -287,7 +279,10 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         public async Task<MtBackendResponse<bool>> CloseOrder([FromBody] CloseOrderBackendRequest request)
         {
-            var order = _ordersCache.ActiveOrders.GetOrderById(request.OrderId);
+            if (!_ordersCache.ActiveOrders.TryGetOrderById(request.OrderId, out var order))
+            {
+                return new MtBackendResponse<bool> {Message = "Order not found"};
+            }
 
             if (_assetDayOffService.IsDayOff(order.Instrument))
             {
@@ -296,7 +291,11 @@ namespace MarginTrading.Backend.Controllers
 
             order = await _tradingEngine.CloseActiveOrderAsync(request.OrderId, OrderCloseReason.Close);
 
-            var result = new MtBackendResponse<bool> {Result = order.Status == OrderStatus.Closed};
+            var result = new MtBackendResponse<bool>
+            {
+                Result = order.Status == OrderStatus.Closed || order.Status == OrderStatus.Closing,
+                Message = order.CloseRejectReasonText
+            };
 
             _consoleWriter.WriteLine(
                 $"action order.close for clientId = {request.ClientId}, orderId = {request.OrderId}");

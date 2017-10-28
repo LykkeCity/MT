@@ -3,7 +3,7 @@
     public static class MarginTradingHelpers
     {
         // TODO: need to use different accuracy for different asset pairs
-        public const int VolumeAccuracy = 8;
+        public const int VolumeAccuracy = 10;
         // TODO: need to use different accuracy for different assets
         public const int DefaultAssetAccuracy = 8;
 
