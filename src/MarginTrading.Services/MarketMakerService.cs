@@ -2,6 +2,7 @@
 using System.Linq;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Core;
+using MarginTrading.Core.Assets;
 using MarginTrading.Core.MarketMakerFeed;
 using MarginTrading.Core.MatchingEngines;
 
@@ -10,16 +11,21 @@ namespace MarginTrading.Services
     public class MarketMakerService : IFeedConsumer
     {
         private readonly IInternalMatchingEngine _matchingEngine;
+        private readonly IAssetPairDayOffService _assetPairDayOffService;
 
-        public MarketMakerService(IInternalMatchingEngine matchingEngine)
+        public MarketMakerService(IInternalMatchingEngine matchingEngine, IAssetPairDayOffService assetPairDayOffService)
         {
             _matchingEngine = matchingEngine;
+            _assetPairDayOffService = assetPairDayOffService;
         }
 
         public void ConsumeFeed(MarketMakerOrderCommandsBatchMessage batch)
         {
             batch.AssetPairId.RequiredNotNullOrWhiteSpace(nameof(batch.AssetPairId));
             batch.Commands.RequiredNotNull(nameof(batch.Commands));
+            
+            if (_assetPairDayOffService.IsDayOff(batch.AssetPairId))
+                return;
 
             var model = new SetOrderModel {MarketMakerId = batch.MarketMakerId};
 

@@ -124,8 +124,8 @@ namespace MarginTrading.Services.Modules
 				.AsSelf()
 				.SingleInstance();
 
-		    builder.RegisterType<AssetDayOffService>()
-		        .As<IAssetDayOffService>()
+		    builder.RegisterType<AssetPairDayOffService>()
+		        .As<IAssetPairDayOffService>()
 		        .SingleInstance();
 
 		    builder.RegisterType<TelemetryPublisher>()

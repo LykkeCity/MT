@@ -103,6 +103,7 @@ namespace MarginTrading.Core
         TakeProfit,
         StopOut,
         Canceled,
+        CanceledBySystem,
         ClosedByBroker
     }
 
@@ -187,7 +188,9 @@ namespace MarginTrading.Core
                             break;
                     }
 
-                    message = order.ExpectedOpenPrice.HasValue && order.CloseReason == OrderCloseReason.Canceled
+                    message = order.ExpectedOpenPrice.HasValue && 
+                              (order.CloseReason == OrderCloseReason.Canceled || 
+                               order.CloseReason == OrderCloseReason.CanceledBySystem)
                         ? string.Format(MtMessages.Notifications_PendingOrderCanceled, type, order.Instrument, volume)
                         : string.Format(MtMessages.Notifications_OrderClosed, type, order.Instrument, volume, reason,
                             order.GetTotalFpl().ToString($"F{MarginTradingHelpers.DefaultAssetAccuracy}"));

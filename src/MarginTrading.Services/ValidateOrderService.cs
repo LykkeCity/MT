@@ -16,7 +16,7 @@ namespace MarginTrading.Services
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly OrdersCache _ordersCache;
-        private readonly IAssetDayOffService _assetDayOffService;
+        private readonly IAssetPairDayOffService _assetDayOffService;
 
         public ValidateOrderService(
             IQuoteCacheService quoteCashService,
@@ -25,7 +25,7 @@ namespace MarginTrading.Services
             IAccountAssetsCacheService accountAssetsCacheService,
             IAssetPairsCache assetPairsCache,
             OrdersCache ordersCache,
-            IAssetDayOffService assetDayOffService)
+            IAssetPairDayOffService assetDayOffService)
         {
             _quoteCashService = quoteCashService;
             _accountUpdateService = accountUpdateService;
@@ -62,6 +62,11 @@ namespace MarginTrading.Services
             //check ExpectedOpenPrice for pending order
             if (order.ExpectedOpenPrice.HasValue)
             {
+                if (_assetDayOffService.IsPendingOrderDisabled(order.Instrument))
+                {
+                    throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Trades for instrument are not available");
+                }
+                
                 if (order.ExpectedOpenPrice <= 0)
                 {
                     throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice, "Incorrect expected open price");

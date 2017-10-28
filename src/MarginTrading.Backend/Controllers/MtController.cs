@@ -37,7 +37,7 @@ namespace MarginTrading.Backend.Controllers
         private readonly OrdersCache _ordersCache;
         private readonly MarginSettings _marginSettings;
         private readonly AccountManager _accountManager;
-        private readonly IAssetDayOffService _assetDayOffService;
+        private readonly IAssetPairDayOffService _assetDayOffService;
         private readonly IQuoteCacheService _quoteCacheService;
 
         public MtController(
@@ -54,7 +54,7 @@ namespace MarginTrading.Backend.Controllers
             OrdersCache ordersCache,
             MarginSettings marginSettings,
             AccountManager accountManager,
-            IAssetDayOffService assetDayOffService,
+            IAssetPairDayOffService assetDayOffService,
             IQuoteCacheService quoteCacheService)
         {
             _accountsHistoryRepository = accountsHistoryRepository;
