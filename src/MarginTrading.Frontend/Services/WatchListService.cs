@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MarginTrading.Common.BackendContracts;
+using MarginTrading.Contract.BackendContracts;
 using MarginTrading.Core;
 
 namespace MarginTrading.Frontend.Services

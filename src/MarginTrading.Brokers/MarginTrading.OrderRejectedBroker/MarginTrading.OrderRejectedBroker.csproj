@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <AssemblyName>MarginTrading.OrderRejectedBroker</AssemblyName>
@@ -10,16 +9,14 @@
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
     <Version>1.0.1</Version>
   </PropertyGroup>
-
   <ItemGroup>
     <None Update="Dockerfile">
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Lykke.Logs" Version="1.0.33" />
-    <PackageReference Include="Lykke.SettingsReader" Version="1.0.39" />
+    <PackageReference Include="Lykke.SettingsReader" Version="1.0.42" />
     <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="1.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.0.0" />
@@ -37,12 +34,10 @@
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="Lykke.RabbitMqBroker" Version="1.0.80" />
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\MarginTrading.AzureRepositories\MarginTrading.AzureRepositories.csproj" />
     <ProjectReference Include="..\..\MarginTrading.Common\MarginTrading.Common.csproj" />
     <ProjectReference Include="..\..\MarginTrading.Services\MarginTrading.Services.csproj" />
     <ProjectReference Include="..\MarginTrading.BrokerBase\MarginTrading.BrokerBase.csproj" />
   </ItemGroup>
-
 </Project>

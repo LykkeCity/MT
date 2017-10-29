@@ -1,15 +1,15 @@
-﻿using Common;
-using Flurl.Http;
+﻿using Flurl.Http;
 using MarginTrading.Client.JsonResults;
 using MarginTrading.Client.Settings;
-using MarginTrading.Common.ClientContracts;
-using MarginTrading.Common.Wamp;
-using MarginTrading.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Common;
+using MarginTrading.Client.Wamp;
+using MarginTrading.Contract.BackendContracts;
+using MarginTrading.Contract.ClientContracts;
 using WampSharp.V2;
 using WampSharp.V2.Client;
 
@@ -311,7 +311,7 @@ namespace MarginTrading.Client.Bot
                         Order = new NewOrderClientContract
                         {
                             AccountId = accountId,
-                            FillType = OrderFillType.FillOrKill,
+                            FillType = OrderFillTypeContract.FillOrKill,
                             Instrument = instrument,
                             Volume = 1
                         }
@@ -355,7 +355,7 @@ namespace MarginTrading.Client.Bot
                         Order = new NewOrderClientContract
                         {
                             AccountId = accountId,
-                            FillType = OrderFillType.FillOrKill,
+                            FillType = OrderFillTypeContract.FillOrKill,
                             Instrument = instrument,
                             Volume = 1,
                             ExpectedOpenPrice = currentBid * 0.9m
@@ -490,7 +490,7 @@ namespace MarginTrading.Client.Bot
         public void SubscribePrice(string instrument)
         {
             var topicName = !string.IsNullOrEmpty(instrument) ? $"prices.update.{instrument}" : "prices.update";
-            IDisposable subscription = _realmProxy.Services.GetSubject<InstrumentBidAskPair>(topicName)
+            IDisposable subscription = _realmProxy.Services.GetSubject<InstrumentBidAskPairContract>(topicName)
                 .Subscribe(PriceReceived);
 
             _priceSubscription.Add(instrument, subscription);
@@ -555,13 +555,13 @@ namespace MarginTrading.Client.Bot
 
 
         #region CallBacks
-        private void PriceReceived(InstrumentBidAskPair price)
+        private void PriceReceived(InstrumentBidAskPairContract price)
         {
-            if (!_subscriptionHistory.ContainsKey(price.Instrument))
-                _subscriptionHistory.Add(price.Instrument, 0);
+            if (!_subscriptionHistory.ContainsKey(price.Id))
+                _subscriptionHistory.Add(price.Id, 0);
 
-            int received = _subscriptionHistory[price.Instrument];
-            _subscriptionHistory[price.Instrument] = received + 1;
+            int received = _subscriptionHistory[price.Id];
+            _subscriptionHistory[price.Id] = received + 1;
 
             //LogInfo($"Price received:{price.Instrument} Ask/Bid:{price.Ask}/{price.Bid}");
         }

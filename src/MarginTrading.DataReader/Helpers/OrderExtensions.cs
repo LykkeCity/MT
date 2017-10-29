@@ -1,5 +1,6 @@
 ﻿using System.Linq;
-using MarginTrading.Common.BackendContracts;
+using MarginTrading.Backend.Core.Mappers;
+using MarginTrading.Contract.BackendContracts;
 using MarginTrading.Core;
 using MarginTrading.Core.MatchedOrders;
 
@@ -26,14 +27,14 @@ namespace MarginTrading.DataReader.Helpers
                 AccountAssetId = src.AccountAssetId,
                 ClientId = src.ClientId,
                 Instrument = src.Instrument,
-                Status = src.Status,
+                Status = src.Status.ToType<OrderStatusContract>(),
                 CreateDate = src.CreateDate,
                 OpenDate = src.OpenDate,
                 CloseDate = src.CloseDate,
                 ExpectedOpenPrice = src.ExpectedOpenPrice,
                 OpenPrice = src.OpenPrice,
                 ClosePrice = src.ClosePrice,
-                Type = src.GetOrderType(),
+                Type = src.GetOrderType().ToType<OrderDirectionContract>(),
                 Volume = src.Volume,
                 MatchedVolume = src.GetMatchedVolume(),
                 MatchedCloseVolume = src.GetMatchedCloseVolume(),
@@ -41,8 +42,8 @@ namespace MarginTrading.DataReader.Helpers
                 StopLoss = src.StopLoss,
                 Fpl = src.FplData.Fpl,
                 PnL = src.FplData.TotalFplSnapshot,
-                CloseReason = src.CloseReason,
-                RejectReason = src.RejectReason,
+                CloseReason = src.CloseReason.ToType<OrderCloseReasonContract>(),
+                RejectReason = src.RejectReason.ToType<OrderRejectReasonContract>(),
                 RejectReasonText = src.RejectReasonText,
                 CommissionLot = src.CommissionLot,
                 OpenCommission = src.GetOpenCommission(),
@@ -61,9 +62,9 @@ namespace MarginTrading.DataReader.Helpers
                 AccountId = src.AccountId,
                 Instrument = src.Instrument,
                 AssetAccuracy = src.AssetAccuracy,
-                Type = src.GetOrderType(),
-                Status = src.Status,
-                CloseReason = src.CloseReason,
+                Type = src.GetOrderType().ToType<OrderDirectionContract>(),
+                Status = src.Status.ToType<OrderStatusContract>(),
+                CloseReason = src.CloseReason.ToType<OrderCloseReasonContract>(),
                 OpenDate = src.OpenDate,
                 CloseDate = src.CloseDate,
                 OpenPrice = src.OpenPrice,

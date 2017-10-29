@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using MarginTrading.Common.BackendContracts;
-using MarginTrading.Common.Mappers;
+using MarginTrading.Backend.Core.Mappers;
+using MarginTrading.Contract.BackendContracts;
 using MarginTrading.Core;
 using MarginTrading.Core.Settings;
 using MarginTrading.Services.Middleware;

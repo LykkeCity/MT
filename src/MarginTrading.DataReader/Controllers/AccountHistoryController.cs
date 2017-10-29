@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MarginTrading.Common.BackendContracts;
-using MarginTrading.Common.Mappers;
+using MarginTrading.Contract.BackendContracts;
 using MarginTrading.Core;
 using MarginTrading.DataReader.Helpers;
 using MarginTrading.DataReader.Services;

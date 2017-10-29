@@ -2,9 +2,7 @@
 using Common.Log;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Core;
-using MarginTrading.Core.Enums;
 using MarginTrading.Core.Settings;
-using Microsoft.Extensions.PlatformAbstractions;
 
 namespace MarginTrading.Services
 {

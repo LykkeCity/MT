@@ -1,4 +1,4 @@
-﻿using MarginTrading.Common.BackendContracts;
+﻿using MarginTrading.Contract.BackendContracts;
 using MarginTrading.Core;
 using MarginTrading.Core.MatchingEngines;
 using MarginTrading.Core.Settings;

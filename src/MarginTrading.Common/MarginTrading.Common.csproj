@@ -9,9 +9,6 @@
     <Version>1.0.1</Version>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MarginTrading.Core\MarginTrading.Core.csproj" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="Flurl.Http" Version="1.1.2" />
     <PackageReference Include="JetBrains.Annotations" Version="11.0.0" />
     <PackageReference Include="SuperSocket.ClientEngine" Version="0.8.0.13" />

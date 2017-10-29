@@ -2,8 +2,8 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
-using MarginTrading.Common.BackendContracts;
-using MarginTrading.Common.Mappers;
+using MarginTrading.Backend.Core.Mappers;
+using MarginTrading.Contract.BackendContracts;
 using MarginTrading.Core;
 using MarginTrading.Core.Notifications;
 using Newtonsoft.Json;

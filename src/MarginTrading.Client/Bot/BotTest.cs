@@ -1,9 +1,10 @@
-﻿using MarginTrading.Common.ClientContracts;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MarginTrading.Contract.ClientContracts;
+
 #pragma warning disable 4014
 
 namespace MarginTrading.Client.Bot

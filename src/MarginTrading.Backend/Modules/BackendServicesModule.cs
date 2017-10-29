@@ -10,7 +10,6 @@ using Lykke.RabbitMqBroker.Subscriber;
 using MarginTrading.Backend.Email;
 using MarginTrading.Backend.Middleware.Validator;
 using MarginTrading.Common.RabbitMq;
-using MarginTrading.Common.Wamp;
 using MarginTrading.Core;
 using MarginTrading.Core.Settings;
 using MarginTrading.Services;

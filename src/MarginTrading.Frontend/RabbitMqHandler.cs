@@ -4,13 +4,12 @@ using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
-using MarginTrading.Common.BackendContracts;
-using MarginTrading.Common.ClientContracts;
-using MarginTrading.Common.Mappers;
 using MarginTrading.Common.RabbitMq;
-using MarginTrading.Common.RabbitMqMessageModels;
+using MarginTrading.Contract.BackendContracts;
+using MarginTrading.Contract.ClientContracts;
+using MarginTrading.Contract.Mappers;
+using MarginTrading.Contract.RabbitMqMessageModels;
 using MarginTrading.Core;
-using MarginTrading.Core.Enums;
 using MarginTrading.Frontend.Settings;
 using WampSharp.V2.Realm;
 

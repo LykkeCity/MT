@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using Newtonsoft.Json;
 
@@ -43,7 +42,7 @@ namespace MarginTrading.Core.MatchedOrders
 
         public void AddRange(IEnumerable<MatchedOrder> orders)
         {
-            Items = Items.Union(orders).ToImmutableList();
+            Items = Items.Union(orders).ToList();
         }
 
 

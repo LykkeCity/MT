@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
-using MarginTrading.Common.BackendContracts;
-using MarginTrading.Common.ClientContracts;
-using MarginTrading.Common.Mappers;
+using MarginTrading.Contract.BackendContracts;
+using MarginTrading.Contract.ClientContracts;
+using MarginTrading.Contract.Mappers;
 using MarginTrading.Core;
 using MarginTrading.DataReaderClient;
 using MarginTrading.Frontend.Settings;
@@ -13,7 +13,6 @@ using AccountHistoryBackendResponse = MarginTrading.DataReaderClient.Models.Acco
 using AccountHistoryBackendContract = MarginTrading.DataReaderClient.Models.AccountHistoryBackendContract;
 using OrderHistoryBackendContract = MarginTrading.DataReaderClient.Models.OrderHistoryBackendContract;
 using AccountNewHistoryBackendResponse = MarginTrading.DataReaderClient.Models.AccountNewHistoryBackendResponse;
-using AccountHistoryItemBackend = MarginTrading.DataReaderClient.Models.AccountHistoryItemBackend;
 
 namespace MarginTrading.Frontend.Services
 {
@@ -278,7 +277,7 @@ namespace MarginTrading.Frontend.Services
                 Balance = (decimal) src.Balance,
                 WithdrawTransferLimit = (decimal) src.WithdrawTransferLimit,
                 Comment = src.Comment,
-                Type = ConvertEnum<AccountHistoryType>(src.Type)
+                Type = ConvertEnum<AccountHistoryTypeContract>(src.Type)
             };
         }
 
@@ -290,9 +289,9 @@ namespace MarginTrading.Frontend.Services
                 AccountId = src.AccountId,
                 Instrument = src.Instrument,
                 AssetAccuracy = src.AssetAccuracy,
-                Type = ConvertEnum<OrderDirection>(src.Type),
-                Status = ConvertEnum<OrderStatus>(src.Status),
-                CloseReason = ConvertEnum<OrderCloseReason>(src.CloseReason),
+                Type = ConvertEnum<OrderDirectionContract>(src.Type),
+                Status = ConvertEnum<OrderStatusContract>(src.Status),
+                CloseReason = ConvertEnum<OrderCloseReasonContract>(src.CloseReason),
                 OpenDate = src.OpenDate,
                 CloseDate = src.CloseDate,
                 OpenPrice = (decimal) src.OpenPrice,

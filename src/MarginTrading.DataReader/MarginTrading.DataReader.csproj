@@ -21,16 +21,19 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MarginTrading.Backend.Core.Mappers\MarginTrading.Backend.Core.Mappers.csproj" />
+    <ProjectReference Include="..\MarginTrading.Backend.Core\MarginTrading.Backend.Core.csproj" />
     <ProjectReference Include="..\MarginTrading.Common\MarginTrading.Common.csproj" />
     <ProjectReference Include="..\MarginTrading.AzureRepositories\MarginTrading.AzureRepositories.csproj" />
+    <ProjectReference Include="..\MarginTrading.Contract\MarginTrading.Contract.csproj" />
     <ProjectReference Include="..\MarginTrading.Services\MarginTrading.Services.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="11.0.0" />
     <PackageReference Include="Lykke.Common.ApiLibrary" Version="1.0.11" />
     <PackageReference Include="Lykke.Logs" Version="1.0.29" />
-    <PackageReference Include="Lykke.Pkg.SettingsReader" Version="1.0.31" />
     <PackageReference Include="Lykke.Service.EmailSender" Version="1.0.13" />
+    <PackageReference Include="Lykke.SettingsReader" Version="1.0.42" />
     <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="1.0.4" />
     <PackageReference Include="Lykke.SlackNotifications" Version="1.0.11" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.1.1" />

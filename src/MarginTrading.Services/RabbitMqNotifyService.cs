@@ -3,10 +3,9 @@ using System.Threading.Tasks;
 using Autofac.Features.Indexed;
 using Common;
 using Common.Log;
-using MarginTrading.Common.Mappers;
-using MarginTrading.Common.RabbitMqMessageModels;
+using MarginTrading.Backend.Core.Mappers;
+using MarginTrading.Contract.RabbitMqMessageModels;
 using MarginTrading.Core;
-using MarginTrading.Core.Enums;
 using MarginTrading.Core.RabbitMqMessages;
 using MarginTrading.Core.Settings;
 

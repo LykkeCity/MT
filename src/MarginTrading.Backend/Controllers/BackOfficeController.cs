@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using MarginTrading.Backend.Attributes;
+using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Models;
-using MarginTrading.Common.BackendContracts;
-using MarginTrading.Common.Mappers;
+using MarginTrading.Contract.BackendContracts;
 using MarginTrading.Core;
 using MarginTrading.Core.MatchingEngines;
 using MarginTrading.Core.Clients;
@@ -552,7 +552,7 @@ namespace MarginTrading.Backend.Controllers
         [Route("routes")]
         public async Task<IActionResult> AddRoute([FromBody]NewMatchingEngineRouteRequest request)
         {
-            IMatchingEngineRoute newRoute = NewMatchingEngineRouteRequest.CreateRoute(request);
+            IMatchingEngineRoute newRoute = DomainObjectsFactory.CreateRoute(request);
             await _routesManager.AddOrReplaceRouteAsync(newRoute);
             return Ok(newRoute);
         }
@@ -564,7 +564,7 @@ namespace MarginTrading.Backend.Controllers
             var existingRoute = _routesManager.GetRouteById(id);
             if (existingRoute != null)
             {
-                var route = NewMatchingEngineRouteRequest.CreateRoute(request, id);
+                var route = DomainObjectsFactory.CreateRoute(request, id);
                 await _routesManager.AddOrReplaceRouteAsync(route);
                 return Ok(_routesManager);
             }

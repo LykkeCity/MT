@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MarginTrading.Common.BackendContracts;
-using MarginTrading.Common.Mappers;
+using MarginTrading.Backend.Core.Mappers;
+using MarginTrading.Contract.BackendContracts;
 using MarginTrading.Core;
 using MarginTrading.Core.Settings;
 using MarginTrading.Services;
@@ -85,7 +85,7 @@ namespace MarginTrading.Backend.Controllers
 
             var openPositions = _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountId);
 
-            return AccountHistoryBackendResponse.Create(accounts, openPositions, historyOrders);
+            return BackendContractFactory.CreateAccountHistoryBackendResponse(accounts, openPositions, historyOrders);
         }
     }
 }
