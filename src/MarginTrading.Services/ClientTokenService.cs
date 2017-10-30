@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Lykke.Service.Session;
-using MarginTrading.Core;
+using MarginTrading.Backend.Core;
 
 namespace MarginTrading.Services
 {

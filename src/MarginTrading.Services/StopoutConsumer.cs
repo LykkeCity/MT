@@ -3,9 +3,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Lykke.Common;
-using MarginTrading.Core;
-using MarginTrading.Core.Clients;
-using MarginTrading.Core.Messages;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Messages;
+using MarginTrading.Common.Settings.Repositories;
 using MarginTrading.Services.Events;
 using MarginTrading.Services.Notifications;
 

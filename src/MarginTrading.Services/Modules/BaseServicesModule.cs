@@ -1,7 +1,6 @@
 ﻿using Autofac;
 using Lykke.Common;
-using MarginTrading.Core;
-using MarginTrading.Core.Settings;
+using MarginTrading.Backend.Core;
 using MarginTrading.Services.Notifications;
 using MarginTrading.Services.Settings;
 

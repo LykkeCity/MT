@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using Autofac;
-using MarginTrading.Core;
-using MarginTrading.Core.MatchedOrders;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Services;
 using MarginTrading.Services.Events;
 using NUnit.Framework;

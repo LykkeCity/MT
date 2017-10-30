@@ -2,8 +2,8 @@
 using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.AzureRepositories;
+using MarginTrading.Backend.Core;
 using MarginTrading.Contract.BackendContracts;
-using MarginTrading.Core;
 using MarginTrading.DataReader.Settings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

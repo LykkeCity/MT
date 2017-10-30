@@ -3,11 +3,11 @@ using System.Threading.Tasks;
 using Autofac.Features.Indexed;
 using Common;
 using Common.Log;
+using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
+using MarginTrading.Backend.Core.RabbitMqMessages;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Contract.RabbitMqMessageModels;
-using MarginTrading.Core;
-using MarginTrading.Core.RabbitMqMessages;
-using MarginTrading.Core.Settings;
 
 namespace MarginTrading.Services
 {

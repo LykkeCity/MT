@@ -1,5 +1,6 @@
 ﻿using Autofac;
-using MarginTrading.Core;
+using MarginTrading.Backend.Core;
+using MarginTrading.Services.AssetPairs;
 using Rocks.Caching;
 
 namespace MarginTrading.Services.Modules

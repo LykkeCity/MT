@@ -1,6 +1,6 @@
 using Lykke.Common;
-using MarginTrading.Core;
-using MarginTrading.Core.Clients;
+using MarginTrading.Backend.Core;
+using MarginTrading.Common.Settings.Repositories;
 using MarginTrading.Services.Events;
 using MarginTrading.Services.Notifications;
 

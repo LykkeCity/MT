@@ -7,8 +7,8 @@ using Common.Log;
 using MarginTrading.AzureRepositories.Reports;
 using JetBrains.Annotations;
 using MarginTrading.AzureRepositories;
-using MarginTrading.Core;
-using MarginTrading.Core.Settings;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Services.Events;
 
 namespace MarginTrading.Services

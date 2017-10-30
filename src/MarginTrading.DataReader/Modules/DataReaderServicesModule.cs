@@ -1,10 +1,9 @@
 ﻿using System;
 using Autofac;
-using MarginTrading.Core;
+using MarginTrading.Common.Settings;
 using MarginTrading.DataReader.Middleware.Validator;
 using MarginTrading.DataReader.Services;
 using MarginTrading.DataReader.Services.Implementation;
-using MarginTrading.Services;
 using Rocks.Caching;
 
 namespace MarginTrading.DataReader.Modules
@@ -18,8 +17,6 @@ namespace MarginTrading.DataReader.Modules
             builder.RegisterType<OrderBookSnapshotReaderService>().As<IOrderBookSnapshotReaderService>()
                 .SingleInstance();
             builder.RegisterType<OrdersSnapshotReaderService>().As<IOrdersSnapshotReaderService>()
-                .SingleInstance();
-            builder.RegisterType<AccountAssetsCacheService>().As<IAccountAssetsCacheService>()
                 .SingleInstance();
             builder.RegisterType<MarginTradingSettingsService>().As<IMarginTradingSettingsService>()
                 .SingleInstance();

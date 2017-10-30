@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
-using MarginTrading.Core;
-using MarginTrading.Core.Clients;
+using MarginTrading.Backend.Core;
+using MarginTrading.Common.Settings.Models;
+using MarginTrading.Common.Settings.Repositories;
 using MarginTrading.Services.Notifications;
 
 namespace MarginTrading.Services

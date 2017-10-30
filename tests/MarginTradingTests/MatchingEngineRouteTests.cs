@@ -1,8 +1,8 @@
-﻿using MarginTrading.Core;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using System;
 using Autofac;
-using MarginTrading.Core.MatchingEngines;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Services;
 using MarginTrading.Services.MatchingEngines;
 

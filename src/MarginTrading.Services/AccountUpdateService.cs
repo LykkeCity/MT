@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
-using MarginTrading.Core;
-using MarginTrading.Core.Messages;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Messages;
 
 namespace MarginTrading.Services
 {

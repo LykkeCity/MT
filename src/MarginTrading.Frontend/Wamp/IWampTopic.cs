@@ -1,6 +1,6 @@
-﻿using MarginTrading.Common.Documentation;
+﻿using MarginTrading.Backend.Core;
+using MarginTrading.Common.Documentation;
 using MarginTrading.Contract.ClientContracts;
-using MarginTrading.Core;
 
 namespace MarginTrading.Frontend.Wamp
 {

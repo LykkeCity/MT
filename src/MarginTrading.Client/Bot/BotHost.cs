@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using MarginTrading.Client.EventArgs;
 
 namespace MarginTrading.Client.Bot
 {
@@ -209,7 +210,7 @@ namespace MarginTrading.Client.Bot
         #endregion
 
         #region Event Raising
-        private void OnTestFinished(object sender, EventArgs e)
+        private void OnTestFinished(object sender, System.EventArgs e)
         {
             TestFinished?.Invoke(sender, e);
         }
@@ -228,7 +229,7 @@ namespace MarginTrading.Client.Bot
         {
             OnLog(sender, e);
         }
-        private void Test_TestFinished(object sender, EventArgs e)
+        private void Test_TestFinished(object sender, System.EventArgs e)
         {
             var sdr = sender as BotTest;
             LogInfo($"Bot:[{sdr?.Bot.Id}]", $"Test Finished! Bot: {sdr?.Bot.Email}");
@@ -237,7 +238,7 @@ namespace MarginTrading.Client.Bot
             if (_runningTests.Count == 0)
             {
                 PrintSummary();
-                OnTestFinished(this, new EventArgs());
+                OnTestFinished(this, new System.EventArgs());
             }
         }
         #endregion

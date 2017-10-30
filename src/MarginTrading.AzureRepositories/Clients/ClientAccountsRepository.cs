@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using AzureStorage;
 using AzureStorage.Tables.Templates.Index;
 using Common.PasswordTools;
-using MarginTrading.Core.Clients;
+using MarginTrading.Backend.Core.Clients;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace MarginTrading.AzureRepositories.Clients

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using AzureStorage.Tables;
 using MarginTrading.AzureRepositories;
-using MarginTrading.Core;
+using MarginTrading.Backend.Core;
 
 namespace MarginTradingTests
 {

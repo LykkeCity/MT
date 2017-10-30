@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
-using MarginTrading.Core;
-using MarginTrading.Core.Clients;
-using MarginTrading.Core.Messages;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Clients;
+using MarginTrading.Backend.Core.Messages;
 
 namespace MarginTrading.Services
 {

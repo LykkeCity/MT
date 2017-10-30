@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Common;
 using Common.Log;
-using MarginTrading.Core;
+using MarginTrading.Backend.Core;
 using MarginTrading.Services.Events;
 
 namespace MarginTrading.Services

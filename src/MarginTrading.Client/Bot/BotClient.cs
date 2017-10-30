@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Common;
+using MarginTrading.Client.EventArgs;
 using MarginTrading.Client.Wamp;
 using MarginTrading.Contract.BackendContracts;
 using MarginTrading.Contract.ClientContracts;

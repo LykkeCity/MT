@@ -2,13 +2,13 @@
 using Common.Log;
 using Lykke.RabbitMqBroker.Subscriber;
 using MarginTrading.AccountHistoryBroker.AzureRepositories;
+using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.BrokerBase;
 using MarginTrading.BrokerBase.Settings;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Contract.BackendContracts;
-using MarginTrading.Core;
-using MarginTrading.Core.Settings;
 
 namespace MarginTrading.AccountHistoryBroker
 {

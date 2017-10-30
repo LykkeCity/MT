@@ -1,12 +1,14 @@
 ﻿using Autofac;
-using MarginTrading.Core;
-using MarginTrading.Core.Assets;
-using MarginTrading.Core.MarketMakerFeed;
-using MarginTrading.Core.MatchingEngines;
-using MarginTrading.Core.Telemetry;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.MarketMakerFeed;
+using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Common.RabbitMq;
+using MarginTrading.Common.Services;
+using MarginTrading.Common.Services.Telemetry;
+using MarginTrading.Common.Settings;
+using MarginTrading.Services.AssetPairs;
 using MarginTrading.Services.Events;
 using MarginTrading.Services.Infrastructure;
-using MarginTrading.Services.Infrastructure.Telemetry;
 using MarginTrading.Services.MatchingEngines;
 
 namespace MarginTrading.Services.Modules

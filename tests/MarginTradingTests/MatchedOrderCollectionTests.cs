@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using Common;
-using MarginTrading.Core;
-using MarginTrading.Core.MatchedOrders;
+using MarginTrading.Backend.Core.MatchedOrders;
 using NUnit.Framework;
 
 namespace MarginTradingTests

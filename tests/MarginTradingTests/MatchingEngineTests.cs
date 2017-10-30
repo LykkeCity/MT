@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using Autofac;
-using MarginTrading.Core;
-using MarginTrading.Core.MatchedOrders;
-using MarginTrading.Core.MatchingEngines;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.MatchedOrders;
+using MarginTrading.Backend.Core.MatchingEngines;
 using NUnit.Framework;
 
 namespace MarginTradingTests

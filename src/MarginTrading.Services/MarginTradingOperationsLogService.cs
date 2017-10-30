@@ -1,7 +1,7 @@
 ﻿using System;
 using Common.Log;
 using Lykke.Common;
-using MarginTrading.Core;
+using MarginTrading.Backend.Core;
 
 namespace MarginTrading.Services
 {

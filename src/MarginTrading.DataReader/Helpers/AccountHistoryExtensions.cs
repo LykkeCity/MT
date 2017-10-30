@@ -1,6 +1,6 @@
-﻿using MarginTrading.Backend.Core.Mappers;
+﻿using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Contract.BackendContracts;
-using MarginTrading.Core;
 
 namespace MarginTrading.DataReader.Helpers
 {

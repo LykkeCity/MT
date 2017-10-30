@@ -1,5 +1,4 @@
 ﻿using MarginTrading.Contract.ClientContracts;
-using MarginTrading.Core;
 
 namespace MarginTrading.Backend.Core.Mappers
 {

@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
-using MarginTrading.Core.Clients;
-using MarginTrading.Core.Settings;
+using MarginTrading.Common.Settings;
+using MarginTrading.Common.Settings.Models;
+using MarginTrading.Common.Settings.Repositories;
 using MarginTrading.Services;
 using MarginTradingTests.Helpers;
 using Moq;

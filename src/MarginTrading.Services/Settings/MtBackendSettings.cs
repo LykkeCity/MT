@@ -1,4 +1,4 @@
-using MarginTrading.Core.Settings;
+using MarginTrading.Backend.Core.Settings;
 
 namespace MarginTrading.Services.Settings
 {

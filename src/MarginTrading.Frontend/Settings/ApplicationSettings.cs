@@ -1,6 +1,6 @@
 ﻿using Lykke.SettingsReader.Attributes;
 using Lykke.SlackNotifications;
-using MarginTrading.Core.Settings;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Services.Settings;
 
 namespace MarginTrading.Frontend.Settings

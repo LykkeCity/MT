@@ -4,9 +4,9 @@ using Common;
 using Common.Log;
 using Flurl.Http;
 using MarginTrading.Common.Extensions;
-using MarginTrading.Core.Models;
 using MarginTrading.Frontend.Settings;
 using System.Linq;
+using MarginTrading.Common.Settings.Models;
 using MarginTrading.Contract.BackendContracts;
 
 namespace MarginTrading.Frontend.Services

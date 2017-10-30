@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Text;
-using MarginTrading.Core;
+using MarginTrading.Backend.Core;
 using Microsoft.IdentityModel.Tokens;
 
 namespace MarginTrading.Frontend.Services

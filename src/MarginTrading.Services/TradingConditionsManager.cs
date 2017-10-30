@@ -3,9 +3,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
 using Common.Log;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Common.RabbitMq;
-using MarginTrading.Core;
-using MarginTrading.Core.Settings;
 using Microsoft.Extensions.PlatformAbstractions;
 
 namespace MarginTrading.Services

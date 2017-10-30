@@ -1,8 +1,8 @@
 ﻿using Common;
 using Common.Log;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Common.RabbitMq;
-using MarginTrading.Core;
-using MarginTrading.Core.Settings;
 
 namespace MarginTrading.Services
 {

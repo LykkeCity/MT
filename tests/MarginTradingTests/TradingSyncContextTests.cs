@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using MarginTrading.Core;
-using MarginTrading.Core.Settings;
-using MarginTrading.Core.Telemetry;
+using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Common.Services.Telemetry;
 using MarginTrading.Services.Infrastructure;
 using Moq;
 using NUnit.Framework;

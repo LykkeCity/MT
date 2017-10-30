@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Autofac;
 using Lykke.Service.Session.AutorestClient;
-using MarginTrading.Core;
+using MarginTrading.Backend.Core;
 using NUnit.Framework;
 
 namespace MarginTradingTests

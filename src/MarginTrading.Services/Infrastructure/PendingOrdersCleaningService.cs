@@ -2,8 +2,8 @@
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
-using MarginTrading.Core;
-using MarginTrading.Core.Assets;
+using MarginTrading.Backend.Core;
+using MarginTrading.Services.AssetPairs;
 
 namespace MarginTrading.Services.Infrastructure
 {

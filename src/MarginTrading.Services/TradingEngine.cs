@@ -4,11 +4,11 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Lykke.Common;
-using MarginTrading.Core;
-using MarginTrading.Core.Assets;
-using MarginTrading.Core.Exceptions;
-using MarginTrading.Core.MatchedOrders;
-using MarginTrading.Core.MatchingEngines;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Core.MatchedOrders;
+using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Services.AssetPairs;
 using MarginTrading.Services.Events;
 using MarginTrading.Services.Infrastructure;
 

@@ -1,7 +1,6 @@
 ﻿using System;
+using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Contract.BackendContracts;
-using MarginTrading.Core;
-using MarginTrading.Core.MatchingEngines;
 
 namespace MarginTrading.Backend.Core.Mappers
 {

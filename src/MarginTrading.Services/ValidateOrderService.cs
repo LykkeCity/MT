@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Linq;
-using MarginTrading.Core;
-using MarginTrading.Core.Assets;
-using MarginTrading.Core.Exceptions;
-using MarginTrading.Core.Messages;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Core.Messages;
+using MarginTrading.Services.AssetPairs;
 using MarginTrading.Services.Helpers;
 
 namespace MarginTrading.Services

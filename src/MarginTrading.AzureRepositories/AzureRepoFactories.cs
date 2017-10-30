@@ -1,11 +1,9 @@
-﻿using AzureStorage.Queue;
-using AzureStorage.Tables;
+﻿using AzureStorage.Tables;
 using AzureStorage.Tables.Templates.Index;
 using Common.Log;
 using MarginTrading.AzureRepositories.Clients;
 using MarginTrading.AzureRepositories.Logs;
 using MarginTrading.AzureRepositories.Reports;
-using MarginTrading.AzureRepositories.Settings;
 
 namespace MarginTrading.AzureRepositories
 {
@@ -13,26 +11,12 @@ namespace MarginTrading.AzureRepositories
     {
         public static class Clients
         {
-            public static ClientSettingsRepository CreateTraderSettingsRepository(string connString, ILog log)
-            {
-                return new ClientSettingsRepository(
-                    AzureTableStorage<ClientSettingsEntity>.Create(() => connString, "TraderSettings", log));
-            }
-
             public static ClientsRepository CreateClientsRepository(string connString, ILog log)
             {
                 const string tableName = "Traders";
                 return new ClientsRepository(
                     AzureTableStorage<ClientAccountEntity>.Create(() => connString, tableName, log),
                     AzureTableStorage<AzureIndex>.Create(() => connString, tableName, log));
-            }
-        }
-
-        public static class Settings
-        {
-            public static AppGlobalSettingsRepository CreateAppGlobalSettingsRepository(string connstring, ILog log)
-            {
-                return new AppGlobalSettingsRepository(AzureTableStorage<AppGlobalSettingsEntity>.Create(() => connstring, "Setup", log));
             }
         }
 

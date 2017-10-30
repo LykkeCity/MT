@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MarginTrading.Client.EventArgs;
 using MarginTrading.Contract.ClientContracts;
 
 #pragma warning disable 4014
@@ -12,7 +13,7 @@ namespace MarginTrading.Client.Bot
     class BotTest
     {
         public event EventHandler<LogEventArgs> LogEvent;
-        public event EventHandler<EventArgs> TestFinished;
+        public event EventHandler<System.EventArgs> TestFinished;
 
         readonly List<OperationResult> _operations;
         private string[] _processedScript;
@@ -273,7 +274,7 @@ namespace MarginTrading.Client.Bot
                 IsFinished = true;
                 PrintTestOperations();
                 //script finished
-                OnTestFinished(new EventArgs());            }
+                OnTestFinished(new System.EventArgs());            }
             else
             {
                 Execute(_processedScript[_currentAction]);                
@@ -301,7 +302,7 @@ namespace MarginTrading.Client.Bot
         {
             LogEvent?.Invoke(this, e);
         }
-        private void OnTestFinished(EventArgs e)
+        private void OnTestFinished(System.EventArgs e)
         {
             TestFinished?.Invoke(this, e);
         }

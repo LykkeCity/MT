@@ -26,7 +26,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\MarginTrading.Common\MarginTrading.Common.csproj" />
-    <ProjectReference Include="..\..\MarginTrading.Core\MarginTrading.Core.csproj" />
+    <ProjectReference Include="..\..\MarginTrading.Backend.Core\MarginTrading.Backend.Core.csproj" />
     <ProjectReference Include="..\MarginTrading.BrokerBase\MarginTrading.BrokerBase.csproj" />
   </ItemGroup>
   <ItemGroup>

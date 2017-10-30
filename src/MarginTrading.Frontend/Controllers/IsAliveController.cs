@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
+using MarginTrading.Backend.Core;
 using MarginTrading.Contract.ClientContracts;
-using MarginTrading.Core;
 using MarginTrading.Frontend.Services;
 using MarginTrading.Frontend.Settings;
 using Microsoft.AspNetCore.Mvc;

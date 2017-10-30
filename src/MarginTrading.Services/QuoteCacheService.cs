@@ -5,9 +5,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
-using MarginTrading.Core;
-using MarginTrading.Core.Exceptions;
-using MarginTrading.Core.Messages;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Services.Events;
 
 namespace MarginTrading.Services

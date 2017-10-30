@@ -9,10 +9,14 @@ using Flurl.Http;
 using Lykke.Common;
 using Lykke.Service.Session;
 using MarginTrading.AzureRepositories;
-using MarginTrading.AzureRepositories.Settings;
-using MarginTrading.Core;
-using MarginTrading.Core.Clients;
-using MarginTrading.Core.Settings;
+using MarginTrading.AzureRepositories.Clients;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Clients;
+using MarginTrading.Common.Services;
+using MarginTrading.Common.Settings;
+using MarginTrading.Common.Settings.Repositories;
+using MarginTrading.Common.Settings.Repositories.Azure;
+using MarginTrading.Common.Settings.Repositories.Azure.Entities;
 using MarginTrading.DataReaderClient;
 using MarginTrading.Frontend.Services;
 using MarginTrading.Frontend.Settings;
@@ -62,8 +66,10 @@ namespace MarginTrading.Frontend.Modules
                 .SingleInstance();
 
             builder.Register<IClientSettingsRepository>(ctx =>
-                AzureRepoFactories.Clients.CreateTraderSettingsRepository(_settings.MarginTradingFront.Db.ClientPersonalInfoConnString, LogLocator.CommonLog)
-            ).SingleInstance();
+                new ClientSettingsRepository(
+                    AzureTableStorage<ClientSettingsEntity>.Create(
+                        () => _settings.MarginTradingFront.Db.ClientPersonalInfoConnString, "TraderSettings",
+                        LogLocator.CommonLog)));
 
             builder.Register<IClientAccountsRepository>(ctx =>
                 AzureRepoFactories.Clients.CreateClientsRepository(_settings.MarginTradingFront.Db.ClientPersonalInfoConnString, LogLocator.CommonLog)

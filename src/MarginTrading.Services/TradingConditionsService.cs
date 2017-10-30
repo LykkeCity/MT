@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using MarginTrading.Core;
+using MarginTrading.Backend.Core;
 
 namespace MarginTrading.Services
 {

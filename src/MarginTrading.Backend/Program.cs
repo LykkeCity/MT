@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using MarginTrading.Common.Services;
 using MarginTrading.Services.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 

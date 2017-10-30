@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using MarginTrading.Core;
-using MarginTrading.Core.Helpers;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Helpers;
 using Rocks.Caching;
 
 namespace MarginTrading.DataReader.Services.Implementation

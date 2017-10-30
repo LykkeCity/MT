@@ -2,8 +2,8 @@
 using Autofac;
 using Lykke.Service.Session.AutorestClient;
 using MarginTrading.AzureRepositories;
-using MarginTrading.Core;
-using MarginTrading.Core.Clients;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Clients;
 using MarginTrading.Services;
 using MarginTradingTests.IntegrationTests.Client;
 using Microsoft.Extensions.Configuration;

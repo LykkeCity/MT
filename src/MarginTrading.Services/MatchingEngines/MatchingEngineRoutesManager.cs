@@ -6,9 +6,9 @@ using Autofac;
 using Common;
 using Common.Log;
 using MarginTrading.AzureRepositories.Logs;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Common.Extensions;
-using MarginTrading.Core;
-using MarginTrading.Core.MatchingEngines;
 
 namespace MarginTrading.Services.MatchingEngines
 {

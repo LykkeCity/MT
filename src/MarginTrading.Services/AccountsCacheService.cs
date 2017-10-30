@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using MarginTrading.Core;
-using MarginTrading.Core.Exceptions;
-using MarginTrading.Core.Messages;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Core.Messages;
 
 namespace MarginTrading.Services
 {

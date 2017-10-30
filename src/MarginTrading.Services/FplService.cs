@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using MarginTrading.Core;
-using MarginTrading.Core.MatchedOrders;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.MatchedOrders;
 
 namespace MarginTrading.Services
 {

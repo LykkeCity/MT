@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using Autofac;
-using MarginTrading.Core;
-using MarginTrading.Core.MatchingEngines;
-using MarginTrading.Core.Models;
-using MarginTrading.Core.Settings;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Common.Settings;
+using MarginTrading.Common.Settings.Models;
 using MarginTrading.Frontend.Services;
 using MarginTrading.Services;
 using MarginTrading.Services.Events;

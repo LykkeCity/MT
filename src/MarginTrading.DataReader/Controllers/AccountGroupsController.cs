@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using MarginTrading.Core;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
+using MarginTrading.Backend.Core;
 
 namespace MarginTrading.DataReader.Controllers
 {

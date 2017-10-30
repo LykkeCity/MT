@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.MarketMakerFeed;
+using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Common.Extensions;
-using MarginTrading.Core;
-using MarginTrading.Core.Assets;
-using MarginTrading.Core.MarketMakerFeed;
-using MarginTrading.Core.MatchingEngines;
+using MarginTrading.Services.AssetPairs;
 
 namespace MarginTrading.Services
 {

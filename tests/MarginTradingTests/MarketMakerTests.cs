@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 using Autofac;
-using MarginTrading.Core;
-using MarginTrading.Core.MarketMakerFeed;
-using MarginTrading.Core.MatchingEngines;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Services.Events;
 using NUnit.Framework;
 

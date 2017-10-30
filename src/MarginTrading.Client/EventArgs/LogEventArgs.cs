@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace MarginTrading.Client
+namespace MarginTrading.Client.EventArgs
 {
-    public class LogEventArgs : EventArgs
+    public class LogEventArgs : System.EventArgs
     {
         public LogEventArgs(DateTime date, string origin, string type, string message, Exception exception)
         {

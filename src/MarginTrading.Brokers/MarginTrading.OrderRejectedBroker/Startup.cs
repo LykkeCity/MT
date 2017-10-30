@@ -1,8 +1,8 @@
 ﻿using Autofac;
 using Common.Log;
 using MarginTrading.AzureRepositories;
+using MarginTrading.Backend.Core;
 using MarginTrading.BrokerBase;
-using MarginTrading.Core;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 

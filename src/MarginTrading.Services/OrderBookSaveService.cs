@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
-using MarginTrading.Core;
+using MarginTrading.Backend.Core;
 using MarginTrading.Services.Infrastructure;
 
 namespace MarginTrading.Services

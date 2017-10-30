@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
-using MarginTrading.Core;
-using MarginTrading.Core.Settings;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Settings;
 
 namespace MarginTrading.Services
 {
