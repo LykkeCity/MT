@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MarginTrading.Common.BackendContracts;
-using MarginTrading.Common.Mappers;
-using MarginTrading.Core;
+using MarginTrading.Backend.Core;
+using MarginTrading.Contract.BackendContracts;
 using MarginTrading.DataReader.Helpers;
 using MarginTrading.DataReader.Services;
 using Microsoft.AspNetCore.Authorization;

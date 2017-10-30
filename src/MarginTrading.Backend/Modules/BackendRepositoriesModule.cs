@@ -1,15 +1,18 @@
 ﻿using Autofac;
 using AzureStorage.Tables;
+using AzureStorage.Tables.Templates.Index;
 using Common.Log;
 using MarginTrading.AzureRepositories;
 using MarginTrading.AzureRepositories.Logs;
 using MarginTrading.AzureRepositories.Reports;
-using MarginTrading.Core;
-using MarginTrading.Core.Clients;
-using MarginTrading.Core.MatchingEngines;
-using MarginTrading.Core.Settings;
-using MarginTrading.Services;
-using MarginTrading.Services.MatchingEngines;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Services.MatchingEngines;
+using MarginTrading.Common.Services;
+using MarginTrading.Common.Settings.Repositories;
+using MarginTrading.Common.Settings.Repositories.Azure;
+using MarginTrading.Common.Settings.Repositories.Azure.Entities;
 
 namespace MarginTrading.Backend.Modules
 {
@@ -37,12 +40,16 @@ namespace MarginTrading.Backend.Modules
 		    ).SingleInstance();
 
 			builder.Register<IClientSettingsRepository>(ctx =>
-				AzureRepoFactories.Clients.CreateTraderSettingsRepository(_settings.Db.ClientPersonalInfoConnString, _log)
-			).SingleInstance();
+				new ClientSettingsRepository(
+					AzureTableStorage<ClientSettingsEntity>.Create(
+						() => _settings.Db.ClientPersonalInfoConnString, "TraderSettings", _log)));
 
 			builder.Register<IClientAccountsRepository>(ctx =>
-				AzureRepoFactories.Clients.CreateClientsRepository(_settings.Db.ClientPersonalInfoConnString, _log)
-			).SingleInstance();
+				new ClientsRepository(
+					AzureTableStorage<ClientAccountEntity>.Create(
+						() => _settings.Db.ClientPersonalInfoConnString, "Traders", _log),
+					AzureTableStorage<AzureIndex>.Create(
+						() => _settings.Db.ClientPersonalInfoConnString, "Traders", _log)));
 
 			builder.Register<IMarginTradingAccountsRepository>(ctx =>
 				AzureRepoFactories.MarginTrading.CreateAccountsRepository(_settings.Db.MarginTradingConnString, _log)
@@ -85,8 +92,8 @@ namespace MarginTrading.Backend.Modules
 			).SingleInstance();
 
 			builder.Register<IAppGlobalSettingsRepositry>(ctx =>
-				AzureRepoFactories.Settings.CreateAppGlobalSettingsRepository(_settings.Db.ClientPersonalInfoConnString, _log)
-			).SingleInstance();
+				new AppGlobalSettingsRepository(AzureTableStorage<AppGlobalSettingsEntity>.Create(
+					() => _settings.Db.ClientPersonalInfoConnString, "Setup", _log)));
 
 			builder.Register<IAccountsStatsReportsRepository>(ctx =>
 				AzureRepoFactories.MarginTrading.CreateAccountsStatsReportsRepository(_settings.Db.ReportsConnString, _log)

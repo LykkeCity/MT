@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using MarginTrading.Client.EventArgs;
 
 namespace MarginTrading.Client.Bot
 {
@@ -338,7 +339,7 @@ namespace MarginTrading.Client.Bot
         #endregion
 
         #region Event Handlers
-        private static void BotHost_TestFinished(object sender, EventArgs e)
+        private static void BotHost_TestFinished(object sender, System.EventArgs e)
         {
             FlushLog();
             _isRunningTests = false;

@@ -2,10 +2,11 @@
 using AzureStorage.Tables;
 using Common.Log;
 using MarginTrading.AzureRepositories;
-using MarginTrading.Core;
-using MarginTrading.Core.Clients;
-using MarginTrading.Core.MatchingEngines;
-using MarginTrading.Core.Settings;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Common.Settings.Repositories;
+using MarginTrading.Common.Settings.Repositories.Azure;
+using MarginTrading.Common.Settings.Repositories.Azure.Entities;
 using MarginTrading.DataReader.Settings;
 
 namespace MarginTrading.DataReader.Modules
@@ -28,8 +29,9 @@ namespace MarginTrading.DataReader.Modules
                 .SingleInstance();
 
             builder.Register<IClientSettingsRepository>(ctx =>
-                AzureRepoFactories.Clients.CreateTraderSettingsRepository(_settings.Db.ClientPersonalInfoConnString, _log)
-            ).SingleInstance();
+                new ClientSettingsRepository(
+                    AzureTableStorage<ClientSettingsEntity>.Create(
+                        () => _settings.Db.ClientPersonalInfoConnString, "TraderSettings", _log)));
 
             builder.Register<IMarginTradingAccountsRepository>(ctx =>
                 AzureRepoFactories.MarginTrading.CreateAccountsRepository(_settings.Db.MarginTradingConnString, _log)
@@ -72,8 +74,8 @@ namespace MarginTrading.DataReader.Modules
             ).SingleInstance();
 
             builder.Register<IAppGlobalSettingsRepositry>(ctx =>
-                AzureRepoFactories.Settings.CreateAppGlobalSettingsRepository(_settings.Db.ClientPersonalInfoConnString, _log)
-            ).SingleInstance();
+                new AppGlobalSettingsRepository(AzureTableStorage<AppGlobalSettingsEntity>.Create(
+                    () => _settings.Db.ClientPersonalInfoConnString, "Setup", _log)));
         }
     }
 }

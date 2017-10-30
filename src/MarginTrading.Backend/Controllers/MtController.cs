@@ -5,16 +5,16 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using MarginTrading.Backend.Attributes;
-using MarginTrading.Common.BackendContracts;
-using MarginTrading.Common.Mappers;
-using MarginTrading.Common.Wamp;
-using MarginTrading.Core;
-using MarginTrading.Core.Assets;
-using MarginTrading.Core.Exceptions;
-using MarginTrading.Core.MatchingEngines;
-using MarginTrading.Core.Settings;
-using MarginTrading.Services;
-using MarginTrading.Services.Middleware;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Core.Mappers;
+using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Services;
+using MarginTrading.Backend.Services.AssetPairs;
+using MarginTrading.Common.Middleware;
+using MarginTrading.Common.Services;
+using MarginTrading.Contract.BackendContracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -97,7 +97,7 @@ namespace MarginTrading.Backend.Controllers
 
             var assets = _accountAssetsCacheService.GetClientAssets(accounts);
 
-            var result = InitDataBackendResponse.Create(accounts, assets, _marginSettings.IsLive);
+            var result = BackendContractFactory.CreateInitDataBackendResponse(accounts, assets, _marginSettings.IsLive);
             result.IsLive = _marginSettings.IsLive;
 
             return result;
@@ -112,7 +112,7 @@ namespace MarginTrading.Backend.Controllers
         public InitChartDataBackendResponse InitChardData()
         {
             var chartData = _micrographCacheService.GetGraphData();
-            return InitChartDataBackendResponse.Create(chartData);
+            return BackendContractFactory.CreateInitChartDataBackendResponse(chartData);
         }
 
         [Route("init.accounts")]
@@ -136,7 +136,7 @@ namespace MarginTrading.Backend.Controllers
                 return InitAccountInstrumentsBackendResponse.CreateEmpty();
 
             var accountAssets = _accountAssetsCacheService.GetClientAssets(accounts);
-            var result = InitAccountInstrumentsBackendResponse.Create(accountAssets);
+            var result = BackendContractFactory.CreateInitAccountInstrumentsBackendResponse(accountAssets);
 
             return result;
         }
@@ -154,7 +154,7 @@ namespace MarginTrading.Backend.Controllers
                     .ToDictionary(k => k.Key, v => v.Value);
             }
 
-            return InitChartDataBackendResponse.Create(chartData);
+            return BackendContractFactory.CreateInitChartDataBackendResponse(chartData);
         }
 
         [Route("init.availableassets")]
@@ -216,7 +216,7 @@ namespace MarginTrading.Backend.Controllers
 
             var openPositions = _ordersCache.ActiveOrders.GetOrdersByAccountIds(clientAccountIds).ToList();
 
-            var result = AccountHistoryBackendResponse.Create(accounts, openPositions, orders);
+            var result = BackendContractFactory.CreateAccountHistoryBackendResponse(accounts, openPositions, orders);
 
             return result;
         }
@@ -237,7 +237,7 @@ namespace MarginTrading.Backend.Controllers
             var historyOrders = (await _ordersHistoryRepository.GetHistoryAsync(request.ClientId, clientAccountIds, request.From, request.To))
                 .Where(item => item.Status != OrderStatus.Rejected);
 
-            var result = AccountNewHistoryBackendResponse.Create(accounts, openOrders, historyOrders);
+            var result = BackendContractFactory.CreateAccountNewHistoryBackendResponse(accounts, openOrders, historyOrders);
 
             return result;
         }
@@ -266,7 +266,7 @@ namespace MarginTrading.Backend.Controllers
 
             var placedOrder = await _tradingEngine.PlaceOrderAsync(order);
 
-            var result = OpenOrderBackendResponse.Create(placedOrder);
+            var result = BackendContractFactory.CreateOpenOrderBackendResponse(placedOrder);
 
             _consoleWriter.WriteLine($"action order.place for clientId = {request.ClientId}");
             _operationsLogService.AddLog("action order.place", request.ClientId, request.Order.AccountId, request.ToJson(), result.ToJson());
@@ -368,7 +368,7 @@ namespace MarginTrading.Backend.Controllers
             var positions = _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountIds).ToList();
             var orders = _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(accountIds).ToList();
 
-            var result = ClientOrdersBackendResponse.Create(positions, orders);
+            var result = BackendContractFactory.CreateClientOrdersBackendResponse(positions, orders);
 
             return result;
         }
@@ -411,7 +411,7 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         public OrderbooksBackendResponse GetOrderBooks([FromBody] OrderbooksBackendRequest request)
         {
-            return OrderbooksBackendResponse.Create(_matchingEngine.GetOrderBook(request.Instrument));
+            return BackendContractFactory.CreateOrderbooksBackendResponse(_matchingEngine.GetOrderBook(request.Instrument));
         }
 
         #endregion

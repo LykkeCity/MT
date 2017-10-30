@@ -1,5 +1,5 @@
 ﻿using Autofac;
-using MarginTrading.Services.Events;
+using MarginTrading.Backend.Services.Events;
 using Moq;
 
 namespace MarginTradingTests.Modules

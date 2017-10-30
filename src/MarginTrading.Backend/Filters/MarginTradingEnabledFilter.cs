@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
-using MarginTrading.Core;
-using MarginTrading.Core.Settings;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Rocks.Caching;
 using MarginTrading.Backend.Attributes;
+using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Common.Settings;
 
 namespace MarginTrading.Backend.Filters
 {

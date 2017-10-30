@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Autofac;
-using MarginTrading.Core;
-using MarginTrading.Services;
-using MarginTrading.Services.Events;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Services;
+using MarginTrading.Backend.Services.Events;
 using Moq;
 using NUnit.Framework;
 

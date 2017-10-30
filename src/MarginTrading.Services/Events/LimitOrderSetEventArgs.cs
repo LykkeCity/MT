@@ -1,6 +1,6 @@
-﻿using MarginTrading.Core;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using MarginTrading.Backend.Core;
 
 namespace MarginTrading.Services.Events
 {

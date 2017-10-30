@@ -7,30 +7,29 @@ using MarginTrading.Common.RabbitMq;
 using System.Collections.Generic;
 using System.Linq;
 using Lykke.RabbitMqBroker;
-using MarginTrading.Core;
+using MarginTrading.Contract.BackendContracts;
 using MarginTrading.Public.Settings;
-using Microsoft.Extensions.PlatformAbstractions;
 
 namespace MarginTrading.Public.Services
 {
     public interface IPricesCacheService
     {
-        InstrumentBidAskPair[] GetPrices();
+        InstrumentBidAskPairContract[] GetPrices();
     }
 
     public class PricesCacheService : IPricesCacheService, IStartable, IDisposable
     {
         private readonly MtPublicBaseSettings _settings;
         private readonly ILog _log;
-        private RabbitMqSubscriber<InstrumentBidAskPair> _subscriber;
-        private readonly Dictionary<string, InstrumentBidAskPair> _lastPrices;
+        private RabbitMqSubscriber<InstrumentBidAskPairContract> _subscriber;
+        private readonly Dictionary<string, InstrumentBidAskPairContract> _lastPrices;
 
         public PricesCacheService(MtPublicBaseSettings settings,
             ILog log)
         {
             _settings = settings;
             _log = log;
-            _lastPrices = new Dictionary<string, InstrumentBidAskPair>();
+            _lastPrices = new Dictionary<string, InstrumentBidAskPairContract>();
         }
 
         public void Start()
@@ -46,15 +45,15 @@ namespace MarginTrading.Public.Services
             };
 
             _subscriber =
-                new RabbitMqSubscriber<InstrumentBidAskPair>(settings, new DefaultErrorHandlingStrategy(_log, settings))
-                    .SetMessageDeserializer(new FrontEndDeserializer<InstrumentBidAskPair>())
+                new RabbitMqSubscriber<InstrumentBidAskPairContract>(settings, new DefaultErrorHandlingStrategy(_log, settings))
+                    .SetMessageDeserializer(new FrontEndDeserializer<InstrumentBidAskPairContract>())
                     .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
                     .SetLogger(_log)
                     .Subscribe(ProcessPrice)
                     .Start();
         }
 
-        public InstrumentBidAskPair[] GetPrices()
+        public InstrumentBidAskPairContract[] GetPrices()
         {
             lock (_lastPrices)
             {
@@ -67,17 +66,17 @@ namespace MarginTrading.Public.Services
             _subscriber.Stop();
         }
 
-        private Task ProcessPrice(InstrumentBidAskPair instrumentBidAskPair)
+        private Task ProcessPrice(InstrumentBidAskPairContract instrumentBidAskPair)
         {
             lock (_lastPrices)
             {
-                if (!_lastPrices.ContainsKey(instrumentBidAskPair.Instrument))
+                if (!_lastPrices.ContainsKey(instrumentBidAskPair.Id))
                 {
-                    _lastPrices.Add(instrumentBidAskPair.Instrument, instrumentBidAskPair);
+                    _lastPrices.Add(instrumentBidAskPair.Id, instrumentBidAskPair);
                 }
                 else
                 {
-                    _lastPrices[instrumentBidAskPair.Instrument] = instrumentBidAskPair;
+                    _lastPrices[instrumentBidAskPair.Id] = instrumentBidAskPair;
                 }
             }
 

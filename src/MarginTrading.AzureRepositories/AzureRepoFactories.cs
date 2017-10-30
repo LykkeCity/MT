@@ -1,41 +1,13 @@
-﻿using AzureStorage.Queue;
-using AzureStorage.Tables;
+﻿using AzureStorage.Tables;
 using AzureStorage.Tables.Templates.Index;
 using Common.Log;
-using MarginTrading.AzureRepositories.Clients;
 using MarginTrading.AzureRepositories.Logs;
 using MarginTrading.AzureRepositories.Reports;
-using MarginTrading.AzureRepositories.Settings;
 
 namespace MarginTrading.AzureRepositories
 {
     public class AzureRepoFactories
     {
-        public static class Clients
-        {
-            public static ClientSettingsRepository CreateTraderSettingsRepository(string connString, ILog log)
-            {
-                return new ClientSettingsRepository(
-                    AzureTableStorage<ClientSettingsEntity>.Create(() => connString, "TraderSettings", log));
-            }
-
-            public static ClientsRepository CreateClientsRepository(string connString, ILog log)
-            {
-                const string tableName = "Traders";
-                return new ClientsRepository(
-                    AzureTableStorage<ClientAccountEntity>.Create(() => connString, tableName, log),
-                    AzureTableStorage<AzureIndex>.Create(() => connString, tableName, log));
-            }
-        }
-
-        public static class Settings
-        {
-            public static AppGlobalSettingsRepository CreateAppGlobalSettingsRepository(string connstring, ILog log)
-            {
-                return new AppGlobalSettingsRepository(AzureTableStorage<AppGlobalSettingsEntity>.Create(() => connstring, "Setup", log));
-            }
-        }
-
         public static class MarginTrading
         {
             public static MarginTradingConditionsRepository CreateTradingConditionsRepository(string connstring, ILog log)
@@ -95,12 +67,6 @@ namespace MarginTrading.AzureRepositories
             public static MarginTradingBlobRepository CreateBlobRepository(string connstring)
             {
                 return new MarginTradingBlobRepository(connstring);
-            }
-
-            public static MarginTradingWatchListsRepository CreateWatchListsRepository(string connstring, ILog log)
-            {
-                return new MarginTradingWatchListsRepository(AzureTableStorage<MarginTradingWatchListEntity>.Create(() => connstring,
-                    "MarginTradingWatchLists", log));
             }
 
             public static MatchingEngineRoutesRepository CreateMatchingEngineRoutesRepository(string connstring, ILog log)

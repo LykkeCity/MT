@@ -1,9 +1,9 @@
 ﻿using System.Threading.Tasks;
-using MarginTrading.Common.ClientContracts;
+using MarginTrading.Common.Middleware;
+using MarginTrading.Contract.ClientContracts;
 using MarginTrading.Frontend.Extensions;
 using MarginTrading.Frontend.Models;
 using MarginTrading.Frontend.Services;
-using MarginTrading.Services.Middleware;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

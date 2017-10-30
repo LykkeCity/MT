@@ -1,5 +1,5 @@
-﻿using MarginTrading.Core.Settings;
-using MarginTrading.Core.Telemetry;
+﻿using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Common.Services.Telemetry;
 
 namespace MarginTrading.Services.Infrastructure
 {

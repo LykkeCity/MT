@@ -1,5 +1,6 @@
-﻿using MarginTrading.Common.BackendContracts;
-using MarginTrading.Core;
+﻿using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Mappers;
+using MarginTrading.Contract.BackendContracts;
 
 namespace MarginTrading.DataReader.Helpers
 {
@@ -13,9 +14,9 @@ namespace MarginTrading.DataReader.Helpers
                 AccountId = src.AccountId,
                 Instrument = src.Instrument,
                 AssetAccuracy = src.AssetAccuracy,
-                Type = src.Type,
-                Status = src.Status,
-                CloseReason = src.CloseReason,
+                Type = src.Type.ToType<OrderDirectionContract>(),
+                Status = src.Status.ToType<OrderStatusContract>(),
+                CloseReason = src.CloseReason.ToType<OrderCloseReasonContract>(),
                 OpenDate = src.OpenDate,
                 CloseDate = src.CloseDate,
                 OpenPrice = src.OpenPrice,
@@ -40,9 +41,9 @@ namespace MarginTrading.DataReader.Helpers
                 AccountId = src.AccountId,
                 Instrument = src.Instrument,
                 AssetAccuracy = src.AssetAccuracy,
-                Type = src.Type,
-                Status = OrderStatus.Active,
-                CloseReason = src.CloseReason,
+                Type = src.Type.ToType<OrderDirectionContract>(),
+                Status = OrderStatusContract.Active,
+                CloseReason = src.CloseReason.ToType<OrderCloseReasonContract>(),
                 OpenDate = src.OpenDate,
                 CloseDate = null,
                 OpenPrice = src.OpenPrice,

@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
-using MarginTrading.Common.ClientContracts;
-using MarginTrading.Common.Wamp;
-using MarginTrading.Core;
+using MarginTrading.Common.Services;
+using MarginTrading.Contract.ClientContracts;
 using MarginTrading.Frontend.Services;
 using MarginTrading.Frontend.Settings;
+using MarginTrading.Frontend.Wamp;
 using Microsoft.Extensions.PlatformAbstractions;
 using Newtonsoft.Json;
-using IsAliveResponse = MarginTrading.Common.ClientContracts.IsAliveResponse;
 
 namespace MarginTrading.Frontend
 {

@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
-using MarginTrading.Core.Settings;
-using MarginTrading.Core.Telemetry;
+using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Common.Services.Telemetry;
 using MarginTradingHelpers = MarginTrading.Services.Helpers.MarginTradingHelpers;
 
 namespace MarginTrading.Services.Infrastructure

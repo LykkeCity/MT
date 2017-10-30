@@ -1,6 +1,6 @@
 ﻿using MarginTrading.Common.Documentation;
-using MarginTrading.Common.Wamp;
 using MarginTrading.Frontend.Models;
+using MarginTrading.Frontend.Wamp;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MarginTrading.Frontend.Controllers

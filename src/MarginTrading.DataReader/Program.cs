@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
-using MarginTrading.Services.Infrastructure;
+using MarginTrading.Common.Services;
 using Microsoft.AspNetCore.Hosting;
 
 #pragma warning disable 1591
@@ -34,7 +34,7 @@ namespace MarginTrading.DataReader
                 catch (Exception e)
                 {
                     Console.WriteLine($"Error: {e.Message}{Environment.NewLine}{e.StackTrace}{Environment.NewLine}Restarting...");
-                    LogLocator.CommonLog.WriteFatalErrorAsync(
+                    LogLocator.CommonLog?.WriteFatalErrorAsync(
                         "MT DataReader", "Restart host", $"Attempts left: {restartAttempsLeft}", e);
                     restartAttempsLeft--;
                     Console.WriteLine($"Error: {e.Message}{Environment.NewLine}Restarting...");

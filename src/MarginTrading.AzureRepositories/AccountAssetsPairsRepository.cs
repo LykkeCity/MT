@@ -2,8 +2,8 @@
 using System.Linq;
 using System.Threading.Tasks;
 using AzureStorage;
-using MarginTrading.Core;
-using MarginTrading.Core.Settings;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Settings;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace MarginTrading.AzureRepositories

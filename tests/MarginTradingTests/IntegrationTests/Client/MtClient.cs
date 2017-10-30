@@ -4,8 +4,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Lykke.Service.Session.AutorestClient;
 using Lykke.Service.Session.AutorestClient.Models;
-using MarginTrading.Common.ClientContracts;
-using MarginTrading.Common.Wamp;
+using MarginTrading.Contract.ClientContracts;
+using MarginTrading.Frontend.Wamp;
 using WampSharp.V2;
 using WampSharp.V2.Client;
 

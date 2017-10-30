@@ -5,12 +5,14 @@ using System.Text;
 using System.Threading.Tasks;
 using Common.Log;
 using Lykke.RabbitMqBroker.Subscriber;
-using MarginTrading.Core;
-using MarginTrading.Core.MarketMakerFeed;
-using MarginTrading.Core.MatchingEngines;
-using MarginTrading.Core.Settings;
-using MarginTrading.Services.Infrastructure;
-using MarginTrading.Services.MatchingEngines;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.MarketMakerFeed;
+using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Services.Infrastructure;
+using MarginTrading.Backend.Services.MatchingEngines;
+using MarginTrading.Common.RabbitMq;
+using MarginTrading.Common.Services;
 using Newtonsoft.Json;
 
 #pragma warning disable 1591

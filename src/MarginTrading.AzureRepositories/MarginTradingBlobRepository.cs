@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using AzureStorage.Blob;
 using Common;
-using MarginTrading.Core;
+using MarginTrading.Backend.Core;
 using Newtonsoft.Json;
 
 namespace MarginTrading.AzureRepositories

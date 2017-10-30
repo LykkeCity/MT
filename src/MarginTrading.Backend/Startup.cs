@@ -6,26 +6,26 @@ using Autofac.Extensions.DependencyInjection;
 using AzureStorage.Tables;
 using Common.Log;
 using Flurl.Http;
+using Lykke.AzureQueueIntegration;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Filters;
 using MarginTrading.Backend.Infrastructure;
 using MarginTrading.Backend.Middleware;
 using MarginTrading.Backend.Modules;
+using MarginTrading.Backend.Services;
+using MarginTrading.Backend.Services.Infrastructure;
+using MarginTrading.Backend.Services.MatchingEngines;
+using MarginTrading.Backend.Services.Modules;
+using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Json;
-using MarginTrading.Core;
-using MarginTrading.Core.MatchingEngines;
-using MarginTrading.Core.Settings;
-using MarginTrading.Services;
-using MarginTrading.Services.Infrastructure;
-using MarginTrading.Services.MatchingEngines;
-using MarginTrading.Services.Middleware;
-using MarginTrading.Services.Modules;
-using MarginTrading.Services.Notifications;
-using MarginTrading.Services.Settings;
+using MarginTrading.Common.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -175,9 +175,14 @@ namespace MarginTrading.Backend
         {
             var consoleLogger = new LogToConsole();
 
+            var azureQueue = new AzureQueueSettings
+            {
+                ConnectionString = mtSettings.SlackNotifications.AzureQueue.ConnectionString,
+                QueueName = mtSettings.SlackNotifications.AzureQueue.QueueName
+            };
+            
             var commonSlackService =
-                services.UseSlackNotificationsSenderViaAzureQueue(mtSettings.SlackNotifications.AzureQueue,
-                    consoleLogger);
+                services.UseSlackNotificationsSenderViaAzureQueue(azureQueue, consoleLogger);
 
             var slackService =
                 new MtSlackNotificationsSender(commonSlackService, "MT Backend", settings.Env);

@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
-using MarginTrading.Common.BackendContracts;
-using MarginTrading.Core;
-using MarginTrading.Services.Infrastructure;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Services.Infrastructure;
+using MarginTrading.Contract.BackendContracts;
 using Microsoft.AspNetCore.Http;
 
 namespace MarginTrading.Backend.Middleware

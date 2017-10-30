@@ -4,11 +4,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Common;
-using MarginTrading.Common.ClientContracts;
+using MarginTrading.Client.Wamp;
+using MarginTrading.Contract.BackendContracts;
+using MarginTrading.Contract.ClientContracts;
 using WampSharp.V2;
 using WampSharp.V2.Client;
-using MarginTrading.Common.Wamp;
-using MarginTrading.Core;
 using Microsoft.Extensions.Configuration;
 
 namespace MarginTrading.Client
@@ -143,7 +143,7 @@ namespace MarginTrading.Client
                     Order = new NewOrderClientContract
                     {
                         AccountId = data.Demo.Accounts[0].Id,
-                        FillType = OrderFillType.FillOrKill,
+                        FillType = OrderFillTypeContract.FillOrKill,
                         Instrument = "BTCUSD",
                         Volume = 1
                     }
@@ -279,10 +279,10 @@ namespace MarginTrading.Client
         public void Prices(string instrument = null)
         {
             var topicName = !string.IsNullOrEmpty(instrument) ? $"prices.update.{instrument}" : "prices.update";
-            IDisposable subscription = _realmProxy.Services.GetSubject<InstrumentBidAskPair>(topicName)
+            IDisposable subscription = _realmProxy.Services.GetSubject<InstrumentBidAskPairContract>(topicName)
                 .Subscribe(info =>
                 {
-                    Console.WriteLine($"{info.Instrument} {info.Bid}/{info.Ask}");
+                    Console.WriteLine($"{info.Id} {info.Bid}/{info.Ask}");
                 });
 
 

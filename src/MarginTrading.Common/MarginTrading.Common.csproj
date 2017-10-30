@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>MarginTrading.Common</AssemblyName>
     <PackageId>MarginTrading.Common</PackageId>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
@@ -9,11 +9,10 @@
     <Version>1.0.1</Version>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MarginTrading.Core\MarginTrading.Core.csproj" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="Flurl.Http" Version="1.1.2" />
     <PackageReference Include="JetBrains.Annotations" Version="11.0.0" />
+    <PackageReference Include="Lykke.SlackNotifications" Version="1.0.11" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.1.1" />
     <PackageReference Include="SuperSocket.ClientEngine" Version="0.8.0.13" />
     <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
     <PackageReference Include="Lykke.WampSharp" Version="0.27.36" />

@@ -1,4 +1,4 @@
-﻿using MarginTrading.Services.Helpers;
+﻿using MarginTrading.Backend.Services.Helpers;
 using NUnit.Framework;
 
 namespace MarginTradingTests

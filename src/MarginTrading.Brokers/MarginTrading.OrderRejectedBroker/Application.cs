@@ -1,13 +1,13 @@
 ﻿using System.Threading.Tasks;
 using Common.Log;
 using Lykke.RabbitMqBroker.Subscriber;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Mappers;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.BrokerBase;
 using MarginTrading.BrokerBase.Settings;
-using MarginTrading.Common.BackendContracts;
-using MarginTrading.Common.Mappers;
 using MarginTrading.Common.RabbitMq;
-using MarginTrading.Core;
-using MarginTrading.Core.Settings;
+using MarginTrading.Contract.BackendContracts;
 
 namespace MarginTrading.OrderRejectedBroker
 {
