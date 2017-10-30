@@ -1,6 +1,7 @@
 ﻿using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Common.Services;
 using MarginTrading.Contract.BackendContracts;
 using Microsoft.AspNetCore.Mvc;
 

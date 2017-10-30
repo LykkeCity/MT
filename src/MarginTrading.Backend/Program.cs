@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using MarginTrading.Common.Services;
-using MarginTrading.Services.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 
 #pragma warning disable 1591

@@ -3,8 +3,8 @@ using System;
 using Autofac;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
-using MarginTrading.Services;
-using MarginTrading.Services.MatchingEngines;
+using MarginTrading.Backend.Services;
+using MarginTrading.Backend.Services.MatchingEngines;
 
 namespace MarginTradingTests
 {

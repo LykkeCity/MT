@@ -9,10 +9,10 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MarketMakerFeed;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Services.Infrastructure;
+using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
-using MarginTrading.Services.Infrastructure;
-using MarginTrading.Services.MatchingEngines;
 using Newtonsoft.Json;
 
 #pragma warning disable 1591

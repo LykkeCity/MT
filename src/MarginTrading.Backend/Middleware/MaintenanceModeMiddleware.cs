@@ -3,8 +3,8 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Contract.BackendContracts;
-using MarginTrading.Services.Infrastructure;
 using Microsoft.AspNetCore.Http;
 
 namespace MarginTrading.Backend.Middleware

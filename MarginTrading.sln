@@ -23,7 +23,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.Public", "src
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.Backend", "src\MarginTrading.Backend\MarginTrading.Backend.csproj", "{E6A712C9-78F1-4573-B3A4-318FA4A6BA0D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.Services", "src\MarginTrading.Services\MarginTrading.Services.csproj", "{5030E6AA-4DDE-41EC-AE8A-609C2D7D5D37}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.Backend.Services", "src\MarginTrading.Backend.Services\MarginTrading.Backend.Services.csproj", "{5030E6AA-4DDE-41EC-AE8A-609C2D7D5D37}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTradingTests", "tests\MarginTradingTests\MarginTradingTests.csproj", "{AFC440C0-68F0-447F-9C04-7614E6323B22}"
 EndProject

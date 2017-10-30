@@ -3,8 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Settings;
-using MarginTrading.Services;
-using MarginTrading.Services.AssetPairs;
+using MarginTrading.Backend.Services.AssetPairs;
+using MarginTrading.Common.Services;
 using Moq;
 using NUnit.Framework;
 

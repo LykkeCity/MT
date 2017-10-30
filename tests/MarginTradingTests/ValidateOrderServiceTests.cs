@@ -2,8 +2,8 @@
 using Autofac;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
-using MarginTrading.Services;
-using MarginTrading.Services.Events;
+using MarginTrading.Backend.Services;
+using MarginTrading.Backend.Services.Events;
 using NUnit.Framework;
 
 namespace MarginTradingTests

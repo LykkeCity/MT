@@ -4,8 +4,8 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using MarginTrading.Common.Extensions;
+using MarginTrading.Common.Helpers;
 using MarginTrading.Contract.BackendContracts;
-using MarginTrading.Services.Helpers;
 using Microsoft.AspNetCore.Http;
 
 namespace MarginTrading.Backend.Middleware

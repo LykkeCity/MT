@@ -2,7 +2,6 @@
 using MarginTrading.Common.Settings;
 using MarginTrading.Common.Settings.Models;
 using MarginTrading.Common.Settings.Repositories;
-using MarginTrading.Services;
 using MarginTradingTests.Helpers;
 using Moq;
 using NUnit.Framework;

@@ -2,7 +2,6 @@
 using AzureStorage.Tables;
 using Common.Log;
 using MarginTrading.AzureRepositories;
-using MarginTrading.AzureRepositories.Clients;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Common.Settings.Repositories;

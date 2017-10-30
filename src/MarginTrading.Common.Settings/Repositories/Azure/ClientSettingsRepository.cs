@@ -5,6 +5,7 @@ using MarginTrading.Common.Settings.Repositories.Azure.Entities;
 
 namespace MarginTrading.Common.Settings.Repositories.Azure
 {
+	//TODO: use http://client-account.lykke-service.svc.cluster.local/swagger/ui/index.html
 	public class ClientSettingsRepository : IClientSettingsRepository
 	{
 		private readonly INoSQLTableStorage<ClientSettingsEntity> _tableStorage;

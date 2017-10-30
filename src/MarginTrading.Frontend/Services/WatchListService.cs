@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MarginTrading.Backend.Core;
 using MarginTrading.Common.Settings;
 using MarginTrading.Contract.BackendContracts;
+using MarginTrading.Frontend.Repositories;
 
 namespace MarginTrading.Frontend.Services
 {

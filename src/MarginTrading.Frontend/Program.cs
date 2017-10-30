@@ -2,7 +2,6 @@
 using System.IO;
 using System.Threading;
 using MarginTrading.Common.Services;
-using MarginTrading.Services.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 
 namespace MarginTrading.Frontend

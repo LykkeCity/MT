@@ -1,6 +1,7 @@
 ﻿using System;
 using Lykke.SettingsReader.Attributes;
 using MarginTrading.Common.RabbitMq;
+using MarginTrading.Common.Settings;
 
 namespace MarginTrading.Backend.Core.Settings
 {
@@ -75,11 +76,6 @@ namespace MarginTrading.Backend.Core.Settings
         public RabbitMqQueueInfo AccountStopout { get; set; }
         public RabbitMqQueueInfo UserUpdates { get; set; }
         public RabbitMqQueueInfo AccountMarginEvents { get; set; }
-    }
-
-    public class RabbitMqQueueInfo
-    {
-        public string ExchangeName { get; set; }
     }
 
     public class ScheduleSettings

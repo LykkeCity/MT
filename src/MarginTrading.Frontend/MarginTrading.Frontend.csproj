@@ -19,10 +19,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MarginTrading.Common.Settings\MarginTrading.Common.Settings.csproj" />
     <ProjectReference Include="..\MarginTrading.Common\MarginTrading.Common.csproj" />
     <ProjectReference Include="..\MarginTrading.Contract\MarginTrading.Contract.csproj" />
-    <ProjectReference Include="..\MarginTrading.Services\MarginTrading.Services.csproj" />
-    <ProjectReference Include="..\MarginTrading.AzureRepositories\MarginTrading.AzureRepositories.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AspNet.Security.OpenIdConnect.Extensions" Version="1.0.0" />

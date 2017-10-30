@@ -12,12 +12,13 @@ using MarginTrading.Frontend.Services;
 using Microsoft.Rest;
 using Moq;
 using WampSharp.V2.Realm;
-using IAppNotifications = MarginTrading.Services.Notifications.IAppNotifications;
+using IAppNotifications = MarginTrading.Backend.Services.Notifications.IAppNotifications;
 using Lykke.Service.Session;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Clients;
+using MarginTrading.Common.Services;
+using MarginTrading.Common.Settings;
 using MarginTrading.Common.Settings.Models;
-using MarginTrading.Services;
+using MarginTrading.Common.Settings.Repositories;
 
 namespace MarginTradingTests.Modules
 {

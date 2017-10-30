@@ -4,13 +4,14 @@ using Autofac;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Services;
+using MarginTrading.Backend.Services.Events;
+using MarginTrading.Backend.Services.MatchingEngines;
+using MarginTrading.Backend.Services.Modules;
+using MarginTrading.Common.Services;
 using MarginTrading.Common.Settings;
 using MarginTrading.Common.Settings.Models;
 using MarginTrading.Frontend.Services;
-using MarginTrading.Services;
-using MarginTrading.Services.Events;
-using MarginTrading.Services.MatchingEngines;
-using MarginTrading.Services.Modules;
 using MarginTradingTests.Modules;
 using Moq;
 
@@ -79,6 +80,10 @@ namespace MarginTradingTests
                 .As<IMarginTradingOperationsLogService>()
                 .SingleInstance();
             builder.RegisterInstance(settings).SingleInstance();
+            
+            builder.RegisterType<ClientTokenService>()
+                .As<IClientTokenService>()
+                .SingleInstance();
 
             builder.RegisterBuildCallback(c => c.Resolve<AccountAssetsManager>());
             builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());

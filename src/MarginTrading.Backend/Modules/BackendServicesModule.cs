@@ -10,15 +10,17 @@ using Lykke.RabbitMqBroker.Subscriber;
 using MarginTrading.Backend.Email;
 using MarginTrading.Backend.Middleware.Validator;
 using MarginTrading.Common.RabbitMq;
-using MarginTrading.Services;
-using MarginTrading.Services.Events;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.PlatformAbstractions;
 using Lykke.Service.EmailSender;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Settings;
-using MarginTrading.Services.Infrastructure;
-using MarginTrading.Services.Settings;
+using MarginTrading.Backend.Services;
+using MarginTrading.Backend.Services.Events;
+using MarginTrading.Backend.Services.Infrastructure;
+using MarginTrading.Backend.Services.Settings;
+using MarginTrading.Common.Services;
+using MarginTrading.Common.Settings;
 
 namespace MarginTrading.Backend.Modules
 {

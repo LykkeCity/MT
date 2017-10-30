@@ -34,7 +34,7 @@ namespace MarginTrading.DataReader
                 catch (Exception e)
                 {
                     Console.WriteLine($"Error: {e.Message}{Environment.NewLine}{e.StackTrace}{Environment.NewLine}Restarting...");
-                    LogLocator.CommonLog.WriteFatalErrorAsync(
+                    LogLocator.CommonLog?.WriteFatalErrorAsync(
                         "MT DataReader", "Restart host", $"Attempts left: {restartAttempsLeft}", e);
                     restartAttempsLeft--;
                     Console.WriteLine($"Error: {e.Message}{Environment.NewLine}Restarting...");

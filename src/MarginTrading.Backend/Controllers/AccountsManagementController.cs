@@ -3,11 +3,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
+using MarginTrading.Backend.Services;
 using MarginTrading.Common.Extensions;
+using MarginTrading.Common.Middleware;
+using MarginTrading.Common.Services;
 using MarginTrading.Contract.BackendContracts;
 using MarginTrading.Contract.BackendContracts.AccountsManagement;
-using MarginTrading.Services;
-using MarginTrading.Services.Middleware;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

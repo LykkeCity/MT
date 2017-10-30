@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Common.Middleware;
 using MarginTrading.Contract.BackendContracts;
-using MarginTrading.Services.Middleware;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

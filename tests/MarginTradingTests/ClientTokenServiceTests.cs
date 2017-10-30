@@ -2,6 +2,7 @@
 using Autofac;
 using Lykke.Service.Session.AutorestClient;
 using MarginTrading.Backend.Core;
+using MarginTrading.Frontend.Services;
 using NUnit.Framework;
 
 namespace MarginTradingTests
@@ -9,14 +10,12 @@ namespace MarginTradingTests
     public class ClientTokenServiceTests : BaseTests
     {
         private IClientTokenService _clientTokenService;
-        private ISessionService _sessionService;
 
         [OneTimeSetUp]
         public void SetUp()
         {
             RegisterDependencies();
             _clientTokenService = Container.Resolve<IClientTokenService>();
-            _sessionService = Container.Resolve<ISessionService>();
         }
 
         [Test]

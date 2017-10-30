@@ -1,34 +1,27 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Autofac;
+﻿using Autofac;
 using AzureStorage.Tables;
+using AzureStorage.Tables.Templates.Index;
 using Common.Log;
 using Flurl.Http;
 using Lykke.Common;
 using Lykke.Service.Session;
-using MarginTrading.AzureRepositories;
-using MarginTrading.AzureRepositories.Clients;
-using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Clients;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Settings;
 using MarginTrading.Common.Settings.Repositories;
 using MarginTrading.Common.Settings.Repositories.Azure;
 using MarginTrading.Common.Settings.Repositories.Azure.Entities;
 using MarginTrading.DataReaderClient;
+using MarginTrading.Frontend.Repositories;
 using MarginTrading.Frontend.Services;
 using MarginTrading.Frontend.Settings;
 using MarginTrading.Frontend.Wamp;
-using MarginTrading.Services;
-using MarginTrading.Services.Infrastructure;
 using Microsoft.Extensions.PlatformAbstractions;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.Rest;
 using Rocks.Caching;
 using WampSharp.V2;
 using WampSharp.V2.Realm;
+using MarginTradingOperationsLogRepository = MarginTrading.Frontend.Repositories.MarginTradingOperationsLogRepository;
+using OperationLogEntity = MarginTrading.Frontend.Repositories.OperationLogEntity;
 
 namespace MarginTrading.Frontend.Modules
 {
@@ -71,19 +64,27 @@ namespace MarginTrading.Frontend.Modules
                         () => _settings.MarginTradingFront.Db.ClientPersonalInfoConnString, "TraderSettings",
                         LogLocator.CommonLog)));
 
-            builder.Register<IClientAccountsRepository>(ctx =>
-                AzureRepoFactories.Clients.CreateClientsRepository(_settings.MarginTradingFront.Db.ClientPersonalInfoConnString, LogLocator.CommonLog)
-            ).SingleInstance();
 
+
+            builder.Register<IClientAccountsRepository>(ctx =>
+                new ClientsRepository(
+                    AzureTableStorage<ClientAccountEntity>.Create(
+                        () => _settings.MarginTradingFront.Db.ClientPersonalInfoConnString, "Traders",
+                        LogLocator.CommonLog),
+                    AzureTableStorage<AzureIndex>.Create(
+                        () => _settings.MarginTradingFront.Db.ClientPersonalInfoConnString, "Traders",
+                        LogLocator.CommonLog)));
+                
             builder.Register<IAppGlobalSettingsRepositry>(ctx =>
                 new AppGlobalSettingsRepository(AzureTableStorage<AppGlobalSettingsEntity>.Create(
                     () => _settings.MarginTradingFront.Db.ClientPersonalInfoConnString, "Setup", LogLocator.CommonLog))
             ).SingleInstance();
 
             builder.Register<IMarginTradingWatchListRepository>(ctx =>
-               AzureRepoFactories.MarginTrading.CreateWatchListsRepository(_settings.MarginTradingFront.Db.MarginTradingConnString, LogLocator.CommonLog)
-           ).SingleInstance();
-
+                new MarginTradingWatchListsRepository(AzureTableStorage<MarginTradingWatchListEntity>.Create(
+                    () => _settings.MarginTradingFront.Db.MarginTradingConnString,
+                    "MarginTradingWatchLists", LogLocator.CommonLog)));
+                
             builder.RegisterType<WatchListService>()
                 .As<IWatchListService>()
                 .SingleInstance();

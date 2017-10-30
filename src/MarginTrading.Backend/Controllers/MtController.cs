@@ -10,10 +10,11 @@ using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Services;
+using MarginTrading.Backend.Services.AssetPairs;
+using MarginTrading.Common.Middleware;
+using MarginTrading.Common.Services;
 using MarginTrading.Contract.BackendContracts;
-using MarginTrading.Services;
-using MarginTrading.Services.AssetPairs;
-using MarginTrading.Services.Middleware;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

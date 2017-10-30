@@ -1,7 +1,7 @@
 ﻿using System;
 using Autofac;
 using MarginTrading.Backend.Core;
-using MarginTrading.Services.Events;
+using MarginTrading.Backend.Services.Events;
 using NUnit.Framework;
 
 namespace MarginTradingTests

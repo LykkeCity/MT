@@ -1,19 +1,18 @@
 ﻿using Autofac;
 using AzureStorage.Tables;
+using AzureStorage.Tables.Templates.Index;
 using Common.Log;
 using MarginTrading.AzureRepositories;
-using MarginTrading.AzureRepositories.Clients;
 using MarginTrading.AzureRepositories.Logs;
 using MarginTrading.AzureRepositories.Reports;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Clients;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Services.MatchingEngines;
+using MarginTrading.Common.Services;
 using MarginTrading.Common.Settings.Repositories;
 using MarginTrading.Common.Settings.Repositories.Azure;
 using MarginTrading.Common.Settings.Repositories.Azure.Entities;
-using MarginTrading.Services;
-using MarginTrading.Services.MatchingEngines;
 
 namespace MarginTrading.Backend.Modules
 {
@@ -46,8 +45,11 @@ namespace MarginTrading.Backend.Modules
 						() => _settings.Db.ClientPersonalInfoConnString, "TraderSettings", _log)));
 
 			builder.Register<IClientAccountsRepository>(ctx =>
-				AzureRepoFactories.Clients.CreateClientsRepository(_settings.Db.ClientPersonalInfoConnString, _log)
-			).SingleInstance();
+				new ClientsRepository(
+					AzureTableStorage<ClientAccountEntity>.Create(
+						() => _settings.Db.ClientPersonalInfoConnString, "Traders", _log),
+					AzureTableStorage<AzureIndex>.Create(
+						() => _settings.Db.ClientPersonalInfoConnString, "Traders", _log)));
 
 			builder.Register<IMarginTradingAccountsRepository>(ctx =>
 				AzureRepoFactories.MarginTrading.CreateAccountsRepository(_settings.Db.MarginTradingConnString, _log)

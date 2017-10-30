@@ -25,7 +25,7 @@
     <ProjectReference Include="..\MarginTrading.Common\MarginTrading.Common.csproj" />
     <ProjectReference Include="..\MarginTrading.AzureRepositories\MarginTrading.AzureRepositories.csproj" />
     <ProjectReference Include="..\MarginTrading.Contract\MarginTrading.Contract.csproj" />
-    <ProjectReference Include="..\MarginTrading.Services\MarginTrading.Services.csproj" />
+    <ProjectReference Include="..\MarginTrading.Backend.Services\MarginTrading.Backend.Services.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="11.0.0" />

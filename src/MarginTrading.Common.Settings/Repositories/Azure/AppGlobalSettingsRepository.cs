@@ -56,8 +56,4 @@ namespace MarginTrading.Common.Settings.Repositories.Azure
         }
 
     }
-
-
-
-
 }
