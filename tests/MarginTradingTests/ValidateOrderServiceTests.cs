@@ -63,12 +63,12 @@ namespace MarginTradingTests
         }
 
         [Test]
-        [TestCase(1, true)]
-        [TestCase(-1, true)]
         [TestCase(2, true)]
         [TestCase(-2, true)]
         [TestCase(3, false)]
-        [TestCase(-3, false)]
+        [TestCase(-3, true)]
+        [TestCase(10, false)]
+        [TestCase(-10, true)]
         public void Is_Summary_Volume_Ivalid(decimal volume, bool isValid)
         {
             const string instrument = "BTCUSD";
@@ -83,7 +83,7 @@ namespace MarginTradingTests
                 AccountId = Accounts[0].Id,
                 ClientId = Accounts[0].ClientId,
                 Instrument = instrument,
-                Volume = 49,
+                Volume = 110,
                 FillType = OrderFillType.FillOrKill
             };
 
@@ -94,7 +94,7 @@ namespace MarginTradingTests
                 AccountId = Accounts[0].Id,
                 ClientId = Accounts[0].ClientId,
                 Instrument = instrument,
-                Volume = -49,
+                Volume = -12,
                 FillType = OrderFillType.FillOrKill
             };
 

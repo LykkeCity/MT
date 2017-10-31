@@ -209,9 +209,9 @@ namespace MarginTrading.Backend.Services
 
         public void ValidateInstrumentPositionVolume(IAccountAssetPair assetPair, Order order)
         {
-            var existingPositionsVolume = _ordersCache.ActiveOrders.GetOrdersByInstrumentAndAccount(assetPair.Instrument, order.AccountId).Sum(o => Math.Abs(o.Volume));
+            var existingPositionsVolume = _ordersCache.ActiveOrders.GetOrdersByInstrumentAndAccount(assetPair.Instrument, order.AccountId).Sum(o => o.Volume);
 
-            if (assetPair.PositionLimit > 0 && existingPositionsVolume + Math.Abs(order.Volume) > assetPair.PositionLimit)
+            if (assetPair.PositionLimit > 0 && Math.Abs(existingPositionsVolume + order.Volume) > assetPair.PositionLimit)
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidVolume,
                     $"Margin Trading is in beta testing. The volume of the net open position is temporarily limited to {assetPair.PositionLimit} {assetPair.Instrument}. Thank you for using Lykke Margin Trading, the limit will be cancelled soon!");
