@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <PreserveCompilationContext>true</PreserveCompilationContext>
@@ -8,22 +7,19 @@
     <PackageId>MarginTrading.Public</PackageId>
     <Version>1.0.1</Version>
   </PropertyGroup>
-
   <ItemGroup>
     <None Update="Dockerfile">
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
   </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\MarginTrading.Common\MarginTrading.Common.csproj" />
-    <ProjectReference Include="..\MarginTrading.AzureRepositories\MarginTrading.AzureRepositories.csproj" />
+    <ProjectReference Include="..\MarginTrading.Contract\MarginTrading.Contract.csproj" />
   </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="Lykke.Common.ApiLibrary" Version="1.0.12" />
     <PackageReference Include="Lykke.Logs" Version="1.0.33" />
-    <PackageReference Include="Lykke.SettingsReader" Version="1.0.39" />
+    <PackageReference Include="Lykke.SettingsReader" Version="1.0.42" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="2.0.0" />
@@ -46,6 +42,4 @@
     <PackageReference Include="Lykke.RabbitMqBroker" Version="1.0.80" />
     <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
   </ItemGroup>
-
-
 </Project>

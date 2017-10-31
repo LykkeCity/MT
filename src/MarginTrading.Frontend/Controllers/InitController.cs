@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MarginTrading.Common.ClientContracts;
-using MarginTrading.Core;
+using MarginTrading.Common.Services;
+using MarginTrading.Contract.ClientContracts;
 using MarginTrading.Frontend.Extensions;
 using MarginTrading.Frontend.Models;
 using MarginTrading.Frontend.Services;

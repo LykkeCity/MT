@@ -1,16 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <Version>1.0.1</Version>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="flurl.http" Version="1.2.0" />
     <PackageReference Include="JetBrains.Annotations" Version="11.0.0" />
     <PackageReference Include="Lykke.Logs" Version="1.0.33" />
     <PackageReference Include="Lykke.RabbitMqBroker" Version="1.0.80" />
-    <PackageReference Include="Lykke.SettingsReader" Version="1.0.39" />
+    <PackageReference Include="Lykke.SettingsReader" Version="1.0.42" />
     <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="1.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.0.0" />
     <PackageReference Include="microsoft.aspnetcore.mvc" Version="2.0.0" />
@@ -20,5 +18,4 @@
     <PackageReference Include="microsoft.extensions.logging.console" Version="2.0.0" />
     <PackageReference Include="microsoft.extensions.logging.debug" Version="2.0.0" />
   </ItemGroup>
-
 </Project>

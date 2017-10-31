@@ -8,17 +8,17 @@ using Common.Log;
 using Lykke.Common;
 using Lykke.Service.Session.AutorestClient;
 using Lykke.Service.Session.AutorestClient.Models;
-using MarginTrading.Core;
-using MarginTrading.Core.Clients;
-using MarginTrading.Core.Notifications;
 using MarginTrading.Frontend.Services;
 using Microsoft.Rest;
 using Moq;
 using WampSharp.V2.Realm;
-using IAppNotifications = MarginTrading.Services.Notifications.IAppNotifications;
+using IAppNotifications = MarginTrading.Backend.Services.Notifications.IAppNotifications;
 using Lykke.Service.Session;
-using MarginTrading.Core.Models;
-using MarginTrading.Services;
+using MarginTrading.Backend.Core;
+using MarginTrading.Common.Services;
+using MarginTrading.Common.Settings;
+using MarginTrading.Common.Settings.Models;
+using MarginTrading.Common.Settings.Repositories;
 
 namespace MarginTradingTests.Modules
 {

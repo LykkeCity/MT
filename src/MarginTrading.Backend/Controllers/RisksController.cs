@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using MarginTrading.Common.BackendContracts;
-using MarginTrading.Common.Mappers;
-using MarginTrading.Core;
-using MarginTrading.Core.Settings;
-using MarginTrading.Services.Middleware;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Mappers;
+using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Common.Middleware;
+using MarginTrading.Contract.BackendContracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

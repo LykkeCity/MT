@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using MarginTrading.Core;
 using Rocks.Caching;
 using System.Linq;
+using MarginTrading.Backend.Core;
 
 namespace MarginTrading.DataReader.Services.Implementation
 {

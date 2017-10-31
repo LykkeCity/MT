@@ -2,46 +2,33 @@ using System;
 using System.IO;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
-using AzureStorage.Tables;
 using Common.Log;
 using Flurl.Http;
-using Lykke.Common;
+using Lykke.AzureQueueIntegration;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
 using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Subscriber;
-using Lykke.Service.Session;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
-using MarginTrading.AzureRepositories;
-using MarginTrading.AzureRepositories.Settings;
-using MarginTrading.Common.BackendContracts;
-using MarginTrading.Common.ClientContracts;
 using MarginTrading.Common.Json;
 using MarginTrading.Common.RabbitMq;
-using MarginTrading.Common.RabbitMqMessageModels;
-using MarginTrading.Common.Wamp;
-using MarginTrading.Core;
-using MarginTrading.Core.Clients;
-using MarginTrading.Core.Settings;
+using MarginTrading.Common.Services;
+using MarginTrading.Contract.BackendContracts;
+using MarginTrading.Contract.ClientContracts;
+using MarginTrading.Contract.RabbitMqMessageModels;
 using MarginTrading.Frontend.Infrastructure;
 using MarginTrading.Frontend.Middleware;
 using MarginTrading.Frontend.Modules;
-using MarginTrading.Frontend.Services;
 using MarginTrading.Frontend.Settings;
-using MarginTrading.Services;
-using MarginTrading.Services.Infrastructure;
-using MarginTrading.Services.Notifications;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.PlatformAbstractions;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
-using Rocks.Caching;
 using WampSharp.AspNetCore.WebSockets.Server;
 using WampSharp.Binding;
 using WampSharp.V2;
@@ -214,9 +201,9 @@ namespace MarginTrading.Frontend
             };
 
             MarginTradingBackendServiceLocator.SubscriberPrices =
-                new RabbitMqSubscriber<InstrumentBidAskPair>(pricesSettings,
+                new RabbitMqSubscriber<BidAskPairRabbitMqContract>(pricesSettings,
                         new DefaultErrorHandlingStrategy(log, pricesSettings))
-                    .SetMessageDeserializer(new FrontEndDeserializer<InstrumentBidAskPair>())
+                    .SetMessageDeserializer(new FrontEndDeserializer<BidAskPairRabbitMqContract>())
                     .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
                     .SetLogger(log)
                     .SetConsole(consoleWriter)
@@ -388,9 +375,14 @@ namespace MarginTrading.Frontend
         {
             var consoleLogger = new LogToConsole();
 
+            var azureQueue = new AzureQueueSettings
+            {
+                ConnectionString = settings.SlackNotifications.AzureQueue.ConnectionString,
+                QueueName = settings.SlackNotifications.AzureQueue.QueueName
+            };
+
             var comonSlackService =
-                services.UseSlackNotificationsSenderViaAzureQueue(settings.SlackNotifications.AzureQueue,
-                    consoleLogger);
+                services.UseSlackNotificationsSenderViaAzureQueue(azureQueue, consoleLogger);
 
             var slackService =
                 new MtSlackNotificationsSender(comonSlackService, "MT Frontend", settings.MtFrontend.MarginTradingFront.Env);
@@ -408,7 +400,7 @@ namespace MarginTrading.Frontend
     public static class MarginTradingBackendServiceLocator
     {
         public static RabbitMqHandler RabbitMqHandler;
-        public static RabbitMqSubscriber<InstrumentBidAskPair> SubscriberPrices;
+        public static RabbitMqSubscriber<BidAskPairRabbitMqContract> SubscriberPrices;
         public static RabbitMqSubscriber<AccountChangedMessage> SubscriberAccountChangedDemo;
         public static RabbitMqSubscriber<AccountChangedMessage> SubscriberAccountChangedLive;
         public static RabbitMqSubscriber<OrderContract> SubscriberOrderChangedDemo;

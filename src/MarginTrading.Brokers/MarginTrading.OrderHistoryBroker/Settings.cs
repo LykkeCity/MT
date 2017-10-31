@@ -1,5 +1,5 @@
-﻿using MarginTrading.BrokerBase.Settings;
-using MarginTrading.Core.Settings;
+﻿using MarginTrading.Backend.Core.Settings;
+using MarginTrading.BrokerBase.Settings;
 
 namespace MarginTrading.OrderHistoryBroker
 {

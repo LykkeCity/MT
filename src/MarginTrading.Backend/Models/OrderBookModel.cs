@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using MarginTrading.Core;
+using MarginTrading.Backend.Core;
 
 namespace MarginTrading.Backend.Models
 {

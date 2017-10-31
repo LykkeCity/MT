@@ -1,5 +1,4 @@
 ﻿using Lykke.SettingsReader.Attributes;
-using MarginTrading.Core.Settings;
 
 namespace MarginTrading.Public.Settings
 {
@@ -27,5 +26,10 @@ namespace MarginTrading.Public.Settings
     public class MtQueues
     {
         public RabbitMqQueueInfo OrderbookPrices { get; set; }
+    }
+    
+    public class RabbitMqQueueInfo
+    {
+        public string ExchangeName { get; set; }
     }
 }

@@ -1,6 +1,6 @@
 ﻿
 
-using MarginTrading.Core.Settings;
+using MarginTrading.Backend.Core.Settings;
 
 #pragma warning disable 1591
 

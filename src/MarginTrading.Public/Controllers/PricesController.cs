@@ -1,5 +1,5 @@
 ﻿using System.Linq;
-using MarginTrading.Common.Mappers;
+using MarginTrading.Contract.Mappers;
 using MarginTrading.Public.Services;
 using Microsoft.AspNetCore.Mvc;
 

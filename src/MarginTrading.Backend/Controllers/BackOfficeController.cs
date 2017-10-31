@@ -5,17 +5,20 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using MarginTrading.Backend.Attributes;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Mappers;
+using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Models;
-using MarginTrading.Common.BackendContracts;
-using MarginTrading.Common.Mappers;
-using MarginTrading.Core;
-using MarginTrading.Core.MatchingEngines;
-using MarginTrading.Core.Clients;
-using MarginTrading.Core.Settings;
-using MarginTrading.Services;
-using MarginTrading.Services.Infrastructure;
-using MarginTrading.Services.MatchingEngines;
-using MarginTrading.Services.Middleware;
+using MarginTrading.Backend.Services;
+using MarginTrading.Backend.Services.Infrastructure;
+using MarginTrading.Backend.Services.MatchingEngines;
+using MarginTrading.Common.Middleware;
+using MarginTrading.Common.Services;
+using MarginTrading.Common.Settings;
+using MarginTrading.Common.Settings.Models;
+using MarginTrading.Common.Settings.Repositories;
+using MarginTrading.Contract.BackendContracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -552,7 +555,7 @@ namespace MarginTrading.Backend.Controllers
         [Route("routes")]
         public async Task<IActionResult> AddRoute([FromBody]NewMatchingEngineRouteRequest request)
         {
-            IMatchingEngineRoute newRoute = NewMatchingEngineRouteRequest.CreateRoute(request);
+            IMatchingEngineRoute newRoute = DomainObjectsFactory.CreateRoute(request);
             await _routesManager.AddOrReplaceRouteAsync(newRoute);
             return Ok(newRoute);
         }
@@ -564,7 +567,7 @@ namespace MarginTrading.Backend.Controllers
             var existingRoute = _routesManager.GetRouteById(id);
             if (existingRoute != null)
             {
-                var route = NewMatchingEngineRouteRequest.CreateRoute(request, id);
+                var route = DomainObjectsFactory.CreateRoute(request, id);
                 await _routesManager.AddOrReplaceRouteAsync(route);
                 return Ok(_routesManager);
             }

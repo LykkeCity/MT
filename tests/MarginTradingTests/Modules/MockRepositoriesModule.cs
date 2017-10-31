@@ -7,11 +7,12 @@ using Common.Log;
 using MarginTrading.AzureRepositories;
 using MarginTrading.AzureRepositories.Logs;
 using MarginTrading.AzureRepositories.Reports;
-using MarginTrading.Core;
-using MarginTrading.Core.Clients;
-using MarginTrading.Core.MatchingEngines;
-using MarginTrading.Services;
-using MarginTrading.Services.MatchingEngines;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Services.MatchingEngines;
+using MarginTrading.Common.Settings.Models;
+using MarginTrading.Common.Settings.Repositories;
+using MarginTrading.Frontend.Repositories;
 using Moq;
 
 namespace MarginTradingTests.Modules

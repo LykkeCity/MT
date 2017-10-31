@@ -2,10 +2,10 @@
 using System.Security.Claims;
 using System.Threading.Tasks;
 using AspNet.Security.OpenIdConnect.Extensions;
-using MarginTrading.Core;
+using MarginTrading.Common.Middleware;
 using MarginTrading.Frontend.Models;
+using MarginTrading.Frontend.Repositories;
 using MarginTrading.Frontend.Services;
-using MarginTrading.Services.Middleware;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

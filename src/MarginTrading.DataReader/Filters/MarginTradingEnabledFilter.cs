@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Common.Log;
 using JetBrains.Annotations;
-using MarginTrading.Core;
+using MarginTrading.Common.Settings;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;

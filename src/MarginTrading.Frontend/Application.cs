@@ -2,8 +2,8 @@
 using System.Threading.Tasks;
 using Autofac;
 using Common.Log;
-using MarginTrading.Common.Wamp;
 using MarginTrading.Frontend.Services;
+using MarginTrading.Frontend.Wamp;
 using WampSharp.V2.Realm;
 
 namespace MarginTrading.Frontend

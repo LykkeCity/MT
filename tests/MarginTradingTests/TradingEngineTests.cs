@@ -2,12 +2,12 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
-using MarginTrading.Core;
-using MarginTrading.Core.Exceptions;
-using MarginTrading.Core.MatchingEngines;
-using MarginTrading.Services;
-using MarginTrading.Services.Events;
-using MarginTrading.Services.Notifications;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Services;
+using MarginTrading.Backend.Services.Events;
+using MarginTrading.Backend.Services.Notifications;
 using Moq;
 using NUnit.Framework;
 

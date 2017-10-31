@@ -1,8 +1,8 @@
 ﻿using System.Threading.Tasks;
-using MarginTrading.Core;
+using MarginTrading.Common.Middleware;
+using MarginTrading.Common.Settings;
 using MarginTrading.Frontend.Extensions;
 using MarginTrading.Frontend.Models;
-using MarginTrading.Services.Middleware;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

@@ -1,5 +1,4 @@
-﻿using MarginTrading.Core.Settings;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace MarginTrading.DataReader.Controllers
 {

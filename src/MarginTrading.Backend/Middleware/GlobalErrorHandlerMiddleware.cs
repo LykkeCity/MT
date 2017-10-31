@@ -1,14 +1,11 @@
 ﻿using System;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
-using MarginTrading.Common.BackendContracts;
 using MarginTrading.Common.Extensions;
-using MarginTrading.Core.Notifications;
-using MarginTrading.Core.Settings;
-using MarginTrading.Services.Helpers;
+using MarginTrading.Common.Helpers;
+using MarginTrading.Contract.BackendContracts;
 using Microsoft.AspNetCore.Http;
 
 namespace MarginTrading.Backend.Middleware

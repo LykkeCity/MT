@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using MarginTrading.Core;
+using MarginTrading.Backend.Core;
 
 namespace MarginTrading.DataReader.Services
 {
