@@ -11,6 +11,7 @@ using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
+using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
 using Newtonsoft.Json;

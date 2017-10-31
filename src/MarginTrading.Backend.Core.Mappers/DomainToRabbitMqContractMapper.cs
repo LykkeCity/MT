@@ -14,5 +14,29 @@ namespace MarginTrading.Backend.Core.Mappers
                 Date = pair.Date
             };
         }
+
+        public static AccountStatsContract ToRabbitMqContract(this IMarginTradingAccount account, bool isLive)
+        {
+            return new AccountStatsContract
+            {
+                AccountId = account.Id,
+                ClientId = account.ClientId,
+                TradingConditionId = account.TradingConditionId,
+                BaseAssetId = account.BaseAssetId,
+                Balance = account.Balance,
+                WithdrawTransferLimit = account.WithdrawTransferLimit,
+                MarginCallLevel = account.GetMarginCall(),
+                StopOutLevel = account.GetStopOut(),
+                TotalCapital = account.GetTotalCapital(),
+                FreeMargin = account.GetFreeMargin(),
+                MarginAvailable = account.GetMarginAvailable(),
+                UsedMargin = account.GetUsedMargin(),
+                MarginInit = account.GetMarginInit(),
+                PnL = account.GetPnl(),
+                OpenPositionsCount = account.GetOpenPositionsCount(),
+                MarginUsageLevel = account.GetMarginUsageLevel(),
+                IsLive = isLive
+            };
+        }
     }
 }

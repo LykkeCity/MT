@@ -2,11 +2,11 @@
 using Common.Log;
 using Lykke.RabbitMqBroker.Subscriber;
 using MarginTrading.AccountMarginEventsBroker.AzureRepositories;
-using MarginTrading.Backend.Core.RabbitMqMessages;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.BrokerBase;
 using MarginTrading.BrokerBase.Settings;
 using MarginTrading.Common.RabbitMq;
+using MarginTrading.Contract.RabbitMqMessageModels;
 
 namespace MarginTrading.AccountMarginEventsBroker
 {
