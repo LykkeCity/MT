@@ -166,7 +166,6 @@ namespace MarginTrading.Contract.Mappers
                 Volume = src.Volume,
                 TakeProfit = src.TakeProfit,
                 StopLoss = src.StopLoss,
-                Fpl = src.TotalPnl,
                 TotalPnL = src.TotalPnl,
                 PnL = src.Pnl,
                 InterestRateSwap = src.InterestRateSwap,
