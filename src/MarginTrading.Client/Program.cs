@@ -10,8 +10,8 @@
 
                 client.Connect(ClientEnv.Local);
 
-                client.IsAlive();
-            //client.InitData().Wait();
+                //client.IsAlive();
+                //client.InitData().Wait();
                 //client.InitAccounts();
                 //client.AccountInstruments();
                 //client.InitGraph().Wait();
@@ -30,7 +30,7 @@
                 //client.GetClientOrders();
                 //client.ChangeOrderLimits();
 
-                client.Prices("EURUSD");
+                client.Prices("eurusd");
                 //client.UserUpdates();
 
                 client.Close();

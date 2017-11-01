@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Reactive;
 using System.Threading;
 using System.Threading.Tasks;
 using Common;
@@ -10,6 +11,7 @@ using WampSharp.V2.Client;
 using MarginTrading.Common.Wamp;
 using MarginTrading.Core;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 
 namespace MarginTrading.Client
 {
@@ -26,7 +28,7 @@ namespace MarginTrading.Client
         {
             SetEnv(env);
             var factory = new DefaultWampChannelFactory();
-            _channel = factory.CreateJsonChannel(_serverAddress, "mtcrossbar");
+            _channel = factory.CreateJsonChannel(_serverAddress, "prices");
 
             while (!_channel.RealmProxy.Monitor.IsConnected)
             {
@@ -272,13 +274,40 @@ namespace MarginTrading.Client
             Console.WriteLine($"result = {result.Result}, message = {result.Message}");
         }
 
+        public class CandleMessage
+        {
+            [JsonProperty("a")]
+            public string AssetPairId { get; set; }
+
+            [JsonProperty("p")]
+            public string PriceType { get; set; }
+
+            [JsonProperty("i")]
+            public string TimeInterval { get; set; }
+
+            [JsonProperty("t")]
+            public DateTime Timestamp { get; set; }
+
+            [JsonProperty("o")]
+            public double Open { get; set; }
+
+            [JsonProperty("c")]
+            public double Close { get; set; }
+
+            [JsonProperty("h")]
+            public double High { get; set; }
+
+            [JsonProperty("l")]
+            public double Low { get; set; }
+        }
+
         public void Prices(string instrument = null)
         {
-            var topicName = !string.IsNullOrEmpty(instrument) ? $"prices.update.{instrument}" : "prices.update";
-            IDisposable subscription = _realmProxy.Services.GetSubject<InstrumentBidAskPair>(topicName)
+            var topicName = !string.IsNullOrEmpty(instrument) ? $"candle.mt.{instrument}.mid.sec" : "prices.update";
+            IDisposable subscription = _realmProxy.Services.GetSubject<CandleMessage>(topicName)
                 .Subscribe(info =>
                 {
-                    Console.WriteLine($"{info.Instrument} {info.Bid}/{info.Ask}");
+                    Console.WriteLine($"{info.AssetPairId}/{info.PriceType}/{info.Open}/{info.Close}/{info.Low}/{info.High}/{info.TimeInterval}/{info.Timestamp}");
                 });
 
 
