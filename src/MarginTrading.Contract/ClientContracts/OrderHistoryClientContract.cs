@@ -19,7 +19,6 @@ namespace MarginTrading.Contract.ClientContracts
         public decimal Volume { get; set; }
         public decimal? TakeProfit { get; set; }
         public decimal? StopLoss { get; set; }
-        public decimal Fpl { get; set; }
         public decimal TotalPnL { get; set; }
         public decimal PnL { get; set; }
         public decimal InterestRateSwap { get; set; }

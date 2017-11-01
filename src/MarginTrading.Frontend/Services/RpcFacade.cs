@@ -299,7 +299,6 @@ namespace MarginTrading.Frontend.Services
                 Volume = (decimal) src.Volume,
                 TakeProfit = (decimal?) src.TakeProfit,
                 StopLoss = (decimal?) src.StopLoss,
-                Fpl = (decimal) src.TotalPnl,
                 TotalPnL = (decimal) src.TotalPnl,
                 PnL = (decimal) src.Pnl,
                 InterestRateSwap = (decimal) src.InterestRateSwap,
