@@ -1,7 +1,7 @@
 ﻿using MarginTrading.BrokerBase.Settings;
 using MarginTrading.Common.RabbitMq;
 
-namespace MarginTrading.OrderRejectedBroker
+namespace MarginTrading.AccountReportsBroker
 {
     public class Settings : BrokerSettingsBase
     {
@@ -11,11 +11,13 @@ namespace MarginTrading.OrderRejectedBroker
     
     public class Db
     {
+        public string ReportsConnString { get; set; }
         public string HistoryConnString { get; set; }
     }
     
     public class RabbitMqQueues
     {
-        public RabbitMqQueueInfo OrderRejected { get; set; }
+        public RabbitMqQueueInfo AccountStats { get; set; }
+        public RabbitMqQueueInfo AccountChanged { get; set; }
     }
 }

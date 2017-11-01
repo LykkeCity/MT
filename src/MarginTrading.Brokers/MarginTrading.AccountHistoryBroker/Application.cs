@@ -1,13 +1,11 @@
 ﻿using System.Threading.Tasks;
 using Common.Log;
-using Lykke.RabbitMqBroker.Subscriber;
+using Lykke.SlackNotifications;
 using MarginTrading.AccountHistoryBroker.AzureRepositories;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
-using MarginTrading.Backend.Core.Settings;
 using MarginTrading.BrokerBase;
 using MarginTrading.BrokerBase.Settings;
-using MarginTrading.Common.RabbitMq;
 using MarginTrading.Contract.BackendContracts;
 
 namespace MarginTrading.AccountHistoryBroker
@@ -16,29 +14,21 @@ namespace MarginTrading.AccountHistoryBroker
     {
         private readonly IMarginTradingAccountHistoryRepository _accountHistoryRepository;
         private readonly IAccountTransactionsReportsRepository _accountTransactionsReportsRepository;
-        private readonly MarginSettings _settings;
+        private readonly Settings _settings;
 
         public Application(IMarginTradingAccountHistoryRepository accountHistoryRepository, ILog logger,
-            MarginSettings settings, CurrentApplicationInfo applicationInfo,
-            IAccountTransactionsReportsRepository accountTransactionsReportsRepository)
-            : base(logger, applicationInfo)
+            Settings settings, CurrentApplicationInfo applicationInfo,
+            IAccountTransactionsReportsRepository accountTransactionsReportsRepository,
+            ISlackNotificationsSender slackNotificationsSender)
+            : base(logger, slackNotificationsSender, applicationInfo)
         {
             _accountHistoryRepository = accountHistoryRepository;
             _settings = settings;
             _accountTransactionsReportsRepository = accountTransactionsReportsRepository;
         }
 
-        protected override RabbitMqSubscriptionSettings GetRabbitMqSubscriptionSettings()
-        {
-            var exchangeName = _settings.RabbitMqQueues.AccountHistory.ExchangeName;
-            return new RabbitMqSubscriptionSettings
-            {
-                ConnectionString = _settings.MtRabbitMqConnString,
-                QueueName = QueueHelper.BuildQueueName(exchangeName, _settings.Env),
-                ExchangeName = exchangeName,
-                IsDurable = true
-            };
-        }
+        protected override BrokerSettingsBase Settings => _settings;
+        protected override string ExchangeName => _settings.RabbitMqQueues.AccountHistory.ExchangeName;
 
         protected override Task HandleMessage(AccountHistoryBackendContract accountHistoryContract)
         {

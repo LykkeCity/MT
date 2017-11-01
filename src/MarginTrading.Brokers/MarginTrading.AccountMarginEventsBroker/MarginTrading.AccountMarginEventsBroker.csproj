@@ -25,7 +25,6 @@
     <PackageReference Include="Lykke.RabbitMqBroker" Version="1.0.80" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\MarginTrading.Backend.Core\MarginTrading.Backend.Core.csproj" />
     <ProjectReference Include="..\..\MarginTrading.Common\MarginTrading.Common.csproj" />
     <ProjectReference Include="..\..\MarginTrading.Contract\MarginTrading.Contract.csproj" />
     <ProjectReference Include="..\MarginTrading.BrokerBase\MarginTrading.BrokerBase.csproj" />

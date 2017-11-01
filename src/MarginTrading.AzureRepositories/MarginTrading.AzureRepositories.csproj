@@ -14,7 +14,4 @@
   <ItemGroup>
     <PackageReference Include="Lykke.AzureStorage" Version="1.2.36" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Settings" />
-  </ItemGroup>
 </Project>
