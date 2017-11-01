@@ -1,11 +1,11 @@
-﻿using System.Threading.Tasks;
-using MarginTrading.Core;
-using Common.Log;
+﻿using Common.Log;
+using Dapper;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Settings;
+using System;
 using System.Data;
 using System.Data.SqlClient;
-using Dapper;
-using System;
-using MarginTrading.Core.Settings;
+using System.Threading.Tasks;
 
 namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
 {

@@ -1,6 +1,6 @@
 ﻿using System;
 using Microsoft.WindowsAzure.Storage.Table;
-using MarginTrading.Core;
+using MarginTrading.Backend.Core;
 
 namespace MarginTrading.AccountMarginEventsBroker.Repositories.AzureRepositories
 {
