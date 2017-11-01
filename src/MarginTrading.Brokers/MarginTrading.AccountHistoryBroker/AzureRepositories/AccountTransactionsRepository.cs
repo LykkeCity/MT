@@ -10,7 +10,7 @@ namespace MarginTrading.AccountHistoryBroker.AzureRepositories
     {
         private readonly INoSQLTableStorage<AccountTransactionsReportsEntity> _tableStorage;
 
-        public AccountTransactionsReportsRepository(MarginSettings settings, ILog log)
+        public AccountTransactionsReportsRepository(Settings settings, ILog log)
         {
             _tableStorage = AzureTableStorage<AccountTransactionsReportsEntity>.Create(() => settings.Db.ReportsConnString,
                 "MarginTradingAccountTransactionsReports", log);

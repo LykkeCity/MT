@@ -135,7 +135,8 @@ namespace MarginTrading.Backend.Modules
                 _settings.RabbitMqQueues.AccountChanged.ExchangeName,
                 _settings.RabbitMqQueues.AccountStopout.ExchangeName,
                 _settings.RabbitMqQueues.UserUpdates.ExchangeName,
-                _settings.RabbitMqQueues.AccountMarginEvents.ExchangeName
+                _settings.RabbitMqQueues.AccountMarginEvents.ExchangeName,
+                _settings.RabbitMqQueues.AccountStats.ExchangeName
             };
 
             var bytesSerializer = new BytesStringSerializer();

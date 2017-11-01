@@ -76,6 +76,7 @@ namespace MarginTrading.Backend.Core.Settings
         public RabbitMqQueueInfo AccountStopout { get; set; }
         public RabbitMqQueueInfo UserUpdates { get; set; }
         public RabbitMqQueueInfo AccountMarginEvents { get; set; }
+        public RabbitMqQueueInfo AccountStats { get; set; }
     }
 
     public class ScheduleSettings

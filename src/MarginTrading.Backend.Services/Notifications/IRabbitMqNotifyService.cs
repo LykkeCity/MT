@@ -1,7 +1,8 @@
 ﻿using System.Threading.Tasks;
-using MarginTrading.Backend.Core.RabbitMqMessages;
+using MarginTrading.Backend.Core;
+using MarginTrading.Contract.RabbitMqMessageModels;
 
-namespace MarginTrading.Backend.Core
+namespace MarginTrading.Backend.Services.Notifications
 {
 	public interface IRabbitMqNotifyService
 	{
@@ -17,5 +18,6 @@ namespace MarginTrading.Backend.Core
 	    Task AccountCreated(IMarginTradingAccount account);
 	    Task AccountDeleted(IMarginTradingAccount account);
 	    Task AccountMarginEvent(AccountMarginEventMessage eventMessage);
+		Task UpdateAccountStats(AccountStatsUpdateMessage message);
 	}
-}
+} 

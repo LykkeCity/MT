@@ -1,5 +1,6 @@
 ﻿using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Services.Events;
+using MarginTrading.Backend.Services.Notifications;
 
 namespace MarginTrading.Backend.Services
 {

@@ -1,6 +1,6 @@
 ﻿using System;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.RabbitMqMessages;
+using MarginTrading.Contract.RabbitMqMessageModels;
 
 namespace MarginTrading.Backend.Services
 {

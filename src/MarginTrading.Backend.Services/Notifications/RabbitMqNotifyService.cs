@@ -5,11 +5,10 @@ using Common;
 using Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
-using MarginTrading.Backend.Core.RabbitMqMessages;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Contract.RabbitMqMessageModels;
 
-namespace MarginTrading.Backend.Services
+namespace MarginTrading.Backend.Services.Notifications
 {
     public class RabbitMqNotifyService : IRabbitMqNotifyService
     {
@@ -95,7 +94,6 @@ namespace MarginTrading.Backend.Services
         public Task AccountMarginEvent(AccountMarginEventMessage eventMessage)
         {
             return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountMarginEvents.ExchangeName, eventMessage);
-
         }
 
         public Task AccountStopout(string clientId, string accountId, int positionsCount, decimal totalPnl)
@@ -108,6 +106,11 @@ namespace MarginTrading.Backend.Services
         {
             var message = new { updateAccountAssetPairs = updateAccountAssets, UpdateAccounts = updateAccounts, clientIds };
             return TryProduceMessageAsync(_settings.RabbitMqQueues.UserUpdates.ExchangeName, message);
+        }
+
+        public Task UpdateAccountStats(AccountStatsUpdateMessage message)
+        {
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountStats.ExchangeName, message);
         }
 
         private async Task TryProduceMessageAsync(string exchangeName, object message)
@@ -136,6 +139,7 @@ namespace MarginTrading.Backend.Services
             ((IStopable)_publishers[_settings.RabbitMqQueues.AccountChanged.ExchangeName]).Stop();
             ((IStopable)_publishers[_settings.RabbitMqQueues.UserUpdates.ExchangeName]).Stop();
             ((IStopable)_publishers[_settings.RabbitMqQueues.AccountMarginEvents.ExchangeName]).Stop();
+            ((IStopable)_publishers[_settings.RabbitMqQueues.AccountStats.ExchangeName]).Stop();
         }
     }
 }

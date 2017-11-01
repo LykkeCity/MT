@@ -103,9 +103,7 @@ namespace MarginTrading.Backend.Core
                 return accountInstance.AccountFpl;
             }
 
-            MtServiceLocator.AccountUpdateService.UpdateAccount(account, account.GetAccountFpl());
-
-            return account.GetAccountFpl();
+            return new AccountFpl();
         }
 
         public static AccountLevel GetAccountLevel(this IMarginTradingAccount account)

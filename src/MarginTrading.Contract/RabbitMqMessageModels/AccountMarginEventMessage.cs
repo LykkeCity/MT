@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MarginTrading.Backend.Core.RabbitMqMessages
+namespace MarginTrading.Contract.RabbitMqMessageModels
 {
     public class AccountMarginEventMessage
     {
