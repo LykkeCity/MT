@@ -1,9 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using AzureStorage;
 using MarginTrading.AzureRepositories.Contract;
-using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.TradingConditions;
 using Microsoft.WindowsAzure.Storage.Table;
 
@@ -20,6 +18,9 @@ namespace MarginTrading.AzureRepositories
         public double StopOut { get; set; }
         decimal IAccountGroup.DepositTransferLimit => (decimal) DepositTransferLimit;
         public double DepositTransferLimit { get; set; }
+        decimal IAccountGroup.ProfitWithdrawalLimit => (decimal) ProfitWithdrawalLimit;
+        public double ProfitWithdrawalLimit { get; set; }
+        
 
         public static string GeneratePartitionKey(string tradingConditionId)
         {
@@ -39,7 +40,8 @@ namespace MarginTrading.AzureRepositories
                 RowKey = GenerateRowKey(src.BaseAssetId),
                 MarginCall = (double) src.MarginCall,
                 StopOut = (double) src.StopOut,
-                DepositTransferLimit = (double) src.DepositTransferLimit
+                DepositTransferLimit = (double) src.DepositTransferLimit,
+                ProfitWithdrawalLimit = (double) src.ProfitWithdrawalLimit
             };
         }
     }

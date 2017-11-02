@@ -7,5 +7,6 @@
         decimal MarginCall { get; }
         decimal StopOut { get; }
         decimal DepositTransferLimit { get; }
+        decimal ProfitWithdrawalLimit { get; }
     }
 }
