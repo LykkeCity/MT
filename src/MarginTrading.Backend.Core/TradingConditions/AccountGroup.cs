@@ -7,6 +7,7 @@
         public decimal MarginCall { get; set; }
         public decimal StopOut { get; set; }
         public decimal DepositTransferLimit { get; set; }
+        public decimal ProfitWithdrawalLimit { get; set; }
 
         public static AccountGroup Create(IAccountGroup src)
         {
@@ -16,7 +17,8 @@
                 BaseAssetId = src.BaseAssetId,
                 MarginCall = src.MarginCall,
                 StopOut = src.StopOut,
-                DepositTransferLimit = src.DepositTransferLimit
+                DepositTransferLimit = src.DepositTransferLimit,
+                ProfitWithdrawalLimit = src.ProfitWithdrawalLimit
             };
         }
     }
