@@ -9,7 +9,9 @@ using MarginTrading.AzureRepositories;
 using MarginTrading.AzureRepositories.Reports;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Services.Events;
+using MarginTrading.Backend.Services.TradingConditions;
 
 namespace MarginTrading.Backend.Services
 {

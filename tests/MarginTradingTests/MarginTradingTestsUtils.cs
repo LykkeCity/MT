@@ -2,6 +2,7 @@
 using AzureStorage.Tables;
 using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Frontend.Repositories;
 
 namespace MarginTradingTests
@@ -101,27 +102,27 @@ namespace MarginTradingTests
             return accountRepository;
         }
 
-        public static MarginTradingAccountGroupRepository GetPopulatedAccountGroupRepository()
+        public static AccountGroupRepository GetPopulatedAccountGroupRepository()
         {
-            var accountGroupRepository = new MarginTradingAccountGroupRepository(new NoSqlTableInMemory<MarginTradingAccountGroupEntity>());
+            var accountGroupRepository = new AccountGroupRepository(new NoSqlTableInMemory<AccountGroupEntity>());
 
-            var groups = new List<MarginTradingAccountGroup>
+            var groups = new List<AccountGroup>
             {
-                new MarginTradingAccountGroup
+                new AccountGroup
                 {
                     TradingConditionId = TradingConditionId,
                     BaseAssetId = "USD",
                     MarginCall = 1.25M,
                     StopOut = 1.05M
                 },
-                new MarginTradingAccountGroup
+                new AccountGroup
                 {
                     TradingConditionId = TradingConditionId,
                     BaseAssetId = "EUR",
                     MarginCall = 1.25M,
                     StopOut = 1.05M
                 },
-                new MarginTradingAccountGroup
+                new AccountGroup
                 {
                     TradingConditionId = TradingConditionId,
                     BaseAssetId = "CHF",
@@ -237,11 +238,11 @@ namespace MarginTradingTests
             return repository;
         }
 
-        public static MarginTradingConditionsRepository GetPopulatedMarginTradingConditionsRepository()
+        public static TradingConditionsRepository GetPopulatedMarginTradingConditionsRepository()
         {
-            var tradingConditionsRepository = new MarginTradingConditionsRepository(new NoSqlTableInMemory<MarginTradingConditionEntity>());
+            var tradingConditionsRepository = new TradingConditionsRepository(new NoSqlTableInMemory<TradingConditionEntity>());
 
-            tradingConditionsRepository.AddOrReplaceAsync(new MarginTradingCondition
+            tradingConditionsRepository.AddOrReplaceAsync(new TradingCondition
             {
                 Id = TradingConditionId,
                 IsDefault = true,

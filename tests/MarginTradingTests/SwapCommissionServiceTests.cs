@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Autofac;
+using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
+using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
+using MarginTrading.Backend.Services.TradingConditions;
 using NUnit.Framework;
 
 namespace MarginTradingTests

@@ -2,15 +2,17 @@
 using System.Threading.Tasks;
 using Autofac;
 using Common.Log;
+using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Common.RabbitMq;
 
-namespace MarginTrading.Backend.Services
+namespace MarginTrading.Backend.Services.TradingConditions
 {
     public class TradingConditionsManager : IStartable
     {
-        private readonly IMarginTradingConditionRepository _repository;
+        private readonly ITradingConditionRepository _repository;
         private readonly TradingConditionsCacheService _tradingConditionsService;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
@@ -18,7 +20,7 @@ namespace MarginTrading.Backend.Services
         private readonly IConsole _console;
 
         public TradingConditionsManager(
-            IMarginTradingConditionRepository repository,
+            ITradingConditionRepository repository,
             TradingConditionsCacheService tradingConditionsService,
             IAccountsCacheService accountsCacheService,
             IRabbitMqNotifyService rabbitMqNotifyService,
@@ -55,7 +57,7 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public async Task AddOrReplaceTradingConditionAsync(IMarginTradingCondition tradingCondition)
+        public async Task AddOrReplaceTradingConditionAsync(ITradingCondition tradingCondition)
         {
             var allTradingConditions = (await _repository.GetAllAsync()).ToList();
             var defaultTradingCondition = allTradingConditions.FirstOrDefault(item => item.IsDefault);
@@ -81,9 +83,9 @@ namespace MarginTrading.Backend.Services
             await UpdateTradingConditions(tradingCondition.Id);
         }
 
-        private async Task SetIsDefault(IMarginTradingCondition tradingCondition, bool isDefault)
+        private async Task SetIsDefault(ITradingCondition tradingCondition, bool isDefault)
         {
-            var existing = MarginTradingCondition.Create(tradingCondition);
+            var existing = TradingCondition.Create(tradingCondition);
             existing.IsDefault = isDefault;
             await _repository.AddOrReplaceAsync(existing);
         }

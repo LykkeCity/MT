@@ -5,6 +5,7 @@ using Autofac;
 using AzureStorage.Tables;
 using Common.Log;
 using MarginTrading.AzureRepositories;
+using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.AzureRepositories.Logs;
 using MarginTrading.AzureRepositories.Reports;
 using MarginTrading.Backend.Core;
@@ -59,8 +60,8 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(
                     new MarginTradingAccountStatsRepository(new NoSqlTableInMemory<MarginTradingAccountStatsEntity>()))
                 .As<IMarginTradingAccountStatsRepository>().SingleInstance();
-            builder.RegisterInstance(conditionsRepository).As<IMarginTradingConditionRepository>().SingleInstance();
-            builder.RegisterInstance(accountGroupRepository).As<IMarginTradingAccountGroupRepository>()
+            builder.RegisterInstance(conditionsRepository).As<ITradingConditionRepository>().SingleInstance();
+            builder.RegisterInstance(accountGroupRepository).As<IAccountGroupRepository>()
                 .SingleInstance();
             builder.RegisterInstance(accountAssetsRepository).As<IAccountAssetPairsRepository>().SingleInstance();
             builder.RegisterInstance(watchListRepository).As<IMarginTradingWatchListRepository>().SingleInstance();

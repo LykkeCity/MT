@@ -3,8 +3,10 @@ using System;
 using Autofac;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.MatchingEngines;
+using MarginTrading.Backend.Services.TradingConditions;
 
 namespace MarginTradingTests
 {
@@ -38,10 +40,10 @@ namespace MarginTradingTests
             // Add trading conditions 
             System.Threading.Tasks.Task.Run(async () =>
             {
-                await _tradingConditionsManager.AddOrReplaceTradingConditionAsync(new MarginTradingCondition() { Id = "TCID001", Name= "MarginTradingCondition 1", IsDefault = true });
-                await _tradingConditionsManager.AddOrReplaceTradingConditionAsync(new MarginTradingCondition() { Id = "TCID003", Name = "MarginTradingCondition 3", IsDefault = false});
-                await _tradingConditionsManager.AddOrReplaceTradingConditionAsync(new MarginTradingCondition() { Id = "TCID004", Name = "MarginTradingCondition 4", IsDefault = false });
-                await _tradingConditionsManager.AddOrReplaceTradingConditionAsync(new MarginTradingCondition() { Id = "TCID005", Name = "MarginTradingCondition 5", IsDefault = false });
+                await _tradingConditionsManager.AddOrReplaceTradingConditionAsync(new TradingCondition() { Id = "TCID001", Name= "MarginTradingCondition 1", IsDefault = true });
+                await _tradingConditionsManager.AddOrReplaceTradingConditionAsync(new TradingCondition() { Id = "TCID003", Name = "MarginTradingCondition 3", IsDefault = false});
+                await _tradingConditionsManager.AddOrReplaceTradingConditionAsync(new TradingCondition() { Id = "TCID004", Name = "MarginTradingCondition 4", IsDefault = false });
+                await _tradingConditionsManager.AddOrReplaceTradingConditionAsync(new TradingCondition() { Id = "TCID005", Name = "MarginTradingCondition 5", IsDefault = false });
             }).Wait();
             
 

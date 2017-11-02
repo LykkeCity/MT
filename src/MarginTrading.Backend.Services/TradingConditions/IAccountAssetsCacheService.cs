@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.TradingConditions;
 
-namespace MarginTrading.Backend.Core
+namespace MarginTrading.Backend.Services.TradingConditions
 {
     public interface IAccountAssetsCacheService
     {

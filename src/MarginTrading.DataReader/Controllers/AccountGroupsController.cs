@@ -3,7 +3,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
+using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.TradingConditions;
 
 namespace MarginTrading.DataReader.Controllers
 {
@@ -11,9 +13,9 @@ namespace MarginTrading.DataReader.Controllers
     [Route("api/accountGroups")]
     public class AccountGroupsController : Controller
     {
-        private readonly IMarginTradingAccountGroupRepository _accountGroupRepository;
+        private readonly IAccountGroupRepository _accountGroupRepository;
 
-        public AccountGroupsController(IMarginTradingAccountGroupRepository accountGroupRepository)
+        public AccountGroupsController(IAccountGroupRepository accountGroupRepository)
         {
             _accountGroupRepository = accountGroupRepository;
         }
@@ -25,9 +27,9 @@ namespace MarginTrading.DataReader.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("")]
-        public async Task<IEnumerable<MarginTradingAccountGroup>> GetAllAccountGroups()
+        public async Task<IEnumerable<AccountGroup>> GetAllAccountGroups()
         {
-            return (await _accountGroupRepository.GetAllAsync()).Select(MarginTradingAccountGroup.Create);
+            return (await _accountGroupRepository.GetAllAsync()).Select(AccountGroup.Create);
         }
 
         /// <summary>
@@ -35,9 +37,9 @@ namespace MarginTrading.DataReader.Controllers
         /// </summary>
         [HttpGet]
         [Route("byBaseAsset/{tradingConditionId}/{baseAssetId}")]
-        public async Task<MarginTradingAccountGroup> GetAccountGroup(string tradingConditionId, string baseAssetId)
+        public async Task<AccountGroup> GetAccountGroup(string tradingConditionId, string baseAssetId)
         {
-            return MarginTradingAccountGroup.Create(await _accountGroupRepository.GetAsync(tradingConditionId, baseAssetId));
+            return AccountGroup.Create(await _accountGroupRepository.GetAsync(tradingConditionId, baseAssetId));
         }
 
     }
