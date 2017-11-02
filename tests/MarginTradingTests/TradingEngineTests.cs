@@ -2,12 +2,15 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
+using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
+using MarginTrading.Backend.Services.TradingConditions;
 using Moq;
 using NUnit.Framework;
 

@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Backend.Core
+﻿using MarginTrading.Backend.Core.TradingConditions;
+
+namespace MarginTrading.Backend.Core
 {
     public interface IValidateOrderService
     {

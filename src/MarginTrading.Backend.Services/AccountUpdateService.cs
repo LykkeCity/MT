@@ -2,6 +2,7 @@
 using System.Linq;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Messages;
+using MarginTrading.Backend.Services.TradingConditions;
 
 namespace MarginTrading.Backend.Services
 {

@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.TradingConditions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,9 +13,9 @@ namespace MarginTrading.DataReader.Controllers
     [Route("api/tradingConditions")]
     public class TradingConditionsController : Controller
     {
-        private readonly IMarginTradingConditionRepository _conditionsRepository;
+        private readonly ITradingConditionRepository _conditionsRepository;
 
-        public TradingConditionsController(IMarginTradingConditionRepository conditionsRepository)
+        public TradingConditionsController(ITradingConditionRepository conditionsRepository)
         {
             _conditionsRepository = conditionsRepository;
         }
@@ -23,9 +25,9 @@ namespace MarginTrading.DataReader.Controllers
         /// </summary>
         [HttpGet]
         [Route("")]
-        public async Task<IEnumerable<MarginTradingCondition>> GetAllTradingConditions()
+        public async Task<IEnumerable<TradingCondition>> GetAllTradingConditions()
         {
-            return (await _conditionsRepository.GetAllAsync()).Select(MarginTradingCondition.Create);
+            return (await _conditionsRepository.GetAllAsync()).Select(TradingCondition.Create);
         }
 
         /// <summary>
@@ -33,9 +35,9 @@ namespace MarginTrading.DataReader.Controllers
         /// </summary>
         [HttpGet]
         [Route("{id}")]
-        public async Task<MarginTradingCondition> GetTradingConditionById(string id)
+        public async Task<TradingCondition> GetTradingConditionById(string id)
         {
-            return MarginTradingCondition.Create(await _conditionsRepository.GetAsync(id));
+            return TradingCondition.Create(await _conditionsRepository.GetAsync(id));
         }
     }
 }

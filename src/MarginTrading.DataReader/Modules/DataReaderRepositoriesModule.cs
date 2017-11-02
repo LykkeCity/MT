@@ -2,6 +2,7 @@
 using AzureStorage.Tables;
 using Common.Log;
 using MarginTrading.AzureRepositories;
+using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Common.Settings.Repositories;
@@ -53,11 +54,11 @@ namespace MarginTrading.DataReader.Modules
                 AzureRepoFactories.MarginTrading.CreateMatchingEngineRoutesRepository(_settings.Db.MarginTradingConnString, _log)
             ).SingleInstance();
 
-            builder.Register<IMarginTradingConditionRepository>(ctx =>
+            builder.Register<ITradingConditionRepository>(ctx =>
                 AzureRepoFactories.MarginTrading.CreateTradingConditionsRepository(_settings.Db.MarginTradingConnString, _log)
             ).SingleInstance();
 
-            builder.Register<IMarginTradingAccountGroupRepository>(ctx =>
+            builder.Register<IAccountGroupRepository>(ctx =>
                 AzureRepoFactories.MarginTrading.CreateAccountGroupRepository(_settings.Db.MarginTradingConnString, _log)
             ).SingleInstance();
 

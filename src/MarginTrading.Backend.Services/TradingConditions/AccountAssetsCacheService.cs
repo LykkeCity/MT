@@ -4,8 +4,9 @@ using System.Linq;
 using System.Threading;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Messages;
+using MarginTrading.Backend.Core.TradingConditions;
 
-namespace MarginTrading.Backend.Services
+namespace MarginTrading.Backend.Services.TradingConditions
 {
     public class  AccountAssetsCacheService : IAccountAssetsCacheService
     {
