@@ -1,10 +1,21 @@
-﻿using MarginTrading.Backend.Core.Settings;
-using MarginTrading.BrokerBase.Settings;
+﻿using MarginTrading.BrokerBase.Settings;
+using MarginTrading.Common.RabbitMq;
 
 namespace MarginTrading.AccountMarginEventsBroker
 {
-    public class Settings : DefaultBrokerSettings
+    public class Settings : BrokerSettingsBase
     {
-        public MarginTradingSettings MtBackend { get; set; }
+        public Db Db { get; set; }
+        public RabbitMqQueues RabbitMqQueues { get; set; }
+    }
+    
+    public class Db
+    {
+        public string ReportsConnString { get; set; }
+    }
+    
+    public class RabbitMqQueues
+    {
+        public RabbitMqQueueInfo AccountMarginEvents { get; set; }
     }
 }

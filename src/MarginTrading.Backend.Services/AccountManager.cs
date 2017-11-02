@@ -5,15 +5,16 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
-using MarginTrading.AzureRepositories;
-using MarginTrading.AzureRepositories.Reports;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Events;
+using MarginTrading.Backend.Services.Notifications;
+using MarginTrading.Contract.RabbitMqMessageModels;
 
 namespace MarginTrading.Backend.Services
 {
-    public class AccountManager: TimerPeriod
+    public class AccountManager: TimerPeriod 
     {
         private readonly AccountsCacheService _accountsCacheService;
         private readonly IMarginTradingAccountsRepository _repository;
@@ -25,9 +26,6 @@ namespace MarginTrading.Backend.Services
         private readonly ITradingConditionsCacheService _tradingConditionsCacheService;
         private readonly ILog _log;
         private readonly IClientNotifyService _clientNotifyService;
-        private readonly IAccountsStatsReportsRepository _accountsStatsReportsRepository;
-        private readonly IAccountsReportsRepository _accountsReportsRepository;
-        private readonly IMarginTradingAccountStatsRepository _statsRepository;
         private readonly OrdersCache _ordersCache;
         private readonly IUpdatedAccountsTrackingService _updatedAccountsTrackingService;
         private readonly IEventChannel<AccountBalanceChangedEventArgs> _acountBalanceChangedEventChannel;
@@ -44,9 +42,6 @@ namespace MarginTrading.Backend.Services
             ITradingConditionsCacheService tradingConditionsCacheService,
             ILog log,
             IClientNotifyService clientNotifyService,
-            IAccountsStatsReportsRepository accountsStatsReportsRepository,
-            IAccountsReportsRepository accountsReportsRepository,
-            IMarginTradingAccountStatsRepository statsRepository,
             OrdersCache ordersCache,
             IUpdatedAccountsTrackingService updatedAccountsTrackingService,
             IEventChannel<AccountBalanceChangedEventArgs> acountBalanceChangedEventChannel,
@@ -63,25 +58,25 @@ namespace MarginTrading.Backend.Services
             _tradingConditionsCacheService = tradingConditionsCacheService;
             _log = log;
             _clientNotifyService = clientNotifyService;
-            _accountsStatsReportsRepository = accountsStatsReportsRepository;
-            _accountsReportsRepository = accountsReportsRepository;
-            _statsRepository = statsRepository;
             _ordersCache = ordersCache;
             _updatedAccountsTrackingService = updatedAccountsTrackingService;
             _acountBalanceChangedEventChannel = acountBalanceChangedEventChannel;
             _tradingEngine = tradingEngine;
         }
 
+        
+        #region TimePeriod
+        
         public override Task Execute()
         {
             var accounts = GetAccountsToWriteStats();
-            var accountsStatsReports = GenerateAccountsStatsReports(accounts);
-            var statsWritingTask = WriteAccountsStats(accountsStatsReports);
-            var writeAccountsStatsReportsTask = WriteAccountsStatsReports(accountsStatsReports);
-            return Task.WhenAll(statsWritingTask, writeAccountsStatsReportsTask);
+            var accountsStatsMessages = GenerateAccountsStatsUpdateMessages(accounts);
+            var tasks = accountsStatsMessages.Select(m => _rabbitMqNotifyService.UpdateAccountStats(m));
+
+            return Task.WhenAll(tasks);
         }
 
-        private IReadOnlyList<MarginTradingAccount> GetAccountsToWriteStats()
+        private IReadOnlyList<IMarginTradingAccount> GetAccountsToWriteStats()
         {
             var accountsIdsToWrite = _ordersCache.GetActive().Select(a => a.AccountId)
                 .Concat(_updatedAccountsTrackingService.GetAccounts())
@@ -90,68 +85,19 @@ namespace MarginTrading.Backend.Services
                 .ToList();
         }
 
-        private Task WriteAccountsStats(List<AccountsStatReportEntity> accountsStatReports)
+        private IEnumerable<AccountStatsUpdateMessage> GenerateAccountsStatsUpdateMessages(IReadOnlyList<IMarginTradingAccount> accounts)
         {
-            var stats = accountsStatReports
-                .Select(a => new MarginTradingAccountStatsEntity
-                {
-                    AccountId = a.AccountId,
-                    BaseAssetId = a.BaseAssetId,
-                    MarginCall = a.MarginCall,
-                    StopOut = a.StopOut,
-                    TotalCapital = a.TotalCapital,
-                    FreeMargin = a.FreeMargin,
-                    MarginAvailable = a.MarginAvailable,
-                    UsedMargin = a.UsedMargin,
-                    MarginInit = a.MarginInit,
-                    PnL = a.PnL,
-                    OpenPositionsCount = a.OpenPositionsCount,
-                    MarginUsageLevel = a.MarginUsageLevel,
-                });
-            return _statsRepository.InsertOrReplaceBatchAsync(stats);
-        }
+            var accountStats = accounts.Select(a => a.ToRabbitMqContract(_marginSettings.IsLive));
 
-        private Task WriteAccountsStatsReports(List<AccountsStatReportEntity> accountsStatsReports)
-        {
-            return _accountsStatsReportsRepository.InsertOrReplaceBatchAsync(accountsStatsReports);
-        }
+            var chunks = accountStats.ToChunks(100);
 
-        private List<AccountsStatReportEntity> GenerateAccountsStatsReports(IReadOnlyList<MarginTradingAccount> accounts)
-        {
-            return accounts.Select(a => new AccountsStatReportEntity
+            foreach (var chunk in chunks)
             {
-                AccountId = a.Id,
-                ClientId = a.ClientId,
-                TradingConditionId = a.TradingConditionId,
-                BaseAssetId = a.BaseAssetId,
-                Balance = (double) a.Balance,
-                WithdrawTransferLimit = (double) a.WithdrawTransferLimit,
-                MarginCall = (double) a.GetMarginCall(),
-                StopOut = (double) a.GetStopOut(),
-                TotalCapital = (double) a.GetTotalCapital(),
-                FreeMargin = (double) a.GetFreeMargin(),
-                MarginAvailable = (double) a.GetMarginAvailable(),
-                UsedMargin = (double) a.GetUsedMargin(),
-                MarginInit = (double) a.GetMarginInit(),
-                PnL = (double) a.GetPnl(),
-                OpenPositionsCount = (double) a.GetOpenPositionsCount(),
-                MarginUsageLevel = (double) a.GetMarginUsageLevel(),
-                IsLive = _marginSettings.IsLive
-            }).ToList();
+                yield return new AccountStatsUpdateMessage {Accounts = chunk.ToArray()};
+            }
         }
-
-        private Task WriteAccountsReports(IEnumerable<MarginTradingAccount> accounts)
-        {
-            var reports = accounts.Select(a => new AccountsReportEntity
-            {
-                TakerAccountId = a.Id,
-                TakerCounterpartyId = a.ClientId,
-                BaseAssetId = a.BaseAssetId,
-                IsLive = _marginSettings.IsLive
-            });
-
-            return _accountsReportsRepository.InsertOrReplaceBatchAsync(reports);
-        }
+        
+        #endregion
 
         public override void Start()
         {
@@ -172,9 +118,7 @@ namespace MarginTrading.Backend.Services
             }
 
             _accountsCacheService.UpdateAccountsCache(clientId, allClientsAccounts);
-            await Task.WhenAll(
-                WriteAccountsReports(allClientsAccounts),
-                _rabbitMqNotifyService.UserUpdates(false, true, new[] { clientId }));
+            await _rabbitMqNotifyService.UserUpdates(false, true, new[] {clientId});
         }
 
         public async Task UpdateBalanceAsync(string clientId, string accountId, decimal amount, AccountHistoryType historyType, string comment, bool changeTransferLimit = false)

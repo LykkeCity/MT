@@ -4,7 +4,6 @@ using AzureStorage.Tables.Templates.Index;
 using Common.Log;
 using MarginTrading.AzureRepositories;
 using MarginTrading.AzureRepositories.Logs;
-using MarginTrading.AzureRepositories.Reports;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Settings;
@@ -55,10 +54,6 @@ namespace MarginTrading.Backend.Modules
 				AzureRepoFactories.MarginTrading.CreateAccountsRepository(_settings.Db.MarginTradingConnString, _log)
 			).SingleInstance();
 
-			builder.Register<IMarginTradingAccountStatsRepository>(ctx =>
-				AzureRepoFactories.MarginTrading.CreateAccountStatsRepository(_settings.Db.HistoryConnString, _log)
-			).SingleInstance();
-
 			builder.Register<IMarginTradingOrdersHistoryRepository>(ctx =>
 				AzureRepoFactories.MarginTrading.CreateOrdersHistoryRepository(_settings.Db.HistoryConnString, _log)
 			).SingleInstance();
@@ -95,14 +90,6 @@ namespace MarginTrading.Backend.Modules
 				new AppGlobalSettingsRepository(AzureTableStorage<AppGlobalSettingsEntity>.Create(
 					() => _settings.Db.ClientPersonalInfoConnString, "Setup", _log)));
 
-			builder.Register<IAccountsStatsReportsRepository>(ctx =>
-				AzureRepoFactories.MarginTrading.CreateAccountsStatsReportsRepository(_settings.Db.ReportsConnString, _log)
-			).SingleInstance();
-
-			builder.Register<IAccountsReportsRepository>(ctx =>
-				AzureRepoFactories.MarginTrading.CreateAccountsReportsRepository(_settings.Db.ReportsConnString, _log)
-			).SingleInstance();
-			
 			builder.Register<IRiskSystemCommandsLogRepository>(ctx =>
 				AzureRepoFactories.MarginTrading.CreateRiskSystemCommandsLogRepository(_settings.Db.LogsConnString, _log)
 			).SingleInstance();

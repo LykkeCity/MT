@@ -7,13 +7,12 @@ using MarginTrading.Backend.Core.Messages;
 
 namespace MarginTrading.Backend.Services
 {
-    public class AccountAssetsCacheService : IAccountAssetsCacheService
+    public class  AccountAssetsCacheService : IAccountAssetsCacheService
     {
         private Dictionary<(string, string), IAccountAssetPair[]> _accountGroupCache =
             new Dictionary<(string, string), IAccountAssetPair[]>();
         private Dictionary<(string, string, string), IAccountAssetPair> _instrumentsCache =
             new Dictionary<(string, string, string), IAccountAssetPair>();
-        private HashSet<string> _instruments = new HashSet<string>();
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
 
         public IAccountAssetPair GetAccountAsset(string tradingConditionId, string accountAssetId, string instrument)
@@ -117,7 +116,14 @@ namespace MarginTrading.Backend.Services
             _lockSlim.EnterReadLock();
             try
             {
-                return _accountGroupCache[GetAccountGroupCacheKey(tradingConditionId, baseAssetId)].ToList();
+                var key = GetAccountGroupCacheKey(tradingConditionId, baseAssetId);
+
+                if (!_accountGroupCache.TryGetValue(key, out var assets))
+                {
+                    return new List<IAccountAssetPair>();
+                }
+
+                return assets;
             }
             finally
             {
@@ -137,8 +143,6 @@ namespace MarginTrading.Backend.Services
                 _instrumentsCache = accountAssets
                     .GroupBy(a => GetInstrumentCacheKey(a.TradingConditionId, a.BaseAssetId, a.Instrument))
                     .ToDictionary(g => g.Key, g => g.SingleOrDefault());
-
-                _instruments = new HashSet<string>(accountAssets.Select(a => a.Instrument).Distinct());
             }
             finally
             {

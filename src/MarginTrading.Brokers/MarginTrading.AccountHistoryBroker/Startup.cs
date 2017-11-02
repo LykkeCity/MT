@@ -4,12 +4,13 @@ using MarginTrading.AccountHistoryBroker.AzureRepositories;
 using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Core;
 using MarginTrading.BrokerBase;
+using MarginTrading.BrokerBase.Settings;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MarginTrading.AccountHistoryBroker
 {
-    public class Startup : BrokerStartupBase<Settings>
+    public class Startup : BrokerStartupBase<DefaultBrokerApplicationSettings<Settings>, Settings>
     {
         protected override string ApplicationName => "MarginTradingAccountHistoryBroker";
 
@@ -19,11 +20,8 @@ namespace MarginTrading.AccountHistoryBroker
 
 
         protected override void RegisterCustomServices(IServiceCollection services, ContainerBuilder builder,
-            Settings settingsRoot, ILog log, bool isLive)
+            Settings settings, ILog log, bool isLive)
         {
-            var settings = isLive ? settingsRoot.MtBackend.MarginTradingLive : settingsRoot.MtBackend.MarginTradingDemo;
-            settings.IsLive = isLive;
-            builder.RegisterInstance(settings).SingleInstance();
             builder.RegisterType<Application>().As<IBrokerApplication>().SingleInstance();
 
             builder.Register<IMarginTradingAccountHistoryRepository>(ctx =>

@@ -2,7 +2,6 @@
 using AzureStorage;
 using AzureStorage.Tables;
 using Common.Log;
-using MarginTrading.Backend.Core.Settings;
 
 namespace MarginTrading.AccountMarginEventsBroker.AzureRepositories
 {
@@ -10,7 +9,7 @@ namespace MarginTrading.AccountMarginEventsBroker.AzureRepositories
     {
         private readonly INoSQLTableStorage<AccountMarginEventReportEntity> _tableStorage;
 
-        public AccountMarginEventsReportsRepository(MarginSettings settings, ILog log)
+        public AccountMarginEventsReportsRepository(Settings settings, ILog log)
         {
             _tableStorage = AzureTableStorage<AccountMarginEventReportEntity>.Create(() => settings.Db.ReportsConnString,
                 "AccountMarginEventsReports", log);
