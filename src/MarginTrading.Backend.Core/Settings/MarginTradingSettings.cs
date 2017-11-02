@@ -64,6 +64,7 @@ namespace MarginTrading.Backend.Core.Settings
         public string HistoryConnString { get; set; }
         public string StateConnString { get; set; }
         public string ReportsConnString { get; set; }
+        public string ReportsSqlConnString { get; set; }
     }
 
     public class RabbitMqQueues

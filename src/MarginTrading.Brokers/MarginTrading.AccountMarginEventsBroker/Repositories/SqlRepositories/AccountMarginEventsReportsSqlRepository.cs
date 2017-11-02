@@ -41,12 +41,7 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
         public AccountMarginEventsReportsSqlRepository(MarginSettings settings, ILog log)
         {
             _log = log;
-#if DEBUG
-            _connection = new SqlConnection(@"Server=.\SQLEXPRESS1;Database=WampTlsLogs;User Id=sa;Password = na123456;");
-
-#else
-            _connection = new SqlConnection(settings.Db.ReportsConnString);
-#endif
+            _connection = new SqlConnection(settings.Db.ReportsSqlConnString);
             CreateTableIfDoesntExists();
         }
 
