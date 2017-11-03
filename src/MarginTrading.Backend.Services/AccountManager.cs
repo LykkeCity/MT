@@ -179,31 +179,30 @@ namespace MarginTrading.Backend.Services
                 _rabbitMqNotifyService.UserUpdates(false, true, new[] { clientId }));
         }
 
-        public async Task UpdateBalanceAsync(string clientId, string accountId, decimal amount, AccountHistoryType historyType, string comment, bool changeTransferLimit = false)
+        public async Task UpdateBalanceAsync(IMarginTradingAccount account, decimal amount, AccountHistoryType historyType, string comment, bool changeTransferLimit = false)
         {
             if (historyType == AccountHistoryType.Deposit && changeTransferLimit)
             {
-                await CheckDepositLimits(clientId, accountId, amount);
+                CheckDepositLimits(account, amount);
             }
 
             if (changeTransferLimit)
             {
-                await CheckTransferLimits(clientId, accountId, amount);
+                CheckTransferLimits(account, amount);
             }
 
-            var updatedAccount = await _repository.UpdateBalanceAsync(clientId, accountId, amount, changeTransferLimit);
+            var updatedAccount = await _repository.UpdateBalanceAsync(account.ClientId, account.Id, amount, changeTransferLimit);
             _acountBalanceChangedEventChannel.SendEvent(this, new AccountBalanceChangedEventArgs(updatedAccount));
             //todo: move to separate event consumers
             _accountsCacheService.UpdateBalance(updatedAccount);
             _clientNotifyService.NotifyAccountUpdated(updatedAccount);
 
-            await _rabbitMqNotifyService.AccountHistory(accountId, clientId, amount, updatedAccount.Balance, updatedAccount.WithdrawTransferLimit, historyType, comment);
+            await _rabbitMqNotifyService.AccountHistory(account.Id, account.ClientId, amount, updatedAccount.Balance,
+                updatedAccount.WithdrawTransferLimit, historyType, comment);
         }
 
-        private async Task CheckDepositLimits(string clientId, string accountId, decimal amount)
+        private void CheckDepositLimits(IMarginTradingAccount account, decimal amount)
         {
-            var account = await _repository.GetAsync(clientId, accountId);
-
             //limit can not be more then max after deposit
             if (amount > 0)
             {
@@ -218,10 +217,8 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        private async Task CheckTransferLimits(string clientId, string accountId, decimal amount)
+        private void CheckTransferLimits(IMarginTradingAccount account, decimal amount)
         {
-            var account = await _repository.GetAsync(clientId, accountId);
-
             //withdraw can not be more then limit
             if (amount < 0 && account.WithdrawTransferLimit < Math.Abs(amount))
             {
@@ -243,11 +240,9 @@ namespace MarginTrading.Backend.Services
         {
             var account = _accountsCacheService.Get(clientId, accountId);
 
-            await UpdateBalanceAsync(clientId, accountId, -account.Balance, AccountHistoryType.Reset,
+            await UpdateBalanceAsync(account, LykkeConstants.DefaultDemoBalance - account.Balance,
+                AccountHistoryType.Reset,
                 "Reset account");
-
-            await UpdateBalanceAsync(clientId, accountId, LykkeConstants.DefaultDemoBalance, AccountHistoryType.Deposit,
-                "Initial deposit");
         }
 
         public async Task AddAccountAsync(string clientId, string baseAssetId, string tradingConditionId)
