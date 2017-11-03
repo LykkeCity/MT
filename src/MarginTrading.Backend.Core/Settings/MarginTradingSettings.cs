@@ -41,6 +41,7 @@ namespace MarginTrading.Backend.Core.Settings
         public string ApplicationInsightsKey { get; set; }
         [Optional]
         public virtual TelemetrySettings Telemetry { get; set; }
+        public int MaxMarketMakerLimitOrderAge { get; set; }
     }
 
     public class NotificationSettings
