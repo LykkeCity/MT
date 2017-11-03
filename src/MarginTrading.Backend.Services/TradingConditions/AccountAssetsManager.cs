@@ -1,9 +1,10 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using MarginTrading.Backend.Core;
+using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Core.TradingConditions;
 
-namespace MarginTrading.Backend.Services
+namespace MarginTrading.Backend.Services.TradingConditions
 {
     public class AccountAssetsManager
     {

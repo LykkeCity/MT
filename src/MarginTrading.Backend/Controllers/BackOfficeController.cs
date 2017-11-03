@@ -9,10 +9,12 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Models;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
+using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Middleware;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Settings;
@@ -248,7 +250,7 @@ namespace MarginTrading.Backend.Controllers
 
         [HttpGet]
         [Route("tradingConditions/getall")]
-        [ProducesResponseType(typeof(List<MarginTradingCondition>), 200)]
+        [ProducesResponseType(typeof(List<TradingCondition>), 200)]
         public IActionResult GetAllTradingConditions()
         {
             var tradingConditions = _tradingConditionsCacheService.GetAllTradingConditions();
@@ -257,7 +259,7 @@ namespace MarginTrading.Backend.Controllers
 
         [HttpGet]
         [Route("tradingConditions/get/{id}")]
-        [ProducesResponseType(typeof(MarginTradingCondition), 200)]
+        [ProducesResponseType(typeof(TradingCondition), 200)]
         public IActionResult GetTradingCondition(string id)
         {
             var tradingCondition = _tradingConditionsCacheService.GetTradingCondition(id);
@@ -266,7 +268,7 @@ namespace MarginTrading.Backend.Controllers
 
         [HttpPost]
         [Route("tradingConditions/add")]
-        public async Task<IActionResult> AddOrReplaceTradingCondition([FromBody]MarginTradingCondition model)
+        public async Task<IActionResult> AddOrReplaceTradingCondition([FromBody]TradingCondition model)
         {
             if (_tradingConditionsCacheService.GetTradingCondition(model.Id) == null)
             {
@@ -285,7 +287,7 @@ namespace MarginTrading.Backend.Controllers
 
         [HttpGet]
         [Route("accountGroups/getall")]
-        [ProducesResponseType(typeof(List<MarginTradingAccountGroup>), 200)]
+        [ProducesResponseType(typeof(List<AccountGroup>), 200)]
         public IActionResult GetAllAccountGrpups()
         {
             var accountGrpups = _accountGroupCacheService.GetAllAccountGroups();
@@ -294,7 +296,7 @@ namespace MarginTrading.Backend.Controllers
 
         [HttpGet]
         [Route("accountGroups/get/{tradingConditionId}/{id}")]
-        [ProducesResponseType(typeof(MarginTradingAccountGroup), 200)]
+        [ProducesResponseType(typeof(AccountGroup), 200)]
         public IActionResult GetAccountGroup(string tradingConditionId, string id)
         {
             var accountGroup = _accountGroupCacheService.GetAccountGroup(tradingConditionId, id);
@@ -303,7 +305,7 @@ namespace MarginTrading.Backend.Controllers
 
         [HttpPost]
         [Route("accountGroups/add")]
-        public async Task<IActionResult> AddOrReplaceAccountGroup([FromBody]MarginTradingAccountGroup model)
+        public async Task<IActionResult> AddOrReplaceAccountGroup([FromBody]AccountGroup model)
         {
             await _accountGroupManager.AddOrReplaceAccountGroupAsync(model);
             await _tradingConditionsManager.UpdateTradingConditions(model.TradingConditionId);
@@ -456,7 +458,7 @@ namespace MarginTrading.Backend.Controllers
 
             try
             {
-                await _accountManager.UpdateBalanceAsync(request.ClientId, request.AccountId, Math.Abs(request.Amount),
+                await _accountManager.UpdateBalanceAsync(account, Math.Abs(request.Amount),
                     AccountHistoryType.Deposit, "Account deposit", changeTransferLimit);
             }
             catch (Exception e)
@@ -489,7 +491,7 @@ namespace MarginTrading.Backend.Controllers
 
             try
             {
-                await _accountManager.UpdateBalanceAsync(request.ClientId, request.AccountId, -Math.Abs(request.Amount),
+                await _accountManager.UpdateBalanceAsync(account, -Math.Abs(request.Amount),
                     AccountHistoryType.Withdraw, "Account withdraw", changeTransferLimit);
             }
             catch (Exception e)

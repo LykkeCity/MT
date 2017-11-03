@@ -8,15 +8,15 @@ namespace MarginTrading.AzureRepositories
     {
         public static class MarginTrading
         {
-            public static MarginTradingConditionsRepository CreateTradingConditionsRepository(string connstring, ILog log)
+            public static TradingConditionsRepository CreateTradingConditionsRepository(string connstring, ILog log)
             {
-                return new MarginTradingConditionsRepository(AzureTableStorage<MarginTradingConditionEntity>.Create(() => connstring,
+                return new TradingConditionsRepository(AzureTableStorage<TradingConditionEntity>.Create(() => connstring,
                     "MarginTradingConditions", log));
             }
 
-            public static MarginTradingAccountGroupRepository CreateAccountGroupRepository(string connstring, ILog log)
+            public static AccountGroupRepository CreateAccountGroupRepository(string connstring, ILog log)
             {
-                return new MarginTradingAccountGroupRepository(AzureTableStorage<MarginTradingAccountGroupEntity>.Create(() => connstring,
+                return new AccountGroupRepository(AzureTableStorage<AccountGroupEntity>.Create(() => connstring,
                     "MarginTradingAccountGroups", log));
             }
 
