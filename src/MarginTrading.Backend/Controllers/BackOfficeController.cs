@@ -458,7 +458,7 @@ namespace MarginTrading.Backend.Controllers
 
             try
             {
-                await _accountManager.UpdateBalanceAsync(request.ClientId, request.AccountId, Math.Abs(request.Amount),
+                await _accountManager.UpdateBalanceAsync(account, Math.Abs(request.Amount),
                     AccountHistoryType.Deposit, "Account deposit", changeTransferLimit);
             }
             catch (Exception e)
@@ -491,7 +491,7 @@ namespace MarginTrading.Backend.Controllers
 
             try
             {
-                await _accountManager.UpdateBalanceAsync(request.ClientId, request.AccountId, -Math.Abs(request.Amount),
+                await _accountManager.UpdateBalanceAsync(account, -Math.Abs(request.Amount),
                     AccountHistoryType.Withdraw, "Account withdraw", changeTransferLimit);
             }
             catch (Exception e)
