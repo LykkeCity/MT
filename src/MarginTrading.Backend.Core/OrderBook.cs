@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.MatchedOrders;
+using MarginTrading.Backend.Core.Settings;
 
 namespace MarginTrading.Backend.Core
 {
@@ -69,14 +70,16 @@ namespace MarginTrading.Backend.Core
             }
         }
 
-        public IEnumerable<MatchedOrder> Match(Order order, OrderDirection orderTypeToMatch, decimal volumeToMatch)
+        public IEnumerable<MatchedOrder> Match(Order order, OrderDirection orderTypeToMatch, decimal volumeToMatch, int maxMarketMakerLimitOrderAge)
         {
             if (volumeToMatch == 0)
                 yield break;
 
             var source = orderTypeToMatch == OrderDirection.Buy ? Buy : Sell;
             volumeToMatch = Math.Abs(volumeToMatch);
-            var minMarketMakerOrderDate = DateTime.UtcNow.AddSeconds(-MarginTradingHelpers.MaxMarketMakerLimitOrderAgeInSec);
+            var minMarketMakerOrderDate = maxMarketMakerLimitOrderAge > 0
+                ? DateTime.UtcNow.AddSeconds(-maxMarketMakerLimitOrderAge)
+                : DateTime.MinValue;
 
             foreach (KeyValuePair<decimal, List<LimitOrder>> pair in source)
                 foreach (var limitOrder in pair.Value.OrderBy(item => item.CreateDate))
@@ -282,6 +285,13 @@ namespace MarginTrading.Backend.Core
     /// </remarks>
     public class OrderBookList : IEnumerable<KeyValuePair<string, OrderBook>>
     {
+        private readonly MarginSettings _marginSettings;
+
+        public OrderBookList(MarginSettings marginSettings)
+        {
+            _marginSettings = marginSettings;
+        }
+        
         private Dictionary<string, OrderBook> _orderBooks;
 
         public Dictionary<string, OrderBook> GetOrderBookState()
@@ -310,7 +320,7 @@ namespace MarginTrading.Backend.Core
                 return new MatchedOrderCollection();
 
             return new MatchedOrderCollection(_orderBooks[order.Instrument]
-                .Match(order, orderTypeToMatch, volumeToMatch).ToList());
+                .Match(order, orderTypeToMatch, volumeToMatch, _marginSettings.MaxMarketMakerLimitOrderAge).ToList());
         }
 
         public void Update(Order order, OrderDirection orderTypeToMatch, IEnumerable<MatchedOrder> matchedOrders)
