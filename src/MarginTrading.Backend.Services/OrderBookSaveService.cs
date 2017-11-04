@@ -6,6 +6,7 @@ using Common;
 using Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Services.Infrastructure;
+using MarginTrading.Backend.Services.TradingConditions;
 
 namespace MarginTrading.Backend.Services
 {

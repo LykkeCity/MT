@@ -3,8 +3,10 @@ using System.Linq;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Messages;
+using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Helpers;
+using MarginTrading.Backend.Services.TradingConditions;
 
 namespace MarginTrading.Backend.Services
 {

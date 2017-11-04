@@ -1,5 +1,6 @@
 ﻿using System;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Services.TradingConditions;
 
 namespace MarginTrading.Backend.Services
 {

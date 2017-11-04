@@ -1,29 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using MarginTrading.Backend.Core.Settings;
-
-namespace MarginTrading.Backend.Core
+﻿namespace MarginTrading.Backend.Core.TradingConditions
 {
-    public interface IAccountAssetPair
-    {
-        string TradingConditionId { get; }
-        string BaseAssetId { get; }
-        string Instrument { get; }
-        int LeverageInit { get; }
-        int LeverageMaintenance { get; }
-        decimal SwapLong { get; }
-        decimal SwapShort { get; }
-        decimal SwapLongPct { get; }
-        decimal SwapShortPct { get; }
-        decimal CommissionLong { get; }
-        decimal CommissionShort { get; }
-        decimal CommissionLot { get; }
-        decimal DeltaBid { get; }
-        decimal DeltaAsk { get; }
-        decimal DealLimit { get; }
-        decimal PositionLimit { get; }
-    }
-
     public class AccountAssetPair : IAccountAssetPair
     {
         public string TradingConditionId { get; set; }
@@ -65,14 +41,5 @@ namespace MarginTrading.Backend.Core
                 PositionLimit = src.PositionLimit
             };
         }
-    }
-
-    public interface IAccountAssetPairsRepository
-    {
-        Task AddOrReplaceAsync(IAccountAssetPair accountAssetPair);
-        Task<IAccountAssetPair> GetAsync(string tradingConditionId, string baseAssetId, string assetPairId);
-        Task<IEnumerable<IAccountAssetPair>> GetAllAsync(string tradingConditionId, string baseAssetId);
-        Task<IEnumerable<IAccountAssetPair>> GetAllAsync();
-        Task AssignAssetPairs(string tradingConditionId, string baseAssetId, string[] assetPairsIds, AccountAssetsSettings defaults);
     }
 }
