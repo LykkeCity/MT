@@ -1,12 +1,13 @@
-﻿using System.Threading.Tasks;
-using Common.Log;
+﻿using Common.Log;
 using Lykke.SlackNotifications;
-using MarginTrading.AccountHistoryBroker.AzureRepositories;
+using MarginTrading.AccountHistoryBroker.Repositories;
+using MarginTrading.AccountHistoryBroker.Repositories.Models;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.BrokerBase;
 using MarginTrading.BrokerBase.Settings;
 using MarginTrading.Contract.BackendContracts;
+using System.Threading.Tasks;
 
 namespace MarginTrading.AccountHistoryBroker
 {

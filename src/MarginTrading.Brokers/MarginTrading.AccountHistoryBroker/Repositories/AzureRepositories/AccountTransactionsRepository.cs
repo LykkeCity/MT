@@ -1,8 +1,8 @@
-﻿using System.Threading.Tasks;
-using AzureStorage;
+﻿using AzureStorage;
 using AzureStorage.Tables;
 using Common.Log;
-using MarginTrading.Backend.Core.Settings;
+using MarginTrading.AccountHistoryBroker.Repositories.Models;
+using System.Threading.Tasks;
 
 namespace MarginTrading.AccountHistoryBroker.Repositories.AzureRepositories
 {

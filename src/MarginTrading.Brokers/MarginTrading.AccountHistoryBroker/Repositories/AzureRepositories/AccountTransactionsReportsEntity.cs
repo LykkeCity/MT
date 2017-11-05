@@ -1,6 +1,6 @@
-﻿using System;
+﻿using MarginTrading.AccountHistoryBroker.Repositories.Models;
 using Microsoft.WindowsAzure.Storage.Table;
-using MarginTrading.Core;
+using System;
 
 namespace MarginTrading.AccountHistoryBroker.Repositories.AzureRepositories
 {

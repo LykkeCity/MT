@@ -1,12 +1,9 @@
 ﻿using Common.Log;
 using Dapper;
-using MarginTrading.Core;
-using MarginTrading.Core.Settings;
+using MarginTrading.AccountHistoryBroker.Repositories.Models;
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
@@ -31,14 +28,10 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
         private readonly IDbConnection _connection;
         private readonly ILog _log;
 
-        public AccountTransactionsReportsSqlRepository(MarginSettings settings, ILog log)
+        public AccountTransactionsReportsSqlRepository(Settings settings, ILog log)
         {
             _log = log;
-#if DEBUG
-            _connection = new SqlConnection(@"Server=.\SQLEXPRESS1;Database=WampTlsLogs;User Id=sa;Password = na123456;");
-#else
-            _connection = new SqlConnection(settings.Db.ReportsConnString);
-#endif
+            _connection = new SqlConnection(settings.Db.ReportsSqlConnString);
             CreateTableIfDoesntExists();
         }
 

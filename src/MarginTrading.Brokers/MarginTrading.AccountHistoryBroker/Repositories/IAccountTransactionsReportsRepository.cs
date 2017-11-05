@@ -1,4 +1,4 @@
-﻿using MarginTrading.Core;
+﻿using MarginTrading.AccountHistoryBroker.Repositories.Models;
 using System.Threading.Tasks;
 
 namespace MarginTrading.AccountHistoryBroker.Repositories

@@ -1,5 +1,4 @@
-﻿using MarginTrading.Core;
-using System;
+﻿using System;
 
 namespace MarginTrading.AccountHistoryBroker.Repositories.Models
 {
