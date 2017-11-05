@@ -2,6 +2,7 @@
 using AzureStorage;
 using AzureStorage.Tables;
 using Common.Log;
+using MarginTrading.AccountMarginEventsBroker.Repositories.Models;
 
 namespace MarginTrading.AccountMarginEventsBroker.Repositories.AzureRepositories
 {

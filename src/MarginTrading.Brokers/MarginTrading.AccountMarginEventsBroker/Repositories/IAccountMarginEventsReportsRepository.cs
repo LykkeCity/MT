@@ -1,4 +1,4 @@
-﻿using MarginTrading.Backend.Core;
+﻿using MarginTrading.AccountMarginEventsBroker.Repositories.Models;
 using System.Threading.Tasks;
 
 namespace MarginTrading.AccountMarginEventsBroker.Repositories

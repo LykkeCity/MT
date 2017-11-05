@@ -1,7 +1,6 @@
 ﻿using Common.Log;
 using Dapper;
-using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Settings;
+using MarginTrading.AccountMarginEventsBroker.Repositories.Models;
 using System;
 using System.Data;
 using System.Data.SqlClient;
@@ -38,12 +37,12 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
         private readonly IDbConnection _connection;
         private readonly ILog _log;
 
-        public AccountMarginEventsReportsSqlRepository(MarginSettings settings, ILog log)
+        public AccountMarginEventsReportsSqlRepository(Settings settings, ILog log)
         {
             _log = log;
             _connection = new SqlConnection(settings.Db.ReportsSqlConnString);
             CreateTableIfDoesntExists();
-        }
+         }
 
         public async Task InsertOrReplaceAsync(IAccountMarginEventReport report)
         {

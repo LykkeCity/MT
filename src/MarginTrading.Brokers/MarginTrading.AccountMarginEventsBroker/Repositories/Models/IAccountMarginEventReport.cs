@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace MarginTrading.Backend.Core
+namespace MarginTrading.AccountMarginEventsBroker.Repositories.Models
 {
-    public interface IAccountMarginEventReport
+    internal interface IAccountMarginEventReport
     {
         string AccountId { get; }
         decimal Balance { get; }

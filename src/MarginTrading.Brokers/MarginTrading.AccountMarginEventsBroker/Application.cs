@@ -1,10 +1,11 @@
 ﻿using System.Threading.Tasks;
 using Common.Log;
 using Lykke.SlackNotifications;
-using MarginTrading.AccountMarginEventsBroker.AzureRepositories;
 using MarginTrading.BrokerBase;
 using MarginTrading.BrokerBase.Settings;
 using MarginTrading.Contract.RabbitMqMessageModels;
+using MarginTrading.AccountMarginEventsBroker.Repositories;
+using MarginTrading.AccountMarginEventsBroker.Repositories.Models;
 
 namespace MarginTrading.AccountMarginEventsBroker
 {

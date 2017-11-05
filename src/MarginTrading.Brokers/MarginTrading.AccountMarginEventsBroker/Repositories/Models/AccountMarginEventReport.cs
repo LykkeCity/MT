@@ -1,5 +1,4 @@
-﻿using MarginTrading.Backend.Core;
-using System;
+﻿using System;
 
 namespace MarginTrading.AccountMarginEventsBroker.Repositories.Models
 {
