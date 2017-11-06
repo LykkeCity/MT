@@ -1,6 +1,7 @@
 ﻿using Common.Log;
 using Dapper;
 using MarginTrading.AccountReportsBroker.Repositories.Models;
+using MarginTrading.BrokerBase;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -42,7 +43,7 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
         {
             _log = log;
             _connection = new SqlConnection(settings.Db.ReportsSqlConnString);
-            CreateTableIfDoesntExists();
+            _connection.CreateTableIfDoesntExists(CreateTableScript, TableName);
         }
 
         public async Task InsertOrReplaceBatchAsync(IEnumerable<IAccountsStatReport> stats)
@@ -52,35 +53,6 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
            " values " +
            "(@Id, @Date, @BaseAssetId, @AccountId, @ClientId, @TradingConditionId, @Balance, @WithdrawTransferLimit, @MarginCall, @StopOut, @TotalCapital, @FreeMargin, @MarginAvailable, @UsedMargin, @MarginInit, @PnL, @OpenPositionsCount, @MarginUsageLevel, @IsLive)";
             await _connection.ExecuteAsync(query, stats);
-        }
-
-        private void CreateTableIfDoesntExists()
-        {
-            try
-            {
-                _connection.Open();
-                try
-                {
-                    // Check if table exists
-                    var res = _connection.ExecuteScalar($"select top 1 Id from {TableName}");
-                }
-                catch (SqlException)
-                {
-                    try
-                    {
-                        // Create table
-                        string query = string.Format(CreateTableScript, TableName);
-                        _connection.QueryAsync(query);
-                    }
-                    catch { throw; }
-                }
-                finally { _connection.Close(); }
-            }
-            catch (Exception ex)
-            {
-                _log.WriteErrorAsync("AccountsReportsSqlRepository", "CreateTableIfDoesntExists", null, ex);
-                throw;
-            }
         }
     }
 }
