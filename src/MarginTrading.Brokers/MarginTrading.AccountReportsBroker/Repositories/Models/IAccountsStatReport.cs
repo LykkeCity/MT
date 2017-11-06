@@ -1,7 +1,11 @@
-﻿namespace MarginTrading.AccountReportsBroker.Repositories.Models
+﻿using System;
+
+namespace MarginTrading.AccountReportsBroker.Repositories.Models
 {
     public interface IAccountsStatReport
     {
+        string Id { get; }
+        DateTime Date { get; }
         string BaseAssetId { get; }
         string AccountId { get; }
         string ClientId { get; }

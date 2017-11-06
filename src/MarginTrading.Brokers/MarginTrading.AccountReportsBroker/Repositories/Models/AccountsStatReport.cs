@@ -6,6 +6,8 @@ namespace MarginTrading.AccountReportsBroker.Repositories.Models
 {
     public class AccountsStatReport : IAccountsStatReport
     {
+        public string Id { get; set; }
+        public DateTime Date { get; set; }
         public string BaseAssetId { get; set; }
         public string AccountId { get; set; }
         public string ClientId { get; set; }

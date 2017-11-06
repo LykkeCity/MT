@@ -1,5 +1,4 @@
-﻿using AzureStorage.Tables;
-using Common.Log;
+﻿using Common.Log;
 using Dapper;
 using MarginTrading.AccountReportsBroker.Repositories.Models;
 using System;

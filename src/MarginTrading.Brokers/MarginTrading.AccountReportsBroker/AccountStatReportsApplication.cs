@@ -38,6 +38,8 @@ namespace MarginTrading.AccountReportsBroker
             var accountsStatsReports = message.Accounts?.Select(a =>
                 new AccountsStatReport
                 {
+                    Id = System.Guid.NewGuid().ToString().Replace("-", "").ToLower(),
+                    Date = System.DateTime.UtcNow,                    
                     AccountId = a.AccountId,
                     Balance = a.Balance,
                     BaseAssetId = a.BaseAssetId,

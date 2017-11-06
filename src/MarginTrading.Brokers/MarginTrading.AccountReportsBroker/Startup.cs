@@ -26,7 +26,7 @@ namespace MarginTrading.AccountReportsBroker
             builder.RegisterType<AccountStatReportsApplication>().As<IBrokerApplication>().SingleInstance();
             builder.RegisterType<AccountReportsApplication>().As<IBrokerApplication>().SingleInstance();
 
-            builder.RegisterType<AccountsStatsReportsRepository>().As<IAccountsStatsReportsRepository>()
+            builder.RegisterType<AccountsStatsReportsSqlRepository>().As<IAccountsStatsReportsRepository>()
                 .SingleInstance();
             
             builder.RegisterType<AccountsReportsSqlRepository>().As<IAccountsReportsRepository>()
