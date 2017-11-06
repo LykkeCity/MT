@@ -14,7 +14,7 @@ namespace MarginTrading.BrokerBase
                 try
                 {
                     // Check if table exists
-                    var res = connection.ExecuteScalar($"select top 1 Id from {tableName}");
+                    var res = connection.ExecuteScalar($"select top 1 * from {tableName}");
                 }
                 catch (SqlException)
                 {
