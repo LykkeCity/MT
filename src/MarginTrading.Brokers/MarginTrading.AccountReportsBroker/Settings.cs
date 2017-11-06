@@ -13,6 +13,7 @@ namespace MarginTrading.AccountReportsBroker
     {
         public string ReportsConnString { get; set; }
         public string HistoryConnString { get; set; }
+        public string ReportsSqlConnString { get; set; }
     }
     
     public class RabbitMqQueues

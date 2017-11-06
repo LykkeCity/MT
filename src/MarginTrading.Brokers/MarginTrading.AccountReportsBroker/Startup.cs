@@ -1,6 +1,8 @@
 ﻿using Autofac;
 using Common.Log;
-using MarginTrading.AccountReportsBroker.AzureRepositories;
+using MarginTrading.AccountReportsBroker.Repositories.AzureRepositories;
+using MarginTrading.AccountReportsBroker.Repositories;
+using MarginTrading.AccountReportsBroker.Repositories.SqlRepositories;
 using MarginTrading.AzureRepositories;
 using MarginTrading.BrokerBase;
 using MarginTrading.BrokerBase.Settings;
@@ -24,10 +26,10 @@ namespace MarginTrading.AccountReportsBroker
             builder.RegisterType<AccountStatReportsApplication>().As<IBrokerApplication>().SingleInstance();
             builder.RegisterType<AccountReportsApplication>().As<IBrokerApplication>().SingleInstance();
 
-            builder.RegisterType<AccountsStatsReportsRepository>().As<IAccountsStatsReportsRepository>()
+            builder.RegisterType<AccountsStatsReportsSqlRepository>().As<IAccountsStatsReportsRepository>()
                 .SingleInstance();
             
-            builder.RegisterType<AccountsReportsRepository>().As<IAccountsReportsRepository>()
+            builder.RegisterType<AccountsReportsSqlRepository>().As<IAccountsReportsRepository>()
                 .SingleInstance();
 
             builder.Register<IMarginTradingAccountStatsRepository>(ctx =>

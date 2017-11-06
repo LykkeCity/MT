@@ -1,13 +1,14 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
-using Common.Log;
+﻿using Common.Log;
 using Lykke.SlackNotifications;
-using MarginTrading.AccountReportsBroker.AzureRepositories;
-using MarginTrading.AccountReportsBroker.AzureRepositories.Entities;
+using MarginTrading.AccountReportsBroker.Repositories;
+using MarginTrading.AccountReportsBroker.Repositories.AzureRepositories.Entities;
+using MarginTrading.AccountReportsBroker.Repositories.Models;
 using MarginTrading.AzureRepositories;
 using MarginTrading.BrokerBase;
 using MarginTrading.BrokerBase.Settings;
 using MarginTrading.Contract.RabbitMqMessageModels;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace MarginTrading.AccountReportsBroker
 {
@@ -35,25 +36,27 @@ namespace MarginTrading.AccountReportsBroker
         protected override Task HandleMessage(AccountStatsUpdateMessage message)
         {
             var accountsStatsReports = message.Accounts?.Select(a =>
-                new AccountsStatReportEntity
+                new AccountsStatReport
                 {
+                    Id = System.Guid.NewGuid().ToString().Replace("-", "").ToLower(),
+                    Date = System.DateTime.UtcNow,                    
                     AccountId = a.AccountId,
-                    Balance = (double) a.Balance,
+                    Balance = a.Balance,
                     BaseAssetId = a.BaseAssetId,
                     ClientId = a.ClientId,
                     IsLive = a.IsLive,
-                    FreeMargin = (double) a.FreeMargin,
-                    MarginAvailable = (double) a.MarginAvailable,
-                    MarginCall = (double) a.MarginCallLevel,
-                    MarginInit = (double) a.MarginInit,
-                    MarginUsageLevel = (double) a.MarginUsageLevel,
-                    OpenPositionsCount = (double) a.OpenPositionsCount,
-                    PnL = (double) a.PnL,
-                    StopOut = (double) a.StopOutLevel,
-                    TotalCapital = (double) a.TotalCapital,
+                    FreeMargin = a.FreeMargin,
+                    MarginAvailable = a.MarginAvailable,
+                    MarginCall = a.MarginCallLevel,
+                    MarginInit = a.MarginInit,
+                    MarginUsageLevel = a.MarginUsageLevel,
+                    OpenPositionsCount = a.OpenPositionsCount,
+                    PnL = a.PnL,
+                    StopOut = a.StopOutLevel,
+                    TotalCapital = a.TotalCapital,
                     TradingConditionId = a.TradingConditionId,
-                    UsedMargin = (double) a.UsedMargin,
-                    WithdrawTransferLimit = (double) a.WithdrawTransferLimit
+                    UsedMargin = a.UsedMargin,
+                    WithdrawTransferLimit = a.WithdrawTransferLimit
                 });
 
             var accountStats = message.Accounts?.Select(a => new MarginTradingAccountStatsEntity

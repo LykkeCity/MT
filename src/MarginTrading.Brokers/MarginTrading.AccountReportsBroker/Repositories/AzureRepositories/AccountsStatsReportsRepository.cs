@@ -1,13 +1,14 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using AzureStorage;
+﻿using AzureStorage;
 using AzureStorage.Tables;
 using Common.Log;
-using MarginTrading.AccountReportsBroker.AzureRepositories.Entities;
+using MarginTrading.AccountReportsBroker.Repositories.AzureRepositories.Entities;
+using MarginTrading.AccountReportsBroker.Repositories.Models;
 using MarginTrading.AzureRepositories.Helpers;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace MarginTrading.AccountReportsBroker.AzureRepositories
+namespace MarginTrading.AccountReportsBroker.Repositories.AzureRepositories
 {
     public class AccountsStatsReportsRepository : IAccountsStatsReportsRepository
     {
@@ -19,9 +20,9 @@ namespace MarginTrading.AccountReportsBroker.AzureRepositories
                 "ClientAccountsStatusReports", log);
         }
         
-        public Task InsertOrReplaceBatchAsync(IEnumerable<AccountsStatReportEntity> stats)
+        public Task InsertOrReplaceBatchAsync(IEnumerable<IAccountsStatReport> stats)
         {
-            var tasks = BatchEntityInsertHelper.MakeBatchesByPartitionKey(stats)
+            var tasks = BatchEntityInsertHelper.MakeBatchesByPartitionKey(stats.Select(m => AccountsStatReportEntity.Create(m)))
                 .Select(b => _tableStorage.InsertOrReplaceBatchAsync(b));
             return Task.WhenAll(tasks);
         }
