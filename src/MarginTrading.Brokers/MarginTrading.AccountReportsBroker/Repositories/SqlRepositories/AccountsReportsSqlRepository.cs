@@ -31,7 +31,12 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
             _settings = settings;
             using (var conn = new SqlConnection(_settings.Db.ReportsSqlConnString))
             {
-                conn.CreateTableIfDoesntExists(CreateTableScript, TableName);
+                try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
+                catch (Exception ex)
+                {
+                    _log.WriteErrorAsync("AccountsReportsSqlRepository", "CreateTableIfDoesntExists", null, ex);
+                    throw;
+                }
             }
         }
 
@@ -44,7 +49,12 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
 
             using (var conn = new SqlConnection(_settings.Db.ReportsSqlConnString))
             {
-                await conn.ExecuteAsync(query, report);
+                try { await conn.ExecuteAsync(query, report); }
+                catch (Exception ex)
+                {
+                    await _log.WriteErrorAsync("AccountsReportsSqlRepository", "InsertOrReplaceAsync", null, ex);
+                    throw;
+                }
             }
         }
     }

@@ -45,7 +45,12 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
             _settings = settings;
             using (var conn = new SqlConnection(_settings.Db.ReportsSqlConnString))
             {
-                conn.CreateTableIfDoesntExists(CreateTableScript, TableName);
+                try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
+                catch (Exception ex)
+                {
+                    _log.WriteErrorAsync("AccountsStatsReportsSqlRepository", "CreateTableIfDoesntExists", null, ex);
+                    throw;
+                }
             }
         }
 
@@ -57,7 +62,12 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
            "(@Id, @Date, @BaseAssetId, @AccountId, @ClientId, @TradingConditionId, @Balance, @WithdrawTransferLimit, @MarginCall, @StopOut, @TotalCapital, @FreeMargin, @MarginAvailable, @UsedMargin, @MarginInit, @PnL, @OpenPositionsCount, @MarginUsageLevel, @IsLive)";
             using (var conn = new SqlConnection(_settings.Db.ReportsSqlConnString))
             {
-                await conn.ExecuteAsync(query, stats);
+                try { await conn.ExecuteAsync(query, stats); }
+                catch (Exception ex)
+                {
+                    await _log.WriteErrorAsync("AccountsStatsReportsSqlRepository", "InsertOrReplaceBatchAsync", null, ex);
+                    throw;
+                }
             }
         }
     }
