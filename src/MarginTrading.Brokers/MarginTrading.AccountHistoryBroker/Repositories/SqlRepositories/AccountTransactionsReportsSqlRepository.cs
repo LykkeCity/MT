@@ -1,6 +1,7 @@
 ﻿using Common.Log;
 using Dapper;
 using MarginTrading.AccountHistoryBroker.Repositories.Models;
+using MarginTrading.BrokerBase;
 using System;
 using System.Data;
 using System.Data.SqlClient;
@@ -32,7 +33,7 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
         {
             _log = log;
             _connection = new SqlConnection(settings.Db.ReportsSqlConnString);
-            CreateTableIfDoesntExists();
+            _connection.CreateTableIfDoesntExists(CreateTableScript, TableName);
         }
 
         public async Task InsertOrReplaceAsync(IAccountTransactionsReport entity)
@@ -43,35 +44,6 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
                 "(@Id ,@Date, @AccountId, @ClientId, @Amount, @Balance, @WithdrawTransferLimit, @Comment, @Type)";
 
             await _connection.ExecuteAsync(query, entity);
-        }
-
-        private void CreateTableIfDoesntExists()
-        {
-            try
-            {
-                _connection.Open();
-                try
-                {
-                    // Check if table exists
-                    var res = _connection.ExecuteScalar($"select top 1 Id from {TableName}");
-                }
-                catch (SqlException)
-                {
-                    try
-                    {
-                        // Create table
-                        string query = string.Format(CreateTableScript, TableName);
-                        _connection.QueryAsync(query);
-                    }
-                    catch { throw; }
-                }
-                finally { _connection.Close(); }
-            }
-            catch (Exception ex)
-            {
-                _log.WriteErrorAsync("AccountTransactionsReportsSqlRepository", "CreateTableIfDoesntExists", null, ex);
-                throw;
-            }
         }
     }
 }
