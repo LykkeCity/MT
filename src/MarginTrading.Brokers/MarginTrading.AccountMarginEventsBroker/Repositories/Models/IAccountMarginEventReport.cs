@@ -4,6 +4,7 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.Models
 {
     internal interface IAccountMarginEventReport
     {
+        string Id { get; }
         string AccountId { get; }
         decimal Balance { get; }
         string BaseAssetId { get; }

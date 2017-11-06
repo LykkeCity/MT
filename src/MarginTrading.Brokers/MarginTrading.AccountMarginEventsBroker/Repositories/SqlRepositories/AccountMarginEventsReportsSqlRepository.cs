@@ -1,6 +1,7 @@
 ﻿using Common.Log;
 using Dapper;
 using MarginTrading.AccountMarginEventsBroker.Repositories.Models;
+using MarginTrading.BrokerBase;
 using System;
 using System.Data;
 using System.Data.SqlClient;
@@ -12,6 +13,7 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
     {
         private const string TableName = "AccountMarginEventsReports";
         private const string CreateTableScript = "CREATE TABLE [{0}] (" +
+            "[Id][nvarchar](64) NOT NULL, " +
             "[EventId][nvarchar](64) NOT NULL, " +
             "[ClientId] [nvarchar] (64) NOT NULL, " +
             "[AccountId] [nvarchar] (64) NOT NULL, " +
@@ -31,7 +33,7 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
             "[TotalCapital] [numeric] (20, 10) NOT NULL, " +
             "[UsedMargin] [numeric] (20, 10) NOT NULL, " +
             "[WithdrawTransferLimit] [numeric] (20, 10) NOT NULL, " +
-            "CONSTRAINT[PK_{0}] PRIMARY KEY CLUSTERED ([EventId] ASC)" +
+            "CONSTRAINT[PK_{0}] PRIMARY KEY CLUSTERED ([Id] ASC)" +
             ");";
 
         private readonly IDbConnection _connection;
@@ -41,52 +43,19 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
         {
             _log = log;
             _connection = new SqlConnection(settings.Db.ReportsSqlConnString);
-            CreateTableIfDoesntExists();
+            _connection.CreateTableIfDoesntExists(CreateTableScript, TableName);
          }
 
         public async Task InsertOrReplaceAsync(IAccountMarginEventReport report)
         {
             string query = $"insert into {TableName} " +
-               "(EventId, ClientId, AccountId, TradingConditionId, Balance, BaseAssetId, EventTime, FreeMargin, IsEventStopout, MarginAvailable, " +
+               "(Id, EventId, ClientId, AccountId, TradingConditionId, Balance, BaseAssetId, EventTime, FreeMargin, IsEventStopout, MarginAvailable, " +
                "MarginCall, MarginInit, MarginUsageLevel, OpenPositionsCount, PnL, StopOut, TotalCapital, UsedMargin, WithdrawTransferLimit)" +
                " values " +
-               "(@EventId, @ClientId, @AccountId, @TradingConditionId, @Balance, @BaseAssetId, @EventTime, @FreeMargin, @IsEventStopout, @MarginAvailable, " +
+               "(@Id, @EventId, @ClientId, @AccountId, @TradingConditionId, @Balance, @BaseAssetId, @EventTime, @FreeMargin, @IsEventStopout, @MarginAvailable, " +
                "@MarginCall, @MarginInit, @MarginUsageLevel, @OpenPositionsCount, @PnL, @StopOut, @TotalCapital, @UsedMargin, @WithdrawTransferLimit)";
 
             await _connection.ExecuteAsync(query, report);
-        }
-
-        private void CreateTableIfDoesntExists()
-        {
-            try
-            {
-                // Open connection
-                _connection.Open();
-                try
-                {
-                    // Check if table exists
-                    var res = _connection.ExecuteScalar($"select top 1 EventId from {TableName}");
-                }
-                catch (SqlException)
-                {                    
-                    try
-                    {
-                        // Create table
-                        string query = string.Format(CreateTableScript, TableName);
-                        _connection.QueryAsync(query);
-                    }
-                    catch { throw; }
-                }
-                finally { _connection.Close(); }
-            }
-            catch (Exception ex)
-            {
-                _log.WriteErrorAsync("AccountMarginEventsReportsSqlRepository", "CreateTableIfDoesntExists", null, ex);
-                throw;
-            }
-
-
-
         }
     }
 }

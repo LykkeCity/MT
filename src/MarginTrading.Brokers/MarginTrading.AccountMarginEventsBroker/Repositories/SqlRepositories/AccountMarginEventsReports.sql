@@ -1,4 +1,5 @@
 ﻿CREATE TABLE [AccountMarginEventsReports](
+	[Id] [nvarchar](64) NOT NULL,
 	[EventId] [nvarchar](64) NOT NULL,
 	[ClientId] [nvarchar](64) NOT NULL,	
 	[AccountId] [nvarchar](64) NOT NULL,
@@ -20,5 +21,5 @@
 	[WithdrawTransferLimit] [numeric](20, 10) NOT NULL,
  CONSTRAINT [PK_AccountMarginEventsReports] PRIMARY KEY CLUSTERED 
 (
-	[EventId] ASC
+	[Id] ASC
 ));

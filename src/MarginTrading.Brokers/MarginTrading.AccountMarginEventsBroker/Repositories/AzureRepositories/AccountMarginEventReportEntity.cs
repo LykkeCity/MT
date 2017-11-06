@@ -38,6 +38,8 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.AzureRepositories
         public double OpenPositionsCount { get; set; }
         public double MarginUsageLevel { get; set; }
 
+        public string Id => EventId;
+
         decimal IAccountMarginEventReport.Balance => Convert.ToDecimal(Balance);
         decimal IAccountMarginEventReport.FreeMargin => Convert.ToDecimal(FreeMargin);
         decimal IAccountMarginEventReport.MarginAvailable => Convert.ToDecimal(MarginAvailable);
