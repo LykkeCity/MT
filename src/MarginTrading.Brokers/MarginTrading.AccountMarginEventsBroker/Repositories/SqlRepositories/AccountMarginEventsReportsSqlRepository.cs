@@ -36,14 +36,22 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
             "CONSTRAINT[PK_{0}] PRIMARY KEY CLUSTERED ([Id] ASC)" +
             ");";
 
-        private readonly IDbConnection _connection;
+        private readonly Settings _settings;
         private readonly ILog _log;
 
         public AccountMarginEventsReportsSqlRepository(Settings settings, ILog log)
         {
             _log = log;
-            _connection = new SqlConnection(settings.Db.ReportsSqlConnString);
-            _connection.CreateTableIfDoesntExists(CreateTableScript, TableName);
+            _settings = settings;
+            using (var conn = new SqlConnection(_settings.Db.ReportsSqlConnString))
+            {
+                try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
+                catch (Exception ex)
+                {
+                    _log.WriteErrorAsync("AccountMarginEventsReportsSqlRepository", "CreateTableIfDoesntExists", null, ex);
+                    throw;
+                }
+            }
          }
 
         public async Task InsertOrReplaceAsync(IAccountMarginEventReport report)
@@ -55,7 +63,15 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
                "(@Id, @EventId, @ClientId, @AccountId, @TradingConditionId, @Balance, @BaseAssetId, @EventTime, @FreeMargin, @IsEventStopout, @MarginAvailable, " +
                "@MarginCall, @MarginInit, @MarginUsageLevel, @OpenPositionsCount, @PnL, @StopOut, @TotalCapital, @UsedMargin, @WithdrawTransferLimit)";
 
-            await _connection.ExecuteAsync(query, report);
+            using (var conn = new SqlConnection(_settings.Db.ReportsSqlConnString))
+            {
+                try { await conn.ExecuteAsync(query, report);  }
+                catch (Exception ex)
+                {
+                    await _log.WriteErrorAsync("AccountMarginEventsReportsSqlRepository", "InsertOrReplaceAsync", null, ex);
+                    throw;
+                }
+            }
         }
     }
 }
