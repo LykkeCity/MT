@@ -22,14 +22,17 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
             "CONSTRAINT[PK_{0}] PRIMARY KEY CLUSTERED ([Id] ASC)" +
             ");";
 
-        private readonly IDbConnection _connection;
+        private readonly Settings _settings;
         private readonly ILog _log;
 
         public AccountsReportsSqlRepository(Settings settings, ILog log)
         {
             _log = log;
-            _connection = new SqlConnection(settings.Db.ReportsSqlConnString);
-            _connection.CreateTableIfDoesntExists(CreateTableScript, TableName);
+            _settings = settings;
+            using (var conn = new SqlConnection(_settings.Db.ReportsSqlConnString))
+            {
+                conn.CreateTableIfDoesntExists(CreateTableScript, TableName);
+            }
         }
 
         public async Task InsertOrReplaceAsync(IAccountsReport report)
@@ -39,7 +42,10 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
                " values " +
                "(@Id, @Date, @TakerCounterpartyId, @TakerAccountId, @BaseAssetId, @IsLive)";
 
-            await _connection.ExecuteAsync(query, report);
+            using (var conn = new SqlConnection(_settings.Db.ReportsSqlConnString))
+            {
+                await conn.ExecuteAsync(query, report);
+            }
         }
     }
 }
