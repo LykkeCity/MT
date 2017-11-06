@@ -26,14 +26,22 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
             "CONSTRAINT[PK_{0}] PRIMARY KEY CLUSTERED ([Id] ASC)" +
             ");";
 
-        private readonly IDbConnection _connection;
+        private readonly Settings _settings;
         private readonly ILog _log;
 
         public AccountTransactionsReportsSqlRepository(Settings settings, ILog log)
         {
             _log = log;
-            _connection = new SqlConnection(settings.Db.ReportsSqlConnString);
-            _connection.CreateTableIfDoesntExists(CreateTableScript, TableName);
+            _settings = settings;
+            using (var conn = new SqlConnection(_settings.Db.ReportsSqlConnString))
+            {
+                try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
+                catch (Exception ex)
+                {
+                    _log.WriteErrorAsync("AccountTransactionsReportsSqlRepository", "CreateTableIfDoesntExists", null, ex);
+                    throw;
+                }
+            }
         }
 
         public async Task InsertOrReplaceAsync(IAccountTransactionsReport entity)
@@ -42,8 +50,15 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
                 "(Id, Date, AccountId, ClientId, Amount, Balance, WithdrawTransferLimit, Comment, Type) " +
                 " values " +
                 "(@Id ,@Date, @AccountId, @ClientId, @Amount, @Balance, @WithdrawTransferLimit, @Comment, @Type)";
-
-            await _connection.ExecuteAsync(query, entity);
+            using (var conn = new SqlConnection(_settings.Db.ReportsSqlConnString))
+            {
+                try { await conn.ExecuteAsync(query, entity); }
+                catch (Exception ex)
+                {
+                    await _log.WriteErrorAsync("AccountTransactionsReportsSqlRepository", "InsertOrReplaceAsync", null, ex);
+                    throw;
+                }
+            }
         }
     }
 }
