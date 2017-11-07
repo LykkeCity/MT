@@ -36,12 +36,14 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.AzureRepositories
             {
                 Id = src.Id,
                 Date = src.Date,
+                AccountId = src.AccountId,
                 ClientId = src.ClientId,
                 Amount = (double)src.Amount,
                 Balance = (double)src.Balance,
                 WithdrawTransferLimit = (double)src.WithdrawTransferLimit,
                 Comment = src.Comment,
-                Type = src.Type.ToString()
+                Type = src.Type.ToString(),
+                PositionId = src.PositionId
             };
         }
     }
