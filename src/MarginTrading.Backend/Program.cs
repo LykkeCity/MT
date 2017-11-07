@@ -21,7 +21,7 @@ namespace MarginTrading.Backend
                         .UseKestrel()
                         .UseUrls("http://*:5000")
                         .UseStartup<Startup>()
-                        //.UseApplicationInsights()
+                        .UseApplicationInsights()
                         .Build();
 
                     host.Run();
