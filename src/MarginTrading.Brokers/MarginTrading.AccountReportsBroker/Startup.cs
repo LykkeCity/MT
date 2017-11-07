@@ -25,12 +25,20 @@ namespace MarginTrading.AccountReportsBroker
         {
             builder.RegisterType<AccountStatReportsApplication>().As<IBrokerApplication>().SingleInstance();
             builder.RegisterType<AccountReportsApplication>().As<IBrokerApplication>().SingleInstance();
+                        
+            builder.RegisterInstance(new AccountsStatsReportsRepositoryAggregator(new IAccountsStatsReportsRepository[]
+            {
+                new AccountsStatsReportsRepository(settings, log),
+                new AccountsStatsReportsSqlRepository(settings, log)
+            }))
+            .As<IAccountsStatsReportsRepository>();
 
-            builder.RegisterType<AccountsStatsReportsSqlRepository>().As<IAccountsStatsReportsRepository>()
-                .SingleInstance();
-            
-            builder.RegisterType<AccountsReportsSqlRepository>().As<IAccountsReportsRepository>()
-                .SingleInstance();
+            builder.RegisterInstance(new AccountsReportsRepositoryAggregator(new IAccountsReportsRepository[]
+            {
+                new AccountsReportsRepository(settings, log),
+                new AccountsReportsSqlRepository(settings, log)
+            }))
+            .As<IAccountsReportsRepository>();
 
             builder.Register<IMarginTradingAccountStatsRepository>(ctx =>
                 AzureRepoFactories.MarginTrading.CreateAccountStatsRepository(settings.Db.HistoryConnString, log)

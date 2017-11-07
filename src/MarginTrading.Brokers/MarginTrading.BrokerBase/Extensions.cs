@@ -22,7 +22,7 @@ namespace MarginTrading.BrokerBase
                     {
                         // Create table
                         string query = string.Format(createQuery, tableName);
-                        connection.QueryAsync(query);
+                        connection.Query(query);
                     }
                     catch { throw; }
                 }
