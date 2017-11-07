@@ -8,4 +8,4 @@ namespace MarginTrading.AccountReportsBroker.Repositories
     {
         Task InsertOrReplaceBatchAsync(IEnumerable<IAccountsStatReport> stats);
     }
-}
+}   
