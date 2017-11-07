@@ -46,6 +46,8 @@ namespace MarginTrading.AccountHistoryBroker
                 Type = accountHistoryContract.Type.ToString(),
                 WithdrawTransferLimit = accountHistoryContract.WithdrawTransferLimit,
                 //TODO: Check PositionId field
+                //PositionId = accountHistoryContract.PositionId
+
             };
             
             return Task.WhenAll(

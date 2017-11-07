@@ -30,8 +30,14 @@ namespace MarginTrading.AccountHistoryBroker
                 AzureRepoFactories.MarginTrading.CreateAccountHistoryRepository(settings.Db.HistoryConnString, log)
             ).SingleInstance();
 
-            builder.RegisterType<AccountTransactionsReportsSqlRepository>().As<IAccountTransactionsReportsRepository>()
-                .SingleInstance();
+            builder.RegisterInstance(new RepositoryAggregator(new IAccountTransactionsReportsRepository[]
+            {
+                new AccountTransactionsReportsRepository(settings, log),
+                new AccountTransactionsReportsSqlRepository(settings, log)
+            }))
+            .As<IAccountTransactionsReportsRepository>();
+
+            
         }
     }
 }
