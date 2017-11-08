@@ -23,10 +23,7 @@ namespace MarginTrading.AccountMarginEventsBroker
             Settings settings, ILog log, bool isLive)
         {
             builder.RegisterType<Application>().As<IBrokerApplication>().SingleInstance();
-
-            builder.RegisterType<AccountMarginEventsReportsSqlRepository>().As<IAccountMarginEventsReportsRepository>()
-                .SingleInstance();
-
+                     
             builder.RegisterInstance(new RepositoryAggregator(new IAccountMarginEventsReportsRepository[]
             {
                 new AccountMarginEventsReportsSqlRepository(settings, log),
