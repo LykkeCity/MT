@@ -7,6 +7,7 @@ using MarginTrading.AzureRepositories;
 using MarginTrading.BrokerBase;
 using MarginTrading.BrokerBase.Settings;
 using MarginTrading.Contract.RabbitMqMessageModels;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -17,6 +18,7 @@ namespace MarginTrading.AccountReportsBroker
         private readonly IAccountsStatsReportsRepository _accountsStatsReportsRepository;
         private readonly IMarginTradingAccountStatsRepository _statsRepository;
         private readonly Settings _settings;
+        private const int DecimalPlaces = 10;
 
         public AccountStatReportsApplication(ILog logger,
             Settings settings, CurrentApplicationInfo applicationInfo,
@@ -38,25 +40,25 @@ namespace MarginTrading.AccountReportsBroker
             var accountsStatsReports = message.Accounts?.Select(a =>
                 new AccountsStatReport
                 {
-                    Id = System.Guid.NewGuid().ToString().Replace("-", "").ToLower(),
-                    Date = System.DateTime.UtcNow,                    
+                    Id = a.AccountId,
+                    Date = DateTime.UtcNow,
                     AccountId = a.AccountId,
-                    Balance = a.Balance,
+                    Balance = Math.Round(a.Balance, DecimalPlaces),
                     BaseAssetId = a.BaseAssetId,
                     ClientId = a.ClientId,
                     IsLive = a.IsLive,
-                    FreeMargin = a.FreeMargin,
-                    MarginAvailable = a.MarginAvailable,
-                    MarginCall = a.MarginCallLevel,
-                    MarginInit = a.MarginInit,
-                    MarginUsageLevel = a.MarginUsageLevel,
-                    OpenPositionsCount = a.OpenPositionsCount,
-                    PnL = a.PnL,
-                    StopOut = a.StopOutLevel,
-                    TotalCapital = a.TotalCapital,
+                    FreeMargin = Math.Round(a.FreeMargin, DecimalPlaces),
+                    MarginAvailable = Math.Round(a.MarginAvailable, DecimalPlaces),
+                    MarginCall = Math.Round(a.MarginCallLevel, DecimalPlaces),
+                    MarginInit = Math.Round(a.MarginInit, DecimalPlaces),
+                    MarginUsageLevel = Math.Round(a.MarginUsageLevel, DecimalPlaces),
+                    OpenPositionsCount = Math.Round(a.OpenPositionsCount, DecimalPlaces),
+                    PnL = Math.Round(a.PnL, DecimalPlaces),
+                    StopOut = Math.Round(a.StopOutLevel, DecimalPlaces),
+                    TotalCapital = Math.Round(a.TotalCapital, DecimalPlaces),
                     TradingConditionId = a.TradingConditionId,
-                    UsedMargin = a.UsedMargin,
-                    WithdrawTransferLimit = a.WithdrawTransferLimit
+                    UsedMargin = Math.Round(a.UsedMargin, DecimalPlaces),
+                    WithdrawTransferLimit = Math.Round(a.WithdrawTransferLimit, DecimalPlaces)
                 });
 
             var accountStats = message.Accounts?.Select(a => new MarginTradingAccountStatsEntity
