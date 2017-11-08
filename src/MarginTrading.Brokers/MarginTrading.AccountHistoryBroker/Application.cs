@@ -1,12 +1,14 @@
-﻿using System.Threading.Tasks;
-using Common.Log;
+﻿using Common.Log;
 using Lykke.SlackNotifications;
-using MarginTrading.AccountHistoryBroker.AzureRepositories;
+using MarginTrading.AccountHistoryBroker.Repositories;
+using MarginTrading.AccountHistoryBroker.Repositories.Models;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.BrokerBase;
 using MarginTrading.BrokerBase.Settings;
 using MarginTrading.Contract.BackendContracts;
+using System;
+using System.Threading.Tasks;
 
 namespace MarginTrading.AccountHistoryBroker
 {
@@ -15,6 +17,7 @@ namespace MarginTrading.AccountHistoryBroker
         private readonly IMarginTradingAccountHistoryRepository _accountHistoryRepository;
         private readonly IAccountTransactionsReportsRepository _accountTransactionsReportsRepository;
         private readonly Settings _settings;
+        private const int DecimalPlaces = 10;
 
         public Application(IMarginTradingAccountHistoryRepository accountHistoryRepository, ILog logger,
             Settings settings, CurrentApplicationInfo applicationInfo,
@@ -33,17 +36,19 @@ namespace MarginTrading.AccountHistoryBroker
         protected override Task HandleMessage(AccountHistoryBackendContract accountHistoryContract)
         {
             var accountHistory = accountHistoryContract.ToAccountHistoryContract();
-            var accountTransactionReport = new AccountTransactionsReportsEntity
+            var accountTransactionReport = new AccountTransactionsReport
             {
                 AccountId = accountHistoryContract.AccountId,
                 ClientId = accountHistoryContract.ClientId,
                 Comment = accountHistoryContract.Comment,
                 Id = accountHistoryContract.Id,
-                Amount = (double) accountHistoryContract.Amount,
-                Balance = (double) accountHistoryContract.Balance,
+                Amount = Math.Round(accountHistoryContract.Amount, DecimalPlaces),
+                Balance = Math.Round(accountHistoryContract.Balance, DecimalPlaces),
                 Date = accountHistoryContract.Date,
                 Type = accountHistoryContract.Type.ToString(),
-                WithdrawTransferLimit = (double) accountHistoryContract.WithdrawTransferLimit,
+                WithdrawTransferLimit = Math.Round(accountHistoryContract.WithdrawTransferLimit, DecimalPlaces),
+                //TODO: Check PositionId field
+                //PositionId = accountHistoryContract.PositionId
             };
             
             return Task.WhenAll(
