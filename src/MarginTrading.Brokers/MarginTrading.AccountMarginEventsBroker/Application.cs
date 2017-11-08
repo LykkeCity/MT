@@ -1,10 +1,12 @@
 ﻿using System.Threading.Tasks;
 using Common.Log;
 using Lykke.SlackNotifications;
-using MarginTrading.AccountMarginEventsBroker.AzureRepositories;
 using MarginTrading.BrokerBase;
 using MarginTrading.BrokerBase.Settings;
 using MarginTrading.Contract.RabbitMqMessageModels;
+using MarginTrading.AccountMarginEventsBroker.Repositories;
+using MarginTrading.AccountMarginEventsBroker.Repositories.Models;
+using System;
 
 namespace MarginTrading.AccountMarginEventsBroker
 {
@@ -28,7 +30,7 @@ namespace MarginTrading.AccountMarginEventsBroker
 
         protected override Task HandleMessage(AccountMarginEventMessage message)
         {
-            return _accountMarginEventsReportsRepository.InsertOrReplaceAsync(new AccountMarginEventReportEntity
+            return _accountMarginEventsReportsRepository.InsertOrReplaceAsync(new AccountMarginEventReport
             {
                 EventId = message.EventId,
                 EventTime = message.EventTime,
@@ -38,19 +40,19 @@ namespace MarginTrading.AccountMarginEventsBroker
                 AccountId = message.AccountId,
                 TradingConditionId = message.TradingConditionId,
                 BaseAssetId = message.BaseAssetId,
-                Balance = (double) message.Balance,
-                WithdrawTransferLimit = (double) message.WithdrawTransferLimit,
+                Balance = Math.Round(message.Balance, 10),
+                WithdrawTransferLimit = Math.Round(message.WithdrawTransferLimit, 10),
 
-                MarginCall = (double) message.MarginCall,
-                StopOut = (double) message.StopOut,
-                TotalCapital = (double) message.TotalCapital,
-                FreeMargin = (double) message.FreeMargin,
-                MarginAvailable = (double) message.MarginAvailable,
-                UsedMargin = (double) message.UsedMargin,
-                MarginInit = (double) message.MarginInit,
-                PnL = (double) message.PnL,
-                OpenPositionsCount = (double) message.OpenPositionsCount,
-                MarginUsageLevel = (double) message.MarginUsageLevel,
+                MarginCall = Math.Round(message.MarginCall, 10),
+                StopOut = Math.Round(message.StopOut, 10),
+                TotalCapital = Math.Round(message.TotalCapital, 10),
+                FreeMargin = Math.Round(message.FreeMargin, 10),
+                MarginAvailable = Math.Round(message.MarginAvailable, 10),
+                UsedMargin = Math.Round(message.UsedMargin, 10),
+                MarginInit = Math.Round(message.MarginInit, 10),
+                PnL = Math.Round(message.PnL, 10),
+                OpenPositionsCount = Math.Round(message.OpenPositionsCount, 10),
+                MarginUsageLevel = Math.Round(message.MarginUsageLevel, 10),
             });
         }
     }

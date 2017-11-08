@@ -12,6 +12,7 @@ namespace MarginTrading.AccountMarginEventsBroker
     public class Db
     {
         public string ReportsConnString { get; set; }
+        public string ReportsSqlConnString { get; set; }
     }
     
     public class RabbitMqQueues
