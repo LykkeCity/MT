@@ -6,6 +6,7 @@ using MarginTrading.BrokerBase.Settings;
 using MarginTrading.Contract.RabbitMqMessageModels;
 using MarginTrading.AccountMarginEventsBroker.Repositories;
 using MarginTrading.AccountMarginEventsBroker.Repositories.Models;
+using System;
 
 namespace MarginTrading.AccountMarginEventsBroker
 {
@@ -39,19 +40,19 @@ namespace MarginTrading.AccountMarginEventsBroker
                 AccountId = message.AccountId,
                 TradingConditionId = message.TradingConditionId,
                 BaseAssetId = message.BaseAssetId,
-                Balance = message.Balance,
-                WithdrawTransferLimit = message.WithdrawTransferLimit,
+                Balance = Math.Round(message.Balance, 10),
+                WithdrawTransferLimit = Math.Round(message.WithdrawTransferLimit, 10),
 
-                MarginCall = message.MarginCall,
-                StopOut = message.StopOut,
-                TotalCapital = message.TotalCapital,
-                FreeMargin = message.FreeMargin,
-                MarginAvailable = message.MarginAvailable,
-                UsedMargin = message.UsedMargin,
-                MarginInit = message.MarginInit,
-                PnL = message.PnL,
-                OpenPositionsCount = message.OpenPositionsCount,
-                MarginUsageLevel = message.MarginUsageLevel,
+                MarginCall = Math.Round(message.MarginCall, 10),
+                StopOut = Math.Round(message.StopOut, 10),
+                TotalCapital = Math.Round(message.TotalCapital, 10),
+                FreeMargin = Math.Round(message.FreeMargin, 10),
+                MarginAvailable = Math.Round(message.MarginAvailable, 10),
+                UsedMargin = Math.Round(message.UsedMargin, 10),
+                MarginInit = Math.Round(message.MarginInit, 10),
+                PnL = Math.Round(message.PnL, 10),
+                OpenPositionsCount = Math.Round(message.OpenPositionsCount, 10),
+                MarginUsageLevel = Math.Round(message.MarginUsageLevel, 10),
             });
         }
     }
