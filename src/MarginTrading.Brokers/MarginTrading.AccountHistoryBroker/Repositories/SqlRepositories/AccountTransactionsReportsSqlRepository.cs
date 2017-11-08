@@ -45,13 +45,25 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
         }
 
         public async Task InsertOrReplaceAsync(IAccountTransactionsReport entity)
-        {
-            string query = $"insert into {TableName} " +
-                "(Id, Date, AccountId, ClientId, Amount, Balance, WithdrawTransferLimit, Comment, Type) " +
-                " values " +
-                "(@Id ,@Date, @AccountId, @ClientId, @Amount, @Balance, @WithdrawTransferLimit, @Comment, @Type)";
+        {   
             using (var conn = new SqlConnection(_settings.Db.ReportsSqlConnString))
             {
+                var res = conn.ExecuteScalar($"select Id from {TableName} where Id = '{entity.Id}'");
+                string query;
+                if (res == null)
+                {
+                    query = $"insert into {TableName} " +
+                     "(Id, Date, AccountId, ClientId, Amount, Balance, WithdrawTransferLimit, Comment, Type) " +
+                     " values " +
+                     "(@Id ,@Date, @AccountId, @ClientId, @Amount, @Balance, @WithdrawTransferLimit, @Comment, @Type)";
+                }
+                else
+                {
+                    query = $"update {TableName} set " +
+                      "Date=@Date, AccountId=@AccountId, ClientId=@ClientId, Amount=@Amount, Balance=@Balance, " +
+                      "WithdrawTransferLimit=@WithdrawTransferLimit, Comment=@Comment, Type=@Type " +
+                      " where Id=@Id";
+                }
                 try { await conn.ExecuteAsync(query, entity); }
                 catch (Exception ex)
                 {
