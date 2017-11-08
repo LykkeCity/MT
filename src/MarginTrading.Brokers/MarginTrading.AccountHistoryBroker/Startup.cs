@@ -32,8 +32,8 @@ namespace MarginTrading.AccountHistoryBroker
 
             builder.RegisterInstance(new RepositoryAggregator(new IAccountTransactionsReportsRepository[]
             {
-                new AccountTransactionsReportsRepository(settings, log),
-                new AccountTransactionsReportsSqlRepository(settings, log)
+                new AccountTransactionsReportsSqlRepository(settings, log),
+                new AccountTransactionsReportsRepository(settings, log)
             }))
             .As<IAccountTransactionsReportsRepository>();
 
