@@ -41,14 +41,24 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
         }
 
         public async Task InsertOrReplaceAsync(IAccountsReport report)
-        {
-            string query = $"insert into {TableName} " +
-               "(Id, Date, TakerCounterpartyId, TakerAccountId, BaseAssetId, IsLive) " +
-               " values " +
-               "(@Id, @Date, @TakerCounterpartyId, @TakerAccountId, @BaseAssetId, @IsLive)";
-
+        {            
             using (var conn = new SqlConnection(_settings.Db.ReportsSqlConnString))
             {
+                var res = conn.ExecuteScalar($"select Id from {TableName} where Id = '{report.Id}'");
+                string query;
+                if (res == null)
+                {
+                    query = $"insert into {TableName} " +
+                        "(Id, Date, TakerCounterpartyId, TakerAccountId, BaseAssetId, IsLive) " +
+                        " values " +
+                        "(@Id, @Date, @TakerCounterpartyId, @TakerAccountId, @BaseAssetId, @IsLive)";
+                }
+                else
+                {
+                    query = $"update {TableName} set " +
+                        "Date=@Date, TakerCounterpartyId=@TakerCounterpartyId, TakerAccountId=@TakerAccountId, BaseAssetId=@BaseAssetId, IsLive=@IsLive " +
+                        " where Id=@Id";
+                }
                 try { await conn.ExecuteAsync(query, report); }
                 catch (Exception ex)
                 {

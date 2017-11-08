@@ -28,15 +28,15 @@ namespace MarginTrading.AccountReportsBroker
                         
             builder.RegisterInstance(new AccountsStatsReportsRepositoryAggregator(new IAccountsStatsReportsRepository[]
             {
-                new AccountsStatsReportsRepository(settings, log),
-                new AccountsStatsReportsSqlRepository(settings, log)
+                new AccountsStatsReportsSqlRepository(settings, log),
+                new AccountsStatsReportsRepository(settings, log)                
             }))
             .As<IAccountsStatsReportsRepository>();
 
             builder.RegisterInstance(new AccountsReportsRepositoryAggregator(new IAccountsReportsRepository[]
             {
-                new AccountsReportsRepository(settings, log),
-                new AccountsReportsSqlRepository(settings, log)
+                new AccountsReportsSqlRepository(settings, log),
+                new AccountsReportsRepository(settings, log)
             }))
             .As<IAccountsReportsRepository>();
 

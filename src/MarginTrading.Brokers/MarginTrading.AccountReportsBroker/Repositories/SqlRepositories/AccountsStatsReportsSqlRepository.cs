@@ -56,18 +56,40 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
 
         public async Task InsertOrReplaceBatchAsync(IEnumerable<IAccountsStatReport> stats)
         {
-            string query = $"insert into {TableName} " +
-           "(Id, Date, BaseAssetId, AccountId, ClientId, TradingConditionId, Balance, WithdrawTransferLimit, MarginCall, StopOut, TotalCapital, FreeMargin, MarginAvailable, UsedMargin, MarginInit, PnL, OpenPositionsCount, MarginUsageLevel, IsLive) " +
-           " values " +
-           "(@Id, @Date, @BaseAssetId, @AccountId, @ClientId, @TradingConditionId, @Balance, @WithdrawTransferLimit, @MarginCall, @StopOut, @TotalCapital, @FreeMargin, @MarginAvailable, @UsedMargin, @MarginInit, @PnL, @OpenPositionsCount, @MarginUsageLevel, @IsLive)";
+            
             using (var conn = new SqlConnection(_settings.Db.ReportsSqlConnString))
             {
-                try { await conn.ExecuteAsync(query, stats); }
-                catch (Exception ex)
+                foreach (var stat in stats)
                 {
-                    await _log.WriteErrorAsync("AccountsStatsReportsSqlRepository", "InsertOrReplaceBatchAsync", null, ex);
-                    throw;
+                    var res = conn.ExecuteScalar($"select Id from {TableName} where Id = '{stat.Id}'");
+                    string query;
+                    if (res == null)
+                    {
+                        query = $"insert into {TableName} " +
+                            "(Id, Date, BaseAssetId, AccountId, ClientId, TradingConditionId, Balance, WithdrawTransferLimit, MarginCall, StopOut, "+
+                            "TotalCapital, FreeMargin, MarginAvailable, UsedMargin, MarginInit, PnL, OpenPositionsCount, MarginUsageLevel, IsLive) " +
+                            " values " +
+                            "(@Id, @Date, @BaseAssetId, @AccountId, @ClientId, @TradingConditionId, @Balance, @WithdrawTransferLimit, @MarginCall, "+
+                            "@StopOut, @TotalCapital, @FreeMargin, @MarginAvailable, @UsedMargin, @MarginInit, @PnL, @OpenPositionsCount, @MarginUsageLevel, @IsLive)";
+                    }
+                    else
+                    {
+                        query = $"update {TableName} set " +
+                            "Date=@Date, BaseAssetId=@BaseAssetId, AccountId=@AccountId, ClientId=@ClientId, TradingConditionId=@TradingConditionId, " +
+                            "Balance=@Balance, WithdrawTransferLimit=@WithdrawTransferLimit, MarginCall=@MarginCall, StopOut=@StopOut, TotalCapital=@TotalCapital, " +
+                            "FreeMargin=@FreeMargin, MarginAvailable=@MarginAvailable, UsedMargin=@UsedMargin, MarginInit=@MarginInit, PnL=@PnL, " +
+                            "OpenPositionsCount=@OpenPositionsCount, MarginUsageLevel=@MarginUsageLevel, IsLive=@IsLive " +
+                            " where Id=@Id";
+                    }
+
+                    try { await conn.ExecuteAsync(query, stat); }
+                    catch (Exception ex)
+                    {
+                        await _log.WriteErrorAsync("AccountsStatsReportsSqlRepository", "InsertOrReplaceBatchAsync", null, ex);
+                        throw;
+                    }
                 }
+                
             }
         }
     }

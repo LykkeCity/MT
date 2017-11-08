@@ -37,7 +37,7 @@ namespace MarginTrading.AccountReportsBroker
 
             var report = new AccountsReport
             {
-                Id = Guid.NewGuid().ToString().Replace("-","").ToLower(),
+                Id = message.Account.Id,
                 Date = DateTime.UtcNow,
                 TakerAccountId = message.Account.Id,
                 TakerCounterpartyId = message.Account.ClientId,
