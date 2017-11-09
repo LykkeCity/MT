@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 namespace MarginTradingTests.Unit.SqlConnection
 {
     [TestFixture]
+    [Ignore("LocalSqlDb")]
     public class SqlRepositories
     {
         string _dbName;
