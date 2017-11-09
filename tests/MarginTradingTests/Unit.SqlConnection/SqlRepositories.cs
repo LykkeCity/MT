@@ -47,8 +47,8 @@ namespace MarginTradingTests.Unit.SqlConnection
                 PositionId= null,
                 Comment = "Comment",
                 Type = "Buy",
-                Amount = -9876543210123456789012.01234567890123456789m,
-                Balance = 9876543210123456789012.01234567890123456789m,
+                Amount = -9999999999999999999999.9999989999m,
+                Balance = 9999999999999999999999.9999989999m,
                 WithdrawTransferLimit = 0
             };
             // Insert
@@ -78,11 +78,11 @@ namespace MarginTradingTests.Unit.SqlConnection
                 PositionId = null,
                 Comment = "Comment",
                 Type = "Buy",
-                Amount = -9876543210123456789012.01234567890123456789m,
-                Balance = 98765432101234567890123.01234567890123456789m,
+                Amount = -9999999999999999999999.9999999999m,
+                Balance = 9999999999999999999999.1m,
                 WithdrawTransferLimit = 0
             };
-            // Insert
+            // Arithmetic Exception
             Assert.ThrowsAsync<System.Exception>(async () => await repo.InsertOrReplaceAsync(domainObject));
             
             
