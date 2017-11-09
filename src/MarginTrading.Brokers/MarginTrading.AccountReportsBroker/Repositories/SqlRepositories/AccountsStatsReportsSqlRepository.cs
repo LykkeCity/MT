@@ -20,18 +20,18 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
             "[AccountId] [nvarchar] (64) NOT NULL, " +
             "[ClientId] [nvarchar] (64) NOT NULL, " +
             "[TradingConditionId] [nvarchar] (64) NOT NULL, " +
-            "[Balance] [numeric](20, 10) NOT NULL, " +
-            "[WithdrawTransferLimit] [numeric](20, 10) NOT NULL, " +
-            "[MarginCall] [numeric](20, 10) NOT NULL, " +
-            "[StopOut] [numeric](20, 10) NOT NULL, " +
-            "[TotalCapital] [numeric](20, 10) NOT NULL, " +
-            "[FreeMargin] [numeric](20, 10) NOT NULL, " +
-            "[MarginAvailable] [numeric](20, 10) NOT NULL, " +
-            "[UsedMargin] [numeric](20, 10) NOT NULL, " +
-            "[MarginInit] [numeric](20, 10) NOT NULL, " +
-            "[PnL] [numeric](20, 10) NOT NULL, " +
-            "[OpenPositionsCount] [numeric](20, 10) NOT NULL, " +
-            "[MarginUsageLevel] [numeric](20, 10) NOT NULL, " +
+            "[Balance] [numeric](32, 10) NOT NULL, " +
+            "[WithdrawTransferLimit] [numeric](32, 10) NOT NULL, " +
+            "[MarginCall] [numeric](32, 10) NOT NULL, " +
+            "[StopOut] [numeric](32, 10) NOT NULL, " +
+            "[TotalCapital] [numeric](32, 10) NOT NULL, " +
+            "[FreeMargin] [numeric](32, 10) NOT NULL, " +
+            "[MarginAvailable] [numeric](32, 10) NOT NULL, " +
+            "[UsedMargin] [numeric](32, 10) NOT NULL, " +
+            "[MarginInit] [numeric](32, 10) NOT NULL, " +
+            "[PnL] [numeric](32, 10) NOT NULL, " +
+            "[OpenPositionsCount] [numeric](32, 10) NOT NULL, " +
+            "[MarginUsageLevel] [numeric](32, 10) NOT NULL, " +
             "[IsLive] [bit] NOT NULL, " +
             "CONSTRAINT[PK_{0}] PRIMARY KEY CLUSTERED ([Id] ASC)" +
             ");";
@@ -48,7 +48,7 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
                 try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
                 catch (Exception ex)
                 {
-                    _log.WriteErrorAsync("AccountsStatsReportsSqlRepository", "CreateTableIfDoesntExists", null, ex);
+                    _log?.WriteErrorAsync("AccountsStatsReportsSqlRepository", "CreateTableIfDoesntExists", null, ex);
                     throw;
                 }
             }
@@ -85,8 +85,30 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
                     try { await conn.ExecuteAsync(query, stat); }
                     catch (Exception ex)
                     {
-                        await _log.WriteErrorAsync("AccountsStatsReportsSqlRepository", "InsertOrReplaceBatchAsync", null, ex);
-                        throw;
+                        string msg = $"Error {ex.Message} \n" +
+                            "Entity <IAccountsStatReport>: \n" +
+                            $" Id:{stat.Id}\n" +
+                            $" Date:{stat.Date}\n" +
+                            $" AccountId:{stat.AccountId}\n" +
+                            $" ClientId:{stat.ClientId}\n" +
+                            $" TradingConditionId:{stat.TradingConditionId}\n" +
+                            $" BaseAssetId:{stat.BaseAssetId}\n" +
+                            $" Balance:{stat.Balance}\n" +
+                            $" FreeMargin:{stat.FreeMargin}\n" +
+                            $" MarginAvailable:{stat.MarginAvailable}\n" +
+                            $" MarginCall:{stat.MarginCall}\n" +
+                            $" MarginInit:{stat.MarginInit}\n" +
+                            $" MarginUsageLevel:{stat.MarginUsageLevel}\n" +
+                            $" PnL:{stat.PnL}\n" +
+                            $" StopOut:{stat.StopOut}\n" +
+                            $" TotalCapital:{stat.TotalCapital}\n" +
+                            $" UsedMargin:{stat.UsedMargin}\n" +
+                            $" OpenPositionsCount:{stat.OpenPositionsCount}\n" +
+                            $" IsLive:{stat.IsLive}\n" +                            
+                            $" WithdrawTransferLimit:{stat.WithdrawTransferLimit}";
+                        Exception newException = new Exception(msg);
+                        await _log?.WriteErrorAsync("AccountsStatsReportsSqlRepository", "InsertOrReplaceBatchAsync", null, newException);
+                        throw newException;
                     }
                 }
                 

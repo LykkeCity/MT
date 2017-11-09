@@ -34,7 +34,7 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
                 try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
                 catch (Exception ex)
                 {
-                    _log.WriteErrorAsync("AccountsReportsSqlRepository", "CreateTableIfDoesntExists", null, ex);
+                    _log?.WriteErrorAsync("AccountsReportsSqlRepository", "CreateTableIfDoesntExists", null, ex);
                     throw;
                 }
             }
@@ -62,8 +62,17 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
                 try { await conn.ExecuteAsync(query, report); }
                 catch (Exception ex)
                 {
-                    await _log.WriteErrorAsync("AccountsReportsSqlRepository", "InsertOrReplaceAsync", null, ex);
-                    throw;
+                    string msg = $"Error {ex.Message} \n" +
+                          "Entity <IAccountsReport>: \n" +
+                          $" Id:{report.Id}\n" +
+                          $" Date:{report.Date}\n" +
+                          $" BaseAssetId:{report.BaseAssetId}\n" +
+                          $" IsLive:{report.IsLive}\n" +
+                          $" TakerAccountId:{report.TakerAccountId}\n" +
+                          $" TakerCounterpartyId:{report.TakerCounterpartyId}";
+                    Exception newException = new Exception(msg);
+                    await _log?.WriteErrorAsync("AccountsReportsSqlRepository", "InsertOrReplaceAsync", null, newException);
+                    throw newException;
                 }
             }
         }
