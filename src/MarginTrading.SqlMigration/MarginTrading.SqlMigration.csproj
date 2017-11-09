@@ -11,6 +11,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MarginTrading.AzureRepositories\MarginTrading.AzureRepositories.csproj" />
+    <ProjectReference Include="..\MarginTrading.Brokers\MarginTrading.AccountHistoryBroker\MarginTrading.AccountHistoryBroker.csproj" />
+    <ProjectReference Include="..\MarginTrading.Brokers\MarginTrading.AccountMarginEventsBroker\MarginTrading.AccountMarginEventsBroker.csproj" />
+    <ProjectReference Include="..\MarginTrading.Brokers\MarginTrading.AccountReportsBroker\MarginTrading.AccountReportsBroker.csproj" />
   </ItemGroup>
 
 </Project>

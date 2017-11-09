@@ -2,7 +2,7 @@
 
 namespace MarginTrading.AccountMarginEventsBroker.Repositories.Models
 {
-    internal interface IAccountMarginEventReport
+    public interface IAccountMarginEventReport
     {
         string Id { get; }
         string AccountId { get; }

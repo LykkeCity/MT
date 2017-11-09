@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
 {
-    internal class AccountTransactionsReportsSqlRepository : IAccountTransactionsReportsRepository
+    public class AccountTransactionsReportsSqlRepository : IAccountTransactionsReportsRepository
     {
         private const string TableName = "MarginTradingAccountTransactionsReports";
         private const string CreateTableScript = "CREATE TABLE [{0}](" +

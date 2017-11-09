@@ -3,13 +3,12 @@ using Dapper;
 using MarginTrading.AccountMarginEventsBroker.Repositories.Models;
 using MarginTrading.BrokerBase;
 using System;
-using System.Data;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 
 namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
 {
-    internal class AccountMarginEventsReportsSqlRepository : IAccountMarginEventsReportsRepository
+    public class AccountMarginEventsReportsSqlRepository : IAccountMarginEventsReportsRepository
     {
         private const string TableName = "AccountMarginEventsReports";
         private const string CreateTableScript = "CREATE TABLE [{0}] (" +
