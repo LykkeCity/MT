@@ -1,11 +1,12 @@
-﻿using System.Threading.Tasks;
-using Common.Log;
+﻿using Common.Log;
 using Lykke.SlackNotifications;
-using MarginTrading.AccountReportsBroker.AzureRepositories;
-using MarginTrading.AccountReportsBroker.AzureRepositories.Entities;
+using MarginTrading.AccountReportsBroker.Repositories;
+using MarginTrading.AccountReportsBroker.Repositories.Models;
 using MarginTrading.BrokerBase;
 using MarginTrading.BrokerBase.Settings;
 using MarginTrading.Contract.RabbitMqMessageModels;
+using System;
+using System.Threading.Tasks;
 
 namespace MarginTrading.AccountReportsBroker
 {
@@ -34,8 +35,10 @@ namespace MarginTrading.AccountReportsBroker
                 return Task.CompletedTask;
             }
 
-            var report = new AccountsReportEntity
+            var report = new AccountsReport
             {
+                Id = message.Account.Id,
+                Date = DateTime.UtcNow,
                 TakerAccountId = message.Account.Id,
                 TakerCounterpartyId = message.Account.ClientId,
                 BaseAssetId = message.Account.BaseAssetId,
