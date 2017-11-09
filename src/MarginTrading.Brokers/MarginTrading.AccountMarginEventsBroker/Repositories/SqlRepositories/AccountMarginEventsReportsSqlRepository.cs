@@ -18,21 +18,21 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
             "[ClientId] [nvarchar] (64) NOT NULL, " +
             "[AccountId] [nvarchar] (64) NOT NULL, " +
             "[TradingConditionId] [nvarchar] (64) NOT NULL, " +
-            "[Balance] [numeric] (20, 10) NOT NULL, " +
+            "[Balance] [numeric](32, 10) NOT NULL, " +
             "[BaseAssetId] [nvarchar] (64) NOT NULL, " +
             "[EventTime] [datetime] NOT NULL, " +
-            "[FreeMargin] [numeric] (20, 10) NOT NULL, " +
+            "[FreeMargin] [numeric](32, 10) NOT NULL, " +
             "[IsEventStopout] [bit] NOT NULL, " +
-            "[MarginAvailable] [numeric] (20, 10) NOT NULL, " +
-            "[MarginCall] [numeric] (20, 10) NOT NULL, " +
-            "[MarginInit] [numeric] (20, 10) NOT NULL, " +
-            "[MarginUsageLevel] [numeric] (20, 10) NOT NULL, " +
-            "[OpenPositionsCount] [numeric] (20, 10) NOT NULL, " +
-            "[PnL] [numeric] (20, 10) NOT NULL, " +
-            "[StopOut] [numeric] (20, 10) NOT NULL, " +
-            "[TotalCapital] [numeric] (20, 10) NOT NULL, " +
-            "[UsedMargin] [numeric] (20, 10) NOT NULL, " +
-            "[WithdrawTransferLimit] [numeric] (20, 10) NOT NULL, " +
+            "[MarginAvailable] [numeric](32, 10) NOT NULL, " +
+            "[MarginCall] [numeric](32, 10) NOT NULL, " +
+            "[MarginInit] [numeric](32, 10) NOT NULL, " +
+            "[MarginUsageLevel] [numeric](32, 10) NOT NULL, " +
+            "[OpenPositionsCount] [numeric](32, 10) NOT NULL, " +
+            "[PnL] [numeric](32, 10) NOT NULL, " +
+            "[StopOut] [numeric](32, 10) NOT NULL, " +
+            "[TotalCapital] [numeric](32, 10) NOT NULL, " +
+            "[UsedMargin] [numeric](32, 10) NOT NULL, " +
+            "[WithdrawTransferLimit] [numeric](32, 10) NOT NULL, " +
             "CONSTRAINT[PK_{0}] PRIMARY KEY CLUSTERED ([Id] ASC)" +
             ");";
 
@@ -48,7 +48,7 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
                 try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
                 catch (Exception ex)
                 {
-                    _log.WriteErrorAsync("AccountMarginEventsReportsSqlRepository", "CreateTableIfDoesntExists", null, ex);
+                    _log?.WriteErrorAsync("AccountMarginEventsReportsSqlRepository", "CreateTableIfDoesntExists", null, ex);
                     throw;
                 }
             }
@@ -83,8 +83,31 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
                 try { await conn.ExecuteAsync(query, report);  }
                 catch (Exception ex)
                 {
-                    await _log.WriteErrorAsync("AccountMarginEventsReportsSqlRepository", "InsertOrReplaceAsync", null, ex);
-                    throw;
+                    string msg = $"Error {ex.Message} \n" +
+                           "Entity <IAccountMarginEventReport>: \n" +
+                           $" Id:{report.Id}\n" +
+                           $" EventTime:{report.EventTime}\n" +
+                           $" EventId:{report.EventId}\n" +
+                           $" AccountId:{report.AccountId}\n" +
+                           $" ClientId:{report.ClientId}\n" +
+                           $" TradingConditionId:{report.TradingConditionId}\n" +
+                           $" BaseAssetId:{report.BaseAssetId}\n" +
+                           $" Balance:{report.Balance}\n" +
+                           $" FreeMargin:{report.FreeMargin}\n" +
+                           $" MarginAvailable:{report.MarginAvailable}\n" +
+                           $" MarginCall:{report.MarginCall}\n" +
+                           $" MarginInit:{report.MarginInit}\n" +
+                           $" MarginUsageLevel:{report.MarginUsageLevel}\n" +
+                           $" PnL:{report.PnL}\n" +
+                           $" StopOut:{report.StopOut}\n" +
+                           $" TotalCapital:{report.TotalCapital}\n" +
+                           $" UsedMargin:{report.UsedMargin}\n" +
+                           $" OpenPositionsCount:{report.OpenPositionsCount}\n" +
+                           $" IsEventStopout:{report.IsEventStopout}\n" +
+                           $" WithdrawTransferLimit:{report.WithdrawTransferLimit}";
+                    Exception newException = new Exception(msg);                    
+                    await _log?.WriteErrorAsync("AccountMarginEventsReportsSqlRepository", "InsertOrReplaceAsync", null, newException);
+                    throw newException;
                 }
             }
         }

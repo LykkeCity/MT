@@ -2,7 +2,7 @@
 
 namespace MarginTrading.AccountHistoryBroker.Repositories.Models
 {
-    interface IAccountTransactionsReport
+    public interface IAccountTransactionsReport
     {
         string AccountId { get; }
         decimal Amount { get; }
