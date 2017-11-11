@@ -61,22 +61,22 @@ namespace MarginTrading.BrokerBase
             }
             catch (Exception ex)
             {
-                _logger.WriteErrorAsync(ApplicationInfo.ApplicationName, "Application.RunAsync", null, ex).GetAwaiter()
+                _logger.WriteErrorAsync(ApplicationInfo.ApplicationFullName, "Application.RunAsync", null, ex).GetAwaiter()
                     .GetResult();
             }
         }
 
         public void StopApplication()
         {
-            Console.WriteLine($"Closing {ApplicationInfo.ApplicationName}...");
+            Console.WriteLine($"Closing {ApplicationInfo.ApplicationFullName}...");
             WriteInfoToLogAndSlack("Stopping listening exchange " + ExchangeName);
             _connector.Stop();
         }
 
         private void WriteInfoToLogAndSlack(string infoMessage)
         {
-            _logger.WriteInfoAsync(ApplicationInfo.ApplicationName, null, null, infoMessage);
-            _slackNotificationsSender.SendAsync(ChannelTypes.MarginTrading, ApplicationInfo.ApplicationName,
+            _logger.WriteInfoAsync(ApplicationInfo.ApplicationFullName, null, null, infoMessage);
+            _slackNotificationsSender.SendAsync(ChannelTypes.MarginTrading, ApplicationInfo.ApplicationFullName,
                 infoMessage);
         }
     }
