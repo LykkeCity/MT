@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Common.Log;
+using Lykke.SettingsReader;
 using MarginTrading.AccountHistoryBroker.Repositories;
 using MarginTrading.AccountHistoryBroker.Repositories.AzureRepositories;
 using MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories;
@@ -21,23 +22,20 @@ namespace MarginTrading.AccountHistoryBroker
         }
 
 
-        protected override void RegisterCustomServices(IServiceCollection services, ContainerBuilder builder,
-            Settings settings, ILog log, bool isLive)
+        protected override void RegisterCustomServices(IServiceCollection services, ContainerBuilder builder, IReloadingManager<Settings> settings, ILog log, bool isLive)
         {
             builder.RegisterType<Application>().As<IBrokerApplication>().SingleInstance();
 
             builder.Register<IMarginTradingAccountHistoryRepository>(ctx =>
-                AzureRepoFactories.MarginTrading.CreateAccountHistoryRepository(settings.Db.HistoryConnString, log)
+                AzureRepoFactories.MarginTrading.CreateAccountHistoryRepository(settings.Nested(s => s.Db.HistoryConnString), log)
             ).SingleInstance();
 
             builder.RegisterInstance(new RepositoryAggregator(new IAccountTransactionsReportsRepository[]
             {
-                new AccountTransactionsReportsSqlRepository(settings, log),
+                new AccountTransactionsReportsSqlRepository(settings.CurrentValue, log),
                 new AccountTransactionsReportsRepository(settings, log)
             }))
             .As<IAccountTransactionsReportsRepository>();
-
-            
         }
     }
 }

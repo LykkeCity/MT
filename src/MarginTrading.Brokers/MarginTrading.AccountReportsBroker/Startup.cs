@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Common.Log;
+using Lykke.SettingsReader;
 using MarginTrading.AccountReportsBroker.Repositories.AzureRepositories;
 using MarginTrading.AccountReportsBroker.Repositories;
 using MarginTrading.AccountReportsBroker.Repositories.SqlRepositories;
@@ -20,28 +21,27 @@ namespace MarginTrading.AccountReportsBroker
         }
 
 
-        protected override void RegisterCustomServices(IServiceCollection services, ContainerBuilder builder,
-            Settings settings, ILog log, bool isLive)
+        protected override void RegisterCustomServices(IServiceCollection services, ContainerBuilder builder, IReloadingManager<Settings> settings, ILog log, bool isLive)
         {
             builder.RegisterType<AccountStatReportsApplication>().As<IBrokerApplication>().SingleInstance();
             builder.RegisterType<AccountReportsApplication>().As<IBrokerApplication>().SingleInstance();
-                        
+
             builder.RegisterInstance(new AccountsStatsReportsRepositoryAggregator(new IAccountsStatsReportsRepository[]
             {
-                new AccountsStatsReportsSqlRepository(settings, log),
-                new AccountsStatsReportsRepository(settings, log)                
+                new AccountsStatsReportsSqlRepository(settings.CurrentValue, log),
+                new AccountsStatsReportsRepository(settings, log)
             }))
             .As<IAccountsStatsReportsRepository>();
 
             builder.RegisterInstance(new AccountsReportsRepositoryAggregator(new IAccountsReportsRepository[]
             {
-                new AccountsReportsSqlRepository(settings, log),
+                new AccountsReportsSqlRepository(settings.CurrentValue, log),
                 new AccountsReportsRepository(settings, log)
             }))
             .As<IAccountsReportsRepository>();
 
             builder.Register<IMarginTradingAccountStatsRepository>(ctx =>
-                AzureRepoFactories.MarginTrading.CreateAccountStatsRepository(settings.Db.HistoryConnString, log)
+                AzureRepoFactories.MarginTrading.CreateAccountStatsRepository(settings.Nested(s => s.Db.HistoryConnString), log)
             ).SingleInstance();
         }
     }

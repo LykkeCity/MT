@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Autofac;
@@ -41,8 +42,8 @@ namespace MarginTrading.DataReader
         public Startup(IHostingEnvironment env)
         {
             Configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.dev.json", true, true)
+                .SetBasePath(env.ContentRootPath)
+                .AddDevJson(env)
                 .AddEnvironmentVariables()
                 .Build();
 
@@ -75,17 +76,18 @@ namespace MarginTrading.DataReader
 
             var builder = new ContainerBuilder();
 
-            var readerSettings = Environment.IsDevelopment()
-                ? Configuration.Get<AppSettings>()
-                : SettingsProcessor.Process<AppSettings>(Configuration["SettingsUrl"].GetStringAsync().Result);
+            var readerSettings = Configuration.LoadSettings<AppSettings>()
+                .Nested(s =>
+                {
+                    var inner = isLive ? s.MtDataReader.Live : s.MtDataReader.Demo;
+                    inner.IsLive = isLive;
+                    inner.Env = isLive ? "Live" : "Demo";
+                    return s;
+                });
 
-            var settings = isLive
-                ? readerSettings.MtDataReader.Live
-                : readerSettings.MtDataReader.Demo;
-            settings.IsLive = isLive;
-            settings.Env = isLive ? "Live" : "Demo";
+            var settings = readerSettings.Nested(s => isLive ? s.MtDataReader.Live : s.MtDataReader.Demo);
 
-            Console.WriteLine($"IsLive: {settings.IsLive}");
+            Console.WriteLine($"IsLive: {settings.CurrentValue.IsLive}");
 
             SetupLoggers(services, readerSettings, settings);
 
@@ -142,26 +144,26 @@ namespace MarginTrading.DataReader
             }
         }
 
-        private void RegisterModules(ContainerBuilder builder, DataReaderSettings settings)
+        private void RegisterModules(ContainerBuilder builder, IReloadingManager<DataReaderSettings> settings)
         {
-            builder.RegisterModule(new DataReaderSettingsModule(settings));
+            builder.RegisterModule(new DataReaderSettingsModule(settings.CurrentValue));
             builder.RegisterModule(new DataReaderRepositoriesModule(settings, LogLocator.CommonLog));
             builder.RegisterModule(new DataReaderServicesModule());
         }
 
-        private static void SetupLoggers(IServiceCollection services, AppSettings mtSettings,
-            DataReaderSettings settings)
+        private static void SetupLoggers(IServiceCollection services, IReloadingManager<AppSettings> mtSettings,
+            IReloadingManager<DataReaderSettings> settings)
         {
             var consoleLogger = new LogToConsole();
 
             var commonSlackService =
-                services.UseSlackNotificationsSenderViaAzureQueue(mtSettings.SlackNotifications.AzureQueue,
+                services.UseSlackNotificationsSenderViaAzureQueue(mtSettings.CurrentValue.SlackNotifications.AzureQueue,
                     new LogToConsole());
 
             var slackService =
-                new MtSlackNotificationsSender(commonSlackService, "MT DataReader", settings.Env);
+                new MtSlackNotificationsSender(commonSlackService, "MT DataReader", settings.CurrentValue.Env);
 
-            var log = services.UseLogToAzureStorage(settings.Db.LogsConnString, slackService,
+            var log = services.UseLogToAzureStorage(settings.Nested(s => s.Db.LogsConnString), slackService,
                 "MarginTradingDataReaderLog", consoleLogger);
 
             LogLocator.CommonLog = log;

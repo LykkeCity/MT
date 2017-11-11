@@ -1,7 +1,9 @@
 ﻿using System.Text;
 using System.Threading.Tasks;
+using AzureStorage;
 using AzureStorage.Blob;
 using Common;
+using Lykke.SettingsReader;
 using MarginTrading.Backend.Core;
 using Newtonsoft.Json;
 
@@ -9,11 +11,11 @@ namespace MarginTrading.AzureRepositories
 {
     public class MarginTradingBlobRepository : IMarginTradingBlobRepository
     {
-        private readonly AzureBlobStorage _blobStorage;
+        private readonly IBlobStorage _blobStorage;
 
-        public MarginTradingBlobRepository(string connectionString)
+        public MarginTradingBlobRepository(IReloadingManager<string> connectionString)
         {
-            _blobStorage = new AzureBlobStorage(connectionString);
+            _blobStorage = AzureBlobStorage.Create(connectionString);
         }
 
         public T Read<T>(string blobContainer, string key)
