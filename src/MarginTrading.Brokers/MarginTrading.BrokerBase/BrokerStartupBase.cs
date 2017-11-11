@@ -24,11 +24,10 @@ namespace MarginTrading.BrokerBase
         where TApplicationSettings : class, IBrokerApplicationSettings<TSettings>
         where TSettings: BrokerSettingsBase
     {
-        private const string AppSettingsDevFile = "appsettings.dev.json";
-
         public IConfigurationRoot Configuration { get; }
         public IHostingEnvironment Environment { get; }
         public IContainer ApplicationContainer { get; private set; }
+        public ILog Log { get; private set; }
 
         protected abstract string ApplicationName { get; }
 
@@ -79,12 +78,14 @@ namespace MarginTrading.BrokerBase
 
             var applications = app.ApplicationServices.GetServices<IBrokerApplication>();
 
-            appLifetime.ApplicationStarted.Register(() =>
+            appLifetime.ApplicationStarted.Register(async () =>
             {
                 foreach (var application in applications)
                 {
                     application.Run();
                 }
+                
+                await Log.WriteMonitorAsync("", "", "Started");
             });
 
             appLifetime.ApplicationStopping.Register(() =>
@@ -95,8 +96,13 @@ namespace MarginTrading.BrokerBase
                 }
             });
 
-            appLifetime.ApplicationStopped.Register(() =>
+            appLifetime.ApplicationStopped.Register(async () =>
             {
+                if (Log != null)
+                {
+                    await Log.WriteMonitorAsync("", "", "Terminating");
+                }
+                
                 ApplicationContainer.Dispose();
             });
         }
@@ -106,14 +112,14 @@ namespace MarginTrading.BrokerBase
         protected virtual ILog CreateLogWithSlack(IServiceCollection services, IReloadingManager<TApplicationSettings> settings, bool isLive)
         {
             var logToConsole = new LogToConsole();
-            var logAggregate = new LogAggregate();
+            var aggregateLogger = new AggregateLogger();
             var isLiveEnv = isLive ? "Live" : "Demo";
 
-            logAggregate.AddLogger(logToConsole);
+            aggregateLogger.AddLog(logToConsole);
 
             var commonSlackService =
                 services.UseSlackNotificationsSenderViaAzureQueue(settings.CurrentValue.SlackNotifications.AzureQueue,
-                    logToConsole);
+                    aggregateLogger);
 
             var slackService =
                 new MtSlackNotificationsSender(commonSlackService, ApplicationName, isLiveEnv);
@@ -128,13 +134,12 @@ namespace MarginTrading.BrokerBase
                 var logToAzureStorage = services.UseLogToAzureStorage(
                     settings.Nested(s => s.MtBrokersLogs.DbConnString), slackService,
                     ApplicationName + isLiveEnv + "Log",
-                    logToConsole);
+                    aggregateLogger);
 
-                logAggregate.AddLogger(logToAzureStorage);
+                aggregateLogger.AddLog(logToAzureStorage);
             }
 
-            // Creating aggregate log, which logs to console and to azure storage, if last one specified
-            return logAggregate.CreateLogger();
+            return aggregateLogger;
         }
 
 
@@ -142,8 +147,8 @@ namespace MarginTrading.BrokerBase
             ContainerBuilder builder,
             bool isLive)
         {
-            var log = CreateLogWithSlack(services, applicationSettings, isLive);
-            builder.RegisterInstance(log).As<ILog>().SingleInstance();
+            Log = CreateLogWithSlack(services, applicationSettings, isLive);
+            builder.RegisterInstance(Log).As<ILog>().SingleInstance();
             builder.RegisterInstance(applicationSettings).AsSelf().SingleInstance();
 
             var settings = isLive
@@ -157,7 +162,7 @@ namespace MarginTrading.BrokerBase
                 ApplicationName
             )).AsSelf().SingleInstance();
 
-            RegisterCustomServices(services, builder, settings, log, isLive);
+            RegisterCustomServices(services, builder, settings, Log, isLive);
             builder.Populate(services);
         }
 

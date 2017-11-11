@@ -13,10 +13,8 @@ namespace MarginTrading.Backend.Core.Settings
 
     public class MarginSettings
     {
-        public string MetricLoggerLine { get; set; }
         public string ApiKey { get; set; }
         public string DemoAccountIdPrefix { get; set; }
-        public bool RemoteConsoleEnabled { get; set; }
 
         #region from Env variables
 

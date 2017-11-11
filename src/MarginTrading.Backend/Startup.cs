@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
-using Flurl.Http;
 using Lykke.AzureQueueIntegration;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
@@ -117,7 +116,8 @@ namespace MarginTrading.Backend
             return new AutofacServiceProvider(ApplicationContainer);
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, IApplicationLifetime appLifetime)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory,
+            IApplicationLifetime appLifetime)
         {
             app.UseMiddleware<GlobalErrorHandlerMiddleware>();
             app.UseMiddleware<MaintenanceModeMiddleware>();
@@ -140,10 +140,15 @@ namespace MarginTrading.Backend
                     Microsoft.ApplicationInsights.Extensibility.TelemetryConfiguration.Active.InstrumentationKey =
                         settings.ApplicationInsightsKey;
                 }
+
+                LogLocator.CommonLog?.WriteMonitorAsync("", "", "Started");
             });
 
             appLifetime.ApplicationStopping.Register(() =>
-                application.StopApplication()
+                {
+                    LogLocator.CommonLog?.WriteMonitorAsync("", "", "Terminating");
+                    application.StopApplication();
+                }
             );
         }
 

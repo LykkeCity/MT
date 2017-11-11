@@ -168,10 +168,13 @@ namespace MarginTrading.Frontend
                 }
 
                 application.StartAsync().Wait();
+                
+                LogLocator.CommonLog?.WriteMonitorAsync("", "", "Started");
             });
 
             appLifetime.ApplicationStopping.Register(() =>
                 {
+                    LogLocator.CommonLog?.WriteMonitorAsync("", "", "Terminating");
                     realmMetaService.Dispose();
                     application.Stop();
                 }
