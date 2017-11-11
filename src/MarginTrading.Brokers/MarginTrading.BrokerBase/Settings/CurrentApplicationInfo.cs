@@ -12,5 +12,7 @@
         public bool IsLive { get; }
         public string ApplicationVersion { get; }
         public string ApplicationName { get; }
+
+        public string ApplicationFullName => $"{ApplicationName}:{ApplicationVersion}";
     }
 }

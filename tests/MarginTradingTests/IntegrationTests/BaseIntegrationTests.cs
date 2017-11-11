@@ -36,9 +36,9 @@ namespace MarginTradingTests.IntegrationTests
             builder.Register<IClientAccountsRepository>(ctx =>
                 new ClientsRepository(
                     AzureTableStorage<ClientAccountEntity>.Create(
-                        () => configuration["ClientInfoConnString"], "Traders", null),
+                        configuration["ClientInfoConnString"].MakeSettings(), "Traders", null),
                     AzureTableStorage<AzureIndex>.Create(
-                        () => configuration["ClientInfoConnString"], "Traders", null)));
+                        configuration["ClientInfoConnString"].MakeSettings(), "Traders", null)));
 
             builder.RegisterType<ClientAccountService>()
                 .As<IClientAccountService>()

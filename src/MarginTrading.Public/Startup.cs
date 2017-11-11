@@ -6,6 +6,7 @@ using Common.Log;
 using Flurl.Http;
 using Lykke.Logs;
 using Lykke.SettingsReader;
+using MarginTrading.Common.Extensions;
 using MarginTrading.Public.Modules;
 using MarginTrading.Public.Settings;
 using Microsoft.AspNetCore.Builder;
@@ -13,7 +14,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.PlatformAbstractions;
 using Swashbuckle.Swagger.Model;
 
 namespace MarginTrading.Public
@@ -28,7 +28,7 @@ namespace MarginTrading.Public
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
-                .AddJsonFile("appsettings.dev.json", true, true)
+                .AddDevJson(env)
                 .AddEnvironmentVariables();
 
             Configuration = builder.Build();
@@ -55,24 +55,26 @@ namespace MarginTrading.Public
 
             var builder = new ContainerBuilder();
 
-            ApplicationSettings appSettings = Environment.IsDevelopment()
-                ? Configuration.Get<ApplicationSettings>()
-                : SettingsProcessor.Process<ApplicationSettings>(Configuration["SettingsUrl"].GetStringAsync().Result);
+            var appSettings = Configuration.LoadSettings<ApplicationSettings>()
+                .Nested(s =>
+                {
+                    if (!string.IsNullOrEmpty(Configuration["Env"]))
+                    {
+                        s.MtPublic.Env = Configuration["Env"];
+                        Console.WriteLine($"Env: {s.MtPublic.Env}");
+                    }
 
-            MtPublicBaseSettings settings = appSettings.MtPublic;
+                    return s;
+                });
 
-            if (!string.IsNullOrEmpty(Configuration["Env"]))
-            {
-                settings.Env = Configuration["Env"];
-                Console.WriteLine($"Env: {settings.Env}");
-            }
+            var settings = appSettings.Nested(s => s.MtPublic);
 
             var consoleLogger = new LogToConsole();
 
-            services.UseLogToAzureStorage(settings.Db.LogsConnString,
+            services.UseLogToAzureStorage(settings.Nested(s => s.Db.LogsConnString),
                 null, "MarginTradingPublicLog", consoleLogger);
 
-            builder.RegisterModule(new PublicApiModule(settings));
+            builder.RegisterModule(new PublicApiModule(settings.CurrentValue));
 
             builder.Populate(services);
 

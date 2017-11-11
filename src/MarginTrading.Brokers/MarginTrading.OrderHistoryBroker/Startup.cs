@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Common.Log;
+using Lykke.SettingsReader;
 using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Core;
 using MarginTrading.BrokerBase;
@@ -17,13 +18,12 @@ namespace MarginTrading.OrderHistoryBroker
 
         protected override string ApplicationName => "MarginTradingOrderHistoryBroker";
 
-        protected override void RegisterCustomServices(IServiceCollection services, ContainerBuilder builder,
-            Settings settings, ILog log, bool isLive)
+        protected override void RegisterCustomServices(IServiceCollection services, ContainerBuilder builder, IReloadingManager<Settings> settings, ILog log, bool isLive)
         {
             builder.RegisterType<Application>().As<IBrokerApplication>().SingleInstance();
 
             builder.Register<IMarginTradingOrdersHistoryRepository>(ctx =>
-                AzureRepoFactories.MarginTrading.CreateOrdersHistoryRepository(settings.Db.HistoryConnString, log)
+                AzureRepoFactories.MarginTrading.CreateOrdersHistoryRepository(settings.Nested(s => s.Db.HistoryConnString), log)
             ).SingleInstance();
         }
     }

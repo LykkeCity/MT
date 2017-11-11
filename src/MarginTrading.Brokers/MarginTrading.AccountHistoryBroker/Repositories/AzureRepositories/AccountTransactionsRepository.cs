@@ -3,6 +3,7 @@ using AzureStorage.Tables;
 using Common.Log;
 using MarginTrading.AccountHistoryBroker.Repositories.Models;
 using System.Threading.Tasks;
+using Lykke.SettingsReader;
 
 namespace MarginTrading.AccountHistoryBroker.Repositories.AzureRepositories
 {
@@ -10,9 +11,9 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.AzureRepositories
     {
         private readonly INoSQLTableStorage<AccountTransactionsReportsEntity> _tableStorage;
 
-        public AccountTransactionsReportsRepository(Settings settings, ILog log)
+        public AccountTransactionsReportsRepository(IReloadingManager<Settings> settings, ILog log)
         {
-            _tableStorage = AzureTableStorage<AccountTransactionsReportsEntity>.Create(() => settings.Db.ReportsConnString,
+            _tableStorage = AzureTableStorage<AccountTransactionsReportsEntity>.Create(settings.Nested(s => s.Db.ReportsConnString),
                 "MarginTradingAccountTransactionsReports", log);
         }
 

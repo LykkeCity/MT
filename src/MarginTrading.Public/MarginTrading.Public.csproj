@@ -17,9 +17,10 @@
     <ProjectReference Include="..\MarginTrading.Contract\MarginTrading.Contract.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Lykke.Common.ApiLibrary" Version="1.0.12" />
-    <PackageReference Include="Lykke.Logs" Version="1.0.33" />
+    <PackageReference Include="Lykke.Common.ApiLibrary" Version="1.0.14" />
+    <PackageReference Include="Lykke.Logs" Version="3.2.2" />
     <PackageReference Include="Lykke.SettingsReader" Version="1.0.42" />
+    <PackageReference Include="Microsoft.AspNetCore.ApplicationInsights.HostingStartup" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="2.0.0" />
@@ -39,7 +40,7 @@
     <PackageReference Include="Swashbuckle.SwaggerGen" Version="6.0.0-beta902" />
     <PackageReference Include="Swashbuckle.SwaggerUi" Version="6.0.0-beta902" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics" Version="2.0.0" />
-    <PackageReference Include="Lykke.RabbitMqBroker" Version="1.0.80" />
+    <PackageReference Include="Lykke.RabbitMqBroker" Version="4.0.5" />
     <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
   </ItemGroup>
 </Project>

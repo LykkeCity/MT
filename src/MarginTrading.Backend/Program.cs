@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 using MarginTrading.Common.Services;
 using Microsoft.AspNetCore.Hosting;
@@ -19,6 +20,7 @@ namespace MarginTrading.Backend
                 {
                     var host = new WebHostBuilder()
                         .UseKestrel()
+                        .UseContentRoot(Directory.GetCurrentDirectory())
                         .UseUrls("http://*:5000")
                         .UseStartup<Startup>()
                         .UseApplicationInsights()

@@ -1,10 +1,11 @@
-﻿using Autofac;
+﻿using System;
+using Autofac;
 using AzureStorage.Tables;
 using AzureStorage.Tables.Templates.Index;
 using Common.Log;
-using Flurl.Http;
 using Lykke.Common;
 using Lykke.Service.Session;
+using Lykke.SettingsReader;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Settings;
 using MarginTrading.Common.Settings.Repositories;
@@ -15,7 +16,6 @@ using MarginTrading.Frontend.Repositories;
 using MarginTrading.Frontend.Services;
 using MarginTrading.Frontend.Settings;
 using MarginTrading.Frontend.Wamp;
-using Microsoft.Extensions.PlatformAbstractions;
 using Microsoft.IdentityModel.Tokens;
 using Rocks.Caching;
 using WampSharp.V2;
@@ -27,9 +27,9 @@ namespace MarginTrading.Frontend.Modules
 {
     public class FrontendModule: Module
     {
-        private readonly MtFrontendSettings _settings;
+        private readonly IReloadingManager<MtFrontendSettings> _settings;
 
-        public FrontendModule(MtFrontendSettings settings)
+        public FrontendModule(IReloadingManager<MtFrontendSettings> settings)
         {
             this._settings = settings;
         }
@@ -53,7 +53,7 @@ namespace MarginTrading.Frontend.Modules
 
             builder.Register<IMarginTradingOperationsLogRepository>(ctx =>
                     new MarginTradingOperationsLogRepository(AzureTableStorage<OperationLogEntity>.Create(
-                        () => _settings.MarginTradingFront.Db.LogsConnString, "MarginTradingFrontendOperationsLog",
+                        _settings.Nested(s => s.MarginTradingFront.Db.LogsConnString), "MarginTradingFrontendOperationsLog",
                         LogLocator.CommonLog))
                 )
                 .SingleInstance();
@@ -61,7 +61,7 @@ namespace MarginTrading.Frontend.Modules
             builder.Register<IClientSettingsRepository>(ctx =>
                 new ClientSettingsRepository(
                     AzureTableStorage<ClientSettingsEntity>.Create(
-                        () => _settings.MarginTradingFront.Db.ClientPersonalInfoConnString, "TraderSettings",
+                        _settings.Nested(s => s.MarginTradingFront.Db.ClientPersonalInfoConnString), "TraderSettings",
                         LogLocator.CommonLog)));
 
 
@@ -69,22 +69,22 @@ namespace MarginTrading.Frontend.Modules
             builder.Register<IClientAccountsRepository>(ctx =>
                 new ClientsRepository(
                     AzureTableStorage<ClientAccountEntity>.Create(
-                        () => _settings.MarginTradingFront.Db.ClientPersonalInfoConnString, "Traders",
+                        _settings.Nested(s => s.MarginTradingFront.Db.ClientPersonalInfoConnString), "Traders",
                         LogLocator.CommonLog),
                     AzureTableStorage<AzureIndex>.Create(
-                        () => _settings.MarginTradingFront.Db.ClientPersonalInfoConnString, "Traders",
+                        _settings.Nested(s => s.MarginTradingFront.Db.ClientPersonalInfoConnString), "Traders",
                         LogLocator.CommonLog)));
-                
+
             builder.Register<IAppGlobalSettingsRepositry>(ctx =>
                 new AppGlobalSettingsRepository(AzureTableStorage<AppGlobalSettingsEntity>.Create(
-                    () => _settings.MarginTradingFront.Db.ClientPersonalInfoConnString, "Setup", LogLocator.CommonLog))
+                    _settings.Nested(s => s.MarginTradingFront.Db.ClientPersonalInfoConnString), "Setup", LogLocator.CommonLog))
             ).SingleInstance();
 
             builder.Register<IMarginTradingWatchListRepository>(ctx =>
                 new MarginTradingWatchListsRepository(AzureTableStorage<MarginTradingWatchListEntity>.Create(
-                    () => _settings.MarginTradingFront.Db.MarginTradingConnString,
+                    _settings.Nested(s => s.MarginTradingFront.Db.MarginTradingConnString),
                     "MarginTradingWatchLists", LogLocator.CommonLog)));
-                
+
             builder.RegisterType<WatchListService>()
                 .As<IWatchListService>()
                 .SingleInstance();
@@ -101,27 +101,7 @@ namespace MarginTrading.Frontend.Modules
                 .As<IMarginTradingOperationsLogService>()
                 .SingleInstance();
 
-            var consoleWriter = new ConsoleLWriter(line =>
-            {
-                try
-                {
-                    if (_settings.MarginTradingFront.RemoteConsoleEnabled && !string.IsNullOrEmpty(_settings.MarginTradingFront.MetricLoggerLine))
-                    {
-                        _settings.MarginTradingFront.MetricLoggerLine.PostJsonAsync(
-                            new
-                            {
-                                Id = "Mt-frontend",
-                                Data =
-                                new[]
-                                {
-                                        new { Key = "Version", Value = PlatformServices.Default.Application.ApplicationVersion },
-                                        new { Key = "Data", Value = line }
-                                }
-                            });
-                    }
-                }
-                catch { }
-            });
+            var consoleWriter = new ConsoleLWriter(Console.WriteLine);
 
             builder.RegisterInstance(consoleWriter)
                 .As<IConsole>()
@@ -131,13 +111,13 @@ namespace MarginTrading.Frontend.Modules
                 .AsSelf()
                 .SingleInstance();
 
-            builder.RegisterInstance(_settings)
+            builder.RegisterInstance(_settings.CurrentValue)
                 .SingleInstance();
 
-            builder.RegisterInstance(_settings.MarginTradingFront)
+            builder.RegisterInstance(_settings.CurrentValue.MarginTradingFront)
                 .SingleInstance();
 
-            builder.RegisterInstance(_settings.MarginTradingFront.RequestLoggerSettings)
+            builder.RegisterInstance(_settings.CurrentValue.MarginTradingFront.RequestLoggerSettings)
                 .SingleInstance();
 
             builder.RegisterType<RpcMtFrontend>()
@@ -161,7 +141,7 @@ namespace MarginTrading.Frontend.Modules
                 .SingleInstance();
 
             builder.Register<IClientsSessionsRepository>(ctx =>
-                new ClientSessionsClient(_settings.MarginTradingFront.SessionServiceApiUrl, LogLocator.CommonLog)
+                new ClientSessionsClient(_settings.CurrentValue.MarginTradingFront.SessionServiceApiUrl, LogLocator.CommonLog)
             ).SingleInstance();
 
             builder.RegisterType<ClientTokenValidator>()
@@ -184,10 +164,10 @@ namespace MarginTrading.Frontend.Modules
 
             builder.Register(context =>
                     MarginTradingDataReaderApiClientFactory.CreateDefaultClientsPair(
-                        _settings.MarginTradingFront.DataReaderApiSettings.DemoApiUrl,
-                        _settings.MarginTradingFront.DataReaderApiSettings.LiveApiUrl,
-                        _settings.MarginTradingFront.DataReaderApiSettings.DemoApiKey,
-                        _settings.MarginTradingFront.DataReaderApiSettings.LiveApiKey,
+                        _settings.CurrentValue.MarginTradingFront.DataReaderApiSettings.DemoApiUrl,
+                        _settings.CurrentValue.MarginTradingFront.DataReaderApiSettings.LiveApiUrl,
+                        _settings.CurrentValue.MarginTradingFront.DataReaderApiSettings.DemoApiKey,
+                        _settings.CurrentValue.MarginTradingFront.DataReaderApiSettings.LiveApiKey,
                         "MarginTradingFrontend"))
                 .SingleInstance();
         }

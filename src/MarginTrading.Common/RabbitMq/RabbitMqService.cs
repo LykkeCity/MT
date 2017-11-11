@@ -39,10 +39,11 @@ namespace MarginTrading.Common.RabbitMq
 
             var rabbitMqPublisher = new RabbitMqPublisher<TMessage>(subscriptionSettings)
                 .SetSerializer(new JsonMessageSerializer<TMessage>())
+                .DisableInMemoryQueuePersistence()
                 .SetLogger(_logger)
                 .SetConsole(_consoleWriter)
                 .Start();
-            
+
             _stopables.Add(rabbitMqPublisher);
 
             return rabbitMqPublisher;

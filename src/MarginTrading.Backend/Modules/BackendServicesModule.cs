@@ -4,14 +4,12 @@ using System.IO;
 using Autofac;
 using Common;
 using Common.Log;
-using Flurl.Http;
 using Lykke.RabbitMqBroker.Publisher;
 using Lykke.RabbitMqBroker.Subscriber;
 using MarginTrading.Backend.Email;
 using MarginTrading.Backend.Middleware.Validator;
 using MarginTrading.Common.RabbitMq;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.PlatformAbstractions;
 using Lykke.Service.EmailSender;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Settings;
@@ -62,33 +60,7 @@ namespace MarginTrading.Backend.Modules
                 new EmailSenderClient(_mtSettings.EmailSender.ServiceUrl, _log)
             ).SingleInstance();
 
-            var consoleWriter = _environment.IsProduction()
-                ? new ConsoleLWriter(line =>
-                {
-                    try
-                    {
-                        if (_settings.RemoteConsoleEnabled && !string.IsNullOrEmpty(_settings.MetricLoggerLine))
-                        {
-                            _settings.MetricLoggerLine.PostJsonAsync(
-                                new
-                                {
-                                    Id = "Mt-backend",
-                                    Data =
-                                    new[]
-                                    {
-                                        new { Key = "Version", Value = PlatformServices.Default.Application.ApplicationVersion },
-                                        new { Key = "Data", Value = line }
-                                    }
-                                });
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                    }
-
-                })
-                : new ConsoleLWriter(Console.WriteLine);
+            var consoleWriter = new ConsoleLWriter(Console.WriteLine);
 
             builder.RegisterInstance(consoleWriter)
                 .As<IConsole>()
@@ -150,6 +122,7 @@ namespace MarginTrading.Backend.Modules
                     })
                     .SetSerializer(bytesSerializer)
                     .SetPublishStrategy(new DefaultFanoutPublishStrategy(new RabbitMqSubscriptionSettings {IsDurable = true}))
+                    .DisableInMemoryQueuePersistence()
                     .SetLogger(_log)
                     .SetConsole(consoleWriter)
                     .Start();
