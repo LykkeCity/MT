@@ -1,5 +1,7 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using System.Threading.Tasks;
+using Lykke.Logs;
 using Lykke.SlackNotifications;
 using MarginTrading.Common.Enums;
 
@@ -20,6 +22,11 @@ namespace MarginTrading.Common.Services
 
         public async Task SendAsync(string type, string sender, string message)
         {
+            if (type.Equals(LykkeLogToAzureStorage.MonitorType, StringComparison.OrdinalIgnoreCase))
+            {
+                await _sender.SendAsync(type, sender, message);
+            }
+            
             await _sender.SendAsync(ChannelTypes.MarginTrading, sender, GetSlackMsg(message));
         }
 

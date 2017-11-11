@@ -1,8 +1,8 @@
-﻿using Autofac;
+﻿using System;
+using Autofac;
 using AzureStorage.Tables;
 using AzureStorage.Tables.Templates.Index;
 using Common.Log;
-using Flurl.Http;
 using Lykke.Common;
 using Lykke.Service.Session;
 using Lykke.SettingsReader;
@@ -16,7 +16,6 @@ using MarginTrading.Frontend.Repositories;
 using MarginTrading.Frontend.Services;
 using MarginTrading.Frontend.Settings;
 using MarginTrading.Frontend.Wamp;
-using Microsoft.Extensions.PlatformAbstractions;
 using Microsoft.IdentityModel.Tokens;
 using Rocks.Caching;
 using WampSharp.V2;
@@ -102,27 +101,7 @@ namespace MarginTrading.Frontend.Modules
                 .As<IMarginTradingOperationsLogService>()
                 .SingleInstance();
 
-            var consoleWriter = new ConsoleLWriter(line =>
-            {
-                try
-                {
-                    if (_settings.CurrentValue.MarginTradingFront.RemoteConsoleEnabled && !string.IsNullOrEmpty(_settings.CurrentValue.MarginTradingFront.MetricLoggerLine))
-                    {
-                        _settings.CurrentValue.MarginTradingFront.MetricLoggerLine.PostJsonAsync(
-                            new
-                            {
-                                Id = "Mt-frontend",
-                                Data =
-                                new[]
-                                {
-                                        new { Key = "Version", Value = PlatformServices.Default.Application.ApplicationVersion },
-                                        new { Key = "Data", Value = line }
-                                }
-                            });
-                    }
-                }
-                catch { }
-            });
+            var consoleWriter = new ConsoleLWriter(Console.WriteLine);
 
             builder.RegisterInstance(consoleWriter)
                 .As<IConsole>()

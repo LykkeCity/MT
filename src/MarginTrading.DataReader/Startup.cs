@@ -125,9 +125,13 @@ namespace MarginTrading.DataReader
                     TelemetryConfiguration.Active.InstrumentationKey =
                         settings.ApplicationInsightsKey;
                 }
+                LogLocator.CommonLog?.WriteMonitorAsync("", "", "Started");
             });
 
-            appLifetime.ApplicationStopping.Register(() => { });
+            appLifetime.ApplicationStopping.Register(() =>
+            {
+                LogLocator.CommonLog?.WriteMonitorAsync("", "", "Terminating");
+            });
         }
 
         /// <summary>
