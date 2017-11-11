@@ -30,7 +30,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MarginTrading.Common.Extensions;
 using ILoggerFactory = Microsoft.Extensions.Logging.ILoggerFactory;
 
 #pragma warning disable 1591

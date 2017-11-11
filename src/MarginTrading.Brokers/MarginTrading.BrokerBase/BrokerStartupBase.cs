@@ -149,7 +149,8 @@ namespace MarginTrading.BrokerBase
             var settings = isLive
                 ? applicationSettings.Nested(s => s.MtBackend.MarginTradingLive)
                 : applicationSettings.Nested(s => s.MtBackend.MarginTradingDemo);
-            builder.RegisterInstance(settings).SingleInstance();
+            builder.RegisterInstance(settings).AsSelf().SingleInstance();
+            builder.RegisterInstance(settings.CurrentValue).AsSelf().SingleInstance();
 
             builder.RegisterInstance(new CurrentApplicationInfo(isLive,
                 PlatformServices.Default.Application.ApplicationVersion,
