@@ -8,7 +8,6 @@ using JetBrains.Annotations;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Settings;
-using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Contract.RabbitMqMessageModels;
@@ -29,7 +28,6 @@ namespace MarginTrading.Backend.Services
         private readonly ILog _log;
         private readonly IClientNotifyService _clientNotifyService;
         private readonly OrdersCache _ordersCache;
-        private readonly IUpdatedAccountsTrackingService _updatedAccountsTrackingService;
         private readonly IEventChannel<AccountBalanceChangedEventArgs> _acountBalanceChangedEventChannel;
         private readonly ITradingEngine _tradingEngine;
 
@@ -45,10 +43,9 @@ namespace MarginTrading.Backend.Services
             ILog log,
             IClientNotifyService clientNotifyService,
             OrdersCache ordersCache,
-            IUpdatedAccountsTrackingService updatedAccountsTrackingService,
             IEventChannel<AccountBalanceChangedEventArgs> acountBalanceChangedEventChannel,
             ITradingEngine tradingEngine)
-            : base(nameof(AccountManager), 10000, log)
+            : base(nameof(AccountManager), 60000, log)
         {
             _accountsCacheService = accountsCacheService;
             _repository = repository;
@@ -61,7 +58,6 @@ namespace MarginTrading.Backend.Services
             _log = log;
             _clientNotifyService = clientNotifyService;
             _ordersCache = ordersCache;
-            _updatedAccountsTrackingService = updatedAccountsTrackingService;
             _acountBalanceChangedEventChannel = acountBalanceChangedEventChannel;
             _tradingEngine = tradingEngine;
         }
@@ -80,11 +76,8 @@ namespace MarginTrading.Backend.Services
 
         private IReadOnlyList<IMarginTradingAccount> GetAccountsToWriteStats()
         {
-            var accountsIdsToWrite = _ordersCache.GetActive().Select(a => a.AccountId)
-                .Concat(_updatedAccountsTrackingService.GetAccounts())
-                .Distinct();
-            return _accountsCacheService.GetAll().Join(accountsIdsToWrite, a => a.Id, a => a, (account, id) => account)
-                .ToList();
+            var accountsIdsToWrite = _ordersCache.GetActive().Select(a => a.AccountId).Distinct().ToHashSet();
+            return _accountsCacheService.GetAll().Where(a => accountsIdsToWrite.Contains(a.Id)).ToList();
         }
 
         private IEnumerable<AccountStatsUpdateMessage> GenerateAccountsStatsUpdateMessages(IReadOnlyList<IMarginTradingAccount> accounts)
