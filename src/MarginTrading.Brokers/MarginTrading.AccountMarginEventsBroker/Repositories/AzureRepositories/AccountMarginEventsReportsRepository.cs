@@ -2,6 +2,7 @@
 using AzureStorage;
 using AzureStorage.Tables;
 using Common.Log;
+using Lykke.SettingsReader;
 using MarginTrading.AccountMarginEventsBroker.Repositories.Models;
 
 namespace MarginTrading.AccountMarginEventsBroker.Repositories.AzureRepositories
@@ -10,9 +11,9 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.AzureRepositories
     {
         private readonly INoSQLTableStorage<AccountMarginEventReportEntity> _tableStorage;
 
-        public AccountMarginEventsReportsRepository(Settings settings, ILog log)
+        public AccountMarginEventsReportsRepository(IReloadingManager<Settings> settings, ILog log)
         {
-            _tableStorage = AzureTableStorage<AccountMarginEventReportEntity>.Create(() => settings.Db.ReportsConnString,
+            _tableStorage = AzureTableStorage<AccountMarginEventReportEntity>.Create(settings.Nested(s => s.Db.ReportsConnString),
                 "AccountMarginEventsReports", log);
         }
 

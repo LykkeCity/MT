@@ -150,6 +150,7 @@ namespace MarginTrading.Backend.Modules
                     })
                     .SetSerializer(bytesSerializer)
                     .SetPublishStrategy(new DefaultFanoutPublishStrategy(new RabbitMqSubscriptionSettings {IsDurable = true}))
+                    .DisableInMemoryQueuePersistence()
                     .SetLogger(_log)
                     .SetConsole(consoleWriter)
                     .Start();

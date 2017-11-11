@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Common.Log;
+using Lykke.SettingsReader;
 using MarginTrading.AccountMarginEventsBroker.Repositories;
 using MarginTrading.AccountMarginEventsBroker.Repositories.AzureRepositories;
 using MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories;
@@ -19,14 +20,13 @@ namespace MarginTrading.AccountMarginEventsBroker
         }
 
 
-        protected override void RegisterCustomServices(IServiceCollection services, ContainerBuilder builder,
-            Settings settings, ILog log, bool isLive)
+        protected override void RegisterCustomServices(IServiceCollection services, ContainerBuilder builder, IReloadingManager<Settings> settings, ILog log, bool isLive)
         {
             builder.RegisterType<Application>().As<IBrokerApplication>().SingleInstance();
                      
             builder.RegisterInstance(new RepositoryAggregator(new IAccountMarginEventsReportsRepository[]
             {
-                new AccountMarginEventsReportsSqlRepository(settings, log),
+                new AccountMarginEventsReportsSqlRepository(settings.CurrentValue, log),
                 new AccountMarginEventsReportsRepository(settings, log)
             }))
             .As<IAccountMarginEventsReportsRepository>();

@@ -1,5 +1,6 @@
 ﻿using AzureStorage.Tables;
 using Common.Log;
+using Lykke.SettingsReader;
 using MarginTrading.AzureRepositories.Logs;
 
 namespace MarginTrading.AzureRepositories
@@ -8,74 +9,74 @@ namespace MarginTrading.AzureRepositories
     {
         public static class MarginTrading
         {
-            public static TradingConditionsRepository CreateTradingConditionsRepository(string connstring, ILog log)
+            public static TradingConditionsRepository CreateTradingConditionsRepository(IReloadingManager<string> connString, ILog log)
             {
-                return new TradingConditionsRepository(AzureTableStorage<TradingConditionEntity>.Create(() => connstring,
+                return new TradingConditionsRepository(AzureTableStorage<TradingConditionEntity>.Create(connString,
                     "MarginTradingConditions", log));
             }
 
-            public static AccountGroupRepository CreateAccountGroupRepository(string connstring, ILog log)
+            public static AccountGroupRepository CreateAccountGroupRepository(IReloadingManager<string> connString, ILog log)
             {
-                return new AccountGroupRepository(AzureTableStorage<AccountGroupEntity>.Create(() => connstring,
+                return new AccountGroupRepository(AzureTableStorage<AccountGroupEntity>.Create(connString,
                     "MarginTradingAccountGroups", log));
             }
 
-            public static AccountAssetsPairsRepository CreateAccountAssetsRepository(string connstring, ILog log)
+            public static AccountAssetsPairsRepository CreateAccountAssetsRepository(IReloadingManager<string> connString, ILog log)
             {
-                return new AccountAssetsPairsRepository(AzureTableStorage<AccountAssetPairEntity>.Create(() => connstring,
+                return new AccountAssetsPairsRepository(AzureTableStorage<AccountAssetPairEntity>.Create(connString,
                     "MarginTradingAccountAssets", log));
             }
 
-            public static AssetPairsRepository CreateAssetsRepository(string connstring, ILog log)
+            public static AssetPairsRepository CreateAssetsRepository(IReloadingManager<string> connString, ILog log)
             {
-                return new AssetPairsRepository(AzureTableStorage<AssetPairEntity>.Create(() => connstring,
+                return new AssetPairsRepository(AzureTableStorage<AssetPairEntity>.Create(connString,
                     "MarginTradingAssets", log));
             }
 
-            public static MarginTradingOrdersHistoryRepository CreateOrdersHistoryRepository(string connstring, ILog log)
+            public static MarginTradingOrdersHistoryRepository CreateOrdersHistoryRepository(IReloadingManager<string> connString, ILog log)
             {
-                return new MarginTradingOrdersHistoryRepository(AzureTableStorage<MarginTradingOrderHistoryEntity>.Create(() => connstring,
+                return new MarginTradingOrdersHistoryRepository(AzureTableStorage<MarginTradingOrderHistoryEntity>.Create(connString,
                     "MarginTradingOrdersHistory", log));
             }
 
-            public static MarginTradingOrdersRejectedRepository CreateOrdersRejectedRepository(string connstring, ILog log)
+            public static MarginTradingOrdersRejectedRepository CreateOrdersRejectedRepository(IReloadingManager<string> connString, ILog log)
             {
-                return new MarginTradingOrdersRejectedRepository(AzureTableStorage<MarginTradingOrderRejectedEntity>.Create(() => connstring,
+                return new MarginTradingOrdersRejectedRepository(AzureTableStorage<MarginTradingOrderRejectedEntity>.Create(connString,
                     "MarginTradingOrdersRejected", log));
             }
 
-            public static MarginTradingAccountHistoryRepository CreateAccountHistoryRepository(string connstring, ILog log)
+            public static MarginTradingAccountHistoryRepository CreateAccountHistoryRepository(IReloadingManager<string> connString, ILog log)
             {
-                return new MarginTradingAccountHistoryRepository(AzureTableStorage<MarginTradingAccountHistoryEntity>.Create(() => connstring,
+                return new MarginTradingAccountHistoryRepository(AzureTableStorage<MarginTradingAccountHistoryEntity>.Create(connString,
                     "AccountsHistory", log));
             }
 
-            public static MarginTradingAccountsRepository CreateAccountsRepository(string connstring, ILog log)
+            public static MarginTradingAccountsRepository CreateAccountsRepository(IReloadingManager<string> connString, ILog log)
             {
-                return new MarginTradingAccountsRepository(AzureTableStorage<MarginTradingAccountEntity>.Create(() => connstring,
+                return new MarginTradingAccountsRepository(AzureTableStorage<MarginTradingAccountEntity>.Create(connString,
                     "MarginTradingAccounts", log));
             }
 
-            public static MarginTradingAccountStatsRepository CreateAccountStatsRepository(string connstring, ILog log)
+            public static MarginTradingAccountStatsRepository CreateAccountStatsRepository(IReloadingManager<string> connString, ILog log)
             {
-                return new MarginTradingAccountStatsRepository(AzureTableStorage<MarginTradingAccountStatsEntity>.Create(() => connstring,
+                return new MarginTradingAccountStatsRepository(AzureTableStorage<MarginTradingAccountStatsEntity>.Create(connString,
                     "MarginTradingAccountStats", log));
             }
 
-            public static MarginTradingBlobRepository CreateBlobRepository(string connstring)
+            public static MarginTradingBlobRepository CreateBlobRepository(IReloadingManager<string> connString)
             {
-                return new MarginTradingBlobRepository(connstring);
+                return new MarginTradingBlobRepository(connString);
             }
 
-            public static MatchingEngineRoutesRepository CreateMatchingEngineRoutesRepository(string connstring, ILog log)
+            public static MatchingEngineRoutesRepository CreateMatchingEngineRoutesRepository(IReloadingManager<string> connString, ILog log)
             {
-                return new MatchingEngineRoutesRepository(AzureTableStorage<MatchingEngineRouteEntity>.Create(() => connstring,
+                return new MatchingEngineRoutesRepository(AzureTableStorage<MatchingEngineRouteEntity>.Create(connString,
                     "MatchingEngineRoutes", log));
             }
 
-            public static RiskSystemCommandsLogRepository CreateRiskSystemCommandsLogRepository(string connstring, ILog log)
+            public static RiskSystemCommandsLogRepository CreateRiskSystemCommandsLogRepository(IReloadingManager<string> connString, ILog log)
             {
-                return new RiskSystemCommandsLogRepository(AzureTableStorage<RiskSystemCommandsLogEntity>.Create(() => connstring,
+                return new RiskSystemCommandsLogRepository(AzureTableStorage<RiskSystemCommandsLogEntity>.Create(connString,
                     "RiskSystemCommandsLog", log));
             }
         }

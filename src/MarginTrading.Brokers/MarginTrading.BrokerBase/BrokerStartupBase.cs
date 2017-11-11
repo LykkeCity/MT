@@ -9,6 +9,7 @@ using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
 using Lykke.SlackNotifications;
 using MarginTrading.BrokerBase.Settings;
+using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -19,7 +20,7 @@ using Microsoft.Extensions.PlatformAbstractions;
 
 namespace MarginTrading.BrokerBase
 {
-    public abstract class BrokerStartupBase<TApplicationSettings, TSettings> 
+    public abstract class BrokerStartupBase<TApplicationSettings, TSettings>
         where TApplicationSettings : class, IBrokerApplicationSettings<TSettings>
         where TSettings: BrokerSettingsBase
     {
@@ -35,7 +36,7 @@ namespace MarginTrading.BrokerBase
         {
             Configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile(AppSettingsDevFile, true, true)
+                .AddDevJson(env)
                 .AddEnvironmentVariables()
                 .Build();
 
@@ -53,9 +54,15 @@ namespace MarginTrading.BrokerBase
             services.AddSingleton(Configuration);
             services.AddMvc();
 
-            var applicationSettings = GetApplicationSettings();
-
             var isLive = IsLive(Configuration);
+            var applicationSettings = Configuration.LoadSettings<TApplicationSettings>()
+                .Nested(s =>
+                {
+                    var settings = isLive ? s.MtBackend.MarginTradingLive : s.MtBackend.MarginTradingDemo;
+                    settings.IsLive = isLive;
+                    return s;
+                });
+
             Console.WriteLine($"IsLive: {isLive}");
 
             var builder = new ContainerBuilder();
@@ -63,30 +70,6 @@ namespace MarginTrading.BrokerBase
             ApplicationContainer = builder.Build();
 
             return new AutofacServiceProvider(ApplicationContainer);
-        }
-
-        protected virtual TApplicationSettings GetApplicationSettings()
-        {
-            TApplicationSettings applicationSettings;
-            string settingsLocation;
-            if (Environment.IsDevelopment())
-            {
-                settingsLocation = AppSettingsDevFile;
-                applicationSettings = Configuration.Get<TApplicationSettings>();
-            }
-            else
-            {
-                settingsLocation = Configuration["SettingsUrl"];
-                applicationSettings =
-                    SettingsProcessor.Process<TApplicationSettings>(settingsLocation.GetStringAsync().Result);
-            }
-
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            if (applicationSettings == null)
-            {
-                throw new InvalidOperationException("Settings not found in " + settingsLocation);
-            }
-            return applicationSettings;
         }
 
         public virtual void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory,
@@ -103,7 +86,7 @@ namespace MarginTrading.BrokerBase
                     application.Run();
                 }
             });
-            
+
             appLifetime.ApplicationStopping.Register(() =>
             {
                 foreach (var application in applications)
@@ -118,10 +101,9 @@ namespace MarginTrading.BrokerBase
             });
         }
 
-        protected abstract void RegisterCustomServices(IServiceCollection services, ContainerBuilder builder,
-            TSettings settings, ILog log, bool isLive);
+        protected abstract void RegisterCustomServices(IServiceCollection services, ContainerBuilder builder, IReloadingManager<TSettings> settings, ILog log, bool isLive);
 
-        protected virtual ILog CreateLogWithSlack(IServiceCollection services, TApplicationSettings settings, bool isLive)
+        protected virtual ILog CreateLogWithSlack(IServiceCollection services, IReloadingManager<TApplicationSettings> settings, bool isLive)
         {
             var logToConsole = new LogToConsole();
             var logAggregate = new LogAggregate();
@@ -130,7 +112,7 @@ namespace MarginTrading.BrokerBase
             logAggregate.AddLogger(logToConsole);
 
             var commonSlackService =
-                services.UseSlackNotificationsSenderViaAzureQueue(settings.SlackNotifications.AzureQueue,
+                services.UseSlackNotificationsSenderViaAzureQueue(settings.CurrentValue.SlackNotifications.AzureQueue,
                     logToConsole);
 
             var slackService =
@@ -139,11 +121,12 @@ namespace MarginTrading.BrokerBase
             services.AddSingleton<ISlackNotificationsSender>(slackService);
 
             // Creating azure storage logger, which logs own messages to concole log
-            var dbLogConnectionString = settings.MtBrokersLogs?.DbConnString;
+            var dbLogConnectionString = settings.CurrentValue.MtBrokersLogs?.DbConnString;
             if (!string.IsNullOrEmpty(dbLogConnectionString) &&
                 !(dbLogConnectionString.StartsWith("${") && dbLogConnectionString.EndsWith("}")))
             {
-                var logToAzureStorage = services.UseLogToAzureStorage(dbLogConnectionString, slackService,
+                var logToAzureStorage = services.UseLogToAzureStorage(
+                    settings.Nested(s => s.MtBrokersLogs.DbConnString), slackService,
                     ApplicationName + isLiveEnv + "Log",
                     logToConsole);
 
@@ -155,16 +138,17 @@ namespace MarginTrading.BrokerBase
         }
 
 
-        private void RegisterServices(IServiceCollection services, TApplicationSettings applicationSettings,
+        private void RegisterServices(IServiceCollection services, IReloadingManager<TApplicationSettings> applicationSettings,
             ContainerBuilder builder,
             bool isLive)
         {
             var log = CreateLogWithSlack(services, applicationSettings, isLive);
             builder.RegisterInstance(log).As<ILog>().SingleInstance();
             builder.RegisterInstance(applicationSettings).AsSelf().SingleInstance();
-            
-            var settings = isLive ? applicationSettings.MtBackend.MarginTradingLive : applicationSettings.MtBackend.MarginTradingDemo;
-            settings.IsLive = isLive;
+
+            var settings = isLive
+                ? applicationSettings.Nested(s => s.MtBackend.MarginTradingLive)
+                : applicationSettings.Nested(s => s.MtBackend.MarginTradingDemo);
             builder.RegisterInstance(settings).SingleInstance();
 
             builder.RegisterInstance(new CurrentApplicationInfo(isLive,
