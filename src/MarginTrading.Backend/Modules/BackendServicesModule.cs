@@ -87,9 +87,11 @@ namespace MarginTrading.Backend.Modules
                 .As<IMaintenanceModeService>()
                 .SingleInstance();
 
-            builder.RegisterType<UpdatedAccountsTrackingService>()
-                .As<IUpdatedAccountsTrackingService>()
+            builder.RegisterType<UpdatedAccountsStatsConsumer>()
                 .As<IEventConsumer<AccountBalanceChangedEventArgs>>()
+                .As<IEventConsumer<OrderPlacedEventArgs>>()
+                .As<IEventConsumer<OrderClosedEventArgs>>()
+                .As<IEventConsumer<OrderCancelledEventArgs>>()
                 .SingleInstance();
 
             RegisterPublishers(builder, consoleWriter);

@@ -51,10 +51,6 @@ namespace MarginTradingTests
                 .As<IWatchListService>()
                 .SingleInstance();
 
-            builder.RegisterType<UpdatedAccountsTrackingService>()
-                .As<IUpdatedAccountsTrackingService>()
-                .SingleInstance();
-
             builder.RegisterType<EventChannel<AccountBalanceChangedEventArgs>>()
                 .As<IEventChannel<AccountBalanceChangedEventArgs>>()
                 .SingleInstance();
