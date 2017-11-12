@@ -4,10 +4,10 @@ namespace MarginTrading.Common.RabbitMq
 {
     public static class QueueHelper
     {
-        public static string BuildQueueName(string exchangeName, string env)
+        public static string BuildQueueName(string exchangeName, string env, string postfix = "")
         {
-            return 
-                $"{exchangeName}.{PlatformServices.Default.Application.ApplicationName}.{env ?? "DefaultEnv"}";
+            return
+                $"{exchangeName}.{PlatformServices.Default.Application.ApplicationName}.{env ?? "DefaultEnv"}{postfix}";
         }
     }
 }

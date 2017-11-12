@@ -25,6 +25,10 @@ namespace MarginTrading.Backend.Services
         public OrdersCache(IContextFactory contextFactory)
         {
             _contextFactory = contextFactory;
+            
+            ActiveOrders = new OrderCacheGroup(new Order[0], OrderStatus.Active);
+            WaitingForExecutionOrders = new OrderCacheGroup(new Order[0], OrderStatus.WaitingForExecution);
+            ClosingOrders = new OrderCacheGroup(new Order[0], OrderStatus.Closing);
         }
 
         public OrderCacheGroup ActiveOrders { get; private set; }

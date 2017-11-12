@@ -22,7 +22,7 @@ namespace MarginTrading.Common.Services
 
         public async Task SendAsync(string type, string sender, string message)
         {
-            if (type.Equals(LykkeLogToAzureStorage.MonitorType, StringComparison.OrdinalIgnoreCase))
+            if (type.Equals(LykkeLogToAzureStorage.MonitorType, StringComparison.InvariantCultureIgnoreCase))
             {
                 await _sender.SendAsync(type, sender, message);
             }

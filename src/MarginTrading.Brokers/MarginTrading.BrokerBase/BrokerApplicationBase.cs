@@ -19,13 +19,14 @@ namespace MarginTrading.BrokerBase
 
         protected abstract BrokerSettingsBase Settings { get; }
         protected abstract string ExchangeName { get; }
+        protected virtual string QueuePostfix => string.Empty;
         
         private RabbitMqSubscriptionSettings GetRabbitMqSubscriptionSettings()
         {
             return new RabbitMqSubscriptionSettings
             {
                 ConnectionString = Settings.MtRabbitMqConnString,
-                QueueName = QueueHelper.BuildQueueName(ExchangeName, Settings.Env),
+                QueueName = QueueHelper.BuildQueueName(ExchangeName, Settings.Env, QueuePostfix),
                 ExchangeName = ExchangeName,
                 IsDurable = true
             };
