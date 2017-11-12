@@ -1,7 +1,6 @@
 ﻿using Common.Log;
 using Lykke.SlackNotifications;
 using MarginTrading.AccountReportsBroker.Repositories;
-using MarginTrading.AccountReportsBroker.Repositories.AzureRepositories.Entities;
 using MarginTrading.AccountReportsBroker.Repositories.Models;
 using MarginTrading.AzureRepositories;
 using MarginTrading.BrokerBase;
@@ -13,14 +12,14 @@ using System.Threading.Tasks;
 
 namespace MarginTrading.AccountReportsBroker
 {
-    internal class AccountStatReportsApplication : BrokerApplicationBase<AccountStatsUpdateMessage>
+    internal abstract class AccountStatReportsApplication : BrokerApplicationBase<AccountStatsUpdateMessage>
     {
         private readonly IAccountsStatsReportsRepository _accountsStatsReportsRepository;
         private readonly IMarginTradingAccountStatsRepository _statsRepository;
         private readonly Settings _settings;
         
 
-        public AccountStatReportsApplication(ILog logger,
+        protected AccountStatReportsApplication(ILog logger,
             Settings settings, CurrentApplicationInfo applicationInfo,
             IAccountsStatsReportsRepository accountsStatsReportsRepository,
             IMarginTradingAccountStatsRepository statsRepository,

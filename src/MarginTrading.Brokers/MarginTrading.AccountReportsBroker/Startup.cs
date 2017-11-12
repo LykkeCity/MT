@@ -1,4 +1,5 @@
-﻿using Autofac;
+﻿using System;
+using Autofac;
 using Common.Log;
 using Lykke.SettingsReader;
 using MarginTrading.AccountReportsBroker.Repositories.AzureRepositories;
@@ -8,6 +9,7 @@ using MarginTrading.AzureRepositories;
 using MarginTrading.BrokerBase;
 using MarginTrading.BrokerBase.Settings;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MarginTrading.AccountReportsBroker
@@ -20,10 +22,27 @@ namespace MarginTrading.AccountReportsBroker
         {
         }
 
+        protected override void SetSettingValues(Settings source, IConfigurationRoot configuration)
+        {
+            base.SetSettingValues(source, configuration);
+
+            source.ReportTarget = GetReportTarget(configuration);
+        }
 
         protected override void RegisterCustomServices(IServiceCollection services, ContainerBuilder builder, IReloadingManager<Settings> settings, ILog log, bool isLive)
         {
-            builder.RegisterType<AccountStatReportsApplication>().As<IBrokerApplication>().SingleInstance();
+            var settingsValue = settings.CurrentValue;
+
+            if (settingsValue.ReportTarget == ReportTarget.All || settingsValue.ReportTarget == ReportTarget.Azure)
+            {
+                builder.RegisterType<AccountStatAzureReportsApplication>().As<IBrokerApplication>().SingleInstance();
+            }
+            
+            if (settingsValue.ReportTarget == ReportTarget.All || settingsValue.ReportTarget == ReportTarget.Sql)
+            {
+                builder.RegisterType<AccountStatSqlReportsApplication>().As<IBrokerApplication>().SingleInstance();
+            }
+            
             builder.RegisterType<AccountReportsApplication>().As<IBrokerApplication>().SingleInstance();
 
             builder.RegisterInstance(new AccountsStatsReportsRepositoryAggregator(new IAccountsStatsReportsRepository[]
@@ -43,6 +62,13 @@ namespace MarginTrading.AccountReportsBroker
             builder.Register<IMarginTradingAccountStatsRepository>(ctx =>
                 AzureRepoFactories.MarginTrading.CreateAccountStatsRepository(settings.Nested(s => s.Db.HistoryConnString), log)
             ).SingleInstance();
+        }
+
+        private static ReportTarget GetReportTarget(IConfigurationRoot configuration)
+        {
+            return Enum.TryParse(configuration["ReportTarget"], out ReportTarget result)
+                ? result
+                : ReportTarget.All;
         }
     }
 }

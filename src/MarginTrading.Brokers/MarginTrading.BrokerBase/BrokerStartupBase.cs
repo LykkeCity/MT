@@ -59,6 +59,11 @@ namespace MarginTrading.BrokerBase
                 {
                     var settings = isLive ? s.MtBackend.MarginTradingLive : s.MtBackend.MarginTradingDemo;
                     settings.IsLive = isLive;
+                    if (!string.IsNullOrEmpty(Configuration["Env"]))
+                    {
+                        settings.Env = Configuration["Env"];
+                    }
+                    SetSettingValues(settings, Configuration);
                     return s;
                 });
 
@@ -69,6 +74,11 @@ namespace MarginTrading.BrokerBase
             ApplicationContainer = builder.Build();
 
             return new AutofacServiceProvider(ApplicationContainer);
+        }
+
+        protected virtual void SetSettingValues(TSettings source, IConfigurationRoot configuration)
+        {
+            //if needed TSetting properties may be setted
         }
 
         public virtual void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory,
