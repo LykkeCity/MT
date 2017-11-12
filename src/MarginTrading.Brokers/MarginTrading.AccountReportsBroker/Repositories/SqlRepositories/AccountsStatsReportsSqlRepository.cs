@@ -31,9 +31,9 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
             "[PnL] [numeric](20, 10) NOT NULL, " +
             "[OpenPositionsCount] [numeric](20, 10) NOT NULL, " +
             "[MarginUsageLevel] [numeric](20, 10) NOT NULL, " +
-            "[IsLive] [bit] NOT NULL, " +
-            "CONSTRAINT[PK_{0}] PRIMARY KEY CLUSTERED ([Id] ASC)" +
-            ");";
+            "[IsLive] [bit] NOT NULL); ";
+
+        private const string CreatePkScript = "ALTER TABLE {0} ADD CONSTRAINT[PK_{0}] PRIMARY KEY CLUSTERED ([Id] ASC);";
 
         private readonly Settings _settings;
         private readonly ILog _log;
@@ -44,7 +44,7 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
             _settings = settings;
             using (var conn = new SqlConnection(_settings.Db.ReportsSqlConnString))
             {
-                try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
+                try { conn.CreateTableIfDoesntExists(CreateTableScript + CreatePkScript, TableName); }
                 catch (Exception ex)
                 {
                     _log.WriteErrorAsync("AccountsStatsReportsSqlRepository", "CreateTableIfDoesntExists", null, ex);
