@@ -1,4 +1,5 @@
-﻿using MarginTrading.BrokerBase.Settings;
+﻿using Lykke.SettingsReader.Attributes;
+using MarginTrading.BrokerBase.Settings;
 using MarginTrading.Common.RabbitMq;
 
 namespace MarginTrading.AccountReportsBroker
@@ -7,6 +8,8 @@ namespace MarginTrading.AccountReportsBroker
     {
         public Db Db { get; set; }
         public RabbitMqQueues RabbitMqQueues { get; set; }
+        [Optional]
+        public ReportTarget ReportTarget { get; set; }
     }
     
     public class Db
@@ -20,5 +23,12 @@ namespace MarginTrading.AccountReportsBroker
     {
         public RabbitMqQueueInfo AccountStats { get; set; }
         public RabbitMqQueueInfo AccountChanged { get; set; }
+    }
+
+    public enum ReportTarget
+    {
+        All,
+        Azure,
+        Sql
     }
 }
