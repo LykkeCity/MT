@@ -102,7 +102,8 @@ namespace MarginTrading.Backend.Core.Mappers
                 Date = src.Date,
                 Balance = src.Balance,
                 WithdrawTransferLimit = src.WithdrawTransferLimit,
-                Comment = src.Comment
+                Comment = src.Comment,
+                OrderId = src.OrderId
             };
         }
     }
