@@ -15,6 +15,7 @@ namespace MarginTrading.Backend.Core
         decimal WithdrawTransferLimit { get; }
         string Comment { get; }
         AccountHistoryType Type { get; }
+        string OrderId { get; }
     }
 
     public class MarginTradingAccountHistory : IMarginTradingAccountHistory
@@ -28,6 +29,8 @@ namespace MarginTrading.Backend.Core
         public decimal WithdrawTransferLimit { get; set; }
         public string Comment { get; set; }
         public AccountHistoryType Type { get; set; }
+        public string OrderId { get; set; }
+
 
         public static MarginTradingAccountHistory Create(IMarginTradingAccountHistory src)
         {
@@ -41,7 +44,8 @@ namespace MarginTrading.Backend.Core
                 Balance = src.Balance,
                 WithdrawTransferLimit = src.WithdrawTransferLimit,
                 Comment = src.Comment,
-                Type = src.Type
+                Type = src.Type,
+                OrderId = src.OrderId
             };
         }
     }

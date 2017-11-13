@@ -50,7 +50,7 @@ namespace MarginTrading.Backend.Services
 				var totalFpl = order.GetTotalFpl();
 				var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
 				await _accountManager.UpdateBalanceAsync(account, totalFpl, AccountHistoryType.OrderClosed,
-					$"Balance changed on order close (id = {order.Id})");
+					$"Balance changed on order close (id = {order.Id})", order.Id);
 
 				await SendNotification(order.ClientId, order.GetPushMessage(), order);
 			});

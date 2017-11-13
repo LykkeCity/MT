@@ -53,15 +53,15 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
                 if (res == null)
                 {
                     query = $"insert into {TableName} " +
-                     "(Id, Date, AccountId, ClientId, Amount, Balance, WithdrawTransferLimit, Comment, Type) " +
+                     "(Id, Date, AccountId, ClientId, Amount, Balance, WithdrawTransferLimit, Comment, Type, PositionId) " +
                      " values " +
-                     "(@Id ,@Date, @AccountId, @ClientId, @Amount, @Balance, @WithdrawTransferLimit, @Comment, @Type)";
+                     "(@Id ,@Date, @AccountId, @ClientId, @Amount, @Balance, @WithdrawTransferLimit, @Comment, @Type, @PositionId)";
                 }
                 else
                 {
                     query = $"update {TableName} set " +
                       "Date=@Date, AccountId=@AccountId, ClientId=@ClientId, Amount=@Amount, Balance=@Balance, " +
-                      "WithdrawTransferLimit=@WithdrawTransferLimit, Comment=@Comment, Type=@Type " +
+                      "WithdrawTransferLimit=@WithdrawTransferLimit, Comment=@Comment, Type=@Type, PositionId = @PositionId " +
                       " where Id=@Id";
                 }
                 try { await conn.ExecuteAsync(query, entity); }
