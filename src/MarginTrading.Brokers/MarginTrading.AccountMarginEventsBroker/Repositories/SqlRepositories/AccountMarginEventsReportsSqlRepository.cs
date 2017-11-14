@@ -1,9 +1,9 @@
-﻿using Common.Log;
+﻿using Common;
+using Common.Log;
 using Dapper;
 using MarginTrading.AccountMarginEventsBroker.Repositories.Models;
 using MarginTrading.BrokerBase;
 using System;
-using System.Data;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 
@@ -85,26 +85,7 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
                 {
                     string msg = $"Error {ex.Message} \n" +
                            "Entity <IAccountMarginEventReport>: \n" +
-                           $" Id:{report.Id}\n" +
-                           $" EventTime:{report.EventTime}\n" +
-                           $" EventId:{report.EventId}\n" +
-                           $" AccountId:{report.AccountId}\n" +
-                           $" ClientId:{report.ClientId}\n" +
-                           $" TradingConditionId:{report.TradingConditionId}\n" +
-                           $" BaseAssetId:{report.BaseAssetId}\n" +
-                           $" Balance:{report.Balance}\n" +
-                           $" FreeMargin:{report.FreeMargin}\n" +
-                           $" MarginAvailable:{report.MarginAvailable}\n" +
-                           $" MarginCall:{report.MarginCall}\n" +
-                           $" MarginInit:{report.MarginInit}\n" +
-                           $" MarginUsageLevel:{report.MarginUsageLevel}\n" +
-                           $" PnL:{report.PnL}\n" +
-                           $" StopOut:{report.StopOut}\n" +
-                           $" TotalCapital:{report.TotalCapital}\n" +
-                           $" UsedMargin:{report.UsedMargin}\n" +
-                           $" OpenPositionsCount:{report.OpenPositionsCount}\n" +
-                           $" IsEventStopout:{report.IsEventStopout}\n" +
-                           $" WithdrawTransferLimit:{report.WithdrawTransferLimit}";
+                           report.ToJson();
                     Exception newException = new Exception(msg);                    
                     await _log?.WriteErrorAsync("AccountMarginEventsReportsSqlRepository", "InsertOrReplaceAsync", null, newException);
                     throw newException;

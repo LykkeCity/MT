@@ -1,9 +1,9 @@
-﻿using Common.Log;
+﻿using Common;
+using Common.Log;
 using Dapper;
 using MarginTrading.AccountHistoryBroker.Repositories.Models;
 using MarginTrading.BrokerBase;
 using System;
-using System.Data;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 
@@ -69,16 +69,7 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
                 {
                     string msg = $"Error {ex.Message} \n" +
                            "Entity <IAccountTransactionsReport>: \n" +
-                           $" Id:{entity.Id}\n" +
-                           $" Date:{entity.Date}\n" +
-                           $" AccountId:{entity.AccountId}\n" +
-                           $" ClientId:{entity.ClientId}\n" +
-                           $" Type:{entity.Type}\n" +
-                           $" PositionId:{entity.PositionId}\n" +
-                           $" Balance:{entity.Balance}\n" +
-                           $" Amount:{entity.Amount}\n" +
-                           $" Comment:{entity.Comment}\n" +                           
-                           $" WithdrawTransferLimit:{entity.WithdrawTransferLimit}";
+                           entity.ToJson();
                     Exception newException = new Exception(msg);                    
                     await _log?.WriteErrorAsync("AccountTransactionsReportsSqlRepository", "InsertOrReplaceAsync", null, newException);
                     throw newException;

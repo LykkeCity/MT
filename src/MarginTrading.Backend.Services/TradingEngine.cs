@@ -478,7 +478,7 @@ namespace MarginTrading.Backend.Services
             _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order));
         }
 
-        public void ChangeOrderLimits(string orderId, decimal stopLoss, decimal takeProfit, decimal expectedOpenPrice = 0)
+        public void ChangeOrderLimits(string orderId, decimal? stopLoss, decimal? takeProfit, decimal? expectedOpenPrice)
         {
             using (_contextFactory.GetWriteSyncContext($"{nameof(TradingEngine)}.{nameof(ChangeOrderLimits)}"))
             {
@@ -490,9 +490,9 @@ namespace MarginTrading.Backend.Services
                 }
 
                 var quote = _quoteCashService.GetQuote(order.Instrument);
-                decimal? tp = takeProfit == 0 ? (decimal?)null : takeProfit;
-                decimal? sl = stopLoss == 0 ? (decimal?)null : stopLoss;
-                decimal? expOpenPrice = expectedOpenPrice == 0 ? (decimal?)null : expectedOpenPrice;
+                var tp = takeProfit == 0 ? null : takeProfit;
+                var sl = stopLoss == 0 ? null : stopLoss;
+                var expOpenPrice = expectedOpenPrice == 0 ? null : expectedOpenPrice;
 
                 var accountAsset = _accountAssetsCacheService.GetAccountAsset(order.TradingConditionId,
                     order.AccountAssetId, order.Instrument);

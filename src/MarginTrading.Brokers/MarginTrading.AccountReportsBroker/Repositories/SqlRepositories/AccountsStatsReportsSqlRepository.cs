@@ -19,18 +19,18 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
             "[AccountId] [nvarchar] (64) NOT NULL, " +
             "[ClientId] [nvarchar] (64) NOT NULL, " +
             "[TradingConditionId] [nvarchar] (64) NOT NULL, " +
-            "[Balance] [numeric](20, 10) NOT NULL, " +
-            "[WithdrawTransferLimit] [numeric](20, 10) NOT NULL, " +
-            "[MarginCall] [numeric](20, 10) NOT NULL, " +
-            "[StopOut] [numeric](20, 10) NOT NULL, " +
-            "[TotalCapital] [numeric](20, 10) NOT NULL, " +
-            "[FreeMargin] [numeric](20, 10) NOT NULL, " +
-            "[MarginAvailable] [numeric](20, 10) NOT NULL, " +
-            "[UsedMargin] [numeric](20, 10) NOT NULL, " +
-            "[MarginInit] [numeric](20, 10) NOT NULL, " +
-            "[PnL] [numeric](20, 10) NOT NULL, " +
-            "[OpenPositionsCount] [numeric](20, 10) NOT NULL, " +
-            "[MarginUsageLevel] [numeric](20, 10) NOT NULL, " +
+            "[Balance] [numeric](32, 10) NOT NULL, " +
+            "[WithdrawTransferLimit] [numeric](32, 10) NOT NULL, " +
+            "[MarginCall] [numeric](32, 10) NOT NULL, " +
+            "[StopOut] [numeric](32, 10) NOT NULL, " +
+            "[TotalCapital] [numeric](32, 10) NOT NULL, " +
+            "[FreeMargin] [numeric](32, 10) NOT NULL, " +
+            "[MarginAvailable] [numeric](32, 10) NOT NULL, " +
+            "[UsedMargin] [numeric](32, 10) NOT NULL, " +
+            "[MarginInit] [numeric](32, 10) NOT NULL, " +
+            "[PnL] [numeric](32, 10) NOT NULL, " +
+            "[OpenPositionsCount] [numeric](32, 10) NOT NULL, " +
+            "[MarginUsageLevel] [numeric](32, 10) NOT NULL, " +
             "[IsLive] [bit] NOT NULL); ";
 
         private const string CreatePkScript = "ALTER TABLE {0} ADD CONSTRAINT[PK_{0}] PRIMARY KEY CLUSTERED ([Id] ASC);";
@@ -47,7 +47,7 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
                 try { conn.CreateTableIfDoesntExists(CreateTableScript + CreatePkScript, TableName); }
                 catch (Exception ex)
                 {
-                    _log.WriteErrorAsync("AccountsStatsReportsSqlRepository", "CreateTableIfDoesntExists", null, ex);
+                    _log?.WriteErrorAsync("AccountsStatsReportsSqlRepository", "CreateTableIfDoesntExists", null, ex);
                     throw;
                 }
             }
