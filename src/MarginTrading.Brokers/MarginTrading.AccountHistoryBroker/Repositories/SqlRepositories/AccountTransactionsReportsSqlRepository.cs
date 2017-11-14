@@ -1,15 +1,15 @@
-﻿using Common.Log;
+﻿using Common;
+using Common.Log;
 using Dapper;
 using MarginTrading.AccountHistoryBroker.Repositories.Models;
 using MarginTrading.BrokerBase;
 using System;
-using System.Data;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 
 namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
 {
-    internal class AccountTransactionsReportsSqlRepository : IAccountTransactionsReportsRepository
+    public class AccountTransactionsReportsSqlRepository : IAccountTransactionsReportsRepository
     {
         private const string TableName = "MarginTradingAccountTransactionsReports";
         private const string CreateTableScript = "CREATE TABLE [{0}](" +
@@ -18,11 +18,11 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
             "[ClientId] [nvarchar] (64) NOT NULL, " +
             "[AccountId] [nvarchar] (64) NOT NULL, " +
             "[PositionId] [text] NULL, " +
-            "[Amount] [numeric] (20, 10) NOT NULL, " +
-            "[Balance] [numeric] (20, 10) NOT NULL, " +
+            "[Amount] [numeric](32, 10) NOT NULL, " +
+            "[Balance] [numeric](32, 10) NOT NULL, " +
             "[Type] [nvarchar] (50) NOT NULL, " +
             "[Comment] [text] NOT NULL, " +
-            "[WithdrawTransferLimit] [numeric] (20, 10) NOT NULL, " +
+            "[WithdrawTransferLimit] [numeric](32, 10) NOT NULL, " +
             "CONSTRAINT[PK_{0}] PRIMARY KEY CLUSTERED ([Id] ASC)" +
             ");";
 
@@ -38,7 +38,7 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
                 try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
                 catch (Exception ex)
                 {
-                    _log.WriteErrorAsync("AccountTransactionsReportsSqlRepository", "CreateTableIfDoesntExists", null, ex);
+                    _log?.WriteErrorAsync("AccountTransactionsReportsSqlRepository", "CreateTableIfDoesntExists", null, ex);
                     throw;
                 }
             }
@@ -67,8 +67,12 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
                 try { await conn.ExecuteAsync(query, entity); }
                 catch (Exception ex)
                 {
-                    await _log.WriteErrorAsync("AccountTransactionsReportsSqlRepository", "InsertOrReplaceAsync", null, ex);
-                    throw;
+                    string msg = $"Error {ex.Message} \n" +
+                           "Entity <IAccountTransactionsReport>: \n" +
+                           entity.ToJson();
+                    Exception newException = new Exception(msg);                    
+                    await _log?.WriteErrorAsync("AccountTransactionsReportsSqlRepository", "InsertOrReplaceAsync", null, newException);
+                    throw newException;
                 }
             }
         }

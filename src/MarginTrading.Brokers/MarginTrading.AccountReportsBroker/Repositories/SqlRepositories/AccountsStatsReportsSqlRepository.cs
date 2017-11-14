@@ -47,7 +47,7 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
                 try { conn.CreateTableIfDoesntExists(CreateTableScript + CreatePkScript, TableName); }
                 catch (Exception ex)
                 {
-                    _log.WriteErrorAsync("AccountsStatsReportsSqlRepository", "CreateTableIfDoesntExists", null, ex);
+                    _log?.WriteErrorAsync("AccountsStatsReportsSqlRepository", "CreateTableIfDoesntExists", null, ex);
                     throw;
                 }
             }

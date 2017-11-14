@@ -16,8 +16,7 @@ namespace MarginTrading.AccountHistoryBroker
     {
         private readonly IMarginTradingAccountHistoryRepository _accountHistoryRepository;
         private readonly IAccountTransactionsReportsRepository _accountTransactionsReportsRepository;
-        private readonly Settings _settings;
-        private const int DecimalPlaces = 10;
+        private readonly Settings _settings;        
 
         public Application(IMarginTradingAccountHistoryRepository accountHistoryRepository, ILog logger,
             Settings settings, CurrentApplicationInfo applicationInfo,
@@ -42,11 +41,11 @@ namespace MarginTrading.AccountHistoryBroker
                 ClientId = accountHistoryContract.ClientId,
                 Comment = accountHistoryContract.Comment,
                 Id = accountHistoryContract.Id,
-                Amount = Math.Round(accountHistoryContract.Amount, DecimalPlaces),
-                Balance = Math.Round(accountHistoryContract.Balance, DecimalPlaces),
+                Amount = accountHistoryContract.Amount.ToRoundedDecimal(),
+                Balance = accountHistoryContract.Balance.ToRoundedDecimal(),
                 Date = accountHistoryContract.Date,
                 Type = accountHistoryContract.Type.ToString(),
-                WithdrawTransferLimit = Math.Round(accountHistoryContract.WithdrawTransferLimit, DecimalPlaces),
+                WithdrawTransferLimit = accountHistoryContract.WithdrawTransferLimit.ToRoundedDecimal(),
                 //TODO: Check PositionId field
                 //PositionId = accountHistoryContract.PositionId
             };

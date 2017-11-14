@@ -1,9 +1,9 @@
-﻿using Common.Log;
+﻿using Common;
+using Common.Log;
 using Dapper;
 using MarginTrading.AccountReportsBroker.Repositories.Models;
 using MarginTrading.BrokerBase;
 using System;
-using System.Data;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 
@@ -34,7 +34,7 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
                 try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
                 catch (Exception ex)
                 {
-                    _log.WriteErrorAsync("AccountsReportsSqlRepository", "CreateTableIfDoesntExists", null, ex);
+                    _log?.WriteErrorAsync("AccountsReportsSqlRepository", "CreateTableIfDoesntExists", null, ex);
                     throw;
                 }
             }
@@ -62,8 +62,12 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
                 try { await conn.ExecuteAsync(query, report); }
                 catch (Exception ex)
                 {
-                    await _log.WriteErrorAsync("AccountsReportsSqlRepository", "InsertOrReplaceAsync", null, ex);
-                    throw;
+                    string msg = $"Error {ex.Message} \n" +
+                          "Entity <IAccountsReport>: \n" +
+                          report.ToJson();
+                    Exception newException = new Exception(msg);
+                    await _log?.WriteErrorAsync("AccountsReportsSqlRepository", "InsertOrReplaceAsync", null, newException);
+                    throw newException;
                 }
             }
         }

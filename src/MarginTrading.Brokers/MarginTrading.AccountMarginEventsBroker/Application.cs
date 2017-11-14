@@ -40,19 +40,19 @@ namespace MarginTrading.AccountMarginEventsBroker
                 AccountId = message.AccountId,
                 TradingConditionId = message.TradingConditionId,
                 BaseAssetId = message.BaseAssetId,
-                Balance = Math.Round(message.Balance, 10),
-                WithdrawTransferLimit = Math.Round(message.WithdrawTransferLimit, 10),
+                Balance = message.Balance.ToRoundedDecimal(),
+                WithdrawTransferLimit = message.WithdrawTransferLimit.ToRoundedDecimal(),
 
-                MarginCall = Math.Round(message.MarginCall, 10),
-                StopOut = Math.Round(message.StopOut, 10),
-                TotalCapital = Math.Round(message.TotalCapital, 10),
-                FreeMargin = Math.Round(message.FreeMargin, 10),
-                MarginAvailable = Math.Round(message.MarginAvailable, 10),
-                UsedMargin = Math.Round(message.UsedMargin, 10),
-                MarginInit = Math.Round(message.MarginInit, 10),
-                PnL = Math.Round(message.PnL, 10),
-                OpenPositionsCount = Math.Round(message.OpenPositionsCount, 10),
-                MarginUsageLevel = Math.Round(message.MarginUsageLevel, 10),
+                MarginCall = message.MarginCall.ToRoundedDecimal(),
+                StopOut = message.StopOut.ToRoundedDecimal(),
+                TotalCapital = message.TotalCapital.ToRoundedDecimal(),
+                FreeMargin = message.FreeMargin.ToRoundedDecimal(),
+                MarginAvailable = message.MarginAvailable.ToRoundedDecimal(),
+                UsedMargin = message.UsedMargin.ToRoundedDecimal(),
+                MarginInit = message.MarginInit.ToRoundedDecimal(),
+                PnL = message.PnL.ToRoundedDecimal(),
+                OpenPositionsCount = message.OpenPositionsCount.ToRoundedDecimal(),
+                MarginUsageLevel = message.MarginUsageLevel.ToRoundedDecimal()
             });
         }
     }

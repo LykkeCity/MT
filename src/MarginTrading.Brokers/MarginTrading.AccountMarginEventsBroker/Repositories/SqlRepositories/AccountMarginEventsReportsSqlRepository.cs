@@ -1,9 +1,9 @@
-﻿using Common.Log;
+﻿using Common;
+using Common.Log;
 using Dapper;
 using MarginTrading.AccountMarginEventsBroker.Repositories.Models;
 using MarginTrading.BrokerBase;
 using System;
-using System.Data;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 
@@ -18,21 +18,21 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
             "[ClientId] [nvarchar] (64) NOT NULL, " +
             "[AccountId] [nvarchar] (64) NOT NULL, " +
             "[TradingConditionId] [nvarchar] (64) NOT NULL, " +
-            "[Balance] [numeric] (20, 10) NOT NULL, " +
+            "[Balance] [numeric](32, 10) NOT NULL, " +
             "[BaseAssetId] [nvarchar] (64) NOT NULL, " +
             "[EventTime] [datetime] NOT NULL, " +
-            "[FreeMargin] [numeric] (20, 10) NOT NULL, " +
+            "[FreeMargin] [numeric](32, 10) NOT NULL, " +
             "[IsEventStopout] [bit] NOT NULL, " +
-            "[MarginAvailable] [numeric] (20, 10) NOT NULL, " +
-            "[MarginCall] [numeric] (20, 10) NOT NULL, " +
-            "[MarginInit] [numeric] (20, 10) NOT NULL, " +
-            "[MarginUsageLevel] [numeric] (20, 10) NOT NULL, " +
-            "[OpenPositionsCount] [numeric] (20, 10) NOT NULL, " +
-            "[PnL] [numeric] (20, 10) NOT NULL, " +
-            "[StopOut] [numeric] (20, 10) NOT NULL, " +
-            "[TotalCapital] [numeric] (20, 10) NOT NULL, " +
-            "[UsedMargin] [numeric] (20, 10) NOT NULL, " +
-            "[WithdrawTransferLimit] [numeric] (20, 10) NOT NULL, " +
+            "[MarginAvailable] [numeric](32, 10) NOT NULL, " +
+            "[MarginCall] [numeric](32, 10) NOT NULL, " +
+            "[MarginInit] [numeric](32, 10) NOT NULL, " +
+            "[MarginUsageLevel] [numeric](32, 10) NOT NULL, " +
+            "[OpenPositionsCount] [numeric](32, 10) NOT NULL, " +
+            "[PnL] [numeric](32, 10) NOT NULL, " +
+            "[StopOut] [numeric](32, 10) NOT NULL, " +
+            "[TotalCapital] [numeric](32, 10) NOT NULL, " +
+            "[UsedMargin] [numeric](32, 10) NOT NULL, " +
+            "[WithdrawTransferLimit] [numeric](32, 10) NOT NULL, " +
             "CONSTRAINT[PK_{0}] PRIMARY KEY CLUSTERED ([Id] ASC)" +
             ");";
 
@@ -48,7 +48,7 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
                 try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
                 catch (Exception ex)
                 {
-                    _log.WriteErrorAsync("AccountMarginEventsReportsSqlRepository", "CreateTableIfDoesntExists", null, ex);
+                    _log?.WriteErrorAsync("AccountMarginEventsReportsSqlRepository", "CreateTableIfDoesntExists", null, ex);
                     throw;
                 }
             }
@@ -83,8 +83,12 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
                 try { await conn.ExecuteAsync(query, report);  }
                 catch (Exception ex)
                 {
-                    await _log.WriteErrorAsync("AccountMarginEventsReportsSqlRepository", "InsertOrReplaceAsync", null, ex);
-                    throw;
+                    string msg = $"Error {ex.Message} \n" +
+                           "Entity <IAccountMarginEventReport>: \n" +
+                           report.ToJson();
+                    Exception newException = new Exception(msg);                    
+                    await _log?.WriteErrorAsync("AccountMarginEventsReportsSqlRepository", "InsertOrReplaceAsync", null, newException);
+                    throw newException;
                 }
             }
         }
