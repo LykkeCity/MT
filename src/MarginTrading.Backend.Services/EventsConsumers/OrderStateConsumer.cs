@@ -5,7 +5,7 @@ using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Settings;
 using MarginTrading.Common.Settings.Repositories;
 
-namespace MarginTrading.Backend.Services
+namespace MarginTrading.Backend.Services.EventsConsumers
 {
 	// TODO: Rename by role
 	public class OrderStateConsumer : SendNotificationBase,

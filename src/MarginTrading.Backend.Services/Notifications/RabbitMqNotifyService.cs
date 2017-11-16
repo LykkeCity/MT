@@ -114,6 +114,11 @@ namespace MarginTrading.Backend.Services.Notifications
             return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountStats.ExchangeName, message);
         }
 
+        public Task NewTrade(TradeContract trade)
+        {
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.Trades.ExchangeName, trade);
+        }
+
         private async Task TryProduceMessageAsync(string exchangeName, object message)
         {
             string messageStr = null;
@@ -141,6 +146,7 @@ namespace MarginTrading.Backend.Services.Notifications
             ((IStopable)_publishers[_settings.RabbitMqQueues.UserUpdates.ExchangeName]).Stop();
             ((IStopable)_publishers[_settings.RabbitMqQueues.AccountMarginEvents.ExchangeName]).Stop();
             ((IStopable)_publishers[_settings.RabbitMqQueues.AccountStats.ExchangeName]).Stop();
+            ((IStopable)_publishers[_settings.RabbitMqQueues.Trades.ExchangeName]).Stop();
         }
     }
 }
