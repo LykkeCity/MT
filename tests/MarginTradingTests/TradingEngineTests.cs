@@ -727,7 +727,7 @@ namespace MarginTradingTests
             Assert.IsNull(order.TakeProfit);
             Assert.AreEqual(OrderStatus.Active, order.Status);
 
-           _tradingEngine.ChangeOrderLimits(order.Id, 0.99M, 1.3M);
+            _tradingEngine.ChangeOrderLimits(order.Id, 0.99M, 1.3M, null);
 
             Assert.AreEqual(0.99, order.StopLoss);
             Assert.AreEqual(1.3, order.TakeProfit);
