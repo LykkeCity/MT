@@ -1,4 +1,5 @@
-﻿using MarginTrading.Contract.RabbitMqMessageModels;
+﻿using System;
+using MarginTrading.Contract.RabbitMqMessageModels;
 
 namespace MarginTrading.Backend.Core.Mappers
 {
