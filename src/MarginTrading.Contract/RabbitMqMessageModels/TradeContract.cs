@@ -1,4 +1,6 @@
 ﻿using System;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace MarginTrading.Contract.RabbitMqMessageModels
 {
@@ -9,6 +11,7 @@ namespace MarginTrading.Contract.RabbitMqMessageModels
         public string AccountId { get; set; }
         public string OrderId { get; set; }
         public string AssetPairId { get; set; }
+        [JsonConverter(typeof(StringEnumConverter))]
         public TradeType Type { get; set; }
         public DateTime Date { get; set; }
         public decimal Price { get; set; }
@@ -17,7 +20,7 @@ namespace MarginTrading.Contract.RabbitMqMessageModels
 
     public enum TradeType
     {
-        Buy,
-        Sell
+        Buy = 0,
+        Sell = 1
     }
 }
