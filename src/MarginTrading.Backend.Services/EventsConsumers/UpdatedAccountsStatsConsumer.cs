@@ -5,7 +5,7 @@ using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Contract.RabbitMqMessageModels;
 
-namespace MarginTrading.Backend.Services
+namespace MarginTrading.Backend.Services.EventsConsumers
 {
     public class UpdatedAccountsStatsConsumer :
         IEventConsumer<AccountBalanceChangedEventArgs>,
@@ -46,7 +46,7 @@ namespace MarginTrading.Backend.Services
             NotifyAccountStatsChanged(ea.Order.ClientId, ea.Order.AccountId);
         }
 
-        public int ConsumerRank => 101;
+        public int ConsumerRank => 102;
 
         private void NotifyAccountStatsChanged(IMarginTradingAccount account)
         {

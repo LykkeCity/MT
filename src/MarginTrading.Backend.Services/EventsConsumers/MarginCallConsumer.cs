@@ -11,7 +11,7 @@ using MarginTrading.Common.Services;
 using MarginTrading.Common.Settings;
 using MarginTrading.Common.Settings.Repositories;
 
-namespace MarginTrading.Backend.Services
+namespace MarginTrading.Backend.Services.EventsConsumers
 {
     // TODO: Rename by role
     public class MarginCallConsumer : SendNotificationBase,
@@ -47,7 +47,7 @@ namespace MarginTrading.Backend.Services
             _dateService = dateService;
         }
 
-        int IEventConsumer.ConsumerRank => 100;
+        int IEventConsumer.ConsumerRank => 103;
 
         void IEventConsumer<MarginCallEventArgs>.ConsumeEvent(object sender, MarginCallEventArgs ea)
         {

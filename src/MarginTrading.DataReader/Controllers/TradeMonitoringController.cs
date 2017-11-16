@@ -9,6 +9,7 @@ using MarginTrading.DataReader.Models;
 using MarginTrading.DataReader.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using OrderExtensions = MarginTrading.DataReader.Helpers.OrderExtensions;
 
 namespace MarginTrading.DataReader.Controllers
 {

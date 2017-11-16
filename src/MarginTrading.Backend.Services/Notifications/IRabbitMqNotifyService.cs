@@ -19,5 +19,6 @@ namespace MarginTrading.Backend.Services.Notifications
 	    Task AccountDeleted(IMarginTradingAccount account);
 	    Task AccountMarginEvent(AccountMarginEventMessage eventMessage);
 		Task UpdateAccountStats(AccountStatsUpdateMessage message);
+		Task NewTrade(TradeContract trade);
 	}
 } 
