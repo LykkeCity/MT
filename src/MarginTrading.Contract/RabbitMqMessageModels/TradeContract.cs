@@ -8,6 +8,7 @@ namespace MarginTrading.Contract.RabbitMqMessageModels
         public string ClientId { get; set; }
         public string AccountId { get; set; }
         public string OrderId { get; set; }
+        public string AssetPairId { get; set; }
         public TradeType Type { get; set; }
         public DateTime Date { get; set; }
         public decimal Price { get; set; }
