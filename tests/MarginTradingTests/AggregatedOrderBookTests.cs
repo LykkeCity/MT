@@ -2,6 +2,7 @@
 using System.Linq;
 using Autofac;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
 using Moq;

@@ -59,14 +59,14 @@ namespace MarginTrading.Client
                     //client.GetHistory();
 
                     //client.PlaceOrder().Wait();
-                    client.CloseOrder(true).Wait();
+                    //client.CloseOrder(true).Wait();
                     //client.CancelOrder();
                     //client.GetAccountOpenPositions().Wait();
                     //client.GetOpenPositions().Wait();
                     //client.GetClientOrders();
                     //client.ChangeOrderLimits();
 
-                    client.Prices("EURUSD");
+                    client.Prices("BTCUSD");
                     //client.UserUpdates();
 
                     client.Close();

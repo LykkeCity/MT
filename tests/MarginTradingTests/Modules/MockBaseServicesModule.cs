@@ -15,6 +15,7 @@ using WampSharp.V2.Realm;
 using IAppNotifications = MarginTrading.Backend.Services.Notifications.IAppNotifications;
 using Lykke.Service.Session;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Settings;

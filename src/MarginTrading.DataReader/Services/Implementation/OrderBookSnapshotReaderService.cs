@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Helpers;
+using MarginTrading.Backend.Core.Orderbooks;
 using Rocks.Caching;
 
 namespace MarginTrading.DataReader.Services.Implementation
