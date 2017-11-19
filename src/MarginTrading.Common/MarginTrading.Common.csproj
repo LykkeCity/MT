@@ -11,7 +11,7 @@
   <ItemGroup>
     <PackageReference Include="Flurl.Http" Version="1.1.2" />
     <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
-    <PackageReference Include="Lykke.Logs" Version="3.2.2" />
+    <PackageReference Include="Lykke.Logs" Version="3.2.3" />
     <PackageReference Include="Lykke.RabbitMq.Azure" Version="3.1.1" />
     <PackageReference Include="Lykke.SlackNotifications" Version="1.1.0" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.1.1" />
