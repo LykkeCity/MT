@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Backend.Core.MatchingEngines
+﻿using MarginTrading.Backend.Core.Orderbooks;
+
+namespace MarginTrading.Backend.Core.MatchingEngines
 {
     public interface IInternalMatchingEngine : IMatchingEngineBase
     {

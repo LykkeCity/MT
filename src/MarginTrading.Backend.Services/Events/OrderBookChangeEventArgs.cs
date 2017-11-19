@@ -2,6 +2,7 @@
 using System.Linq;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
+using MarginTrading.Backend.Core.Orderbooks;
 
 namespace MarginTrading.Backend.Services.Events
 {
