@@ -17,8 +17,8 @@ namespace MarginTrading.Frontend.Wamp
         
         [DocMe(Name = "user.updates.{notificationId}", Description = "sends user updates on position, account changes and dictionaries")]
         NotifyResponse UserUpdates();
-        
         [DocMe(Name = "trades", Description = "sends trades info")]
         TradeClientContract Trades();
+
     }
 }
