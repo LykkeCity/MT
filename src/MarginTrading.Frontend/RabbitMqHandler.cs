@@ -4,6 +4,7 @@ using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using MarginTrading.Common.Extensions;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Settings;
@@ -12,6 +13,7 @@ using MarginTrading.Contract.ClientContracts;
 using MarginTrading.Contract.Mappers;
 using MarginTrading.Contract.RabbitMqMessageModels;
 using MarginTrading.Frontend.Settings;
+using MarginTrading.Frontend.Wamp;
 using WampSharp.V2.Realm;
 
 namespace MarginTrading.Frontend
@@ -22,11 +24,11 @@ namespace MarginTrading.Frontend
         private readonly IClientAccountService _clientNotificationService;
         private readonly IMarginTradingOperationsLogService _operationsLog;
         private readonly MtFrontendSettings _settings;
-        private readonly MtFrontSettings _frontSettings;
         private readonly IConsole _consoleWriter;
         private readonly ILog _log;
         private readonly IMarginTradingSettingsService _marginTradingSettingsService;
         private readonly ISubject<BidAskPairRabbitMqContract> _allPairsSubject;
+        private readonly ISubject<TradeClientContract> _tradesSubject;
 
         private readonly ConcurrentDictionary<string, ISubject<BidAskPairRabbitMqContract>> _priceSubjects =
             new ConcurrentDictionary<string, ISubject<BidAskPairRabbitMqContract>>();
@@ -36,7 +38,6 @@ namespace MarginTrading.Frontend
             IClientAccountService clientNotificationService,
             IMarginTradingOperationsLogService operationsLogService,
             MtFrontendSettings settings,
-            MtFrontSettings frontSettings,
             IConsole consoleWriter,
             ILog log,
             IMarginTradingSettingsService marginTradingSettingsService)
@@ -45,17 +46,34 @@ namespace MarginTrading.Frontend
             _clientNotificationService = clientNotificationService;
             _operationsLog = operationsLogService;
             _settings = settings;
-            _frontSettings = frontSettings;
             _consoleWriter = consoleWriter;
             _log = log;
             _marginTradingSettingsService = marginTradingSettingsService;
-            _allPairsSubject = realm.Services.GetSubject<BidAskPairRabbitMqContract>(frontSettings.WampPricesTopicName);
+            _allPairsSubject = realm.Services.GetSubject<BidAskPairRabbitMqContract>(WampConstants.PricesTopicPrefix);
+            _tradesSubject = realm.Services.GetSubject<TradeClientContract>(WampConstants.TradesTopic);
         }
 
         public async Task ProcessPrices(BidAskPairRabbitMqContract bidAskPair)
         {
            _allPairsSubject.OnNext(bidAskPair);
             GetInstrumentPriceSubject(bidAskPair.Instrument).OnNext(bidAskPair);
+            await Task.FromResult(0);
+        }
+        
+        public async Task ProcessTrades(TradeContract trade)
+        {
+            var contract = new TradeClientContract
+            {
+                Id = trade.Id,
+                AssetPairId = trade.AssetPairId,
+                Date = trade.Date,
+                OrderId = trade.OrderId,
+                Price = trade.Price,
+                Type = trade.Type.ToType<TradeClientType>(),
+                Volume = trade.Volume
+            };
+            
+            _tradesSubject.OnNext(contract);
             await Task.FromResult(0);
         }
 
@@ -211,7 +229,7 @@ namespace MarginTrading.Frontend
         {
             return _priceSubjects.GetOrAdd(instrument,
                 i => _realm.Services.GetSubject<BidAskPairRabbitMqContract>(
-                    $"{_frontSettings.WampPricesTopicName}.{instrument}"));
+                    $"{WampConstants.PricesTopicPrefix}.{instrument}"));
         }
     }
 }

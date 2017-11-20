@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MarginTrading.Backend.Core.Mappers
+namespace MarginTrading.Common.Extensions
 {
     public static class EnumExtensions
     {
