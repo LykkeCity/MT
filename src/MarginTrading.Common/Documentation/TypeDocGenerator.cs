@@ -23,7 +23,9 @@ namespace MarginTrading.Common.Documentation
 
                 var docInfo = new MethodDocInfo
                 {
-                    Id = $"{attr.Name.Replace(".", string.Empty).ToLower()}Id",
+                    Id = attr.Name.Replace(".", "_")
+                             .Replace("{", "_")
+                             .Replace("}", "_").ToLower() + "_Id",
                     Name = attr.Name,
                     Input = input,
                     Output = returnType.GetTypeName(),
