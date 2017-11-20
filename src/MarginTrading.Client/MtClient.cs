@@ -289,6 +289,19 @@ namespace MarginTrading.Client
             Console.ReadLine();
             subscription.Dispose();
         }
+        
+        public void Trades()
+        {
+            IDisposable subscription = _realmProxy.Services.GetSubject<TradeClientContract>("trades")
+                .Subscribe(info =>
+                {
+                    Console.WriteLine($"{info.ToJson()}");
+                });
+
+
+            Console.ReadLine();
+            subscription.Dispose();
+        }
 
         public void UserUpdates()
         {
