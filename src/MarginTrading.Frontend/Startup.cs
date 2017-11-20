@@ -1,14 +1,12 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
-using Flurl.Http;
 using Lykke.AzureQueueIntegration;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
-using Lykke.RabbitMqBroker;
-using Lykke.RabbitMqBroker.Subscriber;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
 using MarginTrading.Common.Extensions;
@@ -186,197 +184,68 @@ namespace MarginTrading.Frontend
         private void RegisterModules(ContainerBuilder builder, IReloadingManager<MtFrontendSettings> settings)
         {
             builder.RegisterModule(new FrontendModule(settings));
-
-            builder.RegisterType<DateService>()
-                .As<IDateService>()
-                .SingleInstance();
         }
 
         private void SetSubscribers(MtFrontendSettings settings)
         {
-            MarginTradingBackendServiceLocator.RabbitMqHandler = ApplicationContainer.Resolve<RabbitMqHandler>();
-            var log = ApplicationContainer.Resolve<ILog>();
-            var consoleWriter = ApplicationContainer.Resolve<IConsole>();
+            var rabbitMqService = ApplicationContainer.Resolve<IRabbitMqService>();
+            var rabbitMqHandler = ApplicationContainer.Resolve<RabbitMqHandler>();
 
-            var pricesSettings = new RabbitMqSubscriptionSettings
-            {
-                ConnectionString = settings.MarginTradingLive.MtRabbitMqConnString,
-                ExchangeName = settings.MarginTradingFront.RabbitMqQueues.OrderbookPrices.ExchangeName,
-                QueueName =
-                    QueueHelper.BuildQueueName(settings.MarginTradingFront.RabbitMqQueues.OrderbookPrices.ExchangeName,
-                        settings.MarginTradingFront.Env),
-                IsDurable = false
-            };
+            // Best prices (only live)
 
-            MarginTradingBackendServiceLocator.SubscriberPrices =
-                new RabbitMqSubscriber<BidAskPairRabbitMqContract>(pricesSettings,
-                        new DefaultErrorHandlingStrategy(log, pricesSettings))
-                    .SetMessageDeserializer(new FrontEndDeserializer<BidAskPairRabbitMqContract>())
-                    .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
-                    .SetLogger(log)
-                    .SetConsole(consoleWriter)
-                    .Subscribe(MarginTradingBackendServiceLocator.RabbitMqHandler.ProcessPrices)
-                    .Start();
+            Subscribe<BidAskPairRabbitMqContract>(rabbitMqService, settings.MarginTradingLive.MtRabbitMqConnString,
+                settings.MarginTradingFront.RabbitMqQueues.OrderbookPrices.ExchangeName,
+                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessPrices);
 
-            var accChangeDemoSettings = new RabbitMqSubscriptionSettings
-            {
-                ConnectionString = settings.MarginTradingDemo.MtRabbitMqConnString,
-                ExchangeName = settings.MarginTradingFront.RabbitMqQueues.AccountChanged.ExchangeName,
-                QueueName =
-                    QueueHelper.BuildQueueName(settings.MarginTradingFront.RabbitMqQueues.AccountChanged.ExchangeName,
-                        settings.MarginTradingFront.Env),
-                IsDurable = false
-            };
+            // Account changes
 
-            MarginTradingBackendServiceLocator.SubscriberAccountChangedDemo =
-                new RabbitMqSubscriber<AccountChangedMessage>(accChangeDemoSettings,
-                        new ResilientErrorHandlingStrategy(log, accChangeDemoSettings, _subscriberRetryTimeout))
-                    .SetMessageDeserializer(new FrontEndDeserializer<AccountChangedMessage>())
-                    .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
-                    .SetLogger(log)
-                    .SetConsole(consoleWriter)
-                    .Subscribe(MarginTradingBackendServiceLocator.RabbitMqHandler.ProcessAccountChanged)
-                    .Start();
+            Subscribe<AccountChangedMessage>(rabbitMqService, settings.MarginTradingLive.MtRabbitMqConnString,
+                settings.MarginTradingFront.RabbitMqQueues.AccountChanged.ExchangeName,
+                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessAccountChanged);
 
-            var accChangedLiveSettings = new RabbitMqSubscriptionSettings
-            {
-                ConnectionString = settings.MarginTradingLive.MtRabbitMqConnString,
-                ExchangeName = settings.MarginTradingFront.RabbitMqQueues.AccountChanged.ExchangeName,
-                QueueName =
-                    QueueHelper.BuildQueueName(settings.MarginTradingFront.RabbitMqQueues.AccountChanged.ExchangeName,
-                        settings.MarginTradingFront.Env),
-                IsDurable = false
-            };
+            Subscribe<AccountChangedMessage>(rabbitMqService, settings.MarginTradingDemo.MtRabbitMqConnString,
+                settings.MarginTradingFront.RabbitMqQueues.AccountChanged.ExchangeName,
+                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessAccountChanged);
 
-            MarginTradingBackendServiceLocator.SubscriberAccountChangedLive =
-                new RabbitMqSubscriber<AccountChangedMessage>(accChangedLiveSettings,
-                        new ResilientErrorHandlingStrategy(log, accChangedLiveSettings, _subscriberRetryTimeout))
-                    .SetMessageDeserializer(new FrontEndDeserializer<AccountChangedMessage>())
-                    .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
-                    .SetLogger(log)
-                    .SetConsole(consoleWriter)
-                    .Subscribe(MarginTradingBackendServiceLocator.RabbitMqHandler.ProcessAccountChanged)
-                    .Start();
+            // Order changes
 
-            var orderDemoSettings = new RabbitMqSubscriptionSettings
-            {
-                ConnectionString = settings.MarginTradingDemo.MtRabbitMqConnString,
-                ExchangeName = settings.MarginTradingFront.RabbitMqQueues.OrderChanged.ExchangeName,
-                QueueName =
-                    QueueHelper.BuildQueueName(settings.MarginTradingFront.RabbitMqQueues.OrderChanged.ExchangeName,
-                        settings.MarginTradingFront.Env),
-                IsDurable = false
-            };
+            Subscribe<OrderContract>(rabbitMqService, settings.MarginTradingLive.MtRabbitMqConnString,
+                settings.MarginTradingFront.RabbitMqQueues.OrderChanged.ExchangeName,
+                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessOrderChanged);
 
-            MarginTradingBackendServiceLocator.SubscriberOrderChangedDemo =
-                new RabbitMqSubscriber<OrderContract>(orderDemoSettings,
-                        new ResilientErrorHandlingStrategy(log, orderDemoSettings, _subscriberRetryTimeout))
-                    .SetMessageDeserializer(new FrontEndDeserializer<OrderContract>())
-                    .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
-                    .SetLogger(log)
-                    .SetConsole(consoleWriter)
-                    .Subscribe(MarginTradingBackendServiceLocator.RabbitMqHandler.ProcessOrderChanged)
-                    .Start();
+            Subscribe<OrderContract>(rabbitMqService, settings.MarginTradingDemo.MtRabbitMqConnString,
+                settings.MarginTradingFront.RabbitMqQueues.OrderChanged.ExchangeName,
+                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessOrderChanged);
 
-            var ordersLiveSettings = new RabbitMqSubscriptionSettings
-            {
-                ConnectionString = settings.MarginTradingLive.MtRabbitMqConnString,
-                ExchangeName = settings.MarginTradingFront.RabbitMqQueues.OrderChanged.ExchangeName,
-                QueueName =
-                    QueueHelper.BuildQueueName(settings.MarginTradingFront.RabbitMqQueues.OrderChanged.ExchangeName,
-                        settings.MarginTradingFront.Env),
-                IsDurable = false
-            };
+            // Stopout
 
-            MarginTradingBackendServiceLocator.SubscriberOrderChangedLive =
-                new RabbitMqSubscriber<OrderContract>(ordersLiveSettings,
-                        new ResilientErrorHandlingStrategy(log, ordersLiveSettings, _subscriberRetryTimeout))
-                    .SetMessageDeserializer(new FrontEndDeserializer<OrderContract>())
-                    .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
-                    .SetLogger(log)
-                    .SetConsole(consoleWriter)
-                    .Subscribe(MarginTradingBackendServiceLocator.RabbitMqHandler.ProcessOrderChanged)
-                    .Start();
+            Subscribe<AccountStopoutBackendContract>(rabbitMqService, settings.MarginTradingLive.MtRabbitMqConnString,
+                settings.MarginTradingFront.RabbitMqQueues.AccountStopout.ExchangeName,
+                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessAccountStopout);
 
-            var stopoutDemoSettings = new RabbitMqSubscriptionSettings
-            {
-                ConnectionString = settings.MarginTradingDemo.MtRabbitMqConnString,
-                ExchangeName = settings.MarginTradingFront.RabbitMqQueues.AccountStopout.ExchangeName,
-                QueueName =
-                    QueueHelper.BuildQueueName(settings.MarginTradingFront.RabbitMqQueues.AccountStopout.ExchangeName,
-                        settings.MarginTradingFront.Env),
-                IsDurable = false
-            };
+            Subscribe<AccountStopoutBackendContract>(rabbitMqService, settings.MarginTradingDemo.MtRabbitMqConnString,
+                settings.MarginTradingFront.RabbitMqQueues.AccountStopout.ExchangeName,
+                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessAccountStopout);
 
-            MarginTradingBackendServiceLocator.SubscriberAccountStopoutDemo =
-                new RabbitMqSubscriber<AccountStopoutBackendContract>(stopoutDemoSettings,
-                        new ResilientErrorHandlingStrategy(log, stopoutDemoSettings, _subscriberRetryTimeout))
-                    .SetMessageDeserializer(new FrontEndDeserializer<AccountStopoutBackendContract>())
-                    .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
-                    .SetLogger(log)
-                    .SetConsole(consoleWriter)
-                    .Subscribe(MarginTradingBackendServiceLocator.RabbitMqHandler.ProcessAccountStopout)
-                    .Start();
+            // User updates
 
-            var stopoutLiveSettings = new RabbitMqSubscriptionSettings
-            {
-                ConnectionString = settings.MarginTradingLive.MtRabbitMqConnString,
-                ExchangeName = settings.MarginTradingFront.RabbitMqQueues.AccountStopout.ExchangeName,
-                QueueName =
-                    QueueHelper.BuildQueueName(settings.MarginTradingFront.RabbitMqQueues.AccountStopout.ExchangeName,
-                        settings.MarginTradingFront.Env),
-                IsDurable = false
-            };
+            Subscribe<UserUpdateEntityBackendContract>(rabbitMqService, settings.MarginTradingLive.MtRabbitMqConnString,
+                settings.MarginTradingFront.RabbitMqQueues.UserUpdates.ExchangeName,
+                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessUserUpdates);
 
-            MarginTradingBackendServiceLocator.SubscriberAccountStopoutLive =
-                new RabbitMqSubscriber<AccountStopoutBackendContract>(stopoutLiveSettings,
-                        new ResilientErrorHandlingStrategy(log, stopoutLiveSettings, _subscriberRetryTimeout))
-                    .SetMessageDeserializer(new FrontEndDeserializer<AccountStopoutBackendContract>())
-                    .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
-                    .SetLogger(log)
-                    .SetConsole(consoleWriter)
-                    .Subscribe(MarginTradingBackendServiceLocator.RabbitMqHandler.ProcessAccountStopout)
-                    .Start();
+            Subscribe<UserUpdateEntityBackendContract>(rabbitMqService, settings.MarginTradingDemo.MtRabbitMqConnString,
+                settings.MarginTradingFront.RabbitMqQueues.UserUpdates.ExchangeName,
+                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessUserUpdates);
+            
+            // Trades
+            
+            Subscribe<TradeContract>(rabbitMqService, settings.MarginTradingLive.MtRabbitMqConnString,
+                settings.MarginTradingFront.RabbitMqQueues.Trades.ExchangeName,
+                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessTrades);
 
-            var userDemoSettings = new RabbitMqSubscriptionSettings
-            {
-                ConnectionString = settings.MarginTradingDemo.MtRabbitMqConnString,
-                ExchangeName = settings.MarginTradingFront.RabbitMqQueues.UserUpdates.ExchangeName,
-                QueueName =
-                    QueueHelper.BuildQueueName(settings.MarginTradingFront.RabbitMqQueues.UserUpdates.ExchangeName,
-                        settings.MarginTradingFront.Env),
-                IsDurable = false
-            };
-
-            MarginTradingBackendServiceLocator.SubscribeUserUpdatesDemo =
-                new RabbitMqSubscriber<UserUpdateEntityBackendContract>(userDemoSettings,
-                        new ResilientErrorHandlingStrategy(log, userDemoSettings, _subscriberRetryTimeout))
-                    .SetMessageDeserializer(new FrontEndDeserializer<UserUpdateEntityBackendContract>())
-                    .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
-                    .SetLogger(log)
-                    .SetConsole(consoleWriter)
-                    .Subscribe(MarginTradingBackendServiceLocator.RabbitMqHandler.ProcessUserUpdates)
-                    .Start();
-
-            var userLiveSettings = new RabbitMqSubscriptionSettings
-            {
-                ConnectionString = settings.MarginTradingLive.MtRabbitMqConnString,
-                ExchangeName = settings.MarginTradingFront.RabbitMqQueues.UserUpdates.ExchangeName,
-                QueueName =
-                    QueueHelper.BuildQueueName(settings.MarginTradingFront.RabbitMqQueues.UserUpdates.ExchangeName,
-                        settings.MarginTradingFront.Env),
-                IsDurable = false
-            };
-
-            MarginTradingBackendServiceLocator.SubscribeUserUpdatesLive =
-                new RabbitMqSubscriber<UserUpdateEntityBackendContract>(userLiveSettings,
-                        new ResilientErrorHandlingStrategy(log, userLiveSettings, _subscriberRetryTimeout))
-                    .SetMessageDeserializer(new FrontEndDeserializer<UserUpdateEntityBackendContract>())
-                    .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
-                    .SetLogger(log)
-                    .SetConsole(consoleWriter)
-                    .Subscribe(MarginTradingBackendServiceLocator.RabbitMqHandler.ProcessUserUpdates)
-                    .Start();
+            Subscribe<TradeContract>(rabbitMqService, settings.MarginTradingDemo.MtRabbitMqConnString,
+                settings.MarginTradingFront.RabbitMqQueues.Trades.ExchangeName,
+                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessTrades);
         }
 
         private static void SetupLoggers(IServiceCollection services, IReloadingManager<ApplicationSettings> settings)
@@ -403,19 +272,18 @@ namespace MarginTrading.Frontend
             LogLocator.CommonLog = services.UseLogToAzureStorage(settings.Nested(s => s.MtFrontend.MarginTradingFront.Db.LogsConnString),
                 slackService, "MarginTradingFrontendLog", consoleLogger);
         }
-    }
 
-    public static class MarginTradingBackendServiceLocator
-    {
-        public static RabbitMqHandler RabbitMqHandler;
-        public static RabbitMqSubscriber<BidAskPairRabbitMqContract> SubscriberPrices;
-        public static RabbitMqSubscriber<AccountChangedMessage> SubscriberAccountChangedDemo;
-        public static RabbitMqSubscriber<AccountChangedMessage> SubscriberAccountChangedLive;
-        public static RabbitMqSubscriber<OrderContract> SubscriberOrderChangedDemo;
-        public static RabbitMqSubscriber<OrderContract> SubscriberOrderChangedLive;
-        public static RabbitMqSubscriber<AccountStopoutBackendContract> SubscriberAccountStopoutDemo;
-        public static RabbitMqSubscriber<AccountStopoutBackendContract> SubscriberAccountStopoutLive;
-        public static RabbitMqSubscriber<UserUpdateEntityBackendContract> SubscribeUserUpdatesDemo;
-        public static RabbitMqSubscriber<UserUpdateEntityBackendContract> SubscribeUserUpdatesLive;
+        private void Subscribe<TMessage>(IRabbitMqService rabbitMqService, string connectionString,
+            string exchangeName, string env, Func<TMessage, Task> handler)
+        {
+            var settings = new RabbitMqSettings
+            {
+                ConnectionString = connectionString,
+                ExchangeName = exchangeName,
+                IsDurable = false
+            };
+
+            rabbitMqService.Subscribe(settings, env, handler);
+        }
     }
 }

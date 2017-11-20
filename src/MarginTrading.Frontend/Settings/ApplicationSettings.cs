@@ -39,12 +39,12 @@ namespace MarginTrading.Frontend.Settings
         public RabbitMqQueueInfo AccountStopout { get; set; }
         public RabbitMqQueueInfo UserUpdates { get; set; }
         public RabbitMqQueueInfo OrderbookPrices { get; set; }
+        public RabbitMqQueueInfo Trades { get; set; }
     }
 
     public class MtFrontSettings
     {
         public string SessionServiceApiUrl { get; set; }
-        public string WampPricesTopicName { get; set; }
         public string DemoAccountIdPrefix { get; set; }
         public string[] AllowOrigins { get; set; }
         public DataReaderApiSettings DataReaderApiSettings { get; set; }

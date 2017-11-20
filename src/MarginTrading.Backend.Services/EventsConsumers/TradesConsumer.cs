@@ -3,6 +3,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
+using MarginTrading.Common.Extensions;
 using MarginTrading.Contract.RabbitMqMessageModels;
 
 namespace MarginTrading.Backend.Services.EventsConsumers
