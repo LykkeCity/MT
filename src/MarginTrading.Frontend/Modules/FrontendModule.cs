@@ -37,7 +37,7 @@ namespace MarginTrading.Frontend.Modules
 
         protected override void Load(ContainerBuilder builder)
         {
-            var host = new WampHost();
+            var host = new WampAuthenticationHost(new WampSessionAuthenticatorFactory());
             var realm = host.RealmContainer.GetRealmByName(WampConstants.FrontEndRealmName);
 
             builder.RegisterInstance(host)
