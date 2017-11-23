@@ -13,5 +13,6 @@ namespace MarginTrading.Contract.BackendContracts
         public decimal WithdrawTransferLimit { get; set; }
         public string Comment { get; set; }
         public AccountHistoryTypeContract Type { get; set; }
+        public string OrderId { get; set; }
     }
 }

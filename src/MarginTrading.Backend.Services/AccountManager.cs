@@ -116,7 +116,7 @@ namespace MarginTrading.Backend.Services
             await _rabbitMqNotifyService.UserUpdates(false, true, new[] {clientId});
         }
 
-        public async Task UpdateBalanceAsync(IMarginTradingAccount account, decimal amount, AccountHistoryType historyType, string comment, bool changeTransferLimit = false)
+        public async Task UpdateBalanceAsync(IMarginTradingAccount account, decimal amount, AccountHistoryType historyType, string comment, string eventSourceId = null, bool changeTransferLimit = false)
         {
             if (historyType == AccountHistoryType.Deposit && changeTransferLimit)
             {
@@ -135,7 +135,7 @@ namespace MarginTrading.Backend.Services
             _clientNotifyService.NotifyAccountUpdated(updatedAccount);
 
             await _rabbitMqNotifyService.AccountHistory(account.Id, account.ClientId, amount, updatedAccount.Balance,
-                updatedAccount.WithdrawTransferLimit, historyType, comment);
+                updatedAccount.WithdrawTransferLimit, historyType, comment, eventSourceId);
         }
 
         private void CheckDepositLimits(IMarginTradingAccount account, decimal amount)
