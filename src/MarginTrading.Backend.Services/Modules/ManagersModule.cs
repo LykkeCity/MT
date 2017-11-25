@@ -54,6 +54,11 @@ namespace MarginTrading.Backend.Services.Modules
                 .AsSelf()
                 .SingleInstance()
                 .OnActivated(args => args.Instance.Start());
+            
+            builder.RegisterType<QuotesMonitor>()
+                .AsSelf()
+                .As<IStartable>()
+                .SingleInstance();
         }
     }
 }
