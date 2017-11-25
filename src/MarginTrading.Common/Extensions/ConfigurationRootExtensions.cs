@@ -9,5 +9,10 @@ namespace MarginTrading.Common.Extensions
             return !string.IsNullOrEmpty(configuration["IsLive"]) &&
                    bool.TryParse(configuration["IsLive"], out var isLive) && isLive;
         }
+        
+        public static string ServerType(this IConfigurationRoot configuration)
+        {
+            return configuration.IsLive() ? "Live" : "Demo";
+        }
     }
 }
