@@ -9,24 +9,22 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Services.Events;
-using MarginTrading.Backend.Services.TradingConditions;
 
-namespace MarginTrading.Backend.Services
+namespace MarginTrading.Backend.Services.Quotes
 {
     public class QuoteCacheService : TimerPeriod, IQuoteCacheService, IEventConsumer<BestPriceChangeEventArgs>
     {
         private readonly ILog _log;
         private readonly IMarginTradingBlobRepository _blobRepository;
-        private readonly IAccountAssetsCacheService _accountAssetsCache;
         private Dictionary<string, InstrumentBidAskPair> _quotes;
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
         private static string BlobName = "Quotes";
 
-        public QuoteCacheService(ILog log, IMarginTradingBlobRepository blobRepository, IAccountAssetsCacheService accountAssetsCache) : base(nameof(QuoteCacheService), 10000, log)
+        public QuoteCacheService(ILog log, IMarginTradingBlobRepository blobRepository) 
+            : base(nameof(QuoteCacheService), 10000, log)
         {
             _log = log;
             _blobRepository = blobRepository;
-            _accountAssetsCache = accountAssetsCache;
         }
 
         public InstrumentBidAskPair GetQuote(string instrument)
