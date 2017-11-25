@@ -60,19 +60,19 @@ namespace MarginTrading.Backend.Services.Quotes
                 if (_dayOffService.IsDayOff(quote.Key))
                     continue;
                 
-                if (_outdatedQuotes.TryGetValue(quote.Key, out var info))
+                if (quote.Value.Date <= minQuoteDateTime)
                 {
-                    if (info.LastNotificationSend < minNotificationRepeatDate)
+                    if (_outdatedQuotes.TryGetValue(quote.Key, out var info))
+                    {
+                        if (info.LastNotificationSend < minNotificationRepeatDate)
+                        {
+                            await NotifyQuoteIsOutdated(quote.Value);
+                        }
+                    }
+                    else
                     {
                         await NotifyQuoteIsOutdated(quote.Value);
                     }
-                    
-                    continue;
-                }
-
-                if (quote.Value.Date <= minQuoteDateTime)
-                {
-                    await NotifyQuoteIsOutdated(quote.Value);
                 }
                 else
                 {

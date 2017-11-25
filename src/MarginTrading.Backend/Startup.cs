@@ -8,6 +8,7 @@ using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
+using Lykke.SlackNotifications;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Settings;
@@ -75,7 +76,7 @@ namespace MarginTrading.Backend
 
             services.AddSwaggerGen(options =>
             {
-                options.DefaultLykkeConfiguration("v1", $"MarginTrading_Api_{(isLive ? "Live" : "Demo")}");
+                options.DefaultLykkeConfiguration("v1", $"MarginTrading_Api_{Configuration.ServerType()}");
                 options.OperationFilter<ApiKeyHeaderOperationFilter>();
             });
 
@@ -87,7 +88,7 @@ namespace MarginTrading.Backend
                 {
                     var inner = isLive ? s.MtBackend.MarginTradingLive : s.MtBackend.MarginTradingDemo;
                     inner.IsLive = isLive;
-                    inner.Env = (isLive ? "Live" : "Demo") + envSuffix;
+                    inner.Env = Configuration.ServerType() + envSuffix;
                     return s;
                 });
 
@@ -142,12 +143,12 @@ namespace MarginTrading.Backend
                         settings.ApplicationInsightsKey;
                 }
 
-                LogLocator.CommonLog?.WriteMonitorAsync("", "", "Started");
+                LogLocator.CommonLog?.WriteMonitorAsync("", "", $"{Configuration.ServerType()} Started");
             });
 
             appLifetime.ApplicationStopping.Register(() =>
                 {
-                    LogLocator.CommonLog?.WriteMonitorAsync("", "", "Terminating");
+                    LogLocator.CommonLog?.WriteMonitorAsync("", "", $"{Configuration.ServerType()} Terminating");
                     application.StopApplication();
                 }
             );
@@ -188,6 +189,8 @@ namespace MarginTrading.Backend
 
             var slackService =
                 new MtSlackNotificationsSender(commonSlackService, "MT Backend", settings.CurrentValue.Env);
+
+            services.AddSingleton<ISlackNotificationsSender>(slackService);
 
             // Order of logs registration is important - UseLogToAzureStorage() registers ILog in container.
             // Last registration wins.
