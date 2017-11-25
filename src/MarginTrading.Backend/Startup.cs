@@ -19,6 +19,7 @@ using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Modules;
+using MarginTrading.Backend.Services.Quotes;
 using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Extensions;

@@ -6,23 +6,20 @@ using Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Services.TradingConditions;
 
-namespace MarginTrading.Backend.Services
+namespace MarginTrading.Backend.Services.Quotes
 {
     public class MicrographManager : TimerPeriod
     {
         private readonly MicrographCacheService _micrographCacheService;
         private readonly IMarginTradingBlobRepository _blobRepository;
-        private readonly IAccountAssetsCacheService _accountAssetsCache;
 
         public MicrographManager(
             MicrographCacheService micrographCacheService,
             IMarginTradingBlobRepository blobRepository,
-            ILog log,
-            IAccountAssetsCacheService accountAssetsCache) : base(nameof(MicrographManager), 60000, log)
+            ILog log) : base(nameof(MicrographManager), 60000, log)
         {
             _micrographCacheService = micrographCacheService;
             _blobRepository = blobRepository;
-            _accountAssetsCache = accountAssetsCache;
         }
 
         public override void Start()

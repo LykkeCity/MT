@@ -17,6 +17,7 @@ using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.EventsConsumers;
 using MarginTrading.Backend.Services.Infrastructure;
+using MarginTrading.Backend.Services.Quotes;
 using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Settings;
