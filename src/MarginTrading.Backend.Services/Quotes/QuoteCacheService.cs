@@ -25,6 +25,7 @@ namespace MarginTrading.Backend.Services.Quotes
         {
             _log = log;
             _blobRepository = blobRepository;
+            _quotes = new Dictionary<string, InstrumentBidAskPair>();
         }
 
         public InstrumentBidAskPair GetQuote(string instrument)
