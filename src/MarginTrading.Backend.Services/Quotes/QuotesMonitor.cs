@@ -22,7 +22,7 @@ namespace MarginTrading.Backend.Services.Quotes
         private readonly IAssetPairDayOffService _dayOffService;
 
         private const int DefaultMaxQuoteAgeInSeconds = 300;
-        private const int NotificationRepeatTimeoutInMinutes = 60;
+        private const int NotificationRepeatTimeoutCoef = 5;
         
         private readonly Dictionary<string, OutdatedQuoteInfo> _outdatedQuotes;
 
@@ -51,7 +51,7 @@ namespace MarginTrading.Backend.Services.Quotes
             
             var now = _dateService.Now();
             var minQuoteDateTime = now.AddSeconds(-maxQuoteAgeInSeconds);
-            var minNotificationRepeatDate = now.AddMinutes(-NotificationRepeatTimeoutInMinutes);
+            var minNotificationRepeatDate = now.AddSeconds(-maxQuoteAgeInSeconds * NotificationRepeatTimeoutCoef);
             
             var quotes = _quoteCacheService.GetAllQuotes();
             
