@@ -152,5 +152,38 @@ namespace MarginTrading.Backend.Controllers
 
             return MtBackendResponse<MarginTradingAccountModel>.Ok(account.ToBackendContract());
         }
+
+        /// <summary>
+        /// Create accounts with requested base asset for all users 
+        /// that already have accounts with requested trading condition
+        /// </summary>
+        [HttpPost]
+        [Route("accountGroup/init")]
+        public async Task<MtBackendResponse<IEnumerable<MarginTradingAccountModel>>> InitAccountGroup(
+            [FromBody] InitAccountGroupRequest request)
+        {
+            var tradingCondition = _tradingConditionsCacheService.GetTradingCondition(request.TradingConditionId);
+
+            if (tradingCondition == null)
+            {
+                return MtBackendResponse<IEnumerable<MarginTradingAccountModel>>.Error(
+                    $"No trading condition {request.TradingConditionId} found in cache");
+            }
+
+            var accountGroup =
+                _accountGroupCacheService.GetAccountGroup(request.TradingConditionId, request.BaseAssetId);
+
+            if (accountGroup == null)
+            {
+                return MtBackendResponse<IEnumerable<MarginTradingAccountModel>>.Error(
+                    $"No account group {request.TradingConditionId}_{request.BaseAssetId} found in cache");
+            }
+
+            var newAccounts = await _accountManager.CreateAccounts(request.TradingConditionId, request.BaseAssetId);
+
+            return MtBackendResponse<IEnumerable<MarginTradingAccountModel>>.Ok(
+                newAccounts.Select(a => a.ToBackendContract()));
+        }
+        
     }
 }
