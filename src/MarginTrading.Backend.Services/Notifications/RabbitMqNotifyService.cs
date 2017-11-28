@@ -85,7 +85,7 @@ namespace MarginTrading.Backend.Services.Notifications
         {
             var message = new AccountChangedMessage
             {
-                Account = account.ToBackendContract(_settings.IsLive),
+                Account = account.ToFullBackendContract(_settings.IsLive),
                 EventType = eventType,
             };
 

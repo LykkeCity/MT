@@ -31,7 +31,7 @@ namespace MarginTrading.Backend.Core.Settings
         public RabbitMqSettings MarketMakerRabbitMqSettings { get; set; }
         public RabbitMqSettings RisksRabbitMqSettings { get; set; }
         public string MtRabbitMqConnString { get; set; }
-        public string[] BaseAccountAssets { get; set; }
+        public string[] BaseAccountAssets { get; set; } = new string[0];
         [Optional]
         public AccountAssetsSettings DefaultAccountAssetsSettings { get; set; }
         public RequestLoggerSettings RequestLoggerSettings { get; set; }

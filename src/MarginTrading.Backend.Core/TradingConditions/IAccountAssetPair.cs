@@ -9,8 +9,6 @@
         int LeverageMaintenance { get; }
         decimal SwapLong { get; }
         decimal SwapShort { get; }
-        decimal SwapLongPct { get; }
-        decimal SwapShortPct { get; }
         decimal CommissionLong { get; }
         decimal CommissionShort { get; }
         decimal CommissionLot { get; }

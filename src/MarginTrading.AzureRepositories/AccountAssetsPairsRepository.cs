@@ -21,10 +21,6 @@ namespace MarginTrading.AzureRepositories
         public double SwapLong { get; set; }
         decimal IAccountAssetPair.SwapShort => (decimal) SwapShort;
         public double SwapShort { get; set; }
-        decimal IAccountAssetPair.SwapLongPct => (decimal) SwapLongPct;
-        public double SwapLongPct { get; set; }
-        decimal IAccountAssetPair.SwapShortPct => (decimal) SwapShortPct;
-        public double SwapShortPct { get; set; }
         decimal IAccountAssetPair.CommissionLong => (decimal) CommissionLong;
         public double CommissionLong { get; set; }
         decimal IAccountAssetPair.CommissionShort => (decimal) CommissionShort;
@@ -62,8 +58,6 @@ namespace MarginTrading.AzureRepositories
                 LeverageMaintenance = src.LeverageMaintenance,
                 SwapLong = (double) src.SwapLong,
                 SwapShort = (double) src.SwapShort,
-                SwapLongPct = (double) src.SwapLongPct,
-                SwapShortPct = (double) src.SwapShortPct,
                 CommissionLong = (double) src.CommissionLong,
                 CommissionShort = (double) src.CommissionShort,
                 CommissionLot = (double) src.CommissionLot,
@@ -105,7 +99,7 @@ namespace MarginTrading.AzureRepositories
             return await _tableStorage.GetDataAsync();
         }
 
-        public async Task AssignAssetPairs(string tradingConditionId, string baseAssetId, string[] assetPairsIds, AccountAssetsSettings defaults)
+        public async Task<IEnumerable<IAccountAssetPair>> AssignAssetPairs(string tradingConditionId, string baseAssetId, string[] assetPairsIds, AccountAssetsSettings defaults)
         {
             var currentInstruments = (await GetAllAsync(tradingConditionId, baseAssetId)).ToArray();
 
@@ -138,12 +132,14 @@ namespace MarginTrading.AzureRepositories
                         LeverageMaintenance = defaults.LeverageMaintenance,
                         PositionLimit = defaults.PositionLimit,
                         SwapLong = defaults.SwapLong,
-                        SwapLongPct = defaults.SwapLongPct,
-                        SwapShort = defaults.SwapShort,
-                        SwapShortPct = defaults.SwapShortPct
-                    }));
+                        SwapShort = defaults.SwapShort
+                    })).ToArray();
                 await _tableStorage.InsertAsync(entitiesToAdd);
+
+                return entitiesToAdd;
             }
+
+            return new IAccountAssetPair[0];
         }
     }
 }

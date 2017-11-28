@@ -70,12 +70,19 @@ namespace MarginTrading.Backend.Core
     public interface IMarginTradingAccountsRepository
     {
         Task<IEnumerable<IMarginTradingAccount>> GetAllAsync(string clientId = null);
+
         [ItemCanBeNull]
         Task<IMarginTradingAccount> GetAsync(string clientId, string accountId);
+
         [ItemCanBeNull]
         Task<IMarginTradingAccount> GetAsync(string accountId);
-        Task<MarginTradingAccount> UpdateBalanceAsync(string clientId, string accountId, decimal amount, bool changeLimit);
-        Task<bool> UpdateTradingConditionIdAsync(string accountId, string tradingConditionId);
+
+        Task<MarginTradingAccount> UpdateBalanceAsync(string clientId, string accountId, decimal amount,
+            bool changeLimit);
+
+        Task<IMarginTradingAccount> UpdateTradingConditionIdAsync(string clientId, string accountId,
+            string tradingConditionId);
+
         Task AddAsync(MarginTradingAccount account);
         Task DeleteAsync(string clientId, string accountId);
     }

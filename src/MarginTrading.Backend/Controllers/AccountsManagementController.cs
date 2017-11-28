@@ -24,16 +24,19 @@ namespace MarginTrading.Backend.Controllers
         private readonly IDateService _dateService;
         private readonly AccountManager _accountManager;
         private readonly AccountGroupCacheService _accountGroupCacheService;
+        private readonly ITradingConditionsCacheService _tradingConditionsCacheService;
 
         public AccountsManagementController(IAccountsCacheService accountsCacheService,
             IDateService dateService,
             AccountManager accountManager,
-            AccountGroupCacheService accountGroupCacheService)
+            AccountGroupCacheService accountGroupCacheService,
+            ITradingConditionsCacheService tradingConditionsCacheService)
         {
             _accountsCacheService = accountsCacheService;
             _dateService = dateService;
             _accountManager = accountManager;
             _accountGroupCacheService = accountGroupCacheService;
+            _tradingConditionsCacheService = tradingConditionsCacheService;
         }
         
         
@@ -120,6 +123,34 @@ namespace MarginTrading.Backend.Controllers
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Sets trading condition for account
+        /// </summary>
+        /// <response code="200">Returns changed account</response>
+        [HttpPost]
+        [Route("tradingCondition")]
+        [Route("~/api/backoffice/setTradingCondition")]
+        public async Task<MtBackendResponse<MarginTradingAccountModel>> SetTradingCondition(
+            [FromBody] SetTradingConditionModel model)
+        {
+            var tradingCondition = _tradingConditionsCacheService.GetTradingCondition(model.TradingConditionId);
+
+            if (tradingCondition == null)
+            {
+                return MtBackendResponse<MarginTradingAccountModel>.Error(
+                    $"No trading condition {model.TradingConditionId} found in cache");
+            }
+
+            var account =
+                await _accountManager.SetTradingCondition(model.ClientId, model.AccountId, model.TradingConditionId);
+
+            if (account == null)
+                return MtBackendResponse<MarginTradingAccountModel>.Error(
+                    $"Account for client [{model.ClientId}] with id [{model.AccountId}] was not found");
+
+            return MtBackendResponse<MarginTradingAccountModel>.Ok(account.ToBackendContract());
         }
     }
 }

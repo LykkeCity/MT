@@ -46,7 +46,7 @@ namespace MarginTrading.Backend.Controllers
         public MarginTradingAccountBackendContract[] GetAllAccounts()
         {
             var accounts = _accountsCacheService.GetAll();
-            return accounts.Select(item => item.ToBackendContract(_marginSettings.IsLive)).ToArray();
+            return accounts.Select(item => item.ToFullBackendContract(_marginSettings.IsLive)).ToArray();
         }
 
         [Route("accounts/history")]
