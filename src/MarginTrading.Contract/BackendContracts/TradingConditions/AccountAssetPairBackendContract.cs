@@ -1,6 +1,6 @@
-﻿namespace MarginTrading.Contract.BackendContracts
+﻿namespace MarginTrading.Contract.BackendContracts.TradingConditions
 {
-    public class AccountAssetPairBackendContract
+    public class AccountAssetPairModel
     {
         public string TradingConditionId { get; set; }
         public string BaseAssetId { get; set; }
@@ -9,8 +9,6 @@
         public int LeverageMaintenance { get; set; }
         public decimal SwapLong { get; set; }
         public decimal SwapShort { get; set; }
-        public decimal SwapLongPct { get; set; }
-        public decimal SwapShortPct { get; set; }
         public decimal CommissionLong { get; set; }
         public decimal CommissionShort { get; set; }
         public decimal CommissionLot { get; set; }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using MarginTrading.Contract.BackendContracts;
+using MarginTrading.Contract.BackendContracts.TradingConditions;
 using MarginTrading.Contract.ClientContracts;
 
 namespace MarginTrading.Contract.Mappers
@@ -45,7 +46,7 @@ namespace MarginTrading.Contract.Mappers
         }
 
         public static AccountAssetPairClientContract ToClientContract(
-            this AccountAssetPairBackendContract src)
+            this AccountAssetPairModel src)
         {
             return new AccountAssetPairClientContract
             {
@@ -56,8 +57,6 @@ namespace MarginTrading.Contract.Mappers
                 LeverageMaintenance = src.LeverageMaintenance,
                 SwapLong = src.SwapLong,
                 SwapShort = src.SwapShort,
-                SwapLongPct = src.SwapLongPct,
-                SwapShortPct = src.SwapShortPct,
                 CommissionLong = src.CommissionLong,
                 CommissionShort = src.CommissionShort,
                 CommissionLot = src.CommissionLot,

@@ -1,4 +1,6 @@
-﻿using Common;
+﻿using System.Linq;
+using System.Threading.Tasks;
+using Common;
 using Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Settings;
@@ -14,17 +16,20 @@ namespace MarginTrading.Backend.Services
         private readonly IMarginTradingOperationsLogService _operationsLogService;
         private readonly MarginSettings _marginSettings;
         private readonly IConsole _consoleWriter;
+        private readonly IAccountsCacheService _accountsCacheService;
 
         public ClientNotifyService(
             IRabbitMqNotifyService rabbitMqNotifyService,
             IMarginTradingOperationsLogService operationsLogService,
             MarginSettings marginSettings,
-            IConsole consoleWriter)
+            IConsole consoleWriter,
+            IAccountsCacheService accountsCacheService)
         {
             _rabbitMqNotifyService = rabbitMqNotifyService;
             _operationsLogService = operationsLogService;
             _marginSettings = marginSettings;
             _consoleWriter = consoleWriter;
+            _accountsCacheService = accountsCacheService;
         }
 
         public void NotifyOrderChanged(Order order)
@@ -50,6 +55,22 @@ namespace MarginTrading.Backend.Services
             _consoleWriter.WriteLine($"send account stopout to queue {queueName}");
             _operationsLogService.AddLog($"queue {queueName}", clientId, accountId, null,
                 new {clientId = clientId, accountId = accountId, positionsCount = positionsCount, totalPnl = totalPnl}.ToJson());
+        }
+        
+        public async Task NotifyTradingConditionsChanged(string tradingConditionId = null, string accountId = null)
+        {
+            if (!string.IsNullOrEmpty(tradingConditionId))
+            {
+                string[] clientIds = _accountsCacheService
+                    .GetClientIdsByTradingConditionId(tradingConditionId, accountId).ToArray();
+
+                if (clientIds.Length > 0)
+                {
+                    await _rabbitMqNotifyService.UserUpdates(true, false, clientIds);
+                    _consoleWriter.WriteLine(
+                        $"send user updates to queue {QueueHelper.BuildQueueName(_marginSettings.RabbitMqQueues.UserUpdates.ExchangeName, _marginSettings.Env)}");
+                }
+            }
         }
     }
 }

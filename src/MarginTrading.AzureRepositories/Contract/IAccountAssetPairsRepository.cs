@@ -12,6 +12,6 @@ namespace MarginTrading.AzureRepositories.Contract
         Task<IAccountAssetPair> GetAsync(string tradingConditionId, string baseAssetId, string assetPairId);
         Task<IEnumerable<IAccountAssetPair>> GetAllAsync(string tradingConditionId, string baseAssetId);
         Task<IEnumerable<IAccountAssetPair>> GetAllAsync();
-        Task AssignAssetPairs(string tradingConditionId, string baseAssetId, string[] assetPairsIds, AccountAssetsSettings defaults);
+        Task<IEnumerable<IAccountAssetPair>> AssignAssetPairs(string tradingConditionId, string baseAssetId, string[] assetPairsIds, AccountAssetsSettings defaults);
     }
 }

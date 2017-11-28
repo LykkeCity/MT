@@ -9,12 +9,10 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Settings;
-using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Models;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
-using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Middleware;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Settings;
@@ -31,19 +29,11 @@ namespace MarginTrading.Backend.Controllers
     [MiddlewareFilter(typeof(RequestLoggingPipeline))]
     public class BackOfficeController : Controller
     {
-        private readonly ITradingConditionsCacheService _tradingConditionsCacheService;
-        private readonly IAccountGroupCacheService _accountGroupCacheService;
-        private readonly AccountAssetsCacheService _accountAssetsCacheService;
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly AccountManager _accountManager;
-        private readonly TradingConditionsManager _tradingConditionsManager;
-        private readonly AccountGroupManager _accountGroupManager;
-        private readonly AccountAssetsManager _accountAssetsManager;
         private readonly MatchingEngineRoutesManager _routesManager;
-        private readonly IMarginTradingAccountsRepository _accountsRepository;
         private readonly IOrderReader _ordersReader;
-        private readonly OrderBookList _orderBooks;
         private readonly IClientSettingsRepository _clientSettingsRepository;
         private readonly MarginSettings _marginSettings;
         private readonly IMarginTradingOperationsLogService _operationsLogService;
@@ -53,19 +43,13 @@ namespace MarginTrading.Backend.Controllers
         private readonly IMarginTradingSettingsService _marginTradingSettingsService;
 
         public BackOfficeController(
-            ITradingConditionsCacheService tradingConditionsCacheService,
-            IAccountGroupCacheService accountGroupCacheService,
-            AccountAssetsCacheService accountAssetsCacheService,
+            
             IAssetPairsCache assetPairsCache,
             IAccountsCacheService accountsCacheService,
             AccountManager accountManager,
-            TradingConditionsManager tradingConditionsManager,
-            AccountGroupManager accountGroupManager,
-            AccountAssetsManager accountAssetsManager,
+            
             MatchingEngineRoutesManager routesManager,
-            IMarginTradingAccountsRepository accountsRepository,
             IOrderReader ordersReader,
-            OrderBookList orderBooks,
             IClientSettingsRepository clientSettingsRepository,
             MarginSettings marginSettings,
             IMarginTradingOperationsLogService operationsLogService,
@@ -74,20 +58,12 @@ namespace MarginTrading.Backend.Controllers
             ILog log,
             IMarginTradingSettingsService marginTradingSettingsService)
         {
-            _tradingConditionsCacheService = tradingConditionsCacheService;
-            _accountGroupCacheService = accountGroupCacheService;
-            _accountAssetsCacheService = accountAssetsCacheService;
             _assetPairsCache = assetPairsCache;
             _accountsCacheService = accountsCacheService;
 
             _accountManager = accountManager;
-            _tradingConditionsManager = tradingConditionsManager;
-            _accountGroupManager = accountGroupManager;
-            _accountAssetsManager = accountAssetsManager;
             _routesManager = routesManager;
-            _accountsRepository = accountsRepository;
             _ordersReader = ordersReader;
-            _orderBooks = orderBooks;
             _clientSettingsRepository = clientSettingsRepository;
             _marginSettings = marginSettings;
             _operationsLogService = operationsLogService;
@@ -207,154 +183,6 @@ namespace MarginTrading.Backend.Controllers
             }
 
             return result;
-        }
-
-        #endregion
-
-
-        #region Trading conditions
-
-        /// <summary>
-        /// Sets trading condition for account
-        /// </summary>
-        /// <remarks>
-        ///
-        /// Header "api-key" is required
-        /// </remarks>
-        /// <response code="200">Returns true if trading condition is set</response>
-        [HttpPost]
-        [Route("setTradingCondition")]
-        [ProducesResponseType(typeof(bool), 200)]
-        public async Task<IActionResult> SetTradingCondition([FromBody]SetTradingConditionModel model)
-        {
-            bool result;
-
-            var tradingCondition = _tradingConditionsCacheService.GetTradingCondition(model.TradingConditionId);
-
-            if (tradingCondition == null)
-            {
-                throw new Exception($"No trading condition {model.TradingConditionId} found in cache");
-            }
-
-            _accountsCacheService.SetTradingCondition(model.ClientId, model.AccountId, model.TradingConditionId);
-
-            result = await _accountsRepository.UpdateTradingConditionIdAsync(model.AccountId, model.TradingConditionId);
-
-            if (result)
-            {
-                await _tradingConditionsManager.UpdateTradingConditions(model.TradingConditionId, model.AccountId);
-            }
-
-            return Ok(result);
-        }
-
-        [HttpGet]
-        [Route("tradingConditions/getall")]
-        [ProducesResponseType(typeof(List<TradingCondition>), 200)]
-        public IActionResult GetAllTradingConditions()
-        {
-            var tradingConditions = _tradingConditionsCacheService.GetAllTradingConditions();
-            return Ok(tradingConditions);
-        }
-
-        [HttpGet]
-        [Route("tradingConditions/get/{id}")]
-        [ProducesResponseType(typeof(TradingCondition), 200)]
-        public IActionResult GetTradingCondition(string id)
-        {
-            var tradingCondition = _tradingConditionsCacheService.GetTradingCondition(id);
-            return Ok(tradingCondition);
-        }
-
-        [HttpPost]
-        [Route("tradingConditions/add")]
-        public async Task<IActionResult> AddOrReplaceTradingCondition([FromBody]TradingCondition model)
-        {
-            if (_tradingConditionsCacheService.GetTradingCondition(model.Id) == null)
-            {
-                await _accountGroupManager.AddAccountGroupsForTradingCondition(model.Id);
-            }
-
-            await _tradingConditionsManager.AddOrReplaceTradingConditionAsync(model);
-
-            return Ok();
-        }
-
-        #endregion
-
-
-        #region Account groups
-
-        [HttpGet]
-        [Route("accountGroups/getall")]
-        [ProducesResponseType(typeof(List<AccountGroup>), 200)]
-        public IActionResult GetAllAccountGrpups()
-        {
-            var accountGrpups = _accountGroupCacheService.GetAllAccountGroups();
-            return Ok(accountGrpups);
-        }
-
-        [HttpGet]
-        [Route("accountGroups/get/{tradingConditionId}/{id}")]
-        [ProducesResponseType(typeof(AccountGroup), 200)]
-        public IActionResult GetAccountGroup(string tradingConditionId, string id)
-        {
-            var accountGroup = _accountGroupCacheService.GetAccountGroup(tradingConditionId, id);
-            return Ok(accountGroup);
-        }
-
-        [HttpPost]
-        [Route("accountGroups/add")]
-        public async Task<IActionResult> AddOrReplaceAccountGroup([FromBody]AccountGroup model)
-        {
-            await _accountGroupManager.AddOrReplaceAccountGroupAsync(model);
-            await _tradingConditionsManager.UpdateTradingConditions(model.TradingConditionId);
-
-            return Ok();
-        }
-
-        #endregion
-
-
-        #region Account assets
-
-        [HttpGet]
-        [Route("accountAssets/getall/{tradingConditionId}/{baseAssetId}")]
-        [ProducesResponseType(typeof(List<AccountAssetPair>), 200)]
-        public IActionResult GetAllAccountAssets(string tradingConditionId, string baseAssetId)
-        {
-            var accountAssets = _accountAssetsCacheService.GetAccountAssets(tradingConditionId, baseAssetId);
-            return Ok(accountAssets);
-        }
-
-        [HttpGet]
-        [Route("accountAssets/get/{tradingConditionId}/{baseAssetId}/{instrumet}")]
-        [ProducesResponseType(typeof(AccountAssetPair), 200)]
-        public IActionResult GetAccountAssets(string tradingConditionId, string baseAssetId, string instrumet)
-        {
-            var accountAsset = _accountAssetsCacheService.GetAccountAssetThrowIfNotFound(tradingConditionId, baseAssetId, instrumet);
-            return Ok(accountAsset);
-        }
-
-        [HttpPost]
-        [Route("accountAssets/assignInstruments")]
-        [ProducesResponseType(typeof(AccountAssetPair), 200)]
-        public async Task<IActionResult> AssignInstruments([FromBody]AssignInstrumentsModel model)
-        {
-            await _accountAssetsManager.AssignInstruments(model.TradingConditionId, model.BaseAssetId, model.Instruments);
-            await _tradingConditionsManager.UpdateTradingConditions(model.TradingConditionId);
-
-            return Ok();
-        }
-
-        [HttpPost]
-        [Route("accountAssets/add")]
-        public async Task<IActionResult> AddOrReplaceAccountAsset([FromBody]AccountAssetPair model)
-        {
-            await _accountAssetsManager.AddOrReplaceAccountAssetAsync(model);
-            await _tradingConditionsManager.UpdateTradingConditions(model.TradingConditionId);
-
-            return Ok();
         }
 
         #endregion
@@ -637,5 +465,6 @@ namespace MarginTrading.Backend.Controllers
         }
 
         #endregion
+        
     }
 }
