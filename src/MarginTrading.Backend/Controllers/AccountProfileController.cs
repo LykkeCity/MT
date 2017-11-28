@@ -49,7 +49,7 @@ namespace MarginTrading.Backend.Controllers
         [Route("account/{clientId}/{accountId}")]
         public MarginTradingAccountBackendContract GetAccount(string clientId, string accountId)
         {
-            return _accountsCacheService.Get(clientId, accountId).ToBackendContract(_settings.IsLive);
+            return _accountsCacheService.Get(clientId, accountId).ToFullBackendContract(_settings.IsLive);
         }
 
         /// <summary>

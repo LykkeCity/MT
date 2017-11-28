@@ -156,12 +156,12 @@ namespace MarginTrading.Backend
 
         private void RegisterModules(ContainerBuilder builder, IReloadingManager<MtBackendSettings> mtSettings, IReloadingManager<MarginSettings> settings, IHostingEnvironment environment)
         {
+            builder.RegisterModule(new BaseServicesModule(mtSettings.CurrentValue));
             builder.RegisterModule(new BackendSettingsModule(mtSettings.CurrentValue, settings.CurrentValue));
             builder.RegisterModule(new BackendRepositoriesModule(settings, LogLocator.CommonLog));
             builder.RegisterModule(new EventModule());
             builder.RegisterModule(new CacheModule());
             builder.RegisterModule(new ManagersModule());
-            builder.RegisterModule(new BaseServicesModule(mtSettings.CurrentValue));
             builder.RegisterModule(new ServicesModule());
             builder.RegisterModule(new BackendServicesModule(mtSettings.CurrentValue, settings.CurrentValue, environment, LogLocator.CommonLog));
 

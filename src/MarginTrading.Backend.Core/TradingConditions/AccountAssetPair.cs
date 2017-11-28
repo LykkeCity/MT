@@ -9,8 +9,6 @@
         public int LeverageMaintenance { get; set; }
         public decimal SwapLong { get; set; }
         public decimal SwapShort { get; set; }
-        public decimal SwapLongPct { get; set; }
-        public decimal SwapShortPct { get; set; }
         public decimal CommissionLong { get; set; }
         public decimal CommissionShort { get; set; }
         public decimal CommissionLot { get; set; }
@@ -30,8 +28,6 @@
                 LeverageMaintenance = src.LeverageMaintenance,
                 SwapLong = src.SwapLong,
                 SwapShort = src.SwapShort,
-                SwapLongPct = src.SwapLongPct,
-                SwapShortPct = src.SwapShortPct,
                 CommissionLong = src.CommissionLong,
                 CommissionShort = src.CommissionShort,
                 CommissionLot = src.CommissionLot,

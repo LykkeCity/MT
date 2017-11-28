@@ -68,7 +68,7 @@ namespace MarginTrading.Backend.Core.Mappers
         {
             return new InitDataBackendResponse
             {
-                Accounts = accounts.Select(item => item.ToBackendContract(isLive)).ToArray(),
+                Accounts = accounts.Select(item => item.ToFullBackendContract(isLive)).ToArray(),
                 AccountAssetPairs = accountAssetPairs.ToDictionary(pair => pair.Key, pair => pair.Value.Select(item => item.ToBackendContract()).ToArray()),
             };
         }

@@ -122,7 +122,7 @@ namespace MarginTrading.Backend.Controllers
         {
             var accounts = _accountsCacheService.GetAll(request.ClientId).ToArray();
 
-            var result = accounts.Select(item => item.ToBackendContract(_marginSettings.IsLive)).ToArray();
+            var result = accounts.Select(item => item.ToFullBackendContract(_marginSettings.IsLive)).ToArray();
 
             return result;
         }

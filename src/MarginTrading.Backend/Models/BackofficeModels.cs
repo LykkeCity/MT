@@ -12,13 +12,6 @@ namespace MarginTrading.Backend.Models
         public decimal PnL { get; set; }
     }
 
-    public class SetTradingConditionModel
-    {
-        public string ClientId { get; set; }
-        public string AccountId { get; set; }
-        public string TradingConditionId { get; set; }
-    }
-
     public class CreateMarginTradingAccountModel
     {
         [Required]
@@ -27,13 +20,6 @@ namespace MarginTrading.Backend.Models
         public string AssetId { get; set; }
         [Required]
         public string TradingConditionId { get; set; }
-    }
-
-    public class AssignInstrumentsModel
-    {
-        public string TradingConditionId { get; set; }
-        public string BaseAssetId { get; set; }
-        public string[] Instruments { get; set; }
     }
 
     public class InitAccountsRequest

@@ -251,6 +251,22 @@ namespace MarginTrading.Backend.Services
             return closedOrders;
         }
 
+        public async Task<IMarginTradingAccount> SetTradingCondition(string clientId, string accountId,
+            string tradingConditionId)
+        {
+            var result =
+                await _accountsRepository.UpdateTradingConditionIdAsync(clientId, accountId, tradingConditionId);
+
+            if (result != null)
+            {
+                _accountsCacheService.SetTradingCondition(clientId, accountId, tradingConditionId);
+
+                await _clientNotifyService.NotifyTradingConditionsChanged(tradingConditionId, accountId);
+            }
+            
+            return result;
+        }
+
         #region Helpers
 
         private string[] GetBaseAssets(string tradingConditionsId)
