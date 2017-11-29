@@ -67,7 +67,7 @@ namespace MarginTrading.Backend.Services.Modules
 
 			builder.RegisterType<TradingEngine>()
 				.As<ITradingEngine>()
-				.As<IEventConsumer<OrderBookChangeEventArgs>>()
+				.As<IEventConsumer<BestPriceChangeEventArgs>>()
 				.SingleInstance();
 
 			builder.RegisterType<MarginCallConsumer>()
@@ -89,12 +89,6 @@ namespace MarginTrading.Backend.Services.Modules
 
 			builder.RegisterType<CfdCalculatorService>()
 				.As<ICfdCalculatorService>()
-				.SingleInstance();
-
-			builder.RegisterType<AggregatedOrderBook>()
-				.As<IEventConsumer<OrderBookChangeEventArgs>>()
-				.As<IAggregatedOrderBook>()
-				.AsSelf()
 				.SingleInstance();
 
 			builder.RegisterType<OrderBookList>()

@@ -28,7 +28,7 @@ namespace MarginTrading.Backend.Core.Orderbooks
         {
             var result = new List<LimitOrder>();
 
-            foreach (List<LimitOrder> limitOrders in src.Values)
+            foreach (var limitOrders in src.Values)
             {
                 result.AddRange(limitOrders.Where(x => x.MarketMakerId == marketMakerId && (idsToDelete == null || idsToDelete.Contains(x.Id))));
                 limitOrders.RemoveAll(x => x.MarketMakerId == marketMakerId && (idsToDelete == null || idsToDelete.Contains(x.Id)));
@@ -39,23 +39,18 @@ namespace MarginTrading.Backend.Core.Orderbooks
             return result;
         }
 
-        public static List<LimitOrder> DeleteAllOrdersByMarketMaker(this SortedDictionary<decimal, List<LimitOrder>> src,
+        public static void DeleteAllOrdersByMarketMaker(this SortedDictionary<decimal, List<LimitOrder>> src,
             string marketMakerId)
         {
-            var result = new List<LimitOrder>();
-
-            foreach (List<LimitOrder> limitOrders in src.Values)
+            foreach (var limitOrders in src.Values)
             {
-                result.AddRange(limitOrders.Where(x => x.MarketMakerId == marketMakerId));
                 limitOrders.RemoveAll(x => x.MarketMakerId == marketMakerId);
             }
 
             src.RemoveEmptyKeys();
-
-            return result;
         }
 
-        public static LimitOrder AddMarketMakerOrder(this SortedDictionary<decimal, List<LimitOrder>> src,
+        public static void AddMarketMakerOrder(this SortedDictionary<decimal, List<LimitOrder>> src,
             LimitOrder order)
         {
             if (!src.ContainsKey(order.Price))
@@ -67,22 +62,18 @@ namespace MarginTrading.Backend.Core.Orderbooks
             if (existingOrder != null)
             {
                 existingOrder.Volume = order.Volume;
-                return existingOrder;
             }
 
             src[order.Price].Add(order);
-            return order;
         }
 
         public static void RemoveEmptyKeys(this SortedDictionary<decimal, List<LimitOrder>> src)
         {
-            var emptyKeys = src.Where(pair => pair.Value.Count == 0)
-                .Select(pair => pair.Key)
-                .ToList();
+            var emptyItems = src.Where(pair => pair.Value.Count == 0).ToArray();
 
-            foreach (var key in emptyKeys)
+            foreach (var item in emptyItems)
             {
-                src.Remove(key);
+                src.Remove(item.Key);
             }
         }
     }

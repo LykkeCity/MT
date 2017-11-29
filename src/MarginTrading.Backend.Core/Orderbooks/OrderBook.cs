@@ -8,12 +8,14 @@ namespace MarginTrading.Backend.Core.Orderbooks
     public class OrderBook
     {
         public string Instrument { get; set; }
-
+        
         public SortedDictionary<decimal, List<LimitOrder>> Buy { get; set; } =
             new SortedDictionary<decimal, List<LimitOrder>>(new ReverseComparer<decimal>(Comparer<decimal>.Default));
 
         public SortedDictionary<decimal, List<LimitOrder>> Sell { get; set; } =
             new SortedDictionary<decimal, List<LimitOrder>>();
+        
+        private DateTime _lastUpdated = DateTime.UtcNow; 
 
         public OrderBook Clone()
         {
@@ -111,15 +113,7 @@ namespace MarginTrading.Backend.Core.Orderbooks
             {
                 var bookOrder = source[matchedOrder.Price].First(item => item.Id == matchedOrder.OrderId);
 
-                bookOrder.MatchedOrders.Add(new MatchedOrder
-                {
-                    OrderId = order.Id,
-                    MarketMakerId = matchedOrder.MarketMakerId,
-                    Volume = matchedOrder.Volume,
-                    MatchedDate = matchedOrder.MatchedDate,
-                    Price = matchedOrder.Price,
-                    ClientId = matchedOrder.ClientId
-                });
+                bookOrder.MatchedOrders.Add(matchedOrder);
 
                 if (bookOrder.GetIsFullfilled())
                 {
@@ -128,37 +122,40 @@ namespace MarginTrading.Backend.Core.Orderbooks
                     if (!source[matchedOrder.Price].Any())
                         source.Remove(matchedOrder.Price);
                 }
+                
+                _lastUpdated = DateTime.UtcNow;
             }
         }
 
         public IEnumerable<LimitOrder> DeleteMarketMakerOrders(string marketMakerId, string[] idsToDelete)
         {
-            var result = new List<LimitOrder>();
-            var buyOrders = Buy.DeleteMarketMakerOrders(marketMakerId, idsToDelete);
-            var sellOrders = Sell.DeleteMarketMakerOrders(marketMakerId, idsToDelete);
+            var deletedBuy = Buy.DeleteMarketMakerOrders(marketMakerId, idsToDelete);
+            var deletedSell = Sell.DeleteMarketMakerOrders(marketMakerId, idsToDelete);
 
-            result.AddRange(buyOrders);
-            result.AddRange(sellOrders);
-
-            return result;
+            return deletedBuy.Concat(deletedSell);
         }
 
-        public IEnumerable<LimitOrder> DeleteAllOrdersByMarketMaker(string marketMakerId, bool deleteAllBuy, bool deleteAllSell)
+        public void DeleteAllOrdersByMarketMaker(string marketMakerId, bool deleteAllBuy, bool deleteAllSell)
         {
-            var result = new List<LimitOrder>();
-            var buyOrders = new List<LimitOrder>();
-            var sellOrders = new List<LimitOrder>();
-
             if (deleteAllBuy)
-                buyOrders = Buy.DeleteAllOrdersByMarketMaker(marketMakerId);
+                Buy.DeleteAllOrdersByMarketMaker(marketMakerId);
 
             if (deleteAllSell)
-                sellOrders = Sell.DeleteAllOrdersByMarketMaker(marketMakerId);
+                Sell.DeleteAllOrdersByMarketMaker(marketMakerId);
+        }
 
-            result.AddRange(buyOrders);
-            result.AddRange(sellOrders);
-
-            return result;
+        public InstrumentBidAskPair GetBestPrice()
+        {
+            if (!Sell.Any() || !Buy.Any())
+                return null;
+            
+            return new InstrumentBidAskPair
+            {
+                Instrument = Instrument,
+                Ask = Sell.First().Key,
+                Bid = Buy.First().Key,
+                Date = _lastUpdated
+            };
         }
     }
 }
