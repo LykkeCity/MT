@@ -41,7 +41,7 @@ namespace MarginTrading.Backend.Core
                 BaseAssetId = src.BaseAssetId,
                 Balance = src.Balance,
                 WithdrawTransferLimit = src.WithdrawTransferLimit,
-                AccountFpl = accountFpl ?? new AccountFpl()
+                AccountFpl = accountFpl ?? new AccountFpl() {ActualHash = 1}
             };
         }
 
