@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.Settings;
@@ -50,7 +51,7 @@ namespace MarginTrading.Backend.Core.Orderbooks
                 return new MatchedOrderCollection();
 
             return new MatchedOrderCollection(_orderBooks[order.Instrument]
-                .Match(order, orderTypeToMatch, volumeToMatch, _marginSettings.MaxMarketMakerLimitOrderAge).ToList());
+                .Match(order, orderTypeToMatch, volumeToMatch, _marginSettings.MaxMarketMakerLimitOrderAge));
         }
 
         public void Update(Order order, OrderDirection orderTypeToMatch, IEnumerable<MatchedOrder> matchedOrders)
@@ -70,71 +71,65 @@ namespace MarginTrading.Backend.Core.Orderbooks
 
         public IEnumerable<LimitOrder> DeleteMarketMakerOrders(string marketMakerId, string[] idsToDelete)
         {
-            foreach (var orderbook in _orderBooks)
-            {
-                var orders = orderbook.Value.DeleteMarketMakerOrders(marketMakerId, idsToDelete);
-                foreach (var order in orders)
-                    yield return order;
-            }
+            return _orderBooks.SelectMany(o => o.Value.DeleteMarketMakerOrders(marketMakerId, idsToDelete));
         }
 
-        public IEnumerable<LimitOrder> DeleteAllOrdersByMarketMaker(string marketMakerId, bool deleteAllBuy, bool deleteAllSell)
+        public void DeleteAllOrdersByMarketMaker(string marketMakerId, bool deleteAllBuy, bool deleteAllSell)
         {
             foreach (var orderbook in _orderBooks)
             {
-                var orders = orderbook.Value.DeleteAllOrdersByMarketMaker(marketMakerId, deleteAllBuy, deleteAllSell);
-                foreach (var order in orders)
-                    yield return order;
+                orderbook.Value.DeleteAllOrdersByMarketMaker(marketMakerId, deleteAllBuy, deleteAllSell);
             }
         }
 
-        public IEnumerable<LimitOrder> DeleteAllBuyOrdersByMarketMaker(string marketMakerId, IReadOnlyList<string> instruments)
+        public void DeleteAllBuyOrdersByMarketMaker(string marketMakerId, IReadOnlyList<string> instruments)
         {
             foreach (var instrument in instruments)
             {
-                if (_orderBooks.ContainsKey(instrument))
+                if (_orderBooks.TryGetValue(instrument, out var orderBook))
                 {
-                    var orders = _orderBooks[instrument].DeleteAllOrdersByMarketMaker(marketMakerId, true, false);
-                    foreach (var order in orders)
-                        yield return order;
+                    orderBook.DeleteAllOrdersByMarketMaker(marketMakerId, true, false);
                 }
             }
         }
 
-        public IEnumerable<LimitOrder> DeleteAllSellOrdersByMarketMaker(string marketMakerId, IReadOnlyList<string> instruments)
+        public void DeleteAllSellOrdersByMarketMaker(string marketMakerId, IReadOnlyList<string> instruments)
         {
             foreach (var instrument in instruments)
             {
-                if (_orderBooks.ContainsKey(instrument))
+                if (_orderBooks.TryGetValue(instrument, out var orderBook))
                 {
-                    var orders = _orderBooks[instrument].DeleteAllOrdersByMarketMaker(marketMakerId, false, true);
-                    foreach (var order in orders)
-                        yield return order;
+                    orderBook.DeleteAllOrdersByMarketMaker(marketMakerId, false, true);
                 }
             }
         }
 
-        public List<LimitOrder> AddMarketMakerOrders(IReadOnlyList<LimitOrder> ordersToAdd)
+        public void AddMarketMakerOrders(IReadOnlyList<LimitOrder> ordersToAdd)
         {
-            var result = new List<LimitOrder>();
-
             foreach (var order in ordersToAdd)
             {
-                if (!_orderBooks.ContainsKey(order.Instrument))
+                if (!_orderBooks.TryGetValue(order.Instrument, out var orderBook))
                 {
-                    _orderBooks.Add(order.Instrument, new OrderBook { Instrument = order.Instrument });
+                    orderBook = new OrderBook {Instrument = order.Instrument};
+                    _orderBooks.Add(order.Instrument, orderBook);
                 }
 
                 var source = order.GetOrderType() == OrderDirection.Buy
-                    ? _orderBooks[order.Instrument].Buy
-                    : _orderBooks[order.Instrument].Sell;
+                    ? orderBook.Buy
+                    : orderBook.Sell;
 
-
-                var addedOrder = source.AddMarketMakerOrder(order);
-                result.Add(addedOrder);
+                source.AddMarketMakerOrder(order);
+            }
+        }
+        
+        public InstrumentBidAskPair GetBestPrice(string instrument)
+        {
+            if (_orderBooks.TryGetValue(instrument, out var orderbook))
+            {
+                return orderbook.GetBestPrice();
             }
 
-            return result;
+            return null;
         }
     }
 }

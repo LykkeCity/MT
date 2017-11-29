@@ -16,10 +16,6 @@ namespace MarginTradingTests.Modules
                 .As<IEventChannel<MarginCallEventArgs>>()
                 .SingleInstance();
 
-            builder.RegisterInstance(new Mock<IEventChannel<OrderBookChangeEventArgs>>().Object)
-                .As<IEventChannel<OrderBookChangeEventArgs>>()
-                .SingleInstance();
-
             builder.RegisterInstance(new Mock<IEventChannel<OrderCancelledEventArgs>>().Object)
                 .As<IEventChannel<OrderCancelledEventArgs>>()
                 .SingleInstance();
