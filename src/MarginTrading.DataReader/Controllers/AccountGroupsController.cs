@@ -37,9 +37,13 @@ namespace MarginTrading.DataReader.Controllers
         /// </summary>
         [HttpGet]
         [Route("byBaseAsset/{tradingConditionId}/{baseAssetId}")]
+        [ProducesResponseType(typeof(AccountGroup), 200)]
+        [ProducesResponseType(typeof(AccountGroup), 204)]
         public async Task<AccountGroup> GetAccountGroup(string tradingConditionId, string baseAssetId)
         {
-            return AccountGroup.Create(await _accountGroupRepository.GetAsync(tradingConditionId, baseAssetId));
+            var accountGroup = await _accountGroupRepository.GetAsync(tradingConditionId, baseAssetId);
+
+            return accountGroup == null ? null : AccountGroup.Create(accountGroup);
         }
 
     }
