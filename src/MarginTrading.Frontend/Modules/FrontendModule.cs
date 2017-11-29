@@ -6,6 +6,7 @@ using Common.Log;
 using Lykke.Common;
 using Lykke.Service.Session;
 using Lykke.SettingsReader;
+using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Settings;
 using MarginTrading.Common.Settings.Repositories;
@@ -37,7 +38,7 @@ namespace MarginTrading.Frontend.Modules
         protected override void Load(ContainerBuilder builder)
         {
             var host = new WampAuthenticationHost(new WampSessionAuthenticatorFactory());
-            var realm = host.RealmContainer.GetRealmByName(RealmNames.FrontEnd);
+            var realm = host.RealmContainer.GetRealmByName(WampConstants.FrontEndRealmName);
 
             builder.RegisterInstance(host)
                 .As<IWampHost>()
@@ -169,6 +170,14 @@ namespace MarginTrading.Frontend.Modules
                         _settings.CurrentValue.MarginTradingFront.DataReaderApiSettings.DemoApiKey,
                         _settings.CurrentValue.MarginTradingFront.DataReaderApiSettings.LiveApiKey,
                         "MarginTradingFrontend"))
+                .SingleInstance();
+            
+            builder.RegisterType<DateService>()
+                .As<IDateService>()
+                .SingleInstance();
+            
+            builder.RegisterType<RabbitMqService>()
+                .As<IRabbitMqService>()
                 .SingleInstance();
         }
     }

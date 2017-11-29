@@ -2,6 +2,7 @@
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.MatchedOrders;
+using MarginTrading.Common.Extensions;
 using MarginTrading.Contract.BackendContracts;
 
 namespace MarginTrading.DataReader.Helpers
