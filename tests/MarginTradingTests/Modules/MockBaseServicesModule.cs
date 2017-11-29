@@ -14,6 +14,7 @@ using Moq;
 using WampSharp.V2.Realm;
 using IAppNotifications = MarginTrading.Backend.Services.Notifications.IAppNotifications;
 using Lykke.Service.Session;
+using Lykke.SlackNotifications;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services;
@@ -40,6 +41,7 @@ namespace MarginTradingTests.Modules
             var rabbitMqNotifyService = new Mock<IRabbitMqNotifyService>();
             var consoleWriterMock = new Mock<IConsole>();
             var sessionServiceMock = new Mock<ISessionService>();
+            var slackNotificationsMock = new Mock<ISlackNotificationsSender>();
 
             sessionServiceMock
                 .Setup(item => item.ApiSessionGetPostWithHttpMessagesAsync(It.IsAny<ClientSessionGetRequest>(), null, It.IsAny<CancellationToken>()))
@@ -71,6 +73,7 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(sessionServiceMock.Object).As<ISessionService>();
             builder.RegisterInstance(clientAccountsServiceMock.Object).As<IClientAccountService>();
             builder.RegisterInstance(httpRequestServiceMock.Object).As<IHttpRequestService>();
+            builder.RegisterInstance(slackNotificationsMock.Object).As<ISlackNotificationsSender>();
 
             builder.RegisterType<DateService>()
                 .As<IDateService>()

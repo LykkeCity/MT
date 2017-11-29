@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Services.Events;
 
-namespace MarginTrading.Backend.Services
+namespace MarginTrading.Backend.Services.Quotes
 {
     public sealed class MicrographCacheService : IMicrographCacheService,
         IEventConsumer<BestPriceChangeEventArgs>
