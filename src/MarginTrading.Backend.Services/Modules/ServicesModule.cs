@@ -5,6 +5,7 @@ using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
+using MarginTrading.Backend.Services.EventsConsumers;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.TradingConditions;
@@ -84,6 +85,11 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<IEventConsumer<OrderPlacedEventArgs>>()
 				.As<IEventConsumer<OrderClosedEventArgs>>()
 				.As<IEventConsumer<OrderCancelledEventArgs>>()
+				.SingleInstance();
+
+			builder.RegisterType<TradesConsumer>()
+				.As<IEventConsumer<OrderPlacedEventArgs>>()
+				.As<IEventConsumer<OrderClosedEventArgs>>()
 				.SingleInstance();
 
 			builder.RegisterType<CfdCalculatorService>()

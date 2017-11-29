@@ -15,6 +15,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
+using MarginTrading.Backend.Services.EventsConsumers;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Common.Services;
@@ -110,7 +111,8 @@ namespace MarginTrading.Backend.Modules
                 _settings.RabbitMqQueues.AccountStopout.ExchangeName,
                 _settings.RabbitMqQueues.UserUpdates.ExchangeName,
                 _settings.RabbitMqQueues.AccountMarginEvents.ExchangeName,
-                _settings.RabbitMqQueues.AccountStats.ExchangeName
+                _settings.RabbitMqQueues.AccountStats.ExchangeName,
+                _settings.RabbitMqQueues.Trades.ExchangeName
             };
 
             var bytesSerializer = new BytesStringSerializer();
