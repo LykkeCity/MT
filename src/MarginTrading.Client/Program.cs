@@ -66,7 +66,7 @@ namespace MarginTrading.Client
                     //client.GetClientOrders();
                     //client.ChangeOrderLimits();
 
-                    client.Prices("BTCUSD");
+                    //client.Prices("EURUSD");
                     //client.UserUpdates();
                     client.Trades();
 
