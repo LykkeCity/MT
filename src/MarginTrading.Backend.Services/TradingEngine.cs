@@ -15,7 +15,7 @@ using MarginTrading.Backend.Services.TradingConditions;
 
 namespace MarginTrading.Backend.Services
 {
-    public sealed class TradingEngine : ITradingEngine, IEventConsumer<OrderBookChangeEventArgs>
+    public sealed class TradingEngine : ITradingEngine, IEventConsumer<BestPriceChangeEventArgs>
     {
         private readonly IEventChannel<MarginCallEventArgs> _marginCallEventChannel;
         private readonly IEventChannel<StopOutEventArgs> _stopoutEventChannel;
@@ -214,7 +214,7 @@ namespace MarginTrading.Backend.Services
                 if (matchedOrdersForClose.Count == 0)
                     throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "No orders to match for close");
 
-                order.UpdateClosePrice(Math.Round(matchedOrders.WeightedAveragePrice, order.AssetAccuracy));
+                order.UpdateClosePrice(Math.Round(matchedOrdersForClose.WeightedAveragePrice, order.AssetAccuracy));
                 return false;
             });
 
@@ -572,14 +572,11 @@ namespace MarginTrading.Backend.Services
 
         int IEventConsumer.ConsumerRank => 100;
 
-        void IEventConsumer<OrderBookChangeEventArgs>.ConsumeEvent(object sender, OrderBookChangeEventArgs ea)
+        void IEventConsumer<BestPriceChangeEventArgs>.ConsumeEvent(object sender, BestPriceChangeEventArgs ea)
         {
-            foreach (string instrumentId in ea.GetChangedInstruments())
-            {
-                ProcessOrdersClosing(instrumentId);
-                ProcessOrdersActive(instrumentId);
-                ProcessOrdersWaitingForExecution(instrumentId);
-            }
+            ProcessOrdersClosing(ea.BidAskPair.Instrument);
+            ProcessOrdersActive(ea.BidAskPair.Instrument);
+            ProcessOrdersWaitingForExecution(ea.BidAskPair.Instrument);
         }
     }
 }
