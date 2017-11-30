@@ -114,11 +114,7 @@ namespace MarginTrading.Backend.Core.Orderbooks
                     _orderBooks.Add(order.Instrument, orderBook);
                 }
 
-                var source = order.GetOrderType() == OrderDirection.Buy
-                    ? orderBook.Buy
-                    : orderBook.Sell;
-
-                source.AddMarketMakerOrder(order);
+                orderBook.AddMarketMakerOrder(order);
             }
         }
         
@@ -126,7 +122,7 @@ namespace MarginTrading.Backend.Core.Orderbooks
         {
             if (_orderBooks.TryGetValue(instrument, out var orderbook))
             {
-                return orderbook.GetBestPrice();
+                return orderbook.BestPrice;
             }
 
             return null;
