@@ -214,7 +214,7 @@ namespace MarginTrading.Backend.Services
                 if (matchedOrdersForClose.Count == 0)
                     throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "No orders to match for close");
 
-                order.UpdateClosePrice(Math.Round(matchedOrders.WeightedAveragePrice, order.AssetAccuracy));
+                order.UpdateClosePrice(Math.Round(matchedOrdersForClose.WeightedAveragePrice, order.AssetAccuracy));
                 return false;
             });
 

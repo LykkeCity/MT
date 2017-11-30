@@ -15,7 +15,7 @@ namespace MarginTrading.Backend.Core.Orderbooks
         public SortedDictionary<decimal, List<LimitOrder>> Sell { get; set; } =
             new SortedDictionary<decimal, List<LimitOrder>>();
         
-        private DateTime _lastUpdated = DateTime.UtcNow; 
+        public InstrumentBidAskPair BestPrice { get; private set; }
 
         public OrderBook Clone()
         {
@@ -122,9 +122,29 @@ namespace MarginTrading.Backend.Core.Orderbooks
                     if (!source[matchedOrder.Price].Any())
                         source.Remove(matchedOrder.Price);
                 }
-                
-                _lastUpdated = DateTime.UtcNow;
+
+                UpdateBestPrice();
             }
+        }
+        
+        public void AddMarketMakerOrder(LimitOrder order)
+        {
+            var src = order.GetOrderType() == OrderDirection.Buy ? Buy : Sell;
+            
+            if (!src.ContainsKey(order.Price))
+                src.Add(order.Price, new List<LimitOrder>());
+
+            var existingOrder = src[order.Price].FirstOrDefault(
+                item => item.MarketMakerId == order.MarketMakerId);
+
+            if (existingOrder != null)
+            {
+                existingOrder.Volume = order.Volume;
+            }
+
+            src[order.Price].Add(order);
+
+            UpdateBestPrice();
         }
 
         public IEnumerable<LimitOrder> DeleteMarketMakerOrders(string marketMakerId, string[] idsToDelete)
@@ -144,18 +164,18 @@ namespace MarginTrading.Backend.Core.Orderbooks
                 Sell.DeleteAllOrdersByMarketMaker(marketMakerId);
         }
 
-        public InstrumentBidAskPair GetBestPrice()
+        private void UpdateBestPrice()
         {
-            if (!Sell.Any() || !Buy.Any())
-                return null;
-            
-            return new InstrumentBidAskPair
+            var newBestPrice = new InstrumentBidAskPair
             {
                 Instrument = Instrument,
-                Ask = Sell.First().Key,
-                Bid = Buy.First().Key,
-                Date = _lastUpdated
+                Ask = Sell.Any() ? Sell.First().Key : BestPrice?.Ask ?? 0,
+                Bid = Buy.Any() ? Buy.First().Key : BestPrice?.Bid ?? 0,
+                Date = DateTime.UtcNow
             };
+
+            if (newBestPrice.Ask > 0 && newBestPrice.Bid > 0)
+                BestPrice = newBestPrice;
         }
     }
 }
