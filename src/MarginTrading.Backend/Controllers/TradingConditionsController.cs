@@ -5,10 +5,13 @@ using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Contract.BackendContracts;
 using MarginTrading.Contract.BackendContracts.TradingConditions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.SwaggerGen.Annotations;
 
 namespace MarginTrading.Backend.Controllers
 {
+    [Authorize]
     [Route("api/tradingConditions")]
     public class TradingConditionsController : Controller
     {
@@ -28,6 +31,7 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         [Route("")]
         [Route("~/api/backoffice/tradingConditions/add")]
+        [SwaggerOperation("AddOrReplaceTradingCondition")]
         public async Task<MtBackendResponse<TradingConditionModel>> AddOrReplaceTradingCondition(
             [FromBody] TradingConditionModel model)
         {
@@ -41,6 +45,7 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         [Route("accountGroups")]
         [Route("~/api/backoffice/accountGroups/add")]
+        [SwaggerOperation("AddOrReplaceAccountGroup")]
         public async Task<MtBackendResponse<AccountGroupModel>> AddOrReplaceAccountGroup(
             [FromBody] AccountGroupModel model)
         {
@@ -52,6 +57,7 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         [Route("accountAssets/assignInstruments")]
         [Route("~/api/backoffice/accountAssets/assignInstruments")]
+        [SwaggerOperation("AssignInstruments")]
         public async Task<MtBackendResponse<IEnumerable<AccountAssetPairModel>>> AssignInstruments(
             [FromBody] AssignInstrumentsRequest model)
         {
@@ -65,6 +71,7 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         [Route("accountAssets")]
         [Route("~/api/backoffice/accountAssets/add")]
+        [SwaggerOperation("AddOrReplaceAccountAsset")]
         public async Task<MtBackendResponse<AccountAssetPairModel>> AddOrReplaceAccountAsset([FromBody]AccountAssetPairModel model)
         {
             var assetPair = await _accountAssetsManager.AddOrReplaceAccountAssetAsync(model.ToDomainContract());

@@ -12,6 +12,7 @@ using MarginTrading.Contract.BackendContracts;
 using MarginTrading.Contract.BackendContracts.AccountsManagement;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.SwaggerGen.Annotations;
 
 namespace MarginTrading.Backend.Controllers
 {
@@ -132,6 +133,7 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         [Route("tradingCondition")]
         [Route("~/api/backoffice/setTradingCondition")]
+        [SwaggerOperation("SetTradingCondition")]
         public async Task<MtBackendResponse<MarginTradingAccountModel>> SetTradingCondition(
             [FromBody] SetTradingConditionModel model)
         {
@@ -159,6 +161,7 @@ namespace MarginTrading.Backend.Controllers
         /// </summary>
         [HttpPost]
         [Route("accountGroup/init")]
+        [SwaggerOperation("InitAccountGroup")]
         public async Task<MtBackendResponse<IEnumerable<MarginTradingAccountModel>>> InitAccountGroup(
             [FromBody] InitAccountGroupRequest request)
         {
