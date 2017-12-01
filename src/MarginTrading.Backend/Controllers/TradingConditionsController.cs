@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Services.TradingConditions;
+using MarginTrading.Common.Middleware;
 using MarginTrading.Contract.BackendContracts;
 using MarginTrading.Contract.BackendContracts.TradingConditions;
 using Microsoft.AspNetCore.Authorization;
@@ -13,6 +14,7 @@ namespace MarginTrading.Backend.Controllers
 {
     [Authorize]
     [Route("api/tradingConditions")]
+    [MiddlewareFilter(typeof(RequestLoggingPipeline))]
     public class TradingConditionsController : Controller
     {
         private readonly TradingConditionsManager _tradingConditionsManager;

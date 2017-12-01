@@ -132,7 +132,6 @@ namespace MarginTrading.Backend.Controllers
         /// <response code="200">Returns changed account</response>
         [HttpPost]
         [Route("tradingCondition")]
-        [Route("~/api/backoffice/setTradingCondition")]
         [SwaggerOperation("SetTradingCondition")]
         public async Task<MtBackendResponse<MarginTradingAccountModel>> SetTradingCondition(
             [FromBody] SetTradingConditionModel model)
