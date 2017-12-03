@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Common;
-using Common.Log;
 using Flurl.Http;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Frontend.Settings;
@@ -11,37 +10,13 @@ using MarginTrading.Contract.BackendContracts;
 
 namespace MarginTrading.Frontend.Services
 {
-    public interface IHttpRequestService
-    {
-        Task<TResponse> RequestWithRetriesAsync<TResponse>(object request, string action, bool isLive = true, string controller = "mt");
-
-        /// <summary>
-        ///
-        /// </summary>
-        /// <typeparam name="TResponse"></typeparam>
-        /// <param name="path"></param>
-        /// <param name="isLive"></param>
-        /// <returns></returns>
-        Task<TResponse> GetAsync<TResponse>(string path, bool isLive = true);
-
-
-        /// <summary>
-        /// Makes a post requests for available backends for client (live/demo) and gets results.
-        /// If a backend is not available for client or request fails - <paramref name="defaultResult"/> is returned instead.
-        /// </summary>
-        Task<(TResponse Demo, TResponse Live)> RequestIfAvailableAsync<TResponse>(object request, string action, Func<TResponse> defaultResult, EnabledMarginTradingTypes enabledMarginTradingTypes, string controller = "mt")
-            where TResponse : class;
-    }
-
     public class HttpRequestService : IHttpRequestService
     {
         private readonly MtFrontendSettings _settings;
-        private readonly ILog _log;
 
-        public HttpRequestService(MtFrontendSettings settings, ILog log)
+        public HttpRequestService(MtFrontendSettings settings)
         {
             _settings = settings;
-            _log = log;
         }
 
         public async Task<(TResponse Demo, TResponse Live)> RequestIfAvailableAsync<TResponse>(object request, string action, Func<TResponse> defaultResult, EnabledMarginTradingTypes enabledMarginTradingTypes, string controller = "mt")
@@ -71,13 +46,11 @@ namespace MarginTrading.Frontend.Services
                     () => flurlClient.PostJsonAsync(request).ReceiveJson<TResponse>(),
                     ex => ex is FlurlHttpException && !new int?[] {400, 500}.Contains((int?) ((FlurlHttpException) ex).Call.HttpStatus),
                     6,
-                    TimeSpan.FromSeconds(5),
-                    ex => ProcessException(isLive, action, request.ToJson(), ex, true));
+                    TimeSpan.FromSeconds(5));
             }
             catch (Exception ex)
             {
-                ProcessException(isLive, action, request.ToJson(), ex, false);
-                throw;
+                throw new Exception(GetErrorMessage(isLive, action, request.ToJson(), ex));
             }
         }
 
@@ -91,41 +64,27 @@ namespace MarginTrading.Frontend.Services
             }
             catch (Exception ex)
             {
-                ProcessException(isLive, path, "GET", ex, false);
-                throw;
+                throw new Exception(GetErrorMessage(isLive, path, "GET", ex));
             }
         }
 
-        public void ProcessException(bool isLive, string path, string context, Exception ex, bool willBeRetried)
+        public string GetErrorMessage(bool isLive, string path, string context, Exception ex)
         {
             path = $"{(isLive ? "Live: " : "Demo: ")}{path}";
 
-            void WriteLog(Exception e)
-            {
-                if (willBeRetried)
-                {
-                    _log.WriteWarningAsync(nameof(HttpRequestService), path, context,
-                        "An exception has been encountered but will be retried: " + e);
-                }
-                else
-                {
-                    _log.WriteErrorAsync(nameof(HttpRequestService), path, context, e);
-                }
-            }
-
-            WriteLog(ex);
-
+            var error = ex.Message;
+            
             var responseBody = (ex as FlurlHttpException)?.Call.ErrorResponseBody;
             if (!string.IsNullOrEmpty(responseBody))
             {
                 var response = responseBody.DeserializeJson<MtBackendResponse<string>>();
                 if (!string.IsNullOrEmpty(response?.Message))
                 {
-                    var newEx = new Exception(response.Message);
-                    WriteLog(newEx);
-                    throw newEx;
+                    error += " " + response.Message;
                 }
             }
+
+           return $"Backend {path} request failed. Error: {error}. Payload: {context}.";
         }
     }
 }
