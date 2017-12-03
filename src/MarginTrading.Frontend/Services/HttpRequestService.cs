@@ -7,36 +7,50 @@ using MarginTrading.Frontend.Settings;
 using System.Linq;
 using MarginTrading.Common.Settings.Models;
 using MarginTrading.Contract.BackendContracts;
+using MarginTrading.Frontend.Repositories.Contract;
+using Rocks.Caching;
 
 namespace MarginTrading.Frontend.Services
 {
     public class HttpRequestService : IHttpRequestService
     {
         private readonly MtFrontendSettings _settings;
+        private readonly ICacheProvider _cacheProvider;
+        private readonly IMaintenanceInfoRepository _maintenanceInfoRepository;
 
-        public HttpRequestService(MtFrontendSettings settings)
+        public HttpRequestService(MtFrontendSettings settings, 
+            ICacheProvider cacheProvider,
+            IMaintenanceInfoRepository maintenanceInfoRepository)
         {
             _settings = settings;
+            _cacheProvider = cacheProvider;
+            _maintenanceInfoRepository = maintenanceInfoRepository;
         }
 
         public async Task<(TResponse Demo, TResponse Live)> RequestIfAvailableAsync<TResponse>(object request, string action, Func<TResponse> defaultResult, EnabledMarginTradingTypes enabledMarginTradingTypes, string controller = "mt")
             where TResponse : class
         {
-            Task<TResponse> Request(bool isLive, bool isTradingEnabled)
+            async Task<TResponse> Request(bool isLive, bool isTradingEnabled)
             {
-                if (!isTradingEnabled)
+                var maintenanceInfo = await GetMaintenance(isLive);
+                
+                if (!isTradingEnabled || maintenanceInfo.IsEnabled)
                 {
-                    return Task.FromResult(defaultResult());
+                    return defaultResult();
                 }
 
-                return RequestWithRetriesAsync<TResponse>(request, action, isLive, controller).ContinueWith(t => t.IsFaulted ? defaultResult() : t.Result);
+                return await RequestWithRetriesAsync<TResponse>(request, action, isLive, controller)
+                    .ContinueWith(t => t.IsFaulted ? defaultResult() : t.Result);
             }
 
-            return (Demo: await Request(false, enabledMarginTradingTypes.Demo), Live: await Request(true, enabledMarginTradingTypes.Live));
+            return (Demo: await Request(false, enabledMarginTradingTypes.Demo),
+                    Live: await Request(true, enabledMarginTradingTypes.Live));
         }
 
         public async Task<TResponse> RequestWithRetriesAsync<TResponse>(object request, string action, bool isLive = true, string controller = "mt")
         {
+            await CheckMaintenance(isLive);
+            
             try
             {
                 var flurlClient = $"{(isLive ? _settings.MarginTradingLive.ApiRootUrl : _settings.MarginTradingDemo.ApiRootUrl)}/api/{controller}/{action}"
@@ -54,12 +68,15 @@ namespace MarginTrading.Frontend.Services
             }
         }
 
-        public async Task<TResponse> GetAsync<TResponse>(string path, bool isLive = true)
+        public async Task<TResponse> GetAsync<TResponse>(string path, bool isLive = true, int timeout = 30)
         {
+            await CheckMaintenance(isLive);
+            
             try
             {
                 return await $"{(isLive ? _settings.MarginTradingLive.ApiRootUrl : _settings.MarginTradingDemo.ApiRootUrl)}/api/{path}"
                     .WithHeader("api-key", isLive ? _settings.MarginTradingLive.ApiKey : _settings.MarginTradingDemo.ApiKey)
+                    .WithTimeout(timeout)
                     .GetJsonAsync<TResponse>();
             }
             catch (Exception ex)
@@ -67,8 +84,11 @@ namespace MarginTrading.Frontend.Services
                 throw new Exception(GetErrorMessage(isLive, path, "GET", ex));
             }
         }
+        
+        
+        #region Helpers
 
-        public string GetErrorMessage(bool isLive, string path, string context, Exception ex)
+        private string GetErrorMessage(bool isLive, string path, string context, Exception ex)
         {
             path = $"{(isLive ? "Live: " : "Demo: ")}{path}";
 
@@ -86,5 +106,26 @@ namespace MarginTrading.Frontend.Services
 
            return $"Backend {path} request failed. Error: {error}. Payload: {context}.";
         }
+
+        private async Task<IMaintenanceInfo> GetMaintenance(bool isLive)
+        {
+            var cacheKey = CacheKeyBuilder.Create(nameof(HttpRequestService), nameof(CheckMaintenance), isLive);
+
+            return await _cacheProvider.GetAsync(cacheKey,
+                async () => new CachableResult<IMaintenanceInfo>(
+                    await _maintenanceInfoRepository.GetMaintenanceInfo(isLive),
+                    CachingParameters.FromMinutes(1)));
+        }
+        
+        private async Task CheckMaintenance(bool isLive)
+        {
+            var maintenanceInfo = await GetMaintenance(isLive);
+            
+            if (maintenanceInfo?.IsEnabled == true)
+                throw new MaintenanceException(maintenanceInfo.ChangedDate);
+        }
+
+        #endregion
+
     }
 }

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using MarginTrading.Common.Settings;
 using MarginTrading.Contract.BackendContracts;
 using MarginTrading.Frontend.Repositories;
+using MarginTrading.Frontend.Repositories.Contract;
 
 namespace MarginTrading.Frontend.Services
 {

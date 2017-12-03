@@ -50,7 +50,9 @@ namespace MarginTrading.Frontend.Services
             initData.Assets = initAssetsResponses.Live.Concat(initAssetsResponses.Demo).GroupBy(a => a.Id)
                 .Select(g => g.First().ToClientContract()).ToArray();
 
-            var initPricesResponse = await _httpRequestService.RequestWithRetriesAsync<Dictionary<string, InstrumentBidAskPairContract>>(new InitPricesBackendRequest { ClientId = clientId }, "init.prices");
+            var initPricesResponse =
+                await _httpRequestService.RequestWithRetriesAsync<Dictionary<string, InstrumentBidAskPairContract>>(
+                    new InitPricesBackendRequest {ClientId = clientId}, "init.prices");
 
             initData.Prices = initPricesResponse.ToDictionary(p => p.Key, p => p.Value.ToClientContract());
 

@@ -8,15 +8,7 @@ namespace MarginTrading.Frontend.Services
     {
         Task<TResponse> RequestWithRetriesAsync<TResponse>(object request, string action, bool isLive = true, string controller = "mt");
 
-        /// <summary>
-        ///
-        /// </summary>
-        /// <typeparam name="TResponse"></typeparam>
-        /// <param name="path"></param>
-        /// <param name="isLive"></param>
-        /// <returns></returns>
-        Task<TResponse> GetAsync<TResponse>(string path, bool isLive = true);
-
+        Task<TResponse> GetAsync<TResponse>(string path, bool isLive = true, int timeout = 30);
 
         /// <summary>
         /// Makes a post requests for available backends for client (live/demo) and gets results.

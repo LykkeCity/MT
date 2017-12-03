@@ -14,6 +14,8 @@ using MarginTrading.Common.Settings.Repositories.Azure;
 using MarginTrading.Common.Settings.Repositories.Azure.Entities;
 using MarginTrading.DataReaderClient;
 using MarginTrading.Frontend.Repositories;
+using MarginTrading.Frontend.Repositories.Contract;
+using MarginTrading.Frontend.Repositories.Entities;
 using MarginTrading.Frontend.Services;
 using MarginTrading.Frontend.Settings;
 using MarginTrading.Frontend.Wamp;
@@ -22,7 +24,7 @@ using Rocks.Caching;
 using WampSharp.V2;
 using WampSharp.V2.Realm;
 using MarginTradingOperationsLogRepository = MarginTrading.Frontend.Repositories.MarginTradingOperationsLogRepository;
-using OperationLogEntity = MarginTrading.Frontend.Repositories.OperationLogEntity;
+using OperationLogEntity = MarginTrading.Frontend.Repositories.Entities.OperationLogEntity;
 
 namespace MarginTrading.Frontend.Modules
 {
@@ -85,6 +87,9 @@ namespace MarginTrading.Frontend.Modules
                 new MarginTradingWatchListsRepository(AzureTableStorage<MarginTradingWatchListEntity>.Create(
                     _settings.Nested(s => s.MarginTradingFront.Db.MarginTradingConnString),
                     "MarginTradingWatchLists", LogLocator.CommonLog)));
+
+            builder.Register<IMaintenanceInfoRepository>(ctx =>
+                new MaintenanceInfoRepository(_settings.Nested(s => s.MarginTradingFront.Db.MarginTradingConnString)));
 
             builder.RegisterType<WatchListService>()
                 .As<IWatchListService>()

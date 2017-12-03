@@ -37,29 +37,29 @@ namespace MarginTrading.Frontend.Controllers
                 ServerTime = _dateService.Now()
             };
 
-            try
-            {
-                var responce = await _httpRequestService.GetAsync<IsAliveResponse>("isAlive");
-                result.LiveVersion = responce.Version;
-            }
-            catch
-            {
-                result.LiveVersion = "Error";
-            }
-
-            try
-            {
-                var responce = await _httpRequestService.GetAsync<IsAliveResponse>("isAlive", false);
-                result.DemoVersion = responce.Version;
-            }
-            catch
-            {
-                result.DemoVersion = "Error";
-            }
-
+            result.LiveVersion = await GetBackendVersion(true);
+            result.DemoVersion = await GetBackendVersion(false);
             result.WampOpened = _wampSessionsService.OpenedSessionsCount;
 
             return result;
+        }
+
+        private async Task<string> GetBackendVersion(bool isLive)
+        {
+            try
+            {
+                var responce = await _httpRequestService.GetAsync<IsAliveResponse>("isAlive", isLive, 3);
+                return responce.Version;
+            }
+            catch (MaintenanceException ex)
+            {
+                return $"Maintenance since {ex.EnabledAt}";
+            }
+            catch
+            {
+                return "Error";
+            }
+            
         }
     }
 }

@@ -13,6 +13,7 @@ using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Common.Settings.Models;
 using MarginTrading.Common.Settings.Repositories;
 using MarginTrading.Frontend.Repositories;
+using MarginTrading.Frontend.Repositories.Contract;
 using Moq;
 
 namespace MarginTradingTests.Modules
