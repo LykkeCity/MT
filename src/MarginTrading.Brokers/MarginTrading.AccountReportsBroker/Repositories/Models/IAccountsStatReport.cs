@@ -10,18 +10,18 @@ namespace MarginTrading.AccountReportsBroker.Repositories.Models
         string AccountId { get; }
         string ClientId { get; }
         string TradingConditionId { get; }
-        decimal Balance { get; }
-        decimal WithdrawTransferLimit { get; }
-        decimal MarginCall { get; }
-        decimal StopOut { get; }
-        decimal TotalCapital { get; }
-        decimal FreeMargin { get; }
-        decimal MarginAvailable { get; }
-        decimal UsedMargin { get; }
-        decimal MarginInit { get; }
-        decimal PnL { get; }
-        decimal OpenPositionsCount { get; }
-        decimal MarginUsageLevel { get; }
+        double Balance { get; }
+        double WithdrawTransferLimit { get; }
+        double MarginCall { get; }
+        double StopOut { get; }
+        double TotalCapital { get; }
+        double FreeMargin { get; }
+        double MarginAvailable { get; }
+        double UsedMargin { get; }
+        double MarginInit { get; }
+        double PnL { get; }
+        double OpenPositionsCount { get; }
+        double MarginUsageLevel { get; }
         bool IsLive { get; }
     }
 }

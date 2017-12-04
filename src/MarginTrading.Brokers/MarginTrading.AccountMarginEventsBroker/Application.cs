@@ -6,7 +6,6 @@ using MarginTrading.BrokerBase.Settings;
 using MarginTrading.Contract.RabbitMqMessageModels;
 using MarginTrading.AccountMarginEventsBroker.Repositories;
 using MarginTrading.AccountMarginEventsBroker.Repositories.Models;
-using System;
 
 namespace MarginTrading.AccountMarginEventsBroker
 {
@@ -40,19 +39,19 @@ namespace MarginTrading.AccountMarginEventsBroker
                 AccountId = message.AccountId,
                 TradingConditionId = message.TradingConditionId,
                 BaseAssetId = message.BaseAssetId,
-                Balance = message.Balance.ToRoundedDecimal(),
-                WithdrawTransferLimit = message.WithdrawTransferLimit.ToRoundedDecimal(),
+                Balance = (double) message.Balance,
+                WithdrawTransferLimit = (double) message.WithdrawTransferLimit,
 
-                MarginCall = message.MarginCall.ToRoundedDecimal(),
-                StopOut = message.StopOut.ToRoundedDecimal(),
-                TotalCapital = message.TotalCapital.ToRoundedDecimal(),
-                FreeMargin = message.FreeMargin.ToRoundedDecimal(),
-                MarginAvailable = message.MarginAvailable.ToRoundedDecimal(),
-                UsedMargin = message.UsedMargin.ToRoundedDecimal(),
-                MarginInit = message.MarginInit.ToRoundedDecimal(),
-                PnL = message.PnL.ToRoundedDecimal(),
-                OpenPositionsCount = message.OpenPositionsCount.ToRoundedDecimal(),
-                MarginUsageLevel = message.MarginUsageLevel.ToRoundedDecimal()
+                MarginCall = (double) message.MarginCall,
+                StopOut = (double) message.StopOut,
+                TotalCapital = (double) message.TotalCapital,
+                FreeMargin = (double) message.FreeMargin,
+                MarginAvailable = (double) message.MarginAvailable,
+                UsedMargin = (double) message.UsedMargin,
+                MarginInit = (double) message.MarginInit,
+                PnL = (double) message.PnL,
+                OpenPositionsCount = (double) message.OpenPositionsCount,
+                MarginUsageLevel = (double) message.MarginUsageLevel
             });
         }
     }

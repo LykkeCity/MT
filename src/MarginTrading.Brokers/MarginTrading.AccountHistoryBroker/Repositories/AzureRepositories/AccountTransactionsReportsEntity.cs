@@ -1,6 +1,6 @@
-﻿using MarginTrading.AccountHistoryBroker.Repositories.Models;
+﻿using System;
+using MarginTrading.AccountHistoryBroker.Repositories.Models;
 using Microsoft.WindowsAzure.Storage.Table;
-using System;
 
 namespace MarginTrading.AccountHistoryBroker.Repositories.AzureRepositories
 {
@@ -19,15 +19,12 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.AzureRepositories
         }
 
         public double Amount { get; set; }
-        decimal IAccountTransactionsReport.Amount => (decimal)Amount;
         public double Balance { get; set; }
-        decimal IAccountTransactionsReport.Balance => (decimal)Balance;
         public string ClientId { get; set; }
         public string Comment { get; set; }
         public DateTime Date { get; set; }
         public string Type { get; set; }
         public double WithdrawTransferLimit { get; set; }
-        decimal IAccountTransactionsReport.WithdrawTransferLimit => (decimal)WithdrawTransferLimit;
         public string PositionId { get; set; }
 
         public static AccountTransactionsReportsEntity Create(IAccountTransactionsReport src)
@@ -38,11 +35,11 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.AzureRepositories
                 Date = src.Date,
                 AccountId = src.AccountId,
                 ClientId = src.ClientId,
-                Amount = (double)src.Amount,
-                Balance = (double)src.Balance,
-                WithdrawTransferLimit = (double)src.WithdrawTransferLimit,
+                Amount = src.Amount,
+                Balance = src.Balance,
+                WithdrawTransferLimit = src.WithdrawTransferLimit,
                 Comment = src.Comment,
-                Type = src.Type.ToString(),
+                Type = src.Type,
                 PositionId = src.PositionId
             };
         }
