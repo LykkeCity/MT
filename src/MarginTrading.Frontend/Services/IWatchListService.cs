@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using MarginTrading.Frontend.Repositories;
+using MarginTrading.Frontend.Repositories.Contract;
 
 namespace MarginTrading.Frontend.Services
 {

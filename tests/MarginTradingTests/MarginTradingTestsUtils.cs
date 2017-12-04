@@ -4,6 +4,7 @@ using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Frontend.Repositories;
+using MarginTrading.Frontend.Repositories.Entities;
 
 namespace MarginTradingTests
 {

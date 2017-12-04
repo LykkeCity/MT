@@ -5,6 +5,7 @@ using Common;
 using Common.Log;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Frontend.Models;
+using MarginTrading.Frontend.Services;
 using Microsoft.AspNetCore.Http;
 
 namespace MarginTrading.Frontend.Middleware
@@ -25,6 +26,10 @@ namespace MarginTrading.Frontend.Middleware
             try
             {
                 await _next.Invoke(context);
+            }
+            catch (MaintenanceException)
+            {
+                await SendMaintenanceError(context);
             }
             catch (Exception ex)
             {
@@ -49,6 +54,15 @@ namespace MarginTrading.Frontend.Middleware
             ctx.Response.ContentType = "application/json";
             ctx.Response.StatusCode = 500;
             var response = ResponseModel.CreateFail(ResponseModel.ErrorCodeType.RuntimeProblem, "Technical problems");
+            await ctx.Response.WriteAsync(response.ToJson());
+        }
+        
+        private async Task SendMaintenanceError(HttpContext ctx)
+        {
+            ctx.Response.ContentType = "application/json";
+            ctx.Response.StatusCode = 503;
+            var response = ResponseModel.CreateFail(ResponseModel.ErrorCodeType.MaintananceMode,
+                "Sorry, application is on maintenance. Please try again later.");
             await ctx.Response.WriteAsync(response.ToJson());
         }
     }
