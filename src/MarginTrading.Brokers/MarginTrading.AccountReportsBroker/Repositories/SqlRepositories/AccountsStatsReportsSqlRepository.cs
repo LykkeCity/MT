@@ -82,13 +82,13 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
                 }
                 catch (SqlException ex)
                 {
-                    await _log.WriteErrorAsync("AccountsStatsReportsSqlRepository", "InsertOrReplaceBatchAsync", null,
-                        ex);
+                    await _log.WriteWarningAsync("AccountsStatsReportsSqlRepository", "InsertOrReplaceBatchAsync", null,
+                        ex.ToString());
                 }
                 catch (Exception ex)
                 {
-                    await _log.WriteErrorAsync("AccountsStatsReportsSqlRepository", "InsertOrReplaceBatchAsync", null,
-                        ex);
+                    await _log.WriteWarningAsync("AccountsStatsReportsSqlRepository", "InsertOrReplaceBatchAsync", null,
+                        ex.ToString());
                     throw;
                 }
             }
