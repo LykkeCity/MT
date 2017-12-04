@@ -18,11 +18,11 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
             "[ClientId] [nvarchar] (64) NOT NULL, " +
             "[AccountId] [nvarchar] (64) NOT NULL, " +
             "[PositionId] [text] NULL, " +
-            "[Amount] [numeric](32, 10) NOT NULL, " +
-            "[Balance] [numeric](32, 10) NOT NULL, " +
+            "[Amount] float NOT NULL, " +
+            "[Balance] float NOT NULL, " +
             "[Type] [nvarchar] (50) NOT NULL, " +
             "[Comment] [text] NOT NULL, " +
-            "[WithdrawTransferLimit] [numeric](32, 10) NOT NULL, " +
+            "[WithdrawTransferLimit] float NOT NULL, " +
             "CONSTRAINT[PK_{0}] PRIMARY KEY CLUSTERED ([Id] ASC)" +
             ");";
 
@@ -70,9 +70,8 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
                     string msg = $"Error {ex.Message} \n" +
                            "Entity <IAccountTransactionsReport>: \n" +
                            entity.ToJson();
-                    Exception newException = new Exception(msg);                    
-                    await _log?.WriteErrorAsync("AccountTransactionsReportsSqlRepository", "InsertOrReplaceAsync", null, newException);
-                    throw newException;
+                    await _log?.WriteWarningAsync("AccountTransactionsReportsSqlRepository", "InsertOrReplaceAsync", null, msg);
+                    throw new Exception(msg);  ;
                 }
             }
         }

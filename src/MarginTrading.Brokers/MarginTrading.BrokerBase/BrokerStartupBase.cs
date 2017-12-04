@@ -3,7 +3,6 @@ using System.IO;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
-using Flurl.Http;
 using Lykke.Logs;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
@@ -53,7 +52,7 @@ namespace MarginTrading.BrokerBase
             services.AddSingleton(Configuration);
             services.AddMvc();
 
-            var isLive = IsLive(Configuration);
+            var isLive = Configuration.IsLive();
             var applicationSettings = Configuration.LoadSettings<TApplicationSettings>()
                 .Nested(s =>
                 {
@@ -95,7 +94,7 @@ namespace MarginTrading.BrokerBase
                     application.Run();
                 }
                 
-                await Log.WriteMonitorAsync("", "", "Started");
+                await Log.WriteMonitorAsync("", "", $"{Configuration.ServerType()} Started");
             });
 
             appLifetime.ApplicationStopping.Register(() =>
@@ -110,7 +109,7 @@ namespace MarginTrading.BrokerBase
             {
                 if (Log != null)
                 {
-                    await Log.WriteMonitorAsync("", "", "Terminating");
+                    await Log.WriteMonitorAsync("", "", $"{Configuration.ServerType()} Terminating");
                 }
                 
                 ApplicationContainer.Dispose();
@@ -123,7 +122,6 @@ namespace MarginTrading.BrokerBase
         {
             var logToConsole = new LogToConsole();
             var aggregateLogger = new AggregateLogger();
-            var isLiveEnv = isLive ? "Live" : "Demo";
 
             aggregateLogger.AddLog(logToConsole);
 
@@ -132,7 +130,7 @@ namespace MarginTrading.BrokerBase
                     aggregateLogger);
 
             var slackService =
-                new MtSlackNotificationsSender(commonSlackService, ApplicationName, isLiveEnv);
+                new MtSlackNotificationsSender(commonSlackService, ApplicationName, Configuration.ServerType());
 
             services.AddSingleton<ISlackNotificationsSender>(slackService);
 
@@ -143,7 +141,7 @@ namespace MarginTrading.BrokerBase
             {
                 var logToAzureStorage = services.UseLogToAzureStorage(
                     settings.Nested(s => s.MtBrokersLogs.DbConnString), slackService,
-                    ApplicationName + isLiveEnv + "Log",
+                    ApplicationName + Configuration.ServerType() + "Log",
                     aggregateLogger);
 
                 aggregateLogger.AddLog(logToAzureStorage);
@@ -174,12 +172,6 @@ namespace MarginTrading.BrokerBase
 
             RegisterCustomServices(services, builder, settings, Log, isLive);
             builder.Populate(services);
-        }
-
-        private static bool IsLive(IConfigurationRoot configuration)
-        {
-            return !string.IsNullOrEmpty(configuration["IsLive"]) &&
-                   bool.TryParse(configuration["IsLive"], out var isLive) && isLive;
         }
     }
 }

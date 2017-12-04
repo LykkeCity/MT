@@ -6,23 +6,23 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.Models
     {
         string Id { get; }
         string AccountId { get; }
-        decimal Balance { get; }
+        double Balance { get; }
         string BaseAssetId { get; }
         string ClientId { get; }
         string EventId { get; }
         DateTime EventTime { get; }
-        decimal FreeMargin { get; }
+        double FreeMargin { get; }
         bool IsEventStopout { get; }
-        decimal MarginAvailable { get; }
-        decimal MarginCall { get; }
-        decimal MarginInit { get; }
-        decimal MarginUsageLevel { get; }
-        decimal OpenPositionsCount { get; }
-        decimal PnL { get; }
-        decimal StopOut { get; }
-        decimal TotalCapital { get; }
+        double MarginAvailable { get; }
+        double MarginCall { get; }
+        double MarginInit { get; }
+        double MarginUsageLevel { get; }
+        double OpenPositionsCount { get; }
+        double PnL { get; }
+        double StopOut { get; }
+        double TotalCapital { get; }
         string TradingConditionId { get; }
-        decimal UsedMargin { get; }
-        decimal WithdrawTransferLimit { get; }
+        double UsedMargin { get; }
+        double WithdrawTransferLimit { get; }
     }
 }
