@@ -19,18 +19,18 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
             "[AccountId] [nvarchar] (64) NOT NULL, " +
             "[ClientId] [nvarchar] (64) NOT NULL, " +
             "[TradingConditionId] [nvarchar] (64) NOT NULL, " +
-            "[Balance] [numeric](32, 10) NOT NULL, " +
-            "[WithdrawTransferLimit] [numeric](32, 10) NOT NULL, " +
-            "[MarginCall] [numeric](32, 10) NOT NULL, " +
-            "[StopOut] [numeric](32, 10) NOT NULL, " +
-            "[TotalCapital] [numeric](32, 10) NOT NULL, " +
-            "[FreeMargin] [numeric](32, 10) NOT NULL, " +
-            "[MarginAvailable] [numeric](32, 10) NOT NULL, " +
-            "[UsedMargin] [numeric](32, 10) NOT NULL, " +
-            "[MarginInit] [numeric](32, 10) NOT NULL, " +
-            "[PnL] [numeric](32, 10) NOT NULL, " +
-            "[OpenPositionsCount] [numeric](32, 10) NOT NULL, " +
-            "[MarginUsageLevel] [numeric](32, 10) NOT NULL, " +
+            "[Balance] float NOT NULL, " +
+            "[WithdrawTransferLimit] float NOT NULL, " +
+            "[MarginCall] float NOT NULL, " +
+            "[StopOut] float NOT NULL, " +
+            "[TotalCapital] float NOT NULL, " + 
+            "[FreeMargin] float NOT NULL, " +
+            "[MarginAvailable] float NOT NULL, " +
+            "[UsedMargin] float NOT NULL, " +
+            "[MarginInit] float NOT NULL, " +
+            "[PnL] float NOT NULL, " +
+            "[OpenPositionsCount] float NOT NULL, " +
+            "[MarginUsageLevel] float NOT NULL, " +
             "[IsLive] [bit] NOT NULL); ";
 
         private const string CreatePkScript = "ALTER TABLE {0} ADD CONSTRAINT[PK_{0}] PRIMARY KEY CLUSTERED ([Id] ASC);";

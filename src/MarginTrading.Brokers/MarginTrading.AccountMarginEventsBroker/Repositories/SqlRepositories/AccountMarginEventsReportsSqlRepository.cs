@@ -18,21 +18,21 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
             "[ClientId] [nvarchar] (64) NOT NULL, " +
             "[AccountId] [nvarchar] (64) NOT NULL, " +
             "[TradingConditionId] [nvarchar] (64) NOT NULL, " +
-            "[Balance] [numeric](32, 10) NOT NULL, " +
+            "[Balance] float NOT NULL, " +
             "[BaseAssetId] [nvarchar] (64) NOT NULL, " +
             "[EventTime] [datetime] NOT NULL, " +
-            "[FreeMargin] [numeric](32, 10) NOT NULL, " +
+            "[FreeMargin] float NOT NULL, " +
             "[IsEventStopout] [bit] NOT NULL, " +
-            "[MarginAvailable] [numeric](32, 10) NOT NULL, " +
-            "[MarginCall] [numeric](32, 10) NOT NULL, " +
-            "[MarginInit] [numeric](32, 10) NOT NULL, " +
-            "[MarginUsageLevel] [numeric](32, 10) NOT NULL, " +
-            "[OpenPositionsCount] [numeric](32, 10) NOT NULL, " +
-            "[PnL] [numeric](32, 10) NOT NULL, " +
-            "[StopOut] [numeric](32, 10) NOT NULL, " +
-            "[TotalCapital] [numeric](32, 10) NOT NULL, " +
-            "[UsedMargin] [numeric](32, 10) NOT NULL, " +
-            "[WithdrawTransferLimit] [numeric](32, 10) NOT NULL, " +
+            "[MarginAvailable] float NOT NULL, " +
+            "[MarginCall] float NOT NULL, " +
+            "[MarginInit] float NOT NULL, " +
+            "[MarginUsageLevel] float NOT NULL, " +
+            "[OpenPositionsCount] float NOT NULL, " +
+            "[PnL] float NOT NULL, " +
+            "[StopOut] float NOT NULL, " +
+            "[TotalCapital] float NOT NULL, " +
+            "[UsedMargin] float NOT NULL, " +
+            "[WithdrawTransferLimit] float NOT NULL, " +
             "CONSTRAINT[PK_{0}] PRIMARY KEY CLUSTERED ([Id] ASC)" +
             ");";
 

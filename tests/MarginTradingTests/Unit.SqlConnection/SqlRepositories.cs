@@ -47,8 +47,8 @@ namespace MarginTradingTests.Unit.SqlConnection
                 PositionId= null,
                 Comment = "Comment",
                 Type = "Buy",
-                Amount = -9999999999999999999999.9999989999m,
-                Balance = 9999999999999999999999.9999989999m,
+                Amount = -9999999999999999999999.9999989999,
+                Balance = 9999999999999999999999.9999989999,
                 WithdrawTransferLimit = 0
             };
             // Insert
@@ -78,8 +78,8 @@ namespace MarginTradingTests.Unit.SqlConnection
                 PositionId = null,
                 Comment = "Comment",
                 Type = "Buy",
-                Amount = -9999999999999999999999.9999999999m,
-                Balance = 9999999999999999999999.1m,
+                Amount = -9999999999999999999999.9999999999,
+                Balance = 9999999999999999999999.1,
                 WithdrawTransferLimit = 0
             };
             // Arithmetic Exception

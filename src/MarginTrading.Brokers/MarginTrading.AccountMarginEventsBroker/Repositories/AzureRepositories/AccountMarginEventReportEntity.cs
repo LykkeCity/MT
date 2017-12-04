@@ -1,6 +1,6 @@
 ﻿using System;
-using Microsoft.WindowsAzure.Storage.Table;
 using MarginTrading.AccountMarginEventsBroker.Repositories.Models;
+using Microsoft.WindowsAzure.Storage.Table;
 
 namespace MarginTrading.AccountMarginEventsBroker.Repositories.AzureRepositories
 {
@@ -40,42 +40,29 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.AzureRepositories
 
         public string Id => EventId;
 
-        decimal IAccountMarginEventReport.Balance => Convert.ToDecimal(Balance);
-        decimal IAccountMarginEventReport.FreeMargin => Convert.ToDecimal(FreeMargin);
-        decimal IAccountMarginEventReport.MarginAvailable => Convert.ToDecimal(MarginAvailable);
-        decimal IAccountMarginEventReport.MarginCall => Convert.ToDecimal(MarginCall);
-        decimal IAccountMarginEventReport.MarginInit => Convert.ToDecimal(MarginInit);
-        decimal IAccountMarginEventReport.MarginUsageLevel => Convert.ToDecimal(MarginUsageLevel);
-        decimal IAccountMarginEventReport.OpenPositionsCount => Convert.ToDecimal(OpenPositionsCount);
-        decimal IAccountMarginEventReport.PnL => Convert.ToDecimal(PnL);
-        decimal IAccountMarginEventReport.StopOut => Convert.ToDecimal(StopOut);
-        decimal IAccountMarginEventReport.TotalCapital => Convert.ToDecimal(TotalCapital);
-        decimal IAccountMarginEventReport.UsedMargin => Convert.ToDecimal(UsedMargin);
-        decimal IAccountMarginEventReport.WithdrawTransferLimit => Convert.ToDecimal(WithdrawTransferLimit);
-
         public static AccountMarginEventReportEntity Create(IAccountMarginEventReport src)
         {
             return new AccountMarginEventReportEntity
             {
                 AccountId = src.AccountId,
-                Balance = (double)src.Balance,
+                Balance = src.Balance,
                 BaseAssetId = src.BaseAssetId,
                 ClientId = src.ClientId,
                 EventId = src.EventId,
                 EventTime = src.EventTime,
-                FreeMargin = (double)src.FreeMargin,
+                FreeMargin = src.FreeMargin,
                 IsEventStopout = src.IsEventStopout,
-                MarginAvailable = (double)src.MarginAvailable,
-                MarginCall = (double)src.MarginCall,
-                MarginInit = (double)src.MarginInit,
-                MarginUsageLevel = (double)src.MarginUsageLevel,
-                OpenPositionsCount = (double)src.OpenPositionsCount,
-                PnL = (double)src.PnL,
-                StopOut = (double)src.StopOut,
-                TotalCapital = (double)src.TotalCapital,
+                MarginAvailable = src.MarginAvailable,
+                MarginCall = src.MarginCall,
+                MarginInit = src.MarginInit,
+                MarginUsageLevel = src.MarginUsageLevel,
+                OpenPositionsCount = src.OpenPositionsCount,
+                PnL = src.PnL,
+                StopOut = src.StopOut,
+                TotalCapital = src.TotalCapital,
                 TradingConditionId = src.TradingConditionId,
-                UsedMargin = (double)src.UsedMargin,
-                WithdrawTransferLimit = (double)src.WithdrawTransferLimit
+                UsedMargin = src.UsedMargin,
+                WithdrawTransferLimit = src.WithdrawTransferLimit
             };
         }
     }

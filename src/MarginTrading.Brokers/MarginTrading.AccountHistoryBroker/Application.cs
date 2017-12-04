@@ -7,7 +7,6 @@ using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.BrokerBase;
 using MarginTrading.BrokerBase.Settings;
 using MarginTrading.Contract.BackendContracts;
-using System;
 using System.Threading.Tasks;
 
 namespace MarginTrading.AccountHistoryBroker
@@ -41,11 +40,11 @@ namespace MarginTrading.AccountHistoryBroker
                 ClientId = accountHistoryContract.ClientId,
                 Comment = accountHistoryContract.Comment,
                 Id = accountHistoryContract.Id,
-                Amount = accountHistoryContract.Amount.ToRoundedDecimal(),
-                Balance = accountHistoryContract.Balance.ToRoundedDecimal(),
+                Amount = (double) accountHistoryContract.Amount,
+                Balance = (double) accountHistoryContract.Balance,
                 Date = accountHistoryContract.Date,
                 Type = accountHistoryContract.Type.ToString(),
-                WithdrawTransferLimit = accountHistoryContract.WithdrawTransferLimit.ToRoundedDecimal(),
+                WithdrawTransferLimit = (double) accountHistoryContract.WithdrawTransferLimit,
                 PositionId = accountHistoryContract.OrderId
             };
             
