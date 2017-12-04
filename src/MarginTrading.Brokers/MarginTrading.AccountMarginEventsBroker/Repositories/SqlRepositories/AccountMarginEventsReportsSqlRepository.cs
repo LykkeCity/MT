@@ -86,9 +86,9 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
                     string msg = $"Error {ex.Message} \n" +
                            "Entity <IAccountMarginEventReport>: \n" +
                            report.ToJson();
-                    Exception newException = new Exception(msg);                    
-                    await _log?.WriteErrorAsync("AccountMarginEventsReportsSqlRepository", "InsertOrReplaceAsync", null, newException);
-                    throw newException;
+                    await _log?.WriteWarningAsync("AccountMarginEventsReportsSqlRepository", "InsertOrReplaceAsync",
+                        null, msg);
+                    throw new Exception(msg);
                 }
             }
         }

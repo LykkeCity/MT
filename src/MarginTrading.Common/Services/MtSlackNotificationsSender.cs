@@ -22,9 +22,8 @@ namespace MarginTrading.Common.Services
 
         public async Task SendAsync(string type, string sender, string message)
         {
-            if (!type.Equals(LykkeLogToAzureStorage.ErrorType, StringComparison.InvariantCultureIgnoreCase)
-                && !type.Equals(LykkeLogToAzureStorage.WarningType, StringComparison.InvariantCultureIgnoreCase)
-                && !type.Equals(LykkeLogToAzureStorage.FatalErrorType, StringComparison.InvariantCultureIgnoreCase))
+            if (type.Equals(LykkeLogToAzureStorage.MonitorType, StringComparison.InvariantCultureIgnoreCase)
+                || type.Equals(ChannelTypes.MtMmRisks, StringComparison.InvariantCultureIgnoreCase))
             {
                 await _sender.SendAsync(type, sender, message);
             }
