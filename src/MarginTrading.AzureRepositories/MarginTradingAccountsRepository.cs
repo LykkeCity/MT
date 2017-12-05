@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AzureStorage;
@@ -79,18 +80,16 @@ namespace MarginTrading.AzureRepositories
             return null;
         }
 
-        public async Task<bool> UpdateTradingConditionIdAsync(string accountId, string tradingConditionId)
+        public async Task<IMarginTradingAccount> UpdateTradingConditionIdAsync(string clientId, string accountId,
+            string tradingConditionId)
         {
-            var account = (await _tableStorage.GetDataAsync(entity => entity.Id == accountId)).FirstOrDefault();
-
-            if (account != null)
-            {
-                account.TradingConditionId = tradingConditionId;
-                await _tableStorage.InsertOrMergeAsync(account);
-                return true;
-            }
-
-            return false;
+            return await _tableStorage.MergeAsync(MarginTradingAccountEntity.GeneratePartitionKey(clientId),
+                MarginTradingAccountEntity.GenerateRowKey(accountId),
+                a =>
+                {
+                    a.TradingConditionId = tradingConditionId;
+                    return a;
+                });
         }
 
         public async Task AddAsync(MarginTradingAccount account)

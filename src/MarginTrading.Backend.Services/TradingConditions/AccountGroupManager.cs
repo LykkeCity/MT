@@ -13,15 +13,18 @@ namespace MarginTrading.Backend.Services.TradingConditions
         private readonly AccountGroupCacheService _accountGroupCacheService;
         private readonly IAccountGroupRepository _repository;
         private readonly MarginSettings _settings;
+        private readonly IClientNotifyService _clientNotifyService;
 
         public AccountGroupManager(
             AccountGroupCacheService accountGroupCacheService,
             IAccountGroupRepository accountGroupRepository,
-            MarginSettings settings)
+            MarginSettings settings,
+            IClientNotifyService clientNotifyService)
         {
             _accountGroupCacheService = accountGroupCacheService;
             _repository = accountGroupRepository;
             _settings = settings;
+            _clientNotifyService = clientNotifyService;
         }
 
         public void Start()
@@ -51,10 +54,14 @@ namespace MarginTrading.Backend.Services.TradingConditions
             await UpdateAccountGroupCache();
         }
 
-        public async Task AddOrReplaceAccountGroupAsync(IAccountGroup accountGroup)
+        public async Task<IAccountGroup> AddOrReplaceAccountGroupAsync(IAccountGroup accountGroup)
         {
             await _repository.AddOrReplaceAsync(accountGroup);
             await UpdateAccountGroupCache();
+
+            await _clientNotifyService.NotifyTradingConditionsChanged(accountGroup.TradingConditionId);
+
+            return accountGroup;
         }
     }
 }

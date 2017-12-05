@@ -4,12 +4,14 @@ using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Contract.BackendContracts;
+using MarginTrading.Contract.BackendContracts.AccountsManagement;
+using MarginTrading.Contract.BackendContracts.TradingConditions;
 
 namespace MarginTrading.Backend.Core.Mappers
 {
     public static class DomainToBackendContractMapper
     {
-        public static MarginTradingAccountBackendContract ToBackendContract(this IMarginTradingAccount src, bool isLive)
+        public static MarginTradingAccountBackendContract ToFullBackendContract(this IMarginTradingAccount src, bool isLive)
         {
             return new MarginTradingAccountBackendContract
             {
@@ -45,9 +47,9 @@ namespace MarginTrading.Backend.Core.Mappers
             };
         }
 
-        public static AccountAssetPairBackendContract ToBackendContract(this IAccountAssetPair src)
+        public static AccountAssetPairModel ToBackendContract(this IAccountAssetPair src)
         {
-            return new AccountAssetPairBackendContract
+            return new AccountAssetPairModel
             {
                 TradingConditionId = src.TradingConditionId,
                 BaseAssetId = src.BaseAssetId,
@@ -361,6 +363,42 @@ namespace MarginTrading.Backend.Core.Mappers
                 Date = src.Date,
                 Bid = src.Bid,
                 Ask = src.Ask
+            };
+        }
+
+        public static TradingConditionModel ToBackendContract(this ITradingCondition src)
+        {
+            return new TradingConditionModel
+            {
+                Id = src.Id,
+                Name = src.Name,
+                IsDefault = src.IsDefault
+            };
+        }
+        
+        public static AccountGroupModel ToBackendContract(this IAccountGroup src)
+        {
+            return new AccountGroupModel
+            {
+                TradingConditionId = src.TradingConditionId,
+                BaseAssetId = src.BaseAssetId,
+                MarginCall = src.MarginCall,
+                StopOut = src.StopOut,
+                DepositTransferLimit = src.DepositTransferLimit,
+                ProfitWithdrawalLimit = src.ProfitWithdrawalLimit
+            };
+        }
+
+        public static MarginTradingAccountModel ToBackendContract(this IMarginTradingAccount src)
+        {
+            return new MarginTradingAccountModel
+            {
+                Id = src.Id,
+                ClientId = src.ClientId,
+                TradingConditionId = src.TradingConditionId,
+                BaseAssetId = src.BaseAssetId,
+                Balance = src.Balance,
+                WithdrawTransferLimit = src.WithdrawTransferLimit
             };
         }
     }

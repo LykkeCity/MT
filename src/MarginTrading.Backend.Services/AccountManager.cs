@@ -73,6 +73,17 @@ namespace MarginTrading.Backend.Services
 
             return Task.WhenAll(tasks);
         }
+        
+        public override void Start()
+        {
+            var accounts = _repository.GetAllAsync().GetAwaiter().GetResult()
+                .Select(MarginTradingAccount.Create).GroupBy(x => x.ClientId).ToDictionary(x => x.Key, x => x.ToArray());
+
+            _accountsCacheService.InitAccountsCache(accounts);
+            _console.WriteLine($"InitAccountsCache (clients count:{accounts.Count})");
+
+            base.Start();
+        }
 
         private IReadOnlyList<IMarginTradingAccount> GetAccountsToWriteStats()
         {
@@ -93,28 +104,7 @@ namespace MarginTrading.Backend.Services
         }
         
         #endregion
-
-        public override void Start()
-        {
-            var accounts = _repository.GetAllAsync().GetAwaiter().GetResult()
-                .Select(MarginTradingAccount.Create).GroupBy(x => x.ClientId).ToDictionary(x => x.Key, x => x.ToArray());
-
-            _accountsCacheService.InitAccountsCache(accounts);
-            _console.WriteLine($"InitAccountsCache (clients count:{accounts.Count})");
-
-            base.Start();
-        }
-
-        private async Task ProcessAccountsSetChange(string clientId, IReadOnlyList<MarginTradingAccount> allClientsAccounts = null)
-        {
-            if (allClientsAccounts == null)
-            {
-                allClientsAccounts = (await _repository.GetAllAsync(clientId)).Select(MarginTradingAccount.Create).ToList();
-            }
-
-            _accountsCacheService.UpdateAccountsCache(clientId, allClientsAccounts);
-            await _rabbitMqNotifyService.UserUpdates(false, true, new[] {clientId});
-        }
+       
 
         public async Task UpdateBalanceAsync(IMarginTradingAccount account, decimal amount, AccountHistoryType historyType, string comment, string eventSourceId = null, bool changeTransferLimit = false)
         {
@@ -136,32 +126,6 @@ namespace MarginTrading.Backend.Services
 
             await _rabbitMqNotifyService.AccountHistory(account.Id, account.ClientId, amount, updatedAccount.Balance,
                 updatedAccount.WithdrawTransferLimit, historyType, comment, eventSourceId);
-        }
-
-        private void CheckDepositLimits(IMarginTradingAccount account, decimal amount)
-        {
-            //limit can not be more then max after deposit
-            if (amount > 0)
-            {
-                var accountGroup =
-                    _accountGroupCacheService.GetAccountGroup(account.TradingConditionId, account.BaseAssetId);
-
-                if (accountGroup.DepositTransferLimit > 0 && accountGroup.DepositTransferLimit < account.Balance + amount)
-                {
-                    throw new Exception(
-                        $"Margin Trading is in beta testing. The cash-ins are temporarily limited when Total Capital exceeds {accountGroup.DepositTransferLimit} {accountGroup.BaseAssetId}. Thank you for using Lykke Margin Trading, the limit will be cancelled soon!");
-                }
-            }
-        }
-
-        private void CheckTransferLimits(IMarginTradingAccount account, decimal amount)
-        {
-            //withdraw can not be more then limit
-            if (amount < 0 && account.WithdrawTransferLimit < Math.Abs(amount))
-            {
-                throw new Exception(
-                    $"Can not transfer {Math.Abs(amount)}. Current limit is {account.WithdrawTransferLimit}");
-            }
         }
 
         public async Task DeleteAccountAsync(string clientId, string accountId)
@@ -229,6 +193,38 @@ namespace MarginTrading.Backend.Services
             return newAccounts.ToArray();
         }
 
+        public async Task<IReadOnlyList<IMarginTradingAccount>> CreateAccounts(string tradingConditionId,
+            string baseAssetId)
+        {
+            var result = new List<IMarginTradingAccount>();
+            
+            var clientAccountGroups = _accountsCacheService.GetAll()
+                .GroupBy(a => a.ClientId)
+                .Where(g =>
+                    g.Any(a => a.TradingConditionId == tradingConditionId)
+                    && g.All(a => a.BaseAssetId != baseAssetId));
+
+            foreach (var group in clientAccountGroups)
+            {
+                try
+                {
+                    var account = CreateAccount(group.Key, baseAssetId, tradingConditionId);
+                    await _repository.AddAsync(account);
+                    await _rabbitMqNotifyService.AccountCreated(account);
+                    await ProcessAccountsSetChange(group.Key, group.Concat(new[] {account}).ToArray());
+                    result.Add(account);
+                }
+                catch (Exception e)
+                {
+                    await _log.WriteErrorAsync(nameof(AccountManager), "Create accounts by account group",
+                        $"clientId={group.Key}, tradingConditionsId={tradingConditionId}, baseAssetId={baseAssetId}",
+                        e);
+                }
+            }
+
+            return result;
+        }
+        
         public async Task<List<IOrder>> CloseAccountOrders(string accountId, OrderCloseReason reason)
         {
             var openedOrders = _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountId).ToArray();
@@ -251,6 +247,23 @@ namespace MarginTrading.Backend.Services
             return closedOrders;
         }
 
+        public async Task<IMarginTradingAccount> SetTradingCondition(string clientId, string accountId,
+            string tradingConditionId)
+        {
+            var result =
+                await _accountsRepository.UpdateTradingConditionIdAsync(clientId, accountId, tradingConditionId);
+
+            if (result != null)
+            {
+                _accountsCacheService.SetTradingCondition(clientId, accountId, tradingConditionId);
+
+                await _clientNotifyService.NotifyTradingConditionsChanged(tradingConditionId, accountId);
+            }
+            
+            return result;
+        }
+
+        
         #region Helpers
 
         private string[] GetBaseAssets(string tradingConditionsId)
@@ -300,7 +313,45 @@ namespace MarginTrading.Backend.Services
                 TradingConditionId = tradingConditionId
             };
         }
+        
+        private void CheckDepositLimits(IMarginTradingAccount account, decimal amount)
+        {
+            //limit can not be more then max after deposit
+            if (amount > 0)
+            {
+                var accountGroup =
+                    _accountGroupCacheService.GetAccountGroup(account.TradingConditionId, account.BaseAssetId);
+
+                if (accountGroup.DepositTransferLimit > 0 && accountGroup.DepositTransferLimit < account.Balance + amount)
+                {
+                    throw new Exception(
+                        $"Margin Trading is in beta testing. The cash-ins are temporarily limited when Total Capital exceeds {accountGroup.DepositTransferLimit} {accountGroup.BaseAssetId}. Thank you for using Lykke Margin Trading, the limit will be cancelled soon!");
+                }
+            }
+        }
+        
+        private void CheckTransferLimits(IMarginTradingAccount account, decimal amount)
+        {
+            //withdraw can not be more then limit
+            if (amount < 0 && account.WithdrawTransferLimit < Math.Abs(amount))
+            {
+                throw new Exception(
+                    $"Can not transfer {Math.Abs(amount)}. Current limit is {account.WithdrawTransferLimit}");
+            }
+        }
+        
+        private async Task ProcessAccountsSetChange(string clientId, IReadOnlyList<MarginTradingAccount> allClientsAccounts = null)
+        {
+            if (allClientsAccounts == null)
+            {
+                allClientsAccounts = (await _repository.GetAllAsync(clientId)).Select(MarginTradingAccount.Create).ToList();
+            }
+
+            _accountsCacheService.UpdateAccountsCache(clientId, allClientsAccounts);
+            await _rabbitMqNotifyService.UserUpdates(false, true, new[] {clientId});
+        }
 
         #endregion
+        
     }
 }

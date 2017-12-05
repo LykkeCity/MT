@@ -1,7 +1,9 @@
 ﻿using System.Linq;
 using MarginTrading.Backend.Core.MatchedOrders;
+using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Contract.BackendContracts;
+using MarginTrading.Contract.BackendContracts.TradingConditions;
 
 namespace MarginTrading.Backend.Core.Mappers
 {
@@ -105,6 +107,50 @@ namespace MarginTrading.Backend.Core.Mappers
                 WithdrawTransferLimit = src.WithdrawTransferLimit,
                 Comment = src.Comment,
                 OrderId = src.OrderId
+            };
+        }
+
+        public static ITradingCondition ToDomainContract(this TradingConditionModel src)
+        {
+            return new TradingCondition
+            {
+                Id = src.Id,
+                Name = src.Name,
+                IsDefault = src.IsDefault
+            };
+        }
+
+        public static IAccountGroup ToDomainContract(this AccountGroupModel src)
+        {
+            return new AccountGroup
+            {
+                TradingConditionId = src.TradingConditionId,
+                BaseAssetId = src.BaseAssetId,
+                MarginCall = src.MarginCall,
+                StopOut = src.StopOut,
+                DepositTransferLimit = src.DepositTransferLimit,
+                ProfitWithdrawalLimit = src.ProfitWithdrawalLimit
+            };
+        }
+
+        public static IAccountAssetPair ToDomainContract(this AccountAssetPairModel src)
+        {
+            return new AccountAssetPair
+            {
+                TradingConditionId = src.TradingConditionId,
+                BaseAssetId = src.BaseAssetId,
+                Instrument = src.Instrument,
+                LeverageInit = src.LeverageInit,
+                LeverageMaintenance = src.LeverageMaintenance,
+                SwapLong = src.SwapLong,
+                SwapShort = src.SwapShort,
+                CommissionLong = src.CommissionLong,
+                CommissionShort = src.CommissionShort,
+                CommissionLot = src.CommissionLot,
+                DeltaBid = src.DeltaBid,
+                DeltaAsk = src.DeltaAsk,
+                DealLimit = src.DealLimit,
+                PositionLimit = src.PositionLimit
             };
         }
     }
