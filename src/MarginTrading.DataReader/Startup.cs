@@ -28,6 +28,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Swashbuckle.Swagger.Model;
 using Swashbuckle.SwaggerGen.Annotations;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 #pragma warning disable 1591
 
