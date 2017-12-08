@@ -4,6 +4,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MarketMakerFeed;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Services.AssetPairs;
+using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Common.Extensions;
 
 namespace MarginTrading.Backend.Services
@@ -12,17 +13,24 @@ namespace MarginTrading.Backend.Services
     {
         private readonly IInternalMatchingEngine _matchingEngine;
         private readonly IAssetPairDayOffService _assetPairDayOffService;
+        private readonly IMaintenanceModeService _maintenanceModeService;
 
-        public MarketMakerService(IInternalMatchingEngine matchingEngine, IAssetPairDayOffService assetPairDayOffService)
+        public MarketMakerService(IInternalMatchingEngine matchingEngine, 
+            IAssetPairDayOffService assetPairDayOffService,
+            IMaintenanceModeService maintenanceModeService)
         {
             _matchingEngine = matchingEngine;
             _assetPairDayOffService = assetPairDayOffService;
+            _maintenanceModeService = maintenanceModeService;
         }
 
         public void ConsumeFeed(MarketMakerOrderCommandsBatchMessage batch)
         {
             batch.AssetPairId.RequiredNotNullOrWhiteSpace(nameof(batch.AssetPairId));
             batch.Commands.RequiredNotNull(nameof(batch.Commands));
+
+            if (_maintenanceModeService.CheckIsEnabled())
+                return;
             
             if (_assetPairDayOffService.IsDayOff(batch.AssetPairId))
                 return;

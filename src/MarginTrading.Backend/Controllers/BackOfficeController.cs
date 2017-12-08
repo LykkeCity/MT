@@ -38,7 +38,6 @@ namespace MarginTrading.Backend.Controllers
         private readonly MarginSettings _marginSettings;
         private readonly IMarginTradingOperationsLogService _operationsLogService;
         private readonly IConsole _consoleWriter;
-        private readonly IMaintenanceModeService _maintenanceModeService;
         private readonly ILog _log;
         private readonly IMarginTradingSettingsService _marginTradingSettingsService;
 
@@ -54,7 +53,6 @@ namespace MarginTrading.Backend.Controllers
             MarginSettings marginSettings,
             IMarginTradingOperationsLogService operationsLogService,
             IConsole consoleWriter,
-            IMaintenanceModeService maintenanceModeService,
             ILog log,
             IMarginTradingSettingsService marginTradingSettingsService)
         {
@@ -68,7 +66,6 @@ namespace MarginTrading.Backend.Controllers
             _marginSettings = marginSettings;
             _operationsLogService = operationsLogService;
             _consoleWriter = consoleWriter;
-            _maintenanceModeService = maintenanceModeService;
             _log = log;
             _marginTradingSettingsService = marginTradingSettingsService;
         }
@@ -439,29 +436,6 @@ namespace MarginTrading.Backend.Controllers
         {
             await _marginTradingSettingsService.SetMarginTradingEnabled(clientId, _marginSettings.IsLive, enabled);
             return Ok();
-        }
-
-        #endregion
-
-
-        #region Service
-
-        [HttpPost]
-        [Route(LykkeConstants.MaintenanceModeRoute)]
-        public IActionResult SetMaintenanceMode([FromBody]bool enabled)
-        {
-            _maintenanceModeService.SetMode(enabled);
-
-            return Ok();
-        }
-
-        [HttpGet]
-        [Route(LykkeConstants.MaintenanceModeRoute)]
-        public IActionResult GetMaintenanceMode()
-        {
-            var result = _maintenanceModeService.CheckIsEnabled();
-
-            return Ok(result);
         }
 
         #endregion
