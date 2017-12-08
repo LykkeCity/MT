@@ -59,7 +59,7 @@ namespace MarginTrading.Backend
             try
             {
                 _rabbitMqService.Subscribe<MarketMakerOrderCommandsBatchMessage>(
-                    _marginSettings.MarketMakerRabbitMqSettings, _marginSettings.Env, HandleNewOrdersMessage);
+                    _marginSettings.MarketMakerRabbitMqSettings, "test", HandleNewOrdersMessage);
 
                 _rabbitMqService.Subscribe<MatchingEngineRouteRisksCommand>(_marginSettings.RisksRabbitMqSettings,
                     _marginSettings.Env, _matchingEngineRoutesManager.HandleRiskManagerCommand);
