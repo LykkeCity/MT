@@ -299,6 +299,9 @@ namespace MarginTrading.Client
 
             [JsonProperty("l")]
             public double Low { get; set; }
+
+            [JsonProperty("v")]
+            public double TradingVolume { get; set; }
         }
 
         public void Prices(string instrument = null)
@@ -307,7 +310,7 @@ namespace MarginTrading.Client
             IDisposable subscription = _realmProxy.Services.GetSubject<CandleMessage>(topicName)
                 .Subscribe(info =>
                 {
-                    Console.WriteLine($"{info.AssetPairId}/{info.PriceType}/{info.Open}/{info.Close}/{info.Low}/{info.High}/{info.TimeInterval}/{info.Timestamp}");
+                    Console.WriteLine($"{info.AssetPairId}-{info.PriceType}-{info.TimeInterval} | {info.Timestamp} | {info.Open}/{info.Close}/{info.Low}/{info.High} | {info.TradingVolume}");
                 });
 
 
