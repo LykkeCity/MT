@@ -4,6 +4,8 @@
     {
         public enum ErrorCodeType
         {
+            MaintananceMode = 11,
+            
             InconsistentData = 100,
             InvalidInputField = 101,
 
