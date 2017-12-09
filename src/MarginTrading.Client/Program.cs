@@ -30,7 +30,7 @@
                 //client.GetClientOrders();
                 //client.ChangeOrderLimits();
 
-                client.Prices("eurusd");
+                client.Prices("btcusd");
                 //client.UserUpdates();
 
                 client.Close();

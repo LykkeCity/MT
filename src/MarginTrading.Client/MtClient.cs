@@ -306,16 +306,23 @@ namespace MarginTrading.Client
 
         public void Prices(string instrument = null)
         {
-            var topicName = !string.IsNullOrEmpty(instrument) ? $"candle.mt.{instrument}.mid.sec" : "prices.update";
-            IDisposable subscription = _realmProxy.Services.GetSubject<CandleMessage>(topicName)
+            var candlesTopic = !string.IsNullOrEmpty(instrument) ? $"candle.mt.{instrument}.mid.sec" : "prices.update";
+            var candlesSubscription = _realmProxy.Services.GetSubject<CandleMessage>(candlesTopic)
                 .Subscribe(info =>
                 {
-                    Console.WriteLine($"{info.AssetPairId}-{info.PriceType}-{info.TimeInterval} | {info.Timestamp} | {info.Open}/{info.Close}/{info.Low}/{info.High} | {info.TradingVolume}");
+                    Console.WriteLine(
+                        $"{info.AssetPairId}-{info.PriceType}-{info.TimeInterval} | {info.Timestamp} | {info.Open}/{info.Close}/{info.Low}/{info.High} | {info.TradingVolume}");
+                });
+            var quoteTopic = $"quote.mt.{instrument}.bid";
+            var quotesSubscription = _realmProxy.Services.GetSubject<dynamic>(quoteTopic)
+                .Subscribe(info =>
+                {
+                    Console.WriteLine($"{info.m}-{info.a}-{info.pt}-{info.t} | {info.p}");
                 });
 
-
             Console.ReadLine();
-            subscription.Dispose();
+            candlesSubscription.Dispose();
+            quotesSubscription.Dispose();
         }
 
         public void UserUpdates()
