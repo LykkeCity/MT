@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Autofac;
+using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.DayOffSettings;
 using MarginTrading.Backend.Core.MatchingEngines;
@@ -83,7 +84,8 @@ namespace MarginTradingTests
             dayOffSettingsService.Setup(s => s.GetScheduleSettings()).Returns(settings);
             dayOffSettingsService.Setup(s => s.GetExclusions(It.IsNotNull<string>())).Returns(ImmutableArray<DayOffExclusion>.Empty);
             builder.RegisterInstance(dayOffSettingsService.Object).SingleInstance();
-            
+            builder.Register<IDayOffSettingsRepository>(c => new DayOffSettingsRepository(c.Resolve<IMarginTradingBlobRepository>())).SingleInstance();
+
             builder.RegisterType<ClientTokenService>()
                 .As<IClientTokenService>()
                 .SingleInstance();
