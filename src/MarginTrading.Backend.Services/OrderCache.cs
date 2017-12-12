@@ -13,9 +13,9 @@ namespace MarginTrading.Backend.Services
 {
     public interface IOrderReader
     {
-        IImmutableList<Order> GetAll();
-        IImmutableList<Order> GetActive();
-        IImmutableList<Order> GetPending();
+        ImmutableArray<Order> GetAll();
+        ImmutableArray<Order> GetActive();
+        ImmutableArray<Order> GetPending();
     }
 
     public class OrdersCache : IOrderReader
@@ -35,22 +35,22 @@ namespace MarginTrading.Backend.Services
         public OrderCacheGroup WaitingForExecutionOrders { get; private set; }
         public OrderCacheGroup ClosingOrders { get; private set; }
 
-        public IImmutableList<Order> GetAll()
+        public ImmutableArray<Order> GetAll()
         {
             using (_contextFactory.GetReadSyncContext($"{nameof(OrdersCache)}.{nameof(GetAll)}"))
                 return ActiveOrders.GetAllOrders()
                     .Union(WaitingForExecutionOrders.GetAllOrders())
-                    .Union(ClosingOrders.GetAllOrders()).ToImmutableList();
+                    .Union(ClosingOrders.GetAllOrders()).ToImmutableArray();
         }
 
-        public IImmutableList<Order> GetActive()
+        public ImmutableArray<Order> GetActive()
         {
-            return ActiveOrders.GetAllOrders().ToImmutableList();
+            return ActiveOrders.GetAllOrders().ToImmutableArray();
         }
 
-        public IImmutableList<Order> GetPending()
+        public ImmutableArray<Order> GetPending()
         {
-            return WaitingForExecutionOrders.GetAllOrders().ToImmutableList();
+            return WaitingForExecutionOrders.GetAllOrders().ToImmutableArray();
         }
 
         public Order GetOrderById(string orderId)

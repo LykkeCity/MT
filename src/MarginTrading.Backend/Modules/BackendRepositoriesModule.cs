@@ -96,6 +96,10 @@ namespace MarginTrading.Backend.Modules
 				AzureRepoFactories.MarginTrading.CreateRiskSystemCommandsLogRepository(_settings.Nested(s => s.Db.LogsConnString), _log)
 			).SingleInstance();
 
+			builder.Register(ctx =>
+				AzureRepoFactories.MarginTrading.CreateDayOffSettingsRepository(_settings.Nested(s => s.Db.MarginTradingConnString))
+			).SingleInstance();
+
 			builder.RegisterType<MatchingEngineInMemoryRepository>()
 				.As<IMatchingEngineRepository>()
 				.SingleInstance();
