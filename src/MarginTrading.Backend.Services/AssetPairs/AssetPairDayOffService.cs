@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
+using MarginTrading.Backend.Core.DayOffSettings;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Common.Services;
 
@@ -9,61 +11,48 @@ namespace MarginTrading.Backend.Services.AssetPairs
     public class AssetPairDayOffService : IAssetPairDayOffService
     {
         private readonly IDateService _dateService;
-        private readonly ScheduleSettings _scheduleSettings;
-        private readonly HashSet<string> _assetPairsWithoutDayOff;
+        private readonly IDayOffSettingsService _dayOffSettingsService;
 
-        public AssetPairDayOffService(IDateService dateService,
-            ScheduleSettings scheduleSettings)
+        public AssetPairDayOffService(IDateService dateService, IDayOffSettingsService dayOffSettingsService)
         {
             _dateService = dateService;
-            _scheduleSettings = scheduleSettings;
-            _assetPairsWithoutDayOff = _scheduleSettings.AssetPairsWithoutDayOff?.ToHashSet() ?? new HashSet<string>();
+            _dayOffSettingsService = dayOffSettingsService;
         }
 
         public bool IsDayOff(string assetPairId)
         {
-            return IsDayOff(assetPairId, TimeSpan.Zero);
+            return IsNowNotInSchedule(assetPairId, TimeSpan.Zero);
         }
         
-        public bool IsPendingOrderDisabled(string assetPairId)
+        public bool ArePendingOrdersDisabled(string assetPairId)
         {
-            return IsDayOff(assetPairId, _scheduleSettings.PendingOrdersCutOff);
+            return IsNowNotInSchedule(assetPairId, _dayOffSettingsService.GetScheduleSettings().PendingOrdersCutOff);
         }
 
-        public bool IsPendingOrdersDisabledTime()
-        {
-            return IsNowNotInSchedule(_scheduleSettings.PendingOrdersCutOff);
-        }
-
-        public bool IsAssetPairHasNoDayOff(string assetPairId)
-        {
-            return _assetPairsWithoutDayOff.Contains(assetPairId);
-        }
-
-        private bool IsDayOff(string assetPairId, TimeSpan cutOff)
-        {
-            if (IsAssetPairHasNoDayOff(assetPairId))
-                return false;
-
-            return IsNowNotInSchedule(cutOff);
-        }
-        
         /// <summary>
         /// Check if current time is not in schedule
         /// </summary>
+        /// <param name="assetPairId"></param>
         /// <param name="scheduleCutOff">
-        /// Timespan to reduce schedule from both sides
+        ///     Timespan to reduce schedule from both sides
         /// </param>
         /// <returns></returns>
-        private bool IsNowNotInSchedule(TimeSpan scheduleCutOff)
+        private bool IsNowNotInSchedule(string assetPairId, TimeSpan scheduleCutOff)
         {
             var currentDateTime = _dateService.Now();
+            var isDayOffByExclusion = IsDayOffByExclusion(assetPairId, scheduleCutOff, currentDateTime);
+            if (isDayOffByExclusion != null)
+                return isDayOffByExclusion.Value; 
             
-            var closestDayOffStart = GetNextWeekday(currentDateTime, _scheduleSettings.DayOffStartDay)
-                                    .Add(_scheduleSettings.DayOffStartTime.Subtract(scheduleCutOff));
+            var scheduleSettings = _dayOffSettingsService.GetScheduleSettings();
+            if (scheduleSettings.AssetPairsWithoutDayOff.Contains(assetPairId))
+                return false;
+            
+            var closestDayOffStart = GetNextWeekday(currentDateTime, scheduleSettings.DayOffStartDay)
+                                    .Add(scheduleSettings.DayOffStartTime.Subtract(scheduleCutOff));
 
-            var closestDayOffEnd = GetNextWeekday(currentDateTime, _scheduleSettings.DayOffEndDay)
-                                    .Add(_scheduleSettings.DayOffEndTime.Add(scheduleCutOff));
+            var closestDayOffEnd = GetNextWeekday(currentDateTime, scheduleSettings.DayOffEndDay)
+                                    .Add(scheduleSettings.DayOffEndTime.Add(scheduleCutOff));
 
             if (closestDayOffStart > closestDayOffEnd)
             {
@@ -74,7 +63,26 @@ namespace MarginTrading.Backend.Services.AssetPairs
                    //don't even try to understand
                    || currentDateTime < closestDayOffEnd.AddDays(-7);
         }
-        
+
+        [CanBeNull]
+        private bool? IsDayOffByExclusion(string assetPairId, TimeSpan scheduleCutOff, DateTime currentDateTime)
+        {
+            var dayOffExclusions = _dayOffSettingsService.GetExclusions(assetPairId);
+            return dayOffExclusions
+                .Where(e =>
+                {
+                    var start = e.IsTradeEnabled ? e.Start.Add(scheduleCutOff) : e.Start.Subtract(scheduleCutOff);
+                    var end = e.IsTradeEnabled ? e.End.Subtract(scheduleCutOff) : e.End.Add(scheduleCutOff);
+                    return IsBetween(currentDateTime, start, end);
+                }).DefaultIfEmpty()
+                .Select(e => e == null ? (bool?) null : !e.IsTradeEnabled).Max();
+        }
+
+        private static bool IsBetween(DateTime currentDateTime, DateTime start, DateTime end)
+        {
+            return start <= currentDateTime && currentDateTime <= end;
+        }
+
         private static DateTime GetNextWeekday(DateTime start, DayOfWeek day)
         {
             var daysToAdd = ((int) day - (int) start.DayOfWeek + 7) % 7;

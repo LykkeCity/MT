@@ -180,7 +180,7 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public ICollection<Order> GetAllOrders()
+        public IReadOnlyCollection<Order> GetAllOrders()
         {
             _lockSlim.EnterReadLock();
 

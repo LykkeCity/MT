@@ -287,7 +287,7 @@ namespace MarginTrading.Backend.Services
                     var price = pair.GetPriceForOrderType(order.GetCloseType());
 
                     if (order.IsSuitablePriceForPendingOrder(price) &&
-                        !_assetPairDayOffService.IsPendingOrderDisabled(order.Instrument))
+                        !_assetPairDayOffService.ArePendingOrdersDisabled(order.Instrument))
                         yield return order;
                 }
             }
