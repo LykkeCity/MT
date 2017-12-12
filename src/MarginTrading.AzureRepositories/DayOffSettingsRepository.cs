@@ -54,6 +54,8 @@ namespace MarginTrading.AzureRepositories
 
         private static DayOffSettingsRoot Convert(DayOffSettingsRootStorageModel settings)
         {
+            if (settings == null)
+                return null;
 
             return new DayOffSettingsRoot(
                 settings.Exclusions.ToImmutableDictionary(s => s.Key, s =>

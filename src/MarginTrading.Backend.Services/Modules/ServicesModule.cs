@@ -148,6 +148,7 @@ namespace MarginTrading.Backend.Services.Modules
 			
 			builder.RegisterType<DayOffSettingsService>()
 				.As<IDayOffSettingsService>()
+				.As<IStartable>()
 				.SingleInstance();
         }
 	}
