@@ -37,6 +37,8 @@ namespace MarginTrading.DataReader.Controllers
         [HttpGet]
         public async Task<AccountHistoryBackendResponse> GetAccountHistoryByTypes([FromQuery] AccountHistoryBackendRequest request)
         {
+            request.From = request.From?.ToUniversalTime();
+            request.To = request.To?.ToUniversalTime();
             var clientAccountIds = string.IsNullOrEmpty(request.AccountId)
                 ? (await _accountsRepository.GetAllAsync(request.ClientId)).Select(item => item.Id).ToArray()
                 : new[] {request.AccountId};
@@ -67,6 +69,8 @@ namespace MarginTrading.DataReader.Controllers
         public async Task<Dictionary<string, AccountHistoryBackendContract[]>> GetAccountHistoryByAccounts(
             [FromQuery] string accountId = null, [FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null)
         {
+            from = from?.ToUniversalTime();
+            to = to?.ToUniversalTime();
             var accountIds = accountId != null
                 ? new[] {accountId}
                 : (await _accountsRepository.GetAllAsync()).Select(item => item.Id).ToArray();
@@ -80,6 +84,8 @@ namespace MarginTrading.DataReader.Controllers
         public async Task<AccountNewHistoryBackendResponse> GetAccountHistoryTimeline(
             [FromQuery] AccountHistoryBackendRequest request)
         {
+            request.From = request.From?.ToUniversalTime();
+            request.To = request.To?.ToUniversalTime();
             var clientAccountIds = string.IsNullOrEmpty(request.AccountId)
                 ? (await _accountsRepository.GetAllAsync(request.ClientId)).Select(item => item.Id).ToArray()
                 : new[] {request.AccountId};

@@ -71,7 +71,7 @@ namespace MarginTrading.AzureRepositories
         public async Task<IReadOnlyList<IMarginTradingAccountHistory>> GetAsync(string[] accountIds, DateTime? from,
             DateTime? to)
         {
-            return (await _tableStorage.WhereAsync(accountIds, from ?? DateTime.MinValue, to ?? DateTime.MaxValue, ToIntervalOption.IncludeTo))
+            return (await _tableStorage.WhereAsync(accountIds, from ?? DateTime.MinValue, to?.Date.AddDays(1) ?? DateTime.MaxValue, ToIntervalOption.IncludeTo))
                 .OrderByDescending(item => item.Date).ToList();
         }
     }
