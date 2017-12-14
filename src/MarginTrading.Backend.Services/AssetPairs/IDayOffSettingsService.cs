@@ -15,5 +15,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
         ScheduleSettings GetScheduleSettings();
         ScheduleSettings SetScheduleSettings(ScheduleSettings scheduleSettings);
         IReadOnlyList<DayOffExclusion> GetExclusions(string assetPairId);
+        void DeleteExclusion(Guid id);
+        ImmutableDictionary<string, ImmutableArray<DayOffExclusion>> GetCompiledExclusions();
     }
 }
