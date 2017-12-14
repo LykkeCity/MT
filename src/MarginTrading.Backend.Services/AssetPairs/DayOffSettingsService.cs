@@ -33,6 +33,11 @@ namespace MarginTrading.Backend.Services.AssetPairs
             return GetRoot().Exclusions;
         }
 
+        public ImmutableDictionary<string, ImmutableArray<DayOffExclusion>> GetCompiledExclusions()
+        {
+            return _exclusionsByAssetPairId.Get();
+        }
+
         public ScheduleSettings GetScheduleSettings()
         {
             return GetRoot().ScheduleSettings;
@@ -46,8 +51,18 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         public IReadOnlyList<DayOffExclusion> GetExclusions(string assetPairId)
         {
-            var immutableDictionary = _exclusionsByAssetPairId.Get();
-            return immutableDictionary.GetValueOrDefault(assetPairId, ImmutableArray<DayOffExclusion>.Empty);
+            return _exclusionsByAssetPairId.Get().GetValueOrDefault(assetPairId, ImmutableArray<DayOffExclusion>.Empty);
+        }
+
+        public void DeleteExclusion(Guid id)
+        {
+            id.RequiredNotEqualsTo(default, nameof(id));
+            Change(root =>
+            {
+                root.Exclusions.ContainsKey(id).RequiredEqualsTo(true, "oldExclusion",
+                    "Trying to delete non-existent exclusion with id " + id);
+                return new DayOffSettingsRoot(root.Exclusions.Remove(id), root.ScheduleSettings);
+            });
         }
 
         private DayOffSettingsRoot GetRoot()
@@ -57,11 +72,14 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         public DayOffExclusion GetExclusion(Guid id)
         {
+            id.RequiredNotEqualsTo(default, nameof(id));
             return GetExclusions().GetValueOrDefault(id);
         }
 
-        public DayOffExclusion CreateExclusion(DayOffExclusion exclusion)
+        public DayOffExclusion CreateExclusion([NotNull] DayOffExclusion exclusion)
         {
+            if (exclusion == null) throw new ArgumentNullException(nameof(exclusion));
+            exclusion.Id.RequiredNotEqualsTo(default, nameof(exclusion.Id));
             Change(root =>
             {
                 root.Exclusions.ContainsKey(exclusion.Id).RequiredEqualsTo(false, "oldExclusion",
@@ -71,8 +89,10 @@ namespace MarginTrading.Backend.Services.AssetPairs
             return exclusion;
         }
 
-        public DayOffExclusion UpdateExclusion(DayOffExclusion exclusion)
+        public DayOffExclusion UpdateExclusion([NotNull] DayOffExclusion exclusion)
         {
+            if (exclusion == null) throw new ArgumentNullException(nameof(exclusion));
+            exclusion.Id.RequiredNotEqualsTo(default, nameof(exclusion.Id));
             Change(root =>
             {
                 root.Exclusions.ContainsKey(exclusion.Id).RequiredEqualsTo(true, "oldExclusion",
