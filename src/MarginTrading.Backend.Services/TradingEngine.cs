@@ -367,7 +367,8 @@ namespace MarginTrading.Backend.Services
             order.StartClosingDate = DateTime.UtcNow;
             order.CloseReason = reason;
 
-            if (string.IsNullOrEmpty(order.CloseOrderbookId))
+            if (string.IsNullOrEmpty(order.CloseOrderbookId) ||
+                order.CloseOrderbookId == MatchingEngineConstants.Reject)
             {
                 var me = _meRouter.GetMatchingEngine(order.ClientId, order.TradingConditionId, order.Instrument, order.GetCloseType());
 
@@ -431,7 +432,8 @@ namespace MarginTrading.Backend.Services
             var order = GetActiveOrderForClose(orderId);
             IMatchingEngineBase me;
 
-            if (string.IsNullOrEmpty(order.CloseOrderbookId))
+            if (string.IsNullOrEmpty(order.CloseOrderbookId) ||
+                order.CloseOrderbookId == MatchingEngineConstants.Reject)
             {
                 me = _meRouter.GetMatchingEngine(order.ClientId, order.TradingConditionId, order.Instrument,
                     order.GetCloseType());

@@ -33,6 +33,8 @@ using WampSharp.Binding;
 using WampSharp.V2;
 using WampSharp.V2.MetaApi;
 using WampSharp.V2.Realm;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
+
 #pragma warning disable 1591
 
 namespace MarginTrading.Frontend
