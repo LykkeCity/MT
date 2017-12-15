@@ -31,7 +31,4 @@
     <PackageReference Include="Lykke.RabbitMqBroker" Version="4.0.5" />
     <PackageReference Include="Lykke.Common" Version="3.0.2" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="OrderEventsConsumers" />
-  </ItemGroup>
 </Project>

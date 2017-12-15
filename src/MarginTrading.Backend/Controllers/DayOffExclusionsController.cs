@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using JetBrains.Annotations;
+using MarginTrading.Backend.Contracts.DayOffSettings;
 using MarginTrading.Backend.Core.DayOffSettings;
 using MarginTrading.Backend.Services.AssetPairs;
-using MarginTrading.Contract.BackendContracts.DayOffSettings;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MarginTrading.Backend.Controllers
@@ -69,7 +69,7 @@ namespace MarginTrading.Backend.Controllers
         }
 
         /// <summary>
-        /// Delete exclusions
+        /// Delete exclusion
         /// </summary>
         [HttpDelete]
         [Route("{id}")]

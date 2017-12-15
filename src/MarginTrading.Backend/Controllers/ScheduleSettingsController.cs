@@ -1,8 +1,7 @@
-﻿using System.Linq;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
+using MarginTrading.Backend.Contracts.DayOffSettings;
 using MarginTrading.Backend.Core.DayOffSettings;
 using MarginTrading.Backend.Services.AssetPairs;
-using MarginTrading.Contract.BackendContracts.DayOffSettings;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MarginTrading.Backend.Controllers
