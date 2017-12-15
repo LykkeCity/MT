@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace MarginTrading.Contract.BackendContracts.DayOffSettings
+namespace MarginTrading.Backend.Contracts.DayOffSettings
 {
     public class CompiledExclusionsListContract
     {
