@@ -9,7 +9,7 @@ namespace MarginTradingTests
         [Test]
         public void PointCalculationsCorrect()
         {
-            decimal value = MarginTradingCalculations.GetVolumeFromPoints(1, 3);
+            var value = MarginTradingCalculations.GetVolumeFromPoints(1, 3);
             Assert.AreEqual(0.001, value);
 
             value = MarginTradingCalculations.GetVolumeFromPoints(10, 3);

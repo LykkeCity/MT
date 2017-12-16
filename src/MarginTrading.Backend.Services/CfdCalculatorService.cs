@@ -19,7 +19,7 @@ namespace MarginTrading.Backend.Services
         {
             var asset = _assetPairsCache.GetAssetPairById(instrument);
 
-            string baseAssetId = asset.BaseAssetId;
+            var baseAssetId = asset.BaseAssetId;
 
             if (accountAssetId == baseAssetId)
             {
@@ -41,7 +41,7 @@ namespace MarginTrading.Backend.Services
         {
             var assetPair = _assetPairsCache.GetAssetPairById(assetPairId);
 
-            string quoteAssetId = assetPair.QuoteAssetId;
+            var quoteAssetId = assetPair.QuoteAssetId;
 
             if (accountAssetId == quoteAssetId)
             {

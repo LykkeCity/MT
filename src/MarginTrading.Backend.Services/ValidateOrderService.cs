@@ -119,8 +119,8 @@ namespace MarginTrading.Backend.Services
         public void ValidateOrderStops(OrderDirection type, BidAskPair quote, decimal deltaBid, decimal deltaAsk, decimal? takeProfit,
             decimal? stopLoss, decimal? expectedOpenPrice, int assetAccuracy)
         {
-            decimal deltaBidValue = MarginTradingCalculations.GetVolumeFromPoints(deltaBid, assetAccuracy);
-            decimal deltaAskValue = MarginTradingCalculations.GetVolumeFromPoints(deltaAsk, assetAccuracy);
+            var deltaBidValue = MarginTradingCalculations.GetVolumeFromPoints(deltaBid, assetAccuracy);
+            var deltaAskValue = MarginTradingCalculations.GetVolumeFromPoints(deltaAsk, assetAccuracy);
 
             if (expectedOpenPrice.HasValue)
             {
@@ -170,8 +170,8 @@ namespace MarginTrading.Backend.Services
             else
             {
                 //check TP/SL for market order
-                decimal minGray = Math.Round(quote.Bid - deltaBidValue, assetAccuracy);
-                decimal maxGray = Math.Round(quote.Ask + deltaAskValue, assetAccuracy);
+                var minGray = Math.Round(quote.Bid - deltaBidValue, assetAccuracy);
+                var maxGray = Math.Round(quote.Ask + deltaAskValue, assetAccuracy);
 
                 if (type == OrderDirection.Buy)
                 {

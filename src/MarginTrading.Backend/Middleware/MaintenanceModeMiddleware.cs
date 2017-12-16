@@ -26,7 +26,7 @@ namespace MarginTrading.Backend.Middleware
 
         public async Task Invoke(HttpContext context)
         {
-            bool isMaintenanceMode = false;
+            var isMaintenanceMode = false;
             try
             {
                 isMaintenanceMode = !context.Request.Path.ToString().StartsWith("/swagger") &&

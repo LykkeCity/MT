@@ -40,7 +40,7 @@ namespace MarginTrading.Backend.Core.Orderbooks
             {
                 var orders = new List<LimitOrder>();
 
-                foreach (LimitOrder order in pair.Value)
+                foreach (var order in pair.Value)
                 {
                     orders.Add(new LimitOrder
                     {
@@ -80,7 +80,7 @@ namespace MarginTrading.Backend.Core.Orderbooks
                 ? DateTime.UtcNow.AddSeconds(-maxMarketMakerLimitOrderAge)
                 : DateTime.MinValue;
 
-            foreach (KeyValuePair<decimal, List<LimitOrder>> pair in source)
+            foreach (var pair in source)
                 foreach (var limitOrder in pair.Value.OrderBy(item => item.CreateDate))
                 {
                     if (!string.IsNullOrEmpty(limitOrder.MarketMakerId) &&
@@ -109,7 +109,7 @@ namespace MarginTrading.Backend.Core.Orderbooks
         public void Update(Order order, OrderDirection orderTypeToMatch, IEnumerable<MatchedOrder> matchedOrders)
         {
             var source = orderTypeToMatch == OrderDirection.Buy ? Buy : Sell;
-            foreach (MatchedOrder matchedOrder in matchedOrders)
+            foreach (var matchedOrder in matchedOrders)
             {
                 var bookOrder = source[matchedOrder.Price].First(item => item.Id == matchedOrder.OrderId);
 

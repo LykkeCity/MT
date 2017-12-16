@@ -7,7 +7,7 @@
         public const string EthAssetId = "ETH";
         public const string SolarAssetId = "SLR";
 
-        public static decimal DefaultDemoBalance = 50000;
+        public const decimal DefaultDemoBalance = 50000;
         public const decimal DefaultMarginCall = 0.8M;
         public const decimal DefaultStopOut = 0.95M;
 

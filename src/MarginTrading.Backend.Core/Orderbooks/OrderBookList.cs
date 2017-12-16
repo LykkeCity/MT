@@ -56,10 +56,10 @@ namespace MarginTrading.Backend.Core.Orderbooks
 
         public void Update(Order order, OrderDirection orderTypeToMatch, IEnumerable<MatchedOrder> matchedOrders)
         {
-            if (!_orderBooks.ContainsKey(order.Instrument))
-                return;
-
-            _orderBooks[order.Instrument].Update(order, orderTypeToMatch, matchedOrders);
+            if (_orderBooks.TryGetValue(order.Instrument, out var orderBook))
+            {
+                orderBook.Update(order, orderTypeToMatch, matchedOrders);
+            }
         }
 
         public OrderBook GetOrderBook(string instrumentId)

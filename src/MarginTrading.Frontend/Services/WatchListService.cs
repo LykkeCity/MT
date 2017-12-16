@@ -41,7 +41,7 @@ namespace MarginTrading.Frontend.Services
         public async Task<WatchListResult<IMarginTradingWatchList>> AddAsync(string id, string clientId, string name, List<string> assetIds)
         {
             var result = new WatchListResult<IMarginTradingWatchList>();
-            bool isNew = string.IsNullOrEmpty(id);
+            var isNew = string.IsNullOrEmpty(id);
             var watchLists = (await GetWatchLists(clientId)).ToList();
             var allAssets = await GetAvailableAssetIds(clientId);
 

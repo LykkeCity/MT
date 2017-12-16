@@ -201,7 +201,7 @@ namespace MarginTrading.Frontend
             if (string.IsNullOrEmpty(token))
                 throw new Exception("Token is null or empty");
 
-            string clientId = await _clientTokenService.GetClientId(token);
+            var clientId = await _clientTokenService.GetClientId(token);
 
             if (string.IsNullOrWhiteSpace(clientId))
                 throw new KeyNotFoundException($"Can't find session by provided token '{token}'");

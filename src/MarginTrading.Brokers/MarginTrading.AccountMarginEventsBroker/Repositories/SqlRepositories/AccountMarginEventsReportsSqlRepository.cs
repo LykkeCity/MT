@@ -83,7 +83,7 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
                 try { await conn.ExecuteAsync(query, report);  }
                 catch (Exception ex)
                 {
-                    string msg = $"Error {ex.Message} \n" +
+                    var msg = $"Error {ex.Message} \n" +
                            "Entity <IAccountMarginEventReport>: \n" +
                            report.ToJson();
                     await _log?.WriteWarningAsync("AccountMarginEventsReportsSqlRepository", "InsertOrReplaceAsync",

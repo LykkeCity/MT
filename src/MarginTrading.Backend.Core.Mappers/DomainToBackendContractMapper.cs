@@ -260,12 +260,12 @@ namespace MarginTrading.Backend.Core.Mappers
                 CloseCrossPrice = src.GetCloseCrossPrice()
             };
 
-            foreach (MatchedOrder order in src.MatchedOrders)
+            foreach (var order in src.MatchedOrders)
             {
                 orderContract.MatchedOrders.Add(order.ToBackendContract());
             }
 
-            foreach (MatchedOrder order in src.MatchedCloseOrders)
+            foreach (var order in src.MatchedCloseOrders)
             {
                 orderContract.MatchedCloseOrders.Add(order.ToBackendContract());
             }
@@ -306,12 +306,12 @@ namespace MarginTrading.Backend.Core.Mappers
                 SwapCommission = src.SwapCommission
             };
 
-            foreach (MatchedOrder order in src.MatchedOrders)
+            foreach (var order in src.MatchedOrders)
             {
                 orderContract.MatchedOrders.Add(order.ToBackendContract());
             }
 
-            foreach (MatchedOrder order in src.MatchedCloseOrders)
+            foreach (var order in src.MatchedCloseOrders)
             {
                 orderContract.MatchedCloseOrders.Add(order.ToBackendContract());
             }
