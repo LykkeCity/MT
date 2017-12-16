@@ -19,10 +19,10 @@ namespace MarginTrading.Frontend.Services
         {
             validatedToken = null;
 
-            List<Claim> ls = new List<Claim>();
+            var ls = new List<Claim>();
             var clientId = _clientTokenService.GetClientId(securityToken).Result;
             ls.Add(new Claim(ClaimTypes.NameIdentifier, clientId, ClaimValueTypes.String));
-            ClaimsIdentity id = new ClaimsIdentity(ls, "magic");
+            var id = new ClaimsIdentity(ls, "magic");
             var principal = new ClaimsPrincipal(id);
             return principal;
         }

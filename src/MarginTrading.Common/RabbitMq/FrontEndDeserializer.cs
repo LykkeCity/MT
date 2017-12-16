@@ -8,7 +8,7 @@ namespace MarginTrading.Common.RabbitMq
     {
         public T Deserialize(byte[] data)
         {
-            string json = Encoding.UTF8.GetString(data);
+            var json = Encoding.UTF8.GetString(data);
             return JsonConvert.DeserializeObject<T>(json);
         }
     }

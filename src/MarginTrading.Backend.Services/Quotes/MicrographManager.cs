@@ -47,7 +47,7 @@ namespace MarginTrading.Backend.Services.Quotes
         {
             foreach (var pair in graphData)
             {
-                for (int i = pair.Value.Count - 1; i >= 0; i--)
+                for (var i = pair.Value.Count - 1; i >= 0; i--)
                 {
                     var bidAsk = pair.Value[i];
 

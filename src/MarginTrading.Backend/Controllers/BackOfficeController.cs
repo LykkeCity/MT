@@ -386,7 +386,7 @@ namespace MarginTrading.Backend.Controllers
         [Route("routes")]
         public async Task<IActionResult> AddRoute([FromBody]NewMatchingEngineRouteRequest request)
         {
-            IMatchingEngineRoute newRoute = DomainObjectsFactory.CreateRoute(request);
+            var newRoute = DomainObjectsFactory.CreateRoute(request);
             await _routesManager.AddOrReplaceRouteAsync(newRoute);
             return Ok(newRoute);
         }

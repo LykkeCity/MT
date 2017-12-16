@@ -29,8 +29,8 @@ namespace MarginTrading.Backend.Controllers
         [HttpGet]
         public IsAliveResponse Get()
         {
-            bool matchingEngineAlive = _matchingEngine.PingLock();
-            bool tradingEngineAlive = _tradingEngine.PingLock();
+            var matchingEngineAlive = _matchingEngine.PingLock();
+            var tradingEngineAlive = _tradingEngine.PingLock();
 
             return new IsAliveResponse
             {

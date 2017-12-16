@@ -29,7 +29,7 @@ namespace MarginTradingTests.IntegrationTests.Client
         {
             SetEnv(env);
             var factory = new DefaultWampChannelFactory();
-            IWampChannel channel =
+            var channel =
                 factory.CreateJsonChannel(_serverAddress, "mtcrossbar");
 
             while (!channel.RealmProxy.Monitor.IsConnected)

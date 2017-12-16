@@ -58,7 +58,7 @@ namespace MarginTrading.Backend.Services
                 return 0;
             }
 
-            int accuracy = _assetPairsCache.GetAssetPairById(instrument).Accuracy;
+            var accuracy = _assetPairsCache.GetAssetPairById(instrument).Accuracy;
 
             return Math.Round(matchedOrders.Sum(item => item.Price * item.Volume) /
                               matchedOrders.Sum(item => item.Volume), accuracy);

@@ -18,7 +18,7 @@ namespace MarginTrading.BrokerBase
             catch (SqlException)
             {
                 // Create table
-                string query = string.Format(createQuery, tableName);
+                var query = string.Format(createQuery, tableName);
                 connection.Query(query);
             }
             finally

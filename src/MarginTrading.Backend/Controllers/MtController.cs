@@ -335,7 +335,7 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         public OrderBackendContract[] GetOpenPositions([FromBody]ClientIdBackendRequest request)
         {
-            string[] accountIds = _accountsCacheService.GetAll(request.ClientId).Select(item => item.Id).ToArray();
+            var accountIds = _accountsCacheService.GetAll(request.ClientId).Select(item => item.Id).ToArray();
 
             var positions = _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountIds).Select(item => item.ToBackendContract()).ToList();
             var orders = _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(accountIds).Select(item => item.ToBackendContract()).ToList();
@@ -365,7 +365,7 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         public ClientOrdersBackendResponse GetClientOrders([FromBody]ClientIdBackendRequest request)
         {
-            string[] accountIds = _accountsCacheService.GetAll(request.ClientId).Select(item => item.Id).ToArray();
+            var accountIds = _accountsCacheService.GetAll(request.ClientId).Select(item => item.Id).ToArray();
 
             var positions = _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountIds).ToList();
             var orders = _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(accountIds).ToList();

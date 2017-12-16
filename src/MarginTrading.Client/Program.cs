@@ -40,7 +40,7 @@ namespace MarginTrading.Client
             }
             else
             {
-                for (int i = 0; i < 1; i++)
+                for (var i = 0; i < 1; i++)
                 {
                     var client = new MtClient();
 
