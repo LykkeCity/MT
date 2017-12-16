@@ -208,6 +208,6 @@
     <value> with take profit</value>
   </data>
   <data name="Notifications_OrderClosed" xml:space="preserve">
-    <value>{0} {1} {2} closed{3}, PnL {4}</value>
+    <value>{0} {1} {2} closed{3}, PnL {4} {5}</value>
   </data>
 </root>
