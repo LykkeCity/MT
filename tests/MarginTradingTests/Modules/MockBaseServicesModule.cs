@@ -16,6 +16,7 @@ using IAppNotifications = MarginTrading.Backend.Services.Notifications.IAppNotif
 using Lykke.Service.Session;
 using Lykke.SlackNotifications;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Settings;

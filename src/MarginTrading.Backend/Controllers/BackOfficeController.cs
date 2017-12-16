@@ -8,6 +8,7 @@ using MarginTrading.Backend.Attributes;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Models;
 using MarginTrading.Backend.Services;
@@ -385,7 +386,7 @@ namespace MarginTrading.Backend.Controllers
         [Route("routes")]
         public async Task<IActionResult> AddRoute([FromBody]NewMatchingEngineRouteRequest request)
         {
-            IMatchingEngineRoute newRoute = DomainObjectsFactory.CreateRoute(request);
+            var newRoute = DomainObjectsFactory.CreateRoute(request);
             await _routesManager.AddOrReplaceRouteAsync(newRoute);
             return Ok(newRoute);
         }

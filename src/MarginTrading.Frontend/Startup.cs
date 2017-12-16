@@ -33,6 +33,8 @@ using WampSharp.Binding;
 using WampSharp.V2;
 using WampSharp.V2.MetaApi;
 using WampSharp.V2.Realm;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
+
 #pragma warning disable 1591
 
 namespace MarginTrading.Frontend
@@ -58,7 +60,7 @@ namespace MarginTrading.Frontend
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
-            ILoggerFactory loggerFactory = new LoggerFactory()
+            var loggerFactory = new LoggerFactory()
                 .AddConsole(LogLevel.Error)
                 .AddDebug(LogLevel.Error);
 
@@ -125,9 +127,9 @@ namespace MarginTrading.Frontend
             var settings = ApplicationContainer.Resolve<MtFrontSettings>();
             app.UseCors(builder => builder.WithOrigins(settings.AllowOrigins));
 
-            IWampHost host = ApplicationContainer.Resolve<IWampHost>();
-            IWampHostedRealm realm = ApplicationContainer.Resolve<IWampHostedRealm>();
-            IDisposable realmMetaService = realm.HostMetaApiService();
+            var host = ApplicationContainer.Resolve<IWampHost>();
+            var realm = ApplicationContainer.Resolve<IWampHostedRealm>();
+            var realmMetaService = realm.HostMetaApiService();
 
             app.UseAuthentication();
 
@@ -155,7 +157,7 @@ namespace MarginTrading.Frontend
 
             appLifetime.ApplicationStopped.Register(() => ApplicationContainer.Dispose());
 
-            Application application = app.ApplicationServices.GetService<Application>();
+            var application = app.ApplicationServices.GetService<Application>();
 
             appLifetime.ApplicationStarted.Register(() =>
             {

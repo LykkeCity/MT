@@ -67,7 +67,7 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
                 try { await conn.ExecuteAsync(query, entity); }
                 catch (Exception ex)
                 {
-                    string msg = $"Error {ex.Message} \n" +
+                    var msg = $"Error {ex.Message} \n" +
                            "Entity <IAccountTransactionsReport>: \n" +
                            entity.ToJson();
                     await _log?.WriteWarningAsync("AccountTransactionsReportsSqlRepository", "InsertOrReplaceAsync", null, msg);

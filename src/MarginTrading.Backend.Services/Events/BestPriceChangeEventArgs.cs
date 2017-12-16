@@ -7,8 +7,7 @@ namespace MarginTrading.Backend.Services.Events
     {
         public BestPriceChangeEventArgs(InstrumentBidAskPair pair)
         {
-            if (pair == null) throw new ArgumentNullException(nameof(pair));
-            BidAskPair = pair;
+            BidAskPair = pair ?? throw new ArgumentNullException(nameof(pair));
         }
 
         public InstrumentBidAskPair BidAskPair { get; }

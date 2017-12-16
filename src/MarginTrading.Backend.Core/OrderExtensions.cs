@@ -27,9 +27,9 @@ namespace MarginTrading.Backend.Core
 
         public static string GetPushMessage(this IOrder order)
         {
-            string message = string.Empty;
-            decimal volume = Math.Abs(order.Volume);
-            string type = order.GetOrderType() == OrderDirection.Buy ? "Long" : "Short";
+            var message = string.Empty;
+            var volume = Math.Abs(order.Volume);
+            var type = order.GetOrderType() == OrderDirection.Buy ? "Long" : "Short";
 
             switch (order.Status)
             {
@@ -44,7 +44,7 @@ namespace MarginTrading.Backend.Core
                             Math.Round(order.OpenPrice, order.AssetAccuracy));
                     break;
                 case OrderStatus.Closed:
-                    string reason = string.Empty;
+                    var reason = string.Empty;
 
                     switch (order.CloseReason)
                     {

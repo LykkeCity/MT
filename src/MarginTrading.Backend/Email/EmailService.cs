@@ -19,7 +19,7 @@ namespace MarginTrading.Backend.Email
 
         public async Task SendMarginCallEmailAsync(string email, string baseAssetId, string accountId)
         {
-            string message =
+            var message =
                 _templateGenerator.Generate("MarginCall", new {BaseAssetId = baseAssetId, AccountId = accountId});
 
             await _emailSender.SendAsync(
@@ -36,7 +36,7 @@ namespace MarginTrading.Backend.Email
 
         public async Task SendStopOutEmailAsync(string email, string baseAssetId, string accountId)
         {
-            string message =
+            var message =
                 _templateGenerator.Generate("StopOut", new {BaseAssetId = baseAssetId, AccountId = accountId});
 
             await _emailSender.SendAsync(

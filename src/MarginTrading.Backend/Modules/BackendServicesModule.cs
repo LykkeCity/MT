@@ -118,7 +118,7 @@ namespace MarginTrading.Backend.Modules
 
             var bytesSerializer = new BytesStringSerializer();
 
-            foreach (string exchangeName in publishers)
+            foreach (var exchangeName in publishers)
             {
                 var pub = new RabbitMqPublisher<string>(new RabbitMqSubscriptionSettings
                     {

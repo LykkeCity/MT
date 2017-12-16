@@ -33,7 +33,7 @@ namespace MarginTrading.Common.Services
 
         private string GetSlackMsg(string message)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             sb.Append(_appName);
             sb.Append(":");
             sb.AppendLine(_env);

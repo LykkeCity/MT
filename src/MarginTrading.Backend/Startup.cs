@@ -32,6 +32,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ILoggerFactory = Microsoft.Extensions.Logging.ILoggerFactory;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 #pragma warning disable 1591
 
@@ -56,7 +57,7 @@ namespace MarginTrading.Backend
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
-            ILoggerFactory loggerFactory = new LoggerFactory()
+            var loggerFactory = new LoggerFactory()
                 .AddConsole(LogLevel.Error)
                 .AddDebug(LogLevel.Error);
 
@@ -72,7 +73,7 @@ namespace MarginTrading.Backend
             services.AddAuthentication(KeyAuthOptions.AuthenticationScheme)
                 .AddScheme<KeyAuthOptions, KeyAuthHandler>(KeyAuthOptions.AuthenticationScheme, "", options => { });
 
-            bool isLive = Configuration.IsLive();
+            var isLive = Configuration.IsLive();
 
             services.AddSwaggerGen(options =>
             {
@@ -131,7 +132,7 @@ namespace MarginTrading.Backend
 
             appLifetime.ApplicationStopped.Register(() => ApplicationContainer.Dispose());
 
-            Application application = app.ApplicationServices.GetService<Application>();
+            var application = app.ApplicationServices.GetService<Application>();
 
             var settings = app.ApplicationServices.GetService<MarginSettings>();
 

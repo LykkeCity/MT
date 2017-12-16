@@ -2,6 +2,7 @@
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MarketMakerFeed;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
@@ -68,7 +69,7 @@ namespace MarginTrading.Backend.Services.Modules
 
 			builder.RegisterType<TradingEngine>()
 				.As<ITradingEngine>()
-				.As<IEventConsumer<OrderBookChangeEventArgs>>()
+				.As<IEventConsumer<BestPriceChangeEventArgs>>()
 				.SingleInstance();
 
 			builder.RegisterType<MarginCallConsumer>()
@@ -95,12 +96,6 @@ namespace MarginTrading.Backend.Services.Modules
 
 			builder.RegisterType<CfdCalculatorService>()
 				.As<ICfdCalculatorService>()
-				.SingleInstance();
-
-			builder.RegisterType<AggregatedOrderBook>()
-				.As<IEventConsumer<OrderBookChangeEventArgs>>()
-				.As<IAggregatedOrderBook>()
-				.AsSelf()
 				.SingleInstance();
 
 			builder.RegisterType<OrderBookList>()

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using MarginTrading.Backend.Core.MatchedOrders;
+using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Contract.BackendContracts;
@@ -259,12 +260,12 @@ namespace MarginTrading.Backend.Core.Mappers
                 CloseCrossPrice = src.GetCloseCrossPrice()
             };
 
-            foreach (MatchedOrder order in src.MatchedOrders)
+            foreach (var order in src.MatchedOrders)
             {
                 orderContract.MatchedOrders.Add(order.ToBackendContract());
             }
 
-            foreach (MatchedOrder order in src.MatchedCloseOrders)
+            foreach (var order in src.MatchedCloseOrders)
             {
                 orderContract.MatchedCloseOrders.Add(order.ToBackendContract());
             }
@@ -305,12 +306,12 @@ namespace MarginTrading.Backend.Core.Mappers
                 SwapCommission = src.SwapCommission
             };
 
-            foreach (MatchedOrder order in src.MatchedOrders)
+            foreach (var order in src.MatchedOrders)
             {
                 orderContract.MatchedOrders.Add(order.ToBackendContract());
             }
 
-            foreach (MatchedOrder order in src.MatchedCloseOrders)
+            foreach (var order in src.MatchedCloseOrders)
             {
                 orderContract.MatchedCloseOrders.Add(order.ToBackendContract());
             }
