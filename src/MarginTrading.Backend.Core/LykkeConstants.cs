@@ -13,6 +13,6 @@
 
         public const string StateBlobContainer = "state";
 
-        public const string MaintenanceModeRoute = "service/maintenance";
+        public const string MaintenanceModeRoute = "maintenance";
     }
 }

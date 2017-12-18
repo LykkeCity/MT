@@ -5,6 +5,7 @@ using Flurl.Http;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Frontend.Settings;
 using System.Linq;
+using System.Net;
 using MarginTrading.Common.Settings.Models;
 using MarginTrading.Contract.BackendContracts;
 using MarginTrading.Frontend.Repositories.Contract;
@@ -93,14 +94,23 @@ namespace MarginTrading.Frontend.Services
             path = $"{(isLive ? "Live: " : "Demo: ")}{path}";
 
             var error = ex.Message;
-            
-            var responseBody = (ex as FlurlHttpException)?.Call.ErrorResponseBody;
-            if (!string.IsNullOrEmpty(responseBody))
+
+            if (ex is FlurlHttpException flurException)
             {
-                var response = responseBody.DeserializeJson<MtBackendResponse<string>>();
-                if (!string.IsNullOrEmpty(response?.Message))
+                var responseBody = flurException.Call.ErrorResponseBody;
+                
+                if (!string.IsNullOrEmpty(responseBody))
                 {
-                    error += " " + response.Message;
+                    var response = responseBody.DeserializeJson<MtBackendResponse<string>>();
+                    if (!string.IsNullOrEmpty(response?.Message))
+                    {
+                        error += " " + response.Message;
+                    }
+                }
+
+                if (flurException.Call.HttpStatus == HttpStatusCode.ServiceUnavailable)
+                {
+                    ClearMaintenanceCache(isLive);
                 }
             }
 
@@ -109,12 +119,12 @@ namespace MarginTrading.Frontend.Services
 
         private async Task<IMaintenanceInfo> GetMaintenance(bool isLive)
         {
-            var cacheKey = CacheKeyBuilder.Create(nameof(HttpRequestService), nameof(CheckMaintenance), isLive);
+            var cacheKey = GetMaintenanceModeCacheKey(isLive);
 
             return await _cacheProvider.GetAsync(cacheKey,
                 async () => new CachableResult<IMaintenanceInfo>(
                     await _maintenanceInfoRepository.GetMaintenanceInfo(isLive),
-                    CachingParameters.FromMinutes(1)));
+                    CachingParameters.FromSeconds(15)));
         }
         
         private async Task CheckMaintenance(bool isLive)
@@ -123,6 +133,16 @@ namespace MarginTrading.Frontend.Services
             
             if (maintenanceInfo?.IsEnabled == true)
                 throw new MaintenanceException(maintenanceInfo.ChangedDate);
+        }
+
+        private string GetMaintenanceModeCacheKey(bool isLive)
+        {
+            return CacheKeyBuilder.Create(nameof(HttpRequestService), nameof(CheckMaintenance), isLive);
+        }
+
+        private void ClearMaintenanceCache(bool isLive)
+        {
+            _cacheProvider.Remove(GetMaintenanceModeCacheKey(isLive));
         }
 
         #endregion
