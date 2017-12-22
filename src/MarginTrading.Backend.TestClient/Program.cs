@@ -17,7 +17,7 @@ namespace MarginTrading.Backend.TestClient
         {
             var services = new ServiceCollection();
             var builder = new ContainerBuilder();
-            services.RegisterMtMarketMakerClient("http://localhost:5000", "margintrading", "TestClient");
+            services.RegisterMtBackendClient("http://localhost:5000", "margintrading", "TestClient");
             builder.Populate(services);
             var container = builder.Build();
             var client = container.Resolve<IMtBackendClient>();
