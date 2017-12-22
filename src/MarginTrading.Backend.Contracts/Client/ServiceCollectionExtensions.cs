@@ -10,7 +10,7 @@ namespace MarginTrading.Backend.Contracts.Client
         {
             services.AddSingleton<IMtBackendClientsPair>(p => new MtBackendClientsPair(
                 new MtBackendClient(demoUrl, demoKey, userAgent), 
-                new MtBackendClient(liveKey, liveKey, userAgent)));
+                new MtBackendClient(liveUrl, liveKey, userAgent)));
         }
         
         [PublicAPI]
