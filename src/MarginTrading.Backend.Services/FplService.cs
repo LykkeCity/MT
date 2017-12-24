@@ -45,6 +45,9 @@ namespace MarginTrading.Backend.Services
             fplData.OpenPrice = order.OpenPrice;
             fplData.ClosePrice = order.ClosePrice;
             fplData.SwapsSnapshot = order.GetSwaps();
+            
+            fplData.CalculatedHash = fplData.ActualHash;
+            
             fplData.TotalFplSnapshot = order.GetTotalFpl(fplData.SwapsSnapshot);
 
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);

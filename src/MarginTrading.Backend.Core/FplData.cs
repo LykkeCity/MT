@@ -12,5 +12,8 @@
         public decimal ClosePrice { get; set; }
         public decimal TotalFplSnapshot { get; set; }
         public decimal SwapsSnapshot { get; set; }
+        
+        public int CalculatedHash { get; set; }
+        public int ActualHash { get; set; }
     }
 }
