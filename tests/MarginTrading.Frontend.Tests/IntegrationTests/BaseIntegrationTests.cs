@@ -3,17 +3,15 @@ using Autofac;
 using AzureStorage.Tables;
 using AzureStorage.Tables.Templates.Index;
 using Lykke.Service.Session.AutorestClient;
-using MarginTrading.AzureRepositories;
-using MarginTrading.Backend.Core;
 using MarginTrading.Common.Settings;
 using MarginTrading.Common.Settings.Repositories;
 using MarginTrading.Common.Settings.Repositories.Azure;
 using MarginTrading.Common.Settings.Repositories.Azure.Entities;
-using MarginTradingTests.IntegrationTests.Client;
+using MarginTrading.Frontend.Tests.IntegrationTests.Client;
 using Microsoft.Extensions.Configuration;
 using NUnit.Framework;
 
-namespace MarginTradingTests.IntegrationTests
+namespace MarginTrading.Frontend.Tests.IntegrationTests
 {
     public class BaseIntegrationTests
     {

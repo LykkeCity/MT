@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Lykke.SettingsReader;
 
-namespace MarginTradingTests.IntegrationTests
+namespace MarginTrading.Frontend.Tests.IntegrationTests
 {
     public class StaticSettingsManager<T> : IReloadingManager<T>
     {

@@ -1,4 +1,4 @@
-﻿namespace MarginTradingTests.IntegrationTests.Client
+﻿namespace MarginTrading.Frontend.Tests.IntegrationTests.Client
 {
     public enum TestEnv
     {

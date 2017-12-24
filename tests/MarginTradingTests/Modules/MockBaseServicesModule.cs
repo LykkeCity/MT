@@ -8,7 +8,6 @@ using Common.Log;
 using Lykke.Common;
 using Lykke.Service.Session.AutorestClient;
 using Lykke.Service.Session.AutorestClient.Models;
-using MarginTrading.Frontend.Services;
 using Microsoft.Rest;
 using Moq;
 using WampSharp.V2.Realm;
@@ -58,11 +57,6 @@ namespace MarginTradingTests.Modules
                 .Setup(item => item.GetAsync(It.IsAny<string>()))
                 .Returns(() => Task.FromResult((IClientAccount)new ClientAccount{ NotificationsId = Guid.NewGuid().ToString()}));
 
-            var httpRequestServiceMock = new Mock<IHttpRequestService>();
-            httpRequestServiceMock
-                .Setup(item => item.RequestIfAvailableAsync(It.IsAny<object>(), "init.availableassets", It.IsAny<Func<List<string>>>(), It.IsAny<EnabledMarginTradingTypes>(), "mt"))
-                .Returns(() => Task.FromResult((new List<string> { "EURUSD" }, new List<string> { "BTCCHF" })));
-
             builder.RegisterInstance(emailService.Object).As<IEmailService>();
             builder.RegisterInstance(appNotifications.Object).As<IAppNotifications>();
             builder.RegisterInstance(appNotifications).As<Mock<IAppNotifications>>();
@@ -73,7 +67,6 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(clientsRepositoryMock.Object).As<IClientsSessionsRepository>();
             builder.RegisterInstance(sessionServiceMock.Object).As<ISessionService>();
             builder.RegisterInstance(clientAccountsServiceMock.Object).As<IClientAccountService>();
-            builder.RegisterInstance(httpRequestServiceMock.Object).As<IHttpRequestService>();
             builder.RegisterInstance(slackNotificationsMock.Object).As<ISlackNotificationsSender>();
 
             builder.RegisterType<DateService>()

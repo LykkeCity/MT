@@ -18,7 +18,6 @@ using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Settings;
 using MarginTrading.Common.Settings.Models;
-using MarginTrading.Frontend.Services;
 using MarginTradingTests.Modules;
 using Moq;
 
@@ -52,10 +51,6 @@ namespace MarginTradingTests
             builder.RegisterModule(new ServicesModule());
             builder.RegisterModule(new ManagersModule());
 
-            builder.RegisterType<WatchListService>()
-                .As<IWatchListService>()
-                .SingleInstance();
-
             builder.RegisterType<EventChannel<AccountBalanceChangedEventArgs>>()
                 .As<IEventChannel<AccountBalanceChangedEventArgs>>()
                 .SingleInstance();
@@ -86,10 +81,6 @@ namespace MarginTradingTests
             dayOffSettingsService.Setup(s => s.GetExclusions(It.IsNotNull<string>())).Returns(ImmutableArray<DayOffExclusion>.Empty);
             builder.RegisterInstance(dayOffSettingsService.Object).SingleInstance();
             builder.Register<IDayOffSettingsRepository>(c => new DayOffSettingsRepository(c.Resolve<IMarginTradingBlobRepository>())).SingleInstance();
-
-            builder.RegisterType<ClientTokenService>()
-                .As<IClientTokenService>()
-                .SingleInstance();
 
             builder.RegisterBuildCallback(c => c.Resolve<AccountAssetsManager>());
             builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
