@@ -13,7 +13,7 @@ namespace MarginTrading.Common.RabbitMq
         public ErrorLoggingJsonMessageDeserializer(ILog log)
         {
             _log = log;
-            _jsonDeserializer = new JsonMessageDeserializer<TMessage>();
+            _jsonDeserializer = FormatMigrationMessageDeserializerFactory.JsonToMessagePack<TMessage>();
         }
         
         public TMessage Deserialize(byte[] data)
