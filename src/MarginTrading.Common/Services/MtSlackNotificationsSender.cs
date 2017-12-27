@@ -26,6 +26,7 @@ namespace MarginTrading.Common.Services
                 || type.Equals(ChannelTypes.MtMmRisks, StringComparison.InvariantCultureIgnoreCase))
             {
                 await _sender.SendAsync(type, sender, message);
+                return;
             }
 
             await _sender.SendAsync(ChannelTypes.MarginTrading, sender, GetSlackMsg(message));
