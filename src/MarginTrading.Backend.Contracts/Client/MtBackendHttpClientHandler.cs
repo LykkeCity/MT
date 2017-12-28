@@ -19,7 +19,7 @@ namespace MarginTrading.Backend.Contracts.Client
             CancellationToken cancellationToken)
         {
             request.Headers.UserAgent.Clear();
-            request.Headers.TryAddWithoutValidation("UserAgent", _userAgent);
+            request.Headers.TryAddWithoutValidation("User-Agent", _userAgent);
             request.Headers.TryAddWithoutValidation("api-key", _apiKey);
             return await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
         }
