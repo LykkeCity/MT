@@ -12,5 +12,6 @@ namespace MarginTrading.Backend.Core
         IMarginTradingAccount SetTradingCondition(string clientId, string accountId, string tradingConditionId);
         IEnumerable<string> GetClientIdsByTradingConditionId(string tradingConditionId, string accountId = null);
         void UpdateAccountsCache(string clientId, IEnumerable<MarginTradingAccount> newValues);
+        MarginTradingAccount TryGet(string clientId, string accountId);
     }
 }

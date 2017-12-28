@@ -29,6 +29,22 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 _lockSlim.ExitReadLock();
             }
         }
+        
+        public IAssetPair TryGetAssetPairById(string assetPairId)
+        {
+            _lockSlim.EnterReadLock();
+
+            try
+            {
+                _assetPairs.TryGetValue(assetPairId, out var result);
+                    
+                return result;
+            }
+            finally
+            {
+                _lockSlim.ExitReadLock();
+            }
+        }
 
         public IEnumerable<IAssetPair> GetAll()
         {
