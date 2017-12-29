@@ -14,7 +14,7 @@ namespace MarginTrading.Common.RabbitMq
         {
             _log = log;
             _baseDeserializer =
-                baseDeserializer ?? FormatMigrationMessageDeserializerFactory.JsonToMessagePack<TMessage>();
+                baseDeserializer ?? new JsonMessageDeserializer<TMessage>();
         }
 
         public TMessage Deserialize(byte[] data)
