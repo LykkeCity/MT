@@ -36,7 +36,7 @@ namespace MarginTrading.Backend.Core.Messages {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("MarginTrading.Backend.Core.Messages.MtMessages", typeof(MtMessages).GetTypeInfo().Assembly);
+                    var temp = new global::System.Resources.ResourceManager("MarginTrading.Backend.Core.Messages.MtMessages", typeof(MtMessages).GetTypeInfo().Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;

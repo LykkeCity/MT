@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
@@ -18,6 +20,7 @@ namespace MarginTrading.Common.Middleware
         private readonly ILog _requestsLog;
 
         private const int MaxStorageFieldLength = 2000;
+        private readonly string[] _personalDataHeaders = {"Authorization"};
 
         public RequestsLoggingMiddleware(RequestDelegate next, RequestLoggerSettings settings, ILog log)
         {
@@ -47,8 +50,10 @@ namespace MarginTrading.Common.Middleware
                     using (originalRequestBody)
                     {
                         var body = await StreamHelpers.GetStreamPart(originalRequestBody, _settings.MaxPartSize);
+                        var headers = context.Request.Headers.Where(h => !_personalDataHeaders.Contains(h.Key)).ToJson();
+                        var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                         var info =
-                            $"Body: {body} {Environment.NewLine}Headers:{context.Request.Headers.ToJson()}";
+                            $"UserId:{userId} {Environment.NewLine}Body:{body} {Environment.NewLine}Headers:{headers}";
                         if (info.Length > MaxStorageFieldLength)
                         {
                             info = info.Substring(0, MaxStorageFieldLength);

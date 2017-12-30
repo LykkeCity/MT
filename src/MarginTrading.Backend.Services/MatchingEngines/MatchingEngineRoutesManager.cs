@@ -351,7 +351,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
         public static int GetSpecificationLevel(IMatchingEngineRoute route)
         {
-            int specLevel = 0;
+            var specLevel = 0;
             specLevel += IsAny(route.Instrument) ? 0 : 1;
             specLevel += !route.Type.HasValue ? 0 : 1;
             specLevel += IsAny(route.TradingConditionId) ? 0 : 1;
@@ -366,7 +366,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             //client, trading condition, type, instrument, asset type, asset.
             //Flag based 1+2+4+8+16+32 >> 1 with Client(32) is higher than 1 with TradingConditionId(16), Type(8), Instrument(4), Asset Type(2), Asset(1) = 31
 
-            int priority = 0;
+            var priority = 0;
             priority += IsAny(route.Asset) ? 0 : 1;
             priority += IsAny(route.Instrument) ? 0 : 4;
             priority += route.Type == null ? 0 : 8;

@@ -87,9 +87,9 @@ namespace MarginTrading.Frontend
             }
 
             var account = accountChangedMessage.Account;
-            string queueName = QueueHelper.BuildQueueName(_settings.MarginTradingFront.RabbitMqQueues.AccountChanged.ExchangeName, _settings.MarginTradingFront.Env);
+            var queueName = QueueHelper.BuildQueueName(_settings.MarginTradingFront.RabbitMqQueues.AccountChanged.ExchangeName, _settings.MarginTradingFront.Env);
             _consoleWriter.WriteLine($"Get account change from {queueName} queue for clientId = {account.ClientId}");
-            string notificationId = await _clientNotificationService.GetNotificationId(account.ClientId);
+            var notificationId = await _clientNotificationService.GetNotificationId(account.ClientId);
             var userTopic = _realm.Services.GetSubject<NotifyResponse<MarginTradingAccountClientContract>>($"user.{notificationId}");
 
             var notifyResponse = new NotifyResponse<MarginTradingAccountClientContract>
@@ -115,10 +115,10 @@ namespace MarginTrading.Frontend
 
         public async Task ProcessOrderChanged(OrderContract order)
         {
-            string queueName = QueueHelper.BuildQueueName(_settings.MarginTradingFront.RabbitMqQueues.OrderChanged.ExchangeName, _settings.MarginTradingFront.Env);
+            var queueName = QueueHelper.BuildQueueName(_settings.MarginTradingFront.RabbitMqQueues.OrderChanged.ExchangeName, _settings.MarginTradingFront.Env);
             _consoleWriter.WriteLine($"Get order change from {queueName} queue for clientId = {order.ClientId}");
 
-            string notificationId = await _clientNotificationService.GetNotificationId(order.ClientId);
+            var notificationId = await _clientNotificationService.GetNotificationId(order.ClientId);
             var userTopic = _realm.Services.GetSubject<NotifyResponse<OrderClientContract>>($"user.{notificationId}");
 
             var notifyResponse = new NotifyResponse<OrderClientContract>
@@ -143,10 +143,10 @@ namespace MarginTrading.Frontend
 
         public async Task ProcessAccountStopout(AccountStopoutBackendContract stopout)
         {
-            string queueName = QueueHelper.BuildQueueName(_settings.MarginTradingFront.RabbitMqQueues.AccountStopout.ExchangeName, _settings.MarginTradingFront.Env);
+            var queueName = QueueHelper.BuildQueueName(_settings.MarginTradingFront.RabbitMqQueues.AccountStopout.ExchangeName, _settings.MarginTradingFront.Env);
             _consoleWriter.WriteLine($"Get account stopout from {queueName} queue for clientId = {stopout.ClientId}");
 
-            string notificationId = await _clientNotificationService.GetNotificationId(stopout.ClientId);
+            var notificationId = await _clientNotificationService.GetNotificationId(stopout.ClientId);
             var userTopic = _realm.Services.GetSubject<NotifyResponse<AccountStopoutClientContract>>($"user.{notificationId}");
 
             var response = new NotifyResponse<AccountStopoutClientContract>
@@ -171,14 +171,14 @@ namespace MarginTrading.Frontend
 
         public async Task ProcessUserUpdates(UserUpdateEntityBackendContract userUpdate)
         {
-            string queueName = QueueHelper.BuildQueueName(_settings.MarginTradingFront.RabbitMqQueues.UserUpdates.ExchangeName, _settings.MarginTradingFront.Env);
+            var queueName = QueueHelper.BuildQueueName(_settings.MarginTradingFront.RabbitMqQueues.UserUpdates.ExchangeName, _settings.MarginTradingFront.Env);
             _consoleWriter.WriteLine($"Get user update from {queueName} queue for {userUpdate.ClientIds.Length} clients");
 
             foreach (var clientId in userUpdate.ClientIds)
             {
                 try
                 {
-                    string notificationId = await _clientNotificationService.GetNotificationId(clientId);
+                    var notificationId = await _clientNotificationService.GetNotificationId(clientId);
                     var userTopic =
                         _realm.Services.GetSubject<NotifyResponse<UserUpdateEntityClientContract>>(
                             $"user.{notificationId}");
@@ -191,7 +191,7 @@ namespace MarginTrading.Frontend
 
                     userTopic.OnNext(response);
 
-                    string eventType = string.Empty;
+                    var eventType = string.Empty;
 
                     if (userUpdate.UpdateAccountAssetPairs)
                     {

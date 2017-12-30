@@ -66,7 +66,7 @@ namespace MarginTrading.Client.Bot
         {
             var factory = new DefaultWampChannelFactory();
             _channel = factory.CreateJsonChannel(_serverAddress, "mtcrossbar");
-            int tries = 0;
+            var tries = 0;
             while (!_channel.RealmProxy.Monitor.IsConnected)
             {
                 try
@@ -145,7 +145,7 @@ namespace MarginTrading.Client.Bot
         {
             try
             {
-                OperationResult res = new OperationResult
+                var res = new OperationResult
                 {
                     Operation = "InitData",
                     StartDate = DateTime.UtcNow
@@ -167,7 +167,7 @@ namespace MarginTrading.Client.Bot
         {
             try
             {
-                OperationResult res = new OperationResult
+                var res = new OperationResult
                 {
                     Operation = "InitAccounts",
                     StartDate = DateTime.UtcNow
@@ -189,7 +189,7 @@ namespace MarginTrading.Client.Bot
         {
             try
             {
-                OperationResult res = new OperationResult
+                var res = new OperationResult
                 {
                     Operation = "InitGraph",
                     StartDate = DateTime.UtcNow
@@ -211,7 +211,7 @@ namespace MarginTrading.Client.Bot
         {
             try
             {
-                OperationResult res = new OperationResult
+                var res = new OperationResult
                 {
                     Operation = "GetAccountHistory",
                     StartDate = DateTime.UtcNow
@@ -221,7 +221,7 @@ namespace MarginTrading.Client.Bot
                 {
                     Token = _token
                 };
-                AccountHistoryClientResponse result = await _service.GetAccountHistory(request.ToJson());
+                var result = await _service.GetAccountHistory(request.ToJson());
                 res.EndDate = DateTime.UtcNow;
                 res.Result = result;
                 LogInfo($";{res.Duration};GetAccountHistory: Accounts={result.Account.Length}, OpenPositions={result.OpenPositions.Length}, PositionsHistory={result.PositionsHistory.Length}");
@@ -236,7 +236,7 @@ namespace MarginTrading.Client.Bot
 
         public async Task<OperationResult> GetHistory()
         {
-            OperationResult res = new OperationResult
+            var res = new OperationResult
             {
                 Operation = "GetHistory",
                 StartDate = DateTime.UtcNow
@@ -246,7 +246,7 @@ namespace MarginTrading.Client.Bot
             {
                 Token = _token
             };
-            AccountHistoryItemClient[] result = await _service.GetHistory(request.ToJson());
+            var result = await _service.GetHistory(request.ToJson());
             res.EndDate = DateTime.UtcNow;
             res.Result = result;
             LogInfo($";{res.Duration};GetHistory: Items={result.Length}");
@@ -254,7 +254,7 @@ namespace MarginTrading.Client.Bot
         }
         public async Task<OperationResult> GetOpenPositionsFromDemo()
         {
-            OperationResult res = new OperationResult
+            var res = new OperationResult
             {
                 Operation = "GetOpenPositions",
                 StartDate = DateTime.UtcNow
@@ -268,7 +268,7 @@ namespace MarginTrading.Client.Bot
         }
         public async Task<OperationResult> GetAccountOpenPositions(string accountId)
         {
-            OperationResult res = new OperationResult
+            var res = new OperationResult
             {
                 Operation = "GetAccountOpenPositions",
                 StartDate = DateTime.UtcNow
@@ -286,13 +286,13 @@ namespace MarginTrading.Client.Bot
         }
         public async Task<OperationResult> GetClientOrders()
         {
-            OperationResult res = new OperationResult
+            var res = new OperationResult
             {
                 Operation = "GetClientOrders",
                 StartDate = DateTime.UtcNow
             };
             
-            ClientPositionsLiveDemoClientResponse result = await _service.GetClientOrders(_token);
+            var result = await _service.GetClientOrders(_token);
             res.EndDate = DateTime.UtcNow;
             res.Result = result;
             LogInfo($";{res.Duration};GetClientOrders: Orders={result.Demo.Orders.Length}, Positions={result.Demo.Positions.Length}");
@@ -301,8 +301,8 @@ namespace MarginTrading.Client.Bot
 
         public async Task<IEnumerable<OperationResult>> PlaceOrders(string accountId, string instrument, int numOrders)
         {            
-            List<OperationResult> operations = new List<OperationResult>();
-            for (int i = 0; i < numOrders; i++)
+            var operations = new List<OperationResult>();
+            for (var i = 0; i < numOrders; i++)
             {
                 try
                 {                    
@@ -319,7 +319,7 @@ namespace MarginTrading.Client.Bot
                     };
                     LogInfo($"Placing order {i+1}/{numOrders}: [{instrument}]");
 
-                    OperationResult res = new OperationResult
+                    var res = new OperationResult
                     {
                         Operation = "PlaceOrders",
                         StartDate = DateTime.UtcNow
@@ -345,8 +345,8 @@ namespace MarginTrading.Client.Bot
         public async Task<IEnumerable<OperationResult>> PlacePendingOrders(string accountId, string instrument, int numOrders, decimal currentBid)
         {
             
-            List<OperationResult> operations = new List<OperationResult>();
-            for (int i = 0; i < numOrders; i++)
+            var operations = new List<OperationResult>();
+            for (var i = 0; i < numOrders; i++)
             {
                 try
                 {
@@ -364,7 +364,7 @@ namespace MarginTrading.Client.Bot
                     };
 
                     LogInfo($"Placing order {i + 1}/{numOrders}: [{instrument}]");
-                    OperationResult res = new OperationResult
+                    var res = new OperationResult
                     {
                         Operation = "PlacePendingOrders",
                         StartDate = DateTime.UtcNow
@@ -389,13 +389,13 @@ namespace MarginTrading.Client.Bot
         }
         public async Task<IEnumerable<OperationResult>> CloseOrders(string accountId, string instrument, int numOrders)
         {
-            List<OperationResult> operations = new List<OperationResult>();
-            OperationResult resGetOpenPositions = await GetOpenPositionsFromDemo();
+            var operations = new List<OperationResult>();
+            var resGetOpenPositions = await GetOpenPositionsFromDemo();
             operations.Add(resGetOpenPositions);
 
-            List<OrderClientContract> orders = ((OrderClientContract[])resGetOpenPositions.Result)
+            var orders = ((OrderClientContract[])resGetOpenPositions.Result)
                 .Where(x => x.AccountId == accountId && x.Instrument == instrument).ToList();
-            int processed = 0;
+            var processed = 0;
             foreach (var order in orders)
             {
                 if (processed >= numOrders)
@@ -403,7 +403,7 @@ namespace MarginTrading.Client.Bot
                 try
                 {
                     LogInfo($"Closing order {processed + 1}/{numOrders}: [{instrument}] Id={order.Id} Fpl={order.Fpl}");
-                    OperationResult res = new OperationResult
+                    var res = new OperationResult
                     {
                         Operation = "CloseOrders",
                         StartDate = DateTime.UtcNow
@@ -439,13 +439,13 @@ namespace MarginTrading.Client.Bot
         }
         public async Task<IEnumerable<OperationResult>> CancelOrders(string accountId, string instrument, int numOrders)
         {
-            List<OperationResult> operations = new List<OperationResult>();
-            OperationResult resGetOpenPositions = await GetOpenPositionsFromDemo();
+            var operations = new List<OperationResult>();
+            var resGetOpenPositions = await GetOpenPositionsFromDemo();
             operations.Add(resGetOpenPositions);
 
-            List<OrderClientContract> orders = ((OrderClientContract[])resGetOpenPositions.Result)
+            var orders = ((OrderClientContract[])resGetOpenPositions.Result)
                 .Where(x => x.AccountId == accountId && x.Instrument == instrument && x.Status==0).ToList();
-            int processed = 0;
+            var processed = 0;
             foreach (var order in orders)
             {
                 if (processed >= numOrders)
@@ -453,7 +453,7 @@ namespace MarginTrading.Client.Bot
                 try
                 {
                     LogInfo($"Canceling order {processed + 1}/{numOrders}: [{instrument}] Id={order.Id} Fpl={order.Fpl}");
-                    OperationResult res = new OperationResult
+                    var res = new OperationResult
                     {
                         Operation = "CancelOrders",
                         StartDate = DateTime.UtcNow
@@ -491,7 +491,7 @@ namespace MarginTrading.Client.Bot
         public void SubscribePrice(string instrument)
         {
             var topicName = !string.IsNullOrEmpty(instrument) ? $"prices.update.{instrument}" : "prices.update";
-            IDisposable subscription = _realmProxy.Services.GetSubject<InstrumentBidAskPairContract>(topicName)
+            var subscription = _realmProxy.Services.GetSubject<InstrumentBidAskPairContract>(topicName)
                 .Subscribe(PriceReceived);
 
             _priceSubscription.Add(instrument, subscription);
@@ -501,12 +501,12 @@ namespace MarginTrading.Client.Bot
         }
         public void UnsubscribePrice(string instrument)
         {
-            IDisposable subscription = _priceSubscription[instrument];
+            var subscription = _priceSubscription[instrument];
             subscription?.Dispose();
 
             if (_subscriptionHistory.ContainsKey(instrument))
             {
-                int received = _subscriptionHistory[instrument];
+                var received = _subscriptionHistory[instrument];
                 LogInfo($"UnsubscribePrice: Instrument={instrument}. Entries received:{received}");
                 _subscriptionHistory.Remove(instrument);
             }
@@ -514,7 +514,7 @@ namespace MarginTrading.Client.Bot
 
         private async Task<(string token, string notificationsId)> AquireTokenData()
         {
-            string address = $"{_authorizationAddress}/Auth";
+            var address = $"{_authorizationAddress}/Auth";
             var result = await address.PostJsonAsync(new
             {
                 _settings.Email,
@@ -561,7 +561,7 @@ namespace MarginTrading.Client.Bot
             if (!_subscriptionHistory.ContainsKey(price.Id))
                 _subscriptionHistory.Add(price.Id, 0);
 
-            int received = _subscriptionHistory[price.Id];
+            var received = _subscriptionHistory[price.Id];
             _subscriptionHistory[price.Id] = received + 1;
 
             //LogInfo($"Price received:{price.Instrument} Ask/Bid:{price.Ask}/{price.Bid}");

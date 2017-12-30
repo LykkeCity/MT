@@ -11,14 +11,14 @@ namespace MarginTrading.Common.Documentation
         public MethodDocInfo[] GetDocumentation(Type type)
         {
             var result = new List<MethodDocInfo>();
-            MethodInfo[] methods = GetAvailableMethods(type);
+            var methods = GetAvailableMethods(type);
 
             foreach (var method in methods)
             {
                 var attr = (DocMeAttribute)method.GetCustomAttribute(typeof(DocMeAttribute));
                 var returnType = method.ReturnType.IsConstructedGenericType ? method.ReturnType.GenericTypeArguments[0] : method.ReturnType;
                 var types = GetTypes(returnType);
-                string input = GetInputParametersAsString(method);
+                var input = GetInputParametersAsString(method);
                 var inputTypes = GetTypes(attr.InputType);
 
                 var docInfo = new MethodDocInfo
@@ -57,14 +57,14 @@ namespace MarginTrading.Common.Documentation
                 return new List<Type>();
 
             var elementType = type.GetElementType() ?? type;
-            PropertyInfo[] properties = elementType.GetProperties();
+            var properties = elementType.GetProperties();
 
             if (properties.Length == 0)
                 return new List<Type> { type };
 
             var types = new List<Type> { elementType };
 
-            foreach (PropertyInfo property in properties)
+            foreach (var property in properties)
             {
                 if (property.PropertyType.IsUserDefinedClass())
                 {

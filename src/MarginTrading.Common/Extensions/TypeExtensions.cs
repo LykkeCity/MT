@@ -51,7 +51,7 @@ namespace MarginTrading.Common.Extensions
 
             if (isEnum)
             {
-                FieldInfo[] fields = type.GetFields(BindingFlags.Public|BindingFlags.Static);
+                var fields = type.GetFields(BindingFlags.Public|BindingFlags.Static);
 
                 for (var i = 0; i < fields.Length; i++)
                 {
@@ -62,7 +62,7 @@ namespace MarginTrading.Common.Extensions
             {
                 var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
 
-                foreach (PropertyInfo property in properties)
+                foreach (var property in properties)
                 {
                     sb.AppendLine(property.PropertyType.IsDictionary() ? GetDictionaryProperty(property) : GetProperty(property));
                 }

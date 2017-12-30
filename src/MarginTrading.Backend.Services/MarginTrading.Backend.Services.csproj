@@ -19,10 +19,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="4.2.0" />
-    <PackageReference Include="Lykke.AzureQueueIntegration" Version="1.0.7" />
+    <PackageReference Include="Lykke.AzureQueueIntegration" Version="2.0.1" />
     <PackageReference Include="Lykke.Rocks.Caching" Version="1.0.0" />
     <PackageReference Include="Lykke.Service.Session" Version="16.0.0" />
-    <PackageReference Include="Lykke.SlackNotifications" Version="1.1.0" />
+    <PackageReference Include="Lykke.SlackNotifications" Version="1.2.0" />
     <PackageReference Include="Lykke.WampSharp.NewtonsoftJson" Version="1.0.2" />
     <PackageReference Include="Lykke.WampSharp.AspNetCore.WebSockets.Server" Version="1.0.2" />
     <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.8" />

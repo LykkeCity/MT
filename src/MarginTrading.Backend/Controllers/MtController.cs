@@ -290,6 +290,11 @@ namespace MarginTrading.Backend.Controllers
             {
                 return new MtBackendResponse<bool> {Message = "Trades for instrument are not available"};
             }
+            
+            if (order.ClientId != request.ClientId || order.AccountId != request.AccountId)
+            {
+                return new MtBackendResponse<bool> {Message = "Order is not available for user"};
+            }
 
             order = await _tradingEngine.CloseActiveOrderAsync(request.OrderId, OrderCloseReason.Close);
 
@@ -312,11 +317,19 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         public MtBackendResponse<bool> CancelOrder([FromBody] CloseOrderBackendRequest request)
         {
-            var order = _ordersCache.WaitingForExecutionOrders.GetOrderById(request.OrderId);
+            if (!_ordersCache.WaitingForExecutionOrders.TryGetOrderById(request.OrderId, out var order))
+            {
+                return new MtBackendResponse<bool> {Message = "Order not found"};
+            }
 
             if (_assetDayOffService.IsDayOff(order.Instrument))
             {
                 return new MtBackendResponse<bool> {Message = "Trades for instrument are not available"};
+            }
+
+            if (order.ClientId != request.ClientId || order.AccountId != request.AccountId)
+            {
+                return new MtBackendResponse<bool> {Message = "Order is not available for user"};
             }
 
             _tradingEngine.CancelPendingOrder(order.Id, OrderCloseReason.Canceled);
@@ -335,7 +348,7 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         public OrderBackendContract[] GetOpenPositions([FromBody]ClientIdBackendRequest request)
         {
-            string[] accountIds = _accountsCacheService.GetAll(request.ClientId).Select(item => item.Id).ToArray();
+            var accountIds = _accountsCacheService.GetAll(request.ClientId).Select(item => item.Id).ToArray();
 
             var positions = _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountIds).Select(item => item.ToBackendContract()).ToList();
             var orders = _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(accountIds).Select(item => item.ToBackendContract()).ToList();
@@ -365,7 +378,7 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         public ClientOrdersBackendResponse GetClientOrders([FromBody]ClientIdBackendRequest request)
         {
-            string[] accountIds = _accountsCacheService.GetAll(request.ClientId).Select(item => item.Id).ToArray();
+            var accountIds = _accountsCacheService.GetAll(request.ClientId).Select(item => item.Id).ToArray();
 
             var positions = _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountIds).ToList();
             var orders = _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(accountIds).ToList();

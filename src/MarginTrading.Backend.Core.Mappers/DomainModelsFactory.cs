@@ -16,7 +16,7 @@ namespace MarginTrading.Backend.Core.Mappers
                 TradingConditionId = request.TradingConditionId,
                 ClientId = request.ClientId,
                 Instrument = request.Instrument,
-                Type = request.Type.ToType<OrderDirection>(),
+                Type = request.Type?.ToType<OrderDirection>(),
                 MatchingEngineId = request.MatchingEngineId,
                 Asset = request.Asset
             };
