@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.AzureRepositories.Contract;
@@ -14,17 +15,20 @@ namespace MarginTrading.Backend.Services.TradingConditions
         private readonly IAccountAssetPairsRepository _pairsRepository;
         private readonly MarginSettings _settings;
         private readonly IClientNotifyService _clientNotifyService;
+        private readonly IOrderReader _orderReader;
 
         public AccountAssetsManager(
             AccountAssetsCacheService accountAssetsCacheService,
             IAccountAssetPairsRepository accountAssetPairsRepository,
             MarginSettings settings,
-            IClientNotifyService clientNotifyService)
+            IClientNotifyService clientNotifyService,
+            IOrderReader orderReader)
         {
             _accountAssetsCacheService = accountAssetsCacheService;
             _pairsRepository = accountAssetPairsRepository;
             _settings = settings;
             _clientNotifyService = clientNotifyService;
+            _orderReader = orderReader;
         }
 
         public void Start()
@@ -42,13 +46,43 @@ namespace MarginTrading.Backend.Services.TradingConditions
             string baseAssetId, string[] instruments)
         {
             var defaults = _settings.DefaultAccountAssetsSettings ?? new AccountAssetsSettings();
-            var assignedPairs =
-                await _pairsRepository.AssignAssetPairs(tradingConditionId, baseAssetId, instruments, defaults);
+            
+            var currentInstruments = (await _pairsRepository.GetAllAsync(tradingConditionId, baseAssetId)).ToArray();
+
+            if (currentInstruments.Any())
+            {
+                var toRemove = currentInstruments.Where(x => !instruments.Contains(x.Instrument)).ToHashSet();
+
+                var existingOrderGroups = _orderReader.GetAll().Where(o =>
+                    o.TradingConditionId == tradingConditionId && o.AccountAssetId == baseAssetId &&
+                    toRemove.Any(i => i.Instrument == o.Instrument)).GroupBy(o => o.Instrument).ToArray();
+
+                if (existingOrderGroups.Any())
+                {
+                    var errorMessage = "Unable not remove following instruments as they have active orders: ";
+
+                    foreach (var group in existingOrderGroups)
+                    {
+                        errorMessage += $"{group.Key}({group.Count()} orders) ";
+                    }
+
+                    throw new InvalidOperationException(errorMessage);
+                }
+                
+                foreach (var pair in toRemove)
+                {
+                    await _pairsRepository.Remove(pair.TradingConditionId, pair.BaseAssetId, pair.Instrument);
+                }
+            }
+
+            var pairsToAdd = instruments.Where(x => !currentInstruments.Select(y => y.Instrument).Contains(x));
+            
+            var addedPairs = await _pairsRepository.AddAssetPairs(tradingConditionId, baseAssetId, pairsToAdd, defaults);
             await UpdateAccountAssetsCache();
 
             await _clientNotifyService.NotifyTradingConditionsChanged(tradingConditionId);
 
-            return assignedPairs;
+            return addedPairs;
         }
 
         public async Task<IAccountAssetPair> AddOrReplaceAccountAssetAsync(IAccountAssetPair model)
