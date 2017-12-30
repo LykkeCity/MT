@@ -11,6 +11,7 @@ using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Json;
+using MarginTrading.Common.Modules;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
 using MarginTrading.Contract.BackendContracts;
@@ -184,6 +185,7 @@ namespace MarginTrading.Frontend
         private void RegisterModules(ContainerBuilder builder, IReloadingManager<MtFrontendSettings> settings)
         {
             builder.RegisterModule(new FrontendModule(settings));
+            builder.RegisterModule(new MarginTradingCommonModule());
         }
 
         private void SetSubscribers(MtFrontendSettings settings)

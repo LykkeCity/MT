@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
@@ -24,8 +25,11 @@ using MarginTrading.Backend.Services.Quotes;
 using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Extensions;
+using MarginTrading.Common.Helpers;
 using MarginTrading.Common.Json;
+using MarginTrading.Common.Modules;
 using MarginTrading.Common.Services;
+using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -139,8 +143,7 @@ namespace MarginTrading.Backend
             {
                 if (!string.IsNullOrEmpty(settings.ApplicationInsightsKey))
                 {
-                    Microsoft.ApplicationInsights.Extensibility.TelemetryConfiguration.Active.InstrumentationKey =
-                        settings.ApplicationInsightsKey;
+                    TelemetryConfiguration.Active.InstrumentationKey = settings.ApplicationInsightsKey;
                 }
 
                 LogLocator.CommonLog?.WriteMonitorAsync("", "", $"{Configuration.ServerType()} Started");
@@ -164,6 +167,7 @@ namespace MarginTrading.Backend
             builder.RegisterModule(new ManagersModule());
             builder.RegisterModule(new ServicesModule());
             builder.RegisterModule(new BackendServicesModule(mtSettings.CurrentValue, settings.CurrentValue, environment, LogLocator.CommonLog));
+            builder.RegisterModule(new MarginTradingCommonModule());
 
             builder.RegisterBuildCallback(c => c.Resolve<AccountAssetsManager>());
             builder.RegisterBuildCallback(c => c.Resolve<OrderBookSaveService>());
