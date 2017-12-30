@@ -130,6 +130,14 @@ namespace MarginTrading.Backend.Services
 
         public async Task DeleteAccountAsync(string clientId, string accountId)
         {
+            var orders = _ordersCache.GetAll().Where(o => o.AccountId == accountId).ToArray();
+            
+            if (orders.Any())
+            {
+                throw new Exception(
+                    $"Account [{accountId}] has not closed orders: [{orders.Select(o => $"{o.Id}:{o.Status.ToString()}").ToJson()}]");
+            }
+            
             var account = _accountsCacheService.Get(clientId, accountId);
             await _repository.DeleteAsync(clientId, accountId);
             await ProcessAccountsSetChange(clientId);
