@@ -76,8 +76,8 @@ namespace MarginTradingTests
 
             var swapsFor2Days = _swapService.GetSwaps(twoDayOrder);
 
-            Assert.AreEqual(5.69863, swapsForDay);
-            Assert.AreEqual(11.39726, swapsFor2Days);
+            Assert.AreEqual(5.69863014m, swapsForDay);
+            Assert.AreEqual(11.39726027m, swapsFor2Days);
         }
     }
 }
