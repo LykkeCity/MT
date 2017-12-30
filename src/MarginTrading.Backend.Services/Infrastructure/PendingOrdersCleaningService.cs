@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
@@ -14,8 +15,6 @@ namespace MarginTrading.Backend.Services.Infrastructure
         private readonly ITradingEngine _tradingEngine;
         private readonly IAssetPairDayOffService _assetDayOffService;
 
-        private bool _isCleanPerformed;
-
         public PendingOrdersCleaningService(ILog log, IOrderReader orderReader, ITradingEngine tradingEngine,
             IAssetPairDayOffService assetDayOffService)
             : base(nameof(PendingOrdersCleaningService), 60000, log)
@@ -28,32 +27,23 @@ namespace MarginTrading.Backend.Services.Infrastructure
 
         public override Task Execute()
         {
-            if (!_assetDayOffService.IsPendingOrdersDisabledTime())
+            var pendingOrders = _orderReader.GetPending().GroupBy(o => o.Instrument);
+            foreach (var gr in pendingOrders)
             {
-                _isCleanPerformed = false;
-                return Task.CompletedTask;
-            }
-                
-            if (_isCleanPerformed)
-                return Task.CompletedTask;
-
-            _isCleanPerformed = true;
-
-            var pendingOrders = _orderReader.GetPending();
-
-            foreach (var pendingOrder in pendingOrders)
-            {
-                if (_assetDayOffService.IsAssetPairHasNoDayOff(pendingOrder.Instrument))
+                if (!_assetDayOffService.ArePendingOrdersDisabled(gr.Key))
                     continue;
-                
-                try
+
+                foreach (var pendingOrder in gr)
                 {
-                    _tradingEngine.CancelPendingOrder(pendingOrder.Id, OrderCloseReason.CanceledBySystem);
-                }
-                catch (Exception e)
-                {
-                    _log.WriteErrorAsync(nameof(PendingOrdersCleaningService),
-                        $"Cancelling pending order {pendingOrder.Id}", pendingOrder.ToJson(), e);
+                    try
+                    {
+                        _tradingEngine.CancelPendingOrder(pendingOrder.Id, OrderCloseReason.CanceledBySystem);
+                    }
+                    catch (Exception e)
+                    {
+                        _log.WriteErrorAsync(nameof(PendingOrdersCleaningService),
+                            $"Cancelling pending order {pendingOrder.Id}", pendingOrder.ToJson(), e);
+                    }
                 }
             }
 

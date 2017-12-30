@@ -1,11 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using Autofac;
+using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.DayOffSettings;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;
+using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Modules;
@@ -64,20 +69,24 @@ namespace MarginTradingTests
                 .As<IMarginTradingSettingsService>()
                 .SingleInstance();
 
-            var settings = new ScheduleSettings
-            {
-                DayOffStartDay = DayOfWeek.Sunday,
-                DayOffStartTime = new TimeSpan(21, 0, 0),
-                DayOffEndDay = DayOfWeek.Sunday,
-                DayOffEndTime = new TimeSpan(21, 0, 0),
-                AssetPairsWithoutDayOff = new[] {"BTCCHF"}
-            };
 
             builder.RegisterInstance(new Mock<IMarginTradingOperationsLogService>().Object)
                 .As<IMarginTradingOperationsLogService>()
                 .SingleInstance();
-            builder.RegisterInstance(settings).SingleInstance();
             
+            var settings = new ScheduleSettings(
+                dayOffStartDay: DayOfWeek.Sunday,
+                dayOffStartTime: new TimeSpan(21, 0, 0),
+                dayOffEndDay: DayOfWeek.Sunday,
+                dayOffEndTime: new TimeSpan(21, 0, 0),
+                assetPairsWithoutDayOff: new[] {"BTCCHF"}.ToHashSet(),
+                pendingOrdersCutOff: TimeSpan.Zero);
+            var dayOffSettingsService = new Mock<IDayOffSettingsService>(MockBehavior.Strict);
+            dayOffSettingsService.Setup(s => s.GetScheduleSettings()).Returns(settings);
+            dayOffSettingsService.Setup(s => s.GetExclusions(It.IsNotNull<string>())).Returns(ImmutableArray<DayOffExclusion>.Empty);
+            builder.RegisterInstance(dayOffSettingsService.Object).SingleInstance();
+            builder.Register<IDayOffSettingsRepository>(c => new DayOffSettingsRepository(c.Resolve<IMarginTradingBlobRepository>())).SingleInstance();
+
             builder.RegisterType<ClientTokenService>()
                 .As<IClientTokenService>()
                 .SingleInstance();

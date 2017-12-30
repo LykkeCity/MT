@@ -140,6 +140,11 @@ namespace MarginTrading.Backend.Services.Modules
 			builder.RegisterType<RabbitMqService>()
 				.As<IRabbitMqService>()
 				.SingleInstance();
+			
+			builder.RegisterType<DayOffSettingsService>()
+				.As<IDayOffSettingsService>()
+				.As<IStartable>()
+				.SingleInstance();
         }
 	}
 }

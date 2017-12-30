@@ -2,6 +2,7 @@
 using Common.Log;
 using Lykke.SettingsReader;
 using MarginTrading.AzureRepositories.Logs;
+using MarginTrading.Backend.Core;
 
 namespace MarginTrading.AzureRepositories
 {
@@ -78,6 +79,11 @@ namespace MarginTrading.AzureRepositories
             {
                 return new RiskSystemCommandsLogRepository(AzureTableStorage<RiskSystemCommandsLogEntity>.Create(connString,
                     "RiskSystemCommandsLog", log));
+            }
+
+            public static IDayOffSettingsRepository CreateDayOffSettingsRepository(IReloadingManager<string> connString)
+            {
+                return new DayOffSettingsRepository(new MarginTradingBlobRepository(connString));
             }
         }
     }

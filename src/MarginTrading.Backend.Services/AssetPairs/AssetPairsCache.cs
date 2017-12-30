@@ -59,6 +59,19 @@ namespace MarginTrading.Backend.Services.AssetPairs
             }
         }
 
+        public HashSet<string> GetAllIds()
+        {
+            _lockSlim.EnterReadLock();
+            try
+            {
+                return _assetPairs.Keys.ToHashSet();
+            }
+            finally
+            {
+                _lockSlim.ExitReadLock();
+            }
+        }
+
         public IAssetPair FindAssetPair(string asset1, string asset2)
         {
             _lockSlim.EnterReadLock();

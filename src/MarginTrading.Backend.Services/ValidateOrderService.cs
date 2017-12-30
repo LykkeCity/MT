@@ -81,7 +81,7 @@ namespace MarginTrading.Backend.Services
             //check ExpectedOpenPrice for pending order
             if (order.ExpectedOpenPrice.HasValue)
             {
-                if (_assetDayOffService.IsPendingOrderDisabled(order.Instrument))
+                if (_assetDayOffService.ArePendingOrdersDisabled(order.Instrument))
                 {
                     throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Trades for instrument are not available");
                 }

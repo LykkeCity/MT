@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.DayOffSettings;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Common.Services;
@@ -43,15 +46,17 @@ namespace MarginTradingTests
             //arrange 
             var dateService = new Mock<IDateService>();
             dateService.Setup(s => s.Now()).Returns(dateTime);
-            var settings = new ScheduleSettings()
-            {
-                DayOffStartDay = DayOfWeek.Friday,
-                DayOffStartTime = new TimeSpan(21, 0, 0),
-                DayOffEndDay = DayOfWeek.Sunday,
-                DayOffEndTime = new TimeSpan(21, 0, 0),
-                AssetPairsWithoutDayOff = new[] {AssetWithoutDayOff, "BTCCHF"}
-            };
-            var dayOffService = new AssetPairDayOffService(dateService.Object, settings);
+            var settings = new ScheduleSettings(
+                dayOffStartDay: DayOfWeek.Friday,
+                dayOffStartTime: new TimeSpan(21, 0, 0),
+                dayOffEndDay: DayOfWeek.Sunday,
+                dayOffEndTime: new TimeSpan(21, 0, 0),
+                assetPairsWithoutDayOff: new[] {AssetWithoutDayOff, "BTCCHF"}.ToHashSet(),
+                pendingOrdersCutOff: TimeSpan.Zero);
+            var dayOffSettingsService = new Mock<IDayOffSettingsService>();
+            dayOffSettingsService.Setup(s => s.GetScheduleSettings()).Returns(settings);
+            dayOffSettingsService.Setup(s => s.GetExclusions(It.IsNotNull<string>())).Returns(ImmutableArray<DayOffExclusion>.Empty);
+            var dayOffService = new AssetPairDayOffService(dateService.Object, dayOffSettingsService.Object);
 
             //act
             return dayOffService.IsDayOff(asset);
@@ -85,19 +90,83 @@ namespace MarginTradingTests
             //arrange 
             var dateService = new Mock<IDateService>();
             dateService.Setup(s => s.Now()).Returns(dateTime);
-            var settings = new ScheduleSettings()
-            {
-                DayOffStartDay = DayOfWeek.Friday,
-                DayOffStartTime = new TimeSpan(21, 0, 0),
-                DayOffEndDay = DayOfWeek.Sunday,
-                DayOffEndTime = new TimeSpan(21, 0, 0),
-                AssetPairsWithoutDayOff = new[] {AssetWithoutDayOff, "BTCCHF"},
-                PendingOrdersCutOff = new TimeSpan(1, 0, 0)
-            };
-            var dayOffService = new AssetPairDayOffService(dateService.Object, settings);
+            var settings = new ScheduleSettings(
+                dayOffStartDay: DayOfWeek.Friday,
+                dayOffStartTime: new TimeSpan(21, 0, 0),
+                dayOffEndDay: DayOfWeek.Sunday,
+                dayOffEndTime: new TimeSpan(21, 0, 0),
+                assetPairsWithoutDayOff: new[] {AssetWithoutDayOff, "BTCCHF"}.ToHashSet(),
+                pendingOrdersCutOff: new TimeSpan(1, 0, 0));
+
+            var dayOffSettingsService = new Mock<IDayOffSettingsService>();
+            dayOffSettingsService.Setup(s => s.GetScheduleSettings()).Returns(settings);
+            dayOffSettingsService.Setup(s => s.GetExclusions(It.IsNotNull<string>())).Returns(ImmutableArray<DayOffExclusion>.Empty);
+            var dayOffService = new AssetPairDayOffService(dateService.Object, dayOffSettingsService.Object);
 
             //act
-            return dayOffService.IsPendingOrderDisabled(asset);
+            return dayOffService.ArePendingOrdersDisabled(asset);
+        }
+        
+        public static IEnumerable ExclusionsTestCases
+        {
+            get
+            {
+                yield return new TestCaseData(new DateTime(2017, 6, 21), AssetWithDayOff).Returns(false);
+                yield return new TestCaseData(new DateTime(2017, 6, 23, 19, 59, 59), AssetWithDayOff).Returns(false);
+                yield return new TestCaseData(new DateTime(2017, 6, 23, 20, 00, 00), AssetWithDayOff).Returns(true);
+                yield return new TestCaseData(new DateTime(2017, 6, 24, 01, 59, 59), AssetWithDayOff).Returns(true);
+                yield return new TestCaseData(new DateTime(2017, 6, 24, 02, 00, 00), AssetWithDayOff).Returns(false);
+                yield return new TestCaseData(new DateTime(2017, 6, 24, 03, 00, 00), AssetWithDayOff).Returns(false);
+                yield return new TestCaseData(new DateTime(2017, 6, 24, 03, 00, 01), AssetWithDayOff).Returns(true);
+                yield return new TestCaseData(new DateTime(2017, 6, 25, 21, 59, 59), AssetWithDayOff).Returns(true);
+                yield return new TestCaseData(new DateTime(2017, 6, 25, 22, 00, 00), AssetWithDayOff).Returns(false);
+
+                yield return new TestCaseData(new DateTime(2017, 6, 21), AssetWithoutDayOff).Returns(false);
+                yield return new TestCaseData(new DateTime(2017, 6, 23, 19, 59, 59), AssetWithoutDayOff).Returns(false);
+                yield return new TestCaseData(new DateTime(2017, 6, 23, 20, 00, 00), AssetWithoutDayOff).Returns(false);
+                yield return new TestCaseData(new DateTime(2017, 6, 24, 01, 59, 59), AssetWithoutDayOff).Returns(false);
+                yield return new TestCaseData(new DateTime(2017, 6, 24, 02, 00, 00), AssetWithoutDayOff).Returns(true);
+                yield return new TestCaseData(new DateTime(2017, 6, 24, 05, 00, 00), AssetWithoutDayOff).Returns(true);
+                yield return new TestCaseData(new DateTime(2017, 6, 24, 05, 00, 01), AssetWithoutDayOff).Returns(false);
+                yield return new TestCaseData(new DateTime(2017, 6, 25, 21, 59, 59), AssetWithoutDayOff).Returns(false);
+                yield return new TestCaseData(new DateTime(2017, 6, 25, 22, 00, 00), AssetWithoutDayOff).Returns(false);
+            }
+        }
+        
+        [Test]
+        [TestCaseSource(nameof(ExclusionsTestCases))]
+        public bool TestExclusions(DateTime dateTime, string asset)
+        {
+            //arrange 
+            var dateService = new Mock<IDateService>();
+            dateService.Setup(s => s.Now()).Returns(dateTime);
+            var settings = new ScheduleSettings(
+                dayOffStartDay: DayOfWeek.Friday,
+                dayOffStartTime: new TimeSpan(21, 0, 0),
+                dayOffEndDay: DayOfWeek.Sunday,
+                dayOffEndTime: new TimeSpan(21, 0, 0),
+                assetPairsWithoutDayOff: new[] {AssetWithoutDayOff, "BTCCHF"}.ToHashSet(),
+                pendingOrdersCutOff: new TimeSpan(1, 0, 0));
+
+            var dayOffSettingsService = new Mock<IDayOffSettingsService>();
+            dayOffSettingsService.Setup(s => s.GetScheduleSettings()).Returns(settings);
+
+            dayOffSettingsService.Setup(s => s.GetExclusions(AssetWithDayOff))
+                .Returns(ImmutableArray.Create(
+                    new DayOffExclusion(Guid.NewGuid(), "smth",
+                        new DateTime(2017, 6, 24, 01, 00, 00),
+                        new DateTime(2017, 6, 24, 04, 00, 00), true)));
+            
+            dayOffSettingsService.Setup(s => s.GetExclusions(AssetWithoutDayOff))
+                .Returns(ImmutableArray.Create(
+                    new DayOffExclusion(Guid.NewGuid(), "smth",
+                        new DateTime(2017, 6, 24, 03, 00, 00),
+                        new DateTime(2017, 6, 24, 04, 00, 00), false)));
+
+            var dayOffService = new AssetPairDayOffService(dateService.Object, dayOffSettingsService.Object);
+
+            //act
+            return dayOffService.ArePendingOrdersDisabled(asset);
         }
     }
 }

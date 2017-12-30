@@ -1,5 +1,4 @@
-﻿using System;
-using Lykke.SettingsReader.Attributes;
+﻿using Lykke.SettingsReader.Attributes;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Settings;
 
@@ -78,16 +77,6 @@ namespace MarginTrading.Backend.Core.Settings
         public RabbitMqQueueInfo AccountMarginEvents { get; set; }
         public RabbitMqQueueInfo AccountStats { get; set; }
         public RabbitMqQueueInfo Trades { get; set; }
-    }
-
-    public class ScheduleSettings
-    {
-        public DayOfWeek DayOffStartDay { get; set; }
-        public TimeSpan DayOffStartTime { get; set; }
-        public DayOfWeek DayOffEndDay { get; set; }
-        public TimeSpan DayOffEndTime { get; set; }
-        public string[] AssetPairsWithoutDayOff { get; set; }
-        public TimeSpan PendingOrdersCutOff { get; set; }
     }
 
     public class AccountAssetsSettings

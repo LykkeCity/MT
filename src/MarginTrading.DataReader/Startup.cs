@@ -13,6 +13,7 @@ using Lykke.Logs;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
 using MarginTrading.Common.Extensions;
+using MarginTrading.Common.Modules;
 using MarginTrading.Common.Services;
 using MarginTrading.DataReader.Filters;
 using MarginTrading.DataReader.Infrastructure;
@@ -154,6 +155,7 @@ namespace MarginTrading.DataReader
             builder.RegisterModule(new DataReaderSettingsModule(settings.CurrentValue));
             builder.RegisterModule(new DataReaderRepositoriesModule(settings, LogLocator.CommonLog));
             builder.RegisterModule(new DataReaderServicesModule());
+            builder.RegisterModule(new MarginTradingCommonModule());
         }
 
         private static void SetupLoggers(IServiceCollection services, IReloadingManager<AppSettings> mtSettings,
