@@ -41,6 +41,8 @@ namespace MarginTrading.Backend.Services
         //has to be beyond global lock
         public void Validate(Order order)
         {
+            #region Validate input params
+            
             if (_assetDayOffService.IsDayOff(order.Instrument))
             {
                 throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Trades for instrument are not available");
@@ -51,16 +53,31 @@ namespace MarginTrading.Backend.Services
                 throw new ValidateOrderException(OrderRejectReason.InvalidVolume, "Volume cannot be 0");
             }
 
-            var asset = _assetPairsCache.GetAssetPairById(order.Instrument);
+            var asset = _assetPairsCache.TryGetAssetPairById(order.Instrument);
+
+            if (asset == null)
+            {
+                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, "Instrument not found");
+            }
+            
+            var account = _accountsCacheService.TryGet(order.ClientId, order.AccountId);
+
+            if (account == null)
+            {
+                throw new ValidateOrderException(OrderRejectReason.InvalidAccount, "Account not found");
+            }
+            
+            if (!_quoteCashService.TryGetQuoteById(order.Instrument, out var quote))
+            {
+                throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Quote not found");
+            }
+
+            #endregion
+            
             order.AssetAccuracy = asset.Accuracy;
-
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
-
             order.AccountAssetId = account.BaseAssetId;
             order.TradingConditionId = account.TradingConditionId;
-
-            var quote = _quoteCashService.GetQuote(order.Instrument);
-
+            
             //check ExpectedOpenPrice for pending order
             if (order.ExpectedOpenPrice.HasValue)
             {
