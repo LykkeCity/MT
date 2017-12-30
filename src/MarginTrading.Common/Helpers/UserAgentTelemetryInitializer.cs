@@ -16,9 +16,10 @@ namespace MarginTrading.Common.Helpers
 
         public void Initialize(ITelemetry telemetry)
         {
-            if (string.IsNullOrEmpty(telemetry.Context.User.UserAgent))
+            const string propName = "UserAgent";
+            if (string.IsNullOrEmpty(telemetry.Context.Properties.TryGetValue(propName, out var value) ? value : string.Empty))
             {
-                telemetry.Context.User.UserAgent = _httpContextAccessor.HttpContext.Request.Headers[HeaderNames.UserAgent];
+                telemetry.Context.Properties[propName] = _httpContextAccessor.HttpContext?.Request?.Headers[HeaderNames.UserAgent].ToString();
             }
         }
     }
