@@ -46,7 +46,7 @@ namespace MarginTrading.Frontend.Settings
     {
         public string SessionServiceApiUrl { get; set; }
         public string DemoAccountIdPrefix { get; set; }
-        public string[] AllowOrigins { get; set; }
+        public CorsSettings CorsSettings { get; set; } 
         public DataReaderApiSettings DataReaderApiSettings { get; set; }
 
         #region From env variables
@@ -61,6 +61,16 @@ namespace MarginTrading.Frontend.Settings
         public RequestLoggerSettings RequestLoggerSettings { get; set; }
         [Optional]
         public string ApplicationInsightsKey { get; set; }
+    }
+
+    public class CorsSettings
+    {
+        public bool Enabled { get; set; }
+        public bool HandleOptionsRequest { get; set; }
+        public string AllowOrigins { get; set; }
+        public string AllowHeaders { get; set; }
+        public string AllowMethods { get; set; }
+        public bool AllowCredentials { get; set; }
     }
 
     public class DataReaderApiSettings

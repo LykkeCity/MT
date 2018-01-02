@@ -126,7 +126,20 @@ namespace MarginTrading.Frontend
             app.UseOptions();
 
             var settings = ApplicationContainer.Resolve<MtFrontSettings>();
-            app.UseCors(builder => builder.WithOrigins(settings.AllowOrigins));
+
+            if (settings.CorsSettings.Enabled)
+            {
+                app.UseCors(builder =>
+                {
+                    builder.WithOrigins(settings.CorsSettings.AllowOrigins)
+                        .WithHeaders(settings.CorsSettings.AllowHeaders)
+                        .WithMethods(settings.CorsSettings.AllowMethods);
+
+                    if (settings.CorsSettings.AllowCredentials)
+                        builder.AllowCredentials();
+                });
+            }
+            
 
             var host = ApplicationContainer.Resolve<IWampHost>();
             var realm = ApplicationContainer.Resolve<IWampHostedRealm>();

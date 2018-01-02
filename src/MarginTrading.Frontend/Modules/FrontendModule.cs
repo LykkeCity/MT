@@ -125,6 +125,9 @@ namespace MarginTrading.Frontend.Modules
 
             builder.RegisterInstance(_settings.CurrentValue.MarginTradingFront.RequestLoggerSettings)
                 .SingleInstance();
+            
+            builder.RegisterInstance(_settings.CurrentValue.MarginTradingFront.CorsSettings)
+                .SingleInstance();
 
             builder.RegisterType<RpcMtFrontend>()
                 .As<IRpcMtFrontend>()
