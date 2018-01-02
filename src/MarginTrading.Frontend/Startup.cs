@@ -20,6 +20,7 @@ using MarginTrading.Contract.RabbitMqMessageModels;
 using MarginTrading.Frontend.Infrastructure;
 using MarginTrading.Frontend.Middleware;
 using MarginTrading.Frontend.Modules;
+using MarginTrading.Frontend.Services;
 using MarginTrading.Frontend.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -122,7 +123,7 @@ namespace MarginTrading.Frontend
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, IApplicationLifetime appLifetime)
         {
-            app.UseMiddleware<GlobalErrorHandlerMiddleware>();
+            app.UseGlobalErrorHandler();
             app.UseOptions();
 
             var settings = ApplicationContainer.Resolve<MtFrontSettings>();

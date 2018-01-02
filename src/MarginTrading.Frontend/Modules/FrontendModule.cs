@@ -19,6 +19,7 @@ using MarginTrading.Frontend.Repositories.Entities;
 using MarginTrading.Frontend.Services;
 using MarginTrading.Frontend.Settings;
 using MarginTrading.Frontend.Wamp;
+using Microsoft.AspNetCore.Http;
 using Microsoft.IdentityModel.Tokens;
 using Rocks.Caching;
 using WampSharp.V2;
@@ -128,14 +129,24 @@ namespace MarginTrading.Frontend.Modules
             
             builder.RegisterInstance(_settings.CurrentValue.MarginTradingFront.CorsSettings)
                 .SingleInstance();
+            
+            builder.RegisterInstance(_settings.CurrentValue.MarginTradingFront.TerminalsSettings)
+                .SingleInstance();
 
             builder.RegisterType<RpcMtFrontend>()
                 .As<IRpcMtFrontend>()
                 .SingleInstance();
 
+            builder.RegisterType<HttpContextAccessor>()
+                .As<IHttpContextAccessor>()
+                .SingleInstance();
+            
+            builder.RegisterType<TerminalInfoService>()
+                .As<ITerminalInfoService>()
+                .SingleInstance();
+            
             builder.RegisterType<HttpRequestService>()
                 .As<IHttpRequestService>()
-                .AsSelf()
                 .SingleInstance();
 
             builder.RegisterType<MarginTradingSettingsService>()

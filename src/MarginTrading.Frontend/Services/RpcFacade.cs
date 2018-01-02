@@ -19,13 +19,13 @@ namespace MarginTrading.Frontend.Services
     public class RpcFacade
     {
         private readonly MtFrontendSettings _settings;
-        private readonly HttpRequestService _httpRequestService;
+        private readonly IHttpRequestService _httpRequestService;
         private readonly IMarginTradingSettingsService _marginTradingSettingsService;
         private readonly MarginTradingDataReaderApiClientsPair _dataReaderClients;
 
         public RpcFacade(
             MtFrontendSettings settings,
-            HttpRequestService httpRequestService,
+            IHttpRequestService httpRequestService,
             IMarginTradingSettingsService marginTradingSettingsService,
             MarginTradingDataReaderApiClientsPair dataReaderClients)
         {

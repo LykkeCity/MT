@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using MarginTrading.Frontend.Settings;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 
 namespace MarginTrading.Frontend.Middleware
@@ -34,14 +33,6 @@ namespace MarginTrading.Frontend.Middleware
             {
                 await this._next.Invoke(context);
             }
-        }
-    }
-
-    public static class OptionsMiddlewareExtensions
-    {
-        public static IApplicationBuilder UseOptions(this IApplicationBuilder builder)
-        {
-            return builder.UseMiddleware<OptionsRequestsMiddleware>();
         }
     }
 }

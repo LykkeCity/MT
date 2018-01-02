@@ -1,4 +1,5 @@
-﻿using Lykke.SettingsReader.Attributes;
+﻿using System.Collections.Generic;
+using Lykke.SettingsReader.Attributes;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Settings;
 
@@ -48,19 +49,32 @@ namespace MarginTrading.Frontend.Settings
         public string DemoAccountIdPrefix { get; set; }
         public CorsSettings CorsSettings { get; set; } 
         public DataReaderApiSettings DataReaderApiSettings { get; set; }
-
+        public DbSettings Db { get; set; }
+        public MtQueues RabbitMqQueues { get; set; }
+        public RequestLoggerSettings RequestLoggerSettings { get; set; }
+        public TerminalsSettings TerminalsSettings { get; set; }
+        
+        [Optional]
+        public string ApplicationInsightsKey { get; set; }
+        
         #region From env variables
 
         [Optional]
         public string Env { get; set; }
 
         #endregion
+    }
 
-        public DbSettings Db { get; set; }
-        public MtQueues RabbitMqQueues { get; set; }
-        public RequestLoggerSettings RequestLoggerSettings { get; set; }
-        [Optional]
-        public string ApplicationInsightsKey { get; set; }
+    public class TerminalsSettings
+    {
+        public string TerminalIdHeaderName { get; set; }
+        public Dictionary<string, TerminalSettings> Settings { get; set; }
+    }
+
+    public class TerminalSettings
+    {
+        public bool DemoEnabled { get; set; }
+        public bool LiveEnabled { get; set; }
     }
 
     public class CorsSettings
