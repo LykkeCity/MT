@@ -107,8 +107,7 @@ namespace MarginTrading.Backend.Core
 
             if (orderInstance != null)
             {
-                if (orderInstance.FplData.OpenPrice != order.OpenPrice ||
-                    orderInstance.FplData.ClosePrice != order.ClosePrice)
+                if (orderInstance.FplData.ActualHash != orderInstance.FplData.CalculatedHash)
                 {
                     MtServiceLocator.FplService.UpdateOrderFpl(orderInstance, orderInstance.FplData);
                 }
@@ -159,6 +158,7 @@ namespace MarginTrading.Backend.Core
             if (orderInstance != null)
             {
                 orderInstance.ClosePrice = closePrice;
+                orderInstance.FplData.ActualHash++;
                 var account = MtServiceLocator.AccountsCacheService.Get(order.ClientId, order.AccountId);
                 account.CacheNeedsToBeUpdated();
             }
