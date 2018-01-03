@@ -20,6 +20,7 @@ using MarginTrading.Contract.RabbitMqMessageModels;
 using MarginTrading.Frontend.Infrastructure;
 using MarginTrading.Frontend.Middleware;
 using MarginTrading.Frontend.Modules;
+using MarginTrading.Frontend.Services;
 using MarginTrading.Frontend.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -122,11 +123,24 @@ namespace MarginTrading.Frontend
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, IApplicationLifetime appLifetime)
         {
-            app.UseMiddleware<GlobalErrorHandlerMiddleware>();
+            app.UseGlobalErrorHandler();
             app.UseOptions();
 
             var settings = ApplicationContainer.Resolve<MtFrontSettings>();
-            app.UseCors(builder => builder.WithOrigins(settings.AllowOrigins));
+
+            if (settings.CorsSettings.Enabled)
+            {
+                app.UseCors(builder =>
+                {
+                    builder.WithOrigins(settings.CorsSettings.AllowOrigins)
+                        .WithHeaders(settings.CorsSettings.AllowHeaders)
+                        .WithMethods(settings.CorsSettings.AllowMethods);
+
+                    if (settings.CorsSettings.AllowCredentials)
+                        builder.AllowCredentials();
+                });
+            }
+            
 
             var host = ApplicationContainer.Resolve<IWampHost>();
             var realm = ApplicationContainer.Resolve<IWampHostedRealm>();
@@ -170,12 +184,12 @@ namespace MarginTrading.Frontend
 
                 application.StartAsync().Wait();
                 
-                LogLocator.CommonLog?.WriteMonitorAsync("", "", "Started");
+                LogLocator.CommonLog?.WriteMonitorAsync("", "", settings.Env + " Started");
             });
 
             appLifetime.ApplicationStopping.Register(() =>
                 {
-                    LogLocator.CommonLog?.WriteMonitorAsync("", "", "Terminating");
+                    LogLocator.CommonLog?.WriteMonitorAsync("", "", settings.Env + " Terminating");
                     realmMetaService.Dispose();
                     application.Stop();
                 }
