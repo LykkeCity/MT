@@ -130,6 +130,14 @@ namespace MarginTrading.Backend.Services
 
         public async Task DeleteAccountAsync(string clientId, string accountId)
         {
+            var orders = _ordersCache.GetAll().Where(o => o.AccountId == accountId).ToArray();
+            
+            if (orders.Any())
+            {
+                throw new Exception(
+                    $"Account [{accountId}] has not closed orders: [{orders.Select(o => $"{o.Id}:{o.Status.ToString()}").ToJson()}]");
+            }
+            
             var account = _accountsCacheService.Get(clientId, accountId);
             await _repository.DeleteAsync(clientId, accountId);
             await ProcessAccountsSetChange(clientId);
@@ -148,6 +156,23 @@ namespace MarginTrading.Backend.Services
 
         public async Task AddAccountAsync(string clientId, string baseAssetId, string tradingConditionId)
         {
+            var accountGroup =
+                _accountGroupCacheService.GetAccountGroup(tradingConditionId, baseAssetId);
+
+            if (accountGroup == null)
+            {
+                throw new Exception(
+                    $"Account group with base asset [{baseAssetId}] and trading condition [{tradingConditionId}] is not found");
+            }
+
+            var clientAccounts = _accountsCacheService.GetAll(clientId);
+
+            if (clientAccounts.Any(a => a.BaseAssetId == baseAssetId && a.TradingConditionId == tradingConditionId))
+            {
+                throw new Exception(
+                    $"Client [{clientId}] already has account with base asset [{baseAssetId}] and trading condition [{tradingConditionId}]");
+            }
+
             var account = CreateAccount(clientId, baseAssetId, tradingConditionId);
             await _repository.AddAsync(account);
             await ProcessAccountsSetChange(account.ClientId);
