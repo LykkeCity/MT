@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Http;
 
 namespace MarginTrading.Frontend.Services
 {
+    /// <summary>
+    /// Gets terminal info from settings for terminal ID passed in corresponding request header
+    /// </summary>
     public class TerminalInfoService : ITerminalInfoService
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
@@ -27,8 +30,10 @@ namespace MarginTrading.Frontend.Services
                 terminalId = context.Request.Headers[_settings.TerminalIdHeaderName].ToString();
             }
 
+            //try get settings for terminal ID passed in header (or for empty string if header is empty)
             if (!_settings.Settings.TryGetValue(terminalId, out var terminalSettings))
             {
+                //if terminal ID was not empty but no settings exists for it, we try to get default settings
                 if (terminalId != string.Empty)
                 {
                     _settings.Settings.TryGetValue(string.Empty, out terminalSettings);
