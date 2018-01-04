@@ -31,10 +31,10 @@ namespace MarginTrading.Backend.Services
 
             if (inst.BaseAssetId == baseAssetId)
             {
-                return quote.Bid;
+                return quote.Ask;
             }
 
-            return 1.0M / quote.Ask;
+            return 1.0M / quote.Bid;
         }
 
         public decimal GetQuoteRateForQuoteAsset(string accountAssetId, string assetPairId)

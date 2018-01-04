@@ -51,7 +51,7 @@ namespace MarginTradingTests
 
             var quoteRate = _cfdCalculatorService.GetQuoteRateForBaseAsset(Accounts[0].BaseAssetId, instrument);
 
-            Assert.AreEqual(905.1, quoteRate);
+            Assert.AreEqual(905.35, quoteRate);
         }
 
         [Test]
