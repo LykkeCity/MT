@@ -40,7 +40,7 @@ namespace MarginTrading.Client
             }
             else
             {
-                for (int i = 0; i < 1; i++)
+                for (var i = 0; i < 1; i++)
                 {
                     var client = new MtClient();
 
@@ -66,7 +66,7 @@ namespace MarginTrading.Client
                     //client.GetClientOrders();
                     //client.ChangeOrderLimits();
 
-                    //client.Prices("EURUSD");
+                    client.Prices("BTCUSD");
                     //client.UserUpdates();
                     client.Trades();
 

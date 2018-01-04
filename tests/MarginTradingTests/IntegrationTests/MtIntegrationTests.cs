@@ -28,7 +28,7 @@ namespace MarginTradingTests.IntegrationTests
             Assert.IsNotEmpty(initData.Demo.Accounts);
             Assert.IsNotEmpty(initData.Demo.TradingConditions);
 
-            foreach (string key in initData.Demo.TradingConditions.Keys)
+            foreach (var key in initData.Demo.TradingConditions.Keys)
             {
                 var assets = initData.Demo.TradingConditions[key];
                 foreach (var asset in assets)

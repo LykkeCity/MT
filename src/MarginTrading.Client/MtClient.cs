@@ -117,7 +117,7 @@ namespace MarginTrading.Client
 
         public async Task PlaceOrder()
         {
-            IDisposable subscription = _realmProxy.Services.GetSubject<NotifyResponse>($"user.updates.{_notificationId}")
+            var subscription = _realmProxy.Services.GetSubject<NotifyResponse>($"user.updates.{_notificationId}")
                 .Subscribe(info =>
                 {
                     if (info.Account != null)
@@ -168,7 +168,7 @@ namespace MarginTrading.Client
 
         public async Task CloseOrder(bool closeAnyFpl)
         {
-            IDisposable subscription = _realmProxy.Services.GetSubject<NotifyResponse>($"user.updates.{_notificationId}")
+            var subscription = _realmProxy.Services.GetSubject<NotifyResponse>($"user.updates.{_notificationId}")
                 .Subscribe(info =>
                 {
                     if (info.Order != null)
@@ -206,7 +206,7 @@ namespace MarginTrading.Client
 
         public async Task CancelOrder()
         {
-            IDisposable subscription = _realmProxy.Services.GetSubject<NotifyResponse>($"user.updates.{_notificationId}")
+            var subscription = _realmProxy.Services.GetSubject<NotifyResponse>($"user.updates.{_notificationId}")
                 .Subscribe(info =>
                 {
                     if (info.Order != null)
@@ -279,7 +279,7 @@ namespace MarginTrading.Client
         public void Prices(string instrument = null)
         {
             var topicName = !string.IsNullOrEmpty(instrument) ? $"prices.update.{instrument}" : "prices.update";
-            IDisposable subscription = _realmProxy.Services.GetSubject<InstrumentBidAskPairContract>(topicName)
+            var subscription = _realmProxy.Services.GetSubject<InstrumentBidAskPairContract>(topicName)
                 .Subscribe(info =>
                 {
                     Console.WriteLine($"{info.Id} {info.Bid}/{info.Ask}");
@@ -292,7 +292,7 @@ namespace MarginTrading.Client
         
         public void Trades()
         {
-            IDisposable subscription = _realmProxy.Services.GetSubject<TradeClientContract>("trades")
+            var subscription = _realmProxy.Services.GetSubject<TradeClientContract>("trades")
                 .Subscribe(info =>
                 {
                     Console.WriteLine($"{info.ToJson()}");
@@ -305,7 +305,7 @@ namespace MarginTrading.Client
 
         public void UserUpdates()
         {
-            IDisposable subscription = _realmProxy.Services.GetSubject<NotifyResponse>($"user.updates.{_notificationId}")
+            var subscription = _realmProxy.Services.GetSubject<NotifyResponse>($"user.updates.{_notificationId}")
                 .Subscribe(info =>
                 {
                     if (info.UserUpdate != null)

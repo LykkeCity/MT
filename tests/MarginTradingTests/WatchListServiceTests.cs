@@ -89,7 +89,7 @@ namespace MarginTradingTests
         [Test]
         public void Is_WatchList_Changed()
         {
-            string accountId = Accounts[0].ClientId;
+            var accountId = Accounts[0].ClientId;
             var result = _watchListService.AddAsync(string.Empty, accountId, "New list", new List<string> { "EURUSD" }).Result;
 
             Assert.NotNull(result.Result);
@@ -105,7 +105,7 @@ namespace MarginTradingTests
         [Test]
         public void Is_WatchList_Deleted()
         {
-            string accountId = Accounts[0].ClientId;
+            var accountId = Accounts[0].ClientId;
             var result = _watchListService.AddAsync(string.Empty, accountId, "New list", new List<string> { "EURUSD" }).Result;
 
             Assert.NotNull(result.Result);

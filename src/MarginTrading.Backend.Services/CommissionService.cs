@@ -26,14 +26,13 @@ namespace MarginTrading.Backend.Services
 
             if (openDate.HasValue)
             {
-                var asset = _assetPairsCache.GetAssetPairById(instrument);
                 var close = closeDate ?? DateTime.UtcNow;
                 var seconds = (decimal)(close - openDate.Value).TotalSeconds;
 
                 const int secondsInYear = 31536000;
                 var volumeInAccAsset = _calculator.GetVolumeInAccountAsset(type, accountAssetId, instrument, volume);
                 var swaps = volumeInAccAsset * swapRate * seconds / secondsInYear;
-                result = Math.Round(swaps, asset.Accuracy);
+                result = Math.Round(swaps, MarginTradingHelpers.DefaultAssetAccuracy);
             }
 
             return result;

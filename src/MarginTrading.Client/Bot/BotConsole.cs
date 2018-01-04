@@ -27,7 +27,7 @@ namespace MarginTrading.Client.Bot
         
         private static void LoadSettings(string testScriptFile)
         {
-            IConfigurationRoot config = new ConfigurationBuilder()
+            var config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.dev.json", true, true)
                 .AddEnvironmentVariables()
@@ -35,7 +35,7 @@ namespace MarginTrading.Client.Bot
 
             var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
             // If it's Development environment load local settings file, else load settings from Lykke.Settings
-            TradingBotSettings mtSettings = (env == "Development") ?
+            var mtSettings = (env == "Development") ?
                     config.Get<TradingBotSettings>() :
                     Lykke.SettingsReader.SettingsProcessor.Process<TradingBotSettings>(config["SettingsUrl"].GetStringAsync().Result);
 
@@ -49,7 +49,7 @@ namespace MarginTrading.Client.Bot
             else
                 throw new Exception("Invalid configuration file");
 
-            FileInfo testFile = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), script));
+            var testFile = new FileInfo(Path.Combine(Directory.GetCurrentDirectory(), script));
             if (!testFile.Exists)
                 throw new FileNotFoundException($"Script file not found: {testFile.Name}");
 
@@ -183,7 +183,7 @@ namespace MarginTrading.Client.Bot
         private static async void RegisterUser()
         {
             Console.Write("Email: ");
-            string email = Console.ReadLine();
+            var email = Console.ReadLine();
             try
             {
                 await MtUserHelper.EmailVerification(email, _settings.MTAuthorizationAddress);
@@ -195,7 +195,7 @@ namespace MarginTrading.Client.Bot
             }
 
             Console.Write("Password: ");
-            string pass = Console.ReadLine();
+            var pass = Console.ReadLine();
 
             await MtUserHelper.Registration(email, pass, _settings.MTAuthorizationAddress);
         }
@@ -221,7 +221,7 @@ namespace MarginTrading.Client.Bot
         }
         private static void IsAlive()
         {
-            string botid = RequestBot();
+            var botid = RequestBot();
             if (botid == null)
                 Console.WriteLine("Invalid bot id");
             else if (botid == "all")
@@ -239,7 +239,7 @@ namespace MarginTrading.Client.Bot
         }
         private static void InitData()
         {
-            string botid = RequestBot();
+            var botid = RequestBot();
             switch (botid)
             {
                 case null:
@@ -259,7 +259,7 @@ namespace MarginTrading.Client.Bot
         }
         private static void InitAccounts()
         {
-            string botid = RequestBot();
+            var botid = RequestBot();
             if (botid == null)
                 Console.WriteLine("Invalid bot id");
             else if (botid == "all")

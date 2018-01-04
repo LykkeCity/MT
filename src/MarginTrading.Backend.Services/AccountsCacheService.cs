@@ -37,6 +37,11 @@ namespace MarginTrading.Backend.Services
 
             return result;
         }
+        
+        public MarginTradingAccount TryGet(string clientId, string accountId)
+        {
+            return GetClientAccount(clientId, accountId);
+        }
 
         public void UpdateBalance(MarginTradingAccount account)
         {

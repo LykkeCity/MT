@@ -45,6 +45,9 @@ namespace MarginTrading.Backend.Services
             fplData.OpenPrice = order.OpenPrice;
             fplData.ClosePrice = order.ClosePrice;
             fplData.SwapsSnapshot = order.GetSwaps();
+            
+            fplData.CalculatedHash = fplData.ActualHash;
+            
             fplData.TotalFplSnapshot = order.GetTotalFpl(fplData.SwapsSnapshot);
 
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
@@ -58,7 +61,7 @@ namespace MarginTrading.Backend.Services
                 return 0;
             }
 
-            int accuracy = _assetPairsCache.GetAssetPairById(instrument).Accuracy;
+            var accuracy = _assetPairsCache.GetAssetPairById(instrument).Accuracy;
 
             return Math.Round(matchedOrders.Sum(item => item.Price * item.Volume) /
                               matchedOrders.Sum(item => item.Volume), accuracy);

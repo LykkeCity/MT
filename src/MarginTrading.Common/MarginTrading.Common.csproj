@@ -11,9 +11,10 @@
   <ItemGroup>
     <PackageReference Include="Flurl.Http" Version="1.1.2" />
     <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
-    <PackageReference Include="Lykke.Logs" Version="3.2.2" />
+    <PackageReference Include="Lykke.Logs" Version="3.3.1" />
     <PackageReference Include="Lykke.RabbitMq.Azure" Version="3.1.1" />
-    <PackageReference Include="Lykke.SlackNotifications" Version="1.1.0" />
+    <PackageReference Include="Lykke.SettingsReader" Version="1.0.45" />
+    <PackageReference Include="Lykke.SlackNotifications" Version="1.2.0" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.1.1" />
     <PackageReference Include="SuperSocket.ClientEngine" Version="0.8.0.13" />
     <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
@@ -25,6 +26,5 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.0.0" />
     <PackageReference Include="Lykke.RabbitMqBroker" Version="4.0.5" />
     <PackageReference Include="Lykke.Common" Version="3.0.2" />
-    <PackageReference Include="Lykke.SettingsReader" Version="1.0.42" />
   </ItemGroup>
 </Project>

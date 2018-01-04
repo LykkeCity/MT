@@ -10,7 +10,7 @@ namespace MarginTrading.Client.Bot
     {
         public static async Task ApplicationInfo(string apiAddress)
         {
-            string address = $"{apiAddress}/ApplicationInfo";
+            var address = $"{apiAddress}/ApplicationInfo";
 
             var result = await address.GetJsonAsync();
             if (result.Error != null)
@@ -18,8 +18,8 @@ namespace MarginTrading.Client.Bot
         }
         public static async Task EmailVerification(string email, string apiAddress)
         {
-            string address = $"{apiAddress}/EmailVerification";
-            string Email = email;
+            var address = $"{apiAddress}/EmailVerification";
+            var Email = email;
 
             var result = await address.PostJsonAsync(
                 new
@@ -31,14 +31,14 @@ namespace MarginTrading.Client.Bot
         }
         public static async Task Registration(string email, string password, string apiAddress)
         {
-            string address = $"{apiAddress}/Registration";
+            var address = $"{apiAddress}/Registration";
 
-            string ClientInfo = "MT Test Bot";
-            string ContactPhone = "";
-            string Email = email;
-            string FullName = "";
-            string Hint = "MtBotHint";
-            string Password = HashPass(password);            
+            var ClientInfo = "MT Test Bot";
+            var ContactPhone = "";
+            var Email = email;
+            var FullName = "";
+            var Hint = "MtBotHint";
+            var Password = HashPass(password);            
             var result = await address.PostJsonAsync(
                 new
                 {

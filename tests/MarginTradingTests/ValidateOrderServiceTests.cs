@@ -152,9 +152,9 @@ namespace MarginTradingTests
                 FillType = OrderFillType.FillOrKill
             };
 
-            var ex = Assert.Throws<AssetPairNotFoundException>(() => _validateOrderService.Validate(order));
+            var ex = Assert.Throws<ValidateOrderException>(() => _validateOrderService.Validate(order));
 
-            Assert.That(ex.InstrumentId == instrument);
+            Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
         }
 
         [Test]
@@ -173,10 +173,9 @@ namespace MarginTradingTests
                 FillType = OrderFillType.FillOrKill
             };
 
+            var ex = Assert.Throws<ValidateOrderException>(() => _validateOrderService.Validate(order));
 
-            var ex = Assert.Throws<AccountNotFoundException>(() => _validateOrderService.Validate(order));
-
-            Assert.That(ex.AccountId == accountId);
+            Assert.That(ex.RejectReason == OrderRejectReason.InvalidAccount);
         }
 
         [Test]
@@ -193,9 +192,9 @@ namespace MarginTradingTests
                 FillType = OrderFillType.FillOrKill
             };
 
-            var ex = Assert.Throws<QuoteNotFoundException>(() => _validateOrderService.Validate(order));
+            var ex = Assert.Throws<ValidateOrderException>(() => _validateOrderService.Validate(order));
 
-            Assert.That(ex.InstrumentId == order.Instrument);
+            Assert.That(ex.RejectReason == OrderRejectReason.NoLiquidity);
         }
 
         [Test]

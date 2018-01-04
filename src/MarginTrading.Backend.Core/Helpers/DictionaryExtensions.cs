@@ -13,7 +13,7 @@ namespace MarginTrading.Backend.Core.Helpers
         public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key,
             Func<TKey, TValue> defaultValueFactory)
         {
-            return dictionary.TryGetValue(key, out TValue value)
+            return dictionary.TryGetValue(key, out var value)
                 ? value
                 : defaultValueFactory(key);
         }
@@ -25,7 +25,7 @@ namespace MarginTrading.Backend.Core.Helpers
         [CanBeNull]
         public static TValue GetValueOrDefault<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key)
         {
-            return dictionary.TryGetValue(key, out TValue value)
+            return dictionary.TryGetValue(key, out var value)
                 ? value
                 : default(TValue);
         }

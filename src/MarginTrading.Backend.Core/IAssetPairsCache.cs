@@ -8,5 +8,6 @@ namespace MarginTrading.Backend.Core
         IEnumerable<IAssetPair> GetAll();
         IAssetPair FindAssetPair(string asset1, string asset2);
         HashSet<string> GetAllIds();
+        IAssetPair TryGetAssetPairById(string assetPairId);
     }
 }

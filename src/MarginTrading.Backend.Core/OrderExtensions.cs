@@ -27,9 +27,9 @@ namespace MarginTrading.Backend.Core
 
         public static string GetPushMessage(this IOrder order)
         {
-            string message = string.Empty;
-            decimal volume = Math.Abs(order.Volume);
-            string type = order.GetOrderType() == OrderDirection.Buy ? "Long" : "Short";
+            var message = string.Empty;
+            var volume = Math.Abs(order.Volume);
+            var type = order.GetOrderType() == OrderDirection.Buy ? "Long" : "Short";
 
             switch (order.Status)
             {
@@ -44,7 +44,7 @@ namespace MarginTrading.Backend.Core
                             Math.Round(order.OpenPrice, order.AssetAccuracy));
                     break;
                 case OrderStatus.Closed:
-                    string reason = string.Empty;
+                    var reason = string.Empty;
 
                     switch (order.CloseReason)
                     {
@@ -56,12 +56,13 @@ namespace MarginTrading.Backend.Core
                             break;
                     }
 
-                    message = order.ExpectedOpenPrice.HasValue && 
-                              (order.CloseReason == OrderCloseReason.Canceled || 
+                    message = order.ExpectedOpenPrice.HasValue &&
+                              (order.CloseReason == OrderCloseReason.Canceled ||
                                order.CloseReason == OrderCloseReason.CanceledBySystem)
                         ? string.Format(MtMessages.Notifications_PendingOrderCanceled, type, order.Instrument, volume)
                         : string.Format(MtMessages.Notifications_OrderClosed, type, order.Instrument, volume, reason,
-                            order.GetTotalFpl().ToString($"F{MarginTradingHelpers.DefaultAssetAccuracy}"));
+                            order.GetTotalFpl().ToString($"F{MarginTradingHelpers.DefaultAssetAccuracy}"),
+                            order.AccountAssetId);
                     break;
                 case OrderStatus.Rejected:
                     break;
@@ -106,8 +107,7 @@ namespace MarginTrading.Backend.Core
 
             if (orderInstance != null)
             {
-                if (orderInstance.FplData.OpenPrice != order.OpenPrice ||
-                    orderInstance.FplData.ClosePrice != order.ClosePrice)
+                if (orderInstance.FplData.ActualHash != orderInstance.FplData.CalculatedHash)
                 {
                     MtServiceLocator.FplService.UpdateOrderFpl(orderInstance, orderInstance.FplData);
                 }
@@ -158,6 +158,7 @@ namespace MarginTrading.Backend.Core
             if (orderInstance != null)
             {
                 orderInstance.ClosePrice = closePrice;
+                orderInstance.FplData.ActualHash++;
                 var account = MtServiceLocator.AccountsCacheService.Get(order.ClientId, order.AccountId);
                 account.CacheNeedsToBeUpdated();
             }

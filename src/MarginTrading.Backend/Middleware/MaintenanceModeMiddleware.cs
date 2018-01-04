@@ -26,11 +26,11 @@ namespace MarginTrading.Backend.Middleware
 
         public async Task Invoke(HttpContext context)
         {
-            bool isMaintenanceMode = false;
+            var isMaintenanceMode = false;
             try
             {
                 isMaintenanceMode = !context.Request.Path.ToString().StartsWith("/swagger") &&
-                                    context.Request.Path != $"/api/backoffice/{LykkeConstants.MaintenanceModeRoute}" &&
+                                    context.Request.Path != $"/api/service/{LykkeConstants.MaintenanceModeRoute}" &&
                                     _maintenanceModeService.CheckIsEnabled();
             }
             catch (Exception ex)

@@ -69,7 +69,7 @@ namespace MarginTrading.Client.Bot
                             repeated.Add(Actions[j]);
                         }
 
-                        int repeatAllCount = 1;
+                        var repeatAllCount = 1;
                         if (Actions[i].Split(' ').Length > 2)
                             int.TryParse(Actions[i].Split(' ')[2], out repeatAllCount);                                    
                             
@@ -147,7 +147,7 @@ namespace MarginTrading.Client.Bot
                         int placeOrderCount;
                         if (action.Split(' ').Length > 2)
                         {
-                            string orderCount = action.Split(' ')[2].ToUpper();
+                            var orderCount = action.Split(' ')[2].ToUpper();
                             if (!int.TryParse(orderCount, out placeOrderCount))
                                 placeOrderCount = 1;
                         }
@@ -167,11 +167,11 @@ namespace MarginTrading.Client.Bot
                     }
                     else
                     {
-                        string closeOrderInstrument = action.Split(' ')[1].ToUpper();
+                        var closeOrderInstrument = action.Split(' ')[1].ToUpper();
                         int closeOrderCount;
                         if (action.Split(' ').Length > 2)
                         {
-                            string orderCount = action.Split(' ')[2].ToUpper();
+                            var orderCount = action.Split(' ')[2].ToUpper();
                             if (!int.TryParse(orderCount, out closeOrderCount))
                                 closeOrderCount = 1;
                         }
@@ -191,11 +191,11 @@ namespace MarginTrading.Client.Bot
                     }
                     else
                     {
-                        string cancelOrderInstrument = action.Split(' ')[1].ToUpper();
+                        var cancelOrderInstrument = action.Split(' ')[1].ToUpper();
                         int cancelOrderCount;
                         if (action.Split(' ').Length > 2)
                         {
-                            string orderCount = action.Split(' ')[2].ToUpper();
+                            var orderCount = action.Split(' ')[2].ToUpper();
                             if (!int.TryParse(orderCount, out cancelOrderCount))
                                 cancelOrderCount = 1;
                         }
@@ -242,11 +242,11 @@ namespace MarginTrading.Client.Bot
                     }
                     else
                     {
-                        string placeOrderInstrument = action.Split(' ')[1].ToUpper();
+                        var placeOrderInstrument = action.Split(' ')[1].ToUpper();
                         int placeOrderCount;
                         if (action.Split(' ').Length > 2)
                         {
-                            string orderCount = action.Split(' ')[2].ToUpper();
+                            var orderCount = action.Split(' ')[2].ToUpper();
                             if (!int.TryParse(orderCount, out placeOrderCount))
                                 placeOrderCount = 1;
                         }

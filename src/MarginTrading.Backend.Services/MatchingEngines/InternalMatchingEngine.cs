@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
 
@@ -10,61 +12,62 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 {
     public class InternalMatchingEngine : IInternalMatchingEngine
     {
-        private readonly IEventChannel<OrderBookChangeEventArgs> _orderbookChangeEventChannel;
+        private readonly IEventChannel<BestPriceChangeEventArgs> _bestPriceChangeEventChannel;
         private readonly OrderBookList _orderBooks;
-        private long _currentMessageId;
         private readonly IContextFactory _contextFactory;
 
         public InternalMatchingEngine(
-            IEventChannel<OrderBookChangeEventArgs> orderbookChangeEventChannel,
+            IEventChannel<BestPriceChangeEventArgs> bestPriceChangeEventChannel,
             OrderBookList orderBooks, IContextFactory contextFactory)
         {
-            _orderbookChangeEventChannel = orderbookChangeEventChannel;
+            _bestPriceChangeEventChannel = bestPriceChangeEventChannel;
             _orderBooks = orderBooks;
             _contextFactory = contextFactory;
-            _currentMessageId = 0;
         }
 
         public string Id => MatchingEngineConstants.Lykke;
 
         public void SetOrders(SetOrderModel model)
         {
+            var updatedInstruments = new List<string>();
+            
             using (_contextFactory.GetWriteSyncContext($"{nameof(InternalMatchingEngine)}.{nameof(SetOrders)}"))
             {
-                var changeEventArgs = new OrderBookChangeEventArgs { MessageId = _currentMessageId++ };
-
                 if (model.DeleteByInstrumentsBuy?.Count > 0)
                 {
-                    var deletedOrders = _orderBooks.DeleteAllBuyOrdersByMarketMaker(model.MarketMakerId, model.DeleteByInstrumentsBuy).ToArray();
-                    changeEventArgs.AddOrderBookLevelsToDelete(deletedOrders);
+                    _orderBooks.DeleteAllBuyOrdersByMarketMaker(model.MarketMakerId, model.DeleteByInstrumentsBuy);
                 }
 
                 if (model.DeleteByInstrumentsSell?.Count > 0)
                 {
-                    var deletedOrders = _orderBooks.DeleteAllSellOrdersByMarketMaker(model.MarketMakerId, model.DeleteByInstrumentsSell).ToArray();
-                    changeEventArgs.AddOrderBookLevelsToDelete(deletedOrders);
+                    _orderBooks.DeleteAllSellOrdersByMarketMaker(model.MarketMakerId, model.DeleteByInstrumentsSell);
                 }
 
                 if (model.DeleteAllBuy || model.DeleteAllSell)
                 {
-                    var deletedOrders = _orderBooks.DeleteAllOrdersByMarketMaker(model.MarketMakerId, model.DeleteAllBuy, model.DeleteAllSell).ToArray();
-                    changeEventArgs.AddOrderBookLevelsToDelete(deletedOrders);
+                    _orderBooks.DeleteAllOrdersByMarketMaker(model.MarketMakerId, model.DeleteAllBuy,
+                        model.DeleteAllSell);
                 }
 
                 if (model.OrderIdsToDelete?.Length > 0)
                 {
-                    var deletedOrders = _orderBooks.DeleteMarketMakerOrders(model.MarketMakerId, model.OrderIdsToDelete).ToArray();
-                    changeEventArgs.AddOrderBookLevelsToDelete(deletedOrders);
+                    var deletedOrders =
+                        _orderBooks.DeleteMarketMakerOrders(model.MarketMakerId, model.OrderIdsToDelete);
+
+                    updatedInstruments.AddRange(deletedOrders.Select(o => o.Instrument).Distinct());
                 }
 
                 if (model.OrdersToAdd?.Count > 0)
                 {
-                    var addedOrders = _orderBooks.AddMarketMakerOrders(model.OrdersToAdd).ToArray();
-                    changeEventArgs.AddOrderBookLevels(addedOrders);
+                    _orderBooks.AddMarketMakerOrders(model.OrdersToAdd);
+
+                    updatedInstruments.AddRange(model.OrdersToAdd.Select(o => o.Instrument).Distinct());
                 }
 
-                if (changeEventArgs.HasEvents())
-                    _orderbookChangeEventChannel.SendEvent(this, changeEventArgs);
+                foreach (var instrument in updatedInstruments.Distinct())
+                {
+                    ProduceBestPrice(instrument);
+                }
             }
         }
 
@@ -80,7 +83,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         {
             using (_contextFactory.GetWriteSyncContext($"{nameof(InternalMatchingEngine)}.{nameof(MatchMarketOrderForOpen)}"))
             {
-                OrderDirection orderBookTypeToMatch = order.GetOrderType().GetOrderTypeToMatchInOrderBook();
+                var orderBookTypeToMatch = order.GetOrderType().GetOrderTypeToMatchInOrderBook();
 
                 var matchedOrders =
                     _orderBooks.Match(order, orderBookTypeToMatch, Math.Abs(order.Volume));
@@ -88,9 +91,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 if (matchedFunc(matchedOrders))
                 {
                     _orderBooks.Update(order, orderBookTypeToMatch, matchedOrders);
-                    var changeEventArgs = new OrderBookChangeEventArgs { MessageId = _currentMessageId++ };
-                    changeEventArgs.AddOrderBookLevelsToUpdate(orderBookTypeToMatch, order.Instrument, matchedOrders);
-                    _orderbookChangeEventChannel.SendEvent(this, changeEventArgs);
+                    ProduceBestPrice(order.Instrument);
                 }
             }
         }
@@ -99,7 +100,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         {
             using (_contextFactory.GetWriteSyncContext($"{nameof(InternalMatchingEngine)}.{nameof(MatchMarketOrderForClose)}"))
             {
-                OrderDirection orderBookTypeToMatch = order.GetCloseType().GetOrderTypeToMatchInOrderBook();
+                var orderBookTypeToMatch = order.GetCloseType().GetOrderTypeToMatchInOrderBook();
 
                 var matchedOrders = _orderBooks.Match(order, orderBookTypeToMatch, Math.Abs(order.GetRemainingCloseVolume()));
 
@@ -107,9 +108,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                     return;
 
                 _orderBooks.Update(order, orderBookTypeToMatch, matchedOrders);
-                var changeEventArgs = new OrderBookChangeEventArgs { MessageId = _currentMessageId++ };
-                changeEventArgs.AddOrderBookLevelsToUpdate(orderBookTypeToMatch, order.Instrument, matchedOrders);
-                _orderbookChangeEventChannel.SendEvent(this, changeEventArgs);
+                ProduceBestPrice(order.Instrument);
             } // lock
         }
 
@@ -119,6 +118,14 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             {
                 return true;
             }
+        }
+
+        private void ProduceBestPrice(string instrument)
+        {
+            var bestPrice = _orderBooks.GetBestPrice(instrument);
+
+            if (bestPrice != null)
+                _bestPriceChangeEventChannel.SendEvent(this, new BestPriceChangeEventArgs(bestPrice));
         }
     }
 }

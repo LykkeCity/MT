@@ -27,11 +27,11 @@ namespace MarginTrading.AzureRepositories
             _blobRepository.Write(BlobContainer, Key, Convert(settings));
         }
 
-        private static DayOffSettingsRootStorageModel Convert(DayOffSettingsRoot dayOffExclusion)
+        private static DayOffSettingsRootStorageModel Convert(DayOffSettingsRoot settingsRoot)
         {
             return new DayOffSettingsRootStorageModel
             {
-                Exclusions = dayOffExclusion.Exclusions.ToImmutableDictionary(d => d.Key, d =>
+                Exclusions = settingsRoot.Exclusions.ToImmutableDictionary(d => d.Key, d =>
                     new DayOffExclusionStorageModel
                     {
                         AssetPairRegex = d.Value.AssetPairRegex,
@@ -42,12 +42,12 @@ namespace MarginTrading.AzureRepositories
                     }),
                 ScheduleSettings = new ScheduleSettingsStorageModel
                 {
-                    AssetPairsWithoutDayOff = dayOffExclusion.ScheduleSettings.AssetPairsWithoutDayOff,
-                    DayOffEndDay = dayOffExclusion.ScheduleSettings.DayOffEndDay,
-                    DayOffEndTime = dayOffExclusion.ScheduleSettings.DayOffEndTime,
-                    DayOffStartDay = dayOffExclusion.ScheduleSettings.DayOffStartDay,
-                    DayOffStartTime = dayOffExclusion.ScheduleSettings.DayOffStartTime,
-                    PendingOrdersCutOff = dayOffExclusion.ScheduleSettings.PendingOrdersCutOff,
+                    AssetPairsWithoutDayOff = settingsRoot.ScheduleSettings.AssetPairsWithoutDayOff,
+                    DayOffEndDay = settingsRoot.ScheduleSettings.DayOffEndDay,
+                    DayOffEndTime = settingsRoot.ScheduleSettings.DayOffEndTime,
+                    DayOffStartDay = settingsRoot.ScheduleSettings.DayOffStartDay,
+                    DayOffStartTime = settingsRoot.ScheduleSettings.DayOffStartTime,
+                    PendingOrdersCutOff = settingsRoot.ScheduleSettings.PendingOrdersCutOff,
                 }
             };
         }

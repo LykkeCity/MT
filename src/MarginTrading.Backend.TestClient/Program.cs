@@ -22,29 +22,28 @@ namespace MarginTrading.Backend.TestClient
             var container = builder.Build();
             var client = container.Resolve<IMtBackendClient>();
             
-            await client.DayOffExclusions.List().Dump();
-            var id = Guid.NewGuid();
-            await client.DayOffExclusions.Create(new DayOffExclusionContract
+            await client.ScheduleSettings.ListExclusions().Dump();
+            var excl = await client.ScheduleSettings.CreateExclusion(new DayOffExclusionInputContract
             {
-                Id = id,
                 AssetPairRegex = "lol",
                 Start = DateTime.Now.AddDays(-1),
                 End = DateTime.Now.Date,
                 IsTradeEnabled = false,
             }).Dump();
-            var ex = await client.DayOffExclusions.Get(id).Dump();
+            var id = excl.Id;
+            var ex = await client.ScheduleSettings.GetExclusion(id).Dump();
             ex.AssetPairRegex = "^btc";
-            await client.DayOffExclusions.Update(ex).Dump();
-            await client.DayOffExclusions.Get(id).Dump();
-            await client.DayOffExclusions.ListCompiled().Dump();
-            await client.DayOffExclusions.Delete(id).Dump();
-            await client.DayOffExclusions.Get(id).Dump();
+            await client.ScheduleSettings.UpdateExclusion(id, ex).Dump();
+            await client.ScheduleSettings.GetExclusion(id).Dump();
+            await client.ScheduleSettings.ListCompiledExclusions().Dump();
+            await client.ScheduleSettings.DeleteExclusion(id).Dump();
+            await client.ScheduleSettings.GetExclusion(id).Dump();
 
-            var s = await client.ScheduleSettings.Get().Dump();
+            var s = await client.ScheduleSettings.GetSchedule().Dump();
             s.AssetPairsWithoutDayOff.Add("BTCRABBIT");
-            await client.ScheduleSettings.Set(s).Dump();
+            await client.ScheduleSettings.SetSchedule(s).Dump();
             s.AssetPairsWithoutDayOff.Remove("BTCRABBIT");
-            await client.ScheduleSettings.Set(s).Dump();
+            await client.ScheduleSettings.SetSchedule(s).Dump();
         }
 
         public static T Dump<T>(this T o)

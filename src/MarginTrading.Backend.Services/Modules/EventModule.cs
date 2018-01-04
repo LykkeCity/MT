@@ -15,10 +15,6 @@ namespace MarginTrading.Backend.Services.Modules
                 .As<IEventChannel<MarginCallEventArgs>>()
                 .SingleInstance();
 
-            builder.RegisterType<EventChannel<OrderBookChangeEventArgs>>()
-                .As<IEventChannel<OrderBookChangeEventArgs>>()
-                .SingleInstance();
-
             builder.RegisterType<EventChannel<OrderCancelledEventArgs>>()
                 .As<IEventChannel<OrderCancelledEventArgs>>()
                 .SingleInstance();
