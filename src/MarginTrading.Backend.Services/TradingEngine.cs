@@ -517,10 +517,11 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        // TODO: Resolve situalion when we have no liquidity!
-        private void ProcessOrdersClosing(string instrument)
+        private void ProcessOrdersClosing(string instrument = null)
         {
-            var closingOrders = _ordersCache.ClosingOrders.GetOrdersByInstrument(instrument);
+            var closingOrders = string.IsNullOrEmpty(instrument)
+                ? _ordersCache.ClosingOrders.GetAllOrders()
+                : _ordersCache.ClosingOrders.GetOrdersByInstrument(instrument);
 
             if (closingOrders.Count == 0)
                 return;
@@ -530,7 +531,6 @@ namespace MarginTrading.Backend.Services
                 var me = _meRepository.GetMatchingEngineById(order.CloseOrderbookId);
 
                 ProcessOrdersClosingByMatchingEngine(order, me);
-
             }
         }
 

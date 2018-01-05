@@ -135,7 +135,7 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public ICollection<Order> GetOrdersByInstrument(string instrument)
+        public IReadOnlyCollection<Order> GetOrdersByInstrument(string instrument)
         {
             if (string.IsNullOrWhiteSpace(instrument))
                 throw new ArgumentException(nameof(instrument));
