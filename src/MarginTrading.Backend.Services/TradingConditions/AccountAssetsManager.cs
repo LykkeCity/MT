@@ -51,15 +51,17 @@ namespace MarginTrading.Backend.Services.TradingConditions
 
             if (currentInstruments.Any())
             {
-                var toRemove = currentInstruments.Where(x => !instruments.Contains(x.Instrument)).ToHashSet();
+                var toRemove = currentInstruments.Where(x => !instruments.Contains(x.Instrument)).ToArray();
 
-                var existingOrderGroups = _orderReader.GetAll().Where(o =>
-                    o.TradingConditionId == tradingConditionId && o.AccountAssetId == baseAssetId &&
-                    toRemove.Any(i => i.Instrument == o.Instrument)).GroupBy(o => o.Instrument).ToArray();
+                var existingOrderGroups = _orderReader.GetAll()
+                    .Where(o => o.TradingConditionId == tradingConditionId && o.AccountAssetId == baseAssetId)
+                    .GroupBy(o => o.Instrument)
+                    .Where(o => toRemove.Any(i => i.Instrument == o.Key))
+                    .ToArray();
 
                 if (existingOrderGroups.Any())
                 {
-                    var errorMessage = "Unable not remove following instruments as they have active orders: ";
+                    var errorMessage = "Unable to remove following instruments as they have active orders: ";
 
                     foreach (var group in existingOrderGroups)
                     {
@@ -75,7 +77,7 @@ namespace MarginTrading.Backend.Services.TradingConditions
                 }
             }
 
-            var pairsToAdd = instruments.Where(x => !currentInstruments.Select(y => y.Instrument).Contains(x));
+            var pairsToAdd = instruments.Where(x => currentInstruments.All(y => y.Instrument != x));
             
             var addedPairs = await _pairsRepository.AddAssetPairs(tradingConditionId, baseAssetId, pairsToAdd, defaults);
             await UpdateAccountAssetsCache();
