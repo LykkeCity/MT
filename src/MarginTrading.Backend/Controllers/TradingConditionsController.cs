@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Core.Mappers;
@@ -32,7 +33,6 @@ namespace MarginTrading.Backend.Controllers
 
         [HttpPost]
         [Route("")]
-        [Route("~/api/backoffice/tradingConditions/add")]
         [SwaggerOperation("AddOrReplaceTradingCondition")]
         public async Task<MtBackendResponse<TradingConditionModel>> AddOrReplaceTradingCondition(
             [FromBody] TradingConditionModel model)
@@ -46,7 +46,6 @@ namespace MarginTrading.Backend.Controllers
 
         [HttpPost]
         [Route("accountGroups")]
-        [Route("~/api/backoffice/accountGroups/add")]
         [SwaggerOperation("AddOrReplaceAccountGroup")]
         public async Task<MtBackendResponse<AccountGroupModel>> AddOrReplaceAccountGroup(
             [FromBody] AccountGroupModel model)
@@ -58,21 +57,26 @@ namespace MarginTrading.Backend.Controllers
 
         [HttpPost]
         [Route("accountAssets/assignInstruments")]
-        [Route("~/api/backoffice/accountAssets/assignInstruments")]
         [SwaggerOperation("AssignInstruments")]
         public async Task<MtBackendResponse<IEnumerable<AccountAssetPairModel>>> AssignInstruments(
             [FromBody] AssignInstrumentsRequest model)
         {
-            var assetPairs = await _accountAssetsManager.AssignInstruments(model.TradingConditionId, model.BaseAssetId,
-                model.Instruments);
-
-            return MtBackendResponse<IEnumerable<AccountAssetPairModel>>.Ok(
-                assetPairs.Select(a => a.ToBackendContract()));
+            try
+            {
+                var assetPairs = await _accountAssetsManager.AssignInstruments(model.TradingConditionId, model.BaseAssetId,
+                    model.Instruments);
+                
+                return MtBackendResponse<IEnumerable<AccountAssetPairModel>>.Ok(
+                    assetPairs.Select(a => a.ToBackendContract()));
+            }
+            catch (Exception e)
+            {
+                return MtBackendResponse<IEnumerable<AccountAssetPairModel>>.Error(e.Message);
+            }
         }
 
         [HttpPost]
         [Route("accountAssets")]
-        [Route("~/api/backoffice/accountAssets/add")]
         [SwaggerOperation("AddOrReplaceAccountAsset")]
         public async Task<MtBackendResponse<AccountAssetPairModel>> AddOrReplaceAccountAsset([FromBody]AccountAssetPairModel model)
         {
