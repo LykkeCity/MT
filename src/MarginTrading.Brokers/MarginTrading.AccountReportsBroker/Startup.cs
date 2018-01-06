@@ -1,5 +1,6 @@
 ﻿using System;
 using Autofac;
+using Autofac.Core;
 using Common.Log;
 using Lykke.SettingsReader;
 using MarginTrading.AccountReportsBroker.Repositories.AzureRepositories;
@@ -35,22 +36,27 @@ namespace MarginTrading.AccountReportsBroker
 
             if (settingsValue.ReportTarget == ReportTarget.All || settingsValue.ReportTarget == ReportTarget.Azure)
             {
-                builder.RegisterType<AccountStatAzureReportsApplication>().As<IBrokerApplication>().SingleInstance();
+                builder.RegisterType<AccountStatAzureReportsApplication>()
+                    .As<IBrokerApplication>()
+                    .WithParameter(
+                        new ResolvedParameter(
+                            (pi, ctx) => pi.ParameterType == typeof(IAccountsStatsReportsRepository),
+                            (pi, ctx) => new AccountsStatsReportsRepository(settings, log)))
+                    .SingleInstance();
             }
             
             if (settingsValue.ReportTarget == ReportTarget.All || settingsValue.ReportTarget == ReportTarget.Sql)
             {
-                builder.RegisterType<AccountStatSqlReportsApplication>().As<IBrokerApplication>().SingleInstance();
+                builder.RegisterType<AccountStatSqlReportsApplication>()
+                    .As<IBrokerApplication>()
+                    .WithParameter(
+                        new ResolvedParameter(
+                            (pi, ctx) => pi.ParameterType == typeof(IAccountsStatsReportsRepository),
+                            (pi, ctx) => new AccountsStatsReportsSqlRepository(settings.CurrentValue, log)))
+                    .SingleInstance();
             }
             
             builder.RegisterType<AccountReportsApplication>().As<IBrokerApplication>().SingleInstance();
-
-            builder.RegisterInstance(new AccountsStatsReportsRepositoryAggregator(new IAccountsStatsReportsRepository[]
-            {
-                new AccountsStatsReportsSqlRepository(settings.CurrentValue, log),
-                new AccountsStatsReportsRepository(settings, log)
-            }))
-            .As<IAccountsStatsReportsRepository>();
 
             builder.RegisterInstance(new AccountsReportsRepositoryAggregator(new IAccountsReportsRepository[]
             {
