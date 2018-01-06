@@ -1,9 +1,9 @@
 ﻿using System.Threading.Tasks;
 using Autofac;
-using MarginTradingTests.IntegrationTests.Client;
+using MarginTrading.Frontend.Tests.IntegrationTests.Client;
 using NUnit.Framework;
 
-namespace MarginTradingTests.IntegrationTests
+namespace MarginTrading.Frontend.Tests.IntegrationTests
 {
     [TestFixture]
     [Ignore("Integration")]

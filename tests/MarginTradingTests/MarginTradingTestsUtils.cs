@@ -3,8 +3,6 @@ using AzureStorage.Tables;
 using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.TradingConditions;
-using MarginTrading.Frontend.Repositories;
-using MarginTrading.Frontend.Repositories.Entities;
 
 namespace MarginTradingTests
 {
@@ -251,13 +249,6 @@ namespace MarginTradingTests
             }).Wait();
 
             return tradingConditionsRepository;
-        }
-
-        public static MarginTradingWatchListsRepository GetPopulatedMarginTradingWatchListsRepository()
-        {
-            var repository = new MarginTradingWatchListsRepository(new NoSqlTableInMemory<MarginTradingWatchListEntity>());
-
-            return repository;
         }
 
         public static MatchingEngineRoutesRepository GetPopulatedMatchingEngineRoutesRepository()

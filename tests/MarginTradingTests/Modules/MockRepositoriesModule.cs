@@ -12,8 +12,6 @@ using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Common.Settings.Models;
 using MarginTrading.Common.Settings.Repositories;
-using MarginTrading.Frontend.Repositories;
-using MarginTrading.Frontend.Repositories.Contract;
 using Moq;
 
 namespace MarginTradingTests.Modules
@@ -34,7 +32,6 @@ namespace MarginTradingTests.Modules
             var conditionsRepository = MarginTradingTestsUtils.GetPopulatedMarginTradingConditionsRepository();
             var accountGroupRepository = MarginTradingTestsUtils.GetPopulatedAccountGroupRepository();
             var accountAssetsRepository = MarginTradingTestsUtils.GetPopulatedAccountAssetsRepository();
-            var watchListRepository = MarginTradingTestsUtils.GetPopulatedMarginTradingWatchListsRepository();
             var meRoutesRepository = MarginTradingTestsUtils.GetPopulatedMatchingEngineRoutesRepository();
 
             var blobRepository = new Mock<IMarginTradingBlobRepository>();
@@ -62,7 +59,6 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(accountGroupRepository).As<IAccountGroupRepository>()
                 .SingleInstance();
             builder.RegisterInstance(accountAssetsRepository).As<IAccountAssetPairsRepository>().SingleInstance();
-            builder.RegisterInstance(watchListRepository).As<IMarginTradingWatchListRepository>().SingleInstance();
             builder.RegisterInstance(meRoutesRepository).As<IMatchingEngineRoutesRepository>().SingleInstance();
             builder.RegisterType<MatchingEngineInMemoryRepository>().As<IMatchingEngineRepository>().SingleInstance();
 
