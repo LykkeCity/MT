@@ -18,6 +18,7 @@ using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Settings;
 using MarginTrading.Common.Settings.Models;
+using MarginTradingTests.Helpers;
 using MarginTradingTests.Modules;
 using Moq;
 
@@ -48,7 +49,25 @@ namespace MarginTradingTests
             }
 
             builder.RegisterModule(new CacheModule());
-            builder.RegisterModule(new ServicesModule());
+            builder.RegisterModule(
+                new ServicesModule(new StaticSettingsManager<RiskInformingSettings>(new RiskInformingSettings
+                {
+                    Data = new[]
+                    {
+                        new RiskInformingParams
+                        {
+                            EventTypeCode = "BE01",
+                            Level = AlertSeverityLevel.None,
+                            System = "QuotesMonitor",
+                        },
+                        new RiskInformingParams
+                        {
+                            EventTypeCode = "BE02",
+                            Level = AlertSeverityLevel.None,
+                            System = "QuotesMonitor",
+                        }
+                    }
+                })));
             builder.RegisterModule(new ManagersModule());
 
             builder.RegisterType<EventChannel<AccountBalanceChangedEventArgs>>()
@@ -56,8 +75,10 @@ namespace MarginTradingTests
                 .SingleInstance();
 
             var settingsServiceMock = new Mock<IMarginTradingSettingsService>();
-            settingsServiceMock.Setup(s => s.IsMarginTradingEnabled(It.IsAny<string>())).ReturnsAsync(new EnabledMarginTradingTypes { Live = true, Demo = true });
-            settingsServiceMock.Setup(s => s.IsMarginTradingEnabled(It.IsAny<string>(), It.IsAny<bool>())).ReturnsAsync(true);
+            settingsServiceMock.Setup(s => s.IsMarginTradingEnabled(It.IsAny<string>()))
+                .ReturnsAsync(new EnabledMarginTradingTypes {Live = true, Demo = true});
+            settingsServiceMock.Setup(s => s.IsMarginTradingEnabled(It.IsAny<string>(), It.IsAny<bool>()))
+                .ReturnsAsync(true);
 
 
             builder.RegisterInstance(settingsServiceMock.Object)
@@ -68,19 +89,21 @@ namespace MarginTradingTests
             builder.RegisterInstance(new Mock<IMarginTradingOperationsLogService>().Object)
                 .As<IMarginTradingOperationsLogService>()
                 .SingleInstance();
-            
+
             var settings = new ScheduleSettings(
-                dayOffStartDay: DayOfWeek.Sunday,
-                dayOffStartTime: new TimeSpan(21, 0, 0),
-                dayOffEndDay: DayOfWeek.Sunday,
-                dayOffEndTime: new TimeSpan(21, 0, 0),
-                assetPairsWithoutDayOff: new[] {"BTCCHF"}.ToHashSet(),
-                pendingOrdersCutOff: TimeSpan.Zero);
+                DayOfWeek.Sunday,
+                new TimeSpan(21, 0, 0),
+                DayOfWeek.Sunday,
+                new TimeSpan(21, 0, 0),
+                new[] {"BTCCHF"}.ToHashSet(),
+                TimeSpan.Zero);
             var dayOffSettingsService = new Mock<IDayOffSettingsService>(MockBehavior.Strict);
             dayOffSettingsService.Setup(s => s.GetScheduleSettings()).Returns(settings);
-            dayOffSettingsService.Setup(s => s.GetExclusions(It.IsNotNull<string>())).Returns(ImmutableArray<DayOffExclusion>.Empty);
+            dayOffSettingsService.Setup(s => s.GetExclusions(It.IsNotNull<string>()))
+                .Returns(ImmutableArray<DayOffExclusion>.Empty);
             builder.RegisterInstance(dayOffSettingsService.Object).SingleInstance();
-            builder.Register<IDayOffSettingsRepository>(c => new DayOffSettingsRepository(c.Resolve<IMarginTradingBlobRepository>())).SingleInstance();
+            builder.Register<IDayOffSettingsRepository>(c =>
+                new DayOffSettingsRepository(c.Resolve<IMarginTradingBlobRepository>())).SingleInstance();
 
             builder.RegisterBuildCallback(c => c.Resolve<AccountAssetsManager>());
             builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
@@ -88,7 +111,8 @@ namespace MarginTradingTests
             Container = builder.Build();
 
             var meRepository = Container.Resolve<IMatchingEngineRepository>();
-            meRepository.InitMatchingEngines(new List<IMatchingEngineBase> {
+            meRepository.InitMatchingEngines(new List<IMatchingEngineBase>
+            {
                 Container.Resolve<IInternalMatchingEngine>(),
                 new RejectMatchingEngine()
             });
