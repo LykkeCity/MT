@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
@@ -25,7 +24,6 @@ using MarginTrading.Backend.Services.Quotes;
 using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Extensions;
-using MarginTrading.Common.Helpers;
 using MarginTrading.Common.Json;
 using MarginTrading.Common.Modules;
 using MarginTrading.Common.Services;
@@ -35,7 +33,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using ILoggerFactory = Microsoft.Extensions.Logging.ILoggerFactory;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 #pragma warning disable 1591
@@ -70,10 +67,7 @@ namespace MarginTrading.Backend
             services.AddSingleton(Configuration);
             services.AddMvc(options => options.Filters.Add(typeof(MarginTradingEnabledFilter)))
                 .AddJsonOptions(
-                    options =>
-                    {
-                        options.SerializerSettings.Converters = SerializerSettings.GetDefaultConverters();
-                    });
+                    options => { options.SerializerSettings.Converters = SerializerSettings.GetDefaultConverters(); });
             services.AddAuthentication(KeyAuthOptions.AuthenticationScheme)
                 .AddScheme<KeyAuthOptions, KeyAuthHandler>(KeyAuthOptions.AuthenticationScheme, "", options => { });
 
@@ -97,13 +91,16 @@ namespace MarginTrading.Backend
                     return s;
                 });
 
-            var settings = mtSettings.Nested(s => isLive ? s.MtBackend.MarginTradingLive : s.MtBackend.MarginTradingDemo);
+            var settings =
+                mtSettings.Nested(s => isLive ? s.MtBackend.MarginTradingLive : s.MtBackend.MarginTradingDemo);
+            var riskInformingSettings =
+                mtSettings.Nested(s => isLive ? s.RiskInformingSettings : s.RiskInformingSettingsDemo);
 
             Console.WriteLine($"IsLive: {settings.CurrentValue.IsLive}");
 
             SetupLoggers(services, mtSettings, settings);
 
-            RegisterModules(builder, mtSettings, settings, Environment);
+            RegisterModules(builder, mtSettings, settings, Environment, riskInformingSettings);
 
             builder.Populate(services);
             ApplicationContainer = builder.Build();
@@ -158,7 +155,9 @@ namespace MarginTrading.Backend
             );
         }
 
-        private void RegisterModules(ContainerBuilder builder, IReloadingManager<MtBackendSettings> mtSettings, IReloadingManager<MarginSettings> settings, IHostingEnvironment environment)
+        private void RegisterModules(ContainerBuilder builder, IReloadingManager<MtBackendSettings> mtSettings,
+            IReloadingManager<MarginSettings> settings, IHostingEnvironment environment,
+            IReloadingManager<RiskInformingSettings> riskInformingSettings)
         {
             builder.RegisterModule(new BaseServicesModule(mtSettings.CurrentValue));
             builder.RegisterModule(new BackendSettingsModule(mtSettings.CurrentValue, settings.CurrentValue));
@@ -166,8 +165,9 @@ namespace MarginTrading.Backend
             builder.RegisterModule(new EventModule());
             builder.RegisterModule(new CacheModule());
             builder.RegisterModule(new ManagersModule());
-            builder.RegisterModule(new ServicesModule());
-            builder.RegisterModule(new BackendServicesModule(mtSettings.CurrentValue, settings.CurrentValue, environment, LogLocator.CommonLog));
+            builder.RegisterModule(new ServicesModule(riskInformingSettings));
+            builder.RegisterModule(new BackendServicesModule(mtSettings.CurrentValue, settings.CurrentValue,
+                environment, LogLocator.CommonLog));
             builder.RegisterModule(new MarginTradingCommonModule());
 
             builder.RegisterBuildCallback(c => c.Resolve<AccountAssetsManager>());
