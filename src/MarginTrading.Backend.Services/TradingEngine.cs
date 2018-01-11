@@ -300,8 +300,8 @@ namespace MarginTrading.Backend.Services
         private void ProcessOrdersActive(string instrument)
         {
             var stopoutAccounts = UpdateClosePriceAndDetectStopout(instrument).ToArray();
-            foreach (var tuple in stopoutAccounts)
-                CommitStopout(tuple.Item1, tuple.Item2);
+            foreach (var account in stopoutAccounts)
+                CommitStopout(account);
 
             foreach (var order in _ordersCache.ActiveOrders.GetOrdersByInstrument(instrument))
             {
@@ -314,7 +314,7 @@ namespace MarginTrading.Backend.Services
             ProcessOrdersClosing(instrument);
         }
 
-        private IEnumerable<Tuple<MarginTradingAccount, Order[]>> UpdateClosePriceAndDetectStopout(string instrument)
+        private IEnumerable<MarginTradingAccount> UpdateClosePriceAndDetectStopout(string instrument)
         {
             var openOrders = _ordersCache.ActiveOrders.GetOrdersByInstrument(instrument).GroupBy(x => x.AccountId).ToDictionary(x => x.Key, x => x.ToArray());
 
@@ -348,16 +348,34 @@ namespace MarginTrading.Backend.Services
                     NotifyAccountLevelChanged(account, newAccountLevel);
 
                     if (newAccountLevel == AccountLevel.StopOUt)
-                        yield return new Tuple<MarginTradingAccount, Order[]>(account, accountOrders.Value);
+                        yield return account;
                 }
             }
         }
 
-        private void CommitStopout(MarginTradingAccount account, Order[] orders)
+        private void CommitStopout(MarginTradingAccount account)
         {
-            _stopoutEventChannel.SendEvent(this, new StopOutEventArgs(account, orders));
+            var activeOrders = _ordersCache.ActiveOrders.GetOrdersByAccountIds(account.Id);
+            
+            var ordersToClose = new List<Order>();
+            var newAccountUsedMargin = account.GetUsedMargin();
 
-            foreach (var order in orders)
+            foreach (var order in activeOrders.OrderBy(o => o.GetTotalFpl()))
+            {
+                if (newAccountUsedMargin <= 0 ||
+                    account.GetTotalCapital() / newAccountUsedMargin > account.GetMarginCallLevel())
+                    break;
+                
+                ordersToClose.Add(order);
+                newAccountUsedMargin -= order.GetTotalFpl();
+            }
+
+            if (!ordersToClose.Any())
+                return;
+            
+            _stopoutEventChannel.SendEvent(this, new StopOutEventArgs(account, ordersToClose.ToArray()));
+
+            foreach (var order in ordersToClose)
                 SetOrderToClosingState(order, OrderCloseReason.StopOut);
         }
 

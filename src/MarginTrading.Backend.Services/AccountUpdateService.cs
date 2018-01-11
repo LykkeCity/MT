@@ -50,8 +50,8 @@ namespace MarginTrading.Backend.Services
                 throw new Exception(string.Format(MtMessages.AccountGroupForTradingConditionNotFound, account.TradingConditionId, account.BaseAssetId));
             }
 
-            accountFpl.MarginCall = accountGroup.MarginCall;
-            accountFpl.Stopout = accountGroup.StopOut;
+            accountFpl.MarginCallLevel = accountGroup.MarginCall;
+            accountFpl.StopoutLevel = accountGroup.StopOut;
             accountFpl.CalculatedHash = accountFpl.ActualHash;
         }
 
