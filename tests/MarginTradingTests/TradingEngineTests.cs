@@ -1172,39 +1172,60 @@ namespace MarginTradingTests
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Bid = 905.57M, Ask = 905.67M }));
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0092M, Ask = 1.0095M }));
 
-            var order = new Order
+            
+            //3 orders = 10000 USD (with leverage)
+
+            Order CreateOrder(decimal volume)
             {
-                CreateDate = DateTime.UtcNow,
-                Id = Guid.NewGuid().ToString("N"),
-                AccountId = _acount1Id,
-                ClientId = _client1Id,
-                Instrument = "BTCCHF",
-                Volume = 11.14644406903176M,  //10000 USD (with leverage)
-                FillType = OrderFillType.FillOrKill
+                return new Order
+                {
+                    CreateDate = DateTime.UtcNow,
+                    Id = Guid.NewGuid().ToString("N"),
+                    AccountId = _acount1Id,
+                    ClientId = _client1Id,
+                    Instrument = "BTCCHF",
+                    Volume = volume,
+                    FillType = OrderFillType.FillOrKill
+                };
             };
 
-            order = _tradingEngine.PlaceOrderAsync(order).Result;
+            var order1 = CreateOrder(1.95M);
+            var order2 = CreateOrder(1.9M);
+            var order3 = CreateOrder(1.85M);
+            var order4 = CreateOrder(1.8M);
+            var order5 = CreateOrder(1.79M);
+            var order6 = CreateOrder(1.78M);
+
+            order1 = _tradingEngine.PlaceOrderAsync(order1).Result;
+            order2 = _tradingEngine.PlaceOrderAsync(order2).Result;
+            order3 = _tradingEngine.PlaceOrderAsync(order3).Result;
+            order4 = _tradingEngine.PlaceOrderAsync(order4).Result;
+            order5 = _tradingEngine.PlaceOrderAsync(order5).Result;
+            order6 = _tradingEngine.PlaceOrderAsync(order6).Result;
+            
             var account = _accountsCacheService.Get(_client1Id, _acount1Id);
 
-            Assert.AreEqual(OrderStatus.Active, order.Status);
-            Assert.AreEqual(1.62683m, Math.Round(account.GetMarginUsageLevel(), 5));
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
-            _appNotificationsMock.Verify(x => x.SendPositionNotification(It.IsAny<string[]>(), It.Is<string>(message => message == order.GetPushMessage()), It.IsAny<IOrder>()), Times.Once());
-
+            Assert.AreEqual(OrderStatus.Active, order1.Status);
+            Assert.AreEqual(OrderStatus.Active, order2.Status);
+            Assert.AreEqual(OrderStatus.Active, order3.Status);
+            Assert.AreEqual(OrderStatus.Active, order4.Status);
+            Assert.AreEqual(OrderStatus.Active, order5.Status);
+            Assert.AreEqual(OrderStatus.Active, order6.Status);
+            
+            Assert.AreEqual(1.63808m, Math.Round(account.GetMarginUsageLevel(), 5));
+            
             //add new order which will set account to stop out
             _matchingEngine.SetOrders(MarketMaker1Id,
                 new []{new LimitOrder { CreateDate = DateTime.UtcNow, Id = "7", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 790.286M, Volume = 15000 }
             }, new[] { "6" });
 
-            account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            Assert.AreEqual(4, account.GetOpenPositionsCount());
+            Assert.AreEqual(376.81128742m, account.GetUsedMargin());
 
-            Assert.AreEqual(0, account.GetOpenPositionsCount()); //all open orders are closed!
-            Assert.AreEqual(0, account.GetUsedMargin());
-
-            _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<MarginTradingAccount>(o => o.GetUsedMargin() == 0 && o.Balance == account.Balance)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<MarginTradingAccount>(o => o.GetUsedMargin() == 376.81128742m && o.Balance == account.Balance)));
             _clientNotifyServiceMock.Verify(x => x.NotifyAccountStopout(
                 It.Is<string>(clientId => account.ClientId == clientId), 
-                It.Is<string>(accountId => account.Id == accountId), It.Is<int>(count => count == 1), It.IsAny<decimal>()), Times.Once());
+                It.Is<string>(accountId => account.Id == accountId), It.Is<int>(count => count == 2), It.IsAny<decimal>()), Times.Once());
             _appNotificationsMock.Verify(x => x.SendPositionNotification(It.IsAny<string[]>(), It.Is<string>(message => message.Contains("Stop out")), It.IsAny<IOrder>()), Times.Once());
             _emailServiceMock.Verify(
                 x => x.SendStopOutEmailAsync(It.IsAny<string>(), account.BaseAssetId, account.Id), Times.Once);

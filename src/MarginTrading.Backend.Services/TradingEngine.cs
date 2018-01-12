@@ -367,7 +367,7 @@ namespace MarginTrading.Backend.Services
                     break;
                 
                 ordersToClose.Add(order);
-                newAccountUsedMargin -= order.GetTotalFpl();
+                newAccountUsedMargin -= order.GetMarginMaintenance();
             }
 
             if (!ordersToClose.Any())
