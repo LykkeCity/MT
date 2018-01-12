@@ -4,6 +4,6 @@
     {
         public string System { get; set; }
         public string EventTypeCode { get; set; }
-        public AlertSeverityLevel Level { get; set; }
+        public string Level { get; set; }
     }
 }

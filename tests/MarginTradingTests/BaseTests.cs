@@ -57,13 +57,13 @@ namespace MarginTradingTests
                         new RiskInformingParams
                         {
                             EventTypeCode = "BE01",
-                            Level = AlertSeverityLevel.None,
+                            Level = "None",
                             System = "QuotesMonitor",
                         },
                         new RiskInformingParams
                         {
                             EventTypeCode = "BE02",
-                            Level = AlertSeverityLevel.None,
+                            Level = "None",
                             System = "QuotesMonitor",
                         }
                     }

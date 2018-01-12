@@ -33,20 +33,18 @@ namespace MarginTrading.Backend.Services.Infrastructure
         }
 
         [CanBeNull]
-        private static string ConvertLevel(AlertSeverityLevel alertSeverityLevel)
+        private static string ConvertLevel(string alertSeverityLevel)
         {
             switch (alertSeverityLevel)
             {
-                case AlertSeverityLevel.None:
-                    return null;
-                case AlertSeverityLevel.Information:
-                    return "mt-information";
-                case AlertSeverityLevel.Warning:
-                    return "mt-warning";
-                case AlertSeverityLevel.Critical:
+                case "Critical":
                     return "mt-critical";
+                case "Warning":
+                    return "mt-warning";
+                case "None":
+                    return null;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(RiskInformingParams.Level), alertSeverityLevel, null);
+                    return "mt-information";
             }
         }
 
