@@ -4,12 +4,15 @@ using System.Linq;
 using JetBrains.Annotations;
 using Lykke.SettingsReader;
 using MarginTrading.Backend.Core.Settings;
+using MoreLinq;
 
 namespace MarginTrading.Backend.Services.Infrastructure
 {
     public class AlertSeverityLevelService : IAlertSeverityLevelService
     {
         private readonly IReloadingManager<ReadOnlyCollection<(EventTypeEnum Event, string SlackChannelType)>> _levels;
+        
+        private static readonly string _defaultLevel = "mt-critical";
 
         public AlertSeverityLevelService(IReloadingManager<RiskInformingSettings> settings)
         {
@@ -37,20 +40,21 @@ namespace MarginTrading.Backend.Services.Infrastructure
         {
             switch (alertSeverityLevel)
             {
-                case "Critical":
-                    return "mt-critical";
-                case "Warning":
-                    return "mt-warning";
                 case "None":
                     return null;
-                default:
+                case "Information":
                     return "mt-information";
+                case "Warning":
+                    return "mt-warning";
+                default:
+                    return _defaultLevel;
             }
         }
 
         public string GetSlackChannelType(EventTypeEnum eventType)
         {
-            return _levels.CurrentValue.Single(l => l.Event == eventType).SlackChannelType;
+            return _levels.CurrentValue.Where(l => l.Event == eventType).Select(l => l.SlackChannelType)
+                .FallbackIfEmpty(_defaultLevel).Single();
         }
     }
 }
