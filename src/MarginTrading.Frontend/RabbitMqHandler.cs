@@ -53,11 +53,19 @@ namespace MarginTrading.Frontend
             _tradesSubject = realm.Services.GetSubject<TradeClientContract>(WampConstants.TradesTopic);
         }
 
-        public async Task ProcessPrices(BidAskPairRabbitMqContract bidAskPair)
+        public Task ProcessPrices(BidAskPairRabbitMqContract bidAskPair)
         {
-           _allPairsSubject.OnNext(bidAskPair);
-            GetInstrumentPriceSubject(bidAskPair.Instrument).OnNext(bidAskPair);
-            await Task.FromResult(0);
+            try
+            {
+                _allPairsSubject.OnNext(bidAskPair);
+                GetInstrumentPriceSubject(bidAskPair.Instrument).OnNext(bidAskPair);
+            }
+            catch (Exception e)
+            {
+                _log.WriteWarning("RabbitMqHandler", "ProcessPrices", bidAskPair.ToJson(), e);
+            }
+           
+            return Task.CompletedTask;
         }
         
         public async Task ProcessTrades(TradeContract trade)
