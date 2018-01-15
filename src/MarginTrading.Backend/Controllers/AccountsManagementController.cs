@@ -60,7 +60,9 @@ namespace MarginTrading.Backend.Controllers
                         BaseAssetId = a.BaseAssetId,
                         Balance = a.Balance,
                         MarginLevel = a.GetMarginUsageLevel(),
-                        OpenedPositionsCount = a.GetOpenPositionsCount()
+                        OpenedPositionsCount = a.GetOpenPositionsCount(),
+                        UsedMargin = a.GetUsedMargin(),
+                        TotalBalance = a.GetTotalCapital()
                     })
                 .Where(a => a.MarginLevel <= threshold)
                 .ToArray();
