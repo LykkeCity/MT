@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
@@ -31,7 +33,8 @@ namespace MarginTrading.Backend.Services
         private readonly IEventChannel<AccountBalanceChangedEventArgs> _acountBalanceChangedEventChannel;
         private readonly ITradingEngine _tradingEngine;
 
-
+        private static readonly ConcurrentDictionary<int, SemaphoreSlim> Semaphores = new ConcurrentDictionary<int, SemaphoreSlim>();
+        
         public AccountManager(AccountsCacheService accountsCacheService,
             IMarginTradingAccountsRepository repository,
             IConsole console,
@@ -118,14 +121,27 @@ namespace MarginTrading.Backend.Services
                 CheckTransferLimits(account, amount);
             }
 
-            var updatedAccount = await _repository.UpdateBalanceAsync(account.ClientId, account.Id, amount, changeTransferLimit);
-            _acountBalanceChangedEventChannel.SendEvent(this, new AccountBalanceChangedEventArgs(updatedAccount));
-            //todo: move to separate event consumers
-            _accountsCacheService.UpdateBalance(updatedAccount);
-            _clientNotifyService.NotifyAccountUpdated(updatedAccount);
+            var semaphore = GetSemaphore(account);
 
-            await _rabbitMqNotifyService.AccountHistory(account.Id, account.ClientId, amount, updatedAccount.Balance,
-                updatedAccount.WithdrawTransferLimit, historyType, comment, eventSourceId);
+            await semaphore.WaitAsync();
+
+            try
+            {
+                var updatedAccount =
+                    await _repository.UpdateBalanceAsync(account.ClientId, account.Id, amount, changeTransferLimit);
+                _acountBalanceChangedEventChannel.SendEvent(this, new AccountBalanceChangedEventArgs(updatedAccount));
+                //todo: move to separate event consumers
+                _accountsCacheService.UpdateBalance(updatedAccount);
+                _clientNotifyService.NotifyAccountUpdated(updatedAccount);
+
+                await _rabbitMqNotifyService.AccountHistory(account.Id, account.ClientId, amount,
+                    updatedAccount.Balance,
+                    updatedAccount.WithdrawTransferLimit, historyType, comment, eventSourceId);
+            }
+            finally
+            {
+                semaphore.Release();
+            }
         }
 
         public async Task DeleteAccountAsync(string clientId, string accountId)
@@ -374,6 +390,13 @@ namespace MarginTrading.Backend.Services
 
             _accountsCacheService.UpdateAccountsCache(clientId, allClientsAccounts);
             await _rabbitMqNotifyService.UserUpdates(false, true, new[] {clientId});
+        }
+
+        private SemaphoreSlim GetSemaphore(IMarginTradingAccount account)
+        {
+            var hash = account.Id.GetHashCode() % 100;
+
+            return Semaphores.GetOrAdd(hash, new SemaphoreSlim(1, 1));
         }
 
         #endregion
