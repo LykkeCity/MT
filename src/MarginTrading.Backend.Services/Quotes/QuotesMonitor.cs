@@ -114,7 +114,7 @@ namespace MarginTrading.Backend.Services.Quotes
         {
             _log.WriteInfoAsync(nameof(QuotesMonitor), quote.ToJson(), message);
             var slackChannelType = _alertSeverityLevelService.GetSlackChannelType(eventType);
-            if (string.IsNullOrWhiteSpace(slackChannelType))
+            if (!string.IsNullOrWhiteSpace(slackChannelType))
                 _slackNotificationsSender.SendAsync(slackChannelType, nameof(QuotesMonitor), message);
         }
 
