@@ -16,7 +16,7 @@ namespace MarginTrading.Backend.Services.Quotes
     public class QuotesMonitor : TimerPeriod
     {
         private readonly ILog _log;
-        private readonly ISlackNotificationsSender _slackNotificationsSender;
+        private readonly IMtSlackNotificationsSender _slackNotificationsSender;
         private readonly MarginSettings _marginSettings;
         private readonly IQuoteCacheService _quoteCacheService;
         private readonly IDateService _dateService;
@@ -29,7 +29,7 @@ namespace MarginTrading.Backend.Services.Quotes
         private readonly Dictionary<string, OutdatedQuoteInfo> _outdatedQuotes;
 
         public QuotesMonitor(ILog log, 
-            ISlackNotificationsSender slackNotificationsSender,
+            IMtSlackNotificationsSender slackNotificationsSender,
             MarginSettings marginSettings,
             IQuoteCacheService quoteCacheService,
             IDateService dateService,
@@ -115,7 +115,7 @@ namespace MarginTrading.Backend.Services.Quotes
             _log.WriteInfoAsync(nameof(QuotesMonitor), quote.ToJson(), message);
             var slackChannelType = _alertSeverityLevelService.GetSlackChannelType(eventType);
             if (!string.IsNullOrWhiteSpace(slackChannelType))
-                _slackNotificationsSender.SendAsync(slackChannelType, nameof(QuotesMonitor), message);
+                _slackNotificationsSender.SendRawAsync(slackChannelType, nameof(QuotesMonitor), message);
         }
 
         private class OutdatedQuoteInfo

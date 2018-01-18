@@ -196,6 +196,7 @@ namespace MarginTrading.Backend
                 new MtSlackNotificationsSender(commonSlackService, "MT Backend", settings.CurrentValue.Env);
 
             services.AddSingleton<ISlackNotificationsSender>(slackService);
+            services.AddSingleton<IMtSlackNotificationsSender>(slackService);
 
             // Order of logs registration is important - UseLogToAzureStorage() registers ILog in container.
             // Last registration wins.
