@@ -10,5 +10,7 @@ namespace MarginTrading.Backend.Services.Settings
         public EmailSenderSettings EmailSender { get; set; }
         public NotificationSettings Jobs { get; set; }
         public SlackNotificationSettings SlackNotifications { get; set; }
+        public RiskInformingSettings RiskInformingSettings { get; set; }
+        public RiskInformingSettings RiskInformingSettingsDemo { get; set; }
     }
 }

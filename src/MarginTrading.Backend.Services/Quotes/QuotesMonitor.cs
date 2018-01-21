@@ -7,6 +7,7 @@ using Lykke.SlackNotifications;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
+using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Common.Enums;
 using MarginTrading.Common.Services;
 
@@ -15,11 +16,12 @@ namespace MarginTrading.Backend.Services.Quotes
     public class QuotesMonitor : TimerPeriod
     {
         private readonly ILog _log;
-        private readonly ISlackNotificationsSender _slackNotificationsSender;
+        private readonly IMtSlackNotificationsSender _slackNotificationsSender;
         private readonly MarginSettings _marginSettings;
         private readonly IQuoteCacheService _quoteCacheService;
         private readonly IDateService _dateService;
         private readonly IAssetPairDayOffService _dayOffService;
+        private readonly IAlertSeverityLevelService _alertSeverityLevelService;
 
         private const int DefaultMaxQuoteAgeInSeconds = 300;
         private const int NotificationRepeatTimeoutCoef = 5;
@@ -27,11 +29,12 @@ namespace MarginTrading.Backend.Services.Quotes
         private readonly Dictionary<string, OutdatedQuoteInfo> _outdatedQuotes;
 
         public QuotesMonitor(ILog log, 
-            ISlackNotificationsSender slackNotificationsSender,
+            IMtSlackNotificationsSender slackNotificationsSender,
             MarginSettings marginSettings,
             IQuoteCacheService quoteCacheService,
             IDateService dateService,
-            IAssetPairDayOffService dayOffService) 
+            IAssetPairDayOffService dayOffService,
+            IAlertSeverityLevelService alertSeverityLevelService) 
             : base("QuotesMonitor", 60000, log)
         {
             _log = log;
@@ -40,10 +43,11 @@ namespace MarginTrading.Backend.Services.Quotes
             _quoteCacheService = quoteCacheService;
             _dateService = dateService;
             _dayOffService = dayOffService;
+            _alertSeverityLevelService = alertSeverityLevelService;
             _outdatedQuotes = new Dictionary<string, OutdatedQuoteInfo>();
         }
 
-        public override async Task Execute()
+        public override Task Execute()
         {
             var maxQuoteAgeInSeconds = _marginSettings.MaxMarketMakerLimitOrderAge >= 0
                 ? _marginSettings.MaxMarketMakerLimitOrderAge
@@ -66,31 +70,30 @@ namespace MarginTrading.Backend.Services.Quotes
                     {
                         if (info.LastNotificationSend < minNotificationRepeatDate)
                         {
-                            await NotifyQuoteIsOutdated(quote.Value);
+                            NotifyQuoteIsOutdated(quote.Value);
                         }
                     }
                     else
                     {
-                        await NotifyQuoteIsOutdated(quote.Value);
+                        NotifyQuoteIsOutdated(quote.Value);
                     }
                 }
                 else
                 {
                     if (_outdatedQuotes.ContainsKey(quote.Key))
                     {
-                        await NotifyQuoteIsOk(quote.Value);
+                        NotifyQuoteIsOk(quote.Value);
                     }
                 }
             }
+            
+            return Task.CompletedTask;
         }
 
-        private async Task NotifyQuoteIsOutdated(InstrumentBidAskPair quote)
+        private void NotifyQuoteIsOutdated(InstrumentBidAskPair quote)
         {
             var message = $"Quotes for {quote.Instrument} stopped at {quote.Date}!";
-
-            await _log.WriteInfoAsync(nameof(QuotesMonitor), quote.ToJson(), message);
-            await _slackNotificationsSender.SendAsync(ChannelTypes.MtMmRisks, nameof(QuotesMonitor), message);
-
+            WriteMessage(quote, message, EventTypeEnum.QuoteStopped);
             var info = new OutdatedQuoteInfo
             {
                 LastQuoteRecieved = quote.Date,
@@ -99,15 +102,20 @@ namespace MarginTrading.Backend.Services.Quotes
             
             _outdatedQuotes[quote.Instrument] = info;
         }
-        
-        private async Task NotifyQuoteIsOk(InstrumentBidAskPair quote)
+
+        private void NotifyQuoteIsOk(InstrumentBidAskPair quote)
         {
             var message = $"Quotes for {quote.Instrument} started at {quote.Date}";
-
-            await _log.WriteInfoAsync(nameof(QuotesMonitor), quote.ToJson(), message);
-            await _slackNotificationsSender.SendAsync(ChannelTypes.MtMmRisks, nameof(QuotesMonitor), message);
-
+            WriteMessage(quote, message, EventTypeEnum.QuoteStarted);
             _outdatedQuotes.Remove(quote.Instrument);
+        }
+
+        private void WriteMessage(InstrumentBidAskPair quote, string message, EventTypeEnum eventType)
+        {
+            _log.WriteInfoAsync(nameof(QuotesMonitor), quote.ToJson(), message);
+            var slackChannelType = _alertSeverityLevelService.GetSlackChannelType(eventType);
+            if (!string.IsNullOrWhiteSpace(slackChannelType))
+                _slackNotificationsSender.SendRawAsync(slackChannelType, nameof(QuotesMonitor), message);
         }
 
         private class OutdatedQuoteInfo
