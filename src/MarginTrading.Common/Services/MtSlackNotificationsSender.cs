@@ -22,8 +22,7 @@ namespace MarginTrading.Common.Services
 
         public async Task SendAsync(string type, string sender, string message)
         {
-            if (type.Equals(ChannelTypes.Monitor, StringComparison.InvariantCultureIgnoreCase)
-                || type.Equals(ChannelTypes.MtMmRisks, StringComparison.InvariantCultureIgnoreCase))
+            if (type.Equals(ChannelTypes.Monitor, StringComparison.InvariantCultureIgnoreCase))
             {
                 await _sender.SendAsync(type, sender, message);
                 return;
