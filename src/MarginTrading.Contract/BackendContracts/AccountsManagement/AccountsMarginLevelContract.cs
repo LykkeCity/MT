@@ -18,5 +18,10 @@
         public decimal MarginLevel { get; set; }
         
         public int OpenedPositionsCount { get; set; }
+
+        public decimal UsedMargin { get; set; }
+
+        public decimal TotalBalance { get; set; }
+
     }
 }
