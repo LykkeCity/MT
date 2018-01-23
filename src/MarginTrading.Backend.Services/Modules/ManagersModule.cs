@@ -45,7 +45,7 @@ namespace MarginTrading.Backend.Services.Modules
                 .As<IStartable>()
                 .SingleInstance();
 
-            builder.RegisterType<InstrumentsManager>()
+            builder.RegisterType<AssetPairsManager>()
                 .AsSelf()
                 .As<IStartable>()
                 .SingleInstance();

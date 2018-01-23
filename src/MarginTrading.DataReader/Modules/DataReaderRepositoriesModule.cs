@@ -67,10 +67,6 @@ namespace MarginTrading.DataReader.Modules
                 AzureRepoFactories.MarginTrading.CreateAccountAssetsRepository(_settings.Nested(s => s.Db.MarginTradingConnString), _log)
             ).SingleInstance();
 
-            builder.Register<IAssetPairsRepository>(ctx =>
-                AzureRepoFactories.MarginTrading.CreateAssetsRepository(_settings.Nested(s => s.Db.DictsConnString), _log)
-            ).SingleInstance();
-
             builder.Register<IMarginTradingBlobRepository>(ctx =>
                 AzureRepoFactories.MarginTrading.CreateBlobRepository(_settings.Nested(s => s.Db.StateConnString))
             ).SingleInstance();

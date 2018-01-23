@@ -89,7 +89,7 @@ namespace MarginTrading.DataReader
 
             SetupLoggers(services, readerSettings, settings);
 
-            RegisterModules(builder, settings);
+            RegisterModules(builder, readerSettings, settings);
 
             builder.Populate(services);
             ApplicationContainer = builder.Build();
@@ -146,12 +146,14 @@ namespace MarginTrading.DataReader
             }
         }
 
-        private void RegisterModules(ContainerBuilder builder, IReloadingManager<DataReaderSettings> settings)
+        private void RegisterModules(ContainerBuilder builder, IReloadingManager<AppSettings> readerSettings,
+            IReloadingManager<DataReaderSettings> settings)
         {
             builder.RegisterModule(new DataReaderSettingsModule(settings.CurrentValue));
             builder.RegisterModule(new DataReaderRepositoriesModule(settings, LogLocator.CommonLog));
             builder.RegisterModule(new DataReaderServicesModule());
             builder.RegisterModule(new MarginTradingCommonModule());
+            builder.RegisterModule(new DataReaderExternalServicesModule(readerSettings));
         }
 
         private static void SetupLoggers(IServiceCollection services, IReloadingManager<AppSettings> mtSettings,
