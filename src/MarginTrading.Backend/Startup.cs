@@ -159,7 +159,7 @@ namespace MarginTrading.Backend
             IReloadingManager<MarginSettings> settings, IHostingEnvironment environment,
             IReloadingManager<RiskInformingSettings> riskInformingSettings)
         {
-            builder.RegisterModule(new BaseServicesModule(mtSettings.CurrentValue));
+            builder.RegisterModule(new BaseServicesModule(mtSettings.CurrentValue, LogLocator.CommonLog));
             builder.RegisterModule(new BackendSettingsModule(mtSettings.CurrentValue, settings.CurrentValue));
             builder.RegisterModule(new BackendRepositoriesModule(settings, LogLocator.CommonLog));
             builder.RegisterModule(new EventModule());

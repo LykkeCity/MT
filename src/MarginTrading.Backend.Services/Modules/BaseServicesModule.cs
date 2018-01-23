@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Common.Log;
 using Lykke.Common;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Services.Notifications;
@@ -10,10 +11,12 @@ namespace MarginTrading.Backend.Services.Modules
     public class BaseServicesModule : Module
     {
         private readonly MtBackendSettings _mtSettings;
+        private readonly ILog _log;
 
-        public BaseServicesModule(MtBackendSettings mtSettings)
+        public BaseServicesModule(MtBackendSettings mtSettings, ILog log)
         {
             _mtSettings = mtSettings;
+            _log = log;
         }
 
         protected override void Load(ContainerBuilder builder)
@@ -23,7 +26,8 @@ namespace MarginTrading.Backend.Services.Modules
                 .SingleInstance();
 
             builder.Register<IAppNotifications>(ctx =>
-                new SrvAppNotifications(_mtSettings.Jobs.NotificationsHubConnectionString, _mtSettings.Jobs.NotificationsHubName)
+                new SrvAppNotifications(_mtSettings.Jobs.NotificationsHubConnectionString,
+                    _mtSettings.Jobs.NotificationsHubName, _log)
             ).SingleInstance();
 
             builder.RegisterType<ClientNotifyService>()

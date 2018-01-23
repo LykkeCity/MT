@@ -14,7 +14,7 @@ using MarginTrading.Common.Settings.Repositories;
 namespace MarginTrading.Backend.Services.EventsConsumers
 {
     // TODO: Rename by role
-    public class MarginCallConsumer : SendNotificationBase,
+    public class MarginCallConsumer : NotificationSenderBase,
         IEventConsumer<MarginCallEventArgs>,
         IEventConsumer<OrderPlacedEventArgs>,
         IEventConsumer<OrderClosedEventArgs>,
@@ -69,9 +69,9 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 var marginUsageLevel = account.GetMarginUsageLevel();
                 var marginUsedPerc = marginUsageLevel == 0 ? 0 : 1 / marginUsageLevel;
 
-                var notificationTask = SendNotification(account.ClientId, string.Format(
+                var notificationTask = SendMarginEventNotification(account.ClientId, string.Format(
                     MtMessages.Notifications_MarginCall, marginUsedPerc,
-                    account.BaseAssetId), null);
+                    account.BaseAssetId));
 
                 var clientAcc = await _clientAccountService.GetAsync(account.ClientId);
 

@@ -25,52 +25,6 @@ namespace MarginTrading.Backend.Core
                 : order.TakeProfit.HasValue && order.TakeProfit > 0 && order.ClosePrice <= order.TakeProfit;
         }
 
-        public static string GetPushMessage(this IOrder order)
-        {
-            var message = string.Empty;
-            var volume = Math.Abs(order.Volume);
-            var type = order.GetOrderType() == OrderDirection.Buy ? "Long" : "Short";
-
-            switch (order.Status)
-            {
-                case OrderStatus.WaitingForExecution:
-                    message = string.Format(MtMessages.Notifications_PendingOrderPlaced, type, order.Instrument, volume, Math.Round(order.ExpectedOpenPrice ?? 0, order.AssetAccuracy));
-                    break;
-                case OrderStatus.Active:
-                    message = order.ExpectedOpenPrice.HasValue
-                        ? string.Format(MtMessages.Notifications_PendingOrderTriggered, order.GetOrderType() == OrderDirection.Buy ? "Long" : "Short", order.Instrument, volume,
-                            Math.Round(order.OpenPrice, order.AssetAccuracy))
-                        : string.Format(MtMessages.Notifications_OrderPlaced, type, order.Instrument, volume,
-                            Math.Round(order.OpenPrice, order.AssetAccuracy));
-                    break;
-                case OrderStatus.Closed:
-                    var reason = string.Empty;
-
-                    switch (order.CloseReason)
-                    {
-                        case OrderCloseReason.StopLoss:
-                            reason = MtMessages.Notifications_WithStopLossPhrase;
-                            break;
-                        case OrderCloseReason.TakeProfit:
-                            reason = MtMessages.Notifications_WithTakeProfitPhrase;
-                            break;
-                    }
-
-                    message = order.ExpectedOpenPrice.HasValue &&
-                              (order.CloseReason == OrderCloseReason.Canceled ||
-                               order.CloseReason == OrderCloseReason.CanceledBySystem)
-                        ? string.Format(MtMessages.Notifications_PendingOrderCanceled, type, order.Instrument, volume)
-                        : string.Format(MtMessages.Notifications_OrderClosed, type, order.Instrument, volume, reason,
-                            order.GetTotalFpl().ToString($"F{MarginTradingHelpers.DefaultAssetAccuracy}"),
-                            order.AccountAssetId);
-                    break;
-                case OrderStatus.Rejected:
-                    break;
-            }
-
-            return message;
-        }
-
         public static decimal GetTotalFpl(this IOrder order, decimal swaps)
         {
             return order.GetFpl() - order.GetOpenCommission() - order.GetCloseCommission() - swaps;

@@ -14,7 +14,7 @@ using MarginTrading.Common.Settings.Repositories;
 namespace MarginTrading.Backend.Services
 {
     // TODO: Rename by role
-    public class StopOutConsumer : SendNotificationBase, IEventConsumer<StopOutEventArgs>
+    public class StopOutConsumer : NotificationSenderBase, IEventConsumer<StopOutEventArgs>
     {
         private readonly IThreadSwitcher _threadSwitcher;
         private readonly IClientAccountService _clientAccountService;
@@ -63,9 +63,9 @@ namespace MarginTrading.Backend.Services
 
                 _notifyService.NotifyAccountStopout(account.ClientId, account.Id, orders.Length, totalPnl);
 
-                var notificationTask = SendNotification(account.ClientId,
+                var notificationTask = SendMarginEventNotification(account.ClientId,
                     string.Format(MtMessages.Notifications_StopOutNotification, orders.Length, totalPnl,
-                        account.BaseAssetId), null);
+                        account.BaseAssetId));
 
                 var clientAcc = await _clientAccountService.GetAsync(account.ClientId);
 
