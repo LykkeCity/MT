@@ -32,7 +32,7 @@ namespace MarginTrading.Backend.Core
 
         public static decimal GetTotalFpl(this IOrder order)
         {
-            return Math.Round(GetTotalFpl(order, order.GetSwaps()), MarginTradingHelpers.DefaultAssetAccuracy);
+            return Math.Round(GetTotalFpl(order, order.GetSwaps()), order.GetFplData().AccountBaseAssetAccuracy);
         }
 
         public static decimal GetMatchedVolume(this IOrder order)

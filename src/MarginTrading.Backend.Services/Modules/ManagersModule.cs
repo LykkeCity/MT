@@ -1,4 +1,6 @@
 ﻿using Autofac;
+using MarginTrading.Backend.Services.AssetPairs;
+using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Quotes;
@@ -46,6 +48,11 @@ namespace MarginTrading.Backend.Services.Modules
                 .SingleInstance();
 
             builder.RegisterType<AssetPairsManager>()
+                .AsSelf()
+                .As<IStartable>()
+                .SingleInstance();
+            
+            builder.RegisterType<AssetsManager>()
                 .AsSelf()
                 .As<IStartable>()
                 .SingleInstance();

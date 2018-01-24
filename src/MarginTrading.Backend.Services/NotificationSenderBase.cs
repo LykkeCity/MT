@@ -4,6 +4,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Core.Notifications;
+using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Settings;
 using MarginTrading.Common.Settings.Models;
@@ -17,15 +18,18 @@ namespace MarginTrading.Backend.Services
         private readonly IClientSettingsRepository _clientSettingsRepository;
         private readonly IAppNotifications _appNotifications;
         private readonly IClientAccountService _clientAccountService;
+        private readonly IAssetsCache _assetsCache;
 
         public NotificationSenderBase(
             IClientSettingsRepository clientSettingsRepository,
             IAppNotifications appNotifications,
-            IClientAccountService clientAccountService)
+            IClientAccountService clientAccountService,
+            IAssetsCache assetsCache)
         {
             _clientSettingsRepository = clientSettingsRepository;
             _appNotifications = appNotifications;
             _clientAccountService = clientAccountService;
+            _assetsCache = assetsCache;
         }
 
         protected async Task SendOrderChangedNotification(string clientId, IOrder order)
@@ -87,12 +91,14 @@ namespace MarginTrading.Backend.Services
                             break;
                     }
 
+                    var accuracy = _assetsCache.GetAssetAccuracy(order.AccountAssetId);
+
                     message = order.ExpectedOpenPrice.HasValue &&
                               (order.CloseReason == OrderCloseReason.Canceled ||
                                order.CloseReason == OrderCloseReason.CanceledBySystem)
                         ? string.Format(MtMessages.Notifications_PendingOrderCanceled, type, order.Instrument, volume)
                         : string.Format(MtMessages.Notifications_OrderClosed, type, order.Instrument, volume, reason,
-                            order.GetTotalFpl().ToString($"F{MarginTradingHelpers.DefaultAssetAccuracy}"),
+                            order.GetTotalFpl().ToString($"F{accuracy}"),
                             order.AccountAssetId);
                     break;
                 case OrderStatus.Rejected:

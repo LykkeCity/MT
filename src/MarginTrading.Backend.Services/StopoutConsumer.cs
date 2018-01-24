@@ -5,6 +5,7 @@ using Common;
 using Lykke.Common;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Messages;
+using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services;
@@ -23,6 +24,7 @@ namespace MarginTrading.Backend.Services
         private readonly IMarginTradingOperationsLogService _operationsLogService;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly IDateService _dateService;
+        private readonly IAssetsCache _assetsCache;
 
         public StopOutConsumer(IThreadSwitcher threadSwitcher,
             IClientSettingsRepository clientSettingsRepository,
@@ -32,9 +34,11 @@ namespace MarginTrading.Backend.Services
             IEmailService emailService,
             IMarginTradingOperationsLogService operationsLogService,
             IRabbitMqNotifyService rabbitMqNotifyService,
-            IDateService dateService) : base(clientSettingsRepository,
+            IDateService dateService,
+            IAssetsCache assetsCache) : base(clientSettingsRepository,
             appNotifications,
-            clientAccountService)
+            clientAccountService,
+            assetsCache)
         {
             _threadSwitcher = threadSwitcher;
             _clientAccountService = clientAccountService;
@@ -43,6 +47,7 @@ namespace MarginTrading.Backend.Services
             _operationsLogService = operationsLogService;
             _rabbitMqNotifyService = rabbitMqNotifyService;
             _dateService = dateService;
+            _assetsCache = assetsCache;
         }
 
         int IEventConsumer.ConsumerRank => 100;
@@ -53,7 +58,8 @@ namespace MarginTrading.Backend.Services
             var orders = ea.Orders;
             var eventTime = _dateService.Now();
             var accountMarginEventMessage = AccountMarginEventMessageConverter.Create(account, true, eventTime);
-            var totalPnl = Math.Round(orders.Sum(x => x.GetTotalFpl()), MarginTradingHelpers.DefaultAssetAccuracy);
+            var accuracy = _assetsCache.GetAssetAccuracy(account.BaseAssetId);
+            var totalPnl = Math.Round(orders.Sum(x => x.GetTotalFpl()), accuracy);
 
             _threadSwitcher.SwitchThread(async () =>
             {

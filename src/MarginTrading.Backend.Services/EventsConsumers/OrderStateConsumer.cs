@@ -1,5 +1,6 @@
 using Lykke.Common;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Settings;
@@ -26,9 +27,12 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 			IAppNotifications appNotifications,
 			IClientAccountService clientAccountService,
 			AccountManager accountManager,
-			IRabbitMqNotifyService rabbitMqNotifyService) : base(clientSettingsRepository,
-			appNotifications,
-			clientAccountService)
+			IRabbitMqNotifyService rabbitMqNotifyService,
+			IAssetsCache assetsCache)
+			: base(clientSettingsRepository,
+				appNotifications,
+				clientAccountService,
+				assetsCache)
 		{
 			_threadSwitcher = threadSwitcher;
 			_clientNotifyService = clientNotifyService;

@@ -7,6 +7,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.TradingConditions;
 using Microsoft.Rest;
 using Moq;
+using Asset = Lykke.Service.Assets.Client.Models.Asset;
 using AssetPair = Lykke.Service.Assets.Client.Models.AssetPair;
 
 namespace MarginTradingTests
@@ -19,7 +20,7 @@ namespace MarginTradingTests
         {
             var assetsService = new Mock<IAssetsService>();
 
-            var assets = new List<AssetPair>
+            var assetPairs = new List<AssetPair>
             {
                 new AssetPair
                 {
@@ -86,11 +87,27 @@ namespace MarginTradingTests
                 }
             };
 
-            var result = new HttpOperationResponse<IList<AssetPair>> {Body = assets};
-
+            var assetPairsResult = new HttpOperationResponse<IList<AssetPair>> {Body = assetPairs};
+            
             assetsService
                 .Setup(s => s.AssetPairGetAllWithHttpMessagesAsync(It.IsAny<Dictionary<string, List<string>>>(),
-                    It.IsAny<CancellationToken>())).ReturnsAsync(result);
+                    It.IsAny<CancellationToken>())).ReturnsAsync(assetPairsResult);
+            
+            var assets = new List<Asset>
+            {
+                new Asset
+                {
+                    Id = "BTC",
+                    Name = "BTC",
+                    Accuracy = 8
+                }
+            };
+            
+            var assetsResult = new HttpOperationResponse<IList<Asset>> {Body = assets};
+
+            assetsService
+                .Setup(s => s.AssetGetAllWithHttpMessagesAsync(false, It.IsAny<Dictionary<string, List<string>>>(),
+                    It.IsAny<CancellationToken>())).ReturnsAsync(assetsResult);
 
             return assetsService.Object;
         }

@@ -3,9 +3,8 @@ using System.Threading.Tasks;
 using Autofac;
 using Lykke.Service.Assets.Client;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Services.AssetPairs;
 
-namespace MarginTrading.Backend.Services
+namespace MarginTrading.Backend.Services.AssetPairs
 {
     public class AssetPairsManager : IStartable
     {
