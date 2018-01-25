@@ -1,23 +1,24 @@
 ﻿using System;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.TradingConditions;
 
 namespace MarginTrading.Backend.Services
 {
     public class CommissionService : ICommissionService
     {
-        private readonly IAssetPairsCache _assetPairsCache;
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
         private readonly ICfdCalculatorService _calculator;
+        private readonly IAssetsCache _assetsCache;
 
         public CommissionService(
-            IAssetPairsCache assetPairsCache,
             IAccountAssetsCacheService accountAssetsCacheService,
-            ICfdCalculatorService calculator)
+            ICfdCalculatorService calculator,
+            IAssetsCache assetsCache)
         {
-            _assetPairsCache = assetPairsCache;
             _accountAssetsCacheService = accountAssetsCacheService;
             _calculator = calculator;
+            _assetsCache = assetsCache;
         }
 
         private decimal GetSwaps(string accountAssetId, string instrument, OrderDirection type, DateTime? openDate, DateTime? closeDate, decimal volume, decimal swapRate)
@@ -32,7 +33,7 @@ namespace MarginTrading.Backend.Services
                 const int secondsInYear = 31536000;
                 var quote = _calculator.GetQuoteRateForBaseAsset(accountAssetId, instrument);
                 var swaps = quote * volume * swapRate * seconds / secondsInYear;
-                result = Math.Round(swaps, MarginTradingHelpers.DefaultAssetAccuracy);
+                result = Math.Round(swaps, _assetsCache.GetAssetAccuracy(accountAssetId));
             }
 
             return result;

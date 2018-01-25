@@ -5,6 +5,7 @@ using Common;
 using Lykke.Common;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Messages;
+using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services;
@@ -14,7 +15,7 @@ using MarginTrading.Common.Settings.Repositories;
 namespace MarginTrading.Backend.Services.EventsConsumers
 {
     // TODO: Rename by role
-    public class MarginCallConsumer : SendNotificationBase,
+    public class MarginCallConsumer : NotificationSenderBase,
         IEventConsumer<MarginCallEventArgs>,
         IEventConsumer<OrderPlacedEventArgs>,
         IEventConsumer<OrderClosedEventArgs>,
@@ -36,8 +37,9 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             IClientAccountService clientAccountService,
             IMarginTradingOperationsLogService operationsLogService,
             IRabbitMqNotifyService rabbitMqNotifyService,
-            IDateService dateService)
-            : base(clientSettingsRepository, appNotifications, clientAccountService)
+            IDateService dateService,
+            IAssetsCache assetsCache)
+            : base(clientSettingsRepository, appNotifications, clientAccountService, assetsCache)
         {
             _threadSwitcher = threadSwitcher;
             _emailService = emailService;
@@ -69,9 +71,9 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 var marginUsageLevel = account.GetMarginUsageLevel();
                 var marginUsedPerc = marginUsageLevel == 0 ? 0 : 1 / marginUsageLevel;
 
-                var notificationTask = SendNotification(account.ClientId, string.Format(
+                var notificationTask = SendMarginEventNotification(account.ClientId, string.Format(
                     MtMessages.Notifications_MarginCall, marginUsedPerc,
-                    account.BaseAssetId), null);
+                    account.BaseAssetId));
 
                 var clientAcc = await _clientAccountService.GetAsync(account.ClientId);
 
