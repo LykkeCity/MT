@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Lykke.Service.Assets.Client;
 using MarginTrading.Backend.Core;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,18 +13,25 @@ namespace MarginTrading.DataReader.Controllers
     [Route("api/dictionaries")]
     public class DictionariesController : Controller
     {
-        private readonly IAssetPairsRepository _assetPairsRepository;
+        private readonly IAssetsServiceWithCache _assetsService;
 
-        public DictionariesController(IAssetPairsRepository assetPairsRepository)
+        public DictionariesController(IAssetsServiceWithCache assetsService)
         {
-            _assetPairsRepository = assetPairsRepository;
+            _assetsService = assetsService;
         }
 
         [HttpGet]
         [Route("assetPairs")]
         public async Task<IEnumerable<AssetPair>> GetAllAssetPairs()
         {
-            return (await _assetPairsRepository.GetAllAsync()).Select(AssetPair.Create);
+            return (await _assetsService.GetAllAssetPairsAsync()).Select(a => new AssetPair
+            {
+                Id = a.Id,
+                Name = a.Name,
+                Accuracy = a.Accuracy,
+                BaseAssetId = a.BaseAssetId,
+                QuoteAssetId = a.QuotingAssetId
+            });
         }
 
         [HttpGet]

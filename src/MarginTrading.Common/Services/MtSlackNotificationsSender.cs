@@ -7,7 +7,7 @@ using MarginTrading.Common.Enums;
 
 namespace MarginTrading.Common.Services
 {
-    public class MtSlackNotificationsSender : ISlackNotificationsSender
+    public class MtSlackNotificationsSender : IMtSlackNotificationsSender
     {
         private readonly ISlackNotificationsSender _sender;
         private readonly string _appName;
@@ -22,13 +22,18 @@ namespace MarginTrading.Common.Services
 
         public async Task SendAsync(string type, string sender, string message)
         {
-            if (type.Equals(ChannelTypes.Monitor, StringComparison.InvariantCultureIgnoreCase)
-                || type.Equals(ChannelTypes.MtMmRisks, StringComparison.InvariantCultureIgnoreCase))
+            if (type.Equals(ChannelTypes.Monitor, StringComparison.InvariantCultureIgnoreCase))
             {
                 await _sender.SendAsync(type, sender, message);
+                return;
             }
 
             await _sender.SendAsync(ChannelTypes.MarginTrading, sender, GetSlackMsg(message));
+        }
+
+        public Task SendRawAsync(string type, string sender, string message)
+        {
+            return _sender.SendAsync(type, sender, message);
         }
 
         private string GetSlackMsg(string message)

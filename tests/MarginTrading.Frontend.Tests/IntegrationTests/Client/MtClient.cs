@@ -9,7 +9,7 @@ using MarginTrading.Frontend.Wamp;
 using WampSharp.V2;
 using WampSharp.V2.Client;
 
-namespace MarginTradingTests.IntegrationTests.Client
+namespace MarginTrading.Frontend.Tests.IntegrationTests.Client
 {
     public class MtClient
     {

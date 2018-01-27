@@ -1,11 +1,9 @@
 ﻿using System.Threading.Tasks;
 using Autofac;
-using Lykke.Service.Session.AutorestClient;
-using MarginTrading.Backend.Core;
 using MarginTrading.Frontend.Services;
 using NUnit.Framework;
 
-namespace MarginTradingTests
+namespace MarginTrading.Frontend.Tests
 {
     public class ClientTokenServiceTests : BaseTests
     {

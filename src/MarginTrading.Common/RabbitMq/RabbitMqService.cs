@@ -61,7 +61,7 @@ namespace MarginTrading.Common.RabbitMq
 
             var rabbitMqSubscriber = new RabbitMqSubscriber<TMessage>(subscriptionSettings,
                     new DefaultErrorHandlingStrategy(_logger, subscriptionSettings))
-                .SetMessageDeserializer(new ErrorLoggingJsonMessageDeserializer<TMessage>(_logger))
+                .SetMessageDeserializer(new DeserializerWithErrorLogging<TMessage>(_logger))
                 .Subscribe(handler)
                 .SetLogger(_logger)
                 .SetConsole(_consoleWriter)

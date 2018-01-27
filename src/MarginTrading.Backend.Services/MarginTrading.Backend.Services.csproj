@@ -20,15 +20,17 @@
   <ItemGroup>
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="4.2.0" />
     <PackageReference Include="Lykke.AzureQueueIntegration" Version="2.0.1" />
+    <PackageReference Include="Lykke.Common" Version="4.1.0" />
+    <PackageReference Include="Lykke.RabbitMqBroker" Version="4.3.0" />
     <PackageReference Include="Lykke.Rocks.Caching" Version="1.0.0" />
+    <PackageReference Include="Lykke.Service.Assets.Client" Version="3.0.1" />
     <PackageReference Include="Lykke.Service.Session" Version="16.0.0" />
     <PackageReference Include="Lykke.SlackNotifications" Version="1.2.0" />
     <PackageReference Include="Lykke.WampSharp.NewtonsoftJson" Version="1.0.2" />
     <PackageReference Include="Lykke.WampSharp.AspNetCore.WebSockets.Server" Version="1.0.2" />
-    <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.8" />
+    <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.10" />
+    <PackageReference Include="morelinq" Version="2.9.0" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
-    <PackageReference Include="Lykke.RabbitMqBroker" Version="4.0.5" />
-    <PackageReference Include="Lykke.Common" Version="3.0.2" />
   </ItemGroup>
 </Project>

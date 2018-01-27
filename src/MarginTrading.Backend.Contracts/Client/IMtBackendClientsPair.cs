@@ -3,7 +3,7 @@
 namespace MarginTrading.Backend.Contracts.Client
 {
     [PublicAPI]
-    internal interface IMtBackendClientsPair
+    public interface IMtBackendClientsPair
     {
         IMtBackendClient Demo { get; }
         IMtBackendClient Live { get; }

@@ -1,8 +1,10 @@
 ﻿using Autofac;
+using Lykke.SettingsReader;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MarketMakerFeed;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
@@ -19,6 +21,13 @@ namespace MarginTrading.Backend.Services.Modules
 {
 	public class ServicesModule : Module
 	{
+		private readonly IReloadingManager<RiskInformingSettings> _riskInformingSettings;
+
+		public ServicesModule(IReloadingManager<RiskInformingSettings> riskInformingSettings)
+		{
+			_riskInformingSettings = riskInformingSettings;
+		}
+
 		protected override void Load(ContainerBuilder builder)
 		{
 			builder.RegisterType<QuoteCacheService>()
@@ -145,6 +154,14 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<IDayOffSettingsService>()
 				.As<IStartable>()
 				.SingleInstance();
-        }
+			
+			builder.RegisterType<AlertSeverityLevelService>()
+				.As<IAlertSeverityLevelService>()
+				.SingleInstance();
+
+			builder.RegisterInstance(_riskInformingSettings)
+				.As<IReloadingManager<RiskInformingSettings>>()
+				.SingleInstance();
+		}
 	}
 }

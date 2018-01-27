@@ -1,11 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
-using Flurl.Http;
 using JetBrains.Annotations;
 using Lykke.Common.ApiLibrary.Middleware;
 using Lykke.Common.ApiLibrary.Swagger;
@@ -28,7 +25,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Swashbuckle.Swagger.Model;
-using Swashbuckle.SwaggerGen.Annotations;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 #pragma warning disable 1591
@@ -93,7 +89,7 @@ namespace MarginTrading.DataReader
 
             SetupLoggers(services, readerSettings, settings);
 
-            RegisterModules(builder, settings);
+            RegisterModules(builder, readerSettings, settings);
 
             builder.Populate(services);
             ApplicationContainer = builder.Build();
@@ -150,12 +146,14 @@ namespace MarginTrading.DataReader
             }
         }
 
-        private void RegisterModules(ContainerBuilder builder, IReloadingManager<DataReaderSettings> settings)
+        private void RegisterModules(ContainerBuilder builder, IReloadingManager<AppSettings> readerSettings,
+            IReloadingManager<DataReaderSettings> settings)
         {
             builder.RegisterModule(new DataReaderSettingsModule(settings.CurrentValue));
             builder.RegisterModule(new DataReaderRepositoriesModule(settings, LogLocator.CommonLog));
             builder.RegisterModule(new DataReaderServicesModule());
             builder.RegisterModule(new MarginTradingCommonModule());
+            builder.RegisterModule(new DataReaderExternalServicesModule(readerSettings));
         }
 
         private static void SetupLoggers(IServiceCollection services, IReloadingManager<AppSettings> mtSettings,

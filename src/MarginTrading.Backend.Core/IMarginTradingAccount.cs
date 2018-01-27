@@ -117,10 +117,10 @@ namespace MarginTrading.Backend.Core
         {
             var marginUsageLevel = account.GetMarginUsageLevel();
 
-            if (marginUsageLevel <= account.GetStopOut())
+            if (marginUsageLevel <= account.GetStopOutLevel())
                 return AccountLevel.StopOUt;
 
-            if (marginUsageLevel <= account.GetMarginCall())
+            if (marginUsageLevel <= account.GetMarginCallLevel())
                 return AccountLevel.MarginCall;
 
             return AccountLevel.None;
@@ -136,7 +136,7 @@ namespace MarginTrading.Backend.Core
             if (usedMargin <= 0)
                 return 100;
 
-            return totalCapital / account.GetUsedMargin();
+            return totalCapital / usedMargin;
         }
 
         public static decimal GetTotalCapital(this IMarginTradingAccount account)
@@ -169,14 +169,14 @@ namespace MarginTrading.Backend.Core
             return account.GetTotalCapital() - account.GetMarginInit();
         }
 
-        public static decimal GetMarginCall(this IMarginTradingAccount account)
+        public static decimal GetMarginCallLevel(this IMarginTradingAccount account)
         {
-            return account.GetAccountFpl().MarginCall;
+            return account.GetAccountFpl().MarginCallLevel;
         }
 
-        public static decimal GetStopOut(this IMarginTradingAccount account)
+        public static decimal GetStopOutLevel(this IMarginTradingAccount account)
         {
-            return account.GetAccountFpl().Stopout;
+            return account.GetAccountFpl().StopoutLevel;
         }
 
         public static int GetOpenPositionsCount(this IMarginTradingAccount account)

@@ -1,10 +1,14 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using AzureStorage.Tables;
+using Lykke.Service.Assets.Client;
 using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.TradingConditions;
-using MarginTrading.Frontend.Repositories;
-using MarginTrading.Frontend.Repositories.Entities;
+using Microsoft.Rest;
+using Moq;
+using Asset = Lykke.Service.Assets.Client.Models.Asset;
+using AssetPair = Lykke.Service.Assets.Client.Models.AssetPair;
 
 namespace MarginTradingTests
 {
@@ -12,83 +16,100 @@ namespace MarginTradingTests
     {
         public const string TradingConditionId = "1";
 
-        public static AssetPairsRepository GetPopulatedAssetsRepository()
+        public static IAssetsService GetPopulatedAssetsService()
         {
-            var assetsRepository = new AssetPairsRepository(new NoSqlTableInMemory<AssetPairEntity>());
+            var assetsService = new Mock<IAssetsService>();
 
-            var assets = new List<AssetPair>
+            var assetPairs = new List<AssetPair>
             {
                 new AssetPair
                 {
                     Id = "EURUSD",
                     Accuracy = 5,
                     BaseAssetId = "EUR",
-                    QuoteAssetId = "USD"
+                    QuotingAssetId = "USD"
                 },
                 new AssetPair
                 {
                     Id = "BTCEUR",
                     Accuracy = 3,
                     BaseAssetId = "BTC",
-                    QuoteAssetId = "EUR"
+                    QuotingAssetId = "EUR"
                 },
                 new AssetPair
                 {
                     Id = "BTCUSD",
                     Accuracy = 3,
                     BaseAssetId = "BTC",
-                    QuoteAssetId = "USD"
+                    QuotingAssetId = "USD"
                 },
                 new AssetPair
                 {
                     Id = "BTCCHF",
                     Accuracy = 3,
                     BaseAssetId = "BTC",
-                    QuoteAssetId = "CHF"
+                    QuotingAssetId = "CHF"
                 },
                 new AssetPair
                 {
                     Id = "CHFJPY",
                     Accuracy = 3,
                     BaseAssetId = "CHF",
-                    QuoteAssetId = "JPY"
+                    QuotingAssetId = "JPY"
                 },
                 new AssetPair
                 {
                     Id = "USDCHF",
                     Accuracy = 3,
                     BaseAssetId = "USD",
-                    QuoteAssetId = "CHF"
+                    QuotingAssetId = "CHF"
                 },
                 new AssetPair
                 {
                     Id = "EURCHF",
                     Accuracy = 5,
                     BaseAssetId = "EUR",
-                    QuoteAssetId = "CHF"
+                    QuotingAssetId = "CHF"
                 },
                 new AssetPair
                 {
                     Id = "BTCJPY",
                     Accuracy = 5,
                     BaseAssetId = "BTC",
-                    QuoteAssetId = "JPY"
+                    QuotingAssetId = "JPY"
                 },
                 new AssetPair
                 {
                     Id = "EURJPY",
                     Accuracy = 3,
                     BaseAssetId = "EUR",
-                    QuoteAssetId = "JPY"
+                    QuotingAssetId = "JPY"
                 }
             };
 
-            foreach (var asset in assets)
+            var assetPairsResult = new HttpOperationResponse<IList<AssetPair>> {Body = assetPairs};
+            
+            assetsService
+                .Setup(s => s.AssetPairGetAllWithHttpMessagesAsync(It.IsAny<Dictionary<string, List<string>>>(),
+                    It.IsAny<CancellationToken>())).ReturnsAsync(assetPairsResult);
+            
+            var assets = new List<Asset>
             {
-                assetsRepository.AddAsync(asset).Wait();
-            }
+                new Asset
+                {
+                    Id = "BTC",
+                    Name = "BTC",
+                    Accuracy = 8
+                }
+            };
+            
+            var assetsResult = new HttpOperationResponse<IList<Asset>> {Body = assets};
 
-            return assetsRepository;
+            assetsService
+                .Setup(s => s.AssetGetAllWithHttpMessagesAsync(false, It.IsAny<Dictionary<string, List<string>>>(),
+                    It.IsAny<CancellationToken>())).ReturnsAsync(assetsResult);
+
+            return assetsService.Object;
         }
 
         public static MarginTradingAccountsRepository GetPopulatedAccountsRepository(List<MarginTradingAccount> accounts)
@@ -251,13 +272,6 @@ namespace MarginTradingTests
             }).Wait();
 
             return tradingConditionsRepository;
-        }
-
-        public static MarginTradingWatchListsRepository GetPopulatedMarginTradingWatchListsRepository()
-        {
-            var repository = new MarginTradingWatchListsRepository(new NoSqlTableInMemory<MarginTradingWatchListEntity>());
-
-            return repository;
         }
 
         public static MatchingEngineRoutesRepository GetPopulatedMatchingEngineRoutesRepository()

@@ -2,6 +2,7 @@
 using System.Linq;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Messages;
+using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.TradingConditions;
 
 namespace MarginTrading.Backend.Services
@@ -13,19 +14,22 @@ namespace MarginTrading.Backend.Services
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly OrdersCache _ordersCache;
+        private readonly IAssetsCache _assetsCache;
 
         public AccountUpdateService(
             ICfdCalculatorService cfdCalculatorService,
             IAccountGroupCacheService accountGroupCacheService,
             IAccountAssetsCacheService accountAssetsCacheService,
             IAccountsCacheService accountsCacheService,
-            OrdersCache ordersCache)
+            OrdersCache ordersCache,
+            IAssetsCache assetsCache)
         {
             _cfdCalculatorService = cfdCalculatorService;
             _accountGroupCacheService = accountGroupCacheService;
             _accountAssetsCacheService = accountAssetsCacheService;
             _accountsCacheService = accountsCacheService;
             _ordersCache = ordersCache;
+            _assetsCache = assetsCache;
         }
 
         public void UpdateAccount(IMarginTradingAccount account, AccountFpl accountFpl, Order[] orders = null)
@@ -35,12 +39,14 @@ namespace MarginTrading.Backend.Services
                 orders = _ordersCache.ActiveOrders.GetOrdersByAccountIds(account.Id).ToArray();
             }
 
-            accountFpl.PnL = Math.Round(orders.Sum(x => x.GetTotalFpl()), MarginTradingHelpers.DefaultAssetAccuracy);
+            var accuracy = _assetsCache.GetAssetAccuracy(account.BaseAssetId);
+            
+            accountFpl.PnL = Math.Round(orders.Sum(x => x.GetTotalFpl()), accuracy);
 
             accountFpl.UsedMargin = Math.Round(orders.Sum(item => item.GetMarginMaintenance()),
-                MarginTradingHelpers.DefaultAssetAccuracy);
+                accuracy);
             accountFpl.MarginInit = Math.Round(orders.Sum(item => item.GetMarginInit()),
-                MarginTradingHelpers.DefaultAssetAccuracy);
+                accuracy);
             accountFpl.OpenPositionsCount = orders.Length;
 
             var accountGroup = _accountGroupCacheService.GetAccountGroup(account.TradingConditionId, account.BaseAssetId);
@@ -50,8 +56,8 @@ namespace MarginTrading.Backend.Services
                 throw new Exception(string.Format(MtMessages.AccountGroupForTradingConditionNotFound, account.TradingConditionId, account.BaseAssetId));
             }
 
-            accountFpl.MarginCall = accountGroup.MarginCall;
-            accountFpl.Stopout = accountGroup.StopOut;
+            accountFpl.MarginCallLevel = accountGroup.MarginCall;
+            accountFpl.StopoutLevel = accountGroup.StopOut;
             accountFpl.CalculatedHash = accountFpl.ActualHash;
         }
 

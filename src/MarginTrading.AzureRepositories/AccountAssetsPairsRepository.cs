@@ -99,47 +99,37 @@ namespace MarginTrading.AzureRepositories
             return await _tableStorage.GetDataAsync();
         }
 
-        public async Task<IEnumerable<IAccountAssetPair>> AssignAssetPairs(string tradingConditionId, string baseAssetId, string[] assetPairsIds, AccountAssetsSettings defaults)
+        public async Task Remove(string tradingConditionId, string baseAssetId, string assetPairId)
         {
-            var currentInstruments = (await GetAllAsync(tradingConditionId, baseAssetId)).ToArray();
+            await _tableStorage.DeleteAsync(
+                AccountAssetPairEntity.GeneratePartitionKey(tradingConditionId, baseAssetId),
+                AccountAssetPairEntity.GenerateRowKey(assetPairId));
+        }
 
-            if (currentInstruments.Any())
-            {
-                var toRemove = currentInstruments.Where(x => !assetPairsIds.Contains(x.Instrument)).Select(x => (AccountAssetPairEntity)x);
-
-                foreach (var entity in toRemove)
+        public async Task<IEnumerable<IAccountAssetPair>> AddAssetPairs(string tradingConditionId, string baseAssetId,
+            IEnumerable<string> assetPairsIds, AccountAssetsSettings defaults)
+        {
+            var entitiesToAdd = assetPairsIds.Select(x => AccountAssetPairEntity.Create(
+                new AccountAssetPair
                 {
-                    await _tableStorage.DeleteAsync(entity.PartitionKey, entity.RowKey);
-                }
-            }
+                    BaseAssetId = baseAssetId,
+                    TradingConditionId = tradingConditionId,
+                    Instrument = x,
+                    CommissionLong = defaults.CommissionLong,
+                    CommissionLot = defaults.CommissionLot,
+                    CommissionShort = defaults.CommissionShort,
+                    DealLimit = defaults.DealLimit,
+                    DeltaAsk = defaults.DeltaAsk,
+                    DeltaBid = defaults.DeltaBid,
+                    LeverageInit = defaults.LeverageInit,
+                    LeverageMaintenance = defaults.LeverageMaintenance,
+                    PositionLimit = defaults.PositionLimit,
+                    SwapLong = defaults.SwapLong,
+                    SwapShort = defaults.SwapShort
+                })).ToArray();
+            await _tableStorage.InsertAsync(entitiesToAdd);
 
-            if (assetPairsIds.Any())
-            {
-                var toAdd = assetPairsIds.Where(x => !currentInstruments.Select(y => y.Instrument).Contains(x));
-                var entitiesToAdd = toAdd.Select(x => AccountAssetPairEntity.Create(
-                    new AccountAssetPair
-                    {
-                        BaseAssetId = baseAssetId,
-                        TradingConditionId = tradingConditionId,
-                        Instrument = x,
-                        CommissionLong = defaults.CommissionLong,
-                        CommissionLot = defaults.CommissionLot,
-                        CommissionShort = defaults.CommissionShort,
-                        DealLimit = defaults.DealLimit,
-                        DeltaAsk = defaults.DeltaAsk,
-                        DeltaBid = defaults.DeltaBid,
-                        LeverageInit = defaults.LeverageInit,
-                        LeverageMaintenance = defaults.LeverageMaintenance,
-                        PositionLimit = defaults.PositionLimit,
-                        SwapLong = defaults.SwapLong,
-                        SwapShort = defaults.SwapShort
-                    })).ToArray();
-                await _tableStorage.InsertAsync(entitiesToAdd);
-
-                return entitiesToAdd;
-            }
-
-            return new IAccountAssetPair[0];
+            return entitiesToAdd;
         }
     }
 }

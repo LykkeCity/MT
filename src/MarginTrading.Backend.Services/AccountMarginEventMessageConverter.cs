@@ -21,8 +21,8 @@ namespace MarginTrading.Backend.Services
                 Balance = account.Balance,
                 WithdrawTransferLimit = account.WithdrawTransferLimit,
 
-                MarginCall = account.GetMarginCall(),
-                StopOut = account.GetStopOut(),
+                MarginCall = account.GetMarginCallLevel(),
+                StopOut = account.GetStopOutLevel(),
                 TotalCapital = account.GetTotalCapital(),
                 FreeMargin = account.GetFreeMargin(),
                 MarginAvailable = account.GetMarginAvailable(),

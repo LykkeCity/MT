@@ -1,5 +1,6 @@
 using Lykke.Common;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Settings;
@@ -8,7 +9,7 @@ using MarginTrading.Common.Settings.Repositories;
 namespace MarginTrading.Backend.Services.EventsConsumers
 {
 	// TODO: Rename by role
-	public class OrderStateConsumer : SendNotificationBase,
+	public class OrderStateConsumer : NotificationSenderBase,
 		IEventConsumer<OrderPlacedEventArgs>,
 		IEventConsumer<OrderClosedEventArgs>,
 		IEventConsumer<OrderCancelledEventArgs>
@@ -26,9 +27,12 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 			IAppNotifications appNotifications,
 			IClientAccountService clientAccountService,
 			AccountManager accountManager,
-			IRabbitMqNotifyService rabbitMqNotifyService) : base(clientSettingsRepository,
-			appNotifications,
-			clientAccountService)
+			IRabbitMqNotifyService rabbitMqNotifyService,
+			IAssetsCache assetsCache)
+			: base(clientSettingsRepository,
+				appNotifications,
+				clientAccountService,
+				assetsCache)
 		{
 			_threadSwitcher = threadSwitcher;
 			_clientNotifyService = clientNotifyService;
@@ -52,7 +56,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 				await _accountManager.UpdateBalanceAsync(account, totalFpl, AccountHistoryType.OrderClosed,
 					$"Balance changed on order close (id = {order.Id})", order.Id);
 
-				await SendNotification(order.ClientId, order.GetPushMessage(), order);
+				await SendOrderChangedNotification(order.ClientId, order);
 			});
 		}
 
@@ -63,7 +67,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 			{
 				_clientNotifyService.NotifyOrderChanged(order);
 				await _rabbitMqNotifyService.OrderHistory(order);
-				await SendNotification(order.ClientId, order.GetPushMessage(), order);
+				await SendOrderChangedNotification(order.ClientId, order);
 			});
 		}
 
@@ -74,7 +78,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 			_threadSwitcher.SwitchThread(async () =>
 			{
 				_clientNotifyService.NotifyOrderChanged(order);
-				await SendNotification(order.ClientId, order.GetPushMessage(), order);
+				await SendOrderChangedNotification(order.ClientId, order);
 			});
 		}
 	}

@@ -18,14 +18,17 @@ namespace MarginTrading.Frontend.Services
         private readonly MtFrontendSettings _settings;
         private readonly ICacheProvider _cacheProvider;
         private readonly IMaintenanceInfoRepository _maintenanceInfoRepository;
+        private readonly ITerminalInfoService _terminalInfoService;
 
         public HttpRequestService(MtFrontendSettings settings, 
             ICacheProvider cacheProvider,
-            IMaintenanceInfoRepository maintenanceInfoRepository)
+            IMaintenanceInfoRepository maintenanceInfoRepository,
+            ITerminalInfoService terminalInfoService)
         {
             _settings = settings;
             _cacheProvider = cacheProvider;
             _maintenanceInfoRepository = maintenanceInfoRepository;
+            _terminalInfoService = terminalInfoService;
         }
 
         public async Task<(TResponse Demo, TResponse Live)> RequestIfAvailableAsync<TResponse>(object request, string action, Func<TResponse> defaultResult, EnabledMarginTradingTypes enabledMarginTradingTypes, string controller = "mt")
@@ -34,8 +37,10 @@ namespace MarginTrading.Frontend.Services
             async Task<TResponse> Request(bool isLive, bool isTradingEnabled)
             {
                 var maintenanceInfo = await GetMaintenance(isLive);
+                var terminalInfo = _terminalInfoService.Get();
+                var enabledForTerminal = isLive ? terminalInfo.LiveEnabled : terminalInfo.DemoEnabled;
                 
-                if (!isTradingEnabled || maintenanceInfo.IsEnabled)
+                if (!isTradingEnabled || maintenanceInfo.IsEnabled || !enabledForTerminal)
                 {
                     return defaultResult();
                 }

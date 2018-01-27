@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Services.AssetPairs;
+using MarginTrading.Backend.Services.Assets;
 using Rocks.Caching;
 
 namespace MarginTrading.Backend.Services.Modules
@@ -11,6 +12,11 @@ namespace MarginTrading.Backend.Services.Modules
         {
             builder.RegisterType<AssetPairsCache>()
                 .As<IAssetPairsCache>()
+                .AsSelf()
+                .SingleInstance();
+            
+            builder.RegisterType<AssetsCache>()
+                .As<IAssetsCache>()
                 .AsSelf()
                 .SingleInstance();
 
