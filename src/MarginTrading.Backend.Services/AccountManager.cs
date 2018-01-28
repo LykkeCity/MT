@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
+using Lykke.Service.ClientAccount.Client;
+using Lykke.Service.ClientAccount.Client.AutorestClient.Models;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Settings;
@@ -25,10 +27,11 @@ namespace MarginTrading.Backend.Services
         private readonly MarginSettings _marginSettings;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly IAccountGroupCacheService _accountGroupCacheService;
+        private readonly IClientNotifyService _clientNotifyService;
+        private readonly IClientAccountClient _clientAccountClient;
         private readonly IMarginTradingAccountsRepository _accountsRepository;
         private readonly ITradingConditionsCacheService _tradingConditionsCacheService;
         private readonly ILog _log;
-        private readonly IClientNotifyService _clientNotifyService;
         private readonly OrdersCache _ordersCache;
         private readonly IEventChannel<AccountBalanceChangedEventArgs> _acountBalanceChangedEventChannel;
         private readonly ITradingEngine _tradingEngine;
@@ -41,16 +44,18 @@ namespace MarginTrading.Backend.Services
             MarginSettings marginSettings,
             IRabbitMqNotifyService rabbitMqNotifyService,
             IAccountGroupCacheService accountGroupCacheService,
+            IClientNotifyService clientNotifyService,
+            IClientAccountClient clientAccountClient,
             IMarginTradingAccountsRepository accountsRepository,
             ITradingConditionsCacheService tradingConditionsCacheService,
             ILog log,
-            IClientNotifyService clientNotifyService,
             OrdersCache ordersCache,
             IEventChannel<AccountBalanceChangedEventArgs> acountBalanceChangedEventChannel,
             ITradingEngine tradingEngine)
             : base(nameof(AccountManager), 60000, log)
         {
             _accountsCacheService = accountsCacheService;
+            _clientAccountClient = clientAccountClient;
             _repository = repository;
             _console = console;
             _marginSettings = marginSettings;
@@ -155,6 +160,11 @@ namespace MarginTrading.Backend.Services
             }
             
             var account = _accountsCacheService.Get(clientId, accountId);
+            
+            if (account.Balance > 0)
+                throw new Exception(
+                    $"Account [{accountId}] balance is higher than zero: [{account.Balance}]");
+            
             await _repository.DeleteAsync(clientId, accountId);
             await ProcessAccountsSetChange(clientId);
             await _rabbitMqNotifyService.AccountDeleted(account);
@@ -189,7 +199,7 @@ namespace MarginTrading.Backend.Services
                     $"Client [{clientId}] already has account with base asset [{baseAssetId}] and trading condition [{tradingConditionId}]");
             }
 
-            var account = CreateAccount(clientId, baseAssetId, tradingConditionId);
+            var account = await CreateAccountAndWalletAsync(clientId, baseAssetId, tradingConditionId);
             await _repository.AddAsync(account);
             await ProcessAccountsSetChange(account.ClientId);
             await _rabbitMqNotifyService.AccountCreated(account);
@@ -217,7 +227,7 @@ namespace MarginTrading.Backend.Services
             {
                 try
                 {
-                    var account = CreateAccount(clientId, baseAsset, tradingConditionsId);
+                    var account = await CreateAccountAndWalletAsync(clientId, baseAsset, tradingConditionsId);
                     await _repository.AddAsync(account);
                     await _rabbitMqNotifyService.AccountCreated(account);
                     newAccounts.Add(account);
@@ -249,7 +259,7 @@ namespace MarginTrading.Backend.Services
             {
                 try
                 {
-                    var account = CreateAccount(group.Key, baseAssetId, tradingConditionId);
+                    var account = await CreateAccountAndWalletAsync(group.Key, baseAssetId, tradingConditionId);
                     await _repository.AddAsync(account);
                     await _rabbitMqNotifyService.AccountCreated(account);
                     await ProcessAccountsSetChange(group.Key, group.Concat(new[] {account}).ToArray());
@@ -339,10 +349,18 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        [Pure]
-        private MarginTradingAccount CreateAccount(string clientId, string baseAssetId, string tradingConditionId)
+        private async Task<MarginTradingAccount> CreateAccountAndWalletAsync(string clientId, string baseAssetId, string tradingConditionId)
         {
-            var id = $"{(_marginSettings.IsLive ? string.Empty : _marginSettings.DemoAccountIdPrefix)}{Guid.NewGuid():N}";
+            var wallet = await _clientAccountClient.CreateWalletAsync(clientId, WalletType.Trading, OwnerType.Mt,
+                LegalEntityType.Uk, "MarginWallet", null);
+            
+            return CreateAccount(wallet.Id, clientId, baseAssetId, tradingConditionId);
+        }
+        
+        [Pure]
+        private MarginTradingAccount CreateAccount(string walletId, string clientId, string baseAssetId, string tradingConditionId)
+        {
+            var id = _marginSettings.IsLive ? walletId : $"{_marginSettings.DemoAccountIdPrefix}{Guid.NewGuid():N}";
             var initialBalance = _marginSettings.IsLive ? 0 : LykkeConstants.DefaultDemoBalance;
 
             return new MarginTradingAccount
