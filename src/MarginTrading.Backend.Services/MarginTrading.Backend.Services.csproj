@@ -24,7 +24,7 @@
     <PackageReference Include="Lykke.RabbitMqBroker" Version="4.3.0" />
     <PackageReference Include="Lykke.Rocks.Caching" Version="1.0.0" />
     <PackageReference Include="Lykke.Service.Assets.Client" Version="3.0.1" />
-    <PackageReference Include="Lykke.Service.ClientAccount.Client" Version="1.1.18" />
+    <PackageReference Include="Lykke.Service.ClientAccount.Client" Version="1.1.19" />
     <PackageReference Include="Lykke.Service.Session" Version="16.0.0" />
     <PackageReference Include="Lykke.SlackNotifications" Version="1.2.0" />
     <PackageReference Include="Lykke.WampSharp.NewtonsoftJson" Version="1.0.2" />

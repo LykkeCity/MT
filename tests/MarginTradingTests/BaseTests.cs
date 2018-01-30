@@ -2,7 +2,12 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading.Tasks;
 using Autofac;
+using FluentAssertions;
+using Lykke.Service.ClientAccount.Client;
+using Lykke.Service.ClientAccount.Client.AutorestClient.Models;
+using Lykke.Service.ClientAccount.Client.Models;
 using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.DayOffSettings;
@@ -80,11 +85,27 @@ namespace MarginTradingTests
             settingsServiceMock.Setup(s => s.IsMarginTradingEnabled(It.IsAny<string>(), It.IsAny<bool>()))
                 .ReturnsAsync(true);
 
-
             builder.RegisterInstance(settingsServiceMock.Object)
                 .As<IMarginTradingSettingsService>()
                 .SingleInstance();
 
+            var clientAccountClientMock = new Mock<IClientAccountClient>();
+            clientAccountClientMock.Setup(s => s.CreateWalletAsync(It.IsAny<string>(), It.IsAny<WalletType>(),
+                    It.IsAny<OwnerType>(), It.IsAny<LegalEntityType>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Returns((string clientId, WalletType walletType, OwnerType owner,
+                    LegalEntityType legalEntity, string name, string description) => Task.FromResult(
+                    new WalletDtoModel
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        Name = name,
+                        Type = walletType.ToString(),
+                        Description = description,
+                        ClientId = clientId,
+                    }));
+
+            builder.RegisterInstance(clientAccountClientMock.Object)
+                .As<IClientAccountClient>()
+                .SingleInstance();
 
             builder.RegisterInstance(new Mock<IMarginTradingOperationsLogService>().Object)
                 .As<IMarginTradingOperationsLogService>()
