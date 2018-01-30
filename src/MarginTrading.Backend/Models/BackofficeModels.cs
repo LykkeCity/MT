@@ -40,24 +40,4 @@ namespace MarginTrading.Backend.Models
         Created,
         Error
     }
-
-    public class AccountDepositWithdrawRequest
-    {
-        public string ClientId { get; set; }
-        public string AccountId { get; set; }
-        public PaymentType PaymentType { get; set; }
-        public decimal Amount { get; set; }
-    }
-
-    public enum PaymentType
-    {
-        Transfer,
-        Swift
-    }
-
-    public class AccounResetRequest
-    {
-        public string ClientId { get; set; }
-        public string AccountId { get; set; }
-    }
 }

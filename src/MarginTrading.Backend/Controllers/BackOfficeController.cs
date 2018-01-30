@@ -37,9 +37,6 @@ namespace MarginTrading.Backend.Controllers
         private readonly IOrderReader _ordersReader;
         private readonly IClientSettingsRepository _clientSettingsRepository;
         private readonly MarginSettings _marginSettings;
-        private readonly IMarginTradingOperationsLogService _operationsLogService;
-        private readonly IConsole _consoleWriter;
-        private readonly ILog _log;
         private readonly IMarginTradingSettingsService _marginTradingSettingsService;
 
         public BackOfficeController(
@@ -52,9 +49,6 @@ namespace MarginTrading.Backend.Controllers
             IOrderReader ordersReader,
             IClientSettingsRepository clientSettingsRepository,
             MarginSettings marginSettings,
-            IMarginTradingOperationsLogService operationsLogService,
-            IConsole consoleWriter,
-            ILog log,
             IMarginTradingSettingsService marginTradingSettingsService)
         {
             _assetPairsCache = assetPairsCache;
@@ -65,9 +59,6 @@ namespace MarginTrading.Backend.Controllers
             _ordersReader = ordersReader;
             _clientSettingsRepository = clientSettingsRepository;
             _marginSettings = marginSettings;
-            _operationsLogService = operationsLogService;
-            _consoleWriter = consoleWriter;
-            _log = log;
             _marginTradingSettingsService = marginTradingSettingsService;
         }
 
@@ -268,92 +259,6 @@ namespace MarginTrading.Backend.Controllers
         {
             await _accountManager.AddAccountAsync(account.ClientId, account.BaseAssetId, account.TradingConditionId);
             return Ok();
-        }
-
-        [Route("marginTradingAccounts/deposit")]
-        [HttpPost]
-        [ProducesResponseType(typeof(bool), 200)]
-        public async Task<IActionResult> AccountDeposit([FromBody]AccountDepositWithdrawRequest request)
-        {
-            if (!_marginSettings.IsLive)
-                return Ok(false);
-
-            var account = _accountsCacheService.Get(request.ClientId, request.AccountId);
-
-            var changeTransferLimit = request.PaymentType == PaymentType.Transfer && !IsCrypto(account.BaseAssetId); ;
-
-            try
-            {
-                await _accountManager.UpdateBalanceAsync(account, Math.Abs(request.Amount),
-                    AccountHistoryType.Deposit, "Account deposit", null/*TODO: transaction ID*/, changeTransferLimit);
-            }
-            catch (Exception e)
-            {
-                await _log.WriteErrorAsync(nameof(BackOfficeController), "AccountDeposit", request?.ToJson(), e);
-                return Ok(false);
-            }
-
-            _consoleWriter.WriteLine($"account deposit for clientId = {request.ClientId}");
-            _operationsLogService.AddLog($"account deposit {request.PaymentType}", request.ClientId, request.AccountId, request.ToJson(), true.ToJson());
-
-            return Ok(true);
-        }
-
-        [Route("marginTradingAccounts/withdraw")]
-        [HttpPost]
-        [ProducesResponseType(typeof(bool), 200)]
-        public async Task<IActionResult> AccountWithdraw([FromBody]AccountDepositWithdrawRequest request)
-        {
-            if (!_marginSettings.IsLive)
-                return Ok(false);
-
-            var account = _accountsCacheService.Get(request.ClientId, request.AccountId);
-            var freeMargin = account.GetFreeMargin();
-
-            if (freeMargin < Math.Abs(request.Amount))
-                return Ok(false);
-
-            var changeTransferLimit = request.PaymentType == PaymentType.Transfer && !IsCrypto(account.BaseAssetId);
-
-            try
-            {
-                await _accountManager.UpdateBalanceAsync(account, -Math.Abs(request.Amount),
-                    AccountHistoryType.Withdraw, "Account withdraw", null, changeTransferLimit);
-            }
-            catch (Exception e)
-            {
-                await _log.WriteErrorAsync(nameof(BackOfficeController), "AccountWithdraw", request?.ToJson(), e);
-                return Ok(false);
-            }
-
-            _consoleWriter.WriteLine($"account withdraw for clientId = {request.ClientId}");
-            _operationsLogService.AddLog($"account withdraw {request.PaymentType}", request.ClientId, request.AccountId, request.ToJson(), true.ToJson());
-
-            return Ok(true);
-        }
-
-        private bool IsCrypto(string baseAssetId)
-        {
-            return baseAssetId == LykkeConstants.BitcoinAssetId
-                   || baseAssetId == LykkeConstants.LykkeAssetId
-                   || baseAssetId == LykkeConstants.EthAssetId
-                   || baseAssetId == LykkeConstants.SolarAssetId;
-        }
-
-        [Route("marginTradingAccounts/reset")]
-        [HttpPost]
-        [ProducesResponseType(typeof(bool), 200)]
-        public async Task<IActionResult> AccountWithdrawDepositDemo([FromBody]AccounResetRequest request)
-        {
-            if (_marginSettings.IsLive)
-                return Ok(false);
-
-            await _accountManager.ResetAccountAsync(request.ClientId, request.AccountId);
-
-            _consoleWriter.WriteLine($"account reset for clientId = {request.ClientId}");
-            _operationsLogService.AddLog("account reset", request.ClientId, request.AccountId, request.ToJson(), true.ToJson());
-
-            return Ok(true);
         }
 
         #endregion
