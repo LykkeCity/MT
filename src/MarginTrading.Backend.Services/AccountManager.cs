@@ -352,7 +352,7 @@ namespace MarginTrading.Backend.Services
         private async Task<MarginTradingAccount> CreateAccountAndWalletAsync(string clientId, string baseAssetId, string tradingConditionId)
         {
             var wallet = await _clientAccountClient.CreateWalletAsync(clientId, WalletType.Trading, OwnerType.Mt,
-                LegalEntityType.Uk, "MarginWallet", null);
+                LegalEntityType.Uk, $"{baseAssetId} margin wallet", null);
             
             return CreateAccount(wallet.Id, clientId, baseAssetId, tradingConditionId);
         }
