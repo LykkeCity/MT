@@ -164,7 +164,8 @@ namespace MarginTrading.Backend.Services
             if (account.Balance > 0)
                 throw new Exception(
                     $"Account [{accountId}] balance is higher than zero: [{account.Balance}]");
-            
+
+            await _clientAccountClient.DeleteWalletAsync(accountId);
             await _repository.DeleteAsync(clientId, accountId);
             await ProcessAccountsSetChange(clientId);
             await _rabbitMqNotifyService.AccountDeleted(account);
