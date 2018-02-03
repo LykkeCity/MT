@@ -115,7 +115,7 @@ namespace MarginTrading.Backend.Controllers
 
         #region Obsolete
         
-        [Route("~/marginTradingAccounts/deposit")]
+        [Route("~/api/backoffice/marginTradingAccounts/deposit")]
         [HttpPost]
         [ProducesResponseType(typeof(bool), 200)]
         [Obsolete]
@@ -124,7 +124,7 @@ namespace MarginTrading.Backend.Controllers
             return AccountDeposit(request);
         }
         
-        [Route("~/marginTradingAccounts/withdraw")]
+        [Route("~/api/backoffice/marginTradingAccounts/withdraw")]
         [HttpPost]
         [ProducesResponseType(typeof(bool), 200)]
         [Obsolete]
@@ -133,7 +133,7 @@ namespace MarginTrading.Backend.Controllers
             return AccountWithdraw(request);
         }
         
-        [Route("~/marginTradingAccounts/reset")]
+        [Route("~/api/backoffice/marginTradingAccounts/reset")]
         [HttpPost]
         [ProducesResponseType(typeof(bool), 200)]
         [Obsolete]
