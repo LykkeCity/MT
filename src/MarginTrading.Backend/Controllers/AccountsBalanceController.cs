@@ -71,7 +71,7 @@ namespace MarginTrading.Backend.Controllers
 
         [Route("withdraw")]
         [HttpPost]
-        [ProducesResponseType(typeof(bool), 200)]
+        [ProducesResponseType(typeof(BackendResponse<AccountDepositWithdrawResponse>), 200)]
         public async Task<BackendResponse<AccountDepositWithdrawResponse>> AccountWithdraw([FromBody]AccountDepositWithdrawRequest request)
         {
             var account = _accountsCacheService.Get(request.ClientId, request.AccountId);
@@ -105,7 +105,7 @@ namespace MarginTrading.Backend.Controllers
 
         [Route("reset")]
         [HttpPost]
-        [ProducesResponseType(typeof(bool), 200)]
+        [ProducesResponseType(typeof(BackendResponse<AccountResetResponse>), 200)]
         public async Task<BackendResponse<AccountResetResponse>> AccountResetDemo([FromBody]AccounResetRequest request)
         {
             if (_marginSettings.IsLive)
