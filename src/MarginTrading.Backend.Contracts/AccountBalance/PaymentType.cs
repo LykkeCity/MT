@@ -3,6 +3,7 @@
     public enum PaymentType
     {
         Transfer,
-        Swift
+        Swift,
+        BankCard
     }
 }

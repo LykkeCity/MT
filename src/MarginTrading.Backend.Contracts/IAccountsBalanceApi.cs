@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Contracts.AccountBalance;
+using MarginTrading.Backend.Contracts.Common;
 using Refit;
 
 namespace MarginTrading.Backend.Contracts
@@ -15,13 +16,13 @@ namespace MarginTrading.Backend.Contracts
         /// Add funds to account
         /// </summary>
         [Get("/api/AccountsBalance/deposit")]
-        Task<bool> AccountDeposit(AccountDepositWithdrawRequest request);
+        Task<BackendResponse<AccountDepositWithdrawResponse>> AccountDeposit(AccountDepositWithdrawRequest request);
         
         /// <summary>
         /// Remove funds from account
         /// </summary>
         [Get("/api/AccountsBalance/withdraw")]
-        Task<bool> AccountWithdraw(AccountDepositWithdrawRequest request);
+        Task<BackendResponse<AccountDepositWithdrawResponse>> AccountWithdraw(AccountDepositWithdrawRequest request);
         
         /// <summary>
         /// Gets schedule settings
@@ -30,6 +31,6 @@ namespace MarginTrading.Backend.Contracts
         /// Only for DEMO account
         /// </remarks>
         [Get("/api/AccountsBalance/reset")]
-        Task<bool> AccountResetDemo(AccounResetRequest request);
+        Task<BackendResponse<AccountResetResponse>> AccountResetDemo(AccounResetRequest request);
     }
 }

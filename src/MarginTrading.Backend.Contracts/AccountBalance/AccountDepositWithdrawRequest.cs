@@ -6,5 +6,6 @@
         public string AccountId { get; set; }
         public PaymentType PaymentType { get; set; }
         public decimal Amount { get; set; }
+        public string TransactionId { get; set; }
     }
 }

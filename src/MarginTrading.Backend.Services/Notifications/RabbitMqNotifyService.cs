@@ -26,11 +26,11 @@ namespace MarginTrading.Backend.Services.Notifications
             _log = log;
         }
 
-        public Task AccountHistory(string accountId, string clientId, decimal amount, decimal balance, decimal withdrawTransferLimit, AccountHistoryType type, string comment = null, string eventSourceId = null)
+        public Task AccountHistory(string transactionId, string accountId, string clientId, decimal amount, decimal balance, decimal withdrawTransferLimit, AccountHistoryType type, string comment = null, string eventSourceId = null)
         {
             var record = new MarginTradingAccountHistory
             {
-                Id = Guid.NewGuid().ToString("N"),
+                Id = transactionId,
                 AccountId = accountId,
                 ClientId = clientId,
                 Type = type,
