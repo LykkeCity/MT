@@ -9,7 +9,7 @@ namespace MarginTrading.Common.Extensions
         {
             if (!Enum.TryParse(dto.ToString(), out TEnum result))
             {
-                throw new NotSupportedException($"Value {dto} is not suppoted by mapper");
+                throw new NotSupportedException($"Value {dto} is not supported by mapper");
             }
 
             return result;
