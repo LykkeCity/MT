@@ -24,7 +24,7 @@ namespace MarginTrading.Contract.ClientContracts
         [DisplayName("Trade date and time")]
         public DateTime Date { get; set; }
 
-        [DisplayName("Trade effective prive")]
+        [DisplayName("Trade effective price")]
         public decimal Price { get; set; }
 
         [DisplayName("Trade effective volume")]
