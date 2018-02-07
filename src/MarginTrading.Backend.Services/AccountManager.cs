@@ -200,7 +200,7 @@ namespace MarginTrading.Backend.Services
                     $"Client [{clientId}] already has account with base asset [{baseAssetId}] and trading condition [{tradingConditionId}]");
             }
 
-            var account = await CreateAccountAndWalletAsync(clientId, baseAssetId, tradingConditionId);
+            var account = await CreateAccount(clientId, baseAssetId, tradingConditionId);
             await _repository.AddAsync(account);
             await ProcessAccountsSetChange(account.ClientId);
             await _rabbitMqNotifyService.AccountCreated(account);
@@ -228,7 +228,7 @@ namespace MarginTrading.Backend.Services
             {
                 try
                 {
-                    var account = await CreateAccountAndWalletAsync(clientId, baseAsset, tradingConditionsId);
+                    var account = await CreateAccount(clientId, baseAsset, tradingConditionsId);
                     await _repository.AddAsync(account);
                     await _rabbitMqNotifyService.AccountCreated(account);
                     newAccounts.Add(account);
@@ -260,7 +260,7 @@ namespace MarginTrading.Backend.Services
             {
                 try
                 {
-                    var account = await CreateAccountAndWalletAsync(group.Key, baseAssetId, tradingConditionId);
+                    var account = await CreateAccount(group.Key, baseAssetId, tradingConditionId);
                     await _repository.AddAsync(account);
                     await _rabbitMqNotifyService.AccountCreated(account);
                     await ProcessAccountsSetChange(group.Key, group.Concat(new[] {account}).ToArray());
@@ -349,19 +349,14 @@ namespace MarginTrading.Backend.Services
                 throw new Exception("No trading conditions found");
             }
         }
-
-        private async Task<MarginTradingAccount> CreateAccountAndWalletAsync(string clientId, string baseAssetId, string tradingConditionId)
-        {
-            var wallet = await _clientAccountClient.CreateWalletAsync(clientId, WalletType.Trading, OwnerType.Mt,
-                LegalEntityType.Uk, $"{baseAssetId} margin wallet", null);
-            
-            return CreateAccount(wallet.Id, clientId, baseAssetId, tradingConditionId);
-        }
         
-        [Pure]
-        private MarginTradingAccount CreateAccount(string walletId, string clientId, string baseAssetId, string tradingConditionId)
+        private async Task<MarginTradingAccount> CreateAccount(string clientId, string baseAssetId, string tradingConditionId)
         {
-            var id = _marginSettings.IsLive ? walletId : $"{_marginSettings.DemoAccountIdPrefix}{Guid.NewGuid():N}";
+            var wallet = _marginSettings.IsLive
+                ? await _clientAccountClient.CreateWalletAsync(clientId, WalletType.Trading, OwnerType.Mt,
+                    LegalEntityType.Vanuatu, $"{baseAssetId} margin wallet", null)
+                : null;
+            var id = _marginSettings.IsLive ? wallet?.Id : $"{_marginSettings.DemoAccountIdPrefix}{Guid.NewGuid():N}";
             var initialBalance = _marginSettings.IsLive ? 0 : LykkeConstants.DefaultDemoBalance;
 
             return new MarginTradingAccount
