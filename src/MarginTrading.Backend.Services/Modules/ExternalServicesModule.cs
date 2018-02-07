@@ -2,6 +2,7 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Lykke.Service.Assets.Client;
+using Lykke.Service.ClientAccount.Client;
 using Lykke.SettingsReader;
 using MarginTrading.Backend.Services.Settings;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,6 +26,8 @@ namespace MarginTrading.Backend.Services.Modules
                 _settings.CurrentValue.Assets.CacheExpirationPeriod));
             
             builder.Populate(_services);
+
+            builder.RegisterLykkeServiceClient(_settings.CurrentValue.ClientAccountServiceClient.ServiceUrl);
         }
     }
 }

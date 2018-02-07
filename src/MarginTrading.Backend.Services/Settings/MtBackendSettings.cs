@@ -13,5 +13,6 @@ namespace MarginTrading.Backend.Services.Settings
         public RiskInformingSettings RiskInformingSettings { get; set; }
         public RiskInformingSettings RiskInformingSettingsDemo { get; set; }
         public AssetClientSettings Assets { get; set; }
+        public ClientAccountServiceSettings ClientAccountServiceClient { get; set; }
     }
 }
