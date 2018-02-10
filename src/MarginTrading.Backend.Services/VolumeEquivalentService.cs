@@ -21,8 +21,6 @@ namespace MarginTrading.Backend.Services
 
 		private string GetEquivalentAsset()
 		{
-			if (string.IsNullOrEmpty(_equivalentAssetSetting))
-				throw new Exception("Equivalent asset is not set in settings.");
 			return _equivalentAssetSetting;
 		}
 

@@ -143,6 +143,9 @@ namespace MarginTrading.AzureRepositories
                 Orders = src.MatchedOrders.SerializeArrayForTableStorage(),
                 ClosedOrders = src.MatchedCloseOrders.SerializeArrayForTableStorage(),
                 SwapCommission = (double) src.SwapCommission,
+                EquivalentAsset = src.EquivalentAsset,
+                OpenPriceEquivalent = (double) src.OpenPriceEquivalent,
+                ClosePriceEquivalent = (double) src.ClosePriceEquivalent,
                 Comment = src.Comment
             };
         }
