@@ -26,7 +26,8 @@ namespace MarginTrading.Backend.Services.Notifications
             _log = log;
         }
 
-        public Task AccountHistory(string accountId, string clientId, decimal amount, decimal balance, decimal withdrawTransferLimit, AccountHistoryType type, string comment = null, string eventSourceId = null)
+        public Task AccountHistory(string accountId, string clientId, decimal amount, decimal balance, 
+            decimal withdrawTransferLimit, AccountHistoryType type, string comment = null, string eventSourceId = null)
         {
             var record = new MarginTradingAccountHistory
             {
@@ -45,14 +46,14 @@ namespace MarginTrading.Backend.Services.Notifications
             return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountHistory.ExchangeName, record.ToBackendContract());
         }
 
-        public Task OrderHistory(IOrder order)
+        public Task OrderHistory(IOrder order, OrderUpdateType orderUpdateType)
         {
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderHistory.ExchangeName, order.ToFullContract());
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderHistory.ExchangeName, order.ToFullContract(orderUpdateType));
         }
 
         public Task OrderReject(IOrder order)
         {
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderRejected.ExchangeName, order.ToFullContract());
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderRejected.ExchangeName, order.ToFullContract(OrderUpdateType.Reject));
         }
 
         public Task OrderBookPrice(InstrumentBidAskPair quote)

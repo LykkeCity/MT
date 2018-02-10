@@ -31,6 +31,7 @@ namespace MarginTrading.AzureRepositories
         decimal IOrderHistory.ClosePrice => (decimal) ClosePrice;
         public double ClosePrice { get; set; }
         decimal IOrderHistory.CloseCrossPrice => (decimal) CloseCrossPrice;
+        public OrderUpdateType OrderUpdateType { get; set; }
         public double CloseCrossPrice { get; set; }
         decimal IOrderHistory.Volume => (decimal) Volume;
         public double Volume { get; set; }
@@ -131,7 +132,8 @@ namespace MarginTrading.AzureRepositories
                 Orders = src.MatchedOrders.SerializeArrayForTableStorage(),
                 ClosedOrders = src.MatchedCloseOrders.SerializeArrayForTableStorage(),
                 SwapCommission = (double) src.SwapCommission,
-                Comment = src.Comment
+                Comment = src.Comment,
+                OrderUpdateType = src.OrderUpdateType,
             };
         }
     }

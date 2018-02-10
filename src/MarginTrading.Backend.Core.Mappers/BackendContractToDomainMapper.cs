@@ -77,7 +77,7 @@ namespace MarginTrading.Backend.Core.Mappers
                 MarginInit = src.MarginInit,
                 MarginMaintenance = src.MarginMaintenance,
                 OpenCrossPrice = src.OpenCrossPrice,
-                CloseCrossPrice = src.CloseCrossPrice
+                CloseCrossPrice = src.CloseCrossPrice,
             };
 
             foreach (var order in src.MatchedOrders)

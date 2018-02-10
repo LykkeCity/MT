@@ -126,13 +126,13 @@ namespace MarginTrading.Backend.Core
 
     public enum OrderUpdateType
     {
-        Open,
-        TakeProfitTrigger,
-        StopLossTrigger,
-        ExpectedOpenPriceTrigger,
-        Update,
-        ClosePending,
-        ClosePosition
+        Place,
+        Cancel,
+        Activate,
+        Reject,
+        Closing,
+        Close,
+        ChangeOrderLimits,
     }
 
     public static class OrderTypeExtension

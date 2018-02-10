@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Autofac.Features.Variance;
 using Lykke.SettingsReader;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MarketMakerFeed;
@@ -92,10 +93,15 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<IEventConsumer<StopOutEventArgs>>()
 				.SingleInstance();
 
+			builder.RegisterSource(new ContravariantRegistrationSource());
 			builder.RegisterType<OrderStateConsumer>()
 				.As<IEventConsumer<OrderPlacedEventArgs>>()
 				.As<IEventConsumer<OrderClosedEventArgs>>()
 				.As<IEventConsumer<OrderCancelledEventArgs>>()
+				.As<IEventConsumer<OrderLimitsChangedEventArgs>>()
+				.As<IEventConsumer<OrderClosingEventArgs>>()
+				.As<IEventConsumer<OrderActivatedEventArgs>>()
+				.As<IEventConsumer<OrderRejectedEventArgs>>()
 				.SingleInstance();
 
 			builder.RegisterType<TradesConsumer>()
