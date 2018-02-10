@@ -45,11 +45,11 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 			SendOrderHistory(ea);
 			switch (ea.UpdateType)
 			{
-				case OrderUpdateType.Activate:
 				case OrderUpdateType.Closing:
 					break;
+				case OrderUpdateType.Activate:
 				case OrderUpdateType.Place:
-					OnPlaced(ea);
+					OnPlacedOrActivated(ea);
 					break;
 				case OrderUpdateType.Cancel:
 					OnCancelled(ea);
@@ -101,7 +101,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 			});
 		}
 
-		private void OnPlaced(OrderUpdateBaseEventArgs ea)
+		private void OnPlacedOrActivated(OrderUpdateBaseEventArgs ea)
 		{
 			var order = ea.Order;
 			_threadSwitcher.SwitchThread(async () =>
