@@ -53,12 +53,15 @@ namespace MarginTrading.Backend.Services
             return WaitingForExecutionOrders.GetAllOrders().ToImmutableArray();
         }
 
+        public bool TryGetOrderById(string orderId, out Order order)
+        {
+            return WaitingForExecutionOrders.TryGetOrderById(orderId, out order) ||
+                   ActiveOrders.TryGetOrderById(orderId, out order);
+        }
+        
         public Order GetOrderById(string orderId)
         {
-            if (WaitingForExecutionOrders.TryGetOrderById(orderId, out var result))
-                return result;
-
-            if (ActiveOrders.TryGetOrderById(orderId, out result))
+            if (TryGetOrderById(orderId, out var result))
                 return result;
 
             throw new Exception(string.Format(MtMessages.OrderNotFound, orderId));
