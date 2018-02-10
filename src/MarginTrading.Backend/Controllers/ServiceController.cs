@@ -13,10 +13,13 @@ namespace MarginTrading.Backend.Controllers
     public class ServiceController : Controller
     {
         private readonly IMaintenanceModeService _maintenanceModeService;
+        private readonly IQuoteCacheService _quoteCacheService;
 
-        public ServiceController(IMaintenanceModeService maintenanceModeService)
+        public ServiceController(IMaintenanceModeService maintenanceModeService,
+            IQuoteCacheService quoteCacheService)
         {
             _maintenanceModeService = maintenanceModeService;
+            _quoteCacheService = quoteCacheService;
         }
 
         [HttpPost]
@@ -35,6 +38,15 @@ namespace MarginTrading.Backend.Controllers
             var result = _maintenanceModeService.CheckIsEnabled();
 
             return MtBackendResponse<bool>.Ok(result);
+        }
+
+        [HttpDelete]
+        [Route("bestprice/{assetPair}")]
+        public MtBackendResponse<bool> ClearBestBriceCache(string assetPair)
+        {
+            _quoteCacheService.RemoveQuote(assetPair);
+            
+            return MtBackendResponse<bool>.Ok(true);
         }
     }
 }
