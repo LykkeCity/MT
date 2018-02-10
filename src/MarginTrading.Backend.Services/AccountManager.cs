@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
-using JetBrains.Annotations;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.ClientAccount.Client.AutorestClient.Models;
 using MarginTrading.Backend.Core;
@@ -16,6 +15,7 @@ using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Contract.RabbitMqMessageModels;
 using MarginTrading.Backend.Services.TradingConditions;
+using MoreLinq;
 
 namespace MarginTrading.Backend.Services
 {
@@ -95,7 +95,8 @@ namespace MarginTrading.Backend.Services
 
         private IReadOnlyList<IMarginTradingAccount> GetAccountsToWriteStats()
         {
-            var accountsIdsToWrite = _ordersCache.GetActive().Select(a => a.AccountId).Distinct().ToHashSet();
+            var accountsIdsToWrite =
+                new HashSet<string>(_ordersCache.GetActive().Select(a => a.AccountId).Distinct(), null);
             return _accountsCacheService.GetAll().Where(a => accountsIdsToWrite.Contains(a.Id)).ToList();
         }
 
@@ -103,7 +104,7 @@ namespace MarginTrading.Backend.Services
         {
             var accountStats = accounts.Select(a => a.ToRabbitMqContract(_marginSettings.IsLive));
 
-            var chunks = accountStats.ToChunks(100);
+            var chunks = accountStats.Batch(100);
 
             foreach (var chunk in chunks)
             {
@@ -279,9 +280,10 @@ namespace MarginTrading.Backend.Services
         
         public async Task<List<IOrder>> CloseAccountOrders(string accountId, OrderCloseReason reason)
         {
-            var openedOrders = _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountId).ToArray();
             var closedOrders = new List<IOrder>();
-
+            
+            var openedOrders = _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountId);
+            
             foreach (var order in openedOrders)
             {
                 try
@@ -291,8 +293,24 @@ namespace MarginTrading.Backend.Services
                 }
                 catch (Exception e)
                 {
-                    await _log.WriteWarningAsync(nameof(AccountManager), "CloseAccountActiveOrders",
+                    await _log.WriteWarningAsync(nameof(AccountManager), "CloseAccountOrders",
                         $"AccountId: {accountId}, OrderId: {order.Id}", $"Error closing order: {e.Message}");
+                }
+            }
+
+            var pendingOrders = _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(accountId);
+            
+            foreach (var order in pendingOrders)
+            {
+                try
+                {
+                    var closedOrder = _tradingEngine.CancelPendingOrder(order.Id, reason);
+                    closedOrders.Add(closedOrder);
+                }
+                catch (Exception e)
+                {
+                    await _log.WriteWarningAsync(nameof(AccountManager), "CloseAccountOrders",
+                        $"AccountId: {accountId}, OrderId: {order.Id}", $"Error cancelling order: {e.Message}");
                 }
             }
 

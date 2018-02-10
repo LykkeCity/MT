@@ -18,6 +18,7 @@ namespace MarginTrading.AzureRepositories
         decimal IMarginTradingAccount.Balance => (decimal) Balance;
         public double Balance { get; set; }
         decimal IMarginTradingAccount.WithdrawTransferLimit => (decimal) WithdrawTransferLimit;
+        public AccountFpl FplData => new AccountFpl();
         public double WithdrawTransferLimit { get; set; }
         public double MarginCall { get; set; }
         public double StopOut { get; set; }
