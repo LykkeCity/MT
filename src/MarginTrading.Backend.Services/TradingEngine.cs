@@ -29,6 +29,7 @@ namespace MarginTrading.Backend.Services
         private readonly IValidateOrderService _validateOrderService;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly IClientNotifyService _notifyService;
+        private readonly IVolumeEquivalentService _volumeEquivalentService;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly OrdersCache _ordersCache;
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
@@ -51,6 +52,7 @@ namespace MarginTrading.Backend.Services
             ICommissionService swapCommissionService,
             IClientNotifyService notifyService,
             IRabbitMqNotifyService rabbitMqNotifyService,
+            IVolumeEquivalentService volumeEquivalentService,
             IAccountsCacheService accountsCacheService,
             OrdersCache ordersCache,
             IAccountAssetsCacheService accountAssetsCacheService,
@@ -71,6 +73,7 @@ namespace MarginTrading.Backend.Services
             _swapCommissionService = swapCommissionService;
             _validateOrderService = validateOrderService;
             _rabbitMqNotifyService = rabbitMqNotifyService;
+            _volumeEquivalentService = volumeEquivalentService;
             _accountsCacheService = accountsCacheService;
             _ordersCache = ordersCache;
             _accountAssetsCacheService = accountAssetsCacheService;
@@ -138,6 +141,8 @@ namespace MarginTrading.Backend.Services
                     return false;
                 }
 
+                _volumeEquivalentService.EnrichOpeningOrder(order);
+                
                 MakeOrderActive(order);
 
                 return true;
@@ -195,6 +200,7 @@ namespace MarginTrading.Backend.Services
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
             _swapCommissionService.SetCommissionRates(account.TradingConditionId, account.BaseAssetId, order);
             _ordersCache.ActiveOrders.Add(order);
+            
             _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
         }
 
@@ -249,7 +255,7 @@ namespace MarginTrading.Backend.Services
             _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
         }
 
-        #region Orders waition for execution
+        #region Orders waiting for execution
         
         private void ProcessOrdersWaitingForExecution(string instrument)
         {
@@ -441,6 +447,8 @@ namespace MarginTrading.Backend.Services
 
                 return true;
             });
+
+            _volumeEquivalentService.EnrichClosingOrder(order);
 
             return Task.FromResult(order);
         }

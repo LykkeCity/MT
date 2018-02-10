@@ -128,7 +128,10 @@ namespace MarginTrading.Backend.Core.Mappers
                 InterestRateSwap = src.GetSwaps(),
                 CommissionLot = src.CommissionLot,
                 OpenCommission = src.GetOpenCommission(),
-                CloseCommission = src.GetCloseCommission()
+                CloseCommission = src.GetCloseCommission(),
+                EquivalentAsset = src.EquivalentAsset,
+                OpenPriceEquivalent = src.OpenPriceEquivalent,
+                ClosePriceEquivalent = src.ClosePriceEquivalent
             };
         }
 
@@ -155,7 +158,10 @@ namespace MarginTrading.Backend.Core.Mappers
                 InterestRateSwap = src.InterestRateSwap,
                 CommissionLot = src.CommissionLot,
                 OpenCommission = src.OpenCommission,
-                CloseCommission = src.CloseCommission
+                CloseCommission = src.CloseCommission,
+                EquivalentAsset = src.EquivalentAsset,
+                OpenPriceEquivalent = src.OpenPriceEquivalent,
+                ClosePriceEquivalent = src.ClosePriceEquivalent
             };
         }
 
@@ -182,7 +188,10 @@ namespace MarginTrading.Backend.Core.Mappers
                 InterestRateSwap = src.InterestRateSwap,
                 CommissionLot = src.CommissionLot,
                 OpenCommission = src.OpenCommission,
-                CloseCommission = src.CloseCommission
+                CloseCommission = src.CloseCommission,
+                EquivalentAsset = src.EquivalentAsset,
+                OpenPriceEquivalent = src.OpenPriceEquivalent,
+                ClosePriceEquivalent = src.ClosePriceEquivalent
             };
         }
 
@@ -212,7 +221,10 @@ namespace MarginTrading.Backend.Core.Mappers
                 CommissionLot = src.CommissionLot,
                 OpenCommission = src.GetOpenCommission(),
                 CloseCommission = src.GetCloseCommission(),
-                SwapCommission = src.SwapCommission
+                SwapCommission = src.SwapCommission,
+                EquivalentAsset = src.EquivalentAsset,
+                OpenPriceEquivalent = src.OpenPriceEquivalent,
+                ClosePriceEquivalent = src.ClosePriceEquivalent
             };
         }
 
@@ -242,6 +254,9 @@ namespace MarginTrading.Backend.Core.Mappers
                 OpenCommission = src.GetOpenCommission(),
                 CloseCommission = src.GetCloseCommission(),
                 SwapCommission = src.SwapCommission,
+                EquivalentAsset = src.EquivalentAsset,
+                OpenPriceEquivalent = src.OpenPriceEquivalent,
+                ClosePriceEquivalent = src.ClosePriceEquivalent,
                 StartClosingDate = src.StartClosingDate,
                 Status = src.Status.ToType<OrderStatusContract>(),
                 CloseReason = src.CloseReason.ToType<OrderCloseReasonContract>(),
@@ -303,7 +318,10 @@ namespace MarginTrading.Backend.Core.Mappers
                 CommissionLot = src.CommissionLot,
                 OpenCommission = src.GetOpenCommission(),
                 CloseCommission = src.GetCloseCommission(),
-                SwapCommission = src.SwapCommission
+                SwapCommission = src.SwapCommission,
+                EquivalentAsset = src.EquivalentAsset,
+                OpenPriceEquivalent = src.OpenPriceEquivalent,
+                ClosePriceEquivalent = src.ClosePriceEquivalent,
             };
 
             foreach (var order in src.MatchedOrders)

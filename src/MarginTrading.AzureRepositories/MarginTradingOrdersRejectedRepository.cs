@@ -78,6 +78,12 @@ namespace MarginTrading.AzureRepositories
         public List<MatchedOrder> MatchedCloseOrders { get; set; } = new List<MatchedOrder>();
         decimal IOrderHistory.SwapCommission => (decimal) SwapCommission;
         public double SwapCommission { get; set; }
+        
+        public string EquivalentAsset { get; set; }
+        decimal IOrderHistory.OpenPriceEquivalent => (decimal) OpenPriceEquivalent;
+        public double OpenPriceEquivalent { get; set; }
+        decimal IOrderHistory.ClosePriceEquivalent => (decimal) ClosePriceEquivalent;
+        public double ClosePriceEquivalent { get; set; }
 
         public string Orders { get; set; }
         public string ClosedOrders { get; set; }
