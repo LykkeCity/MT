@@ -57,6 +57,8 @@ namespace MarginTradingTests.Modules
                 .Setup(item => item.GetAsync(It.IsAny<string>()))
                 .Returns(() => Task.FromResult((IClientAccount)new ClientAccount{ NotificationsId = Guid.NewGuid().ToString()}));
 
+            var volumeEquivalentService = new Mock<IVolumeEquivalentService>();
+
             builder.RegisterInstance(emailService.Object).As<IEmailService>();
             builder.RegisterInstance(appNotifications.Object).As<IAppNotifications>();
             builder.RegisterInstance(appNotifications).As<Mock<IAppNotifications>>();
@@ -68,6 +70,7 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(sessionServiceMock.Object).As<ISessionService>();
             builder.RegisterInstance(clientAccountsServiceMock.Object).As<IClientAccountService>();
             builder.RegisterInstance(slackNotificationsMock.Object).As<ISlackNotificationsSender>();
+            builder.RegisterInstance(volumeEquivalentService.Object).As<IVolumeEquivalentService>();
 
             builder.RegisterType<DateService>()
                 .As<IDateService>()
