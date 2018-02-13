@@ -91,9 +91,9 @@ namespace MarginTradingTests
 
             var clientAccountClientMock = new Mock<IClientAccountClient>();
             clientAccountClientMock.Setup(s => s.CreateWalletAsync(It.IsAny<string>(), It.IsAny<WalletType>(),
-                    It.IsAny<OwnerType>(), It.IsAny<LegalEntityType>(), It.IsAny<string>(), It.IsAny<string>()))
+                    It.IsAny<OwnerType>(), It.IsAny<string>(), It.IsAny<string>()))
                 .Returns((string clientId, WalletType walletType, OwnerType owner,
-                    LegalEntityType legalEntity, string name, string description) => Task.FromResult(
+                    string name, string description) => Task.FromResult(
                     new WalletDtoModel
                     {
                         Id = Guid.NewGuid().ToString(),

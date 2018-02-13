@@ -161,7 +161,7 @@ namespace MarginTrading.Backend.Services
             
             var account = _accountsCacheService.Get(clientId, accountId);
             
-            if (account.Balance > 0)
+            if (_marginSettings.IsLive && account.Balance > 0)
                 throw new Exception(
                     $"Account [{accountId}] balance is higher than zero: [{account.Balance}]");
 
@@ -354,7 +354,7 @@ namespace MarginTrading.Backend.Services
         {
             var wallet = _marginSettings.IsLive
                 ? await _clientAccountClient.CreateWalletAsync(clientId, WalletType.Trading, OwnerType.Mt,
-                    LegalEntityType.Vanuatu, $"{baseAssetId} margin wallet", null)
+                    $"{baseAssetId} margin wallet", null)
                 : null;
             var id = _marginSettings.IsLive ? wallet?.Id : $"{_marginSettings.DemoAccountIdPrefix}{Guid.NewGuid():N}";
             var initialBalance = _marginSettings.IsLive ? 0 : LykkeConstants.DefaultDemoBalance;
