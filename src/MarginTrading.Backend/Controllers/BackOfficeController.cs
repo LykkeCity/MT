@@ -36,20 +36,21 @@ namespace MarginTrading.Backend.Controllers
         private readonly IConsole _consoleWriter;
         private readonly ILog _log;
         private readonly IMarginTradingSettingsService _marginTradingSettingsService;
+        private readonly IMatchingEngineRepository _meRepository;
 
         public BackOfficeController(
             
             IAssetPairsCache assetPairsCache,
             IAccountsCacheService accountsCacheService,
             AccountManager accountManager,
-            
             MatchingEngineRoutesManager routesManager,
             IOrderReader ordersReader,
             MarginSettings marginSettings,
             IMarginTradingOperationsLogService operationsLogService,
             IConsole consoleWriter,
             ILog log,
-            IMarginTradingSettingsService marginTradingSettingsService)
+            IMarginTradingSettingsService marginTradingSettingsService,
+            IMatchingEngineRepository meRepository)
         {
             _assetPairsCache = assetPairsCache;
             _accountsCacheService = accountsCacheService;
@@ -62,6 +63,7 @@ namespace MarginTrading.Backend.Controllers
             _consoleWriter = consoleWriter;
             _log = log;
             _marginTradingSettingsService = marginTradingSettingsService;
+            _meRepository = meRepository;
         }
 
 
@@ -195,7 +197,7 @@ namespace MarginTrading.Backend.Controllers
         [ProducesResponseType(typeof(List<string>), 200)]
         public IActionResult GetAllMatchingEngines()
         {
-            var matchingEngines = MatchingEngineConstants.All;
+            var matchingEngines = _meRepository.GetMatchingEngines().Select(me => me.Id);
             return Ok(matchingEngines);
         }
 

@@ -22,6 +22,7 @@ namespace MarginTrading.Backend.Core.Settings
         public Db Db { get; set; }
         public RabbitMqQueues RabbitMqQueues { get; set; }
         public RabbitMqSettings MarketMakerRabbitMqSettings { get; set; }
+        public RabbitMqSettings StpAggregatorRabbitMqSettings { get; set; }
         public RabbitMqSettings RisksRabbitMqSettings { get; set; }
         public string MtRabbitMqConnString { get; set; }
         public string[] BaseAccountAssets { get; set; } = new string[0];

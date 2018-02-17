@@ -23,7 +23,7 @@ namespace MarginTradingTests
     public class TradingEngineTests : BaseTests
     {
         private ITradingEngine _tradingEngine;
-        private IInternalMatchingEngine _matchingEngine;
+        private IMarketMakerMatchingEngine _matchingEngine;
         private IAccountAssetPairsRepository _accountAssetPairsRepository;
         private const string MarketMaker1Id = "1";
         private string _acount1Id;
@@ -49,7 +49,7 @@ namespace MarginTradingTests
             _accountManager = Container.Resolve<AccountManager>();
             
             _accountsCacheService = Container.Resolve<IAccountsCacheService>();
-            _matchingEngine = Container.Resolve<IInternalMatchingEngine>();
+            _matchingEngine = Container.Resolve<IMarketMakerMatchingEngine>();
             _tradingEngine = Container.Resolve<ITradingEngine>();
 
             var clientNotifyService = Container.Resolve<IClientNotifyService>();
@@ -1929,7 +1929,7 @@ namespace MarginTradingTests
 
     public static class TestsExtension
     {
-        public static void SetOrders(this IInternalMatchingEngine matchingEngine, string marketMakerId, LimitOrder[] ordersToAdd = null, string[] orderIdsToDelete = null, bool deleteAll = false)
+        public static void SetOrders(this IMarketMakerMatchingEngine matchingEngine, string marketMakerId, LimitOrder[] ordersToAdd = null, string[] orderIdsToDelete = null, bool deleteAll = false)
         {
             var model = new SetOrderModel
             {

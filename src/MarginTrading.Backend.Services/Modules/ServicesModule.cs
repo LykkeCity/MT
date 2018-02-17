@@ -74,8 +74,14 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<IClientAccountService>()
 				.SingleInstance();
 
-			builder.RegisterType<InternalMatchingEngine>()
-				.As<IInternalMatchingEngine>()
+			builder.RegisterType<MarketMakerMatchingEngine>()
+				.As<IMarketMakerMatchingEngine>()
+				.WithParameter(TypedParameter.From(MatchingEngineConstants.LykkeVuMm))
+				.SingleInstance();
+			
+			builder.RegisterType<StpMatchingEngine>()
+				.As<IStpMatchingEngine>()
+				.WithParameter(TypedParameter.From(MatchingEngineConstants.LykkeCyStp))
 				.SingleInstance();
 
 			builder.RegisterType<TradingEngine>()

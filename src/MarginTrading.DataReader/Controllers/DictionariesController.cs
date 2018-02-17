@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Lykke.Service.Assets.Client;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.MatchingEngines;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,10 +15,13 @@ namespace MarginTrading.DataReader.Controllers
     public class DictionariesController : Controller
     {
         private readonly IAssetsServiceWithCache _assetsService;
+        private readonly IMatchingEngineRepository _matchingEngineRepository;
 
-        public DictionariesController(IAssetsServiceWithCache assetsService)
+        public DictionariesController(IAssetsServiceWithCache assetsService,
+            IMatchingEngineRepository matchingEngineRepository)
         {
             _assetsService = assetsService;
+            _matchingEngineRepository = matchingEngineRepository;
         }
 
         [HttpGet]
@@ -38,7 +42,7 @@ namespace MarginTrading.DataReader.Controllers
         [Route("matchingEngines")]
         public string[] GetAllMatchingEngines()
         {
-            return MatchingEngineConstants.All;
+            return _matchingEngineRepository.GetMatchingEngines().Select(me => me.Id).ToArray();
         }
 
         [HttpGet]

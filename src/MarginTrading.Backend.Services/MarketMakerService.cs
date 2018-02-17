@@ -11,11 +11,11 @@ namespace MarginTrading.Backend.Services
 {
     public class MarketMakerService : IFeedConsumer
     {
-        private readonly IInternalMatchingEngine _matchingEngine;
+        private readonly IMarketMakerMatchingEngine _matchingEngine;
         private readonly IAssetPairDayOffService _assetPairDayOffService;
         private readonly IMaintenanceModeService _maintenanceModeService;
 
-        public MarketMakerService(IInternalMatchingEngine matchingEngine, 
+        public MarketMakerService(IMarketMakerMatchingEngine matchingEngine, 
             IAssetPairDayOffService assetPairDayOffService,
             IMaintenanceModeService maintenanceModeService)
         {

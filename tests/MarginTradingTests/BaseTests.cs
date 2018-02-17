@@ -136,13 +136,6 @@ namespace MarginTradingTests
 
             Container = builder.Build();
 
-            var meRepository = Container.Resolve<IMatchingEngineRepository>();
-            meRepository.InitMatchingEngines(new List<IMatchingEngineBase>
-            {
-                Container.Resolve<IInternalMatchingEngine>(),
-                new RejectMatchingEngine()
-            });
-
             MtServiceLocator.FplService = Container.Resolve<IFplService>();
             MtServiceLocator.AccountUpdateService = Container.Resolve<IAccountUpdateService>();
             MtServiceLocator.AccountsCacheService = Container.Resolve<IAccountsCacheService>();

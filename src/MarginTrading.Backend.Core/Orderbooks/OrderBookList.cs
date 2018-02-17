@@ -64,7 +64,7 @@ namespace MarginTrading.Backend.Core.Orderbooks
 
         public OrderBook GetOrderBook(string instrumentId)
         {
-            var orderbook = _orderBooks.GetValueOrDefault(instrumentId, k => new OrderBook());
+            var orderbook = _orderBooks.GetValueOrDefault(instrumentId, k => new OrderBook(instrumentId));
 
             return orderbook.Clone();
         }
@@ -110,7 +110,7 @@ namespace MarginTrading.Backend.Core.Orderbooks
             {
                 if (!_orderBooks.TryGetValue(order.Instrument, out var orderBook))
                 {
-                    orderBook = new OrderBook {Instrument = order.Instrument};
+                    orderBook = new OrderBook(order.Instrument);
                     _orderBooks.Add(order.Instrument, orderBook);
                 }
 

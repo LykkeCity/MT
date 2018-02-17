@@ -105,13 +105,6 @@ namespace MarginTrading.Backend
             builder.Populate(services);
             ApplicationContainer = builder.Build();
 
-            var meRepository = ApplicationContainer.Resolve<IMatchingEngineRepository>();
-            meRepository.InitMatchingEngines(new List<IMatchingEngineBase>
-            {
-                ApplicationContainer.Resolve<IInternalMatchingEngine>(),
-                new RejectMatchingEngine()
-            });
-
             MtServiceLocator.FplService = ApplicationContainer.Resolve<IFplService>();
             MtServiceLocator.AccountUpdateService = ApplicationContainer.Resolve<IAccountUpdateService>();
             MtServiceLocator.AccountsCacheService = ApplicationContainer.Resolve<IAccountsCacheService>();
