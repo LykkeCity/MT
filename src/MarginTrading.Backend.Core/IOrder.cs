@@ -9,7 +9,9 @@ namespace MarginTrading.Backend.Core
         string AccountId { get; }
         string TradingConditionId { get; }
         string AccountAssetId { get; }
+        //Matching Engine ID used for open
         string OpenOrderbookId { get; }
+        //Matching Engine ID used for close
         string CloseOrderbookId { get; }
         DateTime? OpenDate { get; }
         DateTime? CloseDate { get; }

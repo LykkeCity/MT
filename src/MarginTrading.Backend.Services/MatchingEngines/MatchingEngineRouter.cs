@@ -1,5 +1,6 @@
 ﻿using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Services.TradingConditions;
 
 namespace MarginTrading.Backend.Services.MatchingEngines
 {
@@ -9,27 +10,41 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         
         private readonly MatchingEngineRoutesManager _routesManager;
         private readonly IMatchingEngineRepository _matchingEngineRepository;
+        private readonly ITradingConditionsCacheService _tradingConditionsCacheService;
 
         public MatchingEngineRouter(
             MatchingEngineRoutesManager routesManager,
-            IMatchingEngineRepository matchingEngineRepository)
+            IMatchingEngineRepository matchingEngineRepository,
+            ITradingConditionsCacheService tradingConditionsCacheService)
         {
             _routesManager = routesManager;
             _matchingEngineRepository = matchingEngineRepository;
+            _tradingConditionsCacheService = tradingConditionsCacheService;
         }
 
         public IMatchingEngineBase GetMatchingEngineForOpen(IOrder order)
         {
-            var route = _routesManager.FindRoute(order.ClientId, order.TradingConditionId, order.Instrument, order.GetOrderType());
+            var route = _routesManager.FindRoute(order.ClientId, order.TradingConditionId, order.Instrument,
+                order.GetOrderType());
 
-            //TODO: use ME from trading condition
-            return _matchingEngineRepository.GetMatchingEngineById(route?.MatchingEngineId ?? MatchingEngineConstants.LykkeVuMm);
+            if (route != null)
+            {
+                return _matchingEngineRepository.GetMatchingEngineById(route.MatchingEngineId);
+            }
+
+            var tradingCondition = _tradingConditionsCacheService.GetTradingCondition(order.TradingConditionId);
+
+            return _matchingEngineRepository.GetMatchingEngineById(
+                tradingCondition.MatchingEngineId ?? MatchingEngineConstants.LykkeVuMm);
         }
 
         public IMatchingEngineBase GetMatchingEngineForClose(IOrder order)
         {
-            //TODO: use open ME or from trading condition + compare with Lykke const for old orders
-            return _matchingEngineRepository.GetMatchingEngineById(MatchingEngineConstants.LykkeVuMm);
+            var meId = order.OpenOrderbookId == Lykke
+                ? MatchingEngineConstants.LykkeVuMm
+                : order.OpenOrderbookId;
+            
+            return _matchingEngineRepository.GetMatchingEngineById(meId);
         }
     }
 }

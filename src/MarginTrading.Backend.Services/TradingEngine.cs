@@ -102,6 +102,8 @@ namespace MarginTrading.Backend.Services
 
         private Task<Order> PlaceMarketOrderByMatchingEngineAsync(Order order, IMatchingEngineBase matchingEngine)
         {
+            order.OpenOrderbookId = matchingEngine.Id;
+            
             matchingEngine.MatchMarketOrderForOpen(order, matchedOrders =>
             {
                 if (!matchedOrders.Any())
@@ -165,9 +167,6 @@ namespace MarginTrading.Backend.Services
             {
                 var me = _meRouter.GetMatchingEngineForOpen(order);
 
-                order.OpenOrderbookId = me.Id;
-                order.CloseOrderbookId = me.Id;
-
                 return PlaceMarketOrderByMatchingEngineAsync(order, me);
             }
             catch (QuoteNotFoundException ex)
@@ -202,7 +201,7 @@ namespace MarginTrading.Backend.Services
             order.MatchedOrders.AddRange(matchedOrders);
             order.OpenPrice = Math.Round(order.MatchedOrders.WeightedAveragePrice, order.AssetAccuracy);
 
-            var defaultMatchingEngine = _meRouter.GetMatchingEngineForOpen(order);
+            var defaultMatchingEngine = _meRouter.GetMatchingEngineForClose(order);
             
             defaultMatchingEngine.MatchMarketOrderForClose(order, matchedOrdersForClose =>
             {
@@ -380,14 +379,6 @@ namespace MarginTrading.Backend.Services
             order.StartClosingDate = DateTime.UtcNow;
             order.CloseReason = reason;
 
-            if (string.IsNullOrEmpty(order.CloseOrderbookId) ||
-                order.CloseOrderbookId == MatchingEngineConstants.Reject)
-            {
-                var me = _meRouter.GetMatchingEngineForClose(order);
-
-                order.CloseOrderbookId = me.Id;
-            }
-
             _ordersCache.ClosingOrders.Add(order);
             _ordersCache.ActiveOrders.Remove(order);
         }
@@ -404,6 +395,7 @@ namespace MarginTrading.Backend.Services
 
         private Task<Order> CloseActiveOrderByMatchingEngineAsync(Order order, OrderCloseReason reason, IMatchingEngineBase matchingEngine)
         {
+            order.CloseOrderbookId = matchingEngine.Id;
             order.StartClosingDate = DateTime.UtcNow;
             order.CloseReason = reason;
 
@@ -440,11 +432,8 @@ namespace MarginTrading.Backend.Services
         public Task<Order> CloseActiveOrderAsync(string orderId, OrderCloseReason reason)
         {
             var order = GetActiveOrderForClose(orderId);
-            IMatchingEngineBase me;
 
-            me = _meRouter.GetMatchingEngineForClose(order);
-
-            order.CloseOrderbookId = me.Id;
+            var me = _meRouter.GetMatchingEngineForClose(order);
 
             return CloseActiveOrderByMatchingEngineAsync(order, reason, me);
         }
@@ -534,6 +523,8 @@ namespace MarginTrading.Backend.Services
 
         private void ProcessOrdersClosingByMatchingEngine(Order order, IMatchingEngineBase matchingEngine)
         {
+            order.CloseOrderbookId = matchingEngine.Id;
+            
             matchingEngine.MatchMarketOrderForClose(order, matchedOrders =>
             {
                 if (matchedOrders.Count == 0)

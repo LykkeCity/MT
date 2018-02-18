@@ -4,6 +4,7 @@
     {
         public string Id { get; set; }
         public string Name { get; set; }
+        public string MatchingEngineId { get; set; }
         public bool IsDefault { get; set; }
 
         public static TradingCondition Create(ITradingCondition src)
@@ -12,6 +13,7 @@
             {
                 Id = src.Id,
                 Name = src.Name,
+                MatchingEngineId = src.MatchingEngineId,
                 IsDefault = src.IsDefault
             };
         }
