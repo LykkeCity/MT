@@ -9,7 +9,7 @@ using MarginTrading.Common.Extensions;
 
 namespace MarginTrading.Backend.Services
 {
-    public class MarketMakerService : IFeedConsumer
+    public class MarketMakerService
     {
         private readonly IMarketMakerMatchingEngine _matchingEngine;
         private readonly IAssetPairDayOffService _assetPairDayOffService;
@@ -24,7 +24,7 @@ namespace MarginTrading.Backend.Services
             _maintenanceModeService = maintenanceModeService;
         }
 
-        public void ConsumeFeed(MarketMakerOrderCommandsBatchMessage batch)
+        public void ProcessOrderCommands(MarketMakerOrderCommandsBatchMessage batch)
         {
             batch.AssetPairId.RequiredNotNullOrWhiteSpace(nameof(batch.AssetPairId));
             batch.Commands.RequiredNotNull(nameof(batch.Commands));

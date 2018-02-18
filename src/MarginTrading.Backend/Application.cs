@@ -9,6 +9,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MarketMakerFeed;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Notifications;
@@ -22,9 +23,9 @@ namespace MarginTrading.Backend
 {
     public sealed class Application
     {
-        private readonly List<IFeedConsumer> _consumers;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly IConsole _consoleWriter;
+        private readonly MarketMakerService _marketMakerService;
         private readonly ILog _logger;
         private readonly MarginSettings _marginSettings;
         private readonly IMaintenanceModeService _maintenanceModeService;
@@ -35,15 +36,15 @@ namespace MarginTrading.Backend
         public Application(
             IRabbitMqNotifyService rabbitMqNotifyService,
             IConsole consoleWriter,
-            IEnumerable<IFeedConsumer> consumers,
+            MarketMakerService marketMakerService,
             ILog logger, MarginSettings marginSettings,
             IMaintenanceModeService maintenanceModeService,
             IRabbitMqService rabbitMqService,
             MatchingEngineRoutesManager matchingEngineRoutesManager)
         {
-            _consumers = consumers.ToList();
             _rabbitMqNotifyService = rabbitMqNotifyService;
             _consoleWriter = consoleWriter;
+            _marketMakerService = marketMakerService;
             _logger = logger;
             _marginSettings = marginSettings;
             _maintenanceModeService = maintenanceModeService;
@@ -61,14 +62,29 @@ namespace MarginTrading.Backend
                 _rabbitMqService.Subscribe<MarketMakerOrderCommandsBatchMessage>(
                     _marginSettings.MarketMakerRabbitMqSettings, _marginSettings.Env, HandleNewOrdersMessage);
 
-                _rabbitMqService.Subscribe<MatchingEngineRouteRisksCommand>(_marginSettings.RisksRabbitMqSettings,
-                    _marginSettings.Env, _matchingEngineRoutesManager.HandleRiskManagerCommand);
+                if (_marginSettings.RisksRabbitMqSettings != null)
+                {
+                    _rabbitMqService.Subscribe<MatchingEngineRouteRisksCommand>(_marginSettings.RisksRabbitMqSettings,
+                        _marginSettings.Env, _matchingEngineRoutesManager.HandleRiskManagerCommand);
+                }
+                else if (_marginSettings.IsLive)
+                {
+                    _logger.WriteWarning(ServiceName, nameof(StartApplicationAsync),
+                        "RisksRabbitMqSettings is not configured");
+                }
+                
+                // Demo server works only in MM mode
+
+                if (_marginSettings.IsLive)
+                {
+                    //TODO: subscribe to STP orderbooks
+                }
 
             }
             catch (Exception ex)
             {
                 _consoleWriter.WriteLine($"{ServiceName} error: {ex.Message}");
-                await _logger.WriteErrorAsync(ServiceName, "Application.RunAsync", null, ex);
+                await _logger.WriteErrorAsync(ServiceName, nameof(StartApplicationAsync), null, ex);
             }
         }
 
@@ -84,7 +100,7 @@ namespace MarginTrading.Backend
 
         private Task HandleNewOrdersMessage(MarketMakerOrderCommandsBatchMessage feedData)
         {
-            _consumers.ForEach(c => c.ConsumeFeed(feedData));
+            _marketMakerService.ProcessOrderCommands(feedData);
             return Task.CompletedTask;
         }
     }

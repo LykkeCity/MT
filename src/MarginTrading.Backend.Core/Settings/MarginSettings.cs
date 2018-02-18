@@ -20,19 +20,33 @@ namespace MarginTrading.Backend.Core.Settings
         #endregion
 
         public Db Db { get; set; }
+        
         public RabbitMqQueues RabbitMqQueues { get; set; }
+        
         public RabbitMqSettings MarketMakerRabbitMqSettings { get; set; }
+        
+        [Optional]
         public RabbitMqSettings StpAggregatorRabbitMqSettings { get; set; }
+        
+        [Optional]
         public RabbitMqSettings RisksRabbitMqSettings { get; set; }
+        
+        [AmqpCheck]
         public string MtRabbitMqConnString { get; set; }
+        
         public string[] BaseAccountAssets { get; set; } = new string[0];
+        
         [Optional]
         public AccountAssetsSettings DefaultAccountAssetsSettings { get; set; }
+        
         public RequestLoggerSettings RequestLoggerSettings { get; set; }
+        
         [Optional]
         public string ApplicationInsightsKey { get; set; }
+        
         [Optional]
         public virtual TelemetrySettings Telemetry { get; set; }
+        
         public int MaxMarketMakerLimitOrderAge { get; set; }
     }
 }
