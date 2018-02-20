@@ -8,6 +8,7 @@ using Lykke.Service.Session;
 using Lykke.SettingsReader;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
+using MarginTrading.Common.Services.Settings;
 using MarginTrading.Common.Settings;
 using MarginTrading.Common.Settings.Repositories;
 using MarginTrading.Common.Settings.Repositories.Azure;

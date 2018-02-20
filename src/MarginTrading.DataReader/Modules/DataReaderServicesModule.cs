@@ -1,5 +1,6 @@
 ﻿using System;
 using Autofac;
+using MarginTrading.Common.Services.Settings;
 using MarginTrading.Common.Settings;
 using MarginTrading.DataReader.Middleware.Validator;
 using MarginTrading.DataReader.Services;

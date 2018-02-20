@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using MarginTrading.Common.Services;
+using MarginTrading.Common.Services.Settings;
 using MarginTrading.Common.Settings;
 using MarginTrading.Common.Settings.Models;
 using MarginTrading.Frontend.Services;

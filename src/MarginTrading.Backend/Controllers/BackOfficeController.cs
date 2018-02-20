@@ -16,6 +16,7 @@ using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Common.Middleware;
 using MarginTrading.Common.Services;
+using MarginTrading.Common.Services.Settings;
 using MarginTrading.Common.Settings;
 using MarginTrading.Common.Settings.Models;
 using MarginTrading.Common.Settings.Repositories;

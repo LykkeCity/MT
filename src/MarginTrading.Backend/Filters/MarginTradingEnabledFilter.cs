@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Rocks.Caching;
 using MarginTrading.Backend.Attributes;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Common.Services.Settings;
 using MarginTrading.Common.Settings;
 
 namespace MarginTrading.Backend.Filters

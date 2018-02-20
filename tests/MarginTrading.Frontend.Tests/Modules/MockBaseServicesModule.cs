@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Autofac;
 using Lykke.Common;
 using Lykke.Service.Session;
+using MarginTrading.Common.Services.Settings;
 using MarginTrading.Common.Settings;
 using MarginTrading.Common.Settings.Models;
 using MarginTrading.Common.Settings.Repositories;

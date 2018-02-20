@@ -21,6 +21,7 @@ using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Modules;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Services;
+using MarginTrading.Common.Services.Settings;
 using MarginTrading.Common.Settings;
 using MarginTrading.Common.Settings.Models;
 using MarginTradingTests.Helpers;
