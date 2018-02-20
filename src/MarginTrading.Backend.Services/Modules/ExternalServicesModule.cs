@@ -11,7 +11,6 @@ namespace MarginTrading.Backend.Services.Modules
 {
     public class ExternalServicesModule : Module
     {
-        private readonly IServiceCollection _services = new ServiceCollection();
         private readonly IReloadingManager<MtBackendSettings> _settings;
 
         public ExternalServicesModule(IReloadingManager<MtBackendSettings> settings)
@@ -21,11 +20,13 @@ namespace MarginTrading.Backend.Services.Modules
 
         protected override void Load(ContainerBuilder builder)
         {
-            _services.RegisterAssetsClient(AssetServiceSettings.Create(
+            var services = new ServiceCollection();
+            
+            services.RegisterAssetsClient(AssetServiceSettings.Create(
                 new Uri(_settings.CurrentValue.Assets.ServiceUrl),
                 _settings.CurrentValue.Assets.CacheExpirationPeriod));
             
-            builder.Populate(_services);
+            builder.Populate(services);
 
             builder.RegisterLykkeServiceClient(_settings.CurrentValue.ClientAccountServiceClient.ServiceUrl);
         }

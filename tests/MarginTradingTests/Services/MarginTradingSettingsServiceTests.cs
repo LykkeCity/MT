@@ -2,9 +2,6 @@
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.ClientAccount.Client.Models;
 using MarginTrading.Common.Services.Settings;
-using MarginTrading.Common.Settings;
-using MarginTrading.Common.Settings.Models;
-using MarginTrading.Common.Settings.Repositories;
 using MarginTradingTests.Helpers;
 using Moq;
 using NUnit.Framework;

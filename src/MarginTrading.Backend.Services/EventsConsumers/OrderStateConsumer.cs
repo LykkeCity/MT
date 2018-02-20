@@ -3,8 +3,8 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
+using MarginTrading.Common.Services.Client;
 using MarginTrading.Common.Settings;
-using MarginTrading.Common.Settings.Repositories;
 
 namespace MarginTrading.Backend.Services.EventsConsumers
 {
@@ -21,7 +21,6 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 		private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
 
 		public OrderStateConsumer(IThreadSwitcher threadSwitcher,
-			IClientSettingsRepository clientSettingsRepository,
 			IClientNotifyService clientNotifyService,
 			IAccountsCacheService accountsCacheService,
 			IAppNotifications appNotifications,
@@ -29,8 +28,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 			AccountManager accountManager,
 			IRabbitMqNotifyService rabbitMqNotifyService,
 			IAssetsCache assetsCache)
-			: base(clientSettingsRepository,
-				appNotifications,
+			: base(appNotifications,
 				clientAccountService,
 				assetsCache)
 		{

@@ -22,8 +22,6 @@ using MarginTrading.Backend.Services.Modules;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Services.Settings;
-using MarginTrading.Common.Settings;
-using MarginTrading.Common.Settings.Models;
 using MarginTradingTests.Helpers;
 using MarginTradingTests.Modules;
 using Moq;
@@ -103,7 +101,12 @@ namespace MarginTradingTests
                         Description = description,
                         ClientId = clientId,
                     }));
-
+            clientAccountClientMock.Setup(s => s.GetByIdAsync(It.IsAny<string>()))
+                .ReturnsAsync(() =>
+                    new ClientModel {Email = "example@example.com", NotificationsId = Guid.NewGuid().ToString()});
+            clientAccountClientMock.Setup(s => s.GetPushNotificationAsync(It.IsAny<string>()))
+                .ReturnsAsync(() => new PushNotificationsSettingsModel {Enabled = true});
+            
             builder.RegisterInstance(clientAccountClientMock.Object)
                 .As<IClientAccountClient>()
                 .SingleInstance();

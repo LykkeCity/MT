@@ -7,7 +7,6 @@ using MarginTrading.Frontend.Settings;
 using System.Linq;
 using System.Net;
 using MarginTrading.Common.Services.Settings;
-using MarginTrading.Common.Settings.Models;
 using MarginTrading.Contract.BackendContracts;
 using MarginTrading.Frontend.Repositories.Contract;
 using Rocks.Caching;

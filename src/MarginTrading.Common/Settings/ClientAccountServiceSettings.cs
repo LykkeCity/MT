@@ -1,4 +1,4 @@
-﻿namespace MarginTrading.Backend.Core.Settings
+﻿namespace MarginTrading.Common.Settings
 {
 	public class ClientAccountServiceSettings
 	{

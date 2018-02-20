@@ -19,7 +19,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MarginTrading.Common.Settings\MarginTrading.Common.Settings.csproj" />
     <ProjectReference Include="..\MarginTrading.Common\MarginTrading.Common.csproj" />
     <ProjectReference Include="..\MarginTrading.Contract\MarginTrading.Contract.csproj" />
   </ItemGroup>

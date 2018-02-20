@@ -14,6 +14,7 @@ using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Quotes;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.RabbitMq;
+using MarginTrading.Common.Services.Client;
 using MarginTrading.Common.Services.Settings;
 using MarginTrading.Common.Services.Telemetry;
 using MarginTrading.Common.Settings;

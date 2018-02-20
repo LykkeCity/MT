@@ -20,7 +20,6 @@ using MarginTrading.Contract.RabbitMqMessageModels;
 using MarginTrading.Frontend.Infrastructure;
 using MarginTrading.Frontend.Middleware;
 using MarginTrading.Frontend.Modules;
-using MarginTrading.Frontend.Services;
 using MarginTrading.Frontend.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -46,8 +45,6 @@ namespace MarginTrading.Frontend
         public IConfigurationRoot Configuration { get; }
         public IHostingEnvironment Environment { get; }
         public IContainer ApplicationContainer { get; set; }
-
-        private readonly TimeSpan _subscriberRetryTimeout = TimeSpan.FromSeconds(1);
 
         public Startup(IHostingEnvironment env)
         {
@@ -110,7 +107,7 @@ namespace MarginTrading.Frontend
 
             SetupLoggers(services, appSettings);
 
-            RegisterModules(builder, settings);
+            RegisterModules(builder, appSettings);
 
             builder.Populate(services);
 
@@ -198,10 +195,13 @@ namespace MarginTrading.Frontend
             host.Open();
         }
 
-        private void RegisterModules(ContainerBuilder builder, IReloadingManager<MtFrontendSettings> settings)
+        private void RegisterModules(ContainerBuilder builder, IReloadingManager<ApplicationSettings> appSettings)
         {
+            var settings = appSettings.Nested(s => s.MtFrontend);
+            
             builder.RegisterModule(new FrontendModule(settings));
             builder.RegisterModule(new MarginTradingCommonModule());
+            builder.RegisterModule(new FrontendExternalServicesModule(appSettings));
         }
 
         private void SetSubscribers(MtFrontendSettings settings)

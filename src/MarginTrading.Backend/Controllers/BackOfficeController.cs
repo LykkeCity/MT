@@ -8,18 +8,13 @@ using MarginTrading.Backend.Attributes;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.MatchingEngines;
-using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Models;
 using MarginTrading.Backend.Services;
-using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Common.Middleware;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Services.Settings;
-using MarginTrading.Common.Settings;
-using MarginTrading.Common.Settings.Models;
-using MarginTrading.Common.Settings.Repositories;
 using MarginTrading.Contract.BackendContracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -36,7 +31,6 @@ namespace MarginTrading.Backend.Controllers
         private readonly AccountManager _accountManager;
         private readonly MatchingEngineRoutesManager _routesManager;
         private readonly IOrderReader _ordersReader;
-        private readonly IClientSettingsRepository _clientSettingsRepository;
         private readonly MarginSettings _marginSettings;
         private readonly IMarginTradingOperationsLogService _operationsLogService;
         private readonly IConsole _consoleWriter;
@@ -51,7 +45,6 @@ namespace MarginTrading.Backend.Controllers
             
             MatchingEngineRoutesManager routesManager,
             IOrderReader ordersReader,
-            IClientSettingsRepository clientSettingsRepository,
             MarginSettings marginSettings,
             IMarginTradingOperationsLogService operationsLogService,
             IConsole consoleWriter,
@@ -64,7 +57,6 @@ namespace MarginTrading.Backend.Controllers
             _accountManager = accountManager;
             _routesManager = routesManager;
             _ordersReader = ordersReader;
-            _clientSettingsRepository = clientSettingsRepository;
             _marginSettings = marginSettings;
             _operationsLogService = operationsLogService;
             _consoleWriter = consoleWriter;
@@ -416,20 +408,6 @@ namespace MarginTrading.Backend.Controllers
 
 
         #region Settings
-
-        [HttpGet]
-        [Route("settings/enabled/{clientId}")]
-        [ProducesResponseType(typeof(bool), 200)]
-        [SkipMarginTradingEnabledCheck]
-        public async Task<IActionResult> GetMarginTradingIsEnabled(string clientId)
-        {
-            var settings = await _clientSettingsRepository.GetSettings<MarginEnabledSettings>(clientId);
-
-            if (_marginSettings.IsLive)
-                return Ok(settings.EnabledLive);
-
-            return Ok(settings.Enabled);
-        }
 
         [HttpPost]
         [Route("settings/enabled/{clientId}")]
