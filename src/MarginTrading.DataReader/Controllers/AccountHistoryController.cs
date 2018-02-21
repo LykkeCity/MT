@@ -97,8 +97,9 @@ namespace MarginTrading.DataReader.Controllers
 
             var history = (await _ordersHistoryRepository.GetHistoryAsync(request.ClientId, clientAccountIds,
                     request.From, request.To))
-                .Where(item => item.Status != OrderStatus.Rejected)
-                .Where(item => item.OpenDate != null).ToList();
+                .Where(item => item.Status != OrderStatus.Rejected &&
+                               item.OpenDate != null &&
+                               item.OrderUpdateType == OrderUpdateType.Close).ToList();
 
             var items = accounts.Select(item => new AccountHistoryItemBackend
                 {
