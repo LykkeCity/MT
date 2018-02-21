@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Messages;
 
 namespace MarginTrading.Backend.Services.AssetPairs
@@ -44,6 +45,14 @@ namespace MarginTrading.Backend.Services.AssetPairs
             {
                 _lockSlim.ExitReadLock();
             }
+        }
+
+        //TODO: init settings from service/repo and return actual setting for Pair
+        public AssetPairSettings GetAssetPairSettings(string assetPairId)
+        {
+            return assetPairId.Contains(".")
+                ? new AssetPairSettings("LYKKECY", MatchingEngineMode.Stp)
+                : new AssetPairSettings("LYKKEVU", MatchingEngineMode.MarketMaker);
         }
 
         public IEnumerable<IAssetPair> GetAll()

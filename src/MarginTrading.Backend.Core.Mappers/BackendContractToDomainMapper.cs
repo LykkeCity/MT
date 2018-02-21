@@ -116,9 +116,7 @@ namespace MarginTrading.Backend.Core.Mappers
             {
                 Id = src.Id,
                 Name = src.Name,
-                IsDefault = src.IsDefault,
-                MatchingEngineId = src.MatchingEngineId
-                
+                IsDefault = src.IsDefault
             };
         }
 

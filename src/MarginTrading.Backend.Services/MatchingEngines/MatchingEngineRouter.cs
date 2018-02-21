@@ -10,16 +10,16 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         
         private readonly MatchingEngineRoutesManager _routesManager;
         private readonly IMatchingEngineRepository _matchingEngineRepository;
-        private readonly ITradingConditionsCacheService _tradingConditionsCacheService;
+        private readonly IAssetPairsCache _assetPairsCache;
 
         public MatchingEngineRouter(
             MatchingEngineRoutesManager routesManager,
             IMatchingEngineRepository matchingEngineRepository,
-            ITradingConditionsCacheService tradingConditionsCacheService)
+            IAssetPairsCache assetPairsCache)
         {
             _routesManager = routesManager;
             _matchingEngineRepository = matchingEngineRepository;
-            _tradingConditionsCacheService = tradingConditionsCacheService;
+            _assetPairsCache = assetPairsCache;
         }
 
         public IMatchingEngineBase GetMatchingEngineForOpen(IOrder order)
@@ -29,13 +29,19 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
             if (route != null)
             {
+                //TODO: to consider account LE and take only ME with same LE as account
+                
                 return _matchingEngineRepository.GetMatchingEngineById(route.MatchingEngineId);
             }
 
-            var tradingCondition = _tradingConditionsCacheService.GetTradingCondition(order.TradingConditionId);
+            var assetPairSetting = _assetPairsCache.GetAssetPairSettings(order.Instrument);
+
+            //TODO: find ME with correct mode that ownes the same Entity as asset pair
 
             return _matchingEngineRepository.GetMatchingEngineById(
-                tradingCondition.MatchingEngineId ?? MatchingEngineConstants.LykkeVuMm);
+                assetPairSetting.MatchingEngineMode == MatchingEngineMode.MarketMaker
+                    ? MatchingEngineConstants.LykkeVuMm
+                    : MatchingEngineConstants.LykkeCyStp);
         }
 
         public IMatchingEngineBase GetMatchingEngineForClose(IOrder order)

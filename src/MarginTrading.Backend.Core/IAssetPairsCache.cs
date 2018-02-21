@@ -9,5 +9,6 @@ namespace MarginTrading.Backend.Core
         IAssetPair FindAssetPair(string asset1, string asset2);
         HashSet<string> GetAllIds();
         IAssetPair TryGetAssetPairById(string assetPairId);
+        AssetPairSettings GetAssetPairSettings(string assetPairId);
     }
 }
