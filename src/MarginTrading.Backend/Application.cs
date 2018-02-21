@@ -78,6 +78,7 @@ namespace MarginTrading.Backend
                 if (_marginSettings.IsLive)
                 {
                     //TODO: subscribe to STP orderbooks
+                    //Set orders in ExternalOrderBooksList
                 }
 
             }
