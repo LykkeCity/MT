@@ -15,13 +15,10 @@ namespace MarginTrading.DataReader.Controllers
     public class DictionariesController : Controller
     {
         private readonly IAssetsServiceWithCache _assetsService;
-        private readonly IMatchingEngineRepository _matchingEngineRepository;
 
-        public DictionariesController(IAssetsServiceWithCache assetsService,
-            IMatchingEngineRepository matchingEngineRepository)
+        public DictionariesController(IAssetsServiceWithCache assetsService)
         {
             _assetsService = assetsService;
-            _matchingEngineRepository = matchingEngineRepository;
         }
 
         [HttpGet]
@@ -42,7 +39,13 @@ namespace MarginTrading.DataReader.Controllers
         [Route("matchingEngines")]
         public string[] GetAllMatchingEngines()
         {
-            return _matchingEngineRepository.GetMatchingEngines().Select(me => me.Id).ToArray();
+            //TODO: replace by Ids when ME infos will be stored in DB
+            return new[]
+            {
+                MatchingEngineConstants.LykkeVuMm,
+                MatchingEngineConstants.LykkeCyStp,
+                MatchingEngineConstants.Reject
+            };
         }
 
         [HttpGet]
