@@ -27,6 +27,6 @@ namespace MarginTrading.Contract.BackendContracts
         public decimal OpenCommission { get; set; }
         public decimal CloseCommission { get; set; }
         public decimal SwapCommission { get; set; }
-
+        public MatchingEngineModeContract MatchingEngineMode { get; set; }
     }
 }
