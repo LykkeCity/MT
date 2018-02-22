@@ -11,9 +11,6 @@ using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Common.Services;
-using MarginTrading.Common.Settings.Repositories;
-using MarginTrading.Common.Settings.Repositories.Azure;
-using MarginTrading.Common.Settings.Repositories.Azure.Entities;
 
 namespace MarginTrading.Backend.Modules
 {
@@ -39,18 +36,6 @@ namespace MarginTrading.Backend.Modules
 		            AzureTableStorage<OperationLogEntity>.Create(_settings.Nested(s => s.Db.LogsConnString),
 		                "MarginTradingBackendOperationsLog", _log))
 		    ).SingleInstance();
-
-			builder.Register<IClientSettingsRepository>(ctx =>
-				new ClientSettingsRepository(
-					AzureTableStorage<ClientSettingsEntity>.Create(
-						_settings.Nested(s => s.Db.ClientPersonalInfoConnString), "TraderSettings", _log)));
-
-			builder.Register<IClientAccountsRepository>(ctx =>
-				new ClientsRepository(
-					AzureTableStorage<ClientAccountEntity>.Create(
-						_settings.Nested(s => s.Db.ClientPersonalInfoConnString), "Traders", _log),
-					AzureTableStorage<AzureIndex>.Create(
-						_settings.Nested(s => s.Db.ClientPersonalInfoConnString), "Traders", _log)));
 
 			builder.Register<IMarginTradingAccountsRepository>(ctx =>
 				AzureRepoFactories.MarginTrading.CreateAccountsRepository(_settings.Nested(s => s.Db.MarginTradingConnString), _log)
@@ -83,10 +68,6 @@ namespace MarginTrading.Backend.Modules
 			builder.Register<IMarginTradingBlobRepository>(ctx =>
 				AzureRepoFactories.MarginTrading.CreateBlobRepository(_settings.Nested(s => s.Db.StateConnString))
 			).SingleInstance();
-
-			builder.Register<IAppGlobalSettingsRepositry>(ctx =>
-				new AppGlobalSettingsRepository(AzureTableStorage<AppGlobalSettingsEntity>.Create(
-					_settings.Nested(s => s.Db.ClientPersonalInfoConnString), "Setup", _log)));
 
 			builder.Register<IRiskSystemCommandsLogRepository>(ctx =>
 				AzureRepoFactories.MarginTrading.CreateRiskSystemCommandsLogRepository(_settings.Nested(s => s.Db.LogsConnString), _log)

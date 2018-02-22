@@ -1,7 +1,6 @@
 ﻿using System.Threading.Tasks;
-using MarginTrading.Common.Settings.Models;
 
-namespace MarginTrading.Common.Settings
+namespace MarginTrading.Common.Services.Settings
 {
     /// <summary>
     /// Detects if margin trading of particular types (live and demo) is available globally and for user.

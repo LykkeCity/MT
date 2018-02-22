@@ -1,7 +1,6 @@
 ﻿using Autofac;
 using MarginTrading.Common.Services;
-using MarginTrading.Common.Settings;
-using MarginTrading.Common.Settings.Models;
+using MarginTrading.Common.Services.Settings;
 using MarginTrading.Frontend.Services;
 using MarginTrading.Frontend.Tests.Modules;
 using Moq;

@@ -1,11 +1,11 @@
 ﻿using System.Threading.Tasks;
-using MarginTrading.Common.Settings.Repositories;
 
-namespace MarginTrading.Common.Settings
+namespace MarginTrading.Common.Services.Client
 {
     public interface IClientAccountService
     {
         Task<string> GetNotificationId(string clientId);
-        Task<IClientAccount> GetAsync(string clientId);
+        Task<string> GetEmail(string clientId);
+        Task<bool> IsPushEnabled(string clientId);
     }
 }

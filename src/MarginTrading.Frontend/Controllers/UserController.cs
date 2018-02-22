@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using MarginTrading.Common.Middleware;
+using MarginTrading.Common.Services.Client;
 using MarginTrading.Common.Settings;
 using MarginTrading.Frontend.Extensions;
 using MarginTrading.Frontend.Models;

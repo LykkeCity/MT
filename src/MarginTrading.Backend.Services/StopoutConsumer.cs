@@ -9,8 +9,8 @@ using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services;
+using MarginTrading.Common.Services.Client;
 using MarginTrading.Common.Settings;
-using MarginTrading.Common.Settings.Repositories;
 
 namespace MarginTrading.Backend.Services
 {
@@ -27,7 +27,6 @@ namespace MarginTrading.Backend.Services
         private readonly IAssetsCache _assetsCache;
 
         public StopOutConsumer(IThreadSwitcher threadSwitcher,
-            IClientSettingsRepository clientSettingsRepository,
             IAppNotifications appNotifications,
             IClientAccountService clientAccountService,
             IClientNotifyService notifyService,
@@ -35,8 +34,7 @@ namespace MarginTrading.Backend.Services
             IMarginTradingOperationsLogService operationsLogService,
             IRabbitMqNotifyService rabbitMqNotifyService,
             IDateService dateService,
-            IAssetsCache assetsCache) : base(clientSettingsRepository,
-            appNotifications,
+            IAssetsCache assetsCache) : base(appNotifications,
             clientAccountService,
             assetsCache)
         {
@@ -73,10 +71,10 @@ namespace MarginTrading.Backend.Services
                     string.Format(MtMessages.Notifications_StopOutNotification, orders.Length, totalPnl,
                         account.BaseAssetId));
 
-                var clientAcc = await _clientAccountService.GetAsync(account.ClientId);
-
-                var emailTask = clientAcc != null
-                    ? _emailService.SendStopOutEmailAsync(clientAcc.Email, account.BaseAssetId, account.Id)
+                var clientEmail = await _clientAccountService.GetEmail(account.ClientId);
+                
+                var emailTask = !string.IsNullOrEmpty(clientEmail)
+                    ? _emailService.SendStopOutEmailAsync(clientEmail, account.BaseAssetId, account.Id)
                     : Task.CompletedTask;
 
                 await Task.WhenAll(marginEventTask, notificationTask, emailTask);

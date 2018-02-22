@@ -8,10 +8,9 @@ using Lykke.Service.Session;
 using Lykke.SettingsReader;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
+using MarginTrading.Common.Services.Client;
+using MarginTrading.Common.Services.Settings;
 using MarginTrading.Common.Settings;
-using MarginTrading.Common.Settings.Repositories;
-using MarginTrading.Common.Settings.Repositories.Azure;
-using MarginTrading.Common.Settings.Repositories.Azure.Entities;
 using MarginTrading.DataReaderClient;
 using MarginTrading.Frontend.Repositories;
 using MarginTrading.Frontend.Repositories.Contract;
@@ -61,28 +60,6 @@ namespace MarginTrading.Frontend.Modules
                         LogLocator.CommonLog))
                 )
                 .SingleInstance();
-
-            builder.Register<IClientSettingsRepository>(ctx =>
-                new ClientSettingsRepository(
-                    AzureTableStorage<ClientSettingsEntity>.Create(
-                        _settings.Nested(s => s.MarginTradingFront.Db.ClientPersonalInfoConnString), "TraderSettings",
-                        LogLocator.CommonLog)));
-
-
-
-            builder.Register<IClientAccountsRepository>(ctx =>
-                new ClientsRepository(
-                    AzureTableStorage<ClientAccountEntity>.Create(
-                        _settings.Nested(s => s.MarginTradingFront.Db.ClientPersonalInfoConnString), "Traders",
-                        LogLocator.CommonLog),
-                    AzureTableStorage<AzureIndex>.Create(
-                        _settings.Nested(s => s.MarginTradingFront.Db.ClientPersonalInfoConnString), "Traders",
-                        LogLocator.CommonLog)));
-
-            builder.Register<IAppGlobalSettingsRepositry>(ctx =>
-                new AppGlobalSettingsRepository(AzureTableStorage<AppGlobalSettingsEntity>.Create(
-                    _settings.Nested(s => s.MarginTradingFront.Db.ClientPersonalInfoConnString), "Setup", LogLocator.CommonLog))
-            ).SingleInstance();
 
             builder.Register<IMarginTradingWatchListRepository>(ctx =>
                 new MarginTradingWatchListsRepository(AzureTableStorage<MarginTradingWatchListEntity>.Create(

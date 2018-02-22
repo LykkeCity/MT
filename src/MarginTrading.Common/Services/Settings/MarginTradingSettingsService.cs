@@ -1,35 +1,28 @@
 ﻿using System.Threading.Tasks;
-using MarginTrading.Common.Settings.Models;
-using MarginTrading.Common.Settings.Repositories;
+using Lykke.Service.ClientAccount.Client;
 using Rocks.Caching;
 
-namespace MarginTrading.Common.Settings
+namespace MarginTrading.Common.Services.Settings
 {
     /// <summary>
     /// Detects if margin trading of particular types (live and demo) is available globally and for user.
     /// </summary>
     public class MarginTradingSettingsService : IMarginTradingSettingsService
     {
-        private static readonly CachingParameters ClientTradingEnabledCachingParameters = CachingParameters.FromMinutes(5);
+        private static readonly CachingParameters ClientTradingEnabledCachingParameters = CachingParameters.FromMinutes(1);
 
-        private readonly IClientSettingsRepository _clientSettingsRepository;
-        private readonly IAppGlobalSettingsRepositry _appGlobalSettingsRepository;
+        private readonly IClientAccountClient _clientAccountClient;
         private readonly ICacheProvider _cacheProvider;
 
-        public MarginTradingSettingsService(
-            IClientSettingsRepository clientSettingsRepository,
-            IAppGlobalSettingsRepositry appGlobalSettingsRepository,
-            ICacheProvider cacheProvider)
+        public MarginTradingSettingsService(ICacheProvider cacheProvider, 
+            IClientAccountClient clientAccountClient)
         {
-            _clientSettingsRepository = clientSettingsRepository;
-            _appGlobalSettingsRepository = appGlobalSettingsRepository;
             _cacheProvider = cacheProvider;
+            _clientAccountClient = clientAccountClient;
         }
 
         public async Task<EnabledMarginTradingTypes> IsMarginTradingEnabled(string clientId)
-            => await IsMarginTradingEnabledGlobally()
-                   ? await IsMarginTradingEnabledInternal(clientId)
-                   : new EnabledMarginTradingTypes { Demo = false, Live = false };
+            => await IsMarginTradingEnabledInternal(clientId);
 
         public async Task<bool> IsMarginTradingEnabled(string clientId, bool isLive)
         {
@@ -39,7 +32,7 @@ namespace MarginTrading.Common.Settings
 
         public async Task SetMarginTradingEnabled(string clientId, bool isLive, bool enabled)
         {
-            var settings = await _clientSettingsRepository.GetSettings<MarginEnabledSettings>(clientId);
+            var settings = await _clientAccountClient.GetMarginEnabledAsync(clientId);
 
             if (isLive)
             {
@@ -50,7 +43,9 @@ namespace MarginTrading.Common.Settings
                 settings.Enabled = enabled;
             }
 
-            await _clientSettingsRepository.SetSettings(clientId, settings);
+            await _clientAccountClient.SetMarginEnabledAsync(clientId, settings.Enabled, settings.EnabledLive,
+                settings.TermsOfUseAgreed);
+            
             _cacheProvider.Add(GetClientTradingEnabledCacheKey(clientId),
                                new EnabledMarginTradingTypes { Demo = settings.Enabled, Live = settings.EnabledLive },
                                ClientTradingEnabledCachingParameters);
@@ -68,18 +63,11 @@ namespace MarginTrading.Common.Settings
         {
             async Task<EnabledMarginTradingTypes> MarginEnabled()
             {
-                var marginEnabledSettings = await _clientSettingsRepository.GetSettings<MarginEnabledSettings>(clientId);
+                var marginEnabledSettings = await _clientAccountClient.GetMarginEnabledAsync(clientId);
                 return new EnabledMarginTradingTypes { Demo = marginEnabledSettings.Enabled, Live = marginEnabledSettings.EnabledLive };
             }
 
             return _cacheProvider.GetAsync(GetClientTradingEnabledCacheKey(clientId), async () => new CachableResult<EnabledMarginTradingTypes>(await MarginEnabled(), ClientTradingEnabledCachingParameters));
-        }
-
-        private Task<bool> IsMarginTradingEnabledGlobally()
-        {
-            var cacheKey = CacheKeyBuilder.Create(nameof(MarginTradingSettingsService), nameof(IsMarginTradingEnabledGlobally));
-            async Task<bool> MarginEnabled() => (await _appGlobalSettingsRepository.GetAsync()).MarginTradingEnabled;
-            return _cacheProvider.GetAsync(cacheKey, async () => new CachableResult<bool>(await MarginEnabled(), CachingParameters.FromHours(1)));
         }
 
         private string GetClientTradingEnabledCacheKey(string clientId) => CacheKeyBuilder.Create(nameof(MarginTradingSettingsService), nameof(GetClientTradingEnabledCacheKey), clientId);

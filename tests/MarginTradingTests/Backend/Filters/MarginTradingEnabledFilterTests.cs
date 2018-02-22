@@ -7,6 +7,7 @@ using FluentAssertions;
 using MarginTrading.Backend.Attributes;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Filters;
+using MarginTrading.Common.Services.Settings;
 using MarginTrading.Common.Settings;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

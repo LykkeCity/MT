@@ -9,6 +9,7 @@ namespace MarginTrading.Frontend.Settings
     {
         public MtFrontendSettings MtFrontend {get; set;}
         public SlackNotificationSettings SlackNotifications { get; set; }
+        public ClientAccountServiceSettings ClientAccountServiceClient { get; set; }
     }
 
     public class MtFrontendSettings
@@ -30,7 +31,6 @@ namespace MarginTrading.Frontend.Settings
     {
         public string LogsConnString { get; set; }
         public string MarginTradingConnString { get; set; }
-        public string ClientPersonalInfoConnString { get; set; }
     }
 
     public class MtQueues

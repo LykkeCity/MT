@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
-using MarginTrading.Common.Settings.Models;
-using MarginTrading.Common.Settings.Repositories;
+using MarginTrading.Common.Services.Settings;
 using MarginTrading.DataReader.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,12 +11,13 @@ namespace MarginTrading.DataReader.Controllers
     public class SettingsController : Controller
     {
         private readonly Settings.DataReaderSettings _dataReaderSettings;
-        private readonly IClientSettingsRepository _clientSettingsRepository;
+        private readonly IMarginTradingSettingsService _marginTradingSettingsService;
 
-        public SettingsController(Settings.DataReaderSettings dataReaderSettings, IClientSettingsRepository clientSettingsRepository)
+        public SettingsController(Settings.DataReaderSettings dataReaderSettings, 
+            IMarginTradingSettingsService marginTradingSettingsService)
         {
             _dataReaderSettings = dataReaderSettings;
-            _clientSettingsRepository = clientSettingsRepository;
+            _marginTradingSettingsService = marginTradingSettingsService;
         }
 
         [HttpGet]
@@ -25,10 +25,10 @@ namespace MarginTrading.DataReader.Controllers
         [SkipMarginTradingEnabledCheck]
         public async Task<bool> GetIsMarginTradingEnabled(string clientId)
         {
-            var settings = await _clientSettingsRepository.GetSettings<MarginEnabledSettings>(clientId);
+            var settings = await _marginTradingSettingsService.IsMarginTradingEnabled(clientId);
             return _dataReaderSettings.IsLive
-                ? settings.EnabledLive
-                : settings.Enabled;
+                ? settings.Live
+                : settings.Demo;
         }
     }
 }
