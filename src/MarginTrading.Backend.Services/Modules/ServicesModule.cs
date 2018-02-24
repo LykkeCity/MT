@@ -1,4 +1,6 @@
 ﻿using Autofac;
+using Autofac.Core;
+using Common.Log;
 using Lykke.SettingsReader;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MarketMakerFeed;
@@ -158,8 +160,13 @@ namespace MarginTrading.Backend.Services.Modules
 		    builder.RegisterType<ContextFactory>()
 		        .As<IContextFactory>()
 		        .SingleInstance();
-			
-			builder.RegisterType<RabbitMqService>()
+
+			builder.Register(c =>
+				{
+					var settings = c.Resolve<IReloadingManager<MarginSettings>>();
+					return new RabbitMqService(c.Resolve<ILog>(), c.Resolve<IConsole>(),
+						settings.Nested(s => s.Db.StateConnString), settings.CurrentValue.Env);
+				})
 				.As<IRabbitMqService>()
 				.SingleInstance();
 			

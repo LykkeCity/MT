@@ -80,7 +80,7 @@ namespace MarginTrading.Common.Extensions
 
 
         [NotNull, ContractAnnotation("values:null => halt"), MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ICollection<T> RequiredNotNullOrEmpty<T>(this ICollection<T> values, string paramName, string message = null)
+        public static ICollection<T> RequiredNotNullOrEmptyCollection<T>(this ICollection<T> values, string paramName, string message = null)
         {
             if (values == null || values.Count == 0)
             {
@@ -92,7 +92,7 @@ namespace MarginTrading.Common.Extensions
 
 
         [NotNull, ContractAnnotation("values:null => halt"), MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IEnumerable<T> RequiredNotNullOrEmpty<T>(this IEnumerable<T> values, string paramName, string message = null)
+        public static IEnumerable<T> RequiredNotNullOrEmptyEnumerable<T>(this IEnumerable<T> values, string paramName, string message = null)
         {
             // ReSharper disable PossibleMultipleEnumeration
             if (values == null || !values.Any())
