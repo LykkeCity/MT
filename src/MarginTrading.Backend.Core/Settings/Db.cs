@@ -12,9 +12,5 @@ namespace MarginTrading.Backend.Core.Settings
         public string HistoryConnString { get; set; }
         [AzureBlobCheck]
         public string StateConnString { get; set; }
-        [AzureTableCheck]
-        public string ReportsConnString { get; set; }
-        [SqlCheck]
-        public string ReportsSqlConnString { get; set; }
     }
 }

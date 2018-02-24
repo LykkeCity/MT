@@ -7,6 +7,5 @@ namespace MarginTrading.Common.RabbitMq
         [AmqpCheck]
         public string ConnectionString { get; set; }
         public string ExchangeName { get; set; }
-        public bool IsDurable { get; set; }
     }
 }

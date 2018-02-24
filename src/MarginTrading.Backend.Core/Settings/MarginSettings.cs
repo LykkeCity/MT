@@ -1,4 +1,5 @@
-﻿using Lykke.SettingsReader.Attributes;
+﻿using JetBrains.Annotations;
+using Lykke.SettingsReader.Attributes;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Settings;
 
@@ -28,7 +29,7 @@ namespace MarginTrading.Backend.Core.Settings
         [Optional]
         public RabbitMqSettings StpAggregatorRabbitMqSettings { get; set; }
         
-        [Optional]
+        [Optional, CanBeNull]
         public RabbitMqSettings RisksRabbitMqSettings { get; set; }
         
         [AmqpCheck]
