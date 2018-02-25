@@ -25,6 +25,7 @@ namespace MarginTradingTests
                 new AssetPair
                 {
                     Id = "EURUSD",
+                    Name = "EURUSD",
                     Accuracy = 5,
                     BaseAssetId = "EUR",
                     QuotingAssetId = "USD"
@@ -32,6 +33,7 @@ namespace MarginTradingTests
                 new AssetPair
                 {
                     Id = "BTCEUR",
+                    Name = "BTCEUR",
                     Accuracy = 3,
                     BaseAssetId = "BTC",
                     QuotingAssetId = "EUR"
@@ -39,6 +41,7 @@ namespace MarginTradingTests
                 new AssetPair
                 {
                     Id = "BTCUSD",
+                    Name = "BTCUSD",
                     Accuracy = 3,
                     BaseAssetId = "BTC",
                     QuotingAssetId = "USD"
@@ -46,6 +49,7 @@ namespace MarginTradingTests
                 new AssetPair
                 {
                     Id = "BTCCHF",
+                    Name = "BTCCHF",
                     Accuracy = 3,
                     BaseAssetId = "BTC",
                     QuotingAssetId = "CHF"
@@ -53,6 +57,7 @@ namespace MarginTradingTests
                 new AssetPair
                 {
                     Id = "CHFJPY",
+                    Name = "CHFJPY",
                     Accuracy = 3,
                     BaseAssetId = "CHF",
                     QuotingAssetId = "JPY"
@@ -60,6 +65,7 @@ namespace MarginTradingTests
                 new AssetPair
                 {
                     Id = "USDCHF",
+                    Name = "USDCHF",
                     Accuracy = 3,
                     BaseAssetId = "USD",
                     QuotingAssetId = "CHF"
@@ -67,6 +73,7 @@ namespace MarginTradingTests
                 new AssetPair
                 {
                     Id = "EURCHF",
+                    Name = "EURCHF",
                     Accuracy = 5,
                     BaseAssetId = "EUR",
                     QuotingAssetId = "CHF"
@@ -74,6 +81,7 @@ namespace MarginTradingTests
                 new AssetPair
                 {
                     Id = "BTCJPY",
+                    Name = "BTCJPY",
                     Accuracy = 5,
                     BaseAssetId = "BTC",
                     QuotingAssetId = "JPY"
@@ -81,6 +89,7 @@ namespace MarginTradingTests
                 new AssetPair
                 {
                     Id = "EURJPY",
+                    Name = "EURJPY",
                     Accuracy = 3,
                     BaseAssetId = "EUR",
                     QuotingAssetId = "JPY"

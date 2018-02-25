@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
@@ -36,6 +37,20 @@ namespace MarginTradingTests
         protected IContainer Container { get; set; }
 
         protected void RegisterDependencies(bool mockEvents = false)
+        {
+            try
+            {
+                RegisterDependenciesCore(mockEvents);
+            }
+            catch (Exception e)
+            {
+                Debugger.Break();
+                Console.WriteLine(e);
+                throw;
+            }
+        }
+        
+        private void RegisterDependenciesCore(bool mockEvents = false)
         {
             var builder = new ContainerBuilder();
 
@@ -127,8 +142,6 @@ namespace MarginTradingTests
             dayOffSettingsService.Setup(s => s.GetExclusions(It.IsNotNull<string>()))
                 .Returns(ImmutableArray<DayOffExclusion>.Empty);
             builder.RegisterInstance(dayOffSettingsService.Object).SingleInstance();
-            builder.Register<IDayOffSettingsRepository>(c =>
-                new DayOffSettingsRepository(c.Resolve<IMarginTradingBlobRepository>())).SingleInstance();
 
             builder.RegisterBuildCallback(c => c.Resolve<AccountAssetsManager>());
             builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
