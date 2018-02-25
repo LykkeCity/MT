@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace MarginTrading.Backend.Core
 {
@@ -8,7 +9,7 @@ namespace MarginTrading.Backend.Core
         IEnumerable<IAssetPair> GetAll();
         IAssetPair FindAssetPair(string asset1, string asset2);
         HashSet<string> GetAllIds();
-        IAssetPair TryGetAssetPairById(string assetPairId);
-        AssetPairSettings GetAssetPairSettings(string assetPairId);
+        [CanBeNull] IAssetPair TryGetAssetPairById(string assetPairId);
+        [CanBeNull] IAssetPairSettings GetAssetPairSettings(string assetPairId);
     }
 }

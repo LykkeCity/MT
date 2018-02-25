@@ -7,6 +7,8 @@ namespace MarginTrading.Backend.Contracts.Client
         public IScheduleSettingsApi ScheduleSettings { get; }
         
         public IAccountsBalanceApi AccountsBalance { get; }
+        
+        public IAssetPairSettingsEditingApi AssetPairSettingsEdit { get; }
 
         public MtBackendClient(string url, string apiKey, string userAgent)
         {
@@ -15,6 +17,7 @@ namespace MarginTrading.Backend.Contracts.Client
             
             ScheduleSettings = RestService.For<IScheduleSettingsApi>(url, settings);
             AccountsBalance = RestService.For<IAccountsBalanceApi>(url, settings);
+            AssetPairSettingsEdit = RestService.For<IAssetPairSettingsEditingApi>(url, settings);
         }
     }
 }
