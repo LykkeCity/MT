@@ -150,8 +150,6 @@ namespace MarginTradingTests
             dayOffSettingsService.Setup(s => s.GetExclusions(It.IsNotNull<string>()))
                 .Returns(ImmutableArray<DayOffExclusion>.Empty);
             builder.RegisterInstance(dayOffSettingsService.Object).SingleInstance();
-            builder.Register<IDayOffSettingsRepository>(c =>
-                new DayOffSettingsRepository(c.Resolve<IMarginTradingBlobRepository>())).SingleInstance();
 
             builder.RegisterBuildCallback(c => c.Resolve<AccountAssetsManager>());
             builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
