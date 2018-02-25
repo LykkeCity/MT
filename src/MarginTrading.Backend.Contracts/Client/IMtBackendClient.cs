@@ -6,5 +6,6 @@ namespace MarginTrading.Backend.Contracts.Client
     public interface IMtBackendClient
     {
         IScheduleSettingsApi ScheduleSettings { get; }
+        IAssetPairSettingsEditingApi AssetPairSettingsEdit { get; }
     }
 }

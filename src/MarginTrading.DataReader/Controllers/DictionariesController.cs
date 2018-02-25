@@ -25,14 +25,8 @@ namespace MarginTrading.DataReader.Controllers
         [Route("assetPairs")]
         public async Task<IEnumerable<AssetPair>> GetAllAssetPairs()
         {
-            return (await _assetsService.GetAllAssetPairsAsync()).Select(a => new AssetPair
-            {
-                Id = a.Id,
-                Name = a.Name,
-                Accuracy = a.Accuracy,
-                BaseAssetId = a.BaseAssetId,
-                QuoteAssetId = a.QuotingAssetId
-            });
+            return (await _assetsService.GetAllAssetPairsAsync()).Select(a =>
+                new AssetPair(a.Id, a.Name, a.BaseAssetId, a.QuotingAssetId, a.Accuracy));
         }
 
         [HttpGet]
