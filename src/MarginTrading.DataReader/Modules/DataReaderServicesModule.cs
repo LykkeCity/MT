@@ -1,12 +1,15 @@
 ﻿using System;
 using Autofac;
 using Common.Log;
+using Lykke.SettingsReader;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services.Settings;
 using MarginTrading.Common.Settings;
 using MarginTrading.DataReader.Middleware.Validator;
 using MarginTrading.DataReader.Services;
 using MarginTrading.DataReader.Services.Implementation;
+using MarginTrading.DataReader.Settings;
 using Rocks.Caching;
 
 namespace MarginTrading.DataReader.Modules
@@ -27,8 +30,16 @@ namespace MarginTrading.DataReader.Modules
                 .SingleInstance();
             builder.RegisterType<Application>().As<IStartable>()
                 .SingleInstance();
-            builder.RegisterType<RabbitMqService>().As<IRabbitMqService>()
+            
+            builder.Register(c =>
+                {
+                    var settings = c.Resolve<IReloadingManager<DataReaderSettings>>();
+                    return new RabbitMqService(c.Resolve<ILog>(), c.Resolve<IConsole>(),
+                        settings.Nested(s => s.Db.StateConnString), settings.CurrentValue.Env);
+                })
+                .As<IRabbitMqService>()
                 .SingleInstance();
+            
             builder.RegisterInstance(new ConsoleLWriter(Console.WriteLine)).As<IConsole>()
                 .SingleInstance();
         }

@@ -149,7 +149,7 @@ namespace MarginTrading.DataReader
         private void RegisterModules(ContainerBuilder builder, IReloadingManager<AppSettings> readerSettings,
             IReloadingManager<DataReaderSettings> settings)
         {
-            builder.RegisterModule(new DataReaderSettingsModule(settings.CurrentValue));
+            builder.RegisterModule(new DataReaderSettingsModule(settings));
             builder.RegisterModule(new DataReaderRepositoriesModule(settings, LogLocator.CommonLog));
             builder.RegisterModule(new DataReaderServicesModule());
             builder.RegisterModule(new MarginTradingCommonModule());
