@@ -52,6 +52,7 @@ namespace MarginTradingTests.Services
             _marginTradingSettingsCacheService = Mock.Of<IMarginTradingSettingsCacheService>();
             _sut = new MarginTradingEnablingService(_clientAccountsService, rabbitMqService, marginSettings,
                 _marginTradingSettingsCacheService);
+            _sut.Start();
         }
 
         [Test]
