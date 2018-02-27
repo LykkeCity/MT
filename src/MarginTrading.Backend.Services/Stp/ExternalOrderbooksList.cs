@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using Common;
 using Common.Log;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Common.Extensions;
@@ -37,19 +39,34 @@ namespace MarginTrading.Backend.Services.Stp
         private readonly ReadWriteLockedDictionary<string, Dictionary<string, ExternalOrderBook>> _orderbooks =
             new ReadWriteLockedDictionary<string, Dictionary<string, ExternalOrderBook>>();
 
-        public List<(string source, decimal price)> GetPricesForMatch(IOrder order, bool isOpening)
+        public List<(string source, decimal? price)> GetPricesForOpen(IOrder order)
         {
             return _orderbooks.TryReadValue(order.Instrument, (dataExist, assetPairId, orderbooks)
-                => orderbooks.Select(p => (p.Key, MatchBestPriceForOrder(p.Value, order, isOpening)))).ToList();
+                => orderbooks.Select(p => (p.Key, MatchBestPriceForOrder(p.Value, order, true))).ToList());
         }
 
-        private static decimal MatchBestPriceForOrder(ExternalOrderBook externalOrderbook, IOrder order, bool isOpening)
+        public decimal? GetPriceForClose(IOrder order)
         {
-            // todo: revise logic
+            decimal? CalculatePriceForClose(Dictionary<string, ExternalOrderBook> orderbooks)
+            {
+                if (!orderbooks.TryGetValue(order.OpenExternalProviderId, out var orderBook))
+                {
+                    return null;
+                }
+
+                return MatchBestPriceForOrder(orderBook, order, false);
+            }
+
+            return _orderbooks.TryReadValue(order.Instrument, (dataExist, assetPairId, orderbooks)
+                => dataExist ? CalculatePriceForClose(orderbooks) : null);
+        }
+
+        private static decimal? MatchBestPriceForOrder(ExternalOrderBook externalOrderbook, IOrder order, bool isOpening)
+        {
             var direction = isOpening ? order.GetOrderType() : order.GetCloseType();
-            return direction == OrderDirection.Buy
-                ? externalOrderbook.Asks.First().Price
-                : externalOrderbook.Bids.First().Price;
+            var volume = Math.Abs(order.Volume);
+
+            return externalOrderbook.GetMatchedPrice(volume, direction);
         }
 
         public void SetOrderbook(ExternalOrderBook orderbook)
