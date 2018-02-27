@@ -47,17 +47,19 @@ namespace MarginTrading.Frontend.Services
             }
 
             var initData = new InitDataLiveDemoClientResponse();
-            var initAssetsResponses = await _httpRequestService.RequestIfAvailableAsync(null, "init.assets", Array.Empty<AssetPairBackendContract>, marginTradingEnabled);
+            var clientIdRequest = new ClientIdBackendRequest {ClientId = clientId};
+            
+            var initAssetsResponses = await _httpRequestService.RequestIfAvailableAsync(clientIdRequest, "init.assets", Array.Empty<AssetPairBackendContract>, marginTradingEnabled);
             initData.Assets = initAssetsResponses.Live.Concat(initAssetsResponses.Demo).GroupBy(a => a.Id)
                 .Select(g => g.First().ToClientContract()).ToArray();
 
             var initPricesResponse =
                 await _httpRequestService.RequestWithRetriesAsync<Dictionary<string, InstrumentBidAskPairContract>>(
-                    new InitPricesBackendRequest {ClientId = clientId}, "init.prices");
+                    clientIdRequest, "init.prices");
 
             initData.Prices = initPricesResponse.ToDictionary(p => p.Key, p => p.Value.ToClientContract());
 
-            var initDataResponses = await _httpRequestService.RequestIfAvailableAsync<InitDataBackendResponse>(new ClientIdBackendRequest { ClientId = clientId }, "init.data", () => null, marginTradingEnabled);
+            var initDataResponses = await _httpRequestService.RequestIfAvailableAsync<InitDataBackendResponse>(clientIdRequest, "init.data", () => null, marginTradingEnabled);
             initData.Live = initDataResponses.Live?.ToClientContract();
             initData.Demo = initDataResponses.Demo?.ToClientContract();
 
