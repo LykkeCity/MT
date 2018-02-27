@@ -414,7 +414,7 @@ namespace MarginTrading.Backend.Controllers
         [SkipMarginTradingEnabledCheck]
         public async Task<IActionResult> SetMarginTradingIsEnabled(string clientId, [FromBody]bool enabled)
         {
-            await _marginTradingEnablingService.SetMarginTradingEnabled(clientId, _marginSettings.IsLive, enabled);
+            await _marginTradingEnablingService.SetMarginTradingEnabled(clientId, enabled);
             return Ok();
         }
 

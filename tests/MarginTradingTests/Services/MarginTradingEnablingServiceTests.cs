@@ -59,7 +59,7 @@ namespace MarginTradingTests.Services
         public async Task Always_ShouldCorrectlyEnableDemo()
         {
             //act
-            await _sut.SetMarginTradingEnabled("id of client", isLive: false, enabled: true);
+            await _sut.SetMarginTradingEnabled("id of client", enabled: true);
 
             //assert
             Mock.Get(_clientAccountsService).Verify(r => r.SetMarginEnabledAsync("id of client", true, false, false));
@@ -77,7 +77,7 @@ namespace MarginTradingTests.Services
         public async Task Always_ShouldCorrectlyEnableLive()
         {
             //act
-            await _sut.SetMarginTradingEnabled("id of client", isLive: true, enabled: true);
+            await _sut.SetMarginTradingEnabled("id of client", enabled: true);
 
             //assert
             Mock.Get(_clientAccountsService).Verify(r => r.SetMarginEnabledAsync("id of client", false, true, false));

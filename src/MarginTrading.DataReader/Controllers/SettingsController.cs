@@ -23,12 +23,9 @@ namespace MarginTrading.DataReader.Controllers
         [HttpGet]
         [Route("enabled/{clientId}")]
         [SkipMarginTradingEnabledCheck]
-        public async Task<bool> GetIsMarginTradingEnabled(string clientId)
+        public Task<bool> GetIsMarginTradingEnabled(string clientId)
         {
-            var settings = await _marginTradingSettingsCacheService.IsMarginTradingEnabled(clientId);
-            return _dataReaderSettings.IsLive
-                ? settings.Live
-                : settings.Demo;
+            return _marginTradingSettingsCacheService.IsMarginTradingEnabled(clientId, _dataReaderSettings.IsLive);
         }
     }
 }

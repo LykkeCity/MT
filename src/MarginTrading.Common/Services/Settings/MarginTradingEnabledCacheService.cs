@@ -23,8 +23,8 @@ namespace MarginTrading.Common.Services.Settings
             _clientAccountClient = clientAccountClient;
         }
 
-        public async Task<EnabledMarginTradingTypes> IsMarginTradingEnabled(string clientId)
-            => await IsMarginTradingEnabledInternal(clientId);
+        public Task<EnabledMarginTradingTypes> IsMarginTradingEnabled(string clientId)
+            => IsMarginTradingEnabledInternal(clientId);
 
         public async Task<bool> IsMarginTradingEnabled(string clientId, bool isLive)
         {

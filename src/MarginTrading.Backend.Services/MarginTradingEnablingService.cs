@@ -27,11 +27,11 @@ namespace MarginTrading.Backend.Services
             _marginTradingSettingsCacheService = marginTradingSettingsCacheService;
         }
 
-        public async Task SetMarginTradingEnabled(string clientId, bool isLive, bool enabled)
+        public async Task SetMarginTradingEnabled(string clientId, bool enabled)
         {
             var settings = await _clientAccountClient.GetMarginEnabledAsync(clientId);
 
-            if (isLive)
+            if (_marginSettings.IsLive)
             {
                 settings.EnabledLive = enabled;
             }
