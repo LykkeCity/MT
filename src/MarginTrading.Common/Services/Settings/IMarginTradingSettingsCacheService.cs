@@ -1,11 +1,12 @@
 ﻿using System.Threading.Tasks;
+using MarginTrading.Backend.Contracts.RabbitMqMessages;
 
 namespace MarginTrading.Common.Services.Settings
 {
     /// <summary>
     /// Detects if margin trading of particular types (live and demo) is available globally and for user.
     /// </summary>
-    public interface IMarginTradingSettingsService
+    public interface IMarginTradingSettingsCacheService
     {
         /// <summary>
         /// Detects if margin trading of particular types is available globally and for user <paramref name="clientId"/>
@@ -18,13 +19,8 @@ namespace MarginTrading.Common.Services.Settings
         Task<bool> IsMarginTradingEnabled(string clientId, bool isLive);
 
         /// <summary>
-        /// Enables or disables margin trading of specified type <paramref name="isLive"/> for specified <paramref name="clientId"/>
+        /// Notifies the service of availability change 
         /// </summary>
-        Task SetMarginTradingEnabled(string clientId, bool isLive, bool enabled);
-
-        /// <summary>
-        /// Removes from cache value for user
-        /// </summary>
-        void ResetCacheForClient(string clientId);
+        void OnMarginTradingEnabledChanged(MarginTradingEnabledChangedMessage message);
     }
 }

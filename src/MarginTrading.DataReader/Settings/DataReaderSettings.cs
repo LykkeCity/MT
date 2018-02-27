@@ -16,5 +16,7 @@ namespace MarginTrading.DataReader.Settings
 
         [Optional]
         public string ApplicationInsightsKey { get; set; }
+
+        public RabbitMqConsumers Consumers { get; set; }
     }
 }

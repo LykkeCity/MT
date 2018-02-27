@@ -22,13 +22,13 @@ namespace MarginTrading.Frontend.Tests
                 .As<IWatchListService>()
                 .SingleInstance();
 
-            var settingsServiceMock = new Mock<IMarginTradingSettingsService>();
+            var settingsServiceMock = new Mock<IMarginTradingSettingsCacheService>();
             settingsServiceMock.Setup(s => s.IsMarginTradingEnabled(It.IsAny<string>())).ReturnsAsync(new EnabledMarginTradingTypes { Live = true, Demo = true });
             settingsServiceMock.Setup(s => s.IsMarginTradingEnabled(It.IsAny<string>(), It.IsAny<bool>())).ReturnsAsync(true);
 
 
             builder.RegisterInstance(settingsServiceMock.Object)
-                .As<IMarginTradingSettingsService>()
+                .As<IMarginTradingSettingsCacheService>()
                 .SingleInstance();
 
             builder.RegisterInstance(new Mock<IMarginTradingOperationsLogService>().Object)

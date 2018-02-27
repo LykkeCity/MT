@@ -4,6 +4,7 @@ using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using MarginTrading.Backend.Contracts.RabbitMqMessages;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
@@ -28,7 +29,7 @@ namespace MarginTrading.Frontend
         private readonly MtFrontendSettings _settings;
         private readonly IConsole _consoleWriter;
         private readonly ILog _log;
-        private readonly IMarginTradingSettingsService _marginTradingSettingsService;
+        private readonly IMarginTradingSettingsCacheService _marginTradingSettingsCacheService;
         private readonly ISubject<BidAskPairRabbitMqContract> _allPairsSubject;
         private readonly ISubject<TradeClientContract> _tradesSubject;
 
@@ -42,7 +43,7 @@ namespace MarginTrading.Frontend
             MtFrontendSettings settings,
             IConsole consoleWriter,
             ILog log,
-            IMarginTradingSettingsService marginTradingSettingsService)
+            IMarginTradingSettingsCacheService marginTradingSettingsCacheService)
         {
             _realm = realm;
             _clientNotificationService = clientNotificationService;
@@ -50,7 +51,7 @@ namespace MarginTrading.Frontend
             _settings = settings;
             _consoleWriter = consoleWriter;
             _log = log;
-            _marginTradingSettingsService = marginTradingSettingsService;
+            _marginTradingSettingsCacheService = marginTradingSettingsCacheService;
             _allPairsSubject = realm.Services.GetSubject<BidAskPairRabbitMqContract>(WampConstants.PricesTopicPrefix);
             _tradesSubject = realm.Services.GetSubject<TradeClientContract>(WampConstants.TradesTopic);
         }
@@ -90,11 +91,7 @@ namespace MarginTrading.Frontend
         public async Task ProcessAccountChanged(AccountChangedMessage accountChangedMessage)
         {
             if (accountChangedMessage.EventType != AccountEventTypeEnum.Updated)
-            {
-                // Adding/deleting accounts usually means activation/deactivation of live trading
-                _marginTradingSettingsService.ResetCacheForClient(accountChangedMessage.Account?.ClientId);
                 return;
-            }
 
             var account = accountChangedMessage.Account;
             var queueName = QueueHelper.BuildQueueName(_settings.MarginTradingFront.RabbitMqQueues.AccountChanged.ExchangeName, _settings.MarginTradingFront.Env);
@@ -240,6 +237,12 @@ namespace MarginTrading.Frontend
             return _priceSubjects.GetOrAdd(instrument,
                 i => _realm.Services.GetSubject<BidAskPairRabbitMqContract>(
                     $"{WampConstants.PricesTopicPrefix}.{instrument}"));
+        }
+
+        public Task ProcessMarginTradingEnabledChanged(MarginTradingEnabledChangedMessage message)
+        {
+            _marginTradingSettingsCacheService.OnMarginTradingEnabledChanged(message);
+            return Task.CompletedTask;
         }
     }
 }

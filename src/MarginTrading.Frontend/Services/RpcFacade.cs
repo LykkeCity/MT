@@ -21,18 +21,18 @@ namespace MarginTrading.Frontend.Services
     {
         private readonly MtFrontendSettings _settings;
         private readonly IHttpRequestService _httpRequestService;
-        private readonly IMarginTradingSettingsService _marginTradingSettingsService;
+        private readonly IMarginTradingSettingsCacheService _marginTradingSettingsCacheService;
         private readonly MarginTradingDataReaderApiClientsPair _dataReaderClients;
 
         public RpcFacade(
             MtFrontendSettings settings,
             IHttpRequestService httpRequestService,
-            IMarginTradingSettingsService marginTradingSettingsService,
+            IMarginTradingSettingsCacheService marginTradingSettingsCacheService,
             MarginTradingDataReaderApiClientsPair dataReaderClients)
         {
             _settings = settings;
             _httpRequestService = httpRequestService;
-            _marginTradingSettingsService = marginTradingSettingsService;
+            _marginTradingSettingsCacheService = marginTradingSettingsCacheService;
             _dataReaderClients = dataReaderClients;
         }
 
@@ -40,7 +40,7 @@ namespace MarginTrading.Frontend.Services
 
         public async Task<InitDataLiveDemoClientResponse> InitData(string clientId)
         {
-            var marginTradingEnabled = await _marginTradingSettingsService.IsMarginTradingEnabled(clientId);
+            var marginTradingEnabled = await _marginTradingSettingsCacheService.IsMarginTradingEnabled(clientId);
             if (!marginTradingEnabled.Demo && !marginTradingEnabled.Live)
             {
                 throw new Exception("Margin trading is not available");
@@ -66,7 +66,7 @@ namespace MarginTrading.Frontend.Services
 
         public async Task<InitAccountsLiveDemoClientResponse> InitAccounts(string clientId)
         {
-            var marginTradingEnabled = await _marginTradingSettingsService.IsMarginTradingEnabled(clientId);
+            var marginTradingEnabled = await _marginTradingSettingsCacheService.IsMarginTradingEnabled(clientId);
             var responses = await _httpRequestService.RequestIfAvailableAsync(new ClientIdBackendRequest { ClientId = clientId },
                                                                               "init.accounts",
                                                                               Array.Empty<MarginTradingAccountBackendContract>,
@@ -80,7 +80,7 @@ namespace MarginTrading.Frontend.Services
 
         public async Task<InitAccountInstrumentsLiveDemoClientResponse> AccountInstruments(string clientId)
         {
-            var marginTradingEnabled = await _marginTradingSettingsService.IsMarginTradingEnabled(clientId);
+            var marginTradingEnabled = await _marginTradingSettingsCacheService.IsMarginTradingEnabled(clientId);
             var responses = await _httpRequestService.RequestIfAvailableAsync(new ClientIdBackendRequest { ClientId = clientId },
                                                                               "init.accountinstruments",
                                                                               InitAccountInstrumentsBackendResponse.CreateEmpty,
@@ -123,7 +123,7 @@ namespace MarginTrading.Frontend.Services
                 ? IsLiveAccount(request.AccountId)
                 : request.IsLive;
 
-            var marginTradingEnabled = await _marginTradingSettingsService.IsMarginTradingEnabled(clientId, isLive);
+            var marginTradingEnabled = await _marginTradingSettingsCacheService.IsMarginTradingEnabled(clientId, isLive);
             if (!marginTradingEnabled)
             {
                 return new AccountHistoryClientResponse
@@ -144,7 +144,7 @@ namespace MarginTrading.Frontend.Services
                 ? IsLiveAccount(request.AccountId)
                 : request.IsLive;
 
-            var marginTradingEnabled = await _marginTradingSettingsService.IsMarginTradingEnabled(clientId, isLive);
+            var marginTradingEnabled = await _marginTradingSettingsCacheService.IsMarginTradingEnabled(clientId, isLive);
             if (!marginTradingEnabled)
             {
                 return Array.Empty<AccountHistoryItemClient>();
@@ -184,7 +184,7 @@ namespace MarginTrading.Frontend.Services
 
         public async Task<ClientOrdersLiveDemoClientResponse> GetOpenPositions(string clientId)
         {
-            var marginTradingEnabled = await _marginTradingSettingsService.IsMarginTradingEnabled(clientId);
+            var marginTradingEnabled = await _marginTradingSettingsCacheService.IsMarginTradingEnabled(clientId);
             var responses = await _httpRequestService.RequestIfAvailableAsync(new ClientIdBackendRequest { ClientId = clientId },
                                                                               "order.list",
                                                                               Array.Empty<OrderBackendContract>,
@@ -208,7 +208,7 @@ namespace MarginTrading.Frontend.Services
 
         public async Task<ClientPositionsLiveDemoClientResponse> GetClientOrders(string clientId)
         {
-            var marginTradingEnabled = await _marginTradingSettingsService.IsMarginTradingEnabled(clientId);
+            var marginTradingEnabled = await _marginTradingSettingsCacheService.IsMarginTradingEnabled(clientId);
             var responses = await _httpRequestService.RequestIfAvailableAsync(new ClientIdBackendRequest { ClientId = clientId },
                                                                               "order.positions",
                                                                               () => new ClientOrdersBackendResponse

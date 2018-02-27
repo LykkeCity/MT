@@ -41,6 +41,7 @@ namespace MarginTrading.Frontend.Settings
         public RabbitMqQueueInfo UserUpdates { get; set; }
         public RabbitMqQueueInfo OrderbookPrices { get; set; }
         public RabbitMqQueueInfo Trades { get; set; }
+        public RabbitMqQueueInfo MarginTradingEnabledChanged { get; set; }
     }
 
     public class MtFrontSettings
