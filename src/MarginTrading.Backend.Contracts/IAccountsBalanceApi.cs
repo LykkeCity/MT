@@ -25,7 +25,7 @@ namespace MarginTrading.Backend.Contracts
         Task<BackendResponse<AccountDepositWithdrawResponse>> AccountWithdraw(AccountDepositWithdrawRequest request);
         
         /// <summary>
-        /// Gets schedule settings
+        /// Resets DEMO account balance to default
         /// </summary>
         /// <remarks>
         /// Only for DEMO account
