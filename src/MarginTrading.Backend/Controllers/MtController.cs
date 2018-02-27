@@ -162,8 +162,26 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         public string[] InitAvailableAssets([FromBody]ClientIdBackendRequest request)
         {
+            return GetAvailableAssets(request.ClientId).ToArray();
+        }
+
+        [Route("init.assets")]
+        [HttpPost]
+        public AssetPairBackendContract[] InitAssets([FromBody]ClientIdBackendRequest request)
+        {
+            var availableAssets = GetAvailableAssets(request.ClientId).ToHashSet();
+
+            var instruments = _assetPairsCache.GetAll();
+            
+            return instruments.Where(a => availableAssets.Contains(a.Id))
+                .Select(item => item.ToBackendContract()).ToArray();
+        }
+
+        private IEnumerable<string> GetAvailableAssets(string clientId)
+        {
             var result = new List<string>();
-            var accounts = _accountsCacheService.GetAll(request.ClientId);
+            
+            var accounts = _accountsCacheService.GetAll(clientId);
 
             foreach (var account in accounts)
             {
@@ -171,16 +189,7 @@ namespace MarginTrading.Backend.Controllers
                     .GetAccountAssets(account.TradingConditionId, account.BaseAssetId).Select(a => a.Instrument));
             }
 
-            return result.Distinct().ToArray();
-        }
-
-        [Route("init.assets")]
-        [HttpPost]
-        public AssetPairBackendContract[] InitAssets()
-        {
-            var instruments = _assetPairsCache.GetAll();
-            return instruments
-                .Select(item => item.ToBackendContract()).ToArray();
+            return result.Distinct();
         }
 
         [Route("init.prices")]
