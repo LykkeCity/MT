@@ -18,7 +18,9 @@ namespace MarginTrading.Backend.Contracts.Client
                 new RetryingHttpClientHandler(new HttpClientHandler(), 6, TimeSpan.FromSeconds(5)),
                 userAgent, apiKey);
             var settings = new RefitSettings {HttpMessageHandlerFactory = () => httpMessageHandler};
+            
             ScheduleSettings = RestService.For<IScheduleSettingsApi>(url, settings);
+            AccountsBalance = RestService.For<IAccountsBalanceApi>(url, settings);
             AssetPairSettingsEdit = RestService.For<IAssetPairSettingsEditingApi>(url, settings);
         }
     }
