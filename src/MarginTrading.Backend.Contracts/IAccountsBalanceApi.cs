@@ -15,13 +15,13 @@ namespace MarginTrading.Backend.Contracts
         /// <summary>
         /// Add funds to account
         /// </summary>
-        [Get("/api/AccountsBalance/deposit")]
+        [Post("/api/AccountsBalance/deposit")]
         Task<BackendResponse<AccountDepositWithdrawResponse>> AccountDeposit(AccountDepositWithdrawRequest request);
         
         /// <summary>
         /// Remove funds from account
         /// </summary>
-        [Get("/api/AccountsBalance/withdraw")]
+        [Post("/api/AccountsBalance/withdraw")]
         Task<BackendResponse<AccountDepositWithdrawResponse>> AccountWithdraw(AccountDepositWithdrawRequest request);
         
         /// <summary>
@@ -30,7 +30,7 @@ namespace MarginTrading.Backend.Contracts
         /// <remarks>
         /// Only for DEMO account
         /// </remarks>
-        [Get("/api/AccountsBalance/reset")]
+        [Post("/api/AccountsBalance/reset")]
         Task<BackendResponse<AccountResetResponse>> AccountResetDemo(AccounResetRequest request);
     }
 }

@@ -12,7 +12,9 @@ namespace MarginTrading.Backend.Contracts.Client
         {
             var httpMessageHandler = new MtBackendHttpClientHandler(userAgent, apiKey);
             var settings = new RefitSettings {HttpMessageHandlerFactory = () => httpMessageHandler};
+            
             ScheduleSettings = RestService.For<IScheduleSettingsApi>(url, settings);
+            AccountsBalance = RestService.For<IAccountsBalanceApi>(url, settings);
         }
     }
 }
