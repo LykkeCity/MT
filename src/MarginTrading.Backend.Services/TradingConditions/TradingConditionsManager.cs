@@ -84,7 +84,7 @@ namespace MarginTrading.Backend.Services.TradingConditions
             var tradingConditions = (await _repository.GetAllAsync()).ToList();
 
             _tradingConditionsCacheService.InitTradingConditionsCache(tradingConditions);
-            _console.WriteLine($"InitTradingConditionsCache (trading conditins count:{tradingConditions.Count})");
+            _console.WriteLine($"InitTradingConditionsCache (trading conditions count:{tradingConditions.Count})");
         }
     }
 }

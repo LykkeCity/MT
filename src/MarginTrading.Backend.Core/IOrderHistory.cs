@@ -47,6 +47,8 @@ namespace MarginTrading.Backend.Core
         decimal MarginMaintenance { get; }
         decimal OpenCrossPrice { get; }
         decimal CloseCrossPrice { get; }
+        
+        OrderUpdateType OrderUpdateType { get; }
     }
 
     public class OrderHistory : IOrderHistory
@@ -91,5 +93,6 @@ namespace MarginTrading.Backend.Core
         public decimal MarginMaintenance { get; set; }
         public decimal OpenCrossPrice { get; set; }
         public decimal CloseCrossPrice { get; set; }
+        public OrderUpdateType OrderUpdateType { get; set; }
     }
 }

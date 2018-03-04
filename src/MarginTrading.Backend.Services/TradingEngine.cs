@@ -10,7 +10,6 @@ using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
-using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Backend.Services.TradingConditions;
 
 namespace MarginTrading.Backend.Services
@@ -22,13 +21,15 @@ namespace MarginTrading.Backend.Services
         private readonly IEventChannel<OrderPlacedEventArgs> _orderPlacedEventChannel;
         private readonly IEventChannel<OrderClosedEventArgs> _orderClosedEventChannel;
         private readonly IEventChannel<OrderCancelledEventArgs> _orderCancelledEventChannel;
+        private readonly IEventChannel<OrderLimitsChangedEventArgs> _orderLimitsChangesEventChannel;
+        private readonly IEventChannel<OrderClosingEventArgs> _orderClosingEventChannel;
+        private readonly IEventChannel<OrderActivatedEventArgs> _orderActivatedEventChannel;
+        private readonly IEventChannel<OrderRejectedEventArgs> _orderRejectedEventChannel;
 
         private readonly IQuoteCacheService _quoteCashService;
         private readonly IAccountUpdateService _accountUpdateService;
         private readonly ICommissionService _swapCommissionService;
         private readonly IValidateOrderService _validateOrderService;
-        private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
-        private readonly IClientNotifyService _notifyService;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly OrdersCache _ordersCache;
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
@@ -43,14 +44,16 @@ namespace MarginTrading.Backend.Services
             IEventChannel<StopOutEventArgs> stopoutEventChannel,
             IEventChannel<OrderPlacedEventArgs> orderPlacedEventChannel,
             IEventChannel<OrderClosedEventArgs> orderClosedEventChannel,
-            IEventChannel<OrderCancelledEventArgs> orderCancelledEventChannel,
-
+            IEventChannel<OrderCancelledEventArgs> orderCancelledEventChannel, 
+            IEventChannel<OrderLimitsChangedEventArgs> orderLimitsChangesEventChannel,
+            IEventChannel<OrderClosingEventArgs> orderClosingEventChannel,
+            IEventChannel<OrderActivatedEventArgs> orderActivatedEventChannel, 
+            IEventChannel<OrderRejectedEventArgs> orderRejectedEventChannel,
+            
             IValidateOrderService validateOrderService,
             IQuoteCacheService quoteCashService,
             IAccountUpdateService accountUpdateService,
             ICommissionService swapCommissionService,
-            IClientNotifyService notifyService,
-            IRabbitMqNotifyService rabbitMqNotifyService,
             IAccountsCacheService accountsCacheService,
             OrdersCache ordersCache,
             IAccountAssetsCacheService accountAssetsCacheService,
@@ -65,16 +68,18 @@ namespace MarginTrading.Backend.Services
             _orderPlacedEventChannel = orderPlacedEventChannel;
             _orderClosedEventChannel = orderClosedEventChannel;
             _orderCancelledEventChannel = orderCancelledEventChannel;
+            _orderActivatedEventChannel = orderActivatedEventChannel;
+            _orderClosingEventChannel = orderClosingEventChannel;
+            _orderLimitsChangesEventChannel = orderLimitsChangesEventChannel;
+            _orderRejectedEventChannel = orderRejectedEventChannel;
 
             _quoteCashService = quoteCashService;
             _accountUpdateService = accountUpdateService;
             _swapCommissionService = swapCommissionService;
             _validateOrderService = validateOrderService;
-            _rabbitMqNotifyService = rabbitMqNotifyService;
             _accountsCacheService = accountsCacheService;
             _ordersCache = ordersCache;
             _accountAssetsCacheService = accountAssetsCacheService;
-            _notifyService = notifyService;
             _meRouter = meRouter;
             _threadSwitcher = threadSwitcher;
             _meRepository = meRepository;
@@ -145,7 +150,7 @@ namespace MarginTrading.Backend.Services
 
             if (order.Status == OrderStatus.Rejected)
             {
-                _rabbitMqNotifyService.OrderReject(order);
+                _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
             }
 
             return Task.FromResult(order);
@@ -158,8 +163,7 @@ namespace MarginTrading.Backend.Services
             order.RejectReason = reason;
             order.RejectReasonText = message;
             order.Comment = comment;
-
-            _rabbitMqNotifyService.OrderReject(order);
+            _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
         }
 
         private Task<Order> PlaceOrderByMarketPrice(Order order)
@@ -195,7 +199,7 @@ namespace MarginTrading.Backend.Services
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
             _swapCommissionService.SetCommissionRates(account.TradingConditionId, account.BaseAssetId, order);
             _ordersCache.ActiveOrders.Add(order);
-            _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
+            _orderActivatedEventChannel.SendEvent(this, new OrderActivatedEventArgs(order));
         }
 
         //TODO: do check in other way??
@@ -430,6 +434,7 @@ namespace MarginTrading.Backend.Services
                     order.Status = OrderStatus.Closing;
                     _ordersCache.ActiveOrders.Remove(order);
                     _ordersCache.ClosingOrders.Add(order);
+                    _orderClosingEventChannel.SendEvent(this, new OrderClosingEventArgs(order));
                 }
                 else
                 {
@@ -523,7 +528,7 @@ namespace MarginTrading.Backend.Services
                 order.TakeProfit = tp.HasValue ? Math.Round(tp.Value, order.AssetAccuracy) : (decimal?)null;
                 order.StopLoss = sl.HasValue ? Math.Round(sl.Value, order.AssetAccuracy) : (decimal?)null;
                 order.ExpectedOpenPrice = expOpenPrice.HasValue ? Math.Round(expOpenPrice.Value, order.AssetAccuracy) : (decimal?)null;
-                _notifyService.NotifyOrderChanged(order);
+                _orderLimitsChangesEventChannel.SendEvent(this, new OrderLimitsChangedEventArgs(order));
             }
         }
 
