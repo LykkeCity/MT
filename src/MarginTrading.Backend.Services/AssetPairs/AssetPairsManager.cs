@@ -8,16 +8,16 @@ using MarginTrading.Common.Extensions;
 
 namespace MarginTrading.Backend.Services.AssetPairs
 {
-    public class AssetPairsManager : IStartable, IAssetPairsManager
+    internal class AssetPairsManager : IStartable, IAssetPairsManager
     {
         private static readonly object InitAssetPairSettingsLock = new object();
 
         private readonly IAssetsService _assets;
-        private readonly AssetPairsCache _assetPairsCache;
+        private readonly IAssetPairsInitializableCache _assetPairsCache;
         private readonly IAssetPairSettingsRepository _assetPairSettingsRepository;
 
         public AssetPairsManager(IAssetsService repository,
-            AssetPairsCache assetPairsCache,
+            IAssetPairsInitializableCache assetPairsCache,
             IAssetPairSettingsRepository assetPairSettingsRepository)
         {
             _assets = repository;
@@ -46,7 +46,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
         {
             lock (InitAssetPairSettingsLock)
             {
-                var settings = _assetPairSettingsRepository.Get().GetAwaiter().GetResult()
+                var settings = _assetPairSettingsRepository.GetAsync().GetAwaiter().GetResult()
                     .ToDictionary(a => a.AssetPairId, s => s);
                 _assetPairsCache.InitAssetPairSettingsCache(settings);
             }
@@ -54,7 +54,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         public async Task<IAssetPairSettings> UpdateAssetPairSettings(IAssetPairSettings assetPairSettings)
         {
-            await _assetPairSettingsRepository.Update(assetPairSettings);
+            await _assetPairSettingsRepository.ReplaceAsync(assetPairSettings);
             InitAssetPairSettings();
             return _assetPairsCache.GetAssetPairSettings(assetPairSettings.AssetPairId)
                 .RequiredNotNull("AssetPairSettings for " + assetPairSettings.AssetPairId);
@@ -62,7 +62,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         public async Task<IAssetPairSettings> InsertAssetPairSettings(IAssetPairSettings assetPairSettings)
         {
-            await _assetPairSettingsRepository.Insert(assetPairSettings);
+            await _assetPairSettingsRepository.InsertAsync(assetPairSettings);
             InitAssetPairSettings();
             return _assetPairsCache.GetAssetPairSettings(assetPairSettings.AssetPairId)
                 .RequiredNotNull("AssetPairSettings for " + assetPairSettings.AssetPairId);
@@ -70,7 +70,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         public async Task<IAssetPairSettings> DeleteAssetPairSettings(string assetPairId)
         {
-            var settings = await _assetPairSettingsRepository.Delete(assetPairId);
+            var settings = await _assetPairSettingsRepository.DeleteAsync(assetPairId);
             InitAssetPairSettings();
             return settings;
         }

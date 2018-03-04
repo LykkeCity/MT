@@ -12,6 +12,7 @@ namespace MarginTrading.Backend.Services.Modules
         {
             builder.RegisterType<AssetPairsCache>()
                 .As<IAssetPairsCache>()
+                .As<IAssetPairsInitializableCache>()
                 .AsSelf()
                 .SingleInstance();
             

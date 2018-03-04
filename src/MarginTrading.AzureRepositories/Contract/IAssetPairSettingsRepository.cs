@@ -6,10 +6,10 @@ namespace MarginTrading.AzureRepositories.Contract
 {
     public interface IAssetPairSettingsRepository
     {
-        Task<IReadOnlyList<IAssetPairSettings>> Get();
-        Task Insert(IAssetPairSettings settings);
-        Task Update(IAssetPairSettings settings);
-        Task<IAssetPairSettings> Delete(string assetPairId);
-        Task<IAssetPairSettings> Get(string assetPairId);
+        Task<IReadOnlyList<IAssetPairSettings>> GetAsync();
+        Task InsertAsync(IAssetPairSettings settings);
+        Task ReplaceAsync(IAssetPairSettings settings);
+        Task<IAssetPairSettings> DeleteAsync(string assetPairId);
+        Task<IAssetPairSettings> GetAsync(string assetPairId);
     }
 }

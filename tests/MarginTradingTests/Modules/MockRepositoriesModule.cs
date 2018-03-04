@@ -35,7 +35,7 @@ namespace MarginTradingTests.Modules
             var orderHistoryRepository = new Mock<IMarginTradingOrdersHistoryRepository>();
             var riskSystemCommandsLogRepository = new Mock<IRiskSystemCommandsLogRepository>();
             var assetPairSettingsRepository = new Mock<IAssetPairSettingsRepository>();
-            assetPairSettingsRepository.Setup(s => s.Get()).ReturnsAsync(new List<IAssetPairSettings>());
+            assetPairSettingsRepository.Setup(s => s.GetAsync()).ReturnsAsync(new List<IAssetPairSettings>());
 
             builder.RegisterInstance(new LogToMemory()).As<ILog>();
             builder.RegisterInstance(assetsService).As<IAssetsService>().SingleInstance();

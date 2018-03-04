@@ -16,7 +16,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
     /// are used as read-only: never updated, only reference-assigned.
     /// Their contents are also readonly.
     /// </remarks>
-    public class AssetPairsCache : IAssetPairsCache
+    public class AssetPairsCache : IAssetPairsInitializableCache
     {
         private IReadOnlyDictionary<string, IAssetPair> _assetPairs =
             ImmutableSortedDictionary<string, IAssetPair>.Empty;
@@ -65,12 +65,12 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 string.Format(MtMessages.InstrumentWithAssetsNotFound, asset1, asset2));
         }
 
-        internal void InitInstrumentsCache(Dictionary<string, IAssetPair> instruments)
+        void IAssetPairsInitializableCache.InitInstrumentsCache(Dictionary<string, IAssetPair> instruments)
         {
             _assetPairs = instruments;
         }
 
-        internal void InitAssetPairSettingsCache(Dictionary<string, IAssetPairSettings> assetPairSettings)
+        void IAssetPairsInitializableCache.InitAssetPairSettingsCache(Dictionary<string, IAssetPairSettings> assetPairSettings)
         {
             _assetPairSettings = assetPairSettings;
         }
