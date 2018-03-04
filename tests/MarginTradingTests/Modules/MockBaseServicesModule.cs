@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,9 +17,6 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services;
-using MarginTrading.Common.Settings;
-using MarginTrading.Common.Settings.Models;
-using MarginTrading.Common.Settings.Repositories;
 
 namespace MarginTradingTests.Modules
 {
@@ -52,11 +48,6 @@ namespace MarginTradingTests.Modules
                 .Setup(item => item.GetAsync(It.IsAny<string>()))
                 .Returns(() => Task.FromResult((IClientSession)new ClientSession { ClientId = "1" }));
 
-            var clientAccountsServiceMock = new Mock<IClientAccountService>();
-            clientAccountsServiceMock
-                .Setup(item => item.GetAsync(It.IsAny<string>()))
-                .Returns(() => Task.FromResult((IClientAccount)new ClientAccount{ NotificationsId = Guid.NewGuid().ToString()}));
-
             builder.RegisterInstance(emailService.Object).As<IEmailService>();
             builder.RegisterInstance(appNotifications.Object).As<IAppNotifications>();
             builder.RegisterInstance(appNotifications).As<Mock<IAppNotifications>>();
@@ -66,7 +57,6 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(consoleWriterMock.Object).As<IConsole>();
             builder.RegisterInstance(clientsRepositoryMock.Object).As<IClientsSessionsRepository>();
             builder.RegisterInstance(sessionServiceMock.Object).As<ISessionService>();
-            builder.RegisterInstance(clientAccountsServiceMock.Object).As<IClientAccountService>();
             builder.RegisterInstance(slackNotificationsMock.Object).As<ISlackNotificationsSender>();
 
             builder.RegisterType<DateService>()

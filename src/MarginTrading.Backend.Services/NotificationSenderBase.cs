@@ -1,32 +1,29 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Lykke.Service.ClientAccount.Client;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Core.Notifications;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Notifications;
+using MarginTrading.Common.Services.Client;
 using MarginTrading.Common.Settings;
-using MarginTrading.Common.Settings.Models;
-using MarginTrading.Common.Settings.Repositories;
 using MarginTrading.Contract.BackendContracts;
 
 namespace MarginTrading.Backend.Services
 {
     public class NotificationSenderBase
     {
-        private readonly IClientSettingsRepository _clientSettingsRepository;
         private readonly IAppNotifications _appNotifications;
         private readonly IClientAccountService _clientAccountService;
         private readonly IAssetsCache _assetsCache;
 
         public NotificationSenderBase(
-            IClientSettingsRepository clientSettingsRepository,
             IAppNotifications appNotifications,
             IClientAccountService clientAccountService,
             IAssetsCache assetsCache)
         {
-            _clientSettingsRepository = clientSettingsRepository;
             _appNotifications = appNotifications;
             _clientAccountService = clientAccountService;
             _assetsCache = assetsCache;
@@ -50,9 +47,7 @@ namespace MarginTrading.Backend.Services
         private async Task SendNotification(string clientId, NotificationType notificationType, string message,
             OrderHistoryBackendContract order)
         {
-            var pushSettings = await _clientSettingsRepository.GetSettings<PushNotificationsSettings>(clientId);
-
-            if (pushSettings != null && pushSettings.Enabled)
+            if (await _clientAccountService.IsPushEnabled(clientId))
             {
                 var notificationId = await _clientAccountService.GetNotificationId(clientId);
 

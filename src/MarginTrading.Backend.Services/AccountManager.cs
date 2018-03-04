@@ -114,7 +114,7 @@ namespace MarginTrading.Backend.Services
         #endregion
        
 
-        public async Task UpdateBalanceAsync(IMarginTradingAccount account, decimal amount, AccountHistoryType historyType, string comment, string eventSourceId = null, bool changeTransferLimit = false)
+        public async Task<string> UpdateBalanceAsync(IMarginTradingAccount account, decimal amount, AccountHistoryType historyType, string comment, string eventSourceId = null, bool changeTransferLimit = false)
         {
             if (historyType == AccountHistoryType.Deposit && changeTransferLimit)
             {
@@ -139,9 +139,20 @@ namespace MarginTrading.Backend.Services
                 _accountsCacheService.UpdateBalance(updatedAccount);
                 _clientNotifyService.NotifyAccountUpdated(updatedAccount);
 
-                await _rabbitMqNotifyService.AccountHistory(account.Id, account.ClientId, amount,
+                var transactionId = Guid.NewGuid().ToString("N");
+                
+                await _rabbitMqNotifyService.AccountHistory(
+                    transactionId,
+                    account.Id,
+                    account.ClientId,
+                    amount,
                     updatedAccount.Balance,
-                    updatedAccount.WithdrawTransferLimit, historyType, comment, eventSourceId);
+                    updatedAccount.WithdrawTransferLimit,
+                    historyType,
+                    comment,
+                    eventSourceId);
+
+                return transactionId;
             }
             finally
             {
@@ -161,7 +172,7 @@ namespace MarginTrading.Backend.Services
             
             var account = _accountsCacheService.Get(clientId, accountId);
             
-            if (account.Balance > 0)
+            if (_marginSettings.IsLive && account.Balance > 0)
                 throw new Exception(
                     $"Account [{accountId}] balance is higher than zero: [{account.Balance}]");
 
@@ -172,11 +183,11 @@ namespace MarginTrading.Backend.Services
         }
 
         //TODO: close/remove all orders
-        public async Task ResetAccountAsync(string clientId, string accountId)
+        public Task<string> ResetAccountAsync(string clientId, string accountId)
         {
             var account = _accountsCacheService.Get(clientId, accountId);
 
-            await UpdateBalanceAsync(account, LykkeConstants.DefaultDemoBalance - account.Balance,
+            return UpdateBalanceAsync(account, LykkeConstants.DefaultDemoBalance - account.Balance,
                 AccountHistoryType.Reset,
                 "Reset account");
         }
@@ -354,7 +365,7 @@ namespace MarginTrading.Backend.Services
         {
             var wallet = _marginSettings.IsLive
                 ? await _clientAccountClient.CreateWalletAsync(clientId, WalletType.Trading, OwnerType.Mt,
-                    LegalEntityType.Vanuatu, $"{baseAssetId} margin wallet", null)
+                    $"{baseAssetId} margin wallet", null)
                 : null;
             var id = _marginSettings.IsLive ? wallet?.Id : $"{_marginSettings.DemoAccountIdPrefix}{Guid.NewGuid():N}";
             var initialBalance = _marginSettings.IsLive ? 0 : LykkeConstants.DefaultDemoBalance;
