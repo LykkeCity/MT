@@ -1,12 +1,7 @@
 ﻿using System;
 using Autofac;
-using AzureStorage.Tables;
-using AzureStorage.Tables.Templates.Index;
 using Lykke.Service.Session.AutorestClient;
-using MarginTrading.Common.Settings;
-using MarginTrading.Common.Settings.Repositories;
-using MarginTrading.Common.Settings.Repositories.Azure;
-using MarginTrading.Common.Settings.Repositories.Azure.Entities;
+using MarginTrading.Common.Services.Client;
 using MarginTrading.Frontend.Tests.IntegrationTests.Client;
 using Microsoft.Extensions.Configuration;
 using NUnit.Framework;
@@ -30,13 +25,6 @@ namespace MarginTrading.Frontend.Tests.IntegrationTests
             builder.Register<ISessionService>(ctx =>
                 new SessionService(new Uri(configuration["SessionServiceApiUrl"]))
             ).SingleInstance();
-
-            builder.Register<IClientAccountsRepository>(ctx =>
-                new ClientsRepository(
-                    AzureTableStorage<ClientAccountEntity>.Create(
-                        configuration["ClientInfoConnString"].MakeSettings(), "Traders", null),
-                    AzureTableStorage<AzureIndex>.Create(
-                        configuration["ClientInfoConnString"].MakeSettings(), "Traders", null)));
 
             builder.RegisterType<ClientAccountService>()
                 .As<IClientAccountService>()

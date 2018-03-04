@@ -20,6 +20,7 @@ using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Quotes;
 using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Common.Services;
+using MarginTrading.Common.Services.Client;
 using MarginTrading.Common.Settings;
 
 namespace MarginTrading.Backend.Modules

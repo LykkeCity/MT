@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,9 +17,6 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services;
-using MarginTrading.Common.Settings;
-using MarginTrading.Common.Settings.Models;
-using MarginTrading.Common.Settings.Repositories;
 
 namespace MarginTradingTests.Modules
 {
@@ -68,7 +64,6 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(consoleWriterMock.Object).As<IConsole>();
             builder.RegisterInstance(clientsRepositoryMock.Object).As<IClientsSessionsRepository>();
             builder.RegisterInstance(sessionServiceMock.Object).As<ISessionService>();
-            builder.RegisterInstance(clientAccountsServiceMock.Object).As<IClientAccountService>();
             builder.RegisterInstance(slackNotificationsMock.Object).As<ISlackNotificationsSender>();
             builder.RegisterInstance(volumeEquivalentService.Object).As<IVolumeEquivalentService>();
 

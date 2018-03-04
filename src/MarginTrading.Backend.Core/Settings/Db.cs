@@ -4,7 +4,6 @@
     {
         public string LogsConnString { get; set; }
         public string MarginTradingConnString { get; set; }
-        public string ClientPersonalInfoConnString { get; set; }
         public string HistoryConnString { get; set; }
         public string StateConnString { get; set; }
         public string ReportsConnString { get; set; }
