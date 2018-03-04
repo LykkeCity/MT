@@ -1,5 +1,8 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,9 +12,22 @@ namespace MarginTrading.Backend.Controllers
 	[Route("api/overnightswap")]
 	public class OvernightSwapController : Controller
 	{
-		public OvernightSwapController()
+		private readonly IOvernightSwapHistoryRepository _overnightSwapHistoryRepository;
+		
+		public OvernightSwapController(IOvernightSwapHistoryRepository overnightSwapHistoryRepository)
 		{
-			
+			_overnightSwapHistoryRepository = overnightSwapHistoryRepository;
+		}
+		
+		[Route("overnight.swaps.state")]
+		[ProducesResponseType(typeof(IEnumerable<IOvernightSwapHistory>), 200)]
+		[ProducesResponseType(400)]
+		[HttpPost]
+		public async Task<IActionResult> GetOvernightSwapHistory([FromQuery] DateTime from, [FromQuery] DateTime to)
+		{
+			var data = _overnightSwapHistoryRepository.GetAsync(from, to);
+
+			return Ok(data);
 		}
 
 		/// <summary>
@@ -24,7 +40,7 @@ namespace MarginTrading.Backend.Controllers
 		[HttpPost]
 		public async Task<IActionResult> RecalculateFailedOrders()
 		{
-			await MtServiceLocator.OvernightSwapService.CalculateAndChargeSwaps();
+			MtServiceLocator.OvernightSwapService.CalculateAndChargeSwaps();
 
 			return Ok();
 		}

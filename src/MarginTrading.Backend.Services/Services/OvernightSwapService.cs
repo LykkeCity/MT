@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using Lykke.Common;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
@@ -26,6 +27,7 @@ namespace MarginTrading.Backend.Services
 		private readonly IOvernightSwapStateRepository _overnightSwapStateRepository;
 		private readonly IOvernightSwapHistoryRepository _overnightSwapHistoryRepository;
 		private readonly IOrderReader _orderReader;
+		private readonly IThreadSwitcher _threadSwitcher;
 		private readonly AccountManager _accountManager;
 		private readonly MarginSettings _marginSettings;
 		private readonly ILog _log;
@@ -40,6 +42,7 @@ namespace MarginTrading.Backend.Services
 			IOvernightSwapStateRepository overnightSwapStateRepository,
 			IOvernightSwapHistoryRepository overnightSwapHistoryRepository,
 			IOrderReader orderReader,
+			IThreadSwitcher threadSwitcher,
 			AccountManager accountManager,
 			MarginSettings marginSettings,
 			ILog log)
@@ -51,6 +54,7 @@ namespace MarginTrading.Backend.Services
 			_overnightSwapStateRepository = overnightSwapStateRepository;
 			_overnightSwapHistoryRepository = overnightSwapHistoryRepository;
 			_orderReader = orderReader;
+			_threadSwitcher = threadSwitcher;
 			_accountManager = accountManager;
 			_marginSettings = marginSettings;
 			_log = log;
@@ -58,60 +62,77 @@ namespace MarginTrading.Backend.Services
 
 		public void Start()
 		{
-			var savedState = _overnightSwapStateRepository.GetAsync().GetAwaiter().GetResult();
+			//initialize cache from storage
+			var savedState = _overnightSwapStateRepository.GetAsync().GetAwaiter().GetResult().ToList();
 			_overnightSwapCache.Initialize(savedState.Select(OvernightSwapCalculation.Create));
+			
+			//start calculation
+			CalculateAndChargeSwaps();
+			
+			//TODO if server was down more that a day.. calc N days
 		}
 
-		public async Task CalculateAndChargeSwaps()
+		public void CalculateAndChargeSwaps()
 		{
 			_currentStartTimestamp = DateTime.UtcNow;
-			//TODO save open order state on timer, recheck on app init if any invocation was missed, start it on app init if so.
-			//TODO on calculation start use this cached orders state
 			
-			foreach (var accountOrders in _orderReader.GetActive().GroupBy(x => x.AccountId))
+			//read orders syncronously
+			var openOrders = _orderReader.GetActive();
+			
+			//filter orders that are already calculated
+			var calculatedIds = _overnightSwapCache.GetAll()
+				.Where(x => x.Timestamp > LastInvocationTime)
+				.SelectMany(x => x.OpenOrderIds);
+			var filteredOrders = openOrders.Where(x => !calculatedIds.Contains(x.Id));
+			
+			//start calculation in a separate thread
+			_threadSwitcher.SwitchThread(async () =>
 			{
-				var clientId = accountOrders.First().ClientId;
-				MarginTradingAccount account;
-				try
+				foreach (var accountOrders in filteredOrders.GroupBy(x => x.AccountId))
 				{
-					account = _accountsCacheService.Get(clientId, accountOrders.Key);
-				}
-				catch (Exception ex)
-				{
-					await ProcessFailedOrders(accountOrders, accountOrders.FirstOrDefault()?.AccountId, null, ex);
-					continue;
-				}
-				
-				foreach (var ordersByInstrument in accountOrders.GroupBy(x => x.Instrument))
-				{
-					var firstOrder = ordersByInstrument.FirstOrDefault();
-					IAccountAssetPair accountAssetPair;
+					var clientId = accountOrders.First().ClientId;
+					MarginTradingAccount account;
 					try
 					{
-						accountAssetPair = _accountAssetsCacheService.GetAccountAsset(
-							firstOrder?.TradingConditionId, firstOrder?.AccountAssetId, firstOrder?.Instrument);
+						account = _accountsCacheService.Get(clientId, accountOrders.Key);
 					}
 					catch (Exception ex)
 					{
-						await ProcessFailedOrders(ordersByInstrument, account.Id, ordersByInstrument.Key, ex);
+						await ProcessFailedOrders(accountOrders, accountOrders.FirstOrDefault()?.AccountId, null, ex);
 						continue;
 					}
-					
-					foreach (OrderDirection direction in Enum.GetValues(typeof(OrderDirection)))
+
+					foreach (var ordersByInstrument in accountOrders.GroupBy(x => x.Instrument))
 					{
-						var orders = ordersByInstrument.Where(order => order.GetOrderType() == direction).ToList();
+						var firstOrder = ordersByInstrument.FirstOrDefault();
+						IAccountAssetPair accountAssetPair;
 						try
 						{
-							await ProcessOrders(orders, ordersByInstrument.Key, account, accountAssetPair, direction);
+							accountAssetPair = _accountAssetsCacheService.GetAccountAsset(
+								firstOrder?.TradingConditionId, firstOrder?.AccountAssetId, firstOrder?.Instrument);
 						}
 						catch (Exception ex)
 						{
-							await ProcessFailedOrders(orders, account.Id, ordersByInstrument.Key, ex);
+							await ProcessFailedOrders(ordersByInstrument, account.Id, ordersByInstrument.Key, ex);
 							continue;
+						}
+
+						foreach (OrderDirection direction in Enum.GetValues(typeof(OrderDirection)))
+						{
+							var orders = ordersByInstrument.Where(order => order.GetOrderType() == direction).ToList();
+							try
+							{
+								await ProcessOrders(orders, ordersByInstrument.Key, account, accountAssetPair, direction);
+							}
+							catch (Exception ex)
+							{
+								await ProcessFailedOrders(orders, account.Id, ordersByInstrument.Key, ex);
+								continue;
+							}
 						}
 					}
 				}
-			}
+			});
 		}
 
 		/// <summary>
@@ -129,7 +150,7 @@ namespace MarginTrading.Backend.Services
 			//check if swaps had already been taken
 			if (_overnightSwapCache.TryGet(OvernightSwapCalculation.GetKey(account.Id, instrument, direction),
 				    out var lastCalc)
-			    && CheckIfCurrentStartInterval(lastCalc.Timestamp))
+			    && lastCalc.Timestamp > LastInvocationTime)
 				throw new Exception($"Overnight swaps had already been taken: {JsonConvert.SerializeObject(lastCalc)}");
 
 			//calc swaps
@@ -171,19 +192,12 @@ namespace MarginTrading.Backend.Services
 		}
 
 		/// <summary>
-		/// Checks if last calculation time is in the current invocation time period.
-		/// Takes into account, that scheduler might fire the job with delay of 100ms.
-		/// https://github.com/fluentscheduler/FluentScheduler#milliseconds-accuracy
+		/// Return last invocation time. Take into account, that scheduler might fire the job with delay of 100ms.
 		/// </summary>
-		/// <param name="lastTimestamp"></param>
-		/// <returns></returns>
-		private bool CheckIfCurrentStartInterval(DateTime lastTimestamp)
-		{
-			var lastCalcFixedTime = lastTimestamp.AddMilliseconds(-100);
-			var lastInvocationTime = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day,
+		private DateTime LastInvocationTime =>
+			new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day,
 					_marginSettings.OvernightSwapCalculationHour, 0, 0)
-				.AddDays(DateTime.UtcNow.Hour >= _marginSettings.OvernightSwapCalculationHour ? 0 : -1);
-			return lastCalcFixedTime > lastInvocationTime;
-		}
+				.AddDays(DateTime.UtcNow.Hour >= _marginSettings.OvernightSwapCalculationHour ? 0 : -1)
+				.AddMilliseconds(100);
 	}
 }

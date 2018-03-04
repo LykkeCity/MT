@@ -8,10 +8,10 @@ namespace MarginTrading.Backend.Core
 		/// Scheduler entry point for overnight swaps calculation. Successfully calculated swaps are immediately charged.
 		/// </summary>
 		/// <returns></returns>
-		Task CalculateAndChargeSwaps();
+		void CalculateAndChargeSwaps();
 
 		/// <summary>
-		/// Initialization point
+		/// Fire at app start. Initialize cache from storage. Detect if calc was missed and invoke it if needed.
 		/// </summary>
 		void Start();
 	}

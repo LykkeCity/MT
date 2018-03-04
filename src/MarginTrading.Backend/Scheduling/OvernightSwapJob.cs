@@ -14,7 +14,7 @@ namespace MarginTrading.Backend.Scheduling
 		
 		public void Execute()
 		{
-			MtServiceLocator.OvernightSwapService.CalculateAndChargeSwaps().GetAwaiter().GetResult();
+			MtServiceLocator.OvernightSwapService.CalculateAndChargeSwaps();
 		}
 
 		public void Dispose()
