@@ -2,7 +2,7 @@
 
 namespace MarginTrading.OrderbookBestPricesBroker.Repositories
 {
-    internal class OrderbookBestPricesEntity : AzureTableEntity
+    internal class OrderbookBestPricesHistoryEntity : AzureTableEntity
     {
         public string AssetPairId
         {

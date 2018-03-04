@@ -5,6 +5,6 @@ namespace MarginTrading.OrderbookBestPricesBroker.Repositories
 {
     internal interface IOrderbookBestPricesRepository
     {
-        Task InsertOrReplaceAsync(OrderbookBestPricesEntity report, DateTime time);
+        Task InsertAsync(OrderbookBestPricesHistoryEntity report, DateTime time);
     }
 }
