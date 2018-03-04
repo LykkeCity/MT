@@ -15,6 +15,8 @@ using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Quotes;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.RabbitMq;
+using MarginTrading.Common.Services.Client;
+using MarginTrading.Common.Services.Settings;
 using MarginTrading.Common.Services.Telemetry;
 using MarginTrading.Common.Settings;
 
@@ -127,8 +129,8 @@ namespace MarginTrading.Backend.Services.Modules
 				.AsSelf()
 				.SingleInstance();
 
-			builder.RegisterType<MarginTradingSettingsService>()
-				.As<IMarginTradingSettingsService>()
+			builder.RegisterType<MarginTradingEnabledCacheService>()
+				.As<IMarginTradingSettingsCacheService>()
 				.SingleInstance();
 
 			builder.RegisterType<MatchingEngineRouter>()
@@ -167,6 +169,11 @@ namespace MarginTrading.Backend.Services.Modules
 
 			builder.RegisterInstance(_riskInformingSettings)
 				.As<IReloadingManager<RiskInformingSettings>>()
+				.SingleInstance();
+			
+			builder.RegisterType<MarginTradingEnablingService>()
+				.As<IMarginTradingEnablingService>()
+				.As<IStartable>()
 				.SingleInstance();
 		}
 	}

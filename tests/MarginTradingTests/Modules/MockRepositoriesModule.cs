@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Autofac;
 using AzureStorage.Tables;
 using Common.Log;
@@ -11,8 +9,6 @@ using MarginTrading.AzureRepositories.Logs;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Services.MatchingEngines;
-using MarginTrading.Common.Settings.Models;
-using MarginTrading.Common.Settings.Repositories;
 using Moq;
 
 namespace MarginTradingTests.Modules
@@ -37,18 +33,7 @@ namespace MarginTradingTests.Modules
 
             var blobRepository = new Mock<IMarginTradingBlobRepository>();
             var orderHistoryRepository = new Mock<IMarginTradingOrdersHistoryRepository>();
-            var clientAccountsRepository = new Mock<IClientAccountsRepository>();
             var riskSystemCommandsLogRepository = new Mock<IRiskSystemCommandsLogRepository>();
-            clientAccountsRepository
-                .Setup(item => item.GetByIdAsync(It.IsAny<string>()))
-                .Returns(() =>
-                    Task.FromResult(
-                        (IClientAccount) new ClientAccount {Id = "1", NotificationsId = new Guid().ToString()}));
-
-            var clientSettingsRepository = new Mock<IClientSettingsRepository>();
-            clientSettingsRepository
-                .Setup(item => item.GetSettings<PushNotificationsSettings>(It.IsAny<string>()))
-                .Returns(() => Task.FromResult(new PushNotificationsSettings {Enabled = true}));
 
             builder.RegisterInstance(new LogToMemory()).As<ILog>();
             builder.RegisterInstance(assetsService).As<IAssetsService>().SingleInstance();
@@ -67,8 +52,6 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(blobRepository.Object).As<IMarginTradingBlobRepository>().SingleInstance();
             builder.RegisterInstance(orderHistoryRepository.Object).As<IMarginTradingOrdersHistoryRepository>()
                 .SingleInstance();
-            builder.RegisterInstance(clientSettingsRepository.Object).As<IClientSettingsRepository>().SingleInstance();
-            builder.RegisterInstance(clientAccountsRepository.Object).As<IClientAccountsRepository>().SingleInstance();
             builder.RegisterInstance(riskSystemCommandsLogRepository.Object).As<IRiskSystemCommandsLogRepository>()
                 .SingleInstance();
         }

@@ -9,6 +9,7 @@ using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
+using MarginTrading.Backend.Contracts.RabbitMqMessages;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Json;
 using MarginTrading.Common.Modules;
@@ -20,7 +21,6 @@ using MarginTrading.Contract.RabbitMqMessageModels;
 using MarginTrading.Frontend.Infrastructure;
 using MarginTrading.Frontend.Middleware;
 using MarginTrading.Frontend.Modules;
-using MarginTrading.Frontend.Services;
 using MarginTrading.Frontend.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -46,8 +46,6 @@ namespace MarginTrading.Frontend
         public IConfigurationRoot Configuration { get; }
         public IHostingEnvironment Environment { get; }
         public IContainer ApplicationContainer { get; set; }
-
-        private readonly TimeSpan _subscriberRetryTimeout = TimeSpan.FromSeconds(1);
 
         public Startup(IHostingEnvironment env)
         {
@@ -110,7 +108,7 @@ namespace MarginTrading.Frontend
 
             SetupLoggers(services, appSettings);
 
-            RegisterModules(builder, settings);
+            RegisterModules(builder, appSettings);
 
             builder.Populate(services);
 
@@ -198,10 +196,13 @@ namespace MarginTrading.Frontend
             host.Open();
         }
 
-        private void RegisterModules(ContainerBuilder builder, IReloadingManager<MtFrontendSettings> settings)
+        private void RegisterModules(ContainerBuilder builder, IReloadingManager<ApplicationSettings> appSettings)
         {
+            var settings = appSettings.Nested(s => s.MtFrontend);
+            
             builder.RegisterModule(new FrontendModule(settings));
             builder.RegisterModule(new MarginTradingCommonModule());
+            builder.RegisterModule(new FrontendExternalServicesModule(appSettings));
         }
 
         private void SetSubscribers(MtFrontendSettings settings)
@@ -264,6 +265,14 @@ namespace MarginTrading.Frontend
             Subscribe<TradeContract>(rabbitMqService, settings.MarginTradingDemo.MtRabbitMqConnString,
                 settings.MarginTradingFront.RabbitMqQueues.Trades.ExchangeName,
                 settings.MarginTradingFront.Env, rabbitMqHandler.ProcessTrades);
+
+            Subscribe<MarginTradingEnabledChangedMessage>(rabbitMqService, settings.MarginTradingLive.MtRabbitMqConnString,
+                settings.MarginTradingFront.RabbitMqQueues.MarginTradingEnabledChanged.ExchangeName,
+                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessMarginTradingEnabledChanged);
+            
+            Subscribe<MarginTradingEnabledChangedMessage>(rabbitMqService, settings.MarginTradingDemo.MtRabbitMqConnString,
+                settings.MarginTradingFront.RabbitMqQueues.MarginTradingEnabledChanged.ExchangeName,
+                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessMarginTradingEnabledChanged);
         }
 
         private static void SetupLoggers(IServiceCollection services, IReloadingManager<ApplicationSettings> settings)

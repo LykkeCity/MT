@@ -1,4 +1,4 @@
-﻿namespace MarginTrading.Common.Settings.Models
+﻿namespace MarginTrading.Common.Services.Settings
 {
     /// <summary>
     /// Contains information about what types of margin trading are available for particular client

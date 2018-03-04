@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MarginTrading.Common.Services.Settings;
 using MarginTrading.Common.Settings;
 using MarginTrading.Contract.BackendContracts;
 using MarginTrading.Frontend.Repositories;
@@ -13,17 +14,17 @@ namespace MarginTrading.Frontend.Services
     {
         private readonly IHttpRequestService _httpRequestService;
         private readonly IMarginTradingWatchListRepository _watchListRepository;
-        private readonly IMarginTradingSettingsService _marginTradingSettingsService;
+        private readonly IMarginTradingSettingsCacheService _marginTradingSettingsCacheService;
         private const string AllAssetsWatchListId = "all_assets_watchlist";
 
         public WatchListService(
             IHttpRequestService httpRequestService,
             IMarginTradingWatchListRepository watchListRepository,
-            IMarginTradingSettingsService marginTradingSettingsService)
+            IMarginTradingSettingsCacheService marginTradingSettingsCacheService)
         {
             _httpRequestService = httpRequestService;
             _watchListRepository = watchListRepository;
-            _marginTradingSettingsService = marginTradingSettingsService;
+            _marginTradingSettingsCacheService = marginTradingSettingsCacheService;
         }
 
         public async Task<List<MarginTradingWatchList>> GetAllAsync(string clientId)
@@ -113,7 +114,7 @@ namespace MarginTrading.Frontend.Services
         private async Task<List<string>> GetAvailableAssetIds(string clientId)
         {
 
-            var marginTradingEnabled = await _marginTradingSettingsService.IsMarginTradingEnabled(clientId);
+            var marginTradingEnabled = await _marginTradingSettingsCacheService.IsMarginTradingEnabled(clientId);
             var responses = await _httpRequestService.RequestIfAvailableAsync(new ClientIdBackendRequest { ClientId = clientId },
                                                                               "init.availableassets",
                                                                               () => new List<string>(),

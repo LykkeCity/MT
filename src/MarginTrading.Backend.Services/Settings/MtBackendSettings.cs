@@ -1,4 +1,3 @@
-using MarginTrading.Backend.Core.DayOffSettings;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Common.Settings;
 
