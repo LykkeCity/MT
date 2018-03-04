@@ -11,36 +11,6 @@ using MarginTrading.Common.Services;
 
 namespace MarginTrading.AzureRepositories
 {
-    internal class AssetPairSettingsEntity : AzureTableEntity, IAssetPairSettings
-    {
-        public AssetPairSettingsEntity()
-        {
-            PartitionKey = GeneratePartitionKey();
-        }
-
-        public string AssetPairId
-        {
-            get => RowKey;
-            set => RowKey = value;
-        }
-        
-        public string LegalEntity { get; set; }
-        public string BasePairId { get; set; }
-        public MatchingEngineMode MatchingEngineMode { get; set; }
-        public decimal MultiplierMarkupBid { get; set; }
-        public decimal MultiplierMarkupAsk { get; set; }
-
-        public static string GeneratePartitionKey()
-        {
-            return "AssetPairSettings";
-        }
-            
-        public static string GenerateRowKey(string assetPairId)
-        {
-            return assetPairId;
-        }
-    }
-
     internal class AssetPairSettingsRepository : IAssetPairSettingsRepository
     {
         private readonly INoSQLTableStorage<AssetPairSettingsEntity> _tableStorage;
@@ -53,34 +23,35 @@ namespace MarginTrading.AzureRepositories
             _convertService = convertService;
         }
 
-        public async Task<IReadOnlyList<IAssetPairSettings>> Get()
+        public async Task<IReadOnlyList<IAssetPairSettings>> GetAsync()
         {
             return Convert(await _tableStorage.GetDataAsync());
         }
 
-        public Task Insert(IAssetPairSettings settings)
+        public Task InsertAsync(IAssetPairSettings settings)
         {
             return _tableStorage.InsertAsync(Convert(settings));
         }
 
-        public Task Update(IAssetPairSettings settings)
+        public Task ReplaceAsync(IAssetPairSettings settings)
         {
             return _tableStorage.ReplaceAsync(Convert(settings));
         }
 
-        public async Task<IAssetPairSettings> Delete(string assetPairId)
+        public async Task<IAssetPairSettings> DeleteAsync(string assetPairId)
         {
             return Convert(await _tableStorage.DeleteAsync(AssetPairSettingsEntity.GeneratePartitionKey(),
                 AssetPairSettingsEntity.GenerateRowKey(assetPairId)));
         }
 
-        public async Task<IAssetPairSettings> Get(string assetPairId)
+        public async Task<IAssetPairSettings> GetAsync(string assetPairId)
         {
             return Convert(await _tableStorage.GetDataAsync(AssetPairSettingsEntity.GeneratePartitionKey(),
                 AssetPairSettingsEntity.GenerateRowKey(assetPairId)));
         }
 
-        private static IReadOnlyList<IAssetPairSettings> Convert(IEnumerable<AssetPairSettingsEntity> accountAssetPairEntities)
+        private static IReadOnlyList<IAssetPairSettings> Convert(
+            IEnumerable<AssetPairSettingsEntity> accountAssetPairEntities)
         {
             return accountAssetPairEntities.ToList<IAssetPairSettings>();
         }
@@ -89,6 +60,36 @@ namespace MarginTrading.AzureRepositories
         {
             return _convertService.Convert<IAssetPairSettings, AssetPairSettingsEntity>(accountAssetPair,
                 o => o.ConfigureMap(MemberList.Source).ForMember(e => e.ETag, e => e.UseValue("*")));
+        }
+        
+        internal class AssetPairSettingsEntity : AzureTableEntity, IAssetPairSettings
+        {
+            public AssetPairSettingsEntity()
+            {
+                PartitionKey = GeneratePartitionKey();
+            }
+
+            public string AssetPairId
+            {
+                get => RowKey;
+                set => RowKey = value;
+            }
+
+            public string LegalEntity { get; set; }
+            public string BasePairId { get; set; }
+            public MatchingEngineMode MatchingEngineMode { get; set; }
+            public decimal MultiplierMarkupBid { get; set; }
+            public decimal MultiplierMarkupAsk { get; set; }
+
+            public static string GeneratePartitionKey()
+            {
+                return "AssetPairSettings";
+            }
+
+            public static string GenerateRowKey(string assetPairId)
+            {
+                return assetPairId;
+            }
         }
     }
 }

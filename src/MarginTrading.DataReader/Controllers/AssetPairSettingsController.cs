@@ -30,7 +30,7 @@ namespace MarginTrading.DataReader.Controllers
         [HttpGet, Route("")]
         public async Task<List<AssetPairSettingsContract>> List()
         {
-            return (await _assetPairSettingsRepository.Get()).Select(Convert).ToList();
+            return (await _assetPairSettingsRepository.GetAsync()).Select(Convert).ToList();
         }
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace MarginTrading.DataReader.Controllers
         [HttpGet, Route("{assetPairId}")]
         public async Task<AssetPairSettingsContract> Get(string assetPairId)
         {
-            return Convert(await _assetPairSettingsRepository.Get(assetPairId));
+            return Convert(await _assetPairSettingsRepository.GetAsync(assetPairId));
         }
 
         /// <summary>
@@ -48,7 +48,7 @@ namespace MarginTrading.DataReader.Controllers
         [HttpGet, Route("by-mode/{matchingEngineMode}")]
         public async Task<List<AssetPairSettingsContract>> Get(MatchingEngineModeContract matchingEngineMode)
         {
-            return (await _assetPairSettingsRepository.Get()).Select(Convert)
+            return (await _assetPairSettingsRepository.GetAsync()).Select(Convert)
                 .Where(s => s.MatchingEngineMode == matchingEngineMode).ToList();
         }
 

@@ -86,7 +86,7 @@ namespace MarginTrading.AzureRepositories
                 ILog log, IConvertService convertService)
             {
                 return new AssetPairSettingsRepository(
-                    AzureTableStorage<AssetPairSettingsEntity>.Create(connString,
+                    AzureTableStorage<AssetPairSettingsRepository.AssetPairSettingsEntity>.Create(connString,
                         "AssetPairSettings", log), convertService);
             }
         }
