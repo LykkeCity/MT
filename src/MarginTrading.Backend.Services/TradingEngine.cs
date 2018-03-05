@@ -29,7 +29,7 @@ namespace MarginTrading.Backend.Services
         private readonly IValidateOrderService _validateOrderService;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly IClientNotifyService _notifyService;
-        private readonly IVolumeEquivalentService _volumeEquivalentService;
+        private readonly IEquivalentPricesService _equivalentPricesService;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly OrdersCache _ordersCache;
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
@@ -52,7 +52,7 @@ namespace MarginTrading.Backend.Services
             ICommissionService swapCommissionService,
             IClientNotifyService notifyService,
             IRabbitMqNotifyService rabbitMqNotifyService,
-            IVolumeEquivalentService volumeEquivalentService,
+            IEquivalentPricesService equivalentPricesService,
             IAccountsCacheService accountsCacheService,
             OrdersCache ordersCache,
             IAccountAssetsCacheService accountAssetsCacheService,
@@ -73,7 +73,7 @@ namespace MarginTrading.Backend.Services
             _swapCommissionService = swapCommissionService;
             _validateOrderService = validateOrderService;
             _rabbitMqNotifyService = rabbitMqNotifyService;
-            _volumeEquivalentService = volumeEquivalentService;
+            _equivalentPricesService = equivalentPricesService;
             _accountsCacheService = accountsCacheService;
             _ordersCache = ordersCache;
             _accountAssetsCacheService = accountAssetsCacheService;
@@ -141,7 +141,7 @@ namespace MarginTrading.Backend.Services
                     return false;
                 }
 
-                _volumeEquivalentService.EnrichOpeningOrder(order);
+                _equivalentPricesService.EnrichOpeningOrder(order);
                 
                 MakeOrderActive(order);
 
@@ -431,6 +431,8 @@ namespace MarginTrading.Backend.Services
                 
                 order.MatchedCloseOrders.AddRange(matchedOrders);
 
+                _equivalentPricesService.EnrichClosingOrder(order);
+
                 if (!order.GetIsCloseFullfilled())
                 {
                     order.Status = OrderStatus.Closing;
@@ -447,8 +449,6 @@ namespace MarginTrading.Backend.Services
 
                 return true;
             });
-
-            _volumeEquivalentService.EnrichClosingOrder(order);
 
             return Task.FromResult(order);
         }

@@ -97,9 +97,8 @@ namespace MarginTrading.Backend.Modules
                 .As<IEventConsumer<OrderCancelledEventArgs>>()
                 .SingleInstance();
 
-            builder.RegisterType<VolumeEquivalentService>()
-                .As<IVolumeEquivalentService>()
-                .WithParameter(TypedParameter.From(_settings.EquivalentAssetSettings))
+            builder.RegisterType<EquivalentPricesService>()
+                .As<IEquivalentPricesService>()
                 .SingleInstance();
 
             RegisterPublishers(builder, consoleWriter);

@@ -6,22 +6,22 @@ using MarginTrading.Backend.Core.Settings;
 
 namespace MarginTrading.Backend.Services
 {
-	public class VolumeEquivalentService : IVolumeEquivalentService
+	public class EquivalentPricesService : IEquivalentPricesService
 	{
 		private readonly ICfdCalculatorService _cfdCalculatorService;
-		private readonly string _equivalentAssetSetting;
+		private readonly MarginSettings _marginSettings;
 
-		public VolumeEquivalentService(
+		public EquivalentPricesService(
 			ICfdCalculatorService cfdCalculatorService,
-			string equivalentAssetSetting)
+			MarginSettings marginSettings)
 		{
 			_cfdCalculatorService = cfdCalculatorService;
-			_equivalentAssetSetting = equivalentAssetSetting;
+			_marginSettings = marginSettings;
 		}
 
 		private string GetEquivalentAsset()
 		{
-			return _equivalentAssetSetting;
+			return _marginSettings.ReportingEquivalentPricesAsset;
 		}
 
 		public void EnrichOpeningOrder(Order order)
@@ -34,7 +34,10 @@ namespace MarginTrading.Backend.Services
 		public void EnrichClosingOrder(Order order)
 		{
 			if (string.IsNullOrEmpty(order.EquivalentAsset))
+			{
 				order.EquivalentAsset = GetEquivalentAsset();
+			}
+
 			order.ClosePriceEquivalent = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.EquivalentAsset,
 				order.Instrument);
 		}

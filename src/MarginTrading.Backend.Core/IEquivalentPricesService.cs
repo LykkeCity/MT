@@ -2,7 +2,7 @@
 
 namespace MarginTrading.Backend.Core
 {
-	public interface IVolumeEquivalentService
+	public interface IEquivalentPricesService
 	{
 		void EnrichOpeningOrder(Order order);
 		void EnrichClosingOrder(Order order);
