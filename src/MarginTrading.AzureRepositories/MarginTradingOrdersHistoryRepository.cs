@@ -87,6 +87,9 @@ namespace MarginTrading.AzureRepositories
 
         public string Orders { get; set; }
         public string ClosedOrders { get; set; }
+        
+        OrderUpdateType IOrderHistory.OrderUpdateType => OrderUpdateType.ParseEnum(Backend.Core.OrderUpdateType.Place);
+        public string OrderUpdateType { get; set; }
 
         public static string GeneratePartitionKey(string clientId, string accountIds)
         {
@@ -141,6 +144,7 @@ namespace MarginTrading.AzureRepositories
                 OpenPriceEquivalent = (double) src.OpenPriceEquivalent,
                 ClosePriceEquivalent = (double) src.ClosePriceEquivalent,
                 Comment = src.Comment
+                OrderUpdateType = src.OrderUpdateType.ToString(),
             };
         }
     }
@@ -158,14 +162,14 @@ namespace MarginTrading.AzureRepositories
         {
             var entity = MarginTradingOrderHistoryEntity.Create(order);
             // ReSharper disable once RedundantArgumentDefaultValue
-            return _tableStorage.InsertAndGenerateRowKeyAsDateTimeAsync(entity, entity.CloseDate ?? entity.OpenDate.Value, RowKeyDateTimeFormat.Iso);
+            return _tableStorage.InsertAndGenerateRowKeyAsDateTimeAsync(entity, entity.CloseDate ?? entity.OpenDate ?? entity.CreateDate, RowKeyDateTimeFormat.Iso);
         }
 
         public async Task<IReadOnlyList<IOrderHistory>> GetHistoryAsync(string clientId, string[] accountIds, DateTime? from, DateTime? to)
         {
             return (await _tableStorage.WhereAsync(accountIds.Select(a => clientId + '_' + a),
                     from ?? DateTime.MinValue, to?.Date.AddDays(1) ?? DateTime.MaxValue, ToIntervalOption.IncludeTo))
-                .OrderByDescending(entity => entity.CloseDate ?? entity.OpenDate.Value).ToList();
+                .OrderByDescending(entity => entity.CloseDate ?? entity.OpenDate ?? entity.CreateDate).ToList();
         }
 
         public async Task<IEnumerable<IOrderHistory>> GetHistoryAsync()
