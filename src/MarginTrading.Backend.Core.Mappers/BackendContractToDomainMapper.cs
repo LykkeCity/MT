@@ -80,7 +80,8 @@ namespace MarginTrading.Backend.Core.Mappers
                 CloseCrossPrice = src.CloseCrossPrice,
                 EquivalentAsset = src.EquivalentAsset,
                 OpenPriceEquivalent = src.OpenPriceEquivalent,
-                ClosePriceEquivalent = src.ClosePriceEquivalent
+                ClosePriceEquivalent = src.ClosePriceEquivalent,
+                OrderUpdateType = src.OrderUpdateType.ToType<OrderUpdateType>()
             };
 
             foreach (var order in src.MatchedOrders)

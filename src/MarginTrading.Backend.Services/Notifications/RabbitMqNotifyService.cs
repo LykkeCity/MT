@@ -45,14 +45,14 @@ namespace MarginTrading.Backend.Services.Notifications
             return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountHistory.ExchangeName, record.ToBackendContract());
         }
 
-        public Task OrderHistory(IOrder order)
+        public Task OrderHistory(IOrder order, OrderUpdateType orderUpdateType)
         {
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderHistory.ExchangeName, order.ToFullContract());
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderHistory.ExchangeName, order.ToFullContract(orderUpdateType));
         }
 
         public Task OrderReject(IOrder order)
         {
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderRejected.ExchangeName, order.ToFullContract());
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderRejected.ExchangeName, order.ToFullContract(OrderUpdateType.Reject));
         }
 
         public Task OrderBookPrice(InstrumentBidAskPair quote)

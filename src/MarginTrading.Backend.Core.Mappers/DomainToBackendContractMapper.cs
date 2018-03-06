@@ -228,7 +228,7 @@ namespace MarginTrading.Backend.Core.Mappers
             };
         }
 
-        public static OrderFullContract ToFullContract(this IOrder src)
+        public static OrderFullContract ToFullContract(this IOrder src, OrderUpdateType orderUpdateType)
         {
             var orderContract = new OrderFullContract
             {
@@ -272,7 +272,8 @@ namespace MarginTrading.Backend.Core.Mappers
                 MarginInit = src.GetMarginInit(),
                 MarginMaintenance = src.GetMarginMaintenance(),
                 OpenCrossPrice = src.GetOpenCrossPrice(),
-                CloseCrossPrice = src.GetCloseCrossPrice()
+                CloseCrossPrice = src.GetCloseCrossPrice(),
+                OrderUpdateType = orderUpdateType.ToType<OrderUpdateTypeContract>(),
             };
 
             foreach (var order in src.MatchedOrders)

@@ -87,6 +87,9 @@ namespace MarginTrading.AzureRepositories
 
         public string Orders { get; set; }
         public string ClosedOrders { get; set; }
+        
+        OrderUpdateType IOrderHistory.OrderUpdateType => OrderUpdateType.ParseEnum(Backend.Core.OrderUpdateType.Place);
+        public string OrderUpdateType { get; set; }
 
         public static string GeneratePartitionKey(string clientId)
         {
@@ -146,7 +149,8 @@ namespace MarginTrading.AzureRepositories
                 EquivalentAsset = src.EquivalentAsset,
                 OpenPriceEquivalent = (double) src.OpenPriceEquivalent,
                 ClosePriceEquivalent = (double) src.ClosePriceEquivalent,
-                Comment = src.Comment
+                Comment = src.Comment,
+                OrderUpdateType = src.OrderUpdateType.ToString(),
             };
         }
     }
