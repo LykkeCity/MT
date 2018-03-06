@@ -4,27 +4,6 @@ namespace MarginTrading.ExternalOrderBroker.Models
 {
 	public class ExternalOrderReport : IExternalOrderReport
 	{
-		public ExternalOrderReport()
-		{
-		}
-
-		public ExternalOrderReport(string type, System.DateTime time, double price, double volume, double fee,
-			string status, string accountAssetId, string instrument, string exchange,
-			string orderId = default(string), string message = default(string))
-		{
-			AccountAssetId = accountAssetId;
-			Instrument = instrument;
-			Exchange = exchange;
-			Type = type;
-			Time = time;
-			Price = price;
-			Volume = volume;
-			Fee = fee;
-			Id = orderId;
-			Status = status;
-			Message = message;
-		}
-
 		public string AccountAssetId { get; set; }
         
 		public string Instrument { get; set; }

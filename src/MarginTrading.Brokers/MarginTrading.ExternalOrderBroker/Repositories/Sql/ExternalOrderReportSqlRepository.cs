@@ -15,6 +15,7 @@ namespace MarginTrading.ExternalOrderBroker.Repositories.Sql
     {
         private const string TableName = "ExternalOrderReport";
         private const string CreateTableScript = "CREATE TABLE [{0}](" +
+            "[OID] [int] NOT NULL IDENTITY (1,1) PRIMARY KEY," +
             "[AccountAssetId] [nvarchar](64) NOT NULL, " +
 			"[Instrument] [nvarchar] (64) NOT NULL, " +
 			"[Exchange] [nvarchar] (64) NOT NULL, " +
@@ -22,32 +23,31 @@ namespace MarginTrading.ExternalOrderBroker.Repositories.Sql
 			"[QuoteAsset] [nvarchar] (64) NOT NULL, " +
 			"[Type] [nvarchar] (64) NOT NULL, " +
             "[Time] [datetime] NOT NULL," +
-            "[Price] float NOT NULL, " +
-            "[Volume] float NOT NULL, " +
-            "[Fee] float NOT NULL, " +
-            "[Id] [nvarchar] (64) NOT NULL, " +
+            "[Price] [float] NOT NULL, " +
+            "[Volume] [float] NOT NULL, " +
+            "[Fee] [float] NOT NULL, " +
+            "[Id] [nvarchar] (64) constraint ux_{0}_Id unique NONCLUSTERED NOT NULL, " +
             "[Status] [nvarchar] (64) NOT NULL, " +
             "[Message] [text] NOT NULL, " +
-            "CONSTRAINT[PK_{0}] PRIMARY KEY CLUSTERED ([Id] ASC)" +
             ");";
 
-        private string GetColumns =>
+        private static readonly string GetColumns =
             string.Join(",", typeof(IExternalOrderReport).GetProperties().Select(x => x.Name));
 
-        private string GetFields =>
+        private static readonly string GetFields =
             string.Join(",", typeof(IExternalOrderReport).GetProperties().Select(x => "@" + x.Name));
 
-        private string GetUpdateClause => string.Join(",",
+        private static readonly string GetUpdateClause = string.Join(",",
             typeof(IExternalOrderReport).GetProperties().Select(x => "[" + x.Name + "]=@" + x.Name));
 
-        private readonly Settings _settings;
+        private readonly Settings.AppSettings _appSettings;
         private readonly ILog _log;
 
-        public ExternalOrderReportSqlRepository(Settings settings, ILog log)
+        public ExternalOrderReportSqlRepository(Settings.AppSettings appSettings, ILog log)
         {
             _log = log;
-            _settings = settings;
-            using (var conn = new SqlConnection(_settings.Db.ReportsSqlConnString))
+            _appSettings = appSettings;
+            using (var conn = new SqlConnection(_appSettings.Db.ReportsSqlConnString))
             {
                 try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
                 catch (Exception ex)
@@ -62,14 +62,21 @@ namespace MarginTrading.ExternalOrderBroker.Repositories.Sql
         {
             var entity = ExternalOrderReportEntity.Create(obj);
             
-            using (var conn = new SqlConnection(_settings.Db.ReportsSqlConnString))
+            using (var conn = new SqlConnection(_appSettings.Db.ReportsSqlConnString))
             {
-                var res = conn.ExecuteScalar($"select Id from {TableName} where Id = '{entity.Id}'");
-                var query = res == null
-                    ? $"insert into {TableName} " + $"({GetColumns})" + " values " + $"({GetFields})"
-                    : $"update {TableName} set " + $"{GetUpdateClause}" + " where Id=@Id ";
-               
-                try { await conn.ExecuteAsync(query, entity); }
+                try
+                {
+                    try
+                    {
+                        await conn.ExecuteAsync(
+                            $"insert into {TableName} ({GetColumns}) values ({GetFields})", entity);
+                    }
+                    catch (SqlException)
+                    {
+                        await conn.ExecuteAsync(
+                            $"update {TableName} set {GetUpdateClause} where Id=@Id", entity); 
+                    }
+                }
                 catch (Exception ex)
                 {
                     var msg = $"Error {ex.Message} \n" +

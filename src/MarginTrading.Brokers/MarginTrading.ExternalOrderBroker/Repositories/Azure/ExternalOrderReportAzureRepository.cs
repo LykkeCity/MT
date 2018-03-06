@@ -11,7 +11,7 @@ namespace MarginTrading.ExternalOrderBroker.Repositories.Azure
     {
         private readonly INoSQLTableStorage<ExternalOrderReportEntity> _tableStorage;
 
-        public ExternalOrderReportAzureRepository(IReloadingManager<Settings> settings, ILog log)
+        public ExternalOrderReportAzureRepository(IReloadingManager<Settings.AppSettings> settings, ILog log)
         {
             _tableStorage = AzureTableStorage<ExternalOrderReportEntity>.Create(settings.Nested(s => s.Db.ReportsConnString),
                 "ExternalOrderReport", log);

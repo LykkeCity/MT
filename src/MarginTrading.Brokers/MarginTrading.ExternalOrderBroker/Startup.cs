@@ -13,7 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace MarginTrading.ExternalOrderBroker
 {
-    public class Startup : BrokerStartupBase<DefaultBrokerApplicationSettings<Settings>, Settings>
+    public class Startup : BrokerStartupBase<DefaultBrokerApplicationSettings<Settings.AppSettings>, Settings.AppSettings>
     {
         public Startup(IHostingEnvironment env) : base(env)
         {
@@ -22,7 +22,7 @@ namespace MarginTrading.ExternalOrderBroker
         protected override string ApplicationName => "ExternalOrderBroker";
 
         protected override void RegisterCustomServices(IServiceCollection services, ContainerBuilder builder,
-            IReloadingManager<Settings> settings, ILog log, bool isLive)
+            IReloadingManager<Settings.AppSettings> settings, ILog log, bool isLive)
         {
             builder.RegisterType<Application>().As<IBrokerApplication>().SingleInstance();
 

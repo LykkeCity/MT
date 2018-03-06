@@ -14,21 +14,21 @@ namespace MarginTrading.ExternalOrderBroker
     public class Application : BrokerApplicationBase<Lykke.Service.ExchangeConnector.Client.Models.ExecutionReport>
     {
         private readonly IExternalOrderReportRepository _externalOrderReportRepository;
-        private readonly Settings _settings;
+        private readonly Settings.AppSettings _appSettings;
 
         public Application(IExternalOrderReportRepository externalOrderReportRepository,
             ILog logger,
-            Settings settings, 
+            Settings.AppSettings appSettings, 
             CurrentApplicationInfo applicationInfo,
             ISlackNotificationsSender slackNotificationsSender) 
             : base(logger, slackNotificationsSender, applicationInfo)
         {
             _externalOrderReportRepository = externalOrderReportRepository;
-            _settings = settings;
+            _appSettings = appSettings;
         }
 
-        protected override BrokerSettingsBase Settings => _settings;
-        protected override string ExchangeName => _settings.RabbitMqQueues.ExternalOrder.ExchangeName;
+        protected override BrokerSettingsBase Settings => _appSettings;
+        protected override string ExchangeName => _appSettings.RabbitMqQueues.ExternalOrder.ExchangeName;
 
         protected override Task HandleMessage(Lykke.Service.ExchangeConnector.Client.Models.ExecutionReport order)
         {
