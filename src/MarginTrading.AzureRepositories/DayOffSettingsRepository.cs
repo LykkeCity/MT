@@ -8,7 +8,7 @@ namespace MarginTrading.AzureRepositories
 {
     internal class DayOffSettingsRepository : IDayOffSettingsRepository
     {
-        private const string BlobContainer = "MtDayOffSettings";
+        private const string BlobContainer = "mt-dayoff-settings";
         private const string Key = "DayOffSettingsRoot";
         private readonly IMarginTradingBlobRepository _blobRepository;
 

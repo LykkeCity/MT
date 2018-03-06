@@ -11,24 +11,21 @@ namespace MarginTrading.DataReader.Controllers
     public class SettingsController : Controller
     {
         private readonly Settings.DataReaderSettings _dataReaderSettings;
-        private readonly IMarginTradingSettingsService _marginTradingSettingsService;
+        private readonly IMarginTradingSettingsCacheService _marginTradingSettingsCacheService;
 
         public SettingsController(Settings.DataReaderSettings dataReaderSettings, 
-            IMarginTradingSettingsService marginTradingSettingsService)
+            IMarginTradingSettingsCacheService marginTradingSettingsCacheService)
         {
             _dataReaderSettings = dataReaderSettings;
-            _marginTradingSettingsService = marginTradingSettingsService;
+            _marginTradingSettingsCacheService = marginTradingSettingsCacheService;
         }
 
         [HttpGet]
         [Route("enabled/{clientId}")]
         [SkipMarginTradingEnabledCheck]
-        public async Task<bool> GetIsMarginTradingEnabled(string clientId)
+        public Task<bool> GetIsMarginTradingEnabled(string clientId)
         {
-            var settings = await _marginTradingSettingsService.IsMarginTradingEnabled(clientId);
-            return _dataReaderSettings.IsLive
-                ? settings.Live
-                : settings.Demo;
+            return _marginTradingSettingsCacheService.IsMarginTradingEnabled(clientId, _dataReaderSettings.IsLive);
         }
     }
 }

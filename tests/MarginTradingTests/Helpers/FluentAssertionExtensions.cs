@@ -1,18 +1,32 @@
-﻿using FluentAssertions.Primitives;
+﻿using System;
+using FluentAssertions;
+using FluentAssertions.Equivalency;
+using Moq;
 
 namespace MarginTradingTests.Helpers
 {
     public static class FluentAssertionExtensions
     {
-        public static TypedAssertions<T> Should<T>(this T actualValue)
+        public static T Equivalent<T>(this T o)
         {
-            return new TypedAssertions<T>(actualValue);
+            return o.Equivalent(op => op);
         }
 
-        public class TypedAssertions<T> : ReferenceTypeAssertions<T, TypedAssertions<T>>
+        public static T Equivalent<T>(this T o, Func<EquivalencyAssertionOptions<T>, EquivalencyAssertionOptions<T>> config)
         {
-            protected override string Context => "object of type " + nameof(T);
-            public TypedAssertions(T subject) => this.Subject = subject;
+            return Match.Create<T>(s =>
+            {
+                try
+                {
+                    s.ShouldBeEquivalentTo(o, config);
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    return false;
+                }
+            });
         }
     }
 }
