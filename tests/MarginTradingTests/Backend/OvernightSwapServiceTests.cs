@@ -3,8 +3,17 @@
 namespace MarginTradingTests.Backend
 {
 	[TestFixture]
-	public class OvernightSwapServiceTests
+	public class OvernightSwapServiceTests : BaseTests
 	{
+		
+		
+		
+		[OneTimeSetUp]
+		public void SetUp()
+		{
+			
+		}
+			
 		
 	}
 }

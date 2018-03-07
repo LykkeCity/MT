@@ -25,7 +25,7 @@ namespace MarginTrading.Backend.Controllers
 		[HttpPost]
 		public async Task<IActionResult> GetOvernightSwapHistory([FromQuery] DateTime from, [FromQuery] DateTime to)
 		{
-			var data = _overnightSwapHistoryRepository.GetAsync(from, to);
+			var data = await _overnightSwapHistoryRepository.GetAsync(from, to);
 
 			return Ok(data);
 		}
@@ -38,7 +38,7 @@ namespace MarginTrading.Backend.Controllers
 		[ProducesResponseType(200)]
 		[ProducesResponseType(400)]
 		[HttpPost]
-		public async Task<IActionResult> RecalculateFailedOrders()
+		public IActionResult RecalculateFailedOrders()
 		{
 			MtServiceLocator.OvernightSwapService.CalculateAndChargeSwaps();
 
