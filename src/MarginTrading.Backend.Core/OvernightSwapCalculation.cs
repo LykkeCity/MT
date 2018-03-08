@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace MarginTrading.Backend.Core
 {
@@ -19,9 +20,7 @@ namespace MarginTrading.Backend.Core
 		public Exception Exception { get; set; }
 		
 		public static string GetKey(string accountId, string instrument, OrderDirection? direction) =>
-			string.IsNullOrEmpty(accountId) || string.IsNullOrEmpty(instrument) || direction == null
-				? throw new Exception($"One of fields is invalid. Account id: {accountId}, instrument: {instrument}, direction: {direction}.")
-				: $"{accountId}_{instrument}_{direction}";
+			$"{accountId}_{instrument ?? ""}_{direction?.ToString() ?? ""}";
 
 		public static OvernightSwapCalculation Create(IOvernightSwapState state)
 		{

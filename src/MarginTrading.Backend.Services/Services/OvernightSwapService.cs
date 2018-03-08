@@ -103,7 +103,7 @@ namespace MarginTrading.Backend.Services
 						}
 						catch (Exception ex)
 						{
-							await ProcessFailedOrders(accountOrders, accountOrders.FirstOrDefault()?.AccountId, null, ex);
+							await ProcessFailedOrders(accountOrders, accountOrders.Key, null, ex);
 							continue;
 						}
 
