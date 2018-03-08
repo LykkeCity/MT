@@ -52,7 +52,7 @@ namespace MarginTrading.AzureRepositories
 			var partitionKeys = new ConcurrentBag<string>();
 			await _tableStorage.ExecuteAsync(new TableQuery<OvernightSwapHistoryEntity>(), entity =>
 				entity.Select(m => m.PartitionKey).ForEach(pk => partitionKeys.Add(pk)));
-			return partitionKeys;
+			return partitionKeys.Distinct();
 		}
 	}
 }
