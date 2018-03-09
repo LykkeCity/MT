@@ -19,11 +19,15 @@ namespace MarginTrading.AzureRepositories.Entities
 		public decimal Value { get; set; }
 		public decimal SwapRate { get; set; }
 		
+		public static string GetKey(string accountId, string instrument, OrderDirection? direction) =>
+			$"{accountId}_{instrument ?? ""}_{direction?.ToString() ?? ""}";
+		
 		public static OvernightSwapStateEntity Create(IOvernightSwapState obj)
 		{
 			return new OvernightSwapStateEntity
 			{
 				PartitionKey = obj.AccountId,
+				RowKey = GetKey(obj.AccountId, obj.Instrument, obj.Direction),
 				AccountId = obj.AccountId,
 				Instrument = obj.Instrument,
 				Direction = obj.Direction?.ToString(),

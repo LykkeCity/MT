@@ -193,6 +193,11 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<IMarginTradingEnablingService>()
 				.As<IStartable>()
 				.SingleInstance();
+
+			builder.RegisterType<OvernightSwapService>()
+				.As<IOvernightSwapService>()
+				.SingleInstance()
+				.OnActivated(args => args.Instance.Start());
 		}
 	}
 }

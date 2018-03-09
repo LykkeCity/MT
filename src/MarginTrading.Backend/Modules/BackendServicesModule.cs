@@ -86,11 +86,6 @@ namespace MarginTrading.Backend.Modules
                 .As<IClientAccountService>()
                 .SingleInstance();
 
-            builder.RegisterType<OvernightSwapService>()
-                .As<IOvernightSwapService>()
-                .SingleInstance()
-                .OnActivated(args => args.Instance.Start());
-
             builder.RegisterType<BackendMaintenanceModeService>()
                 .As<IMaintenanceModeService>()
                 .SingleInstance();

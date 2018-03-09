@@ -22,12 +22,16 @@ namespace MarginTrading.AzureRepositories.Entities
 		public bool IsSuccess { get; set; }
 		public string Exception { get; set; }
 		Exception IOvernightSwapHistory.Exception => JsonConvert.DeserializeObject<Exception>(Exception);
+		
+		public static string GetKey(string accountId, string instrument, OrderDirection? direction) =>
+			$"{accountId}_{instrument ?? ""}_{direction?.ToString() ?? ""}";
 
 		public static OvernightSwapHistoryEntity Create(IOvernightSwapHistory obj)
 		{
 			return new OvernightSwapHistoryEntity
 			{
 				PartitionKey = obj.AccountId,
+				RowKey = GetKey(obj.AccountId, obj.Instrument, obj.Direction),
 				AccountId = obj.AccountId,
 				Instrument = obj.Instrument,
 				Direction = obj.Direction?.ToString(),
