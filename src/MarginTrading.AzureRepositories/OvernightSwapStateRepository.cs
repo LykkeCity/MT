@@ -32,7 +32,7 @@ namespace MarginTrading.AzureRepositories
 		{
 			return (await _tableStorage.WhereAsync(accountId, from ?? DateTime.MinValue, to ?? DateTime.MaxValue, 
 					ToIntervalOption.IncludeTo))
-				.OrderByDescending(item => item.Timestamp).ToList();
+				.OrderByDescending(item => item.Time).ToList();
 		}
 	}
 }

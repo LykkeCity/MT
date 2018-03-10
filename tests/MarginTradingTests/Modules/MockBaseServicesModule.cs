@@ -35,6 +35,9 @@ namespace MarginTradingTests.Modules
                 .Returns(new Subject<OrderBookLevel>());
             var notifyService = new Mock<IClientNotifyService>();
             var rabbitMqNotifyService = new Mock<IRabbitMqNotifyService>();
+            rabbitMqNotifyService.Setup(x => x.AccountHistory(It.IsAny<string>(), It.IsAny<string>(),
+                It.IsAny<string>(), It.IsAny<decimal>(), It.IsAny<decimal>(), It.IsAny<decimal>(), 
+                It.IsAny<AccountHistoryType>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()));
             var consoleWriterMock = new Mock<IConsole>();
             var sessionServiceMock = new Mock<ISessionService>();
             var slackNotificationsMock = new Mock<ISlackNotificationsSender>();

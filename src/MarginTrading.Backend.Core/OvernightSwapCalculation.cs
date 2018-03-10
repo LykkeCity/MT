@@ -11,7 +11,7 @@ namespace MarginTrading.Backend.Core
 		public string AccountId { get; set; }
 		public string Instrument { get; set; }
 		public OrderDirection? Direction { get; set; }
-		public DateTime Timestamp { get; set; }
+		public DateTime Time { get; set; }
 		public List<string> OpenOrderIds { get; set; }
 		public decimal Value { get; set; }
 		public decimal SwapRate { get; set; }
@@ -29,7 +29,7 @@ namespace MarginTrading.Backend.Core
 				AccountId = state.AccountId,
 				Instrument = state.Instrument,
 				Direction = state.Direction,
-				Timestamp = state.Timestamp,
+				Time = state.Time,
 				OpenOrderIds = state.OpenOrderIds,
 				Value = state.Value,
 				SwapRate = state.SwapRate,
@@ -45,7 +45,7 @@ namespace MarginTrading.Backend.Core
 			{
 				AccountId = accountId,
 				Instrument = instrument,
-				Timestamp = timestamp,
+				Time = timestamp,
 				Value = value,
 				OpenOrderIds = orderIds,
 				Direction = direction,

@@ -8,7 +8,7 @@ namespace MarginTrading.Backend.Core
 		string AccountId { get; }
 		string Instrument { get; }
 		OrderDirection? Direction { get; }
-		DateTime Timestamp { get; }
+		DateTime Time { get; }
 		List<string> OpenOrderIds { get; }
 		decimal Value { get; }
 		decimal SwapRate { get; }

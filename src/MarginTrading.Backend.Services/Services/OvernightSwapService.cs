@@ -86,7 +86,7 @@ namespace MarginTrading.Backend.Services
 
 				//filter orders that are already calculated
 				var calculatedIds = _overnightSwapCache.GetAll()
-					.Where(x => x.Timestamp > LastInvocationTime)
+					.Where(x => x.Time > LastInvocationTime)
 					.SelectMany(x => x.OpenOrderIds);
 				var filteredOrders = openOrders.Where(x => !calculatedIds.Contains(x.Id));
 
@@ -156,11 +156,11 @@ namespace MarginTrading.Backend.Services
 			//check if swaps had already been taken
 			if (_overnightSwapCache.TryGet(OvernightSwapCalculation.GetKey(account.Id, instrument, direction),
 				    out var lastCalc)
-			    && lastCalc.Timestamp > LastInvocationTime)
+			    && lastCalc.Time > LastInvocationTime)
 				throw new Exception($"Overnight swaps had already been taken: {JsonConvert.SerializeObject(lastCalc)}");
 
 			//calc swaps
-			var swapRate = direction == OrderDirection.Buy ? accountAssetPair.CommissionLong : accountAssetPair.CommissionShort;
+			var swapRate = direction == OrderDirection.Buy ? accountAssetPair.OvernightSwapLong : accountAssetPair.OvernightSwapShort;
 			var total = orders.Sum(order => _commissionService.GetOvernightSwap(order, swapRate));
 					
 			//create calculation obj & add to cache

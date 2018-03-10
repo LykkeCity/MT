@@ -24,7 +24,7 @@ namespace MarginTrading.AzureRepositories
 		public async Task AddAsync(IOvernightSwapHistory obj)
 		{
 			var entity = OvernightSwapHistoryEntity.Create(obj);
-			await _tableStorage.InsertAndGenerateRowKeyAsDateTimeAsync(entity, entity.Timestamp);
+			await _tableStorage.InsertAndGenerateRowKeyAsDateTimeAsync(entity, entity.Time);
 		}
 
 		public async Task<IEnumerable<IOvernightSwapHistory>> GetAsync()
@@ -36,7 +36,7 @@ namespace MarginTrading.AzureRepositories
 		{
 			var partitionKeys = await GetPartitionKeys();
 			return (await _tableStorage.WhereAsync(partitionKeys, from ?? DateTime.MinValue, to ?? DateTime.MaxValue, ToIntervalOption.IncludeTo))
-				.OrderByDescending(item => item.Timestamp)
+				.OrderByDescending(item => item.Time)
 				.ToList();
 		}
 
@@ -44,7 +44,7 @@ namespace MarginTrading.AzureRepositories
 		{
 			return (await _tableStorage.WhereAsync(accountId, from ?? DateTime.MinValue, to ?? DateTime.MaxValue, 
 					ToIntervalOption.IncludeTo))
-				.OrderByDescending(item => item.Timestamp).ToList();
+				.OrderByDescending(item => item.Time).ToList();
 		}
 
 		private async Task<IEnumerable<string>> GetPartitionKeys()

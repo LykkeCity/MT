@@ -13,7 +13,7 @@ namespace MarginTrading.AzureRepositories.Entities
 		public string Direction { get; set; }
 		OrderDirection? IOvernightSwapState.Direction => 
 			Enum.TryParse<OrderDirection>(Direction, out var direction) ? direction : (OrderDirection?)null;
-		public DateTime Timestamp { get; set; }
+		public DateTime Time { get; set; }
 		public string OpenOrderIds { get; set; }
 		List<string> IOvernightSwapState.OpenOrderIds => JsonConvert.DeserializeObject<List<string>>(OpenOrderIds);
 		public decimal Value { get; set; }
@@ -31,7 +31,7 @@ namespace MarginTrading.AzureRepositories.Entities
 				AccountId = obj.AccountId,
 				Instrument = obj.Instrument,
 				Direction = obj.Direction?.ToString(),
-				Timestamp = obj.Timestamp,
+				Time = obj.Time,
 				OpenOrderIds = JsonConvert.SerializeObject(obj.OpenOrderIds),
 				Value = obj.Value,
 				SwapRate = obj.SwapRate
