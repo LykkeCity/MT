@@ -44,6 +44,7 @@ namespace MarginTrading.AzureRepositories
         public double OpenPositionsCount { get; set; }
         decimal IMarginTradingAccountStats.MarginUsageLevel  => (decimal) MarginUsageLevel;
         public double MarginUsageLevel { get; set; }
+        public string LegalEntity { get; set; }
 
         public override IDictionary<string, EntityProperty> WriteEntity(OperationContext operationContext)
         {
@@ -61,6 +62,7 @@ namespace MarginTrading.AzureRepositories
                 {nameof(PnL), new EntityProperty(PnL)},
                 {nameof(OpenPositionsCount), new EntityProperty(OpenPositionsCount)},
                 {nameof(MarginUsageLevel), new EntityProperty(MarginUsageLevel)},
+                {nameof(LegalEntity), new EntityProperty(LegalEntity)},
             };
         }
     }

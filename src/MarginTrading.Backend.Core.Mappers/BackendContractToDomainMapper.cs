@@ -107,7 +107,8 @@ namespace MarginTrading.Backend.Core.Mappers
                 Balance = src.Balance,
                 WithdrawTransferLimit = src.WithdrawTransferLimit,
                 Comment = src.Comment,
-                OrderId = src.OrderId
+                OrderId = src.OrderId,
+                LegalEntity = src.LegalEntity,
             };
         }
 
@@ -117,7 +118,8 @@ namespace MarginTrading.Backend.Core.Mappers
             {
                 Id = src.Id,
                 Name = src.Name,
-                IsDefault = src.IsDefault
+                IsDefault = src.IsDefault,
+                LegalEntity = src.LegalEntity
             };
         }
 

@@ -1,10 +1,11 @@
-﻿using MarginTrading.Backend.Core.TradingConditions;
+﻿using JetBrains.Annotations;
+using MarginTrading.Backend.Core.TradingConditions;
 
 namespace MarginTrading.Backend.Services.TradingConditions
 {
     public interface IAccountGroupCacheService
     {
         IAccountGroup[] GetAllAccountGroups();
-        IAccountGroup GetAccountGroup(string tradingConditionId, string accountAssetId);
+        [CanBeNull] IAccountGroup GetAccountGroup(string tradingConditionId, string accountAssetId);
     }
 }

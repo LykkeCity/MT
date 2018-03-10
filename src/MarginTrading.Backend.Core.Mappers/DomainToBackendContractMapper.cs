@@ -32,7 +32,8 @@ namespace MarginTrading.Backend.Core.Mappers
                 PnL = src.GetPnl(),
                 OpenPositionsCount = src.GetOpenPositionsCount(),
                 MarginUsageLevel = src.GetMarginUsageLevel(),
-                IsLive = isLive
+                IsLive = isLive,
+                LegalEntity = src.LegalEntity,
             };
         }
 
@@ -101,7 +102,8 @@ namespace MarginTrading.Backend.Core.Mappers
                 WithdrawTransferLimit = src.WithdrawTransferLimit,
                 Comment = src.Comment,
                 Type = src.Type.ToType<AccountHistoryTypeContract>(),
-                OrderId = src.OrderId
+                OrderId = src.OrderId,
+                LegalEntity = src.LegalEntity,
             };
         }
 
@@ -374,7 +376,8 @@ namespace MarginTrading.Backend.Core.Mappers
             {
                 Id = src.Id,
                 Name = src.Name,
-                IsDefault = src.IsDefault
+                IsDefault = src.IsDefault,
+                LegalEntity = src.LegalEntity,
             };
         }
         
@@ -400,7 +403,8 @@ namespace MarginTrading.Backend.Core.Mappers
                 TradingConditionId = src.TradingConditionId,
                 BaseAssetId = src.BaseAssetId,
                 Balance = src.Balance,
-                WithdrawTransferLimit = src.WithdrawTransferLimit
+                WithdrawTransferLimit = src.WithdrawTransferLimit,
+                LegalEntity = src.LegalEntity,
             };
         }
     }

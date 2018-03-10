@@ -145,19 +145,28 @@ namespace MarginTrading.Backend.Controllers
             [FromBody] SetTradingConditionModel model)
         {
             var tradingCondition = _tradingConditionsCacheService.GetTradingCondition(model.TradingConditionId);
-
             if (tradingCondition == null)
             {
                 return MtBackendResponse<MarginTradingAccountModel>.Error(
                     $"No trading condition {model.TradingConditionId} found in cache");
             }
+            
 
             var account =
                 await _accountManager.SetTradingCondition(model.ClientId, model.AccountId, model.TradingConditionId);
-
             if (account == null)
+            {
                 return MtBackendResponse<MarginTradingAccountModel>.Error(
                     $"Account for client [{model.ClientId}] with id [{model.AccountId}] was not found");
+            }
+
+            if (tradingCondition.LegalEntity != account.LegalEntity)
+            {
+                return MtBackendResponse<MarginTradingAccountModel>.Error(
+                    $"Account for client [{model.ClientId}] with id [{model.AccountId}] has LegalEntity " +
+                    $"[{account.LegalEntity}], but trading condition wit id [{tradingCondition.Id}] has " +
+                    $"LegalEntity [{tradingCondition.LegalEntity}]");
+            }
 
             return MtBackendResponse<MarginTradingAccountModel>.Ok(account.ToBackendContract());
         }

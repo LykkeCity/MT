@@ -37,5 +37,7 @@ namespace MarginTrading.Contract.ClientContracts
         public decimal MarginUsageLevel { get; set; }
         [DisplayName("Is account live (trading real money) or demo")]
         public bool IsLive { get; set; }
+        [DisplayName("Account legal entity")]
+        public string LegalEntity { get; set; }
     }
 }
