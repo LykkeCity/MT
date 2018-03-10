@@ -18,6 +18,7 @@ namespace MarginTrading.AzureRepositories
         decimal IMarginTradingAccount.Balance => (decimal) Balance;
         public double Balance { get; set; }
         decimal IMarginTradingAccount.WithdrawTransferLimit => (decimal) WithdrawTransferLimit;
+        public string LegalEntity { get; set; }
         public double WithdrawTransferLimit { get; set; }
         public double MarginCall { get; set; }
         public double StopOut { get; set; }
@@ -42,6 +43,7 @@ namespace MarginTrading.AzureRepositories
                 BaseAssetId = src.BaseAssetId,
                 Balance = (double) src.Balance,
                 WithdrawTransferLimit = (double) src.WithdrawTransferLimit,
+                LegalEntity = src.LegalEntity,
             };
         }
     }

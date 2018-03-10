@@ -36,7 +36,8 @@ namespace MarginTrading.Backend.Core.Mappers
                 PnL = account.GetPnl(),
                 OpenPositionsCount = account.GetOpenPositionsCount(),
                 MarginUsageLevel = account.GetMarginUsageLevel(),
-                IsLive = isLive
+                IsLive = isLive,
+                LegalEntity = account.LegalEntity,
             };
         }
     }

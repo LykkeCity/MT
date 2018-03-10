@@ -281,7 +281,8 @@ namespace MarginTrading.Frontend.Services
                 Balance = src.Balance,
                 WithdrawTransferLimit = src.WithdrawTransferLimit,
                 Comment = src.Comment,
-                Type = ConvertEnum<AccountHistoryTypeContract>(src.Type)
+                Type = ConvertEnum<AccountHistoryTypeContract>(src.Type),
+                LegalEnity = src.LegalEnity,
             };
         }
 
