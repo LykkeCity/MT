@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MarginTrading.Backend.Contracts;
 using MarginTrading.Backend.Core;
 using MarginTrading.Contract.BackendContracts;
 using MarginTrading.DataReader.Helpers;
@@ -14,7 +15,7 @@ namespace MarginTrading.DataReader.Controllers
 {
     [Authorize]
     [Route("api/accountHistory")]
-    public class AccountHistoryController : Controller
+    public class AccountHistoryController : Controller, IAccountHistoryApi
     {
         private readonly IMarginTradingAccountHistoryRepository _accountsHistoryRepository;
         private readonly IMarginTradingOrdersHistoryRepository _ordersHistoryRepository;
@@ -35,7 +36,7 @@ namespace MarginTrading.DataReader.Controllers
 
         [Route("byTypes")]
         [HttpGet]
-        public async Task<AccountHistoryBackendResponse> GetAccountHistoryByTypes([FromQuery] AccountHistoryBackendRequest request)
+        public async Task<AccountHistoryBackendResponse> ByTypes([FromQuery] AccountHistoryBackendRequest request)
         {
             request.From = request.From?.ToUniversalTime();
             request.To = request.To?.ToUniversalTime();
@@ -66,7 +67,7 @@ namespace MarginTrading.DataReader.Controllers
 
         [Route("byAccounts")]
         [HttpGet]
-        public async Task<Dictionary<string, AccountHistoryBackendContract[]>> GetAccountHistoryByAccounts(
+        public async Task<Dictionary<string, AccountHistoryBackendContract[]>> ByAccounts(
             [FromQuery] string accountId = null, [FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null)
         {
             from = from?.ToUniversalTime();
@@ -81,8 +82,7 @@ namespace MarginTrading.DataReader.Controllers
 
         [Route("timeline")]
         [HttpGet]
-        public async Task<AccountNewHistoryBackendResponse> GetAccountHistoryTimeline(
-            [FromQuery] AccountHistoryBackendRequest request)
+        public async Task<AccountNewHistoryBackendResponse> Timeline([FromQuery] AccountHistoryBackendRequest request)
         {
             request.From = request.From?.ToUniversalTime();
             request.To = request.To?.ToUniversalTime();
