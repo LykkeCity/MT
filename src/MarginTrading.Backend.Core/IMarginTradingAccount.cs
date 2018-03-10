@@ -13,6 +13,7 @@ namespace MarginTrading.Backend.Core
         string BaseAssetId { get; }
         decimal Balance { get; }
         decimal WithdrawTransferLimit { get; }
+        string LegalEntity { get; }
     }
 
     public class MarginTradingAccount : IMarginTradingAccount, IComparable<MarginTradingAccount>
@@ -23,6 +24,7 @@ namespace MarginTrading.Backend.Core
         public string BaseAssetId { get; set; }
         public decimal Balance { get; set; }
         public decimal WithdrawTransferLimit { get; set; }
+        public string LegalEntity { get; set; }
 
         internal AccountFpl AccountFpl;
 
@@ -41,7 +43,8 @@ namespace MarginTrading.Backend.Core
                 BaseAssetId = src.BaseAssetId,
                 Balance = src.Balance,
                 WithdrawTransferLimit = src.WithdrawTransferLimit,
-                AccountFpl = accountFpl ?? new AccountFpl() {ActualHash = 1}
+                AccountFpl = accountFpl ?? new AccountFpl() {ActualHash = 1},
+                LegalEntity = src.LegalEntity,
             };
         }
 
@@ -80,6 +83,7 @@ namespace MarginTrading.Backend.Core
         Task<MarginTradingAccount> UpdateBalanceAsync(string clientId, string accountId, decimal amount,
             bool changeLimit);
 
+        [ItemCanBeNull]
         Task<IMarginTradingAccount> UpdateTradingConditionIdAsync(string clientId, string accountId,
             string tradingConditionId);
 

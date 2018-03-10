@@ -42,7 +42,8 @@ namespace MarginTrading.AccountReportsBroker
                 TakerAccountId = message.Account.Id,
                 TakerCounterpartyId = message.Account.ClientId,
                 BaseAssetId = message.Account.BaseAssetId,
-                IsLive = _settings.IsLive
+                IsLive = _settings.IsLive,
+                LegalEntity = message.Account.LegalEntity,
             };
 
             return _accountsReportsRepository.InsertOrReplaceAsync(report);
