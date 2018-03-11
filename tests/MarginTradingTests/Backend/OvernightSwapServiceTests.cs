@@ -59,13 +59,20 @@ namespace MarginTradingTests.Backend
 				_accountAssetsRepository.Remove(aa.TradingConditionId, aa.BaseAssetId, "BTCUSD"));
 			_accountAssetsManager.UpdateAccountAssetsCache().GetAwaiter().GetResult();
 			
-			//_ordersCache.ActiveOrders.GetAllOrders().ToList().ForEach(o => _ordersCache.ActiveOrders.Remove(o));
 			_ordersCache.InitOrders(new List<Order>());
 			
 			_overnightSwapCache.ClearAll();
 			
 			_quoteCacheService.GetAllQuotes().Values.ForEach(x => _quoteCacheService.RemoveQuote(x.Instrument));
 			
+			_overnightSwapHistoryRepository.GetAsync().Result.ForEach(x => 
+				_overnightSwapHistoryRepository.DeleteAsync(x));
+		}
+
+		[TearDown]
+		public void TearDown()
+		{
+			SetUp();
 		}
 
 		[Test]
@@ -121,7 +128,7 @@ namespace MarginTradingTests.Backend
 			await _accountAssetsRepository.AddOrReplaceAsync(new AccountAssetPair
 			{
 				TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
-				BaseAssetId = "USD",
+				BaseAssetId = "CHF",
 				Instrument = "BTCUSD",
 				LeverageInit = 100,
 				LeverageMaintenance = 150,
@@ -134,7 +141,7 @@ namespace MarginTradingTests.Backend
 			await _accountAssetsManager.UpdateAccountAssetsCache();
 			
 			var accountId = (await _fakeMarginTradingAccountsRepository.GetAllAsync("1"))
-				.First(x => x.ClientId == "1" && x.BaseAssetId == "USD").Id;
+				.First(x => x.ClientId == "1" && x.BaseAssetId == "CHF").Id;
 			_ordersCache.ActiveOrders.Add(new Order
 			{
 				Id = "1",
@@ -142,7 +149,7 @@ namespace MarginTradingTests.Backend
 				Instrument = "BTCUSD",
 				ClientId = "1",
 				TradingConditionId = "1",
-				AccountAssetId = "USD",
+				AccountAssetId = "CHF",
 				Volume = 1,
 				OpenDate = new DateTime(2017, 01, 01, 20, 50, 0),
 				CloseDate = new DateTime(2017, 01, 02, 20, 50, 0),
@@ -154,7 +161,7 @@ namespace MarginTradingTests.Backend
 			var history = (await _overnightSwapHistoryRepository.GetAsync()).First(x => x.AccountId == accountId);
 			
 			Assert.False(history.IsSuccess);
-			Assert.AreEqual("There is no quote for instrument BTCUSD", ((IOvernightSwapHistory)history).Exception.Message);
+			Assert.AreEqual("There is no quote for instrument BTCCHF", ((IOvernightSwapHistory)history).Exception.Message);
 		}
 		
 		[Test]

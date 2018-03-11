@@ -47,6 +47,11 @@ namespace MarginTrading.AzureRepositories
 				.OrderByDescending(item => item.Time).ToList();
 		}
 
+		public async Task DeleteAsync(IOvernightSwapHistory obj)
+		{
+			await _tableStorage.DeleteAsync(OvernightSwapHistoryEntity.Create(obj));
+		}
+
 		private async Task<IEnumerable<string>> GetPartitionKeys()
 		{
 			var partitionKeys = new ConcurrentBag<string>();
