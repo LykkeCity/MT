@@ -155,15 +155,6 @@ namespace MarginTrading.Frontend.Modules
                    .As<ICacheProvider>()
                    .AsSelf()
                    .SingleInstance();
-
-            builder.Register(context =>
-                    MarginTradingDataReaderApiClientFactory.CreateDefaultClientsPair(
-                        _settings.CurrentValue.MarginTradingFront.DataReaderApiSettings.DemoApiUrl,
-                        _settings.CurrentValue.MarginTradingFront.DataReaderApiSettings.LiveApiUrl,
-                        _settings.CurrentValue.MarginTradingFront.DataReaderApiSettings.DemoApiKey,
-                        _settings.CurrentValue.MarginTradingFront.DataReaderApiSettings.LiveApiKey,
-                        "MarginTradingFrontend"))
-                .SingleInstance();
             
             builder.RegisterType<DateService>()
                 .As<IDateService>()

@@ -56,12 +56,11 @@ namespace MarginTrading.Backend.Services
 
         public void Start()
         {
-            _eventsPublisher = _rabbitMqService.CreateProducer<MarginTradingEnabledChangedMessage>(new RabbitMqSettings
+            _eventsPublisher = _rabbitMqService.GetProducer(new RabbitMqSettings
             {
                 ConnectionString = _marginSettings.MtRabbitMqConnString,
                 ExchangeName = _marginSettings.RabbitMqQueues.MarginTradingEnabledChanged.ExchangeName,
-                IsDurable = false,
-            });
+            }, false, _rabbitMqService.GetJsonSerializer<MarginTradingEnabledChangedMessage>());
         }
     }
 }

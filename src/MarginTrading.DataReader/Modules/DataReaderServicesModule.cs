@@ -7,6 +7,7 @@ using MarginTrading.Common.Settings;
 using MarginTrading.DataReader.Middleware.Validator;
 using MarginTrading.DataReader.Services;
 using MarginTrading.DataReader.Services.Implementation;
+using MarginTrading.DataReader.Settings;
 using Rocks.Caching;
 
 namespace MarginTrading.DataReader.Modules
@@ -27,8 +28,13 @@ namespace MarginTrading.DataReader.Modules
                 .SingleInstance();
             builder.RegisterType<Application>().As<IStartable>()
                 .SingleInstance();
-            builder.RegisterType<RabbitMqService>().As<IRabbitMqService>()
+            
+            builder.Register(c => new RabbitMqService(c.Resolve<ILog>(), c.Resolve<IConsole>(),
+                    queueRepositoryConnectionString: null, // todo: when fault-tolerant producers become needed add a string from config here
+                    env: c.Resolve<DataReaderSettings>().Env))
+                .As<IRabbitMqService>()
                 .SingleInstance();
+            
             builder.RegisterInstance(new ConsoleLWriter(Console.WriteLine)).As<IConsole>()
                 .SingleInstance();
         }

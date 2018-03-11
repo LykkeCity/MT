@@ -24,13 +24,13 @@ namespace MarginTrading.DataReader
 
         public void Start()
         {
-            _rabbitMqService.Subscribe<MarginTradingEnabledChangedMessage>(
-                _dataReaderSettings.Consumers.MarginTradingEnabledChanged, _dataReaderSettings.Env,
+            _rabbitMqService.Subscribe(
+                _dataReaderSettings.Consumers.MarginTradingEnabledChanged, false,
                 m =>
                 {
                     _marginTradingSettingsCacheService.OnMarginTradingEnabledChanged(m);
                     return Task.CompletedTask;
-                });
+                }, _rabbitMqService.GetJsonDeserializer<MarginTradingEnabledChangedMessage>());
         }
     }
 }
