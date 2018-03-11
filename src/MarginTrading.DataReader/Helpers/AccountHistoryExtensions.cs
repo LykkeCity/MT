@@ -20,7 +20,8 @@ namespace MarginTrading.DataReader.Helpers
                 WithdrawTransferLimit = src.WithdrawTransferLimit,
                 Comment = src.Comment,
                 Type = src.Type.ToType<AccountHistoryTypeContract>(),
-                OrderId = src.OrderId
+                OrderId = src.OrderId,
+                LegalEntity = src.LegalEntity,
             };
         }
     }
