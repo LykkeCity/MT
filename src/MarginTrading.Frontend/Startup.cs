@@ -50,7 +50,7 @@ namespace MarginTrading.Frontend
         public Startup(IHostingEnvironment env)
         {
             Configuration = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
+                .SetBasePath(env.ContentRootPath)
                 .AddDevJson(env)
                 .AddEnvironmentVariables()
                 .Build();

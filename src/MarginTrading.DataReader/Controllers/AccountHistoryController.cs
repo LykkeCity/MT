@@ -103,7 +103,7 @@ namespace MarginTrading.DataReader.Controllers
 
             var items = accounts.Select(item => new AccountHistoryItemBackend
                 {
-                    Account = AccountHistoryExtensions.ToBackendContract(item),
+                    Account = item.ToBackendContract(),
                     Date = item.Date
                 })
                 .Concat(openOrders.Select(item => new AccountHistoryItemBackend
@@ -113,12 +113,12 @@ namespace MarginTrading.DataReader.Controllers
                 }))
                 .Concat(history.Select(item => new AccountHistoryItemBackend
                 {
-                    Position = OrderHistoryExtensions.ToBackendHistoryOpenedContract(item),
+                    Position = item.ToBackendHistoryOpenedContract(),
                     Date = item.OpenDate.Value
                 }))
                 .Concat(history.Select(item => new AccountHistoryItemBackend
                 {
-                    Position = OrderHistoryExtensions.ToBackendHistoryContract(item),
+                    Position = item.ToBackendHistoryContract(),
                     Date = item.CloseDate.Value
                 }))
                 .OrderByDescending(item => item.Date);
