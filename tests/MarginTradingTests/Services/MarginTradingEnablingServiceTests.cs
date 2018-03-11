@@ -40,7 +40,7 @@ namespace MarginTradingTests.Services
             };
             var rabbitMqService = Mock.Of<IRabbitMqService>(s =>
                 s.GetProducer(expectedRabbitMqSettings.Equivalent(), false,
-                    It.IsNotNull<IRabbitMqSerializer<MarginTradingEnabledChangedMessage>>()) == 
+                    It.IsAny<IRabbitMqSerializer<MarginTradingEnabledChangedMessage>>()) == 
                 publisher);
             _marginSettings = new MarginSettings
             {
