@@ -1,5 +1,7 @@
 ﻿using System;
 using Autofac;
+using Common.Log;
+using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services.Settings;
 using MarginTrading.Common.Settings;
 using MarginTrading.DataReader.Middleware.Validator;
@@ -19,11 +21,16 @@ namespace MarginTrading.DataReader.Modules
                 .SingleInstance();
             builder.RegisterType<OrdersSnapshotReaderService>().As<IOrdersSnapshotReaderService>()
                 .SingleInstance();
-            builder.RegisterType<MarginTradingSettingsService>().As<IMarginTradingSettingsService>()
+            builder.RegisterType<MarginTradingEnabledCacheService>().As<IMarginTradingSettingsCacheService>()
                 .SingleInstance();
             builder.RegisterType<MemoryCacheProvider>().As<ICacheProvider>()
                 .SingleInstance();
-
+            builder.RegisterType<Application>().As<IStartable>()
+                .SingleInstance();
+            builder.RegisterType<RabbitMqService>().As<IRabbitMqService>()
+                .SingleInstance();
+            builder.RegisterInstance(new ConsoleLWriter(Console.WriteLine)).As<IConsole>()
+                .SingleInstance();
         }
     }
 }

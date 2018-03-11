@@ -15,5 +15,10 @@ namespace MarginTrading.Contract.BackendContracts
         public decimal MarginMaintenance { get; set; }
         public decimal OpenCrossPrice { get; set; }
         public decimal CloseCrossPrice { get; set; }
+        
+        /// <summary>
+        /// Business operation type which caused last change 
+        /// </summary>
+        public OrderUpdateTypeContract OrderUpdateType { get; set; }
     }
 }

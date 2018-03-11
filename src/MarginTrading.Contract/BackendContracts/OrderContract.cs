@@ -35,6 +35,9 @@ namespace MarginTrading.Contract.BackendContracts
         public decimal OpenCommission { get; set; }
         public decimal CloseCommission { get; set; }
         public decimal SwapCommission { get; set; }
+        public string EquivalentAsset { get; set; }
+        public decimal OpenPriceEquivalent { get; set; }
+        public decimal ClosePriceEquivalent { get; set; }
         public List<MatchedOrderBackendContract> MatchedOrders { get; set; } = new List<MatchedOrderBackendContract>();
         public List<MatchedOrderBackendContract> MatchedCloseOrders { get; set; } = new List<MatchedOrderBackendContract>();
     }

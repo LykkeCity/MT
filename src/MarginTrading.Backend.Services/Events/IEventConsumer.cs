@@ -8,11 +8,8 @@
         int ConsumerRank { get; }
     }
 
-    // ReSharper disable once TypeParameterCanBeVariant
-    public interface IEventConsumer<TEventArgs> : IEventConsumer
+    public interface IEventConsumer<in TEventArgs> : IEventConsumer
     {
         void ConsumeEvent(object sender, TEventArgs ea);
     }
-
-    // ReSharper disable once TypeParameterCanBeVariant
 }

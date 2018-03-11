@@ -126,8 +126,8 @@ namespace MarginTrading.Frontend.Modules
                 .As<IHttpRequestService>()
                 .SingleInstance();
 
-            builder.RegisterType<MarginTradingSettingsService>()
-               .As<IMarginTradingSettingsService>()
+            builder.RegisterType<MarginTradingEnabledCacheService>()
+               .As<IMarginTradingSettingsCacheService>()
                .SingleInstance();
 
             builder.RegisterType<ThreadSwitcherToNewTask>()

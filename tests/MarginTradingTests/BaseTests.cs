@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
@@ -20,6 +21,7 @@ using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Modules;
 using MarginTrading.Backend.Services.TradingConditions;
+using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Services.Settings;
 using MarginTradingTests.Helpers;
@@ -37,9 +39,30 @@ namespace MarginTradingTests
 
         protected void RegisterDependencies(bool mockEvents = false)
         {
+            try
+            {
+                RegisterDependenciesCore(mockEvents);
+            }
+            catch (Exception e)
+            {
+                Debugger.Break();
+                Console.WriteLine(e);
+                throw;
+            }
+        }
+        
+        private void RegisterDependenciesCore(bool mockEvents = false)
+        {
             var builder = new ContainerBuilder();
 
-            builder.RegisterModule(new SettingsModule());
+            var marginSettings = new MarginSettings
+            {
+                RabbitMqQueues =
+                    new RabbitMqQueues {MarginTradingEnabledChanged = new RabbitMqQueueInfo {ExchangeName = ""}}
+            };
+
+            builder.RegisterInstance(marginSettings).SingleInstance();
+
             builder.RegisterModule(new MockBaseServicesModule());
             builder.RegisterModule(new MockRepositoriesModule(Accounts));
 
@@ -78,14 +101,14 @@ namespace MarginTradingTests
                 .As<IEventChannel<AccountBalanceChangedEventArgs>>()
                 .SingleInstance();
 
-            var settingsServiceMock = new Mock<IMarginTradingSettingsService>();
+            var settingsServiceMock = new Mock<IMarginTradingSettingsCacheService>();
             settingsServiceMock.Setup(s => s.IsMarginTradingEnabled(It.IsAny<string>()))
                 .ReturnsAsync(new EnabledMarginTradingTypes {Live = true, Demo = true});
             settingsServiceMock.Setup(s => s.IsMarginTradingEnabled(It.IsAny<string>(), It.IsAny<bool>()))
                 .ReturnsAsync(true);
 
             builder.RegisterInstance(settingsServiceMock.Object)
-                .As<IMarginTradingSettingsService>()
+                .As<IMarginTradingSettingsCacheService>()
                 .SingleInstance();
 
             var clientAccountClientMock = new Mock<IClientAccountClient>();
@@ -133,7 +156,7 @@ namespace MarginTradingTests
             builder.RegisterBuildCallback(c => c.Resolve<AccountAssetsManager>());
             builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
             builder.RegisterInstance(new Mock<IMtSlackNotificationsSender>(MockBehavior.Loose).Object).SingleInstance();
-
+            builder.RegisterInstance(Mock.Of<IRabbitMqService>()).As<IRabbitMqService>();
             Container = builder.Build();
 
             MtServiceLocator.FplService = Container.Resolve<IFplService>();

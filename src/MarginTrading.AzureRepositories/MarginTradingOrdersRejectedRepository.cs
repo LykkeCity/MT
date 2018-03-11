@@ -78,9 +78,18 @@ namespace MarginTrading.AzureRepositories
         public List<MatchedOrder> MatchedCloseOrders { get; set; } = new List<MatchedOrder>();
         decimal IOrderHistory.SwapCommission => (decimal) SwapCommission;
         public double SwapCommission { get; set; }
+        
+        public string EquivalentAsset { get; set; }
+        decimal IOrderHistory.OpenPriceEquivalent => (decimal) OpenPriceEquivalent;
+        public double OpenPriceEquivalent { get; set; }
+        decimal IOrderHistory.ClosePriceEquivalent => (decimal) ClosePriceEquivalent;
+        public double ClosePriceEquivalent { get; set; }
 
         public string Orders { get; set; }
         public string ClosedOrders { get; set; }
+        
+        OrderUpdateType IOrderHistory.OrderUpdateType => OrderUpdateType.ParseEnum(Backend.Core.OrderUpdateType.Place);
+        public string OrderUpdateType { get; set; }
 
         public static string GeneratePartitionKey(string clientId)
         {
@@ -137,7 +146,11 @@ namespace MarginTrading.AzureRepositories
                 Orders = src.MatchedOrders.SerializeArrayForTableStorage(),
                 ClosedOrders = src.MatchedCloseOrders.SerializeArrayForTableStorage(),
                 SwapCommission = (double) src.SwapCommission,
-                Comment = src.Comment
+                EquivalentAsset = src.EquivalentAsset,
+                OpenPriceEquivalent = (double) src.OpenPriceEquivalent,
+                ClosePriceEquivalent = (double) src.ClosePriceEquivalent,
+                Comment = src.Comment,
+                OrderUpdateType = src.OrderUpdateType.ToString(),
             };
         }
     }

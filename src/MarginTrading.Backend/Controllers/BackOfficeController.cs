@@ -2,19 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Common;
-using Common.Log;
 using MarginTrading.Backend.Attributes;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.MatchingEngines;
-using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Models;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Common.Middleware;
-using MarginTrading.Common.Services;
-using MarginTrading.Common.Services.Settings;
 using MarginTrading.Contract.BackendContracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -26,44 +21,25 @@ namespace MarginTrading.Backend.Controllers
     [MiddlewareFilter(typeof(RequestLoggingPipeline))]
     public class BackOfficeController : Controller
     {
-        private readonly IAssetPairsCache _assetPairsCache;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly AccountManager _accountManager;
         private readonly MatchingEngineRoutesManager _routesManager;
         private readonly IOrderReader _ordersReader;
-        private readonly MarginSettings _marginSettings;
-        private readonly IMarginTradingOperationsLogService _operationsLogService;
-        private readonly IConsole _consoleWriter;
-        private readonly ILog _log;
-        private readonly IMarginTradingSettingsService _marginTradingSettingsService;
-        private readonly IMatchingEngineRepository _meRepository;
+        private readonly IMarginTradingEnablingService _marginTradingEnablingService;
 
         public BackOfficeController(
-            
-            IAssetPairsCache assetPairsCache,
             IAccountsCacheService accountsCacheService,
             AccountManager accountManager,
             MatchingEngineRoutesManager routesManager,
             IOrderReader ordersReader,
-            MarginSettings marginSettings,
-            IMarginTradingOperationsLogService operationsLogService,
-            IConsole consoleWriter,
-            ILog log,
-            IMarginTradingSettingsService marginTradingSettingsService,
-            IMatchingEngineRepository meRepository)
+            IMarginTradingEnablingService marginTradingEnablingService)
         {
-            _assetPairsCache = assetPairsCache;
             _accountsCacheService = accountsCacheService;
 
             _accountManager = accountManager;
             _routesManager = routesManager;
             _ordersReader = ordersReader;
-            _marginSettings = marginSettings;
-            _operationsLogService = operationsLogService;
-            _consoleWriter = consoleWriter;
-            _log = log;
-            _marginTradingSettingsService = marginTradingSettingsService;
-            _meRepository = meRepository;
+            _marginTradingEnablingService = marginTradingEnablingService;
         }
 
 
@@ -181,38 +157,6 @@ namespace MarginTrading.Backend.Controllers
         #endregion
 
 
-        #region Dictionaries
-
-        [HttpGet]
-        [Route("instruments/getall")]
-        [ProducesResponseType(typeof(List<AssetPair>), 200)]
-        public IActionResult GetAllInstruments()
-        {
-            var instruments = _assetPairsCache.GetAll();
-            return Ok(instruments);
-        }
-
-        [HttpGet]
-        [Route("matchingengines")]
-        [ProducesResponseType(typeof(List<string>), 200)]
-        public IActionResult GetAllMatchingEngines()
-        {
-            var matchingEngines = _meRepository.GetMatchingEngines().Select(me => me.Id);
-            return Ok(matchingEngines);
-        }
-
-        [HttpGet]
-        [Route("orderTypes/getall")]
-        [ProducesResponseType(typeof(List<string>), 200)]
-        public IActionResult GetAllOrderTypes()
-        {
-            var orderTypes = Enum.GetNames(typeof(OrderDirection));
-            return Ok(orderTypes);
-        }
-
-        #endregion
-
-
         #region Accounts
 
         [HttpGet]
@@ -263,92 +207,6 @@ namespace MarginTrading.Backend.Controllers
         {
             await _accountManager.AddAccountAsync(account.ClientId, account.BaseAssetId, account.TradingConditionId);
             return Ok();
-        }
-
-        [Route("marginTradingAccounts/deposit")]
-        [HttpPost]
-        [ProducesResponseType(typeof(bool), 200)]
-        public async Task<IActionResult> AccountDeposit([FromBody]AccountDepositWithdrawRequest request)
-        {
-            if (!_marginSettings.IsLive)
-                return Ok(false);
-
-            var account = _accountsCacheService.Get(request.ClientId, request.AccountId);
-
-            var changeTransferLimit = request.PaymentType == PaymentType.Transfer && !IsCrypto(account.BaseAssetId); ;
-
-            try
-            {
-                await _accountManager.UpdateBalanceAsync(account, Math.Abs(request.Amount),
-                    AccountHistoryType.Deposit, "Account deposit", null/*TODO: transaction ID*/, changeTransferLimit);
-            }
-            catch (Exception e)
-            {
-                await _log.WriteErrorAsync(nameof(BackOfficeController), "AccountDeposit", request?.ToJson(), e);
-                return Ok(false);
-            }
-
-            _consoleWriter.WriteLine($"account deposit for clientId = {request.ClientId}");
-            _operationsLogService.AddLog($"account deposit {request.PaymentType}", request.ClientId, request.AccountId, request.ToJson(), true.ToJson());
-
-            return Ok(true);
-        }
-
-        [Route("marginTradingAccounts/withdraw")]
-        [HttpPost]
-        [ProducesResponseType(typeof(bool), 200)]
-        public async Task<IActionResult> AccountWithdraw([FromBody]AccountDepositWithdrawRequest request)
-        {
-            if (!_marginSettings.IsLive)
-                return Ok(false);
-
-            var account = _accountsCacheService.Get(request.ClientId, request.AccountId);
-            var freeMargin = account.GetFreeMargin();
-
-            if (freeMargin < Math.Abs(request.Amount))
-                return Ok(false);
-
-            var changeTransferLimit = request.PaymentType == PaymentType.Transfer && !IsCrypto(account.BaseAssetId);
-
-            try
-            {
-                await _accountManager.UpdateBalanceAsync(account, -Math.Abs(request.Amount),
-                    AccountHistoryType.Withdraw, "Account withdraw", null, changeTransferLimit);
-            }
-            catch (Exception e)
-            {
-                await _log.WriteErrorAsync(nameof(BackOfficeController), "AccountWithdraw", request?.ToJson(), e);
-                return Ok(false);
-            }
-
-            _consoleWriter.WriteLine($"account withdraw for clientId = {request.ClientId}");
-            _operationsLogService.AddLog($"account withdraw {request.PaymentType}", request.ClientId, request.AccountId, request.ToJson(), true.ToJson());
-
-            return Ok(true);
-        }
-
-        private bool IsCrypto(string baseAssetId)
-        {
-            return baseAssetId == LykkeConstants.BitcoinAssetId
-                   || baseAssetId == LykkeConstants.LykkeAssetId
-                   || baseAssetId == LykkeConstants.EthAssetId
-                   || baseAssetId == LykkeConstants.SolarAssetId;
-        }
-
-        [Route("marginTradingAccounts/reset")]
-        [HttpPost]
-        [ProducesResponseType(typeof(bool), 200)]
-        public async Task<IActionResult> AccountWithdrawDepositDemo([FromBody]AccounResetRequest request)
-        {
-            if (_marginSettings.IsLive)
-                return Ok(false);
-
-            await _accountManager.ResetAccountAsync(request.ClientId, request.AccountId);
-
-            _consoleWriter.WriteLine($"account reset for clientId = {request.ClientId}");
-            _operationsLogService.AddLog("account reset", request.ClientId, request.AccountId, request.ToJson(), true.ToJson());
-
-            return Ok(true);
         }
 
         #endregion
@@ -416,7 +274,7 @@ namespace MarginTrading.Backend.Controllers
         [SkipMarginTradingEnabledCheck]
         public async Task<IActionResult> SetMarginTradingIsEnabled(string clientId, [FromBody]bool enabled)
         {
-            await _marginTradingSettingsService.SetMarginTradingEnabled(clientId, _marginSettings.IsLive, enabled);
+            await _marginTradingEnablingService.SetMarginTradingEnabled(clientId, enabled);
             return Ok();
         }
 

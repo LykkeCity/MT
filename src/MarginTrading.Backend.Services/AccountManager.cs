@@ -114,7 +114,7 @@ namespace MarginTrading.Backend.Services
         #endregion
        
 
-        public async Task UpdateBalanceAsync(IMarginTradingAccount account, decimal amount, AccountHistoryType historyType, string comment, string eventSourceId = null, bool changeTransferLimit = false)
+        public async Task<string> UpdateBalanceAsync(IMarginTradingAccount account, decimal amount, AccountHistoryType historyType, string comment, string eventSourceId = null, bool changeTransferLimit = false)
         {
             if (historyType == AccountHistoryType.Deposit && changeTransferLimit)
             {
@@ -139,9 +139,20 @@ namespace MarginTrading.Backend.Services
                 _accountsCacheService.UpdateBalance(updatedAccount);
                 _clientNotifyService.NotifyAccountUpdated(updatedAccount);
 
-                await _rabbitMqNotifyService.AccountHistory(account.Id, account.ClientId, amount,
+                var transactionId = Guid.NewGuid().ToString("N");
+                
+                await _rabbitMqNotifyService.AccountHistory(
+                    transactionId,
+                    account.Id,
+                    account.ClientId,
+                    amount,
                     updatedAccount.Balance,
-                    updatedAccount.WithdrawTransferLimit, historyType, comment, eventSourceId);
+                    updatedAccount.WithdrawTransferLimit,
+                    historyType,
+                    comment,
+                    eventSourceId);
+
+                return transactionId;
             }
             finally
             {
@@ -172,11 +183,11 @@ namespace MarginTrading.Backend.Services
         }
 
         //TODO: close/remove all orders
-        public async Task ResetAccountAsync(string clientId, string accountId)
+        public Task<string> ResetAccountAsync(string clientId, string accountId)
         {
             var account = _accountsCacheService.Get(clientId, accountId);
 
-            await UpdateBalanceAsync(account, LykkeConstants.DefaultDemoBalance - account.Balance,
+            return UpdateBalanceAsync(account, LykkeConstants.DefaultDemoBalance - account.Balance,
                 AccountHistoryType.Reset,
                 "Reset account");
         }

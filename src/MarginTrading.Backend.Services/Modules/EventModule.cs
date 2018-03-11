@@ -38,6 +38,22 @@ namespace MarginTrading.Backend.Services.Modules
             builder.RegisterType<EventChannel<AccountBalanceChangedEventArgs>>()
                 .As<IEventChannel<AccountBalanceChangedEventArgs>>()
                 .SingleInstance();
+            
+            builder.RegisterType<EventChannel<OrderLimitsChangedEventArgs>>()
+                .As<IEventChannel<OrderLimitsChangedEventArgs>>()
+                .SingleInstance();
+
+            builder.RegisterType<EventChannel<OrderClosingEventArgs>>()
+                .As<IEventChannel<OrderClosingEventArgs>>()
+                .SingleInstance();
+
+            builder.RegisterType<EventChannel<OrderActivatedEventArgs>>()
+                .As<IEventChannel<OrderActivatedEventArgs>>()
+                .SingleInstance();
+            
+            builder.RegisterType<EventChannel<OrderRejectedEventArgs>>()
+                .As<IEventChannel<OrderRejectedEventArgs>>()
+                .SingleInstance();
         }
     }
 }
