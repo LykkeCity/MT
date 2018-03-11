@@ -125,6 +125,9 @@ namespace MarginTrading.Backend.Services
 							foreach (OrderDirection direction in Enum.GetValues(typeof(OrderDirection)))
 							{
 								var orders = ordersByInstrument.Where(order => order.GetOrderType() == direction).ToList();
+								if (orders.Count == 0)
+									continue;
+								
 								try
 								{
 									await ProcessOrders(orders, ordersByInstrument.Key, account, accountAssetPair, direction);

@@ -16,8 +16,10 @@ namespace MarginTrading.AzureRepositories.Entities
 		public DateTime Time { get; set; }
 		public string OpenOrderIds { get; set; }
 		List<string> IOvernightSwapState.OpenOrderIds => JsonConvert.DeserializeObject<List<string>>(OpenOrderIds);
-		public decimal Value { get; set; }
-		public decimal SwapRate { get; set; }
+		public double Value { get; set; }
+		decimal IOvernightSwapState.Value => (decimal) Value;
+		public double SwapRate { get; set; }
+		decimal IOvernightSwapState.SwapRate => (decimal) SwapRate;
 		
 		public bool IsSuccess { get; set; }
 		public string Exception { get; set; }
@@ -37,8 +39,8 @@ namespace MarginTrading.AzureRepositories.Entities
 				Direction = obj.Direction?.ToString(),
 				Time = obj.Time,
 				OpenOrderIds = JsonConvert.SerializeObject(obj.OpenOrderIds),
-				Value = obj.Value,
-				SwapRate = obj.SwapRate,
+				Value = (double) obj.Value,
+				SwapRate = (double) obj.SwapRate,
 				IsSuccess = obj.IsSuccess,
 				Exception = JsonConvert.SerializeObject(obj.Exception)
 			};
