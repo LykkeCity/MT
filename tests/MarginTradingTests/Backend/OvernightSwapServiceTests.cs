@@ -158,7 +158,7 @@ namespace MarginTradingTests.Backend
 			
 			_overnightSwapService.CalculateAndChargeSwaps();
 
-			var history = (await _overnightSwapHistoryRepository.GetAsync()).First(x => x.AccountId == accountId);
+			var history = (await _overnightSwapHistoryRepository.GetAsync()).First(x => x.AccountId == accountId && x.Exception != null);
 			
 			Assert.False(history.IsSuccess);
 			Assert.AreEqual("There is no quote for instrument BTCCHF", ((IOvernightSwapHistory)history).Exception.Message);
