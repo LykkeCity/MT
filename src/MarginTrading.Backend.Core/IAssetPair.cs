@@ -1,4 +1,7 @@
-﻿namespace MarginTrading.Backend.Core
+﻿using System;
+using JetBrains.Annotations;
+
+namespace MarginTrading.Backend.Core
 {
     public interface IAssetPair
     {
@@ -11,10 +14,20 @@
 
     public class AssetPair : IAssetPair
     {
-        public string Id { get; set; }
-        public string Name { get; set; }
-        public string BaseAssetId { get; set; }
-        public string QuoteAssetId { get; set; }
-        public int Accuracy { get; set; }
+        public AssetPair([NotNull] string id, [NotNull] string name, [NotNull] string baseAssetId,
+            [NotNull] string quoteAssetId, int accuracy)
+        {
+            Id = id ?? throw new ArgumentNullException(nameof(id));
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+            BaseAssetId = baseAssetId ?? throw new ArgumentNullException(nameof(baseAssetId));
+            QuoteAssetId = quoteAssetId ?? throw new ArgumentNullException(nameof(quoteAssetId));
+            Accuracy = accuracy;
+        }
+
+        [NotNull] public string Id { get; }
+        [NotNull] public string Name { get; }
+        [NotNull] public string BaseAssetId { get; }
+        [NotNull] public string QuoteAssetId { get; }
+        public int Accuracy { get; }
     }
 }

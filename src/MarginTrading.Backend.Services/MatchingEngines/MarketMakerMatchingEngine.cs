@@ -10,28 +10,33 @@ using MarginTrading.Backend.Services.Infrastructure;
 
 namespace MarginTrading.Backend.Services.MatchingEngines
 {
-    public class InternalMatchingEngine : IInternalMatchingEngine
+    public class MarketMakerMatchingEngine : IMarketMakerMatchingEngine
     {
         private readonly IEventChannel<BestPriceChangeEventArgs> _bestPriceChangeEventChannel;
         private readonly OrderBookList _orderBooks;
         private readonly IContextFactory _contextFactory;
 
-        public InternalMatchingEngine(
+        public string Id { get; }
+
+        public MatchingEngineMode Mode => MatchingEngineMode.MarketMaker;
+
+        public MarketMakerMatchingEngine(
+            string id,
             IEventChannel<BestPriceChangeEventArgs> bestPriceChangeEventChannel,
-            OrderBookList orderBooks, IContextFactory contextFactory)
+            OrderBookList orderBooks, 
+            IContextFactory contextFactory)
         {
+            Id = id;
             _bestPriceChangeEventChannel = bestPriceChangeEventChannel;
             _orderBooks = orderBooks;
             _contextFactory = contextFactory;
         }
 
-        public string Id => MatchingEngineConstants.Lykke;
-
         public void SetOrders(SetOrderModel model)
         {
             var updatedInstruments = new List<string>();
             
-            using (_contextFactory.GetWriteSyncContext($"{nameof(InternalMatchingEngine)}.{nameof(SetOrders)}"))
+            using (_contextFactory.GetWriteSyncContext($"{nameof(MarketMakerMatchingEngine)}.{nameof(SetOrders)}"))
             {
                 if (model.DeleteByInstrumentsBuy?.Count > 0)
                 {
@@ -73,7 +78,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
         public OrderBook GetOrderBook(string instrument)
         {
-            using (_contextFactory.GetReadSyncContext($"{nameof(InternalMatchingEngine)}.{nameof(GetOrderBook)}"))
+            using (_contextFactory.GetReadSyncContext($"{nameof(MarketMakerMatchingEngine)}.{nameof(GetOrderBook)}"))
             {
                  return _orderBooks.GetOrderBook(instrument);
             }
@@ -81,7 +86,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
         public void MatchMarketOrderForOpen(Order order, Func<MatchedOrderCollection, bool> matchedFunc)
         {
-            using (_contextFactory.GetWriteSyncContext($"{nameof(InternalMatchingEngine)}.{nameof(MatchMarketOrderForOpen)}"))
+            using (_contextFactory.GetWriteSyncContext($"{nameof(MarketMakerMatchingEngine)}.{nameof(MatchMarketOrderForOpen)}"))
             {
                 var orderBookTypeToMatch = order.GetOrderType().GetOrderTypeToMatchInOrderBook();
 
@@ -98,7 +103,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
         public void MatchMarketOrderForClose(Order order, Func<MatchedOrderCollection, bool> matchedAction)
         {
-            using (_contextFactory.GetWriteSyncContext($"{nameof(InternalMatchingEngine)}.{nameof(MatchMarketOrderForClose)}"))
+            using (_contextFactory.GetWriteSyncContext($"{nameof(MarketMakerMatchingEngine)}.{nameof(MatchMarketOrderForClose)}"))
             {
                 var orderBookTypeToMatch = order.GetCloseType().GetOrderTypeToMatchInOrderBook();
 
@@ -114,7 +119,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
         public bool PingLock()
         {
-            using (_contextFactory.GetReadSyncContext($"{nameof(InternalMatchingEngine)}.{nameof(PingLock)}"))
+            using (_contextFactory.GetReadSyncContext($"{nameof(MarketMakerMatchingEngine)}.{nameof(PingLock)}"))
             {
                 return true;
             }

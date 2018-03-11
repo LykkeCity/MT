@@ -32,7 +32,7 @@ namespace MarginTrading.Backend.Services.TradingConditions
 
         public void Start()
         {
-            UpdateAllTradingConditions().Wait();
+            InitTradingConditions().Wait();
         }
 
         public async Task<ITradingCondition> AddOrReplaceTradingConditionAsync(ITradingCondition tradingCondition)
@@ -60,12 +60,12 @@ namespace MarginTrading.Backend.Services.TradingConditions
 
             await _repository.AddOrReplaceAsync(tradingCondition);
             
-            if (_tradingConditionsCacheService.GetTradingCondition(tradingCondition.Id) == null)
+            if (!_tradingConditionsCacheService.IsTradingConditionExists(tradingCondition.Id))
             {
                 await _accountGroupManager.AddAccountGroupsForTradingCondition(tradingCondition.Id);
             }
             
-            await UpdateAllTradingConditions();
+            _tradingConditionsCacheService.AddOrUpdateTradingCondition(tradingCondition);
             
             await _clientNotifyService.NotifyTradingConditionsChanged(tradingCondition.Id);
 
@@ -79,12 +79,15 @@ namespace MarginTrading.Backend.Services.TradingConditions
             await _repository.AddOrReplaceAsync(existing);
         }
 
-        private async Task UpdateAllTradingConditions()
+        private async Task InitTradingConditions()
         {
+            _console.WriteLine($"Started {nameof(InitTradingConditions)}");
+            
             var tradingConditions = (await _repository.GetAllAsync()).ToList();
-
             _tradingConditionsCacheService.InitTradingConditionsCache(tradingConditions);
-            _console.WriteLine($"InitTradingConditionsCache (trading conditions count:{tradingConditions.Count})");
+            
+            _console.WriteLine(
+                $"Finished {nameof(InitTradingConditions)}. Count:{tradingConditions.Count})");
         }
     }
 }

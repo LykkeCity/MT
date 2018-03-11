@@ -27,7 +27,7 @@
     <PackageReference Include="Flurl.Http" Version="2.1.1" />
     <PackageReference Include="Lykke.Common.ApiLibrary" Version="1.0.14" />
     <PackageReference Include="Lykke.Logs" Version="3.6.0" />
-    <PackageReference Include="Lykke.RabbitMqBroker" Version="4.3.0" />
+    <PackageReference Include="Lykke.RabbitMqBroker" Version="6.1.0" />
     <PackageReference Include="Lykke.Service.Session" Version="16.0.0" />
     <PackageReference Include="Lykke.SettingsReader" Version="2.1.0" />
     <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="2.0.1" />

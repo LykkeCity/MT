@@ -3,12 +3,29 @@ using System.Collections.Generic;
 using System.Linq;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Orderbooks;
+using MarginTrading.Backend.Services.Events;
+using MarginTrading.Backend.Services.Infrastructure;
 
 namespace MarginTrading.Backend.Services.MatchingEngines
 {
     public class MatchingEngineInMemoryRepository : IMatchingEngineRepository
     {
-        private Dictionary<string, IMatchingEngineBase> _matchingEngines;
+        private readonly Dictionary<string, IMatchingEngineBase> _matchingEngines;
+        
+        public MatchingEngineInMemoryRepository(
+            IMarketMakerMatchingEngine marketMakerMatchingEngine,
+            IStpMatchingEngine stpMatchingEngine)
+        {
+            var mes = new IMatchingEngineBase[]
+            {
+                new RejectMatchingEngine(),
+                marketMakerMatchingEngine,
+                stpMatchingEngine
+            };
+
+            _matchingEngines = mes.ToDictionary(me => me.Id);
+        }
 
         public IMatchingEngineBase GetMatchingEngineById(string id)
         {
@@ -18,14 +35,9 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             throw new NotSupportedException($"Matching Engine with ID [{id}] not found");
         }
 
-        public IInternalMatchingEngine GetDefaultMatchingEngine()
+        public ICollection<IMatchingEngineBase> GetMatchingEngines()
         {
-            return (IInternalMatchingEngine) GetMatchingEngineById(MatchingEngineConstants.Lykke);
-        }
-
-        public void InitMatchingEngines(IEnumerable<IMatchingEngineBase> matchingEngines)
-        {
-            _matchingEngines = matchingEngines.ToDictionary(me => me.Id);
+            return _matchingEngines.Values;
         }
     }
 }

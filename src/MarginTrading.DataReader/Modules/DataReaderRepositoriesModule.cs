@@ -6,6 +6,7 @@ using MarginTrading.AzureRepositories;
 using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Common.Services;
 using MarginTrading.DataReader.Settings;
 
 namespace MarginTrading.DataReader.Modules
@@ -61,6 +62,11 @@ namespace MarginTrading.DataReader.Modules
 
             builder.Register<IMarginTradingBlobRepository>(ctx =>
                 AzureRepoFactories.MarginTrading.CreateBlobRepository(_settings.Nested(s => s.Db.StateConnString))
+            ).SingleInstance();
+
+            builder.Register(ctx =>
+                AzureRepoFactories.MarginTrading.CreateAssetPairSettingsRepository(
+                    _settings.Nested(s => s.Db.MarginTradingConnString), _log, ctx.Resolve<IConvertService>())
             ).SingleInstance();
         }
     }

@@ -14,5 +14,7 @@ namespace MarginTrading.Backend.Contracts.Client
         /// Account deposit, withdraw and other operations with balace
         /// </summary>
         IAccountsBalanceApi AccountsBalance { get; }
+
+        IAssetPairSettingsEditingApi AssetPairSettingsEdit { get; }
     }
 }

@@ -150,21 +150,12 @@ namespace MarginTradingTests
             dayOffSettingsService.Setup(s => s.GetExclusions(It.IsNotNull<string>()))
                 .Returns(ImmutableArray<DayOffExclusion>.Empty);
             builder.RegisterInstance(dayOffSettingsService.Object).SingleInstance();
-            builder.Register<IDayOffSettingsRepository>(c =>
-                new DayOffSettingsRepository(c.Resolve<IMarginTradingBlobRepository>())).SingleInstance();
 
             builder.RegisterBuildCallback(c => c.Resolve<AccountAssetsManager>());
             builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
             builder.RegisterInstance(new Mock<IMtSlackNotificationsSender>(MockBehavior.Loose).Object).SingleInstance();
             builder.RegisterInstance(Mock.Of<IRabbitMqService>()).As<IRabbitMqService>();
             Container = builder.Build();
-
-            var meRepository = Container.Resolve<IMatchingEngineRepository>();
-            meRepository.InitMatchingEngines(new List<IMatchingEngineBase>
-            {
-                Container.Resolve<IInternalMatchingEngine>(),
-                new RejectMatchingEngine()
-            });
 
             MtServiceLocator.FplService = Container.Resolve<IFplService>();
             MtServiceLocator.AccountUpdateService = Container.Resolve<IAccountUpdateService>();

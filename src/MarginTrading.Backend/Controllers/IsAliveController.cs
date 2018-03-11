@@ -10,13 +10,13 @@ namespace MarginTrading.Backend.Controllers
     [Route("api/[controller]")]
     public class IsAliveController : Controller
     {
-        private readonly IInternalMatchingEngine _matchingEngine;
+        private readonly IMarketMakerMatchingEngine _matchingEngine;
         private readonly ITradingEngine _tradingEngine;
         private readonly MarginSettings _settings;
         private readonly IDateService _dateService;
 
         public IsAliveController(
-            IInternalMatchingEngine matchingEngine,
+            IMarketMakerMatchingEngine matchingEngine,
             ITradingEngine tradingEngine,
             MarginSettings settings,
             IDateService dateService)

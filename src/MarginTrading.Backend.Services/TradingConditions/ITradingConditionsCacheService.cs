@@ -8,5 +8,6 @@ namespace MarginTrading.Backend.Services.TradingConditions
     {
         List<ITradingCondition> GetAllTradingConditions();
         [CanBeNull] ITradingCondition GetTradingCondition(string tradingConditionId);
+        bool IsTradingConditionExists(string tradingConditionId);
     }
 }

@@ -26,13 +26,15 @@ namespace MarginTrading.Backend.Controllers
         private readonly MatchingEngineRoutesManager _routesManager;
         private readonly IOrderReader _ordersReader;
         private readonly IMarginTradingEnablingService _marginTradingEnablingService;
+        private readonly IMatchingEngineRepository _meRepository;
 
         public BackOfficeController(
             IAccountsCacheService accountsCacheService,
             AccountManager accountManager,
             MatchingEngineRoutesManager routesManager,
             IOrderReader ordersReader,
-            IMarginTradingEnablingService marginTradingEnablingService)
+            IMarginTradingEnablingService marginTradingEnablingService,
+            IMatchingEngineRepository meRepository)
         {
             _accountsCacheService = accountsCacheService;
 
@@ -40,6 +42,7 @@ namespace MarginTrading.Backend.Controllers
             _routesManager = routesManager;
             _ordersReader = ordersReader;
             _marginTradingEnablingService = marginTradingEnablingService;
+            _meRepository = meRepository;
         }
 
 

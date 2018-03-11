@@ -2,6 +2,8 @@
 {
     public interface IMatchingEngineRouter
     {
-        IMatchingEngineBase GetMatchingEngine(string clientId, string tradingConditionId, string instrument, OrderDirection orderType);
+        IMatchingEngineBase GetMatchingEngineForOpen(IOrder order);
+        
+        IMatchingEngineBase GetMatchingEngineForClose(IOrder order);
     }
 }

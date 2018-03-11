@@ -196,7 +196,7 @@ namespace MarginTrading.Frontend
             host.Open();
         }
 
-        private void RegisterModules(ContainerBuilder builder, IReloadingManager<ApplicationSettings> appSettings)
+        private static void RegisterModules(ContainerBuilder builder, IReloadingManager<ApplicationSettings> appSettings)
         {
             var settings = appSettings.Nested(s => s.MtFrontend);
             
@@ -213,66 +213,55 @@ namespace MarginTrading.Frontend
             // Best prices (only live)
 
             Subscribe<BidAskPairRabbitMqContract>(rabbitMqService, settings.MarginTradingLive.MtRabbitMqConnString,
-                settings.MarginTradingFront.RabbitMqQueues.OrderbookPrices.ExchangeName,
-                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessPrices);
+                settings.MarginTradingFront.RabbitMqQueues.OrderbookPrices.ExchangeName, rabbitMqHandler.ProcessPrices);
 
             // Account changes
 
             Subscribe<AccountChangedMessage>(rabbitMqService, settings.MarginTradingLive.MtRabbitMqConnString,
-                settings.MarginTradingFront.RabbitMqQueues.AccountChanged.ExchangeName,
-                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessAccountChanged);
+                settings.MarginTradingFront.RabbitMqQueues.AccountChanged.ExchangeName, rabbitMqHandler.ProcessAccountChanged);
 
             Subscribe<AccountChangedMessage>(rabbitMqService, settings.MarginTradingDemo.MtRabbitMqConnString,
-                settings.MarginTradingFront.RabbitMqQueues.AccountChanged.ExchangeName,
-                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessAccountChanged);
+                settings.MarginTradingFront.RabbitMqQueues.AccountChanged.ExchangeName, rabbitMqHandler.ProcessAccountChanged);
 
             // Order changes
 
             Subscribe<OrderContract>(rabbitMqService, settings.MarginTradingLive.MtRabbitMqConnString,
-                settings.MarginTradingFront.RabbitMqQueues.OrderChanged.ExchangeName,
-                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessOrderChanged);
+                settings.MarginTradingFront.RabbitMqQueues.OrderChanged.ExchangeName, rabbitMqHandler.ProcessOrderChanged);
 
             Subscribe<OrderContract>(rabbitMqService, settings.MarginTradingDemo.MtRabbitMqConnString,
-                settings.MarginTradingFront.RabbitMqQueues.OrderChanged.ExchangeName,
-                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessOrderChanged);
+                settings.MarginTradingFront.RabbitMqQueues.OrderChanged.ExchangeName, rabbitMqHandler.ProcessOrderChanged);
 
             // Stopout
 
             Subscribe<AccountStopoutBackendContract>(rabbitMqService, settings.MarginTradingLive.MtRabbitMqConnString,
-                settings.MarginTradingFront.RabbitMqQueues.AccountStopout.ExchangeName,
-                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessAccountStopout);
+                settings.MarginTradingFront.RabbitMqQueues.AccountStopout.ExchangeName, rabbitMqHandler.ProcessAccountStopout);
 
             Subscribe<AccountStopoutBackendContract>(rabbitMqService, settings.MarginTradingDemo.MtRabbitMqConnString,
-                settings.MarginTradingFront.RabbitMqQueues.AccountStopout.ExchangeName,
-                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessAccountStopout);
+                settings.MarginTradingFront.RabbitMqQueues.AccountStopout.ExchangeName, rabbitMqHandler.ProcessAccountStopout);
 
             // User updates
 
             Subscribe<UserUpdateEntityBackendContract>(rabbitMqService, settings.MarginTradingLive.MtRabbitMqConnString,
-                settings.MarginTradingFront.RabbitMqQueues.UserUpdates.ExchangeName,
-                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessUserUpdates);
+                settings.MarginTradingFront.RabbitMqQueues.UserUpdates.ExchangeName, rabbitMqHandler.ProcessUserUpdates);
 
             Subscribe<UserUpdateEntityBackendContract>(rabbitMqService, settings.MarginTradingDemo.MtRabbitMqConnString,
-                settings.MarginTradingFront.RabbitMqQueues.UserUpdates.ExchangeName,
-                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessUserUpdates);
+                settings.MarginTradingFront.RabbitMqQueues.UserUpdates.ExchangeName, rabbitMqHandler.ProcessUserUpdates);
             
             // Trades
             
             Subscribe<TradeContract>(rabbitMqService, settings.MarginTradingLive.MtRabbitMqConnString,
-                settings.MarginTradingFront.RabbitMqQueues.Trades.ExchangeName,
-                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessTrades);
+                settings.MarginTradingFront.RabbitMqQueues.Trades.ExchangeName, rabbitMqHandler.ProcessTrades);
 
             Subscribe<TradeContract>(rabbitMqService, settings.MarginTradingDemo.MtRabbitMqConnString,
-                settings.MarginTradingFront.RabbitMqQueues.Trades.ExchangeName,
-                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessTrades);
+                settings.MarginTradingFront.RabbitMqQueues.Trades.ExchangeName, rabbitMqHandler.ProcessTrades);
 
             Subscribe<MarginTradingEnabledChangedMessage>(rabbitMqService, settings.MarginTradingLive.MtRabbitMqConnString,
                 settings.MarginTradingFront.RabbitMqQueues.MarginTradingEnabledChanged.ExchangeName,
-                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessMarginTradingEnabledChanged);
+                rabbitMqHandler.ProcessMarginTradingEnabledChanged);
             
             Subscribe<MarginTradingEnabledChangedMessage>(rabbitMqService, settings.MarginTradingDemo.MtRabbitMqConnString,
                 settings.MarginTradingFront.RabbitMqQueues.MarginTradingEnabledChanged.ExchangeName,
-                settings.MarginTradingFront.Env, rabbitMqHandler.ProcessMarginTradingEnabledChanged);
+                rabbitMqHandler.ProcessMarginTradingEnabledChanged);
         }
 
         private static void SetupLoggers(IServiceCollection services, IReloadingManager<ApplicationSettings> settings)
@@ -300,17 +289,16 @@ namespace MarginTrading.Frontend
                 slackService, "MarginTradingFrontendLog", consoleLogger);
         }
 
-        private void Subscribe<TMessage>(IRabbitMqService rabbitMqService, string connectionString,
-            string exchangeName, string env, Func<TMessage, Task> handler)
+        private static void Subscribe<TMessage>(IRabbitMqService rabbitMqService, string connectionString,
+            string exchangeName, Func<TMessage, Task> handler)
         {
             var settings = new RabbitMqSettings
             {
                 ConnectionString = connectionString,
                 ExchangeName = exchangeName,
-                IsDurable = false
             };
 
-            rabbitMqService.Subscribe(settings, env, handler);
+            rabbitMqService.Subscribe(settings, false, handler, rabbitMqService.GetJsonDeserializer<TMessage>());
         }
     }
 }
