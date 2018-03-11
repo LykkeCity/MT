@@ -35,6 +35,9 @@ namespace MarginTrading.Backend.Core
         string Comment { get; }
         MatchedOrderCollection MatchedCloseOrders { get; }
         decimal SwapCommission { get; }
+        string EquivalentAsset { get; }
+        decimal OpenPriceEquivalent { get; }
+        decimal ClosePriceEquivalent { get; }
     }
 
     public class Order : IOrder
@@ -62,6 +65,9 @@ namespace MarginTrading.Backend.Core
         public decimal CloseCommission { get; set; }
         public decimal CommissionLot { get; set; }
         public decimal SwapCommission { get; set; }
+        public string EquivalentAsset { get; set; }
+        public decimal OpenPriceEquivalent { get; set; }
+        public decimal ClosePriceEquivalent { get; set; }
         public DateTime? StartClosingDate { get; set; }
         public OrderStatus Status { get; set; }
         public OrderCloseReason CloseReason { get; set; }

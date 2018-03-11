@@ -49,5 +49,6 @@ namespace MarginTrading.Backend.Core.Settings
         public virtual TelemetrySettings Telemetry { get; set; }
         
         public int MaxMarketMakerLimitOrderAge { get; set; }
+        public string ReportingEquivalentPricesAsset { get; set; }
     }
 }

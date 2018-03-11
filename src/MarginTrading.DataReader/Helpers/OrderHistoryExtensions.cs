@@ -30,7 +30,10 @@ namespace MarginTrading.DataReader.Helpers
                 InterestRateSwap = src.InterestRateSwap,
                 CommissionLot = src.CommissionLot,
                 OpenCommission = src.OpenCommission,
-                CloseCommission = src.CloseCommission
+                CloseCommission = src.CloseCommission,
+                EquivalentAsset = src.EquivalentAsset,
+                OpenPriceEquivalent = src.OpenPriceEquivalent,
+                ClosePriceEquivalent = src.ClosePriceEquivalent
             };
         }
 
@@ -57,7 +60,10 @@ namespace MarginTrading.DataReader.Helpers
                 InterestRateSwap = src.InterestRateSwap,
                 CommissionLot = src.CommissionLot,
                 OpenCommission = src.OpenCommission,
-                CloseCommission = src.CloseCommission
+                CloseCommission = src.CloseCommission,
+                EquivalentAsset = src.EquivalentAsset,
+                OpenPriceEquivalent = src.OpenPriceEquivalent,
+                ClosePriceEquivalent = src.ClosePriceEquivalent
             };
         }
     }
