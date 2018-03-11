@@ -218,44 +218,53 @@ namespace MarginTrading.Frontend
             // Account changes
 
             Subscribe<AccountChangedMessage>(rabbitMqService, settings.MarginTradingLive.MtRabbitMqConnString,
-                settings.MarginTradingFront.RabbitMqQueues.AccountChanged.ExchangeName, rabbitMqHandler.ProcessAccountChanged);
+                settings.MarginTradingFront.RabbitMqQueues.AccountChanged.ExchangeName,
+                rabbitMqHandler.ProcessAccountChanged);
 
             Subscribe<AccountChangedMessage>(rabbitMqService, settings.MarginTradingDemo.MtRabbitMqConnString,
-                settings.MarginTradingFront.RabbitMqQueues.AccountChanged.ExchangeName, rabbitMqHandler.ProcessAccountChanged);
+                settings.MarginTradingFront.RabbitMqQueues.AccountChanged.ExchangeName,
+                rabbitMqHandler.ProcessAccountChanged);
 
             // Order changes
 
             Subscribe<OrderContract>(rabbitMqService, settings.MarginTradingLive.MtRabbitMqConnString,
-                settings.MarginTradingFront.RabbitMqQueues.OrderChanged.ExchangeName, rabbitMqHandler.ProcessOrderChanged);
+                settings.MarginTradingFront.RabbitMqQueues.OrderChanged.ExchangeName,
+                rabbitMqHandler.ProcessOrderChanged);
 
             Subscribe<OrderContract>(rabbitMqService, settings.MarginTradingDemo.MtRabbitMqConnString,
-                settings.MarginTradingFront.RabbitMqQueues.OrderChanged.ExchangeName, rabbitMqHandler.ProcessOrderChanged);
+                settings.MarginTradingFront.RabbitMqQueues.OrderChanged.ExchangeName,
+                rabbitMqHandler.ProcessOrderChanged);
 
             // Stopout
 
             Subscribe<AccountStopoutBackendContract>(rabbitMqService, settings.MarginTradingLive.MtRabbitMqConnString,
-                settings.MarginTradingFront.RabbitMqQueues.AccountStopout.ExchangeName, rabbitMqHandler.ProcessAccountStopout);
+                settings.MarginTradingFront.RabbitMqQueues.AccountStopout.ExchangeName,
+                rabbitMqHandler.ProcessAccountStopout);
 
             Subscribe<AccountStopoutBackendContract>(rabbitMqService, settings.MarginTradingDemo.MtRabbitMqConnString,
-                settings.MarginTradingFront.RabbitMqQueues.AccountStopout.ExchangeName, rabbitMqHandler.ProcessAccountStopout);
+                settings.MarginTradingFront.RabbitMqQueues.AccountStopout.ExchangeName,
+                rabbitMqHandler.ProcessAccountStopout);
 
             // User updates
 
             Subscribe<UserUpdateEntityBackendContract>(rabbitMqService, settings.MarginTradingLive.MtRabbitMqConnString,
-                settings.MarginTradingFront.RabbitMqQueues.UserUpdates.ExchangeName, rabbitMqHandler.ProcessUserUpdates);
+                settings.MarginTradingFront.RabbitMqQueues.UserUpdates.ExchangeName,
+                rabbitMqHandler.ProcessUserUpdates);
 
             Subscribe<UserUpdateEntityBackendContract>(rabbitMqService, settings.MarginTradingDemo.MtRabbitMqConnString,
-                settings.MarginTradingFront.RabbitMqQueues.UserUpdates.ExchangeName, rabbitMqHandler.ProcessUserUpdates);
-            
+                settings.MarginTradingFront.RabbitMqQueues.UserUpdates.ExchangeName,
+                rabbitMqHandler.ProcessUserUpdates);
+
             // Trades
-            
+
             Subscribe<TradeContract>(rabbitMqService, settings.MarginTradingLive.MtRabbitMqConnString,
                 settings.MarginTradingFront.RabbitMqQueues.Trades.ExchangeName, rabbitMqHandler.ProcessTrades);
 
             Subscribe<TradeContract>(rabbitMqService, settings.MarginTradingDemo.MtRabbitMqConnString,
                 settings.MarginTradingFront.RabbitMqQueues.Trades.ExchangeName, rabbitMqHandler.ProcessTrades);
 
-            Subscribe<MarginTradingEnabledChangedMessage>(rabbitMqService, settings.MarginTradingLive.MtRabbitMqConnString,
+            Subscribe<MarginTradingEnabledChangedMessage>(rabbitMqService,
+                settings.MarginTradingLive.MtRabbitMqConnString,
                 settings.MarginTradingFront.RabbitMqQueues.MarginTradingEnabledChanged.ExchangeName,
                 rabbitMqHandler.ProcessMarginTradingEnabledChanged);
             
