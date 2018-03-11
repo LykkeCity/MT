@@ -24,5 +24,8 @@ namespace MarginTrading.Contract.BackendContracts
         public decimal CommissionLot { get; set; }
         public decimal OpenCommission { get; set; }
         public decimal CloseCommission { get; set; }
+        public string EquivalentAsset { get; set; }
+        public decimal OpenPriceEquivalent{ get; set; }
+        public decimal ClosePriceEquivalent { get; set; }
     }
 }

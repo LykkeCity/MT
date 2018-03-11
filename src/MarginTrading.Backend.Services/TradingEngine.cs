@@ -30,6 +30,7 @@ namespace MarginTrading.Backend.Services
         private readonly IAccountUpdateService _accountUpdateService;
         private readonly ICommissionService _swapCommissionService;
         private readonly IValidateOrderService _validateOrderService;
+        private readonly IEquivalentPricesService _equivalentPricesService;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly OrdersCache _ordersCache;
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
@@ -54,6 +55,7 @@ namespace MarginTrading.Backend.Services
             IQuoteCacheService quoteCashService,
             IAccountUpdateService accountUpdateService,
             ICommissionService swapCommissionService,
+            IEquivalentPricesService equivalentPricesService,
             IAccountsCacheService accountsCacheService,
             OrdersCache ordersCache,
             IAccountAssetsCacheService accountAssetsCacheService,
@@ -77,6 +79,7 @@ namespace MarginTrading.Backend.Services
             _accountUpdateService = accountUpdateService;
             _swapCommissionService = swapCommissionService;
             _validateOrderService = validateOrderService;
+            _equivalentPricesService = equivalentPricesService;
             _accountsCacheService = accountsCacheService;
             _ordersCache = ordersCache;
             _accountAssetsCacheService = accountAssetsCacheService;
@@ -143,6 +146,8 @@ namespace MarginTrading.Backend.Services
                     return false;
                 }
 
+                _equivalentPricesService.EnrichOpeningOrder(order);
+                
                 MakeOrderActive(order);
 
                 return true;
@@ -253,7 +258,7 @@ namespace MarginTrading.Backend.Services
             _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
         }
 
-        #region Orders waition for execution
+        #region Orders waiting for execution
         
         private void ProcessOrdersWaitingForExecution(string instrument)
         {
@@ -428,6 +433,8 @@ namespace MarginTrading.Backend.Services
                 }
                 
                 order.MatchedCloseOrders.AddRange(matchedOrders);
+
+                _equivalentPricesService.EnrichClosingOrder(order);
 
                 if (!order.GetIsCloseFullfilled())
                 {
