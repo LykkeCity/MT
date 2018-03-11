@@ -7,5 +7,6 @@ namespace MarginTrading.Backend.Contracts.DataReaderClient
     {
         IMtDataReaderClient Demo { get; }
         IMtDataReaderClient Live { get; }
+        IMtDataReaderClient Get(bool isLive);
     }
 }
