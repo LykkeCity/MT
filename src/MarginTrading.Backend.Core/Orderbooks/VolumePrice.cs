@@ -1,8 +1,9 @@
 ﻿namespace MarginTrading.Backend.Core.Orderbooks
 {
-    public class AggregatedOrderBookItem
+    public class VolumePrice
     {
-        public decimal Price { get; set; }
         public decimal Volume { get; set; }
+
+        public decimal Price { get; set; }
     }
 }

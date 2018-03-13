@@ -16,7 +16,6 @@ namespace MarginTrading.Backend.Services
         private readonly IMarginTradingBlobRepository _blobRepository;
         private readonly OrderBookList _orderBookList;
         private readonly ILog _log;
-        private readonly IAccountAssetsCacheService _accountAssetsCache;
 
         private static string BlobName = "orderbook";
         private readonly IContextFactory _contextFactory;
@@ -25,13 +24,11 @@ namespace MarginTrading.Backend.Services
             IMarginTradingBlobRepository blobRepository,
             OrderBookList orderBookList,
             ILog log,
-            IAccountAssetsCacheService accountAssetsCache, 
             IContextFactory contextFactory) : base(nameof(OrderBookSaveService), 5000, log)
         {
             _blobRepository = blobRepository;
             _orderBookList = orderBookList;
             _log = log;
-            _accountAssetsCache = accountAssetsCache;
             _contextFactory = contextFactory;
         }
 

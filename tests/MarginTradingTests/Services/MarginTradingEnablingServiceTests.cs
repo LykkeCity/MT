@@ -35,11 +35,11 @@ namespace MarginTradingTests.Services
             var expectedRabbitMqSettings = new RabbitMqSettings
             {
                 ConnectionString = "conn str",
-                ExchangeName = "exchange name",
-                IsDurable = false
+                ExchangeName = "exchange name"
             };
             var rabbitMqService = Mock.Of<IRabbitMqService>(s =>
-                s.CreateProducer<MarginTradingEnabledChangedMessage>(expectedRabbitMqSettings.Equivalent()) ==
+                s.GetProducer(expectedRabbitMqSettings.Equivalent(), false,
+                    s.GetJsonSerializer<MarginTradingEnabledChangedMessage>()) ==
                 publisher);
             _marginSettings = new MarginSettings
             {

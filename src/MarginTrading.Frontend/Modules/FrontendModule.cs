@@ -172,7 +172,8 @@ namespace MarginTrading.Frontend.Modules
                 .As<IDateService>()
                 .SingleInstance();
             
-            builder.RegisterType<RabbitMqService>()
+            builder.Register(c => new RabbitMqService(c.Resolve<ILog>(), c.Resolve<IConsole>(),
+                    null, _settings.CurrentValue.MarginTradingFront.Env))
                 .As<IRabbitMqService>()
                 .SingleInstance();
         }

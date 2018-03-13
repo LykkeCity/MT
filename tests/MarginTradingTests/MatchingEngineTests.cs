@@ -13,7 +13,7 @@ namespace MarginTradingTests
     public class MatchingEngineTests : BaseTests
     {
         private IQuoteCacheService _quoteCashService;
-        private IInternalMatchingEngine _matchingEngine;
+        private IMarketMakerMatchingEngine _matchingEngine;
         private string _marketMakerId1;
 
         [OneTimeSetUp]
@@ -23,7 +23,7 @@ namespace MarginTradingTests
             _marketMakerId1 = "1";
 
             _quoteCashService = Container.Resolve<IQuoteCacheService>();
-            _matchingEngine = Container.Resolve<IInternalMatchingEngine>();
+            _matchingEngine = Container.Resolve<IMarketMakerMatchingEngine>();
 
         }
 

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Lykke.Service.Assets.Client;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.MatchingEngines;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -38,7 +39,13 @@ namespace MarginTrading.DataReader.Controllers
         [Route("matchingEngines")]
         public string[] GetAllMatchingEngines()
         {
-            return MatchingEngineConstants.All;
+            //TODO: replace by Ids when ME infos will be stored in DB
+            return new[]
+            {
+                MatchingEngineConstants.LykkeVuMm,
+                MatchingEngineConstants.LykkeCyStp,
+                MatchingEngineConstants.Reject
+            };
         }
 
         [HttpGet]

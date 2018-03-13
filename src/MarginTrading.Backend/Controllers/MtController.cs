@@ -30,7 +30,7 @@ namespace MarginTrading.Backend.Controllers
         private readonly IMicrographCacheService _micrographCacheService;
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
         private readonly IAssetPairsCache _assetPairsCache;
-        private readonly IInternalMatchingEngine _matchingEngine;
+        private readonly IMarketMakerMatchingEngine _matchingEngine;
         private readonly ITradingEngine _tradingEngine;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly IMarginTradingOperationsLogService _operationsLogService;
@@ -47,7 +47,7 @@ namespace MarginTrading.Backend.Controllers
             IMicrographCacheService micrographCacheService,
             IAccountAssetsCacheService accountAssetsCacheService,
             IAssetPairsCache assetPairsCache,
-            IInternalMatchingEngine matchingEngine,
+            IMarketMakerMatchingEngine matchingEngine,
             ITradingEngine tradingEngine,
             IAccountsCacheService accountsCacheService,
             IMarginTradingOperationsLogService operationsLogService,

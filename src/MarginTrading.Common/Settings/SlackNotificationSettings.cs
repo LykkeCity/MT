@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Common.Settings
+﻿using Lykke.SettingsReader.Attributes;
+
+namespace MarginTrading.Common.Settings
 {
     public class SlackNotificationSettings
     {
@@ -7,6 +9,7 @@
     
     public class AzureQueueSettings
     {
+        [AzureQueueCheck]
         public string ConnectionString { get; set; }
 
         public string QueueName { get; set; }

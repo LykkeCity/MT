@@ -6,25 +6,30 @@ using MarginTrading.Backend.Core.Orderbooks;
 
 namespace MarginTrading.Backend.Services.MatchingEngines
 {
-    public class RejectMatchingEngine : IMatchingEngineBase
+    public class StpMatchingEngine : IStpMatchingEngine
     {
-        public string Id => MatchingEngineConstants.Reject;
+        public string Id { get; }
 
-        public MatchingEngineMode Mode => MatchingEngineMode.MarketMaker;
+        public MatchingEngineMode Mode => MatchingEngineMode.Stp;
 
+        public StpMatchingEngine(string id)
+        {
+            Id = id;
+        }
+        
         public void MatchMarketOrderForOpen(Order order, Func<MatchedOrderCollection, bool> orderProcessed)
         {
-            orderProcessed(new MatchedOrderCollection());
+            throw new NotImplementedException();
         }
 
         public void MatchMarketOrderForClose(Order order, Func<MatchedOrderCollection, bool> orderProcessed)
         {
-            orderProcessed(new MatchedOrderCollection());
+            throw new NotImplementedException();
         }
 
         public OrderBook GetOrderBook(string instrument)
         {
-            return new OrderBook(instrument);
+            throw new NotImplementedException();
         }
     }
 }
