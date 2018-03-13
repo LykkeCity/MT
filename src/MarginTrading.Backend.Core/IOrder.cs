@@ -9,7 +9,9 @@ namespace MarginTrading.Backend.Core
         string AccountId { get; }
         string TradingConditionId { get; }
         string AccountAssetId { get; }
+        //Matching Engine ID used for open
         string OpenOrderbookId { get; }
+        //Matching Engine ID used for close
         string CloseOrderbookId { get; }
         DateTime? OpenDate { get; }
         DateTime? CloseDate { get; }
@@ -33,6 +35,9 @@ namespace MarginTrading.Backend.Core
         string Comment { get; }
         MatchedOrderCollection MatchedCloseOrders { get; }
         decimal SwapCommission { get; }
+        string EquivalentAsset { get; }
+        decimal OpenPriceEquivalent { get; }
+        decimal ClosePriceEquivalent { get; }
     }
 
     public class Order : IOrder
@@ -60,6 +65,9 @@ namespace MarginTrading.Backend.Core
         public decimal CloseCommission { get; set; }
         public decimal CommissionLot { get; set; }
         public decimal SwapCommission { get; set; }
+        public string EquivalentAsset { get; set; }
+        public decimal OpenPriceEquivalent { get; set; }
+        public decimal ClosePriceEquivalent { get; set; }
         public DateTime? StartClosingDate { get; set; }
         public OrderStatus Status { get; set; }
         public OrderCloseReason CloseReason { get; set; }
@@ -126,13 +134,13 @@ namespace MarginTrading.Backend.Core
 
     public enum OrderUpdateType
     {
-        Open,
-        TakeProfitTrigger,
-        StopLossTrigger,
-        ExpectedOpenPriceTrigger,
-        Update,
-        ClosePending,
-        ClosePosition
+        Place,
+        Cancel,
+        Activate,
+        Reject,
+        Closing,
+        Close,
+        ChangeOrderLimits,
     }
 
     public static class OrderTypeExtension

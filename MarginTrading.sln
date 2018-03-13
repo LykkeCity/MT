@@ -51,16 +51,18 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.Contract", "s
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.Backend.Core.Mappers", "src\MarginTrading.Backend.Core.Mappers\MarginTrading.Backend.Core.Mappers.csproj", "{41948BD6-0CD9-4A2B-BAA3-02AD065AD52B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.Common.Settings", "src\MarginTrading.Common.Settings\MarginTrading.Common.Settings.csproj", "{3457039F-195E-4F3F-9BD4-285CA36CC1CB}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.AccountReportsBroker", "src\MarginTrading.Brokers\MarginTrading.AccountReportsBroker\MarginTrading.AccountReportsBroker.csproj", "{9595DED9-58C9-4732-87B1-891AFC2282B1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.Frontend.Tests", "tests\MarginTrading.Frontend.Tests\MarginTrading.Frontend.Tests.csproj", "{FE2B7AD8-4085-410A-8855-75F9FC650EFB}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.Backend.Contracts", "src\MarginTrading.Backend.Contracts\MarginTrading.Backend.Contracts.csproj", "{5EC22A63-BA3F-41A2-A70F-216B7E809390}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3. Backend", "3. Backend", "{1EA2FA6D-0FEA-47D9-B8CE-EF31A1C54DCD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.Backend.TestClient", "src\MarginTrading.Backend.TestClient\MarginTrading.Backend.TestClient.csproj", "{ADD09EC0-CED6-4C52-95B5-57101E0EA633}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.ExternalOrderBroker", "src\MarginTrading.Brokers\MarginTrading.ExternalOrderBroker\MarginTrading.ExternalOrderBroker.csproj", "{AE4DA150-F395-4E80-B1A2-2D0D4FDB89D8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.OrderbookBestPricesBroker", "src\MarginTrading.Brokers\MarginTrading.OrderbookBestPricesBroker\MarginTrading.OrderbookBestPricesBroker.csproj", "{B9DD492A-58CC-4716-879F-725AE2218AB7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -132,10 +134,6 @@ Global
 		{41948BD6-0CD9-4A2B-BAA3-02AD065AD52B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{41948BD6-0CD9-4A2B-BAA3-02AD065AD52B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{41948BD6-0CD9-4A2B-BAA3-02AD065AD52B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3457039F-195E-4F3F-9BD4-285CA36CC1CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3457039F-195E-4F3F-9BD4-285CA36CC1CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3457039F-195E-4F3F-9BD4-285CA36CC1CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3457039F-195E-4F3F-9BD4-285CA36CC1CB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9595DED9-58C9-4732-87B1-891AFC2282B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9595DED9-58C9-4732-87B1-891AFC2282B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9595DED9-58C9-4732-87B1-891AFC2282B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -152,6 +150,14 @@ Global
 		{ADD09EC0-CED6-4C52-95B5-57101E0EA633}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ADD09EC0-CED6-4C52-95B5-57101E0EA633}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ADD09EC0-CED6-4C52-95B5-57101E0EA633}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AE4DA150-F395-4E80-B1A2-2D0D4FDB89D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE4DA150-F395-4E80-B1A2-2D0D4FDB89D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE4DA150-F395-4E80-B1A2-2D0D4FDB89D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE4DA150-F395-4E80-B1A2-2D0D4FDB89D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9DD492A-58CC-4716-879F-725AE2218AB7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9DD492A-58CC-4716-879F-725AE2218AB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9DD492A-58CC-4716-879F-725AE2218AB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9DD492A-58CC-4716-879F-725AE2218AB7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -169,7 +175,6 @@ Global
 		{2228A223-02B8-472C-98BC-8F71E8F0F604} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
 		{88F0B500-1119-4292-A721-15B13BB1A4BA} = {A1366CA2-DF4A-4E38-BD6C-895A399118B4}
 		{08346EF4-8525-4CE0-93C4-CCE510D27D88} = {84F3857F-CE2C-4A87-ACB2-809570092CF6}
-		{3457039F-195E-4F3F-9BD4-285CA36CC1CB} = {84F3857F-CE2C-4A87-ACB2-809570092CF6}
 		{9595DED9-58C9-4732-87B1-891AFC2282B1} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
 		{FE2B7AD8-4085-410A-8855-75F9FC650EFB} = {F9EA3679-8D3F-4DC2-B0A9-08801E02EE70}
 		{5EC22A63-BA3F-41A2-A70F-216B7E809390} = {1EA2FA6D-0FEA-47D9-B8CE-EF31A1C54DCD}
@@ -178,6 +183,8 @@ Global
 		{5030E6AA-4DDE-41EC-AE8A-609C2D7D5D37} = {1EA2FA6D-0FEA-47D9-B8CE-EF31A1C54DCD}
 		{ADD09EC0-CED6-4C52-95B5-57101E0EA633} = {1EA2FA6D-0FEA-47D9-B8CE-EF31A1C54DCD}
 		{E6A712C9-78F1-4573-B3A4-318FA4A6BA0D} = {A1366CA2-DF4A-4E38-BD6C-895A399118B4}
+		{AE4DA150-F395-4E80-B1A2-2D0D4FDB89D8} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
+		{B9DD492A-58CC-4716-879F-725AE2218AB7} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {16BCEC97-771D-46F8-BD02-379A8FC34CDD}

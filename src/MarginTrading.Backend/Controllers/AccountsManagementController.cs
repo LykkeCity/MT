@@ -80,7 +80,7 @@ namespace MarginTrading.Backend.Controllers
         [ProducesResponseType(typeof(CloseAccountPositionsResponse), 200)]
         [Route("closePositions")]
         [HttpPost]
-        public async Task<CloseAccountPositionsResponse> GetAccountsMarginLevels([FromBody] CloseAccountPositionsRequest request)
+        public async Task<CloseAccountPositionsResponse> CloseAccountPositions([FromBody] CloseAccountPositionsRequest request)
         {
             request.RequiredNotNull(nameof(request));
             
@@ -121,7 +121,13 @@ namespace MarginTrading.Backend.Controllers
                 result.Results.Add(new CloseAccountPositionsResult
                 {
                     AccountId = accountId,
-                    ClosedPositions = closedOrders.Select(o => o.ToFullContract()).ToArray()
+                    ClosedPositions = closedOrders.Select(o =>
+                    {
+                        var orderUpdateType = o.Status == OrderStatus.Closing
+                            ? OrderUpdateType.Closing
+                            : OrderUpdateType.Close;
+                        return o.ToFullContract(orderUpdateType);
+                    }).ToArray()
                 });
             }
 
@@ -138,9 +144,7 @@ namespace MarginTrading.Backend.Controllers
         public async Task<MtBackendResponse<MarginTradingAccountModel>> SetTradingCondition(
             [FromBody] SetTradingConditionModel model)
         {
-            var tradingCondition = _tradingConditionsCacheService.GetTradingCondition(model.TradingConditionId);
-
-            if (tradingCondition == null)
+            if (!_tradingConditionsCacheService.IsTradingConditionExists(model.TradingConditionId))
             {
                 return MtBackendResponse<MarginTradingAccountModel>.Error(
                     $"No trading condition {model.TradingConditionId} found in cache");

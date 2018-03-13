@@ -1,7 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
 using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.Settings;
@@ -14,7 +12,7 @@ namespace MarginTrading.Backend.Core.Orderbooks
     /// <remarks>
     /// Not thread-safe!
     /// </remarks>
-    public class OrderBookList : IEnumerable<KeyValuePair<string, OrderBook>>
+    public class OrderBookList
     {
         private readonly MarginSettings _marginSettings;
 
@@ -33,16 +31,6 @@ namespace MarginTrading.Backend.Core.Orderbooks
         public void Init(Dictionary<string, OrderBook> orderBook)
         {
             _orderBooks = orderBook ?? new Dictionary<string, OrderBook>();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        public IEnumerator<KeyValuePair<string, OrderBook>> GetEnumerator()
-        {
-            return _orderBooks.GetEnumerator();
         }
 
         public MatchedOrderCollection Match(Order order, OrderDirection orderTypeToMatch, decimal volumeToMatch)
@@ -64,7 +52,7 @@ namespace MarginTrading.Backend.Core.Orderbooks
 
         public OrderBook GetOrderBook(string instrumentId)
         {
-            var orderbook = _orderBooks.GetValueOrDefault(instrumentId, k => new OrderBook());
+            var orderbook = _orderBooks.GetValueOrDefault(instrumentId, k => new OrderBook(instrumentId));
 
             return orderbook.Clone();
         }
@@ -110,7 +98,7 @@ namespace MarginTrading.Backend.Core.Orderbooks
             {
                 if (!_orderBooks.TryGetValue(order.Instrument, out var orderBook))
                 {
-                    orderBook = new OrderBook {Instrument = order.Instrument};
+                    orderBook = new OrderBook(order.Instrument);
                     _orderBooks.Add(order.Instrument, orderBook);
                 }
 

@@ -10,7 +10,6 @@ using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
-using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Backend.Services.TradingConditions;
 
 namespace MarginTrading.Backend.Services
@@ -22,19 +21,21 @@ namespace MarginTrading.Backend.Services
         private readonly IEventChannel<OrderPlacedEventArgs> _orderPlacedEventChannel;
         private readonly IEventChannel<OrderClosedEventArgs> _orderClosedEventChannel;
         private readonly IEventChannel<OrderCancelledEventArgs> _orderCancelledEventChannel;
+        private readonly IEventChannel<OrderLimitsChangedEventArgs> _orderLimitsChangesEventChannel;
+        private readonly IEventChannel<OrderClosingEventArgs> _orderClosingEventChannel;
+        private readonly IEventChannel<OrderActivatedEventArgs> _orderActivatedEventChannel;
+        private readonly IEventChannel<OrderRejectedEventArgs> _orderRejectedEventChannel;
 
         private readonly IQuoteCacheService _quoteCashService;
         private readonly IAccountUpdateService _accountUpdateService;
         private readonly ICommissionService _swapCommissionService;
         private readonly IValidateOrderService _validateOrderService;
-        private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
-        private readonly IClientNotifyService _notifyService;
+        private readonly IEquivalentPricesService _equivalentPricesService;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly OrdersCache _ordersCache;
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
         private readonly IMatchingEngineRouter _meRouter;
         private readonly IThreadSwitcher _threadSwitcher;
-        private readonly IMatchingEngineRepository _meRepository;
         private readonly IContextFactory _contextFactory;
         private readonly IAssetPairDayOffService _assetPairDayOffService;
 
@@ -43,20 +44,22 @@ namespace MarginTrading.Backend.Services
             IEventChannel<StopOutEventArgs> stopoutEventChannel,
             IEventChannel<OrderPlacedEventArgs> orderPlacedEventChannel,
             IEventChannel<OrderClosedEventArgs> orderClosedEventChannel,
-            IEventChannel<OrderCancelledEventArgs> orderCancelledEventChannel,
-
+            IEventChannel<OrderCancelledEventArgs> orderCancelledEventChannel, 
+            IEventChannel<OrderLimitsChangedEventArgs> orderLimitsChangesEventChannel,
+            IEventChannel<OrderClosingEventArgs> orderClosingEventChannel,
+            IEventChannel<OrderActivatedEventArgs> orderActivatedEventChannel, 
+            IEventChannel<OrderRejectedEventArgs> orderRejectedEventChannel,
+            
             IValidateOrderService validateOrderService,
             IQuoteCacheService quoteCashService,
             IAccountUpdateService accountUpdateService,
             ICommissionService swapCommissionService,
-            IClientNotifyService notifyService,
-            IRabbitMqNotifyService rabbitMqNotifyService,
+            IEquivalentPricesService equivalentPricesService,
             IAccountsCacheService accountsCacheService,
             OrdersCache ordersCache,
             IAccountAssetsCacheService accountAssetsCacheService,
             IMatchingEngineRouter meRouter,
             IThreadSwitcher threadSwitcher,
-            IMatchingEngineRepository meRepository, 
             IContextFactory contextFactory,
             IAssetPairDayOffService assetPairDayOffService)
         {
@@ -65,19 +68,21 @@ namespace MarginTrading.Backend.Services
             _orderPlacedEventChannel = orderPlacedEventChannel;
             _orderClosedEventChannel = orderClosedEventChannel;
             _orderCancelledEventChannel = orderCancelledEventChannel;
+            _orderActivatedEventChannel = orderActivatedEventChannel;
+            _orderClosingEventChannel = orderClosingEventChannel;
+            _orderLimitsChangesEventChannel = orderLimitsChangesEventChannel;
+            _orderRejectedEventChannel = orderRejectedEventChannel;
 
             _quoteCashService = quoteCashService;
             _accountUpdateService = accountUpdateService;
             _swapCommissionService = swapCommissionService;
             _validateOrderService = validateOrderService;
-            _rabbitMqNotifyService = rabbitMqNotifyService;
+            _equivalentPricesService = equivalentPricesService;
             _accountsCacheService = accountsCacheService;
             _ordersCache = ordersCache;
             _accountAssetsCacheService = accountAssetsCacheService;
-            _notifyService = notifyService;
             _meRouter = meRouter;
             _threadSwitcher = threadSwitcher;
-            _meRepository = meRepository;
             _contextFactory = contextFactory;
             _assetPairDayOffService = assetPairDayOffService;
         }
@@ -105,6 +110,8 @@ namespace MarginTrading.Backend.Services
 
         private Task<Order> PlaceMarketOrderByMatchingEngineAsync(Order order, IMatchingEngineBase matchingEngine)
         {
+            order.OpenOrderbookId = matchingEngine.Id;
+            
             matchingEngine.MatchMarketOrderForOpen(order, matchedOrders =>
             {
                 if (!matchedOrders.Any())
@@ -138,6 +145,8 @@ namespace MarginTrading.Backend.Services
                     return false;
                 }
 
+                _equivalentPricesService.EnrichOpeningOrder(order);
+                
                 MakeOrderActive(order);
 
                 return true;
@@ -145,7 +154,7 @@ namespace MarginTrading.Backend.Services
 
             if (order.Status == OrderStatus.Rejected)
             {
-                _rabbitMqNotifyService.OrderReject(order);
+                _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
             }
 
             return Task.FromResult(order);
@@ -158,20 +167,14 @@ namespace MarginTrading.Backend.Services
             order.RejectReason = reason;
             order.RejectReasonText = message;
             order.Comment = comment;
-
-            _rabbitMqNotifyService.OrderReject(order);
+            _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
         }
 
         private Task<Order> PlaceOrderByMarketPrice(Order order)
         {
             try
             {
-                var me = _meRouter.GetMatchingEngine(order.ClientId, order.TradingConditionId, order.Instrument, order.GetOrderType());
-                if (me == null)
-                    throw new Exception("Orderbook not found");
-
-                order.OpenOrderbookId = me.Id;
-                order.CloseOrderbookId = me.Id;
+                var me = _meRouter.GetMatchingEngineForOpen(order);
 
                 return PlaceMarketOrderByMatchingEngineAsync(order, me);
             }
@@ -195,7 +198,7 @@ namespace MarginTrading.Backend.Services
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
             _swapCommissionService.SetCommissionRates(account.TradingConditionId, account.BaseAssetId, order);
             _ordersCache.ActiveOrders.Add(order);
-            _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
+            _orderActivatedEventChannel.SendEvent(this, new OrderActivatedEventArgs(order));
         }
 
         //TODO: do check in other way??
@@ -206,8 +209,8 @@ namespace MarginTrading.Backend.Services
 
             order.MatchedOrders.AddRange(matchedOrders);
             order.OpenPrice = Math.Round(order.MatchedOrders.WeightedAveragePrice, order.AssetAccuracy);
-            
-            var defaultMatchingEngine = _meRepository.GetDefaultMatchingEngine();
+
+            var defaultMatchingEngine = _meRouter.GetMatchingEngineForClose(order);
             
             defaultMatchingEngine.MatchMarketOrderForClose(order, matchedOrdersForClose =>
             {
@@ -249,7 +252,7 @@ namespace MarginTrading.Backend.Services
             _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
         }
 
-        #region Orders waition for execution
+        #region Orders waiting for execution
         
         private void ProcessOrdersWaitingForExecution(string instrument)
         {
@@ -327,10 +330,10 @@ namespace MarginTrading.Backend.Services
                 var account = _accountsCacheService.Get(anyOrder.ClientId, anyOrder.AccountId);
                 var oldAccountLevel = account.GetAccountLevel();
 
-                var defaultMatchingEngine = _meRepository.GetDefaultMatchingEngine();
-
                 foreach (var order in accountOrders.Value)
                 {
+                    var defaultMatchingEngine = _meRouter.GetMatchingEngineForClose(order);
+                    
                     defaultMatchingEngine.MatchMarketOrderForClose(order, matchedOrders =>
                     {
                         if (matchedOrders.Count == 0)
@@ -385,17 +388,6 @@ namespace MarginTrading.Backend.Services
             order.StartClosingDate = DateTime.UtcNow;
             order.CloseReason = reason;
 
-            if (string.IsNullOrEmpty(order.CloseOrderbookId) ||
-                order.CloseOrderbookId == MatchingEngineConstants.Reject)
-            {
-                var me = _meRouter.GetMatchingEngine(order.ClientId, order.TradingConditionId, order.Instrument, order.GetCloseType());
-
-                if (me == null)
-                    throw new Exception("Orderbook not found");
-
-                order.CloseOrderbookId = me.Id;
-            }
-
             _ordersCache.ClosingOrders.Add(order);
             _ordersCache.ActiveOrders.Remove(order);
         }
@@ -412,6 +404,7 @@ namespace MarginTrading.Backend.Services
 
         private Task<Order> CloseActiveOrderByMatchingEngineAsync(Order order, OrderCloseReason reason, IMatchingEngineBase matchingEngine)
         {
+            order.CloseOrderbookId = matchingEngine.Id;
             order.StartClosingDate = DateTime.UtcNow;
             order.CloseReason = reason;
 
@@ -425,11 +418,14 @@ namespace MarginTrading.Backend.Services
                 
                 order.MatchedCloseOrders.AddRange(matchedOrders);
 
+                _equivalentPricesService.EnrichClosingOrder(order);
+
                 if (!order.GetIsCloseFullfilled())
                 {
                     order.Status = OrderStatus.Closing;
                     _ordersCache.ActiveOrders.Remove(order);
                     _ordersCache.ClosingOrders.Add(order);
+                    _orderClosingEventChannel.SendEvent(this, new OrderClosingEventArgs(order));
                 }
                 else
                 {
@@ -448,23 +444,8 @@ namespace MarginTrading.Backend.Services
         public Task<Order> CloseActiveOrderAsync(string orderId, OrderCloseReason reason)
         {
             var order = GetActiveOrderForClose(orderId);
-            IMatchingEngineBase me;
 
-            if (string.IsNullOrEmpty(order.CloseOrderbookId) ||
-                order.CloseOrderbookId == MatchingEngineConstants.Reject)
-            {
-                me = _meRouter.GetMatchingEngine(order.ClientId, order.TradingConditionId, order.Instrument,
-                    order.GetCloseType());
-
-                if (me == null)
-                    throw new Exception("Orderbook not found");
-
-                order.CloseOrderbookId = me.Id;
-            }
-            else
-            {
-                me = _meRepository.GetMatchingEngineById(order.CloseOrderbookId);
-            }
+            var me = _meRouter.GetMatchingEngineForClose(order);
 
             return CloseActiveOrderByMatchingEngineAsync(order, reason, me);
         }
@@ -523,7 +504,7 @@ namespace MarginTrading.Backend.Services
                 order.TakeProfit = tp.HasValue ? Math.Round(tp.Value, order.AssetAccuracy) : (decimal?)null;
                 order.StopLoss = sl.HasValue ? Math.Round(sl.Value, order.AssetAccuracy) : (decimal?)null;
                 order.ExpectedOpenPrice = expOpenPrice.HasValue ? Math.Round(expOpenPrice.Value, order.AssetAccuracy) : (decimal?)null;
-                _notifyService.NotifyOrderChanged(order);
+                _orderLimitsChangesEventChannel.SendEvent(this, new OrderLimitsChangedEventArgs(order));
             }
         }
 
@@ -546,7 +527,7 @@ namespace MarginTrading.Backend.Services
 
             foreach (var order in closingOrders)
             {
-                var me = _meRepository.GetMatchingEngineById(order.CloseOrderbookId);
+                var me = _meRouter.GetMatchingEngineForClose(order);
 
                 ProcessOrdersClosingByMatchingEngine(order, me);
             }
@@ -554,6 +535,8 @@ namespace MarginTrading.Backend.Services
 
         private void ProcessOrdersClosingByMatchingEngine(Order order, IMatchingEngineBase matchingEngine)
         {
+            order.CloseOrderbookId = matchingEngine.Id;
+            
             matchingEngine.MatchMarketOrderForClose(order, matchedOrders =>
             {
                 if (matchedOrders.Count == 0)

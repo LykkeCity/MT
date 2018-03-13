@@ -78,7 +78,10 @@ namespace MarginTrading.DataReader.Helpers
                 InterestRateSwap = src.FplData.SwapsSnapshot,
                 CommissionLot = src.CommissionLot,
                 OpenCommission = src.GetOpenCommission(),
-                CloseCommission = src.GetCloseCommission()
+                CloseCommission = src.GetCloseCommission(),
+                EquivalentAsset = src.EquivalentAsset,
+                OpenPriceEquivalent = src.OpenPriceEquivalent,
+                ClosePriceEquivalent = src.ClosePriceEquivalent
             };
         }
 
