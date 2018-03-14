@@ -118,7 +118,7 @@ namespace MarginTrading.Backend.Services.Notifications
         {
             return TryProduceMessageAsync(_settings.RabbitMqQueues.Trades.ExchangeName, trade);
         }
-
+        
         private async Task TryProduceMessageAsync(string exchangeName, object message)
         {
             string messageStr = null;

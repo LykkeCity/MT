@@ -61,6 +61,13 @@ namespace MarginTrading.Backend.Services.Stp
                 => dataExist ? CalculatePriceForClose(orderbooks) : null);
         }
 
+        //TODO: understand which orderbook should be used (best price? aggregated?)
+        public ExternalOrderBook GetOrderBook(string assetPairId)
+        {
+            return _orderbooks.TryReadValue(assetPairId,
+                (exists, assetPair, orderbooks) => orderbooks.Values.FirstOrDefault());
+        }
+
         private static decimal? MatchBestPriceForOrder(ExternalOrderBook externalOrderbook, IOrder order, bool isOpening)
         {
             var direction = isOpening ? order.GetOrderType() : order.GetCloseType();

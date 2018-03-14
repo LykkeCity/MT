@@ -9,6 +9,7 @@ using FluentAssertions;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.ClientAccount.Client.AutorestClient.Models;
 using Lykke.Service.ClientAccount.Client.Models;
+using Lykke.Service.ExchangeConnector.Client;
 using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.DayOffSettings;
@@ -150,6 +151,9 @@ namespace MarginTradingTests
             dayOffSettingsService.Setup(s => s.GetExclusions(It.IsNotNull<string>()))
                 .Returns(ImmutableArray<DayOffExclusion>.Empty);
             builder.RegisterInstance(dayOffSettingsService.Object).SingleInstance();
+
+            var exchangeConnector = Mock.Of<IExchangeConnectorService>();
+            builder.RegisterInstance(exchangeConnector).As<IExchangeConnectorService>();
 
             builder.RegisterBuildCallback(c => c.Resolve<AccountAssetsManager>());
             builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
