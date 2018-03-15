@@ -7,6 +7,11 @@ namespace MarginTrading.Backend.Contracts.Client
         public IMtBackendClient Demo { get; }
         public IMtBackendClient Live { get; }
 
+        public IMtBackendClient Get(bool isLive)
+        {
+            return isLive ? Live : Demo;
+        }
+
         public MtBackendClientsPair(IMtBackendClient demo, IMtBackendClient live)
         {
             Demo = demo ?? throw new ArgumentNullException(nameof(demo));
