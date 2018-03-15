@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Contract.BackendContracts;
 using MarginTrading.DataReader.Settings;
 using Microsoft.AspNetCore.Authorization;
@@ -55,6 +56,24 @@ namespace MarginTrading.DataReader.Controllers
         public async Task<IEnumerable<MarginTradingAccount>> GetAccountsByClientId(string clientId)
         {
             return (await _accountsRepository.GetAllAsync(clientId)).Select(MarginTradingAccount.Create);
+        }
+
+        /// <summary>
+        /// Returns account by it's Id
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        /// <exception cref="AccountNotFoundException"></exception>
+        [HttpGet]
+        [Route("byId/{id}")]
+        public async Task<MarginTradingAccount> GetAccountById(string id)
+        {
+            var account = await _accountsRepository.GetAsync(id);
+
+            if (account == null)
+                throw new AccountNotFoundException(id, "Account was not found.");
+            
+            return MarginTradingAccount.Create(account);
         }
 
         private static DataReaderAccountBackendContract ToBackendContract(IMarginTradingAccount src, bool isLive)
