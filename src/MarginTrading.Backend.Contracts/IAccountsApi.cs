@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using MarginTrading.DataReaderClient.Models;
+using MarginTrading.Contract.BackendContracts;
 using Refit;
 using DataReaderAccountBackendContract = MarginTrading.Contract.BackendContracts.DataReaderAccountBackendContract;
 
@@ -12,7 +12,7 @@ namespace MarginTrading.Backend.Contracts
         Task<IEnumerable<DataReaderAccountBackendContract>> GetAllAccounts();
 
         [Get("api/accounts/stats")]
-        Task<IEnumerable<MarginTradingAccountStats>> GetAllAccountStats();
+        Task<IEnumerable<DataReaderAccountStatsBackendContract>> GetAllAccountStats();
 
         [Get("api/accounts/byClient/{clientId}")]
         Task<IEnumerable<DataReaderAccountBackendContract>> GetAccountsByClientId(string clientId);
