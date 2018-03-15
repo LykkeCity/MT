@@ -44,7 +44,7 @@ namespace MarginTrading.DataReader.Controllers
         /// </summary>
         [HttpGet]
         [Route("stats")]
-        public async Task<IEnumerable<MarginTradingAccountStats>> GetAllAccountStats()
+        public async Task<IEnumerable<DataReaderAccountStatsBackendContract>> GetAllAccountStats()
         {
             return (await _accountStatsRepository.GetAllAsync()).Select(ToBackendContract);
         }
@@ -93,10 +93,10 @@ namespace MarginTrading.DataReader.Controllers
                 IsLive = isLive
             };
         }
-
-        private static MarginTradingAccountStats ToBackendContract(IMarginTradingAccountStats item)
+        
+        private static DataReaderAccountStatsBackendContract ToBackendContract(IMarginTradingAccountStats item)
         {
-            return new MarginTradingAccountStats
+            return new DataReaderAccountStatsBackendContract
             {
                 AccountId = item.AccountId,
                 BaseAssetId = item.BaseAssetId,
