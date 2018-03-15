@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Contract.BackendContracts;
 using MarginTrading.DataReader.Settings;
 using Microsoft.AspNetCore.Authorization;
@@ -49,13 +50,16 @@ namespace MarginTrading.DataReader.Controllers
         }
 
         /// <summary>
-        ///     Returns all accounts by client
+        /// Returns all accounts by client
         /// </summary>
+        /// <param name="clientId"></param>
+        /// <returns></returns>
         [HttpGet]
         [Route("byClient/{clientId}")]
-        public async Task<IEnumerable<MarginTradingAccount>> GetAccountsByClientId(string clientId)
+        public async Task<IEnumerable<DataReaderAccountBackendContract>> GetAccountsByClientId(string clientId)
         {
-            return (await _accountsRepository.GetAllAsync(clientId)).Select(MarginTradingAccount.Create);
+            return (await _accountsRepository.GetAllAsync(clientId))
+                .Select(x => ToBackendContract(MarginTradingAccount.Create(x), _dataReaderSettings.IsLive));
         }
 
         /// <summary>
@@ -66,14 +70,14 @@ namespace MarginTrading.DataReader.Controllers
         /// <exception cref="AccountNotFoundException"></exception>
         [HttpGet]
         [Route("byId/{id}")]
-        public async Task<MarginTradingAccount> GetAccountById(string id)
+        public async Task<DataReaderAccountBackendContract> GetAccountById(string id)
         {
             var account = await _accountsRepository.GetAsync(id);
 
             if (account == null)
                 throw new AccountNotFoundException(id, "Account was not found.");
             
-            return MarginTradingAccount.Create(account);
+            return ToBackendContract(MarginTradingAccount.Create(account), _dataReaderSettings.IsLive);
         }
 
         private static DataReaderAccountBackendContract ToBackendContract(IMarginTradingAccount src, bool isLive)
