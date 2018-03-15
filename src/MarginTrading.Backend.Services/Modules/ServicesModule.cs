@@ -1,7 +1,7 @@
 ﻿using Autofac;
-using Autofac.Features.Variance;
 using Autofac.Core;
 using Common.Log;
+using Autofac.Features.Variance;
 using Lykke.SettingsReader;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MarketMakerFeed;
