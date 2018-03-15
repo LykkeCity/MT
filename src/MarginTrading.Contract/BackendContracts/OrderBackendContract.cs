@@ -31,6 +31,5 @@ namespace MarginTrading.Contract.BackendContracts
         public string EquivalentAsset { get; set; }
         public decimal OpenPriceEquivalent{ get; set; }
         public decimal ClosePriceEquivalent { get; set; }
-
     }
 }

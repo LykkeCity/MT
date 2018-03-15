@@ -267,8 +267,9 @@ namespace MarginTrading.Frontend
                 settings.MarginTradingLive.MtRabbitMqConnString,
                 settings.MarginTradingFront.RabbitMqQueues.MarginTradingEnabledChanged.ExchangeName,
                 rabbitMqHandler.ProcessMarginTradingEnabledChanged);
-            
-            Subscribe<MarginTradingEnabledChangedMessage>(rabbitMqService, settings.MarginTradingDemo.MtRabbitMqConnString,
+
+            Subscribe<MarginTradingEnabledChangedMessage>(rabbitMqService,
+                settings.MarginTradingDemo.MtRabbitMqConnString,
                 settings.MarginTradingFront.RabbitMqQueues.MarginTradingEnabledChanged.ExchangeName,
                 rabbitMqHandler.ProcessMarginTradingEnabledChanged);
         }
