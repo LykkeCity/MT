@@ -42,6 +42,11 @@ namespace MarginTrading.Backend.Services.AssetPairs
             return _assetPairSettings.GetValueOrDefault(assetPairId);
         }
 
+        public IEnumerable<IAssetPairSettings> GetAssetPairSettings()
+        {
+            return _assetPairSettings.Values;
+        }
+
         public IEnumerable<IAssetPair> GetAll()
         {
             return _assetPairs.Values;

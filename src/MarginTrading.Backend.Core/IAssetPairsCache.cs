@@ -11,5 +11,6 @@ namespace MarginTrading.Backend.Core
         HashSet<string> GetAllIds();
         [CanBeNull] IAssetPair TryGetAssetPairById(string assetPairId);
         [CanBeNull] IAssetPairSettings GetAssetPairSettings(string assetPairId);
+        IEnumerable<IAssetPairSettings> GetAssetPairSettings();
     }
 }

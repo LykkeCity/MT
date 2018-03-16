@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
 using Lykke.Service.Assets.Client;
@@ -54,6 +55,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         public async Task<IAssetPairSettings> UpdateAssetPairSettings(IAssetPairSettings assetPairSettings)
         {
+            ValidateUniqueness(assetPairSettings);
             await _assetPairSettingsRepository.ReplaceAsync(assetPairSettings);
             InitAssetPairSettings();
             return _assetPairsCache.GetAssetPairSettings(assetPairSettings.AssetPairId)
@@ -73,6 +75,15 @@ namespace MarginTrading.Backend.Services.AssetPairs
             var settings = await _assetPairSettingsRepository.DeleteAsync(assetPairId);
             InitAssetPairSettings();
             return settings;
+        }
+
+        private void ValidateUniqueness(IAssetPairSettings newValue)
+        {
+            if (_assetPairsCache.GetAssetPairSettings().Any(s =>
+                s.AssetPairId != newValue.AssetPairId && s.BasePairId == newValue.BasePairId))
+            {
+                throw new InvalidOperationException($"BasePairId {newValue.BasePairId} cannot be added twice");
+            }
         }
     }
 }
