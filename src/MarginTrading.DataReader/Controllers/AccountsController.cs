@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.AzureRepositories;
+using MarginTrading.Backend.Contracts;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Mappers;
@@ -14,7 +15,7 @@ namespace MarginTrading.DataReader.Controllers
 {
     [Authorize]
     [Route("api/accounts")]
-    public class AccountsController : Controller
+    public class AccountsController : Controller, IAccountsApi
     {
         private readonly DataReaderSettings _dataReaderSettings;
         private readonly IMarginTradingAccountsRepository _accountsRepository;
