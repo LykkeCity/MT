@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using MarginTrading.Contract.BackendContracts;
+using MarginTrading.Backend.Contracts.Account;
 using Refit;
-using DataReaderAccountBackendContract = MarginTrading.Contract.BackendContracts.DataReaderAccountBackendContract;
 
 namespace MarginTrading.Backend.Contracts
 {
