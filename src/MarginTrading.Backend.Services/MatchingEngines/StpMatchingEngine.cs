@@ -92,13 +92,15 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                             Volume = (decimal) executionResult.Volume
                         }
                     };
+                    
+                    order.OpenExternalProviderId = price.source;
+                    order.OpenExternalOrderId = executionResult.ExchangeOrderId;
+
+                    _rabbitMqNotifyService.ExternalOrder(executionResult).GetAwaiter().GetResult();
 
                     if (orderProcessed(matchedOrders))
                     {
-                        order.OpenExternalProviderId = price.source;
-                        order.OpenExternalOrderId = executionResult.ExchangeOrderId;
-
-                        _rabbitMqNotifyService.ExternalOrder(executionResult).GetAwaiter().GetResult();
+                        return;
                     }
                     else
                     {
@@ -111,7 +113,9 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                             price.source,
                             externalAssetPair);
 
-                        _exchangeConnectorService.CreateOrderAsync(cancelOrderModel).GetAwaiter().GetResult();
+                        var cancelOrderResult = _exchangeConnectorService.CreateOrderAsync(cancelOrderModel).GetAwaiter().GetResult();
+                        
+                        _rabbitMqNotifyService.ExternalOrder(cancelOrderResult).GetAwaiter().GetResult();
                     }
 
                     return;
