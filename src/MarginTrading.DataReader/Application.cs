@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using Autofac;
-using MarginTrading.Backend.Contracts.RabbitMqMessages;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services.Settings;
 using MarginTrading.DataReader.Settings;

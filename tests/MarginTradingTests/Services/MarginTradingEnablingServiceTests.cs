@@ -3,7 +3,6 @@ using Common;
 using FluentAssertions;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.ClientAccount.Client.Models;
-using MarginTrading.Backend.Contracts.RabbitMqMessages;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;
 using MarginTrading.Common.RabbitMq;

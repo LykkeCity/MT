@@ -1,5 +1,4 @@
 ﻿using System.Threading.Tasks;
-using MarginTrading.Backend.Contracts.RabbitMqMessages;
 
 namespace MarginTrading.Common.Services.Settings
 {

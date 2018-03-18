@@ -4,7 +4,6 @@ using System.Reactive.Subjects;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
-using MarginTrading.Backend.Contracts.RabbitMqMessages;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
