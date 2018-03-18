@@ -31,5 +31,8 @@ namespace MarginTrading.Contract.BackendContracts
         public string OpenExternalProviderId { get; set; }
         public string CloseExternalOrderId { get; set; }
         public string CloseExternalProviderId { get; set; }
+        public MatchingEngineModeContract MatchingEngineMode => !string.IsNullOrEmpty(OpenExternalOrderId)
+            ? MatchingEngineModeContract.Stp
+            : MatchingEngineModeContract.MarketMaker;
     }
 }

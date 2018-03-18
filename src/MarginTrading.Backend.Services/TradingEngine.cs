@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Common.Log;
 using Lykke.Common;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
@@ -38,6 +39,7 @@ namespace MarginTrading.Backend.Services
         private readonly IThreadSwitcher _threadSwitcher;
         private readonly IContextFactory _contextFactory;
         private readonly IAssetPairDayOffService _assetPairDayOffService;
+        private readonly ILog _log;
 
         public TradingEngine(
             IEventChannel<MarginCallEventArgs> marginCallEventChannel,
@@ -61,7 +63,8 @@ namespace MarginTrading.Backend.Services
             IMatchingEngineRouter meRouter,
             IThreadSwitcher threadSwitcher,
             IContextFactory contextFactory,
-            IAssetPairDayOffService assetPairDayOffService)
+            IAssetPairDayOffService assetPairDayOffService,
+            ILog log)
         {
             _marginCallEventChannel = marginCallEventChannel;
             _stopoutEventChannel = stopoutEventChannel;
@@ -85,6 +88,7 @@ namespace MarginTrading.Backend.Services
             _threadSwitcher = threadSwitcher;
             _contextFactory = contextFactory;
             _assetPairDayOffService = assetPairDayOffService;
+            _log = log;
         }
 
         public async Task<Order> PlaceOrderAsync(Order order)
@@ -186,6 +190,7 @@ namespace MarginTrading.Backend.Services
             catch (Exception ex)
             {
                 RejectOrder(order, OrderRejectReason.TechnicalError, ex.Message);
+                _log.WriteError(nameof(TradingEngine), nameof(PlaceOrderByMarketPrice), ex);
                 return Task.FromResult(order);
             }
         }

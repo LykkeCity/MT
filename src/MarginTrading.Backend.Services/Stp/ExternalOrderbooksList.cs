@@ -42,7 +42,9 @@ namespace MarginTrading.Backend.Services.Stp
         public List<(string source, decimal? price)> GetPricesForOpen(IOrder order)
         {
             return _orderbooks.TryReadValue(order.Instrument, (dataExist, assetPairId, orderbooks)
-                => orderbooks.Select(p => (p.Key, MatchBestPriceForOrder(p.Value, order, true))).ToList());
+                => dataExist
+                    ? orderbooks.Select(p => (p.Key, MatchBestPriceForOrder(p.Value, order, true))).ToList()
+                    : null);
         }
 
         public decimal? GetPriceForClose(IOrder order)

@@ -49,6 +49,12 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         {
             var prices = _externalOrderBooksList.GetPricesForOpen(order);
 
+            if (prices == null)
+            {
+                orderProcessed(new MatchedOrderCollection());
+                return;
+            }
+            
             prices = order.GetOrderType() == OrderDirection.Buy
                 ? prices.OrderBy(tuple => tuple.price).ToList()
                 : prices.OrderByDescending(tuple => tuple.price).ToList();
