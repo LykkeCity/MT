@@ -92,8 +92,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
             if (_assetPairsCache.GetAssetPairSettings().Any(s =>
                 s.AssetPairId != newValue.AssetPairId &&
-                s.BasePairId == newValue.BasePairId &&
-                s.LegalEntity == newValue.LegalEntity))
+                s.BasePairId == newValue.BasePairId))
             {
                 throw new InvalidOperationException(
                     $"BasePairId {newValue.BasePairId} cannot be added twice in one Legal Entity {newValue.LegalEntity}");
