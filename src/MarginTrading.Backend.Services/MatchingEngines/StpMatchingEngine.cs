@@ -145,7 +145,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         public void MatchMarketOrderForClose(Order order, Func<MatchedOrderCollection, bool> orderProcessed)
         {
             var closePrice = _externalOrderBooksList.GetPriceForClose(order);
-            var closeLp = order.OpenExternalOrderId;
+            var closeLp = order.OpenExternalProviderId;
             var settings = _assetPairsCache.GetAssetPairSettings(order.Instrument);
             var externalAssetPair = settings?.BasePairId ?? order.Instrument;
 
