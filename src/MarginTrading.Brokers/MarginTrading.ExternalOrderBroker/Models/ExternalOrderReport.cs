@@ -61,7 +61,7 @@ namespace MarginTrading.ExternalOrderBroker.Models
 				Fee = externalContract.Fee,
 				Id = externalContract.ExchangeOrderId,
 				Status = externalContract.ExecutionStatus.ToString(),
-				Message = externalContract.Message
+				Message = externalContract.Message ?? ""
 			};
 		}
 	}
