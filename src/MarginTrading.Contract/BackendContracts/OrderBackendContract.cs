@@ -27,7 +27,6 @@ namespace MarginTrading.Contract.BackendContracts
         public decimal OpenCommission { get; set; }
         public decimal CloseCommission { get; set; }
         public decimal SwapCommission { get; set; }
-        public MatchingEngineModeContract MatchingEngineMode { get; set; }
         public string EquivalentAsset { get; set; }
         public decimal OpenPriceEquivalent{ get; set; }
         public decimal ClosePriceEquivalent { get; set; }
@@ -35,6 +34,10 @@ namespace MarginTrading.Contract.BackendContracts
         public string OpenExternalProviderId { get; set; }
         public string CloseExternalOrderId { get; set; }
         public string CloseExternalProviderId { get; set; }
+        
+        public MatchingEngineModeContract MatchingEngineMode => !string.IsNullOrEmpty(OpenExternalOrderId)
+            ? MatchingEngineModeContract.Stp
+            : MatchingEngineModeContract.MarketMaker;
 
     }
 }
