@@ -1,4 +1,5 @@
-﻿using MarginTrading.Contract.BackendContracts;
+﻿using MarginTrading.Backend.Contracts.Account;
+using MarginTrading.Contract.BackendContracts;
 using Newtonsoft.Json;
 
 namespace MarginTrading.Backend.Services.Notifications

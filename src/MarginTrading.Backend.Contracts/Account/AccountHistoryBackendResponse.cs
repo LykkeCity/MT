@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace MarginTrading.Contract.BackendContracts
+namespace MarginTrading.Backend.Contracts.Account
 {
     public class AccountHistoryBackendResponse
     {

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net;
 using System.Net.Http;
 using MarginTrading.Backend.Contracts.Client;
 using Refit;

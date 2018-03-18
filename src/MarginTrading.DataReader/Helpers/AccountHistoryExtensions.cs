@@ -1,4 +1,5 @@
-﻿using MarginTrading.Backend.Core;
+﻿using MarginTrading.Backend.Contracts.Account;
+using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Contract.BackendContracts;
@@ -19,7 +20,7 @@ namespace MarginTrading.DataReader.Helpers
                 Balance = src.Balance,
                 WithdrawTransferLimit = src.WithdrawTransferLimit,
                 Comment = src.Comment,
-                Type = src.Type.ToType<AccountHistoryTypeContract>(),
+                Type = src.Type.ToType<Backend.Contracts.Account.AccountHistoryTypeContract>(),
                 OrderId = src.OrderId,
                 LegalEntity = src.LegalEntity,
             };

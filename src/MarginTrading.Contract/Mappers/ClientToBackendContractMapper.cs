@@ -25,17 +25,6 @@ namespace MarginTrading.Contract.Mappers
             };
         }
 
-        public static AccountHistoryBackendRequest ToBackendContract(this AccountHistoryFiltersClientRequest src, string clientId)
-        {
-            return new AccountHistoryBackendRequest
-            {
-                AccountId = src.AccountId,
-                ClientId = clientId,
-                From = src.From,
-                To = src.To
-            };
-        }
-
         public static NewOrderBackendContract ToBackendContract(this NewOrderClientContract src)
         {
             return new NewOrderBackendContract

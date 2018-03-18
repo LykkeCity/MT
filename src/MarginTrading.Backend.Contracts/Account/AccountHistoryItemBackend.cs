@@ -1,7 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 
-namespace MarginTrading.Contract.BackendContracts
+namespace MarginTrading.Backend.Contracts.Account
 {
     public class AccountHistoryItemBackend
     {

@@ -132,59 +132,6 @@ namespace MarginTrading.Contract.Mappers
             };
         }
 
-        public static AccountHistoryClientContract ToClientContract(this AccountHistoryBackendContract src)
-        {
-            return new AccountHistoryClientContract
-            {
-                Id = src.Id,
-                Date = src.Date,
-                AccountId = src.AccountId,
-                ClientId = src.ClientId,
-                Amount = src.Amount,
-                Balance = src.Balance,
-                WithdrawTransferLimit = src.WithdrawTransferLimit,
-                Comment = src.Comment,
-                Type = src.Type,
-                LegalEnity = src.LegalEntity,
-            };
-        }
-
-        public static OrderHistoryClientContract ToClientContract(this OrderHistoryBackendContract src)
-        {
-            return new OrderHistoryClientContract
-            {
-                Id = src.Id,
-                AccountId = src.AccountId,
-                Instrument = src.Instrument,
-                AssetAccuracy = src.AssetAccuracy,
-                Type = src.Type,
-                Status = src.Status,
-                CloseReason = src.CloseReason,
-                OpenDate = src.OpenDate,
-                CloseDate = src.CloseDate,
-                OpenPrice = src.OpenPrice,
-                ClosePrice = src.ClosePrice,
-                Volume = src.Volume,
-                TakeProfit = src.TakeProfit,
-                StopLoss = src.StopLoss,
-                TotalPnL = src.TotalPnl,
-                PnL = src.Pnl,
-                InterestRateSwap = src.InterestRateSwap,
-                OpenCommission = src.OpenCommission,
-                CloseCommission = src.CloseCommission
-            };
-        }
-
-        public static AccountHistoryClientResponse ToClientContract(this AccountHistoryBackendResponse src)
-        {
-            return new AccountHistoryClientResponse
-            {
-                Account = src.Account.Select(item => item.ToClientContract()).OrderByDescending(item => item.Date).ToArray(),
-                OpenPositions = src.OpenPositions.Select(item => item.ToClientContract()).ToArray(),
-                PositionsHistory = src.PositionsHistory.Select(item => item.ToClientContract()).ToArray()
-            };
-        }
-
         public static NewOrderClientContract ToClientContract(this NewOrderBackendContract src)
         {
             return new NewOrderClientContract
@@ -313,21 +260,6 @@ namespace MarginTrading.Contract.Mappers
                 Orders = src.Orders.Select(item => item.ToClientContract()).ToArray(),
                 Positions = src.Positions.Select(item => item.ToClientContract()).ToArray()
             };
-        }
-
-        public static AccountHistoryItemClient ToClientContract(this AccountHistoryItemBackend src)
-        {
-            return new AccountHistoryItemClient
-            {
-                Date = src.Date,
-                Account = src.Account?.ToClientContract(),
-                Position = src.Position?.ToClientContract()
-            };
-        }
-
-        public static AccountHistoryItemClient[] ToClientContract(this AccountNewHistoryBackendResponse src)
-        {
-            return src.HistoryItems.Select(item => item.ToClientContract()).ToArray();
         }
 
         public static BidAskClientContract ToClientContract(this InstrumentBidAskPairContract src)
