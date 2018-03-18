@@ -22,6 +22,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         private readonly ILog _log;
         private readonly IDateService _dateService;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
+        private readonly IAssetPairsCache _assetPairsCache;
         public string Id { get; }
 
         public MatchingEngineMode Mode => MatchingEngineMode.Stp;
@@ -31,13 +32,15 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             IExchangeConnectorService exchangeConnectorService,
             ILog log,
             IDateService dateService,
-            IRabbitMqNotifyService rabbitMqNotifyService)
+            IRabbitMqNotifyService rabbitMqNotifyService,
+            IAssetPairsCache assetPairsCache)
         {
             _externalOrderBooksList = externalOrderBooksList;
             _exchangeConnectorService = exchangeConnectorService;
             _log = log;
             _dateService = dateService;
             _rabbitMqNotifyService = rabbitMqNotifyService;
+            _assetPairsCache = assetPairsCache;
             Id = id;
         }
         
@@ -74,7 +77,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                             MarketMakerId = price.source,
                             MatchedDate = _dateService.Now(),
                             OrderId = executionResult.ExchangeOrderId,
-                            Price = (decimal) executionResult.Price,
+                            Price = CalculatePriceWithMarkups(order.Instrument, order.GetOrderType(), executionResult.Price),
                             Volume = (decimal) executionResult.Volume
                         }
                     };
@@ -156,7 +159,8 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
                     order.CloseExternalProviderId = closeLp;
                     order.CloseExternalOrderId = executionResult.ExchangeOrderId;
-                    order.ClosePrice = (decimal) executionResult.Price;
+                    order.ClosePrice =
+                        CalculatePriceWithMarkups(order.Instrument, order.GetCloseType(), executionResult.Price);
                     
                     _rabbitMqNotifyService.ExternalOrder(executionResult).GetAwaiter().GetResult();
                 }
@@ -168,11 +172,25 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         }
 
         //TODO: implement orderbook        
-        public OrderBook GetOrderBook(string instrument)
+        public OrderBook GetOrderBook(string assetPairId)
         {
             //var orderbook = _externalOrderBooksList.GetOrderBook(instrument);
             
-            return new OrderBook(instrument);
+            return new OrderBook(assetPairId);
+        }
+
+        private decimal CalculatePriceWithMarkups(string assetPairId, OrderDirection direction, double sourcePrice)
+        {
+            var settings = _assetPairsCache.GetAssetPairSettings(assetPairId);
+
+            if (settings == null)
+                return (decimal) sourcePrice;
+
+            var markup = direction == OrderDirection.Buy ? settings.MultiplierMarkupAsk : settings.MultiplierMarkupBid;
+
+            markup = markup != 0 ? markup : 1;
+
+            return (decimal) sourcePrice * markup;
         }
     }
 }
