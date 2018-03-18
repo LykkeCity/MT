@@ -1,5 +1,6 @@
 ﻿using System;
 using MarginTrading.Backend.Core.MatchedOrders;
+using MarginTrading.Backend.Core.MatchingEngines;
 
 namespace MarginTrading.Backend.Core
 {
@@ -52,6 +53,8 @@ namespace MarginTrading.Backend.Core
         
         string CloseExternalProviderId { get; }
         
+        MatchingEngineMode MatchingEngineMode { get; }
+
         #endregion
     }
 
@@ -97,6 +100,7 @@ namespace MarginTrading.Backend.Core
         public string Comment { get; set; }
         public MatchedOrderCollection MatchedOrders { get; set; } = new MatchedOrderCollection();
         public MatchedOrderCollection MatchedCloseOrders { get; set; } = new MatchedOrderCollection();
+        public MatchingEngineMode MatchingEngineMode { get; set; }
 
         public FplData FplData { get; set; } = new FplData();
     }

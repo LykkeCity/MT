@@ -115,6 +115,7 @@ namespace MarginTrading.Backend.Services
         private Task<Order> PlaceMarketOrderByMatchingEngineAsync(Order order, IMatchingEngineBase matchingEngine)
         {
             order.OpenOrderbookId = matchingEngine.Id;
+            order.MatchingEngineMode = matchingEngine.Mode;
             
             matchingEngine.MatchMarketOrderForOpen(order, matchedOrders =>
             {
@@ -251,6 +252,9 @@ namespace MarginTrading.Backend.Services
 
         private void PlacePendingOrder(Order order)
         {
+            var me = _meRouter.GetMatchingEngineForOpen(order);
+            order.MatchingEngineMode = me.Mode;
+            
             using (_contextFactory.GetWriteSyncContext($"{nameof(TradingEngine)}.{nameof(PlacePendingOrder)}"))
                 _ordersCache.WaitingForExecutionOrders.Add(order);
 

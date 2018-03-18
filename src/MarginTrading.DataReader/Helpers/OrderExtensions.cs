@@ -85,7 +85,8 @@ namespace MarginTrading.DataReader.Helpers
                 OpenExternalOrderId = src.OpenExternalOrderId,
                 OpenExternalProviderId = src.OpenExternalProviderId,
                 CloseExternalOrderId = src.CloseExternalOrderId,
-                CloseExternalProviderId = src.CloseExternalProviderId
+                CloseExternalProviderId = src.CloseExternalProviderId,
+                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>()
             };
         }
 
