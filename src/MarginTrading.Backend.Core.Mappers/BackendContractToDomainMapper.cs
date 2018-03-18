@@ -81,7 +81,11 @@ namespace MarginTrading.Backend.Core.Mappers
                 EquivalentAsset = src.EquivalentAsset,
                 OpenPriceEquivalent = src.OpenPriceEquivalent,
                 ClosePriceEquivalent = src.ClosePriceEquivalent,
-                OrderUpdateType = src.OrderUpdateType.ToType<OrderUpdateType>()
+                OrderUpdateType = src.OrderUpdateType.ToType<OrderUpdateType>(),
+                OpenExternalOrderId = src.OpenExternalOrderId,
+                OpenExternalProviderId = src.OpenExternalProviderId,
+                CloseExternalOrderId = src.CloseExternalOrderId,
+                CloseExternalProviderId = src.CloseExternalProviderId
             };
 
             foreach (var order in src.MatchedOrders)

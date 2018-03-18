@@ -8,6 +8,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
+using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
@@ -20,6 +21,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         private readonly IExchangeConnectorService _exchangeConnectorService;
         private readonly ILog _log;
         private readonly IDateService _dateService;
+        private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         public string Id { get; }
 
         public MatchingEngineMode Mode => MatchingEngineMode.Stp;
@@ -28,12 +30,14 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             ExternalOrderBooksList externalOrderBooksList,
             IExchangeConnectorService exchangeConnectorService,
             ILog log,
-            IDateService dateService)
+            IDateService dateService,
+            IRabbitMqNotifyService rabbitMqNotifyService)
         {
             _externalOrderBooksList = externalOrderBooksList;
             _exchangeConnectorService = exchangeConnectorService;
             _log = log;
             _dateService = dateService;
+            _rabbitMqNotifyService = rabbitMqNotifyService;
             Id = id;
         }
         
@@ -79,6 +83,8 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                     {
                         order.OpenExternalProviderId = price.source;
                         order.OpenExternalOrderId = executionResult.ExchangeOrderId;
+
+                        _rabbitMqNotifyService.ExternalOrder(executionResult).GetAwaiter().GetResult();
                     }
                     else
                     {
@@ -151,6 +157,8 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                     order.CloseExternalProviderId = closeLp;
                     order.CloseExternalOrderId = executionResult.ExchangeOrderId;
                     order.ClosePrice = (decimal) executionResult.Price;
+                    
+                    _rabbitMqNotifyService.ExternalOrder(executionResult).GetAwaiter().GetResult();
                 }
                 catch (Exception e)
                 {

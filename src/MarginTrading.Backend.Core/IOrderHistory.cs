@@ -52,6 +52,11 @@ namespace MarginTrading.Backend.Core
         decimal CloseCrossPrice { get; }
         
         OrderUpdateType OrderUpdateType { get; }
+        
+        string OpenExternalOrderId { get; }
+        string OpenExternalProviderId { get; }
+        string CloseExternalOrderId { get; }
+        string CloseExternalProviderId { get; }
     }
 
     public class OrderHistory : IOrderHistory
@@ -100,5 +105,9 @@ namespace MarginTrading.Backend.Core
         public decimal OpenCrossPrice { get; set; }
         public decimal CloseCrossPrice { get; set; }
         public OrderUpdateType OrderUpdateType { get; set; }
+        public string OpenExternalOrderId { get; set; }
+        public string OpenExternalProviderId { get; set; }
+        public string CloseExternalOrderId { get; set; }
+        public string CloseExternalProviderId { get; set; }
     }
 }
