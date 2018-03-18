@@ -62,7 +62,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             var settings = _assetPairsCache.GetAssetPairSettings(order.Instrument);
             var externalAssetPair = settings?.BasePairId ?? order.Instrument;
 
-            foreach (var price in prices)
+            foreach (var sourcePrice in prices)
             {
                 var externalOrderModel = new OrderModel();
                 
@@ -74,26 +74,30 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                         TimeInForce.FillOrKill,
                         (double) Math.Abs(order.Volume),
                         _dateService.Now(),
-                        price.source,
+                        sourcePrice.source,
                         externalAssetPair);
 
                     var executionResult = _exchangeConnectorService.CreateOrderAsync(externalOrderModel).GetAwaiter()
                         .GetResult();
+
+                    var executedPrice = Math.Abs(executionResult.Price) > 0
+                        ? (decimal) executionResult.Price
+                        : sourcePrice.price.Value;
 
                     var matchedOrders = new MatchedOrderCollection
                     {
                         new MatchedOrder
                         {
                             ClientId = order.ClientId,
-                            MarketMakerId = price.source,
+                            MarketMakerId = sourcePrice.source,
                             MatchedDate = _dateService.Now(),
                             OrderId = executionResult.ExchangeOrderId,
-                            Price = CalculatePriceWithMarkups(settings, order.GetOrderType(), executionResult.Price),
+                            Price = CalculatePriceWithMarkups(settings, order.GetOrderType(), executedPrice),
                             Volume = (decimal) executionResult.Volume
                         }
                     };
                     
-                    order.OpenExternalProviderId = price.source;
+                    order.OpenExternalProviderId = sourcePrice.source;
                     order.OpenExternalOrderId = executionResult.ExchangeOrderId;
 
                     _rabbitMqNotifyService.ExternalOrder(executionResult).GetAwaiter().GetResult();
@@ -110,7 +114,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                             TimeInForce.FillOrKill,
                             (double) Math.Abs(order.Volume),
                             _dateService.Now(),
-                            price.source,
+                            sourcePrice.source,
                             externalAssetPair);
 
                         var cancelOrderResult = _exchangeConnectorService.CreateOrderAsync(cancelOrderModel).GetAwaiter().GetResult();
@@ -177,10 +181,14 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 
                     var executionResult = _exchangeConnectorService.CreateOrderAsync(externalOrderModel).GetAwaiter().GetResult();
 
+                    var executedPrice = Math.Abs(executionResult.Price) > 0
+                        ? (decimal) executionResult.Price
+                        : closePrice.Value;
+                    
                     order.CloseExternalProviderId = closeLp;
                     order.CloseExternalOrderId = executionResult.ExchangeOrderId;
                     order.ClosePrice =
-                        CalculatePriceWithMarkups(settings, order.GetCloseType(), executionResult.Price);
+                        CalculatePriceWithMarkups(settings, order.GetCloseType(), executedPrice);
                     
                     _rabbitMqNotifyService.ExternalOrder(executionResult).GetAwaiter().GetResult();
                 }
@@ -199,7 +207,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             return new OrderBook(assetPairId);
         }
 
-        private decimal CalculatePriceWithMarkups(AssetPairSettings settings, OrderDirection direction, double sourcePrice)
+        private decimal CalculatePriceWithMarkups(AssetPairSettings settings, OrderDirection direction, decimal sourcePrice)
         {
             if (settings == null)
                 return (decimal) sourcePrice;
