@@ -165,7 +165,11 @@ namespace MarginTrading.Backend.Core.Mappers
                 CloseCommission = src.CloseCommission,
                 EquivalentAsset = src.EquivalentAsset,
                 OpenPriceEquivalent = src.OpenPriceEquivalent,
-                ClosePriceEquivalent = src.ClosePriceEquivalent
+                ClosePriceEquivalent = src.ClosePriceEquivalent,
+                OpenExternalOrderId = src.OpenExternalOrderId,
+                OpenExternalProviderId = src.OpenExternalProviderId,
+                CloseExternalOrderId = src.CloseExternalOrderId,
+                CloseExternalProviderId = src.CloseExternalProviderId
             };
         }
 
@@ -195,7 +199,11 @@ namespace MarginTrading.Backend.Core.Mappers
                 CloseCommission = src.CloseCommission,
                 EquivalentAsset = src.EquivalentAsset,
                 OpenPriceEquivalent = src.OpenPriceEquivalent,
-                ClosePriceEquivalent = src.ClosePriceEquivalent
+                ClosePriceEquivalent = src.ClosePriceEquivalent,
+                OpenExternalOrderId = src.OpenExternalOrderId,
+                OpenExternalProviderId = src.OpenExternalProviderId,
+                CloseExternalOrderId = src.CloseExternalOrderId,
+                CloseExternalProviderId = src.CloseExternalProviderId
             };
         }
 
@@ -285,7 +293,7 @@ namespace MarginTrading.Backend.Core.Mappers
                 MarginMaintenance = src.GetMarginMaintenance(),
                 OpenCrossPrice = src.GetOpenCrossPrice(),
                 CloseCrossPrice = src.GetCloseCrossPrice(),
-                OrderUpdateType = orderUpdateType.ToType<OrderUpdateTypeContract>(),
+                OrderUpdateType = orderUpdateType.ToType<OrderUpdateTypeContract>()
             };
 
             foreach (var order in src.MatchedOrders)

@@ -14,22 +14,36 @@ namespace MarginTrading.Backend.Core.Mappers
             return new AccountHistoryBackendResponse
             {
                 Account = accounts.Select(item => item.ToBackendContract()).ToArray(),
-                OpenPositions = openPositions.Select(item => item.ToBackendHistoryContract()).OrderByDescending(item => item.OpenDate).ToArray(),
-                PositionsHistory = historyOrders.Select(item => item.ToBackendHistoryContract()).OrderByDescending(item => item.OpenDate).ToArray(),
+                OpenPositions = openPositions.Select(item => item.ToBackendHistoryContract())
+                    .OrderByDescending(item => item.OpenDate).ToArray(),
+                PositionsHistory = historyOrders.Where(item => item.OpenDate.HasValue && item.CloseDate.HasValue)
+                    .Select(item => item.ToBackendHistoryContract()).OrderByDescending(item => item.OpenDate).ToArray()
             };
         }
         
         public static AccountNewHistoryBackendResponse CreateAccountNewHistoryBackendResponse(IEnumerable<IMarginTradingAccountHistory> accounts, IEnumerable<IOrder> openOrders, IEnumerable<IOrderHistory> historyOrders)
         {
             var items = new List<AccountHistoryItemBackend>();
-            var history = historyOrders.Where(item => item.OpenDate.HasValue).ToList();
+            var history = historyOrders.Where(item => item.OpenDate.HasValue && item.CloseDate.HasValue).ToList();
 
             items.AddRange(accounts.Select(item => new AccountHistoryItemBackend { Account = item.ToBackendContract(), Date = item.Date }).ToList());
 
             items.AddRange(openOrders.Select(item => new AccountHistoryItemBackend { Position = item.ToBackendHistoryContract(), Date = item.OpenDate.Value }).ToList());
 
-            items.AddRange(history.Select(item => new AccountHistoryItemBackend { Position = item.ToBackendHistoryOpenedContract(), Date = item.OpenDate.Value }).ToList());
-            items.AddRange(history.Select(item => new AccountHistoryItemBackend { Position = item.ToBackendHistoryContract(), Date = item.CloseDate.Value }).ToList());
+            items.AddRange(history.Select(item =>
+                new AccountHistoryItemBackend
+                {
+                    Position = item.ToBackendHistoryOpenedContract(),
+                    Date = item.OpenDate.Value
+                }).ToList());
+            
+            items.AddRange(history.Select(item =>
+                    new AccountHistoryItemBackend
+ {
+                        Position = item.ToBackendHistoryContract(),
+                        Date = item.CloseDate.Value
+                    })
+                .ToList());
 
             items = items.OrderByDescending(item => item.Date).ToList();
 

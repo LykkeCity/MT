@@ -207,16 +207,16 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             return new OrderBook(assetPairId);
         }
 
-        private decimal CalculatePriceWithMarkups(AssetPairSettings settings, OrderDirection direction, decimal sourcePrice)
+        private decimal CalculatePriceWithMarkups(IAssetPairSettings settings, OrderDirection direction, decimal sourcePrice)
         {
             if (settings == null)
-                return (decimal) sourcePrice;
+                return sourcePrice;
 
             var markup = direction == OrderDirection.Buy ? settings.MultiplierMarkupAsk : settings.MultiplierMarkupBid;
 
             markup = markup != 0 ? markup : 1;
 
-            return (decimal) sourcePrice * markup;
+            return sourcePrice * markup;
         }
     }
 }
