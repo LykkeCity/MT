@@ -55,9 +55,11 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
             foreach (var price in prices)
             {
+                var externalOrderModel = new OrderModel();
+                
                 try
                 {
-                    var externalOrderModel = new OrderModel(
+                    externalOrderModel = new OrderModel(
                         order.GetOrderType().ToType<TradeType>(),
                         OrderType.Market,
                         TimeInForce.FillOrKill,
@@ -107,7 +109,8 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 }
                 catch (Exception e)
                 {
-                    _log.WriteErrorAsync(nameof(StpMatchingEngine), nameof(MatchMarketOrderForOpen), order.ToJson(), e);
+                    _log.WriteErrorAsync(nameof(StpMatchingEngine), nameof(MatchMarketOrderForOpen),
+                        $"Internal order: {order.ToJson()}, External order model: {externalOrderModel.ToJson()}", e);
                 }
             }
 
@@ -144,9 +147,11 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
             if (orderProcessed(matchedOrders))
             {
+                var externalOrderModel = new OrderModel();
+                
                 try
                 {
-                    var orderModel = new OrderModel(
+                    externalOrderModel = new OrderModel(
                         order.GetCloseType().ToType<TradeType>(), 
                         OrderType.Market,
                         TimeInForce.FillOrKill, 
@@ -155,7 +160,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                         closeLp,
                         order.Instrument);
                 
-                    var executionResult = _exchangeConnectorService.CreateOrderAsync(orderModel).GetAwaiter().GetResult();
+                    var executionResult = _exchangeConnectorService.CreateOrderAsync(externalOrderModel).GetAwaiter().GetResult();
 
                     order.CloseExternalProviderId = closeLp;
                     order.CloseExternalOrderId = executionResult.ExchangeOrderId;
@@ -166,7 +171,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 }
                 catch (Exception e)
                 {
-                    _log.WriteErrorAsync(nameof(StpMatchingEngine), nameof(MatchMarketOrderForClose), order.ToJson(), e);
+                    _log.WriteErrorAsync(nameof(StpMatchingEngine), nameof(MatchMarketOrderForClose), $"Internal order: {order.ToJson()}, External order model: {externalOrderModel.ToJson()}", e);
                 }
             }
         }
