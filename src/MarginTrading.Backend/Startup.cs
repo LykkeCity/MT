@@ -118,7 +118,6 @@ namespace MarginTrading.Backend
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory,
             IApplicationLifetime appLifetime)
         {
-            MiddlewareApplicationBuilderExtensions.UseLykkeMiddleware(app);
             app.UseMiddleware<GlobalErrorHandlerMiddleware>();
             app.UseMiddleware<MaintenanceModeMiddleware>();
             app.UseAuthentication();

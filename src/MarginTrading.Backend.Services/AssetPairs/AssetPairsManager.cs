@@ -55,7 +55,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         public async Task<IAssetPairSettings> UpdateAssetPairSettings(IAssetPairSettings assetPairSettings)
         {
-            ValidateUniqueness(assetPairSettings);
+            ValidateSettings(assetPairSettings);
             await _assetPairSettingsRepository.ReplaceAsync(assetPairSettings);
             InitAssetPairSettings();
             return _assetPairsCache.GetAssetPairSettings(assetPairSettings.AssetPairId)
@@ -64,6 +64,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         public async Task<IAssetPairSettings> InsertAssetPairSettings(IAssetPairSettings assetPairSettings)
         {
+            ValidateSettings(assetPairSettings);
             await _assetPairSettingsRepository.InsertAsync(assetPairSettings);
             InitAssetPairSettings();
             return _assetPairsCache.GetAssetPairSettings(assetPairSettings.AssetPairId)
@@ -77,12 +78,25 @@ namespace MarginTrading.Backend.Services.AssetPairs
             return settings;
         }
 
-        private void ValidateUniqueness(IAssetPairSettings newValue)
+        private void ValidateSettings(IAssetPairSettings newValue)
         {
-            if (_assetPairsCache.GetAssetPairSettings().Any(s =>
-                s.AssetPairId != newValue.AssetPairId && s.BasePairId == newValue.BasePairId))
+            if (_assetPairsCache.TryGetAssetPairById(newValue.AssetPairId) == null)
             {
-                throw new InvalidOperationException($"BasePairId {newValue.BasePairId} cannot be added twice");
+                throw new InvalidOperationException($"AssetPairId {newValue.AssetPairId} does not exist");
+            }
+
+            if (_assetPairsCache.TryGetAssetPairById(newValue.BasePairId) == null)
+            {
+                throw new InvalidOperationException($"BasePairId {newValue.BasePairId} does not exist");
+            }
+
+            if (_assetPairsCache.GetAssetPairSettings().Any(s =>
+                s.AssetPairId != newValue.AssetPairId &&
+                s.BasePairId == newValue.BasePairId &&
+                s.LegalEntity == newValue.LegalEntity))
+            {
+                throw new InvalidOperationException(
+                    $"BasePairId {newValue.BasePairId} cannot be added twice in one Legal Entity {newValue.LegalEntity}");
             }
         }
     }
