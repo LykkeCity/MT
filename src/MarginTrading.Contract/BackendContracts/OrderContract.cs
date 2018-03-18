@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace MarginTrading.Contract.BackendContracts
 {
@@ -45,6 +47,7 @@ namespace MarginTrading.Contract.BackendContracts
         public List<MatchedOrderBackendContract> MatchedOrders { get; set; } = new List<MatchedOrderBackendContract>();
         public List<MatchedOrderBackendContract> MatchedCloseOrders { get; set; } = new List<MatchedOrderBackendContract>();
 
+        [JsonConverter(typeof(StringEnumConverter))]
         public MatchingEngineModeContract MatchingEngineMode => !string.IsNullOrEmpty(OpenExternalOrderId)
             ? MatchingEngineModeContract.Stp
             : MatchingEngineModeContract.MarketMaker;

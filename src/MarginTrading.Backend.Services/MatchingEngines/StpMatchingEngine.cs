@@ -58,6 +58,9 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             prices = order.GetOrderType() == OrderDirection.Buy
                 ? prices.OrderBy(tuple => tuple.price).ToList()
                 : prices.OrderByDescending(tuple => tuple.price).ToList();
+            
+            var settings = _assetPairsCache.GetAssetPairSettings(order.Instrument);
+            var externalAssetPair = settings?.BasePairId ?? order.Instrument;
 
             foreach (var price in prices)
             {
@@ -72,7 +75,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                         (double) Math.Abs(order.Volume),
                         _dateService.Now(),
                         price.source,
-                        order.Instrument);
+                        externalAssetPair);
 
                     var executionResult = _exchangeConnectorService.CreateOrderAsync(externalOrderModel).GetAwaiter()
                         .GetResult();
@@ -85,7 +88,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                             MarketMakerId = price.source,
                             MatchedDate = _dateService.Now(),
                             OrderId = executionResult.ExchangeOrderId,
-                            Price = CalculatePriceWithMarkups(order.Instrument, order.GetOrderType(), executionResult.Price),
+                            Price = CalculatePriceWithMarkups(settings, order.GetOrderType(), executionResult.Price),
                             Volume = (decimal) executionResult.Volume
                         }
                     };
@@ -106,7 +109,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                             (double) Math.Abs(order.Volume),
                             _dateService.Now(),
                             price.source,
-                            order.Instrument);
+                            externalAssetPair);
 
                         _exchangeConnectorService.CreateOrderAsync(cancelOrderModel).GetAwaiter().GetResult();
                     }
@@ -135,6 +138,8 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         {
             var closePrice = _externalOrderBooksList.GetPriceForClose(order);
             var closeLp = order.OpenExternalOrderId;
+            var settings = _assetPairsCache.GetAssetPairSettings(order.Instrument);
+            var externalAssetPair = settings?.BasePairId ?? order.Instrument;
 
             var matchedOrders = new MatchedOrderCollection();
             
@@ -164,14 +169,14 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                         (double) Math.Abs(order.Volume), 
                         _dateService.Now(), 
                         closeLp,
-                        order.Instrument);
+                        externalAssetPair);
                 
                     var executionResult = _exchangeConnectorService.CreateOrderAsync(externalOrderModel).GetAwaiter().GetResult();
 
                     order.CloseExternalProviderId = closeLp;
                     order.CloseExternalOrderId = executionResult.ExchangeOrderId;
                     order.ClosePrice =
-                        CalculatePriceWithMarkups(order.Instrument, order.GetCloseType(), executionResult.Price);
+                        CalculatePriceWithMarkups(settings, order.GetCloseType(), executionResult.Price);
                     
                     _rabbitMqNotifyService.ExternalOrder(executionResult).GetAwaiter().GetResult();
                 }
@@ -190,10 +195,8 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             return new OrderBook(assetPairId);
         }
 
-        private decimal CalculatePriceWithMarkups(string assetPairId, OrderDirection direction, double sourcePrice)
+        private decimal CalculatePriceWithMarkups(AssetPairSettings settings, OrderDirection direction, double sourcePrice)
         {
-            var settings = _assetPairsCache.GetAssetPairSettings(assetPairId);
-
             if (settings == null)
                 return (decimal) sourcePrice;
 
