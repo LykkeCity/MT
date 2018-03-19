@@ -37,9 +37,19 @@ namespace MarginTrading.Backend.Controllers
         public async Task<MtBackendResponse<TradingConditionModel>> AddOrReplaceTradingCondition(
             [FromBody] TradingConditionModel model)
         {
-            var tradingCondition = model.ToDomainContract();
-
-            tradingCondition = await _tradingConditionsManager.AddOrReplaceTradingConditionAsync(tradingCondition);
+            if (string.IsNullOrWhiteSpace(model.Id)) 
+                return MtBackendResponse<TradingConditionModel>.Error("Id cannot be empty"); 
+             
+            if (string.IsNullOrWhiteSpace(model.Name)) 
+                return MtBackendResponse<TradingConditionModel>.Error("Name cannot be empty"); 
+             
+            if (string.IsNullOrWhiteSpace(model.LegalEntity)) 
+                return MtBackendResponse<TradingConditionModel>.Error("LegalEntity cannot be empty"); 
+ 
+ 
+            var tradingCondition = model.ToDomainContract(); 
+ 
+            tradingCondition = await _tradingConditionsManager.AddOrReplaceTradingConditionAsync(tradingCondition); 
             
             return MtBackendResponse<TradingConditionModel>.Ok(tradingCondition?.ToBackendContract());
         }
