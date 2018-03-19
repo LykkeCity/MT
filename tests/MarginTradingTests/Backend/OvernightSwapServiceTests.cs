@@ -119,7 +119,7 @@ namespace MarginTradingTests.Backend
 			var calc = _overnightSwapCache.GetAll().First();
 			Assert.True(calc.Value == 24.68493151M);
 			Assert.True(calc.IsSuccess);
-			Assert.AreEqual(accountBalance + 24.68493151M, (await _fakeMarginTradingAccountsRepository.GetAsync(accountId)).Balance);
+			Assert.AreEqual(accountBalance - 24.68493151M, (await _fakeMarginTradingAccountsRepository.GetAsync(accountId)).Balance);
 		}
 
 		[Test]
