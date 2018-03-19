@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using Lykke.Service.ClientAccount.Client;
-using MarginTrading.Backend.Contracts.RabbitMqMessages;
 using Rocks.Caching;
 
 namespace MarginTrading.Common.Services.Settings

@@ -2,7 +2,6 @@
 using Autofac;
 using Common;
 using Lykke.Service.ClientAccount.Client;
-using MarginTrading.Backend.Contracts.RabbitMqMessages;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services.Settings;

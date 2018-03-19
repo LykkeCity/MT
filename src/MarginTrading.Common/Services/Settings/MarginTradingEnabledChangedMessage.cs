@@ -1,4 +1,4 @@
-﻿namespace MarginTrading.Backend.Contracts.RabbitMqMessages
+﻿namespace MarginTrading.Common.Services.Settings
 {
     public class MarginTradingEnabledChangedMessage
     {

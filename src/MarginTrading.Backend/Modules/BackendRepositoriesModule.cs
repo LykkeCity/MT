@@ -77,6 +77,11 @@ namespace MarginTrading.Backend.Modules
 				AzureRepoFactories.MarginTrading.CreateDayOffSettingsRepository(_settings.Nested(s => s.Db.MarginTradingConnString))
 			).SingleInstance();
 
+			builder.Register(ctx =>
+				AzureRepoFactories.MarginTrading.CreateAssetPairSettingsRepository(
+					_settings.Nested(s => s.Db.MarginTradingConnString), _log, ctx.Resolve<IConvertService>())
+			).SingleInstance();
+
 			builder.RegisterType<MatchingEngineInMemoryRepository>()
 				.As<IMatchingEngineRepository>()
 				.SingleInstance();
