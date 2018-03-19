@@ -61,7 +61,7 @@ namespace MarginTrading.Backend.Services
                     ConnectionString = _marginSettings.MtRabbitMqConnString,
                     ExchangeName = _marginSettings.RabbitMqQueues.MarginTradingEnabledChanged.ExchangeName
                 },
-                false,
+                true,
                 _rabbitMqService.GetJsonSerializer<MarginTradingEnabledChangedMessage>());
         }
     }
