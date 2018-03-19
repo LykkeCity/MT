@@ -8,6 +8,7 @@ using MarginTrading.BrokerBase;
 using MarginTrading.BrokerBase.Settings;
 using MarginTrading.Contract.BackendContracts;
 using System.Threading.Tasks;
+using MarginTrading.Backend.Contracts.Account;
 
 namespace MarginTrading.AccountHistoryBroker
 {

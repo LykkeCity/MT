@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using MarginTrading.Backend.Contracts.Account;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Contract.BackendContracts;

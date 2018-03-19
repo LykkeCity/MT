@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
+using MarginTrading.Backend.Contracts.Account;
+using MarginTrading.Backend.Contracts.DataReaderClient;
 using MarginTrading.Common.Services.Settings;
 using MarginTrading.Common.Settings;
 using MarginTrading.Contract.BackendContracts;
@@ -281,7 +283,8 @@ namespace MarginTrading.Frontend.Services
                 Balance = src.Balance,
                 WithdrawTransferLimit = src.WithdrawTransferLimit,
                 Comment = src.Comment,
-                Type = ConvertEnum<AccountHistoryTypeContract>(src.Type)
+                Type = ConvertEnum<Contract.BackendContracts.AccountHistoryTypeContract>(src.Type),
+                LegalEnity = src.LegalEntity,
             };
         }
 
@@ -293,9 +296,9 @@ namespace MarginTrading.Frontend.Services
                 AccountId = src.AccountId,
                 Instrument = src.Instrument,
                 AssetAccuracy = src.AssetAccuracy,
-                Type = ConvertEnum<OrderDirectionContract>(src.Type),
-                Status = ConvertEnum<OrderStatusContract>(src.Status),
-                CloseReason = ConvertEnum<OrderCloseReasonContract>(src.CloseReason),
+                Type = ConvertEnum<Contract.BackendContracts.OrderDirectionContract>(src.Type),
+                Status = ConvertEnum<Contract.BackendContracts.OrderStatusContract>(src.Status),
+                CloseReason = ConvertEnum<Contract.BackendContracts.OrderCloseReasonContract>(src.CloseReason),
                 OpenDate = src.OpenDate,
                 CloseDate = src.CloseDate,
                 OpenPrice = src.OpenPrice,

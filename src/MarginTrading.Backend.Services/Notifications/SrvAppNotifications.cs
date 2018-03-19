@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using MarginTrading.Backend.Contracts.Account;
 using MarginTrading.Backend.Core.Notifications;
 using MarginTrading.Contract.BackendContracts;
 

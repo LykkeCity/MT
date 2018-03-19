@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using MarginTrading.Backend.Contracts.Account;
 using MarginTrading.Backend.Core.Notifications;
 using MarginTrading.Contract.BackendContracts;
 

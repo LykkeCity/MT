@@ -1,4 +1,6 @@
-﻿using MarginTrading.Backend.Contracts.Client;
+﻿using System;
+using System.Net.Http;
+using MarginTrading.Backend.Contracts.Client;
 using Refit;
 
 namespace MarginTrading.Backend.Contracts.DataReaderClient

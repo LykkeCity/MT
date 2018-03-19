@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using MarginTrading.Backend.Contracts.Account;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Common.Extensions;
