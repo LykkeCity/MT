@@ -144,14 +144,14 @@ namespace MarginTrading.Backend.Controllers
         public async Task<MtBackendResponse<MarginTradingAccountModel>> SetTradingCondition(
             [FromBody] SetTradingConditionModel model)
         {
-            var tradingCondition = _tradingConditionsCacheService.GetTradingCondition(model.TradingConditionId);
-            if (tradingCondition == null)
+            if (!_tradingConditionsCacheService.IsTradingConditionExists(model.TradingConditionId))
             {
                 return MtBackendResponse<MarginTradingAccountModel>.Error(
                     $"No trading condition {model.TradingConditionId} found in cache");
             }
             
-
+            var tradingCondition = _tradingConditionsCacheService.GetTradingCondition(model.TradingConditionId);
+            
             var account =
                 await _accountManager.SetTradingCondition(model.ClientId, model.AccountId, model.TradingConditionId);
             if (account == null)

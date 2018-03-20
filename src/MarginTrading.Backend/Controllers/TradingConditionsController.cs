@@ -6,6 +6,7 @@ using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Middleware;
 using MarginTrading.Contract.BackendContracts;
+using MarginTrading.Contract.BackendContracts.AccountsManagement;
 using MarginTrading.Contract.BackendContracts.TradingConditions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,14 +22,17 @@ namespace MarginTrading.Backend.Controllers
         private readonly TradingConditionsManager _tradingConditionsManager;
         private readonly AccountGroupManager _accountGroupManager;
         private readonly AccountAssetsManager _accountAssetsManager;
+        private readonly ITradingConditionsCacheService _tradingConditionsCacheService;
 
         public TradingConditionsController(TradingConditionsManager tradingConditionsManager,
             AccountGroupManager accountGroupManager,
-            AccountAssetsManager accountAssetsManager)
+            AccountAssetsManager accountAssetsManager,
+            ITradingConditionsCacheService tradingConditionsCacheService)
         {
             _tradingConditionsManager = tradingConditionsManager;
             _accountGroupManager = accountGroupManager;
             _accountAssetsManager = accountAssetsManager;
+            _tradingConditionsCacheService = tradingConditionsCacheService;
         }
 
         [HttpPost]
@@ -46,7 +50,16 @@ namespace MarginTrading.Backend.Controllers
             if (string.IsNullOrWhiteSpace(model.LegalEntity)) 
                 return MtBackendResponse<TradingConditionModel>.Error("LegalEntity cannot be empty"); 
  
- 
+            if (_tradingConditionsCacheService.IsTradingConditionExists(model.Id))
+            {
+                var existingCondition = _tradingConditionsCacheService.GetTradingCondition(model.Id);
+
+                if (existingCondition.LegalEntity != model.LegalEntity)
+                {
+                    return MtBackendResponse<TradingConditionModel>.Error("LegalEntity cannot be changed"); 
+                }
+            }
+            
             var tradingCondition = model.ToDomainContract(); 
  
             tradingCondition = await _tradingConditionsManager.AddOrReplaceTradingConditionAsync(tradingCondition); 
