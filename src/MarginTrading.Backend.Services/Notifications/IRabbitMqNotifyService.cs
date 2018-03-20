@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Lykke.Service.ExchangeConnector.Client.Models;
 using MarginTrading.Backend.Core;
 using MarginTrading.Contract.RabbitMqMessageModels;
 
@@ -20,5 +21,6 @@ namespace MarginTrading.Backend.Services.Notifications
 	    Task AccountMarginEvent(AccountMarginEventMessage eventMessage);
 		Task UpdateAccountStats(AccountStatsUpdateMessage message);
 		Task NewTrade(TradeContract trade);
+		Task ExternalOrder(ExecutionReport trade);
 	}
 } 

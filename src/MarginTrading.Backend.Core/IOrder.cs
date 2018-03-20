@@ -1,5 +1,6 @@
 ﻿using System;
 using MarginTrading.Backend.Core.MatchedOrders;
+using MarginTrading.Backend.Core.MatchingEngines;
 
 namespace MarginTrading.Backend.Core
 {
@@ -9,10 +10,13 @@ namespace MarginTrading.Backend.Core
         string AccountId { get; }
         string TradingConditionId { get; }
         string AccountAssetId { get; }
+        
         //Matching Engine ID used for open
         string OpenOrderbookId { get; }
+        
         //Matching Engine ID used for close
         string CloseOrderbookId { get; }
+        
         DateTime? OpenDate { get; }
         DateTime? CloseDate { get; }
         decimal? ExpectedOpenPrice { get; }
@@ -38,6 +42,20 @@ namespace MarginTrading.Backend.Core
         string EquivalentAsset { get; }
         decimal OpenPriceEquivalent { get; }
         decimal ClosePriceEquivalent { get; }
+        
+        #region Extenal orders matching
+        
+        string OpenExternalOrderId { get; }
+        
+        string OpenExternalProviderId { get; }
+        
+        string CloseExternalOrderId { get; }
+        
+        string CloseExternalProviderId { get; }
+        
+        MatchingEngineMode MatchingEngineMode { get; }
+
+        #endregion
     }
 
     public class Order : IOrder
@@ -68,6 +86,10 @@ namespace MarginTrading.Backend.Core
         public string EquivalentAsset { get; set; }
         public decimal OpenPriceEquivalent { get; set; }
         public decimal ClosePriceEquivalent { get; set; }
+        public string OpenExternalOrderId { get; set; }
+        public string OpenExternalProviderId { get; set; }
+        public string CloseExternalOrderId { get; set; }
+        public string CloseExternalProviderId { get; set; }
         public DateTime? StartClosingDate { get; set; }
         public OrderStatus Status { get; set; }
         public OrderCloseReason CloseReason { get; set; }
@@ -78,6 +100,7 @@ namespace MarginTrading.Backend.Core
         public string Comment { get; set; }
         public MatchedOrderCollection MatchedOrders { get; set; } = new MatchedOrderCollection();
         public MatchedOrderCollection MatchedCloseOrders { get; set; } = new MatchedOrderCollection();
+        public MatchingEngineMode MatchingEngineMode { get; set; }
 
         public FplData FplData { get; set; } = new FplData();
     }

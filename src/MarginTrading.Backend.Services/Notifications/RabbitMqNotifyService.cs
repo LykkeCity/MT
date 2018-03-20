@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Autofac.Features.Indexed;
 using Common;
 using Common.Log;
+using Lykke.Service.ExchangeConnector.Client.Models;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Settings;
@@ -118,7 +119,12 @@ namespace MarginTrading.Backend.Services.Notifications
         {
             return TryProduceMessageAsync(_settings.RabbitMqQueues.Trades.ExchangeName, trade);
         }
-
+        
+        public Task ExternalOrder(ExecutionReport trade)
+        {
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.ExternalOrder.ExchangeName, trade);
+        }
+        
         private async Task TryProduceMessageAsync(string exchangeName, object message)
         {
             string messageStr = null;
@@ -147,6 +153,7 @@ namespace MarginTrading.Backend.Services.Notifications
             ((IStopable)_publishers[_settings.RabbitMqQueues.AccountMarginEvents.ExchangeName]).Stop();
             ((IStopable)_publishers[_settings.RabbitMqQueues.AccountStats.ExchangeName]).Stop();
             ((IStopable)_publishers[_settings.RabbitMqQueues.Trades.ExchangeName]).Stop();
+            ((IStopable)_publishers[_settings.RabbitMqQueues.ExternalOrder.ExchangeName]).Stop();
         }
     }
 }

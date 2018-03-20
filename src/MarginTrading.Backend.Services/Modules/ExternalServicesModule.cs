@@ -3,6 +3,7 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Lykke.Service.Assets.Client;
 using Lykke.Service.ClientAccount.Client;
+using Lykke.Service.ExchangeConnector.Client;
 using Lykke.SettingsReader;
 using MarginTrading.Backend.Services.Settings;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,6 +26,11 @@ namespace MarginTrading.Backend.Services.Modules
             services.RegisterAssetsClient(AssetServiceSettings.Create(
                 new Uri(_settings.CurrentValue.Assets.ServiceUrl),
                 _settings.CurrentValue.Assets.CacheExpirationPeriod));
+
+            builder.RegisterType<ExchangeConnectorService>()
+                .As<IExchangeConnectorService>()
+                .WithParameter("settings", _settings.CurrentValue.MtStpExchangeConnectorClient)
+                .SingleInstance();
             
             builder.Populate(services);
 

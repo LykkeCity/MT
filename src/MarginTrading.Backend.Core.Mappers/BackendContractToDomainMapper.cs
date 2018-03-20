@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using MarginTrading.Backend.Core.MatchedOrders;
+using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Contract.BackendContracts;
@@ -81,7 +82,12 @@ namespace MarginTrading.Backend.Core.Mappers
                 EquivalentAsset = src.EquivalentAsset,
                 OpenPriceEquivalent = src.OpenPriceEquivalent,
                 ClosePriceEquivalent = src.ClosePriceEquivalent,
-                OrderUpdateType = src.OrderUpdateType.ToType<OrderUpdateType>()
+                OrderUpdateType = src.OrderUpdateType.ToType<OrderUpdateType>(),
+                OpenExternalOrderId = src.OpenExternalOrderId,
+                OpenExternalProviderId = src.OpenExternalProviderId,
+                CloseExternalOrderId = src.CloseExternalOrderId,
+                CloseExternalProviderId = src.CloseExternalProviderId,
+                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineMode>()
             };
 
             foreach (var order in src.MatchedOrders)

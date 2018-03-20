@@ -7,6 +7,7 @@ using AzureStorage.Tables;
 using Common;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
+using MarginTrading.Backend.Core.MatchingEngines;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace MarginTrading.AzureRepositories
@@ -89,7 +90,16 @@ namespace MarginTrading.AzureRepositories
         public string ClosedOrders { get; set; }
         
         OrderUpdateType IOrderHistory.OrderUpdateType => OrderUpdateType.ParseEnum(Backend.Core.OrderUpdateType.Place);
+        public string OpenExternalOrderId { get; set; }
+        public string OpenExternalProviderId { get; set; }
+        public string CloseExternalOrderId { get; set; }
+        public string CloseExternalProviderId { get; set; }
         public string OrderUpdateType { get; set; }
+        
+        public string MatchingEngineMode { get; set; }
+
+        MatchingEngineMode IOrderHistory.MatchingEngineMode =>
+            MatchingEngineMode.ParseEnum(Backend.Core.MatchingEngines.MatchingEngineMode.MarketMaker);
 
         public static string GeneratePartitionKey(string clientId)
         {
@@ -151,6 +161,11 @@ namespace MarginTrading.AzureRepositories
                 ClosePriceEquivalent = (double) src.ClosePriceEquivalent,
                 Comment = src.Comment,
                 OrderUpdateType = src.OrderUpdateType.ToString(),
+                OpenExternalOrderId = src.OpenExternalOrderId,
+                OpenExternalProviderId = src.OpenExternalProviderId,
+                CloseExternalOrderId = src.CloseExternalOrderId,
+                CloseExternalProviderId = src.CloseExternalProviderId,
+                MatchingEngineMode = src.MatchingEngineMode.ToString()
             };
         }
     }
