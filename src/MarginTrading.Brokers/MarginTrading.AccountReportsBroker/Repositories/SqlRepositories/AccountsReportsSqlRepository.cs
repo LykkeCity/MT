@@ -19,6 +19,7 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
             "[TakerAccountId] [nvarchar] (64) NOT NULL, " +
             "[BaseAssetId] [nvarchar] (64) NOT NULL, " +
             "[IsLive] [bit] NOT NULL, " +
+            "[LegalEntity] [nvarchar] (64) NULL, " +
             "CONSTRAINT[PK_{0}] PRIMARY KEY CLUSTERED ([Id] ASC)" +
             ");";
 
@@ -49,14 +50,15 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
                 if (res == null)
                 {
                     query = $"insert into {TableName} " +
-                        "(Id, Date, TakerCounterpartyId, TakerAccountId, BaseAssetId, IsLive) " +
+                        "(Id, Date, TakerCounterpartyId, TakerAccountId, BaseAssetId, IsLive, LegalEntity) " +
                         " values " +
-                        "(@Id, @Date, @TakerCounterpartyId, @TakerAccountId, @BaseAssetId, @IsLive)";
+                        "(@Id, @Date, @TakerCounterpartyId, @TakerAccountId, @BaseAssetId, @IsLive, @LegalEntity)";
                 }
                 else
                 {
                     query = $"update {TableName} set " +
-                        "Date=@Date, TakerCounterpartyId=@TakerCounterpartyId, TakerAccountId=@TakerAccountId, BaseAssetId=@BaseAssetId, IsLive=@IsLive " +
+                        "Date=@Date, TakerCounterpartyId=@TakerCounterpartyId, TakerAccountId=@TakerAccountId, " +
+                        "BaseAssetId=@BaseAssetId, IsLive=@IsLive, LegalEntity=@LegalEntity " +
                         " where Id=@Id";
                 }
                 try { await conn.ExecuteAsync(query, report); }

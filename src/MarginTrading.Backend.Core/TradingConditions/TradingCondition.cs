@@ -5,6 +5,7 @@
         public string Id { get; set; }
         public string Name { get; set; }
         public bool IsDefault { get; set; }
+        public string LegalEntity { get; set; }
 
         public static TradingCondition Create(ITradingCondition src)
         {
@@ -12,7 +13,8 @@
             {
                 Id = src.Id,
                 Name = src.Name,
-                IsDefault = src.IsDefault
+                IsDefault = src.IsDefault,
+                LegalEntity = src.LegalEntity,
             };
         }
     }

@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Common;
 using FluentAssertions;
+using Lykke.RabbitMqBroker.Publisher;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.ClientAccount.Client.Models;
 using MarginTrading.Backend.Core.Settings;
@@ -34,7 +35,7 @@ namespace MarginTradingTests.Services
             var expectedRabbitMqSettings = new RabbitMqSettings
             {
                 ConnectionString = "conn str",
-                ExchangeName = "exchange name"
+                ExchangeName = "exchange name",
             };
             var rabbitMqService = Mock.Of<IRabbitMqService>(s =>
                 s.GetProducer(expectedRabbitMqSettings.Equivalent(), true,
@@ -59,8 +60,8 @@ namespace MarginTradingTests.Services
         public async Task Always_ShouldCorrectlyEnableDemo()
         {
             // arrange
-            _marginSettings.IsLive = false; 
-            
+            _marginSettings.IsLive = false;
+
             //act
             await _sut.SetMarginTradingEnabled("id of client", enabled: true);
 
@@ -73,7 +74,8 @@ namespace MarginTradingTests.Services
                 EnabledLive = false
             };
             _sentMessage.ShouldBeEquivalentTo(expectedMessage);
-            Mock.Get(_marginTradingSettingsCacheService).Verify(s => s.OnMarginTradingEnabledChanged(expectedMessage.Equivalent()));
+            Mock.Get(_marginTradingSettingsCacheService)
+                .Verify(s => s.OnMarginTradingEnabledChanged(expectedMessage.Equivalent()));
         }
 
         [Test]
@@ -81,7 +83,7 @@ namespace MarginTradingTests.Services
         {
             // arrange
             _marginSettings.IsLive = true;
-            
+
             //act
             await _sut.SetMarginTradingEnabled("id of client", enabled: true);
 
@@ -94,7 +96,8 @@ namespace MarginTradingTests.Services
                 EnabledLive = true
             };
             _sentMessage.ShouldBeEquivalentTo(expectedMessage);
-            Mock.Get(_marginTradingSettingsCacheService).Verify(s => s.OnMarginTradingEnabledChanged(expectedMessage.Equivalent()));
+            Mock.Get(_marginTradingSettingsCacheService)
+                .Verify(s => s.OnMarginTradingEnabledChanged(expectedMessage.Equivalent()));
         }
     }
 }

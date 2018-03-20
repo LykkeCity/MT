@@ -10,5 +10,6 @@ namespace MarginTrading.AccountReportsBroker.Repositories.Models
         public string TakerAccountId { get; set; }
         public string BaseAssetId { get; set; }
         public bool IsLive { get; set; }
+        public string LegalEntity { get; set; }
     }
 }

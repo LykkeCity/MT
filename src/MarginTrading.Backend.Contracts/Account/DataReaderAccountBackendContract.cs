@@ -1,4 +1,4 @@
-﻿namespace MarginTrading.Contract.BackendContracts
+﻿namespace MarginTrading.Backend.Contracts.Account
 {
     public class DataReaderAccountBackendContract
     {
@@ -9,5 +9,6 @@
         public decimal Balance { get; set; }
         public decimal WithdrawTransferLimit { get; set; }
         public bool IsLive { get; set; }
+        public string LegalEntity { get; set; }
     }
 }

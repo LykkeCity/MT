@@ -8,5 +8,6 @@
         public string BaseAssetId { get; set; }
         public decimal Balance { get; set; }
         public decimal WithdrawTransferLimit { get; set; }
+        public string LegalEntity { get; set; }
     }
 }

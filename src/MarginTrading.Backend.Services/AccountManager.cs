@@ -16,6 +16,7 @@ using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Contract.RabbitMqMessageModels;
 using MarginTrading.Backend.Services.TradingConditions;
+using MarginTrading.Common.Extensions;
 
 namespace MarginTrading.Backend.Services
 {
@@ -310,6 +311,7 @@ namespace MarginTrading.Backend.Services
             return closedOrders;
         }
 
+        [ItemCanBeNull]
         public async Task<IMarginTradingAccount> SetTradingCondition(string clientId, string accountId,
             string tradingConditionId)
         {
@@ -363,6 +365,8 @@ namespace MarginTrading.Backend.Services
         
         private async Task<MarginTradingAccount> CreateAccount(string clientId, string baseAssetId, string tradingConditionId)
         {
+            var tradingCondition = _tradingConditionsCacheService.GetTradingCondition(tradingConditionId)
+                .RequiredNotNull("tradingCondition id " + tradingConditionId);
             var wallet = _marginSettings.IsLive
                 ? await _clientAccountClient.CreateWalletAsync(clientId, WalletType.Trading, OwnerType.Mt,
                     $"{baseAssetId} margin wallet", null)
@@ -376,7 +380,8 @@ namespace MarginTrading.Backend.Services
                 BaseAssetId = baseAssetId,
                 ClientId = clientId,
                 Balance = initialBalance,
-                TradingConditionId = tradingConditionId
+                TradingConditionId = tradingConditionId,
+                LegalEntity = tradingCondition.LegalEntity,
             };
         }
         

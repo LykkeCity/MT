@@ -3,17 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
+using MarginTrading.Backend.Contracts.DataReaderClient;
 using MarginTrading.Common.Services.Settings;
-using MarginTrading.Common.Settings;
 using MarginTrading.Contract.BackendContracts;
 using MarginTrading.Contract.ClientContracts;
 using MarginTrading.Contract.Mappers;
-using MarginTrading.DataReaderClient;
 using MarginTrading.Frontend.Settings;
-using AccountHistoryBackendResponse = MarginTrading.DataReaderClient.Models.AccountHistoryBackendResponse;
-using AccountHistoryBackendContract = MarginTrading.DataReaderClient.Models.AccountHistoryBackendContract;
-using OrderHistoryBackendContract = MarginTrading.DataReaderClient.Models.OrderHistoryBackendContract;
-using AccountNewHistoryBackendResponse = MarginTrading.DataReaderClient.Models.AccountNewHistoryBackendResponse;
 
 namespace MarginTrading.Frontend.Services
 {
@@ -22,13 +17,13 @@ namespace MarginTrading.Frontend.Services
         private readonly MtFrontendSettings _settings;
         private readonly IHttpRequestService _httpRequestService;
         private readonly IMarginTradingSettingsCacheService _marginTradingSettingsCacheService;
-        private readonly MarginTradingDataReaderApiClientsPair _dataReaderClients;
+        private readonly IMtDataReaderClientsPair _dataReaderClients;
 
         public RpcFacade(
             MtFrontendSettings settings,
             IHttpRequestService httpRequestService,
             IMarginTradingSettingsCacheService marginTradingSettingsCacheService,
-            MarginTradingDataReaderApiClientsPair dataReaderClients)
+            IMtDataReaderClientsPair dataReaderClients)
         {
             _settings = settings;
             _httpRequestService = httpRequestService;
@@ -135,7 +130,14 @@ namespace MarginTrading.Frontend.Services
                 };
             }
 
-            var accountHistoryBackendResponse = await _dataReaderClients.Get(isLive).GetAccountHistoryByTypesAsync(clientId, request.AccountId, request.From, request.To);
+            var accountHistoryBackendResponse = await _dataReaderClients.Get(isLive).AccountHistory.ByTypes(
+                new AccountHistoryBackendRequest
+                {
+                    AccountId = request.AccountId,
+                    ClientId = clientId,
+                    From = request.From,
+                    To = request.To
+                });
             return ToClientContract(accountHistoryBackendResponse);
         }
 
@@ -150,7 +152,13 @@ namespace MarginTrading.Frontend.Services
             {
                 return Array.Empty<AccountHistoryItemClient>();
             }
-            var accountHistoryBackendResponse = await _dataReaderClients.Get(isLive).GetAccountHistoryTimelineAsync(clientId, request.AccountId, request.From, request.To);
+            var accountHistoryBackendResponse = await _dataReaderClients.Get(isLive).AccountHistory.Timeline(new AccountHistoryBackendRequest
+            {
+                AccountId = request.AccountId,
+                ClientId = clientId,
+                From = request.From,
+                To = request.To
+            });
             return ToClientContract(accountHistoryBackendResponse);
         }
 
@@ -281,7 +289,8 @@ namespace MarginTrading.Frontend.Services
                 Balance = src.Balance,
                 WithdrawTransferLimit = src.WithdrawTransferLimit,
                 Comment = src.Comment,
-                Type = ConvertEnum<AccountHistoryTypeContract>(src.Type)
+                Type = ConvertEnum<AccountHistoryTypeContract>(src.Type),
+                LegalEnity = src.LegalEntity,
             };
         }
 
