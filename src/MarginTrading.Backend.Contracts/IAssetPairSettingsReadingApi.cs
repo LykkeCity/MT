@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using MarginTrading.Backend.Contracts.AssetPairSettings;
 using Refit;
 
 namespace MarginTrading.Backend.Contracts
@@ -24,7 +25,6 @@ namespace MarginTrading.Backend.Contracts
         /// Get settings by MatchingEngineMode
         /// </summary>
         [Get("/api/AssetPairSettings/by-mode/{matchingEngineMode}")]
-        Task<List<AssetPairSettings.AssetPairSettingsContract>> Get(
-            AssetPairSettings.MatchingEngineModeContract matchingEngineMode);
+        Task<List<AssetPairSettingsContract>> Get(MarginTrading.Backend.Contracts.AssetPairSettings.MatchingEngineModeContract matchingEngineMode);
     }
 }
