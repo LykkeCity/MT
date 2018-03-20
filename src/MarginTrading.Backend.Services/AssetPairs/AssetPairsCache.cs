@@ -82,11 +82,6 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         private static string GetAssetPairId(string asset1, string asset2)
         {
-            _assetPairSettings = assetPairSettings;
-        }
-
-        private static string GetAssetPairId(string asset1, string asset2)
-        {
             return $"{asset1}{asset2}";
         }
     }
