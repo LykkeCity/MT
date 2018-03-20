@@ -19,6 +19,8 @@ namespace MarginTrading.AccountReportsBroker.Repositories.AzureRepositories.Enti
 
         public string BaseAssetId { get; set; }
         public bool IsLive { get; set; }
+        public string LegalEntity { get; set; }
+
         public static AccountsReportEntity Create(IAccountsReport src)
         {
             return new AccountsReportEntity
@@ -26,7 +28,8 @@ namespace MarginTrading.AccountReportsBroker.Repositories.AzureRepositories.Enti
                 TakerCounterpartyId = src.TakerCounterpartyId,
                 TakerAccountId = src.TakerAccountId,
                 BaseAssetId = src.BaseAssetId,
-                IsLive = src.IsLive
+                IsLive = src.IsLive,
+                LegalEntity = src.LegalEntity,
             };
         }
     }
