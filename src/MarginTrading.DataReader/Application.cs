@@ -29,8 +29,7 @@ namespace MarginTrading.DataReader
                 {
                     _marginTradingSettingsCacheService.OnMarginTradingEnabledChanged(m);
                     return Task.CompletedTask;
-                },
-                _rabbitMqService.GetJsonDeserializer<MarginTradingEnabledChangedMessage>());
+                }, _rabbitMqService.GetJsonDeserializer<MarginTradingEnabledChangedMessage>());
         }
     }
 }

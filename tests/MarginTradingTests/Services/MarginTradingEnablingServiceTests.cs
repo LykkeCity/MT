@@ -35,7 +35,7 @@ namespace MarginTradingTests.Services
             var expectedRabbitMqSettings = new RabbitMqSettings
             {
                 ConnectionString = "conn str",
-                ExchangeName = "exchange name"
+                ExchangeName = "exchange name",
             };
             var rabbitMqService = Mock.Of<IRabbitMqService>(s =>
                 s.GetProducer(expectedRabbitMqSettings.Equivalent(), true,

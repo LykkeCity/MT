@@ -7,7 +7,7 @@ namespace MarginTrading.Backend.Services.TradingConditions
     public interface ITradingConditionsCacheService
     {
         List<ITradingCondition> GetAllTradingConditions();
-        ITradingCondition GetTradingCondition(string tradingConditionId);
+        [CanBeNull] ITradingCondition GetTradingCondition(string tradingConditionId);
         bool IsTradingConditionExists(string tradingConditionId);
     }
 }
