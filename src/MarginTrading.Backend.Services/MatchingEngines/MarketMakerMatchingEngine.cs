@@ -76,6 +76,18 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             }
         }
 
+        public decimal? GetPriceForClose(Order order)
+        {
+            using (_contextFactory.GetWriteSyncContext($"{nameof(MarketMakerMatchingEngine)}.{nameof(GetPriceForClose)}"))
+            {
+                var orderBookTypeToMatch = order.GetCloseType().GetOrderTypeToMatchInOrderBook();
+
+                var matchedOrders = _orderBooks.Match(order, orderBookTypeToMatch, Math.Abs(order.GetRemainingCloseVolume()));
+
+                return matchedOrders.Any() ? matchedOrders.WeightedAveragePrice : (decimal?) null;
+            } // lock
+        }
+
         public OrderBook GetOrderBook(string instrument)
         {
             using (_contextFactory.GetReadSyncContext($"{nameof(MarketMakerMatchingEngine)}.{nameof(GetOrderBook)}"))

@@ -217,15 +217,15 @@ namespace MarginTrading.Backend.Services
             order.OpenPrice = Math.Round(order.MatchedOrders.WeightedAveragePrice, order.AssetAccuracy);
 
             var defaultMatchingEngine = _meRouter.GetMatchingEngineForClose(order);
-            
-            defaultMatchingEngine.MatchMarketOrderForClose(order, matchedOrdersForClose =>
-            {
-                if (matchedOrdersForClose.Count == 0)
-                    throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "No orders to match for close");
 
-                order.UpdateClosePrice(Math.Round(matchedOrdersForClose.WeightedAveragePrice, order.AssetAccuracy));
-                return false;
-            });
+            var closePrice = defaultMatchingEngine.GetPriceForClose(order);
+
+            if (!closePrice.HasValue)
+            {
+                throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "No orders to match for close");
+            }
+            
+            order.UpdateClosePrice(Math.Round(closePrice.Value, order.AssetAccuracy));
 
             var guessAccount = _accountUpdateService.GuessAccountWithOrder(order);
             var guessAccountLevel = guessAccount.GetAccountLevel();
@@ -342,15 +342,13 @@ namespace MarginTrading.Backend.Services
                 foreach (var order in accountOrders.Value)
                 {
                     var defaultMatchingEngine = _meRouter.GetMatchingEngineForClose(order);
-                    
-                    defaultMatchingEngine.MatchMarketOrderForClose(order, matchedOrders =>
-                    {
-                        if (matchedOrders.Count == 0)
-                            return false;
 
-                        order.UpdateClosePrice(Math.Round(matchedOrders.WeightedAveragePrice, order.AssetAccuracy));
-                        return false;
-                    });
+                    var closePrice = defaultMatchingEngine.GetPriceForClose(order);
+
+                    if (closePrice.HasValue)
+                    {
+                        order.UpdateClosePrice(Math.Round(closePrice.Value, order.AssetAccuracy));
+                    }
                 }
 
                 var newAccountLevel = account.GetAccountLevel();

@@ -14,6 +14,8 @@ namespace MarginTrading.Backend.Core.MatchingEngines
         
         void MatchMarketOrderForClose(Order order, Func<MatchedOrderCollection, bool> orderProcessed);
         
+        decimal? GetPriceForClose(Order order);
+        
         OrderBook GetOrderBook(string instrument);
     }
 }

@@ -22,6 +22,11 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             orderProcessed(new MatchedOrderCollection());
         }
 
+        public decimal? GetPriceForClose(Order order)
+        {
+            return null;
+        }
+
         public OrderBook GetOrderBook(string instrument)
         {
             return new OrderBook(instrument);
