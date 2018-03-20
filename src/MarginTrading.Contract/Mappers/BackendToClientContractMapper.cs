@@ -28,7 +28,8 @@ namespace MarginTrading.Contract.Mappers
                 PnL = src.PnL,
                 OpenPositionsCount = src.OpenPositionsCount,
                 MarginUsageLevel = src.MarginUsageLevel,
-                IsLive = src.IsLive
+                IsLive = src.IsLive,
+                LegalEntity = src.LegalEntity,
             };
         }
 
@@ -143,7 +144,8 @@ namespace MarginTrading.Contract.Mappers
                 Balance = src.Balance,
                 WithdrawTransferLimit = src.WithdrawTransferLimit,
                 Comment = src.Comment,
-                Type = src.Type
+                Type = src.Type,
+                LegalEnity = src.LegalEntity,
             };
         }
 

@@ -32,6 +32,7 @@ namespace MarginTrading.AccountReportsBroker.Repositories.AzureRepositories.Enti
         public double OpenPositionsCount { get; set; }
         public double MarginUsageLevel { get; set; }
         public bool IsLive { get; set; }
+        public string LegalEntity { get; set; }
 
         public static AccountsStatReportEntity Create(IAccountsStatReport s)
         {
@@ -53,7 +54,8 @@ namespace MarginTrading.AccountReportsBroker.Repositories.AzureRepositories.Enti
                 PnL = s.PnL,
                 OpenPositionsCount = s.OpenPositionsCount,
                 MarginUsageLevel = s.MarginUsageLevel,
-                IsLive = s.IsLive
+                IsLive = s.IsLive,
+                LegalEntity = s.LegalEntity,
             };
         }
     }

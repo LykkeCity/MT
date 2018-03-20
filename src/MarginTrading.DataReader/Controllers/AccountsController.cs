@@ -90,7 +90,8 @@ namespace MarginTrading.DataReader.Controllers
                 BaseAssetId = src.BaseAssetId,
                 Balance = src.Balance,
                 WithdrawTransferLimit = src.WithdrawTransferLimit,
-                IsLive = isLive
+                IsLive = isLive,
+                LegalEntity = src.LegalEntity,
             };
         }
         
@@ -110,6 +111,7 @@ namespace MarginTrading.DataReader.Controllers
                 PnL = item.PnL,
                 OpenPositionsCount = item.OpenPositionsCount,
                 MarginUsageLevel = item.MarginUsageLevel,
+                LegalEntity = item.LegalEntity,
             };
         }
     }

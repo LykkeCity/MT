@@ -4,12 +4,13 @@ using System.Threading.Tasks;
 
 namespace MarginTrading.Backend.Contracts.Client
 {
-    internal class MtBackendHttpClientHandler : HttpClientHandler
+    internal class MtHeadersHttpClientHandler : DelegatingHandler
     {
         private readonly string _userAgent;
         private readonly string _apiKey;
 
-        public MtBackendHttpClientHandler(string userAgent, string apiKey)
+        public MtHeadersHttpClientHandler(HttpMessageHandler innerHandler, string userAgent, string apiKey)
+            : base(innerHandler)
         {
             _userAgent = userAgent;
             _apiKey = apiKey;

@@ -57,7 +57,8 @@ namespace MarginTrading.AccountReportsBroker
                     TotalCapital = (double) a.TotalCapital,
                     TradingConditionId = a.TradingConditionId,
                     UsedMargin = (double) a.UsedMargin,
-                    WithdrawTransferLimit = (double) a.WithdrawTransferLimit
+                    WithdrawTransferLimit = (double) a.WithdrawTransferLimit,
+                    LegalEntity = a.LegalEntity,
                 });
 
             var accountStats = message.Accounts?.Select(a => new MarginTradingAccountStatsEntity
@@ -74,6 +75,7 @@ namespace MarginTrading.AccountReportsBroker
                 PnL = (double) a.PnL,
                 OpenPositionsCount = (double) a.OpenPositionsCount,
                 MarginUsageLevel = (double) a.MarginUsageLevel,
+                LegalEntity = a.LegalEntity,
             });
 
             return Task.WhenAll(

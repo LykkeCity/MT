@@ -31,7 +31,8 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
             "[PnL] float NOT NULL, " +
             "[OpenPositionsCount] float NOT NULL, " +
             "[MarginUsageLevel] float NOT NULL, " +
-            "[IsLive] [bit] NOT NULL); ";
+            "[IsLive] [bit] NOT NULL, " +
+            "[LegalEntity] [nvarchar] (64) NULL); ";
 
         private const string CreatePkScript = "ALTER TABLE {0} ADD CONSTRAINT[PK_{0}] PRIMARY KEY CLUSTERED ([Id] ASC);";
 
@@ -115,7 +116,8 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
                   PnL, 
                   OpenPositionsCount, 
                   MarginUsageLevel, 
-                  IsLive) 
+                  IsLive,
+                  LegalEntity) 
                VALUES
                   (@Id, 
                    @Date, 
@@ -135,7 +137,8 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
                    @PnL, 
                    @OpenPositionsCount, 
                    @MarginUsageLevel, 
-                   @IsLive)";
+                   @IsLive,
+                   @LegalEntity)";
         }
 
         private string GetMergeQuery(string targetTableName, string sourceTableName)
@@ -144,13 +147,13 @@ namespace MarginTrading.AccountReportsBroker.Repositories.SqlRepositories
                 "SET NOCOUNT ON; " +
                 $"MERGE {targetTableName} AS target " +
                 $"USING (SELECT * from {sourceTableName}) AS source " +
-                @"(Id, Date, BaseAssetId, AccountId, ClientId, TradingConditionId, Balance, WithdrawTransferLimit, MarginCall, StopOut, TotalCapital, FreeMargin, MarginAvailable, UsedMargin, MarginInit, PnL, OpenPositionsCount, MarginUsageLevel, IsLive)
+                @"(Id, Date, BaseAssetId, AccountId, ClientId, TradingConditionId, Balance, WithdrawTransferLimit, MarginCall, StopOut, TotalCapital, FreeMargin, MarginAvailable, UsedMargin, MarginInit, PnL, OpenPositionsCount, MarginUsageLevel, IsLive, LegalEntity)
             ON (target.Id = source.Id)  
             WHEN MATCHED THEN   
-                UPDATE SET Date=source.Date, BaseAssetId=source.BaseAssetId, AccountId=source.AccountId, ClientId=source.ClientId, TradingConditionId=source.TradingConditionId, Balance=source.Balance, WithdrawTransferLimit=source.WithdrawTransferLimit, MarginCall=source.MarginCall, StopOut=source.StopOut, TotalCapital=source.TotalCapital, FreeMargin=source.FreeMargin, MarginAvailable=source.MarginAvailable, UsedMargin=source.UsedMargin, MarginInit=source.MarginInit, PnL=source.PnL, OpenPositionsCount=source.OpenPositionsCount, MarginUsageLevel=source.MarginUsageLevel, IsLive=source.IsLive   
+                UPDATE SET Date=source.Date, BaseAssetId=source.BaseAssetId, AccountId=source.AccountId, ClientId=source.ClientId, TradingConditionId=source.TradingConditionId, Balance=source.Balance, WithdrawTransferLimit=source.WithdrawTransferLimit, MarginCall=source.MarginCall, StopOut=source.StopOut, TotalCapital=source.TotalCapital, FreeMargin=source.FreeMargin, MarginAvailable=source.MarginAvailable, UsedMargin=source.UsedMargin, MarginInit=source.MarginInit, PnL=source.PnL, OpenPositionsCount=source.OpenPositionsCount, MarginUsageLevel=source.MarginUsageLevel, IsLive=source.IsLive, LegalEntity=source.LegalEntity   
             WHEN NOT MATCHED THEN  
-                INSERT (Id, Date, BaseAssetId, AccountId, ClientId, TradingConditionId, Balance, WithdrawTransferLimit, MarginCall, StopOut, TotalCapital, FreeMargin, MarginAvailable, UsedMargin, MarginInit, PnL, OpenPositionsCount, MarginUsageLevel, IsLive)  
-                VALUES (source.Id, source.Date, source.BaseAssetId, source.AccountId, source.ClientId, source.TradingConditionId, source.Balance, source.WithdrawTransferLimit, source.MarginCall, source.StopOut, source.TotalCapital, source.FreeMargin, source.MarginAvailable, source.UsedMargin, source.MarginInit, source.PnL, source.OpenPositionsCount, source.MarginUsageLevel, source.IsLive);";
+                INSERT (Id, Date, BaseAssetId, AccountId, ClientId, TradingConditionId, Balance, WithdrawTransferLimit, MarginCall, StopOut, TotalCapital, FreeMargin, MarginAvailable, UsedMargin, MarginInit, PnL, OpenPositionsCount, MarginUsageLevel, IsLive, LegalEntity)  
+                VALUES (source.Id, source.Date, source.BaseAssetId, source.AccountId, source.ClientId, source.TradingConditionId, source.Balance, source.WithdrawTransferLimit, source.MarginCall, source.StopOut, source.TotalCapital, source.FreeMargin, source.MarginAvailable, source.UsedMargin, source.MarginInit, source.PnL, source.OpenPositionsCount, source.MarginUsageLevel, source.IsLive, source.LegalEntity);";
 
         }
     }

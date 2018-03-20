@@ -1,7 +1,6 @@
 ﻿using System;
 using Autofac;
 using AzureStorage.Tables;
-using AzureStorage.Tables.Templates.Index;
 using Common.Log;
 using Lykke.Common;
 using Lykke.Service.Session;
@@ -10,8 +9,6 @@ using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Services.Client;
 using MarginTrading.Common.Services.Settings;
-using MarginTrading.Common.Settings;
-using MarginTrading.DataReaderClient;
 using MarginTrading.Frontend.Repositories;
 using MarginTrading.Frontend.Repositories.Contract;
 using MarginTrading.Frontend.Repositories.Entities;
@@ -158,15 +155,6 @@ namespace MarginTrading.Frontend.Modules
                    .As<ICacheProvider>()
                    .AsSelf()
                    .SingleInstance();
-
-            builder.Register(context =>
-                    MarginTradingDataReaderApiClientFactory.CreateDefaultClientsPair(
-                        _settings.CurrentValue.MarginTradingFront.DataReaderApiSettings.DemoApiUrl,
-                        _settings.CurrentValue.MarginTradingFront.DataReaderApiSettings.LiveApiUrl,
-                        _settings.CurrentValue.MarginTradingFront.DataReaderApiSettings.DemoApiKey,
-                        _settings.CurrentValue.MarginTradingFront.DataReaderApiSettings.LiveApiKey,
-                        "MarginTradingFrontend"))
-                .SingleInstance();
             
             builder.RegisterType<DateService>()
                 .As<IDateService>()

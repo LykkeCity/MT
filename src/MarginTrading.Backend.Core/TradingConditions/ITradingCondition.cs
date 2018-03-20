@@ -5,5 +5,6 @@
         string Id { get; }
         string Name { get; }
         bool IsDefault { get; }
+        string LegalEntity { get; }
     }
 }

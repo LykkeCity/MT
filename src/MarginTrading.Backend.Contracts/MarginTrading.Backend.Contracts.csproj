@@ -7,7 +7,14 @@
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.0.0" />
+    <PackageReference Include="Polly" Version="5.8.0" />
     <PackageReference Include="Refit" Version="4.2.0" />
     <PackageReference Include="System.Collections.Immutable" Version="1.4.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MarginTrading.Contract\MarginTrading.Contract.csproj">
+      <Project>{08346EF4-8525-4CE0-93C4-CCE510D27D88}</Project>
+      <Name>MarginTrading.Contract</Name>
+    </ProjectReference>
   </ItemGroup>
 </Project>

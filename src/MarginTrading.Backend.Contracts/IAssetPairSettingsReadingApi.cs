@@ -13,13 +13,13 @@ namespace MarginTrading.Backend.Contracts
         /// Get all settings
         /// </summary>
         [Get("/api/AssetPairSettings/")]
-        Task<List<AssetPairSettingsContract>> List();
+        Task<List<AssetPairSettings.AssetPairSettingsContract>> List();
 
         /// <summary>
         /// Get settings by id
         /// </summary>
         [Get("/api/AssetPairSettings/{assetPairId}")]
-        Task<AssetPairSettingsContract> Get(string assetPairId);
+        Task<AssetPairSettings.AssetPairSettingsContract> Get(string assetPairId);
 
         /// <summary>
         /// Get settings by MatchingEngineMode
