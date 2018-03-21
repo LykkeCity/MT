@@ -1,6 +1,6 @@
 ﻿using System.Linq;
+using MarginTrading.Backend.Contracts.AccountHistory;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Contract.BackendContracts;
@@ -55,17 +55,17 @@ namespace MarginTrading.DataReader.Helpers
             };
         }
 
-        public static OrderHistoryBackendContract ToBackendHistoryContract(this Order src)
+        public static OrderHistoryContract ToBackendHistoryContract(this Order src)
         {
-            return new OrderHistoryBackendContract
+            return new OrderHistoryContract
             {
                 Id = src.Id,
                 AccountId = src.AccountId,
                 Instrument = src.Instrument,
                 AssetAccuracy = src.AssetAccuracy,
-                Type = src.GetOrderType().ToType<OrderDirectionContract>(),
-                Status = src.Status.ToType<OrderStatusContract>(),
-                CloseReason = src.CloseReason.ToType<OrderCloseReasonContract>(),
+                Type = src.GetOrderType().ToType<Backend.Contracts.TradeMonitoring.OrderDirectionContract>(),
+                Status = src.Status.ToType<Backend.Contracts.TradeMonitoring.OrderStatusContract>(),
+                CloseReason = src.CloseReason.ToType<Backend.Contracts.TradeMonitoring.OrderCloseReasonContract>(),
                 OpenDate = src.OpenDate,
                 CloseDate = src.CloseDate,
                 OpenPrice = src.OpenPrice,
@@ -86,7 +86,8 @@ namespace MarginTrading.DataReader.Helpers
                 OpenExternalProviderId = src.OpenExternalProviderId,
                 CloseExternalOrderId = src.CloseExternalOrderId,
                 CloseExternalProviderId = src.CloseExternalProviderId,
-                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>()
+                MatchingEngineMode = src.MatchingEngineMode
+                    .ToType<Backend.Contracts.AssetPairSettings.MatchingEngineModeContract>()
             };
         }
 

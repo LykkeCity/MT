@@ -1,15 +1,14 @@
-﻿using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Mappers;
+﻿using MarginTrading.Backend.Contracts.AccountHistory;
+using MarginTrading.Backend.Core;
 using MarginTrading.Common.Extensions;
-using MarginTrading.Contract.BackendContracts;
 
 namespace MarginTrading.DataReader.Helpers
 {
     public static class AccountHistoryExtensions
     {
-        public static AccountHistoryBackendContract ToBackendContract(this IMarginTradingAccountHistory src)
+        public static AccountHistoryContract ToBackendContract(this IMarginTradingAccountHistory src)
         {
-            return new AccountHistoryBackendContract
+            return new AccountHistoryContract
             {
                 Id = src.Id,
                 Date = src.Date,

@@ -1,15 +1,15 @@
-﻿using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Mappers;
+﻿using MarginTrading.Backend.Contracts.AccountHistory;
+using MarginTrading.Backend.Contracts.TradeMonitoring;
+using MarginTrading.Backend.Core;
 using MarginTrading.Common.Extensions;
-using MarginTrading.Contract.BackendContracts;
 
 namespace MarginTrading.DataReader.Helpers
 {
     public static class OrderHistoryExtensions
     {
-        public static OrderHistoryBackendContract ToBackendHistoryContract(this IOrderHistory src)
+        public static OrderHistoryContract ToBackendHistoryContract(this IOrderHistory src)
         {
-            return new OrderHistoryBackendContract
+            return new OrderHistoryContract
             {
                 Id = src.Id,
                 AccountId = src.AccountId,
@@ -37,9 +37,9 @@ namespace MarginTrading.DataReader.Helpers
             };
         }
 
-        public static OrderHistoryBackendContract ToBackendHistoryOpenedContract(this IOrderHistory src)
+        public static OrderHistoryContract ToBackendHistoryOpenedContract(this IOrderHistory src)
         {
-            return new OrderHistoryBackendContract
+            return new OrderHistoryContract
             {
                 Id = src.Id,
                 AccountId = src.AccountId,

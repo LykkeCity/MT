@@ -1,6 +1,8 @@
 ﻿using MarginTrading.Backend.Contracts.AssetPairSettings;
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace MarginTrading.Backend.Contracts.TradeMonitoring
 {
@@ -47,6 +49,7 @@ namespace MarginTrading.Backend.Contracts.TradeMonitoring
         public List<MatchedOrderBackendContract> MatchedOrders { get; set; } = new List<MatchedOrderBackendContract>();
         public List<MatchedOrderBackendContract> MatchedCloseOrders { get; set; } = new List<MatchedOrderBackendContract>();
                 
+        [JsonConverter(typeof(StringEnumConverter))]
         public MatchingEngineModeContract MatchingEngineMode { get; set; }
     }
 

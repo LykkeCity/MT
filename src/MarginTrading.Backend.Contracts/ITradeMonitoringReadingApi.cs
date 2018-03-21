@@ -1,9 +1,9 @@
 ﻿using JetBrains.Annotations;
-using MarginTrading.Backend.Contracts.TradeMonitoring;
 using Refit;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MarginTrading.Backend.Contracts.TradeMonitoring;
 
 namespace MarginTrading.Backend.Contracts
 {
