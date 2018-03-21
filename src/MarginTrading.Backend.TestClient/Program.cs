@@ -143,6 +143,41 @@ namespace MarginTrading.Backend.TestClient
             var orderBooksByInstrument = await dataReaderClient.TradeMonitoringRead.OrderBooksByInstrument("BTCUSD");
             #endregion
 
+            var ag = await client.TradingConditionsEdit.InsertOrUpdateAccountGroup(new Contracts.TradingConditions.AccountGroupContract
+            {
+                BaseAssetId="BTC",                
+                TradingConditionId = tc.Result.Id,
+                DepositTransferLimit = 0.1m,
+                ProfitWithdrawalLimit = 0.2m,
+                MarginCall = 0.3m,
+                StopOut = 0.4m
+            })
+            .Dump();
+            ag.Result.StopOut.RequiredEqualsTo(0.4m, "ag.Result.StopOut");
+
+            var aa = await client.TradingConditionsEdit.InsertOrUpdateAccountAsset(new AccountAssetPairContract
+            {
+                Instrument = "TSTLKK",
+                BaseAssetId = "BTC",
+                TradingConditionId = tc.Result.Id
+            })
+           .Dump();
+            aa.Result.Instrument.RequiredEqualsTo("TSTLKK", "aa.Result.Instrument");
+
+            var ai = await client.TradingConditionsEdit.AssignInstruments(new Contracts.TradingConditions.AssignInstrumentsContract
+            {
+                BaseAssetId= "BTC",
+                TradingConditionId = tc.Result.Id,
+                Instruments = new string[] { "TSTLKK" }
+            })
+            .Dump();
+
+            ai.IsOk.RequiredEqualsTo(true, "ai.IsOk");
+            
+            var tclist = await dataReaderClient.TradingConditionsRead.List().Dump();
+            await dataReaderClient.TradingConditionsRead.Get(tclist.First().Id).Dump();
+            
+
             Console.WriteLine("Successfuly finished");
         }
 
