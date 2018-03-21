@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
+using MarginTrading.Backend.Contracts.AccountHistory;
 using MarginTrading.Backend.Contracts.DataReaderClient;
 using MarginTrading.Common.Services.Settings;
 using MarginTrading.Contract.BackendContracts;
 using MarginTrading.Contract.ClientContracts;
 using MarginTrading.Contract.Mappers;
 using MarginTrading.Frontend.Settings;
+using AccountHistoryTypeContract = MarginTrading.Contract.BackendContracts.AccountHistoryTypeContract;
 
 namespace MarginTrading.Frontend.Services
 {
@@ -131,7 +133,7 @@ namespace MarginTrading.Frontend.Services
             }
 
             var accountHistoryBackendResponse = await _dataReaderClients.Get(isLive).AccountHistory.ByTypes(
-                new AccountHistoryBackendRequest
+                new AccountHistoryRequest
                 {
                     AccountId = request.AccountId,
                     ClientId = clientId,
@@ -152,7 +154,7 @@ namespace MarginTrading.Frontend.Services
             {
                 return Array.Empty<AccountHistoryItemClient>();
             }
-            var accountHistoryBackendResponse = await _dataReaderClients.Get(isLive).AccountHistory.Timeline(new AccountHistoryBackendRequest
+            var accountHistoryBackendResponse = await _dataReaderClients.Get(isLive).AccountHistory.Timeline(new AccountHistoryRequest
             {
                 AccountId = request.AccountId,
                 ClientId = clientId,
@@ -267,7 +269,7 @@ namespace MarginTrading.Frontend.Services
             return !accountId.StartsWith(_settings.MarginTradingFront.DemoAccountIdPrefix);
         }
 
-        private static AccountHistoryClientResponse ToClientContract(AccountHistoryBackendResponse src)
+        private static AccountHistoryClientResponse ToClientContract(AccountHistoryResponse src)
         {
             return new AccountHistoryClientResponse
             {
@@ -277,7 +279,7 @@ namespace MarginTrading.Frontend.Services
             };
         }
 
-        private static AccountHistoryClientContract ToClientContract(AccountHistoryBackendContract src)
+        private static AccountHistoryClientContract ToClientContract(AccountHistoryContract src)
         {
             return new AccountHistoryClientContract
             {
@@ -294,7 +296,7 @@ namespace MarginTrading.Frontend.Services
             };
         }
 
-        private static OrderHistoryClientContract ToClientContract(OrderHistoryBackendContract src)
+        private static OrderHistoryClientContract ToClientContract(OrderHistoryContract src)
         {
             return new OrderHistoryClientContract
             {
@@ -320,7 +322,7 @@ namespace MarginTrading.Frontend.Services
             };
         }
 
-        public static AccountHistoryItemClient[] ToClientContract(AccountNewHistoryBackendResponse src)
+        public static AccountHistoryItemClient[] ToClientContract(AccountNewHistoryResponse src)
         {
             return src.HistoryItems.Select(i => new AccountHistoryItemClient
             {

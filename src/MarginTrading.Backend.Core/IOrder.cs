@@ -100,7 +100,7 @@ namespace MarginTrading.Backend.Core
         public string Comment { get; set; }
         public MatchedOrderCollection MatchedOrders { get; set; } = new MatchedOrderCollection();
         public MatchedOrderCollection MatchedCloseOrders { get; set; } = new MatchedOrderCollection();
-        public MatchingEngineMode MatchingEngineMode { get; set; }
+        public MatchingEngineMode MatchingEngineMode { get; set; } = MatchingEngineMode.MarketMaker;
 
         public FplData FplData { get; set; } = new FplData();
     }

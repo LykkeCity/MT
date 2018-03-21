@@ -59,7 +59,7 @@ namespace MarginTrading.Backend.TestClient
             builder.Populate(services);
             var container = builder.Build();
             var client = container.Resolve<IMtBackendClient>();
-            
+
             await client.ScheduleSettings.ListExclusions().Dump();
             var excl = await client.ScheduleSettings.CreateExclusion(new DayOffExclusionInputContract
             {
@@ -91,7 +91,7 @@ namespace MarginTrading.Backend.TestClient
                 MultiplierMarkupAsk = 1.1m,
                 MatchingEngineMode = MatchingEngineModeContract.MarketMaker
             };
-            
+
             await client.AssetPairSettingsEdit.Delete("BTCUSD.test").Dump();
             var result = await client.AssetPairSettingsEdit.Insert("BTCUSD.test", assetPairSettingsInputContract).Dump();
             CheckAssetPairSettings(result, assetPairSettingsInputContract);
@@ -105,17 +105,17 @@ namespace MarginTrading.Backend.TestClient
             var list = await dataReaderClient.AssetPairSettingsRead.List().Dump();
             var ours = list.First(e => e.AssetPairId == "BTCUSD.test");
             CheckAssetPairSettings(ours, assetPairSettingsInputContract);
-            
+
             var get = await dataReaderClient.AssetPairSettingsRead.Get("BTCUSD.test").Dump();
             CheckAssetPairSettings(get, assetPairSettingsInputContract);
-            
+
             var nonexistentGet = await dataReaderClient.AssetPairSettingsRead.Get("nonexistent").Dump();
             nonexistentGet.RequiredEqualsTo(null, nameof(nonexistentGet));
-            
+
             var getByMode = await dataReaderClient.AssetPairSettingsRead.Get(MatchingEngineModeContract.Stp).Dump();
             var ours2 = getByMode.First(e => e.AssetPairId == "BTCUSD.test");
             CheckAssetPairSettings(ours2, assetPairSettingsInputContract);
-            
+
             var getByOtherMode = await dataReaderClient.AssetPairSettingsRead.Get(MatchingEngineModeContract.MarketMaker).Dump();
             getByOtherMode.Count(e => e.AssetPairId == "BTCUSD.test").RequiredEqualsTo(0, "getByOtherMode.Count");
 
@@ -124,7 +124,24 @@ namespace MarginTrading.Backend.TestClient
 
             var nonexistentDelete = await client.AssetPairSettingsEdit.Delete("nonexistent").Dump();
             nonexistentDelete.RequiredEqualsTo(null, nameof(nonexistentDelete));
-            
+
+            #region TradeMonitoring
+            var assetSumary = await dataReaderClient.TradeMonitoringRead.AssetSummaryList().Dump();
+
+            var openPositions = await dataReaderClient.TradeMonitoringRead.OpenPositions().Dump();
+            string clientId = openPositions.First().ClientId;
+            var openPositionsByClient = await dataReaderClient.TradeMonitoringRead.OpenPositionsByClient(clientId).Dump();
+            var openPositionsByDate = await dataReaderClient.TradeMonitoringRead.OpenPositionsByDate(DateTime.UtcNow.AddDays(-30), DateTime.UtcNow).Dump();
+            var openPositionsByVolume = await dataReaderClient.TradeMonitoringRead.OpenPositionsByVolume(100).Dump();
+
+            var pendingOrders = await dataReaderClient.TradeMonitoringRead.PendingOrders().Dump();
+            var pendingOrdersByClient = await dataReaderClient.TradeMonitoringRead.PendingOrdersByClient(clientId).Dump();
+            var pendingOrdersByDate = await dataReaderClient.TradeMonitoringRead.PendingOrdersByDate(DateTime.UtcNow.AddDays(-30), DateTime.UtcNow).Dump();
+            var pendingOrdersByVolume = await dataReaderClient.TradeMonitoringRead.PendingOrdersByVolume(100).Dump();
+
+            var orderBooksByInstrument = await dataReaderClient.TradeMonitoringRead.OrderBooksByInstrument("BTCUSD");
+            #endregion
+
             Console.WriteLine("Successfuly finished");
         }
 

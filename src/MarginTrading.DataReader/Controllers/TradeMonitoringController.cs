@@ -1,30 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using MarginTrading.Backend.Contracts;
+using MarginTrading.Backend.Contracts.TradeMonitoring;
 using MarginTrading.Backend.Core;
-using MarginTrading.Contract.BackendContracts;
-using MarginTrading.DataReader.Helpers;
+using MarginTrading.Common.Services;
 using MarginTrading.DataReader.Models;
 using MarginTrading.DataReader.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using OrderExtensions = MarginTrading.DataReader.Helpers.OrderExtensions;
 
 namespace MarginTrading.DataReader.Controllers
 {
     [Authorize]
     [Route("api/trade/")]
-    public class TradeMonitoringController : Controller
+    public class TradeMonitoringController : Controller, ITradeMonitoringReadingApi
     {
         private readonly IOrdersSnapshotReaderService _ordersSnapshotReaderService;
         private readonly IOrderBookSnapshotReaderService _orderBookSnapshotReaderService;
+        private readonly IConvertService _convertService;
 
         public TradeMonitoringController(IOrdersSnapshotReaderService ordersSnapshotReaderService,
-            IOrderBookSnapshotReaderService orderBookSnapshotReaderService)
+            IOrderBookSnapshotReaderService orderBookSnapshotReaderService,
+            IConvertService convertService)
         {
             _ordersSnapshotReaderService = ordersSnapshotReaderService;
             _orderBookSnapshotReaderService = orderBookSnapshotReaderService;
+            _convertService = convertService;
         }
 
         /// <summary>
@@ -39,9 +43,9 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns summary info by assets</response>
         [HttpGet]
         [Route("assets/summary")]
-        public async Task<List<SummaryAssetInfo>> GetAssetsSummary()
+        public async Task<List<SummaryAssetContract>> AssetSummaryList()
         {
-            var result = new List<SummaryAssetInfo>();
+            var result = new List<SummaryAssetContract>();
             var orders = await _ordersSnapshotReaderService.GetAllAsync();
 
             foreach (var order in orders)
@@ -50,7 +54,7 @@ namespace MarginTrading.DataReader.Controllers
 
                 if (assetInfo == null)
                 {
-                    result.Add(new SummaryAssetInfo
+                    result.Add(new SummaryAssetContract
                     {
                         AssetPairId = order.Instrument,
                         PnL = order.FplData.Fpl,
@@ -86,10 +90,12 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns opened positions</response>
         [HttpGet]
         [Route("openPositions/byVolume/{volume}")]
-        public async Task<List<OrderContract>> GetOpenPositionsByVolume([FromRoute]decimal volume)
+        public async Task<List<OrderContract>> OpenPositionsByVolume([FromRoute]decimal volume)
         {
             return (await _ordersSnapshotReaderService.GetActiveAsync())
-                .Where(order => order.GetMatchedVolume() >= volume).Select(OrderExtensions.ToBaseContract)
+                .Where(order => order.GetMatchedVolume() >= volume)
+                .Select(OrderExtensions.ToBaseContract)
+                .Select(Convert)
                 .ToList();
         }
 
@@ -103,9 +109,9 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns opened positions</response>
         [HttpGet]
         [Route("openPositions")]
-        public Task<List<OrderContract>> GetAllOpenPositions()
+        public Task<List<OrderContract>> OpenPositions()
         {
-            return GetOpenPositionsByVolume(0);
+            return OpenPositionsByVolume(0);
         }
 
         /// <summary>
@@ -118,11 +124,12 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns opened positions</response>
         [HttpGet]
         [Route("openPositions/byDate")]
-        public async Task<List<OrderContract>> GetOpenPositionsByDate([FromQuery] DateTime from, [FromQuery] DateTime to)
+        public async Task<List<OrderContract>> OpenPositionsByDate([FromQuery] DateTime from, [FromQuery] DateTime to)
         {
             return (await _ordersSnapshotReaderService.GetActiveAsync())
                 .Where(order => order.OpenDate >= from.Date && order.OpenDate< to.Date)
                 .Select(OrderExtensions.ToBaseContract)
+                .Select(Convert)
                 .ToList();
         }
 
@@ -136,11 +143,12 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns opened positions</response>
         [HttpGet]
         [Route("openPositions/byClient/{clientId}")]
-        public async Task<List<OrderContract>> GetOpenPositionsByClient([FromRoute]string clientId)
+        public async Task<List<OrderContract>> OpenPositionsByClient([FromRoute]string clientId)
         {
             return (await _ordersSnapshotReaderService.GetActiveAsync())
                 .Where(order => order.ClientId == clientId)
                 .Select(OrderExtensions.ToBaseContract)
+                .Select(Convert)
                 .ToList();
         }
 
@@ -154,10 +162,12 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns pending orders</response>
         [HttpGet]
         [Route("pendingOrders/byVolume/{volume}")]
-        public async Task<List<OrderContract>> GetPendingOrdersByVolume([FromRoute]decimal volume)
+        public async Task<List<OrderContract>> PendingOrdersByVolume([FromRoute]decimal volume)
         {
             return (await _ordersSnapshotReaderService.GetPendingAsync())
-                .Where(order => Math.Abs(order.Volume) >= volume).Select(OrderExtensions.ToBaseContract)
+                .Where(order => Math.Abs(order.Volume) >= volume)
+                .Select(OrderExtensions.ToBaseContract)
+                .Select(Convert)
                 .ToList();
         }
 
@@ -171,9 +181,9 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns pending orders</response>
         [HttpGet]
         [Route("pendingOrders")]
-        public Task<List<OrderContract>> GetAllPendingOrders()
+        public Task<List<OrderContract>> PendingOrders()
         {
-            return GetPendingOrdersByVolume(0);
+            return PendingOrdersByVolume(0);
         }
 
         /// <summary>
@@ -186,11 +196,12 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns pending orders</response>
         [HttpGet]
         [Route("pendingOrders/byDate")]
-        public async Task<List<OrderContract>> GetPendingOrdersByDate([FromQuery] DateTime from, [FromQuery] DateTime to)
+        public async Task<List<OrderContract>> PendingOrdersByDate([FromQuery] DateTime from, [FromQuery] DateTime to)
         {
             return (await _ordersSnapshotReaderService.GetPendingAsync())
                 .Where(order => order.CreateDate >= from && order.CreateDate < to)
                 .Select(OrderExtensions.ToBaseContract)
+                .Select(Convert)
                 .ToList();
         }
 
@@ -204,11 +215,12 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns pending orders</response>
         [HttpGet]
         [Route("pendingOrders/byClient/{clientId}")]
-        public async Task<List<OrderContract>> GetPendingOrdersByClient([FromRoute]string clientId)
+        public async Task<List<OrderContract>> PendingOrdersByClient([FromRoute]string clientId)
         {
             return (await _ordersSnapshotReaderService.GetPendingAsync())
                 .Where(order => order.ClientId == clientId)
                 .Select(OrderExtensions.ToBaseContract)
+                .Select(Convert)
                 .ToList();
         }
 
@@ -222,10 +234,10 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns orderbooks</response>
         [HttpGet]
         [Route("orderbooks/byInstrument/{instrument}")]
-        public async Task<List<OrderBookModel>> GetOrderBooks(string instrument)
+        public async Task<List<OrderBookContract>> OrderBooksByInstrument(string instrument)
         {
             var orderbooks = await _orderBookSnapshotReaderService.GetOrderBook(instrument);
-            return new List<OrderBookModel>
+            return (new List<OrderBookModel>
             {
                 new OrderBookModel
                 {
@@ -233,7 +245,20 @@ namespace MarginTrading.DataReader.Controllers
                     Buy = orderbooks.Buy.Values.SelectMany(o => o).ToList(),
                     Sell = orderbooks.Sell.Values.SelectMany(o => o).ToList()
                 }
-            };
+            })
+            .Select(Convert)
+            .ToList();
         }
+
+
+        private OrderContract Convert(Contract.BackendContracts.OrderContract domainContract)
+        {
+            return _convertService.Convert<Contract.BackendContracts.OrderContract, OrderContract>(domainContract);
+        }
+        private OrderBookContract Convert(OrderBookModel domainContract)
+        {
+            return _convertService.Convert<OrderBookModel, OrderBookContract>(domainContract);
+        }
+        
     }
 }

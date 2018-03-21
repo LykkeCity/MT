@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Contracts;
+using MarginTrading.Backend.Contracts.AccountHistory;
 using MarginTrading.Backend.Core;
-using MarginTrading.Contract.BackendContracts;
 using MarginTrading.DataReader.Helpers;
 using MarginTrading.DataReader.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -36,7 +36,7 @@ namespace MarginTrading.DataReader.Controllers
 
         [Route("byTypes")]
         [HttpGet]
-        public async Task<AccountHistoryBackendResponse> ByTypes([FromQuery] AccountHistoryBackendRequest request)
+        public async Task<AccountHistoryResponse> ByTypes([FromQuery] AccountHistoryRequest request)
         {
             request.From = request.From?.ToUniversalTime();
             request.To = request.To?.ToUniversalTime();
@@ -54,7 +54,7 @@ namespace MarginTrading.DataReader.Controllers
 
             var openPositions = await _ordersSnapshotReaderService.GetActiveByAccountIdsAsync(clientAccountIds);
 
-            return new AccountHistoryBackendResponse
+            return new AccountHistoryResponse
             {
                 Account = accounts.Select(AccountHistoryExtensions.ToBackendContract)
                     .OrderByDescending(item => item.Date).ToArray(),
@@ -67,7 +67,7 @@ namespace MarginTrading.DataReader.Controllers
 
         [Route("byAccounts")]
         [HttpGet]
-        public async Task<Dictionary<string, AccountHistoryBackendContract[]>> ByAccounts(
+        public async Task<Dictionary<string, AccountHistoryContract[]>> ByAccounts(
             [FromQuery] string accountId = null, [FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null)
         {
             from = from?.ToUniversalTime();
@@ -82,7 +82,7 @@ namespace MarginTrading.DataReader.Controllers
 
         [Route("timeline")]
         [HttpGet]
-        public async Task<AccountNewHistoryBackendResponse> Timeline([FromQuery] AccountHistoryBackendRequest request)
+        public async Task<AccountNewHistoryResponse> Timeline([FromQuery] AccountHistoryRequest request)
         {
             request.From = request.From?.ToUniversalTime();
             request.To = request.To?.ToUniversalTime();
@@ -101,29 +101,29 @@ namespace MarginTrading.DataReader.Controllers
                                item.OpenDate != null &&
                                item.OrderUpdateType == OrderUpdateType.Close).ToList();
 
-            var items = accounts.Select(item => new AccountHistoryItemBackend
+            var items = accounts.Select(item => new AccountHistoryItem
                 {
                     Account = item.ToBackendContract(),
                     Date = item.Date
                 })
-                .Concat(openOrders.Select(item => new AccountHistoryItemBackend
+                .Concat(openOrders.Select(item => new AccountHistoryItem
                 {
                     Position = item.ToBackendHistoryContract(),
                     Date = item.OpenDate.Value
                 }))
-                .Concat(history.Select(item => new AccountHistoryItemBackend
+                .Concat(history.Select(item => new AccountHistoryItem
                 {
                     Position = item.ToBackendHistoryOpenedContract(),
                     Date = item.OpenDate.Value
                 }))
-                .Concat(history.Select(item => new AccountHistoryItemBackend
+                .Concat(history.Select(item => new AccountHistoryItem
                 {
                     Position = item.ToBackendHistoryContract(),
                     Date = item.CloseDate.Value
                 }))
                 .OrderByDescending(item => item.Date);
 
-            return new AccountNewHistoryBackendResponse
+            return new AccountNewHistoryResponse
             {
                 HistoryItems = items.ToArray()
             };
