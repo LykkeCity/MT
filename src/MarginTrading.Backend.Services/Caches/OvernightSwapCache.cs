@@ -26,6 +26,14 @@ namespace MarginTrading.Backend.Services.Caches
 			}
 		}
 
+		public bool TryGet(string key, out OvernightSwapCalculation item)
+		{
+			lock (LockObj)
+			{
+				return _cache.TryGetValue(key, out item);
+			}
+		}
+
 		public IReadOnlyList<OvernightSwapCalculation> GetAll()
 		{
 			lock(LockObj)
@@ -44,6 +52,20 @@ namespace MarginTrading.Backend.Services.Caches
 				_cache[item.Key] = item;
 				return true;
 			}
+		}
+
+		public bool AddOrReplace(OvernightSwapCalculation item)
+		{
+			if (item == null)
+				return false;
+			
+			lock (LockObj)
+			{
+				_cache.Remove(item.Key);
+				_cache[item.Key] = item;
+			}
+
+			return true;
 		}
 
 		public void SetAll(IEnumerable<OvernightSwapCalculation> items)

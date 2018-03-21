@@ -1,7 +1,18 @@
-﻿namespace MarginTrading.Backend.Core
+﻿using System.Threading.Tasks;
+
+namespace MarginTrading.Backend.Core
 {
 	public interface IOvernightSwapService
 	{
-		void CalculateSwaps();
+		/// <summary>
+		/// Scheduler entry point for overnight swaps calculation. Successfully calculated swaps are immediately charged.
+		/// </summary>
+		/// <returns></returns>
+		Task CalculateAndChargeSwaps();
+
+		/// <summary>
+		/// Initialization point
+		/// </summary>
+		void Start();
 	}
 }

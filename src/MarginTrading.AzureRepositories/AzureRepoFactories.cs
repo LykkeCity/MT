@@ -2,6 +2,7 @@
 using Common.Log;
 using Lykke.SettingsReader;
 using MarginTrading.AzureRepositories.Contract;
+using MarginTrading.AzureRepositories.Entities;
 using MarginTrading.AzureRepositories.Logs;
 using MarginTrading.Backend.Core;
 using MarginTrading.Common.Services;
@@ -75,6 +76,18 @@ namespace MarginTrading.AzureRepositories
             {
                 return new RiskSystemCommandsLogRepository(AzureTableStorage<RiskSystemCommandsLogEntity>.Create(connString,
                     "RiskSystemCommandsLog", log));
+            }
+
+            public static OvernightSwapStateRepository CreateOvernightSwapStateRepository(IReloadingManager<string> connString, ILog log)
+            {
+                return new OvernightSwapStateRepository(AzureTableStorage<OvernightSwapStateEntity>.Create(connString,
+                    "OvernightSwapState", log));
+            }
+
+            public static OvernightSwapHistoryRepository CreateOvernightSwapHistoryRepository(IReloadingManager<string> connString, ILog log)
+            {
+                return new OvernightSwapHistoryRepository(AzureTableStorage<OvernightSwapHistoryEntity>.Create(connString,
+                    "OvernightSwapHistory", log));
             }
 
             public static IDayOffSettingsRepository CreateDayOffSettingsRepository(IReloadingManager<string> connString)

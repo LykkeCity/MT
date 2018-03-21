@@ -58,7 +58,8 @@ namespace MarginTrading.Backend.Core
         Deposit,
         Withdraw,
         OrderClosed,
-        Reset
+        Reset,
+        Swap
     }
 
     public interface IMarginTradingAccountHistoryRepository

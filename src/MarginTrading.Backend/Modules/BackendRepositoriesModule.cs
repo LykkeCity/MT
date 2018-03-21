@@ -8,6 +8,7 @@ using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.AzureRepositories.Logs;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Common.Services;
@@ -71,6 +72,14 @@ namespace MarginTrading.Backend.Modules
 
 			builder.Register<IRiskSystemCommandsLogRepository>(ctx =>
 				AzureRepoFactories.MarginTrading.CreateRiskSystemCommandsLogRepository(_settings.Nested(s => s.Db.LogsConnString), _log)
+			).SingleInstance();
+			
+			builder.Register<IOvernightSwapStateRepository>(ctx =>
+				AzureRepoFactories.MarginTrading.CreateOvernightSwapStateRepository(_settings.Nested(s => s.Db.StateConnString), _log)
+			).SingleInstance();
+			
+			builder.Register<IOvernightSwapHistoryRepository>(ctx =>
+				AzureRepoFactories.MarginTrading.CreateOvernightSwapHistoryRepository(_settings.Nested(s => s.Db.HistoryConnString), _log)
 			).SingleInstance();
 
 			builder.Register(ctx =>
