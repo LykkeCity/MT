@@ -51,7 +51,12 @@ namespace MarginTrading.DataReader.Helpers
                 CloseCommission = src.GetCloseCommission(),
                 SwapCommission = src.SwapCommission,
                 MatchedOrders = src.MatchedOrders.Select(MatchedOrderToBackendContract).ToList(),
-                MatchedCloseOrders = src.MatchedCloseOrders.Select(MatchedOrderToBackendContract).ToList()
+                MatchedCloseOrders = src.MatchedCloseOrders.Select(MatchedOrderToBackendContract).ToList(),
+                OpenExternalOrderId = src.OpenExternalOrderId,
+                OpenExternalProviderId = src.OpenExternalProviderId,
+                CloseExternalOrderId = src.CloseExternalOrderId,
+                CloseExternalProviderId = src.CloseExternalProviderId,
+                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>()
             };
         }
 
