@@ -99,6 +99,7 @@ namespace MarginTrading.Backend.TestClient
             assetPairSettingsInputContract.MatchingEngineMode = MatchingEngineModeContract.Stp;
             var result2 = await client.AssetPairSettingsEdit.Update("BTCUSD.test", assetPairSettingsInputContract).Dump();
             CheckAssetPairSettings(result2, assetPairSettingsInputContract);
+                        
 
             var dataReaderClient = container.Resolve<IMtDataReaderClient>();
 

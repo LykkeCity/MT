@@ -60,6 +60,8 @@ namespace MarginTrading.Backend.Core.Mappers
                 LeverageMaintenance = src.LeverageMaintenance,
                 SwapLong = src.SwapLong,
                 SwapShort = src.SwapShort,
+                OvernightSwapLong = src.OvernightSwapLong,
+                OvernightSwapShort =src.OvernightSwapShort,
                 CommissionLong = src.CommissionLong,
                 CommissionShort = src.CommissionShort,
                 CommissionLot = src.CommissionLot,
