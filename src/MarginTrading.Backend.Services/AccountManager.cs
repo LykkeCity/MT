@@ -115,7 +115,8 @@ namespace MarginTrading.Backend.Services
         #endregion
        
 
-        public async Task<string> UpdateBalanceAsync(IMarginTradingAccount account, decimal amount, AccountHistoryType historyType, string comment, string eventSourceId = null, bool changeTransferLimit = false)
+        public async Task<string> UpdateBalanceAsync(IMarginTradingAccount account, decimal amount, AccountHistoryType historyType, 
+            string comment, string eventSourceId = null, bool changeTransferLimit = false, string auditLog = null)
         {
             if (historyType == AccountHistoryType.Deposit && changeTransferLimit)
             {
@@ -148,10 +149,11 @@ namespace MarginTrading.Backend.Services
                     account.ClientId,
                     amount,
                     updatedAccount.Balance,
-                    updatedAccount.WithdrawTransferLimit,
-                    historyType,
-                    comment,
-                    eventSourceId);
+                    updatedAccount.WithdrawTransferLimit, 
+                    historyType, 
+                    comment, 
+                    eventSourceId, 
+                    auditLog);
 
                 return transactionId;
             }

@@ -47,6 +47,7 @@ namespace MarginTrading.AccountHistoryBroker
                 WithdrawTransferLimit = (double) accountHistoryContract.WithdrawTransferLimit,
                 PositionId = accountHistoryContract.OrderId,
                 LegalEntity = accountHistory.LegalEntity,
+                AuditLog = accountHistoryContract.AuditLog
             };
             
             return Task.WhenAll(

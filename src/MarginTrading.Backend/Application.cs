@@ -11,8 +11,8 @@ using MarginTrading.Backend.Core.MarketMakerFeed;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Settings;
-using MarginTrading.Backend.Scheduling;
 using MarginTrading.Backend.Services;
+using MarginTrading.Backend.Scheduling;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Notifications;
@@ -87,7 +87,7 @@ namespace MarginTrading.Backend
                     _logger.WriteWarning(ServiceName, nameof(StartApplicationAsync),
                         "RisksRabbitMqSettings is not configured");
                 }
-
+                
                 // Demo server works only in MM mode
                 if (_marginSettings.IsLive)
                 {
@@ -96,15 +96,16 @@ namespace MarginTrading.Backend
                         HandleStpOrderbook,
                         _rabbitMqService.GetMsgPackDeserializer<ExternalExchangeOrderbookMessage>());
                 }
+
                 var registry = new Registry();
-                registry.Schedule<OvernightSwapJob>().ToRunEvery(0).Days().At(19, 54);//_marginSettings.OvernightSwapCalculationHour, 0);
+                registry.Schedule<OvernightSwapJob>().ToRunEvery(0).Days().At(_marginSettings.OvernightSwapCalculationHour, 0);
                 JobManager.Initialize(registry);
                 JobManager.JobException += info => _logger.WriteError(ServiceName, nameof(JobManager), info.Exception);
             }
             catch (Exception ex)
             {
                 _consoleWriter.WriteLine($"{ServiceName} error: {ex.Message}");
-                await _logger.WriteErrorAsync(ServiceName, nameof(StartApplicationAsync), null, ex);
+                await _logger.WriteErrorAsync(ServiceName, "Application.RunAsync", null, ex);
             }
         }
 

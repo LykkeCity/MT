@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
@@ -31,6 +32,8 @@ namespace MarginTrading.Backend.Services
 		private readonly AccountManager _accountManager;
 		private readonly MarginSettings _marginSettings;
 		private readonly ILog _log;
+		
+		private static readonly object LockObj = new object();
 
 		private DateTime _currentStartTimestamp;
 
@@ -74,65 +77,68 @@ namespace MarginTrading.Backend.Services
 
 		public void CalculateAndChargeSwaps()
 		{
-			_currentStartTimestamp = DateTime.UtcNow;
-			
-			//read orders syncronously
-			var openOrders = _orderReader.GetActive();
-			
-			//filter orders that are already calculated
-			var calculatedIds = _overnightSwapCache.GetAll()
-				.Where(x => x.Timestamp > LastInvocationTime)
-				.SelectMany(x => x.OpenOrderIds);
-			var filteredOrders = openOrders.Where(x => !calculatedIds.Contains(x.Id));
-			
-			//start calculation in a separate thread
-			_threadSwitcher.SwitchThread(async () =>
+			lock (LockObj)
 			{
-				foreach (var accountOrders in filteredOrders.GroupBy(x => x.AccountId))
-				{
-					var clientId = accountOrders.First().ClientId;
-					MarginTradingAccount account;
-					try
-					{
-						account = _accountsCacheService.Get(clientId, accountOrders.Key);
-					}
-					catch (Exception ex)
-					{
-						await ProcessFailedOrders(accountOrders, accountOrders.FirstOrDefault()?.AccountId, null, ex);
-						continue;
-					}
+				_currentStartTimestamp = DateTime.UtcNow;
 
-					foreach (var ordersByInstrument in accountOrders.GroupBy(x => x.Instrument))
+				//read orders syncronously
+				var openOrders = _orderReader.GetActive();
+
+				//filter orders that are already calculated
+				var calculatedIds = _overnightSwapCache.GetAll()
+					.Where(x => x.Timestamp > LastInvocationTime)
+					.SelectMany(x => x.OpenOrderIds);
+				var filteredOrders = openOrders.Where(x => !calculatedIds.Contains(x.Id));
+
+				//start calculation in a separate thread
+				_threadSwitcher.SwitchThread(async () =>
+				{
+					foreach (var accountOrders in filteredOrders.GroupBy(x => x.AccountId))
 					{
-						var firstOrder = ordersByInstrument.FirstOrDefault();
-						IAccountAssetPair accountAssetPair;
+						var clientId = accountOrders.First().ClientId;
+						MarginTradingAccount account;
 						try
 						{
-							accountAssetPair = _accountAssetsCacheService.GetAccountAsset(
-								firstOrder?.TradingConditionId, firstOrder?.AccountAssetId, firstOrder?.Instrument);
+							account = _accountsCacheService.Get(clientId, accountOrders.Key);
 						}
 						catch (Exception ex)
 						{
-							await ProcessFailedOrders(ordersByInstrument, account.Id, ordersByInstrument.Key, ex);
+							await ProcessFailedOrders(accountOrders, accountOrders.FirstOrDefault()?.AccountId, null, ex);
 							continue;
 						}
 
-						foreach (OrderDirection direction in Enum.GetValues(typeof(OrderDirection)))
+						foreach (var ordersByInstrument in accountOrders.GroupBy(x => x.Instrument))
 						{
-							var orders = ordersByInstrument.Where(order => order.GetOrderType() == direction).ToList();
+							var firstOrder = ordersByInstrument.FirstOrDefault();
+							IAccountAssetPair accountAssetPair;
 							try
 							{
-								await ProcessOrders(orders, ordersByInstrument.Key, account, accountAssetPair, direction);
+								accountAssetPair = _accountAssetsCacheService.GetAccountAsset(
+									firstOrder?.TradingConditionId, firstOrder?.AccountAssetId, firstOrder?.Instrument);
 							}
 							catch (Exception ex)
 							{
-								await ProcessFailedOrders(orders, account.Id, ordersByInstrument.Key, ex);
+								await ProcessFailedOrders(ordersByInstrument, account.Id, ordersByInstrument.Key, ex);
 								continue;
+							}
+
+							foreach (OrderDirection direction in Enum.GetValues(typeof(OrderDirection)))
+							{
+								var orders = ordersByInstrument.Where(order => order.GetOrderType() == direction).ToList();
+								try
+								{
+									await ProcessOrders(orders, ordersByInstrument.Key, account, accountAssetPair, direction);
+								}
+								catch (Exception ex)
+								{
+									await ProcessFailedOrders(orders, account.Id, ordersByInstrument.Key, ex);
+									continue;
+								}
 							}
 						}
 					}
-				}
-			});
+				});
+			}
 		}
 
 		/// <summary>
@@ -156,15 +162,19 @@ namespace MarginTrading.Backend.Services
 			//calc swaps
 			var swapRate = direction == OrderDirection.Buy ? accountAssetPair.CommissionLong : accountAssetPair.CommissionShort;
 			var total = orders.Sum(order => _commissionService.GetOvernightSwap(order, swapRate));
-	
-			//charge comission
-			await _accountManager.UpdateBalanceAsync(account, total, AccountHistoryType.Swap,
-				$"{accountAssetPair.Instrument} {(direction == OrderDirection.Buy ? "long" : "short")} swaps. Volume: {orders.Sum(o => o.Volume)}. Positions count: {orders.Count}. Rate: {swapRate}. Time: {_currentStartTimestamp:u}.");
 					
 			//create calculation obj & add to cache
 			var calculation = OvernightSwapCalculation.Create(account.Id, instrument,
 				orders.Select(order => order.Id).ToList(), _currentStartTimestamp, true, null, total, swapRate, direction);
 			_overnightSwapCache.AddOrReplace(calculation);
+	
+			//charge comission
+			await _accountManager.UpdateBalanceAsync(
+				account: account, 
+				amount: total, 
+				historyType: AccountHistoryType.Swap,
+				comment : $"{accountAssetPair.Instrument} {(direction == OrderDirection.Buy ? "long" : "short")} swaps. Volume: {orders.Sum(o => o.Volume)}. Positions count: {orders.Count}. Rate: {swapRate}. Time: {_currentStartTimestamp:u}.",
+				auditLog: calculation.ToJson());
 			
 			//write state and log
 			await _overnightSwapStateRepository.AddOrReplaceAsync(calculation);
