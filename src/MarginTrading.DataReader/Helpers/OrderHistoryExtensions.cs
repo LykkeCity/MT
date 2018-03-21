@@ -1,4 +1,5 @@
 ﻿using MarginTrading.Backend.Contracts.AccountHistory;
+using MarginTrading.Backend.Contracts.AssetPairSettings;
 using MarginTrading.Backend.Contracts.TradeMonitoring;
 using MarginTrading.Backend.Core;
 using MarginTrading.Common.Extensions;
@@ -33,7 +34,12 @@ namespace MarginTrading.DataReader.Helpers
                 CloseCommission = src.CloseCommission,
                 EquivalentAsset = src.EquivalentAsset,
                 OpenPriceEquivalent = src.OpenPriceEquivalent,
-                ClosePriceEquivalent = src.ClosePriceEquivalent
+                ClosePriceEquivalent = src.ClosePriceEquivalent,
+                OpenExternalOrderId = src.OpenExternalOrderId,
+                OpenExternalProviderId = src.OpenExternalProviderId,
+                CloseExternalOrderId = src.CloseExternalOrderId,
+                CloseExternalProviderId = src.CloseExternalProviderId,
+                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>()
             };
         }
 
@@ -63,7 +69,12 @@ namespace MarginTrading.DataReader.Helpers
                 CloseCommission = src.CloseCommission,
                 EquivalentAsset = src.EquivalentAsset,
                 OpenPriceEquivalent = src.OpenPriceEquivalent,
-                ClosePriceEquivalent = src.ClosePriceEquivalent
+                ClosePriceEquivalent = src.ClosePriceEquivalent,
+                OpenExternalOrderId = src.OpenExternalOrderId,
+                OpenExternalProviderId = src.OpenExternalProviderId,
+                CloseExternalOrderId = src.CloseExternalOrderId,
+                CloseExternalProviderId = src.CloseExternalProviderId,
+                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>()
             };
         }
     }
