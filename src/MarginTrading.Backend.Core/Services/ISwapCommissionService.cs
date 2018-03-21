@@ -4,5 +4,6 @@
     {
         void SetCommissionRates(string accountAssetId, string tradingConditionId, Order order);
         decimal GetSwaps(IOrder order);
+        decimal GetOvernightSwap(IOrder order, decimal swapRate);
     }
 }

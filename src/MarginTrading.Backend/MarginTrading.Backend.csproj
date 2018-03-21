@@ -30,6 +30,7 @@
     <ProjectReference Include="..\MarginTrading.Backend.Services\MarginTrading.Backend.Services.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="FluentScheduler" Version="5.3.0" />
     <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
     <PackageReference Include="Lykke.Common.ApiLibrary" Version="1.0.14" />
     <PackageReference Include="Lykke.Logs" Version="3.6.0" />
