@@ -50,7 +50,7 @@ namespace MarginTrading.Backend.Services
             var openDate = DateTime.UtcNow;
             var closeDate = openDate.AddDays(1);
             return GetSwaps(order.AccountAssetId, order.Instrument, order.GetOrderType(), openDate, closeDate,
-                order.Volume, swapRate);
+                Math.Abs(order.Volume), swapRate);
         }
 
         public void SetCommissionRates(string tradingConditionId, string accountAssetId, Order order)

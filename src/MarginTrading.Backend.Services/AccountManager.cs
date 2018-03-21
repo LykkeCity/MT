@@ -149,9 +149,9 @@ namespace MarginTrading.Backend.Services
                     account.ClientId,
                     amount,
                     updatedAccount.Balance,
-                    updatedAccount.WithdrawTransferLimit, 
-                    historyType, 
-                    comment, 
+                    updatedAccount.WithdrawTransferLimit,
+                    historyType,
+                    comment,
                     eventSourceId, 
                     auditLog);
 

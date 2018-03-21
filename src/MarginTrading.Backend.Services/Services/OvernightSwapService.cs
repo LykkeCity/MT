@@ -174,9 +174,9 @@ namespace MarginTrading.Backend.Services
 			//charge comission
 			await _accountManager.UpdateBalanceAsync(
 				account: account, 
-				amount: total, 
+				amount: - total, 
 				historyType: AccountHistoryType.Swap,
-				comment : $"{accountAssetPair.Instrument} {(direction == OrderDirection.Buy ? "long" : "short")} swaps. Volume: {orders.Sum(o => o.Volume)}. Positions count: {orders.Count}. Rate: {swapRate}. Time: {_currentStartTimestamp:u}.",
+				comment : $"{accountAssetPair.Instrument} {(direction == OrderDirection.Buy ? "long" : "short")} swaps. Positions count: {orders.Count}. Rate: {swapRate}. Time: {_currentStartTimestamp:u}.",
 				auditLog: calculation.ToJson());
 			
 			//write state and log
