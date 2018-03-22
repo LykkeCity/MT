@@ -24,6 +24,7 @@ namespace MarginTrading.Backend.Contracts.DataReaderClient
             AssetPairSettingsRead = RestService.For<IAssetPairSettingsReadingApi>(url, settings);
             AccountHistory = RestService.For<IAccountHistoryApi>(url, settings);
             AccountsApi = RestService.For<IAccountsApi>(url, settings);
+            AccountAssetPairsRead = RestService.For<IAccountAssetPairsReadingApi>(url, settings);
             TradeMonitoringRead = RestService.For<ITradeMonitoringReadingApi>(url, settings);
             TradingConditionsRead = RestService.For<ITradingConditionsReadingApi>(url, settings);
         }
