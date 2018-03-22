@@ -21,6 +21,7 @@ namespace MarginTrading.DataReader.Helpers
                 Type = src.Type.ToType<AccountHistoryTypeContract>(),
                 OrderId = src.OrderId,
                 LegalEntity = src.LegalEntity,
+                AuditLog = src.AuditLog
             };
         }
     }

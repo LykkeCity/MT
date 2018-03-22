@@ -8,6 +8,7 @@ using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.AzureRepositories.Logs;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Services.MatchingEngines;
 using Moq;
 
@@ -30,6 +31,8 @@ namespace MarginTradingTests.Modules
             var accountGroupRepository = MarginTradingTestsUtils.GetPopulatedAccountGroupRepository();
             var accountAssetsRepository = MarginTradingTestsUtils.GetPopulatedAccountAssetsRepository();
             var meRoutesRepository = MarginTradingTestsUtils.GetPopulatedMatchingEngineRoutesRepository();
+            var overnightSwapStateRepository = MarginTradingTestsUtils.GetOvernightSwapStateRepository();
+            var overnightSwapHistoryRepository = MarginTradingTestsUtils.GetOvernightSwapHistoryRepository();
 
             var blobRepository = new Mock<IMarginTradingBlobRepository>();
             var orderHistoryRepository = new Mock<IMarginTradingOrdersHistoryRepository>();
@@ -48,6 +51,9 @@ namespace MarginTradingTests.Modules
                 .SingleInstance();
             builder.RegisterInstance(accountAssetsRepository).As<IAccountAssetPairsRepository>().SingleInstance();
             builder.RegisterInstance(meRoutesRepository).As<IMatchingEngineRoutesRepository>().SingleInstance();
+            builder.RegisterInstance(overnightSwapStateRepository).As<IOvernightSwapStateRepository>().SingleInstance();
+            builder.RegisterInstance(overnightSwapHistoryRepository).As<IOvernightSwapHistoryRepository>()
+                .SingleInstance();
             builder.RegisterType<MatchingEngineInMemoryRepository>().As<IMatchingEngineRepository>().SingleInstance();
 
             //mocks

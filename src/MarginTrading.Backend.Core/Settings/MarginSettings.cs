@@ -50,5 +50,6 @@ namespace MarginTrading.Backend.Core.Settings
         
         public int MaxMarketMakerLimitOrderAge { get; set; }
         public string ReportingEquivalentPricesAsset { get; set; }
+        public int OvernightSwapCalculationHour { get; set; }
     }
 }

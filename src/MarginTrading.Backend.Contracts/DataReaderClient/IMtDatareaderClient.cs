@@ -8,6 +8,8 @@ namespace MarginTrading.Backend.Contracts.DataReaderClient
         IAssetPairSettingsReadingApi AssetPairSettingsRead { get; }
         IAccountHistoryApi AccountHistory { get; }
         IAccountsApi AccountsApi { get; }
+        IAccountAssetPairsReadingApi AccountAssetPairsRead { get; }
         ITradeMonitoringReadingApi TradeMonitoringRead { get; }
+        ITradingConditionsReadingApi TradingConditionsRead { get; }
     }
 }

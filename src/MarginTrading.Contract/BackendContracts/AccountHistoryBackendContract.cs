@@ -15,5 +15,6 @@ namespace MarginTrading.Contract.BackendContracts
         public AccountHistoryTypeContract Type { get; set; }
         public string OrderId { get; set; }
         public string LegalEntity { get; set; }
+        public string AuditLog { get; set; }
     }
 }

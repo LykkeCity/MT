@@ -17,6 +17,7 @@ namespace MarginTrading.Backend.Core
         AccountHistoryType Type { get; }
         string OrderId { get; }
         string LegalEntity { get; }
+        string AuditLog { get; }
     }
 
     public class MarginTradingAccountHistory : IMarginTradingAccountHistory
@@ -32,6 +33,7 @@ namespace MarginTrading.Backend.Core
         public AccountHistoryType Type { get; set; }
         public string OrderId { get; set; }
         public string LegalEntity { get; set; }
+        public string AuditLog { get; set; }
 
 
         public static MarginTradingAccountHistory Create(IMarginTradingAccountHistory src)
@@ -49,6 +51,7 @@ namespace MarginTrading.Backend.Core
                 Type = src.Type,
                 OrderId = src.OrderId,
                 LegalEntity = src.LegalEntity,
+                AuditLog = src.AuditLog
             };
         }
     }
@@ -58,7 +61,8 @@ namespace MarginTrading.Backend.Core
         Deposit,
         Withdraw,
         OrderClosed,
-        Reset
+        Reset,
+        Swap
     }
 
     public interface IMarginTradingAccountHistoryRepository

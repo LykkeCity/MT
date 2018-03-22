@@ -1,16 +1,23 @@
-﻿using System;
+﻿using JetBrains.Annotations;
+using MarginTrading.Backend.Contracts;
+using MarginTrading.Backend.Contracts.AccountAssetPair;
+using MarginTrading.Backend.Contracts.Common;
+using MarginTrading.Backend.Contracts.TradingConditions;
+using MarginTrading.Backend.Core.TradingConditions;
+using MarginTrading.Backend.Services.TradingConditions;
+using MarginTrading.Common.Middleware;
+using MarginTrading.Common.Services;
+using MarginTrading.Contract.BackendContracts.AccountsManagement;
+using MarginTrading.Contract.BackendContracts.TradingConditions;
+using MarginTrading.Contract.BackendContracts;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.SwaggerGen.Annotations;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Core.Mappers;
-using MarginTrading.Backend.Services.TradingConditions;
-using MarginTrading.Common.Middleware;
-using MarginTrading.Contract.BackendContracts;
-using MarginTrading.Contract.BackendContracts.AccountsManagement;
-using MarginTrading.Contract.BackendContracts.TradingConditions;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Swashbuckle.SwaggerGen.Annotations;
 
 namespace MarginTrading.Backend.Controllers
 {
@@ -23,16 +30,19 @@ namespace MarginTrading.Backend.Controllers
         private readonly AccountGroupManager _accountGroupManager;
         private readonly AccountAssetsManager _accountAssetsManager;
         private readonly ITradingConditionsCacheService _tradingConditionsCacheService;
+        private readonly IConvertService _convertService;
 
         public TradingConditionsController(TradingConditionsManager tradingConditionsManager,
             AccountGroupManager accountGroupManager,
             AccountAssetsManager accountAssetsManager,
-            ITradingConditionsCacheService tradingConditionsCacheService)
+            ITradingConditionsCacheService tradingConditionsCacheService,
+            IConvertService convertService)
         {
             _tradingConditionsManager = tradingConditionsManager;
             _accountGroupManager = accountGroupManager;
             _accountAssetsManager = accountAssetsManager;
             _tradingConditionsCacheService = tradingConditionsCacheService;
+            _convertService = convertService;
         }
 
         [HttpPost]
@@ -101,11 +111,19 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         [Route("accountAssets")]
         [SwaggerOperation("AddOrReplaceAccountAsset")]
-        public async Task<MtBackendResponse<AccountAssetPairModel>> AddOrReplaceAccountAsset([FromBody]AccountAssetPairModel model)
+        public async Task<BackendResponse<AccountAssetPairContract>> InsertOrUpdateAccountAsset([FromBody]AccountAssetPairContract model)
         {
-            var assetPair = await _accountAssetsManager.AddOrReplaceAccountAssetAsync(model.ToDomainContract());
-
-            return MtBackendResponse<AccountAssetPairModel>.Ok(assetPair.ToBackendContract());
+            var assetPair = await _accountAssetsManager.AddOrReplaceAccountAssetAsync(Convert(model));
+            return BackendResponse<AccountAssetPairContract>.Ok(Convert(assetPair));
+        }
+        
+        private AccountAssetPairContract Convert(IAccountAssetPair accountAssetPair)
+        {
+            return _convertService.Convert<IAccountAssetPair, AccountAssetPairContract>(accountAssetPair);
+        }
+        private IAccountAssetPair Convert(AccountAssetPairContract accountAssetPair)
+        {
+            return _convertService.Convert<AccountAssetPairContract, AccountAssetPair>(accountAssetPair);
         }
     }
 }

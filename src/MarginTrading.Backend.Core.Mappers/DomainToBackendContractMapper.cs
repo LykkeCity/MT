@@ -60,6 +60,8 @@ namespace MarginTrading.Backend.Core.Mappers
                 LeverageMaintenance = src.LeverageMaintenance,
                 SwapLong = src.SwapLong,
                 SwapShort = src.SwapShort,
+                OvernightSwapLong = src.OvernightSwapLong,
+                OvernightSwapShort =src.OvernightSwapShort,
                 CommissionLong = src.CommissionLong,
                 CommissionShort = src.CommissionShort,
                 CommissionLot = src.CommissionLot,
@@ -104,6 +106,7 @@ namespace MarginTrading.Backend.Core.Mappers
                 Type = src.Type.ToType<AccountHistoryTypeContract>(),
                 OrderId = src.OrderId,
                 LegalEntity = src.LegalEntity,
+                AuditLog = src.AuditLog
             };
         }
 

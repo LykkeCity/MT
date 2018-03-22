@@ -6,6 +6,7 @@ namespace MarginTrading.Backend.Core
     {
         InstrumentBidAskPair GetQuote(string instrument);
         Dictionary<string, InstrumentBidAskPair> GetAllQuotes();
-        bool TryGetQuoteById(string instrument, out InstrumentBidAskPair result);
+        bool TryGetQuoteById(string instrument, out InstrumentBidAskPair result); 
+        void RemoveQuote(string assetPair);
     }
 }

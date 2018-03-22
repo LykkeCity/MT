@@ -16,5 +16,10 @@ namespace MarginTrading.Backend.Contracts.Client
         IAccountsBalanceApi AccountsBalance { get; }
         
         IAssetPairSettingsEditingApi AssetPairSettingsEdit { get; }
+
+        /// <summary>
+        /// Manages Trading Conditions
+        /// </summary>
+        ITradingConditionsEditingApi TradingConditionsEdit { get; }
     }
 }

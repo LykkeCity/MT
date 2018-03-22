@@ -27,7 +27,9 @@ namespace MarginTrading.Backend.Services.Notifications
             _log = log;
         }
 
-        public Task AccountHistory(string transactionId, string accountId, string clientId, decimal amount, decimal balance, decimal withdrawTransferLimit, AccountHistoryType type, string comment = null, string eventSourceId = null)
+        public Task AccountHistory(string transactionId, string accountId, string clientId, decimal amount, decimal balance, 
+            decimal withdrawTransferLimit, AccountHistoryType type, string comment = null, string eventSourceId = null, 
+            string auditLog = null)
         {
             var record = new MarginTradingAccountHistory
             {
@@ -40,7 +42,8 @@ namespace MarginTrading.Backend.Services.Notifications
                 WithdrawTransferLimit = withdrawTransferLimit,
                 Date = DateTime.UtcNow,
                 Comment = comment,
-                OrderId = type == AccountHistoryType.OrderClosed ? eventSourceId : null
+                OrderId = type == AccountHistoryType.OrderClosed ? eventSourceId : null,
+                AuditLog = auditLog
             };
 
             return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountHistory.ExchangeName, record.ToBackendContract());

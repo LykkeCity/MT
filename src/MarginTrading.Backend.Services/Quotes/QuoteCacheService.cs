@@ -77,6 +77,22 @@ namespace MarginTrading.Backend.Services.Quotes
             }
         }
 
+        public void RemoveQuote(string assetPair)
+        {
+            _lockSlim.EnterWriteLock();
+            try
+            {
+                if (_quotes.ContainsKey(assetPair))
+                    _quotes.Remove(assetPair);
+                else
+                    throw new QuoteNotFoundException(assetPair, string.Format(MtMessages.QuoteNotFound, assetPair));
+            }
+            finally
+            {
+                _lockSlim.ExitWriteLock();
+            }
+        }
+
         int IEventConsumer.ConsumerRank => 100;
 
         void IEventConsumer<BestPriceChangeEventArgs>.ConsumeEvent(object sender, BestPriceChangeEventArgs ea)

@@ -3,6 +3,7 @@ using System.Threading;
 using AzureStorage.Tables;
 using Lykke.Service.Assets.Client;
 using MarginTrading.AzureRepositories;
+using MarginTrading.AzureRepositories.Entities;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.TradingConditions;
 using Microsoft.Rest;
@@ -289,5 +290,15 @@ namespace MarginTradingTests
 
             return repository;
         }
+
+        public static OvernightSwapStateRepository GetOvernightSwapStateRepository()
+        {
+            return new OvernightSwapStateRepository(new NoSqlTableInMemory<OvernightSwapStateEntity>());
+        }
+
+        public static OvernightSwapHistoryRepository GetOvernightSwapHistoryRepository()
+        {
+            return new OvernightSwapHistoryRepository(new NoSqlTableInMemory<OvernightSwapHistoryEntity>());
+        } 
     }
 }
