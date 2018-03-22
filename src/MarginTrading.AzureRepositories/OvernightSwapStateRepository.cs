@@ -27,12 +27,5 @@ namespace MarginTrading.AzureRepositories
 		{
 			return await _tableStorage.GetDataAsync();
 		}
-
-		public async Task<IReadOnlyList<IOvernightSwapState>> GetAsync(string accountId, DateTime? @from, DateTime? to)
-		{
-			return (await _tableStorage.WhereAsync(accountId, from ?? DateTime.MinValue, to ?? DateTime.MaxValue, 
-					ToIntervalOption.IncludeTo))
-				.OrderByDescending(item => item.Time).ToList();
-		}
 	}
 }

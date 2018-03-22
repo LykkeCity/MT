@@ -8,6 +8,5 @@ namespace MarginTrading.Backend.Core.Repositories
 	{
 		Task AddOrReplaceAsync(IOvernightSwapState obj);
 		Task<IEnumerable<IOvernightSwapState>> GetAsync();
-		Task<IReadOnlyList<IOvernightSwapState>> GetAsync(string accountId, DateTime? from, DateTime? to);
 	}
 }

@@ -19,7 +19,7 @@ namespace MarginTrading.Backend.Controllers
 			_overnightSwapHistoryRepository = overnightSwapHistoryRepository;
 		}
 		
-		[Route("overnight.swaps.state")]
+		[Route("history")]
 		[ProducesResponseType(typeof(IEnumerable<IOvernightSwapHistory>), 200)]
 		[ProducesResponseType(400)]
 		[HttpPost]

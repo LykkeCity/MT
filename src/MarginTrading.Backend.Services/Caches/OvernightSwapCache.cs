@@ -15,16 +15,6 @@ namespace MarginTrading.Backend.Services.Caches
 		{
 			ClearAll();
 		}
-        
-		public OvernightSwapCalculation Get(string key)
-		{
-			lock (LockObj)
-			{
-				return _cache.TryGetValue(key, out var value)
-					? value
-					: null;
-			}
-		}
 
 		public bool TryGet(string key, out OvernightSwapCalculation item)
 		{
@@ -44,11 +34,14 @@ namespace MarginTrading.Backend.Services.Caches
 
 		public bool TryAdd(OvernightSwapCalculation item)
 		{
-			if (item == null || _cache.ContainsKey(item.Key))
+			if (item == null)
 				return false;
             
 			lock (LockObj)
 			{
+				if (_cache.ContainsKey(item.Key))
+					return false;
+				
 				_cache[item.Key] = item;
 				return true;
 			}
@@ -68,7 +61,7 @@ namespace MarginTrading.Backend.Services.Caches
 			return true;
 		}
 
-		public void SetAll(IEnumerable<OvernightSwapCalculation> items)
+		private void SetAll(IEnumerable<OvernightSwapCalculation> items)
 		{
 			if (items == null)
 				return;
@@ -76,14 +69,6 @@ namespace MarginTrading.Backend.Services.Caches
 			lock (LockObj)
 			{
 				items.Where(x => x != null).ForEach(x => _cache[x.Key] = x);
-			}
-		}
-
-		public void Clear(string key)
-		{
-			lock (LockObj)
-			{
-				_cache.Remove(key);
 			}
 		}
 

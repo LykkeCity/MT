@@ -34,8 +34,8 @@ namespace MarginTrading.AzureRepositories
 
 		public async Task<IReadOnlyList<IOvernightSwapHistory>> GetAsync(DateTime? @from, DateTime? to)
 		{
-			var partitionKeys = await GetPartitionKeys();
-			return (await _tableStorage.WhereAsync(partitionKeys, from ?? DateTime.MinValue, to ?? DateTime.MaxValue, ToIntervalOption.IncludeTo))
+			return (await _tableStorage.WhereAsync(AzureStorageUtils.QueryGenerator<OvernightSwapHistoryEntity>.RowKeyOnly
+				.BetweenQuery(from ?? DateTime.MinValue, to ?? DateTime.MaxValue, ToIntervalOption.IncludeTo)))
 				.OrderByDescending(item => item.Time)
 				.ToList();
 		}
@@ -50,14 +50,6 @@ namespace MarginTrading.AzureRepositories
 		public async Task DeleteAsync(IOvernightSwapHistory obj)
 		{
 			await _tableStorage.DeleteAsync(OvernightSwapHistoryEntity.Create(obj));
-		}
-
-		private async Task<IEnumerable<string>> GetPartitionKeys()
-		{
-			var partitionKeys = new ConcurrentBag<string>();
-			await _tableStorage.ExecuteAsync(new TableQuery<OvernightSwapHistoryEntity>(), entity =>
-				entity.Select(m => m.PartitionKey).ForEach(pk => partitionKeys.Add(pk)));
-			return partitionKeys.Distinct();
 		}
 	}
 }
