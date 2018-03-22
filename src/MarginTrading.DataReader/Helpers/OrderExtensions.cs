@@ -1,9 +1,10 @@
 ﻿using System.Linq;
 using MarginTrading.Backend.Contracts.AccountHistory;
+using MarginTrading.Backend.Contracts.AssetPairSettings;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Common.Extensions;
-using MarginTrading.Contract.BackendContracts;
+using MarginTrading.Backend.Contracts.TradeMonitoring;
 
 namespace MarginTrading.DataReader.Helpers
 {
@@ -68,9 +69,9 @@ namespace MarginTrading.DataReader.Helpers
                 AccountId = src.AccountId,
                 Instrument = src.Instrument,
                 AssetAccuracy = src.AssetAccuracy,
-                Type = src.GetOrderType().ToType<Backend.Contracts.TradeMonitoring.OrderDirectionContract>(),
-                Status = src.Status.ToType<Backend.Contracts.TradeMonitoring.OrderStatusContract>(),
-                CloseReason = src.CloseReason.ToType<Backend.Contracts.TradeMonitoring.OrderCloseReasonContract>(),
+                Type = src.GetOrderType().ToType<OrderDirectionContract>(),
+                Status = src.Status.ToType<OrderStatusContract>(),
+                CloseReason = src.CloseReason.ToType<OrderCloseReasonContract>(),
                 OpenDate = src.OpenDate,
                 CloseDate = src.CloseDate,
                 OpenPrice = src.OpenPrice,
@@ -92,7 +93,7 @@ namespace MarginTrading.DataReader.Helpers
                 CloseExternalOrderId = src.CloseExternalOrderId,
                 CloseExternalProviderId = src.CloseExternalProviderId,
                 MatchingEngineMode = src.MatchingEngineMode
-                    .ToType<Backend.Contracts.AssetPairSettings.MatchingEngineModeContract>()
+                    .ToType<MatchingEngineModeContract>()
             };
         }
 

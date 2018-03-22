@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MarginTrading.Backend.Core.Orderbooks;
 using OrderExtensions = MarginTrading.DataReader.Helpers.OrderExtensions;
 
 namespace MarginTrading.DataReader.Controllers
@@ -95,7 +96,6 @@ namespace MarginTrading.DataReader.Controllers
             return (await _ordersSnapshotReaderService.GetActiveAsync())
                 .Where(order => order.GetMatchedVolume() >= volume)
                 .Select(OrderExtensions.ToBaseContract)
-                .Select(Convert)
                 .ToList();
         }
 
@@ -129,7 +129,6 @@ namespace MarginTrading.DataReader.Controllers
             return (await _ordersSnapshotReaderService.GetActiveAsync())
                 .Where(order => order.OpenDate >= from.Date && order.OpenDate< to.Date)
                 .Select(OrderExtensions.ToBaseContract)
-                .Select(Convert)
                 .ToList();
         }
 
@@ -148,7 +147,6 @@ namespace MarginTrading.DataReader.Controllers
             return (await _ordersSnapshotReaderService.GetActiveAsync())
                 .Where(order => order.ClientId == clientId)
                 .Select(OrderExtensions.ToBaseContract)
-                .Select(Convert)
                 .ToList();
         }
 
@@ -167,7 +165,6 @@ namespace MarginTrading.DataReader.Controllers
             return (await _ordersSnapshotReaderService.GetPendingAsync())
                 .Where(order => Math.Abs(order.Volume) >= volume)
                 .Select(OrderExtensions.ToBaseContract)
-                .Select(Convert)
                 .ToList();
         }
 
@@ -201,7 +198,6 @@ namespace MarginTrading.DataReader.Controllers
             return (await _ordersSnapshotReaderService.GetPendingAsync())
                 .Where(order => order.CreateDate >= from && order.CreateDate < to)
                 .Select(OrderExtensions.ToBaseContract)
-                .Select(Convert)
                 .ToList();
         }
 
@@ -220,7 +216,6 @@ namespace MarginTrading.DataReader.Controllers
             return (await _ordersSnapshotReaderService.GetPendingAsync())
                 .Where(order => order.ClientId == clientId)
                 .Select(OrderExtensions.ToBaseContract)
-                .Select(Convert)
                 .ToList();
         }
 
@@ -236,28 +231,14 @@ namespace MarginTrading.DataReader.Controllers
         [Route("orderbooks/byInstrument/{instrument}")]
         public async Task<List<OrderBookContract>> OrderBooksByInstrument(string instrument)
         {
-            var orderbooks = await _orderBookSnapshotReaderService.GetOrderBook(instrument);
-            return (new List<OrderBookModel>
-            {
-                new OrderBookModel
-                {
-                    Instrument = instrument,
-                    Buy = orderbooks.Buy.Values.SelectMany(o => o).ToList(),
-                    Sell = orderbooks.Sell.Values.SelectMany(o => o).ToList()
-                }
-            })
-            .Select(Convert)
-            .ToList();
+            var orderbook = await _orderBookSnapshotReaderService.GetOrderBook(instrument);
+
+            return new List<OrderBookContract> {Convert(orderbook)};
         }
 
-
-        private OrderContract Convert(Contract.BackendContracts.OrderContract domainContract)
+        private OrderBookContract Convert(OrderBook domainContract)
         {
-            return _convertService.Convert<Contract.BackendContracts.OrderContract, OrderContract>(domainContract);
-        }
-        private OrderBookContract Convert(OrderBookModel domainContract)
-        {
-            return _convertService.Convert<OrderBookModel, OrderBookContract>(domainContract);
+            return _convertService.Convert<OrderBook, OrderBookContract>(domainContract);
         }
         
     }
