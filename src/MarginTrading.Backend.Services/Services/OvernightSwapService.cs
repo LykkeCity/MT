@@ -188,8 +188,15 @@ namespace MarginTrading.Backend.Services.Services
 
 			//calc swaps
 			var swapRate = direction == OrderDirection.Buy ? accountAssetPair.OvernightSwapLong : accountAssetPair.OvernightSwapShort;
+			
+			if (swapRate == 0)
+				return;
+			
 			var total = orders.Sum(order => _commissionService.GetOvernightSwap(order, swapRate));
-					
+
+			if (total == 0)
+				return;
+			
 			//create calculation obj & add to cache
 			var calculation = OvernightSwapCalculation.Create(account.Id, instrument,
 				orders.Select(order => order.Id).ToList(), _currentStartTimestamp, true, null, total, swapRate, direction);
