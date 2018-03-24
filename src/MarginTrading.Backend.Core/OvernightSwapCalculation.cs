@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 
 namespace MarginTrading.Backend.Core
@@ -53,6 +54,21 @@ namespace MarginTrading.Backend.Core
 				Exception = exception,
 				SwapRate = swapRate
 			};
+		}
+
+		public static OvernightSwapCalculation Update(OvernightSwapCalculation newCalc, OvernightSwapCalculation lastCalc)
+		{
+			return new OvernightSwapCalculation
+				{
+					AccountId = newCalc.AccountId,
+					Instrument = newCalc.Instrument,
+					Direction = newCalc.Direction,
+					Time = newCalc.Time,
+					OpenOrderIds = newCalc.OpenOrderIds.Concat(lastCalc.OpenOrderIds).ToList(),
+					Value = newCalc.Value + lastCalc.Value,
+					SwapRate = newCalc.SwapRate,
+					IsSuccess = true
+				};
 		}
 	}
 }

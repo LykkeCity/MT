@@ -91,7 +91,9 @@ namespace MarginTrading.Backend.Services.Services
 			var lastInvocationTime = CalcLastInvocationTime;
 			var lastCalculation = _overnightSwapCache.GetAll().Where(x => x.Time > lastInvocationTime).ToList();
 			var calculatedIds = lastCalculation.Where(x => x.IsSuccess).SelectMany(x => x.OpenOrderIds).ToHashSet();
-			var filteredOrders = openOrders.Where(x => !calculatedIds.Contains(x.Id));
+			//select only non-calculated orders, changed before "official invocation time"
+			var filteredOrders = openOrders.Where(x => (x.OpenDate ?? DateTime.MaxValue) < lastInvocationTime
+			                                           && !calculatedIds.Contains(x.Id));
 
 			//detect orders for which last calculation failed and it was closed
 			var failedClosedOrders = lastCalculation.Where(x => !x.IsSuccess).SelectMany(x => x.OpenOrderIds)
@@ -159,7 +161,6 @@ namespace MarginTrading.Backend.Services.Services
 								catch (Exception ex)
 								{
 									await ProcessFailedOrders(orders, account.Id, ordersByInstrument.Key, ex);
-									continue;
 								}
 							}
 						}
@@ -180,26 +181,32 @@ namespace MarginTrading.Backend.Services.Services
 		private async Task ProcessOrders(IReadOnlyList<Order> orders, string instrument, IMarginTradingAccount account,
 				IAccountAssetPair accountAssetPair, OrderDirection direction)
 		{
+			IReadOnlyList<Order> filteredOrders = orders.ToList();
+			
 			//check if swaps had already been taken
-			if (_overnightSwapCache.TryGet(OvernightSwapCalculation.GetKey(account.Id, instrument, direction),
-				    out var lastCalc)
-			    && lastCalc.Time > CalcLastInvocationTime)
-				throw new Exception($"Overnight swaps had already been taken: {JsonConvert.SerializeObject(lastCalc)}");
+			var lastCalcExists = _overnightSwapCache.TryGet(OvernightSwapCalculation.GetKey(account.Id, instrument, direction),
+				                     out var lastCalc)
+			                     && lastCalc.Time > CalcLastInvocationTime;
+			if (lastCalcExists)
+			{
+				await _log.WriteErrorAsync(nameof(OvernightSwapService), nameof(ProcessOrders), 
+					new Exception($"Overnight swaps had already been taken, filtering: {JsonConvert.SerializeObject(lastCalc)}"), DateTime.UtcNow);
+				
+				filteredOrders = orders.Where(x => !lastCalc.OpenOrderIds.Contains(x.Id)).ToList();
+			}
 
 			//calc swaps
 			var swapRate = direction == OrderDirection.Buy ? accountAssetPair.OvernightSwapLong : accountAssetPair.OvernightSwapShort;
-			
 			if (swapRate == 0)
 				return;
 			
-			var total = orders.Sum(order => _commissionService.GetOvernightSwap(order, swapRate));
-
+			var total = filteredOrders.Sum(order => _commissionService.GetOvernightSwap(order, swapRate));
 			if (total == 0)
 				return;
 			
 			//create calculation obj & add to cache
 			var calculation = OvernightSwapCalculation.Create(account.Id, instrument,
-				orders.Select(order => order.Id).ToList(), _currentStartTimestamp, true, null, total, swapRate, direction);
+				filteredOrders.Select(order => order.Id).ToList(), _currentStartTimestamp, true, null, total, swapRate, direction);
 			_overnightSwapCache.AddOrReplace(calculation);
 	
 			//charge comission
@@ -207,11 +214,16 @@ namespace MarginTrading.Backend.Services.Services
 				account: account, 
 				amount: - total, 
 				historyType: AccountHistoryType.Swap,
-				comment : $"{accountAssetPair.Instrument} {(direction == OrderDirection.Buy ? "long" : "short")} swaps. Volume: {orders.Select(x => Math.Abs(x.Volume)).Sum()}. Positions count: {orders.Count}. Rate: {swapRate}. Time: {_currentStartTimestamp:u}.",
+				comment : $"{accountAssetPair.Instrument} {(direction == OrderDirection.Buy ? "long" : "short")} swaps. Volume: {filteredOrders.Select(x => Math.Abs(x.Volume)).Sum()}. Positions count: {filteredOrders.Count}. Rate: {swapRate}. Time: {_currentStartTimestamp:u}.",
 				auditLog: calculation.ToJson());
 			
+			//update calculation state if previous existed
+			var newCalcState = lastCalcExists
+				? OvernightSwapCalculation.Update(calculation, lastCalc)
+				: OvernightSwapCalculation.Create(calculation);
+			
 			//write state and log
-			await _overnightSwapStateRepository.AddOrReplaceAsync(calculation);
+			await _overnightSwapStateRepository.AddOrReplaceAsync(newCalcState);
 			await _overnightSwapHistoryRepository.AddAsync(calculation);
 		}
 
