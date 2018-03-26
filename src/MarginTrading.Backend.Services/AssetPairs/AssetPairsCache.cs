@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using MarginTrading.Backend.Core;
@@ -23,6 +24,8 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         private IReadOnlyDictionary<string, IAssetPairSettings> _assetPairSettings =
             ImmutableSortedDictionary<string, IAssetPairSettings>.Empty;
+
+        private ConcurrentDictionary<string, string> _assetPairsByAssets = new ConcurrentDictionary<string, string>();
 
         public IAssetPair GetAssetPairById(string assetPairId)
         {
@@ -59,11 +62,18 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         public IAssetPair FindAssetPair(string asset1, string asset2)
         {
-            // todo: search pairs using baseAssetId & quotingAssetId
-            if (_assetPairs.TryGetValue(GetAssetPairId(asset1, asset2), out var result))
-                return result;
+            var key = GetAssetPairKey(asset1, asset2);
 
-            if (_assetPairs.TryGetValue(GetAssetPairId(asset2, asset1), out result))
+            var assetPairId = _assetPairsByAssets.GetOrAdd(key, s =>
+            {
+                var assetPair = _assetPairs.FirstOrDefault(p =>
+                    (p.Value.BaseAssetId == asset1 && p.Value.QuoteAssetId == asset2) ||
+                    (p.Value.BaseAssetId == asset2 && p.Value.QuoteAssetId == asset1));
+
+                return assetPair.Key;
+            });
+            
+            if (_assetPairs.TryGetValue(assetPairId, out var result))
                 return result;
 
             throw new InstrumentByAssetsNotFoundException(asset1, asset2,
@@ -80,7 +90,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             _assetPairSettings = assetPairSettings;
         }
 
-        private static string GetAssetPairId(string asset1, string asset2)
+        private static string GetAssetPairKey(string asset1, string asset2)
         {
             return $"{asset1}{asset2}";
         }

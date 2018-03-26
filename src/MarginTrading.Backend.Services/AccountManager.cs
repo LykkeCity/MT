@@ -17,6 +17,7 @@ using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Contract.RabbitMqMessageModels;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Extensions;
+using MoreLinq;
 
 namespace MarginTrading.Backend.Services
 {
@@ -96,7 +97,7 @@ namespace MarginTrading.Backend.Services
 
         private IReadOnlyList<IMarginTradingAccount> GetAccountsToWriteStats()
         {
-            var accountsIdsToWrite = _ordersCache.GetActive().Select(a => a.AccountId).Distinct().ToHashSet();
+            var accountsIdsToWrite = Enumerable.ToHashSet(_ordersCache.GetActive().Select(a => a.AccountId).Distinct());
             return _accountsCacheService.GetAll().Where(a => accountsIdsToWrite.Contains(a.Id)).ToList();
         }
 
@@ -104,7 +105,7 @@ namespace MarginTrading.Backend.Services
         {
             var accountStats = accounts.Select(a => a.ToRabbitMqContract(_marginSettings.IsLive));
 
-            var chunks = accountStats.ToChunks(100);
+            var chunks = accountStats.Batch(100);
 
             foreach (var chunk in chunks)
             {
