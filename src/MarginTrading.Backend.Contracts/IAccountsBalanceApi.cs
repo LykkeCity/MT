@@ -32,5 +32,11 @@ namespace MarginTrading.Backend.Contracts
         /// </remarks>
         [Post("/api/AccountsBalance/reset")]
         Task<BackendResponse<AccountResetResponse>> AccountResetDemo(AccounResetRequest request);
+
+        /// <summary>
+        /// Manually charge client's account. Amount is absolute, i.e. negative value goes for charging.
+        /// </summary>
+        [Post("/api/AccountsBalance/chargeManually")]
+        Task<BackendResponse<AccountChargeManuallyResponse>> ChargeManually([Body]AccountChargeManuallyRequest request);
     }
 }
