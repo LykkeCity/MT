@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
@@ -12,7 +13,6 @@ using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Services;
 using Newtonsoft.Json;
-using Nito.AsyncEx;
 
 namespace MarginTrading.Backend.Services.Services
 {
@@ -34,7 +34,7 @@ namespace MarginTrading.Backend.Services.Services
 		private readonly MarginSettings _marginSettings;
 		private readonly ILog _log;
 
-		private readonly AsyncLock _mutex = new AsyncLock();
+		private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
 		private DateTime _currentStartTimestamp;
 
@@ -117,7 +117,9 @@ namespace MarginTrading.Backend.Services.Services
 			//start calculation in a separate thread
 			_threadSwitcher.SwitchThread(async () =>
 			{
-				using (await _mutex.LockAsync())
+				await _semaphore.WaitAsync();
+
+				try
 				{
 					foreach (var accountOrders in filteredOrders.GroupBy(x => x.AccountId))
 					{
@@ -165,6 +167,10 @@ namespace MarginTrading.Backend.Services.Services
 							}
 						}
 					}
+				}
+				finally
+				{
+					_semaphore.Release();
 				}
 			});
 		}
