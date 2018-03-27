@@ -25,7 +25,8 @@ namespace MarginTrading.Backend.Services.AssetPairs
         private IReadOnlyDictionary<string, IAssetPairSettings> _assetPairSettings =
             ImmutableSortedDictionary<string, IAssetPairSettings>.Empty;
 
-        private ConcurrentDictionary<string, string> _assetPairsByAssets = new ConcurrentDictionary<string, string>();
+        private readonly ConcurrentDictionary<string, string> _assetPairsByAssets =
+            new ConcurrentDictionary<string, string>();
 
         public IAssetPair GetAssetPairById(string assetPairId)
         {
@@ -72,7 +73,11 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
                 return assetPair.Key;
             });
-            
+
+            if (string.IsNullOrEmpty(assetPairId))
+                throw new InstrumentByAssetsNotFoundException(asset1, asset2,
+                    string.Format(MtMessages.InstrumentWithAssetsNotFound, asset1, asset2));
+
             if (_assetPairs.TryGetValue(assetPairId, out var result))
                 return result;
 
