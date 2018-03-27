@@ -22,6 +22,7 @@ namespace MarginTrading.Backend.Services.Services
 	public class OvernightSwapService : IOvernightSwapService
 	{
 		private readonly IOvernightSwapCache _overnightSwapCache;
+		private readonly IAssetPairsCache _assetPairsCache;
 		private readonly IAccountAssetsCacheService _accountAssetsCacheService;
 		private readonly IAccountsCacheService _accountsCacheService;
 		private readonly ICommissionService _commissionService;
@@ -40,6 +41,7 @@ namespace MarginTrading.Backend.Services.Services
 
 		public OvernightSwapService(
 			IOvernightSwapCache overnightSwapCache,
+			IAssetPairsCache assetPairsCache,
 			IAccountAssetsCacheService accountAssetsCacheService,
 			IAccountsCacheService accountsCacheService,
 			ICommissionService commissionService,
@@ -53,6 +55,7 @@ namespace MarginTrading.Backend.Services.Services
 			ILog log)
 		{
 			_overnightSwapCache = overnightSwapCache;
+			_assetPairsCache = assetPairsCache;
 			_accountAssetsCacheService = accountAssetsCacheService;
 			_accountsCacheService = accountsCacheService;
 			_commissionService = commissionService;
@@ -88,7 +91,7 @@ namespace MarginTrading.Backend.Services.Services
 			var openOrders = _orderReader.GetActive();
 			
 			//prepare the list of orders
-			var lastInvocationTime = CalcLastInvocationTime;
+			var lastInvocationTime = CalcLastInvocationTime();
 			var lastCalculation = _overnightSwapCache.GetAll().Where(x => x.Time > lastInvocationTime).ToList();
 			var calculatedIds = lastCalculation.Where(x => x.IsSuccess).SelectMany(x => x.OpenOrderIds).ToHashSet();
 			//select only non-calculated orders, changed before "official invocation time"
@@ -192,7 +195,7 @@ namespace MarginTrading.Backend.Services.Services
 			//check if swaps had already been taken
 			var lastCalcExists = _overnightSwapCache.TryGet(OvernightSwapCalculation.GetKey(account.Id, instrument, direction),
 				                     out var lastCalc)
-			                     && lastCalc.Time > CalcLastInvocationTime;
+			                     && lastCalc.Time > CalcLastInvocationTime();
 			if (lastCalcExists)
 			{
 				await _log.WriteErrorAsync(nameof(OvernightSwapService), nameof(ProcessOrders), 
@@ -210,23 +213,27 @@ namespace MarginTrading.Backend.Services.Services
 			if (total == 0)
 				return;
 			
-			//create calculation obj & add to cache
+			//create calculation obj
 			var calculation = OvernightSwapCalculation.Create(account.Id, instrument,
 				filteredOrders.Select(order => order.Id).ToList(), _currentStartTimestamp, true, null, total, swapRate, direction);
-			_overnightSwapCache.AddOrReplace(calculation);
 	
 			//charge comission
+			var instrumentName = _assetPairsCache.TryGetAssetPairById(accountAssetPair.Instrument)?.Name 
+			                     ?? accountAssetPair.Instrument;
 			await _accountManager.UpdateBalanceAsync(
 				account: account, 
 				amount: - total, 
 				historyType: AccountHistoryType.Swap,
-				comment : $"{accountAssetPair.Instrument} {(direction == OrderDirection.Buy ? "long" : "short")} swaps. Volume: {filteredOrders.Select(x => Math.Abs(x.Volume)).Sum()}. Positions count: {filteredOrders.Count}. Rate: {swapRate}. Time: {_currentStartTimestamp:u}.",
+				comment : $"{instrumentName} {(direction == OrderDirection.Buy ? "long" : "short")} swaps. Volume: {filteredOrders.Select(x => Math.Abs(x.Volume)).Sum()}. Positions count: {filteredOrders.Count}. Rate: {swapRate}. Time: {_currentStartTimestamp:u}.",
 				auditLog: calculation.ToJson());
 			
 			//update calculation state if previous existed
 			var newCalcState = lastCalcExists
 				? OvernightSwapCalculation.Update(calculation, lastCalc)
 				: OvernightSwapCalculation.Create(calculation);
+
+			//add to cache
+			_overnightSwapCache.AddOrReplace(newCalcState);
 			
 			//write state and log
 			await _overnightSwapStateRepository.AddOrReplaceAsync(newCalcState);
@@ -256,10 +263,13 @@ namespace MarginTrading.Backend.Services.Services
 		/// <summary>
 		/// Return last invocation time. Take into account, that scheduler might fire the job with delay of 100ms.
 		/// </summary>
-		private DateTime CalcLastInvocationTime =>
-			new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day,
-					_marginSettings.OvernightSwapCalculationHour, 0, 0)
-				.AddDays(DateTime.UtcNow.Hour >= _marginSettings.OvernightSwapCalculationHour ? 0 : -1)
+		private DateTime CalcLastInvocationTime()
+		{
+			var dt = _dateService.Now();
+			return new DateTime(dt.Year, dt.Month, dt.Day, _marginSettings.OvernightSwapCalculationHour, 0, 0)
+				.ToUniversalTime()
+				.AddDays(dt.Hour >= _marginSettings.OvernightSwapCalculationHour ? 0 : -1)
 				.AddMilliseconds(100);
+		}
 	}
 }
