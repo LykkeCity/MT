@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Common;
+using Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Settings;
 
@@ -11,15 +13,18 @@ namespace MarginTrading.Backend.Services
 		private readonly IAccountsCacheService _accountsCacheService;
 		private readonly ICfdCalculatorService _cfdCalculatorService;
 		private readonly MarginSettings _marginSettings;
+		private readonly ILog _log;
 
 		public EquivalentPricesService(
 			IAccountsCacheService accountsCacheService,
 			ICfdCalculatorService cfdCalculatorService,
-			MarginSettings marginSettings)
+			MarginSettings marginSettings,
+			ILog log)
 		{
 			_accountsCacheService = accountsCacheService;
 			_cfdCalculatorService = cfdCalculatorService;
 			_marginSettings = marginSettings;
+			_log = log;
 		}
 
 		private string GetEquivalentAsset(string clientId, string accountId)
@@ -36,9 +41,17 @@ namespace MarginTrading.Backend.Services
 
 		public void EnrichOpeningOrder(Order order)
 		{
-			order.EquivalentAsset = GetEquivalentAsset(order.ClientId, order.AccountId);
-			order.OpenPriceEquivalent = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.EquivalentAsset,
-				order.Instrument);
+			try
+			{
+        order.EquivalentAsset = GetEquivalentAsset(order.ClientId, order.AccountId);
+        
+			  order.OpenPriceEquivalent = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.EquivalentAsset,
+				  order.Instrument);
+			}
+			catch (Exception e)
+			{
+				_log.WriteError("EnrichOpeningOrder", order.ToJson(), e);
+			}
 		}
 
 		public void EnrichClosingOrder(Order order)
@@ -48,8 +61,17 @@ namespace MarginTrading.Backend.Services
 				order.EquivalentAsset = GetEquivalentAsset(order.ClientId, order.AccountId);
 			}
 
-			order.ClosePriceEquivalent = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.EquivalentAsset,
-				order.Instrument);
+			try
+			{
+				order.ClosePriceEquivalent = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.EquivalentAsset,
+					order.Instrument);
+			}
+			catch (Exception e)
+			{
+				_log.WriteError("EnrichClosingOrder", order.ToJson(), e);
+			}
+			
+			
 		}
 	}
 }
