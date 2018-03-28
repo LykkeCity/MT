@@ -64,7 +64,7 @@ namespace MarginTrading.Backend.Controllers
             }
             catch (Exception e)
             {
-                await _log.WriteErrorAsync(nameof(BackOfficeController), "AccountDeposit", request?.ToJson(), e);
+                await _log.WriteErrorAsync(nameof(AccountsBalanceController), "AccountDeposit", request?.ToJson(), e);
                 return BackendResponse<AccountDepositWithdrawResponse>.Error(e.Message);
             }
         }
@@ -98,8 +98,44 @@ namespace MarginTrading.Backend.Controllers
             }
             catch (Exception e)
             {
-                await _log.WriteErrorAsync(nameof(BackOfficeController), "AccountWithdraw", request?.ToJson(), e);
+                await _log.WriteErrorAsync(nameof(AccountsBalanceController), "AccountWithdraw", request?.ToJson(), e);
                 return BackendResponse<AccountDepositWithdrawResponse>.Error(e.Message);
+            }
+        }
+
+        /// <summary>
+        /// Manually charge client's account. Amount is absolute, i.e. negative value goes for charging.
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [Route("chargeManually")]
+        [HttpPost]
+        [ProducesResponseType(typeof(BackendResponse<AccountChargeManuallyResponse>), 200)]
+        public async Task<BackendResponse<AccountChargeManuallyResponse>> ChargeManually([FromBody]AccountChargeManuallyRequest request)
+        {
+            if (string.IsNullOrEmpty(request?.Reason?.Trim()))
+            {
+                return BackendResponse<AccountChargeManuallyResponse>.Error("Reason must be set.");
+            }
+            
+            var account = _accountsCacheService.Get(request.ClientId, request.AccountId);
+            
+            try
+            {
+                var transactionId = await _accountManager.UpdateBalanceAsync(account, request.Amount,
+                    AccountHistoryType.Manual, request.Reason, auditLog: request.ToJson());
+
+                _operationsLogService.AddLog("account charge manually", request.ClientId, request.AccountId,
+                    request.ToJson(), true.ToJson());
+
+                return BackendResponse<AccountChargeManuallyResponse>.Ok(
+                    new AccountChargeManuallyResponse {TransactionId = transactionId});
+
+            }
+            catch (Exception e)
+            {
+                await _log.WriteErrorAsync(nameof(AccountsBalanceController), "ChargeManually", request?.ToJson(), e);
+                return BackendResponse<AccountChargeManuallyResponse>.Error(e.Message);
             }
         }
 

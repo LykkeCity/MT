@@ -100,7 +100,7 @@ namespace MarginTrading.Backend.TestClient
             assetPairSettingsInputContract.MatchingEngineMode = MatchingEngineModeContract.Stp;
             var result2 = await client.AssetPairSettingsEdit.Update("BTCUSD.test", assetPairSettingsInputContract).Dump();
             CheckAssetPairSettings(result2, assetPairSettingsInputContract);
-                        
+
 
             var dataReaderClient = container.Resolve<IMtDataReaderClient>();
 
@@ -143,7 +143,7 @@ namespace MarginTrading.Backend.TestClient
 
             var orderBooksByInstrument = await dataReaderClient.TradeMonitoringRead.OrderBooksByInstrument("BTCUSD");
             #endregion
-            
+
             var accountAssetPairs = await dataReaderClient.AccountAssetPairsRead
                 .List()
                 .Dump();
@@ -171,17 +171,17 @@ namespace MarginTrading.Backend.TestClient
             CheckAccountAssetPairs(updatedAccountAssetPair.Result, firstAccountAssetPair);
 
             var tc = await client.TradingConditionsEdit.InsertOrUpdate(new Contracts.TradingConditions.TradingConditionContract
-                {
-                    Id = "LYKKETEST",
-                    IsDefault = false,
-                    Name = "Test Trading Condition" 
-                })
+            {
+                Id = "LYKKETEST",
+                IsDefault = false,
+                Name = "Test Trading Condition"
+            })
                 .Dump();
             tc.Result.Id.RequiredEqualsTo("LYKKETEST", "tc.Result.Id");
 
             var ag = await client.TradingConditionsEdit.InsertOrUpdateAccountGroup(new Contracts.TradingConditions.AccountGroupContract
             {
-                BaseAssetId="BTC",                
+                BaseAssetId = "BTC",
                 TradingConditionId = tc.Result.Id,
                 DepositTransferLimit = 0.1m,
                 ProfitWithdrawalLimit = 0.2m,
@@ -202,18 +202,25 @@ namespace MarginTrading.Backend.TestClient
 
             var ai = await client.TradingConditionsEdit.AssignInstruments(new Contracts.TradingConditions.AssignInstrumentsContract
             {
-                BaseAssetId= "BTC",
+                BaseAssetId = "BTC",
                 TradingConditionId = tc.Result.Id,
                 Instruments = new string[] { "TSTLKK" }
             })
             .Dump();
 
             ai.IsOk.RequiredEqualsTo(true, "ai.IsOk");
-            
+
             var tclist = await dataReaderClient.TradingConditionsRead.List().Dump();
             await dataReaderClient.TradingConditionsRead.Get(tclist.First().Id).Dump();
-            
 
+            var manualCharge = await client.AccountsBalance.ChargeManually(new Contracts.AccountBalance.AccountChargeManuallyRequest
+            {
+                ClientId = "232b3b04-7479-44e7-a6b3-ac131d8e6ccd",
+                AccountId = "d_f4c745f19c834145bcf2d6b5f1a871f3",
+                Amount = 1,
+                Reason = "API TEST"
+            })
+            .Dump();
             Console.WriteLine("Successfuly finished");
         }
 

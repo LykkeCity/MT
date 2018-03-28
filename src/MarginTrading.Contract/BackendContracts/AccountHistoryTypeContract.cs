@@ -6,6 +6,7 @@
         Withdraw,
         OrderClosed,
         Reset,
-        Swap
+        Swap,
+        Manual
     }
 }
