@@ -26,10 +26,12 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 			IClientAccountService clientAccountService,
 			AccountManager accountManager,
 			IRabbitMqNotifyService rabbitMqNotifyService,
-			IAssetsCache assetsCache)
+			IAssetsCache assetsCache,
+			IAssetPairsCache assetPairsCache)
 			: base(appNotifications,
 				clientAccountService,
-				assetsCache)
+				assetsCache,
+				assetPairsCache)
 		{
 			_threadSwitcher = threadSwitcher;
 			_clientNotifyService = clientNotifyService;
