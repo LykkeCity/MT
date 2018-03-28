@@ -72,7 +72,7 @@ namespace MarginTrading.Backend.Services
                     break;
                 case OrderStatus.Active:
                     message = order.ExpectedOpenPrice.HasValue
-                        ? string.Format(MtMessages.Notifications_PendingOrderTriggered, order.GetOrderType() == OrderDirection.Buy ? "Long" : "Short", instrumentName, volume,
+                        ? string.Format(MtMessages.Notifications_PendingOrderTriggered, type, instrumentName, volume,
                             Math.Round(order.OpenPrice, order.AssetAccuracy))
                         : string.Format(MtMessages.Notifications_OrderPlaced, type, instrumentName, volume,
                             Math.Round(order.OpenPrice, order.AssetAccuracy));
