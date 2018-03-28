@@ -18,15 +18,18 @@ namespace MarginTrading.Backend.Services
         private readonly IAppNotifications _appNotifications;
         private readonly IClientAccountService _clientAccountService;
         private readonly IAssetsCache _assetsCache;
+        private readonly IAssetPairsCache _assetPairsCache;
 
         public NotificationSenderBase(
             IAppNotifications appNotifications,
             IClientAccountService clientAccountService,
-            IAssetsCache assetsCache)
+            IAssetsCache assetsCache,
+            IAssetPairsCache assetPairsCache)
         {
             _appNotifications = appNotifications;
             _clientAccountService = clientAccountService;
             _assetsCache = assetsCache;
+            _assetPairsCache = assetPairsCache;
         }
 
         protected async Task SendOrderChangedNotification(string clientId, IOrder order)
@@ -60,17 +63,18 @@ namespace MarginTrading.Backend.Services
             var message = string.Empty;
             var volume = Math.Abs(order.Volume);
             var type = order.GetOrderType() == OrderDirection.Buy ? "Long" : "Short";
-
+            var instrumentName = _assetPairsCache.TryGetAssetPairById(order.Instrument)?.Name ?? order.Instrument;
+            
             switch (order.Status)
             {
                 case OrderStatus.WaitingForExecution:
-                    message = string.Format(MtMessages.Notifications_PendingOrderPlaced, type, order.Instrument, volume, Math.Round(order.ExpectedOpenPrice ?? 0, order.AssetAccuracy));
+                    message = string.Format(MtMessages.Notifications_PendingOrderPlaced, type, instrumentName, volume, Math.Round(order.ExpectedOpenPrice ?? 0, order.AssetAccuracy));
                     break;
                 case OrderStatus.Active:
                     message = order.ExpectedOpenPrice.HasValue
-                        ? string.Format(MtMessages.Notifications_PendingOrderTriggered, order.GetOrderType() == OrderDirection.Buy ? "Long" : "Short", order.Instrument, volume,
+                        ? string.Format(MtMessages.Notifications_PendingOrderTriggered, order.GetOrderType() == OrderDirection.Buy ? "Long" : "Short", instrumentName, volume,
                             Math.Round(order.OpenPrice, order.AssetAccuracy))
-                        : string.Format(MtMessages.Notifications_OrderPlaced, type, order.Instrument, volume,
+                        : string.Format(MtMessages.Notifications_OrderPlaced, type, instrumentName, volume,
                             Math.Round(order.OpenPrice, order.AssetAccuracy));
                     break;
                 case OrderStatus.Closed:
@@ -91,8 +95,8 @@ namespace MarginTrading.Backend.Services
                     message = order.ExpectedOpenPrice.HasValue &&
                               (order.CloseReason == OrderCloseReason.Canceled ||
                                order.CloseReason == OrderCloseReason.CanceledBySystem)
-                        ? string.Format(MtMessages.Notifications_PendingOrderCanceled, type, order.Instrument, volume)
-                        : string.Format(MtMessages.Notifications_OrderClosed, type, order.Instrument, volume, reason,
+                        ? string.Format(MtMessages.Notifications_PendingOrderCanceled, type, instrumentName, volume)
+                        : string.Format(MtMessages.Notifications_OrderClosed, type, instrumentName, volume, reason,
                             order.GetTotalFpl().ToString($"F{accuracy}"),
                             order.AccountAssetId);
                     break;

@@ -34,9 +34,11 @@ namespace MarginTrading.Backend.Services
             IMarginTradingOperationsLogService operationsLogService,
             IRabbitMqNotifyService rabbitMqNotifyService,
             IDateService dateService,
-            IAssetsCache assetsCache) : base(appNotifications,
+            IAssetsCache assetsCache,
+            IAssetPairsCache assetPairsCache) : base(appNotifications,
             clientAccountService,
-            assetsCache)
+            assetsCache, 
+            assetPairsCache)
         {
             _threadSwitcher = threadSwitcher;
             _clientAccountService = clientAccountService;
