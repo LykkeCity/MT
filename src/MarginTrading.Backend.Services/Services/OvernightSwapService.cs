@@ -261,15 +261,14 @@ namespace MarginTrading.Backend.Services.Services
 		}
 
 		/// <summary>
-		/// Return last invocation time. Take into account, that scheduler might fire the job with delay of 100ms.
+		/// Return last invocation time.
 		/// </summary>
 		private DateTime CalcLastInvocationTime()
 		{
-			var dt = _dateService.Now();
+			var dt = _currentStartTimestamp;
 			return new DateTime(dt.Year, dt.Month, dt.Day, _marginSettings.OvernightSwapCalculationHour, 0, 0)
 				.ToUniversalTime()
-				.AddDays(dt.Hour >= _marginSettings.OvernightSwapCalculationHour ? 0 : -1)
-				.AddMilliseconds(100);
+				.AddDays(dt.Hour >= _marginSettings.OvernightSwapCalculationHour ? 0 : -1);
 		}
 	}
 }
