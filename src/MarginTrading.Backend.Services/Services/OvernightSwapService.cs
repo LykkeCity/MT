@@ -10,6 +10,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.TradingConditions;
+using MarginTrading.Backend.Services.Helpers;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Services;
 using Newtonsoft.Json;
@@ -266,9 +267,12 @@ namespace MarginTrading.Backend.Services.Services
 		private DateTime CalcLastInvocationTime()
 		{
 			var dt = _currentStartTimestamp;
-			return new DateTime(dt.Year, dt.Month, dt.Day, _marginSettings.OvernightSwapCalculationHour, 0, 0)
+			var settingsCalcTime = OvernightSwapHelpers.GetOvernightSwapCalcTime(_marginSettings.OvernightSwapCalculationTime);
+			
+			return new DateTime(dt.Year, dt.Month, dt.Day, settingsCalcTime.Hour, settingsCalcTime.Min, 0)
 				.ToUniversalTime()
-				.AddDays(dt.Hour >= _marginSettings.OvernightSwapCalculationHour ? 0 : -1);
+				.AddDays(dt.Hour > settingsCalcTime.Hour || (dt.Hour == settingsCalcTime.Hour && dt.Minute >= settingsCalcTime.Min) 
+					? 0 : -1);
 		}
 	}
 }
