@@ -25,6 +25,8 @@ namespace MarginTrading.Backend.Services.Services
 		private readonly IAccountAssetsCacheService _accountAssetsCacheService;
 		private readonly IAccountsCacheService _accountsCacheService;
 		private readonly ICommissionService _commissionService;
+		private readonly IOvernightSwapNotificationService _overnightSwapNotificationService;
+		
 		private readonly IOvernightSwapStateRepository _overnightSwapStateRepository;
 		private readonly IOvernightSwapHistoryRepository _overnightSwapHistoryRepository;
 		private readonly IOrderReader _orderReader;
@@ -43,6 +45,8 @@ namespace MarginTrading.Backend.Services.Services
 			IAccountAssetsCacheService accountAssetsCacheService,
 			IAccountsCacheService accountsCacheService,
 			ICommissionService commissionService,
+			IOvernightSwapNotificationService overnightSwapNotificationService,
+			
 			IOvernightSwapStateRepository overnightSwapStateRepository,
 			IOvernightSwapHistoryRepository overnightSwapHistoryRepository,
 			IOrderReader orderReader,
@@ -56,6 +60,8 @@ namespace MarginTrading.Backend.Services.Services
 			_accountAssetsCacheService = accountAssetsCacheService;
 			_accountsCacheService = accountsCacheService;
 			_commissionService = commissionService;
+			_overnightSwapNotificationService = overnightSwapNotificationService;
+			
 			_overnightSwapStateRepository = overnightSwapStateRepository;
 			_overnightSwapHistoryRepository = overnightSwapHistoryRepository;
 			_orderReader = orderReader;
@@ -131,7 +137,7 @@ namespace MarginTrading.Backend.Services.Services
 						}
 						catch (Exception ex)
 						{
-							await ProcessFailedOrders(accountOrders, accountOrders.Key, null, ex);
+							await ProcessFailedOrders(accountOrders.ToList(), clientId, accountOrders.Key, null, ex);
 							continue;
 						}
 
@@ -146,7 +152,7 @@ namespace MarginTrading.Backend.Services.Services
 							}
 							catch (Exception ex)
 							{
-								await ProcessFailedOrders(ordersByInstrument, account.Id, ordersByInstrument.Key, ex);
+								await ProcessFailedOrders(ordersByInstrument.ToList(), clientId, account.Id, ordersByInstrument.Key, ex);
 								continue;
 							}
 
@@ -162,7 +168,7 @@ namespace MarginTrading.Backend.Services.Services
 								}
 								catch (Exception ex)
 								{
-									await ProcessFailedOrders(orders, account.Id, ordersByInstrument.Key, ex);
+									await ProcessFailedOrders(orders, clientId, account.Id, ordersByInstrument.Key, ex);
 								}
 							}
 						}
@@ -172,6 +178,8 @@ namespace MarginTrading.Backend.Services.Services
 				{
 					_semaphore.Release();
 				}
+
+				_overnightSwapNotificationService.PerformEmailNotification(_currentStartTimestamp);
 			});
 		}
 
@@ -211,8 +219,9 @@ namespace MarginTrading.Backend.Services.Services
 				return;
 			
 			//create calculation obj & add to cache
-			var calculation = OvernightSwapCalculation.Create(account.Id, instrument,
-				filteredOrders.Select(order => order.Id).ToList(), _currentStartTimestamp, true, null, total, swapRate, direction);
+			var volume = filteredOrders.Select(x => Math.Abs(x.Volume)).Sum();
+			var calculation = OvernightSwapCalculation.Create(account.ClientId, account.Id, instrument,
+				filteredOrders.Select(order => order.Id).ToList(), _currentStartTimestamp, true, null, volume, total, swapRate, direction);
 			_overnightSwapCache.AddOrReplace(calculation);
 	
 			//charge comission
@@ -220,7 +229,7 @@ namespace MarginTrading.Backend.Services.Services
 				account: account, 
 				amount: - total, 
 				historyType: AccountHistoryType.Swap,
-				comment : $"{accountAssetPair.Instrument} {(direction == OrderDirection.Buy ? "long" : "short")} swaps. Volume: {filteredOrders.Select(x => Math.Abs(x.Volume)).Sum()}. Positions count: {filteredOrders.Count}. Rate: {swapRate}. Time: {_currentStartTimestamp:u}.",
+				comment : $"{accountAssetPair.Instrument} {(direction == OrderDirection.Buy ? "long" : "short")} swaps. Volume: {volume}. Positions count: {filteredOrders.Count}. Rate: {swapRate}. Time: {_currentStartTimestamp:u}.",
 				auditLog: calculation.ToJson());
 			
 			//update calculation state if previous existed
@@ -237,15 +246,17 @@ namespace MarginTrading.Backend.Services.Services
 		/// Log failed orders.
 		/// </summary>
 		/// <param name="orders"></param>
+		/// <param name="clientId"></param>
 		/// <param name="accountId"></param>
 		/// <param name="instrument"></param>
 		/// <param name="exception"></param>
 		/// <returns></returns>
-		private async Task ProcessFailedOrders(IEnumerable<Order> orders, string accountId, string instrument,
-			Exception exception)
+		private async Task ProcessFailedOrders(IReadOnlyList<Order> orders, string clientId, string accountId, 
+			string instrument, Exception exception)
 		{
-			var failedCalculation = OvernightSwapCalculation.Create(accountId, instrument, 
-				orders.Select(o => o.Id).ToList(), _currentStartTimestamp, false, exception);
+			var volume = orders.Select(x => Math.Abs(x.Volume)).Sum();
+			var failedCalculation = OvernightSwapCalculation.Create(clientId, accountId, instrument, 
+				orders.Select(o => o.Id).ToList(), _currentStartTimestamp, false, exception, volume);
 			
 			await _log.WriteErrorAsync(nameof(OvernightSwapService), nameof(ProcessFailedOrders), 
 				new Exception(failedCalculation.ToJson()), DateTime.UtcNow);
