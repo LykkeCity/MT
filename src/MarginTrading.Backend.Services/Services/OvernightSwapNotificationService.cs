@@ -48,9 +48,10 @@ namespace MarginTrading.Backend.Services.Services
         
         public void PerformEmailNotification(DateTime calculationTime)
         {
-            var processedCalculations = _overnightSwapCache.GetAll().Where(x => x.Time == calculationTime).ToList();
+            var processedCalculations = _overnightSwapCache.GetAll().Where(x => x.Time >= calculationTime).ToList();
             
-            _threadSwitcher.SwitchThread(async () =>
+            //_threadSwitcher.SwitchThread(async () =>
+            Task.Run(async () =>
             {
                 await _semaphore.WaitAsync();
 
@@ -76,9 +77,9 @@ namespace MarginTrading.Backend.Services.Services
                                                 {
                                                     Instrument = calc.Instrument,
                                                     Direction = calc.Direction.ToString(),
-                                                    Volume = calc.Value,
+                                                    Volume = calc.Volume,
                                                     SwapRate = calc.SwapRate,
-                                                    Cost = calc.Volume,
+                                                    Cost = calc.Value,
                                                     PositionIds = calc.OpenOrderIds,
                                                 }).ToList()
                                         };

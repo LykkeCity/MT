@@ -24,10 +24,16 @@
             </td>
         </tr>
         {{#CalculationsByAccount}}
+            <tr style="margin-top: 10px;">
+                <td style="padding:0 40px 0 40px;">
+                    <p style="font-size: 1.0em;line-height: 180%;">
+                        {{AccountCurrency}} account {{AccountId}}:
+                    </p>
+                </td>
+            </tr>
             <tr>
                 <td>
-                    {{AccountCurrency}} account {{AccountId}}:
-                    <table style="margin:auto;width:750px;border: 0px #E5E7EA;background-color: #fff;">
+                    <table border="1" style="margin:auto;width:750px;border: 1px #E5E7EA;border-collapse: collapse;background-color: #fff;">
                         <tr>
                             <th>Instrument</th>
                             <th>Direction</th>
@@ -38,15 +44,22 @@
                         </tr>
                         {{#Calculations}}
                             <tr>
-                                <td>{{Instrument}}</td>
-                                <td>{{Direction}}</td>
-                                <td>{{Volume}}</td>
-                                <td>{{SwapRate}}</td>
-                                <td>{{Cost}}</td>
-                                <td>{{PositionIds}}</td>
+                                <td style="text-align: center">{{Instrument}}</td>
+                                <td style="text-align: center">{{Direction}}</td>
+                                <td style="text-align: center">{{Volume}}</td>
+                                <td style="text-align: center">{{SwapRate}}</td>
+                                <td style="text-align: center">{{Cost}}</td>
+                                <td style="text-align: center">{{PositionIdsString}}</td>
                             </tr>
                         {{/Calculations}}
                     </table>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding:0 40px 0 40px;">
+                    <p style="font-size: 1.0em;line-height: 180%;">
+                        Account total cost: {{TotalCost}}
+                    </p>
                 </td>
             </tr>
         {{/CalculationsByAccount}}
