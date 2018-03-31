@@ -53,5 +53,6 @@ namespace MarginTrading.Backend.Core.Settings
         public ReportingEquivalentPricesSettings[] ReportingEquivalentPricesSettings { get; set; }
         
         public int OvernightSwapCalculationHour { get; set; }
+        public bool SendOvernightSwapEmails { get; set; }
     }
 }

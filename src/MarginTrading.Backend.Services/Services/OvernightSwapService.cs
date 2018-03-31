@@ -179,7 +179,8 @@ namespace MarginTrading.Backend.Services.Services
 					_semaphore.Release();
 				}
 
-				_overnightSwapNotificationService.PerformEmailNotification(_currentStartTimestamp);
+				if (_marginSettings.SendOvernightSwapEmails)
+					_overnightSwapNotificationService.PerformEmailNotification(_currentStartTimestamp);
 			});
 		}
 
