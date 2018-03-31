@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Lykke.Service.Assets.Client;
+using MarginTrading.AzureRepositories.Contract;
+using MarginTrading.Backend.Contracts.AssetPairSettings;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Common.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,19 +15,25 @@ namespace MarginTrading.DataReader.Controllers
     [Route("api/dictionaries")]
     public class DictionariesController : Controller
     {
-        private readonly IAssetsServiceWithCache _assetsService;
+        private readonly IAssetPairsRepository _assetPairsRepository;
+        private readonly IConvertService _convertService;
 
-        public DictionariesController(IAssetsServiceWithCache assetsService)
+        public DictionariesController(IAssetPairsRepository assetPairsRepository, IConvertService convertService)
         {
-            _assetsService = assetsService;
+            _assetPairsRepository = assetPairsRepository;
+            _convertService = convertService;
         }
 
         [HttpGet]
         [Route("assetPairs")]
-        public async Task<IEnumerable<AssetPair>> GetAllAssetPairs()
+        public async Task<List<AssetPairContract>> GetAllAssetPairs()
         {
-            return (await _assetsService.GetAllAssetPairsAsync()).Select(a =>
-                new AssetPair(a.Id, a.Name, a.BaseAssetId, a.QuotingAssetId, a.Accuracy));
+            return (await _assetPairsRepository.GetAsync()).Select(Convert).ToList();
+        }
+
+        private AssetPairContract Convert(IAssetPair assetPair)
+        {
+            return _convertService.Convert<IAssetPair, AssetPairContract>(assetPair);
         }
 
         [HttpGet]

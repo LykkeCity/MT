@@ -91,6 +91,14 @@ namespace MarginTrading.Backend.Services
         public override void Start()
         {
             var orders = _marginTradingBlobRepository.Read<List<Order>>(LykkeConstants.StateBlobContainer, BlobName) ?? new List<Order>();
+            
+            orders.ForEach(o =>
+            {
+                // migrate orders to add LegalEntity field
+                // todo: can be removed once published to prod
+                if (o.LegalEntity == null)
+                    o.LegalEntity = "LYKKEVU";
+            });
 
             _orderCache.InitOrders(orders);
 

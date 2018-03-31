@@ -3,11 +3,11 @@
 namespace MarginTrading.Backend.Contracts.AssetPairSettings
 {
     [PublicAPI]
-    public class AssetPairSettingsContract : AssetPairSettingsInputContract
+    public class AssetPairContract : AssetPairInputContract
     {
         /// <summary>
         /// Instrument id
         /// </summary>
-        public string AssetPairId { get; set; }
+        public string Id { get; set; }
     }
 }

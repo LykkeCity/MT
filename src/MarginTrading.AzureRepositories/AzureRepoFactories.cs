@@ -95,12 +95,12 @@ namespace MarginTrading.AzureRepositories
                 return new DayOffSettingsRepository(new MarginTradingBlobRepository(connString));
             }
             
-            public static IAssetPairSettingsRepository CreateAssetPairSettingsRepository(IReloadingManager<string> connString, 
+            public static IAssetPairsRepository CreateAssetPairSettingsRepository(IReloadingManager<string> connString, 
                 ILog log, IConvertService convertService)
             {
-                return new AssetPairSettingsRepository(
-                    AzureTableStorage<AssetPairSettingsRepository.AssetPairSettingsEntity>.Create(connString,
-                        "AssetPairSettings", log), convertService);
+                return new AssetPairsRepository(
+                    AzureTableStorage<AssetPairsRepository.AssetPairEntity>.Create(connString,
+                        "AssetPairs", log), convertService);
             }
         }
     }

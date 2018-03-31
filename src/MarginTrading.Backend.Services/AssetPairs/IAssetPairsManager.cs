@@ -5,8 +5,8 @@ namespace MarginTrading.Backend.Services.AssetPairs
 {
     public interface IAssetPairsManager
     {
-        Task<IAssetPairSettings> UpdateAssetPairSettings(IAssetPairSettings assetPairSettings);
-        Task<IAssetPairSettings> InsertAssetPairSettings(IAssetPairSettings assetPairSettings);
-        Task<IAssetPairSettings> DeleteAssetPairSettings(string assetPairId);
+        Task<IAssetPair> UpdateAssetPairSettings(IAssetPair assetPairSettings);
+        Task<IAssetPair> InsertAssetPairSettings(IAssetPair assetPairSettings);
+        Task<IAssetPair> DeleteAssetPairSettings(string assetPairId);
     }
 }

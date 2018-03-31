@@ -21,17 +21,18 @@ namespace MarginTrading.Backend.Services
             _assetsCache = assetsCache;
         }
 
-        private decimal GetSwaps(string accountAssetId, string instrument, OrderDirection type, DateTime? openDate, DateTime? closeDate, decimal volume, decimal swapRate)
+        private decimal GetSwaps(string accountAssetId, string instrument, DateTime? openDate, DateTime? closeDate,
+            decimal volume, decimal swapRate, string legalEntity)
         {
             decimal result = 0;
 
             if (openDate.HasValue)
             {
                 var close = closeDate ?? DateTime.UtcNow;
-                var seconds = (decimal)(close - openDate.Value).TotalSeconds;
+                var seconds = (decimal) (close - openDate.Value).TotalSeconds;
 
                 const int secondsInYear = 31536000;
-                var quote = _calculator.GetQuoteRateForBaseAsset(accountAssetId, instrument);
+                var quote = _calculator.GetQuoteRateForBaseAsset(accountAssetId, instrument, legalEntity);
                 var swaps = quote * volume * swapRate * seconds / secondsInYear;
                 result = Math.Round(swaps, _assetsCache.GetAssetAccuracy(accountAssetId));
             }
@@ -41,21 +42,22 @@ namespace MarginTrading.Backend.Services
 
         public decimal GetSwaps(IOrder order)
         {
-            return GetSwaps(order.AccountAssetId, order.Instrument,
-                order.GetOrderType(), order.OpenDate, order.CloseDate, order.GetMatchedVolume(), order.SwapCommission);
+            return GetSwaps(order.AccountAssetId, order.Instrument, order.OpenDate, order.CloseDate,
+                order.GetMatchedVolume(), order.SwapCommission, order.LegalEntity);
         }
 
         public decimal GetOvernightSwap(IOrder order, decimal swapRate)
         {
             var openDate = DateTime.UtcNow;
             var closeDate = openDate.AddDays(1);
-            return GetSwaps(order.AccountAssetId, order.Instrument, order.GetOrderType(), openDate, closeDate,
-                Math.Abs(order.Volume), swapRate);
+            return GetSwaps(order.AccountAssetId, order.Instrument, openDate, closeDate,
+                Math.Abs(order.Volume), swapRate, order.LegalEntity);
         }
 
         public void SetCommissionRates(string tradingConditionId, string accountAssetId, Order order)
         {
-            var accountAsset = _accountAssetsCacheService.GetAccountAsset(tradingConditionId, accountAssetId, order.Instrument);
+            var accountAsset = _accountAssetsCacheService
+                .GetAccountAsset(tradingConditionId, accountAssetId, order.Instrument);
 
             order.CommissionLot = accountAsset.CommissionLot;
 

@@ -59,7 +59,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 ? prices.OrderBy(tuple => tuple.price).ToList()
                 : prices.OrderByDescending(tuple => tuple.price).ToList();
             
-            var settings = _assetPairsCache.GetAssetPairSettings(order.Instrument);
+            var settings = _assetPairsCache.TryGetAssetPairById(order.Instrument);
             var externalAssetPair = settings?.BasePairId ?? order.Instrument;
 
             foreach (var sourcePrice in prices)
@@ -154,7 +154,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             }
             
             var closeLp = order.OpenExternalProviderId;
-            var settings = _assetPairsCache.GetAssetPairSettings(order.Instrument);
+            var settings = _assetPairsCache.TryGetAssetPairById(order.Instrument);
             var externalAssetPair = settings?.BasePairId ?? order.Instrument;
 
             var externalOrderModel = new OrderModel();
@@ -220,12 +220,12 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             return new OrderBook(assetPairId);
         }
 
-        private decimal CalculatePriceWithMarkups(IAssetPairSettings settings, OrderDirection direction, decimal sourcePrice)
+        private decimal CalculatePriceWithMarkups(IAssetPair settings, OrderDirection direction, decimal sourcePrice)
         {
             if (settings == null)
                 return sourcePrice;
 
-            var markup = direction == OrderDirection.Buy ? settings.MultiplierMarkupAsk : settings.MultiplierMarkupBid;
+            var markup = direction == OrderDirection.Buy ? settings.StpMultiplierMarkupAsk : settings.StpMultiplierMarkupBid;
 
             markup = markup != 0 ? markup : 1;
 
