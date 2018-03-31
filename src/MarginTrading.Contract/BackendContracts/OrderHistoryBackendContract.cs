@@ -33,6 +33,7 @@ namespace MarginTrading.Contract.BackendContracts
         public string OpenExternalProviderId { get; set; }
         public string CloseExternalOrderId { get; set; }
         public string CloseExternalProviderId { get; set; }
+        public string LegalEntity { get; set; }  
         
         [JsonConverter(typeof(StringEnumConverter))]
         public MatchingEngineModeContract MatchingEngineMode { get; set; }

@@ -48,7 +48,8 @@ namespace MarginTrading.Backend.Contracts.TradeMonitoring
         public string CloseExternalProviderId { get; set; }
         public List<MatchedOrderBackendContract> MatchedOrders { get; set; } = new List<MatchedOrderBackendContract>();
         public List<MatchedOrderBackendContract> MatchedCloseOrders { get; set; } = new List<MatchedOrderBackendContract>();
-                
+        public string LegalEntity { get; set; }  
+        
         [JsonConverter(typeof(StringEnumConverter))]
         public MatchingEngineModeContract MatchingEngineMode { get; set; }
     }
