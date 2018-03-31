@@ -99,7 +99,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "BTCCHF",
                 Volume = 4000,
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -130,7 +131,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "BTCCHF",
                 Volume = -4000,
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -150,7 +152,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 8,
-                FillType = OrderFillType.PartialFill
+                FillType = OrderFillType.PartialFill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -181,7 +184,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -8,
-                FillType = OrderFillType.PartialFill
+                FillType = OrderFillType.PartialFill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -212,7 +216,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 8,
-                FillType = OrderFillType.PartialFill
+                FillType = OrderFillType.PartialFill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -248,7 +253,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -8,
-                FillType = OrderFillType.PartialFill
+                FillType = OrderFillType.PartialFill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -285,7 +291,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 15,
-                FillType = OrderFillType.PartialFill
+                FillType = OrderFillType.PartialFill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -316,7 +323,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -13,
-                FillType = OrderFillType.PartialFill
+                FillType = OrderFillType.PartialFill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -346,7 +354,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 16,
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -368,7 +377,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -13,
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -390,7 +400,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 9,
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -419,7 +430,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -8,
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -448,7 +460,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 8,
-                FillType = OrderFillType.PartialFill
+                FillType = OrderFillType.PartialFill,
+                LegalEntity = "LYKKEVU",
             };
 
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
@@ -500,7 +513,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -8,
-                FillType = OrderFillType.PartialFill
+                FillType = OrderFillType.PartialFill,
+                LegalEntity = "LYKKEVU",
             };
 
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
@@ -541,7 +555,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 9,
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
+                LegalEntity = "LYKKEVU",
             };
 
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
@@ -586,7 +601,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -8,
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
+                LegalEntity = "LYKKEVU",
             };
 
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
@@ -631,7 +647,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 9,
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
+                LegalEntity = "LYKKEVU",
             };
 
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
@@ -687,7 +704,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -8,
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -739,7 +757,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 8,
-                FillType = OrderFillType.PartialFill
+                FillType = OrderFillType.PartialFill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -768,7 +787,8 @@ namespace MarginTradingTests
                 Instrument = "EURUSD",
                 Volume = 8,
                 TakeProfit = 1.16M,
-                FillType = OrderFillType.PartialFill
+                FillType = OrderFillType.PartialFill,
+                LegalEntity = "LYKKEVU",
             };
 
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
@@ -812,7 +832,8 @@ namespace MarginTradingTests
                 Instrument = "EURUSD",
                 Volume = -8,
                 TakeProfit = 0.8M,
-                FillType = OrderFillType.PartialFill
+                FillType = OrderFillType.PartialFill,
+                LegalEntity = "LYKKEVU",
             };
 
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
@@ -855,7 +876,8 @@ namespace MarginTradingTests
                 Instrument = "EURUSD",
                 Volume = 14,
                 StopLoss = 0.98M,
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
+                LegalEntity = "LYKKEVU",
             };
 
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
@@ -898,7 +920,8 @@ namespace MarginTradingTests
                 Instrument = "EURUSD",
                 Volume = -11,
                 StopLoss = 1.15M,
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
+                LegalEntity = "LYKKEVU",
             };
 
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
@@ -940,7 +963,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 8,
-                FillType = OrderFillType.PartialFill
+                FillType = OrderFillType.PartialFill,
+                LegalEntity = "LYKKEVU",
             };
 
             _accountAssetPairsRepository.AddOrReplaceAsync(new AccountAssetPair
@@ -995,7 +1019,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "BTCCHF",
                 Volume = 1,
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -1039,7 +1064,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "BTCCHF",
                 Volume = 1,
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -1083,7 +1109,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "BTCCHF",
                 Volume = -1,
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -1127,7 +1154,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "BTCCHF",
                 Volume = -1,
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -1172,7 +1200,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "BTCCHF",
                 Volume = 11.14644406903176M,  //10000 USD (with leverage)
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -1208,7 +1237,8 @@ namespace MarginTradingTests
                     ClientId = _client1Id,
                     Instrument = "BTCCHF",
                     Volume = volume,
-                    FillType = OrderFillType.FillOrKill
+                    FillType = OrderFillType.FillOrKill,
+                    LegalEntity = "LYKKEVU",
                 };
             };
 
@@ -1278,7 +1308,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "BTCCHF",
                 Volume = 11.14644406903176M,  //10000 USD (with leverage)
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -1319,7 +1350,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "BTCJPY",
                 Volume = 1,
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
+                LegalEntity = "LYKKEVU",
             };
 
             Assert.ThrowsAsync<QuoteNotFoundException>(async () =>
@@ -1350,7 +1382,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "BTCEUR",
                 Volume = 1000,
-                FillType = OrderFillType.PartialFill
+                FillType = OrderFillType.PartialFill,
+                LegalEntity = "LYKKEVU",
             };
 
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
@@ -1380,7 +1413,8 @@ namespace MarginTradingTests
                 ClientId = _client1Id,
                 Instrument = "BTCEUR",
                 Volume = 1000,
-                FillType = OrderFillType.PartialFill
+                FillType = OrderFillType.PartialFill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -1422,7 +1456,8 @@ namespace MarginTradingTests
                 Instrument = "EURUSD",
                 Volume = 8,
                 ExpectedOpenPrice = 0,
-                FillType = OrderFillType.PartialFill
+                FillType = OrderFillType.PartialFill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -1443,7 +1478,8 @@ namespace MarginTradingTests
                 Instrument = "EURUSD",
                 Volume = 8,
                 ExpectedOpenPrice = 1.1M,
-                FillType = OrderFillType.PartialFill
+                FillType = OrderFillType.PartialFill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -1478,7 +1514,8 @@ namespace MarginTradingTests
                 Instrument = "EURUSD",
                 Volume = 8,
                 ExpectedOpenPrice = 1.055M,
-                FillType = OrderFillType.PartialFill
+                FillType = OrderFillType.PartialFill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -1526,7 +1563,8 @@ namespace MarginTradingTests
                 Instrument = "EURUSD",
                 Volume = -5,
                 ExpectedOpenPrice = 1.05M,
-                FillType = OrderFillType.PartialFill
+                FillType = OrderFillType.PartialFill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -1560,7 +1598,8 @@ namespace MarginTradingTests
                 Instrument = "EURUSD",
                 Volume = -1,
                 ExpectedOpenPrice = 1.07M,
-                FillType = OrderFillType.PartialFill
+                FillType = OrderFillType.PartialFill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -1605,7 +1644,8 @@ namespace MarginTradingTests
                 Instrument = "EURUSD",
                 Volume = 1,
                 ExpectedOpenPrice = 1.1M,
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -1642,7 +1682,8 @@ namespace MarginTradingTests
                 Instrument = "EURUSD",
                 Volume = 1,
                 ExpectedOpenPrice = 1.055M,
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -1686,7 +1727,8 @@ namespace MarginTradingTests
                 Instrument = "EURUSD",
                 Volume = -1,
                 ExpectedOpenPrice = 1.05M,
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -1720,7 +1762,8 @@ namespace MarginTradingTests
                 Instrument = "EURUSD",
                 Volume = -1,
                 ExpectedOpenPrice = 1.07M,
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -1764,7 +1807,8 @@ namespace MarginTradingTests
                 Instrument = "EURUSD",
                 Volume = 8,
                 ExpectedOpenPrice = 1.12M,
-                FillType = OrderFillType.PartialFill
+                FillType = OrderFillType.PartialFill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -1786,7 +1830,8 @@ namespace MarginTradingTests
                 Instrument = "EURUSD",
                 Volume = -8,
                 ExpectedOpenPrice = 1.04M,
-                FillType = OrderFillType.PartialFill
+                FillType = OrderFillType.PartialFill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -1841,7 +1886,8 @@ namespace MarginTradingTests
                 Instrument = "EURUSD",
                 Volume = -10000,
                 ExpectedOpenPrice = 1.07M,
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
@@ -1883,7 +1929,8 @@ namespace MarginTradingTests
                 Instrument = "EURUSD",
                 Volume = -5,
                 ExpectedOpenPrice = 1.07M,
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
+                LegalEntity = "LYKKEVU",
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;

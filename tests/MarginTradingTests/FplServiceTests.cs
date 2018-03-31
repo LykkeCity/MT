@@ -116,7 +116,8 @@ namespace MarginTradingTests
                 Instrument = instrument,
                 Volume = 1000,
                 MatchedOrders = new MatchedOrderCollection( new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 1000 } }), //need for GetMatchedVolume()
-                OpenPrice = 935.461M
+                OpenPrice = 935.461M,
+                LegalEntity = "LYKKEVU",
             };
 
             order.UpdateClosePrice(935.61M);
@@ -142,6 +143,7 @@ namespace MarginTradingTests
                 Volume = -1000,
                 MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 1000 } }), //need for GetMatchedVolume()
                 OpenPrice = 935.461M,
+                LegalEntity = "LYKKEVU",
             };
 
             order.UpdateClosePrice(935.61M);
@@ -175,7 +177,8 @@ namespace MarginTradingTests
                     Volume = 100000,
                     MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 100000 } }), //need for GetMatchedVolume()
                     OpenPrice = 1.05M,
-                    FillType = OrderFillType.FillOrKill
+                    FillType = OrderFillType.FillOrKill,
+                    LegalEntity = "LYKKEVU",
                 },
                 new Order
                 {
@@ -190,7 +193,8 @@ namespace MarginTradingTests
                     Volume = -200000,
                     MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 200000 } }), //need for GetMatchedVolume()
                     OpenPrice = 1.04M,
-                    FillType = OrderFillType.FillOrKill
+                    FillType = OrderFillType.FillOrKill,
+                    LegalEntity = "LYKKEVU",
                 },
                 new Order
                 {
@@ -205,7 +209,8 @@ namespace MarginTradingTests
                     Volume = 50000,
                     MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 50000 } }), //need for GetMatchedVolume()
                     OpenPrice = 1.061M,
-                    FillType = OrderFillType.FillOrKill
+                    FillType = OrderFillType.FillOrKill,
+                    LegalEntity = "LYKKEVU",
                 },
                 new Order
                 {
@@ -220,7 +225,8 @@ namespace MarginTradingTests
                     Volume = 100,
                     MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 100 } }), //need for GetMatchedVolume()
                     OpenPrice = 1120,
-                    FillType = OrderFillType.FillOrKill
+                    FillType = OrderFillType.FillOrKill,
+                    LegalEntity = "LYKKEVU",
                 }
             };
 

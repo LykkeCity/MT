@@ -37,8 +37,6 @@ namespace MarginTradingTests.Modules
             var blobRepository = new Mock<IMarginTradingBlobRepository>();
             var orderHistoryRepository = new Mock<IMarginTradingOrdersHistoryRepository>();
             var riskSystemCommandsLogRepository = new Mock<IRiskSystemCommandsLogRepository>();
-            var assetPairSettingsRepository = new Mock<IAssetPairsRepository>();
-            assetPairSettingsRepository.Setup(s => s.GetAsync()).ReturnsAsync(new List<IAssetPair>());
 
             builder.RegisterInstance(new LogToMemory()).As<ILog>();
             builder.RegisterInstance(assetsService).As<IAssetsService>().SingleInstance();
@@ -64,7 +62,7 @@ namespace MarginTradingTests.Modules
                 .SingleInstance();
             builder.Register<IDayOffSettingsRepository>(c => new DayOffSettingsRepository(blobRepository.Object))
                 .SingleInstance();
-            builder.RegisterInstance(assetPairSettingsRepository.Object)
+            builder.RegisterInstance(MarginTradingTestsUtils.GetPopulatedAssetPairsRepository())
                 .As<IAssetPairsRepository>().SingleInstance();
         }
     }
