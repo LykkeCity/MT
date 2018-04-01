@@ -92,13 +92,15 @@ namespace MarginTrading.Backend.Services.Services
 			var openOrders = _orderReader.GetActive();
 			
 			//prepare the list of orders
-			var calculatedIds = _overnightSwapCache.GetAll().Where(x => x.IsSuccess).SelectMany(x => x.OpenOrderIds).ToHashSet();
+			var lastInvocationTime = CalcLastInvocationTime();
+			var calculatedIds = _overnightSwapCache.GetAll().Where(x => x.IsSuccess && x.Time >= lastInvocationTime)
+				.SelectMany(x => x.OpenOrderIds).ToHashSet();
 			//select only non-calculated orders, changed before current invocation time
 			var filteredOrders = openOrders.Where(x => (x.OpenDate ?? DateTime.MaxValue) < _currentStartTimestamp
 			                                           && !calculatedIds.Contains(x.Id));
 
 			//detect orders for which last calculation failed and it was closed
-			var failedClosedOrders = _overnightSwapHistoryRepository.GetAsync(CalcLastInvocationTime(), _currentStartTimestamp)
+			var failedClosedOrders = _overnightSwapHistoryRepository.GetAsync(lastInvocationTime, _currentStartTimestamp)
 				.GetAwaiter().GetResult()
 				.Where(x => !x.IsSuccess).SelectMany(x => x.OpenOrderIds)
 				.Except(openOrders.Select(y => y.Id)).ToList();
