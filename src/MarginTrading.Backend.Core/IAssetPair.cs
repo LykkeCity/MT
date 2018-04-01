@@ -1,4 +1,5 @@
 ﻿using System;
+using JetBrains.Annotations;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Common.Extensions;
 
@@ -39,6 +40,7 @@ namespace MarginTrading.Backend.Core
         /// <summary>
         /// Base pair id (ex. BTCUSD for id BTCUSD.cy)
         /// </summary>
+        [CanBeNull]
         string BasePairId { get; }
 
         /// <summary>
@@ -67,7 +69,7 @@ namespace MarginTrading.Backend.Core
     {
         public AssetPair(string id, string name, string baseAssetId,
             string quoteAssetId, int accuracy, string legalEntity,
-            string basePairId, MatchingEngineMode matchingEngineMode, decimal stpMultiplierMarkupBid,
+            [CanBeNull] string basePairId, MatchingEngineMode matchingEngineMode, decimal stpMultiplierMarkupBid,
             decimal stpMultiplierMarkupAsk)
         {
             Id = id ?? throw new ArgumentNullException(nameof(id));
@@ -77,7 +79,7 @@ namespace MarginTrading.Backend.Core
             Accuracy = accuracy;
             
             LegalEntity = legalEntity.RequiredNotNullOrWhiteSpace(nameof(legalEntity));
-            BasePairId = basePairId.RequiredNotNullOrWhiteSpace(nameof(basePairId));
+            BasePairId = basePairId;
             MatchingEngineMode = matchingEngineMode.RequiredEnum(nameof(matchingEngineMode));
             StpMultiplierMarkupBid = stpMultiplierMarkupBid.RequiredGreaterThan(0, nameof(stpMultiplierMarkupBid));
             StpMultiplierMarkupAsk = stpMultiplierMarkupAsk.RequiredGreaterThan(0, nameof(stpMultiplierMarkupAsk));

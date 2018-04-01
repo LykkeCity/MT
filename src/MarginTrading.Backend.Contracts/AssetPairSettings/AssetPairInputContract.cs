@@ -35,6 +35,7 @@ namespace MarginTrading.Backend.Contracts.AssetPairSettings
         /// <summary>
         /// Base pair id (ex. BTCUSD for id BTCUSD.cy)
         /// </summary>
+        [CanBeNull]
         public string BasePairId { get; set; }
 
         /// <summary>
