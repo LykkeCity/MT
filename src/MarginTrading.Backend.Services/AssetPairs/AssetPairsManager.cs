@@ -65,10 +65,11 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         private void ValidateSettings(IAssetPair newValue)
         {
-            if (newValue.BasePairId != null && _assetPairsCache.TryGetAssetPairById(newValue.BasePairId) == null)
-            {
+            if (newValue.BasePairId == null) 
+                return;
+
+            if (_assetPairsCache.TryGetAssetPairById(newValue.BasePairId) == null)
                 throw new InvalidOperationException($"BasePairId {newValue.BasePairId} does not exist");
-            }
 
             if (_assetPairsCache.GetAll().Any(s =>
                 s.Id != newValue.Id &&
