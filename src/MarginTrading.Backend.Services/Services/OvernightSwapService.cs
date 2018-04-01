@@ -77,7 +77,7 @@ namespace MarginTrading.Backend.Services.Services
 			//initialize cache from storage
 			var savedState = _overnightSwapStateRepository.GetAsync().GetAwaiter().GetResult().ToList();
 			_overnightSwapCache.Initialize(savedState.Select(OvernightSwapCalculation.Create));
-			
+
 			//start calculation
 			CalculateAndChargeSwaps();
 			

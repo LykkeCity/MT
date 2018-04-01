@@ -18,8 +18,11 @@
         </tr>
         <tr>
             <td style="padding:0 40px 0 40px;">
-                <p style="font-size: 1.1em;color: #3F4D60;line-height: 180%;margin-top: 30px;">
-                    Dear Customer, hereby we inform you that Overnight swaps have been charged to one of your margin trading accounts.
+                <p style="font-size: 1.2em;line-height: 140%;margin-top: 20px;">
+                    {{CurrentDate}}
+                </p>
+                <p style="font-size: 1.1em;color: #3F4D60;line-height: 180%;margin-top: 10px;">
+                    Dear Customer, hereby we inform you that overnight swaps have been charged to at least one of your margin trading accounts.
                 </p>
             </td>
         </tr>
@@ -39,7 +42,7 @@
                             <th>Direction</th>
                             <th>Volume</th>
                             <th>Swap rate</th>
-                            <th>Cost</th>
+                            <th>Cost, {{AccountCurrency}}</th>
                             <th>Position id's</th>
                         </tr>
                         {{#Calculations}}
@@ -47,7 +50,7 @@
                                 <td style="text-align: center">{{Instrument}}</td>
                                 <td style="text-align: center">{{Direction}}</td>
                                 <td style="text-align: center">{{Volume}}</td>
-                                <td style="text-align: center">{{SwapRate}}</td>
+                                <td style="text-align: center">{{SwapRate}}%</td>
                                 <td style="text-align: center">{{Cost}}</td>
                                 <td style="text-align: center">{{PositionIdsString}}</td>
                             </tr>
@@ -58,7 +61,7 @@
             <tr>
                 <td style="padding:0 40px 0 40px;">
                     <p style="font-size: 1.0em;line-height: 180%;">
-                        Account total cost: {{TotalCost}}
+                        Total cost: {{TotalCost}} {{AccountCurrency}}
                     </p>
                 </td>
             </tr>

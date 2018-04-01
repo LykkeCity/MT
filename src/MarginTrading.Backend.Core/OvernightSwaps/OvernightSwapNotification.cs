@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace MarginTrading.Backend.Core
@@ -7,6 +8,7 @@ namespace MarginTrading.Backend.Core
     {
         public string CliendId { get; set; }
         public IReadOnlyList<AccountCalculations> CalculationsByAccount { get; set; }
+        public string CurrentDate => DateTime.UtcNow.ToString("dd MMMM yyyy");
 
         public class AccountCalculations
         {
@@ -24,7 +26,7 @@ namespace MarginTrading.Backend.Core
             public decimal SwapRate { get; set; }
             public decimal Cost { get; set; }
             public List<string> PositionIds { get; set; }
-            public string PositionIdsString => string.Join(", ", PositionIds);
+            public string PositionIdsString => string.Join("<br />", PositionIds);
         }
     }
 }

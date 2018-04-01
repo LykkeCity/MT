@@ -9,6 +9,7 @@ using Common.Log;
 using Lykke.Common;
 using Lykke.Service.ClientAccount.Client;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Services.Client;
 
 namespace MarginTrading.Backend.Services.Services
@@ -16,6 +17,7 @@ namespace MarginTrading.Backend.Services.Services
     public class OvernightSwapNotificationService : IOvernightSwapNotificationService
     {
         private readonly IOvernightSwapCache _overnightSwapCache;
+        private readonly IAssetPairsCache _assetPairsCache;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly IEmailService _emailService;
         private readonly IClientAccountService _clientAccountService;
@@ -28,6 +30,7 @@ namespace MarginTrading.Backend.Services.Services
         
         public OvernightSwapNotificationService(
             IOvernightSwapCache overnightSwapCache,
+            IAssetPairsCache assetPairsCache,
             IAccountsCacheService accountsCacheService,
             IEmailService emailService,
             IClientAccountService clientAccountService,
@@ -37,6 +40,7 @@ namespace MarginTrading.Backend.Services.Services
             ILog log)
         {
             _overnightSwapCache = overnightSwapCache;
+            _assetPairsCache = assetPairsCache;
             _accountsCacheService = accountsCacheService;
             _emailService = emailService;
             _clientAccountService = clientAccountService;
@@ -73,15 +77,19 @@ namespace MarginTrading.Backend.Services.Services
                                             AccountId = a.Key,
                                             AccountCurrency = account.BaseAssetId,
                                             Calculations = a.Select(calc =>
-                                                new OvernightSwapNotification.SingleCalculation
+                                            {
+                                                var instrumentName = _assetPairsCache.TryGetAssetPairById(calc.Instrument)?.Name 
+                                                                     ?? calc.Instrument;
+                                                return new OvernightSwapNotification.SingleCalculation
                                                 {
-                                                    Instrument = calc.Instrument,
-                                                    Direction = calc.Direction.ToString(),
+                                                    Instrument =  instrumentName,
+                                                    Direction = calc.Direction == OrderDirection.Buy ? "Long" : "Short",
                                                     Volume = calc.Volume,
                                                     SwapRate = calc.SwapRate,
                                                     Cost = calc.Value,
                                                     PositionIds = calc.OpenOrderIds,
-                                                }).ToList()
+                                                };
+                                            }).ToList()
                                         };
                                     }).Where(x => x != null).ToList()
                             }
