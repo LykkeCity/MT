@@ -61,12 +61,15 @@ namespace MarginTrading.MigrateApp
         {
             var repository = AzureTableStorage<MarginTradingOrderHistoryEntity>.Create(
                 _reloadingManager.Nested(s => s.Db.MarginTradingConnString), "MarginTradingOrdersHistory", _logger);
-            var tasks = (await repository.GetDataAsync())
-                .Where(a => a.OrderUpdateType == null && a.Status != "Closed")
+            (await repository.GetDataAsync())
+                .Where(a => string.IsNullOrWhiteSpace(a.OrderUpdateType) && a.Status != "Closed")
                 .GroupBy(a => a.PartitionKey)
                 .SelectMany(g => g.Batch(500))
-                .Select(batch => repository.DeleteAsync(batch));
-            await Task.WhenAll(tasks);
+                .ForEach(batch =>
+                {
+                    repository.DeleteAsync(batch).GetAwaiter().GetResult();
+                    Console.WriteLine($"Deleted {batch.Count()} rows");
+                });
         }
     }
 }

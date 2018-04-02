@@ -23,6 +23,7 @@ namespace MarginTrading.MigrateApp
             IReloadingManager<Settings> settings, ILog log, bool isLive)
         {
             builder.RegisterType<Application>().As<IBrokerApplication>().SingleInstance();
+            builder.RegisterInstance(settings).SingleInstance();
         }
     }
 }
