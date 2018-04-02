@@ -12,7 +12,7 @@ namespace MarginTrading.BrokerBase
 {
     public abstract class BrokerApplicationBase<TMessage> : IBrokerApplication
     {
-        private readonly ILog _logger;
+        protected readonly ILog _logger;
         private readonly ISlackNotificationsSender _slackNotificationsSender;
         protected readonly CurrentApplicationInfo ApplicationInfo;
         private RabbitMqSubscriber<TMessage> _connector;
@@ -74,7 +74,7 @@ namespace MarginTrading.BrokerBase
             _connector.Stop();
         }
 
-        private void WriteInfoToLogAndSlack(string infoMessage)
+        protected void WriteInfoToLogAndSlack(string infoMessage)
         {
             _logger.WriteInfoAsync(ApplicationInfo.ApplicationFullName, null, null, infoMessage);
             _slackNotificationsSender.SendAsync(ChannelTypes.MarginTrading, ApplicationInfo.ApplicationFullName,

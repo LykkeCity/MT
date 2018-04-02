@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Contracts;
 using MarginTrading.Backend.Contracts.AccountHistory;
 using MarginTrading.Backend.Core;
+using MarginTrading.Common.Extensions;
 using MarginTrading.DataReader.Helpers;
 using MarginTrading.DataReader.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -50,7 +52,8 @@ namespace MarginTrading.DataReader.Controllers
             var orders =
                 (await _ordersHistoryRepository.GetHistoryAsync(request.ClientId, clientAccountIds, request.From,
                     request.To))
-                .Where(item => item.Status != OrderStatus.Rejected);
+                .Where(item =>  item.OpenDate != null && // remove cancel pending order rows created before OrderUpdateType was introduced
+                                item.OrderUpdateType == OrderUpdateType.Close);
 
             var openPositions = await _ordersSnapshotReaderService.GetActiveByAccountIdsAsync(clientAccountIds);
 
@@ -97,8 +100,7 @@ namespace MarginTrading.DataReader.Controllers
 
             var history = (await _ordersHistoryRepository.GetHistoryAsync(request.ClientId, clientAccountIds,
                     request.From, request.To))
-                .Where(item => item.Status != OrderStatus.Rejected &&
-                               item.OpenDate != null &&
+                .Where(item => item.OpenDate != null && // remove cancel pending order rows created before OrderUpdateType was introduced
                                item.OrderUpdateType == OrderUpdateType.Close).ToList();
 
             var items = accounts.Select(item => new AccountHistoryItem

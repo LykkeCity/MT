@@ -75,7 +75,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
         {
             var settings = await _assetPairSettingsRepository.DeleteAsync(assetPairId);
             InitAssetPairSettings();
-            return settings;
+            return settings; 
         }
 
         private void ValidateSettings(IAssetPairSettings newValue)
