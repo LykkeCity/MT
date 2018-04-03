@@ -26,7 +26,7 @@ namespace MarginTrading.Backend.Core
             public decimal SwapRate { get; set; }
             public decimal Cost { get; set; }
             public List<string> PositionIds { get; set; }
-            public string PositionIdsString => string.Join("<br />", PositionIds);
+            public string PositionIdsString => string.Join("\r\n", PositionIds);
         }
     }
 }
