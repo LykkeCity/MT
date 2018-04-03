@@ -69,8 +69,8 @@ namespace MarginTrading.Backend.Services.Services
 
                 try
                 {
-                    var processedCalculations = (await _overnightSwapHistoryRepository.GetAsync(calculationTime, _dateService.Now()))
-                        .Where(x => x.IsSuccess)
+                    var processedCalculations = (await _overnightSwapHistoryRepository.GetAsync(calculationTime, null))
+                        .Where(x => x.IsSuccess && x.Time >= calculationTime)
                         .ToList();
                     
                     var notifications = processedCalculations
