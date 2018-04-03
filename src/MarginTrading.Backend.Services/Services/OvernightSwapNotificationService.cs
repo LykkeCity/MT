@@ -54,8 +54,7 @@ namespace MarginTrading.Backend.Services.Services
         {
             var processedCalculations = _overnightSwapCache.GetAll().Where(x => x.Time >= calculationTime).ToList();
             
-            //_threadSwitcher.SwitchThread(async () =>
-            Task.Run(async () =>
+            _threadSwitcher.SwitchThread(async () =>
             {
                 await _semaphore.WaitAsync();
 
