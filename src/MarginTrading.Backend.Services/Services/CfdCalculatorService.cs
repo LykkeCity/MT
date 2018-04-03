@@ -1,4 +1,6 @@
 ﻿using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Services.AssetPairs;
 
 namespace MarginTrading.Backend.Services
 {
@@ -57,6 +59,61 @@ namespace MarginTrading.Backend.Services
             }
 
             return 1.0M / quote.Ask;
+        }
+
+        public decimal GetFplRate(string accountAssetId, string instrumentId, bool fplSign)
+        {
+            var assetPair = _assetPairsCache.GetAssetPairById(instrumentId);
+            
+            if (accountAssetId == assetPair.QuoteAssetId)
+                return 1;
+
+            var assetPairQuoteAccount = _assetPairsCache
+                .TryGetAssetPairById(AssetPairsCache.GetAssetPairKey(assetPair.QuoteAssetId, accountAssetId));
+
+            var rate = fplSign
+                ? assetPairQuoteAccount != null
+                    ? _quoteCacheService
+                        .GetQuote(AssetPairsCache.GetAssetPairKey(assetPair.QuoteAssetId, accountAssetId)).Ask
+                    : 1 / _quoteCacheService
+                          .GetQuote(AssetPairsCache.GetAssetPairKey(accountAssetId, assetPair.QuoteAssetId)).Bid
+                : assetPairQuoteAccount != null
+                    ? _quoteCacheService
+                        .GetQuote(AssetPairsCache.GetAssetPairKey(assetPair.QuoteAssetId, accountAssetId)).Bid
+                    : 1 / _quoteCacheService
+                          .GetQuote(AssetPairsCache.GetAssetPairKey(accountAssetId, assetPair.QuoteAssetId)).Ask;
+            
+            return rate;
+        }
+
+        public decimal GetSwapRate(string accountAssetId, string instrumentId, bool swapSign)
+        {
+            var assetPair = _assetPairsCache.GetAssetPairById(instrumentId);
+            
+            if (accountAssetId == assetPair.QuoteAssetId)
+                return 1;
+
+            var assetPairQuoteAccount = _assetPairsCache
+                .TryGetAssetPairById(AssetPairsCache.GetAssetPairKey(assetPair.BaseAssetId, accountAssetId));
+
+            var rate = swapSign
+                ? assetPairQuoteAccount != null
+                    ? _quoteCacheService
+                        .GetQuote(AssetPairsCache.GetAssetPairKey(assetPair.BaseAssetId, accountAssetId)).Ask
+                    : 1 / _quoteCacheService
+                          .GetQuote(AssetPairsCache.GetAssetPairKey(accountAssetId, assetPair.BaseAssetId)).Bid
+                : assetPairQuoteAccount != null
+                    ? _quoteCacheService
+                        .GetQuote(AssetPairsCache.GetAssetPairKey(assetPair.BaseAssetId, accountAssetId)).Bid
+                    : 1 / _quoteCacheService
+                          .GetQuote(AssetPairsCache.GetAssetPairKey(accountAssetId, assetPair.BaseAssetId)).Ask;
+            
+            return rate;
+        }
+
+        public decimal GetMarginRate(string accountAssetId, string instrumentId)
+        {
+            return GetSwapRate(accountAssetId, instrumentId, true);
         }
 
         public decimal GetVolumeInAccountAsset(OrderDirection direction, string accountAssetId, string instrument, decimal volume)

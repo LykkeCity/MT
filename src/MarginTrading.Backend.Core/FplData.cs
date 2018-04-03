@@ -4,6 +4,7 @@
     {
         public decimal Fpl { get; set; }
         public decimal QuoteRate { get; set; }
+        public decimal MarginRate { get; set; }
         public decimal MarginInit { get; set; }
         public decimal MarginMaintenance { get; set; }
         public decimal OpenCrossPrice { get; set; }

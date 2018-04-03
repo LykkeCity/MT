@@ -11,6 +11,7 @@ namespace MarginTrading.Contract.BackendContracts
         public OrderFillTypeContract FillType { get; set; }
         public string Comment { get; set; }
         public decimal InterestRateSwap { get; set; }
+        public decimal MarginRate { get; set; }
         public decimal MarginInit { get; set; }
         public decimal MarginMaintenance { get; set; }
         public decimal OpenCrossPrice { get; set; }

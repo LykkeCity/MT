@@ -33,21 +33,27 @@ namespace MarginTrading.Backend.Services
         public void UpdateOrderFpl(IOrder order, FplData fplData)
         {
             fplData.AccountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(order.AccountAssetId);
-            fplData.QuoteRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.AccountAssetId, order.Instrument);
+            fplData.QuoteRate = _cfdCalculatorService.GetFplRate(order.AccountAssetId, order.Instrument,
+                order.GetOrderType() == OrderDirection.Buy);
 
-            var fpl = order.GetOrderType() == OrderDirection.Buy
-                ? (order.ClosePrice - order.OpenPrice) * fplData.QuoteRate * order.GetMatchedVolume()
-                : (order.OpenPrice - order.ClosePrice) * fplData.QuoteRate * order.GetMatchedVolume();
+            var fpl = (order.ClosePrice - order.OpenPrice) * fplData.QuoteRate * order.GetMatchedVolume()
+                      * (order.GetOrderType() == OrderDirection.Buy ? 1 : -1);
 
             fplData.Fpl = Math.Round(fpl, fplData.AccountBaseAssetAccuracy);
 
             var accountAsset = _accountAssetsCacheService.GetAccountAsset(order.TradingConditionId, order.AccountAssetId, order.Instrument);
 
-            fplData.MarginInit = Math.Round(order.ClosePrice * order.GetMatchedVolume() * fplData.QuoteRate / accountAsset.LeverageInit, fplData.AccountBaseAssetAccuracy);
-            fplData.MarginMaintenance = Math.Round(order.ClosePrice * order.GetMatchedVolume() * fplData.QuoteRate / accountAsset.LeverageMaintenance, fplData.AccountBaseAssetAccuracy);
-
-            fplData.OpenCrossPrice = Math.Round(order.OpenPrice * fplData.QuoteRate, order.AssetAccuracy);
+            fplData.OpenCrossPrice = Math.Round(order.OpenPrice * fplData.QuoteRate, order.AssetAccuracy); 
             fplData.CloseCrossPrice = Math.Round(order.ClosePrice * fplData.QuoteRate, order.AssetAccuracy);
+            
+            fplData.MarginRate = _cfdCalculatorService.GetMarginRate(order.AccountAssetId, order.Instrument);
+            fplData.MarginInit =
+                Math.Round(order.ClosePrice * order.GetMatchedVolume() * fplData.MarginRate / accountAsset.LeverageInit,
+                    fplData.AccountBaseAssetAccuracy);
+            fplData.MarginMaintenance =
+                Math.Round(
+                    order.ClosePrice * order.GetMatchedVolume() * fplData.MarginRate / accountAsset.LeverageMaintenance,
+                    fplData.AccountBaseAssetAccuracy);
 
             fplData.OpenPrice = order.OpenPrice;
             fplData.ClosePrice = order.ClosePrice;

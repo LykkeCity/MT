@@ -8,16 +8,16 @@ namespace MarginTrading.Backend.Services
     public class CommissionService : ICommissionService
     {
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
-        private readonly ICfdCalculatorService _calculator;
+        private readonly ICfdCalculatorService _cfdCalculatorService;
         private readonly IAssetsCache _assetsCache;
 
         public CommissionService(
             IAccountAssetsCacheService accountAssetsCacheService,
-            ICfdCalculatorService calculator,
+            ICfdCalculatorService cfdCalculatorService,
             IAssetsCache assetsCache)
         {
             _accountAssetsCacheService = accountAssetsCacheService;
-            _calculator = calculator;
+            _cfdCalculatorService = cfdCalculatorService;
             _assetsCache = assetsCache;
         }
 
@@ -31,7 +31,7 @@ namespace MarginTrading.Backend.Services
                 var seconds = (decimal)(close - openDate.Value).TotalSeconds;
 
                 const int secondsInYear = 31536000;
-                var quote = _calculator.GetQuoteRateForBaseAsset(accountAssetId, instrument);
+                var quote = _cfdCalculatorService.GetSwapRate(accountAssetId, instrument, volume * swapRate > 0);
                 var swaps = quote * volume * swapRate * seconds / secondsInYear;
                 result = Math.Round(swaps, _assetsCache.GetAssetAccuracy(accountAssetId));
             }

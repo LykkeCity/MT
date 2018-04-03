@@ -85,6 +85,11 @@ namespace MarginTrading.Backend.Core
             return order.GetFplData().QuoteRate;
         }
 
+        public static decimal GetMarginRate(this IOrder order)
+        {
+            return order.GetFplData().MarginRate;
+        }
+
         public static decimal GetMarginMaintenance(this IOrder order)
         {
             return order.GetFplData().MarginMaintenance;
