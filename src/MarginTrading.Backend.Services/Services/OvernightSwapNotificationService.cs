@@ -9,7 +9,9 @@ using Common.Log;
 using Lykke.Common;
 using Lykke.Service.ClientAccount.Client;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Services.TradingConditions;
+using MarginTrading.Common.Services;
 using MarginTrading.Common.Services.Client;
 
 namespace MarginTrading.Backend.Services.Services
@@ -21,6 +23,9 @@ namespace MarginTrading.Backend.Services.Services
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly IEmailService _emailService;
         private readonly IClientAccountService _clientAccountService;
+        private readonly IDateService _dateService;
+
+        private readonly IOvernightSwapHistoryRepository _overnightSwapHistoryRepository;
         
         private readonly IThreadSwitcher _threadSwitcher;
         
@@ -34,6 +39,9 @@ namespace MarginTrading.Backend.Services.Services
             IAccountsCacheService accountsCacheService,
             IEmailService emailService,
             IClientAccountService clientAccountService,
+            IDateService dateService,
+            
+            IOvernightSwapHistoryRepository overnightSwapHistoryRepository,
             
             IThreadSwitcher threadSwitcher,
             
@@ -44,6 +52,9 @@ namespace MarginTrading.Backend.Services.Services
             _accountsCacheService = accountsCacheService;
             _emailService = emailService;
             _clientAccountService = clientAccountService;
+            _dateService = dateService;
+
+            _overnightSwapHistoryRepository = overnightSwapHistoryRepository;
             
             _threadSwitcher = threadSwitcher;
 
@@ -52,14 +63,16 @@ namespace MarginTrading.Backend.Services.Services
         
         public void PerformEmailNotification(DateTime calculationTime)
         {
-            var processedCalculations = _overnightSwapCache.GetAll().Where(x => x.Time >= calculationTime).ToList();
-            
             _threadSwitcher.SwitchThread(async () =>
             {
                 await _semaphore.WaitAsync();
 
                 try
                 {
+                    var processedCalculations = (await _overnightSwapHistoryRepository.GetAsync(calculationTime, _dateService.Now()))
+                        .Where(x => x.IsSuccess)
+                        .ToList();
+                    
                     var notifications = processedCalculations
                         .GroupBy(x => x.ClientId)
                         .Select(c => new OvernightSwapNotification
