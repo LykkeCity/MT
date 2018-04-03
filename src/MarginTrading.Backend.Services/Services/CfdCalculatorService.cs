@@ -61,59 +61,55 @@ namespace MarginTrading.Backend.Services
             return 1.0M / quote.Ask;
         }
 
-        public decimal GetFplRate(string accountAssetId, string instrumentId, bool fplSign)
+        public decimal GetFplRate(string accountAssetId, string instrumentId, string legalEntity, bool fplSign)
         {
             var assetPair = _assetPairsCache.GetAssetPairById(instrumentId);
             
             if (accountAssetId == assetPair.QuoteAssetId)
                 return 1;
 
-            var assetPairQuoteAccount = _assetPairsCache
-                .TryGetAssetPairById(AssetPairsCache.GetAssetPairKey(assetPair.QuoteAssetId, accountAssetId));
+            var assetPairQuoteAccount = _assetPairsCache.TryFindAssetPair(assetPair.QuoteAssetId, accountAssetId, legalEntity);
+            IAssetPair assetPairAccountQuote = null;
+            if (assetPairQuoteAccount == null)
+                assetPairAccountQuote = _assetPairsCache.FindAssetPair(accountAssetId, assetPair.QuoteAssetId, legalEntity);
 
             var rate = fplSign
                 ? assetPairQuoteAccount != null
-                    ? _quoteCacheService
-                        .GetQuote(AssetPairsCache.GetAssetPairKey(assetPair.QuoteAssetId, accountAssetId)).Ask
-                    : 1 / _quoteCacheService
-                          .GetQuote(AssetPairsCache.GetAssetPairKey(accountAssetId, assetPair.QuoteAssetId)).Bid
+                    ? _quoteCacheService.GetQuote(assetPairQuoteAccount.Id).Ask
+                    : 1 / _quoteCacheService.GetQuote(assetPairAccountQuote.Id).Bid
                 : assetPairQuoteAccount != null
-                    ? _quoteCacheService
-                        .GetQuote(AssetPairsCache.GetAssetPairKey(assetPair.QuoteAssetId, accountAssetId)).Bid
-                    : 1 / _quoteCacheService
-                          .GetQuote(AssetPairsCache.GetAssetPairKey(accountAssetId, assetPair.QuoteAssetId)).Ask;
+                    ? _quoteCacheService.GetQuote(assetPairQuoteAccount.Id).Bid
+                    : 1 / _quoteCacheService.GetQuote(assetPairAccountQuote.Id).Ask;
             
             return rate;
         }
 
-        public decimal GetSwapRate(string accountAssetId, string instrumentId, bool swapSign)
+        public decimal GetSwapRate(string accountAssetId, string instrumentId, string legalEntity, bool swapSign)
         {
             var assetPair = _assetPairsCache.GetAssetPairById(instrumentId);
             
             if (accountAssetId == assetPair.QuoteAssetId)
                 return 1;
 
-            var assetPairQuoteAccount = _assetPairsCache
-                .TryGetAssetPairById(AssetPairsCache.GetAssetPairKey(assetPair.BaseAssetId, accountAssetId));
+            var assetPairBaseAccount = _assetPairsCache.TryFindAssetPair(assetPair.BaseAssetId, accountAssetId, legalEntity);
+            IAssetPair assetPairAccountBase = null;
+            if (assetPairBaseAccount == null)
+                assetPairAccountBase = _assetPairsCache.FindAssetPair(accountAssetId, assetPair.BaseAssetId, legalEntity);
 
             var rate = swapSign
-                ? assetPairQuoteAccount != null
-                    ? _quoteCacheService
-                        .GetQuote(AssetPairsCache.GetAssetPairKey(assetPair.BaseAssetId, accountAssetId)).Ask
-                    : 1 / _quoteCacheService
-                          .GetQuote(AssetPairsCache.GetAssetPairKey(accountAssetId, assetPair.BaseAssetId)).Bid
-                : assetPairQuoteAccount != null
-                    ? _quoteCacheService
-                        .GetQuote(AssetPairsCache.GetAssetPairKey(assetPair.BaseAssetId, accountAssetId)).Bid
-                    : 1 / _quoteCacheService
-                          .GetQuote(AssetPairsCache.GetAssetPairKey(accountAssetId, assetPair.BaseAssetId)).Ask;
+                ? assetPairBaseAccount != null
+                    ? _quoteCacheService.GetQuote(assetPairBaseAccount.Id).Ask
+                    : 1 / _quoteCacheService.GetQuote(assetPairAccountBase.Id).Bid
+                : assetPairBaseAccount != null
+                    ? _quoteCacheService.GetQuote(assetPairBaseAccount.Id).Bid
+                    : 1 / _quoteCacheService.GetQuote(assetPairAccountBase.Id).Ask;
             
             return rate;
         }
 
-        public decimal GetMarginRate(string accountAssetId, string instrumentId)
+        public decimal GetMarginRate(string accountAssetId, string instrumentId, string legalEntity)
         {
-            return GetSwapRate(accountAssetId, instrumentId, true);
+            return GetSwapRate(accountAssetId, instrumentId, legalEntity, true);
         }
 
         public decimal GetVolumeInAccountAsset(OrderDirection direction, string accountAssetId, string instrument,

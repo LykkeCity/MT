@@ -56,6 +56,13 @@ namespace MarginTrading.Backend.Services.AssetPairs
             return _assetPairsIds.Get();
         }
 
+        public IAssetPair TryFindAssetPair(string asset1, string asset2, string legalEntity)
+        {
+            var key = GetAssetPairKey(asset1, asset2, legalEntity);
+            
+            return _assetPairsByAssets.Get().TryGetValue(key, out var result) ? result : null;
+        }
+
         public IAssetPair FindAssetPair(string asset1, string asset2, string legalEntity)
         {
             var key = GetAssetPairKey(asset1, asset2, legalEntity);
@@ -82,7 +89,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 }).ToDictionary());
         }
 
-        private static AssetPairKey GetAssetPairKey(string asset1, string asset2, string legalEntity)
+        public static AssetPairKey GetAssetPairKey(string asset1, string asset2, string legalEntity)
         {
             return (asset1, asset2, legalEntity);
         }
