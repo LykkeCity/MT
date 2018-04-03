@@ -1,6 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MarginTrading.Backend.Contracts;
+using MarginTrading.Backend.Contracts.Routes;
+using MarginTrading.Backend.Contracts.TradeMonitoring;
+using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +13,7 @@ namespace MarginTrading.DataReader.Controllers
 {
     [Authorize]
     [Route("api/routes")]
-    public class RoutesController : Controller
+    public class RoutesController : Controller, IRoutesReadingApi
     {
         private readonly IMatchingEngineRoutesRepository _routesRepository;
 
@@ -23,9 +27,9 @@ namespace MarginTrading.DataReader.Controllers
         /// </summary>
         [HttpGet]
         [Route("")]
-        public async Task<IEnumerable<MatchingEngineRoute>> GetAllRoutes()
+        public async Task<List<MatchingEngineRouteContract>> List()
         {
-            return (await _routesRepository.GetAllRoutesAsync()).Select(TransformRoute);
+            return (await _routesRepository.GetAllRoutesAsync()).Select(TransformRoute).ToList();
         }
 
         /// <summary>
@@ -33,20 +37,34 @@ namespace MarginTrading.DataReader.Controllers
         /// </summary>
         [HttpGet]
         [Route("{id}")]
-        public async Task<MatchingEngineRoute> GetRouteById(string id)
+        public async Task<MatchingEngineRouteContract> GetById(string id)
         {
             return TransformRoute(await _routesRepository.GetRouteByIdAsync(id));
         }
 
-        private static MatchingEngineRoute TransformRoute(IMatchingEngineRoute route)
+        private static MatchingEngineRouteContract TransformRoute(IMatchingEngineRoute route)
         {
             string GetEmptyIfAny(string value)
             {
                 const string AnyValue = "*";
                 return value == AnyValue ? null : value;
             }
+            OrderDirectionContract? GetDirection(OrderDirection? direction)
+            {
+                switch (direction)
+                {
+                    case null:
+                        return null;
+                    case OrderDirection.Buy:
+                        return OrderDirectionContract.Buy;
+                    case OrderDirection.Sell:
+                        return OrderDirectionContract.Sell;
+                    default:
+                        throw new System.Exception("Invalid OrderType");
+                }
+            }
 
-            return new MatchingEngineRoute
+            return new MatchingEngineRouteContract
             {
                 Id = route.Id,
                 Rank = route.Rank,
@@ -55,7 +73,7 @@ namespace MarginTrading.DataReader.Controllers
                 ClientId = GetEmptyIfAny(route.ClientId),
                 Instrument = GetEmptyIfAny(route.Instrument),
                 TradingConditionId = GetEmptyIfAny(route.TradingConditionId),
-                Type = route.Type
+                Type = GetDirection(route.Type)
             };
         }
     }

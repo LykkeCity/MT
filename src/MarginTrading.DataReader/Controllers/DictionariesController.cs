@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.AzureRepositories.Contract;
+using MarginTrading.Backend.Contracts;
 using MarginTrading.Backend.Contracts.AssetPairSettings;
 using MarginTrading.Backend.Core;
 using MarginTrading.Common.Services;
@@ -13,7 +14,7 @@ namespace MarginTrading.DataReader.Controllers
 {
     [Authorize]
     [Route("api/dictionaries")]
-    public class DictionariesController : Controller
+    public class DictionariesController : Controller, IDictionariesReadingApi
     {
         private readonly IAssetPairsRepository _assetPairsRepository;
         private readonly IConvertService _convertService;
@@ -26,7 +27,7 @@ namespace MarginTrading.DataReader.Controllers
 
         [HttpGet]
         [Route("assetPairs")]
-        public async Task<List<AssetPairContract>> GetAllAssetPairs()
+        public async Task<List<AssetPairContract>> AssetPairs()
         {
             return (await _assetPairsRepository.GetAsync()).Select(Convert).ToList();
         }
@@ -38,23 +39,23 @@ namespace MarginTrading.DataReader.Controllers
 
         [HttpGet]
         [Route("matchingEngines")]
-        public string[] GetAllMatchingEngines()
+        public Task<List<string>> MatchingEngines()
         {
             //TODO: replace by Ids when ME infos will be stored in DB
-            return new[]
+            return Task.FromResult((new[]
             {
                 MatchingEngineConstants.LykkeVuMm,
                 MatchingEngineConstants.LykkeCyStp,
                 MatchingEngineConstants.Reject
-            };
+            }).ToList());
         }
 
         [HttpGet]
         [Route("orderTypes")]
         [ProducesResponseType(typeof(List<string>), 200)]
-        public string[] GetAllOrderTypes()
-        {
-            return Enum.GetNames(typeof(OrderDirection));
+        public Task<List<string>> OrderTypes()
+        {            
+            return Task.FromResult(Enum.GetNames(typeof(OrderDirection)).ToList());
         }
     }
 }

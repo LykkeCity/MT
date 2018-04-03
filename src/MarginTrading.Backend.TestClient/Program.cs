@@ -165,17 +165,13 @@ namespace MarginTrading.Backend.TestClient
                 .Dump();
             foreach (var accountAssetPair in accountAssetPairsGetByTradingCondition)
             {
-                var item = accountAssetPairs
-                    .Single(x => x.TradingConditionId == accountAssetPair.TradingConditionId
-                                && x.BaseAssetId == accountAssetPair.BaseAssetId
-                                && x.Instrument == accountAssetPair.Instrument);
-                item.Should().BeEquivalentTo(accountAssetPair);
+                var accountGroup = (await dataReaderClient.AccountGroups.GetByBaseAsset(accountGroup1.TradingConditionId, accountGroup1.BaseAssetId)).Dump();
+                accountGroup.Should().BeEquivalentTo(accountGroup1);
             }
 
-            firstAccountAssetPair.OvernightSwapLong = 0.1m;
-            var updatedAccountAssetPair = await backendClient.TradingConditionsEdit.InsertOrUpdateAccountAsset(firstAccountAssetPair)
-                .Dump();
-            updatedAccountAssetPair.Result.Should().BeEquivalentTo(firstAccountAssetPair);
+            var assetPairs = await dataReaderClient.Dictionaries.AssetPairs().Dump();
+            var matchingEngines = await dataReaderClient.Dictionaries.MatchingEngines().Dump();
+            var orderTypes = await dataReaderClient.Dictionaries.OrderTypes().Dump();
 
             var tc = await backendClient.TradingConditionsEdit.InsertOrUpdate(new Contracts.TradingConditions.TradingConditionContract
             {
@@ -216,9 +212,15 @@ namespace MarginTrading.Backend.TestClient
             .Dump();
 
             ai.IsOk.RequiredEqualsTo(true, "ai.IsOk");
+            var routes = await dataReaderClient.Routes.List().Dump();
+            var route1 = routes.FirstOrDefault();
+            if (route1 != null)
+            {
+                var route = await dataReaderClient.Routes.GetById(route1.Id).Dump();
+                route.Should().BeEquivalentTo(route1);
+            }
 
-            var tclist = await dataReaderClient.TradingConditionsRead.List().Dump();
-            await dataReaderClient.TradingConditionsRead.Get(tclist.First().Id).Dump();
+            var isEnabled = await dataReaderClient.Settings.IsMarginTradingEnabled("232b3b04-7479-44e7-a6b3-ac131d8e6ccd");
 
             var manualCharge = await backendClient.AccountsBalance.ChargeManually(new Contracts.AccountBalance.AccountChargeManuallyRequest
             {
