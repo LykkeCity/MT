@@ -105,6 +105,7 @@ namespace MarginTradingTests
             const string instrument = "BTCCHF";
 
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 1.072030M, Bid = 1.071940M }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCUSD", Ask = 1001M, Bid = 1000M }));
 
             var order = new Order
             {
@@ -122,7 +123,7 @@ namespace MarginTradingTests
 
             order.UpdateClosePrice(935.61M);
 
-            Assert.AreEqual(138.989, Math.Round(order.GetFpl(), 3));
+            Assert.AreEqual(159.732, Math.Round(order.GetFpl(), 3));
         }
 
         [Test]
@@ -131,6 +132,7 @@ namespace MarginTradingTests
             const string instrument = "BTCCHF";
 
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 1.072030M, Bid = 1.071940M }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCUSD", Ask = 1001M, Bid = 1000M }));
 
             var order = new Order
             {
@@ -149,8 +151,8 @@ namespace MarginTradingTests
             order.UpdateClosePrice(935.61M);
             var quoteRate = order.GetQuoteRate();
 
-            Assert.AreEqual(0.93280971614600339, quoteRate);
-            Assert.AreEqual(-138.989, Math.Round(order.GetFpl(), 3));
+            Assert.AreEqual(1.07194m, quoteRate);
+            Assert.AreEqual(-159.719, Math.Round(order.GetFpl(), 3));
         }
 
         [Test]
@@ -161,6 +163,7 @@ namespace MarginTradingTests
 
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "EURUSD", Ask = 1.061M, Bid = 1.06M }));
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCEUR", Ask = 1092M, Bid = 1091M }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCUSD", Ask = 1001M, Bid = 1000M }));
 
             var orders = new List<Order>
             {
@@ -243,12 +246,12 @@ namespace MarginTradingTests
             var account = Accounts[0];
 
             Assert.AreEqual(50000, account.Balance);
-            Assert.AreEqual(43676, Math.Round(account.GetTotalCapital(), 5));
-            Assert.AreEqual(33491.6, Math.Round(account.GetFreeMargin(), 1));
-            Assert.AreEqual(28399.4, Math.Round(account.GetMarginAvailable(), 1));
-            Assert.AreEqual(-6324, Math.Round(account.GetPnl(), 5));
-            Assert.AreEqual(10184.4, Math.Round(account.GetUsedMargin(), 1));
-            Assert.AreEqual(15276.6, Math.Round(account.GetMarginInit(), 1));
+            Assert.AreEqual(43673.100, Math.Round(account.GetTotalCapital(), 5));
+            Assert.AreEqual(34666.4, Math.Round(account.GetFreeMargin(), 1));
+            Assert.AreEqual(30163.1, Math.Round(account.GetMarginAvailable(), 1));
+            Assert.AreEqual(-6326.900, Math.Round(account.GetPnl(), 5));
+            Assert.AreEqual(9006.7, Math.Round(account.GetUsedMargin(), 1));
+            Assert.AreEqual(13510, Math.Round(account.GetMarginInit(), 1));
 
         }
     }

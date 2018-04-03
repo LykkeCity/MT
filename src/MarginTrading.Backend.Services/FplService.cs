@@ -48,11 +48,10 @@ namespace MarginTrading.Backend.Services
             
             fplData.MarginRate = _cfdCalculatorService.GetMarginRate(order.AccountAssetId, order.Instrument, order.LegalEntity);
             fplData.MarginInit =
-                Math.Round(order.ClosePrice * order.GetMatchedVolume() * fplData.MarginRate / accountAsset.LeverageInit,
+                Math.Round(order.GetMatchedVolume() * fplData.MarginRate / accountAsset.LeverageInit,
                     fplData.AccountBaseAssetAccuracy);
             fplData.MarginMaintenance =
-                Math.Round(
-                    order.ClosePrice * order.GetMatchedVolume() * fplData.MarginRate / accountAsset.LeverageMaintenance,
+                Math.Round(order.GetMatchedVolume() * fplData.MarginRate / accountAsset.LeverageMaintenance,
                     fplData.AccountBaseAssetAccuracy);
 
             fplData.OpenPrice = order.OpenPrice;
