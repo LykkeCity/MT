@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 using Lykke.SettingsReader.Attributes;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Settings;
@@ -52,6 +53,6 @@ namespace MarginTrading.Backend.Core.Settings
         
         public ReportingEquivalentPricesSettings[] ReportingEquivalentPricesSettings { get; set; }
         
-        public int OvernightSwapCalculationHour { get; set; }
+        public TimeSpan OvernightSwapCalculationTime { get; set; }
     }
 }
