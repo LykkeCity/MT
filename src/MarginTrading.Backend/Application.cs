@@ -99,9 +99,10 @@ namespace MarginTrading.Backend
                         _rabbitMqService.GetMsgPackDeserializer<ExternalExchangeOrderbookMessage>());
                 }
 
-                var settingsCalcTime = OvernightSwapHelpers.GetOvernightSwapCalcTime(_marginSettings.OvernightSwapCalculationTime);
+                var settingsCalcTime = (_marginSettings.OvernightSwapCalculationTime.Hours,
+                    _marginSettings.OvernightSwapCalculationTime.Minutes);
                 var registry = new Registry();
-                registry.Schedule<OvernightSwapJob>().ToRunEvery(0).Days().At(settingsCalcTime.Hour, settingsCalcTime.Min);
+                registry.Schedule<OvernightSwapJob>().ToRunEvery(0).Days().At(settingsCalcTime.Hours, settingsCalcTime.Minutes);
                 JobManager.Initialize(registry);
                 JobManager.JobException += info => _logger.WriteError(ServiceName, nameof(JobManager), info.Exception);
             }

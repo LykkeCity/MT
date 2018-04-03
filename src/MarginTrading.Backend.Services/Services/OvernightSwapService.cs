@@ -96,8 +96,7 @@ namespace MarginTrading.Backend.Services.Services
 			var calculatedIds = _overnightSwapCache.GetAll().Where(x => x.IsSuccess && x.Time >= lastInvocationTime)
 				.SelectMany(x => x.OpenOrderIds).ToHashSet();
 			//select only non-calculated orders, changed before current invocation time
-			var filteredOrders = openOrders.Where(x => (x.OpenDate ?? DateTime.MaxValue) < _currentStartTimestamp
-			                                           && !calculatedIds.Contains(x.Id));
+			var filteredOrders = openOrders.Where(x => !calculatedIds.Contains(x.Id));
 
 			//detect orders for which last calculation failed and it was closed
 			var failedClosedOrders = _overnightSwapHistoryRepository.GetAsync(lastInvocationTime, _currentStartTimestamp)
@@ -277,10 +276,11 @@ namespace MarginTrading.Backend.Services.Services
 		private DateTime CalcLastInvocationTime()
 		{
 			var dt = _currentStartTimestamp;
-			var settingsCalcTime = OvernightSwapHelpers.GetOvernightSwapCalcTime(_marginSettings.OvernightSwapCalculationTime);
+			var settingsCalcTime = (_marginSettings.OvernightSwapCalculationTime.Hours,
+				_marginSettings.OvernightSwapCalculationTime.Minutes);
 			
-			var result = new DateTime(dt.Year, dt.Month, dt.Day, settingsCalcTime.Hour, settingsCalcTime.Min, 0)
-				.AddDays(dt.Hour > settingsCalcTime.Hour || (dt.Hour == settingsCalcTime.Hour && dt.Minute >= settingsCalcTime.Min) 
+			var result = new DateTime(dt.Year, dt.Month, dt.Day, settingsCalcTime.Hours, settingsCalcTime.Minutes, 0)
+				.AddDays(dt.Hour > settingsCalcTime.Hours || (dt.Hour == settingsCalcTime.Hours && dt.Minute >= settingsCalcTime.Minutes) 
 					? 0 : -1);
 			return result;
 		}
