@@ -141,7 +141,8 @@ namespace MarginTrading.Backend.Core.Mappers
                 OpenExternalProviderId = src.OpenExternalProviderId,
                 CloseExternalOrderId = src.CloseExternalOrderId,
                 CloseExternalProviderId = src.CloseExternalProviderId,
-                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>()
+                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>(),
+                LegalEntity = src.LegalEntity,
             };
         }
 
@@ -176,7 +177,8 @@ namespace MarginTrading.Backend.Core.Mappers
                 OpenExternalProviderId = src.OpenExternalProviderId,
                 CloseExternalOrderId = src.CloseExternalOrderId,
                 CloseExternalProviderId = src.CloseExternalProviderId,
-                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>()
+                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>(),
+                LegalEntity = src.LegalEntity,
             };
         }
 
@@ -211,7 +213,8 @@ namespace MarginTrading.Backend.Core.Mappers
                 OpenExternalProviderId = src.OpenExternalProviderId,
                 CloseExternalOrderId = src.CloseExternalOrderId,
                 CloseExternalProviderId = src.CloseExternalProviderId,
-                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>()
+                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>(),
+                LegalEntity = src.LegalEntity,
             };
         }
 
@@ -249,7 +252,8 @@ namespace MarginTrading.Backend.Core.Mappers
                 OpenExternalProviderId = src.OpenExternalProviderId,
                 CloseExternalOrderId = src.CloseExternalOrderId,
                 CloseExternalProviderId = src.CloseExternalProviderId,
-                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>()
+                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>(),
+                LegalEntity = src.LegalEntity,
             };
         }
 
@@ -304,7 +308,8 @@ namespace MarginTrading.Backend.Core.Mappers
                 OpenCrossPrice = src.GetOpenCrossPrice(),
                 CloseCrossPrice = src.GetCloseCrossPrice(),
                 OrderUpdateType = orderUpdateType.ToType<OrderUpdateTypeContract>(),
-                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>()
+                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>(),
+                LegalEntity = src.LegalEntity,
             };
 
             foreach (var order in src.MatchedOrders)
@@ -358,7 +363,8 @@ namespace MarginTrading.Backend.Core.Mappers
                 OpenExternalProviderId = src.OpenExternalProviderId,
                 CloseExternalOrderId = src.CloseExternalOrderId,
                 CloseExternalProviderId = src.CloseExternalProviderId,
-                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>()
+                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>(),
+                LegalEntity = src.LegalEntity,
             };
 
             foreach (var order in src.MatchedOrders)

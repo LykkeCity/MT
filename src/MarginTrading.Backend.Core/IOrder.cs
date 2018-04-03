@@ -54,6 +54,8 @@ namespace MarginTrading.Backend.Core
         string CloseExternalProviderId { get; }
         
         MatchingEngineMode MatchingEngineMode { get; }
+        
+        string LegalEntity { get; set; }
 
         #endregion
     }
@@ -101,7 +103,7 @@ namespace MarginTrading.Backend.Core
         public MatchedOrderCollection MatchedOrders { get; set; } = new MatchedOrderCollection();
         public MatchedOrderCollection MatchedCloseOrders { get; set; } = new MatchedOrderCollection();
         public MatchingEngineMode MatchingEngineMode { get; set; } = MatchingEngineMode.MarketMaker;
-
+        public string LegalEntity { get; set; }  
         public FplData FplData { get; set; } = new FplData();
     }
 

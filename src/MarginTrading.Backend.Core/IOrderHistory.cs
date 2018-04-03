@@ -60,6 +60,7 @@ namespace MarginTrading.Backend.Core
         string CloseExternalProviderId { get; }
         
         MatchingEngineMode MatchingEngineMode { get; }
+        string LegalEntity { get; set; }  
     }
 
     public class OrderHistory : IOrderHistory
@@ -113,5 +114,6 @@ namespace MarginTrading.Backend.Core
         public string CloseExternalOrderId { get; set; }
         public string CloseExternalProviderId { get; set; }
         public MatchingEngineMode MatchingEngineMode { get; set; }
+        public string LegalEntity { get; set; }
     }
 }

@@ -179,7 +179,8 @@ namespace MarginTradingTests
                 TradingConditionId = "1",
                 BaseAssetId = "USD",
                 ClientId = ClientId1,
-                Balance = 1000
+                Balance = 1000, 
+                LegalEntity = "LYKKEVU"
             },
             new MarginTradingAccount
             {
@@ -187,7 +188,8 @@ namespace MarginTradingTests
                 TradingConditionId = "1",
                 BaseAssetId = "EUR",
                 ClientId = ClientId1,
-                Balance = 1000
+                Balance = 1000, 
+                LegalEntity = "LYKKEVU"
             },
             new MarginTradingAccount
             {
@@ -195,7 +197,8 @@ namespace MarginTradingTests
                 TradingConditionId = "1",
                 BaseAssetId = "CHF",
                 ClientId = ClientId1,
-                Balance = 1000
+                Balance = 1000, 
+                LegalEntity = "LYKKEVU"
             },
 
             new MarginTradingAccount
@@ -204,7 +207,8 @@ namespace MarginTradingTests
                 TradingConditionId = "1",
                 BaseAssetId = "USD",
                 ClientId = ClientId2,
-                Balance = 1000
+                Balance = 1000, 
+                LegalEntity = "LYKKEVU"
             },
             new MarginTradingAccount
             {
@@ -212,7 +216,8 @@ namespace MarginTradingTests
                 TradingConditionId = "1",
                 BaseAssetId = "EUR",
                 ClientId = ClientId2,
-                Balance = 1000
+                Balance = 1000, 
+                LegalEntity = "LYKKEVU"
             },
             new MarginTradingAccount
             {
@@ -220,7 +225,8 @@ namespace MarginTradingTests
                 TradingConditionId = "1",
                 BaseAssetId = "CHF",
                 ClientId = ClientId2,
-                Balance = 1000
+                Balance = 1000, 
+                LegalEntity = "LYKKEVU"
             }
         };
     }

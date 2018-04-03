@@ -77,6 +77,7 @@ namespace MarginTrading.Backend.Services
             order.AssetAccuracy = asset.Accuracy;
             order.AccountAssetId = account.BaseAssetId;
             order.TradingConditionId = account.TradingConditionId;
+            order.LegalEntity = account.LegalEntity;
             
             //check ExpectedOpenPrice for pending order
             if (order.ExpectedOpenPrice.HasValue)

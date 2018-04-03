@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using AsyncFriendlyStackTrace;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using FluentAssertions;
 using MarginTrading.Backend.Contracts.AccountAssetPair;
 using MarginTrading.Backend.Contracts.AssetPairSettings;
 using MarginTrading.Backend.Contracts.Client;
@@ -51,6 +52,7 @@ namespace MarginTrading.Backend.TestClient
             }
         }
 
+        // NOTE: Use Demo instances for tests
         private static async Task Run()
         {
             var services = new ServiceCollection();
@@ -59,10 +61,10 @@ namespace MarginTrading.Backend.TestClient
             services.RegisterMtDataReaderClient("http://localhost:5008", "margintrading", "TestClient");
             builder.Populate(services);
             var container = builder.Build();
-            var client = container.Resolve<IMtBackendClient>();
+            var backendClient = container.Resolve<IMtBackendClient>();
 
-            await client.ScheduleSettings.ListExclusions().Dump();
-            var excl = await client.ScheduleSettings.CreateExclusion(new DayOffExclusionInputContract
+            await backendClient.ScheduleSettings.ListExclusions().Dump();
+            var excl = await backendClient.ScheduleSettings.CreateExclusion(new DayOffExclusionInputContract
             {
                 AssetPairRegex = "lol",
                 Start = DateTime.Now.AddDays(-1),
@@ -70,61 +72,66 @@ namespace MarginTrading.Backend.TestClient
                 IsTradeEnabled = false,
             }).Dump();
             var id = excl.Id;
-            var ex = await client.ScheduleSettings.GetExclusion(id).Dump();
+            var ex = await backendClient.ScheduleSettings.GetExclusion(id).Dump();
             ex.AssetPairRegex = "^btc";
-            await client.ScheduleSettings.UpdateExclusion(id, ex).Dump();
-            await client.ScheduleSettings.GetExclusion(id).Dump();
-            await client.ScheduleSettings.ListCompiledExclusions().Dump();
-            await client.ScheduleSettings.DeleteExclusion(id).Dump();
-            await client.ScheduleSettings.GetExclusion(id).Dump();
+            await backendClient.ScheduleSettings.UpdateExclusion(id, ex).Dump();
+            await backendClient.ScheduleSettings.GetExclusion(id).Dump();
+            await backendClient.ScheduleSettings.ListCompiledExclusions().Dump();
+            await backendClient.ScheduleSettings.DeleteExclusion(id).Dump();
+            await backendClient.ScheduleSettings.GetExclusion(id).Dump();
 
-            var s = await client.ScheduleSettings.GetSchedule().Dump();
+            var s = await backendClient.ScheduleSettings.GetSchedule().Dump();
             s.AssetPairsWithoutDayOff.Add("BTCRABBIT");
-            await client.ScheduleSettings.SetSchedule(s).Dump();
+            await backendClient.ScheduleSettings.SetSchedule(s).Dump();
             s.AssetPairsWithoutDayOff.Remove("BTCRABBIT");
-            await client.ScheduleSettings.SetSchedule(s).Dump();
+            await backendClient.ScheduleSettings.SetSchedule(s).Dump();
 
-            var assetPairSettingsInputContract = new AssetPairSettingsInputContract
+            var assetPairSettingsInputContract = new AssetPairContract
             {
+                Id = "BTCUSD.test",
                 BasePairId = "BTCUSD",
                 LegalEntity = "LYKKETEST",
-                MultiplierMarkupBid = 0.9m,
-                MultiplierMarkupAsk = 1.1m,
-                MatchingEngineMode = MatchingEngineModeContract.MarketMaker
+                StpMultiplierMarkupBid = 0.9m,
+                StpMultiplierMarkupAsk = 1.1m,
+                MatchingEngineMode = MatchingEngineModeContract.MarketMaker,
+                Name = "BTCUSD.test name",
+                Accuracy = 123,
+                BaseAssetId = "BTC",
+                QuoteAssetId = "USD",
             };
 
-            await client.AssetPairSettingsEdit.Delete("BTCUSD.test").Dump();
-            var result = await client.AssetPairSettingsEdit.Insert("BTCUSD.test", assetPairSettingsInputContract).Dump();
-            CheckAssetPairSettings(result, assetPairSettingsInputContract);
+            await backendClient.AssetPairsEdit.Delete("BTCUSD.test").Dump();
+            var result = await backendClient.AssetPairsEdit.Insert("BTCUSD.test", assetPairSettingsInputContract).Dump();
+            CheckAssetPair(result, assetPairSettingsInputContract);
 
             assetPairSettingsInputContract.MatchingEngineMode = MatchingEngineModeContract.Stp;
-            var result2 = await client.AssetPairSettingsEdit.Update("BTCUSD.test", assetPairSettingsInputContract).Dump();
-            CheckAssetPairSettings(result2, assetPairSettingsInputContract);
+            var result2 = await backendClient.AssetPairsEdit.Update("BTCUSD.test", assetPairSettingsInputContract).Dump();
+            CheckAssetPair(result2, assetPairSettingsInputContract);
 
 
             var dataReaderClient = container.Resolve<IMtDataReaderClient>();
 
-            var list = await dataReaderClient.AssetPairSettingsRead.List().Dump();
-            var ours = list.First(e => e.AssetPairId == "BTCUSD.test");
-            CheckAssetPairSettings(ours, assetPairSettingsInputContract);
+            var list = await dataReaderClient.AssetPairsRead.List().Dump();
+            var ours = list.First(e => e.Id == "BTCUSD.test");
+            CheckAssetPair(ours, assetPairSettingsInputContract);
 
-            var get = await dataReaderClient.AssetPairSettingsRead.Get("BTCUSD.test").Dump();
-            CheckAssetPairSettings(get, assetPairSettingsInputContract);
+            var get = await dataReaderClient.AssetPairsRead.Get("BTCUSD.test").Dump();
+            CheckAssetPair(get, assetPairSettingsInputContract);
 
-            var nonexistentGet = await dataReaderClient.AssetPairSettingsRead.Get("nonexistent").Dump();
+            var nonexistentGet = await dataReaderClient.AssetPairsRead.Get("nonexistent").Dump();
             nonexistentGet.RequiredEqualsTo(null, nameof(nonexistentGet));
 
-            var getByMode = await dataReaderClient.AssetPairSettingsRead.Get(MatchingEngineModeContract.Stp).Dump();
-            var ours2 = getByMode.First(e => e.AssetPairId == "BTCUSD.test");
-            CheckAssetPairSettings(ours2, assetPairSettingsInputContract);
+            var getByMode = await dataReaderClient.AssetPairsRead.Get("LYKKETEST", MatchingEngineModeContract.Stp).Dump();
+            var ours2 = getByMode.First(e => e.Id == "BTCUSD.test");
+            CheckAssetPair(ours2, assetPairSettingsInputContract);
 
-            var getByOtherMode = await dataReaderClient.AssetPairSettingsRead.Get(MatchingEngineModeContract.MarketMaker).Dump();
-            getByOtherMode.Count(e => e.AssetPairId == "BTCUSD.test").RequiredEqualsTo(0, "getByOtherMode.Count");
+            var getByOtherMode = await dataReaderClient.AssetPairsRead.Get("LYKKETEST", MatchingEngineModeContract.MarketMaker).Dump();
+            getByOtherMode.Count(e => e.Id == "BTCUSD.test").RequiredEqualsTo(0, "getByOtherMode.Count");
 
-            var result3 = await client.AssetPairSettingsEdit.Delete("BTCUSD.test").Dump();
-            CheckAssetPairSettings(result3, assetPairSettingsInputContract);
+            var result3 = await backendClient.AssetPairsEdit.Delete("BTCUSD.test").Dump();
+            CheckAssetPair(result3, assetPairSettingsInputContract);
 
-            var nonexistentDelete = await client.AssetPairSettingsEdit.Delete("nonexistent").Dump();
+            var nonexistentDelete = await backendClient.AssetPairsEdit.Delete("nonexistent").Dump();
             nonexistentDelete.RequiredEqualsTo(null, nameof(nonexistentDelete));
 
             #region TradeMonitoring
@@ -151,7 +158,7 @@ namespace MarginTrading.Backend.TestClient
             var secondAccountAssetPair = await dataReaderClient.AccountAssetPairsRead
                 .Get(firstAccountAssetPair.TradingConditionId, firstAccountAssetPair.BaseAssetId, firstAccountAssetPair.Instrument)
                 .Dump();
-            CheckAccountAssetPairs(firstAccountAssetPair, secondAccountAssetPair);
+            firstAccountAssetPair.Should().BeEquivalentTo(secondAccountAssetPair);
 
             var accountAssetPairsGetByTradingCondition = await dataReaderClient.AccountAssetPairsRead
                 .Get(firstAccountAssetPair.TradingConditionId, firstAccountAssetPair.BaseAssetId)
@@ -162,24 +169,24 @@ namespace MarginTrading.Backend.TestClient
                     .Single(x => x.TradingConditionId == accountAssetPair.TradingConditionId
                                 && x.BaseAssetId == accountAssetPair.BaseAssetId
                                 && x.Instrument == accountAssetPair.Instrument);
-                CheckAccountAssetPairs(item, accountAssetPair);
+                item.Should().BeEquivalentTo(accountAssetPair);
             }
 
             firstAccountAssetPair.OvernightSwapLong = 0.1m;
-            var updatedAccountAssetPair = await client.TradingConditionsEdit.InsertOrUpdateAccountAsset(firstAccountAssetPair)
+            var updatedAccountAssetPair = await backendClient.TradingConditionsEdit.InsertOrUpdateAccountAsset(firstAccountAssetPair)
                 .Dump();
-            CheckAccountAssetPairs(updatedAccountAssetPair.Result, firstAccountAssetPair);
+            updatedAccountAssetPair.Result.Should().BeEquivalentTo(firstAccountAssetPair);
 
-            var tc = await client.TradingConditionsEdit.InsertOrUpdate(new Contracts.TradingConditions.TradingConditionContract
+            var tc = await backendClient.TradingConditionsEdit.InsertOrUpdate(new Contracts.TradingConditions.TradingConditionContract
             {
                 Id = "LYKKETEST",
+                LegalEntity = "LYKKEVA",
                 IsDefault = false,
-                Name = "Test Trading Condition"
-            })
-                .Dump();
+                Name = "Test Trading Condition",
+            }).Dump();
             tc.Result.Id.RequiredEqualsTo("LYKKETEST", "tc.Result.Id");
 
-            var ag = await client.TradingConditionsEdit.InsertOrUpdateAccountGroup(new Contracts.TradingConditions.AccountGroupContract
+            var ag = await backendClient.TradingConditionsEdit.InsertOrUpdateAccountGroup(new Contracts.TradingConditions.AccountGroupContract
             {
                 BaseAssetId = "BTC",
                 TradingConditionId = tc.Result.Id,
@@ -191,7 +198,7 @@ namespace MarginTrading.Backend.TestClient
             .Dump();
             ag.Result.StopOut.RequiredEqualsTo(0.4m, "ag.Result.StopOut");
 
-            var aa = await client.TradingConditionsEdit.InsertOrUpdateAccountAsset(new AccountAssetPairContract
+            var aa = await backendClient.TradingConditionsEdit.InsertOrUpdateAccountAsset(new AccountAssetPairContract
             {
                 Instrument = "TSTLKK",
                 BaseAssetId = "BTC",
@@ -200,7 +207,7 @@ namespace MarginTrading.Backend.TestClient
            .Dump();
             aa.Result.Instrument.RequiredEqualsTo("TSTLKK", "aa.Result.Instrument");
 
-            var ai = await client.TradingConditionsEdit.AssignInstruments(new Contracts.TradingConditions.AssignInstrumentsContract
+            var ai = await backendClient.TradingConditionsEdit.AssignInstruments(new Contracts.TradingConditions.AssignInstrumentsContract
             {
                 BaseAssetId = "BTC",
                 TradingConditionId = tc.Result.Id,
@@ -213,7 +220,7 @@ namespace MarginTrading.Backend.TestClient
             var tclist = await dataReaderClient.TradingConditionsRead.List().Dump();
             await dataReaderClient.TradingConditionsRead.Get(tclist.First().Id).Dump();
 
-            var manualCharge = await client.AccountsBalance.ChargeManually(new Contracts.AccountBalance.AccountChargeManuallyRequest
+            var manualCharge = await backendClient.AccountsBalance.ChargeManually(new Contracts.AccountBalance.AccountChargeManuallyRequest
             {
                 ClientId = "232b3b04-7479-44e7-a6b3-ac131d8e6ccd",
                 AccountId = "d_f4c745f19c834145bcf2d6b5f1a871f3",
@@ -224,39 +231,10 @@ namespace MarginTrading.Backend.TestClient
             Console.WriteLine("Successfuly finished");
         }
 
-        private static void CheckAssetPairSettings(AssetPairSettingsContract actual,
-            AssetPairSettingsInputContract expected)
+        private static void CheckAssetPair(AssetPairContract actual,
+            AssetPairContract expected)
         {
-            actual.AssetPairId.RequiredEqualsTo("BTCUSD.test", nameof(actual.AssetPairId));
-            actual.BasePairId.RequiredEqualsTo(expected.BasePairId, nameof(actual.BasePairId));
-            actual.LegalEntity.RequiredEqualsTo(expected.LegalEntity, nameof(actual.LegalEntity));
-            actual.MultiplierMarkupBid.RequiredEqualsTo(expected.MultiplierMarkupBid,
-                nameof(actual.MultiplierMarkupBid));
-            actual.MultiplierMarkupAsk.RequiredEqualsTo(expected.MultiplierMarkupAsk,
-                nameof(actual.MultiplierMarkupAsk));
-            actual.MatchingEngineMode.RequiredEqualsTo(expected.MatchingEngineMode,
-                nameof(actual.MatchingEngineMode));
-        }
-        
-        private static void CheckAccountAssetPairs(AccountAssetPairContract actual,
-            AccountAssetPairContract expected)
-        {
-            actual.BaseAssetId.RequiredEqualsTo(expected.BaseAssetId, nameof(actual.BaseAssetId));
-            actual.CommissionLong.RequiredEqualsTo(expected.CommissionLong, nameof(actual.CommissionLong));
-            actual.CommissionLot.RequiredEqualsTo(expected.CommissionLot, nameof(actual.CommissionLot));
-            actual.CommissionShort.RequiredEqualsTo(expected.CommissionShort, nameof(actual.CommissionShort));
-            actual.DealLimit.RequiredEqualsTo(expected.DealLimit, nameof(actual.DealLimit));
-            actual.DeltaAsk.RequiredEqualsTo(expected.DeltaAsk, nameof(actual.DeltaAsk));
-            actual.DeltaBid.RequiredEqualsTo(expected.DeltaBid, nameof(actual.DeltaBid));
-            actual.Instrument.RequiredEqualsTo(expected.Instrument, nameof(actual.Instrument));
-            actual.LeverageInit.RequiredEqualsTo(expected.LeverageInit, nameof(actual.LeverageInit));
-            actual.LeverageMaintenance.RequiredEqualsTo(expected.LeverageMaintenance, nameof(actual.LeverageMaintenance));
-            actual.OvernightSwapLong.RequiredEqualsTo(expected.OvernightSwapLong, nameof(actual.OvernightSwapLong));
-            actual.OvernightSwapShort.RequiredEqualsTo(expected.OvernightSwapShort, nameof(actual.OvernightSwapShort));
-            actual.PositionLimit.RequiredEqualsTo(expected.PositionLimit, nameof(actual.PositionLimit));
-            actual.SwapLong.RequiredEqualsTo(expected.SwapLong, nameof(actual.SwapLong));
-            actual.SwapShort.RequiredEqualsTo(expected.SwapShort, nameof(actual.SwapShort));
-            actual.TradingConditionId.RequiredEqualsTo(expected.TradingConditionId, nameof(actual.TradingConditionId));
+            actual.Should().BeEquivalentTo(expected);
         }
 
         public static T Dump<T>(this T o)

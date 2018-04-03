@@ -17,7 +17,7 @@ namespace MarginTrading.Backend.Services
             _quoteCacheService = quoteCacheService;
         }
 
-        public decimal GetQuoteRateForBaseAsset(string accountAssetId, string instrument)
+        public decimal GetQuoteRateForBaseAsset(string accountAssetId, string instrument, string legalEntity)
         {
             var asset = _assetPairsCache.GetAssetPairById(instrument);
 
@@ -28,7 +28,7 @@ namespace MarginTrading.Backend.Services
                 return 1;
             }
 
-            var inst = _assetPairsCache.FindAssetPair(baseAssetId, accountAssetId);
+            var inst = _assetPairsCache.FindAssetPair(baseAssetId, accountAssetId, legalEntity);
             var quote = _quoteCacheService.GetQuote(inst.Id);
 
             if (inst.BaseAssetId == baseAssetId)
@@ -39,7 +39,7 @@ namespace MarginTrading.Backend.Services
             return 1.0M / quote.Bid;
         }
 
-        public decimal GetQuoteRateForQuoteAsset(string accountAssetId, string assetPairId)
+        public decimal GetQuoteRateForQuoteAsset(string accountAssetId, string assetPairId, string legalEntity)
         {
             var assetPair = _assetPairsCache.GetAssetPairById(assetPairId);
 
@@ -50,7 +50,7 @@ namespace MarginTrading.Backend.Services
                 return 1;
             }
 
-            var crossAssetPair = _assetPairsCache.FindAssetPair(quoteAssetId, accountAssetId);
+            var crossAssetPair = _assetPairsCache.FindAssetPair(quoteAssetId, accountAssetId, legalEntity);
             var quote = _quoteCacheService.GetQuote(crossAssetPair.Id);
 
             if (crossAssetPair.BaseAssetId == quoteAssetId)
@@ -116,13 +116,16 @@ namespace MarginTrading.Backend.Services
             return GetSwapRate(accountAssetId, instrumentId, true);
         }
 
-        public decimal GetVolumeInAccountAsset(OrderDirection direction, string accountAssetId, string instrument, decimal volume)
+        public decimal GetVolumeInAccountAsset(OrderDirection direction, string accountAssetId, string instrument,
+            decimal volume, string legalEntity)
         {
             var inst = _assetPairsCache.GetAssetPairById(instrument);
             var instrumentQuote = _quoteCacheService.GetQuote(instrument);
 
-            var rate = GetQuoteRateForQuoteAsset(accountAssetId, inst.Id);
-            var price = instrumentQuote.GetPriceForOrderType(direction == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy);
+            var rate = GetQuoteRateForQuoteAsset(accountAssetId, inst.Id, legalEntity);
+            var price = instrumentQuote.GetPriceForOrderType(direction == OrderDirection.Buy
+                ? OrderDirection.Sell
+                : OrderDirection.Buy);
 
             return volume * rate * price;
         }

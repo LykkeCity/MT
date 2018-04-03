@@ -11,12 +11,12 @@ using Microsoft.AspNetCore.Mvc;
 namespace MarginTrading.Backend.Controllers
 {
     [Route("api/[controller]"), Authorize, MiddlewareFilter(typeof(RequestLoggingPipeline))]
-    public class AssetPairSettingsController : Controller, IAssetPairSettingsEditingApi
+    public class AssetPairsController : Controller, IAssetPairsEditingApi
     {
         private readonly IConvertService _convertService;
         private readonly IAssetPairsManager _assetPairsManager;
 
-        public AssetPairSettingsController(IConvertService convertService, IAssetPairsManager assetPairsManager)
+        public AssetPairsController(IConvertService convertService, IAssetPairsManager assetPairsManager)
         {
             _convertService = convertService;
             _assetPairsManager = assetPairsManager;
@@ -26,8 +26,8 @@ namespace MarginTrading.Backend.Controllers
         /// Insert new settings for a pair
         /// </summary>
         [HttpPost, Route("{assetPairId}")]
-        public async Task<AssetPairSettingsContract> Insert(string assetPairId,
-            [FromBody] AssetPairSettingsInputContract settings)
+        public async Task<AssetPairContract> Insert(string assetPairId,
+            [FromBody] AssetPairInputContract settings)
         {
             return Convert(await _assetPairsManager.InsertAssetPairSettings(Convert(assetPairId, settings)));
         }
@@ -36,8 +36,8 @@ namespace MarginTrading.Backend.Controllers
         /// Update existing settings for a pair
         /// </summary>
         [HttpPut, Route("{assetPairId}")]
-        public async Task<AssetPairSettingsContract> Update(string assetPairId,
-            [FromBody] AssetPairSettingsInputContract settings)
+        public async Task<AssetPairContract> Update(string assetPairId,
+            [FromBody] AssetPairInputContract settings)
         {
             return Convert(await _assetPairsManager.UpdateAssetPairSettings(Convert(assetPairId, settings)));
         }
@@ -46,20 +46,20 @@ namespace MarginTrading.Backend.Controllers
         /// Delete existing settings for a pair
         /// </summary>
         [HttpDelete, Route("{assetPairId}")]
-        public async Task<AssetPairSettingsContract> Delete(string assetPairId)
+        public async Task<AssetPairContract> Delete(string assetPairId)
         {
             return Convert(await _assetPairsManager.DeleteAssetPairSettings(assetPairId));
         }
 
-        private IAssetPairSettings Convert(string assetPairId, AssetPairSettingsInputContract settings)
+        private IAssetPair Convert(string assetPairId, AssetPairInputContract settings)
         {
-            return _convertService.ConvertWithConstructorArgs<AssetPairSettingsInputContract, AssetPairSettings>(
-                settings, new {assetPairId});
+            return _convertService.ConvertWithConstructorArgs<AssetPairInputContract, AssetPair>(
+                settings, new {id = assetPairId});
         }
 
-        private AssetPairSettingsContract Convert(IAssetPairSettings settings)
+        private AssetPairContract Convert(IAssetPair settings)
         {
-            return _convertService.Convert<IAssetPairSettings, AssetPairSettingsContract>(settings);
+            return _convertService.Convert<IAssetPair, AssetPairContract>(settings);
         }
     }
 }

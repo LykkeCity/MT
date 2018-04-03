@@ -1,0 +1,29 @@
+﻿using System.Threading.Tasks;
+using JetBrains.Annotations;
+using MarginTrading.Backend.Contracts.AssetPairSettings;
+using Refit;
+
+namespace MarginTrading.Backend.Contracts
+{
+    [PublicAPI]
+    public interface IAssetPairsEditingApi
+    {
+        /// <summary>
+        /// Insert new settings for a pair
+        /// </summary>
+        [Post("/api/AssetPairs/{assetPairId}")]
+        Task<AssetPairContract> Insert(string assetPairId, [Body] AssetPairInputContract settings);
+
+        /// <summary>
+        /// Update existing settings for a pair
+        /// </summary>
+        [Put("/api/AssetPairs/{assetPairId}")]
+        Task<AssetPairContract> Update(string assetPairId, [Body] AssetPairInputContract settings);
+
+        /// <summary>
+        /// Delete existing settings for a pair
+        /// </summary>
+        [Delete("/api/AssetPairs/{assetPairId}")]
+        Task<AssetPairContract> Delete(string assetPairId);
+    }
+}

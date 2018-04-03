@@ -8,7 +8,7 @@ namespace MarginTrading.Backend.Contracts.DataReaderClient
 {
     internal class MtDataReaderClient : IMtDataReaderClient
     {
-        public IAssetPairSettingsReadingApi AssetPairSettingsRead { get; }
+        public IAssetPairsReadingApi AssetPairsRead { get; }
         public IAccountHistoryApi AccountHistory { get; }
         public IAccountsApi AccountsApi { get; }
         public IAccountAssetPairsReadingApi AccountAssetPairsRead { get; }
@@ -21,7 +21,7 @@ namespace MarginTrading.Backend.Contracts.DataReaderClient
                 new RetryingHttpClientHandler(new HttpClientHandler(), 6, TimeSpan.FromSeconds(5)), 
                 userAgent, apiKey);
             var settings = new RefitSettings {HttpMessageHandlerFactory = () => httpMessageHandler};
-            AssetPairSettingsRead = RestService.For<IAssetPairSettingsReadingApi>(url, settings);
+            AssetPairsRead = RestService.For<IAssetPairsReadingApi>(url, settings);
             AccountHistory = RestService.For<IAccountHistoryApi>(url, settings);
             AccountsApi = RestService.For<IAccountsApi>(url, settings);
             AccountAssetPairsRead = RestService.For<IAccountAssetPairsReadingApi>(url, settings);

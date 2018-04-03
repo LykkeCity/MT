@@ -3,13 +3,16 @@ using System.Threading;
 using AzureStorage.Tables;
 using Lykke.Service.Assets.Client;
 using MarginTrading.AzureRepositories;
+using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.AzureRepositories.Entities;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.TradingConditions;
+using MarginTrading.Common.Services;
 using Microsoft.Rest;
 using Moq;
 using Asset = Lykke.Service.Assets.Client.Models.Asset;
-using AssetPair = Lykke.Service.Assets.Client.Models.AssetPair;
+using AssetPairEntity = MarginTrading.AzureRepositories.AssetPairsRepository.AssetPairEntity;
 
 namespace MarginTradingTests
 {
@@ -20,89 +23,7 @@ namespace MarginTradingTests
         public static IAssetsService GetPopulatedAssetsService()
         {
             var assetsService = new Mock<IAssetsService>();
-
-            var assetPairs = new List<AssetPair>
-            {
-                new AssetPair
-                {
-                    Id = "EURUSD",
-                    Name = "EURUSD",
-                    Accuracy = 5,
-                    BaseAssetId = "EUR",
-                    QuotingAssetId = "USD"
-                },
-                new AssetPair
-                {
-                    Id = "BTCEUR",
-                    Name = "BTCEUR",
-                    Accuracy = 3,
-                    BaseAssetId = "BTC",
-                    QuotingAssetId = "EUR"
-                },
-                new AssetPair
-                {
-                    Id = "BTCUSD",
-                    Name = "BTCUSD",
-                    Accuracy = 3,
-                    BaseAssetId = "BTC",
-                    QuotingAssetId = "USD"
-                },
-                new AssetPair
-                {
-                    Id = "BTCCHF",
-                    Name = "BTCCHF",
-                    Accuracy = 3,
-                    BaseAssetId = "BTC",
-                    QuotingAssetId = "CHF"
-                },
-                new AssetPair
-                {
-                    Id = "CHFJPY",
-                    Name = "CHFJPY",
-                    Accuracy = 3,
-                    BaseAssetId = "CHF",
-                    QuotingAssetId = "JPY"
-                },
-                new AssetPair
-                {
-                    Id = "USDCHF",
-                    Name = "USDCHF",
-                    Accuracy = 3,
-                    BaseAssetId = "USD",
-                    QuotingAssetId = "CHF"
-                },
-                new AssetPair
-                {
-                    Id = "EURCHF",
-                    Name = "EURCHF",
-                    Accuracy = 5,
-                    BaseAssetId = "EUR",
-                    QuotingAssetId = "CHF"
-                },
-                new AssetPair
-                {
-                    Id = "BTCJPY",
-                    Name = "BTCJPY",
-                    Accuracy = 5,
-                    BaseAssetId = "BTC",
-                    QuotingAssetId = "JPY"
-                },
-                new AssetPair
-                {
-                    Id = "EURJPY",
-                    Name = "EURJPY",
-                    Accuracy = 3,
-                    BaseAssetId = "EUR",
-                    QuotingAssetId = "JPY"
-                }
-            };
-
-            var assetPairsResult = new HttpOperationResponse<IList<AssetPair>> {Body = assetPairs};
-            
-            assetsService
-                .Setup(s => s.AssetPairGetAllWithHttpMessagesAsync(It.IsAny<Dictionary<string, List<string>>>(),
-                    It.IsAny<CancellationToken>())).ReturnsAsync(assetPairsResult);
-            
+           
             var assets = new List<Asset>
             {
                 new Asset
@@ -299,6 +220,97 @@ namespace MarginTradingTests
         public static OvernightSwapHistoryRepository GetOvernightSwapHistoryRepository()
         {
             return new OvernightSwapHistoryRepository(new NoSqlTableInMemory<OvernightSwapHistoryEntity>());
-        } 
+        }
+
+        public static IAssetPairsRepository GetPopulatedAssetPairsRepository()
+        {
+            var table = new NoSqlTableInMemory<AssetPairEntity>();
+            var assetPairs = new List<AssetPairEntity>
+            {
+                new AssetPairEntity
+                {
+                    Id = "EURUSD",
+                    Name = "EURUSD",
+                    Accuracy = 5,
+                    BaseAssetId = "EUR",
+                    QuoteAssetId = "USD",
+                },
+                new AssetPairEntity
+                {
+                    Id = "BTCEUR",
+                    Name = "BTCEUR",
+                    Accuracy = 3,
+                    BaseAssetId = "BTC",
+                    QuoteAssetId = "EUR"
+                },
+                new AssetPairEntity
+                {
+                    Id = "BTCUSD",
+                    Name = "BTCUSD",
+                    Accuracy = 3,
+                    BaseAssetId = "BTC",
+                    QuoteAssetId = "USD"
+                },
+                new AssetPairEntity
+                {
+                    Id = "BTCCHF",
+                    Name = "BTCCHF",
+                    Accuracy = 3,
+                    BaseAssetId = "BTC",
+                    QuoteAssetId = "CHF"
+                },
+                new AssetPairEntity
+                {
+                    Id = "CHFJPY",
+                    Name = "CHFJPY",
+                    Accuracy = 3,
+                    BaseAssetId = "CHF",
+                    QuoteAssetId = "JPY"
+                },
+                new AssetPairEntity
+                {
+                    Id = "USDCHF",
+                    Name = "USDCHF",
+                    Accuracy = 3,
+                    BaseAssetId = "USD",
+                    QuoteAssetId = "CHF"
+                },
+                new AssetPairEntity
+                {
+                    Id = "EURCHF",
+                    Name = "EURCHF",
+                    Accuracy = 5,
+                    BaseAssetId = "EUR",
+                    QuoteAssetId = "CHF"
+                },
+                new AssetPairEntity
+                {
+                    Id = "BTCJPY",
+                    Name = "BTCJPY",
+                    Accuracy = 5,
+                    BaseAssetId = "BTC",
+                    QuoteAssetId = "JPY"
+                },
+                new AssetPairEntity
+                {
+                    Id = "EURJPY",
+                    Name = "EURJPY",
+                    Accuracy = 3,
+                    BaseAssetId = "EUR",
+                    QuoteAssetId = "JPY"
+                }
+            };
+
+            foreach (var pair in assetPairs)
+            {
+                pair.LegalEntity = "LYKKEVU";
+                pair.MatchingEngineMode = MatchingEngineMode.MarketMaker;
+                pair.StpMultiplierMarkupAsk = 1;
+                pair.StpMultiplierMarkupBid = 1;
+            }
+
+            table.InsertAsync(assetPairs).GetAwaiter().GetResult();
+            return new AssetPairsRepository(table, new ConvertService());
+        }
     }
 }

@@ -110,6 +110,7 @@ namespace MarginTradingTests.Backend
 				OpenDate = new DateTime(2017, 01, 01, 20, 50, 0),
 				CloseDate = new DateTime(2017, 01, 02, 20, 50, 0),
 				MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder() { Volume = 1} }),
+				LegalEntity = "LYKKEVU",
 			});
 
 			var accountBalance = (await _fakeMarginTradingAccountsRepository.GetAsync(accountId)).Balance;
@@ -154,6 +155,7 @@ namespace MarginTradingTests.Backend
 				OpenDate = new DateTime(2017, 01, 01, 20, 50, 0),
 				CloseDate = new DateTime(2017, 01, 02, 20, 50, 0),
 				MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder() { Volume = 1} }),
+				LegalEntity = "LYKKEVU",
 			});
 			
 			_overnightSwapService.CalculateAndChargeSwaps();

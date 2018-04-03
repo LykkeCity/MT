@@ -30,8 +30,11 @@ namespace MarginTrading.Backend.Middleware
             catch (Exception ex)
             {
                 await LogError(context, ex);
-
+#if DEBUG
+                await SendError(context, ex.ToString());
+#else
                 await SendError(context, ex.Message);
+#endif
             }
         }
 
