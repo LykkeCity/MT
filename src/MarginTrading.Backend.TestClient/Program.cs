@@ -121,11 +121,11 @@ namespace MarginTrading.Backend.TestClient
             var nonexistentGet = await dataReaderClient.AssetPairsRead.Get("nonexistent").Dump();
             nonexistentGet.RequiredEqualsTo(null, nameof(nonexistentGet));
 
-            var getByMode = await dataReaderClient.AssetPairsRead.Get("LYKKETEST", MatchingEngineModeContract.Stp).Dump();
+            var getByMode = await dataReaderClient.AssetPairsRead.List("LYKKETEST", MatchingEngineModeContract.Stp).Dump();
             var ours2 = getByMode.First(e => e.Id == "BTCUSD.test");
             CheckAssetPair(ours2, assetPairSettingsInputContract);
 
-            var getByOtherMode = await dataReaderClient.AssetPairsRead.Get("LYKKETEST", MatchingEngineModeContract.MarketMaker).Dump();
+            var getByOtherMode = await dataReaderClient.AssetPairsRead.List("LYKKETEST", MatchingEngineModeContract.MarketMaker).Dump();
             getByOtherMode.Count(e => e.Id == "BTCUSD.test").RequiredEqualsTo(0, "getByOtherMode.Count");
 
             var result3 = await backendClient.AssetPairsEdit.Delete("BTCUSD.test").Dump();

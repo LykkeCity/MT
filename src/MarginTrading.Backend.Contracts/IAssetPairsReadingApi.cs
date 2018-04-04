@@ -13,18 +13,13 @@ namespace MarginTrading.Backend.Contracts
         /// Get all pairs
         /// </summary>
         [Get("/api/AssetPairs/")]
-        Task<List<AssetPairContract>> List();
+        Task<List<AssetPairContract>> List([Query, CanBeNull] string legalEntity = null,
+            [Query] MatchingEngineModeContract? matchingEngineMode = null);
 
         /// <summary>
         /// Get pair by id
         /// </summary>
         [Get("/api/AssetPairs/{assetPairId}")]
         Task<AssetPairContract> Get(string assetPairId);
-
-        /// <summary>
-        /// Get pairs by MatchingEngineMode
-        /// </summary>
-        [Get("/api/AssetPairs/{legalEntity}/{matchingEngineMode}")]
-        Task<List<AssetPairContract>> Get(string legalEntity, MatchingEngineModeContract matchingEngineMode);
     }
 }
