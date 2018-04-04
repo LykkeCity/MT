@@ -80,7 +80,7 @@ namespace MarginTradingTests
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCUSD", Ask = 1041.41M, Bid = 1040.69M }));
 
             var accountVolume = _cfdCalculatorService.GetVolumeInAccountAsset(OrderDirection.Buy, Accounts[0].BaseAssetId, "BTCCHF", 1, "LYKKEVU");
-            Assert.AreEqual(1046.804, Math.Round(accountVolume, 3));
+            Assert.AreEqual(1047.014, Math.Round(accountVolume, 3));
 
             accountVolume = _cfdCalculatorService.GetVolumeInAccountAsset(OrderDirection.Sell, Accounts[0].BaseAssetId, "BTCCHF", 1, "LYKKEVU");
             Assert.AreEqual(1046.784, Math.Round(accountVolume, 3));

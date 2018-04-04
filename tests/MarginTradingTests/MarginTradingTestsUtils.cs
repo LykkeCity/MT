@@ -164,6 +164,36 @@ namespace MarginTradingTests
                 new AccountAssetPair
                 {
                     TradingConditionId = TradingConditionId,
+                    BaseAssetId = "USD",
+                    Instrument = "JPYUSD",
+                    LeverageInit = 100,
+                    LeverageMaintenance = 150,
+                    DeltaAsk = 30,
+                    DeltaBid = 30
+                },
+                new AccountAssetPair
+                {
+                    TradingConditionId = TradingConditionId,
+                    BaseAssetId = "USD",
+                    Instrument = "EURGBP",
+                    LeverageInit = 100,
+                    LeverageMaintenance = 150,
+                    DeltaAsk = 30,
+                    DeltaBid = 30
+                },
+                new AccountAssetPair
+                {
+                    TradingConditionId = TradingConditionId,
+                    BaseAssetId = "USD",
+                    Instrument = "GBPUSD",
+                    LeverageInit = 100,
+                    LeverageMaintenance = 150,
+                    DeltaAsk = 30,
+                    DeltaBid = 30
+                },
+                new AccountAssetPair
+                {
+                    TradingConditionId = TradingConditionId,
                     BaseAssetId = "EUR",
                     Instrument = "BTCJPY",
                     LeverageInit = 100,
@@ -180,7 +210,7 @@ namespace MarginTradingTests
                     LeverageMaintenance = 150,
                     DeltaAsk = 30,
                     DeltaBid = 30
-                }
+                },
             };
 
             foreach (var asset in assets)
@@ -298,7 +328,31 @@ namespace MarginTradingTests
                     Accuracy = 3,
                     BaseAssetId = "EUR",
                     QuoteAssetId = "JPY"
-                }
+                },
+                new AssetPairEntity
+                {
+                    Id = "JPYUSD",
+                    Name = "JPYUSD",
+                    Accuracy = 3,
+                    BaseAssetId = "JPY",
+                    QuoteAssetId = "USD"
+                },
+                new AssetPairEntity
+                {
+                    Id = "EURGBP",
+                    Name = "EURGBP",
+                    Accuracy = 3,
+                    BaseAssetId = "EUR",
+                    QuoteAssetId = "GBP"
+                },
+                new AssetPairEntity
+                {
+                    Id = "GBPUSD",
+                    Name = "GBPUSD",
+                    Accuracy = 3,
+                    BaseAssetId = "GBP",
+                    QuoteAssetId = "USD"
+                },
             };
 
             foreach (var pair in assetPairs)

@@ -56,6 +56,15 @@ namespace MarginTrading.Backend.Services.AssetPairs
             return _assetPairsIds.Get();
         }
 
+        public IAssetPair TryFindAssetPairStraight(string asset1, string asset2, string legalEntity)
+        {
+            var assetPair = TryFindAssetPair(asset1, asset2, legalEntity);
+            return assetPair != null 
+                   && assetPair.BaseAssetId == asset1 && assetPair.QuoteAssetId == asset2
+                ? assetPair
+                : null;
+        }
+        
         public IAssetPair TryFindAssetPair(string asset1, string asset2, string legalEntity)
         {
             var key = GetAssetPairKey(asset1, asset2, legalEntity);

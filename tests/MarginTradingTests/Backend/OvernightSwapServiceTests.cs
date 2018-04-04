@@ -118,9 +118,9 @@ namespace MarginTradingTests.Backend
 			_overnightSwapService.CalculateAndChargeSwaps();
 
 			var calc = _overnightSwapCache.GetAll().First();
-			Assert.True(calc.Value == 0.00273973M);
+			Assert.AreEqual(24.68493151M, calc.Value);
 			Assert.True(calc.IsSuccess);
-			Assert.AreEqual(accountBalance - 0.00273973M, (await _fakeMarginTradingAccountsRepository.GetAsync(accountId)).Balance);
+			Assert.AreEqual(accountBalance - 24.68493151M, (await _fakeMarginTradingAccountsRepository.GetAsync(accountId)).Balance);
 		}
 
 		[Test]

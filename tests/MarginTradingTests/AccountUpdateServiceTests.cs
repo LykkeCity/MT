@@ -40,6 +40,7 @@ namespace MarginTradingTests
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 AccountAssetId = Accounts[0].BaseAssetId,
                 AssetAccuracy = 5,
+                LegalEntity = "LYKKEVU",
                 Volume = 1000,
                 MatchedOrders =
                     new MatchedOrderCollection(new List<MatchedOrder>
@@ -59,9 +60,9 @@ namespace MarginTradingTests
             Assert.AreEqual(1000, account.Balance);
             Assert.AreEqual(20, Math.Round(account.GetPnl(), 5));
             Assert.AreEqual(1020, account.GetTotalCapital());
-            Assert.AreEqual(6.66666667m, account.GetUsedMargin());
-            Assert.AreEqual(1010.00, account.GetMarginAvailable());
-            Assert.AreEqual(152.99999992350000003824999998m, account.GetMarginUsageLevel());
+            Assert.AreEqual(6.93333333m, account.GetUsedMargin());
+            Assert.AreEqual(1009.60, account.GetMarginAvailable());
+            Assert.AreEqual(147.11538468611316571447748352m, account.GetMarginUsageLevel());
 
             var order2 = new Order
             {
@@ -72,6 +73,7 @@ namespace MarginTradingTests
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 AccountAssetId = Accounts[0].BaseAssetId,
                 AssetAccuracy = 5,
+                LegalEntity = "LYKKEVU",
                 Volume = -30000,
                 MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 30000 } }), //need for GetMatchedVolume()
                 OpenPrice = 1.02M
@@ -85,9 +87,9 @@ namespace MarginTradingTests
             Assert.AreEqual(1000, account.Balance);
             Assert.AreEqual(-580, Math.Round(account.GetPnl(), 5));
             Assert.AreEqual(420, Math.Round(account.GetTotalCapital(), 5));
-            Assert.AreEqual(206.66666667m, account.GetUsedMargin());
-            Assert.AreEqual(110.00, Math.Round(account.GetMarginAvailable(), 5));
-            Assert.AreEqual(2.03226m, Math.Round(account.GetMarginUsageLevel(), 5));
+            Assert.AreEqual(214.93333333m, account.GetUsedMargin());
+            Assert.AreEqual(97.60, Math.Round(account.GetMarginAvailable(), 5));
+            Assert.AreEqual(1.95409m, Math.Round(account.GetMarginUsageLevel(), 5));
         }
 
         [Test]
@@ -102,6 +104,7 @@ namespace MarginTradingTests
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 AccountAssetId = Accounts[0].BaseAssetId,
                 AssetAccuracy = 5,
+                LegalEntity = "LYKKEVU",
                 Volume = 130000,
                 MatchedOrders = new MatchedOrderCollection( new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 130000} }), //need for GetMatchedVolume()
                 OpenPrice = 1.02M

@@ -68,10 +68,10 @@ namespace MarginTrading.Backend.Services
             if (accountAssetId == assetPair.QuoteAssetId)
                 return 1;
 
-            var assetPairQuoteAccount = _assetPairsCache.TryFindAssetPair(assetPair.QuoteAssetId, accountAssetId, legalEntity);
+            var assetPairQuoteAccount = _assetPairsCache.TryFindAssetPairStraight(assetPair.QuoteAssetId, accountAssetId, legalEntity);
             IAssetPair assetPairAccountQuote = null;
             if (assetPairQuoteAccount == null)
-                assetPairAccountQuote = _assetPairsCache.FindAssetPair(accountAssetId, assetPair.QuoteAssetId, legalEntity);
+                assetPairAccountQuote = _assetPairsCache.TryFindAssetPairStraight(accountAssetId, assetPair.QuoteAssetId, legalEntity);
 
             var rate = fplSign
                 ? assetPairQuoteAccount != null
@@ -88,13 +88,13 @@ namespace MarginTrading.Backend.Services
         {
             var assetPair = _assetPairsCache.GetAssetPairById(instrumentId);
             
-            if (accountAssetId == assetPair.QuoteAssetId)
+            if (accountAssetId == assetPair.BaseAssetId)
                 return 1;
 
-            var assetPairBaseAccount = _assetPairsCache.TryFindAssetPair(assetPair.BaseAssetId, accountAssetId, legalEntity);
+            var assetPairBaseAccount = _assetPairsCache.TryFindAssetPairStraight(assetPair.BaseAssetId, accountAssetId, legalEntity);
             IAssetPair assetPairAccountBase = null;
             if (assetPairBaseAccount == null)
-                assetPairAccountBase = _assetPairsCache.FindAssetPair(accountAssetId, assetPair.BaseAssetId, legalEntity);
+                assetPairAccountBase = _assetPairsCache.TryFindAssetPairStraight(accountAssetId, assetPair.BaseAssetId, legalEntity);
 
             var rate = swapSign
                 ? assetPairBaseAccount != null
@@ -118,7 +118,7 @@ namespace MarginTrading.Backend.Services
             var inst = _assetPairsCache.GetAssetPairById(instrument);
             var instrumentQuote = _quoteCacheService.GetQuote(instrument);
 
-            var rate = GetQuoteRateForQuoteAsset(accountAssetId, inst.Id, legalEntity);
+            var rate = GetFplRate(accountAssetId, inst.Id, legalEntity, direction == OrderDirection.Buy);//GetQuoteRateForQuoteAsset(accountAssetId, inst.Id, legalEntity);
             var price = instrumentQuote.GetPriceForOrderType(direction == OrderDirection.Buy
                 ? OrderDirection.Sell
                 : OrderDirection.Buy);
