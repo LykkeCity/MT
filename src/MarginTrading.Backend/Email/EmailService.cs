@@ -50,5 +50,22 @@ namespace MarginTrading.Backend.Email
                     EmailAddress = email
                 });
         }
+
+        public async Task SendOvernightSwapEmailAsync(string email, OvernightSwapNotification overnightSwapNotification)
+        {
+            var message =
+                _templateGenerator.Generate("OvernightSwap", overnightSwapNotification);
+
+            await _emailSender.SendAsync(
+                new EmailMessage
+                {
+                    HtmlBody = message,
+                    Subject = "Overnight Swap"
+                },
+                new EmailAddressee
+                {
+                    EmailAddress = email
+                });
+        }
     }
 }

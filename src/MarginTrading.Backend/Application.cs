@@ -13,9 +13,11 @@ using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Scheduling;
+using MarginTrading.Backend.Services.Helpers;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Notifications;
+using MarginTrading.Backend.Services.Services;
 using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.RabbitMq;
@@ -97,8 +99,10 @@ namespace MarginTrading.Backend
                         _rabbitMqService.GetMsgPackDeserializer<ExternalExchangeOrderbookMessage>());
                 }
 
+                var settingsCalcTime = (_marginSettings.OvernightSwapCalculationTime.Hours,
+                    _marginSettings.OvernightSwapCalculationTime.Minutes);
                 var registry = new Registry();
-                registry.Schedule<OvernightSwapJob>().ToRunEvery(0).Days().At(_marginSettings.OvernightSwapCalculationHour, 0);
+                registry.Schedule<OvernightSwapJob>().ToRunEvery(0).Days().At(settingsCalcTime.Hours, settingsCalcTime.Minutes);
                 JobManager.Initialize(registry);
                 JobManager.JobException += info => _logger.WriteError(ServiceName, nameof(JobManager), info.Exception);
             }

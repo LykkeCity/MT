@@ -35,7 +35,7 @@ namespace MarginTrading.AzureRepositories
 		public async Task<IReadOnlyList<IOvernightSwapHistory>> GetAsync(DateTime? @from, DateTime? to)
 		{
 			return (await _tableStorage.WhereAsync(AzureStorageUtils.QueryGenerator<OvernightSwapHistoryEntity>.RowKeyOnly
-				.BetweenQuery(from ?? DateTime.MinValue, to ?? DateTime.MaxValue, ToIntervalOption.IncludeTo)))
+					.BetweenQuery(from ?? DateTime.MinValue, to ?? DateTime.MaxValue, ToIntervalOption.IncludeTo)))
 				.OrderByDescending(item => item.Time)
 				.ToList();
 		}

@@ -89,7 +89,7 @@ namespace MarginTrading.AzureRepositories
         public string Orders { get; set; }
         public string ClosedOrders { get; set; }
         
-        OrderUpdateType IOrderHistory.OrderUpdateType => OrderUpdateType.ParseEnum(Backend.Core.OrderUpdateType.Place);
+        OrderUpdateType IOrderHistory.OrderUpdateType => OrderUpdateType.ParseEnum(Backend.Core.OrderUpdateType.Reject);
         public string OpenExternalOrderId { get; set; }
         public string OpenExternalProviderId { get; set; }
         public string CloseExternalOrderId { get; set; }
