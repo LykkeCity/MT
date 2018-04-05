@@ -130,10 +130,12 @@ namespace MarginTrading.Backend.Services.Services
                         }
                     }
 
-                    await _log.WriteWarningAsync(nameof(OvernightSwapNotificationService), nameof(PerformEmailNotification),
-                        $"Emails of some clients are incorrect: {string.Join(", ", clientsWithIncorrectMail)}.", DateTime.UtcNow);
-                    await _log.WriteInfoAsync(nameof(OvernightSwapNotificationService), nameof(PerformEmailNotification),
-                        $"Emails sent to: {string.Join(", ", clientsSentEmails)}.", DateTime.UtcNow);
+                    if (clientsWithIncorrectMail.Any())
+                        await _log.WriteWarningAsync(nameof(OvernightSwapNotificationService), nameof(PerformEmailNotification),
+                            $"Emails of some clients are incorrect: {string.Join(", ", clientsWithIncorrectMail)}.", DateTime.UtcNow);
+                    if (clientsSentEmails.Any())
+                        await _log.WriteInfoAsync(nameof(OvernightSwapNotificationService), nameof(PerformEmailNotification),
+                            $"Emails sent to: {string.Join(", ", clientsSentEmails)}.", DateTime.UtcNow);
                 }
                 finally
                 {
