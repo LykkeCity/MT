@@ -41,21 +41,21 @@ namespace MarginTrading.Backend.Services
 
             fplData.Fpl = Math.Round(fpl, fplData.AccountBaseAssetAccuracy);
 
-            var accountAsset = _accountAssetsCacheService.GetAccountAsset(order.TradingConditionId, order.AccountAssetId, order.Instrument);
+            var accountAssetPair = _accountAssetsCacheService.GetAccountAsset(order.TradingConditionId, order.AccountAssetId, order.Instrument);
 
-            fplData.MarginInit = Math.Round(order.ClosePrice * order.GetMatchedVolume() * fplData.QuoteRate / accountAsset.LeverageInit, fplData.AccountBaseAssetAccuracy);
-            fplData.MarginMaintenance = Math.Round(order.ClosePrice * order.GetMatchedVolume() * fplData.QuoteRate / accountAsset.LeverageMaintenance, fplData.AccountBaseAssetAccuracy);
+            fplData.MarginInit = Math.Round(order.ClosePrice * order.GetMatchedVolume() * fplData.QuoteRate / accountAssetPair.LeverageInit, fplData.AccountBaseAssetAccuracy);
+            fplData.MarginMaintenance = Math.Round(order.ClosePrice * order.GetMatchedVolume() * fplData.QuoteRate / accountAssetPair.LeverageMaintenance, fplData.AccountBaseAssetAccuracy);
 
             fplData.OpenCrossPrice = Math.Round(order.OpenPrice * fplData.QuoteRate, order.AssetAccuracy);
             fplData.CloseCrossPrice = Math.Round(order.ClosePrice * fplData.QuoteRate, order.AssetAccuracy);
 
             fplData.OpenPrice = order.OpenPrice;
             fplData.ClosePrice = order.ClosePrice;
+            
             fplData.SwapsSnapshot = order.GetSwaps();
+            fplData.TotalFplSnapshot = order.GetTotalFpl(fplData.SwapsSnapshot);
             
             fplData.CalculatedHash = fplData.ActualHash;
-            
-            fplData.TotalFplSnapshot = order.GetTotalFpl(fplData.SwapsSnapshot);
 
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
             account.CacheNeedsToBeUpdated();

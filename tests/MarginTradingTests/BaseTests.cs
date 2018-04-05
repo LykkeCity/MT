@@ -143,6 +143,7 @@ namespace MarginTradingTests
             MtServiceLocator.AccountUpdateService = Container.Resolve<IAccountUpdateService>();
             MtServiceLocator.AccountsCacheService = Container.Resolve<IAccountsCacheService>();
             MtServiceLocator.SwapCommissionService = Container.Resolve<ICommissionService>();
+            MtServiceLocator.AssetPairsCache = Container.Resolve<IAssetPairsCache>();
 
             Container.Resolve<OrderBookList>().Init(null);
         }

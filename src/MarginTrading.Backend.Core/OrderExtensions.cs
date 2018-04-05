@@ -57,9 +57,7 @@ namespace MarginTrading.Backend.Core
 
         private static FplData GetFplData(this IOrder order)
         {
-            var orderInstance = order as Order;
-
-            if (orderInstance != null)
+            if (order is Order orderInstance)
             {
                 if (orderInstance.FplData.ActualHash != orderInstance.FplData.CalculatedHash)
                 {
@@ -107,9 +105,7 @@ namespace MarginTrading.Backend.Core
 
         public static void UpdateClosePrice(this IOrder order, decimal closePrice)
         {
-            var orderInstance = order as Order;
-
-            if (orderInstance != null)
+            if (order is Order orderInstance)
             {
                 orderInstance.ClosePrice = closePrice;
                 orderInstance.FplData.ActualHash++;

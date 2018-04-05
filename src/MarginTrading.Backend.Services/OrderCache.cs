@@ -34,7 +34,7 @@ namespace MarginTrading.Backend.Services
         public OrderCacheGroup ActiveOrders { get; private set; }
         public OrderCacheGroup WaitingForExecutionOrders { get; private set; }
         public OrderCacheGroup ClosingOrders { get; private set; }
-
+        
         public ImmutableArray<Order> GetAll()
         {
             using (_contextFactory.GetReadSyncContext($"{nameof(OrdersCache)}.{nameof(GetAll)}"))
@@ -51,6 +51,11 @@ namespace MarginTrading.Backend.Services
         public ImmutableArray<Order> GetPending()
         {
             return WaitingForExecutionOrders.GetAllOrders().ToImmutableArray();
+        }
+
+        public ImmutableArray<Order> GetPendingForMarginRecalc(string instrument)
+        {
+            return WaitingForExecutionOrders.GetPendingOrdersByMarginInstrument(instrument).ToImmutableArray();
         }
 
         public bool TryGetOrderById(string orderId, out Order order)

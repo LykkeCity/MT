@@ -253,6 +253,8 @@ namespace MarginTrading.Backend.Services
         
         private void ProcessOrdersWaitingForExecution(string instrument)
         {
+            ProcessPendingOrdersMarginRecalc(instrument);
+            
             var orders = GetPendingOrdersToBeExecuted(instrument).ToArray();
 
             if (orders.Length == 0)
@@ -293,6 +295,25 @@ namespace MarginTrading.Backend.Services
             }
         }
 
+        private void ProcessPendingOrdersMarginRecalc(string instrument)
+        {
+            var pendingOrders = _ordersCache.GetPendingForMarginRecalc(instrument);
+
+            var defaultMatchingEngine = _meRepository.GetDefaultMatchingEngine();
+
+            foreach (var order in pendingOrders)
+            {
+                defaultMatchingEngine.MatchMarketOrderForClose(order, matchedOrders =>
+                {
+                    if (matchedOrders.Count == 0)
+                        return false;
+
+                    order.UpdateClosePrice(Math.Round(matchedOrders.WeightedAveragePrice, order.AssetAccuracy));
+                    return false;
+                });
+            }
+        }
+
         #endregion
 
         #region Active orders
@@ -316,7 +337,8 @@ namespace MarginTrading.Backend.Services
 
         private IEnumerable<MarginTradingAccount> UpdateClosePriceAndDetectStopout(string instrument)
         {
-            var openOrders = _ordersCache.ActiveOrders.GetOrdersByInstrument(instrument).GroupBy(x => x.AccountId).ToDictionary(x => x.Key, x => x.ToArray());
+            var openOrders = _ordersCache.ActiveOrders.GetOrdersByInstrument(instrument)
+                .GroupBy(x => x.AccountId).ToDictionary(x => x.Key, x => x.ToArray());
 
             foreach (var accountOrders in openOrders)
             {

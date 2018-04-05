@@ -53,9 +53,7 @@ namespace MarginTrading.Backend.Services
                 throw new ValidateOrderException(OrderRejectReason.InvalidVolume, "Volume cannot be 0");
             }
 
-            var asset = _assetPairsCache.TryGetAssetPairById(order.Instrument);
-
-            if (asset == null)
+            if (!_assetPairsCache.TryGetAssetPairById(order.Instrument, out var asset))
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, "Instrument not found");
             }

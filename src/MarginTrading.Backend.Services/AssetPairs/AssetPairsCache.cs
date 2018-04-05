@@ -30,15 +30,34 @@ namespace MarginTrading.Backend.Services.AssetPairs
             }
         }
         
-        public IAssetPair TryGetAssetPairById(string assetPairId)
+        public bool TryGetAssetPairById(string assetPairId, out IAssetPair assetPair)
         {
             _lockSlim.EnterReadLock();
 
             try
             {
-                _assetPairs.TryGetValue(assetPairId, out var result);
-                    
-                return result;
+                return _assetPairs.TryGetValue(assetPairId, out assetPair);
+            }
+            finally
+            {
+                _lockSlim.ExitReadLock();
+            }
+        }
+        
+        public bool TryGetAssetPairQuoteSubstWithResersed(string substAsset, string instrument, out IAssetPair assetPair)
+        {
+            _lockSlim.EnterReadLock();
+
+            try
+            {
+                if (!TryGetAssetPairById(instrument, out var baseAssetPair))
+                {
+                    assetPair = null;
+                    return false;
+                }
+
+                return _assetPairs.TryGetValue(GetAssetPairId(baseAssetPair.BaseAssetId, substAsset), out assetPair)
+                    || _assetPairs.TryGetValue(GetAssetPairId(substAsset, baseAssetPair.BaseAssetId), out assetPair);
             }
             finally
             {
