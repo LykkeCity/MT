@@ -18,7 +18,7 @@ namespace MarginTradingTests.Helpers
             {
                 try
                 {
-                    s.ShouldBeEquivalentTo(o, config);
+                    s.Should().BeEquivalentTo(o, config);
                     return true;
                 }
                 catch (Exception e)
