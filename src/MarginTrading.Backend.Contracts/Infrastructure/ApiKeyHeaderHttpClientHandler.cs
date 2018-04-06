@@ -17,7 +17,6 @@ namespace MarginTrading.Backend.Contracts.Infrastructure
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
-            request.Headers.UserAgent.Clear();
             request.Headers.TryAddWithoutValidation("api-key", _apiKey);
             return base.SendAsync(request, cancellationToken);
         }
