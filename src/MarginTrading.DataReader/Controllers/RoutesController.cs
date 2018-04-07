@@ -8,6 +8,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MarginTrading.Common.Extensions;
 
 namespace MarginTrading.DataReader.Controllers
 {
@@ -51,17 +52,7 @@ namespace MarginTrading.DataReader.Controllers
             }
             OrderDirectionContract? GetDirection(OrderDirection? direction)
             {
-                switch (direction)
-                {
-                    case null:
-                        return null;
-                    case OrderDirection.Buy:
-                        return OrderDirectionContract.Buy;
-                    case OrderDirection.Sell:
-                        return OrderDirectionContract.Sell;
-                    default:
-                        throw new System.ArgumentException($"Invalid Value: {direction?.ToString()}", nameof(direction));
-                }
+                return direction?.ToType<OrderDirectionContract>();
             }
 
             return new MatchingEngineRouteContract
