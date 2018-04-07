@@ -72,12 +72,11 @@ namespace MarginTrading.Backend.Services
                     _orderIdsByAccountIdAndInstrumentId.Add(accountInstrumentCacheKey, new HashSet<string>());
                 _orderIdsByAccountIdAndInstrumentId[accountInstrumentCacheKey].Add(order.Id);
 
-                if (order.Status == OrderStatus.WaitingForExecution && MtServiceLocator.AssetPairsCache
-                        .TryGetAssetPairQuoteSubstWithResersed(order.AccountAssetId, order.Instrument, out var substAssetPair))
+                if (order.Status == OrderStatus.WaitingForExecution)
                 {
-                    if(!_pendingOrderIdsByMarginInstrumentId.ContainsKey(substAssetPair.Id))
-                        _pendingOrderIdsByMarginInstrumentId.Add(substAssetPair.Id, new HashSet<string>());
-                    _pendingOrderIdsByMarginInstrumentId[substAssetPair.Id].Add(order.Id);
+                    if(!_pendingOrderIdsByMarginInstrumentId.ContainsKey(order.MarginCalcInstrument))
+                        _pendingOrderIdsByMarginInstrumentId.Add(order.MarginCalcInstrument, new HashSet<string>());
+                    _pendingOrderIdsByMarginInstrumentId[order.MarginCalcInstrument].Add(order.Id);
                 }
             }
             finally
@@ -99,13 +98,8 @@ namespace MarginTrading.Backend.Services
                 {
                     _orderIdsByInstrumentId[order.Instrument].Remove(order.Id);
                     _orderIdsByAccountId[order.AccountId].Remove(order.Id);
-                    _orderIdsByAccountIdAndInstrumentId[
-                        GetAccountInstrumentCacheKey(order.AccountId, order.Instrument)].Remove(order.Id);
-                    if (order.Status == OrderStatus.WaitingForExecution && MtServiceLocator.AssetPairsCache
-                            .TryGetAssetPairQuoteSubstWithResersed(order.AccountAssetId, order.Instrument, out var substAssetPair))
-                    {
-                        _pendingOrderIdsByMarginInstrumentId[substAssetPair.Id].Remove(order.Id);
-                    }
+                    _orderIdsByAccountIdAndInstrumentId[GetAccountInstrumentCacheKey(order.AccountId, order.Instrument)].Remove(order.Id);
+                    _pendingOrderIdsByMarginInstrumentId[order.MarginCalcInstrument].Remove(order.Id);
                 }
                 else
                     throw new Exception(string.Format(MtMessages.CantRemoveOrderWithStatus, order.Id, _status));

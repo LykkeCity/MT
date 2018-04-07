@@ -299,18 +299,9 @@ namespace MarginTrading.Backend.Services
         {
             var pendingOrders = _ordersCache.GetPendingForMarginRecalc(instrument);
 
-            var defaultMatchingEngine = _meRepository.GetDefaultMatchingEngine();
-
-            foreach (var order in pendingOrders)
+            foreach (var pendingOrder in pendingOrders)
             {
-                defaultMatchingEngine.MatchMarketOrderForClose(order, matchedOrders =>
-                {
-                    if (matchedOrders.Count == 0)
-                        return false;
-
-                    order.UpdateClosePrice(Math.Round(matchedOrders.WeightedAveragePrice, order.AssetAccuracy));
-                    return false;
-                });
+                pendingOrder.UpdatePendingOrderMargin();
             }
         }
 

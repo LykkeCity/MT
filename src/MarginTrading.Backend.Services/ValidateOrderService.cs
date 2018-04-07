@@ -110,6 +110,13 @@ namespace MarginTrading.Backend.Services
                     $"Margin Trading is in beta testing. The volume of a single order is temporarily limited to {accountAsset.DealLimit} {accountAsset.Instrument}. Thank you for using Lykke Margin Trading, the limit will be cancelled soon!");
             }
 
+            //set special account-quote instrument for pendin margin calculation
+            if (order.Status == OrderStatus.WaitingForExecution &&
+                _assetPairsCache.TryGetAssetPairQuoteSubstWithResersed(order.AccountAssetId, order.Instrument, out var substAssetPair))
+            {
+                order.MarginCalcInstrument = substAssetPair.Id;
+            }
+
             //check TP/SL
             if (order.TakeProfit.HasValue)
             {

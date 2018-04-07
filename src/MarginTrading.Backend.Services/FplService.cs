@@ -61,6 +61,22 @@ namespace MarginTrading.Backend.Services
             account.CacheNeedsToBeUpdated();
         }
 
+        public void UpdatePendingOrderMargin(IOrder order, FplData fplData)
+        {
+            fplData.AccountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(order.AccountAssetId);
+            fplData.QuoteRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.AccountAssetId, order.Instrument);
+
+            var accountAssetPair = _accountAssetsCacheService.GetAccountAsset(order.TradingConditionId, order.AccountAssetId, order.Instrument);
+
+            fplData.MarginInit = Math.Round(order.ClosePrice * Math.Abs(order.Volume) * fplData.QuoteRate / accountAssetPair.LeverageInit, fplData.AccountBaseAssetAccuracy);
+            fplData.MarginMaintenance = Math.Round(order.ClosePrice * Math.Abs(order.Volume) * fplData.QuoteRate / accountAssetPair.LeverageMaintenance, fplData.AccountBaseAssetAccuracy);
+            
+            fplData.CalculatedHash = fplData.ActualHash;
+
+            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            account.CacheNeedsToBeUpdated();
+        }
+
         public decimal GetMatchedOrdersPrice(List<MatchedOrder> matchedOrders, string instrument)
         {
             if (matchedOrders.Count == 0)
