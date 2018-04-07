@@ -60,7 +60,7 @@ namespace MarginTrading.DataReader.Controllers
                     case OrderDirection.Sell:
                         return OrderDirectionContract.Sell;
                     default:
-                        throw new System.Exception("Invalid OrderType");
+                        throw new System.ArgumentException($"Invalid Value: {direction?.ToString()}", nameof(direction));
                 }
             }
 

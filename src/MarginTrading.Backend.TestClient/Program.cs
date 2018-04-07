@@ -165,6 +165,74 @@ namespace MarginTrading.Backend.TestClient
                 .Dump();
             foreach (var accountAssetPair in accountAssetPairsGetByTradingCondition)
             {
+                var item = accountAssetPairs
+                    .Single(x => x.TradingConditionId == accountAssetPair.TradingConditionId
+                                && x.BaseAssetId == accountAssetPair.BaseAssetId
+                                && x.Instrument == accountAssetPair.Instrument);
+                item.Should().BeEquivalentTo(accountAssetPair);
+            }
+
+            firstAccountAssetPair.OvernightSwapLong = 0.1m;
+            var updatedAccountAssetPair = await backendClient.TradingConditionsEdit.InsertOrUpdateAccountAsset(firstAccountAssetPair)
+                .Dump();
+            updatedAccountAssetPair.Result.Should().BeEquivalentTo(firstAccountAssetPair);
+
+            var tc = await backendClient.TradingConditionsEdit.InsertOrUpdate(new Contracts.TradingConditions.TradingConditionContract
+            {
+                Id = "LYKKETEST",
+                LegalEntity = "LYKKEVA",
+                IsDefault = false,
+                Name = "Test Trading Condition",
+            }).Dump();
+            tc.Result.Id.RequiredEqualsTo("LYKKETEST", "tc.Result.Id");
+
+            var ag = await backendClient.TradingConditionsEdit.InsertOrUpdateAccountGroup(new Contracts.TradingConditions.AccountGroupContract
+            {
+                BaseAssetId = "BTC",
+                TradingConditionId = tc.Result.Id,
+                DepositTransferLimit = 0.1m,
+                ProfitWithdrawalLimit = 0.2m,
+                MarginCall = 0.3m,
+                StopOut = 0.4m
+            })
+            .Dump();
+            ag.Result.StopOut.RequiredEqualsTo(0.4m, "ag.Result.StopOut");
+
+            var aa = await backendClient.TradingConditionsEdit.InsertOrUpdateAccountAsset(new AccountAssetPairContract
+            {
+                Instrument = "TSTLKK",
+                BaseAssetId = "BTC",
+                TradingConditionId = tc.Result.Id
+            })
+           .Dump();
+            aa.Result.Instrument.RequiredEqualsTo("TSTLKK", "aa.Result.Instrument");
+
+            var ai = await backendClient.TradingConditionsEdit.AssignInstruments(new Contracts.TradingConditions.AssignInstrumentsContract
+            {
+                BaseAssetId = "BTC",
+                TradingConditionId = tc.Result.Id,
+                Instruments = new string[] { "TSTLKK" }
+            })
+            .Dump();
+
+            ai.IsOk.RequiredEqualsTo(true, "ai.IsOk");
+
+            var tclist = await dataReaderClient.TradingConditionsRead.List().Dump();
+            await dataReaderClient.TradingConditionsRead.Get(tclist.First().Id).Dump();
+
+            var manualCharge = await backendClient.AccountsBalance.ChargeManually(new Contracts.AccountBalance.AccountChargeManuallyRequest
+            {
+                ClientId = "232b3b04-7479-44e7-a6b3-ac131d8e6ccd",
+                AccountId = "d_f4c745f19c834145bcf2d6b5f1a871f3",
+                Amount = 1,
+                Reason = "API TEST"
+            })
+            .Dump();
+
+            var accountGroups = await dataReaderClient.AccountGroups.List().Dump();
+            var accountGroup1 = accountGroups.FirstOrDefault();
+            if (accountGroup1 != null)
+            {
                 var accountGroup = (await dataReaderClient.AccountGroups.GetByBaseAsset(accountGroup1.TradingConditionId, accountGroup1.BaseAssetId)).Dump();
                 accountGroup.Should().BeEquivalentTo(accountGroup1);
             }
