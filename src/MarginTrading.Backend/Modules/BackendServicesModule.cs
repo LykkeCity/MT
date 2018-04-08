@@ -21,6 +21,7 @@ using MarginTrading.Backend.Services.Quotes;
 using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Settings;
+using Microsoft.Data.OData;
 
 namespace MarginTrading.Backend.Modules
 {
@@ -94,6 +95,10 @@ namespace MarginTrading.Backend.Modules
                 .As<IEventConsumer<OrderPlacedEventArgs>>()
                 .As<IEventConsumer<OrderClosedEventArgs>>()
                 .As<IEventConsumer<OrderCancelledEventArgs>>()
+                .SingleInstance();
+
+            builder.RegisterType<MigrationService>()
+                .As<IMigrationService>()
                 .SingleInstance();
 
             RegisterPublishers(builder, consoleWriter);

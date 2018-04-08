@@ -30,6 +30,7 @@ namespace MarginTrading.Backend
         private readonly IMaintenanceModeService _maintenanceModeService;
         private readonly IRabbitMqService _rabbitMqService;
         private readonly MatchingEngineRoutesManager _matchingEngineRoutesManager;
+        private readonly IMigrationService _migrationService;
         private const string ServiceName = "MarginTrading.Backend";
 
         public Application(
@@ -39,7 +40,8 @@ namespace MarginTrading.Backend
             ILog logger, MarginSettings marginSettings,
             IMaintenanceModeService maintenanceModeService,
             IRabbitMqService rabbitMqService,
-            MatchingEngineRoutesManager matchingEngineRoutesManager)
+            MatchingEngineRoutesManager matchingEngineRoutesManager,
+            IMigrationService migrationService)
         {
             _consumers = consumers.ToList();
             _rabbitMqNotifyService = rabbitMqNotifyService;
@@ -49,15 +51,18 @@ namespace MarginTrading.Backend
             _maintenanceModeService = maintenanceModeService;
             _rabbitMqService = rabbitMqService;
             _matchingEngineRoutesManager = matchingEngineRoutesManager;
+            _migrationService = migrationService;
         }
 
         public async Task StartApplicationAsync()
         {
             _consoleWriter.WriteLine($"Starting {ServiceName}");
-            await _logger.WriteInfoAsync(ServiceName, null, null, "Starting broker");
+            await _logger.WriteInfoAsync(ServiceName, null, null, "Starting...");
 
             try
             {
+                await _migrationService.InvokeAll();
+                
                 _rabbitMqService.Subscribe<MarketMakerOrderCommandsBatchMessage>(
                     _marginSettings.MarketMakerRabbitMqSettings, _marginSettings.Env, HandleNewOrdersMessage);
 
@@ -77,7 +82,7 @@ namespace MarginTrading.Backend
             _maintenanceModeService.SetMode(true);
             _consoleWriter.WriteLine($"Maintenance mode enabled for {ServiceName}");
             _consoleWriter.WriteLine($"Closing {ServiceName}");
-            _logger.WriteInfoAsync(ServiceName, null, null, "Closing broker").Wait();
+            _logger.WriteInfoAsync(ServiceName, null, null, "Closing...").Wait();
             _rabbitMqNotifyService.Stop();
             _consoleWriter.WriteLine($"Closed {ServiceName}");
         }
