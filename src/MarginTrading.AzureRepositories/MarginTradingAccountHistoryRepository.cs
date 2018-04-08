@@ -25,6 +25,8 @@ namespace MarginTrading.AzureRepositories
         public string Comment { get; set; }
         public string Type { get; set; }
         public string OrderId { get; set; }
+        public string LegalEntity { get; set; }
+        public string AuditLog { get; set; }
         public int? EntityVersion { get; set; }
         AccountHistoryType IMarginTradingAccountHistory.Type => Type.ParseEnum(AccountHistoryType.OrderClosed);
 
@@ -46,7 +48,9 @@ namespace MarginTrading.AzureRepositories
                 WithdrawTransferLimit = (double) src.WithdrawTransferLimit,
                 Comment = src.Comment,
                 Type = src.Type.ToString(),
-                OrderId = src.OrderId
+                OrderId = src.OrderId,
+                LegalEntity = src.LegalEntity,
+                AuditLog = src.AuditLog
             };
         }
     }

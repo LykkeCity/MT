@@ -22,7 +22,7 @@ namespace MarginTrading.DataReader.Services.Implementation
         public async Task<OrderBook> GetOrderBook(string instrument)
         {
             var orderbookState = await GetOrderBookStateAsync();
-            return orderbookState.GetValueOrDefault(instrument, k => new OrderBook());
+            return orderbookState.GetValueOrDefault(instrument, k => new OrderBook(instrument));
         }
 
         private Task<Dictionary<string, OrderBook>> GetOrderBookStateAsync()

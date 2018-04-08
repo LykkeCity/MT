@@ -4,6 +4,7 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
 using Lykke.AzureQueueIntegration;
+using Lykke.Common.ApiLibrary.Middleware;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
 using Lykke.SettingsReader;
@@ -33,6 +34,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using GlobalErrorHandlerMiddleware = MarginTrading.Backend.Middleware.GlobalErrorHandlerMiddleware;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 #pragma warning disable 1591
@@ -105,17 +107,11 @@ namespace MarginTrading.Backend
             builder.Populate(services);
             ApplicationContainer = builder.Build();
 
-            var meRepository = ApplicationContainer.Resolve<IMatchingEngineRepository>();
-            meRepository.InitMatchingEngines(new List<IMatchingEngineBase>
-            {
-                ApplicationContainer.Resolve<IInternalMatchingEngine>(),
-                new RejectMatchingEngine()
-            });
-
             MtServiceLocator.FplService = ApplicationContainer.Resolve<IFplService>();
             MtServiceLocator.AccountUpdateService = ApplicationContainer.Resolve<IAccountUpdateService>();
             MtServiceLocator.AccountsCacheService = ApplicationContainer.Resolve<IAccountsCacheService>();
             MtServiceLocator.SwapCommissionService = ApplicationContainer.Resolve<ICommissionService>();
+            MtServiceLocator.OvernightSwapService = ApplicationContainer.Resolve<IOvernightSwapService>();
 
             return new AutofacServiceProvider(ApplicationContainer);
         }
@@ -132,7 +128,7 @@ namespace MarginTrading.Backend
             app.UseSwaggerUi();
 
             appLifetime.ApplicationStopped.Register(() => ApplicationContainer.Dispose());
-
+            
             var application = app.ApplicationServices.GetService<Application>();
 
             var settings = app.ApplicationServices.GetService<MarginSettings>();
@@ -160,7 +156,7 @@ namespace MarginTrading.Backend
             IReloadingManager<RiskInformingSettings> riskInformingSettings)
         {
             builder.RegisterModule(new BaseServicesModule(mtSettings.CurrentValue, LogLocator.CommonLog));
-            builder.RegisterModule(new BackendSettingsModule(mtSettings.CurrentValue, settings.CurrentValue));
+            builder.RegisterModule(new BackendSettingsModule(mtSettings.CurrentValue, settings));
             builder.RegisterModule(new BackendRepositoriesModule(settings, LogLocator.CommonLog));
             builder.RegisterModule(new EventModule());
             builder.RegisterModule(new CacheModule());
@@ -177,6 +173,7 @@ namespace MarginTrading.Backend
             builder.RegisterBuildCallback(c => c.Resolve<QuoteCacheService>());
             builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
             builder.RegisterBuildCallback(c => c.Resolve<PendingOrdersCleaningService>());
+            builder.RegisterBuildCallback(c => c.Resolve<IOvernightSwapService>());
         }
 
         private static void SetupLoggers(IServiceCollection services, IReloadingManager<MtBackendSettings> mtSettings,

@@ -21,6 +21,10 @@ namespace MarginTrading.AzureRepositories
         public double SwapLong { get; set; }
         decimal IAccountAssetPair.SwapShort => (decimal) SwapShort;
         public double SwapShort { get; set; }
+        decimal IAccountAssetPair.OvernightSwapLong => (decimal) OvernightSwapLong;
+        public double OvernightSwapLong { get; set; }
+        decimal IAccountAssetPair.OvernightSwapShort => (decimal) OvernightSwapShort;
+        public double OvernightSwapShort { get; set; }
         decimal IAccountAssetPair.CommissionLong => (decimal) CommissionLong;
         public double CommissionLong { get; set; }
         decimal IAccountAssetPair.CommissionShort => (decimal) CommissionShort;
@@ -58,6 +62,8 @@ namespace MarginTrading.AzureRepositories
                 LeverageMaintenance = src.LeverageMaintenance,
                 SwapLong = (double) src.SwapLong,
                 SwapShort = (double) src.SwapShort,
+                OvernightSwapLong = (double) src.OvernightSwapLong,
+                OvernightSwapShort = (double) src.OvernightSwapShort,
                 CommissionLong = (double) src.CommissionLong,
                 CommissionShort = (double) src.CommissionShort,
                 CommissionLot = (double) src.CommissionLot,
@@ -125,7 +131,9 @@ namespace MarginTrading.AzureRepositories
                     LeverageMaintenance = defaults.LeverageMaintenance,
                     PositionLimit = defaults.PositionLimit,
                     SwapLong = defaults.SwapLong,
-                    SwapShort = defaults.SwapShort
+                    SwapShort = defaults.SwapShort,
+                    OvernightSwapLong = defaults.OvernightSwapLong,
+                    OvernightSwapShort = defaults.OvernightSwapShort
                 })).ToArray();
             await _tableStorage.InsertAsync(entitiesToAdd);
 

@@ -1,4 +1,6 @@
 ﻿using System;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace MarginTrading.Contract.BackendContracts
 {
@@ -24,5 +26,16 @@ namespace MarginTrading.Contract.BackendContracts
         public decimal CommissionLot { get; set; }
         public decimal OpenCommission { get; set; }
         public decimal CloseCommission { get; set; }
+        public string EquivalentAsset { get; set; }
+        public decimal OpenPriceEquivalent{ get; set; }
+        public decimal ClosePriceEquivalent { get; set; }
+        public string OpenExternalOrderId { get; set; }
+        public string OpenExternalProviderId { get; set; }
+        public string CloseExternalOrderId { get; set; }
+        public string CloseExternalProviderId { get; set; }
+        public string LegalEntity { get; set; }  
+        
+        [JsonConverter(typeof(StringEnumConverter))]
+        public MatchingEngineModeContract MatchingEngineMode { get; set; }
     }
 }

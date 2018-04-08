@@ -78,7 +78,7 @@ namespace MarginTrading.BrokerBase
 
         protected virtual void SetSettingValues(TSettings source, IConfigurationRoot configuration)
         {
-            //if needed TSetting properties may be setted
+            //if needed TSetting properties may be set
         }
 
         public virtual void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory,

@@ -9,6 +9,9 @@ namespace MarginTrading.Frontend.Settings
     {
         public MtFrontendSettings MtFrontend {get; set;}
         public SlackNotificationSettings SlackNotifications { get; set; }
+        public ClientAccountServiceSettings ClientAccountServiceClient { get; set; }
+        public MtDataReaderClientSettings MtDataReaderLiveServiceClient { get; set; }
+        public MtDataReaderClientSettings MtDataReaderDemoServiceClient { get; set; }
     }
 
     public class MtFrontendSettings
@@ -30,7 +33,6 @@ namespace MarginTrading.Frontend.Settings
     {
         public string LogsConnString { get; set; }
         public string MarginTradingConnString { get; set; }
-        public string ClientPersonalInfoConnString { get; set; }
     }
 
     public class MtQueues
@@ -41,6 +43,7 @@ namespace MarginTrading.Frontend.Settings
         public RabbitMqQueueInfo UserUpdates { get; set; }
         public RabbitMqQueueInfo OrderbookPrices { get; set; }
         public RabbitMqQueueInfo Trades { get; set; }
+        public RabbitMqQueueInfo MarginTradingEnabledChanged { get; set; }
     }
 
     public class MtFrontSettings
@@ -48,7 +51,6 @@ namespace MarginTrading.Frontend.Settings
         public string SessionServiceApiUrl { get; set; }
         public string DemoAccountIdPrefix { get; set; }
         public CorsSettings CorsSettings { get; set; } 
-        public DataReaderApiSettings DataReaderApiSettings { get; set; }
         public DbSettings Db { get; set; }
         public MtQueues RabbitMqQueues { get; set; }
         public RequestLoggerSettings RequestLoggerSettings { get; set; }
@@ -85,13 +87,5 @@ namespace MarginTrading.Frontend.Settings
         public string AllowHeaders { get; set; }
         public string AllowMethods { get; set; }
         public bool AllowCredentials { get; set; }
-    }
-
-    public class DataReaderApiSettings
-    {
-        public string DemoApiUrl { get; set; }
-        public string LiveApiUrl { get; set; }
-        public string DemoApiKey { get; set; }
-        public string LiveApiKey { get; set; }
     }
 }

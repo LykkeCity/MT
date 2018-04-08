@@ -13,14 +13,14 @@ namespace MarginTradingTests
     public class MarketMakerTests : BaseTests
     {
         private IEventConsumer<BestPriceChangeEventArgs> _quoteCashService;
-        private IInternalMatchingEngine _matchingEngine;
+        private IMarketMakerMatchingEngine _matchingEngine;
 
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
             RegisterDependencies();
             _quoteCashService = Container.Resolve<IQuoteCacheService>() as IEventConsumer<BestPriceChangeEventArgs>;
-            _matchingEngine = Container.Resolve<IInternalMatchingEngine>();
+            _matchingEngine = Container.Resolve<IMarketMakerMatchingEngine>();
         }
 
         [SetUp]

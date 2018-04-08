@@ -1,4 +1,7 @@
 ﻿using Autofac;
+using Autofac.Core;
+using Common.Log;
+using Autofac.Features.Variance;
 using Lykke.SettingsReader;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MarketMakerFeed;
@@ -12,8 +15,12 @@ using MarginTrading.Backend.Services.EventsConsumers;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Quotes;
+using MarginTrading.Backend.Services.Services;
+using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.RabbitMq;
+using MarginTrading.Common.Services.Client;
+using MarginTrading.Common.Services.Settings;
 using MarginTrading.Common.Services.Telemetry;
 using MarginTrading.Common.Settings;
 
@@ -72,8 +79,14 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<IClientAccountService>()
 				.SingleInstance();
 
-			builder.RegisterType<InternalMatchingEngine>()
-				.As<IInternalMatchingEngine>()
+			builder.RegisterType<MarketMakerMatchingEngine>()
+				.As<IMarketMakerMatchingEngine>()
+				.WithParameter(TypedParameter.From(MatchingEngineConstants.LykkeVuMm))
+				.SingleInstance();
+			
+			builder.RegisterType<StpMatchingEngine>()
+				.As<IStpMatchingEngine>()
+				.WithParameter(TypedParameter.From(MatchingEngineConstants.LykkeCyStp))
 				.SingleInstance();
 
 			builder.RegisterType<TradingEngine>()
@@ -92,10 +105,15 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<IEventConsumer<StopOutEventArgs>>()
 				.SingleInstance();
 
+			builder.RegisterSource(new ContravariantRegistrationSource());
 			builder.RegisterType<OrderStateConsumer>()
 				.As<IEventConsumer<OrderPlacedEventArgs>>()
 				.As<IEventConsumer<OrderClosedEventArgs>>()
 				.As<IEventConsumer<OrderCancelledEventArgs>>()
+				.As<IEventConsumer<OrderLimitsChangedEventArgs>>()
+				.As<IEventConsumer<OrderClosingEventArgs>>()
+				.As<IEventConsumer<OrderActivatedEventArgs>>()
+				.As<IEventConsumer<OrderRejectedEventArgs>>()
 				.SingleInstance();
 
 			builder.RegisterType<TradesConsumer>()
@@ -110,9 +128,13 @@ namespace MarginTrading.Backend.Services.Modules
 			builder.RegisterType<OrderBookList>()
 				.AsSelf()
 				.SingleInstance();
+			
+			builder.RegisterType<ExternalOrderBooksList>()
+				.AsSelf()
+				.SingleInstance();
 
 			builder.RegisterType<MarketMakerService>()
-				.As<IFeedConsumer>()
+				.AsSelf()
 				.SingleInstance();
 
 			builder.RegisterType<MicrographCacheService>()
@@ -121,8 +143,8 @@ namespace MarginTrading.Backend.Services.Modules
 				.AsSelf()
 				.SingleInstance();
 
-			builder.RegisterType<MarginTradingSettingsService>()
-				.As<IMarginTradingSettingsService>()
+			builder.RegisterType<MarginTradingEnabledCacheService>()
+				.As<IMarginTradingSettingsCacheService>()
 				.SingleInstance();
 
 			builder.RegisterType<MatchingEngineRouter>()
@@ -145,8 +167,13 @@ namespace MarginTrading.Backend.Services.Modules
 		    builder.RegisterType<ContextFactory>()
 		        .As<IContextFactory>()
 		        .SingleInstance();
-			
-			builder.RegisterType<RabbitMqService>()
+
+			builder.Register(c =>
+				{
+					var settings = c.Resolve<IReloadingManager<MarginSettings>>();
+					return new RabbitMqService(c.Resolve<ILog>(), c.Resolve<IConsole>(),
+						settings.Nested(s => s.Db.StateConnString), settings.CurrentValue.Env);
+				})
 				.As<IRabbitMqService>()
 				.SingleInstance();
 			
@@ -162,6 +189,16 @@ namespace MarginTrading.Backend.Services.Modules
 			builder.RegisterInstance(_riskInformingSettings)
 				.As<IReloadingManager<RiskInformingSettings>>()
 				.SingleInstance();
+			
+			builder.RegisterType<MarginTradingEnablingService>()
+				.As<IMarginTradingEnablingService>()
+				.As<IStartable>()
+				.SingleInstance();
+
+			builder.RegisterType<OvernightSwapService>()
+				.As<IOvernightSwapService>()
+				.SingleInstance()
+				.OnActivated(args => args.Instance.Start());
 		}
 	}
 }

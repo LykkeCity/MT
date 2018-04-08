@@ -3,16 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
-using MarginTrading.Common.Settings;
+using MarginTrading.Backend.Contracts.AccountHistory;
+using MarginTrading.Backend.Contracts.DataReaderClient;
+using MarginTrading.Common.Services.Settings;
 using MarginTrading.Contract.BackendContracts;
 using MarginTrading.Contract.ClientContracts;
 using MarginTrading.Contract.Mappers;
-using MarginTrading.DataReaderClient;
 using MarginTrading.Frontend.Settings;
-using AccountHistoryBackendResponse = MarginTrading.DataReaderClient.Models.AccountHistoryBackendResponse;
-using AccountHistoryBackendContract = MarginTrading.DataReaderClient.Models.AccountHistoryBackendContract;
-using OrderHistoryBackendContract = MarginTrading.DataReaderClient.Models.OrderHistoryBackendContract;
-using AccountNewHistoryBackendResponse = MarginTrading.DataReaderClient.Models.AccountNewHistoryBackendResponse;
+using AccountHistoryTypeContract = MarginTrading.Contract.BackendContracts.AccountHistoryTypeContract;
 
 namespace MarginTrading.Frontend.Services
 {
@@ -20,18 +18,18 @@ namespace MarginTrading.Frontend.Services
     {
         private readonly MtFrontendSettings _settings;
         private readonly IHttpRequestService _httpRequestService;
-        private readonly IMarginTradingSettingsService _marginTradingSettingsService;
-        private readonly MarginTradingDataReaderApiClientsPair _dataReaderClients;
+        private readonly IMarginTradingSettingsCacheService _marginTradingSettingsCacheService;
+        private readonly IMtDataReaderClientsPair _dataReaderClients;
 
         public RpcFacade(
             MtFrontendSettings settings,
             IHttpRequestService httpRequestService,
-            IMarginTradingSettingsService marginTradingSettingsService,
-            MarginTradingDataReaderApiClientsPair dataReaderClients)
+            IMarginTradingSettingsCacheService marginTradingSettingsCacheService,
+            IMtDataReaderClientsPair dataReaderClients)
         {
             _settings = settings;
             _httpRequestService = httpRequestService;
-            _marginTradingSettingsService = marginTradingSettingsService;
+            _marginTradingSettingsCacheService = marginTradingSettingsCacheService;
             _dataReaderClients = dataReaderClients;
         }
 
@@ -39,33 +37,34 @@ namespace MarginTrading.Frontend.Services
 
         public async Task<InitDataLiveDemoClientResponse> InitData(string clientId)
         {
-            var marginTradingEnabled = await _marginTradingSettingsService.IsMarginTradingEnabled(clientId);
+            var marginTradingEnabled = await _marginTradingSettingsCacheService.IsMarginTradingEnabled(clientId);
             if (!marginTradingEnabled.Demo && !marginTradingEnabled.Live)
             {
                 throw new Exception("Margin trading is not available");
             }
 
             var initData = new InitDataLiveDemoClientResponse();
-            var initAssetsResponses = await _httpRequestService.RequestIfAvailableAsync(null, "init.assets", Array.Empty<AssetPairBackendContract>, marginTradingEnabled);
-            initData.Assets = initAssetsResponses.Live.Concat(initAssetsResponses.Demo).GroupBy(a => a.Id)
-                .Select(g => g.First().ToClientContract()).ToArray();
-
-            var initPricesResponse =
-                await _httpRequestService.RequestWithRetriesAsync<Dictionary<string, InstrumentBidAskPairContract>>(
-                    new InitPricesBackendRequest {ClientId = clientId}, "init.prices");
-
-            initData.Prices = initPricesResponse.ToDictionary(p => p.Key, p => p.Value.ToClientContract());
-
-            var initDataResponses = await _httpRequestService.RequestIfAvailableAsync<InitDataBackendResponse>(new ClientIdBackendRequest { ClientId = clientId }, "init.data", () => null, marginTradingEnabled);
+            var clientIdRequest = new ClientIdBackendRequest {ClientId = clientId};
+            
+            var initDataResponses = await _httpRequestService.RequestIfAvailableAsync<InitDataBackendResponse>(clientIdRequest, "init.data", () => null, marginTradingEnabled);
             initData.Live = initDataResponses.Live?.ToClientContract();
             initData.Demo = initDataResponses.Demo?.ToClientContract();
+            
+            var initAssetsResponses = await _httpRequestService.RequestIfAvailableAsync(clientIdRequest, "init.assets", Array.Empty<AssetPairBackendContract>, marginTradingEnabled);
+            initData.Assets = initAssetsResponses.Live.Concat(initAssetsResponses.Demo).GroupBy(a => a.Id)
+                .Select(g => g.First().ToClientContract()).ToArray();
+            
+            var initPricesResponse =
+                await _httpRequestService.RequestWithRetriesAsync<Dictionary<string, InstrumentBidAskPairContract>>(
+                    clientIdRequest, "init.prices");
+            initData.Prices = initPricesResponse.ToDictionary(p => p.Key, p => p.Value.ToClientContract());
 
             return initData;
         }
 
         public async Task<InitAccountsLiveDemoClientResponse> InitAccounts(string clientId)
         {
-            var marginTradingEnabled = await _marginTradingSettingsService.IsMarginTradingEnabled(clientId);
+            var marginTradingEnabled = await _marginTradingSettingsCacheService.IsMarginTradingEnabled(clientId);
             var responses = await _httpRequestService.RequestIfAvailableAsync(new ClientIdBackendRequest { ClientId = clientId },
                                                                               "init.accounts",
                                                                               Array.Empty<MarginTradingAccountBackendContract>,
@@ -79,7 +78,7 @@ namespace MarginTrading.Frontend.Services
 
         public async Task<InitAccountInstrumentsLiveDemoClientResponse> AccountInstruments(string clientId)
         {
-            var marginTradingEnabled = await _marginTradingSettingsService.IsMarginTradingEnabled(clientId);
+            var marginTradingEnabled = await _marginTradingSettingsCacheService.IsMarginTradingEnabled(clientId);
             var responses = await _httpRequestService.RequestIfAvailableAsync(new ClientIdBackendRequest { ClientId = clientId },
                                                                               "init.accountinstruments",
                                                                               InitAccountInstrumentsBackendResponse.CreateEmpty,
@@ -122,7 +121,7 @@ namespace MarginTrading.Frontend.Services
                 ? IsLiveAccount(request.AccountId)
                 : request.IsLive;
 
-            var marginTradingEnabled = await _marginTradingSettingsService.IsMarginTradingEnabled(clientId, isLive);
+            var marginTradingEnabled = await _marginTradingSettingsCacheService.IsMarginTradingEnabled(clientId, isLive);
             if (!marginTradingEnabled)
             {
                 return new AccountHistoryClientResponse
@@ -133,7 +132,14 @@ namespace MarginTrading.Frontend.Services
                 };
             }
 
-            var accountHistoryBackendResponse = await _dataReaderClients.Get(isLive).GetAccountHistoryByTypesAsync(clientId, request.AccountId, request.From, request.To);
+            var accountHistoryBackendResponse = await _dataReaderClients.Get(isLive).AccountHistory.ByTypes(
+                new AccountHistoryRequest
+                {
+                    AccountId = request.AccountId,
+                    ClientId = clientId,
+                    From = request.From,
+                    To = request.To
+                });
             return ToClientContract(accountHistoryBackendResponse);
         }
 
@@ -143,12 +149,18 @@ namespace MarginTrading.Frontend.Services
                 ? IsLiveAccount(request.AccountId)
                 : request.IsLive;
 
-            var marginTradingEnabled = await _marginTradingSettingsService.IsMarginTradingEnabled(clientId, isLive);
+            var marginTradingEnabled = await _marginTradingSettingsCacheService.IsMarginTradingEnabled(clientId, isLive);
             if (!marginTradingEnabled)
             {
                 return Array.Empty<AccountHistoryItemClient>();
             }
-            var accountHistoryBackendResponse = await _dataReaderClients.Get(isLive).GetAccountHistoryTimelineAsync(clientId, request.AccountId, request.From, request.To);
+            var accountHistoryBackendResponse = await _dataReaderClients.Get(isLive).AccountHistory.Timeline(new AccountHistoryRequest
+            {
+                AccountId = request.AccountId,
+                ClientId = clientId,
+                From = request.From,
+                To = request.To
+            });
             return ToClientContract(accountHistoryBackendResponse);
         }
 
@@ -183,7 +195,7 @@ namespace MarginTrading.Frontend.Services
 
         public async Task<ClientOrdersLiveDemoClientResponse> GetOpenPositions(string clientId)
         {
-            var marginTradingEnabled = await _marginTradingSettingsService.IsMarginTradingEnabled(clientId);
+            var marginTradingEnabled = await _marginTradingSettingsCacheService.IsMarginTradingEnabled(clientId);
             var responses = await _httpRequestService.RequestIfAvailableAsync(new ClientIdBackendRequest { ClientId = clientId },
                                                                               "order.list",
                                                                               Array.Empty<OrderBackendContract>,
@@ -207,7 +219,7 @@ namespace MarginTrading.Frontend.Services
 
         public async Task<ClientPositionsLiveDemoClientResponse> GetClientOrders(string clientId)
         {
-            var marginTradingEnabled = await _marginTradingSettingsService.IsMarginTradingEnabled(clientId);
+            var marginTradingEnabled = await _marginTradingSettingsCacheService.IsMarginTradingEnabled(clientId);
             var responses = await _httpRequestService.RequestIfAvailableAsync(new ClientIdBackendRequest { ClientId = clientId },
                                                                               "order.positions",
                                                                               () => new ClientOrdersBackendResponse
@@ -257,7 +269,7 @@ namespace MarginTrading.Frontend.Services
             return !accountId.StartsWith(_settings.MarginTradingFront.DemoAccountIdPrefix);
         }
 
-        private static AccountHistoryClientResponse ToClientContract(AccountHistoryBackendResponse src)
+        private static AccountHistoryClientResponse ToClientContract(AccountHistoryResponse src)
         {
             return new AccountHistoryClientResponse
             {
@@ -267,7 +279,7 @@ namespace MarginTrading.Frontend.Services
             };
         }
 
-        private static AccountHistoryClientContract ToClientContract(AccountHistoryBackendContract src)
+        private static AccountHistoryClientContract ToClientContract(AccountHistoryContract src)
         {
             return new AccountHistoryClientContract
             {
@@ -279,11 +291,12 @@ namespace MarginTrading.Frontend.Services
                 Balance = src.Balance,
                 WithdrawTransferLimit = src.WithdrawTransferLimit,
                 Comment = src.Comment,
-                Type = ConvertEnum<AccountHistoryTypeContract>(src.Type)
+                Type = ConvertEnum<AccountHistoryTypeContract>(src.Type),
+                LegalEnity = src.LegalEntity,
             };
         }
 
-        private static OrderHistoryClientContract ToClientContract(OrderHistoryBackendContract src)
+        private static OrderHistoryClientContract ToClientContract(OrderHistoryContract src)
         {
             return new OrderHistoryClientContract
             {
@@ -309,7 +322,7 @@ namespace MarginTrading.Frontend.Services
             };
         }
 
-        public static AccountHistoryItemClient[] ToClientContract(AccountNewHistoryBackendResponse src)
+        public static AccountHistoryItemClient[] ToClientContract(AccountNewHistoryResponse src)
         {
             return src.HistoryItems.Select(i => new AccountHistoryItemClient
             {

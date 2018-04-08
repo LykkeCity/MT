@@ -1,18 +1,14 @@
 ﻿using System;
 using Autofac;
 using AzureStorage.Tables;
-using AzureStorage.Tables.Templates.Index;
 using Common.Log;
 using Lykke.Common;
 using Lykke.Service.Session;
 using Lykke.SettingsReader;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
-using MarginTrading.Common.Settings;
-using MarginTrading.Common.Settings.Repositories;
-using MarginTrading.Common.Settings.Repositories.Azure;
-using MarginTrading.Common.Settings.Repositories.Azure.Entities;
-using MarginTrading.DataReaderClient;
+using MarginTrading.Common.Services.Client;
+using MarginTrading.Common.Services.Settings;
 using MarginTrading.Frontend.Repositories;
 using MarginTrading.Frontend.Repositories.Contract;
 using MarginTrading.Frontend.Repositories.Entities;
@@ -61,28 +57,6 @@ namespace MarginTrading.Frontend.Modules
                         LogLocator.CommonLog))
                 )
                 .SingleInstance();
-
-            builder.Register<IClientSettingsRepository>(ctx =>
-                new ClientSettingsRepository(
-                    AzureTableStorage<ClientSettingsEntity>.Create(
-                        _settings.Nested(s => s.MarginTradingFront.Db.ClientPersonalInfoConnString), "TraderSettings",
-                        LogLocator.CommonLog)));
-
-
-
-            builder.Register<IClientAccountsRepository>(ctx =>
-                new ClientsRepository(
-                    AzureTableStorage<ClientAccountEntity>.Create(
-                        _settings.Nested(s => s.MarginTradingFront.Db.ClientPersonalInfoConnString), "Traders",
-                        LogLocator.CommonLog),
-                    AzureTableStorage<AzureIndex>.Create(
-                        _settings.Nested(s => s.MarginTradingFront.Db.ClientPersonalInfoConnString), "Traders",
-                        LogLocator.CommonLog)));
-
-            builder.Register<IAppGlobalSettingsRepositry>(ctx =>
-                new AppGlobalSettingsRepository(AzureTableStorage<AppGlobalSettingsEntity>.Create(
-                    _settings.Nested(s => s.MarginTradingFront.Db.ClientPersonalInfoConnString), "Setup", LogLocator.CommonLog))
-            ).SingleInstance();
 
             builder.Register<IMarginTradingWatchListRepository>(ctx =>
                 new MarginTradingWatchListsRepository(AzureTableStorage<MarginTradingWatchListEntity>.Create(
@@ -149,8 +123,8 @@ namespace MarginTrading.Frontend.Modules
                 .As<IHttpRequestService>()
                 .SingleInstance();
 
-            builder.RegisterType<MarginTradingSettingsService>()
-               .As<IMarginTradingSettingsService>()
+            builder.RegisterType<MarginTradingEnabledCacheService>()
+               .As<IMarginTradingSettingsCacheService>()
                .SingleInstance();
 
             builder.RegisterType<ThreadSwitcherToNewTask>()
@@ -181,21 +155,13 @@ namespace MarginTrading.Frontend.Modules
                    .As<ICacheProvider>()
                    .AsSelf()
                    .SingleInstance();
-
-            builder.Register(context =>
-                    MarginTradingDataReaderApiClientFactory.CreateDefaultClientsPair(
-                        _settings.CurrentValue.MarginTradingFront.DataReaderApiSettings.DemoApiUrl,
-                        _settings.CurrentValue.MarginTradingFront.DataReaderApiSettings.LiveApiUrl,
-                        _settings.CurrentValue.MarginTradingFront.DataReaderApiSettings.DemoApiKey,
-                        _settings.CurrentValue.MarginTradingFront.DataReaderApiSettings.LiveApiKey,
-                        "MarginTradingFrontend"))
-                .SingleInstance();
             
             builder.RegisterType<DateService>()
                 .As<IDateService>()
                 .SingleInstance();
             
-            builder.RegisterType<RabbitMqService>()
+            builder.Register(c => new RabbitMqService(c.Resolve<ILog>(), c.Resolve<IConsole>(),
+                    null, _settings.CurrentValue.MarginTradingFront.Env))
                 .As<IRabbitMqService>()
                 .SingleInstance();
         }

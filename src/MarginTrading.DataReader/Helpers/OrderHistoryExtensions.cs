@@ -1,15 +1,16 @@
-﻿using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Mappers;
+﻿using MarginTrading.Backend.Contracts.AccountHistory;
+using MarginTrading.Backend.Contracts.AssetPairSettings;
+using MarginTrading.Backend.Contracts.TradeMonitoring;
+using MarginTrading.Backend.Core;
 using MarginTrading.Common.Extensions;
-using MarginTrading.Contract.BackendContracts;
 
 namespace MarginTrading.DataReader.Helpers
 {
     public static class OrderHistoryExtensions
     {
-        public static OrderHistoryBackendContract ToBackendHistoryContract(this IOrderHistory src)
+        public static OrderHistoryContract ToBackendHistoryContract(this IOrderHistory src)
         {
-            return new OrderHistoryBackendContract
+            return new OrderHistoryContract
             {
                 Id = src.Id,
                 AccountId = src.AccountId,
@@ -30,13 +31,21 @@ namespace MarginTrading.DataReader.Helpers
                 InterestRateSwap = src.InterestRateSwap,
                 CommissionLot = src.CommissionLot,
                 OpenCommission = src.OpenCommission,
-                CloseCommission = src.CloseCommission
+                CloseCommission = src.CloseCommission,
+                EquivalentAsset = src.EquivalentAsset,
+                OpenPriceEquivalent = src.OpenPriceEquivalent,
+                ClosePriceEquivalent = src.ClosePriceEquivalent,
+                OpenExternalOrderId = src.OpenExternalOrderId,
+                OpenExternalProviderId = src.OpenExternalProviderId,
+                CloseExternalOrderId = src.CloseExternalOrderId,
+                CloseExternalProviderId = src.CloseExternalProviderId,
+                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>()
             };
         }
 
-        public static OrderHistoryBackendContract ToBackendHistoryOpenedContract(this IOrderHistory src)
+        public static OrderHistoryContract ToBackendHistoryOpenedContract(this IOrderHistory src)
         {
-            return new OrderHistoryBackendContract
+            return new OrderHistoryContract
             {
                 Id = src.Id,
                 AccountId = src.AccountId,
@@ -57,7 +66,15 @@ namespace MarginTrading.DataReader.Helpers
                 InterestRateSwap = src.InterestRateSwap,
                 CommissionLot = src.CommissionLot,
                 OpenCommission = src.OpenCommission,
-                CloseCommission = src.CloseCommission
+                CloseCommission = src.CloseCommission,
+                EquivalentAsset = src.EquivalentAsset,
+                OpenPriceEquivalent = src.OpenPriceEquivalent,
+                ClosePriceEquivalent = src.ClosePriceEquivalent,
+                OpenExternalOrderId = src.OpenExternalOrderId,
+                OpenExternalProviderId = src.OpenExternalProviderId,
+                CloseExternalOrderId = src.CloseExternalOrderId,
+                CloseExternalProviderId = src.CloseExternalProviderId,
+                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>()
             };
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Lykke.Service.ExchangeConnector.Client.Models;
 using MarginTrading.Backend.Core;
 using MarginTrading.Contract.RabbitMqMessageModels;
 
@@ -6,8 +7,10 @@ namespace MarginTrading.Backend.Services.Notifications
 {
 	public interface IRabbitMqNotifyService
 	{
-		Task AccountHistory(string accountId, string clientId, decimal amount, decimal balance, decimal withdrawTransferLimit, AccountHistoryType type, string comment = null, string eventSourceId = null);
-		Task OrderHistory(IOrder order);
+		Task AccountHistory(string transactionId, string accountId, string clientId, decimal amount, decimal balance, 
+			decimal withdrawTransferLimit, AccountHistoryType type, string comment = null, string eventSourceId = null, 
+			string auditLog = null);
+		Task OrderHistory(IOrder order, OrderUpdateType orderUpdateType);
 		Task OrderReject(IOrder order);
 		Task OrderBookPrice(InstrumentBidAskPair quote);
 		Task OrderChanged(IOrder order);
@@ -20,5 +23,6 @@ namespace MarginTrading.Backend.Services.Notifications
 	    Task AccountMarginEvent(AccountMarginEventMessage eventMessage);
 		Task UpdateAccountStats(AccountStatsUpdateMessage message);
 		Task NewTrade(TradeContract trade);
+		Task ExternalOrder(ExecutionReport trade);
 	}
 } 

@@ -38,8 +38,10 @@ namespace MarginTrading.Backend.Services.Migrations
         private void HandleOrder(Order order)
         {
             if (_assetPairsCache.TryGetAssetPairQuoteSubstWithResersed(order.AccountAssetId, order.Instrument,
-                out var substAssetPair))
+                order.LegalEntity, out var substAssetPair))
+            {
                 order.MarginCalcInstrument = substAssetPair.Id;
+            }
         }
     }
 }

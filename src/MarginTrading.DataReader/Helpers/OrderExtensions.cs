@@ -1,9 +1,10 @@
 ﻿using System.Linq;
+using MarginTrading.Backend.Contracts.AccountHistory;
+using MarginTrading.Backend.Contracts.AssetPairSettings;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Common.Extensions;
-using MarginTrading.Contract.BackendContracts;
+using MarginTrading.Backend.Contracts.TradeMonitoring;
 
 namespace MarginTrading.DataReader.Helpers
 {
@@ -51,13 +52,19 @@ namespace MarginTrading.DataReader.Helpers
                 CloseCommission = src.GetCloseCommission(),
                 SwapCommission = src.SwapCommission,
                 MatchedOrders = src.MatchedOrders.Select(MatchedOrderToBackendContract).ToList(),
-                MatchedCloseOrders = src.MatchedCloseOrders.Select(MatchedOrderToBackendContract).ToList()
+                MatchedCloseOrders = src.MatchedCloseOrders.Select(MatchedOrderToBackendContract).ToList(),
+                OpenExternalOrderId = src.OpenExternalOrderId,
+                OpenExternalProviderId = src.OpenExternalProviderId,
+                CloseExternalOrderId = src.CloseExternalOrderId,
+                CloseExternalProviderId = src.CloseExternalProviderId,
+                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>(),
+                LegalEntity = src.LegalEntity,
             };
         }
 
-        public static OrderHistoryBackendContract ToBackendHistoryContract(this Order src)
+        public static OrderHistoryContract ToBackendHistoryContract(this Order src)
         {
-            return new OrderHistoryBackendContract
+            return new OrderHistoryContract
             {
                 Id = src.Id,
                 AccountId = src.AccountId,
@@ -78,7 +85,16 @@ namespace MarginTrading.DataReader.Helpers
                 InterestRateSwap = src.FplData.SwapsSnapshot,
                 CommissionLot = src.CommissionLot,
                 OpenCommission = src.GetOpenCommission(),
-                CloseCommission = src.GetCloseCommission()
+                CloseCommission = src.GetCloseCommission(),
+                EquivalentAsset = src.EquivalentAsset,
+                OpenPriceEquivalent = src.OpenPriceEquivalent,
+                ClosePriceEquivalent = src.ClosePriceEquivalent,
+                OpenExternalOrderId = src.OpenExternalOrderId,
+                OpenExternalProviderId = src.OpenExternalProviderId,
+                CloseExternalOrderId = src.CloseExternalOrderId,
+                CloseExternalProviderId = src.CloseExternalProviderId,
+                MatchingEngineMode = src.MatchingEngineMode
+                    .ToType<MatchingEngineModeContract>()
             };
         }
 

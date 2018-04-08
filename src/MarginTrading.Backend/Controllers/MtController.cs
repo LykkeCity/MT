@@ -30,7 +30,7 @@ namespace MarginTrading.Backend.Controllers
         private readonly IMicrographCacheService _micrographCacheService;
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
         private readonly IAssetPairsCache _assetPairsCache;
-        private readonly IInternalMatchingEngine _matchingEngine;
+        private readonly IMarketMakerMatchingEngine _matchingEngine;
         private readonly ITradingEngine _tradingEngine;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly IMarginTradingOperationsLogService _operationsLogService;
@@ -47,7 +47,7 @@ namespace MarginTrading.Backend.Controllers
             IMicrographCacheService micrographCacheService,
             IAccountAssetsCacheService accountAssetsCacheService,
             IAssetPairsCache assetPairsCache,
-            IInternalMatchingEngine matchingEngine,
+            IMarketMakerMatchingEngine matchingEngine,
             ITradingEngine tradingEngine,
             IAccountsCacheService accountsCacheService,
             IMarginTradingOperationsLogService operationsLogService,
@@ -162,8 +162,26 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         public string[] InitAvailableAssets([FromBody]ClientIdBackendRequest request)
         {
+            return GetAvailableAssets(request.ClientId).ToArray();
+        }
+
+        [Route("init.assets")]
+        [HttpPost]
+        public AssetPairBackendContract[] InitAssets([FromBody]ClientIdBackendRequest request)
+        {
+            var availableAssets = GetAvailableAssets(request.ClientId).ToHashSet();
+
+            var instruments = _assetPairsCache.GetAll();
+            
+            return instruments.Where(a => availableAssets.Contains(a.Id))
+                .Select(item => item.ToBackendContract()).ToArray();
+        }
+
+        private IEnumerable<string> GetAvailableAssets(string clientId)
+        {
             var result = new List<string>();
-            var accounts = _accountsCacheService.GetAll(request.ClientId);
+            
+            var accounts = _accountsCacheService.GetAll(clientId);
 
             foreach (var account in accounts)
             {
@@ -171,16 +189,7 @@ namespace MarginTrading.Backend.Controllers
                     .GetAccountAssets(account.TradingConditionId, account.BaseAssetId).Select(a => a.Instrument));
             }
 
-            return result.Distinct().ToArray();
-        }
-
-        [Route("init.assets")]
-        [HttpPost]
-        public AssetPairBackendContract[] InitAssets()
-        {
-            var instruments = _assetPairsCache.GetAll();
-            return instruments
-                .Select(item => item.ToBackendContract()).ToArray();
+            return result.Distinct();
         }
 
         [Route("init.prices")]
@@ -429,6 +438,7 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         public OrderbooksBackendResponse GetOrderBooks([FromBody] OrderbooksBackendRequest request)
         {
+            //TODO: handle different MEs
             return BackendContractFactory.CreateOrderbooksBackendResponse(_matchingEngine.GetOrderBook(request.Instrument));
         }
 

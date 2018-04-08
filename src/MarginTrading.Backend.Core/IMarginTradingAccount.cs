@@ -13,8 +13,9 @@ namespace MarginTrading.Backend.Core
         string BaseAssetId { get; }
         decimal Balance { get; }
         decimal WithdrawTransferLimit { get; }
-        [NotNull]
-        AccountFpl FplData { get; }
+        string LegalEntity { get; }
+        [NotNull] 
+        AccountFpl AccountFpl { get; }
     }
 
     public class MarginTradingAccount : IMarginTradingAccount, IComparable<MarginTradingAccount>
@@ -25,14 +26,10 @@ namespace MarginTrading.Backend.Core
         public string BaseAssetId { get; set; }
         public decimal Balance { get; set; }
         public decimal WithdrawTransferLimit { get; set; }
+        public string LegalEntity { get; set; }
 
-        public AccountFpl FplData { get; }
+        public AccountFpl AccountFpl { get; internal set; } = new AccountFpl();
 
-        public MarginTradingAccount()
-        {
-            FplData = new AccountFpl();
-        }
-        
         public static MarginTradingAccount Create(IMarginTradingAccount src)
         {
             return new MarginTradingAccount
@@ -42,18 +39,17 @@ namespace MarginTrading.Backend.Core
                 ClientId = src.ClientId,
                 BaseAssetId = src.BaseAssetId,
                 Balance = src.Balance,
-                WithdrawTransferLimit = src.WithdrawTransferLimit
+                WithdrawTransferLimit = src.WithdrawTransferLimit,
+                LegalEntity = src.LegalEntity,
             };
         }
 
         public int CompareTo(MarginTradingAccount other)
         {
             var result = string.Compare(Id, other.Id, StringComparison.Ordinal);
-            
-            if(0 != result)
-                return result;
-
-            return string.Compare(ClientId, other.ClientId, StringComparison.Ordinal);
+            return 0 != result 
+                ? result 
+                : string.Compare(ClientId, other.ClientId, StringComparison.Ordinal);
         }
 
         public override int GetHashCode()
@@ -82,6 +78,7 @@ namespace MarginTrading.Backend.Core
         Task<MarginTradingAccount> UpdateBalanceAsync(string clientId, string accountId, decimal amount,
             bool changeLimit);
 
+        [ItemCanBeNull]
         Task<IMarginTradingAccount> UpdateTradingConditionIdAsync(string clientId, string accountId,
             string tradingConditionId);
 
@@ -93,12 +90,12 @@ namespace MarginTrading.Backend.Core
     {
         private static AccountFpl GetAccountFpl(this IMarginTradingAccount account)
         {
-            if (account.FplData.ActualHash != account.FplData.CalculatedHash)
+            if (account.AccountFpl.ActualHash != account.AccountFpl.CalculatedHash)
             {
                 MtServiceLocator.AccountUpdateService.UpdateAccount(account);
             }
-
-            return account.FplData;
+ 
+            return account.AccountFpl;
         }
 
         public static AccountLevel GetAccountLevel(this IMarginTradingAccount account)
@@ -174,7 +171,7 @@ namespace MarginTrading.Backend.Core
 
         public static void CacheNeedsToBeUpdated(this IMarginTradingAccount account)
         {
-            account.FplData.ActualHash++;
+            account.AccountFpl.ActualHash++;
         }
     }
 }

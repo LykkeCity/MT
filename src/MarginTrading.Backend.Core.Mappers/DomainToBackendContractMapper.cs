@@ -32,7 +32,8 @@ namespace MarginTrading.Backend.Core.Mappers
                 PnL = src.GetPnl(),
                 OpenPositionsCount = src.GetOpenPositionsCount(),
                 MarginUsageLevel = src.GetMarginUsageLevel(),
-                IsLive = isLive
+                IsLive = isLive,
+                LegalEntity = src.LegalEntity,
             };
         }
 
@@ -59,6 +60,8 @@ namespace MarginTrading.Backend.Core.Mappers
                 LeverageMaintenance = src.LeverageMaintenance,
                 SwapLong = src.SwapLong,
                 SwapShort = src.SwapShort,
+                OvernightSwapLong = src.OvernightSwapLong,
+                OvernightSwapShort =src.OvernightSwapShort,
                 CommissionLong = src.CommissionLong,
                 CommissionShort = src.CommissionShort,
                 CommissionLot = src.CommissionLot,
@@ -101,7 +104,9 @@ namespace MarginTrading.Backend.Core.Mappers
                 WithdrawTransferLimit = src.WithdrawTransferLimit,
                 Comment = src.Comment,
                 Type = src.Type.ToType<AccountHistoryTypeContract>(),
-                OrderId = src.OrderId
+                OrderId = src.OrderId,
+                LegalEntity = src.LegalEntity,
+                AuditLog = src.AuditLog
             };
         }
 
@@ -128,7 +133,16 @@ namespace MarginTrading.Backend.Core.Mappers
                 InterestRateSwap = src.GetSwaps(),
                 CommissionLot = src.CommissionLot,
                 OpenCommission = src.GetOpenCommission(),
-                CloseCommission = src.GetCloseCommission()
+                CloseCommission = src.GetCloseCommission(),
+                EquivalentAsset = src.EquivalentAsset,
+                OpenPriceEquivalent = src.OpenPriceEquivalent,
+                ClosePriceEquivalent = src.ClosePriceEquivalent,
+                OpenExternalOrderId = src.OpenExternalOrderId,
+                OpenExternalProviderId = src.OpenExternalProviderId,
+                CloseExternalOrderId = src.CloseExternalOrderId,
+                CloseExternalProviderId = src.CloseExternalProviderId,
+                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>(),
+                LegalEntity = src.LegalEntity,
             };
         }
 
@@ -155,7 +169,16 @@ namespace MarginTrading.Backend.Core.Mappers
                 InterestRateSwap = src.InterestRateSwap,
                 CommissionLot = src.CommissionLot,
                 OpenCommission = src.OpenCommission,
-                CloseCommission = src.CloseCommission
+                CloseCommission = src.CloseCommission,
+                EquivalentAsset = src.EquivalentAsset,
+                OpenPriceEquivalent = src.OpenPriceEquivalent,
+                ClosePriceEquivalent = src.ClosePriceEquivalent,
+                OpenExternalOrderId = src.OpenExternalOrderId,
+                OpenExternalProviderId = src.OpenExternalProviderId,
+                CloseExternalOrderId = src.CloseExternalOrderId,
+                CloseExternalProviderId = src.CloseExternalProviderId,
+                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>(),
+                LegalEntity = src.LegalEntity,
             };
         }
 
@@ -182,7 +205,16 @@ namespace MarginTrading.Backend.Core.Mappers
                 InterestRateSwap = src.InterestRateSwap,
                 CommissionLot = src.CommissionLot,
                 OpenCommission = src.OpenCommission,
-                CloseCommission = src.CloseCommission
+                CloseCommission = src.CloseCommission,
+                EquivalentAsset = src.EquivalentAsset,
+                OpenPriceEquivalent = src.OpenPriceEquivalent,
+                ClosePriceEquivalent = src.ClosePriceEquivalent,
+                OpenExternalOrderId = src.OpenExternalOrderId,
+                OpenExternalProviderId = src.OpenExternalProviderId,
+                CloseExternalOrderId = src.CloseExternalOrderId,
+                CloseExternalProviderId = src.CloseExternalProviderId,
+                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>(),
+                LegalEntity = src.LegalEntity,
             };
         }
 
@@ -212,11 +244,20 @@ namespace MarginTrading.Backend.Core.Mappers
                 CommissionLot = src.CommissionLot,
                 OpenCommission = src.GetOpenCommission(),
                 CloseCommission = src.GetCloseCommission(),
-                SwapCommission = src.SwapCommission
+                SwapCommission = src.SwapCommission,
+                EquivalentAsset = src.EquivalentAsset,
+                OpenPriceEquivalent = src.OpenPriceEquivalent,
+                ClosePriceEquivalent = src.ClosePriceEquivalent,
+                OpenExternalOrderId = src.OpenExternalOrderId,
+                OpenExternalProviderId = src.OpenExternalProviderId,
+                CloseExternalOrderId = src.CloseExternalOrderId,
+                CloseExternalProviderId = src.CloseExternalProviderId,
+                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>(),
+                LegalEntity = src.LegalEntity,
             };
         }
 
-        public static OrderFullContract ToFullContract(this IOrder src)
+        public static OrderFullContract ToFullContract(this IOrder src, OrderUpdateType orderUpdateType)
         {
             var orderContract = new OrderFullContract
             {
@@ -234,6 +275,7 @@ namespace MarginTrading.Backend.Core.Mappers
                 OpenPrice = src.OpenPrice,
                 ClosePrice = src.ClosePrice,
                 QuoteRate = src.GetQuoteRate(),
+                MarginRate = src.GetMarginRate(),
                 AssetAccuracy = src.AssetAccuracy,
                 Volume = src.Volume,
                 TakeProfit = src.TakeProfit,
@@ -242,6 +284,13 @@ namespace MarginTrading.Backend.Core.Mappers
                 OpenCommission = src.GetOpenCommission(),
                 CloseCommission = src.GetCloseCommission(),
                 SwapCommission = src.SwapCommission,
+                EquivalentAsset = src.EquivalentAsset,
+                OpenPriceEquivalent = src.OpenPriceEquivalent,
+                ClosePriceEquivalent = src.ClosePriceEquivalent,
+                OpenExternalOrderId = src.OpenExternalOrderId,
+                OpenExternalProviderId = src.OpenExternalProviderId,
+                CloseExternalOrderId = src.CloseExternalOrderId,
+                CloseExternalProviderId = src.CloseExternalProviderId,
                 StartClosingDate = src.StartClosingDate,
                 Status = src.Status.ToType<OrderStatusContract>(),
                 CloseReason = src.CloseReason.ToType<OrderCloseReasonContract>(),
@@ -257,7 +306,10 @@ namespace MarginTrading.Backend.Core.Mappers
                 MarginInit = src.GetMarginInit(),
                 MarginMaintenance = src.GetMarginMaintenance(),
                 OpenCrossPrice = src.GetOpenCrossPrice(),
-                CloseCrossPrice = src.GetCloseCrossPrice()
+                CloseCrossPrice = src.GetCloseCrossPrice(),
+                OrderUpdateType = orderUpdateType.ToType<OrderUpdateTypeContract>(),
+                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>(),
+                LegalEntity = src.LegalEntity,
             };
 
             foreach (var order in src.MatchedOrders)
@@ -303,7 +355,16 @@ namespace MarginTrading.Backend.Core.Mappers
                 CommissionLot = src.CommissionLot,
                 OpenCommission = src.GetOpenCommission(),
                 CloseCommission = src.GetCloseCommission(),
-                SwapCommission = src.SwapCommission
+                SwapCommission = src.SwapCommission,
+                EquivalentAsset = src.EquivalentAsset,
+                OpenPriceEquivalent = src.OpenPriceEquivalent,
+                ClosePriceEquivalent = src.ClosePriceEquivalent,
+                OpenExternalOrderId = src.OpenExternalOrderId,
+                OpenExternalProviderId = src.OpenExternalProviderId,
+                CloseExternalOrderId = src.CloseExternalOrderId,
+                CloseExternalProviderId = src.CloseExternalProviderId,
+                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>(),
+                LegalEntity = src.LegalEntity,
             };
 
             foreach (var order in src.MatchedOrders)
@@ -373,7 +434,8 @@ namespace MarginTrading.Backend.Core.Mappers
             {
                 Id = src.Id,
                 Name = src.Name,
-                IsDefault = src.IsDefault
+                IsDefault = src.IsDefault,
+                LegalEntity = src.LegalEntity,
             };
         }
         
@@ -399,7 +461,8 @@ namespace MarginTrading.Backend.Core.Mappers
                 TradingConditionId = src.TradingConditionId,
                 BaseAssetId = src.BaseAssetId,
                 Balance = src.Balance,
-                WithdrawTransferLimit = src.WithdrawTransferLimit
+                WithdrawTransferLimit = src.WithdrawTransferLimit,
+                LegalEntity = src.LegalEntity,
             };
         }
     }

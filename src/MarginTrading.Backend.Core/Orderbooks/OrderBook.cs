@@ -7,23 +7,28 @@ namespace MarginTrading.Backend.Core.Orderbooks
 {
     public class OrderBook
     {
-        public string Instrument { get; set; }
+        public string Instrument { get; }
         
-        public SortedDictionary<decimal, List<LimitOrder>> Buy { get; set; } =
-            new SortedDictionary<decimal, List<LimitOrder>>(new ReverseComparer<decimal>(Comparer<decimal>.Default));
-
-        public SortedDictionary<decimal, List<LimitOrder>> Sell { get; set; } =
-            new SortedDictionary<decimal, List<LimitOrder>>();
+        public SortedDictionary<decimal, List<LimitOrder>> Buy { get; private set; } 
+            
+        public SortedDictionary<decimal, List<LimitOrder>> Sell { get; private set; } 
         
         public InstrumentBidAskPair BestPrice { get; private set; }
 
+        public OrderBook(string instrument)
+        {
+            Instrument = instrument;
+            Buy = new SortedDictionary<decimal, List<LimitOrder>>(new ReverseComparer<decimal>(Comparer<decimal>.Default));
+            Sell = new SortedDictionary<decimal, List<LimitOrder>>();
+            BestPrice = new InstrumentBidAskPair {Instrument = instrument, Date = DateTime.UtcNow};
+        }
+
         public OrderBook Clone()
         {
-            var res = new OrderBook
+            var res = new OrderBook(Instrument)
             {
-                Instrument = Instrument,
-                Buy =
-                    new SortedDictionary<decimal, List<LimitOrder>>(new ReverseComparer<decimal>(Comparer<decimal>.Default)),
+                Buy = new SortedDictionary<decimal, List<LimitOrder>>(
+                        new ReverseComparer<decimal>(Comparer<decimal>.Default)),
                 Sell = new SortedDictionary<decimal, List<LimitOrder>>()
             };
 

@@ -9,8 +9,8 @@ using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services;
+using MarginTrading.Common.Services.Client;
 using MarginTrading.Common.Settings;
-using MarginTrading.Common.Settings.Repositories;
 
 namespace MarginTrading.Backend.Services.EventsConsumers
 {
@@ -31,15 +31,15 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         private readonly IDateService _dateService;
 
         public MarginCallConsumer(IThreadSwitcher threadSwitcher,
-            IClientSettingsRepository clientSettingsRepository,
             IAppNotifications appNotifications,
             IEmailService emailService,
             IClientAccountService clientAccountService,
             IMarginTradingOperationsLogService operationsLogService,
             IRabbitMqNotifyService rabbitMqNotifyService,
             IDateService dateService,
-            IAssetsCache assetsCache)
-            : base(clientSettingsRepository, appNotifications, clientAccountService, assetsCache)
+            IAssetsCache assetsCache,
+            IAssetPairsCache assetPairsCache)
+            : base(appNotifications, clientAccountService, assetsCache, assetPairsCache)
         {
             _threadSwitcher = threadSwitcher;
             _emailService = emailService;
@@ -75,10 +75,10 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     MtMessages.Notifications_MarginCall, marginUsedPerc,
                     account.BaseAssetId));
 
-                var clientAcc = await _clientAccountService.GetAsync(account.ClientId);
+                var clientEmail = await _clientAccountService.GetEmail(account.ClientId);
 
-                var emailTask = clientAcc != null
-                    ? _emailService.SendMarginCallEmailAsync(clientAcc.Email, account.BaseAssetId, account.Id)
+                var emailTask = !string.IsNullOrEmpty(clientEmail)
+                    ? _emailService.SendMarginCallEmailAsync(clientEmail, account.BaseAssetId, account.Id)
                     : Task.CompletedTask;
 
                 await Task.WhenAll(marginEventTask, notificationTask, emailTask);

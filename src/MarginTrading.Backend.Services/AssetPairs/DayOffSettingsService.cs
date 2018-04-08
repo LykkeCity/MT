@@ -111,7 +111,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
                              dayOffStartDay: DayOfWeek.Friday,
                              dayOffStartTime: new TimeSpan(20, 55, 0),
                              dayOffEndDay: DayOfWeek.Sunday,
-                             dayOffEndTime: new TimeSpan(22, 55, 0),
+                             dayOffEndTime: new TimeSpan(22, 05, 0),
                              assetPairsWithoutDayOff: new[] {"BTCUSD"}.ToHashSet(),
                              pendingOrdersCutOff: new TimeSpan(0, 55, 0)));
         }

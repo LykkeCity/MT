@@ -1,35 +1,35 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Lykke.Service.ClientAccount.Client;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Core.Notifications;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Notifications;
+using MarginTrading.Common.Services.Client;
 using MarginTrading.Common.Settings;
-using MarginTrading.Common.Settings.Models;
-using MarginTrading.Common.Settings.Repositories;
 using MarginTrading.Contract.BackendContracts;
 
 namespace MarginTrading.Backend.Services
 {
     public class NotificationSenderBase
     {
-        private readonly IClientSettingsRepository _clientSettingsRepository;
         private readonly IAppNotifications _appNotifications;
         private readonly IClientAccountService _clientAccountService;
         private readonly IAssetsCache _assetsCache;
+        private readonly IAssetPairsCache _assetPairsCache;
 
         public NotificationSenderBase(
-            IClientSettingsRepository clientSettingsRepository,
             IAppNotifications appNotifications,
             IClientAccountService clientAccountService,
-            IAssetsCache assetsCache)
+            IAssetsCache assetsCache,
+            IAssetPairsCache assetPairsCache)
         {
-            _clientSettingsRepository = clientSettingsRepository;
             _appNotifications = appNotifications;
             _clientAccountService = clientAccountService;
             _assetsCache = assetsCache;
+            _assetPairsCache = assetPairsCache;
         }
 
         protected async Task SendOrderChangedNotification(string clientId, IOrder order)
@@ -50,9 +50,7 @@ namespace MarginTrading.Backend.Services
         private async Task SendNotification(string clientId, NotificationType notificationType, string message,
             OrderHistoryBackendContract order)
         {
-            var pushSettings = await _clientSettingsRepository.GetSettings<PushNotificationsSettings>(clientId);
-
-            if (pushSettings != null && pushSettings.Enabled)
+            if (await _clientAccountService.IsPushEnabled(clientId))
             {
                 var notificationId = await _clientAccountService.GetNotificationId(clientId);
 
@@ -65,17 +63,19 @@ namespace MarginTrading.Backend.Services
             var message = string.Empty;
             var volume = Math.Abs(order.Volume);
             var type = order.GetOrderType() == OrderDirection.Buy ? "Long" : "Short";
-
+            _assetPairsCache.TryGetAssetPairById(order.Instrument, out var assetPair);
+            var instrumentName = assetPair?.Name ?? order.Instrument;
+            
             switch (order.Status)
             {
                 case OrderStatus.WaitingForExecution:
-                    message = string.Format(MtMessages.Notifications_PendingOrderPlaced, type, order.Instrument, volume, Math.Round(order.ExpectedOpenPrice ?? 0, order.AssetAccuracy));
+                    message = string.Format(MtMessages.Notifications_PendingOrderPlaced, type, instrumentName, volume, Math.Round(order.ExpectedOpenPrice ?? 0, order.AssetAccuracy));
                     break;
                 case OrderStatus.Active:
                     message = order.ExpectedOpenPrice.HasValue
-                        ? string.Format(MtMessages.Notifications_PendingOrderTriggered, order.GetOrderType() == OrderDirection.Buy ? "Long" : "Short", order.Instrument, volume,
+                        ? string.Format(MtMessages.Notifications_PendingOrderTriggered, type, instrumentName, volume,
                             Math.Round(order.OpenPrice, order.AssetAccuracy))
-                        : string.Format(MtMessages.Notifications_OrderPlaced, type, order.Instrument, volume,
+                        : string.Format(MtMessages.Notifications_OrderPlaced, type, instrumentName, volume,
                             Math.Round(order.OpenPrice, order.AssetAccuracy));
                     break;
                 case OrderStatus.Closed:
@@ -96,13 +96,17 @@ namespace MarginTrading.Backend.Services
                     message = order.ExpectedOpenPrice.HasValue &&
                               (order.CloseReason == OrderCloseReason.Canceled ||
                                order.CloseReason == OrderCloseReason.CanceledBySystem)
-                        ? string.Format(MtMessages.Notifications_PendingOrderCanceled, type, order.Instrument, volume)
-                        : string.Format(MtMessages.Notifications_OrderClosed, type, order.Instrument, volume, reason,
+                        ? string.Format(MtMessages.Notifications_PendingOrderCanceled, type, instrumentName, volume)
+                        : string.Format(MtMessages.Notifications_OrderClosed, type, instrumentName, volume, reason,
                             order.GetTotalFpl().ToString($"F{accuracy}"),
                             order.AccountAssetId);
                     break;
                 case OrderStatus.Rejected:
                     break;
+                case OrderStatus.Closing:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
             return message;

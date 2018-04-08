@@ -33,48 +33,54 @@ namespace MarginTrading.Backend.Services
         public void UpdateOrderFpl(IOrder order, FplData fplData)
         {
             fplData.AccountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(order.AccountAssetId);
-            fplData.QuoteRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.AccountAssetId, order.Instrument);
+            fplData.QuoteRate = _cfdCalculatorService.GetFplRate(order.AccountAssetId, order.Instrument, order.LegalEntity,
+                (order.GetOrderType() == OrderDirection.Buy ? 1 : -1) * (order.ClosePrice - order.OpenPrice) > 0);
 
-            var fpl = order.GetOrderType() == OrderDirection.Buy
-                ? (order.ClosePrice - order.OpenPrice) * fplData.QuoteRate * order.GetMatchedVolume()
-                : (order.OpenPrice - order.ClosePrice) * fplData.QuoteRate * order.GetMatchedVolume();
+            var fpl = (order.ClosePrice - order.OpenPrice) * fplData.QuoteRate * order.GetMatchedVolume()
+                      * (order.GetOrderType() == OrderDirection.Buy ? 1 : -1);
 
             fplData.Fpl = Math.Round(fpl, fplData.AccountBaseAssetAccuracy);
 
             var accountAssetPair = _accountAssetsCacheService.GetAccountAsset(order.TradingConditionId, order.AccountAssetId, order.Instrument);
 
-            fplData.MarginInit = Math.Round(order.ClosePrice * order.GetMatchedVolume() * fplData.QuoteRate / accountAssetPair.LeverageInit, fplData.AccountBaseAssetAccuracy);
-            fplData.MarginMaintenance = Math.Round(order.ClosePrice * order.GetMatchedVolume() * fplData.QuoteRate / accountAssetPair.LeverageMaintenance, fplData.AccountBaseAssetAccuracy);
-
-            fplData.OpenCrossPrice = Math.Round(order.OpenPrice * fplData.QuoteRate, order.AssetAccuracy);
+            fplData.OpenCrossPrice = Math.Round(order.OpenPrice * fplData.QuoteRate, order.AssetAccuracy); 
             fplData.CloseCrossPrice = Math.Round(order.ClosePrice * fplData.QuoteRate, order.AssetAccuracy);
+            
+            fplData.MarginRate = _cfdCalculatorService.GetMarginRate(order.AccountAssetId, order.Instrument, order.LegalEntity);
+            fplData.MarginInit =
+                Math.Round(order.GetMatchedVolume() * fplData.MarginRate / accountAssetPair.LeverageInit,
+                    fplData.AccountBaseAssetAccuracy);
+            fplData.MarginMaintenance =
+                Math.Round(order.GetMatchedVolume() * fplData.MarginRate / accountAssetPair.LeverageMaintenance,
+                    fplData.AccountBaseAssetAccuracy);
 
             fplData.OpenPrice = order.OpenPrice;
             fplData.ClosePrice = order.ClosePrice;
-            
             fplData.SwapsSnapshot = order.GetSwaps();
-            fplData.TotalFplSnapshot = order.GetTotalFpl(fplData.SwapsSnapshot);
             
             fplData.CalculatedHash = fplData.ActualHash;
+            
+            fplData.TotalFplSnapshot = order.GetTotalFpl(fplData.SwapsSnapshot);
 
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
-            account.CacheNeedsToBeUpdated();
+            _accountsCacheService.Get(order.ClientId, order.AccountId).CacheNeedsToBeUpdated();
         }
 
         public void UpdatePendingOrderMargin(IOrder order, FplData fplData)
         {
             fplData.AccountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(order.AccountAssetId);
-            fplData.QuoteRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.AccountAssetId, order.Instrument);
-
             var accountAssetPair = _accountAssetsCacheService.GetAccountAsset(order.TradingConditionId, order.AccountAssetId, order.Instrument);
 
-            fplData.MarginInit = Math.Round(order.ClosePrice * Math.Abs(order.Volume) * fplData.QuoteRate / accountAssetPair.LeverageInit, fplData.AccountBaseAssetAccuracy);
-            fplData.MarginMaintenance = Math.Round(order.ClosePrice * Math.Abs(order.Volume) * fplData.QuoteRate / accountAssetPair.LeverageMaintenance, fplData.AccountBaseAssetAccuracy);
+            fplData.MarginRate = _cfdCalculatorService.GetMarginRate(order.AccountAssetId, order.Instrument, order.LegalEntity);
+            fplData.MarginInit =
+                Math.Round(order.GetMatchedVolume() * fplData.MarginRate / accountAssetPair.LeverageInit,
+                    fplData.AccountBaseAssetAccuracy);
+            fplData.MarginMaintenance =
+                Math.Round(order.GetMatchedVolume() * fplData.MarginRate / accountAssetPair.LeverageMaintenance,
+                    fplData.AccountBaseAssetAccuracy);
             
             fplData.CalculatedHash = fplData.ActualHash;
 
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
-            account.CacheNeedsToBeUpdated();
+            _accountsCacheService.Get(order.ClientId, order.AccountId).CacheNeedsToBeUpdated();
         }
 
         public decimal GetMatchedOrdersPrice(List<MatchedOrder> matchedOrders, string instrument)

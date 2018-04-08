@@ -275,9 +275,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
         private void ValidateTradingCondition(string tradingConditionId)
         {
-            var tradingCondition = _tradingConditionsCacheService.GetTradingCondition(tradingConditionId);
-
-            if (tradingCondition == null)
+            if (!_tradingConditionsCacheService.IsTradingConditionExists(tradingConditionId))
                 throw new ArgumentException("Invalid TradingConditionId");
         }
 

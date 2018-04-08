@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using MarginTrading.Backend.Contracts;
+using MarginTrading.Backend.Contracts.AccountHistory;
 using MarginTrading.Backend.Core;
-using MarginTrading.Contract.BackendContracts;
+using MarginTrading.Common.Extensions;
 using MarginTrading.DataReader.Helpers;
 using MarginTrading.DataReader.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -14,7 +17,7 @@ namespace MarginTrading.DataReader.Controllers
 {
     [Authorize]
     [Route("api/accountHistory")]
-    public class AccountHistoryController : Controller
+    public class AccountHistoryController : Controller, IAccountHistoryApi
     {
         private readonly IMarginTradingAccountHistoryRepository _accountsHistoryRepository;
         private readonly IMarginTradingOrdersHistoryRepository _ordersHistoryRepository;
@@ -35,7 +38,7 @@ namespace MarginTrading.DataReader.Controllers
 
         [Route("byTypes")]
         [HttpGet]
-        public async Task<AccountHistoryBackendResponse> GetAccountHistoryByTypes([FromQuery] AccountHistoryBackendRequest request)
+        public async Task<AccountHistoryResponse> ByTypes([FromQuery] AccountHistoryRequest request)
         {
             request.From = request.From?.ToUniversalTime();
             request.To = request.To?.ToUniversalTime();
@@ -49,11 +52,12 @@ namespace MarginTrading.DataReader.Controllers
             var orders =
                 (await _ordersHistoryRepository.GetHistoryAsync(request.ClientId, clientAccountIds, request.From,
                     request.To))
-                .Where(item => item.Status != OrderStatus.Rejected);
+                .Where(item =>  item.OpenDate != null && // remove cancel pending order rows created before OrderUpdateType was introduced
+                                item.OrderUpdateType == OrderUpdateType.Close);
 
             var openPositions = await _ordersSnapshotReaderService.GetActiveByAccountIdsAsync(clientAccountIds);
 
-            return new AccountHistoryBackendResponse
+            return new AccountHistoryResponse
             {
                 Account = accounts.Select(AccountHistoryExtensions.ToBackendContract)
                     .OrderByDescending(item => item.Date).ToArray(),
@@ -66,7 +70,7 @@ namespace MarginTrading.DataReader.Controllers
 
         [Route("byAccounts")]
         [HttpGet]
-        public async Task<Dictionary<string, AccountHistoryBackendContract[]>> GetAccountHistoryByAccounts(
+        public async Task<Dictionary<string, AccountHistoryContract[]>> ByAccounts(
             [FromQuery] string accountId = null, [FromQuery] DateTime? from = null, [FromQuery] DateTime? to = null)
         {
             from = from?.ToUniversalTime();
@@ -81,8 +85,7 @@ namespace MarginTrading.DataReader.Controllers
 
         [Route("timeline")]
         [HttpGet]
-        public async Task<AccountNewHistoryBackendResponse> GetAccountHistoryTimeline(
-            [FromQuery] AccountHistoryBackendRequest request)
+        public async Task<AccountNewHistoryResponse> Timeline([FromQuery] AccountHistoryRequest request)
         {
             request.From = request.From?.ToUniversalTime();
             request.To = request.To?.ToUniversalTime();
@@ -97,32 +100,32 @@ namespace MarginTrading.DataReader.Controllers
 
             var history = (await _ordersHistoryRepository.GetHistoryAsync(request.ClientId, clientAccountIds,
                     request.From, request.To))
-                .Where(item => item.Status != OrderStatus.Rejected)
-                .Where(item => item.OpenDate != null).ToList();
+                .Where(item => item.OpenDate != null && // remove cancel pending order rows created before OrderUpdateType was introduced
+                               item.OrderUpdateType == OrderUpdateType.Close).ToList();
 
-            var items = accounts.Select(item => new AccountHistoryItemBackend
+            var items = accounts.Select(item => new AccountHistoryItem
                 {
-                    Account = AccountHistoryExtensions.ToBackendContract(item),
+                    Account = item.ToBackendContract(),
                     Date = item.Date
                 })
-                .Concat(openOrders.Select(item => new AccountHistoryItemBackend
+                .Concat(openOrders.Select(item => new AccountHistoryItem
                 {
                     Position = item.ToBackendHistoryContract(),
                     Date = item.OpenDate.Value
                 }))
-                .Concat(history.Select(item => new AccountHistoryItemBackend
+                .Concat(history.Select(item => new AccountHistoryItem
                 {
-                    Position = OrderHistoryExtensions.ToBackendHistoryOpenedContract(item),
+                    Position = item.ToBackendHistoryOpenedContract(),
                     Date = item.OpenDate.Value
                 }))
-                .Concat(history.Select(item => new AccountHistoryItemBackend
+                .Concat(history.Select(item => new AccountHistoryItem
                 {
-                    Position = OrderHistoryExtensions.ToBackendHistoryContract(item),
+                    Position = item.ToBackendHistoryContract(),
                     Date = item.CloseDate.Value
                 }))
                 .OrderByDescending(item => item.Date);
 
-            return new AccountNewHistoryBackendResponse
+            return new AccountNewHistoryResponse
             {
                 HistoryItems = items.ToArray()
             };

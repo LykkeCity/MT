@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using MarginTrading.Common.Settings.Models;
+using MarginTrading.Common.Services.Settings;
 
 namespace MarginTrading.Frontend.Services
 {

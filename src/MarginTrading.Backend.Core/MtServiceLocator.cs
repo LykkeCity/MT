@@ -6,5 +6,6 @@
         public static IAccountUpdateService AccountUpdateService { get; set; }
         public static IAccountsCacheService AccountsCacheService { get; set; }
         public static ICommissionService SwapCommissionService { get; set; }
+        public static IOvernightSwapService OvernightSwapService { get; set; }
     }
 }

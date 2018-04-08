@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Autofac.Features.Indexed;
 using Common;
 using Common.Log;
+using Lykke.Service.ExchangeConnector.Client.Models;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Settings;
@@ -26,11 +27,13 @@ namespace MarginTrading.Backend.Services.Notifications
             _log = log;
         }
 
-        public Task AccountHistory(string accountId, string clientId, decimal amount, decimal balance, decimal withdrawTransferLimit, AccountHistoryType type, string comment = null, string eventSourceId = null)
+        public Task AccountHistory(string transactionId, string accountId, string clientId, decimal amount, decimal balance, 
+            decimal withdrawTransferLimit, AccountHistoryType type, string comment = null, string eventSourceId = null, 
+            string auditLog = null)
         {
             var record = new MarginTradingAccountHistory
             {
-                Id = Guid.NewGuid().ToString("N"),
+                Id = transactionId,
                 AccountId = accountId,
                 ClientId = clientId,
                 Type = type,
@@ -39,20 +42,21 @@ namespace MarginTrading.Backend.Services.Notifications
                 WithdrawTransferLimit = withdrawTransferLimit,
                 Date = DateTime.UtcNow,
                 Comment = comment,
-                OrderId = type == AccountHistoryType.OrderClosed ? eventSourceId : null
+                OrderId = type == AccountHistoryType.OrderClosed ? eventSourceId : null,
+                AuditLog = auditLog
             };
 
             return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountHistory.ExchangeName, record.ToBackendContract());
         }
 
-        public Task OrderHistory(IOrder order)
+        public Task OrderHistory(IOrder order, OrderUpdateType orderUpdateType)
         {
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderHistory.ExchangeName, order.ToFullContract());
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderHistory.ExchangeName, order.ToFullContract(orderUpdateType));
         }
 
         public Task OrderReject(IOrder order)
         {
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderRejected.ExchangeName, order.ToFullContract());
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderRejected.ExchangeName, order.ToFullContract(OrderUpdateType.Reject));
         }
 
         public Task OrderBookPrice(InstrumentBidAskPair quote)
@@ -118,7 +122,12 @@ namespace MarginTrading.Backend.Services.Notifications
         {
             return TryProduceMessageAsync(_settings.RabbitMqQueues.Trades.ExchangeName, trade);
         }
-
+        
+        public Task ExternalOrder(ExecutionReport trade)
+        {
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.ExternalOrder.ExchangeName, trade);
+        }
+        
         private async Task TryProduceMessageAsync(string exchangeName, object message)
         {
             string messageStr = null;
@@ -147,6 +156,7 @@ namespace MarginTrading.Backend.Services.Notifications
             ((IStopable)_publishers[_settings.RabbitMqQueues.AccountMarginEvents.ExchangeName]).Stop();
             ((IStopable)_publishers[_settings.RabbitMqQueues.AccountStats.ExchangeName]).Stop();
             ((IStopable)_publishers[_settings.RabbitMqQueues.Trades.ExchangeName]).Stop();
+            ((IStopable)_publishers[_settings.RabbitMqQueues.ExternalOrder.ExchangeName]).Stop();
         }
     }
 }

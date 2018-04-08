@@ -17,6 +17,12 @@ namespace MarginTrading.Backend.Core.Settings
         public decimal SwapShort { get; set; }
 
         [Optional]
+        public decimal OvernightSwapLong { get; set; }
+
+        [Optional]
+        public decimal OvernightSwapShort { get; set; }
+
+        [Optional]
         public decimal SwapLongPct { get; set; }
 
         [Optional]

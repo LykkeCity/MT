@@ -1,43 +1,82 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
-using Lykke.Service.Assets.Client;
+using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.Backend.Core;
+using MarginTrading.Common.Extensions;
 
 namespace MarginTrading.Backend.Services.AssetPairs
 {
-    public class AssetPairsManager : IStartable
+    internal class AssetPairsManager : IStartable, IAssetPairsManager
     {
-        private readonly IAssetsService _assets;
-        private readonly AssetPairsCache _assetPairsCache;
+        private static readonly object InitAssetPairSettingsLock = new object();
 
-        public AssetPairsManager(IAssetsService repository,
-            AssetPairsCache assetPairsCache)
+        private readonly IAssetPairsInitializableCache _assetPairsCache;
+        private readonly IAssetPairsRepository _assetPairsRepository;
+
+        public AssetPairsManager(IAssetPairsInitializableCache assetPairsCache,
+            IAssetPairsRepository assetPairsRepository)
         {
-            _assets = repository;
             _assetPairsCache = assetPairsCache;
+            _assetPairsRepository = assetPairsRepository;
         }
 
         public void Start()
         {
-            UpdateInstrumentsCache().Wait();
+            InitAssetPairs();
         }
 
-        public async Task UpdateInstrumentsCache()
+        private void InitAssetPairs()
         {
-            var instruments = (await _assets.AssetPairGetAllAsync())
-                .ToDictionary(
-                    a => a.Id,
-                    a => (IAssetPair) new AssetPair
-                    {
-                        Id = a.Id,
-                        Name = a.Name,
-                        Accuracy = a.Accuracy,
-                        BaseAssetId = a.BaseAssetId,
-                        QuoteAssetId = a.QuotingAssetId
-                    });
-            
-            _assetPairsCache.InitInstrumentsCache(instruments);
+            lock (InitAssetPairSettingsLock)
+            {
+                var settings = _assetPairsRepository.GetAsync().GetAwaiter().GetResult()
+                    .ToDictionary(a => a.Id, s => s);
+                _assetPairsCache.InitPairsCache(settings);
+            }
+        }
+
+        public async Task<IAssetPair> UpdateAssetPairSettings(IAssetPair assetPairSettings)
+        {
+            ValidateSettings(assetPairSettings);
+            await _assetPairsRepository.ReplaceAsync(assetPairSettings);
+            InitAssetPairs();
+            _assetPairsCache.TryGetAssetPairById(assetPairSettings.Id, out var assetPair);
+            return assetPair.RequiredNotNull("AssetPairSettings for " + assetPairSettings.Id);
+        }
+
+        public async Task<IAssetPair> InsertAssetPairSettings(IAssetPair assetPairSettings)
+        {
+            ValidateSettings(assetPairSettings);
+            await _assetPairsRepository.InsertAsync(assetPairSettings);
+            InitAssetPairs();
+            _assetPairsCache.TryGetAssetPairById(assetPairSettings.Id, out var assetPair);
+            return assetPair.RequiredNotNull("AssetPairSettings for " + assetPairSettings.Id);
+        }
+
+        public async Task<IAssetPair> DeleteAssetPairSettings(string assetPairId)
+        {
+            var settings = await _assetPairsRepository.DeleteAsync(assetPairId);
+            InitAssetPairs();
+            return settings;
+        }
+
+        private void ValidateSettings(IAssetPair newValue)
+        {
+            if (newValue.BasePairId == null) 
+                return;
+
+            if (_assetPairsCache.TryGetAssetPairById(newValue.BasePairId, out _))
+                throw new InvalidOperationException($"BasePairId {newValue.BasePairId} does not exist");
+
+            if (_assetPairsCache.GetAll().Any(s =>
+                s.Id != newValue.Id &&
+                s.BasePairId == newValue.BasePairId))
+            {
+                throw new InvalidOperationException($"BasePairId {newValue.BasePairId} cannot be added twice");
+            }
         }
     }
 }

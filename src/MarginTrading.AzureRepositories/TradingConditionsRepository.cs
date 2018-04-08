@@ -12,6 +12,7 @@ namespace MarginTrading.AzureRepositories
         public string Id => RowKey;
         public string Name { get; set; }
         public bool IsDefault { get; set; }
+        public string LegalEntity { get; set; }
 
         public static string GeneratePartitionKey()
         {
@@ -30,7 +31,8 @@ namespace MarginTrading.AzureRepositories
                 PartitionKey = GeneratePartitionKey(),
                 RowKey = GenerateRowKey(src.Id),
                 Name = src.Name,
-                IsDefault = src.IsDefault
+                IsDefault = src.IsDefault,
+                LegalEntity = src.LegalEntity,
             };
         }
     }

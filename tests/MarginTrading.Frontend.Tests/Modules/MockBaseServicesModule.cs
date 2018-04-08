@@ -4,9 +4,8 @@ using System.Threading.Tasks;
 using Autofac;
 using Lykke.Common;
 using Lykke.Service.Session;
-using MarginTrading.Common.Settings;
-using MarginTrading.Common.Settings.Models;
-using MarginTrading.Common.Settings.Repositories;
+using MarginTrading.Common.Services.Client;
+using MarginTrading.Common.Services.Settings;
 using MarginTrading.Frontend.Services;
 using Moq;
 
@@ -32,10 +31,8 @@ namespace MarginTrading.Frontend.Tests.Modules
 
             var clientAccountsServiceMock = new Mock<IClientAccountService>();
             clientAccountsServiceMock
-                .Setup(item => item.GetAsync(It.IsAny<string>()))
-                .Returns(() => Task.FromResult((IClientAccount)new ClientAccount{ NotificationsId = Guid.NewGuid().ToString
-                    ()}));
-            
+                .Setup(item => item.GetNotificationId(It.IsAny<string>()))
+                .Returns(() => Task.FromResult(Guid.NewGuid().ToString()));
             
             builder.RegisterInstance(httpRequestServiceMock.Object).As<IHttpRequestService>();
             builder.RegisterInstance(clientsRepositoryMock.Object).As<IClientsSessionsRepository>();

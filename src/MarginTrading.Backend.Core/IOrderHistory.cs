@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using MarginTrading.Backend.Core.MatchedOrders;
+using MarginTrading.Backend.Core.MatchingEngines;
 
 namespace MarginTrading.Backend.Core
 {
@@ -28,6 +29,9 @@ namespace MarginTrading.Backend.Core
         decimal OpenCommission { get; }
         decimal CloseCommission { get; }
         decimal SwapCommission { get; }
+        string EquivalentAsset { get; }
+        decimal OpenPriceEquivalent{ get; }
+        decimal ClosePriceEquivalent { get; }
         DateTime? StartClosingDate { get; }
         OrderStatus Status { get; }
         OrderCloseReason CloseReason { get; }
@@ -47,6 +51,16 @@ namespace MarginTrading.Backend.Core
         decimal MarginMaintenance { get; }
         decimal OpenCrossPrice { get; }
         decimal CloseCrossPrice { get; }
+        
+        OrderUpdateType OrderUpdateType { get; }
+        
+        string OpenExternalOrderId { get; }
+        string OpenExternalProviderId { get; }
+        string CloseExternalOrderId { get; }
+        string CloseExternalProviderId { get; }
+        
+        MatchingEngineMode MatchingEngineMode { get; }
+        string LegalEntity { get; set; }  
     }
 
     public class OrderHistory : IOrderHistory
@@ -73,6 +87,9 @@ namespace MarginTrading.Backend.Core
         public decimal OpenCommission { get; set; }
         public decimal CloseCommission { get; set; }
         public decimal SwapCommission { get; set; }
+        public string EquivalentAsset { get; set; }
+        public decimal OpenPriceEquivalent{ get; set; }
+        public decimal ClosePriceEquivalent { get; set; }
         public DateTime? StartClosingDate { get; set; }
         public OrderStatus Status { get; set; }
         public OrderCloseReason CloseReason { get; set; }
@@ -91,5 +108,12 @@ namespace MarginTrading.Backend.Core
         public decimal MarginMaintenance { get; set; }
         public decimal OpenCrossPrice { get; set; }
         public decimal CloseCrossPrice { get; set; }
+        public OrderUpdateType OrderUpdateType { get; set; }
+        public string OpenExternalOrderId { get; set; }
+        public string OpenExternalProviderId { get; set; }
+        public string CloseExternalOrderId { get; set; }
+        public string CloseExternalProviderId { get; set; }
+        public MatchingEngineMode MatchingEngineMode { get; set; }
+        public string LegalEntity { get; set; }
     }
 }

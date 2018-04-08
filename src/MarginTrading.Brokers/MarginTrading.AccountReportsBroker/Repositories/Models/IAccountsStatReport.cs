@@ -23,5 +23,6 @@ namespace MarginTrading.AccountReportsBroker.Repositories.Models
         double OpenPositionsCount { get; }
         double MarginUsageLevel { get; }
         bool IsLive { get; }
+        string LegalEntity { get; }
     }
 }

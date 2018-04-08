@@ -23,6 +23,8 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
             "[Type] [nvarchar] (50) NOT NULL, " +
             "[Comment] [text] NOT NULL, " +
             "[WithdrawTransferLimit] float NOT NULL, " +
+            "[AuditLog] [text] NULL, " +
+            "[LegalEntity] [nvarchar] (64) NULL, " +
             "CONSTRAINT[PK_{0}] PRIMARY KEY CLUSTERED ([Id] ASC)" +
             ");";
 
@@ -53,15 +55,16 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
                 if (res == null)
                 {
                     query = $"insert into {TableName} " +
-                     "(Id, Date, AccountId, ClientId, Amount, Balance, WithdrawTransferLimit, Comment, Type, PositionId) " +
+                     "(Id, Date, AccountId, ClientId, Amount, Balance, WithdrawTransferLimit, Comment, Type, PositionId, LegalEntity, AuditLog) " +
                      " values " +
-                     "(@Id ,@Date, @AccountId, @ClientId, @Amount, @Balance, @WithdrawTransferLimit, @Comment, @Type, @PositionId)";
+                     "(@Id ,@Date, @AccountId, @ClientId, @Amount, @Balance, @WithdrawTransferLimit, @Comment, @Type, @PositionId, @LegalEntity, @AuditLog)";
                 }
                 else
                 {
                     query = $"update {TableName} set " +
                       "Date=@Date, AccountId=@AccountId, ClientId=@ClientId, Amount=@Amount, Balance=@Balance, " +
-                      "WithdrawTransferLimit=@WithdrawTransferLimit, Comment=@Comment, Type=@Type, PositionId = @PositionId " +
+                      "WithdrawTransferLimit=@WithdrawTransferLimit, Comment=@Comment, Type=@Type, " +
+                      "PositionId = @PositionId, LegalEntity = @LegalEntity, AuditLog = @AuditLog" +
                       " where Id=@Id";
                 }
                 try { await conn.ExecuteAsync(query, entity); }
@@ -71,7 +74,7 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
                            "Entity <IAccountTransactionsReport>: \n" +
                            entity.ToJson();
                     await _log?.WriteWarningAsync("AccountTransactionsReportsSqlRepository", "InsertOrReplaceAsync", null, msg);
-                    throw new Exception(msg);  ;
+                    throw new Exception(msg);
                 }
             }
         }

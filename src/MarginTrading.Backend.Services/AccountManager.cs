@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using JetBrains.Annotations;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.ClientAccount.Client.AutorestClient.Models;
 using MarginTrading.Backend.Core;
@@ -15,6 +16,7 @@ using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Contract.RabbitMqMessageModels;
 using MarginTrading.Backend.Services.TradingConditions;
+using MarginTrading.Common.Extensions;
 using MoreLinq;
 
 namespace MarginTrading.Backend.Services
@@ -95,8 +97,7 @@ namespace MarginTrading.Backend.Services
 
         private IReadOnlyList<IMarginTradingAccount> GetAccountsToWriteStats()
         {
-            var accountsIdsToWrite =
-                new HashSet<string>(_ordersCache.GetActive().Select(a => a.AccountId).Distinct(), null);
+            var accountsIdsToWrite = Enumerable.ToHashSet(_ordersCache.GetActive().Select(a => a.AccountId).Distinct());
             return _accountsCacheService.GetAll().Where(a => accountsIdsToWrite.Contains(a.Id)).ToList();
         }
 
@@ -115,7 +116,8 @@ namespace MarginTrading.Backend.Services
         #endregion
        
 
-        public async Task UpdateBalanceAsync(IMarginTradingAccount account, decimal amount, AccountHistoryType historyType, string comment, string eventSourceId = null, bool changeTransferLimit = false)
+        public async Task<string> UpdateBalanceAsync(IMarginTradingAccount account, decimal amount, AccountHistoryType historyType, 
+            string comment, string eventSourceId = null, bool changeTransferLimit = false, string auditLog = null)
         {
             if (historyType == AccountHistoryType.Deposit && changeTransferLimit)
             {
@@ -140,9 +142,21 @@ namespace MarginTrading.Backend.Services
                 _accountsCacheService.UpdateBalance(updatedAccount);
                 _clientNotifyService.NotifyAccountUpdated(updatedAccount);
 
-                await _rabbitMqNotifyService.AccountHistory(account.Id, account.ClientId, amount,
+                var transactionId = Guid.NewGuid().ToString("N");
+                
+                await _rabbitMqNotifyService.AccountHistory(
+                    transactionId,
+                    account.Id,
+                    account.ClientId,
+                    amount,
                     updatedAccount.Balance,
-                    updatedAccount.WithdrawTransferLimit, historyType, comment, eventSourceId);
+                    updatedAccount.WithdrawTransferLimit,
+                    historyType,
+                    comment,
+                    eventSourceId, 
+                    auditLog);
+
+                return transactionId;
             }
             finally
             {
@@ -162,7 +176,7 @@ namespace MarginTrading.Backend.Services
             
             var account = _accountsCacheService.Get(clientId, accountId);
             
-            if (account.Balance > 0)
+            if (_marginSettings.IsLive && account.Balance > 0)
                 throw new Exception(
                     $"Account [{accountId}] balance is higher than zero: [{account.Balance}]");
 
@@ -173,11 +187,11 @@ namespace MarginTrading.Backend.Services
         }
 
         //TODO: close/remove all orders
-        public async Task ResetAccountAsync(string clientId, string accountId)
+        public Task<string> ResetAccountAsync(string clientId, string accountId)
         {
             var account = _accountsCacheService.Get(clientId, accountId);
 
-            await UpdateBalanceAsync(account, LykkeConstants.DefaultDemoBalance - account.Balance,
+            return UpdateBalanceAsync(account, LykkeConstants.DefaultDemoBalance - account.Balance,
                 AccountHistoryType.Reset,
                 "Reset account");
         }
@@ -280,10 +294,9 @@ namespace MarginTrading.Backend.Services
         
         public async Task<List<IOrder>> CloseAccountOrders(string accountId, OrderCloseReason reason)
         {
+            var openedOrders = _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountId).ToArray();
             var closedOrders = new List<IOrder>();
-            
-            var openedOrders = _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountId);
-            
+
             foreach (var order in openedOrders)
             {
                 try
@@ -293,7 +306,7 @@ namespace MarginTrading.Backend.Services
                 }
                 catch (Exception e)
                 {
-                    await _log.WriteWarningAsync(nameof(AccountManager), "CloseAccountOrders",
+                    await _log.WriteWarningAsync(nameof(AccountManager), "CloseAccountActiveOrders",
                         $"AccountId: {accountId}, OrderId: {order.Id}", $"Error closing order: {e.Message}");
                 }
             }
@@ -317,6 +330,7 @@ namespace MarginTrading.Backend.Services
             return closedOrders;
         }
 
+        [ItemCanBeNull]
         public async Task<IMarginTradingAccount> SetTradingCondition(string clientId, string accountId,
             string tradingConditionId)
         {
@@ -370,9 +384,11 @@ namespace MarginTrading.Backend.Services
         
         private async Task<MarginTradingAccount> CreateAccount(string clientId, string baseAssetId, string tradingConditionId)
         {
+            var tradingCondition = _tradingConditionsCacheService.GetTradingCondition(tradingConditionId)
+                .RequiredNotNull("tradingCondition id " + tradingConditionId);
             var wallet = _marginSettings.IsLive
                 ? await _clientAccountClient.CreateWalletAsync(clientId, WalletType.Trading, OwnerType.Mt,
-                    LegalEntityType.Vanuatu, $"{baseAssetId} margin wallet", null)
+                    $"{baseAssetId} margin wallet", null)
                 : null;
             var id = _marginSettings.IsLive ? wallet?.Id : $"{_marginSettings.DemoAccountIdPrefix}{Guid.NewGuid():N}";
             var initialBalance = _marginSettings.IsLive ? 0 : LykkeConstants.DefaultDemoBalance;
@@ -383,7 +399,8 @@ namespace MarginTrading.Backend.Services
                 BaseAssetId = baseAssetId,
                 ClientId = clientId,
                 Balance = initialBalance,
-                TradingConditionId = tradingConditionId
+                TradingConditionId = tradingConditionId,
+                LegalEntity = tradingCondition.LegalEntity,
             };
         }
         

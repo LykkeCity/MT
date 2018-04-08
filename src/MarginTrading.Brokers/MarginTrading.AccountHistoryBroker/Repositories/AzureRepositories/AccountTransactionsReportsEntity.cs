@@ -26,6 +26,8 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.AzureRepositories
         public string Type { get; set; }
         public double WithdrawTransferLimit { get; set; }
         public string PositionId { get; set; }
+        public string LegalEntity { get; set; }
+        public string AuditLog { get; set; }
 
         public static AccountTransactionsReportsEntity Create(IAccountTransactionsReport src)
         {
@@ -40,7 +42,9 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.AzureRepositories
                 WithdrawTransferLimit = src.WithdrawTransferLimit,
                 Comment = src.Comment,
                 Type = src.Type,
-                PositionId = src.PositionId
+                PositionId = src.PositionId,
+                LegalEntity = src.LegalEntity,
+                AuditLog = src.AuditLog
             };
         }
     }

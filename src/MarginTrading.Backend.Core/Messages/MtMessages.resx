@@ -148,7 +148,7 @@
     <value>Instrument {0} does not exist in cache</value>
   </data>
   <data name="InstrumentWithAssetsNotFound" xml:space="preserve">
-    <value>There is no instrumet with assets {0} and {1}</value>
+    <value>There is no instrument with assets {0} and {1}</value>
   </data>
   <data name="Notifications_MarginCall" xml:space="preserve">
     <value>Margin used {0:P} ({1} Account)</value>

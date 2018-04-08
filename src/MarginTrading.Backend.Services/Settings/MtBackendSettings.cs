@@ -1,4 +1,4 @@
-using MarginTrading.Backend.Core.DayOffSettings;
+using Lykke.Service.ExchangeConnector.Client;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Common.Settings;
 
@@ -14,5 +14,6 @@ namespace MarginTrading.Backend.Services.Settings
         public RiskInformingSettings RiskInformingSettingsDemo { get; set; }
         public AssetClientSettings Assets { get; set; }
         public ClientAccountServiceSettings ClientAccountServiceClient { get; set; }
+        public ExchangeConnectorServiceSettings MtStpExchangeConnectorClient { get; set; }
     }
 }

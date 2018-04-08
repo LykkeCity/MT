@@ -7,5 +7,7 @@ namespace MarginTrading.Backend.Contracts.Client
     {
         IMtBackendClient Demo { get; }
         IMtBackendClient Live { get; }
+
+        IMtBackendClient Get(bool isLive);
     }
 }

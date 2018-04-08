@@ -7,6 +7,7 @@ using AzureStorage.Tables;
 using Common;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
+using MarginTrading.Backend.Core.MatchingEngines;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace MarginTrading.AzureRepositories
@@ -78,9 +79,29 @@ namespace MarginTrading.AzureRepositories
         public List<MatchedOrder> MatchedCloseOrders { get; set; } = new List<MatchedOrder>();
         decimal IOrderHistory.SwapCommission => (decimal) SwapCommission;
         public double SwapCommission { get; set; }
+        
+        public string EquivalentAsset { get; set; }
+        decimal IOrderHistory.OpenPriceEquivalent => (decimal) OpenPriceEquivalent;
+        public double OpenPriceEquivalent { get; set; }
+        decimal IOrderHistory.ClosePriceEquivalent => (decimal) ClosePriceEquivalent;
+        public double ClosePriceEquivalent { get; set; }
 
         public string Orders { get; set; }
         public string ClosedOrders { get; set; }
+        
+        OrderUpdateType IOrderHistory.OrderUpdateType => OrderUpdateType.ParseEnum(Backend.Core.OrderUpdateType.Close);
+        
+        public string OpenExternalOrderId { get; set; }
+        public string OpenExternalProviderId { get; set; }
+        public string CloseExternalOrderId { get; set; }
+        public string CloseExternalProviderId { get; set; }
+        public string MatchingEngineMode { get; set; }
+        public string LegalEntity { get; set; }
+
+        MatchingEngineMode IOrderHistory.MatchingEngineMode =>
+            MatchingEngineMode.ParseEnum(Backend.Core.MatchingEngines.MatchingEngineMode.MarketMaker);
+         
+        public string OrderUpdateType { get; set; }
 
         public static string GeneratePartitionKey(string clientId, string accountIds)
         {
@@ -131,7 +152,17 @@ namespace MarginTrading.AzureRepositories
                 Orders = src.MatchedOrders.SerializeArrayForTableStorage(),
                 ClosedOrders = src.MatchedCloseOrders.SerializeArrayForTableStorage(),
                 SwapCommission = (double) src.SwapCommission,
-                Comment = src.Comment
+                EquivalentAsset = src.EquivalentAsset,
+                OpenPriceEquivalent = (double) src.OpenPriceEquivalent,
+                ClosePriceEquivalent = (double) src.ClosePriceEquivalent,
+                Comment = src.Comment,
+                OrderUpdateType = src.OrderUpdateType.ToString(),
+                OpenExternalOrderId = src.OpenExternalOrderId,
+                OpenExternalProviderId = src.OpenExternalProviderId,
+                CloseExternalOrderId = src.CloseExternalOrderId,
+                CloseExternalProviderId = src.CloseExternalProviderId,
+                MatchingEngineMode = src.MatchingEngineMode.ToString(),
+                LegalEntity = src.LegalEntity,
             };
         }
     }
@@ -149,14 +180,14 @@ namespace MarginTrading.AzureRepositories
         {
             var entity = MarginTradingOrderHistoryEntity.Create(order);
             // ReSharper disable once RedundantArgumentDefaultValue
-            return _tableStorage.InsertAndGenerateRowKeyAsDateTimeAsync(entity, entity.CloseDate ?? entity.OpenDate.Value, RowKeyDateTimeFormat.Iso);
+            return _tableStorage.InsertAndGenerateRowKeyAsDateTimeAsync(entity, entity.CloseDate ?? entity.OpenDate ?? entity.CreateDate, RowKeyDateTimeFormat.Iso);
         }
 
         public async Task<IReadOnlyList<IOrderHistory>> GetHistoryAsync(string clientId, string[] accountIds, DateTime? from, DateTime? to)
         {
             return (await _tableStorage.WhereAsync(accountIds.Select(a => clientId + '_' + a),
                     from ?? DateTime.MinValue, to?.Date.AddDays(1) ?? DateTime.MaxValue, ToIntervalOption.IncludeTo))
-                .OrderByDescending(entity => entity.CloseDate ?? entity.OpenDate.Value).ToList();
+                .OrderByDescending(entity => entity.CloseDate ?? entity.OpenDate ?? entity.CreateDate).ToList();
         }
 
         public async Task<IEnumerable<IOrderHistory>> GetHistoryAsync()

@@ -1,8 +1,11 @@
 ﻿using AzureStorage.Tables;
 using Common.Log;
 using Lykke.SettingsReader;
+using MarginTrading.AzureRepositories.Contract;
+using MarginTrading.AzureRepositories.Entities;
 using MarginTrading.AzureRepositories.Logs;
 using MarginTrading.Backend.Core;
+using MarginTrading.Common.Services;
 
 namespace MarginTrading.AzureRepositories
 {
@@ -75,9 +78,29 @@ namespace MarginTrading.AzureRepositories
                     "RiskSystemCommandsLog", log));
             }
 
+            public static OvernightSwapStateRepository CreateOvernightSwapStateRepository(IReloadingManager<string> connString, ILog log)
+            {
+                return new OvernightSwapStateRepository(AzureTableStorage<OvernightSwapStateEntity>.Create(connString,
+                    "OvernightSwapState", log));
+            }
+
+            public static OvernightSwapHistoryRepository CreateOvernightSwapHistoryRepository(IReloadingManager<string> connString, ILog log)
+            {
+                return new OvernightSwapHistoryRepository(AzureTableStorage<OvernightSwapHistoryEntity>.Create(connString,
+                    "OvernightSwapHistory", log));
+            }
+
             public static IDayOffSettingsRepository CreateDayOffSettingsRepository(IReloadingManager<string> connString)
             {
                 return new DayOffSettingsRepository(new MarginTradingBlobRepository(connString));
+            }
+            
+            public static IAssetPairsRepository CreateAssetPairSettingsRepository(IReloadingManager<string> connString, 
+                ILog log, IConvertService convertService)
+            {
+                return new AssetPairsRepository(
+                    AzureTableStorage<AssetPairsRepository.AssetPairEntity>.Create(connString,
+                        "AssetPairs", log), convertService);
             }
         }
     }

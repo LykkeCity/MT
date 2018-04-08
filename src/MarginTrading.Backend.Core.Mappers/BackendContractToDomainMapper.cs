@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using MarginTrading.Backend.Core.MatchedOrders;
+using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Contract.BackendContracts;
@@ -77,7 +78,17 @@ namespace MarginTrading.Backend.Core.Mappers
                 MarginInit = src.MarginInit,
                 MarginMaintenance = src.MarginMaintenance,
                 OpenCrossPrice = src.OpenCrossPrice,
-                CloseCrossPrice = src.CloseCrossPrice
+                CloseCrossPrice = src.CloseCrossPrice,
+                EquivalentAsset = src.EquivalentAsset,
+                OpenPriceEquivalent = src.OpenPriceEquivalent,
+                ClosePriceEquivalent = src.ClosePriceEquivalent,
+                OrderUpdateType = src.OrderUpdateType.ToType<OrderUpdateType>(),
+                OpenExternalOrderId = src.OpenExternalOrderId,
+                OpenExternalProviderId = src.OpenExternalProviderId,
+                CloseExternalOrderId = src.CloseExternalOrderId,
+                CloseExternalProviderId = src.CloseExternalProviderId,
+                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineMode>(),
+                LegalEntity = src.LegalEntity,
             };
 
             foreach (var order in src.MatchedOrders)
@@ -106,7 +117,9 @@ namespace MarginTrading.Backend.Core.Mappers
                 Balance = src.Balance,
                 WithdrawTransferLimit = src.WithdrawTransferLimit,
                 Comment = src.Comment,
-                OrderId = src.OrderId
+                OrderId = src.OrderId,
+                LegalEntity = src.LegalEntity,
+                AuditLog = src.AuditLog
             };
         }
 
@@ -116,7 +129,8 @@ namespace MarginTrading.Backend.Core.Mappers
             {
                 Id = src.Id,
                 Name = src.Name,
-                IsDefault = src.IsDefault
+                IsDefault = src.IsDefault,
+                LegalEntity = src.LegalEntity
             };
         }
 
@@ -144,6 +158,8 @@ namespace MarginTrading.Backend.Core.Mappers
                 LeverageMaintenance = src.LeverageMaintenance,
                 SwapLong = src.SwapLong,
                 SwapShort = src.SwapShort,
+                OvernightSwapLong = src.OvernightSwapLong,
+                OvernightSwapShort = src.OvernightSwapShort,
                 CommissionLong = src.CommissionLong,
                 CommissionShort = src.CommissionShort,
                 CommissionLot = src.CommissionLot,

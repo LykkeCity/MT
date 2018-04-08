@@ -1,18 +1,17 @@
+using System;
+using System.Threading.Tasks;
 using Lykke.Common;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
+using MarginTrading.Common.Services.Client;
 using MarginTrading.Common.Settings;
-using MarginTrading.Common.Settings.Repositories;
 
 namespace MarginTrading.Backend.Services.EventsConsumers
 {
-	// TODO: Rename by role
 	public class OrderStateConsumer : NotificationSenderBase,
-		IEventConsumer<OrderPlacedEventArgs>,
-		IEventConsumer<OrderClosedEventArgs>,
-		IEventConsumer<OrderCancelledEventArgs>
+		IEventConsumer<OrderUpdateBaseEventArgs>
 	{
 		private readonly IThreadSwitcher _threadSwitcher;
 		private readonly IClientNotifyService _clientNotifyService;
@@ -21,18 +20,18 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 		private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
 
 		public OrderStateConsumer(IThreadSwitcher threadSwitcher,
-			IClientSettingsRepository clientSettingsRepository,
 			IClientNotifyService clientNotifyService,
 			IAccountsCacheService accountsCacheService,
 			IAppNotifications appNotifications,
 			IClientAccountService clientAccountService,
 			AccountManager accountManager,
 			IRabbitMqNotifyService rabbitMqNotifyService,
-			IAssetsCache assetsCache)
-			: base(clientSettingsRepository,
-				appNotifications,
+			IAssetsCache assetsCache,
+			IAssetPairsCache assetPairsCache)
+			: base(appNotifications,
 				clientAccountService,
-				assetsCache)
+				assetsCache,
+				assetPairsCache)
 		{
 			_threadSwitcher = threadSwitcher;
 			_clientNotifyService = clientNotifyService;
@@ -41,14 +40,46 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 			_rabbitMqNotifyService = rabbitMqNotifyService;
 		}
 
+		void IEventConsumer<OrderUpdateBaseEventArgs>.ConsumeEvent(object sender, OrderUpdateBaseEventArgs ea)
+		{
+			SendOrderHistory(ea);
+			switch (ea.UpdateType)
+			{
+				case OrderUpdateType.Closing:
+					break;
+				case OrderUpdateType.Activate:
+				case OrderUpdateType.Place:
+					OnPlacedOrActivated(ea);
+					break;
+				case OrderUpdateType.Cancel:
+					OnCancelled(ea);
+					break;
+				case OrderUpdateType.Reject:
+					OnRejected(ea);
+					break;
+				case OrderUpdateType.Close:
+					OnClosed(ea);
+					break;
+				case OrderUpdateType.ChangeOrderLimits:
+					OnLimitsChanged(ea);
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(ea.UpdateType), ea.UpdateType, string.Empty);
+			}
+		}
+
 		int IEventConsumer.ConsumerRank => 100;
 
-		void IEventConsumer<OrderClosedEventArgs>.ConsumeEvent(object sender, OrderClosedEventArgs ea)
+		private void OnRejected(OrderUpdateBaseEventArgs ea)
+		{
+			_rabbitMqNotifyService.OrderReject(ea.Order);
+		}
+
+		private void OnClosed(OrderUpdateBaseEventArgs ea)
 		{
 			var order = ea.Order;
 			_threadSwitcher.SwitchThread(async () =>
 			{
-				await _rabbitMqNotifyService.OrderHistory(order);
 				_clientNotifyService.NotifyOrderChanged(order);
 				
 				var totalFpl = order.GetTotalFpl();
@@ -60,26 +91,39 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 			});
 		}
 
-		void IEventConsumer<OrderCancelledEventArgs>.ConsumeEvent(object sender, OrderCancelledEventArgs ea)
+		private void OnCancelled(OrderUpdateBaseEventArgs ea)
 		{
 			var order = ea.Order;
 			_threadSwitcher.SwitchThread(async () =>
 			{
 				_clientNotifyService.NotifyOrderChanged(order);
-				await _rabbitMqNotifyService.OrderHistory(order);
+				await SendOrderChangedNotification(order.ClientId, order);
+			});
+		}
+
+		private void OnPlacedOrActivated(OrderUpdateBaseEventArgs ea)
+		{
+			var order = ea.Order;
+			_threadSwitcher.SwitchThread(async () =>
+			{
+				_clientNotifyService.NotifyOrderChanged(order);
 				await SendOrderChangedNotification(order.ClientId, order);
 			});
 		}
 
-		void IEventConsumer<OrderPlacedEventArgs>.ConsumeEvent(object sender, OrderPlacedEventArgs ea)
+		private void OnLimitsChanged(OrderUpdateBaseEventArgs ea)
 		{
 			var order = ea.Order;
-
-			_threadSwitcher.SwitchThread(async () =>
+			_threadSwitcher.SwitchThread(() =>
 			{
 				_clientNotifyService.NotifyOrderChanged(order);
-				await SendOrderChangedNotification(order.ClientId, order);
+				return Task.CompletedTask;
 			});
+		}
+
+		private void SendOrderHistory(OrderUpdateBaseEventArgs ea)
+		{
+			 _rabbitMqNotifyService.OrderHistory(ea.Order, ea.UpdateType);
 		}
 	}
 }

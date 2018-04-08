@@ -5,6 +5,7 @@
     <PackageId>Lykke.MarginTrading.Contracts</PackageId>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
   </ItemGroup>
 </Project>

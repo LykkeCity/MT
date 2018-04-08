@@ -14,6 +14,7 @@
         decimal PnL { get; }
         decimal OpenPositionsCount { get; }
         decimal MarginUsageLevel { get; }
+        string LegalEntity { get; set; }
     }
     public class MarginTradingAccountStats : IMarginTradingAccountStats
     {
@@ -29,5 +30,6 @@
         public decimal PnL { get; set; }
         public decimal OpenPositionsCount { get; set; }
         public decimal MarginUsageLevel { get; set; }
+        public string LegalEntity { get; set; }
     }
 }

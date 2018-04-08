@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using Autofac;
 using AzureStorage.Tables;
 using Common.Log;
@@ -10,9 +8,8 @@ using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.AzureRepositories.Logs;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Services.MatchingEngines;
-using MarginTrading.Common.Settings.Models;
-using MarginTrading.Common.Settings.Repositories;
 using Moq;
 
 namespace MarginTradingTests.Modules
@@ -34,21 +31,12 @@ namespace MarginTradingTests.Modules
             var accountGroupRepository = MarginTradingTestsUtils.GetPopulatedAccountGroupRepository();
             var accountAssetsRepository = MarginTradingTestsUtils.GetPopulatedAccountAssetsRepository();
             var meRoutesRepository = MarginTradingTestsUtils.GetPopulatedMatchingEngineRoutesRepository();
+            var overnightSwapStateRepository = MarginTradingTestsUtils.GetOvernightSwapStateRepository();
+            var overnightSwapHistoryRepository = MarginTradingTestsUtils.GetOvernightSwapHistoryRepository();
 
             var blobRepository = new Mock<IMarginTradingBlobRepository>();
             var orderHistoryRepository = new Mock<IMarginTradingOrdersHistoryRepository>();
-            var clientAccountsRepository = new Mock<IClientAccountsRepository>();
             var riskSystemCommandsLogRepository = new Mock<IRiskSystemCommandsLogRepository>();
-            clientAccountsRepository
-                .Setup(item => item.GetByIdAsync(It.IsAny<string>()))
-                .Returns(() =>
-                    Task.FromResult(
-                        (IClientAccount) new ClientAccount {Id = "1", NotificationsId = new Guid().ToString()}));
-
-            var clientSettingsRepository = new Mock<IClientSettingsRepository>();
-            clientSettingsRepository
-                .Setup(item => item.GetSettings<PushNotificationsSettings>(It.IsAny<string>()))
-                .Returns(() => Task.FromResult(new PushNotificationsSettings {Enabled = true}));
 
             builder.RegisterInstance(new LogToMemory()).As<ILog>();
             builder.RegisterInstance(assetsService).As<IAssetsService>().SingleInstance();
@@ -61,16 +49,21 @@ namespace MarginTradingTests.Modules
                 .SingleInstance();
             builder.RegisterInstance(accountAssetsRepository).As<IAccountAssetPairsRepository>().SingleInstance();
             builder.RegisterInstance(meRoutesRepository).As<IMatchingEngineRoutesRepository>().SingleInstance();
+            builder.RegisterInstance(overnightSwapStateRepository).As<IOvernightSwapStateRepository>().SingleInstance();
+            builder.RegisterInstance(overnightSwapHistoryRepository).As<IOvernightSwapHistoryRepository>()
+                .SingleInstance();
             builder.RegisterType<MatchingEngineInMemoryRepository>().As<IMatchingEngineRepository>().SingleInstance();
 
             //mocks
             builder.RegisterInstance(blobRepository.Object).As<IMarginTradingBlobRepository>().SingleInstance();
             builder.RegisterInstance(orderHistoryRepository.Object).As<IMarginTradingOrdersHistoryRepository>()
                 .SingleInstance();
-            builder.RegisterInstance(clientSettingsRepository.Object).As<IClientSettingsRepository>().SingleInstance();
-            builder.RegisterInstance(clientAccountsRepository.Object).As<IClientAccountsRepository>().SingleInstance();
             builder.RegisterInstance(riskSystemCommandsLogRepository.Object).As<IRiskSystemCommandsLogRepository>()
                 .SingleInstance();
+            builder.Register<IDayOffSettingsRepository>(c => new DayOffSettingsRepository(blobRepository.Object))
+                .SingleInstance();
+            builder.RegisterInstance(MarginTradingTestsUtils.GetPopulatedAssetPairsRepository())
+                .As<IAssetPairsRepository>().SingleInstance();
         }
     }
 }

@@ -20,8 +20,7 @@ using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Quotes;
 using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Common.Services;
-using MarginTrading.Common.Settings;
-using Microsoft.Data.OData;
+using MarginTrading.Common.Services.Client;
 
 namespace MarginTrading.Backend.Modules
 {
@@ -101,6 +100,10 @@ namespace MarginTrading.Backend.Modules
                 .As<IMigrationService>()
                 .SingleInstance();
 
+            builder.RegisterType<EquivalentPricesService>()
+                .As<IEquivalentPricesService>()
+                .SingleInstance();
+
             RegisterPublishers(builder, consoleWriter);
         }
 
@@ -118,7 +121,8 @@ namespace MarginTrading.Backend.Modules
                 _settings.RabbitMqQueues.UserUpdates.ExchangeName,
                 _settings.RabbitMqQueues.AccountMarginEvents.ExchangeName,
                 _settings.RabbitMqQueues.AccountStats.ExchangeName,
-                _settings.RabbitMqQueues.Trades.ExchangeName
+                _settings.RabbitMqQueues.Trades.ExchangeName,
+                _settings.RabbitMqQueues.ExternalOrder.ExchangeName
             };
 
             var bytesSerializer = new BytesStringSerializer();

@@ -5,6 +5,8 @@
         Deposit,
         Withdraw,
         OrderClosed,
-        Reset
+        Reset,
+        Swap,
+        Manual
     }
 }
