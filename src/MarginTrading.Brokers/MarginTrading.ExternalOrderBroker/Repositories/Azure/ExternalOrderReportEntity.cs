@@ -18,8 +18,6 @@ namespace MarginTrading.ExternalOrderBroker.Repositories.Azure
             set => RowKey = value;
         }
         
-        public string AccountAssetId { get; set; }
-        
         public string Instrument { get; set; }
         
         public string BaseAsset { get; set; }
@@ -44,7 +42,6 @@ namespace MarginTrading.ExternalOrderBroker.Repositories.Azure
         {
             return new ExternalOrderReportEntity
             {
-                AccountAssetId = externalContract.BaseAsset, // base by default
                 Instrument = externalContract.Instrument,
                 Exchange = externalContract.Exchange,
                 BaseAsset = externalContract.BaseAsset,

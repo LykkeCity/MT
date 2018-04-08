@@ -1,11 +1,7 @@
-﻿using System;
-
-namespace MarginTrading.ExternalOrderBroker.Models
+﻿namespace MarginTrading.ExternalOrderBroker.Models
 {
 	public class ExternalOrderReport : IExternalOrderReport
 	{
-		public string AccountAssetId { get; set; }
-        
 		public string Instrument { get; set; }
 		
 		public string Exchange { get; set; }
@@ -33,7 +29,6 @@ namespace MarginTrading.ExternalOrderBroker.Models
 		public override string ToString()
 		{
 			return "Exchange: " + Exchange + ", "
-			       + "AccountAssetId: " + AccountAssetId + ", "
 			       + "Instrument: " + Instrument + ", "
 			       + "Type: " + this.Type + ", "
 			       + "Price: " + this.Price + ", "
@@ -48,7 +43,6 @@ namespace MarginTrading.ExternalOrderBroker.Models
 		{
 			return new ExternalOrderReport
 			{
-				AccountAssetId = externalContract.Instrument.BaseProperty, // base by default
 				Instrument = externalContract.Instrument.Name,
 				Exchange = externalContract.Instrument.Exchange,
 				BaseAsset = externalContract.Instrument.BaseProperty,
