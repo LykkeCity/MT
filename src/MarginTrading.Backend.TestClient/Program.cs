@@ -138,13 +138,22 @@ namespace MarginTrading.Backend.TestClient
             var assetSumary = await dataReaderClient.TradeMonitoringRead.AssetSummaryList().Dump();
 
             var openPositions = await dataReaderClient.TradeMonitoringRead.OpenPositions().Dump();
-            string clientId = openPositions.First().ClientId;
-            var openPositionsByClient = await dataReaderClient.TradeMonitoringRead.OpenPositionsByClient(clientId).Dump();
+            var openPosition = openPositions.FirstOrDefault();
+            if (openPosition != null)
+            {
+                string clientId = openPosition.ClientId;
+                var openPositionsByClient = await dataReaderClient.TradeMonitoringRead.OpenPositionsByClient(clientId).Dump();
+            }
             var openPositionsByDate = await dataReaderClient.TradeMonitoringRead.OpenPositionsByDate(DateTime.UtcNow.AddDays(-30), DateTime.UtcNow).Dump();
             var openPositionsByVolume = await dataReaderClient.TradeMonitoringRead.OpenPositionsByVolume(100).Dump();
 
             var pendingOrders = await dataReaderClient.TradeMonitoringRead.PendingOrders().Dump();
-            var pendingOrdersByClient = await dataReaderClient.TradeMonitoringRead.PendingOrdersByClient(clientId).Dump();
+            var pendingOrder = pendingOrders.FirstOrDefault();
+            if (pendingOrder != null)
+            {
+                string clientId = pendingOrder.ClientId;
+                var pendingOrdersByClient = await dataReaderClient.TradeMonitoringRead.PendingOrdersByClient(clientId).Dump();
+            }            
             var pendingOrdersByDate = await dataReaderClient.TradeMonitoringRead.PendingOrdersByDate(DateTime.UtcNow.AddDays(-30), DateTime.UtcNow).Dump();
             var pendingOrdersByVolume = await dataReaderClient.TradeMonitoringRead.PendingOrdersByVolume(100).Dump();
 
@@ -184,12 +193,12 @@ namespace MarginTrading.Backend.TestClient
                 IsDefault = false,
                 Name = "Test Trading Condition",
             }).Dump();
-//            tc.Result.Id.RequiredEqualsTo("LYKKETEST", "tc.Result.Id");
+            tc.Result.Id.RequiredEqualsTo("LYKKETEST", "tc.Result.Id");
 
             var ag = await backendClient.TradingConditionsEdit.InsertOrUpdateAccountGroup(new Contracts.TradingConditions.AccountGroupContract
             {
                 BaseAssetId = "BTC",
-                TradingConditionId = "LYKKETEST",
+                TradingConditionId = tc.Result.Id,
                 DepositTransferLimit = 0.1m,
                 ProfitWithdrawalLimit = 0.2m,
                 MarginCall = 0.3m,
@@ -202,7 +211,7 @@ namespace MarginTrading.Backend.TestClient
             {
                 Instrument = "TSTLKK",
                 BaseAssetId = "BTC",
-                TradingConditionId = "LYKKETEST"
+                TradingConditionId = tc.Result.Id
             })
            .Dump();
             aa.Result.Instrument.RequiredEqualsTo("TSTLKK", "aa.Result.Instrument");
@@ -210,7 +219,7 @@ namespace MarginTrading.Backend.TestClient
             var ai = await backendClient.TradingConditionsEdit.AssignInstruments(new Contracts.TradingConditions.AssignInstrumentsContract
             {
                 BaseAssetId = "BTC",
-                TradingConditionId = "LYKKETEST",
+                TradingConditionId = tc.Result.Id,
                 Instruments = new string[] { "TSTLKK" }
             })
             .Dump();
@@ -222,12 +231,36 @@ namespace MarginTrading.Backend.TestClient
 
             var manualCharge = await backendClient.AccountsBalance.ChargeManually(new Contracts.AccountBalance.AccountChargeManuallyRequest
             {
-                ClientId = "20ee9e59-87f6-425d-bcf0-5bc549ef9094",
-                AccountId = "acd9b5758be74baaa7e0f89b59e91486",
+                ClientId = "232b3b04-7479-44e7-a6b3-ac131d8e6ccd",
+                AccountId = "d_f4c745f19c834145bcf2d6b5f1a871f3",
                 Amount = 1,
                 Reason = "API TEST"
             })
             .Dump();
+
+            var accountGroups = await dataReaderClient.AccountGroups.List().Dump();
+            var accountGroup1 = accountGroups.FirstOrDefault();
+            if (accountGroup1 != null)
+            {
+                var accountGroup = (await dataReaderClient.AccountGroups.GetByBaseAsset(accountGroup1.TradingConditionId, accountGroup1.BaseAssetId)).Dump();
+                accountGroup.Should().BeEquivalentTo(accountGroup1);
+            }
+
+            var assetPairs = await dataReaderClient.Dictionaries.AssetPairs().Dump();
+            var matchingEngines = await dataReaderClient.Dictionaries.MatchingEngines().Dump();
+            var orderTypes = await dataReaderClient.Dictionaries.OrderTypes().Dump();
+
+           
+            var routes = await dataReaderClient.Routes.List().Dump();
+            var route1 = routes.FirstOrDefault();
+            if (route1 != null)
+            {
+                var route = await dataReaderClient.Routes.GetById(route1.Id).Dump();
+                route.Should().BeEquivalentTo(route1);
+            }
+
+            var isEnabled = await dataReaderClient.Settings.IsMarginTradingEnabled("232b3b04-7479-44e7-a6b3-ac131d8e6ccd");
+
             Console.WriteLine("Successfuly finished");
         }
 
