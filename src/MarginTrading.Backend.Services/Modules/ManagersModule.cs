@@ -14,8 +14,8 @@ namespace MarginTrading.Backend.Services.Modules
         {
             builder.RegisterType<AccountManager>()
                 .AsSelf()
-                .As<IStartable>()
-                .SingleInstance();
+                .SingleInstance()
+                .OnActivated(args => args.Instance.Start());
 
             builder.RegisterType<OrderCacheManager>()
                 .AsSelf()

@@ -46,7 +46,7 @@ namespace MarginTrading.Backend.Services
 				order.EquivalentAsset = GetEquivalentAsset(order.ClientId, order.AccountId);
 
 				order.OpenPriceEquivalent = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.EquivalentAsset,
-					order.Instrument);
+					order.Instrument, order.LegalEntity);
 			}
 			catch (Exception e)
 			{
@@ -64,7 +64,7 @@ namespace MarginTrading.Backend.Services
 				}
 				
 				order.ClosePriceEquivalent = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.EquivalentAsset,
-					order.Instrument);
+					order.Instrument, order.LegalEntity);
 			}
 			catch (Exception e)
 			{

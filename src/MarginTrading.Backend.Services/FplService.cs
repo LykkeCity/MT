@@ -33,7 +33,7 @@ namespace MarginTrading.Backend.Services
         public void UpdateOrderFpl(IOrder order, FplData fplData)
         {
             fplData.AccountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(order.AccountAssetId);
-            fplData.QuoteRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.AccountAssetId, order.Instrument);
+            fplData.QuoteRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.AccountAssetId, order.Instrument, order.LegalEntity);
 
             var fpl = order.GetOrderType() == OrderDirection.Buy
                 ? (order.ClosePrice - order.OpenPrice) * fplData.QuoteRate * order.GetMatchedVolume()

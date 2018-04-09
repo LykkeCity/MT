@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Collections.ObjectModel;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -9,7 +7,7 @@ using System.Threading.Tasks;
 using Polly;
 using Polly.Retry;
 
-namespace MarginTrading.Backend.Contracts.Client
+namespace MarginTrading.Backend.Contracts.Infrastructure
 {
     internal class RetryingHttpClientHandler : DelegatingHandler
     {

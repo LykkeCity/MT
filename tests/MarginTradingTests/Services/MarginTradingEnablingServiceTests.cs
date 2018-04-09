@@ -73,7 +73,7 @@ namespace MarginTradingTests.Services
                 EnabledDemo = true,
                 EnabledLive = false
             };
-            _sentMessage.ShouldBeEquivalentTo(expectedMessage);
+            _sentMessage.Should().BeEquivalentTo(expectedMessage);
             Mock.Get(_marginTradingSettingsCacheService)
                 .Verify(s => s.OnMarginTradingEnabledChanged(expectedMessage.Equivalent()));
         }
@@ -95,7 +95,7 @@ namespace MarginTradingTests.Services
                 EnabledDemo = false,
                 EnabledLive = true
             };
-            _sentMessage.ShouldBeEquivalentTo(expectedMessage);
+            _sentMessage.Should().BeEquivalentTo(expectedMessage);
             Mock.Get(_marginTradingSettingsCacheService)
                 .Verify(s => s.OnMarginTradingEnabledChanged(expectedMessage.Equivalent()));
         }

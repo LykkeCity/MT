@@ -1,10 +1,32 @@
-﻿using Newtonsoft.Json;
+﻿using JetBrains.Annotations;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace MarginTrading.Backend.Contracts.AssetPairSettings
 {
-    public class AssetPairSettingsInputContract
+    [PublicAPI]
+    public class AssetPairInputContract
     {
+        /// <summary>
+        /// Instrument display name
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Base asset id
+        /// </summary>
+        public string BaseAssetId { get; set; }
+
+        /// <summary>
+        /// Quoting asset id
+        /// </summary>
+        public string QuoteAssetId { get; set; }
+
+        /// <summary>
+        /// Instrument accuracy in decimal digits count
+        /// </summary>
+        public int Accuracy { get; set; }
+
         /// <summary>
         /// Id of legal entity
         /// </summary>
@@ -13,6 +35,7 @@ namespace MarginTrading.Backend.Contracts.AssetPairSettings
         /// <summary>
         /// Base pair id (ex. BTCUSD for id BTCUSD.cy)
         /// </summary>
+        [CanBeNull]
         public string BasePairId { get; set; }
 
         /// <summary>
@@ -22,19 +45,19 @@ namespace MarginTrading.Backend.Contracts.AssetPairSettings
         public MatchingEngineModeContract MatchingEngineMode { get; set; }
 
         /// <summary>
-        /// Markup for bid. 1 results in no changes.
+        /// Markup for bid for stp mode. 1 results in no changes.
         /// </summary>
         /// <remarks>
         /// You cannot specify a value lower or equal to 0 to ensure positive resulting values.
         /// </remarks>
-        public decimal MultiplierMarkupBid { get; set; }
-        
+        public decimal StpMultiplierMarkupBid { get; set; }
+
         /// <summary>
-        /// Markup for ask. 1 results in no changes.
+        /// Markup for ask for stp mode. 1 results in no changes.
         /// </summary>
         /// <remarks>
         /// You cannot specify a value lower or equal to 0 to ensure positive resulting values.
         /// </remarks>
-        public decimal MultiplierMarkupAsk { get; set; }
+        public decimal StpMultiplierMarkupAsk { get; set; }
     }
 }

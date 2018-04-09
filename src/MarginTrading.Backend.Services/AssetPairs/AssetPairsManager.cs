@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
-using Lykke.Service.Assets.Client;
 using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.Backend.Core;
 using MarginTrading.Common.Extensions;
@@ -11,91 +11,71 @@ namespace MarginTrading.Backend.Services.AssetPairs
 {
     internal class AssetPairsManager : IStartable, IAssetPairsManager
     {
-        private static readonly object InitAssetPairSettingsLock = new object();
+        private static readonly object InitAssetPairsLock = new object();
 
-        private readonly IAssetsService _assets;
         private readonly IAssetPairsInitializableCache _assetPairsCache;
-        private readonly IAssetPairSettingsRepository _assetPairSettingsRepository;
+        private readonly IAssetPairsRepository _assetPairsRepository;
 
-        public AssetPairsManager(IAssetsService repository,
-            IAssetPairsInitializableCache assetPairsCache,
-            IAssetPairSettingsRepository assetPairSettingsRepository)
+        public AssetPairsManager(IAssetPairsInitializableCache assetPairsCache,
+            IAssetPairsRepository assetPairsRepository)
         {
-            _assets = repository;
             _assetPairsCache = assetPairsCache;
-            _assetPairSettingsRepository = assetPairSettingsRepository;
+            _assetPairsRepository = assetPairsRepository;
         }
 
         public void Start()
         {
-            var instrumentsTask = UpdateInstrumentsCache();
-            InitAssetPairSettings();
-            instrumentsTask.Wait();
+            InitAssetPairs();
         }
 
-        private async Task UpdateInstrumentsCache()
+        private void InitAssetPairs()
         {
-            var instruments = (await _assets.AssetPairGetAllAsync())
-                .ToDictionary(
-                    a => a.Id,
-                    a => (IAssetPair) new AssetPair(a.Id, a.Name, a.BaseAssetId, a.QuotingAssetId, a.Accuracy));
-
-            _assetPairsCache.InitInstrumentsCache(instruments);
-        }
-
-        private void InitAssetPairSettings()
-        {
-            lock (InitAssetPairSettingsLock)
+            lock (InitAssetPairsLock)
             {
-                var settings = _assetPairSettingsRepository.GetAsync().GetAwaiter().GetResult()
-                    .ToDictionary(a => a.AssetPairId, s => s);
-                _assetPairsCache.InitAssetPairSettingsCache(settings);
+                var pairs = _assetPairsRepository.GetAsync().GetAwaiter().GetResult()
+                    .ToDictionary(a => a.Id, s => s);
+                _assetPairsCache.InitPairsCache(pairs);
             }
         }
 
-        public async Task<IAssetPairSettings> UpdateAssetPairSettings(IAssetPairSettings assetPairSettings)
+        public async Task<IAssetPair> UpdateAssetPair(IAssetPair assetPair)
         {
-            ValidateSettings(assetPairSettings);
-            await _assetPairSettingsRepository.ReplaceAsync(assetPairSettings);
-            InitAssetPairSettings();
-            return _assetPairsCache.GetAssetPairSettings(assetPairSettings.AssetPairId)
-                .RequiredNotNull("AssetPairSettings for " + assetPairSettings.AssetPairId);
+            ValidatePair(assetPair);
+            await _assetPairsRepository.ReplaceAsync(assetPair);
+            InitAssetPairs();
+            return _assetPairsCache.TryGetAssetPairById(assetPair.Id)
+                .RequiredNotNull("AssetPair " + assetPair.Id);
         }
 
-        public async Task<IAssetPairSettings> InsertAssetPairSettings(IAssetPairSettings assetPairSettings)
+        public async Task<IAssetPair> InsertAssetPair(IAssetPair assetPair)
         {
-            ValidateSettings(assetPairSettings);
-            await _assetPairSettingsRepository.InsertAsync(assetPairSettings);
-            InitAssetPairSettings();
-            return _assetPairsCache.GetAssetPairSettings(assetPairSettings.AssetPairId)
-                .RequiredNotNull("AssetPairSettings for " + assetPairSettings.AssetPairId);
+            ValidatePair(assetPair);
+            await _assetPairsRepository.InsertAsync(assetPair);
+            InitAssetPairs();
+            return _assetPairsCache.TryGetAssetPairById(assetPair.Id)
+                .RequiredNotNull("AssetPair " + assetPair.Id);
         }
 
-        public async Task<IAssetPairSettings> DeleteAssetPairSettings(string assetPairId)
+        public async Task<IAssetPair> DeleteAssetPair(string assetPairId)
         {
-            var settings = await _assetPairSettingsRepository.DeleteAsync(assetPairId);
-            InitAssetPairSettings();
-            return settings; 
+            var pair = await _assetPairsRepository.DeleteAsync(assetPairId);
+            InitAssetPairs();
+            return pair; 
         }
 
-        private void ValidateSettings(IAssetPairSettings newValue)
+        private void ValidatePair(IAssetPair newValue)
         {
-            if (_assetPairsCache.TryGetAssetPairById(newValue.AssetPairId) == null)
-            {
-                throw new InvalidOperationException($"AssetPairId {newValue.AssetPairId} does not exist");
-            }
+            if (newValue.BasePairId == null) 
+                return;
 
             if (_assetPairsCache.TryGetAssetPairById(newValue.BasePairId) == null)
-            {
                 throw new InvalidOperationException($"BasePairId {newValue.BasePairId} does not exist");
-            }
 
-            if (_assetPairsCache.GetAssetPairSettings().Any(s =>
-                s.AssetPairId != newValue.AssetPairId &&
+            if (_assetPairsCache.GetAll().Any(s =>
+                s.Id != newValue.Id &&
                 s.BasePairId == newValue.BasePairId))
             {
-                throw new InvalidOperationException(
-                    $"BasePairId {newValue.BasePairId} cannot be added twice in one Legal Entity {newValue.LegalEntity}");
+                throw new InvalidOperationException($"BasePairId {newValue.BasePairId} cannot be added twice");
             }
         }
     }

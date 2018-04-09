@@ -2,9 +2,20 @@
 {
     public class BackendResponse<TResult>
     {
+        private string _errorMessage;
         public TResult Result { get; set; }
-        
-        public string ErrorMessage { get; set; }
+
+        public string ErrorMessage
+        {
+            get => _errorMessage;
+            set => _errorMessage = value;
+        }
+
+        public string Message
+        {
+            get => _errorMessage;
+            set => _errorMessage = value;
+        }
 
         public bool IsOk => string.IsNullOrEmpty(ErrorMessage);
 

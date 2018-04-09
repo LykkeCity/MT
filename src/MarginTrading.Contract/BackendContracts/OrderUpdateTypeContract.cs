@@ -1,5 +1,8 @@
-﻿namespace MarginTrading.Contract.BackendContracts
+﻿using JetBrains.Annotations;
+
+namespace MarginTrading.Contract.BackendContracts
 {
+    [PublicAPI]
     public enum OrderUpdateTypeContract
     {
         Place,

@@ -5,7 +5,6 @@ namespace MarginTrading.Backend.Services.AssetPairs
 {
     internal interface IAssetPairsInitializableCache : IAssetPairsCache
     {
-        void InitInstrumentsCache(Dictionary<string, IAssetPair> instruments);
-        void InitAssetPairSettingsCache(Dictionary<string, IAssetPairSettings> assetPairSettings);
+        void InitPairsCache(Dictionary<string, IAssetPair> instruments);
     }
 }

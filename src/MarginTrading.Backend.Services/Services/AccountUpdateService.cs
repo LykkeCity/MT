@@ -63,7 +63,8 @@ namespace MarginTrading.Backend.Services
 
         public bool IsEnoughBalance(Order order)
         {
-            var volumeInAccountAsset = _cfdCalculatorService.GetVolumeInAccountAsset(order.GetOrderType(), order.AccountAssetId, order.Instrument, Math.Abs(order.Volume));
+            var volumeInAccountAsset = _cfdCalculatorService.GetVolumeInAccountAsset(order.GetOrderType(),
+                order.AccountAssetId, order.Instrument, Math.Abs(order.Volume), order.LegalEntity);
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
             var accountAsset = _accountAssetsCacheService.GetAccountAsset(order.TradingConditionId, order.AccountAssetId, order.Instrument);
 

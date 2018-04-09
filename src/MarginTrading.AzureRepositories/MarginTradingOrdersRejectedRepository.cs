@@ -97,6 +97,7 @@ namespace MarginTrading.AzureRepositories
         public string OrderUpdateType { get; set; }
         
         public string MatchingEngineMode { get; set; }
+        public string LegalEntity { get; set; }
 
         MatchingEngineMode IOrderHistory.MatchingEngineMode =>
             MatchingEngineMode.ParseEnum(Backend.Core.MatchingEngines.MatchingEngineMode.MarketMaker);
@@ -165,7 +166,8 @@ namespace MarginTrading.AzureRepositories
                 OpenExternalProviderId = src.OpenExternalProviderId,
                 CloseExternalOrderId = src.CloseExternalOrderId,
                 CloseExternalProviderId = src.CloseExternalProviderId,
-                MatchingEngineMode = src.MatchingEngineMode.ToString()
+                MatchingEngineMode = src.MatchingEngineMode.ToString(),
+                LegalEntity = src.LegalEntity,
             };
         }
     }

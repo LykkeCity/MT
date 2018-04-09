@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using MarginTrading.Backend.Contracts.Client;
+using MarginTrading.Backend.Contracts.Infrastructure;
 using NUnit.Framework;
 using Refit;
 
@@ -28,7 +29,7 @@ namespace MarginTradingTests.Backend.Contracts.Client
             var invocation = proxy.Invoking(p => p.TestMethod().GetAwaiter().GetResult());
 
             // assert
-            invocation.ShouldThrow<ApiException>()
+            invocation.Should().Throw<ApiException>()
                 .WithMessage("Response status code does not indicate success: 502 (Bad Gateway).");
         }
     }
