@@ -27,5 +27,11 @@ namespace MarginTrading.AzureRepositories
 		{
 			return await _tableStorage.GetDataAsync();
 		}
+
+		public async Task DeleteAsync(IOvernightSwapState obj)
+		{
+			var entity = OvernightSwapStateEntity.Create(obj);
+			await _tableStorage.DeleteIfExistAsync(entity.PartitionKey, entity.RowKey);
+		}
 	}
 }

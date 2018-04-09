@@ -1,0 +1,88 @@
+﻿﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Overnight swaps charged</title>
+</head>
+<body style="background-color: #F4F6F7;font-family: Geneva, Arial, Helvetica, sans-serif;">
+    <div style="margin:20px auto;width:600px;">
+        <img src="https://lkefiles.blob.core.windows.net/images/emails/logo_big.png" height="60" alt="Lykke logo" />
+    </div>
+    <table style="margin:auto;width:800px;border: 1px solid #E5E7EA;background-color: #fff;">
+        <tr>
+            <td style="padding-top:50px;"></td>
+        </tr>
+        <tr>
+            <td style="padding:0 40px 0 40px;">
+                <h1 style="font-size: 2.2em;line-height: 140%;"><span style="border-bottom:3px solid #FF8F1C;padding-bottom: 4px;">Overnight swaps charged</span></h1>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding:0 40px 0 40px;">
+                <p style="font-size: 1.2em;line-height: 140%;margin-top: 20px;">
+                    {{CurrentDate}}
+                </p>
+                <p style="font-size: 1.1em;color: #3F4D60;line-height: 180%;margin-top: 10px;">
+                    Dear Customer, hereby we inform you that overnight swaps have been charged to at least one of your margin trading accounts.
+                </p>
+            </td>
+        </tr>
+        {{#CalculationsByAccount}}
+            <tr style="margin-top: 10px;">
+                <td style="padding:0 40px 0 40px;">
+                    <p style="font-size: 1.0em;line-height: 180%;">
+                        {{AccountCurrency}} account {{AccountId}}:
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <table border="1" style="margin:auto;width:750px;border-collapse: collapse;">
+                        <tr>
+                            <th>Instrument</th>
+                            <th>Direction</th>
+                            <th>Volume</th>
+                            <th>Swap rate</th>
+                            <th>Cost, {{AccountCurrency}}</th>
+                            <th>Position id's</th>
+                        </tr>
+                        {{#Calculations}}
+                            <tr>
+                                <td style="text-align: center">{{Instrument}}</td>
+                                <td style="text-align: center">{{Direction}}</td>
+                                <td style="text-align: center">{{Volume}}</td>
+                                <td style="text-align: center">{{SwapRate}}%</td>
+                                <td style="text-align: center">{{Cost}}</td>
+                                <td style="text-align: center">{{PositionIdsString}}</td>
+                            </tr>
+                        {{/Calculations}}
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td style="padding:0 40px 0 40px;">
+                    <p style="font-size: 1.0em;line-height: 180%;">
+                        Total cost: {{TotalCost}} {{AccountCurrency}}
+                    </p>
+                </td>
+            </tr>
+        {{/CalculationsByAccount}}
+        <tr>
+            <td style="padding:0 40px 0 40px;">
+                <p style="font-size: 1.1em;color: #3F4D60;line-height: 180%;margin-top: 30px;"><b style="color: #000;">Warm regards, the Lykke Team</p>
+                <hr />
+            </td>
+        </tr>
+    </table>
+    <table style="margin:auto;width:600px;border: none;">
+        <tr>
+            <td style="padding:10px 40px 20px 40px; text-align:center;font-size: 0.9em;color: #8C94A0;margin: 20px 0 40px 0;">
+                <p>&copy; Lykke {{Year}}. All rights reserved. Need help? Contact <a style="color: #8C94A0;" href="mailto:support@lykkex.com">support@lykkex.com</a></p>
+                <p>Let's be friends in social networks!</p>
+                <a href="https://www.facebook.com/groups/542506412568917/"><img style="margin-right:10px" src="https://lkefiles.blob.core.windows.net/images/emails/fb_icon.png" height="25" alt="facebook" /></a>
+                <a href="https://twitter.com/LykkeCity"><img style="margin-right:10px" src="https://lkefiles.blob.core.windows.net/images/emails/twitter_icon.png" height="25" alt="twitter" /></a>
+                <a href="https://www.youtube.com/channel/UCmMYipGdKMF0kzfaE-PXsNQ"><img style="margin-right:10px" src="https://lkefiles.blob.core.windows.net/images/emails/youtube_icon.png" height="25" alt="youtube" /></a>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

@@ -6,5 +6,6 @@ namespace MarginTrading.Backend.Core
     {
         Task SendMarginCallEmailAsync(string email, string baseAssetId, string accountId);
         Task SendStopOutEmailAsync(string email, string baseAssetId, string accountId);
+        Task SendOvernightSwapEmailAsync(string email, OvernightSwapNotification overnightSwapNotification);
     }
 }
