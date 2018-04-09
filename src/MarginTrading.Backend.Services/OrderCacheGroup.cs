@@ -72,7 +72,8 @@ namespace MarginTrading.Backend.Services
                     _orderIdsByAccountIdAndInstrumentId.Add(accountInstrumentCacheKey, new HashSet<string>());
                 _orderIdsByAccountIdAndInstrumentId[accountInstrumentCacheKey].Add(order.Id);
 
-                if (order.Status == OrderStatus.WaitingForExecution)
+                if (order.Status == OrderStatus.WaitingForExecution
+                    && !string.IsNullOrEmpty(order.MarginCalcInstrument))
                 {
                     if(!_pendingOrderIdsByMarginInstrumentId.ContainsKey(order.MarginCalcInstrument))
                         _pendingOrderIdsByMarginInstrumentId.Add(order.MarginCalcInstrument, new HashSet<string>());
@@ -99,7 +100,10 @@ namespace MarginTrading.Backend.Services
                     _orderIdsByInstrumentId[order.Instrument].Remove(order.Id);
                     _orderIdsByAccountId[order.AccountId].Remove(order.Id);
                     _orderIdsByAccountIdAndInstrumentId[GetAccountInstrumentCacheKey(order.AccountId, order.Instrument)].Remove(order.Id);
-                    _pendingOrderIdsByMarginInstrumentId[order.MarginCalcInstrument].Remove(order.Id);
+
+                    if (order.Status == OrderStatus.WaitingForExecution
+                        && (_pendingOrderIdsByMarginInstrumentId[order.MarginCalcInstrument]?.Contains(order.Id) ?? false))
+                        _pendingOrderIdsByMarginInstrumentId[order.MarginCalcInstrument].Remove(order.Id);
                 }
                 else
                     throw new Exception(string.Format(MtMessages.CantRemoveOrderWithStatus, order.Id, _status));
