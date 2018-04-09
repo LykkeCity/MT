@@ -20,7 +20,7 @@ namespace MarginTradingTests.Backend.Contracts.Client
             var refitSettings = new RefitSettings
             {
                 HttpMessageHandlerFactory = () =>
-                    new RetryingHttpClientHandler(new FakeHttpClientHandler(), 6, new TimeSpan(1))
+                    new RetryingHttpClientHandler(new FakeHttpClientHandler(), 6, (retryAttempt, url) => new TimeSpan(1))
             };
 
             var proxy = RestService.For<ITestInterface>("http://fake.host", refitSettings);

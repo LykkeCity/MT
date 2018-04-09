@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
 using Polly;
@@ -11,12 +12,14 @@ using Refit;
 
 namespace MarginTrading.Backend.Contracts.Infrastructure
 {
-    public class CachingHelper
+    internal class CachingHelper
     {
+        [CanBeNull] private readonly Func<MethodInfo, object[], TimeSpan, TimeSpan> _cachingDurationProvider;
         private readonly IAsyncPolicy _retryPolicy;
-
-        public CachingHelper()
+        
+        public CachingHelper([CanBeNull] Func<MethodInfo, object[], TimeSpan, TimeSpan> cachingDurationProvider)
         {
+            _cachingDurationProvider = cachingDurationProvider;
             _retryPolicy = Policy
                 .CacheAsync(new MemoryCacheProvider(new MemoryCache(new MemoryCacheOptions())),
                     new ContextualTtl());
@@ -24,32 +27,20 @@ namespace MarginTrading.Backend.Contracts.Infrastructure
 
         public Task<object> HandleMethodCall(MethodInfo targetMethod, object[] args, Func<Task<object>> innerHandler)
         {
-            var clientCachingAttribute = targetMethod.GetCustomAttribute<ClientCachingAttribute>();
-
             // ReSharper disable once ConditionIsAlwaysTrueOrFalse
             // ReSharper disable once HeuristicUnreachableCode
-            if (clientCachingAttribute == null) return innerHandler();
-
-            if (clientCachingAttribute.CachingTime <= TimeSpan.Zero)
-            {
-                throw new InvalidOperationException(
-                    $"Method {targetMethod.DeclaringType}.{targetMethod.Name} has {nameof(ClientCachingAttribute)} " +
-                    "specified, but it has invalid caching time specified");
-            }
-
-            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-            // ReSharper disable HeuristicUnreachableCode
             if (targetMethod.GetCustomAttribute<GetAttribute>() == null)
-            {
-                throw new InvalidOperationException(
-                    $"Method {targetMethod.DeclaringType}.{targetMethod.Name} has {nameof(ClientCachingAttribute)} " +
-                    "specified, but it is not a Refit GET method");
-            }
-            // ReSharper restore HeuristicUnreachableCode
+                return innerHandler();
 
+            var clientCachingAttribute = targetMethod.GetCustomAttribute<ClientCachingAttribute>();
+            var attributeCachingTime = clientCachingAttribute?.CachingTime ?? TimeSpan.Zero;
+            attributeCachingTime = attributeCachingTime < TimeSpan.Zero ? TimeSpan.Zero : attributeCachingTime;
+            var cachingTime = (_cachingDurationProvider ?? ((mi, a, t) => t))
+                .Invoke(targetMethod, args, attributeCachingTime);
+            
             var contextData = new Dictionary<string, object>
             {
-                {ContextualTtl.TimeSpanKey, clientCachingAttribute.CachingTime}
+                {ContextualTtl.TimeSpanKey, cachingTime}
             };
             return _retryPolicy.ExecuteAsync((context, ct) => innerHandler(),
                 new Context($"{targetMethod.DeclaringType}:{targetMethod.Name}:{targetMethod.GetHashCode()}:{JsonConvert.SerializeObject(args)}",

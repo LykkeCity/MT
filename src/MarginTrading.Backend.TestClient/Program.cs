@@ -5,11 +5,14 @@ using AsyncFriendlyStackTrace;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using FluentAssertions;
+using Lykke.ClientGenerator;
+using Lykke.ClientGenerator.Retries;
 using MarginTrading.Backend.Contracts.AccountAssetPair;
 using MarginTrading.Backend.Contracts.AssetPairSettings;
 using MarginTrading.Backend.Contracts.Client;
 using MarginTrading.Backend.Contracts.DataReaderClient;
 using MarginTrading.Backend.Contracts.DayOffSettings;
+using MarginTrading.Backend.Contracts.Infrastructure;
 using MarginTrading.Common.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
@@ -57,8 +60,9 @@ namespace MarginTrading.Backend.TestClient
         {
             var services = new ServiceCollection();
             var builder = new ContainerBuilder();
-            services.RegisterMtBackendClient("http://localhost:5000", "margintrading", "TestClient");
-            services.RegisterMtDataReaderClient("http://localhost:5008", "margintrading", "TestClient");
+            var retryStrategy = new LinearRetryStrategy(TimeSpan.FromSeconds(10), 50);
+            services.RegisterMtBackendClient(ClientProxyGenerator.CreateDefault("http://localhost:5000", "margintrading", retryStrategy));
+            services.RegisterMtDataReaderClient(ClientProxyGenerator.CreateDefault("http://localhost:5008", "margintrading", retryStrategy));
             builder.Populate(services);
             var container = builder.Build();
             var backendClient = container.Resolve<IMtBackendClient>();
