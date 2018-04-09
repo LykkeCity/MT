@@ -12,7 +12,6 @@ using MarginTrading.Backend.Contracts.AssetPairSettings;
 using MarginTrading.Backend.Contracts.Client;
 using MarginTrading.Backend.Contracts.DataReaderClient;
 using MarginTrading.Backend.Contracts.DayOffSettings;
-using MarginTrading.Backend.Contracts.Infrastructure;
 using MarginTrading.Common.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;

@@ -4,10 +4,8 @@ using Lykke.ClientGenerator;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.SettingsReader;
 using MarginTrading.Backend.Contracts.DataReaderClient;
-using MarginTrading.Backend.Contracts.Infrastructure;
 using MarginTrading.Frontend.Settings;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.PlatformAbstractions;
 
 namespace MarginTrading.Frontend.Modules
 {

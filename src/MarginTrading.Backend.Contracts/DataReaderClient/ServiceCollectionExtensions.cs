@@ -1,6 +1,5 @@
 ﻿using JetBrains.Annotations;
 using Lykke.ClientGenerator;
-using MarginTrading.Backend.Contracts.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MarginTrading.Backend.Contracts.DataReaderClient
