@@ -12,7 +12,7 @@ namespace MarginTrading.Backend.Contracts.Client
 
         public ITradingConditionsEditingApi TradingConditionsEdit { get; }
 
-        public MtBackendClient(ClientProxyGenerator clientProxyGenerator)
+        public MtBackendClient(IClientProxyGenerator clientProxyGenerator)
         {
             ScheduleSettings = clientProxyGenerator.Generate<IScheduleSettingsApi>();
             AccountsBalance = clientProxyGenerator.Generate<IAccountsBalanceApi>();

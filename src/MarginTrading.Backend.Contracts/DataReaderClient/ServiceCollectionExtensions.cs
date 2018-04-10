@@ -7,8 +7,8 @@ namespace MarginTrading.Backend.Contracts.DataReaderClient
     public static class ServiceCollectionExtensions
     {
         [PublicAPI]
-        public static void RegisterMtDataReaderClientsPair(this IServiceCollection services, ClientProxyGenerator demo,
-            ClientProxyGenerator live)
+        public static void RegisterMtDataReaderClientsPair(this IServiceCollection services, IClientProxyGenerator demo,
+            IClientProxyGenerator live)
         {
             services.AddSingleton<IMtDataReaderClientsPair>(p => new MtDataReaderClientsPair(
                 new MtDataReaderClient(demo),
@@ -16,7 +16,7 @@ namespace MarginTrading.Backend.Contracts.DataReaderClient
         }
 
         [PublicAPI]
-        public static void RegisterMtDataReaderClient(this IServiceCollection services, ClientProxyGenerator clientProxyGenerator)
+        public static void RegisterMtDataReaderClient(this IServiceCollection services, IClientProxyGenerator clientProxyGenerator)
         {
             services.AddSingleton<IMtDataReaderClient>(p => new MtDataReaderClient(clientProxyGenerator));
         }

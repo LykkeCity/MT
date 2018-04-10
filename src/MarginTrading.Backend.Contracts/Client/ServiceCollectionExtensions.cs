@@ -7,8 +7,8 @@ namespace MarginTrading.Backend.Contracts.Client
     public static class ServiceCollectionExtensions
     {
         [PublicAPI]
-        public static void RegisterMtBackendClientsPair(this IServiceCollection services, ClientProxyGenerator demo,
-            ClientProxyGenerator live)
+        public static void RegisterMtBackendClientsPair(this IServiceCollection services, IClientProxyGenerator demo,
+            IClientProxyGenerator live)
         {
             services.AddSingleton<IMtBackendClientsPair>(p => new MtBackendClientsPair(
                 new MtBackendClient(demo),
@@ -16,7 +16,7 @@ namespace MarginTrading.Backend.Contracts.Client
         }
 
         [PublicAPI]
-        public static void RegisterMtBackendClient(this IServiceCollection services, ClientProxyGenerator clientProxyGenerator)
+        public static void RegisterMtBackendClient(this IServiceCollection services, IClientProxyGenerator clientProxyGenerator)
         {
             services.AddSingleton<IMtBackendClient>(p => new MtBackendClient(clientProxyGenerator));
         }

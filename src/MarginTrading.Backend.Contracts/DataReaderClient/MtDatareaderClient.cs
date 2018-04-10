@@ -1,4 +1,4 @@
-﻿using Lykke.ClientGenerator;
+﻿﻿using Lykke.ClientGenerator;
 
 namespace MarginTrading.Backend.Contracts.DataReaderClient
 {
@@ -15,7 +15,7 @@ namespace MarginTrading.Backend.Contracts.DataReaderClient
         public IRoutesReadingApi Routes { get; }
         public ISettingsReadingApi Settings { get; }
 
-        public MtDataReaderClient(ClientProxyGenerator clientGenerator)
+        public MtDataReaderClient(IClientProxyGenerator clientGenerator)
         {
             AssetPairsRead = clientGenerator.Generate<IAssetPairsReadingApi>();
             AccountHistory = clientGenerator.Generate<IAccountHistoryApi>();
