@@ -25,9 +25,9 @@ namespace MarginTrading.Frontend.Modules
             services.RegisterMtDataReaderClientsPair(
                 ClientProxyGenerator.CreateDefault(
                     _settings.CurrentValue.MtDataReaderDemoServiceClient.ServiceUrl,
-                    _settings.CurrentValue.MtDataReaderLiveServiceClient.ServiceUrl), 
+                    _settings.CurrentValue.MtDataReaderDemoServiceClient.ApiKey), 
                 ClientProxyGenerator.CreateDefault(
-                    _settings.CurrentValue.MtDataReaderDemoServiceClient.ApiKey,
+                    _settings.CurrentValue.MtDataReaderLiveServiceClient.ServiceUrl,
                     _settings.CurrentValue.MtDataReaderLiveServiceClient.ApiKey));
             
             builder.RegisterLykkeServiceClient(_settings.CurrentValue.ClientAccountServiceClient.ServiceUrl);
