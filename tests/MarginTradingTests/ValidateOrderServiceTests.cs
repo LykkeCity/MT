@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using Autofac;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
 using NUnit.Framework;
@@ -365,7 +367,7 @@ namespace MarginTradingTests
         }
 
         [Test]
-        public void Is_Not_Enought_Balance()
+        public void Is_Not_Enough_Balance()
         {
             const string instrument = "EURUSD";
             var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 1.55M, Ask = 1.57M };
@@ -381,7 +383,7 @@ namespace MarginTradingTests
                 AccountAssetId = Accounts[0].BaseAssetId,
                 Instrument = instrument,
                 Volume = 150000,
-                FillType = OrderFillType.FillOrKill
+                FillType = OrderFillType.FillOrKill,
             };
 
             var ex = Assert.Throws<ValidateOrderException>(() => _validateOrderService.Validate(order));

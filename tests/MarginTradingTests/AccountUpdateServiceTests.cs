@@ -6,6 +6,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
+using MoreLinq;
 using NUnit.Framework;
 
 namespace MarginTradingTests
@@ -14,18 +15,27 @@ namespace MarginTradingTests
     public class AccountUpdateServiceTests : BaseTests
     {
         private IAccountsCacheService _accountsCacheService;
+        private IAccountUpdateService _accountUpdateService;
         private OrdersCache _ordersCache;
 
         [OneTimeSetUp]
-        public void SetUp()
+        public void OneTimeSetUp()
         {
             RegisterDependencies();
             _accountsCacheService = Container.Resolve<IAccountsCacheService>();
+            _accountUpdateService = Container.Resolve<IAccountUpdateService>();
             _ordersCache = Container.Resolve<OrdersCache>();
             var bestPriceConsumer = Container.Resolve<IEventChannel<BestPriceChangeEventArgs>>();
 
             bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "EURUSD", Bid = 1.02M, Ask = 1.04M }));
             bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCUSD", Bid = 905.1M, Ask = 905.35M }));
+        }
+
+        [SetUp]
+        public void SetUp()
+        {
+            foreach (var o in _ordersCache.ActiveOrders.GetAllOrders().ToList())
+                _ordersCache.ActiveOrders.Remove(o);
         }
 
         [Test]
@@ -117,6 +127,44 @@ namespace MarginTradingTests
 
             Assert.IsNotNull(account);
             Assert.IsTrue(account.GetMarginUsageLevel() <= 1.25M);
+        }
+        
+        [Test]
+        public void Check_IsEnoughBalance()
+        {
+            var order1 = new Order
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                Instrument = "EURUSD",
+                AccountId = Accounts[0].Id,
+                ClientId = Accounts[0].ClientId,
+                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
+                AccountAssetId = Accounts[0].BaseAssetId,
+                AssetAccuracy = 5,
+                LegalEntity = "LYKKEVU",
+                Volume = 96000,
+                OpenPrice = 1.02M
+            };
+            
+            var result1 = _accountUpdateService.IsEnoughBalance(order1);//account have 1000
+            Assert.IsTrue(result1);
+            
+            var order2 = new Order
+            {
+                Id = Guid.NewGuid().ToString("N"),
+                Instrument = "EURUSD",
+                AccountId = Accounts[0].Id,
+                ClientId = Accounts[0].ClientId,
+                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
+                AccountAssetId = Accounts[0].BaseAssetId,
+                AssetAccuracy = 5,
+                LegalEntity = "LYKKEVU",
+                Volume = 97000,
+                OpenPrice = 1.02M
+            };
+            
+            var result2 = _accountUpdateService.IsEnoughBalance(order2);//account have 1000
+            Assert.IsFalse(result2);
         }
     }
 }

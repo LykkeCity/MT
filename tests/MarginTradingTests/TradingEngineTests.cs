@@ -296,7 +296,7 @@ namespace MarginTradingTests
             Assert.AreEqual(1, order.Volume - order.GetMatchedVolume());
             Assert.AreEqual(1.12857, order.OpenPrice);
             Assert.AreEqual(1.04636, order.ClosePrice);
-            Assert.AreEqual(-1.15094, Math.Round(order.GetFpl(), 5));
+            Assert.AreEqual(-1.23315, Math.Round(order.GetFpl(), 5));
             Assert.AreEqual(OrderStatus.Active, order.Status);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
@@ -327,7 +327,7 @@ namespace MarginTradingTests
             Assert.AreEqual(2, Math.Abs(order.Volume) - order.GetMatchedVolume());
             Assert.AreEqual(1.04636, order.OpenPrice);
             Assert.AreEqual(1.12273, order.ClosePrice);
-            Assert.AreEqual(-0.84007, Math.Round(order.GetFpl(), 5));
+            Assert.AreEqual(-0.99281, Math.Round(order.GetFpl(), 5));
             Assert.AreEqual(OrderStatus.Active, order.Status);
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
             _appNotificationsMock.Verify(
@@ -1006,8 +1006,6 @@ namespace MarginTradingTests
             Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
             Assert.AreEqual(838.371, order.OpenPrice);
             Assert.AreEqual(834.286, order.ClosePrice);
-            Assert.AreEqual(828.103, order.GetOpenCrossPrice());
-            Assert.AreEqual(824.068, order.GetCloseCrossPrice());
             Assert.AreEqual(-4.035, Math.Round(order.GetFpl(), 3));
             Assert.AreEqual(OrderStatus.Active, order.Status);
             Assert.IsNull(order.StartClosingDate);
@@ -1050,8 +1048,6 @@ namespace MarginTradingTests
             Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
             Assert.AreEqual(838.371, order.OpenPrice);
             Assert.AreEqual(834.286, order.ClosePrice);
-            Assert.AreEqual(828.103, order.GetOpenCrossPrice());
-            Assert.AreEqual(824.068, order.GetCloseCrossPrice());
             Assert.AreEqual(-4.035, Math.Round(order.GetFpl(), 3));
             Assert.AreEqual(OrderStatus.Active, order.Status);
             Assert.IsNull(order.StartClosingDate);
@@ -1094,8 +1090,6 @@ namespace MarginTradingTests
             Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
             Assert.AreEqual(834.286, order.OpenPrice);
             Assert.AreEqual(838.371, order.ClosePrice);
-            Assert.AreEqual(824.068, order.GetOpenCrossPrice());
-            Assert.AreEqual(828.103, order.GetCloseCrossPrice());
             Assert.AreEqual(-4.035, Math.Round(order.GetFpl(), 3));
             Assert.AreEqual(OrderStatus.Active, order.Status);
             Assert.IsNull(order.StartClosingDate);
@@ -1138,8 +1132,6 @@ namespace MarginTradingTests
             Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
             Assert.AreEqual(834.286, order.OpenPrice);
             Assert.AreEqual(838.371, order.ClosePrice);
-            Assert.AreEqual(824.068, order.GetOpenCrossPrice());
-            Assert.AreEqual(828.103, order.GetCloseCrossPrice());
             Assert.AreEqual(-4.035, Math.Round(order.GetFpl(), 3));
             Assert.AreEqual(OrderStatus.Active, order.Status);
             Assert.IsNull(order.StartClosingDate);

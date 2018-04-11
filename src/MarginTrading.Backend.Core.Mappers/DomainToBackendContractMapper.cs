@@ -305,8 +305,6 @@ namespace MarginTrading.Backend.Core.Mappers
                 InterestRateSwap = src.GetSwaps(),
                 MarginInit = src.GetMarginInit(),
                 MarginMaintenance = src.GetMarginMaintenance(),
-                OpenCrossPrice = src.GetOpenCrossPrice(),
-                CloseCrossPrice = src.GetCloseCrossPrice(),
                 OrderUpdateType = orderUpdateType.ToType<OrderUpdateTypeContract>(),
                 MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>(),
                 LegalEntity = src.LegalEntity,
