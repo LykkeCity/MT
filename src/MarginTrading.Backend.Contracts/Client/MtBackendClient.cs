@@ -1,4 +1,4 @@
-﻿using Lykke.ClientGenerator;
+﻿using Lykke.HttpClientGenerator;
 
 namespace MarginTrading.Backend.Contracts.Client
 {
@@ -12,7 +12,7 @@ namespace MarginTrading.Backend.Contracts.Client
 
         public ITradingConditionsEditingApi TradingConditionsEdit { get; }
 
-        public MtBackendClient(IClientProxyGenerator clientProxyGenerator)
+        public MtBackendClient(IHttpClientGenerator clientProxyGenerator)
         {
             ScheduleSettings = clientProxyGenerator.Generate<IScheduleSettingsApi>();
             AccountsBalance = clientProxyGenerator.Generate<IAccountsBalanceApi>();

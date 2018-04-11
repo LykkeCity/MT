@@ -8,7 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
-    <PackageReference Include="Lykke.ClientGenerator" Version="1.0.0-beta05" />
+    <PackageReference Include="Lykke.HttpClientGenerator" Version="1.0.0-beta01" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.PlatformAbstractions" Version="1.1.0" />
     <PackageReference Include="Polly" Version="5.8.0" />
