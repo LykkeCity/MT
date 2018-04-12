@@ -9,19 +9,19 @@ namespace MarginTrading.Backend.Contracts
     public interface IAssetPairsEditingApi
     {
         /// <summary>
-        /// Insert new settings for a pair
+        /// Insert new pair
         /// </summary>
         [Post("/api/AssetPairs/{assetPairId}")]
         Task<AssetPairContract> Insert(string assetPairId, [Body] AssetPairInputContract settings);
 
         /// <summary>
-        /// Update existing settings for a pair
+        /// Update existing pair
         /// </summary>
         [Put("/api/AssetPairs/{assetPairId}")]
         Task<AssetPairContract> Update(string assetPairId, [Body] AssetPairInputContract settings);
 
         /// <summary>
-        /// Delete existing settings for a pair
+        /// Delete existing pair
         /// </summary>
         [Delete("/api/AssetPairs/{assetPairId}")]
         Task<AssetPairContract> Delete(string assetPairId);

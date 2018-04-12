@@ -33,26 +33,14 @@ namespace MarginTrading.Backend.Services
         public void UpdateOrderFpl(IOrder order, FplData fplData)
         {
             fplData.AccountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(order.AccountAssetId);
-            fplData.QuoteRate = _cfdCalculatorService.GetFplRate(order.AccountAssetId, order.Instrument, order.LegalEntity,
-                (order.GetOrderType() == OrderDirection.Buy ? 1 : -1) * (order.ClosePrice - order.OpenPrice) > 0);
+            fplData.FplRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.AccountAssetId, order.Instrument, 
+                order.LegalEntity, order.Volume * (order.ClosePrice - order.OpenPrice) > 0);
 
-            var fpl = (order.ClosePrice - order.OpenPrice) * fplData.QuoteRate * order.GetMatchedVolume()
-                      * (order.GetOrderType() == OrderDirection.Buy ? 1 : -1);
+            var fpl = (order.ClosePrice - order.OpenPrice) * fplData.FplRate * order.Volume;
 
             fplData.Fpl = Math.Round(fpl, fplData.AccountBaseAssetAccuracy);
 
-            var accountAssetPair = _accountAssetsCacheService.GetAccountAsset(order.TradingConditionId, order.AccountAssetId, order.Instrument);
-
-            fplData.OpenCrossPrice = Math.Round(order.OpenPrice * fplData.QuoteRate, order.AssetAccuracy); 
-            fplData.CloseCrossPrice = Math.Round(order.ClosePrice * fplData.QuoteRate, order.AssetAccuracy);
-            
-            fplData.MarginRate = _cfdCalculatorService.GetMarginRate(order.AccountAssetId, order.Instrument, order.LegalEntity);
-            fplData.MarginInit =
-                Math.Round(order.GetMatchedVolume() * fplData.MarginRate / accountAssetPair.LeverageInit,
-                    fplData.AccountBaseAssetAccuracy);
-            fplData.MarginMaintenance =
-                Math.Round(order.GetMatchedVolume() * fplData.MarginRate / accountAssetPair.LeverageMaintenance,
-                    fplData.AccountBaseAssetAccuracy);
+            CalculateMargin(order, fplData);
 
             fplData.OpenPrice = order.OpenPrice;
             fplData.ClosePrice = order.ClosePrice;
@@ -68,19 +56,25 @@ namespace MarginTrading.Backend.Services
         public void UpdatePendingOrderMargin(IOrder order, FplData fplData)
         {
             fplData.AccountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(order.AccountAssetId);
-            var accountAssetPair = _accountAssetsCacheService.GetAccountAsset(order.TradingConditionId, order.AccountAssetId, order.Instrument);
-
-            fplData.MarginRate = _cfdCalculatorService.GetMarginRate(order.AccountAssetId, order.Instrument, order.LegalEntity);
-            fplData.MarginInit =
-                Math.Round(order.GetMatchedVolume() * fplData.MarginRate / accountAssetPair.LeverageInit,
-                    fplData.AccountBaseAssetAccuracy);
-            fplData.MarginMaintenance =
-                Math.Round(order.GetMatchedVolume() * fplData.MarginRate / accountAssetPair.LeverageMaintenance,
-                    fplData.AccountBaseAssetAccuracy);
+            
+            CalculateMargin(order, fplData);
             
             fplData.CalculatedHash = fplData.ActualHash;
-
             _accountsCacheService.Get(order.ClientId, order.AccountId).CacheNeedsToBeUpdated();
+        }
+
+        public void CalculateMargin(IOrder order, FplData fplData)
+        {
+            var accountAsset = _accountAssetsCacheService.GetAccountAsset(order.TradingConditionId, order.AccountAssetId, order.Instrument);
+
+            fplData.MarginRate = _cfdCalculatorService.GetQuoteRateForBaseAsset(order.AccountAssetId, order.Instrument, 
+                order.LegalEntity);
+            fplData.MarginInit =
+                Math.Round(Math.Abs(order.Volume) * fplData.MarginRate / accountAsset.LeverageInit,
+                    fplData.AccountBaseAssetAccuracy);
+            fplData.MarginMaintenance =
+                Math.Round(Math.Abs(order.Volume) * fplData.MarginRate / accountAsset.LeverageMaintenance,
+                    fplData.AccountBaseAssetAccuracy);
         }
 
         public decimal GetMatchedOrdersPrice(List<MatchedOrder> matchedOrders, string instrument)

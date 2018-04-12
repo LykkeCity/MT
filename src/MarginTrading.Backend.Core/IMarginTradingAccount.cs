@@ -14,8 +14,7 @@ namespace MarginTrading.Backend.Core
         decimal Balance { get; }
         decimal WithdrawTransferLimit { get; }
         string LegalEntity { get; }
-        [NotNull] 
-        AccountFpl AccountFpl { get; }
+        [NotNull] AccountFpl AccountFpl { get; }
     }
 
     public class MarginTradingAccount : IMarginTradingAccount, IComparable<MarginTradingAccount>
@@ -28,9 +27,14 @@ namespace MarginTrading.Backend.Core
         public decimal WithdrawTransferLimit { get; set; }
         public string LegalEntity { get; set; }
 
-        public AccountFpl AccountFpl { get; internal set; } = new AccountFpl();
+        public AccountFpl AccountFpl { get; private set; } = new AccountFpl();
 
         public static MarginTradingAccount Create(IMarginTradingAccount src)
+        {
+            return Create(src, null);
+        }
+
+        public static MarginTradingAccount Create(IMarginTradingAccount src, AccountFpl accountFpl)
         {
             return new MarginTradingAccount
             {
@@ -40,16 +44,18 @@ namespace MarginTrading.Backend.Core
                 BaseAssetId = src.BaseAssetId,
                 Balance = src.Balance,
                 WithdrawTransferLimit = src.WithdrawTransferLimit,
+                AccountFpl = accountFpl ?? new AccountFpl() {ActualHash = 1},
                 LegalEntity = src.LegalEntity,
             };
         }
 
         public int CompareTo(MarginTradingAccount other)
         {
-            var result = string.Compare(Id, other.Id, StringComparison.Ordinal);
-            return 0 != result 
-                ? result 
-                : string.Compare(ClientId, other.ClientId, StringComparison.Ordinal);
+            var result = Id.CompareTo(other.Id);
+            if(0 != result)
+                return result;
+
+            return ClientId.CompareTo(other.ClientId);
         }
 
         public override int GetHashCode()
@@ -90,12 +96,17 @@ namespace MarginTrading.Backend.Core
     {
         private static AccountFpl GetAccountFpl(this IMarginTradingAccount account)
         {
-            if (account.AccountFpl.ActualHash != account.AccountFpl.CalculatedHash)
+            if (account is MarginTradingAccount accountInstance)
             {
-                MtServiceLocator.AccountUpdateService.UpdateAccount(account);
+                if (accountInstance.AccountFpl.ActualHash != accountInstance.AccountFpl.CalculatedHash)
+                {
+                    MtServiceLocator.AccountUpdateService.UpdateAccount(account);
+                }
+
+                return accountInstance.AccountFpl;
             }
- 
-            return account.AccountFpl;
+
+            return new AccountFpl();
         }
 
         public static AccountLevel GetAccountLevel(this IMarginTradingAccount account)
@@ -171,7 +182,10 @@ namespace MarginTrading.Backend.Core
 
         public static void CacheNeedsToBeUpdated(this IMarginTradingAccount account)
         {
-            account.AccountFpl.ActualHash++;
+            if (account is MarginTradingAccount accountInstance)
+            {
+                accountInstance.AccountFpl.ActualHash++;
+            }
         }
     }
 }

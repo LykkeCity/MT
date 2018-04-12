@@ -2,7 +2,8 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
-using MarginTrading.AzureRepositories.Contract;
+ using Lykke.Service.Assets.Client.Models;
+ using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Mappers;
@@ -296,7 +297,7 @@ namespace MarginTradingTests
             Assert.AreEqual(1, order.Volume - order.GetMatchedVolume());
             Assert.AreEqual(1.12857, order.OpenPrice);
             Assert.AreEqual(1.04636, order.ClosePrice);
-            Assert.AreEqual(-1.15094, Math.Round(order.GetFpl(), 5));
+            Assert.AreEqual(-1.23315, Math.Round(order.GetFpl(), 5));
             Assert.AreEqual(OrderStatus.Active, order.Status);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
@@ -327,7 +328,7 @@ namespace MarginTradingTests
             Assert.AreEqual(2, Math.Abs(order.Volume) - order.GetMatchedVolume());
             Assert.AreEqual(1.04636, order.OpenPrice);
             Assert.AreEqual(1.12273, order.ClosePrice);
-            Assert.AreEqual(-0.84007, Math.Round(order.GetFpl(), 5));
+            Assert.AreEqual(-0.99281, Math.Round(order.GetFpl(), 5));
             Assert.AreEqual(OrderStatus.Active, order.Status);
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
             _appNotificationsMock.Verify(
@@ -1006,8 +1007,6 @@ namespace MarginTradingTests
             Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
             Assert.AreEqual(838.371, order.OpenPrice);
             Assert.AreEqual(834.286, order.ClosePrice);
-            Assert.AreEqual(828.103, order.GetOpenCrossPrice());
-            Assert.AreEqual(824.068, order.GetCloseCrossPrice());
             Assert.AreEqual(-4.035, Math.Round(order.GetFpl(), 3));
             Assert.AreEqual(OrderStatus.Active, order.Status);
             Assert.IsNull(order.StartClosingDate);
@@ -1050,8 +1049,6 @@ namespace MarginTradingTests
             Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
             Assert.AreEqual(838.371, order.OpenPrice);
             Assert.AreEqual(834.286, order.ClosePrice);
-            Assert.AreEqual(828.103, order.GetOpenCrossPrice());
-            Assert.AreEqual(824.068, order.GetCloseCrossPrice());
             Assert.AreEqual(-4.035, Math.Round(order.GetFpl(), 3));
             Assert.AreEqual(OrderStatus.Active, order.Status);
             Assert.IsNull(order.StartClosingDate);
@@ -1094,8 +1091,6 @@ namespace MarginTradingTests
             Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
             Assert.AreEqual(834.286, order.OpenPrice);
             Assert.AreEqual(838.371, order.ClosePrice);
-            Assert.AreEqual(824.068, order.GetOpenCrossPrice());
-            Assert.AreEqual(828.103, order.GetCloseCrossPrice());
             Assert.AreEqual(-4.035, Math.Round(order.GetFpl(), 3));
             Assert.AreEqual(OrderStatus.Active, order.Status);
             Assert.IsNull(order.StartClosingDate);
@@ -1138,8 +1133,6 @@ namespace MarginTradingTests
             Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
             Assert.AreEqual(834.286, order.OpenPrice);
             Assert.AreEqual(838.371, order.ClosePrice);
-            Assert.AreEqual(824.068, order.GetOpenCrossPrice());
-            Assert.AreEqual(828.103, order.GetCloseCrossPrice());
             Assert.AreEqual(-4.035, Math.Round(order.GetFpl(), 3));
             Assert.AreEqual(OrderStatus.Active, order.Status);
             Assert.IsNull(order.StartClosingDate);
@@ -1514,8 +1507,11 @@ namespace MarginTradingTests
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
+            order.UpdatePendingOrderMargin();
 
             Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status);
+            Assert.AreEqual(0.088, order.GetMarginInit());
+            Assert.AreEqual(0.05866667, order.GetMarginMaintenance());
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("placed")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
 
             _matchingEngine.SetOrders(MarketMaker1Id, new[]

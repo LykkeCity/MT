@@ -8,12 +8,15 @@ namespace MarginTrading.AzureRepositories.Entities
 {
 	public class OvernightSwapStateEntity : TableEntity, IOvernightSwapState
 	{
+		public string ClientId { get; set; }
 		public string AccountId { get; set; }
 		public string Instrument { get; set; }
 		public string Direction { get; set; }
 		OrderDirection? IOvernightSwapState.Direction => 
 			Enum.TryParse<OrderDirection>(Direction, out var direction) ? direction : (OrderDirection?)null;
 		public DateTime Time { get; set; }
+		public double Volume { get; set; }
+		decimal IOvernightSwapState.Volume => (decimal) Volume;
 		public string OpenOrderIds { get; set; }
 		List<string> IOvernightSwapState.OpenOrderIds => JsonConvert.DeserializeObject<List<string>>(OpenOrderIds);
 		public double Value { get; set; }
@@ -30,13 +33,15 @@ namespace MarginTrading.AzureRepositories.Entities
 			{
 				PartitionKey = obj.AccountId,
 				RowKey = GetKey(obj.AccountId, obj.Instrument, obj.Direction),
+				ClientId = obj.ClientId,
 				AccountId = obj.AccountId,
 				Instrument = obj.Instrument,
 				Direction = obj.Direction?.ToString(),
 				Time = obj.Time,
-				OpenOrderIds = JsonConvert.SerializeObject(obj.OpenOrderIds),
+				Volume = (double) obj.Volume,
 				Value = (double) obj.Value,
-				SwapRate = (double) obj.SwapRate
+				SwapRate = (double) obj.SwapRate,
+				OpenOrderIds = JsonConvert.SerializeObject(obj.OpenOrderIds),
 			};
 		}
 	}

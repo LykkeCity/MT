@@ -52,44 +52,32 @@ namespace MarginTradingTests
             var quoteRate = _cfdCalculatorService.GetQuoteRateForBaseAsset(Accounts[0].BaseAssetId, instrument, "LYKKEVU");
 
             Assert.AreEqual(905.35, quoteRate);
+            
+            quoteRate = _cfdCalculatorService.GetQuoteRateForBaseAsset(Accounts[0].BaseAssetId, instrument, "LYKKEVU", false);
+            
+            Assert.AreEqual(905.1, quoteRate);
         }
 
         [Test]
         public void Is_GetQuoteRateForQuoteAsset_Correct()
         {
-            const string instrument = "BTCUSD";
+            const string instrument = "USDCHF";
 
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = instrument, Ask = 905.35M, Bid = 905.1M }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 0.9982M, Bid = 0.9980M }));
 
             var quote = _quoteCacheService.GetQuote(instrument);
 
             Assert.IsNotNull(quote);
-            Assert.AreEqual(905.1, quote.Bid);
-            Assert.AreEqual(905.35, quote.Ask);
+            Assert.AreEqual(0.9980, quote.Bid);
+            Assert.AreEqual(0.9982, quote.Ask);
 
             var quoteRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(Accounts[0].BaseAssetId, instrument, "LYKKEVU");
 
-            Assert.AreEqual(1, quoteRate);
-        }
+            Assert.AreEqual(1.002004008016032064128256513, quoteRate);
+            
+            quoteRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(Accounts[0].BaseAssetId, instrument, "LYKKEVU", false);
 
-        [Test]
-        public void Is_Volume_In_Accont_Asset_Correct()
-        {
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Ask = 1044.92M, Bid = 1044.90M }));
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 0.9982M, Bid = 0.9980M }));
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCUSD", Ask = 1041.41M, Bid = 1040.69M }));
-
-            var accountVolume = _cfdCalculatorService.GetVolumeInAccountAsset(OrderDirection.Buy, Accounts[0].BaseAssetId, "BTCCHF", 1, "LYKKEVU");
-            Assert.AreEqual(1047.014, Math.Round(accountVolume, 3));
-
-            accountVolume = _cfdCalculatorService.GetVolumeInAccountAsset(OrderDirection.Sell, Accounts[0].BaseAssetId, "BTCCHF", 1, "LYKKEVU");
-            Assert.AreEqual(1046.784, Math.Round(accountVolume, 3));
-
-            accountVolume = _cfdCalculatorService.GetVolumeInAccountAsset(OrderDirection.Buy, Accounts[0].BaseAssetId, "BTCUSD", 1, "LYKKEVU");
-            Assert.AreEqual(1041.41, Math.Round(accountVolume, 3));
-
-            accountVolume = _cfdCalculatorService.GetVolumeInAccountAsset(OrderDirection.Sell, Accounts[0].BaseAssetId, "BTCUSD", 1, "LYKKEVU");
-            Assert.AreEqual(1040.69, Math.Round(accountVolume, 3));
+            Assert.AreEqual(1.0018032458425165297535564015, quoteRate);
         }
     }
 }

@@ -23,32 +23,32 @@ namespace MarginTrading.Backend.Controllers
         }
 
         /// <summary>
-        /// Insert new settings for a pair
+        /// Insert new pair
         /// </summary>
         [HttpPost, Route("{assetPairId}")]
         public async Task<AssetPairContract> Insert(string assetPairId,
             [FromBody] AssetPairInputContract settings)
         {
-            return Convert(await _assetPairsManager.InsertAssetPairSettings(Convert(assetPairId, settings)));
+            return Convert(await _assetPairsManager.InsertAssetPair(Convert(assetPairId, settings)));
         }
 
         /// <summary>
-        /// Update existing settings for a pair
+        /// Update existing pair
         /// </summary>
         [HttpPut, Route("{assetPairId}")]
         public async Task<AssetPairContract> Update(string assetPairId,
             [FromBody] AssetPairInputContract settings)
         {
-            return Convert(await _assetPairsManager.UpdateAssetPairSettings(Convert(assetPairId, settings)));
+            return Convert(await _assetPairsManager.UpdateAssetPair(Convert(assetPairId, settings)));
         }
 
         /// <summary>
-        /// Delete existing settings for a pair
+        /// Delete existing pair
         /// </summary>
         [HttpDelete, Route("{assetPairId}")]
         public async Task<AssetPairContract> Delete(string assetPairId)
         {
-            return Convert(await _assetPairsManager.DeleteAssetPairSettings(assetPairId));
+            return Convert(await _assetPairsManager.DeleteAssetPair(assetPairId));
         }
 
         private IAssetPair Convert(string assetPairId, AssetPairInputContract settings)

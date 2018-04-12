@@ -27,12 +27,8 @@ namespace MarginTrading.AzureRepositories
         public double? ExpectedOpenPrice { get; set; }
         decimal IOrderHistory.OpenPrice => (decimal) OpenPrice;
         public double OpenPrice { get; set; }
-        decimal IOrderHistory.OpenCrossPrice => (decimal) OpenCrossPrice;
-        public double OpenCrossPrice { get; set; }
         decimal IOrderHistory.ClosePrice => (decimal) ClosePrice;
         public double ClosePrice { get; set; }
-        decimal IOrderHistory.CloseCrossPrice => (decimal) CloseCrossPrice;
-        public double CloseCrossPrice { get; set; }
         decimal IOrderHistory.Volume => (decimal) Volume;
         public double Volume { get; set; }
         decimal IOrderHistory.MatchedVolume => (decimal) MatchedVolume;
@@ -125,9 +121,7 @@ namespace MarginTrading.AzureRepositories
                 CloseDate = src.CloseDate,
                 ExpectedOpenPrice = (double?) src.ExpectedOpenPrice,
                 OpenPrice = (double) src.OpenPrice,
-                OpenCrossPrice = (double) src.OpenCrossPrice,
                 ClosePrice = (double) src.ClosePrice,
-                CloseCrossPrice = (double) src.CloseCrossPrice,
                 TakeProfit = (double?) src.TakeProfit,
                 StopLoss = (double?) src.StopLoss,
                 Fpl = (double) src.Fpl,

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Messages;
@@ -42,10 +41,9 @@ namespace MarginTrading.Backend.Services.AssetPairs
                     string.Format(MtMessages.InstrumentNotFoundInCache, assetPairId));
         }
 
-        public bool TryGetAssetPairById(string assetPairId, out IAssetPair assetPair)
+        public IAssetPair TryGetAssetPairById(string assetPairId)
         {
-            assetPair = _assetPairs.GetValueOrDefault(assetPairId);
-            return assetPair != null;
+            return _assetPairs.GetValueOrDefault(assetPairId);
         }
 
         public IEnumerable<IAssetPair> GetAll()
@@ -57,25 +55,31 @@ namespace MarginTrading.Backend.Services.AssetPairs
         {
             return _assetPairsIds.Get();
         }
-
-        private bool TryFindAssetPair(string asset1, string asset2, string legalEntity, out IAssetPair assetPair)
+        
+        public IAssetPair TryFindAssetPair(string asset1, string asset2, string legalEntity)
         {
             var key = GetAssetPairKey(asset1, asset2, legalEntity);
             
-            return _assetPairsByAssets.Get().TryGetValue(key, out assetPair);
+            return _assetPairsByAssets.Get().TryGetValue(key, out var result) ? result : null;
         }
         
         public bool TryGetAssetPairQuoteSubstWithResersed(string substAsset, string instrument, string legalEntity, 
             out IAssetPair assetPair)
         {
             assetPair = null;
-            return TryGetAssetPairById(instrument, out var baseAssetPair)
-                && TryFindAssetPair(baseAssetPair.BaseAssetId, substAsset, legalEntity, out assetPair);
+            var baseAssetPair = TryGetAssetPairById(instrument);
+            if (baseAssetPair == null)
+                return false;
+            
+            assetPair = TryFindAssetPair(baseAssetPair.BaseAssetId, substAsset, legalEntity);
+            return assetPair != null;
         }
 
         public IAssetPair FindAssetPair(string asset1, string asset2, string legalEntity)
         {
-            if (TryFindAssetPair(asset1, asset2, legalEntity, out var result))
+            var key = GetAssetPairKey(asset1, asset2, legalEntity);
+            
+            if (_assetPairsByAssets.Get().TryGetValue(key, out var result))
                 return result;
 
             throw new InstrumentByAssetsNotFoundException(asset1, asset2,
@@ -97,7 +101,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 }).ToDictionary());
         }
 
-        public static AssetPairKey GetAssetPairKey(string asset1, string asset2, string legalEntity)
+        private static AssetPairKey GetAssetPairKey(string asset1, string asset2, string legalEntity)
         {
             return (asset1, asset2, legalEntity);
         }

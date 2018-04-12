@@ -32,7 +32,8 @@ namespace MarginTrading.Backend.Services
                 var seconds = (decimal) (close - openDate.Value).TotalSeconds;
 
                 const int secondsInYear = 31536000;
-                var quote = _cfdCalculatorService.GetSwapRate(accountAssetId, instrument, legalEntity, volume * swapRate > 0);
+                var quote = _cfdCalculatorService.GetQuoteRateForBaseAsset(accountAssetId, instrument, legalEntity, 
+                    volume * swapRate > 0);
                 var swaps = quote * volume * swapRate * seconds / secondsInYear;
                 result = Math.Round(swaps, _assetsCache.GetAssetAccuracy(accountAssetId));
             }

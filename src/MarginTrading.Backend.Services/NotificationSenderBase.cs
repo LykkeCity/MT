@@ -63,7 +63,7 @@ namespace MarginTrading.Backend.Services
             var message = string.Empty;
             var volume = Math.Abs(order.Volume);
             var type = order.GetOrderType() == OrderDirection.Buy ? "Long" : "Short";
-            _assetPairsCache.TryGetAssetPairById(order.Instrument, out var assetPair);
+            var assetPair = _assetPairsCache.TryGetAssetPairById(order.Instrument);
             var instrumentName = assetPair?.Name ?? order.Instrument;
             
             switch (order.Status)

@@ -72,6 +72,17 @@ namespace MarginTrading.Backend.Services.Caches
 			}
 		}
 
+		public void Remove(OvernightSwapCalculation item)
+		{
+			if (item == null)
+				return;
+			
+			lock (LockObj)
+			{
+				_cache.Remove(item.Key);
+			}
+		}
+
 		public void ClearAll()
 		{
 			lock (LockObj)

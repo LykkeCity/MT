@@ -82,9 +82,9 @@ namespace MarginTrading.Backend.Core
             return order.GetAndHandleFplData().Fpl;
         }
 
-        public static decimal GetQuoteRate(this IOrder order)
+        public static decimal GetFplRate(this IOrder order)
         {
-            return order.GetAndHandleFplData().QuoteRate;
+            return order.GetAndHandleFplData().FplRate;
         }
 
         public static decimal GetMarginRate(this IOrder order)
@@ -100,16 +100,6 @@ namespace MarginTrading.Backend.Core
         public static decimal GetMarginInit(this IOrder order)
         {
             return order.GetAndHandleFplData().MarginInit;
-        }
-
-        public static decimal GetOpenCrossPrice(this IOrder order)
-        {
-            return order.GetAndHandleFplData().OpenCrossPrice;
-        }
-
-        public static decimal GetCloseCrossPrice(this IOrder order)
-        {
-            return order.GetAndHandleFplData().CloseCrossPrice;
         }
 
         public static void UpdateClosePrice(this IOrder order, decimal closePrice)

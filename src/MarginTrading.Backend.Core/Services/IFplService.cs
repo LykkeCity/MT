@@ -8,5 +8,6 @@ namespace MarginTrading.Backend.Core
         void UpdateOrderFpl(IOrder order, FplData fplData);
         void UpdatePendingOrderMargin(IOrder order, FplData fplData);
         decimal GetMatchedOrdersPrice(List<MatchedOrder> matchedOrders, string instrument);
+        void CalculateMargin(IOrder order, FplData fplData);
     }
 }

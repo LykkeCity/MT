@@ -25,12 +25,15 @@ namespace MarginTrading.DataReader.Controllers
         }
 
         /// <summary>
-        /// Get all pairs
+        /// Get pairs with optional filtering by LegalEntity and MatchingEngineMode
         /// </summary>
         [HttpGet, Route("")]
-        public async Task<List<AssetPairContract>> List()
+        public async Task<List<AssetPairContract>> List([FromQuery]string legalEntity,
+            [FromQuery]MatchingEngineModeContract? matchingEngineMode)
         {
-            return (await _assetPairsRepository.GetAsync()).Select(Convert).ToList();
+            return (await _assetPairsRepository.GetAsync()).Select(Convert)
+                .Where(s => (matchingEngineMode == null || s.MatchingEngineMode == matchingEngineMode) &&
+                            (legalEntity == null || s.LegalEntity == legalEntity)).ToList();
         }
 
         /// <summary>
@@ -40,16 +43,6 @@ namespace MarginTrading.DataReader.Controllers
         public async Task<AssetPairContract> Get(string assetPairId)
         {
             return Convert(await _assetPairsRepository.GetAsync(assetPairId));
-        }
-
-        /// <summary>
-        /// Get pairs by LegalEntity and MatchingEngineMode
-        /// </summary>
-        [HttpGet, Route("{legalEntity}/{matchingEngineMode}")]
-        public async Task<List<AssetPairContract>> Get(string legalEntity, MatchingEngineModeContract matchingEngineMode)
-        {
-            return (await _assetPairsRepository.GetAsync()).Select(Convert)
-                .Where(s => s.MatchingEngineMode == matchingEngineMode && s.LegalEntity == legalEntity).ToList();
         }
 
         private AssetPairContract Convert(IAssetPair settings)
