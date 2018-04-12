@@ -77,8 +77,6 @@ namespace MarginTrading.Backend.Core.Mappers
                 InterestRateSwap = src.InterestRateSwap,
                 MarginInit = src.MarginInit,
                 MarginMaintenance = src.MarginMaintenance,
-                OpenCrossPrice = src.OpenCrossPrice,
-                CloseCrossPrice = src.CloseCrossPrice,
                 EquivalentAsset = src.EquivalentAsset,
                 OpenPriceEquivalent = src.OpenPriceEquivalent,
                 ClosePriceEquivalent = src.ClosePriceEquivalent,

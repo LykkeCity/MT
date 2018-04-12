@@ -2,9 +2,9 @@
 {
     public interface ICfdCalculatorService
     {
-        decimal GetQuoteRateForBaseAsset(string accountAssetId, string instrument, string legalEntity);
-        decimal GetQuoteRateForQuoteAsset(string accountAssetId, string instrument, string legalEntity);
-        decimal GetVolumeInAccountAsset(OrderDirection direction, string accountAssetId, string instrument,
-            decimal volume, string legalEntity);
+        decimal GetQuoteRateForBaseAsset(string accountAssetId, string instrument, string legalEntity, 
+            bool metricIsPositive = true);
+        decimal GetQuoteRateForQuoteAsset(string accountAssetId, string instrument, string legalEntity, 
+            bool metricIsPositive = true);
     }
 }

@@ -41,7 +41,8 @@ namespace MarginTradingTests
                 Instrument = instrument,
                 Volume = 10,
                 MatchedOrders = new MatchedOrderCollection( new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 10 } }), //need for GetMatchedVolume()
-                OpenPrice = 790
+                OpenPrice = 790,
+                LegalEntity = "LYKKEVU",
             };
 
             order.UpdateClosePrice(800);
@@ -65,7 +66,8 @@ namespace MarginTradingTests
                 Instrument = instrument,
                 Volume = -10,
                 MatchedOrders = new MatchedOrderCollection( new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 10 } }), //need for GetMatchedVolume()
-                OpenPrice = 790
+                OpenPrice = 790,
+                LegalEntity = "LYKKEVU",
             };
 
             order.UpdateClosePrice(800);
@@ -91,7 +93,8 @@ namespace MarginTradingTests
                 MatchedOrders = new MatchedOrderCollection( new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 10 } }), //need for GetMatchedVolume()
                 OpenPrice = 790,
                 OpenCommission = 2,
-                CommissionLot = 10
+                CommissionLot = 10,
+                LegalEntity = "LYKKEVU",
             };
 
             order.UpdateClosePrice(800);
@@ -105,6 +108,7 @@ namespace MarginTradingTests
             const string instrument = "BTCCHF";
 
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 1.072030M, Bid = 1.071940M }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCUSD", Ask = 1001M, Bid = 1000M }));
 
             var order = new Order
             {
@@ -122,7 +126,7 @@ namespace MarginTradingTests
 
             order.UpdateClosePrice(935.61M);
 
-            Assert.AreEqual(138.989, Math.Round(order.GetFpl(), 3));
+            Assert.AreEqual(139m, Math.Round(order.GetFpl(), 3));
         }
 
         [Test]
@@ -131,6 +135,7 @@ namespace MarginTradingTests
             const string instrument = "BTCCHF";
 
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 1.072030M, Bid = 1.071940M }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCUSD", Ask = 1001M, Bid = 1000M }));
 
             var order = new Order
             {
@@ -149,7 +154,7 @@ namespace MarginTradingTests
             order.UpdateClosePrice(935.61M);
             var quoteRate = order.GetQuoteRate();
 
-            Assert.AreEqual(0.93280971614600339, quoteRate);
+            Assert.AreEqual(0.9328097161460033767711724485m, quoteRate);
             Assert.AreEqual(-138.989, Math.Round(order.GetFpl(), 3));
         }
 
@@ -161,6 +166,7 @@ namespace MarginTradingTests
 
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "EURUSD", Ask = 1.061M, Bid = 1.06M }));
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCEUR", Ask = 1092M, Bid = 1091M }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCUSD", Ask = 1001M, Bid = 1000M }));
 
             var orders = new List<Order>
             {
@@ -243,12 +249,12 @@ namespace MarginTradingTests
             var account = Accounts[0];
 
             Assert.AreEqual(50000, account.Balance);
-            Assert.AreEqual(43676, Math.Round(account.GetTotalCapital(), 5));
-            Assert.AreEqual(33491.6, Math.Round(account.GetFreeMargin(), 1));
-            Assert.AreEqual(28399.4, Math.Round(account.GetMarginAvailable(), 1));
-            Assert.AreEqual(-6324, Math.Round(account.GetPnl(), 5));
-            Assert.AreEqual(10184.4, Math.Round(account.GetUsedMargin(), 1));
-            Assert.AreEqual(15276.6, Math.Round(account.GetMarginInit(), 1));
+            Assert.AreEqual(43676.000, Math.Round(account.GetTotalCapital(), 5));
+            Assert.AreEqual(34527.0, Math.Round(account.GetFreeMargin(), 1));
+            Assert.AreEqual(29952.5, Math.Round(account.GetMarginAvailable(), 1));
+            Assert.AreEqual(-6324.000, Math.Round(account.GetPnl(), 5));
+            Assert.AreEqual(9149.0, Math.Round(account.GetUsedMargin(), 1));
+            Assert.AreEqual(13723.5, Math.Round(account.GetMarginInit(), 1));
 
         }
     }

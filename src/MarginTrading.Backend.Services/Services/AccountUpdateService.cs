@@ -9,24 +9,21 @@ namespace MarginTrading.Backend.Services
 {
     public class AccountUpdateService : IAccountUpdateService
     {
-        private readonly ICfdCalculatorService _cfdCalculatorService;
+        private readonly IFplService _fplService;
         private readonly IAccountGroupCacheService _accountGroupCacheService;
-        private readonly IAccountAssetsCacheService _accountAssetsCacheService;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly OrdersCache _ordersCache;
         private readonly IAssetsCache _assetsCache;
 
         public AccountUpdateService(
-            ICfdCalculatorService cfdCalculatorService,
+            IFplService fplService,
             IAccountGroupCacheService accountGroupCacheService,
-            IAccountAssetsCacheService accountAssetsCacheService,
             IAccountsCacheService accountsCacheService,
             OrdersCache ordersCache,
             IAssetsCache assetsCache)
         {
-            _cfdCalculatorService = cfdCalculatorService;
+            _fplService = fplService;
             _accountGroupCacheService = accountGroupCacheService;
-            _accountAssetsCacheService = accountAssetsCacheService;
             _accountsCacheService = accountsCacheService;
             _ordersCache = ordersCache;
             _assetsCache = assetsCache;
@@ -63,12 +60,11 @@ namespace MarginTrading.Backend.Services
 
         public bool IsEnoughBalance(Order order)
         {
-            var volumeInAccountAsset = _cfdCalculatorService.GetVolumeInAccountAsset(order.GetOrderType(),
-                order.AccountAssetId, order.Instrument, Math.Abs(order.Volume), order.LegalEntity);
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
-            var accountAsset = _accountAssetsCacheService.GetAccountAsset(order.TradingConditionId, order.AccountAssetId, order.Instrument);
-
-            return account.GetMarginAvailable() * accountAsset.LeverageInit >= volumeInAccountAsset;
+            _fplService.CalculateMargin(order, order.FplData);
+            var orderMargin = order.GetMarginInit();
+            var accountMarginAvailable = _accountsCacheService.Get(order.ClientId, order.AccountId).GetMarginAvailable(); 
+            
+            return accountMarginAvailable >= orderMargin;
         }
 
         public MarginTradingAccount GuessAccountWithOrder(Order order)

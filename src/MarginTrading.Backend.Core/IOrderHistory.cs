@@ -49,8 +49,6 @@ namespace MarginTrading.Backend.Core
         decimal InterestRateSwap { get; }
         decimal MarginInit { get; }
         decimal MarginMaintenance { get; }
-        decimal OpenCrossPrice { get; }
-        decimal CloseCrossPrice { get; }
         
         OrderUpdateType OrderUpdateType { get; }
         
@@ -106,8 +104,6 @@ namespace MarginTrading.Backend.Core
         public decimal InterestRateSwap { get; set; }
         public decimal MarginInit { get; set; }
         public decimal MarginMaintenance { get; set; }
-        public decimal OpenCrossPrice { get; set; }
-        public decimal CloseCrossPrice { get; set; }
         public OrderUpdateType OrderUpdateType { get; set; }
         public string OpenExternalOrderId { get; set; }
         public string OpenExternalProviderId { get; set; }
