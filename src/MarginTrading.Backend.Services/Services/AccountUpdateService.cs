@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Messages;
@@ -29,33 +30,9 @@ namespace MarginTrading.Backend.Services
             _assetsCache = assetsCache;
         }
 
-        public void UpdateAccount(IMarginTradingAccount account, AccountFpl accountFpl, Order[] orders = null)
+        public void UpdateAccount(IMarginTradingAccount account)
         {
-            if (orders == null)
-            {
-                orders = _ordersCache.ActiveOrders.GetOrdersByAccountIds(account.Id).ToArray();
-            }
-
-            var accuracy = _assetsCache.GetAssetAccuracy(account.BaseAssetId);
-            
-            accountFpl.PnL = Math.Round(orders.Sum(x => x.GetTotalFpl()), accuracy);
-
-            accountFpl.UsedMargin = Math.Round(orders.Sum(item => item.GetMarginMaintenance()),
-                accuracy);
-            accountFpl.MarginInit = Math.Round(orders.Sum(item => item.GetMarginInit()),
-                accuracy);
-            accountFpl.OpenPositionsCount = orders.Length;
-
-            var accountGroup = _accountGroupCacheService.GetAccountGroup(account.TradingConditionId, account.BaseAssetId);
-
-            if (accountGroup == null)
-            {
-                throw new Exception(string.Format(MtMessages.AccountGroupForTradingConditionNotFound, account.TradingConditionId, account.BaseAssetId));
-            }
-
-            accountFpl.MarginCallLevel = accountGroup.MarginCall;
-            accountFpl.StopoutLevel = accountGroup.StopOut;
-            accountFpl.CalculatedHash = accountFpl.ActualHash;
+            UpdateAccount(account, GetActiveOrders(account.Id), GetPendingOrders(account.Id));
         }
 
         public bool IsEnoughBalance(Order order)
@@ -67,17 +44,56 @@ namespace MarginTrading.Backend.Services
             return accountMarginAvailable >= orderMargin;
         }
 
-        public MarginTradingAccount GuessAccountWithOrder(Order order)
+        public MarginTradingAccount GuessAccountWithNewActiveOrder(Order order)
         {
-            var accountFpl = new AccountFpl();
-            var newInstance = MarginTradingAccount.Create(_accountsCacheService.Get(order.ClientId, order.AccountId), accountFpl);
+            var newInstance = MarginTradingAccount.Create(_accountsCacheService.Get(order.ClientId, order.AccountId));
 
-            var orders = _ordersCache.ActiveOrders.GetOrdersByInstrumentAndAccount(order.Instrument, order.AccountId).ToList();
-            orders.Add(order);
+            var activeOrders = GetActiveOrders(newInstance.Id);
+            activeOrders.Add(order);
+            
+            var pendingOrders = GetPendingOrders(newInstance.Id);
 
-            UpdateAccount(newInstance, accountFpl, orders.ToArray());
+            UpdateAccount(newInstance, activeOrders, pendingOrders);
 
             return newInstance;
+        }
+        
+        private void UpdateAccount(IMarginTradingAccount account,
+            ICollection<Order> activeOrders,
+            ICollection<Order> pendingOrders)
+        {
+            var accuracy = _assetsCache.GetAssetAccuracy(account.BaseAssetId);
+            var activeOrdersMaintenanceMargin = activeOrders.Sum(item => item.GetMarginMaintenance());
+            var activeOrdersInitMargin = activeOrders.Sum(item => item.GetMarginInit());
+            var pendingOrdersMargin = pendingOrders.Sum(item => item.GetMarginInit());
+
+            account.AccountFpl.PnL = Math.Round(activeOrders.Sum(x => x.GetTotalFpl()), accuracy);
+
+            account.AccountFpl.UsedMargin = Math.Round(activeOrdersMaintenanceMargin + pendingOrdersMargin, accuracy);
+            account.AccountFpl.MarginInit = Math.Round(activeOrdersInitMargin + pendingOrdersMargin, accuracy);
+            account.AccountFpl.OpenPositionsCount = activeOrders.Count;
+
+            var accountGroup = _accountGroupCacheService.GetAccountGroup(account.TradingConditionId, account.BaseAssetId);
+
+            if (accountGroup == null)
+            {
+                throw new Exception(string.Format(MtMessages.AccountGroupForTradingConditionNotFound,
+                    account.TradingConditionId, account.BaseAssetId));
+            }
+
+            account.AccountFpl.MarginCallLevel = accountGroup.MarginCall;
+            account.AccountFpl.StopoutLevel = accountGroup.StopOut;
+            account.AccountFpl.CalculatedHash = account.AccountFpl.ActualHash;
+        }
+
+        private ICollection<Order> GetActiveOrders(string accountId)
+        {
+            return _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountId);
+        }
+        
+        private ICollection<Order> GetPendingOrders(string accountId)
+        {
+            return _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(accountId);
         }
     }
 }

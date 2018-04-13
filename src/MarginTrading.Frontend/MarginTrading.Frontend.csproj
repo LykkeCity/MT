@@ -31,7 +31,7 @@
     <PackageReference Include="AspNet.Security.OpenIdConnect.Extensions" Version="1.0.0" />
     <PackageReference Include="Flurl.Http" Version="2.1.1" />
     <PackageReference Include="Lykke.Common.ApiLibrary" Version="1.0.14" />
-    <PackageReference Include="Lykke.Logs" Version="3.6.0" />
+    <PackageReference Include="Lykke.Logs" Version="3.6.2" />
     <PackageReference Include="Lykke.MarginTrading.DataReaderClient" Version="1.0.13" />
     <PackageReference Include="Lykke.RabbitMqBroker" Version="7.0.0" />
     <PackageReference Include="Lykke.Service.Session" Version="16.0.0" />

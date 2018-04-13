@@ -63,7 +63,8 @@ namespace MarginTrading.Backend.Services
             var message = string.Empty;
             var volume = Math.Abs(order.Volume);
             var type = order.GetOrderType() == OrderDirection.Buy ? "Long" : "Short";
-            var instrumentName = _assetPairsCache.TryGetAssetPairById(order.Instrument)?.Name ?? order.Instrument;
+            var assetPair = _assetPairsCache.TryGetAssetPairById(order.Instrument);
+            var instrumentName = assetPair?.Name ?? order.Instrument;
             
             switch (order.Status)
             {
@@ -102,6 +103,10 @@ namespace MarginTrading.Backend.Services
                     break;
                 case OrderStatus.Rejected:
                     break;
+                case OrderStatus.Closing:
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
 
             return message;

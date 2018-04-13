@@ -6,7 +6,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Flurl.Http" Version="2.1.1" />
-    <PackageReference Include="Lykke.Common" Version="4.4.2" />
+    <PackageReference Include="Lykke.Common" Version="6.2.0" />
     <PackageReference Include="Lykke.SettingsReader" Version="2.1.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="2.0.0" />

@@ -15,7 +15,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Lykke.Logs" Version="3.6.0" />
+    <PackageReference Include="Lykke.Logs" Version="3.6.2" />
     <PackageReference Include="Lykke.RabbitMqBroker" Version="7.0.0" />
     <PackageReference Include="Lykke.SettingsReader" Version="2.1.0" />
     <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="2.0.1" />

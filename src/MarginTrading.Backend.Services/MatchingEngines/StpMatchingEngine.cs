@@ -59,8 +59,8 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 ? prices.OrderBy(tuple => tuple.price).ToList()
                 : prices.OrderByDescending(tuple => tuple.price).ToList();
             
-            var settings = _assetPairsCache.TryGetAssetPairById(order.Instrument);
-            var externalAssetPair = settings?.BasePairId ?? order.Instrument;
+            var assetPair = _assetPairsCache.TryGetAssetPairById(order.Instrument);
+            var externalAssetPair = assetPair?.BasePairId ?? order.Instrument;
 
             foreach (var sourcePrice in prices)
             {
@@ -92,7 +92,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                             MarketMakerId = sourcePrice.source,
                             MatchedDate = _dateService.Now(),
                             OrderId = executionResult.ExchangeOrderId,
-                            Price = CalculatePriceWithMarkups(settings, order.GetOrderType(), executedPrice),
+                            Price = CalculatePriceWithMarkups(assetPair, order.GetOrderType(), executedPrice),
                             Volume = (decimal) executionResult.Volume
                         }
                     };
@@ -154,8 +154,8 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             }
             
             var closeLp = order.OpenExternalProviderId;
-            var settings = _assetPairsCache.TryGetAssetPairById(order.Instrument);
-            var externalAssetPair = settings?.BasePairId ?? order.Instrument;
+            var assetPair = _assetPairsCache.TryGetAssetPairById(order.Instrument);
+            var externalAssetPair = assetPair?.BasePairId ?? order.Instrument;
 
             var externalOrderModel = new OrderModel();
 
@@ -180,7 +180,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 order.CloseExternalProviderId = closeLp;
                 order.CloseExternalOrderId = executionResult.ExchangeOrderId;
                 order.ClosePrice =
-                    CalculatePriceWithMarkups(settings, order.GetCloseType(), executedPrice);
+                    CalculatePriceWithMarkups(assetPair, order.GetCloseType(), executedPrice);
 
                 _rabbitMqNotifyService.ExternalOrder(executionResult).GetAwaiter().GetResult();
                 

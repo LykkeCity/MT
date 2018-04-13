@@ -53,8 +53,7 @@ namespace MarginTrading.Backend.Services
                 throw new ValidateOrderException(OrderRejectReason.InvalidVolume, "Volume cannot be 0");
             }
 
-            var asset = _assetPairsCache.TryGetAssetPairById(order.Instrument);
-
+            var asset = _assetPairsCache.TryGetAssetPairById(order.Instrument); 
             if (asset == null)
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, "Instrument not found");
@@ -111,6 +110,14 @@ namespace MarginTrading.Backend.Services
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidVolume,
                     $"Margin Trading is in beta testing. The volume of a single order is temporarily limited to {accountAsset.DealLimit} {accountAsset.Instrument}. Thank you for using Lykke Margin Trading, the limit will be cancelled soon!");
+            }
+
+            //set special account-quote instrument for pendin margin calculation
+            if (order.Status == OrderStatus.WaitingForExecution &&
+                _assetPairsCache.TryGetAssetPairQuoteSubstWithResersed(order.AccountAssetId, order.Instrument,
+                    order.LegalEntity, out var substAssetPair))
+            {
+                order.MarginCalcInstrument = substAssetPair.Id;
             }
 
             //check TP/SL

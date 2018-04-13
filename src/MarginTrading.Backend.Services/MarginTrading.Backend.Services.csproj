@@ -20,7 +20,7 @@
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="4.2.0" />
     <PackageReference Include="FluentScheduler" Version="5.3.0" />
     <PackageReference Include="Lykke.AzureQueueIntegration" Version="2.0.1" />
-    <PackageReference Include="Lykke.Common" Version="4.4.2" />
+    <PackageReference Include="Lykke.Common" Version="6.2.0" />
     <PackageReference Include="Lykke.MarginTrading.OrderbookAggregator.Contracts" Version="1.0.1" />
     <PackageReference Include="Lykke.RabbitMqBroker" Version="7.0.0" />
     <PackageReference Include="Lykke.Rocks.Caching" Version="1.0.0" />

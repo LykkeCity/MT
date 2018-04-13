@@ -57,7 +57,8 @@ namespace MarginTradingTests
                     {
                         new MatchedOrder {MatchedDate = DateTime.UtcNow, Volume = 1000}
                     }), //need for GetMatchedVolume()
-                OpenPrice = 1.02M
+                OpenPrice = 1.02M,
+                Status = OrderStatus.Active,
             };
 
             _ordersCache.ActiveOrders.Add(order1);
@@ -86,7 +87,8 @@ namespace MarginTradingTests
                 LegalEntity = "LYKKEVU",
                 Volume = -30000,
                 MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 30000 } }), //need for GetMatchedVolume()
-                OpenPrice = 1.02M
+                OpenPrice = 1.02M,
+                Status = OrderStatus.Active,
             };
 
             _ordersCache.ActiveOrders.Add(order2);
@@ -117,7 +119,8 @@ namespace MarginTradingTests
                 LegalEntity = "LYKKEVU",
                 Volume = 130000,
                 MatchedOrders = new MatchedOrderCollection( new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 130000} }), //need for GetMatchedVolume()
-                OpenPrice = 1.02M
+                OpenPrice = 1.02M,
+                Status = OrderStatus.Active,
             };
 
             _ordersCache.ActiveOrders.Add(order);
@@ -143,7 +146,8 @@ namespace MarginTradingTests
                 AssetAccuracy = 5,
                 LegalEntity = "LYKKEVU",
                 Volume = 96000,
-                OpenPrice = 1.02M
+                OpenPrice = 1.02M,
+                Status = OrderStatus.Active,
             };
             
             var result1 = _accountUpdateService.IsEnoughBalance(order1);//account have 1000

@@ -34,11 +34,11 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 return _matchingEngineRepository.GetMatchingEngineById(route.MatchingEngineId);
             }
 
-            var assetPairSetting = _assetPairsCache.TryGetAssetPairById(order.Instrument);
+            var assetPair = _assetPairsCache.TryGetAssetPairById(order.Instrument);
 
             //TODO: find ME with correct mode that ownes the same Entity as asset pair
             return _matchingEngineRepository.GetMatchingEngineById(
-                (assetPairSetting?.MatchingEngineMode ?? MatchingEngineMode.MarketMaker) == MatchingEngineMode.MarketMaker
+                (assetPair?.MatchingEngineMode ?? MatchingEngineMode.MarketMaker) == MatchingEngineMode.MarketMaker
                     ? MatchingEngineConstants.LykkeVuMm
                     : MatchingEngineConstants.LykkeCyStp);
         }
