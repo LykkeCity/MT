@@ -2,8 +2,6 @@
 {
 	public interface IExternalOrderReport
 	{
-		string AccountAssetId { get; }
-
 		string Instrument { get; }
 		
 		string Exchange { get; }

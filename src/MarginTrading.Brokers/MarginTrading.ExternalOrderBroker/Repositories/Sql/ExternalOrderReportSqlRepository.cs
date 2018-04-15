@@ -16,7 +16,6 @@ namespace MarginTrading.ExternalOrderBroker.Repositories.Sql
         private const string TableName = "ExternalOrderReport";
         private const string CreateTableScript = "CREATE TABLE [{0}](" +
             "[OID] [int] NOT NULL IDENTITY (1,1) PRIMARY KEY," +
-            "[AccountAssetId] [nvarchar](64) NOT NULL, " +
 			"[Instrument] [nvarchar] (64) NOT NULL, " +
 			"[Exchange] [nvarchar] (64) NOT NULL, " +
 			"[BaseAsset] [nvarchar] (64) NOT NULL, " +
