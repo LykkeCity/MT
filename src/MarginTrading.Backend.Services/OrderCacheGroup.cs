@@ -170,7 +170,7 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public IReadOnlyCollection<Order> GetOrdersByMarginInstrument(string instrument, OrderStatus? orderStatus = null)
+        public IReadOnlyCollection<Order> GetOrdersByMarginInstrument(string instrument)
         {
             if (string.IsNullOrWhiteSpace(instrument))
                 throw new ArgumentException(nameof(instrument));
@@ -182,8 +182,7 @@ namespace MarginTrading.Backend.Services
                 if (!_orderIdsByMarginInstrumentId.ContainsKey(instrument))
                     return new List<Order>();
 
-                var orders = _orderIdsByMarginInstrumentId[instrument].Select(id => _ordersById[id]).ToList();
-                return orderStatus == null ? orders : orders.Where(o => o.Status == orderStatus).ToList();
+                return _orderIdsByMarginInstrumentId[instrument].Select(id => _ordersById[id]).ToList();
             }
             finally
             {

@@ -309,7 +309,7 @@ namespace MarginTrading.Backend.Services
 
         private void ProcessPendingOrdersMarginRecalc(string instrument)
         {
-            var pendingOrders = _ordersCache.GetPendingForMarginRecalc(instrument, OrderStatus.WaitingForExecution);
+            var pendingOrders = _ordersCache.GetPendingForMarginRecalc(instrument);
 
             foreach (var pendingOrder in pendingOrders)
             {

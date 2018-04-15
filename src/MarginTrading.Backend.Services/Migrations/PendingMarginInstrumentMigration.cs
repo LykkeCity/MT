@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Services.Infrastructure;
+using MoreLinq;
 
 namespace MarginTrading.Backend.Services.Migrations
 {
@@ -33,17 +34,18 @@ namespace MarginTrading.Backend.Services.Migrations
             using (_contextFactory.GetWriteSyncContext($"{nameof(PendingMarginInstrumentMigration)}.{nameof(Invoke)}"))
             {
                 //open orders from cache
-                var orders = _orderCache.GetPending().Where(x => string.IsNullOrEmpty(x.MarginCalcInstrument)).ToList();
-                if (!orders.Any())
+                var allOrders = _orderCache.GetAll().ToList();
+                var pendingOrders = _orderCache.GetPending().Where(x => string.IsNullOrEmpty(x.MarginCalcInstrument)).ToList();
+                if (!pendingOrders.Any())
                     return Task.CompletedTask;
                 
-                foreach (var order in orders)
+                foreach (var order in pendingOrders)
                 {
                     HandleOrder(order);
                 }
                 
                 //reinit orders cache with modified data
-                _orderCache.InitOrders(orders);
+                _orderCache.InitOrders(allOrders);
             }
 
             return Task.CompletedTask;

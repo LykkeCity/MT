@@ -39,7 +39,7 @@ namespace MarginTrading.Backend.Services
                 try
                 {
                     if (!migrationVersions.TryGetValue(migrationName, out var version)
-                        && version < migration.Version)
+                        || version < migration.Version)
                     {
                         await migration.Invoke();
 
