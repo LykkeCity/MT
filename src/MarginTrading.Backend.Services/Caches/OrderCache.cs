@@ -50,9 +50,9 @@ namespace MarginTrading.Backend.Services
             return WaitingForExecutionOrders.GetAllOrders().ToImmutableArray();
         }
 
-        public ImmutableArray<Order> GetPendingForMarginRecalc(string instrument)
+        public ImmutableArray<Order> GetPendingForMarginRecalc(string instrument, OrderStatus? orderStatus = null)
         {
-            return WaitingForExecutionOrders.GetPendingOrdersByMarginInstrument(instrument).ToImmutableArray();
+            return WaitingForExecutionOrders.GetOrdersByMarginInstrument(instrument, orderStatus).ToImmutableArray();
         }
 
         public bool TryGetOrderById(string orderId, out Order order)

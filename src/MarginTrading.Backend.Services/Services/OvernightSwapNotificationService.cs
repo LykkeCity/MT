@@ -90,7 +90,7 @@ namespace MarginTrading.Backend.Services.Services
                                             AccountCurrency = account.BaseAssetId,
                                             Calculations = a.Select(calc =>
                                             {
-                                                var instrumentName = _assetPairsCache.TryGetAssetPairById(calc.Instrument)?.Name 
+                                                var instrumentName = _assetPairsCache.GetAssetPairByIdOrDefault(calc.Instrument)?.Name 
                                                                      ?? calc.Instrument;
                                                 return new OvernightSwapNotification.SingleCalculation
                                                 {

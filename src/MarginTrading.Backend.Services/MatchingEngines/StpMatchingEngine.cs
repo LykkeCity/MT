@@ -59,7 +59,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 ? prices.OrderBy(tuple => tuple.price).ToList()
                 : prices.OrderByDescending(tuple => tuple.price).ToList();
             
-            var assetPair = _assetPairsCache.TryGetAssetPairById(order.Instrument);
+            var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(order.Instrument);
             var externalAssetPair = assetPair?.BasePairId ?? order.Instrument;
 
             foreach (var sourcePrice in prices)
@@ -154,7 +154,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             }
             
             var closeLp = order.OpenExternalProviderId;
-            var assetPair = _assetPairsCache.TryGetAssetPairById(order.Instrument);
+            var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(order.Instrument);
             var externalAssetPair = assetPair?.BasePairId ?? order.Instrument;
 
             var externalOrderModel = new OrderModel();

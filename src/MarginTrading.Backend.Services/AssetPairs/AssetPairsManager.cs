@@ -43,7 +43,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             ValidatePair(assetPair);
             await _assetPairsRepository.ReplaceAsync(assetPair);
             InitAssetPairs();
-            return _assetPairsCache.TryGetAssetPairById(assetPair.Id)
+            return _assetPairsCache.GetAssetPairByIdOrDefault(assetPair.Id)
                 .RequiredNotNull("AssetPair " + assetPair.Id);
         }
 
@@ -52,7 +52,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             ValidatePair(assetPair);
             await _assetPairsRepository.InsertAsync(assetPair);
             InitAssetPairs();
-            return _assetPairsCache.TryGetAssetPairById(assetPair.Id)
+            return _assetPairsCache.GetAssetPairByIdOrDefault(assetPair.Id)
                 .RequiredNotNull("AssetPair " + assetPair.Id);
         }
 
@@ -68,7 +68,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             if (newValue.BasePairId == null) 
                 return;
 
-            if (_assetPairsCache.TryGetAssetPairById(newValue.BasePairId) == null)
+            if (_assetPairsCache.GetAssetPairByIdOrDefault(newValue.BasePairId) == null)
                 throw new InvalidOperationException($"BasePairId {newValue.BasePairId} does not exist");
 
             if (_assetPairsCache.GetAll().Any(s =>

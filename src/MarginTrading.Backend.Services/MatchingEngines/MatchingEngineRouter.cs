@@ -34,7 +34,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 return _matchingEngineRepository.GetMatchingEngineById(route.MatchingEngineId);
             }
 
-            var assetPair = _assetPairsCache.TryGetAssetPairById(order.Instrument);
+            var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(order.Instrument);
 
             //TODO: find ME with correct mode that ownes the same Entity as asset pair
             return _matchingEngineRepository.GetMatchingEngineById(

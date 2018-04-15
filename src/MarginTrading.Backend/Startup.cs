@@ -105,6 +105,7 @@ namespace MarginTrading.Backend
             RegisterModules(builder, mtSettings, settings, Environment, riskInformingSettings);
 
             builder.Populate(services);
+            
             ApplicationContainer = builder.Build();
 
             MtServiceLocator.FplService = ApplicationContainer.Resolve<IFplService>();
@@ -166,6 +167,7 @@ namespace MarginTrading.Backend
                 environment, LogLocator.CommonLog));
             builder.RegisterModule(new MarginTradingCommonModule());
             builder.RegisterModule(new ExternalServicesModule(mtSettings));
+            builder.RegisterModule(new BackendMigrationsModule());
 
             builder.RegisterBuildCallback(c => c.Resolve<AccountAssetsManager>());
             builder.RegisterBuildCallback(c => c.Resolve<OrderBookSaveService>());

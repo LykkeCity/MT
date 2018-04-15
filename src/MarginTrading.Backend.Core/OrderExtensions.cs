@@ -32,7 +32,7 @@ namespace MarginTrading.Backend.Core
 
         public static decimal GetTotalFpl(this IOrder order)
         {
-            return Math.Round(GetTotalFpl(order, order.GetSwaps()), order.GetAndHandleFplData().AccountBaseAssetAccuracy);
+            return Math.Round(GetTotalFpl(order, order.GetSwaps()), order.CalculateFplData().AccountBaseAssetAccuracy);
         }
 
         public static decimal GetMatchedVolume(this IOrder order)
@@ -55,51 +55,47 @@ namespace MarginTrading.Backend.Core
             return Math.Round(order.GetRemainingCloseVolume(), MarginTradingHelpers.VolumeAccuracy) == 0;
         }
 
-        private static FplData GetAndHandleFplData(this IOrder order)
+        private static FplData CalculateFplData(this IOrder order)
         {
-            var handler = order.Status != OrderStatus.WaitingForExecution
-                ? MtServiceLocator.FplService.UpdateOrderFpl
-                : (Action<IOrder, FplData>)MtServiceLocator.FplService.UpdatePendingOrderMargin;
-            
             if (order is Order orderInstance)
             {
                 if (orderInstance.FplData.ActualHash != orderInstance.FplData.CalculatedHash)
                 {
-                    handler(orderInstance, orderInstance.FplData);
+                    MtServiceLocator.FplService.UpdateOrderFpl(orderInstance, orderInstance.FplData);
                 }
 
                 return orderInstance.FplData;
             }
 
             var fplData = new FplData();
-            handler(order, fplData);
+            MtServiceLocator.FplService.UpdateOrderFpl(order, fplData);
 
             return fplData;
         }
 
         public static decimal GetFpl(this IOrder order)
         {
-            return order.GetAndHandleFplData().Fpl;
+            return order.CalculateFplData().Fpl;
         }
 
         public static decimal GetFplRate(this IOrder order)
         {
-            return order.GetAndHandleFplData().FplRate;
+            return order.CalculateFplData().FplRate;
         }
 
         public static decimal GetMarginRate(this IOrder order)
         {
-            return order.GetAndHandleFplData().MarginRate;
+            return order.CalculateFplData().MarginRate;
         }
 
         public static decimal GetMarginMaintenance(this IOrder order)
         {
-            return order.GetAndHandleFplData().MarginMaintenance;
+            return order.CalculateFplData().MarginMaintenance;
         }
 
         public static decimal GetMarginInit(this IOrder order)
         {
-            return order.GetAndHandleFplData().MarginInit;
+            return order.CalculateFplData().MarginInit;
         }
 
         public static void UpdateClosePrice(this IOrder order, decimal closePrice)

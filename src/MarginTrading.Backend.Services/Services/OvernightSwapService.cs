@@ -238,7 +238,7 @@ namespace MarginTrading.Backend.Services.Services
 				filteredOrders.Select(order => order.Id).ToList(), _currentStartTimestamp, true, null, volume, total, swapRate, direction);
 	
 			//charge comission
-			var instrumentName = _assetPairsCache.TryGetAssetPairById(accountAssetPair.Instrument)?.Name 
+			var instrumentName = _assetPairsCache.GetAssetPairByIdOrDefault(accountAssetPair.Instrument)?.Name 
 			                     ?? accountAssetPair.Instrument;
 			await _accountManager.UpdateBalanceAsync(
 				account: account, 

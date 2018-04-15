@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Messages;
@@ -14,7 +13,7 @@ namespace MarginTrading.Backend.Services
         private readonly Dictionary<string, HashSet<string>> _orderIdsByAccountId;
         private readonly Dictionary<string, HashSet<string>> _orderIdsByInstrumentId;
         private readonly Dictionary<(string, string), HashSet<string>> _orderIdsByAccountIdAndInstrumentId;
-        private readonly Dictionary<string, HashSet<string>> _pendingOrderIdsByMarginInstrumentId;
+        private readonly Dictionary<string, HashSet<string>> _orderIdsByMarginInstrumentId;
         private readonly OrderStatus _status;
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
 
@@ -39,7 +38,9 @@ namespace MarginTrading.Backend.Services
                 _orderIdsByAccountIdAndInstrumentId = statusOrders.GroupBy(x => GetAccountInstrumentCacheKey(x.AccountId, x.Instrument))
                     .ToDictionary(x => x.Key, x => x.Select(o => o.Id).ToHashSet());
 
-                _pendingOrderIdsByMarginInstrumentId = new Dictionary<string, HashSet<string>>();
+                _orderIdsByMarginInstrumentId = statusOrders.Where(x => !string.IsNullOrEmpty(x.MarginCalcInstrument))
+                    .GroupBy(x => x.MarginCalcInstrument)
+                    .ToDictionary(x => x.Key, x => x.Select(o => o.Id).ToHashSet());
             }
             finally 
             {
@@ -72,12 +73,11 @@ namespace MarginTrading.Backend.Services
                     _orderIdsByAccountIdAndInstrumentId.Add(accountInstrumentCacheKey, new HashSet<string>());
                 _orderIdsByAccountIdAndInstrumentId[accountInstrumentCacheKey].Add(order.Id);
 
-                if (order.Status == OrderStatus.WaitingForExecution
-                    && !string.IsNullOrEmpty(order.MarginCalcInstrument))
+                if (!string.IsNullOrEmpty(order.MarginCalcInstrument))
                 {
-                    if(!_pendingOrderIdsByMarginInstrumentId.ContainsKey(order.MarginCalcInstrument))
-                        _pendingOrderIdsByMarginInstrumentId.Add(order.MarginCalcInstrument, new HashSet<string>());
-                    _pendingOrderIdsByMarginInstrumentId[order.MarginCalcInstrument].Add(order.Id);
+                    if(!_orderIdsByMarginInstrumentId.ContainsKey(order.MarginCalcInstrument))
+                        _orderIdsByMarginInstrumentId.Add(order.MarginCalcInstrument, new HashSet<string>());
+                    _orderIdsByMarginInstrumentId[order.MarginCalcInstrument].Add(order.Id);
                 }
             }
             finally
@@ -101,9 +101,9 @@ namespace MarginTrading.Backend.Services
                     _orderIdsByAccountId[order.AccountId].Remove(order.Id);
                     _orderIdsByAccountIdAndInstrumentId[GetAccountInstrumentCacheKey(order.AccountId, order.Instrument)].Remove(order.Id);
 
-                    if (order.Status == OrderStatus.WaitingForExecution
-                        && (_pendingOrderIdsByMarginInstrumentId[order.MarginCalcInstrument]?.Contains(order.Id) ?? false))
-                        _pendingOrderIdsByMarginInstrumentId[order.MarginCalcInstrument].Remove(order.Id);
+                    if (!string.IsNullOrEmpty(order.MarginCalcInstrument)
+                        && (_orderIdsByMarginInstrumentId[order.MarginCalcInstrument]?.Contains(order.Id) ?? false))
+                        _orderIdsByMarginInstrumentId[order.MarginCalcInstrument].Remove(order.Id);
                 }
                 else
                     throw new Exception(string.Format(MtMessages.CantRemoveOrderWithStatus, order.Id, _status));
@@ -170,7 +170,7 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public IReadOnlyCollection<Order> GetPendingOrdersByMarginInstrument(string instrument)
+        public IReadOnlyCollection<Order> GetOrdersByMarginInstrument(string instrument, OrderStatus? orderStatus = null)
         {
             if (string.IsNullOrWhiteSpace(instrument))
                 throw new ArgumentException(nameof(instrument));
@@ -179,10 +179,11 @@ namespace MarginTrading.Backend.Services
 
             try
             {
-                if (!_pendingOrderIdsByMarginInstrumentId.ContainsKey(instrument))
+                if (!_orderIdsByMarginInstrumentId.ContainsKey(instrument))
                     return new List<Order>();
 
-                return _pendingOrderIdsByMarginInstrumentId[instrument].Select(id => _ordersById[id]).ToList();
+                var orders = _orderIdsByMarginInstrumentId[instrument].Select(id => _ordersById[id]).ToList();
+                return orderStatus == null ? orders : orders.Where(o => o.Status == orderStatus).ToList();
             }
             finally
             {
