@@ -39,6 +39,7 @@ namespace MarginTrading.Backend
         private readonly IMaintenanceModeService _maintenanceModeService;
         private readonly IRabbitMqService _rabbitMqService;
         private readonly MatchingEngineRoutesManager _matchingEngineRoutesManager;
+        private readonly IMigrationService _migrationService;
         private readonly IConvertService _convertService;
         private readonly ExternalOrderBooksList _externalOrderBooksList;
         private const string ServiceName = "MarginTrading.Backend";
@@ -52,6 +53,7 @@ namespace MarginTrading.Backend
             IMaintenanceModeService maintenanceModeService,
             IRabbitMqService rabbitMqService,
             MatchingEngineRoutesManager matchingEngineRoutesManager,
+            IMigrationService migrationService,
             IConvertService convertService,
             ExternalOrderBooksList externalOrderBooksList)
         {
@@ -63,6 +65,7 @@ namespace MarginTrading.Backend
             _maintenanceModeService = maintenanceModeService;
             _rabbitMqService = rabbitMqService;
             _matchingEngineRoutesManager = matchingEngineRoutesManager;
+            _migrationService = migrationService;
             _convertService = convertService;
             _externalOrderBooksList = externalOrderBooksList;
         }
@@ -70,10 +73,12 @@ namespace MarginTrading.Backend
         public async Task StartApplicationAsync()
         {
             _consoleWriter.WriteLine($"Starting {ServiceName}");
-            await _logger.WriteInfoAsync(ServiceName, null, null, "Starting broker");
+            await _logger.WriteInfoAsync(ServiceName, null, null, "Starting...");
 
             try
             {
+                await _migrationService.InvokeAll();
+                
                 _rabbitMqService.Subscribe(
                     _marginSettings.MarketMakerRabbitMqSettings, false, HandleNewOrdersMessage,
                     _rabbitMqService.GetJsonDeserializer<MarketMakerOrderCommandsBatchMessage>());
@@ -125,7 +130,7 @@ namespace MarginTrading.Backend
             _maintenanceModeService.SetMode(true);
             _consoleWriter.WriteLine($"Maintenance mode enabled for {ServiceName}");
             _consoleWriter.WriteLine($"Closing {ServiceName}");
-            _logger.WriteInfoAsync(ServiceName, null, null, "Closing broker").Wait();
+            _logger.WriteInfoAsync(ServiceName, null, null, "Closing...").Wait();
             _rabbitMqNotifyService.Stop();
             _consoleWriter.WriteLine($"Closed {ServiceName}");
         }

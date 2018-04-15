@@ -12,6 +12,7 @@
         public const decimal DefaultStopOut = 0.95M;
 
         public const string StateBlobContainer = "state";
+        public const string MigrationsBlobContainer = "migrations";
 
         public const string MaintenanceModeRoute = "maintenance";
     }

@@ -32,7 +32,7 @@ namespace MarginTrading.Backend.Core
 
         public static decimal GetTotalFpl(this IOrder order)
         {
-            return Math.Round(GetTotalFpl(order, order.GetSwaps()), order.GetFplData().AccountBaseAssetAccuracy);
+            return Math.Round(GetTotalFpl(order, order.GetSwaps()), order.CalculateFplData().AccountBaseAssetAccuracy);
         }
 
         public static decimal GetMatchedVolume(this IOrder order)
@@ -55,11 +55,9 @@ namespace MarginTrading.Backend.Core
             return Math.Round(order.GetRemainingCloseVolume(), MarginTradingHelpers.VolumeAccuracy) == 0;
         }
 
-        private static FplData GetFplData(this IOrder order)
+        private static FplData CalculateFplData(this IOrder order)
         {
-            var orderInstance = order as Order;
-
-            if (orderInstance != null)
+            if (order is Order orderInstance)
             {
                 if (orderInstance.FplData.ActualHash != orderInstance.FplData.CalculatedHash)
                 {
@@ -77,27 +75,27 @@ namespace MarginTrading.Backend.Core
 
         public static decimal GetFpl(this IOrder order)
         {
-            return order.GetFplData().Fpl;
+            return order.CalculateFplData().Fpl;
         }
 
-        public static decimal GetQuoteRate(this IOrder order)
+        public static decimal GetFplRate(this IOrder order)
         {
-            return order.GetFplData().FplRate;
+            return order.CalculateFplData().FplRate;
         }
 
         public static decimal GetMarginRate(this IOrder order)
         {
-            return order.GetFplData().MarginRate;
+            return order.CalculateFplData().MarginRate;
         }
 
         public static decimal GetMarginMaintenance(this IOrder order)
         {
-            return order.GetFplData().MarginMaintenance;
+            return order.CalculateFplData().MarginMaintenance;
         }
 
         public static decimal GetMarginInit(this IOrder order)
         {
-            return order.GetFplData().MarginInit;
+            return order.CalculateFplData().MarginInit;
         }
 
         public static void UpdateClosePrice(this IOrder order, decimal closePrice)
@@ -108,6 +106,14 @@ namespace MarginTrading.Backend.Core
                 orderInstance.FplData.ActualHash++;
                 var account = MtServiceLocator.AccountsCacheService.Get(order.ClientId, order.AccountId);
                 account.CacheNeedsToBeUpdated();
+            }
+        }
+
+        public static void UpdatePendingOrderMargin(this IOrder order)
+        {
+            if (order is Order orderInstance)
+            {
+                orderInstance.FplData.ActualHash++;
             }
         }
 

@@ -402,8 +402,11 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         public MtBackendResponse<bool> ChangeOrderLimits([FromBody]ChangeOrderLimitsBackendRequest request)
         {
-            var order = _ordersCache.GetOrderById(request.OrderId);
-
+            if (!_ordersCache.TryGetOrderById(request.OrderId, out var order))
+            {
+                return new MtBackendResponse<bool> {Message = "Order not found"};
+            }
+            
             if (_assetDayOffService.IsDayOff(order.Instrument))
             {
                 return new MtBackendResponse<bool> { Message = "Trades for instrument are not available" };

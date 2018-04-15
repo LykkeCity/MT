@@ -2,13 +2,18 @@
 {
     public interface IAccountUpdateService
     {
-        void UpdateAccount(IMarginTradingAccount account, AccountFpl accountFpl, Order[] orders = null);
+        void UpdateAccount(IMarginTradingAccount account);
         bool IsEnoughBalance(Order order);
-        MarginTradingAccount GuessAccountWithOrder(Order order);
+        MarginTradingAccount GuessAccountWithNewActiveOrder(Order order);
     }
 
     public class AccountFpl
     {
+        public AccountFpl()
+        {
+            ActualHash = 1;
+        }
+        
         public decimal PnL { get; set; }
         public decimal UsedMargin { get; set; }
         public decimal MarginInit { get; set; }

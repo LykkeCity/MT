@@ -12,6 +12,6 @@
     <ProjectReference Include="..\MarginTrading.Backend.Core\MarginTrading.Backend.Core.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Lykke.AzureStorage" Version="5.0.1" />
+    <PackageReference Include="Lykke.AzureStorage" Version="8.1.0" />
   </ItemGroup>
 </Project>

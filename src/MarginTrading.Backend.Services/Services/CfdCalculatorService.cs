@@ -1,4 +1,5 @@
-﻿using MarginTrading.Backend.Core;
+﻿using System;
+using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Services.AssetPairs;
 
@@ -47,7 +48,7 @@ namespace MarginTrading.Backend.Services
                 return 1;
 
             var assetPairSubst = _assetPairsCache.FindAssetPair(assetPair.QuoteAssetId, accountAssetId, legalEntity);
-
+           
             var rate = metricIsPositive
                 ? assetPairSubst.BaseAssetId == assetPair.QuoteAssetId
                     ? _quoteCacheService.GetQuote(assetPairSubst.Id).Ask

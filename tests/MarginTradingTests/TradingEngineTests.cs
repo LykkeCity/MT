@@ -2,7 +2,8 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
-using MarginTrading.AzureRepositories.Contract;
+ using Lykke.Service.Assets.Client.Models;
+ using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Mappers;
@@ -1506,8 +1507,11 @@ namespace MarginTradingTests
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
+            order.UpdatePendingOrderMargin();
 
             Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status);
+            Assert.AreEqual(0.088, order.GetMarginInit());
+            Assert.AreEqual(0.05866667, order.GetMarginMaintenance());
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("placed")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
 
             _matchingEngine.SetOrders(MarketMaker1Id, new[]

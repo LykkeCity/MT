@@ -311,6 +311,22 @@ namespace MarginTrading.Backend.Services
                 }
             }
 
+            var pendingOrders = _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(accountId);
+            
+            foreach (var order in pendingOrders)
+            {
+                try
+                {
+                    var closedOrder = _tradingEngine.CancelPendingOrder(order.Id, reason);
+                    closedOrders.Add(closedOrder);
+                }
+                catch (Exception e)
+                {
+                    await _log.WriteWarningAsync(nameof(AccountManager), "CloseAccountOrders",
+                        $"AccountId: {accountId}, OrderId: {order.Id}", $"Error cancelling order: {e.Message}");
+                }
+            }
+
             return closedOrders;
         }
 

@@ -43,6 +43,7 @@ namespace MarginTradingTests
                 MatchedOrders = new MatchedOrderCollection( new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 10 } }), //need for GetMatchedVolume()
                 OpenPrice = 790,
                 LegalEntity = "LYKKEVU",
+                Status = OrderStatus.Active,
             };
 
             order.UpdateClosePrice(800);
@@ -68,6 +69,7 @@ namespace MarginTradingTests
                 MatchedOrders = new MatchedOrderCollection( new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 10 } }), //need for GetMatchedVolume()
                 OpenPrice = 790,
                 LegalEntity = "LYKKEVU",
+                Status = OrderStatus.Active,
             };
 
             order.UpdateClosePrice(800);
@@ -95,6 +97,7 @@ namespace MarginTradingTests
                 OpenCommission = 2,
                 CommissionLot = 10,
                 LegalEntity = "LYKKEVU",
+                Status = OrderStatus.Active,
             };
 
             order.UpdateClosePrice(800);
@@ -122,6 +125,7 @@ namespace MarginTradingTests
                 MatchedOrders = new MatchedOrderCollection( new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 1000 } }), //need for GetMatchedVolume()
                 OpenPrice = 935.461M,
                 LegalEntity = "LYKKEVU",
+                Status = OrderStatus.Active,
             };
 
             order.UpdateClosePrice(935.61M);
@@ -149,10 +153,11 @@ namespace MarginTradingTests
                 MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 1000 } }), //need for GetMatchedVolume()
                 OpenPrice = 935.461M,
                 LegalEntity = "LYKKEVU",
+                Status = OrderStatus.Active,
             };
 
             order.UpdateClosePrice(935.61M);
-            var quoteRate = order.GetQuoteRate();
+            var quoteRate = order.GetFplRate();
 
             Assert.AreEqual(0.9328097161460033767711724485m, quoteRate);
             Assert.AreEqual(-138.989, Math.Round(order.GetFpl(), 3));
@@ -185,6 +190,7 @@ namespace MarginTradingTests
                     OpenPrice = 1.05M,
                     FillType = OrderFillType.FillOrKill,
                     LegalEntity = "LYKKEVU",
+                    Status = OrderStatus.Active,
                 },
                 new Order
                 {
@@ -201,6 +207,7 @@ namespace MarginTradingTests
                     OpenPrice = 1.04M,
                     FillType = OrderFillType.FillOrKill,
                     LegalEntity = "LYKKEVU",
+                    Status = OrderStatus.Active,
                 },
                 new Order
                 {
@@ -217,6 +224,7 @@ namespace MarginTradingTests
                     OpenPrice = 1.061M,
                     FillType = OrderFillType.FillOrKill,
                     LegalEntity = "LYKKEVU",
+                    Status = OrderStatus.Active,
                 },
                 new Order
                 {
@@ -233,6 +241,7 @@ namespace MarginTradingTests
                     OpenPrice = 1120,
                     FillType = OrderFillType.FillOrKill,
                     LegalEntity = "LYKKEVU",
+                    Status = OrderStatus.Active,
                 }
             };
 

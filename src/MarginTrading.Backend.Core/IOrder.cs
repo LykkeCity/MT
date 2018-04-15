@@ -39,6 +39,7 @@ namespace MarginTrading.Backend.Core
         string Comment { get; }
         MatchedOrderCollection MatchedCloseOrders { get; }
         decimal SwapCommission { get; }
+        string MarginCalcInstrument { get; }
         string EquivalentAsset { get; }
         decimal OpenPriceEquivalent { get; }
         decimal ClosePriceEquivalent { get; }
@@ -70,6 +71,7 @@ namespace MarginTrading.Backend.Core
         public string OpenOrderbookId { get; set; }
         public string CloseOrderbookId { get; set; }
         public string Instrument { get; set; }
+        public string MarginCalcInstrument { get; set; }
         public DateTime CreateDate { get; set; }
         public DateTime? OpenDate { get; set; }
         public DateTime? CloseDate { get; set; }

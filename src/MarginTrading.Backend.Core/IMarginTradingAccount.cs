@@ -14,6 +14,7 @@ namespace MarginTrading.Backend.Core
         decimal Balance { get; }
         decimal WithdrawTransferLimit { get; }
         string LegalEntity { get; }
+        [NotNull] AccountFpl AccountFpl { get; }
     }
 
     public class MarginTradingAccount : IMarginTradingAccount, IComparable<MarginTradingAccount>
@@ -26,7 +27,7 @@ namespace MarginTrading.Backend.Core
         public decimal WithdrawTransferLimit { get; set; }
         public string LegalEntity { get; set; }
 
-        internal AccountFpl AccountFpl;
+        public AccountFpl AccountFpl { get; private set; } = new AccountFpl();
 
         public static MarginTradingAccount Create(IMarginTradingAccount src)
         {
@@ -93,22 +94,13 @@ namespace MarginTrading.Backend.Core
 
     public static class MarginTradingAccountExtensions
     {
-        //TODO: optimize
         private static AccountFpl GetAccountFpl(this IMarginTradingAccount account)
         {
-            var accountInstance = account as MarginTradingAccount;
-
-            if (accountInstance != null)
+            if (account is MarginTradingAccount accountInstance)
             {
-                if (accountInstance.AccountFpl == null)
-                {
-                    accountInstance.AccountFpl = new AccountFpl();
-                    accountInstance.CacheNeedsToBeUpdated();
-                }
-
                 if (accountInstance.AccountFpl.ActualHash != accountInstance.AccountFpl.CalculatedHash)
                 {
-                    MtServiceLocator.AccountUpdateService.UpdateAccount(account, accountInstance.AccountFpl);
+                    MtServiceLocator.AccountUpdateService.UpdateAccount(account);
                 }
 
                 return accountInstance.AccountFpl;
@@ -190,15 +182,8 @@ namespace MarginTrading.Backend.Core
 
         public static void CacheNeedsToBeUpdated(this IMarginTradingAccount account)
         {
-            var accountInstance = account as MarginTradingAccount;
-
-            if (accountInstance != null)
+            if (account is MarginTradingAccount accountInstance)
             {
-                if (accountInstance.AccountFpl == null)
-                {
-                    accountInstance.AccountFpl = new AccountFpl();
-                }
-
                 accountInstance.AccountFpl.ActualHash++;
             }
         }
