@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Lykke.HttpClientGenerator;
+using Lykke.HttpClientGenerator.Retries;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.SettingsReader;
 using MarginTrading.Backend.Contracts.DataReaderClient;
@@ -22,12 +23,12 @@ namespace MarginTrading.Frontend.Modules
         {
             var services = new ServiceCollection();
             services.RegisterMtDataReaderClientsPair(
-                HttpClientGenerator.CreateDefault(
-                    _settings.CurrentValue.MtDataReaderDemoServiceClient.ServiceUrl,
-                    _settings.CurrentValue.MtDataReaderDemoServiceClient.ApiKey), 
-                HttpClientGenerator.CreateDefault(
-                    _settings.CurrentValue.MtDataReaderLiveServiceClient.ServiceUrl,
-                    _settings.CurrentValue.MtDataReaderLiveServiceClient.ApiKey));
+                HttpClientGenerator.BuildForUrl(_settings.CurrentValue.MtDataReaderDemoServiceClient.ServiceUrl)
+                    .WithApiKey(_settings.CurrentValue.MtDataReaderDemoServiceClient.ApiKey)
+                    .Create(), 
+                HttpClientGenerator.BuildForUrl(_settings.CurrentValue.MtDataReaderLiveServiceClient.ServiceUrl)
+                    .WithApiKey(_settings.CurrentValue.MtDataReaderLiveServiceClient.ApiKey)
+                    .Create());
             
             builder.RegisterLykkeServiceClient(_settings.CurrentValue.ClientAccountServiceClient.ServiceUrl);
             
