@@ -1,4 +1,5 @@
 ﻿using JetBrains.Annotations;
+using Lykke.HttpClientGenerator;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MarginTrading.Backend.Contracts.Client
@@ -6,17 +7,18 @@ namespace MarginTrading.Backend.Contracts.Client
     public static class ServiceCollectionExtensions
     {
         [PublicAPI]
-        public static void RegisterMtBackendClientsPair(this IServiceCollection services, string demoUrl, string liveUrl, string demoKey, string liveKey, string userAgent)
+        public static void RegisterMtBackendClientsPair(this IServiceCollection services, IHttpClientGenerator demo,
+            IHttpClientGenerator live)
         {
             services.AddSingleton<IMtBackendClientsPair>(p => new MtBackendClientsPair(
-                new MtBackendClient(demoUrl, demoKey, userAgent), 
-                new MtBackendClient(liveUrl, liveKey, userAgent)));
+                new MtBackendClient(demo),
+                new MtBackendClient(live)));
         }
-        
+
         [PublicAPI]
-        public static void RegisterMtBackendClient(this IServiceCollection services, string url, string key, string userAgent)
+        public static void RegisterMtBackendClient(this IServiceCollection services, IHttpClientGenerator clientProxyGenerator)
         {
-            services.AddSingleton<IMtBackendClient>(p => new MtBackendClient(url, key, userAgent));
+            services.AddSingleton<IMtBackendClient>(p => new MtBackendClient(clientProxyGenerator));
         }
     }
 }

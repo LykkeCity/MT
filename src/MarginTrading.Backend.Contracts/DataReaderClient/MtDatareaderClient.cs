@@ -1,9 +1,4 @@
-﻿using System;
-using System.Net;
-using System.Net.Http;
-using MarginTrading.Backend.Contracts.Client;
-using MarginTrading.Backend.Contracts.Infrastructure;
-using Refit;
+﻿using Lykke.HttpClientGenerator;
 
 namespace MarginTrading.Backend.Contracts.DataReaderClient
 {
@@ -20,30 +15,18 @@ namespace MarginTrading.Backend.Contracts.DataReaderClient
         public IRoutesReadingApi Routes { get; }
         public ISettingsReadingApi Settings { get; }
 
-        public MtDataReaderClient(string url, string apiKey, string userAgent)
+        public MtDataReaderClient(IHttpClientGenerator clientGenerator)
         {
-            var httpMessageHandler = new ApiKeyHeaderHttpClientHandler(
-                new UserAgentHeaderHttpClientHandler(
-                    new RetryingHttpClientHandler(new HttpClientHandler(), 6, TimeSpan.FromSeconds(5)),
-                    userAgent), 
-                apiKey);
-            var settings = new RefitSettings {HttpMessageHandlerFactory = () => httpMessageHandler};
-            AssetPairsRead = AddCaching(RestService.For<IAssetPairsReadingApi>(url, settings));
-            AccountHistory = RestService.For<IAccountHistoryApi>(url, settings);
-            AccountsApi = RestService.For<IAccountsApi>(url, settings);
-            AccountAssetPairsRead = RestService.For<IAccountAssetPairsReadingApi>(url, settings);
-            TradeMonitoringRead = RestService.For<ITradeMonitoringReadingApi>(url, settings);
-            TradingConditionsRead = RestService.For<ITradingConditionsReadingApi>(url, settings);
-            AccountGroups = RestService.For<IAccountGroupsReadingApi>(url, settings);
-            Dictionaries = RestService.For<IDictionariesReadingApi>(url, settings);
-            Routes = RestService.For<IRoutesReadingApi>(url, settings);
-            Settings = RestService.For<ISettingsReadingApi>(url, settings);
-        }
-
-        private T AddCaching<T>(T obj)
-        {
-            var cachingHelper = new CachingHelper();
-            return AopProxy.Create(obj, cachingHelper.HandleMethodCall);
+            AssetPairsRead = clientGenerator.Generate<IAssetPairsReadingApi>();
+            AccountHistory = clientGenerator.Generate<IAccountHistoryApi>();
+            AccountsApi = clientGenerator.Generate<IAccountsApi>();
+            AccountAssetPairsRead = clientGenerator.Generate<IAccountAssetPairsReadingApi>();
+            TradeMonitoringRead = clientGenerator.Generate<ITradeMonitoringReadingApi>();
+            TradingConditionsRead = clientGenerator.Generate<ITradingConditionsReadingApi>();
+            AccountGroups = clientGenerator.Generate<IAccountGroupsReadingApi>();
+            Dictionaries = clientGenerator.Generate<IDictionariesReadingApi>();
+            Routes = clientGenerator.Generate<IRoutesReadingApi>();
+            Settings = clientGenerator.Generate<ISettingsReadingApi>();
         }
     }
 }
