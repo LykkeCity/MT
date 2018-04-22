@@ -5,12 +5,15 @@ using Common.Log;
 using Lykke.SettingsReader;
 using MarginTrading.AzureRepositories;
 using MarginTrading.AzureRepositories.Contract;
+using MarginTrading.AzureRepositories.Entities;
 using MarginTrading.AzureRepositories.Logs;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
+using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Modules
@@ -93,6 +96,19 @@ namespace MarginTrading.Backend.Modules
 
 			builder.RegisterType<MatchingEngineInMemoryRepository>()
 				.As<IMatchingEngineRepository>()
+				.SingleInstance();
+
+			builder.Register(c =>
+				{
+					var settings = c.Resolve<IReloadingManager<MarginSettings>>();
+
+					return settings.CurrentValue.UseAzureIdentityGenerator
+						? (IIdentityGenerator) new AzureIdentityGenerator(
+							AzureTableStorage<IdentityEntity>.Create(settings.Nested(s => s.Db.MarginTradingConnString),
+								"Identity", _log))
+						: (IIdentityGenerator) new FakeIdentityGenerator();
+				})
+				.As<IIdentityGenerator>()
 				.SingleInstance();
 		}
 	}

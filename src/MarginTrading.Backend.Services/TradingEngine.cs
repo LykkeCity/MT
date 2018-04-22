@@ -8,6 +8,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
@@ -40,6 +41,7 @@ namespace MarginTrading.Backend.Services
         private readonly IContextFactory _contextFactory;
         private readonly IAssetPairDayOffService _assetPairDayOffService;
         private readonly ILog _log;
+        private readonly IIdentityGenerator _identityGenerator;
 
         public TradingEngine(
             IEventChannel<MarginCallEventArgs> marginCallEventChannel,
@@ -64,7 +66,8 @@ namespace MarginTrading.Backend.Services
             IThreadSwitcher threadSwitcher,
             IContextFactory contextFactory,
             IAssetPairDayOffService assetPairDayOffService,
-            ILog log)
+            ILog log,
+            IIdentityGenerator identityGenerator)
         {
             _marginCallEventChannel = marginCallEventChannel;
             _stopoutEventChannel = stopoutEventChannel;
@@ -89,12 +92,15 @@ namespace MarginTrading.Backend.Services
             _contextFactory = contextFactory;
             _assetPairDayOffService = assetPairDayOffService;
             _log = log;
+            _identityGenerator = identityGenerator;
         }
 
         public async Task<Order> PlaceOrderAsync(Order order)
         {
             try
             {
+                order.Code = await _identityGenerator.GenerateIdAsync(nameof(Order));
+                
                 _validateOrderService.Validate(order);
 
                 if (order.ExpectedOpenPrice.HasValue)

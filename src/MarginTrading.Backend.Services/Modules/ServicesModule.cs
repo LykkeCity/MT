@@ -38,11 +38,11 @@ namespace MarginTrading.Backend.Services.Modules
 		protected override void Load(ContainerBuilder builder)
 		{
 			builder.RegisterType<QuoteCacheService>()
-                .AsSelf()
-                .As<IQuoteCacheService>()
+				.AsSelf()
+				.As<IQuoteCacheService>()
 				.As<IEventConsumer<BestPriceChangeEventArgs>>()
 				.SingleInstance()
-			    .OnActivated(args => args.Instance.Start());
+				.OnActivated(args => args.Instance.Start());
 
 			builder.RegisterType<FplService>()
 				.As<IFplService>()
@@ -83,7 +83,7 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<IMarketMakerMatchingEngine>()
 				.WithParameter(TypedParameter.From(MatchingEngineConstants.LykkeVuMm))
 				.SingleInstance();
-			
+
 			builder.RegisterType<StpMatchingEngine>()
 				.As<IStpMatchingEngine>()
 				.WithParameter(TypedParameter.From(MatchingEngineConstants.LykkeCyStp))
@@ -96,10 +96,10 @@ namespace MarginTrading.Backend.Services.Modules
 
 			builder.RegisterType<MarginCallConsumer>()
 				.As<IEventConsumer<MarginCallEventArgs>>()
-                .As<IEventConsumer<OrderPlacedEventArgs>>()
-                .As<IEventConsumer<OrderClosedEventArgs>>()
-                .As<IEventConsumer<OrderCancelledEventArgs>>()
-                .SingleInstance();
+				.As<IEventConsumer<OrderPlacedEventArgs>>()
+				.As<IEventConsumer<OrderClosedEventArgs>>()
+				.As<IEventConsumer<OrderCancelledEventArgs>>()
+				.SingleInstance();
 
 			builder.RegisterType<StopOutConsumer>()
 				.As<IEventConsumer<StopOutEventArgs>>()
@@ -128,7 +128,7 @@ namespace MarginTrading.Backend.Services.Modules
 			builder.RegisterType<OrderBookList>()
 				.AsSelf()
 				.SingleInstance();
-			
+
 			builder.RegisterType<ExternalOrderBooksList>()
 				.AsSelf()
 				.SingleInstance();
@@ -156,17 +156,17 @@ namespace MarginTrading.Backend.Services.Modules
 				.AsSelf()
 				.SingleInstance();
 
-		    builder.RegisterType<AssetPairDayOffService>()
-		        .As<IAssetPairDayOffService>()
-		        .SingleInstance();
+			builder.RegisterType<AssetPairDayOffService>()
+				.As<IAssetPairDayOffService>()
+				.SingleInstance();
 
-		    builder.RegisterType<TelemetryPublisher>()
-		        .As<ITelemetryPublisher>()
-		        .SingleInstance();
+			builder.RegisterType<TelemetryPublisher>()
+				.As<ITelemetryPublisher>()
+				.SingleInstance();
 
-		    builder.RegisterType<ContextFactory>()
-		        .As<IContextFactory>()
-		        .SingleInstance();
+			builder.RegisterType<ContextFactory>()
+				.As<IContextFactory>()
+				.SingleInstance();
 
 			builder.Register(c =>
 				{
@@ -176,12 +176,12 @@ namespace MarginTrading.Backend.Services.Modules
 				})
 				.As<IRabbitMqService>()
 				.SingleInstance();
-			
+
 			builder.RegisterType<DayOffSettingsService>()
 				.As<IDayOffSettingsService>()
 				.As<IStartable>()
 				.SingleInstance();
-			
+
 			builder.RegisterType<AlertSeverityLevelService>()
 				.As<IAlertSeverityLevelService>()
 				.SingleInstance();
@@ -189,7 +189,7 @@ namespace MarginTrading.Backend.Services.Modules
 			builder.RegisterInstance(_riskInformingSettings)
 				.As<IReloadingManager<RiskInformingSettings>>()
 				.SingleInstance();
-			
+
 			builder.RegisterType<MarginTradingEnablingService>()
 				.As<IMarginTradingEnablingService>()
 				.As<IStartable>()
