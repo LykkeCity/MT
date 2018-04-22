@@ -4,7 +4,7 @@ namespace MarginTrading.Common.RabbitMq
 {
     public class RabbitMqSettings
     {
-        [AmqpCheck]
+        [AmqpCheck(false)]
         public string ConnectionString { get; set; }
         public string ExchangeName { get; set; }
     }
