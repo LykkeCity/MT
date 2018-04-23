@@ -118,9 +118,9 @@ namespace MarginTrading.Backend.Controllers
                 return BackendResponse<AccountChargeManuallyResponse>.Error("Reason must be set.");
             }
 
-            if (request.Amount <= 0)
+            if (request.Amount == 0)
             {
-                return BackendResponse<AccountChargeManuallyResponse>.Error("Amount must be greather than zero.");
+                return BackendResponse<AccountChargeManuallyResponse>.Error("Amount must be set.");
             }
             
             var account = _accountsCacheService.Get(request.ClientId, request.AccountId);
