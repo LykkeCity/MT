@@ -124,11 +124,6 @@ namespace MarginTrading.Backend.Controllers
             }
             
             var account = _accountsCacheService.Get(request.ClientId, request.AccountId);
-            var freeMargin = account.GetFreeMargin();
-
-            if (freeMargin < Math.Abs(request.Amount))
-                return BackendResponse<AccountChargeManuallyResponse>.Error(
-                    "Requested charge amount is more than free margin.");
             
             try
             {
