@@ -79,7 +79,7 @@ namespace MarginTrading.Backend.Controllers
 
             if (freeMargin < Math.Abs(request.Amount))
                 return BackendResponse<AccountDepositWithdrawResponse>.Error(
-                    "Requested withdrawal amount is less than free margin");
+                    "Requested withdrawal amount is more than free margin");
 
             var changeTransferLimit = _marginSettings.IsLive &&
                                       request.PaymentType == PaymentType.Transfer &&
@@ -116,6 +116,11 @@ namespace MarginTrading.Backend.Controllers
             if (string.IsNullOrEmpty(request?.Reason?.Trim()))
             {
                 return BackendResponse<AccountChargeManuallyResponse>.Error("Reason must be set.");
+            }
+
+            if (request.Amount == 0)
+            {
+                return BackendResponse<AccountChargeManuallyResponse>.Error("Amount must be set.");
             }
             
             var account = _accountsCacheService.Get(request.ClientId, request.AccountId);
