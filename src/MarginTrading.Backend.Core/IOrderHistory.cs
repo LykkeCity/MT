@@ -8,6 +8,7 @@ namespace MarginTrading.Backend.Core
     public interface IOrderHistory
     {
         string Id { get; }
+        long Code { get; }
         string ClientId { get; }
         string AccountId { get; }
         string TradingConditionId { get; }
@@ -64,6 +65,7 @@ namespace MarginTrading.Backend.Core
     public class OrderHistory : IOrderHistory
     {
         public string Id { get; set; }
+        public long Code { get; set; }
         public string ClientId { get; set; }
         public string AccountId { get; set; }
         public string TradingConditionId { get; set; }

@@ -6,6 +6,7 @@ namespace MarginTrading.Backend.Core
 {
     public interface IOrder : IBaseOrder
     {
+        long Code { get; set; }
         string ClientId { get; }
         string AccountId { get; }
         string TradingConditionId { get; }

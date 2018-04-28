@@ -6,7 +6,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
 {
     public class FakeIdentityGenerator : IIdentityGenerator
     {
-        private static long _currentId;
+        private long _currentId;
         
         public FakeIdentityGenerator()
         {
@@ -15,7 +15,8 @@ namespace MarginTrading.Backend.Services.Infrastructure
         
         public Task<long> GenerateIdAsync(string entityType)
         {
-            return Task.FromResult(_currentId++);
+            _currentId++;
+            return Task.FromResult(_currentId);
         }
     }
 }
