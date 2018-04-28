@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using Dapper;
+using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Core;
 using MarginTrading.BrokerBase;
 
@@ -104,7 +105,8 @@ namespace MarginTrading.OrderHistoryBroker.Repositories.SqlRepositories
 
                 try
                 {
-                    await conn.ExecuteAsync(query, order);
+                    var entity = MarginTradingOrderHistoryEntity.Create(order);
+                    await conn.ExecuteAsync(query, entity);
                 }
                 catch (Exception ex)
                 {
