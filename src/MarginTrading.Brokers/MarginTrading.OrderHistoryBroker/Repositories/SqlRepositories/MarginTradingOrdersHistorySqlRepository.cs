@@ -17,7 +17,7 @@ namespace MarginTrading.OrderHistoryBroker.Repositories.SqlRepositories
         private const string CreateTableScript = "CREATE TABLE [{0}](" +
                                                  @"[OID] [int] NOT NULL IDENTITY (1,1) PRIMARY KEY,
 [Id] [nvarchar](64) NOT NULL,
-[Code] [bigint](64) NULL,
+[Code] [bigint] NULL,
 [ClientId] [nvarchar] (64) NOT NULL,
 [TradingConditionId] [nvarchar] (64) NOT NULL,
 [AccountAssetId] [nvarchar] (64) NULL,
