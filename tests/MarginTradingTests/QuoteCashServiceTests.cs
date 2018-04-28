@@ -49,11 +49,11 @@ namespace MarginTradingTests
             Assert.AreEqual(905.1, quote.Bid);
             Assert.AreEqual(905.35, quote.Ask);
 
-            var quoteRate = _cfdCalculatorService.GetQuoteRateForBaseAsset(Accounts[0].BaseAssetId, instrument, "LYKKEVU");
+            var quoteRate = _cfdCalculatorService.GetQuoteRateForBaseAsset(Accounts[0].BaseAssetId, instrument, "LYKKETEST");
 
             Assert.AreEqual(905.35, quoteRate);
             
-            quoteRate = _cfdCalculatorService.GetQuoteRateForBaseAsset(Accounts[0].BaseAssetId, instrument, "LYKKEVU", false);
+            quoteRate = _cfdCalculatorService.GetQuoteRateForBaseAsset(Accounts[0].BaseAssetId, instrument, "LYKKETEST", false);
             
             Assert.AreEqual(905.1, quoteRate);
         }
@@ -71,11 +71,11 @@ namespace MarginTradingTests
             Assert.AreEqual(0.9980, quote.Bid);
             Assert.AreEqual(0.9982, quote.Ask);
 
-            var quoteRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(Accounts[0].BaseAssetId, instrument, "LYKKEVU");
+            var quoteRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(Accounts[0].BaseAssetId, instrument, "LYKKETEST");
 
             Assert.AreEqual(1.002004008016032064128256513, quoteRate);
             
-            quoteRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(Accounts[0].BaseAssetId, instrument, "LYKKEVU", false);
+            quoteRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(Accounts[0].BaseAssetId, instrument, "LYKKETEST", false);
 
             Assert.AreEqual(1.0018032458425165297535564015, quoteRate);
         }

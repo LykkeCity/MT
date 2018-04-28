@@ -50,7 +50,7 @@ namespace MarginTradingTests
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 AccountAssetId = Accounts[0].BaseAssetId,
                 AssetAccuracy = 5,
-                LegalEntity = "LYKKEVU",
+                LegalEntity = "LYKKETEST",
                 Volume = 1000,
                 MatchedOrders =
                     new MatchedOrderCollection(new List<MatchedOrder>
@@ -84,7 +84,7 @@ namespace MarginTradingTests
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 AccountAssetId = Accounts[0].BaseAssetId,
                 AssetAccuracy = 5,
-                LegalEntity = "LYKKEVU",
+                LegalEntity = "LYKKETEST",
                 Volume = -30000,
                 MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 30000 } }), //need for GetMatchedVolume()
                 OpenPrice = 1.02M,
@@ -116,7 +116,7 @@ namespace MarginTradingTests
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 AccountAssetId = Accounts[0].BaseAssetId,
                 AssetAccuracy = 5,
-                LegalEntity = "LYKKEVU",
+                LegalEntity = "LYKKETEST",
                 Volume = 130000,
                 MatchedOrders = new MatchedOrderCollection( new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 130000} }), //need for GetMatchedVolume()
                 OpenPrice = 1.02M,
@@ -144,7 +144,7 @@ namespace MarginTradingTests
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 AccountAssetId = Accounts[0].BaseAssetId,
                 AssetAccuracy = 5,
-                LegalEntity = "LYKKEVU",
+                LegalEntity = "LYKKETEST",
                 Volume = 96000,
                 OpenPrice = 1.02M,
                 Status = OrderStatus.Active,
@@ -162,7 +162,7 @@ namespace MarginTradingTests
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 AccountAssetId = Accounts[0].BaseAssetId,
                 AssetAccuracy = 5,
-                LegalEntity = "LYKKEVU",
+                LegalEntity = "LYKKETEST",
                 Volume = 97000,
                 OpenPrice = 1.02M
             };

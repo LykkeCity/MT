@@ -59,7 +59,7 @@ namespace MarginTradingTests
                 CloseDate = new DateTime(2017, 01, 02, 20, 50, 0),
                 MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder() { Volume = 20} }),
                 SwapCommission = 100,
-                LegalEntity = "LYKKEVU",
+                LegalEntity = "LYKKETEST",
             };
 
             var swapsForDay = _swapService.GetSwaps(dayOrder);
@@ -73,7 +73,7 @@ namespace MarginTradingTests
                 CloseDate = new DateTime(2017, 01, 03, 20, 50, 0),
                 MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder>() { new MatchedOrder() { Volume = 20 } }),
                 SwapCommission = 100,
-                LegalEntity = "LYKKEVU",
+                LegalEntity = "LYKKETEST",
             };
 
             var swapsFor2Days = _swapService.GetSwaps(twoDayOrder);
