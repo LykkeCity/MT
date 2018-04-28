@@ -292,7 +292,7 @@ namespace MarginTrading.Backend.Services
             return result;
         }
         
-        public async Task<List<IOrder>> CloseAccountOrders(string accountId, OrderCloseReason reason)
+        public async Task<List<IOrder>> CloseAccountOrders(string accountId)
         {
             var openedOrders = _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountId).ToArray();
             var closedOrders = new List<IOrder>();
@@ -301,7 +301,9 @@ namespace MarginTrading.Backend.Services
             {
                 try
                 {
-                    var closedOrder = await _tradingEngine.CloseActiveOrderAsync(order.Id, reason);
+                    var closedOrder = await _tradingEngine.CloseActiveOrderAsync(order.Id,
+                        OrderCloseReason.ClosedByBroker, "Close orders for account");
+                    
                     closedOrders.Add(closedOrder);
                 }
                 catch (Exception e)
@@ -317,7 +319,8 @@ namespace MarginTrading.Backend.Services
             {
                 try
                 {
-                    var closedOrder = _tradingEngine.CancelPendingOrder(order.Id, reason);
+                    var closedOrder = _tradingEngine.CancelPendingOrder(order.Id, OrderCloseReason.CanceledByBroker,
+                        "Close orders for account");
                     closedOrders.Add(closedOrder);
                 }
                 catch (Exception e)

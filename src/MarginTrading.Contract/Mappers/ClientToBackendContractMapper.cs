@@ -59,16 +59,6 @@ namespace MarginTrading.Contract.Mappers
             };
         }
 
-        public static CloseOrderBackendRequest ToBackendContract(this CloseOrderClientRequest src, string clientId)
-        {
-            return new CloseOrderBackendRequest
-            {
-                ClientId = clientId,
-                OrderId = src.OrderId,
-                AccountId = src.AccountId
-            };
-        }
-
         public static ChangeOrderLimitsBackendRequest ToBackendContract(this ChangeOrderLimitsClientRequest src, string clientId)
         {
             return new ChangeOrderLimitsBackendRequest

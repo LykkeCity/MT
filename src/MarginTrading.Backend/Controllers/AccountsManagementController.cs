@@ -116,7 +116,7 @@ namespace MarginTrading.Backend.Controllers
                     }
                 }
 
-                var closedOrders = await _accountManager.CloseAccountOrders(accountId, OrderCloseReason.ClosedByBroker);
+                var closedOrders = await _accountManager.CloseAccountOrders(accountId);
                 
                 result.Results.Add(new CloseAccountPositionsResult
                 {

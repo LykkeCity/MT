@@ -37,7 +37,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
                 {
                     try
                     {
-                        _tradingEngine.CancelPendingOrder(pendingOrder.Id, OrderCloseReason.CanceledBySystem);
+                        _tradingEngine.CancelPendingOrder(pendingOrder.Id, OrderCloseReason.CanceledBySystem, "Day off started");
                     }
                     catch (Exception e)
                     {

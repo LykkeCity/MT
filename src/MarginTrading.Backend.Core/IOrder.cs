@@ -141,7 +141,8 @@ namespace MarginTrading.Backend.Core
         StopOut,
         Canceled,
         CanceledBySystem,
-        ClosedByBroker
+        CanceledByBroker,
+        ClosedByBroker,
     }
 
     public enum OrderRejectReason

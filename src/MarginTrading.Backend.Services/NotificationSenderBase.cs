@@ -95,7 +95,8 @@ namespace MarginTrading.Backend.Services
 
                     message = order.ExpectedOpenPrice.HasValue &&
                               (order.CloseReason == OrderCloseReason.Canceled ||
-                               order.CloseReason == OrderCloseReason.CanceledBySystem)
+                               order.CloseReason == OrderCloseReason.CanceledBySystem ||
+                               order.CloseReason == OrderCloseReason.CanceledByBroker)
                         ? string.Format(MtMessages.Notifications_PendingOrderCanceled, type, instrumentName, volume)
                         : string.Format(MtMessages.Notifications_OrderClosed, type, instrumentName, volume, reason,
                             order.GetTotalFpl().ToString($"F{accuracy}"),

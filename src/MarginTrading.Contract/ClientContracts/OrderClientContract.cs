@@ -17,7 +17,7 @@ namespace MarginTrading.Contract.ClientContracts
         [DisplayName("Order status (WaitingForExecution - 0, Active - 1, Closed - 2, Rejected - 3, Closing - 4)")]
         public int Status { get; set; }
         [DisplayName("Order close reason (None - 0, Close - 1, StopLoss - 2, TakeProfit - 3, StopOut - 4, " +
-                     "Canceled - 5, CanceledBySystem - 6, ClosedByBroker - 7)")]
+                     "Canceled - 5, CanceledBySystem - 6, CanceledByBroker - 7, ClosedByBroker - 8)")]
         public int CloseReason { get; set; }
         [DisplayName("Order reject reason (None - 0, NoLiquidity - 1, NotEnoughBalance - 2, LeadToStopOut - 3, " +
                      "AccountInvalidState - 4, InvalidExpectedOpenPrice - 5, InvalidVolume - 6, " +

@@ -386,7 +386,7 @@ namespace MarginTrading.Backend.Services
             foreach (var pendingOrder in pendingOrders)
             {
                 cancelledPendingOrders.Add(pendingOrder);
-                CancelPendingOrder(pendingOrder.Id, OrderCloseReason.StopOut);
+                CancelPendingOrder(pendingOrder.Id, OrderCloseReason.CanceledBySystem, "Stop out");
             }
             
             var activeOrders = _ordersCache.ActiveOrders.GetOrdersByAccountIds(account.Id);
@@ -434,11 +434,12 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        private Task<Order> CloseActiveOrderByMatchingEngineAsync(Order order, OrderCloseReason reason, IMatchingEngineBase matchingEngine)
+        private Task<Order> CloseActiveOrderByMatchingEngineAsync(Order order, IMatchingEngineBase matchingEngine, OrderCloseReason reason, string comment)
         {
             order.CloseOrderbookId = matchingEngine.Id;
             order.StartClosingDate = DateTime.UtcNow;
             order.CloseReason = reason;
+            order.Comment = comment;
 
             matchingEngine.MatchMarketOrderForClose(order, matchedOrders =>
             {
@@ -473,21 +474,21 @@ namespace MarginTrading.Backend.Services
             return Task.FromResult(order);
         }
 
-        public Task<Order> CloseActiveOrderAsync(string orderId, OrderCloseReason reason)
+        public Task<Order> CloseActiveOrderAsync(string orderId, OrderCloseReason reason, string comment = null)
         {
             var order = GetActiveOrderForClose(orderId);
 
             var me = _meRouter.GetMatchingEngineForClose(order);
 
-            return CloseActiveOrderByMatchingEngineAsync(order, reason, me);
+            return CloseActiveOrderByMatchingEngineAsync(order, me, reason, comment);
         }
 
-        public Order CancelPendingOrder(string orderId, OrderCloseReason reason)
+        public Order CancelPendingOrder(string orderId, OrderCloseReason reason, string comment = null)
         {
             using (_contextFactory.GetWriteSyncContext($"{nameof(TradingEngine)}.{nameof(CancelPendingOrder)}"))
             {
                 var order = _ordersCache.WaitingForExecutionOrders.GetOrderById(orderId);
-                CancelWaitingForExecutionOrder(order, reason);
+                CancelWaitingForExecutionOrder(order, reason, comment);
                 return order;
             }
         }
@@ -500,12 +501,13 @@ namespace MarginTrading.Backend.Services
                 return _ordersCache.ActiveOrders.GetOrderById(orderId);
         }
 
-        private void CancelWaitingForExecutionOrder(Order order, OrderCloseReason reason)
+        private void CancelWaitingForExecutionOrder(Order order, OrderCloseReason reason, string comment)
         {
             order.Status = OrderStatus.Closed;
             order.CloseDate = DateTime.UtcNow;
             order.CloseReason = reason;
-
+            order.Comment = comment;
+            
             _ordersCache.WaitingForExecutionOrders.Remove(order);
 
             _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order));

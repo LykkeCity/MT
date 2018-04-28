@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using MarginTrading.Backend.Attributes;
+using MarginTrading.Backend.Contracts;
+using MarginTrading.Backend.Contracts.Common;
+using MarginTrading.Backend.Contracts.Trading;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Mappers;
@@ -24,7 +27,7 @@ namespace MarginTrading.Backend.Controllers
 {
     [Authorize]
     [Route("api/mt")]
-    public class MtController : Controller
+    public class MtController : Controller, ITradingApi
     {
         private readonly IMarginTradingAccountHistoryRepository _accountsHistoryRepository;
         private readonly IMarginTradingOrdersHistoryRepository _ordersHistoryRepository;
@@ -295,26 +298,33 @@ namespace MarginTrading.Backend.Controllers
         [Route("order.close")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [HttpPost]
-        public async Task<MtBackendResponse<bool>> CloseOrder([FromBody] CloseOrderBackendRequest request)
+        public async Task<BackendResponse<bool>> CloseOrder([FromBody] CloseOrderBackendRequest request)
         {
             if (!_ordersCache.ActiveOrders.TryGetOrderById(request.OrderId, out var order))
             {
-                return new MtBackendResponse<bool> {Message = "Order not found"};
+                return BackendResponse<bool>.Error("Order not found");
             }
 
             if (_assetDayOffService.IsDayOff(order.Instrument))
             {
-                return new MtBackendResponse<bool> {Message = "Trades for instrument are not available"};
+                return BackendResponse<bool>.Error("Trades for instrument are not available");
             }
             
             if (order.ClientId != request.ClientId || order.AccountId != request.AccountId)
             {
-                return new MtBackendResponse<bool> {Message = "Order is not available for user"};
+                return BackendResponse<bool>.Error("Order is not available for user");
             }
 
-            order = await _tradingEngine.CloseActiveOrderAsync(request.OrderId, OrderCloseReason.Close);
+            if (request.IsForcedByBroker && string.IsNullOrEmpty(request.Comment))
+            {
+                return BackendResponse<bool>.Error("For operation forced by broker, comment is mandatory");
+            }
 
-            var result = new MtBackendResponse<bool>
+            var reason = request.IsForcedByBroker ? OrderCloseReason.ClosedByBroker : OrderCloseReason.Close;
+
+            order = await _tradingEngine.CloseActiveOrderAsync(request.OrderId, reason, request.Comment);
+
+            var result = new BackendResponse<bool>
             {
                 Result = order.Status == OrderStatus.Closed || order.Status == OrderStatus.Closing,
                 Message = order.CloseRejectReasonText
@@ -331,26 +341,34 @@ namespace MarginTrading.Backend.Controllers
         [Route("order.cancel")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [HttpPost]
-        public MtBackendResponse<bool> CancelOrder([FromBody] CloseOrderBackendRequest request)
+        public async Task<BackendResponse<bool>> CancelOrder([FromBody] CloseOrderBackendRequest request)
         {
             if (!_ordersCache.WaitingForExecutionOrders.TryGetOrderById(request.OrderId, out var order))
             {
-                return new MtBackendResponse<bool> {Message = "Order not found"};
+                return BackendResponse<bool>.Error("Order not found");
             }
 
             if (_assetDayOffService.IsDayOff(order.Instrument))
             {
-                return new MtBackendResponse<bool> {Message = "Trades for instrument are not available"};
+                return BackendResponse<bool>.Error("Trades for instrument are not available");
             }
 
             if (order.ClientId != request.ClientId || order.AccountId != request.AccountId)
             {
-                return new MtBackendResponse<bool> {Message = "Order is not available for user"};
+                
+                return BackendResponse<bool>.Error("Order is not available for user");
+            }
+            
+            if (request.IsForcedByBroker && string.IsNullOrEmpty(request.Comment))
+            {
+                return BackendResponse<bool>.Error("For operation forced by broker, comment is mandatory");
             }
 
-            _tradingEngine.CancelPendingOrder(order.Id, OrderCloseReason.Canceled);
+            var reason = request.IsForcedByBroker ? OrderCloseReason.CanceledByBroker : OrderCloseReason.Canceled;
 
-            var result = new MtBackendResponse<bool> {Result = true};
+            _tradingEngine.CancelPendingOrder(order.Id, reason, request.Comment);
+
+            var result = new BackendResponse<bool> {Result = true};
 
             _consoleWriter.WriteLine(
                 $"action order.cancel for clientId = {request.ClientId}, orderId = {request.OrderId}");
