@@ -5,6 +5,7 @@ using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Core;
 using MarginTrading.BrokerBase;
 using MarginTrading.BrokerBase.Settings;
+using MarginTrading.OrderHistoryBroker.Repositories.SqlRepositories;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -24,6 +25,9 @@ namespace MarginTrading.OrderHistoryBroker
 
             builder.Register<IMarginTradingOrdersHistoryRepository>(ctx =>
                 AzureRepoFactories.MarginTrading.CreateOrdersHistoryRepository(settings.Nested(s => s.Db.HistoryConnString), log)
+            ).SingleInstance();
+            builder.Register<IMarginTradingOrdersHistoryRepository>(ctx =>
+                new MarginTradingOrdersHistorySqlRepository(settings.CurrentValue, log)
             ).SingleInstance();
         }
     }
