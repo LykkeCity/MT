@@ -115,6 +115,7 @@ namespace MarginTrading.Backend.Core.Mappers
             return new OrderHistoryBackendContract
             {
                 Id = src.Id,
+                Code = src.Code,
                 AccountId = src.AccountId,
                 Instrument = src.Instrument,
                 AssetAccuracy = src.AssetAccuracy,
@@ -223,6 +224,7 @@ namespace MarginTrading.Backend.Core.Mappers
             return new OrderBackendContract
             {
                 Id = src.Id,
+                Code = src.Code,
                 AccountId = src.AccountId,
                 Instrument = src.Instrument,
                 Type = src.GetOrderType().ToType<OrderDirectionContract>(),
@@ -262,6 +264,7 @@ namespace MarginTrading.Backend.Core.Mappers
             var orderContract = new OrderFullContract
             {
                 Id = src.Id,
+                Code = src.Code,
                 ClientId = src.ClientId,
                 AccountId = src.AccountId,
                 TradingConditionId = src.TradingConditionId,
@@ -328,6 +331,7 @@ namespace MarginTrading.Backend.Core.Mappers
             var orderContract = new OrderContract
             {
                 Id = src.Id,
+                Code = src.Code,
                 AccountId = src.AccountId,
                 AccountAssetId = src.AccountAssetId,
                 ClientId = src.ClientId,

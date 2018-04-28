@@ -15,6 +15,7 @@ namespace MarginTrading.AzureRepositories
     public class MarginTradingOrderRejectedEntity : TableEntity, IOrderHistory
     {
         public string Id { get; set; }
+        public long Code { get; set; }
         public string ClientId { get; set; }
         public string AccountId { get; set; }
         public string TradingConditionId { get; set; }
@@ -115,6 +116,7 @@ namespace MarginTrading.AzureRepositories
                 PartitionKey = GeneratePartitionKey(src.ClientId),
                 RowKey = GenerateRowKey(src.Id),
                 Id = src.Id,
+                Code = src.Code,
                 ClientId = src.ClientId,
                 AccountId = src.AccountId,
                 TradingConditionId = src.TradingConditionId,

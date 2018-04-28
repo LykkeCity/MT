@@ -7,6 +7,7 @@ namespace MarginTrading.Contract.BackendContracts
     public class OrderHistoryBackendContract
     {
         public string Id { get; set; }
+        public long Code { get; set; }
         public string AccountId { get; set; }
         public string Instrument { get; set; }
         public int AssetAccuracy { get; set; }

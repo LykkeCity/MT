@@ -9,6 +9,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
@@ -40,6 +41,7 @@ namespace MarginTrading.Backend.Controllers
         private readonly AccountManager _accountManager;
         private readonly IAssetPairDayOffService _assetDayOffService;
         private readonly IQuoteCacheService _quoteCacheService;
+        private readonly IIdentityGenerator _identityGenerator;
 
         public MtController(
             IMarginTradingAccountHistoryRepository accountsHistoryRepository,
@@ -56,7 +58,8 @@ namespace MarginTrading.Backend.Controllers
             MarginSettings marginSettings,
             AccountManager accountManager,
             IAssetPairDayOffService assetDayOffService,
-            IQuoteCacheService quoteCacheService)
+            IQuoteCacheService quoteCacheService,
+            IIdentityGenerator identityGenerator)
         {
             _accountsHistoryRepository = accountsHistoryRepository;
             _ordersHistoryRepository = ordersHistoryRepository;
@@ -73,6 +76,7 @@ namespace MarginTrading.Backend.Controllers
             _accountManager = accountManager;
             _assetDayOffService = assetDayOffService;
             _quoteCacheService = quoteCacheService;
+            _identityGenerator = identityGenerator;
         }
 
         #region Init data
@@ -262,9 +266,12 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         public async Task<OpenOrderBackendResponse> PlaceOrder([FromBody]OpenOrderBackendRequest request)
         {
+            var code = await _identityGenerator.GenerateIdAsync(nameof(Order));
+            
             var order = new Order
             {
                 Id = Guid.NewGuid().ToString("N"),
+                Code = code,
                 CreateDate = DateTime.UtcNow,
                 ClientId = request.ClientId,
                 AccountId = request.Order.AccountId,

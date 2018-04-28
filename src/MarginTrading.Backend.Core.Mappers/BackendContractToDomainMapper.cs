@@ -42,6 +42,7 @@ namespace MarginTrading.Backend.Core.Mappers
             var orderContract = new OrderHistory
             {
                 Id = src.Id,
+                Code = src.Code,
                 ClientId = src.ClientId,
                 AccountId = src.AccountId,
                 TradingConditionId = src.TradingConditionId,

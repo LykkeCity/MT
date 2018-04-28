@@ -55,5 +55,8 @@ namespace MarginTrading.Backend.Core.Settings
         
         public TimeSpan OvernightSwapCalculationTime { get; set; }
         public bool SendOvernightSwapEmails { get; set; }
+        
+        [Optional]
+        public bool UseAzureIdentityGenerator { get; set; }
     }
 }

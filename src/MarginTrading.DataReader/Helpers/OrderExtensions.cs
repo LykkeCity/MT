@@ -25,6 +25,7 @@ namespace MarginTrading.DataReader.Helpers
             return new OrderContract
             {
                 Id = src.Id,
+                Code = src.Code,
                 AccountId = src.AccountId,
                 AccountAssetId = src.AccountAssetId,
                 ClientId = src.ClientId,
@@ -67,6 +68,7 @@ namespace MarginTrading.DataReader.Helpers
             return new OrderHistoryContract
             {
                 Id = src.Id,
+                Code = src.Code,
                 AccountId = src.AccountId,
                 Instrument = src.Instrument,
                 AssetAccuracy = src.AssetAccuracy,
