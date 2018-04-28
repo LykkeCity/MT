@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Common;
 using MarginTrading.Backend.Contracts.AccountHistory;
 using MarginTrading.Backend.Contracts.DataReaderClient;
+using MarginTrading.Backend.Contracts.Trading;
 using MarginTrading.Common.Services.Settings;
 using MarginTrading.Contract.BackendContracts;
 using MarginTrading.Contract.ClientContracts;
@@ -179,7 +180,13 @@ namespace MarginTrading.Frontend.Services
 
         public async Task<MtClientResponse<bool>> CloseOrder(string clientId, CloseOrderClientRequest request)
         {
-            var backendRequest = request.ToBackendContract(clientId);
+            var backendRequest = new CloseOrderBackendRequest
+            {
+                ClientId = clientId,
+                OrderId = request.OrderId,
+                AccountId = request.AccountId
+            };
+            
             var backendResponse = await _httpRequestService.RequestWithRetriesAsync<MtBackendResponse<bool>>(backendRequest, "order.close",
                 IsLiveAccount(backendRequest.AccountId));
             return backendResponse.ToClientContract();
@@ -187,7 +194,13 @@ namespace MarginTrading.Frontend.Services
 
         public async Task<MtClientResponse<bool>> CancelOrder(string clientId, CloseOrderClientRequest request)
         {
-            var backendRequest = request.ToBackendContract(clientId);
+            var backendRequest = new CloseOrderBackendRequest
+            {
+                ClientId = clientId,
+                OrderId = request.OrderId,
+                AccountId = request.AccountId
+            };
+            
             var backendResponse = await _httpRequestService.RequestWithRetriesAsync<MtBackendResponse<bool>>(backendRequest, "order.cancel",
                 IsLiveAccount(backendRequest.AccountId));
             return backendResponse.ToClientContract();
@@ -336,7 +349,7 @@ namespace MarginTrading.Frontend.Services
         {
             return e.ToString().ParseEnum<TResult>();
         }
-
+        
         #endregion
     }
 }
