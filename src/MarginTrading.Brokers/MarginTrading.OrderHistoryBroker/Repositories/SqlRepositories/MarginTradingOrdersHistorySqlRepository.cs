@@ -17,6 +17,7 @@ namespace MarginTrading.OrderHistoryBroker.Repositories.SqlRepositories
         private const string CreateTableScript = "CREATE TABLE [{0}](" +
                                                  @"[OID] [int] NOT NULL IDENTITY (1,1) PRIMARY KEY,
 [Id] [nvarchar](64) NOT NULL,
+[Code] [bigint](64) NULL,
 [ClientId] [nvarchar] (64) NOT NULL,
 [TradingConditionId] [nvarchar] (64) NOT NULL,
 [AccountAssetId] [nvarchar] (64) NULL,
@@ -85,7 +86,7 @@ namespace MarginTrading.OrderHistoryBroker.Repositories.SqlRepositories
             using (var conn = new SqlConnection(_settings.Db.ReportsSqlConnString))
             {
                 var query = $"insert into {TableName} " +
-                            @"(Id, ClientId, TradingConditionId, AccountAssetId, Instrument, Type, CreateDate, OpenDate,
+                            @"(Id, Code, ClientId, TradingConditionId, AccountAssetId, Instrument, Type, CreateDate, OpenDate,
                             CloseDate, ExpectedOpenPrice, OpenPrice, ClosePrice, QuoteRate, Volume, TakeProfit, 
                             StopLoss, CommissionLot, OpenCommission, CloseCommission, SwapCommission, StartClosingDate, 
                             Status, CloseReason, FillType, RejectReason, RejectReasonText, Comment, MatchedVolume,
@@ -93,7 +94,7 @@ namespace MarginTrading.OrderHistoryBroker.Repositories.SqlRepositories
                             OrderUpdateType, OpenExternalOrderId, OpenExternalProviderId, CloseExternalOrderId,
                             CloseExternalProviderId, MatchingEngineMode, LegalEntity) 
                              values 
-                            (@Id, @ClientId, @TradingConditionId, @AccountAssetId, @Instrument, @Type, @CreateDate, @OpenDate,
+                            (@Id, @Code, @ClientId, @TradingConditionId, @AccountAssetId, @Instrument, @Type, @CreateDate, @OpenDate,
                             @CloseDate, @ExpectedOpenPrice, @OpenPrice, @ClosePrice, @QuoteRate, @Volume, @TakeProfit, 
                             @StopLoss, @CommissionLot, @OpenCommission, @CloseCommission, @SwapCommission, @StartClosingDate, 
                             @Status, @CloseReason, @FillType, @RejectReason, @RejectReasonText, @Comment, @MatchedVolume,
