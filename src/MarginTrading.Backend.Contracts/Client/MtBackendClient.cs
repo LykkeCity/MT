@@ -11,6 +11,8 @@ namespace MarginTrading.Backend.Contracts.Client
         public IAssetPairsEditingApi AssetPairsEdit { get; }
 
         public ITradingConditionsEditingApi TradingConditionsEdit { get; }
+        
+        public ITradingApi Trading { get; }
 
         public MtBackendClient(IHttpClientGenerator clientProxyGenerator)
         {
@@ -18,6 +20,7 @@ namespace MarginTrading.Backend.Contracts.Client
             AccountsBalance = clientProxyGenerator.Generate<IAccountsBalanceApi>();
             AssetPairsEdit = clientProxyGenerator.Generate<IAssetPairsEditingApi>();
             TradingConditionsEdit = clientProxyGenerator.Generate<ITradingConditionsEditingApi>();
+            Trading = clientProxyGenerator.Generate<ITradingApi>();
         }
     }
 }
