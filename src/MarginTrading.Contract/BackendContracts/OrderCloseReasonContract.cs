@@ -9,6 +9,7 @@
         StopOut,
         Canceled,
         CanceledBySystem,
+        CanceledByBroker,
         ClosedByBroker
     }
 }
