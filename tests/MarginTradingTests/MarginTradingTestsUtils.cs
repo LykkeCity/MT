@@ -357,7 +357,7 @@ namespace MarginTradingTests
 
             foreach (var pair in assetPairs)
             {
-                pair.LegalEntity = "LYKKEVU";
+                pair.LegalEntity = "LYKKETEST";
                 pair.MatchingEngineMode = MatchingEngineMode.MarketMaker;
                 pair.StpMultiplierMarkupAsk = 1;
                 pair.StpMultiplierMarkupBid = 1;

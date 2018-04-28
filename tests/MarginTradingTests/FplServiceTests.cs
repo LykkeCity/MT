@@ -42,7 +42,7 @@ namespace MarginTradingTests
                 Volume = 10,
                 MatchedOrders = new MatchedOrderCollection( new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 10 } }), //need for GetMatchedVolume()
                 OpenPrice = 790,
-                LegalEntity = "LYKKEVU",
+                LegalEntity = "LYKKETEST",
                 Status = OrderStatus.Active,
             };
 
@@ -68,7 +68,7 @@ namespace MarginTradingTests
                 Volume = -10,
                 MatchedOrders = new MatchedOrderCollection( new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 10 } }), //need for GetMatchedVolume()
                 OpenPrice = 790,
-                LegalEntity = "LYKKEVU",
+                LegalEntity = "LYKKETEST",
                 Status = OrderStatus.Active,
             };
 
@@ -96,7 +96,7 @@ namespace MarginTradingTests
                 OpenPrice = 790,
                 OpenCommission = 2,
                 CommissionLot = 10,
-                LegalEntity = "LYKKEVU",
+                LegalEntity = "LYKKETEST",
                 Status = OrderStatus.Active,
             };
 
@@ -124,7 +124,7 @@ namespace MarginTradingTests
                 Volume = 1000,
                 MatchedOrders = new MatchedOrderCollection( new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 1000 } }), //need for GetMatchedVolume()
                 OpenPrice = 935.461M,
-                LegalEntity = "LYKKEVU",
+                LegalEntity = "LYKKETEST",
                 Status = OrderStatus.Active,
             };
 
@@ -152,7 +152,7 @@ namespace MarginTradingTests
                 Volume = -1000,
                 MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 1000 } }), //need for GetMatchedVolume()
                 OpenPrice = 935.461M,
-                LegalEntity = "LYKKEVU",
+                LegalEntity = "LYKKETEST",
                 Status = OrderStatus.Active,
             };
 
@@ -189,7 +189,7 @@ namespace MarginTradingTests
                     MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 100000 } }), //need for GetMatchedVolume()
                     OpenPrice = 1.05M,
                     FillType = OrderFillType.FillOrKill,
-                    LegalEntity = "LYKKEVU",
+                    LegalEntity = "LYKKETEST",
                     Status = OrderStatus.Active,
                 },
                 new Order
@@ -206,7 +206,7 @@ namespace MarginTradingTests
                     MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 200000 } }), //need for GetMatchedVolume()
                     OpenPrice = 1.04M,
                     FillType = OrderFillType.FillOrKill,
-                    LegalEntity = "LYKKEVU",
+                    LegalEntity = "LYKKETEST",
                     Status = OrderStatus.Active,
                 },
                 new Order
@@ -223,7 +223,7 @@ namespace MarginTradingTests
                     MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 50000 } }), //need for GetMatchedVolume()
                     OpenPrice = 1.061M,
                     FillType = OrderFillType.FillOrKill,
-                    LegalEntity = "LYKKEVU",
+                    LegalEntity = "LYKKETEST",
                     Status = OrderStatus.Active,
                 },
                 new Order
@@ -240,7 +240,7 @@ namespace MarginTradingTests
                     MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 100 } }), //need for GetMatchedVolume()
                     OpenPrice = 1120,
                     FillType = OrderFillType.FillOrKill,
-                    LegalEntity = "LYKKEVU",
+                    LegalEntity = "LYKKETEST",
                     Status = OrderStatus.Active,
                 }
             };
