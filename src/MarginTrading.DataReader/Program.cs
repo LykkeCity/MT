@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading;
 using MarginTrading.Common.Services;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.PlatformAbstractions;
 
 #pragma warning disable 1591
 
@@ -10,8 +11,20 @@ namespace MarginTrading.DataReader
 {
     public class Program
     {
+        public static string EnvInfo => Environment.GetEnvironmentVariable("ENV_INFO") ?? "DefaultEnv";
+
         public static void Main(string[] args)
         {
+            Console.WriteLine($"{PlatformServices.Default.Application.ApplicationName} version " +
+                              PlatformServices.Default.Application.ApplicationVersion);
+#if DEBUG
+            Console.WriteLine("Is DEBUG");
+#else
+            Console.WriteLine("Is RELEASE");
+#endif
+            Console.WriteLine($"ENV_INFO: {EnvInfo}");
+
+
             var restartAttempsLeft = 5;
 
             while (restartAttempsLeft > 0)
@@ -33,7 +46,8 @@ namespace MarginTrading.DataReader
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"Error: {e.Message}{Environment.NewLine}{e.StackTrace}{Environment.NewLine}Restarting...");
+                    Console.WriteLine(
+                        $"Error: {e.Message}{Environment.NewLine}{e.StackTrace}{Environment.NewLine}Restarting...");
                     LogLocator.CommonLog?.WriteFatalErrorAsync(
                         "MT DataReader", "Restart host", $"Attempts left: {restartAttempsLeft}", e);
                     restartAttempsLeft--;

@@ -16,7 +16,6 @@ using MarginTrading.DataReader.Infrastructure;
 using MarginTrading.DataReader.Middleware;
 using MarginTrading.DataReader.Modules;
 using MarginTrading.DataReader.Settings;
-using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -152,7 +151,7 @@ namespace MarginTrading.DataReader
                         mtSettings.CurrentValue.SlackNotifications.AzureQueue,
                         consoleLogger);
 
-                slackService = new MtSlackNotificationsSender(commonSlackService, "MT DataReader", settings.CurrentValue.Env);
+                slackService = new MtSlackNotificationsSender(commonSlackService, "MT DataReader", Program.EnvInfo);
             }
 
             var log = services.UseLogToAzureStorage(settings.Nested(s => s.Db.LogsConnString), slackService,

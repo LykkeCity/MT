@@ -74,8 +74,4 @@
   <ItemGroup>
     <WCFMetadata Include="Connected Services" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Attributes" />
-    <Folder Include="Filters" />
-  </ItemGroup>
 </Project>

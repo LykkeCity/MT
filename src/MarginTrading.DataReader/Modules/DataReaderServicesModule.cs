@@ -33,7 +33,7 @@ namespace MarginTrading.DataReader.Modules
                 {
                     var settings = c.Resolve<IReloadingManager<DataReaderSettings>>();
                     return new RabbitMqService(c.Resolve<ILog>(), c.Resolve<IConsole>(),
-                        settings.Nested(s => s.Db.StateConnString), settings.CurrentValue.Env);
+                        settings.Nested(s => s.Db.StateConnString), Program.EnvInfo);
                 })
                 .As<IRabbitMqService>()
                 .SingleInstance();

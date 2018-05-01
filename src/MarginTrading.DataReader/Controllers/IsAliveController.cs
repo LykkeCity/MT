@@ -18,7 +18,7 @@ namespace MarginTrading.DataReader.Controllers
             return Ok(new
             {
                 Version = Microsoft.Extensions.PlatformAbstractions.PlatformServices.Default.Application.ApplicationVersion,
-                Env = _settings.Env
+                Env = Program.EnvInfo
             });
         }
     }
