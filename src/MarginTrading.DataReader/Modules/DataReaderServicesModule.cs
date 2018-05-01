@@ -28,8 +28,6 @@ namespace MarginTrading.DataReader.Modules
                 .SingleInstance();
             builder.RegisterType<MemoryCacheProvider>().As<ICacheProvider>()
                 .SingleInstance();
-            builder.RegisterType<Application>().As<IStartable>()
-                .SingleInstance();
             
             builder.Register(c =>
                 {

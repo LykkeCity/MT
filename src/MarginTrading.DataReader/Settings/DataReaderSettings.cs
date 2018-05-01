@@ -9,14 +9,6 @@ namespace MarginTrading.DataReader.Settings
         [Optional]
         public string Env { get; set; }
 
-        [Optional]
-        public bool IsLive { get; set; }
-
         public Db Db { get; set; }
-
-        [Optional]
-        public string ApplicationInsightsKey { get; set; }
-
-        public RabbitMqConsumers Consumers { get; set; }
     }
 }
