@@ -5,6 +5,7 @@ using MarginTrading.AccountHistoryBroker.Repositories.Models;
 using MarginTrading.BrokerBase;
 using System;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
@@ -25,11 +26,21 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
             "[WithdrawTransferLimit] float NOT NULL, " +
             "[AuditLog] [text] NULL, " +
             "[LegalEntity] [nvarchar] (64) NULL, " +
+            "[AmountInUsd] float NOT NULL " +
             "CONSTRAINT[PK_{0}] PRIMARY KEY CLUSTERED ([Id] ASC)" +
             ");";
 
         private readonly Settings _settings;
         private readonly ILog _log;
+
+        private static readonly string GetColumns =
+            string.Join(",", typeof(IAccountTransactionsReport).GetProperties().Select(x => x.Name));
+
+        private static readonly string GetFields =
+            string.Join(",", typeof(IAccountTransactionsReport).GetProperties().Select(x => "@" + x.Name));
+
+        private static readonly string GetUpdateClause = string.Join(",",
+            typeof(IAccountTransactionsReport).GetProperties().Select(x => "[" + x.Name + "]=@" + x.Name));
 
         public AccountTransactionsReportsSqlRepository(Settings settings, ILog log)
         {
@@ -50,29 +61,24 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories
         {   
             using (var conn = new SqlConnection(_settings.Db.ReportsSqlConnString))
             {
-                var res = conn.ExecuteScalar($"select Id from {TableName} where Id = '{entity.Id}'");
-                string query;
-                if (res == null)
+                try
                 {
-                    query = $"insert into {TableName} " +
-                     "(Id, Date, AccountId, ClientId, Amount, Balance, WithdrawTransferLimit, Comment, Type, PositionId, LegalEntity, AuditLog) " +
-                     " values " +
-                     "(@Id ,@Date, @AccountId, @ClientId, @Amount, @Balance, @WithdrawTransferLimit, @Comment, @Type, @PositionId, @LegalEntity, @AuditLog)";
+                    try
+                    {
+                        await conn.ExecuteAsync(
+                            $"insert into {TableName} ({GetColumns}) values ({GetFields})", entity);
+                    }
+                    catch (SqlException)
+                    {
+                        await conn.ExecuteAsync(
+                            $"update {TableName} set {GetUpdateClause} where Id=@Id", entity); 
+                    }
                 }
-                else
-                {
-                    query = $"update {TableName} set " +
-                      "Date=@Date, AccountId=@AccountId, ClientId=@ClientId, Amount=@Amount, Balance=@Balance, " +
-                      "WithdrawTransferLimit=@WithdrawTransferLimit, Comment=@Comment, Type=@Type, " +
-                      "PositionId = @PositionId, LegalEntity = @LegalEntity, AuditLog = @AuditLog" +
-                      " where Id=@Id";
-                }
-                try { await conn.ExecuteAsync(query, entity); }
                 catch (Exception ex)
                 {
                     var msg = $"Error {ex.Message} \n" +
-                           "Entity <IAccountTransactionsReport>: \n" +
-                           entity.ToJson();
+                              "Entity <IAccountTransactionsReport>: \n" +
+                              entity.ToJson();
                     await _log?.WriteWarningAsync("AccountTransactionsReportsSqlRepository", "InsertOrReplaceAsync", null, msg);
                     throw new Exception(msg);
                 }

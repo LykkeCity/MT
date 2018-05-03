@@ -8,8 +8,8 @@ namespace MarginTrading.Backend.Services.Notifications
 	public interface IRabbitMqNotifyService
 	{
 		Task AccountHistory(string transactionId, string accountId, string clientId, decimal amount, decimal balance, 
-			decimal withdrawTransferLimit, AccountHistoryType type, string comment = null, string eventSourceId = null, 
-			string auditLog = null);
+			decimal withdrawTransferLimit, AccountHistoryType type, decimal amountInUsd = default, string comment = null, 
+			string eventSourceId = null, string legalEntity = null, string auditLog = null);
 		Task OrderHistory(IOrder order, OrderUpdateType orderUpdateType);
 		Task OrderReject(IOrder order);
 		Task OrderBookPrice(InstrumentBidAskPair quote);

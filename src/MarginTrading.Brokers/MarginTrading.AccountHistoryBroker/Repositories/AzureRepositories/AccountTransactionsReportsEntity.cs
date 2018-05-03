@@ -28,6 +28,7 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.AzureRepositories
         public string PositionId { get; set; }
         public string LegalEntity { get; set; }
         public string AuditLog { get; set; }
+        public double AmountInUsd { get; set; }
 
         public static AccountTransactionsReportsEntity Create(IAccountTransactionsReport src)
         {
@@ -44,7 +45,8 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.AzureRepositories
                 Type = src.Type,
                 PositionId = src.PositionId,
                 LegalEntity = src.LegalEntity,
-                AuditLog = src.AuditLog
+                AuditLog = src.AuditLog,
+                AmountInUsd = src.AmountInUsd,
             };
         }
     }

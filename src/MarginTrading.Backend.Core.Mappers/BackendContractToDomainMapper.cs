@@ -118,7 +118,8 @@ namespace MarginTrading.Backend.Core.Mappers
                 Comment = src.Comment,
                 OrderId = src.OrderId,
                 LegalEntity = src.LegalEntity,
-                AuditLog = src.AuditLog
+                AuditLog = src.AuditLog,
+                AmountInUsd = src.AmountInUsd,
             };
         }
 

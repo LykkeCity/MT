@@ -16,5 +16,6 @@ namespace MarginTrading.AccountHistoryBroker.Repositories.Models
         double WithdrawTransferLimit { get; }
         string LegalEntity { get; }
         string AuditLog { get; }
+        double AmountInUsd { get; }
     }
 }
