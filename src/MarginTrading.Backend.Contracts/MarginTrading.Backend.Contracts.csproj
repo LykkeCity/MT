@@ -23,4 +23,7 @@
     <PackageReference Include="System.Collections.Immutable" Version="1.4.0" />
     <PackageReference Include="System.Reflection.DispatchProxy" Version="4.4.0" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Snow" />
+  </ItemGroup>
 </Project>
