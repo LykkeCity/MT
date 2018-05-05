@@ -2,10 +2,8 @@
 using Autofac;
 using Common.Log;
 using Lykke.SettingsReader;
-using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services.Settings;
-using MarginTrading.Common.Settings;
 using MarginTrading.DataReader.Middleware.Validator;
 using MarginTrading.DataReader.Services;
 using MarginTrading.DataReader.Services.Implementation;

@@ -6,7 +6,6 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
-using MoreLinq;
 using NUnit.Framework;
 
 namespace MarginTradingTests

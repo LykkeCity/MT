@@ -10,7 +10,6 @@ using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Services.Client;
-using MarginTrading.Common.Settings;
 
 namespace MarginTrading.Backend.Services
 {

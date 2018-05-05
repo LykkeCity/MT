@@ -1,38 +1,39 @@
 ﻿using System;
 using System.Text;
 using System.Threading.Tasks;
-using Lykke.SlackNotifications;
+using Common.Log;
 using MarginTrading.Common.Enums;
+using MarginTrading.Common.Services;
 
-namespace MarginTrading.Common.Services
+namespace MarginTrading.Backend.Services.Stubs
 {
-    public class MtSlackNotificationsSender : IMtSlackNotificationsSender
+    public class MtSlackNotificationsSenderLogStub : IMtSlackNotificationsSender
     {
-        private readonly ISlackNotificationsSender _sender;
         private readonly string _appName;
         private readonly string _env;
+        private readonly ILog _consoleLog;
 
-        public MtSlackNotificationsSender(ISlackNotificationsSender sender, string appName, string env)
+        public MtSlackNotificationsSenderLogStub(string appName, string env, ILog consoleLog)
         {
-            _sender = sender;
             _appName = appName;
             _env = env;
+            _consoleLog = consoleLog;
         }
 
         public async Task SendAsync(string type, string sender, string message)
         {
             if (type.Equals(ChannelTypes.Monitor, StringComparison.InvariantCultureIgnoreCase))
             {
-                await _sender.SendAsync(type, sender, message);
+                await _consoleLog.WriteInfoAsync(sender, type, message);
                 return;
             }
 
-            await _sender.SendAsync(ChannelTypes.MarginTrading, sender, GetSlackMsg(message));
+            await _consoleLog.WriteInfoAsync(sender, ChannelTypes.MarginTrading, GetSlackMsg(message));
         }
 
         public Task SendRawAsync(string type, string sender, string message)
         {
-            return _sender.SendAsync(type, sender, message);
+            return _consoleLog.WriteInfoAsync(sender, type, message);
         }
 
         private string GetSlackMsg(string message)

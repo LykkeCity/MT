@@ -27,11 +27,11 @@ namespace MarginTrading.Backend.Modules
     public class BackendServicesModule : Module
     {
         private readonly MtBackendSettings _mtSettings;
-        private readonly MarginSettings _settings;
+        private readonly MarginTradingSettings _settings;
         private readonly IHostingEnvironment _environment;
         private readonly ILog _log;
 
-        public BackendServicesModule(MtBackendSettings mtSettings, MarginSettings settings, IHostingEnvironment environment, ILog log)
+        public BackendServicesModule(MtBackendSettings mtSettings, MarginTradingSettings settings, IHostingEnvironment environment, ILog log)
         {
             _mtSettings = mtSettings;
             _settings = settings;
@@ -56,10 +56,6 @@ namespace MarginTrading.Backend.Modules
 
             builder.Register<ITemplateGenerator>(ctx =>
                 new MustacheTemplateGenerator(_environment, Path.Combine("Email","Templates"))
-            ).SingleInstance();
-
-            builder.Register<IEmailSender>(ctx =>
-                new EmailSenderClient(_mtSettings.EmailSender.ServiceUrl, _log)
             ).SingleInstance();
 
             var consoleWriter = new ConsoleLWriter(Console.WriteLine);

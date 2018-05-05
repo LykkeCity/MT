@@ -13,12 +13,12 @@ namespace MarginTrading.Backend.Services.Notifications
 {
     public class RabbitMqNotifyService : IRabbitMqNotifyService
     {
-        private readonly MarginSettings _settings;
+        private readonly MarginTradingSettings _settings;
         private readonly IIndex<string, IMessageProducer<string>> _publishers;
         private readonly ILog _log;
 
         public RabbitMqNotifyService(
-            MarginSettings settings,
+            MarginTradingSettings settings,
             IIndex<string, IMessageProducer<string>> publishers,
             ILog log)
         {

@@ -1,5 +1,4 @@
 ﻿using Autofac;
-using AzureStorage.Tables;
 using Common.Log;
 using Lykke.SettingsReader;
 using MarginTrading.AzureRepositories;

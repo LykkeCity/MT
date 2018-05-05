@@ -1,29 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Common.Log;
-using FluentScheduler;
-using Lykke.RabbitMqBroker.Subscriber;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MarketMakerFeed;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;
-using MarginTrading.Backend.Scheduling;
-using MarginTrading.Backend.Services.Helpers;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Notifications;
-using MarginTrading.Backend.Services.Services;
 using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
 using MarginTrading.OrderbookAggregator.Contracts.Messages;
-using Newtonsoft.Json;
 
 #pragma warning disable 1591
 
@@ -35,7 +26,7 @@ namespace MarginTrading.Backend
         private readonly IConsole _consoleWriter;
         private readonly MarketMakerService _marketMakerService;
         private readonly ILog _logger;
-        private readonly MarginSettings _marginSettings;
+        private readonly MarginTradingSettings _marginSettings;
         private readonly IMaintenanceModeService _maintenanceModeService;
         private readonly IRabbitMqService _rabbitMqService;
         private readonly MatchingEngineRoutesManager _matchingEngineRoutesManager;
@@ -49,7 +40,7 @@ namespace MarginTrading.Backend
             IConsole consoleWriter,
             MarketMakerService marketMakerService,
             ILog logger, 
-            MarginSettings marginSettings,
+            MarginTradingSettings marginSettings,
             IMaintenanceModeService maintenanceModeService,
             IRabbitMqService rabbitMqService,
             MatchingEngineRoutesManager matchingEngineRoutesManager,
@@ -103,13 +94,6 @@ namespace MarginTrading.Backend
                         HandleStpOrderbook,
                         _rabbitMqService.GetMsgPackDeserializer<ExternalExchangeOrderbookMessage>());
                 }
-
-                var settingsCalcTime = (_marginSettings.OvernightSwapCalculationTime.Hours,
-                    _marginSettings.OvernightSwapCalculationTime.Minutes);
-                var registry = new Registry();
-                registry.Schedule<OvernightSwapJob>().ToRunEvery(0).Days().At(settingsCalcTime.Hours, settingsCalcTime.Minutes);
-                JobManager.Initialize(registry);
-                JobManager.JobException += info => _logger.WriteError(ServiceName, nameof(JobManager), info.Exception);
             }
             catch (Exception ex)
             {

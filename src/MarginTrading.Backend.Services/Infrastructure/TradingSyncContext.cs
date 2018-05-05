@@ -25,14 +25,14 @@ namespace MarginTrading.Backend.Services.Infrastructure
         private readonly string _contextType;
         private readonly string _contextSource;
         private readonly ITelemetryPublisher _telemetryPublisher;
-        private readonly MarginSettings _marginTradingSettings;
+        private readonly MarginTradingSettings _marginTradingSettings;
         private static int _contextNestingDepth;
         private readonly long _waitingForLockTime;
 
         private readonly Stopwatch _sw = new Stopwatch();
 
         public TradingSyncContext(string contextType, string contextSource,
-            ITelemetryPublisher telemetryPublisher, MarginSettings marginTradingSettings)
+            ITelemetryPublisher telemetryPublisher, MarginTradingSettings marginTradingSettings)
         {
             _contextType = contextType;
             _contextSource = contextSource;

@@ -6,9 +6,9 @@ namespace MarginTrading.Backend.Services.Infrastructure
     public class ContextFactory : IContextFactory
     {
         private readonly ITelemetryPublisher _telemetryPublisher;
-        private readonly MarginSettings _marginSettings;
+        private readonly MarginTradingSettings _marginSettings;
 
-        public ContextFactory(ITelemetryPublisher telemetryPublisher, MarginSettings marginSettings)
+        public ContextFactory(ITelemetryPublisher telemetryPublisher, MarginTradingSettings marginSettings)
         {
             _telemetryPublisher = telemetryPublisher;
             _marginSettings = marginSettings;

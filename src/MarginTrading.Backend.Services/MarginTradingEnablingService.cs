@@ -1,9 +1,9 @@
 ﻿using System.Threading.Tasks;
 using Autofac;
 using Common;
-using Lykke.Service.ClientAccount.Client;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Common.RabbitMq;
+using MarginTrading.Common.Services.Client;
 using MarginTrading.Common.Services.Settings;
 
 namespace MarginTrading.Backend.Services
@@ -11,24 +11,24 @@ namespace MarginTrading.Backend.Services
     public class MarginTradingEnablingService : IMarginTradingEnablingService, IStartable
     {
         private IMessageProducer<MarginTradingEnabledChangedMessage> _eventsPublisher;
-        private readonly IClientAccountClient _clientAccountClient;
+        private readonly IClientAccountService _clientAccountService;
         private readonly IMarginTradingSettingsCacheService _marginTradingSettingsCacheService;
         private readonly IRabbitMqService _rabbitMqService;
-        private readonly MarginSettings _marginSettings;
+        private readonly MarginTradingSettings _marginSettings;
 
-        public MarginTradingEnablingService(IClientAccountClient clientAccountClient, IRabbitMqService rabbitMqService,
-            MarginSettings settings,
+        public MarginTradingEnablingService(IClientAccountService clientAccountService, IRabbitMqService rabbitMqService,
+            MarginTradingSettings settings,
             IMarginTradingSettingsCacheService marginTradingSettingsCacheService)
         {
             _marginSettings = settings;
             _rabbitMqService = rabbitMqService;
-            _clientAccountClient = clientAccountClient;
+            _clientAccountService = clientAccountService;
             _marginTradingSettingsCacheService = marginTradingSettingsCacheService;
         }
 
         public async Task SetMarginTradingEnabled(string clientId, bool enabled)
         {
-            var settings = await _clientAccountClient.GetMarginEnabledAsync(clientId);
+            var settings = await _clientAccountService.GetMarginEnabledAsync(clientId);
 
             if (_marginSettings.IsLive)
             {
@@ -39,7 +39,7 @@ namespace MarginTrading.Backend.Services
                 settings.Enabled = enabled;
             }
 
-            await _clientAccountClient.SetMarginEnabledAsync(clientId, settings.Enabled, settings.EnabledLive,
+            await _clientAccountService.SetMarginEnabledAsync(clientId, settings.Enabled, settings.EnabledLive,
                 settings.TermsOfUseAgreed);
 
             var marginEnabledChangedMessage = new MarginTradingEnabledChangedMessage

@@ -14,11 +14,11 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         IEventConsumer<OrderCancelledEventArgs>
     {
         private readonly IAccountsCacheService _accountsCacheService;
-        private readonly MarginSettings _marginSettings;
+        private readonly MarginTradingSettings _marginSettings;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
 
         public UpdatedAccountsStatsConsumer(IAccountsCacheService accountsCacheService,
-            MarginSettings marginSettings,
+            MarginTradingSettings marginSettings,
             IRabbitMqNotifyService rabbitMqNotifyService)
         {
             _accountsCacheService = accountsCacheService;

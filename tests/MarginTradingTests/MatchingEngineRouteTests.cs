@@ -4,7 +4,6 @@ using Autofac;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.TradingConditions;
-using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.TradingConditions;
 
@@ -38,13 +37,14 @@ namespace MarginTradingTests
             _accountsCacheService.UpdateAccountsCache(account4.ClientId, new[] {account4});
 
             // Add trading conditions 
-            System.Threading.Tasks.Task.Run(async () =>
-            {
-                await _tradingConditionsManager.AddOrReplaceTradingConditionAsync(new TradingCondition() { Id = "TCID001", Name= "MarginTradingCondition 1", IsDefault = true });
-                await _tradingConditionsManager.AddOrReplaceTradingConditionAsync(new TradingCondition() { Id = "TCID003", Name = "MarginTradingCondition 3", IsDefault = false});
-                await _tradingConditionsManager.AddOrReplaceTradingConditionAsync(new TradingCondition() { Id = "TCID004", Name = "MarginTradingCondition 4", IsDefault = false });
-                await _tradingConditionsManager.AddOrReplaceTradingConditionAsync(new TradingCondition() { Id = "TCID005", Name = "MarginTradingCondition 5", IsDefault = false });
-            }).Wait();
+            //TODO: init trading conditions
+//            System.Threading.Tasks.Task.Run(async () =>
+//            {
+//                await _tradingConditionsManager.AddOrReplaceTradingConditionAsync(new TradingCondition() { Id = "TCID001", Name= "MarginTradingCondition 1", IsDefault = true });
+//                await _tradingConditionsManager.AddOrReplaceTradingConditionAsync(new TradingCondition() { Id = "TCID003", Name = "MarginTradingCondition 3", IsDefault = false});
+//                await _tradingConditionsManager.AddOrReplaceTradingConditionAsync(new TradingCondition() { Id = "TCID004", Name = "MarginTradingCondition 4", IsDefault = false });
+//                await _tradingConditionsManager.AddOrReplaceTradingConditionAsync(new TradingCondition() { Id = "TCID005", Name = "MarginTradingCondition 5", IsDefault = false });
+//            }).Wait();
             
 
             System.Threading.Tasks.Task.Run(async () =>

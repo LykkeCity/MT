@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Lykke.Service.ClientAccount.Client;
+using Lykke.Service.ClientAccount.Client.Models;
 
 namespace MarginTrading.Common.Services.Client
 {
@@ -37,6 +38,18 @@ namespace MarginTrading.Common.Services.Client
             var pushSettings = await _clientAccountsClient.GetPushNotificationAsync(clientId);
 
             return pushSettings != null && pushSettings.Enabled;
+        }
+
+        public Task<MarginEnabledSettingsModel> GetMarginEnabledAsync(string clientId)
+        {
+            return _clientAccountsClient.GetMarginEnabledAsync(clientId);
+        }
+
+        public Task SetMarginEnabledAsync(string clientId, bool settingsEnabled, bool settingsEnabledLive,
+            bool settingsTermsOfUseAgreed)
+        {
+            return _clientAccountsClient.SetMarginEnabledAsync(clientId, settingsEnabled, settingsEnabledLive,
+                settingsTermsOfUseAgreed);
         }
     }
 }

@@ -1,17 +1,14 @@
 using System;
-using System.Collections.Generic;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
 using Lykke.AzureQueueIntegration;
-using Lykke.Common.ApiLibrary.Middleware;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
 using Lykke.SlackNotifications;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Filters;
 using MarginTrading.Backend.Infrastructure;
@@ -19,16 +16,15 @@ using MarginTrading.Backend.Middleware;
 using MarginTrading.Backend.Modules;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Infrastructure;
-using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Modules;
 using MarginTrading.Backend.Services.Quotes;
 using MarginTrading.Backend.Services.Settings;
+using MarginTrading.Backend.Services.Stubs;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Json;
 using MarginTrading.Common.Modules;
 using MarginTrading.Common.Services;
-using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -77,7 +73,7 @@ namespace MarginTrading.Backend
 
             services.AddSwaggerGen(options =>
             {
-                options.DefaultLykkeConfiguration("v1", $"MarginTrading_Api_{Configuration.ServerType()}");
+                options.DefaultLykkeConfiguration("v1", $"MarginTradingEngine_Api_{Configuration.ServerType()}");
                 options.OperationFilter<ApiKeyHeaderOperationFilter>();
             });
 
@@ -87,16 +83,14 @@ namespace MarginTrading.Backend
             var mtSettings = Configuration.LoadSettings<MtBackendSettings>()
                 .Nested(s =>
                 {
-                    var inner = isLive ? s.MtBackend.MarginTradingLive : s.MtBackend.MarginTradingDemo;
-                    inner.IsLive = isLive;
-                    inner.Env = Configuration.ServerType() + envSuffix;
+                    s.MtBackend.IsLive = isLive;
+                    s.MtBackend.Env = Configuration.ServerType() + envSuffix;
                     return s;
                 });
 
-            var settings =
-                mtSettings.Nested(s => isLive ? s.MtBackend.MarginTradingLive : s.MtBackend.MarginTradingDemo);
-            var riskInformingSettings =
-                mtSettings.Nested(s => isLive ? s.RiskInformingSettings : s.RiskInformingSettingsDemo);
+            var settings = mtSettings.Nested(s => s.MtBackend);
+            
+            var riskInformingSettings = mtSettings.Nested(s => s.RiskInformingSettings);
 
             Console.WriteLine($"IsLive: {settings.CurrentValue.IsLive}");
 
@@ -112,7 +106,6 @@ namespace MarginTrading.Backend
             MtServiceLocator.AccountUpdateService = ApplicationContainer.Resolve<IAccountUpdateService>();
             MtServiceLocator.AccountsCacheService = ApplicationContainer.Resolve<IAccountsCacheService>();
             MtServiceLocator.SwapCommissionService = ApplicationContainer.Resolve<ICommissionService>();
-            MtServiceLocator.OvernightSwapService = ApplicationContainer.Resolve<IOvernightSwapService>();
 
             return new AutofacServiceProvider(ApplicationContainer);
         }
@@ -132,15 +125,8 @@ namespace MarginTrading.Backend
             
             var application = app.ApplicationServices.GetService<Application>();
 
-            var settings = app.ApplicationServices.GetService<MarginSettings>();
-
             appLifetime.ApplicationStarted.Register(() =>
             {
-                if (!string.IsNullOrEmpty(settings.ApplicationInsightsKey))
-                {
-                    TelemetryConfiguration.Active.InstrumentationKey = settings.ApplicationInsightsKey;
-                }
-
                 LogLocator.CommonLog?.WriteMonitorAsync("", "", $"{Configuration.ServerType()} Started");
             });
 
@@ -153,11 +139,11 @@ namespace MarginTrading.Backend
         }
 
         private void RegisterModules(ContainerBuilder builder, IReloadingManager<MtBackendSettings> mtSettings,
-            IReloadingManager<MarginSettings> settings, IHostingEnvironment environment,
+            IReloadingManager<MarginTradingSettings> settings, IHostingEnvironment environment,
             IReloadingManager<RiskInformingSettings> riskInformingSettings)
         {
             builder.RegisterModule(new BaseServicesModule(mtSettings.CurrentValue, LogLocator.CommonLog));
-            builder.RegisterModule(new BackendSettingsModule(mtSettings.CurrentValue, settings));
+            builder.RegisterModule(new BackendSettingsModule(settings));
             builder.RegisterModule(new BackendRepositoriesModule(settings, LogLocator.CommonLog));
             builder.RegisterModule(new EventModule());
             builder.RegisterModule(new CacheModule());
@@ -176,26 +162,35 @@ namespace MarginTrading.Backend
             builder.RegisterBuildCallback(c => c.Resolve<AccountManager>()); // note the order here is important!
             builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
             builder.RegisterBuildCallback(c => c.Resolve<PendingOrdersCleaningService>());
-            builder.RegisterBuildCallback(c => c.Resolve<IOvernightSwapService>());
         }
 
         private static void SetupLoggers(IServiceCollection services, IReloadingManager<MtBackendSettings> mtSettings,
-            IReloadingManager<MarginSettings> settings)
+            IReloadingManager<MarginTradingSettings> settings)
         {
             var consoleLogger = new LogToConsole();
 
-            var azureQueue = new AzureQueueSettings
+            IMtSlackNotificationsSender slackService = null;
+            
+            if (mtSettings.CurrentValue.SlackNotifications != null)
             {
-                ConnectionString = mtSettings.CurrentValue.SlackNotifications.AzureQueue.ConnectionString,
-                QueueName = mtSettings.CurrentValue.SlackNotifications.AzureQueue.QueueName
-            };
+                var azureQueue = new AzureQueueSettings
+                {
+                    ConnectionString = mtSettings.CurrentValue.SlackNotifications.AzureQueue.ConnectionString,
+                    QueueName = mtSettings.CurrentValue.SlackNotifications.AzureQueue.QueueName
+                };
 
-            var commonSlackService =
-                services.UseSlackNotificationsSenderViaAzureQueue(azureQueue, consoleLogger);
+                var commonSlackService =
+                    services.UseSlackNotificationsSenderViaAzureQueue(azureQueue, consoleLogger);
 
-            var slackService =
-                new MtSlackNotificationsSender(commonSlackService, "MT Backend", settings.CurrentValue.Env);
-
+                slackService =
+                    new MtSlackNotificationsSender(commonSlackService, "MT Backend", settings.CurrentValue.Env);
+            }
+            else
+            {
+                slackService =
+                    new MtSlackNotificationsSenderLogStub("MT Backend", settings.CurrentValue.Env, consoleLogger);
+            }
+            
             services.AddSingleton<ISlackNotificationsSender>(slackService);
             services.AddSingleton<IMtSlackNotificationsSender>(slackService);
 

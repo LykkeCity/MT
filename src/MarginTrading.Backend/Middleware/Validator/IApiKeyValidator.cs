@@ -13,9 +13,9 @@ namespace MarginTrading.Backend.Middleware.Validator
 
     public class ApiKeyValidator : IApiKeyValidator
     {
-        private readonly MarginSettings _settings;
+        private readonly MarginTradingSettings _settings;
 
-        public ApiKeyValidator(MarginSettings settings)
+        public ApiKeyValidator(MarginTradingSettings settings)
         {
             _settings = settings;
         }

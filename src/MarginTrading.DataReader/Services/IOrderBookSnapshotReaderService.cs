@@ -1,5 +1,4 @@
 ﻿using System.Threading.Tasks;
-using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orderbooks;
 
 namespace MarginTrading.DataReader.Services

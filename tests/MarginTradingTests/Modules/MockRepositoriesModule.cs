@@ -2,7 +2,6 @@
 using Autofac;
 using AzureStorage.Tables;
 using Common.Log;
-using Lykke.Service.Assets.Client;
 using MarginTrading.AzureRepositories;
 using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.AzureRepositories.Logs;
@@ -25,21 +24,19 @@ namespace MarginTradingTests.Modules
 
         protected override void Load(ContainerBuilder builder)
         {
-            var assetsService = MarginTradingTestsUtils.GetPopulatedAssetsService();
+            //var assetsService = MarginTradingTestsUtils.GetPopulatedAssetsService();
             var accountRepository = MarginTradingTestsUtils.GetPopulatedAccountsRepository(_accounts);
             var conditionsRepository = MarginTradingTestsUtils.GetPopulatedMarginTradingConditionsRepository();
             var accountGroupRepository = MarginTradingTestsUtils.GetPopulatedAccountGroupRepository();
             var accountAssetsRepository = MarginTradingTestsUtils.GetPopulatedAccountAssetsRepository();
             var meRoutesRepository = MarginTradingTestsUtils.GetPopulatedMatchingEngineRoutesRepository();
-            var overnightSwapStateRepository = MarginTradingTestsUtils.GetOvernightSwapStateRepository();
-            var overnightSwapHistoryRepository = MarginTradingTestsUtils.GetOvernightSwapHistoryRepository();
 
             var blobRepository = new Mock<IMarginTradingBlobRepository>();
             var orderHistoryRepository = new Mock<IMarginTradingOrdersHistoryRepository>();
             var riskSystemCommandsLogRepository = new Mock<IRiskSystemCommandsLogRepository>();
 
             builder.RegisterInstance(new LogToMemory()).As<ILog>();
-            builder.RegisterInstance(assetsService).As<IAssetsService>().SingleInstance();
+            //builder.RegisterInstance(assetsService).As<IAssetsService>().SingleInstance();
             builder.RegisterInstance(accountRepository).As<IMarginTradingAccountsRepository>().SingleInstance();
             builder.RegisterInstance(
                     new MarginTradingAccountStatsRepository(new NoSqlTableInMemory<MarginTradingAccountStatsEntity>()))
@@ -49,9 +46,6 @@ namespace MarginTradingTests.Modules
                 .SingleInstance();
             builder.RegisterInstance(accountAssetsRepository).As<IAccountAssetPairsRepository>().SingleInstance();
             builder.RegisterInstance(meRoutesRepository).As<IMatchingEngineRoutesRepository>().SingleInstance();
-            builder.RegisterInstance(overnightSwapStateRepository).As<IOvernightSwapStateRepository>().SingleInstance();
-            builder.RegisterInstance(overnightSwapHistoryRepository).As<IOvernightSwapHistoryRepository>()
-                .SingleInstance();
             builder.RegisterType<MatchingEngineInMemoryRepository>().As<IMatchingEngineRepository>().SingleInstance();
 
             //mocks

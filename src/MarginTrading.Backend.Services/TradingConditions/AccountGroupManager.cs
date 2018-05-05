@@ -12,13 +12,13 @@ namespace MarginTrading.Backend.Services.TradingConditions
     {
         private readonly AccountGroupCacheService _accountGroupCacheService;
         private readonly IAccountGroupRepository _repository;
-        private readonly MarginSettings _settings;
+        private readonly MarginTradingSettings _settings;
         private readonly IClientNotifyService _clientNotifyService;
 
         public AccountGroupManager(
             AccountGroupCacheService accountGroupCacheService,
             IAccountGroupRepository accountGroupRepository,
-            MarginSettings settings,
+            MarginTradingSettings settings,
             IClientNotifyService clientNotifyService)
         {
             _accountGroupCacheService = accountGroupCacheService;
@@ -36,32 +36,6 @@ namespace MarginTrading.Backend.Services.TradingConditions
         {
             var accountGroups = (await _repository.GetAllAsync()).ToList();
             _accountGroupCacheService.InitAccountGroupsCache(accountGroups);
-        }
-
-        public async Task AddAccountGroupsForTradingCondition(string tradingConditionId)
-        {
-            foreach (var asset in _settings.BaseAccountAssets)
-            {
-                await _repository.AddOrReplaceAsync(new AccountGroup
-                {
-                    BaseAssetId = asset,
-                    MarginCall = LykkeConstants.DefaultMarginCall,
-                    StopOut = LykkeConstants.DefaultStopOut,
-                    TradingConditionId = tradingConditionId
-                });
-            }
-
-            await UpdateAccountGroupCache();
-        }
-
-        public async Task<IAccountGroup> AddOrReplaceAccountGroupAsync(IAccountGroup accountGroup)
-        {
-            await _repository.AddOrReplaceAsync(accountGroup);
-            await UpdateAccountGroupCache();
-
-            await _clientNotifyService.NotifyTradingConditionsChanged(accountGroup.TradingConditionId);
-
-            return accountGroup;
         }
     }
 }

@@ -2,7 +2,6 @@
 using MarginTrading.Backend.Contracts.TradeMonitoring;
 using MarginTrading.Backend.Core;
 using MarginTrading.Common.Services;
-using MarginTrading.DataReader.Models;
 using MarginTrading.DataReader.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

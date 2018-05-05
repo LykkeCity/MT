@@ -8,7 +8,6 @@ using Common.Log;
 using MarginTrading.AzureRepositories.Logs;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
-using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Extensions;
 

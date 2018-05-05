@@ -1,5 +1,4 @@
 ﻿using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Common.Middleware;
 using MarginTrading.Contract.BackendContracts;
 using Microsoft.AspNetCore.Authorization;
@@ -12,32 +11,11 @@ namespace MarginTrading.Backend.Controllers
     [MiddlewareFilter(typeof(RequestLoggingPipeline))]
     public class ServiceController : Controller
     {
-        private readonly IMaintenanceModeService _maintenanceModeService;
         private readonly IQuoteCacheService _quoteCacheService;
 
-        public ServiceController(IMaintenanceModeService maintenanceModeService,
-            IQuoteCacheService quoteCacheService)
+        public ServiceController(IQuoteCacheService quoteCacheService)
         {
-            _maintenanceModeService = maintenanceModeService;
             _quoteCacheService = quoteCacheService;
-        }
-
-        [HttpPost]
-        [Route(LykkeConstants.MaintenanceModeRoute)]
-        public MtBackendResponse<bool> SetMaintenanceMode([FromBody]bool enabled)
-        {
-            _maintenanceModeService.SetMode(enabled);
-
-            return MtBackendResponse<bool>.Ok(enabled);
-        }
-
-        [HttpGet]
-        [Route(LykkeConstants.MaintenanceModeRoute)]
-        public MtBackendResponse<bool> GetMaintenanceMode()
-        {
-            var result = _maintenanceModeService.CheckIsEnabled();
-
-            return MtBackendResponse<bool>.Ok(result);
         }
 
         [HttpDelete]

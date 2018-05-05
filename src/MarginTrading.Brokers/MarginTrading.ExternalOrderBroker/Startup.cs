@@ -1,8 +1,6 @@
 ﻿using Autofac;
 using Common.Log;
 using Lykke.SettingsReader;
-using MarginTrading.AzureRepositories;
-using MarginTrading.Backend.Core;
 using MarginTrading.BrokerBase;
 using MarginTrading.BrokerBase.Settings;
 using MarginTrading.ExternalOrderBroker.Repositories;

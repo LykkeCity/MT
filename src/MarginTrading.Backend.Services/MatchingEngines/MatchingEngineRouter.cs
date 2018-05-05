@@ -1,6 +1,5 @@
 ﻿using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
-using MarginTrading.Backend.Services.TradingConditions;
 
 namespace MarginTrading.Backend.Services.MatchingEngines
 {

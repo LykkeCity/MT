@@ -78,18 +78,6 @@ namespace MarginTrading.AzureRepositories
                     "RiskSystemCommandsLog", log));
             }
 
-            public static OvernightSwapStateRepository CreateOvernightSwapStateRepository(IReloadingManager<string> connString, ILog log)
-            {
-                return new OvernightSwapStateRepository(AzureTableStorage<OvernightSwapStateEntity>.Create(connString,
-                    "OvernightSwapState", log));
-            }
-
-            public static OvernightSwapHistoryRepository CreateOvernightSwapHistoryRepository(IReloadingManager<string> connString, ILog log)
-            {
-                return new OvernightSwapHistoryRepository(AzureTableStorage<OvernightSwapHistoryEntity>.Create(connString,
-                    "OvernightSwapHistory", log));
-            }
-
             public static IDayOffSettingsRepository CreateDayOffSettingsRepository(IReloadingManager<string> connString)
             {
                 return new DayOffSettingsRepository(new MarginTradingBlobRepository(connString));

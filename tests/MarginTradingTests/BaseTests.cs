@@ -5,21 +5,17 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
-using FluentAssertions;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.ClientAccount.Client.AutorestClient.Models;
 using Lykke.Service.ClientAccount.Client.Models;
 using Lykke.Service.ExchangeConnector.Client;
-using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.DayOffSettings;
-using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
-using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Modules;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.RabbitMq;
@@ -56,7 +52,7 @@ namespace MarginTradingTests
         {
             var builder = new ContainerBuilder();
 
-            var marginSettings = new MarginSettings
+            var marginSettings = new MarginTradingSettings
             {
                 RabbitMqQueues =
                     new RabbitMqQueues {MarginTradingEnabledChanged = new RabbitMqQueueInfo {ExchangeName = ""}}
@@ -157,7 +153,6 @@ namespace MarginTradingTests
 
             builder.RegisterBuildCallback(c => c.Resolve<AccountAssetsManager>());
             builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
-            builder.RegisterBuildCallback(c => c.Resolve<IOvernightSwapService>());
             builder.RegisterInstance(new Mock<IMtSlackNotificationsSender>(MockBehavior.Loose).Object).SingleInstance();
             builder.RegisterInstance(Mock.Of<IRabbitMqService>()).As<IRabbitMqService>();
             Container = builder.Build();
@@ -166,7 +161,6 @@ namespace MarginTradingTests
             MtServiceLocator.AccountUpdateService = Container.Resolve<IAccountUpdateService>();
             MtServiceLocator.AccountsCacheService = Container.Resolve<IAccountsCacheService>();
             MtServiceLocator.SwapCommissionService = Container.Resolve<ICommissionService>();
-            MtServiceLocator.OvernightSwapService = Container.Resolve<IOvernightSwapService>();
 
             Container.Resolve<OrderBookList>().Init(null);
         }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using MarginTrading.Backend.Core;
@@ -12,13 +11,13 @@ namespace MarginTrading.Backend.Services
 	{
 		private readonly IAccountsCacheService _accountsCacheService;
 		private readonly ICfdCalculatorService _cfdCalculatorService;
-		private readonly MarginSettings _marginSettings;
+		private readonly MarginTradingSettings _marginSettings;
 		private readonly ILog _log;
 
 		public EquivalentPricesService(
 			IAccountsCacheService accountsCacheService,
 			ICfdCalculatorService cfdCalculatorService,
-			MarginSettings marginSettings,
+			MarginTradingSettings marginSettings,
 			ILog log)
 		{
 			_accountsCacheService = accountsCacheService;

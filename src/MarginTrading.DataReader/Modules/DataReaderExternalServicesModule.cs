@@ -1,5 +1,4 @@
 ﻿using Autofac;
-using Lykke.Service.ClientAccount.Client;
 using Lykke.SettingsReader;
 using MarginTrading.DataReader.Settings;
 

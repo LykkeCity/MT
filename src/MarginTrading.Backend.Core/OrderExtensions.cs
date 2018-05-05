@@ -1,5 +1,4 @@
 ﻿using System;
-using MarginTrading.Backend.Core.Messages;
 
 namespace MarginTrading.Backend.Core
 {

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using MarginTrading.Contract.BackendContracts.TradingConditions;
 
 namespace MarginTrading.Contract.BackendContracts
