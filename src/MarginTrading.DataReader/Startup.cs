@@ -12,12 +12,10 @@ using Lykke.SlackNotification.AzureQueue;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Modules;
 using MarginTrading.Common.Services;
-using MarginTrading.DataReader.Filters;
 using MarginTrading.DataReader.Infrastructure;
 using MarginTrading.DataReader.Middleware;
 using MarginTrading.DataReader.Modules;
 using MarginTrading.DataReader.Settings;
-using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -58,7 +56,7 @@ namespace MarginTrading.DataReader
             services.AddSingleton(loggerFactory);
             services.AddLogging();
             services.AddSingleton(Configuration);
-            services.AddMvc(options => options.Filters.Add(typeof(MarginTradingEnabledFilter)));
+            services.AddMvc();
             services.AddAuthentication(KeyAuthOptions.AuthenticationScheme)
                 .AddScheme<KeyAuthOptions, KeyAuthHandler>(KeyAuthOptions.AuthenticationScheme, "", options => { });
 
@@ -74,18 +72,9 @@ namespace MarginTrading.DataReader
 
             var builder = new ContainerBuilder();
 
-            var readerSettings = Configuration.LoadSettings<AppSettings>()
-                .Nested(s =>
-                {
-                    var inner = isLive ? s.MtDataReader.Live : s.MtDataReader.Demo;
-                    inner.IsLive = isLive;
-                    inner.Env = isLive ? "Live" : "Demo";
-                    return s;
-                });
+            var readerSettings = Configuration.LoadSettings<AppSettings>();
 
-            var settings = readerSettings.Nested(s => isLive ? s.MtDataReader.Live : s.MtDataReader.Demo);
-
-            Console.WriteLine($"IsLive: {settings.CurrentValue.IsLive}");
+            var settings = readerSettings.Nested(s => s.MtDataReader);
 
             SetupLoggers(services, readerSettings, settings);
 
@@ -114,15 +103,8 @@ namespace MarginTrading.DataReader
 
             appLifetime.ApplicationStopped.Register(() => ApplicationContainer.Dispose());
 
-            var settings = app.ApplicationServices.GetService<DataReaderSettings>();
-
             appLifetime.ApplicationStarted.Register(() =>
             {
-                if (!string.IsNullOrEmpty(settings.ApplicationInsightsKey))
-                {
-                    TelemetryConfiguration.Active.InstrumentationKey =
-                        settings.ApplicationInsightsKey;
-                }
                 LogLocator.CommonLog?.WriteMonitorAsync("", "", "Started");
             });
 
@@ -161,12 +143,16 @@ namespace MarginTrading.DataReader
         {
             var consoleLogger = new LogToConsole();
 
-            var commonSlackService =
-                services.UseSlackNotificationsSenderViaAzureQueue(mtSettings.CurrentValue.SlackNotifications.AzureQueue,
-                    new LogToConsole());
+            MtSlackNotificationsSender slackService = null;
+            if (mtSettings.CurrentValue.SlackNotifications != null)
+            {
+                var commonSlackService =
+                    services.UseSlackNotificationsSenderViaAzureQueue(
+                        mtSettings.CurrentValue.SlackNotifications.AzureQueue,
+                        consoleLogger);
 
-            var slackService =
-                new MtSlackNotificationsSender(commonSlackService, "MT DataReader", settings.CurrentValue.Env);
+                slackService = new MtSlackNotificationsSender(commonSlackService, "MT DataReader", Program.EnvInfo);
+            }
 
             var log = services.UseLogToAzureStorage(settings.Nested(s => s.Db.LogsConnString), slackService,
                 "MarginTradingDataReaderLog", consoleLogger);

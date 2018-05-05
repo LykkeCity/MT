@@ -1,11 +1,11 @@
-﻿using MarginTrading.Common.Settings;
+﻿using JetBrains.Annotations;
+using Lykke.SettingsReader.Attributes;
 
 namespace MarginTrading.DataReader.Settings
 {
     public class AppSettings
     {
-        public DataReaderLiveDemoSettings MtDataReader { get; set; }
-        public SlackNotificationSettings SlackNotifications { get; set; }
-        public ClientAccountServiceSettings ClientAccountServiceClient { get; set; }
+        public DataReaderSettings MtDataReader { get; set; }
+        [Optional, CanBeNull] public SlackNotificationSettings SlackNotifications { get; set; }
     }
 }
