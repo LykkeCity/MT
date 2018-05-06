@@ -66,13 +66,39 @@ namespace MarginTrading.Backend
             _consoleWriter.WriteLine($"Starting {ServiceName}");
             await _logger.WriteInfoAsync(ServiceName, null, null, "Starting...");
 
+            if (_marginSettings.MarketMakerRabbitMqSettings == null &&
+                _marginSettings.StpAggregatorRabbitMqSettings == null)
+            {
+                throw new Exception("Both MM and STP connections are not configured. Can not start service.");
+            }
+
             try
             {
                 await _migrationService.InvokeAll();
                 
-                _rabbitMqService.Subscribe(
-                    _marginSettings.MarketMakerRabbitMqSettings, false, HandleNewOrdersMessage,
-                    _rabbitMqService.GetJsonDeserializer<MarketMakerOrderCommandsBatchMessage>());
+                if (_marginSettings.MarketMakerRabbitMqSettings != null)
+                {
+                    _rabbitMqService.Subscribe(
+                        _marginSettings.MarketMakerRabbitMqSettings, false, HandleNewOrdersMessage,
+                        _rabbitMqService.GetJsonDeserializer<MarketMakerOrderCommandsBatchMessage>());
+                }
+                else
+                {
+                    _logger.WriteInfo(ServiceName, nameof(StartApplicationAsync),
+                        "MarketMakerRabbitMqSettings is not configured");
+                }
+                
+                if (_marginSettings.StpAggregatorRabbitMqSettings != null)
+                {
+                    _rabbitMqService.Subscribe(_marginSettings.StpAggregatorRabbitMqSettings,
+                        false, HandleStpOrderbook,
+                        _rabbitMqService.GetMsgPackDeserializer<ExternalExchangeOrderbookMessage>());
+                }
+                else
+                {
+                    _logger.WriteInfo(ServiceName, nameof(StartApplicationAsync),
+                        "StpAggregatorRabbitMqSettings is not configured");
+                }
 
                 if (_marginSettings.RisksRabbitMqSettings != null)
                 {
@@ -80,19 +106,10 @@ namespace MarginTrading.Backend
                         true, _matchingEngineRoutesManager.HandleRiskManagerCommand,
                         _rabbitMqService.GetJsonDeserializer<MatchingEngineRouteRisksCommand>());
                 }
-                else if (_marginSettings.IsLive)
+                else
                 {
-                    _logger.WriteWarning(ServiceName, nameof(StartApplicationAsync),
+                    _logger.WriteInfo(ServiceName, nameof(StartApplicationAsync),
                         "RisksRabbitMqSettings is not configured");
-                }
-                
-                // Demo server works only in MM mode
-                if (_marginSettings.IsLive)
-                {
-                    _rabbitMqService.Subscribe(_marginSettings.StpAggregatorRabbitMqSettings
-                            .RequiredNotNull(nameof(_marginSettings.StpAggregatorRabbitMqSettings)), false, 
-                        HandleStpOrderbook,
-                        _rabbitMqService.GetMsgPackDeserializer<ExternalExchangeOrderbookMessage>());
                 }
             }
             catch (Exception ex)

@@ -16,7 +16,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace MarginTrading.Backend.Controllers
 {
     [Authorize]
-    [Route("api/[controller]")]
+    [Route("api/accounts-management")]
     [MiddlewareFilter(typeof(RequestLoggingPipeline))]
     public class AccountsManagementController : Controller
     {
