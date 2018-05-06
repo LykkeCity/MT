@@ -15,6 +15,7 @@ namespace MarginTrading.DataReader.Helpers
                 AccountId = src.AccountId,
                 ClientId = src.ClientId,
                 Amount = src.Amount,
+                AmountInUsd = src.AmountInUsd,
                 Balance = src.Balance,
                 WithdrawTransferLimit = src.WithdrawTransferLimit,
                 Comment = src.Comment,

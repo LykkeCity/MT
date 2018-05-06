@@ -9,6 +9,7 @@ namespace MarginTrading.Backend.Contracts.AccountHistory
         public string AccountId { get; set; }
         public string ClientId { get; set; }
         public decimal Amount { get; set; }
+        public decimal AmountInUsd { get; set; }
         public decimal Balance { get; set; }
         public decimal WithdrawTransferLimit { get; set; }
         public string Comment { get; set; }
