@@ -16,7 +16,6 @@ namespace MarginTrading.AzureRepositories
     {
         public string Id { get; set; }
         public long Code { get; set; }
-        public string ClientId { get; set; }
         public string AccountId { get; set; }
         public string TradingConditionId { get; set; }
         public string AccountAssetId { get; set; }
@@ -95,6 +94,7 @@ namespace MarginTrading.AzureRepositories
         
         public string MatchingEngineMode { get; set; }
         public string LegalEntity { get; set; }
+        public DateTimeOffset UpdateTimestamp => Timestamp;
 
         MatchingEngineMode IOrderHistory.MatchingEngineMode =>
             MatchingEngineMode.ParseEnum(Backend.Core.MatchingEngines.MatchingEngineMode.MarketMaker);

@@ -9,12 +9,12 @@ using MarginTrading.Contract.BackendContracts;
 
 namespace MarginTrading.OrderHistoryBroker
 {
-    public class Application : BrokerApplicationBase<OrderFullContract>
+    public class OrderHistoryApplication : BrokerApplicationBase<OrderFullContract>
     {
         private readonly IMarginTradingOrdersHistoryRepository[] _ordersHistoryRepositories;
         private readonly Settings _settings;
 
-        public Application(IMarginTradingOrdersHistoryRepository[] ordersHistoryRepositories, ILog logger,
+        public OrderHistoryApplication(IMarginTradingOrdersHistoryRepository[] ordersHistoryRepositories, ILog logger,
             Settings settings, CurrentApplicationInfo applicationInfo,
             ISlackNotificationsSender slackNotificationsSender) : base(logger, slackNotificationsSender,
             applicationInfo)

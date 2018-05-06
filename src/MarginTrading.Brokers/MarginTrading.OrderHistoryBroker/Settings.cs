@@ -18,5 +18,6 @@ namespace MarginTrading.OrderHistoryBroker
     public class RabbitMqQueues
     {
         public RabbitMqQueueInfo OrderHistory { get; set; }
+        public RabbitMqQueueInfo Trades { get; set; }
     }
 }

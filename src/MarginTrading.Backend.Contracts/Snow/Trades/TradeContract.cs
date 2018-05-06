@@ -33,5 +33,7 @@ namespace MarginTrading.Backend.Contracts.Snow.Trades
         /// Trade timestamp
         /// </summary>
         public DateTime Timestamp { get; set; }
+        
+        //todo add other fields: volume and price
     }
 }

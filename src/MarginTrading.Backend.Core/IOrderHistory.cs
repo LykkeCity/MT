@@ -9,7 +9,6 @@ namespace MarginTrading.Backend.Core
     {
         string Id { get; }
         long Code { get; }
-        string ClientId { get; }
         string AccountId { get; }
         string TradingConditionId { get; }
         string AccountAssetId { get; }
@@ -59,14 +58,14 @@ namespace MarginTrading.Backend.Core
         string CloseExternalProviderId { get; }
         
         MatchingEngineMode MatchingEngineMode { get; }
-        string LegalEntity { get; set; }  
+        string LegalEntity { get; }  
+        DateTimeOffset UpdateTimestamp { get; }  
     }
 
     public class OrderHistory : IOrderHistory
     {
         public string Id { get; set; }
         public long Code { get; set; }
-        public string ClientId { get; set; }
         public string AccountId { get; set; }
         public string TradingConditionId { get; set; }
         public string AccountAssetId { get; set; }
@@ -113,5 +112,6 @@ namespace MarginTrading.Backend.Core
         public string CloseExternalProviderId { get; set; }
         public MatchingEngineMode MatchingEngineMode { get; set; }
         public string LegalEntity { get; set; }
+        public DateTimeOffset UpdateTimestamp { get; set; }
     }
 }

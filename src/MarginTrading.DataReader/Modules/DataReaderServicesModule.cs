@@ -29,6 +29,9 @@ namespace MarginTrading.DataReader.Modules
             builder.RegisterType<MemoryCacheProvider>().As<ICacheProvider>()
                 .SingleInstance();
             
+            builder.RegisterType<QuotesSnapshotReadersService>().As<IQuotesSnapshotReadersService>()
+                .SingleInstance().OnActivated(a => a.Instance.Start()).AutoActivate();
+            
             builder.Register(c =>
                 {
                     var settings = c.Resolve<IReloadingManager<DataReaderSettings>>();
