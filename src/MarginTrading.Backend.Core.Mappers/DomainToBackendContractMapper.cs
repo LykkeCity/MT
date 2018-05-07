@@ -153,6 +153,7 @@ namespace MarginTrading.Backend.Core.Mappers
             return new OrderHistoryBackendContract
             {
                 Id = src.Id,
+                Code = src.Code,
                 AccountId = src.AccountId,
                 Instrument = src.Instrument,
                 AssetAccuracy = src.AssetAccuracy,
