@@ -10,7 +10,7 @@ namespace MarginTrading.DataReader.Helpers
 {
     internal static class OrderExtensions
     {
-        public static OrderContract ToBaseContract(this Order src)
+        public static DetailedOrderContract ToBaseContract(this Order src)
         {
             MatchedOrderBackendContract MatchedOrderToBackendContract(MatchedOrder o)
                 => new MatchedOrderBackendContract
@@ -22,7 +22,7 @@ namespace MarginTrading.DataReader.Helpers
                     MatchedDate = o.MatchedDate
                 };
 
-            return new OrderContract
+            return new DetailedOrderContract
             {
                 Id = src.Id,
                 Code = src.Code,

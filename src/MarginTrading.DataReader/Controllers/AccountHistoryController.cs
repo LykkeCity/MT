@@ -20,14 +20,14 @@ namespace MarginTrading.DataReader.Controllers
     public class AccountHistoryController : Controller, IAccountHistoryApi
     {
         private readonly IMarginTradingAccountHistoryRepository _accountsHistoryRepository;
-        private readonly IMarginTradingOrdersHistoryRepository _ordersHistoryRepository;
+        private readonly IOrdersHistoryRepository _ordersHistoryRepository;
         private readonly IOrdersSnapshotReaderService _ordersSnapshotReaderService;
         private readonly IMarginTradingAccountsRepository _accountsRepository;
 
         public AccountHistoryController(
             IMarginTradingAccountsRepository accountsRepository,
             IMarginTradingAccountHistoryRepository accountsHistoryRepository,
-            IMarginTradingOrdersHistoryRepository ordersHistoryRepository,
+            IOrdersHistoryRepository ordersHistoryRepository,
             IOrdersSnapshotReaderService ordersSnapshotReaderService)
         {
             _accountsRepository = accountsRepository;
@@ -50,7 +50,7 @@ namespace MarginTrading.DataReader.Controllers
                 .Where(item => item.Type != AccountHistoryType.OrderClosed);
 
             var orders =
-                (await _ordersHistoryRepository.GetHistoryAsync(request.ClientId, clientAccountIds, request.From,
+                (await _ordersHistoryRepository.GetHistoryAsync(clientAccountIds, request.From,
                     request.To))
                 .Where(item =>  item.OpenDate != null && // remove cancel pending order rows created before OrderUpdateType was introduced
                                 item.OrderUpdateType == OrderUpdateType.Close);
@@ -98,7 +98,7 @@ namespace MarginTrading.DataReader.Controllers
 
             var openOrders = await _ordersSnapshotReaderService.GetActiveByAccountIdsAsync(clientAccountIds);
 
-            var history = (await _ordersHistoryRepository.GetHistoryAsync(request.ClientId, clientAccountIds,
+            var history = (await _ordersHistoryRepository.GetHistoryAsync(clientAccountIds,
                     request.From, request.To))
                 .Where(item => item.OpenDate != null && // remove cancel pending order rows created before OrderUpdateType was introduced
                                item.OrderUpdateType == OrderUpdateType.Close).ToList();

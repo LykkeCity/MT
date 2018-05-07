@@ -11,10 +11,10 @@ namespace MarginTrading.OrderHistoryBroker
 {
     public class OrderHistoryApplication : BrokerApplicationBase<OrderFullContract>
     {
-        private readonly IMarginTradingOrdersHistoryRepository[] _ordersHistoryRepositories;
+        private readonly IOrdersHistoryRepository[] _ordersHistoryRepositories;
         private readonly Settings _settings;
 
-        public OrderHistoryApplication(IMarginTradingOrdersHistoryRepository[] ordersHistoryRepositories, ILog logger,
+        public OrderHistoryApplication(IOrdersHistoryRepository[] ordersHistoryRepositories, ILog logger,
             Settings settings, CurrentApplicationInfo applicationInfo,
             ISlackNotificationsSender slackNotificationsSender) : base(logger, slackNotificationsSender,
             applicationInfo)

@@ -21,11 +21,10 @@ namespace MarginTrading.DataReader.Controllers.Snow
     {
         private readonly ITradesRepository _tradesRepository;
         private readonly IOrdersSnapshotReaderService _ordersSnapshotReaderService;
-        private readonly IMarginTradingOrdersHistoryRepository _ordersHistoryRepository;
+        private readonly IOrdersHistoryRepository _ordersHistoryRepository;
 
         public OrdersController(ITradesRepository tradesRepository,
-            IOrdersSnapshotReaderService ordersSnapshotReaderService,
-            IMarginTradingOrdersHistoryRepository ordersHistoryRepository)
+            IOrdersSnapshotReaderService ordersSnapshotReaderService, IOrdersHistoryRepository ordersHistoryRepository)
         {
             _tradesRepository = tradesRepository;
             _ordersSnapshotReaderService = ordersSnapshotReaderService;
@@ -44,14 +43,14 @@ namespace MarginTrading.DataReader.Controllers.Snow
                 return Convert(order);
             }
 
-            var orderByIdEntity = await _tradesRepository.GetAsync(orderId);
-            if (orderByIdEntity == null)
+            var trade = await _tradesRepository.GetAsync(orderId);
+            if (trade == null)
             {
                 return null;
             }
 
-            var history = await _ordersHistoryRepository.GetHistoryAsync(orderByIdEntity.ClientId,
-                new[] {orderByIdEntity.AccountId}, orderByIdEntity.LastTradeTime - TimeSpan.FromSeconds(1), null);
+            var history = await _ordersHistoryRepository.GetHistoryAsync(new[] {trade.AccountId},
+                trade.TradeTimestamp - TimeSpan.FromSeconds(1), null);
 
             if (!history.Any())
             {

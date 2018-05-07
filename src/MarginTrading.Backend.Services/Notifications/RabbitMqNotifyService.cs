@@ -54,11 +54,6 @@ namespace MarginTrading.Backend.Services.Notifications
             return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderHistory.ExchangeName, order.ToFullContract(orderUpdateType));
         }
 
-        public Task OrderReject(IOrder order)
-        {
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderRejected.ExchangeName, order.ToFullContract(OrderUpdateType.Reject));
-        }
-
         public Task OrderBookPrice(InstrumentBidAskPair quote)
         {
             return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderbookPrices.ExchangeName, quote.ToRabbitMqContract());
@@ -148,7 +143,6 @@ namespace MarginTrading.Backend.Services.Notifications
         {
             ((IStopable)_publishers[_settings.RabbitMqQueues.AccountHistory.ExchangeName]).Stop();
             ((IStopable)_publishers[_settings.RabbitMqQueues.OrderHistory.ExchangeName]).Stop();
-            ((IStopable)_publishers[_settings.RabbitMqQueues.OrderRejected.ExchangeName]).Stop();
             ((IStopable)_publishers[_settings.RabbitMqQueues.OrderbookPrices.ExchangeName]).Stop();
             ((IStopable)_publishers[_settings.RabbitMqQueues.AccountStopout.ExchangeName]).Stop();
             ((IStopable)_publishers[_settings.RabbitMqQueues.AccountChanged.ExchangeName]).Stop();

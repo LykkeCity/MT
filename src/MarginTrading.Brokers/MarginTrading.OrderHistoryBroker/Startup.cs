@@ -24,11 +24,11 @@ namespace MarginTrading.OrderHistoryBroker
             builder.RegisterType<OrderHistoryApplication>().As<IBrokerApplication>().SingleInstance();
             builder.RegisterType<TradesApplication>().As<IBrokerApplication>().SingleInstance();
 
-            builder.Register<IMarginTradingOrdersHistoryRepository>(ctx =>
+            builder.Register<IOrdersHistoryRepository>(ctx =>
                 AzureRepoFactories.MarginTrading.CreateOrdersHistoryRepository(settings.Nested(s => s.Db.HistoryConnString), log)
             ).SingleInstance();
-            builder.Register<IMarginTradingOrdersHistoryRepository>(ctx =>
-                new MarginTradingOrdersHistorySqlRepository(settings.CurrentValue, log)
+            builder.Register<IOrdersHistoryRepository>(ctx =>
+                new OrdersHistorySqlRepository(settings.CurrentValue, log)
             ).SingleInstance();
         }
     }

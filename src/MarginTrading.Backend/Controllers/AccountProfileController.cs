@@ -20,14 +20,14 @@ namespace MarginTrading.Backend.Controllers
     public class AccountProfileController : Controller
     {
         private readonly IMarginTradingAccountHistoryRepository _accountsHistoryRepository;
-        private readonly IMarginTradingOrdersHistoryRepository _ordersHistoryRepository;
+        private readonly IOrdersHistoryRepository _ordersHistoryRepository;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly OrdersCache _ordersCache;
         private readonly MarginSettings _settings;
 
         public AccountProfileController(
             IMarginTradingAccountHistoryRepository accountsHistoryRepository,
-            IMarginTradingOrdersHistoryRepository ordersHistoryRepository,
+            IOrdersHistoryRepository ordersHistoryRepository,
             IAccountsCacheService accountsCacheService,
             OrdersCache ordersCache,
             MarginSettings settings)
@@ -67,12 +67,11 @@ namespace MarginTrading.Backend.Controllers
         /// <summary>
         /// Returns account history by account id
         /// </summary>
-        /// <param name="clientId"></param>
         /// <param name="accountId"></param>
         /// <returns></returns>
         [HttpGet]
         [Route("history/{clientId}/{accountId}")]
-        public async Task<AccountHistoryBackendResponse> GetAccountHistory(string clientId, string accountId)
+        public async Task<AccountHistoryBackendResponse> GetAccountHistory(string accountId)
         {
             var now = DateTime.UtcNow;
 
@@ -80,7 +79,7 @@ namespace MarginTrading.Backend.Controllers
                 .Where(item => item.Type != AccountHistoryType.OrderClosed)
                 .OrderByDescending(item => item.Date);
 
-            var historyOrders = (await _ordersHistoryRepository.GetHistoryAsync(clientId, new[] { accountId }, now.AddYears(-1), now))
+            var historyOrders = (await _ordersHistoryRepository.GetHistoryAsync(new[] { accountId }, now.AddYears(-1), now))
                 .Where(item => item.Status != OrderStatus.Rejected);
 
             var openPositions = _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountId);

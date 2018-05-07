@@ -38,7 +38,7 @@ namespace MarginTrading.DataReader.Controllers.Snow
         /// Get trades with optional filtering by order or position 
         /// </summary>
         [HttpGet, Route("")]
-        public async Task<List<TradeContract>> List(string orderId, string positionId)
+        public async Task<List<TradeContract>> List([FromQuery] string orderId, [FromQuery] string positionId)
         {
             if (orderId == null && positionId == null)
                 throw new ArgumentException($"{nameof(orderId)} or {nameof(positionId)} should be passed");
@@ -48,22 +48,11 @@ namespace MarginTrading.DataReader.Controllers.Snow
                     $"{nameof(orderId)} and {nameof(positionId)} should be equal if both passed, separation is not yet supported");
 
             var id = orderId ?? positionId;
-            var list = new List<TradeContract>();
-            var tradeContract = Convert(await _tradesRepository.GetAsync(id));
-            if (tradeContract != null)
-                list.Add(tradeContract);
-
-            return list;
+            return new List<TradeContract> {Convert(await _tradesRepository.GetAsync(id))};
         }
 
-        [CanBeNull]
         private TradeContract Convert(TradeEntity tradeEntity)
         {
-            if (tradeEntity.LastTradeTime == null)
-            {
-                return null;
-            }
-
             return new TradeContract
             {
                 // todo: separate order from position and trade and use there ids correctly
@@ -71,7 +60,7 @@ namespace MarginTrading.DataReader.Controllers.Snow
                 AccountId = tradeEntity.AccountId,
                 OrderId = tradeEntity.Id,
                 PositionId = tradeEntity.Id,
-                Timestamp = tradeEntity.LastTradeTime.Value,
+                Timestamp = tradeEntity.TradeTimestamp,
             };
         }
     }

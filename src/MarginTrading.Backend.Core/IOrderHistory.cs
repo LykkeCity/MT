@@ -59,7 +59,7 @@ namespace MarginTrading.Backend.Core
         
         MatchingEngineMode MatchingEngineMode { get; }
         string LegalEntity { get; }  
-        DateTimeOffset UpdateTimestamp { get; }  
+        DateTime UpdateTimestamp { get; }  
     }
 
     public class OrderHistory : IOrderHistory
@@ -112,6 +112,6 @@ namespace MarginTrading.Backend.Core
         public string CloseExternalProviderId { get; set; }
         public MatchingEngineMode MatchingEngineMode { get; set; }
         public string LegalEntity { get; set; }
-        public DateTimeOffset UpdateTimestamp { get; set; }
+        public DateTime UpdateTimestamp { get; set; }
     }
 }

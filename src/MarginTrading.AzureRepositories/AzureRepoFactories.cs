@@ -4,6 +4,8 @@ using Lykke.SettingsReader;
 using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.AzureRepositories.Entities;
 using MarginTrading.AzureRepositories.Logs;
+using MarginTrading.AzureRepositories.Snow.OrdersHistory;
+using MarginTrading.AzureRepositories.Snow.Trades;
 using MarginTrading.Backend.Core;
 using MarginTrading.Common.Services;
 
@@ -31,16 +33,16 @@ namespace MarginTrading.AzureRepositories
                     "MarginTradingAccountAssets", log));
             }
 
-            public static MarginTradingOrdersHistoryRepository CreateOrdersHistoryRepository(IReloadingManager<string> connString, ILog log)
+            public static OrdersHistoryRepository CreateOrdersHistoryRepository(IReloadingManager<string> connString, ILog log)
             {
-                return new MarginTradingOrdersHistoryRepository(AzureTableStorage<MarginTradingOrderHistoryEntity>.Create(connString,
+                return new OrdersHistoryRepository(AzureTableStorage<OrderHistoryEntity>.Create(connString,
                     "MarginTradingOrdersHistory", log));
             }
 
-            public static MarginTradingOrdersRejectedRepository CreateOrdersRejectedRepository(IReloadingManager<string> connString, ILog log)
+            public static ITradesRepository CreateTradesRepository(IReloadingManager<string> connString, ILog log,
+                IConvertService resolve)
             {
-                return new MarginTradingOrdersRejectedRepository(AzureTableStorage<MarginTradingOrderRejectedEntity>.Create(connString,
-                    "MarginTradingOrdersRejected", log));
+                return new TradesRepository(AzureTableStorage<TradeEntity>.Create(connString, "Trades", log));
             }
 
             public static MarginTradingAccountHistoryRepository CreateAccountHistoryRepository(IReloadingManager<string> connString, ILog log)

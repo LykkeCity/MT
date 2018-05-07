@@ -3,7 +3,7 @@ using AzureStorage;
 
 namespace MarginTrading.AzureRepositories.Snow.Trades
 {
-    public class TradesRepository : ITradesRepository
+    internal class TradesRepository : ITradesRepository
     {
         private readonly INoSQLTableStorage<TradeEntity> _tableStorage;
 

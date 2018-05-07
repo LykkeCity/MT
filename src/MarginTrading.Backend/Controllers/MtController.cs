@@ -30,7 +30,7 @@ namespace MarginTrading.Backend.Controllers
     public class MtController : Controller, ITradingApi
     {
         private readonly IMarginTradingAccountHistoryRepository _accountsHistoryRepository;
-        private readonly IMarginTradingOrdersHistoryRepository _ordersHistoryRepository;
+        private readonly IOrdersHistoryRepository _ordersHistoryRepository;
         private readonly IMicrographCacheService _micrographCacheService;
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
         private readonly IAssetPairsCache _assetPairsCache;
@@ -48,7 +48,7 @@ namespace MarginTrading.Backend.Controllers
 
         public MtController(
             IMarginTradingAccountHistoryRepository accountsHistoryRepository,
-            IMarginTradingOrdersHistoryRepository ordersHistoryRepository,
+            IOrdersHistoryRepository ordersHistoryRepository,
             IMicrographCacheService micrographCacheService,
             IAccountAssetsCacheService accountAssetsCacheService,
             IAssetPairsCache assetPairsCache,
@@ -229,7 +229,7 @@ namespace MarginTrading.Backend.Controllers
             var accounts = (await _accountsHistoryRepository.GetAsync(clientAccountIds, request.From, request.To))
                 .Where(item => item.Type != AccountHistoryType.OrderClosed);
 
-            var orders = (await _ordersHistoryRepository.GetHistoryAsync(request.ClientId, clientAccountIds, request.From, request.To))
+            var orders = (await _ordersHistoryRepository.GetHistoryAsync(clientAccountIds, request.From, request.To))
                 .Where(item => item.Status != OrderStatus.Rejected);
 
             var openPositions = _ordersCache.ActiveOrders.GetOrdersByAccountIds(clientAccountIds).ToList();
@@ -252,7 +252,7 @@ namespace MarginTrading.Backend.Controllers
 
             var openOrders = _ordersCache.ActiveOrders.GetOrdersByAccountIds(clientAccountIds);
 
-            var historyOrders = (await _ordersHistoryRepository.GetHistoryAsync(request.ClientId, clientAccountIds, request.From, request.To))
+            var historyOrders = (await _ordersHistoryRepository.GetHistoryAsync(clientAccountIds, request.From, request.To))
                 .Where(item => item.Status != OrderStatus.Rejected);
 
             var result = BackendContractFactory.CreateAccountNewHistoryBackendResponse(accounts, openOrders, historyOrders);
