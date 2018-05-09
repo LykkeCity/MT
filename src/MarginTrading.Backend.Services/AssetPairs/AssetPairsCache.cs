@@ -79,6 +79,13 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 string.Format(MtMessages.InstrumentWithAssetsNotFound, asset1, asset2));
         }
 
+        public IAssetPair FindAssetPairOrDefault(string asset1, string asset2, string legalEntity)
+        {
+            var key = GetAssetPairKey(asset1, asset2, legalEntity);
+
+            return _assetPairsByAssets.Get().TryGetValue(key, out var result) ? result : null;
+        }
+
         void IAssetPairsInitializableCache.InitPairsCache(Dictionary<string, IAssetPair> instruments)
         {
             _assetPairs = instruments;

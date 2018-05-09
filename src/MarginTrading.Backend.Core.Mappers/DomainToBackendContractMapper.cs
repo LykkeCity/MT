@@ -106,7 +106,8 @@ namespace MarginTrading.Backend.Core.Mappers
                 Type = src.Type.ToType<AccountHistoryTypeContract>(),
                 OrderId = src.OrderId,
                 LegalEntity = src.LegalEntity,
-                AuditLog = src.AuditLog
+                AuditLog = src.AuditLog,
+                AmountInUsd = src.AmountInUsd,
             };
         }
 
@@ -152,6 +153,7 @@ namespace MarginTrading.Backend.Core.Mappers
             return new OrderHistoryBackendContract
             {
                 Id = src.Id,
+                Code = src.Code,
                 AccountId = src.AccountId,
                 Instrument = src.Instrument,
                 AssetAccuracy = src.AssetAccuracy,

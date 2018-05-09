@@ -16,5 +16,6 @@ namespace MarginTrading.Contract.BackendContracts
         public string OrderId { get; set; }
         public string LegalEntity { get; set; }
         public string AuditLog { get; set; }
+        public decimal AmountInUsd { get; set; }
     }
 }

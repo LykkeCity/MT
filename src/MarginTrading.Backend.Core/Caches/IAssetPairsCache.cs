@@ -15,6 +15,7 @@ namespace MarginTrading.Backend.Core
         [CanBeNull] IAssetPair GetAssetPairByIdOrDefault(string assetPairId);
         IEnumerable<IAssetPair> GetAll();
         IAssetPair FindAssetPair(string asset1, string asset2, string legalEntity);
+        IAssetPair FindAssetPairOrDefault(string asset1, string asset2, string legalEntity);
         /// <summary>
         /// Tries to get an asset pair constructed as [instrument.baseAsset, substAsset] or reversed.
         /// If such pairs are not found returns false.

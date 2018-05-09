@@ -30,6 +30,7 @@ namespace MarginTrading.Backend.Services
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly IAccountGroupCacheService _accountGroupCacheService;
         private readonly IClientNotifyService _clientNotifyService;
+        private readonly IEquivalentPricesService _equivalentPricesService;
         private readonly IClientAccountClient _clientAccountClient;
         private readonly IMarginTradingAccountsRepository _accountsRepository;
         private readonly ITradingConditionsCacheService _tradingConditionsCacheService;
@@ -47,6 +48,7 @@ namespace MarginTrading.Backend.Services
             IRabbitMqNotifyService rabbitMqNotifyService,
             IAccountGroupCacheService accountGroupCacheService,
             IClientNotifyService clientNotifyService,
+            IEquivalentPricesService equivalentPricesService,
             IClientAccountClient clientAccountClient,
             IMarginTradingAccountsRepository accountsRepository,
             ITradingConditionsCacheService tradingConditionsCacheService,
@@ -67,6 +69,7 @@ namespace MarginTrading.Backend.Services
             _tradingConditionsCacheService = tradingConditionsCacheService;
             _log = log;
             _clientNotifyService = clientNotifyService;
+            _equivalentPricesService = equivalentPricesService;
             _ordersCache = ordersCache;
             _acountBalanceChangedEventChannel = acountBalanceChangedEventChannel;
             _tradingEngine = tradingEngine;
@@ -152,8 +155,10 @@ namespace MarginTrading.Backend.Services
                     updatedAccount.Balance,
                     updatedAccount.WithdrawTransferLimit,
                     historyType,
+                    _equivalentPricesService.GetUsdEquivalent(amount, account.BaseAssetId, account.LegalEntity),
                     comment,
                     eventSourceId, 
+                    account.LegalEntity,
                     auditLog);
 
                 return transactionId;

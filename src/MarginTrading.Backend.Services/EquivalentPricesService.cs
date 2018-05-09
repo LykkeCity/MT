@@ -12,17 +12,23 @@ namespace MarginTrading.Backend.Services
 	{
 		private readonly IAccountsCacheService _accountsCacheService;
 		private readonly ICfdCalculatorService _cfdCalculatorService;
+		private readonly IQuoteCacheService _quoteCacheService;
+		private readonly IAssetPairsCache _assetPairsCache;
 		private readonly MarginSettings _marginSettings;
 		private readonly ILog _log;
 
 		public EquivalentPricesService(
 			IAccountsCacheService accountsCacheService,
 			ICfdCalculatorService cfdCalculatorService,
+			IQuoteCacheService quoteCacheService,
+			IAssetPairsCache assetPairsCache,
 			MarginSettings marginSettings,
 			ILog log)
 		{
 			_accountsCacheService = accountsCacheService;
 			_cfdCalculatorService = cfdCalculatorService;
+			_quoteCacheService = quoteCacheService;
+			_assetPairsCache = assetPairsCache;
 			_marginSettings = marginSettings;
 			_log = log;
 		}
@@ -70,8 +76,24 @@ namespace MarginTrading.Backend.Services
 			{
 				_log.WriteError("EnrichClosingOrder", order.ToJson(), e);
 			}
+		}
+
+		public decimal GetUsdEquivalent(decimal amount, string baseAsset, string legalEntity)
+		{
+			if (baseAsset == LykkeConstants.UsdAssetId)
+				return amount;
 			
-			
+			var assetPair = _assetPairsCache.FindAssetPairOrDefault(baseAsset, LykkeConstants.UsdAssetId, legalEntity);
+
+			if (assetPair == null)
+				return default;
+
+			var quote = _quoteCacheService.GetQuote(assetPair.Id);
+
+			if (quote == null)
+				return default;
+
+			return amount * (amount > 0 ? quote.Ask : quote.Bid);
 		}
 	}
 }

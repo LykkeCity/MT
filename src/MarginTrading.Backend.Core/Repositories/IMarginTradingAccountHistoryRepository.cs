@@ -18,6 +18,7 @@ namespace MarginTrading.Backend.Core
         string OrderId { get; }
         string LegalEntity { get; }
         string AuditLog { get; }
+        decimal AmountInUsd { get; }
     }
 
     public class MarginTradingAccountHistory : IMarginTradingAccountHistory
@@ -34,7 +35,7 @@ namespace MarginTrading.Backend.Core
         public string OrderId { get; set; }
         public string LegalEntity { get; set; }
         public string AuditLog { get; set; }
-
+        public decimal AmountInUsd { get; set; }
 
         public static MarginTradingAccountHistory Create(IMarginTradingAccountHistory src)
         {
@@ -51,7 +52,8 @@ namespace MarginTrading.Backend.Core
                 Type = src.Type,
                 OrderId = src.OrderId,
                 LegalEntity = src.LegalEntity,
-                AuditLog = src.AuditLog
+                AuditLog = src.AuditLog,
+                AmountInUsd = src.AmountInUsd
             };
         }
     }

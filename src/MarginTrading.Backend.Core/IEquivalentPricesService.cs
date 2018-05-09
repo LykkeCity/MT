@@ -6,5 +6,6 @@ namespace MarginTrading.Backend.Core
 	{
 		void EnrichOpeningOrder(Order order);
 		void EnrichClosingOrder(Order order);
+		decimal GetUsdEquivalent(decimal amount, string baseAsset, string legalEntity);
 	}
 }

@@ -27,6 +27,8 @@ namespace MarginTrading.AzureRepositories
         public string OrderId { get; set; }
         public string LegalEntity { get; set; }
         public string AuditLog { get; set; }
+        decimal IMarginTradingAccountHistory.AmountInUsd => (decimal) AmountInUsd;
+        public double AmountInUsd { get; set; }
         public int? EntityVersion { get; set; }
         AccountHistoryType IMarginTradingAccountHistory.Type => Type.ParseEnum(AccountHistoryType.OrderClosed);
 
@@ -50,7 +52,8 @@ namespace MarginTrading.AzureRepositories
                 Type = src.Type.ToString(),
                 OrderId = src.OrderId,
                 LegalEntity = src.LegalEntity,
-                AuditLog = src.AuditLog
+                AuditLog = src.AuditLog,
+                AmountInUsd = (double) src.AmountInUsd,
             };
         }
     }

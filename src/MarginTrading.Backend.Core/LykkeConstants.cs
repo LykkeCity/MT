@@ -6,6 +6,7 @@
         public const string LykkeAssetId = "LKK";
         public const string EthAssetId = "ETH";
         public const string SolarAssetId = "SLR";
+        public const string UsdAssetId = "USD";
 
         public const decimal DefaultDemoBalance = 50000;
         public const decimal DefaultMarginCall = 0.8M;
