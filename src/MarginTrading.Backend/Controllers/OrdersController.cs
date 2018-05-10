@@ -49,13 +49,17 @@ namespace MarginTrading.Backend.Controllers
             _identityGenerator = identityGenerator;
         }
         
+        /// <summary>
+        /// Place new order
+        /// </summary>
+        /// <param name="request">Order model</param>
         [Route("")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [HttpPost]
         public async Task PlaceAsync([FromBody] OrderPlaceRequest request)
         {
             var code = await _identityGenerator.GenerateIdAsync(nameof(Order));
-            
+
             var order = new Order
             {
                 Id = Guid.NewGuid().ToString("N"),
@@ -65,7 +69,7 @@ namespace MarginTrading.Backend.Controllers
                 ClientId = request.AccountId,
                 AccountId = request.AccountId,
                 Instrument = request.InstrumentId,
-                Volume = request.Volume,
+                Volume = request.Direction == OrderDirectionContract.Buy ? request.Volume : -request.Volume,
                 ExpectedOpenPrice = request.Price
             };
 
@@ -76,12 +80,17 @@ namespace MarginTrading.Backend.Controllers
                 placedOrder.ToJson());
         }
 
-        [Route("")]
+        /// <summary>
+        /// Cancel existiong order
+        /// </summary>
+        /// <param name="orderId">Id of order to cancel</param>
+        /// <param name="request">Additional cancellation info</param>
+        [Route("{orderId}")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [HttpDelete]
-        public Task CancelAsync([FromBody] OrderCancelRequest request)
+        public Task CancelAsync(string orderId, [FromBody] OrderCancelRequest request)
         {
-            if (!_ordersCache.WaitingForExecutionOrders.TryGetOrderById(request.OrderId, out var order))
+            if (!_ordersCache.WaitingForExecutionOrders.TryGetOrderById(orderId, out var order))
             {
                 throw new InvalidOperationException("Order not found");
             }
@@ -100,13 +109,20 @@ namespace MarginTrading.Backend.Controllers
             var canceledOrder = _tradingEngine.CancelPendingOrder(order.Id, reason, request.Comment);
 
             _consoleWriter.WriteLine(
-                $"action order.cancel for accountId = {order.AccountId}, orderId = {request.OrderId}");
+                $"action order.cancel for accountId = {order.AccountId}, orderId = {orderId}");
             _operationsLogService.AddLog("action order.cancel", order.ClientId, order.AccountId, request.ToJson(),
                 canceledOrder.ToJson());
             
             return Task.CompletedTask;
         }
 
+        /// <summary>
+        /// Change existion order
+        /// </summary>
+        /// <param name="orderId">Id of order to change</param>
+        /// <param name="request">Values to change</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
         [Route("{orderId}")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [HttpPut]

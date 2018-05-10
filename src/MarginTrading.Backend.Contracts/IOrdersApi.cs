@@ -17,8 +17,8 @@ namespace MarginTrading.Backend.Contracts
         [Put("/api/orders/{orderId}")]
         Task ChangeAsync(string orderId, [Body] OrderChangeRequest request);
 
-        [Delete("/api/orders")]
-        Task CancelAsync([Body] OrderCancelRequest request);
+        [Delete("/api/orders/{orderId}")]
+        Task CancelAsync(string orderId, [Body] OrderCancelRequest request);
 
     }
 }

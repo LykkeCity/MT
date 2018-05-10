@@ -76,12 +76,17 @@ namespace MarginTrading.Backend.Controllers
             _identityGenerator = identityGenerator;
         }
         
-        [Route("")]
+        /// <summary>
+        /// Close opened position
+        /// </summary>
+        /// <param name="positionId">Id of position</param>
+        /// <param name="request">Additional info for close</param>
+        [Route("{positionId}")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
-        [HttpPost]
-        public async Task CloseAsync([FromBody] PositionCloseRequest request)
+        [HttpDelete]
+        public async Task CloseAsync([FromRoute] string positionId, [FromBody] PositionCloseRequest request)
         {
-            if (!_ordersCache.ActiveOrders.TryGetOrderById(request.PositionId, out var order))
+            if (!_ordersCache.ActiveOrders.TryGetOrderById(positionId, out var order))
             {
                 throw new InvalidOperationException("Position not found");
             }
@@ -97,7 +102,7 @@ namespace MarginTrading.Backend.Controllers
                     ? OrderCloseReason.ClosedByBroker
                     : OrderCloseReason.Close;
 
-            order = await _tradingEngine.CloseActiveOrderAsync(request.PositionId, reason, request.Comment);
+            order = await _tradingEngine.CloseActiveOrderAsync(positionId, reason, request.Comment);
 
             if (order.Status != OrderStatus.Closed && order.Status != OrderStatus.Closing)
             {
@@ -105,9 +110,24 @@ namespace MarginTrading.Backend.Controllers
             }
 
             _consoleWriter.WriteLine(
-                $"action position.close, orderId = {request.PositionId}");
+                $"action position.close, orderId = {positionId}");
             _operationsLogService.AddLog("action order.close", order.ClientId, order.AccountId, request.ToJson(),
                 order.ToJson());
+        }
+
+        /// <summary>
+        /// Close group of opened positions by itrument and direction
+        /// </summary>
+        /// <param name="instrumentId">Positions instrument</param>
+        /// <param name="direction">Positions direction (Long or Short), optional</param>
+        /// <param name="request">Additional info for close</param>
+        [Route("instrument-group/{instrumentId}")]
+        [MiddlewareFilter(typeof(RequestLoggingPipeline))]
+        [HttpDelete]
+        public Task CloseGroupAsync([FromRoute] string instrumentId,
+            [FromBody] PositionCloseRequest request, [FromQuery] PositionDirectionContract? direction = null)
+        {
+            throw new NotImplementedException();
         }
     }
 }

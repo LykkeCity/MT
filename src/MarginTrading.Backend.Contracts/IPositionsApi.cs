@@ -11,8 +11,11 @@ namespace MarginTrading.Backend.Contracts
     [PublicAPI]
     public interface IPositionsApi
     {
-        [Delete("/api/positions")]
-        Task CloseAsync([Body] PositionCloseRequest request);
+        [Delete("/api/positions/{positionId}")]
+        Task CloseAsync(string positionId, PositionCloseRequest request);
 
+        [Delete("/api/positions/instrument-group/{instrumentId}")]
+        Task CloseGroupAsync(string instrument, PositionCloseRequest request,
+            PositionDirectionContract? direction = null);
     }
 }
