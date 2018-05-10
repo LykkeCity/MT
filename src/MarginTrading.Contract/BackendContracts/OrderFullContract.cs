@@ -14,10 +14,12 @@ namespace MarginTrading.Contract.BackendContracts
         public decimal MarginRate { get; set; }
         public decimal MarginInit { get; set; }
         public decimal MarginMaintenance { get; set; }
+        public DateTime UpdateTimestamp { get; set; }
         
         /// <summary>
         /// Business operation type which caused last change 
         /// </summary>
         public OrderUpdateTypeContract OrderUpdateType { get; set; }
+
     }
 }

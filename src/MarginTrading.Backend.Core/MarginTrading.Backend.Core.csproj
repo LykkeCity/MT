@@ -15,4 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\MarginTrading.Common\MarginTrading.Common.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Snow" />
+  </ItemGroup>
 </Project>

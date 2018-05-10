@@ -4,7 +4,7 @@ using MarginTrading.Contract.RabbitMqMessageModels;
 
 namespace MarginTrading.AzureRepositories.Snow.Trades
 {
-    public class TradeEntity : AzureTableEntity
+    internal class TradeEntity : AzureTableEntity, ITrade
     {
         public TradeEntity()
         {
@@ -20,7 +20,6 @@ namespace MarginTrading.AzureRepositories.Snow.Trades
         public string OrderId { get; set; }
         public string PositionId { get; set; }
         public string AccountId { get; set; }
-        public string ClientId { get; set; }
         public DateTime TradeTimestamp { get; set; }
         public string AssetPairId { get; set; }
         public TradeType Type { get; set; }
@@ -35,6 +34,22 @@ namespace MarginTrading.AzureRepositories.Snow.Trades
         public static string GetRowKey()
         {
             return "-";
+        }
+
+        public static TradeEntity Create(ITrade trade)
+        {
+            return new TradeEntity
+            {
+                AccountId = trade.AccountId,
+                AssetPairId = trade.AssetPairId,
+                Id = trade.Id,
+                OrderId = trade.OrderId,
+                PositionId = trade.PositionId,
+                Price = trade.Price,
+                TradeTimestamp = trade.TradeTimestamp,
+                Type = trade.Type,
+                Volume = trade.Volume,
+            };
         }
     }
 }

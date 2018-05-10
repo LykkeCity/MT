@@ -26,7 +26,7 @@ namespace MarginTrading.Backend.Contracts.Snow.Positions
         /// <summary>
         /// When the position was opened
         /// </summary>
-        public DateTime Timestamp { get; set; }
+        public DateTime OpenTimestamp { get; set; }
 
         /// <summary>
         /// The direction of the position

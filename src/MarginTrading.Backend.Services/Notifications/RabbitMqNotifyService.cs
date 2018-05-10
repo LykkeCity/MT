@@ -7,21 +7,25 @@ using Lykke.Service.ExchangeConnector.Client.Models;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Common.Services;
 using MarginTrading.Contract.RabbitMqMessageModels;
 
 namespace MarginTrading.Backend.Services.Notifications
 {
     public class RabbitMqNotifyService : IRabbitMqNotifyService
     {
+        private readonly IDateService _dateService;
         private readonly MarginSettings _settings;
         private readonly IIndex<string, IMessageProducer<string>> _publishers;
         private readonly ILog _log;
 
         public RabbitMqNotifyService(
+            IDateService dateService,
             MarginSettings settings,
             IIndex<string, IMessageProducer<string>> publishers,
             ILog log)
         {
+            _dateService = dateService;
             _settings = settings;
             _publishers = publishers;
             _log = log;

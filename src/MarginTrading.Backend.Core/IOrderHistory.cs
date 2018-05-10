@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
 
@@ -30,7 +31,7 @@ namespace MarginTrading.Backend.Core
         decimal CloseCommission { get; }
         decimal SwapCommission { get; }
         string EquivalentAsset { get; }
-        decimal OpenPriceEquivalent{ get; }
+        decimal OpenPriceEquivalent { get; }
         decimal ClosePriceEquivalent { get; }
         DateTime? StartClosingDate { get; }
         OrderStatus Status { get; }
@@ -49,17 +50,23 @@ namespace MarginTrading.Backend.Core
         decimal InterestRateSwap { get; }
         decimal MarginInit { get; }
         decimal MarginMaintenance { get; }
-        
+
         OrderUpdateType OrderUpdateType { get; }
-        
+
         string OpenExternalOrderId { get; }
         string OpenExternalProviderId { get; }
         string CloseExternalOrderId { get; }
         string CloseExternalProviderId { get; }
-        
+
         MatchingEngineMode MatchingEngineMode { get; }
-        string LegalEntity { get; }  
-        DateTime UpdateTimestamp { get; }  
+        string LegalEntity { get; }
+        DateTime UpdateTimestamp { get; }
+
+        [CanBeNull]
+        string ParentPositionId { get; }
+
+        [CanBeNull]
+        string ParentOrderId { get; }
     }
 
     public class OrderHistory : IOrderHistory
@@ -87,7 +94,7 @@ namespace MarginTrading.Backend.Core
         public decimal CloseCommission { get; set; }
         public decimal SwapCommission { get; set; }
         public string EquivalentAsset { get; set; }
-        public decimal OpenPriceEquivalent{ get; set; }
+        public decimal OpenPriceEquivalent { get; set; }
         public decimal ClosePriceEquivalent { get; set; }
         public DateTime? StartClosingDate { get; set; }
         public OrderStatus Status { get; set; }
@@ -113,5 +120,7 @@ namespace MarginTrading.Backend.Core
         public MatchingEngineMode MatchingEngineMode { get; set; }
         public string LegalEntity { get; set; }
         public DateTime UpdateTimestamp { get; set; }
+        public string ParentPositionId { get; set; }
+        public string ParentOrderId { get; set; }
     }
 }

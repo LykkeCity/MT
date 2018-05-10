@@ -51,7 +51,7 @@ namespace MarginTrading.DataReader.Controllers.Snow
             return new List<TradeContract> {Convert(await _tradesRepository.GetAsync(id))};
         }
 
-        private TradeContract Convert(TradeEntity tradeEntity)
+        private TradeContract Convert(ITrade tradeEntity)
         {
             return new TradeContract
             {

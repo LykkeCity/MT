@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.Orderbooks;
@@ -259,7 +260,8 @@ namespace MarginTrading.Backend.Core.Mappers
             };
         }
 
-        public static OrderFullContract ToFullContract(this IOrder src, OrderUpdateType orderUpdateType)
+        public static OrderFullContract ToFullContract(this IOrder src, OrderUpdateType orderUpdateType, 
+            DateTime updateTimestamp)
         {
             var orderContract = new OrderFullContract
             {
@@ -311,6 +313,7 @@ namespace MarginTrading.Backend.Core.Mappers
                 OrderUpdateType = orderUpdateType.ToType<OrderUpdateTypeContract>(),
                 MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>(),
                 LegalEntity = src.LegalEntity,
+                UpdateTimestamp = updateTimestamp,
             };
 
             foreach (var order in src.MatchedOrders)

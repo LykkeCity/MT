@@ -9,22 +9,20 @@ namespace MarginTrading.Backend.Contracts.Snow.Positions
     /// Gets info about positions
     /// </summary>
     [PublicAPI]
-    public interface IPositionsApi
+    public interface IOpenPositionsApi
     {
-        // todo: Querying a closed position should be moved to the history service?
-        // todo But in that case if we query this method with an already closed position id - it will not find the order.
         /// <summary>
         /// Get a position by id
         /// </summary>
-        [Get("/api/positions/{positionId}"), ItemCanBeNull]
+        [Get("/api/positions/open/{positionId}"), ItemCanBeNull]
         Task<OpenPositionContract> Get(string positionId);
 
         /// <summary>
-        /// Get open positions 
+        /// Get open positions with optional filtering
         /// </summary>
         [Get("/api/positions/open")]
-        Task<List<OpenPositionContract>> ListOpen([Query, CanBeNull] string accountId,
-            [Query, CanBeNull] string instrument);
+        Task<List<OpenPositionContract>> List([Query, CanBeNull] string accountId,
+            [Query, CanBeNull] string assetPairId);
 
         // todo: move to history?
 //        /// <summary>

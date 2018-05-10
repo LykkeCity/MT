@@ -34,7 +34,6 @@ namespace MarginTrading.OrderHistoryBroker
                 PositionId = trade.OrderId,
                 AccountId = trade.AccountId,
                 AssetPairId = trade.AssetPairId,
-                ClientId = trade.ClientId, //todo: remove client id?
                 Price = trade.Price,
                 Volume = trade.Volume,
                 TradeTimestamp = trade.Date,

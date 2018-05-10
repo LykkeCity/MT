@@ -87,6 +87,7 @@ namespace MarginTrading.Backend.Core.Mappers
                 CloseExternalProviderId = src.CloseExternalProviderId,
                 MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineMode>(),
                 LegalEntity = src.LegalEntity,
+                UpdateTimestamp = src.UpdateTimestamp,
             };
 
             foreach (var order in src.MatchedOrders)
