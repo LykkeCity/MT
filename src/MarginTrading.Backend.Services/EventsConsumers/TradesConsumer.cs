@@ -22,9 +22,10 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         {
             if (ea.Order.IsOpened())
             {
+                var tradeType = ea.Order.GetOrderType().ToType<TradeType>();
                 var trade = new TradeContract
                 {
-                    Id = Guid.NewGuid().ToString("N"),
+                    Id = ea.Order.Id + '_' + tradeType, // todo: fix ids?
                     AccountId = ea.Order.AccountId,
                     ClientId = ea.Order.ClientId,
                     OrderId = ea.Order.Id,
@@ -32,7 +33,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     Date = ea.Order.OpenDate.Value,
                     Price = ea.Order.OpenPrice,
                     Volume = ea.Order.MatchedOrders.SummaryVolume,
-                    Type = ea.Order.GetOrderType().ToType<TradeType>()
+                    Type = tradeType
                 };
 
                 _rabbitMqNotifyService.NewTrade(trade);
@@ -43,9 +44,10 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         {
             if (ea.Order.IsClosed())
             {
+                var tradeType = ea.Order.GetCloseType().ToType<TradeType>();
                 var trade = new TradeContract
                 {
-                    Id = Guid.NewGuid().ToString("N"),
+                    Id = ea.Order.Id + '_' + tradeType, // todo: fix ids?,
                     AccountId = ea.Order.AccountId,
                     ClientId = ea.Order.ClientId,
                     OrderId = ea.Order.Id,
@@ -53,7 +55,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     Date = ea.Order.CloseDate.Value,
                     Price = ea.Order.ClosePrice,
                     Volume = ea.Order.MatchedCloseOrders.SummaryVolume,
-                    Type = ea.Order.GetCloseType().ToType<TradeType>()
+                    Type = tradeType
                 };
 
                 _rabbitMqNotifyService.NewTrade(trade);

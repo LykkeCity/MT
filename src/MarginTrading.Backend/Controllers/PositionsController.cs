@@ -24,7 +24,6 @@ namespace MarginTrading.Backend.Controllers
     public class PositionsController : Controller, IPositionsApi
     {
         private readonly IMarginTradingAccountHistoryRepository _accountsHistoryRepository;
-        private readonly IMarginTradingOrdersHistoryRepository _ordersHistoryRepository;
         private readonly IMicrographCacheService _micrographCacheService;
         private readonly IAccountAssetsCacheService _accountAssetsCacheService;
         private readonly IAssetPairsCache _assetPairsCache;
@@ -42,7 +41,6 @@ namespace MarginTrading.Backend.Controllers
 
         public PositionsController(
             IMarginTradingAccountHistoryRepository accountsHistoryRepository,
-            IMarginTradingOrdersHistoryRepository ordersHistoryRepository,
             IMicrographCacheService micrographCacheService,
             IAccountAssetsCacheService accountAssetsCacheService,
             IAssetPairsCache assetPairsCache,
@@ -59,7 +57,6 @@ namespace MarginTrading.Backend.Controllers
             IIdentityGenerator identityGenerator)
         {
             _accountsHistoryRepository = accountsHistoryRepository;
-            _ordersHistoryRepository = ordersHistoryRepository;
             _micrographCacheService = micrographCacheService;
             _accountAssetsCacheService = accountAssetsCacheService;
             _assetPairsCache = assetPairsCache;

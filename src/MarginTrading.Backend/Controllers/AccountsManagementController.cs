@@ -123,7 +123,7 @@ namespace MarginTrading.Backend.Controllers
                         var orderUpdateType = o.Status == OrderStatus.Closing
                             ? OrderUpdateType.Closing
                             : OrderUpdateType.Close;
-                        return o.ToFullContract(orderUpdateType);
+                        return o.ToFullContract(orderUpdateType, _dateService.Now());
                     }).ToArray()
                 });
             }

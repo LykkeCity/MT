@@ -11,7 +11,6 @@ namespace MarginTrading.Backend.Services.Notifications
 			decimal withdrawTransferLimit, AccountHistoryType type, string comment = null, string eventSourceId = null, 
 			string auditLog = null);
 		Task OrderHistory(IOrder order, OrderUpdateType orderUpdateType);
-		Task OrderReject(IOrder order);
 		Task OrderBookPrice(InstrumentBidAskPair quote);
 		Task OrderChanged(IOrder order);
 		Task AccountUpdated(IMarginTradingAccount account);

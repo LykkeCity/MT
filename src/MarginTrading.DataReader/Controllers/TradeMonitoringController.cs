@@ -90,7 +90,7 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns opened positions</response>
         [HttpGet]
         [Route("openPositions/byVolume/{volume}")]
-        public async Task<List<OrderContract>> OpenPositionsByVolume([FromRoute]decimal volume)
+        public async Task<List<DetailedOrderContract>> OpenPositionsByVolume([FromRoute]decimal volume)
         {
             return (await _ordersSnapshotReaderService.GetActiveAsync())
                 .Where(order => order.GetMatchedVolume() >= volume)
@@ -108,7 +108,7 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns opened positions</response>
         [HttpGet]
         [Route("openPositions")]
-        public Task<List<OrderContract>> OpenPositions()
+        public Task<List<DetailedOrderContract>> OpenPositions()
         {
             return OpenPositionsByVolume(0);
         }
@@ -123,7 +123,7 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns opened positions</response>
         [HttpGet]
         [Route("openPositions/byDate")]
-        public async Task<List<OrderContract>> OpenPositionsByDate([FromQuery] DateTime from, [FromQuery] DateTime to)
+        public async Task<List<DetailedOrderContract>> OpenPositionsByDate([FromQuery] DateTime from, [FromQuery] DateTime to)
         {
             return (await _ordersSnapshotReaderService.GetActiveAsync())
                 .Where(order => order.OpenDate >= from.Date && order.OpenDate< to.Date)
@@ -141,7 +141,7 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns opened positions</response>
         [HttpGet]
         [Route("openPositions/byClient/{clientId}")]
-        public async Task<List<OrderContract>> OpenPositionsByClient([FromRoute]string clientId)
+        public async Task<List<DetailedOrderContract>> OpenPositionsByClient([FromRoute]string clientId)
         {
             return (await _ordersSnapshotReaderService.GetActiveAsync())
                 .Where(order => order.ClientId == clientId)
@@ -159,7 +159,7 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns pending orders</response>
         [HttpGet]
         [Route("pendingOrders/byVolume/{volume}")]
-        public async Task<List<OrderContract>> PendingOrdersByVolume([FromRoute]decimal volume)
+        public async Task<List<DetailedOrderContract>> PendingOrdersByVolume([FromRoute]decimal volume)
         {
             return (await _ordersSnapshotReaderService.GetPendingAsync())
                 .Where(order => Math.Abs(order.Volume) >= volume)
@@ -177,7 +177,7 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns pending orders</response>
         [HttpGet]
         [Route("pendingOrders")]
-        public Task<List<OrderContract>> PendingOrders()
+        public Task<List<DetailedOrderContract>> PendingOrders()
         {
             return PendingOrdersByVolume(0);
         }
@@ -192,7 +192,7 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns pending orders</response>
         [HttpGet]
         [Route("pendingOrders/byDate")]
-        public async Task<List<OrderContract>> PendingOrdersByDate([FromQuery] DateTime from, [FromQuery] DateTime to)
+        public async Task<List<DetailedOrderContract>> PendingOrdersByDate([FromQuery] DateTime from, [FromQuery] DateTime to)
         {
             return (await _ordersSnapshotReaderService.GetPendingAsync())
                 .Where(order => order.CreateDate >= from && order.CreateDate < to)
@@ -210,7 +210,7 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns pending orders</response>
         [HttpGet]
         [Route("pendingOrders/byClient/{clientId}")]
-        public async Task<List<OrderContract>> PendingOrdersByClient([FromRoute]string clientId)
+        public async Task<List<DetailedOrderContract>> PendingOrdersByClient([FromRoute]string clientId)
         {
             return (await _ordersSnapshotReaderService.GetPendingAsync())
                 .Where(order => order.ClientId == clientId)

@@ -43,7 +43,6 @@ namespace MarginTrading.Backend.Core.Mappers
             {
                 Id = src.Id,
                 Code = src.Code,
-                ClientId = src.ClientId,
                 AccountId = src.AccountId,
                 TradingConditionId = src.TradingConditionId,
                 AccountAssetId = src.AccountAssetId,
@@ -88,6 +87,7 @@ namespace MarginTrading.Backend.Core.Mappers
                 CloseExternalProviderId = src.CloseExternalProviderId,
                 MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineMode>(),
                 LegalEntity = src.LegalEntity,
+                UpdateTimestamp = src.UpdateTimestamp,
             };
 
             foreach (var order in src.MatchedOrders)

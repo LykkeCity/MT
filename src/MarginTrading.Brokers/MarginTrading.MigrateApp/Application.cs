@@ -6,6 +6,8 @@ using Common.Log;
 using Lykke.SettingsReader;
 using Lykke.SlackNotifications;
 using MarginTrading.AzureRepositories;
+using MarginTrading.AzureRepositories.Snow.OrdersHistory;
+using MarginTrading.Backend.Core;
 using MarginTrading.BrokerBase;
 using MarginTrading.BrokerBase.Settings;
 using MarginTrading.Contract.RabbitMqMessageModels;
@@ -57,17 +59,17 @@ namespace MarginTrading.MigrateApp
 
         private async Task ProcessOrders()
         {
-            var repository = AzureTableStorage<MarginTradingOrderHistoryEntity>.Create(
-                _reloadingManager.Nested(s => s.Db.MarginTradingConnString), "MarginTradingOrdersHistory", _logger);
-            (await repository.GetDataAsync())
-                .Where(a => string.IsNullOrWhiteSpace(a.OrderUpdateType) && a.Status != "Closed")
-                .GroupBy(a => a.PartitionKey)
-                .SelectMany(g => g.Batch(500))
-                .ForEach(batch =>
-                {
-                    repository.DeleteAsync(batch).GetAwaiter().GetResult();
-                    Console.WriteLine($"Deleted {batch.Count()} rows");
-                });
+//            var repository = AzureTableStorage<OrderHistoryEntity>.Create(
+//                _reloadingManager.Nested(s => s.Db.MarginTradingConnString), "MarginTradingOrdersHistory", _logger);
+//            (await repository.GetDataAsync())
+//                .Where(a => string.IsNullOrWhiteSpace(a.OrderUpdateType) && a.Status != "Closed")
+//                .GroupBy(a => a.PartitionKey)
+//                .SelectMany(g => g.Batch(500))
+//                .ForEach(batch =>
+//                {
+//                    repository.DeleteAsync(batch).GetAwaiter().GetResult();
+//                    Console.WriteLine($"Deleted {batch.Count()} rows");
+//                });
         }
     }
 }

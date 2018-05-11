@@ -13,7 +13,7 @@
     <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="2.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.ApplicationInsights.HostingStartup" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.0.0" />
-    <PackageReference Include="microsoft.aspnetcore.mvc" Version="2.0.0" />
+    <PackageReference Include="microsoft.aspnetcore.Mvc" Version="2.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.0.0" />
     <PackageReference Include="microsoft.extensions.configuration.binder" Version="2.0.0" />
     <PackageReference Include="microsoft.extensions.configuration.json" Version="2.0.0" />

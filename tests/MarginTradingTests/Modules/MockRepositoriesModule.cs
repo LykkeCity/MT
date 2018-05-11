@@ -32,7 +32,7 @@ namespace MarginTradingTests.Modules
             var meRoutesRepository = MarginTradingTestsUtils.GetPopulatedMatchingEngineRoutesRepository();
 
             var blobRepository = new Mock<IMarginTradingBlobRepository>();
-            var orderHistoryRepository = new Mock<IMarginTradingOrdersHistoryRepository>();
+            var orderHistoryRepository = new Mock<IOrdersHistoryRepository>();
             var riskSystemCommandsLogRepository = new Mock<IRiskSystemCommandsLogRepository>();
 
             builder.RegisterInstance(new LogToMemory()).As<ILog>();
@@ -50,7 +50,7 @@ namespace MarginTradingTests.Modules
 
             //mocks
             builder.RegisterInstance(blobRepository.Object).As<IMarginTradingBlobRepository>().SingleInstance();
-            builder.RegisterInstance(orderHistoryRepository.Object).As<IMarginTradingOrdersHistoryRepository>()
+            builder.RegisterInstance(orderHistoryRepository.Object).As<IOrdersHistoryRepository>()
                 .SingleInstance();
             builder.RegisterInstance(riskSystemCommandsLogRepository.Object).As<IRiskSystemCommandsLogRepository>()
                 .SingleInstance();

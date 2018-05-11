@@ -7,7 +7,7 @@ using Newtonsoft.Json.Converters;
 namespace MarginTrading.Backend.Contracts.TradeMonitoring
 {
 
-    public class OrderContract
+    public class DetailedOrderContract
     {
         public string Id { get; set; }
         public long Code { get; set; }

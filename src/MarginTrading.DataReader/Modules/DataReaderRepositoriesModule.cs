@@ -35,7 +35,7 @@ namespace MarginTrading.DataReader.Modules
                 AzureRepoFactories.MarginTrading.CreateAccountStatsRepository(_settings.Nested(s => s.Db.HistoryConnString), _log)
             ).SingleInstance();
 
-            builder.Register<IMarginTradingOrdersHistoryRepository>(ctx =>
+            builder.Register<IOrdersHistoryRepository>(ctx =>
                 AzureRepoFactories.MarginTrading.CreateOrdersHistoryRepository(_settings.Nested(s => s.Db.HistoryConnString), _log)
             ).SingleInstance();
 
@@ -65,6 +65,15 @@ namespace MarginTrading.DataReader.Modules
 
             builder.Register(ctx =>
                 AzureRepoFactories.MarginTrading.CreateAssetPairSettingsRepository(
+                    _settings.Nested(s => s.Db.MarginTradingConnString), _log, ctx.Resolve<IConvertService>())
+            ).SingleInstance();
+
+            builder.Register(ctx =>
+                AzureRepoFactories.MarginTrading.CreateTradesRepository(
+                    _settings.Nested(s => s.Db.HistoryConnString), _log, ctx.Resolve<IConvertService>())
+            ).SingleInstance();
+            builder.Register(ctx =>
+                AzureRepoFactories.MarginTrading.CreateOrdersByIdRepository(
                     _settings.Nested(s => s.Db.MarginTradingConnString), _log, ctx.Resolve<IConvertService>())
             ).SingleInstance();
         }

@@ -21,13 +21,14 @@ namespace MarginTrading.OrderHistoryBroker
 
         protected override void RegisterCustomServices(IServiceCollection services, ContainerBuilder builder, IReloadingManager<Settings> settings, ILog log, bool isLive)
         {
-            builder.RegisterType<Application>().As<IBrokerApplication>().SingleInstance();
+            builder.RegisterType<OrderHistoryApplication>().As<IBrokerApplication>().SingleInstance();
+            builder.RegisterType<TradesApplication>().As<IBrokerApplication>().SingleInstance();
 
-            builder.Register<IMarginTradingOrdersHistoryRepository>(ctx =>
+            builder.Register<IOrdersHistoryRepository>(ctx =>
                 AzureRepoFactories.MarginTrading.CreateOrdersHistoryRepository(settings.Nested(s => s.Db.HistoryConnString), log)
             ).SingleInstance();
-            builder.Register<IMarginTradingOrdersHistoryRepository>(ctx =>
-                new MarginTradingOrdersHistorySqlRepository(settings.CurrentValue, log)
+            builder.Register<IOrdersHistoryRepository>(ctx =>
+                new OrdersHistorySqlRepository(settings.CurrentValue, log)
             ).SingleInstance();
         }
     }

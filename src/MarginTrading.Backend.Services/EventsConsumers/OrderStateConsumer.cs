@@ -45,6 +45,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 			switch (ea.UpdateType)
 			{
 				case OrderUpdateType.Closing:
+				case OrderUpdateType.Reject:
 					break;
 				case OrderUpdateType.Activate:
 				case OrderUpdateType.Place:
@@ -52,9 +53,6 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 					break;
 				case OrderUpdateType.Cancel:
 					OnCancelled(ea);
-					break;
-				case OrderUpdateType.Reject:
-					OnRejected(ea);
 					break;
 				case OrderUpdateType.Close:
 					OnClosed(ea);
@@ -68,11 +66,6 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 		}
 
 		int IEventConsumer.ConsumerRank => 100;
-
-		private void OnRejected(OrderUpdateBaseEventArgs ea)
-		{
-			_rabbitMqNotifyService.OrderReject(ea.Order);
-		}
 
 		private void OnClosed(OrderUpdateBaseEventArgs ea)
 		{
