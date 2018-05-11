@@ -44,9 +44,14 @@ namespace MarginTrading.Backend.Core.Mappers
             return true;
         }
 
-        public static Order Deserialize(this HashEntry hashEntry)
+        public static T Deserialize<T>(this HashEntry hashEntry)
         {
-            return CacheSerializer.Deserialize<Order>(hashEntry.Value);
+            return CacheSerializer.Deserialize<T>(hashEntry.Value);
+        }
+
+        public static T Deserialize<T>(this RedisValue redisValue)
+        {
+            return CacheSerializer.Deserialize<T>(redisValue);
         }
     }
 }

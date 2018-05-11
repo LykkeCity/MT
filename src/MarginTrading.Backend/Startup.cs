@@ -99,13 +99,6 @@ namespace MarginTrading.Backend
                 mtSettings.Nested(s => isLive ? s.RiskInformingSettings : s.RiskInformingSettingsDemo);
 
             Console.WriteLine($"IsLive: {settings.CurrentValue.IsLive}");
-            /*
-            services.AddDistributedRedisCache(options =>
-            {
-                options.Configuration = settings.CurrentValue.RedisSettings.RedisConfiguration;
-                options.InstanceName = settings.CurrentValue.RedisSettings.InstanceName;
-            });
-            */
 
             SetupLoggers(services, mtSettings, settings);
 
@@ -115,11 +108,11 @@ namespace MarginTrading.Backend
             
             ApplicationContainer = builder.Build();
 
-            MtServiceLocator.FplService = ApplicationContainer.Resolve<IFplService>();
+            /*MtServiceLocator.FplService = ApplicationContainer.Resolve<IFplService>();
             MtServiceLocator.AccountUpdateService = ApplicationContainer.Resolve<IAccountUpdateService>();
             MtServiceLocator.AccountsCacheService = ApplicationContainer.Resolve<IAccountsCacheService>();
             MtServiceLocator.SwapCommissionService = ApplicationContainer.Resolve<ICommissionService>();
-            MtServiceLocator.OvernightSwapService = ApplicationContainer.Resolve<IOvernightSwapService>();
+            MtServiceLocator.OvernightSwapService = ApplicationContainer.Resolve<IOvernightSwapService>();*/
 
             return new AutofacServiceProvider(ApplicationContainer);
         }
@@ -176,6 +169,15 @@ namespace MarginTrading.Backend
             builder.RegisterModule(new ExternalServicesModule(mtSettings));
             builder.RegisterModule(new BackendMigrationsModule());
 
+            builder.RegisterBuildCallback(c =>
+            {
+                MtServiceLocator.FplService = c.Resolve<IFplService>();
+                MtServiceLocator.AccountUpdateService = c.Resolve<IAccountUpdateService>();
+                MtServiceLocator.AccountsCacheService = c.Resolve<IAccountsCacheService>();
+                MtServiceLocator.SwapCommissionService = c.Resolve<ICommissionService>();
+                MtServiceLocator.OvernightSwapService = c.Resolve<IOvernightSwapService>();
+            });
+            
             builder.RegisterBuildCallback(c => c.Resolve<AccountAssetsManager>());
             builder.RegisterBuildCallback(c => c.Resolve<OrderBookSaveService>());
             builder.RegisterBuildCallback(c => c.Resolve<MicrographManager>());

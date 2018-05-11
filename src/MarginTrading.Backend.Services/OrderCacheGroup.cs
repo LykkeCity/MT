@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Messages;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Common.Json;
 using StackExchange.Redis;
 using Order = MarginTrading.Backend.Core.Order;
@@ -14,7 +15,7 @@ namespace MarginTrading.Backend.Services
 {
     public class OrderCacheGroup : IOrderCacheGroup
     {
-        private const string RedisPartitionKey = ":Orders:";
+        private string RedisPartitionKey { get; set; }
         private string RedisRouteKey { get; set; }
 
         private string OrdersByIdKey { get; set; }
@@ -29,11 +30,13 @@ namespace MarginTrading.Backend.Services
         
         private readonly SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1, 1);
 
-        public OrderCacheGroup(IDatabase database, OrderStatus status)
+        public OrderCacheGroup(IDatabase database, OrderStatus status, MarginSettings marginSettings)
         {
             Database = database;
             Status = status;
-            
+
+            var env = marginSettings.IsLive ? "Live" : "Demo";
+            RedisPartitionKey = $":Orders{env}:";
             RedisRouteKey = SelectRedisKey(status);
             OrdersByIdKey = GetCacheKey("OrdersById:");
             OrderIdsByAccountIdKey = GetCacheKey("OrderIdsByAccountId:");
@@ -129,19 +132,18 @@ namespace MarginTrading.Backend.Services
 
             try
             {
+                var orderIdSerialized = CacheSerializer.Serialize(order.Id);
+                
                 await Database.HashSetAsync(OrdersByIdKey, order.Id, order.Serialize());
-
-                await Database.SetAddAsync($"{OrderIdsByInstrumentIdKey}:{order.Instrument}", order.Id);
-
-                await Database.SetAddAsync($"{OrderIdsByAccountIdKey}:{order.AccountId}", order.Id);
-
+                await Database.SetAddAsync($"{OrderIdsByInstrumentIdKey}:{order.Instrument}", orderIdSerialized);
+                await Database.SetAddAsync($"{OrderIdsByAccountIdKey}:{order.AccountId}", orderIdSerialized);
                 await Database.SetAddAsync(
                     $"{OrderIdsByAccountIdAndInstrumentIdKey}:{GetAccountInstrumentCacheKey(order.AccountId, order.Instrument)}",
-                    order.Id);
+                    orderIdSerialized);
 
                 if (!string.IsNullOrEmpty(order.MarginCalcInstrument))
                 {
-                    await Database.SetAddAsync($"{OrderIdsByMarginInstrumentIdKey}:{order.MarginCalcInstrument}", order.Id);
+                    await Database.SetAddAsync($"{OrderIdsByMarginInstrumentIdKey}:{order.MarginCalcInstrument}", orderIdSerialized);
                 }
             }
             finally
@@ -161,15 +163,17 @@ namespace MarginTrading.Backend.Services
             {
                 if (await Database.HashDeleteAsync(OrdersByIdKey, order.Id))
                 {
-                    await Database.SetRemoveAsync($"{OrderIdsByInstrumentIdKey}:{order.Instrument}", order.Id);
-                    await Database.SetRemoveAsync($"{OrderIdsByAccountIdKey}:{order.AccountId}", order.Id);
+                    var orderIdSerialized = CacheSerializer.Serialize(order.Id);
+                        
+                    await Database.SetRemoveAsync($"{OrderIdsByInstrumentIdKey}:{order.Instrument}", orderIdSerialized);
+                    await Database.SetRemoveAsync($"{OrderIdsByAccountIdKey}:{order.AccountId}", orderIdSerialized);
                     await Database.SetRemoveAsync(
                         $"{OrderIdsByAccountIdAndInstrumentIdKey}:{GetAccountInstrumentCacheKey(order.AccountId, order.Instrument)}",
-                        order.Id);
+                        orderIdSerialized);
 
                     if (!string.IsNullOrEmpty(order.MarginCalcInstrument))
                     {
-                        await Database.SetRemoveAsync($"{OrderIdsByMarginInstrumentIdKey}:{order.MarginCalcInstrument}", order.Id);
+                        await Database.SetRemoveAsync($"{OrderIdsByMarginInstrumentIdKey}:{order.MarginCalcInstrument}", orderIdSerialized);
                     }
                 }
                 else
@@ -224,7 +228,7 @@ namespace MarginTrading.Backend.Services
             {
                 //TODO optimize
                 var orderIdsData = Database.SetMembers($"{OrderIdsByInstrumentIdKey}:{instrument}");
-                var orderIds = orderIdsData.Select(x => CacheSerializer.Deserialize<string>(x)).ToList();
+                var orderIds = orderIdsData.Select(x => x.Deserialize<string>()).ToList();
                 var orders = orderIds.Select(x =>
                 {
                     var data = Database.HashGet(OrdersByIdKey, x);
@@ -250,7 +254,7 @@ namespace MarginTrading.Backend.Services
             {
                 //TODO optimize
                 var orderIdsData = Database.SetMembers($"{OrderIdsByMarginInstrumentIdKey}:{instrument}");
-                var orderIds = orderIdsData.Select(x => CacheSerializer.Deserialize<string>(x)).ToList();
+                var orderIds = orderIdsData.Select(x => x.Deserialize<string>()).ToList();
                 var orders = orderIds.Select(x =>
                 {
                     var data = Database.HashGet(OrdersByIdKey, x);
@@ -282,7 +286,7 @@ namespace MarginTrading.Backend.Services
                 //TODO optimize
                 var orderIdsData = Database.SetMembers(
                     $"{OrderIdsByAccountIdAndInstrumentIdKey}:{GetAccountInstrumentCacheKey(accountId, instrument)}");
-                var orderIds = orderIdsData.Select(x => CacheSerializer.Deserialize<string>(x)).ToList();
+                var orderIds = orderIdsData.Select(x => x.Deserialize<string>()).ToList();
                 var orders = orderIds.Select(x =>
                 {
                     var data = Database.HashGet(OrdersByIdKey, x);
@@ -305,7 +309,7 @@ namespace MarginTrading.Backend.Services
             {
                 //TODO optimize
                 var ordersData = Database.HashGetAll(OrdersByIdKey);
-                var orders = ordersData.Select(x => x.Deserialize()).ToList();
+                var orders = ordersData.Select(x => x.Deserialize<Order>()).ToList();
                 return orders;
             }
             finally
@@ -326,7 +330,7 @@ namespace MarginTrading.Backend.Services
                     //TODO optimize
                     //todo maybe it's faster to grab $"{OrderIdsByAccountIdKey}:" and sort locally... depends on cases
                     var orderIdsData = Database.SetMembers($"{OrderIdsByAccountIdKey}:{accountId}");
-                    var orderIds = orderIdsData.Select(x => CacheSerializer.Deserialize<string>(x)).ToList();
+                    var orderIds = orderIdsData.Select(x => x.Deserialize<string>()).ToList();
                     var orders = orderIds.Select(x =>
                     {
                         var data = Database.HashGet(OrdersByIdKey, x);
