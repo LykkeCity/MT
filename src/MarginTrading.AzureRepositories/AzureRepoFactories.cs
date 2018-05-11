@@ -4,6 +4,7 @@ using Lykke.SettingsReader;
 using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.AzureRepositories.Entities;
 using MarginTrading.AzureRepositories.Logs;
+using MarginTrading.AzureRepositories.Snow.OrdersById;
 using MarginTrading.AzureRepositories.Snow.OrdersHistory;
 using MarginTrading.AzureRepositories.Snow.Trades;
 using MarginTrading.Backend.Core;
@@ -43,6 +44,12 @@ namespace MarginTrading.AzureRepositories
                 IConvertService resolve)
             {
                 return new TradesRepository(AzureTableStorage<TradeEntity>.Create(connString, "Trades", log));
+            }
+
+            public static IOrdersByIdRepository CreateOrdersByIdRepository(IReloadingManager<string> connString, ILog log,
+                IConvertService resolve)
+            {
+                return new OrdersByIdRepository(AzureTableStorage<OrderByIdEntity>.Create(connString, "OrdersById", log));
             }
 
             public static MarginTradingAccountHistoryRepository CreateAccountHistoryRepository(IReloadingManager<string> connString, ILog log)

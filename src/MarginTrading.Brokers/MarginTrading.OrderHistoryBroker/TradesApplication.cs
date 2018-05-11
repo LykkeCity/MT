@@ -27,18 +27,8 @@ namespace MarginTrading.OrderHistoryBroker
 
         protected override Task HandleMessage(TradeContract trade)
         {
-            return _tradesRepository.UpsertAsync(new TradeEntity
-            {
-                Id = trade.Id,
-                OrderId = trade.OrderId,
-                PositionId = trade.OrderId,
-                AccountId = trade.AccountId,
-                AssetPairId = trade.AssetPairId,
-                Price = trade.Price,
-                Volume = trade.Volume,
-                TradeTimestamp = trade.Date,
-                Type = trade.Type,
-            });
+            return _tradesRepository.UpsertAsync(new Trade(trade.Id, trade.OrderId, trade.OrderId, trade.AccountId,
+                trade.Date, trade.AssetPairId, trade.Type, trade.Volume, trade.Price));
         }
     }
 }
