@@ -2,115 +2,182 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Messages;
+using MarginTrading.Common.Json;
+using StackExchange.Redis;
+using Order = MarginTrading.Backend.Core.Order;
 
 namespace MarginTrading.Backend.Services
 {
-    public class OrderCacheGroup
+    public class OrderCacheGroup : IOrderCacheGroup
     {
-        private readonly Dictionary<string, Order> _ordersById;
-        private readonly Dictionary<string, HashSet<string>> _orderIdsByAccountId;
-        private readonly Dictionary<string, HashSet<string>> _orderIdsByInstrumentId;
-        private readonly Dictionary<(string, string), HashSet<string>> _orderIdsByAccountIdAndInstrumentId;
-        private readonly Dictionary<string, HashSet<string>> _orderIdsByMarginInstrumentId;
-        private readonly OrderStatus _status;
-        private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
+        private const string RedisPartitionKey = ":Orders:";
+        private string RedisRouteKey { get; set; }
 
-        public OrderCacheGroup(IReadOnlyCollection<Order> orders, OrderStatus status)
+        private string OrdersByIdKey { get; set; }
+        private string OrderIdsByAccountIdKey { get; set; }
+        private string OrderIdsByInstrumentIdKey { get; set; }
+        private string OrderIdsByAccountIdAndInstrumentIdKey { get; set; }
+        private string OrderIdsByMarginInstrumentIdKey { get; set; }
+        
+        private IDatabase Database { get; set; }
+        
+        public OrderStatus Status { get; }
+        
+        private readonly SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1, 1);
+
+        public OrderCacheGroup(IDatabase database, OrderStatus status)
         {
-            _status = status;
+            Database = database;
+            Status = status;
+            
+            RedisRouteKey = SelectRedisKey(status);
+            OrdersByIdKey = GetCacheKey("OrdersById:");
+            OrderIdsByAccountIdKey = GetCacheKey("OrderIdsByAccountId:");
+            OrderIdsByInstrumentIdKey = GetCacheKey("OrderIdsByInstrumentId:");
+            OrderIdsByAccountIdAndInstrumentIdKey = GetCacheKey("OrderIdsByAccountIdAndInstrumentId:");
+            OrderIdsByMarginInstrumentIdKey = GetCacheKey("OrderIdsByMarginInstrumentId:");
+        }
 
-            var statusOrders = orders.Where(x => x.Status == status).ToList();
+        public IOrderCacheGroup Init(IReadOnlyCollection<Order> orders)
+        {
+            var statusOrders = orders.Where(x => x.Status == Status).ToList();
 
-            _lockSlim.EnterWriteLock();
+            InitAsync(statusOrders).GetAwaiter().GetResult();
+
+            return this;
+        }
+
+        private string GetCacheKey(string id)
+        {
+            return $"{RedisPartitionKey}{RedisRouteKey}{id}";
+        }
+
+        private static string SelectRedisKey(OrderStatus status)
+        {
+            switch (status)
+            {
+                case OrderStatus.WaitingForExecution:
+                    return "Pending:";
+                case OrderStatus.Active:
+                    return "Open:";
+                case OrderStatus.Closing:
+                    return "Closing:";
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(status), status, null);
+            }
+            return null;
+        }
+
+        private async Task InitAsync(IReadOnlyCollection<Order> statusOrders)
+        {
+            await _semaphoreSlim.WaitAsync();
 
             try
             {
-                _ordersById = statusOrders.ToDictionary(x => x.Id);
+                await Database.HashSetAsync(OrdersByIdKey, statusOrders.Serialize(x => x.Id));
 
-                _orderIdsByInstrumentId = statusOrders.GroupBy(x => x.Instrument)
+                //TODO may be optimized to query data concurrently + throttled by SemaphoreSlim
+                var orderIdsByInstrumentId = statusOrders.GroupBy(x => x.Instrument)
                     .ToDictionary(x => x.Key, x => x.Select(o => o.Id).ToHashSet());
+                foreach (var kvp in orderIdsByInstrumentId)
+                {
+                    await Database.SetAddAsync($"{OrderIdsByInstrumentIdKey}:{kvp.Key}",
+                        kvp.Value.Serialize());
+                }
 
-                _orderIdsByAccountId = statusOrders.GroupBy(x => x.AccountId)
+                var orderIdsByAccountId = statusOrders.GroupBy(x => x.AccountId)
                     .ToDictionary(x => x.Key, x => x.Select(o => o.Id).ToHashSet());
+                foreach (var kvp in orderIdsByAccountId)
+                {
+                    await Database.SetAddAsync($"{OrderIdsByAccountIdKey}:{kvp.Key}",
+                        kvp.Value.Serialize());
+                }
 
-                _orderIdsByAccountIdAndInstrumentId = statusOrders.GroupBy(x => GetAccountInstrumentCacheKey(x.AccountId, x.Instrument))
+                var orderIdsByAccountIdAndInstrumentId = statusOrders
+                    .GroupBy(x => GetAccountInstrumentCacheKey(x.AccountId, x.Instrument))
                     .ToDictionary(x => x.Key, x => x.Select(o => o.Id).ToHashSet());
+                foreach (var kvp in orderIdsByAccountIdAndInstrumentId)
+                {
+                    await Database.SetAddAsync($"{OrderIdsByAccountIdAndInstrumentIdKey}:{kvp.Key}",
+                        kvp.Value.Serialize());
+                }
 
-                _orderIdsByMarginInstrumentId = statusOrders.Where(x => !string.IsNullOrEmpty(x.MarginCalcInstrument))
+                var orderIdsByMarginInstrumentId = statusOrders.Where(x => !string.IsNullOrEmpty(x.MarginCalcInstrument))
                     .GroupBy(x => x.MarginCalcInstrument)
                     .ToDictionary(x => x.Key, x => x.Select(o => o.Id).ToHashSet());
+                foreach (var kvp in orderIdsByMarginInstrumentId)
+                {
+                    await Database.SetAddAsync($"{OrderIdsByMarginInstrumentIdKey}:{kvp.Key}",
+                        kvp.Value.Serialize());
+                }
             }
             finally 
             {
-                _lockSlim.ExitWriteLock();
-            }
+                _semaphoreSlim.Release();
+            } 
         }
-
 
         #region Setters
 
-        public void Add(Order order)
+        public async Task AddAsync(Order order)
         {
-            _lockSlim.EnterWriteLock();
+            await _semaphoreSlim.WaitAsync();
 
             try
             {
-                _ordersById.Add(order.Id, order);
+                await Database.HashSetAsync(OrdersByIdKey, order.Id, order.Serialize());
 
-                if (!_orderIdsByAccountId.ContainsKey(order.AccountId))
-                    _orderIdsByAccountId.Add(order.AccountId, new HashSet<string>());
-                _orderIdsByAccountId[order.AccountId].Add(order.Id);
+                await Database.SetAddAsync($"{OrderIdsByInstrumentIdKey}:{order.Instrument}", order.Id);
 
-                if (!_orderIdsByInstrumentId.ContainsKey(order.Instrument))
-                    _orderIdsByInstrumentId.Add(order.Instrument, new HashSet<string>());
-                _orderIdsByInstrumentId[order.Instrument].Add(order.Id);
+                await Database.SetAddAsync($"{OrderIdsByAccountIdKey}:{order.AccountId}", order.Id);
 
-                var accountInstrumentCacheKey = GetAccountInstrumentCacheKey(order.AccountId, order.Instrument);
-
-                if (!_orderIdsByAccountIdAndInstrumentId.ContainsKey(accountInstrumentCacheKey))
-                    _orderIdsByAccountIdAndInstrumentId.Add(accountInstrumentCacheKey, new HashSet<string>());
-                _orderIdsByAccountIdAndInstrumentId[accountInstrumentCacheKey].Add(order.Id);
+                await Database.SetAddAsync(
+                    $"{OrderIdsByAccountIdAndInstrumentIdKey}:{GetAccountInstrumentCacheKey(order.AccountId, order.Instrument)}",
+                    order.Id);
 
                 if (!string.IsNullOrEmpty(order.MarginCalcInstrument))
                 {
-                    if(!_orderIdsByMarginInstrumentId.ContainsKey(order.MarginCalcInstrument))
-                        _orderIdsByMarginInstrumentId.Add(order.MarginCalcInstrument, new HashSet<string>());
-                    _orderIdsByMarginInstrumentId[order.MarginCalcInstrument].Add(order.Id);
+                    await Database.SetAddAsync($"{OrderIdsByMarginInstrumentIdKey}:{order.MarginCalcInstrument}", order.Id);
                 }
             }
             finally
             {
-                _lockSlim.ExitWriteLock();
+                _semaphoreSlim.Release();
             }
 
             var account = MtServiceLocator.AccountsCacheService.Get(order.ClientId, order.AccountId);
             account.CacheNeedsToBeUpdated();
         }
 
-        public void Remove(Order order)
+        public async Task RemoveAsync(Order order)
         {
-            _lockSlim.EnterWriteLock();
+            await _semaphoreSlim.WaitAsync();
 
             try
             {
-                if (_ordersById.Remove(order.Id))
+                if (await Database.HashDeleteAsync(OrdersByIdKey, order.Id))
                 {
-                    _orderIdsByInstrumentId[order.Instrument].Remove(order.Id);
-                    _orderIdsByAccountId[order.AccountId].Remove(order.Id);
-                    _orderIdsByAccountIdAndInstrumentId[GetAccountInstrumentCacheKey(order.AccountId, order.Instrument)].Remove(order.Id);
+                    await Database.SetRemoveAsync($"{OrderIdsByInstrumentIdKey}:{order.Instrument}", order.Id);
+                    await Database.SetRemoveAsync($"{OrderIdsByAccountIdKey}:{order.AccountId}", order.Id);
+                    await Database.SetRemoveAsync(
+                        $"{OrderIdsByAccountIdAndInstrumentIdKey}:{GetAccountInstrumentCacheKey(order.AccountId, order.Instrument)}",
+                        order.Id);
 
-                    if (!string.IsNullOrEmpty(order.MarginCalcInstrument)
-                        && (_orderIdsByMarginInstrumentId[order.MarginCalcInstrument]?.Contains(order.Id) ?? false))
-                        _orderIdsByMarginInstrumentId[order.MarginCalcInstrument].Remove(order.Id);
+                    if (!string.IsNullOrEmpty(order.MarginCalcInstrument))
+                    {
+                        await Database.SetRemoveAsync($"{OrderIdsByMarginInstrumentIdKey}:{order.MarginCalcInstrument}", order.Id);
+                    }
                 }
                 else
-                    throw new Exception(string.Format(MtMessages.CantRemoveOrderWithStatus, order.Id, _status));
+                    throw new Exception(string.Format(MtMessages.CantRemoveOrderWithStatus, order.Id, Status));
             }
             finally
             {
-                _lockSlim.ExitWriteLock();
+                _semaphoreSlim.Release();
             }
 
             var account = MtServiceLocator.AccountsCacheService?.Get(order.ClientId, order.AccountId);
@@ -127,26 +194,22 @@ namespace MarginTrading.Backend.Services
             if (TryGetOrderById(orderId, out var result))
                 return result;
 
-            throw new Exception(string.Format(MtMessages.CantGetOrderWithStatus, orderId, _status));
+            throw new Exception(string.Format(MtMessages.CantGetOrderWithStatus, orderId, Status));
         }
 
         public bool TryGetOrderById(string orderId, out Order result)
         {
-            _lockSlim.EnterReadLock();
+            _semaphoreSlim.Wait();
 
             try
             {
-                if (!_ordersById.ContainsKey(orderId))
-                {
-                    result = null;
-                    return false;
-                }
-                result = _ordersById[orderId];
-                return true;
+                //TODO must be substituted with async version
+                var data = Database.HashGet(OrdersByIdKey, orderId);
+                return data.TryDeserialize(out result);
             }
             finally
             {
-                _lockSlim.ExitReadLock();
+                _semaphoreSlim.Release();
             }
         }
 
@@ -155,18 +218,24 @@ namespace MarginTrading.Backend.Services
             if (string.IsNullOrWhiteSpace(instrument))
                 throw new ArgumentException(nameof(instrument));
 
-            _lockSlim.EnterReadLock();
+            _semaphoreSlim.Wait();
 
             try
             {
-                if (!_orderIdsByInstrumentId.ContainsKey(instrument))
-                    return new List<Order>();
-
-                return _orderIdsByInstrumentId[instrument].Select(id => _ordersById[id]).ToList();
+                //TODO optimize
+                var orderIdsData = Database.SetMembers($"{OrderIdsByInstrumentIdKey}:{instrument}");
+                var orderIds = orderIdsData.Select(x => CacheSerializer.Deserialize<string>(x)).ToList();
+                var orders = orderIds.Select(x =>
+                {
+                    var data = Database.HashGet(OrdersByIdKey, x);
+                    data.TryDeserialize(out var result);
+                    return result;
+                }).ToList();
+                return orders;
             }
             finally
             {
-                _lockSlim.ExitReadLock();
+                _semaphoreSlim.Release();
             }
         }
 
@@ -175,18 +244,24 @@ namespace MarginTrading.Backend.Services
             if (string.IsNullOrWhiteSpace(instrument))
                 throw new ArgumentException(nameof(instrument));
 
-            _lockSlim.EnterReadLock();
+            _semaphoreSlim.Wait();
 
             try
             {
-                if (!_orderIdsByMarginInstrumentId.ContainsKey(instrument))
-                    return new List<Order>();
-
-                return _orderIdsByMarginInstrumentId[instrument].Select(id => _ordersById[id]).ToList();
+                //TODO optimize
+                var orderIdsData = Database.SetMembers($"{OrderIdsByMarginInstrumentIdKey}:{instrument}");
+                var orderIds = orderIdsData.Select(x => CacheSerializer.Deserialize<string>(x)).ToList();
+                var orders = orderIds.Select(x =>
+                {
+                    var data = Database.HashGet(OrdersByIdKey, x);
+                    data.TryDeserialize(out var result);
+                    return result;
+                }).ToList();
+                return orders;
             }
             finally
             {
-                _lockSlim.ExitReadLock();
+                _semaphoreSlim.Release();
             }
         }
 
@@ -200,57 +275,73 @@ namespace MarginTrading.Backend.Services
 
             var key = GetAccountInstrumentCacheKey(accountId, instrument);
 
-            _lockSlim.EnterReadLock();
+            _semaphoreSlim.Wait();
 
             try
             {
-                if (!_orderIdsByAccountIdAndInstrumentId.ContainsKey(key))
-                    return new List<Order>();
-
-                return _orderIdsByAccountIdAndInstrumentId[key].Select(id => _ordersById[id]).ToList();
+                //TODO optimize
+                var orderIdsData = Database.SetMembers(
+                    $"{OrderIdsByAccountIdAndInstrumentIdKey}:{GetAccountInstrumentCacheKey(accountId, instrument)}");
+                var orderIds = orderIdsData.Select(x => CacheSerializer.Deserialize<string>(x)).ToList();
+                var orders = orderIds.Select(x =>
+                {
+                    var data = Database.HashGet(OrdersByIdKey, x);
+                    data.TryDeserialize(out var result);
+                    return result;
+                }).ToList();
+                return orders;
             }
             finally
             {
-                _lockSlim.ExitReadLock();
+                _semaphoreSlim.Release();
             }
         }
 
         public IReadOnlyCollection<Order> GetAllOrders()
         {
-            _lockSlim.EnterReadLock();
+            _semaphoreSlim.Wait();
 
             try
             {
-                return _ordersById.Values;
+                //TODO optimize
+                var ordersData = Database.HashGetAll(OrdersByIdKey);
+                var orders = ordersData.Select(x => x.Deserialize()).ToList();
+                return orders;
             }
             finally
             {
-                _lockSlim.ExitReadLock();
+                _semaphoreSlim.Release();
             }
         }
 
         public ICollection<Order> GetOrdersByAccountIds(params string[] accountIds)
         {
-            _lockSlim.EnterReadLock();
-
-            var result = new List<Order>();
+            _semaphoreSlim.Wait();
 
             try
             {
+                var result = new List<Order>();
                 foreach (var accountId in accountIds)
                 {
-                    if (!_orderIdsByAccountId.ContainsKey(accountId))
-                        continue;
-
-                    foreach (var orderId in _orderIdsByAccountId[accountId])
-                        result.Add(_ordersById[orderId]);
+                    //TODO optimize
+                    //todo maybe it's faster to grab $"{OrderIdsByAccountIdKey}:" and sort locally... depends on cases
+                    var orderIdsData = Database.SetMembers($"{OrderIdsByAccountIdKey}:{accountId}");
+                    var orderIds = orderIdsData.Select(x => CacheSerializer.Deserialize<string>(x)).ToList();
+                    var orders = orderIds.Select(x =>
+                    {
+                        var data = Database.HashGet(OrdersByIdKey, x);
+                        data.TryDeserialize(out var deserializedOrder);
+                        return deserializedOrder;
+                    }).ToList();
+                    
+                    result.AddRange(orders);
                 }
 
                 return result;
             }
             finally
             {
-                _lockSlim.ExitReadLock();
+                _semaphoreSlim.Release();
             }
         }
         #endregion

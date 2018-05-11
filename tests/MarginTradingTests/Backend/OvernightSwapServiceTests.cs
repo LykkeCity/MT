@@ -98,7 +98,7 @@ namespace MarginTradingTests.Backend
 
 			var accountId = (await _fakeMarginTradingAccountsRepository.GetAllAsync("1"))
 				.First(x => x.ClientId == "1" && x.BaseAssetId == "USD").Id;
-			_ordersCache.ActiveOrders.Add(new Order
+			_ordersCache.ActiveOrders.AddAsync(new Order
 			{
 				Id = "1",
 				AccountId = accountId,
@@ -143,7 +143,7 @@ namespace MarginTradingTests.Backend
 			
 			var accountId = (await _fakeMarginTradingAccountsRepository.GetAllAsync("1"))
 				.First(x => x.ClientId == "1" && x.BaseAssetId == "CHF").Id;
-			_ordersCache.ActiveOrders.Add(new Order
+			_ordersCache.ActiveOrders.AddAsync(new Order
 			{
 				Id = "1",
 				AccountId = accountId,
@@ -174,7 +174,7 @@ namespace MarginTradingTests.Backend
 
 			var accountId = (await _fakeMarginTradingAccountsRepository.GetAllAsync("1"))
 				.First(x => x.ClientId == "1" && x.BaseAssetId == "EUR").Id;
-			_ordersCache.ActiveOrders.Add(new Order
+			_ordersCache.ActiveOrders.AddAsync(new Order
 			{
 				Id = "1",
 				AccountId = accountId,

@@ -111,9 +111,9 @@ namespace MarginTradingTests
                 FillType = OrderFillType.FillOrKill
             };
 
-            _ordersCache.ActiveOrders.Add(existingLong);
-            _ordersCache.ActiveOrders.Add(existingShort);
-            _ordersCache.ActiveOrders.Add(existingOtherAcc);
+            _ordersCache.ActiveOrders.AddAsync(existingLong);
+            _ordersCache.ActiveOrders.AddAsync(existingShort);
+            _ordersCache.ActiveOrders.AddAsync(existingOtherAcc);
 
             var order = new Order
             {

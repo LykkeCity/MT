@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using MsgPack;
 using Newtonsoft.Json;
 
 namespace MarginTrading.Backend.Core.MatchedOrders
@@ -30,6 +31,11 @@ namespace MarginTrading.Backend.Core.MatchedOrders
             }
         }
 
+        public MatchedOrderCollection()
+        {
+            Items = new List<MatchedOrder>();
+        }
+        
         public MatchedOrderCollection(IEnumerable<MatchedOrder> orders = null)
         {
             Items = orders?.ToList() ?? new List<MatchedOrder>();

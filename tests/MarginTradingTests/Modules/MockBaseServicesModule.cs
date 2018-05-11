@@ -17,6 +17,9 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services;
+using MarginTradingTests.MockImpl;
+using MoreLinq;
+using StackExchange.Redis;
 
 namespace MarginTradingTests.Modules
 {
@@ -38,6 +41,7 @@ namespace MarginTradingTests.Modules
             var consoleWriterMock = new Mock<IConsole>();
             var sessionServiceMock = new Mock<ISessionService>();
             var slackNotificationsMock = new Mock<ISlackNotificationsSender>();
+            var redisDatabaseMock = new Mock<IDatabase>();
 
             sessionServiceMock
                 .Setup(item => item.ApiSessionGetPostWithHttpMessagesAsync(It.IsAny<ClientSessionGetRequest>(), null, It.IsAny<CancellationToken>()))
@@ -61,6 +65,15 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(sessionServiceMock.Object).As<ISessionService>();
             builder.RegisterInstance(slackNotificationsMock.Object).As<ISlackNotificationsSender>();
             builder.RegisterInstance(volumeEquivalentService.Object).As<IEquivalentPricesService>();
+            builder.RegisterInstance(redisDatabaseMock.Object).As<IDatabase>();
+            
+            new[] {OrderStatus.Active, OrderStatus.Closing, OrderStatus.WaitingForExecution}.ForEach(os =>
+            {
+                builder.RegisterType<InMemoryOrderCacheGroup>()
+                    .As<IOrderCacheGroup>()
+                    .WithParameter(new TypedParameter(typeof(OrderStatus), os))
+                    .SingleInstance();
+            });
 
             builder.RegisterType<DateService>()
                 .As<IDateService>()

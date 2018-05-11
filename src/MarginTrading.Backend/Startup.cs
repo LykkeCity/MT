@@ -99,6 +99,13 @@ namespace MarginTrading.Backend
                 mtSettings.Nested(s => isLive ? s.RiskInformingSettings : s.RiskInformingSettingsDemo);
 
             Console.WriteLine($"IsLive: {settings.CurrentValue.IsLive}");
+            /*
+            services.AddDistributedRedisCache(options =>
+            {
+                options.Configuration = settings.CurrentValue.RedisSettings.RedisConfiguration;
+                options.InstanceName = settings.CurrentValue.RedisSettings.InstanceName;
+            });
+            */
 
             SetupLoggers(services, mtSettings, settings);
 

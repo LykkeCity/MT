@@ -5,6 +5,9 @@ using System.Linq;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Services.Infrastructure;
+using Microsoft.Extensions.Caching.Distributed;
+using StackExchange.Redis;
+using Order = MarginTrading.Backend.Core.Order;
 
 namespace MarginTrading.Backend.Services
 {
@@ -19,18 +22,19 @@ namespace MarginTrading.Backend.Services
     {
         private readonly IContextFactory _contextFactory;
 
-        public OrdersCache(IContextFactory contextFactory)
+        public OrdersCache(IContextFactory contextFactory,
+            IOrderCacheGroup[] orderCacheGroups)
         {
             _contextFactory = contextFactory;
-            
-            ActiveOrders = new OrderCacheGroup(new Order[0], OrderStatus.Active);
-            WaitingForExecutionOrders = new OrderCacheGroup(new Order[0], OrderStatus.WaitingForExecution);
-            ClosingOrders = new OrderCacheGroup(new Order[0], OrderStatus.Closing);
+
+            ActiveOrders = orderCacheGroups.First(x => x.Status == OrderStatus.Active).Init(new Order[0]);
+            WaitingForExecutionOrders = orderCacheGroups.First(x => x.Status == OrderStatus.WaitingForExecution).Init(new Order[0]);
+            ClosingOrders = orderCacheGroups.First(x => x.Status == OrderStatus.Closing).Init(new Order[0]);
         }
 
-        public OrderCacheGroup ActiveOrders { get; private set; }
-        public OrderCacheGroup WaitingForExecutionOrders { get; private set; }
-        public OrderCacheGroup ClosingOrders { get; private set; }
+        public IOrderCacheGroup ActiveOrders { get; private set; }
+        public IOrderCacheGroup WaitingForExecutionOrders { get; private set; }
+        public IOrderCacheGroup ClosingOrders { get; private set; }
         
         public ImmutableArray<Order> GetAll()
         {
@@ -71,9 +75,9 @@ namespace MarginTrading.Backend.Services
 
         public void InitOrders(List<Order> orders)
         {
-            ActiveOrders = new OrderCacheGroup(orders, OrderStatus.Active);
-            WaitingForExecutionOrders = new OrderCacheGroup(orders, OrderStatus.WaitingForExecution);
-            ClosingOrders = new OrderCacheGroup(orders, OrderStatus.Closing);
+            ActiveOrders = ActiveOrders.Init(orders);
+            WaitingForExecutionOrders = WaitingForExecutionOrders.Init(orders);
+            ClosingOrders = ClosingOrders.Init(orders);
         }
     }
 }

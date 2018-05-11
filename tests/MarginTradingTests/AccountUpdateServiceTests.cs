@@ -35,7 +35,7 @@ namespace MarginTradingTests
         public void SetUp()
         {
             foreach (var o in _ordersCache.ActiveOrders.GetAllOrders().ToList())
-                _ordersCache.ActiveOrders.Remove(o);
+                _ordersCache.ActiveOrders.RemoveAsync(o);
         }
 
         [Test]
@@ -61,7 +61,7 @@ namespace MarginTradingTests
                 Status = OrderStatus.Active,
             };
 
-            _ordersCache.ActiveOrders.Add(order1);
+            _ordersCache.ActiveOrders.AddAsync(order1);
             order1.UpdateClosePrice(1.04M);
 
             order1.GetFpl();
@@ -91,7 +91,7 @@ namespace MarginTradingTests
                 Status = OrderStatus.Active,
             };
 
-            _ordersCache.ActiveOrders.Add(order2);
+            _ordersCache.ActiveOrders.AddAsync(order2);
             order2.UpdateClosePrice(1.04M);
             order2.GetFpl();
 
@@ -123,7 +123,7 @@ namespace MarginTradingTests
                 Status = OrderStatus.Active,
             };
 
-            _ordersCache.ActiveOrders.Add(order);
+            _ordersCache.ActiveOrders.AddAsync(order);
             order.UpdateClosePrice(1.02M);
             order.GetFpl();
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);

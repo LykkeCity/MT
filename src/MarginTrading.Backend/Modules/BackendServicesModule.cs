@@ -21,6 +21,8 @@ using MarginTrading.Backend.Services.Quotes;
 using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Services.Client;
+using MoreLinq;
+using StackExchange.Redis;
 
 namespace MarginTrading.Backend.Modules
 {
@@ -104,7 +106,26 @@ namespace MarginTrading.Backend.Modules
                 .As<IEquivalentPricesService>()
                 .SingleInstance();
 
+            new[] {OrderStatus.Active, OrderStatus.Closing, OrderStatus.WaitingForExecution}.ForEach(os =>
+            {
+                builder.RegisterType<OrderCacheGroup>()
+                    .As<IOrderCacheGroup>()
+                    .WithParameter(new TypedParameter(typeof(OrderStatus), os))
+                    .SingleInstance();
+            });
+
             RegisterPublishers(builder, consoleWriter);
+            RegisterRedis(builder);
+        }
+
+        private void RegisterRedis(ContainerBuilder builder)
+        {
+            builder.Register(c => ConnectionMultiplexer.Connect(_settings.RedisSettings.RedisConfiguration))
+                .As<IConnectionMultiplexer>()
+                .SingleInstance();
+
+            builder.Register(c => c.Resolve<IConnectionMultiplexer>().GetDatabase())
+                .As<IDatabase>();
         }
 
         private void RegisterPublishers(ContainerBuilder builder, IConsole consoleWriter)

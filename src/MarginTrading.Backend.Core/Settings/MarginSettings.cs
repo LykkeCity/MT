@@ -27,6 +27,8 @@ namespace MarginTrading.Backend.Core.Settings
         
         public RabbitMqSettings MarketMakerRabbitMqSettings { get; set; }
         
+        public RedisSettings RedisSettings { get; set; }
+        
         [Optional]
         public RabbitMqSettings StpAggregatorRabbitMqSettings { get; set; }
         

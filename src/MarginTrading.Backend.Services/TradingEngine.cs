@@ -204,7 +204,7 @@ namespace MarginTrading.Backend.Services
 
             var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
             _swapCommissionService.SetCommissionRates(account.TradingConditionId, account.BaseAssetId, order);
-            _ordersCache.ActiveOrders.Add(order);
+            _ordersCache.ActiveOrders.AddAsync(order);
             _orderActivatedEventChannel.SendEvent(this, new OrderActivatedEventArgs(order));
         }
 
@@ -257,7 +257,7 @@ namespace MarginTrading.Backend.Services
             order.MatchingEngineMode = me.Mode;
             
             using (_contextFactory.GetWriteSyncContext($"{nameof(TradingEngine)}.{nameof(PlacePendingOrder)}"))
-                _ordersCache.WaitingForExecutionOrders.Add(order);
+                _ordersCache.WaitingForExecutionOrders.AddAsync(order);
 
             _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
         }
@@ -276,7 +276,7 @@ namespace MarginTrading.Backend.Services
             using (_contextFactory.GetWriteSyncContext($"{nameof(TradingEngine)}.{nameof(ProcessOrdersWaitingForExecution)}"))
             {
                 foreach (var order in orders)
-                    _ordersCache.WaitingForExecutionOrders.Remove(order);
+                    _ordersCache.WaitingForExecutionOrders.RemoveAsync(order);
             }
 
             //TODO: think how to make sure that we don't loose orders
@@ -420,8 +420,8 @@ namespace MarginTrading.Backend.Services
             order.StartClosingDate = DateTime.UtcNow;
             order.CloseReason = reason;
 
-            _ordersCache.ClosingOrders.Add(order);
-            _ordersCache.ActiveOrders.Remove(order);
+            _ordersCache.ClosingOrders.AddAsync(order);
+            _ordersCache.ActiveOrders.RemoveAsync(order);
         }
 
         private void NotifyAccountLevelChanged(MarginTradingAccount account, AccountLevel newAccountLevel)
@@ -456,15 +456,15 @@ namespace MarginTrading.Backend.Services
                 if (!order.GetIsCloseFullfilled())
                 {
                     order.Status = OrderStatus.Closing;
-                    _ordersCache.ActiveOrders.Remove(order);
-                    _ordersCache.ClosingOrders.Add(order);
+                    _ordersCache.ActiveOrders.RemoveAsync(order);
+                    _ordersCache.ClosingOrders.AddAsync(order);
                     _orderClosingEventChannel.SendEvent(this, new OrderClosingEventArgs(order));
                 }
                 else
                 {
                     order.Status = OrderStatus.Closed;
                     order.CloseDate = DateTime.UtcNow;
-                    _ordersCache.ActiveOrders.Remove(order);
+                    _ordersCache.ActiveOrders.RemoveAsync(order);
                     _orderClosedEventChannel.SendEvent(this, new OrderClosedEventArgs(order));
                 }
 
@@ -508,7 +508,7 @@ namespace MarginTrading.Backend.Services
             order.CloseReason = reason;
             order.Comment = comment;
             
-            _ordersCache.WaitingForExecutionOrders.Remove(order);
+            _ordersCache.WaitingForExecutionOrders.RemoveAsync(order);
 
             _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order));
         }
@@ -581,8 +581,8 @@ namespace MarginTrading.Backend.Services
                         order.Status = OrderStatus.Active;
                         order.CloseRejectReasonText = "No orders to match";
                         
-                        _ordersCache.ActiveOrders.Add(order);
-                        _ordersCache.ClosingOrders.Remove(order);
+                        _ordersCache.ActiveOrders.AddAsync(order);
+                        _ordersCache.ClosingOrders.RemoveAsync(order);
                     }
 
                     return false;
@@ -602,7 +602,7 @@ namespace MarginTrading.Backend.Services
             {
                 order.Status = OrderStatus.Closed;
                 order.CloseDate = DateTime.UtcNow;
-                _ordersCache.ClosingOrders.Remove(order);
+                _ordersCache.ClosingOrders.RemoveAsync(order);
                 _orderClosedEventChannel.SendEvent(this, new OrderClosedEventArgs(order));
             }
         }
