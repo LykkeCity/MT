@@ -1,22 +1,28 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
-//using Lykke.Service.Assets.Client;
+using JetBrains.Annotations;
 using MarginTrading.Backend.Core;
+using MarginTrading.Common.Services;
+using MarginTrading.SettingsService.Contracts;
+using MarginTrading.SettingsService.Contracts.Asset;
 
 namespace MarginTrading.Backend.Services.Assets
 {
-    public class AssetsManager : IStartable
+    [UsedImplicitly]
+    public class AssetsManager : IStartable, IAssetsManager
     {
-        //TODO: init assets
-        //private readonly IAssetsService _assetsService;
+        private readonly IAssetsApi _assets;
         private readonly AssetsCache _assetsCache;
+        private readonly IConvertService _convertService;
 
-        public AssetsManager(/*IAssetsService assetsService,*/
-            AssetsCache assetsCache)
+        public AssetsManager(IAssetsApi assets,
+            AssetsCache assetsCache,
+            IConvertService convertService)
         {
-            //_assetsService = assetsService;
+            _assets = assets;
             _assetsCache = assetsCache;
+            _convertService = convertService;
         }
 
         public void Start()
@@ -26,17 +32,12 @@ namespace MarginTrading.Backend.Services.Assets
 
         public async Task UpdateCache()
         {
-//            var assets = (await _assetsService.AssetGetAllAsync())
-//                .ToDictionary(
-//                    a => a.Id,
-//                    a => (IAsset) new Asset
-//                    {
-//                        Id = a.Id,
-//                        Name = a.Name,
-//                        Accuracy = a.Accuracy
-//                    });
-//            
-//            _assetsCache.Init(assets);
+            var assets = (await _assets.List())
+                .ToDictionary(
+                    a => a.Id,
+                    a => (IAsset)_convertService.Convert<AssetContract, Asset>(a));
+            
+            _assetsCache.Init(assets);
         }
     }
 }

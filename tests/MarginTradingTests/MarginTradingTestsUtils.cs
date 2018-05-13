@@ -1,16 +1,13 @@
 ﻿using System.Collections.Generic;
-using System.Threading;
 using AzureStorage.Tables;
 using MarginTrading.AzureRepositories;
-using MarginTrading.AzureRepositories.Contract;
-using MarginTrading.AzureRepositories.Entities;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.TradingConditions;
-using MarginTrading.Common.Services;
-using Microsoft.Rest;
+using MarginTrading.SettingsService.Contracts;
+using MarginTrading.SettingsService.Contracts.Asset;
+using MarginTrading.SettingsService.Contracts.Enums;
 using Moq;
-using AssetPairEntity = MarginTrading.AzureRepositories.AssetPairsRepository.AssetPairEntity;
+using AssetPairContract = MarginTrading.SettingsService.Contracts.AssetPair.AssetPairContract;
 
 namespace MarginTradingTests
 {
@@ -18,29 +15,24 @@ namespace MarginTradingTests
     {
         public const string TradingConditionId = "1";
 
-        //TODO: init assets
-//        public static IAssetsService GetPopulatedAssetsService()
-//        {
-//            var assetsService = new Mock<IAssetsService>();
-//           
-//            var assets = new List<Asset>
-//            {
-//                new Asset
-//                {
-//                    Id = "BTC",
-//                    Name = "BTC",
-//                    Accuracy = 8
-//                }
-//            };
-//            
-//            var assetsResult = new HttpOperationResponse<IList<Asset>> {Body = assets};
-//
-//            assetsService
-//                .Setup(s => s.AssetGetAllWithHttpMessagesAsync(false, It.IsAny<Dictionary<string, List<string>>>(),
-//                    It.IsAny<CancellationToken>())).ReturnsAsync(assetsResult);
-//
-//            return assetsService.Object;
-//        }
+        public static IAssetsApi GetPopulatedAssets()
+        {
+            var assetsService = new Mock<IAssetsApi>();
+           
+            var assets = new List<AssetContract>
+            {
+                new AssetContract
+                {
+                    Id = "BTC",
+                    Name = "BTC",
+                    Accuracy = 8
+                }
+            };
+
+            assetsService.Setup(s => s.List()).ReturnsAsync(assets);
+
+            return assetsService.Object;
+        }
 
         public static MarginTradingAccountsRepository GetPopulatedAccountsRepository(List<MarginTradingAccount> accounts)
         {
@@ -241,12 +233,11 @@ namespace MarginTradingTests
             return repository;
         }
 
-        public static IAssetPairsRepository GetPopulatedAssetPairsRepository()
+        public static IAssetPairsApi GetPopulatedAssetPairs()
         {
-            var table = new NoSqlTableInMemory<AssetPairEntity>();
-            var assetPairs = new List<AssetPairEntity>
+            var assetPairs = new List<AssetPairContract>
             {
-                new AssetPairEntity
+                new AssetPairContract
                 {
                     Id = "EURUSD",
                     Name = "EURUSD",
@@ -254,7 +245,7 @@ namespace MarginTradingTests
                     BaseAssetId = "EUR",
                     QuoteAssetId = "USD",
                 },
-                new AssetPairEntity
+                new AssetPairContract
                 {
                     Id = "BTCEUR",
                     Name = "BTCEUR",
@@ -262,7 +253,7 @@ namespace MarginTradingTests
                     BaseAssetId = "BTC",
                     QuoteAssetId = "EUR"
                 },
-                new AssetPairEntity
+                new AssetPairContract
                 {
                     Id = "BTCUSD",
                     Name = "BTCUSD",
@@ -270,7 +261,7 @@ namespace MarginTradingTests
                     BaseAssetId = "BTC",
                     QuoteAssetId = "USD"
                 },
-                new AssetPairEntity
+                new AssetPairContract
                 {
                     Id = "BTCCHF",
                     Name = "BTCCHF",
@@ -278,7 +269,7 @@ namespace MarginTradingTests
                     BaseAssetId = "BTC",
                     QuoteAssetId = "CHF"
                 },
-                new AssetPairEntity
+                new AssetPairContract
                 {
                     Id = "CHFJPY",
                     Name = "CHFJPY",
@@ -286,7 +277,7 @@ namespace MarginTradingTests
                     BaseAssetId = "CHF",
                     QuoteAssetId = "JPY"
                 },
-                new AssetPairEntity
+                new AssetPairContract
                 {
                     Id = "USDCHF",
                     Name = "USDCHF",
@@ -294,7 +285,7 @@ namespace MarginTradingTests
                     BaseAssetId = "USD",
                     QuoteAssetId = "CHF"
                 },
-                new AssetPairEntity
+                new AssetPairContract
                 {
                     Id = "EURCHF",
                     Name = "EURCHF",
@@ -302,7 +293,7 @@ namespace MarginTradingTests
                     BaseAssetId = "EUR",
                     QuoteAssetId = "CHF"
                 },
-                new AssetPairEntity
+                new AssetPairContract
                 {
                     Id = "BTCJPY",
                     Name = "BTCJPY",
@@ -310,7 +301,7 @@ namespace MarginTradingTests
                     BaseAssetId = "BTC",
                     QuoteAssetId = "JPY"
                 },
-                new AssetPairEntity
+                new AssetPairContract
                 {
                     Id = "EURJPY",
                     Name = "EURJPY",
@@ -318,7 +309,7 @@ namespace MarginTradingTests
                     BaseAssetId = "EUR",
                     QuoteAssetId = "JPY"
                 },
-                new AssetPairEntity
+                new AssetPairContract
                 {
                     Id = "JPYUSD",
                     Name = "JPYUSD",
@@ -326,7 +317,7 @@ namespace MarginTradingTests
                     BaseAssetId = "JPY",
                     QuoteAssetId = "USD"
                 },
-                new AssetPairEntity
+                new AssetPairContract
                 {
                     Id = "EURGBP",
                     Name = "EURGBP",
@@ -334,7 +325,7 @@ namespace MarginTradingTests
                     BaseAssetId = "EUR",
                     QuoteAssetId = "GBP"
                 },
-                new AssetPairEntity
+                new AssetPairContract
                 {
                     Id = "GBPUSD",
                     Name = "GBPUSD",
@@ -347,13 +338,16 @@ namespace MarginTradingTests
             foreach (var pair in assetPairs)
             {
                 pair.LegalEntity = "LYKKETEST";
-                pair.MatchingEngineMode = MatchingEngineMode.MarketMaker;
+                pair.MatchingEngineMode = MatchingEngineModeContract.MarketMaker;
                 pair.StpMultiplierMarkupAsk = 1;
                 pair.StpMultiplierMarkupBid = 1;
             }
 
-            table.InsertAsync(assetPairs).GetAwaiter().GetResult();
-            return new AssetPairsRepository(table, new ConvertService());
+            var mock = new Mock<IAssetPairsApi>();
+            mock.Setup(m => m.List(It.IsAny<string>(), It.IsAny<MatchingEngineModeContract?>()))
+                .ReturnsAsync(assetPairs);
+
+            return mock.Object;
         }
     }
 }

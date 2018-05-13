@@ -39,32 +39,12 @@ namespace MarginTrading.Backend.Modules
 		                "MarginTradingBackendOperationsLog", _log))
 		    ).SingleInstance();
 
-			builder.Register<IMarginTradingAccountsRepository>(ctx =>
-				AzureRepoFactories.MarginTrading.CreateAccountsRepository(_settings.Nested(s => s.Db.MarginTradingConnString), _log)
-			).SingleInstance();
-
 			builder.Register<IOrdersHistoryRepository>(ctx =>
 				AzureRepoFactories.MarginTrading.CreateOrdersHistoryRepository(_settings.Nested(s => s.Db.HistoryConnString), _log)
 			).SingleInstance();
 
 			builder.Register<IMarginTradingAccountHistoryRepository>(ctx =>
 				AzureRepoFactories.MarginTrading.CreateAccountHistoryRepository(_settings.Nested(s => s.Db.HistoryConnString), _log)
-			).SingleInstance();
-
-			builder.Register<IMatchingEngineRoutesRepository>(ctx =>
-				AzureRepoFactories.MarginTrading.CreateMatchingEngineRoutesRepository(_settings.Nested(s => s.Db.MarginTradingConnString), _log)
-			).SingleInstance();
-
-			builder.Register<ITradingConditionRepository>(ctx =>
-				AzureRepoFactories.MarginTrading.CreateTradingConditionsRepository(_settings.Nested(s => s.Db.MarginTradingConnString), _log)
-			).SingleInstance();
-
-			builder.Register<IAccountGroupRepository>(ctx =>
-				AzureRepoFactories.MarginTrading.CreateAccountGroupRepository(_settings.Nested(s => s.Db.MarginTradingConnString), _log)
-			).SingleInstance();
-
-			builder.Register<IAccountAssetPairsRepository>(ctx =>
-				AzureRepoFactories.MarginTrading.CreateAccountAssetsRepository(_settings.Nested(s => s.Db.MarginTradingConnString), _log)
 			).SingleInstance();
 
 			builder.Register<IMarginTradingBlobRepository>(ctx =>
@@ -77,11 +57,6 @@ namespace MarginTrading.Backend.Modules
 			
 			builder.Register(ctx =>
 				AzureRepoFactories.MarginTrading.CreateDayOffSettingsRepository(_settings.Nested(s => s.Db.MarginTradingConnString))
-			).SingleInstance();
-
-			builder.Register(ctx =>
-				AzureRepoFactories.MarginTrading.CreateAssetPairSettingsRepository(
-					_settings.Nested(s => s.Db.MarginTradingConnString), _log, ctx.Resolve<IConvertService>())
 			).SingleInstance();
 
 			builder.RegisterType<MatchingEngineInMemoryRepository>()

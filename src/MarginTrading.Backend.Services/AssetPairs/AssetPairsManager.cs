@@ -1,25 +1,29 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using Autofac;
-using MarginTrading.AzureRepositories.Contract;
+using JetBrains.Annotations;
 using MarginTrading.Backend.Core;
-using MarginTrading.Common.Extensions;
+using MarginTrading.Common.Services;
+using MarginTrading.SettingsService.Contracts;
+using MarginTrading.SettingsService.Contracts.AssetPair;
 
 namespace MarginTrading.Backend.Services.AssetPairs
 {
+    [UsedImplicitly]
     internal class AssetPairsManager : IStartable, IAssetPairsManager
     {
         private static readonly object InitAssetPairsLock = new object();
 
         private readonly IAssetPairsInitializableCache _assetPairsCache;
-        private readonly IAssetPairsRepository _assetPairsRepository;
+        private readonly IAssetPairsApi _assetPairs;
+        private readonly IConvertService _convertService;
 
         public AssetPairsManager(IAssetPairsInitializableCache assetPairsCache,
-            IAssetPairsRepository assetPairsRepository)
+            IAssetPairsApi assetPairs,
+            IConvertService convertService)
         {
             _assetPairsCache = assetPairsCache;
-            _assetPairsRepository = assetPairsRepository;
+            _assetPairs = assetPairs;
+            _convertService = convertService;
         }
 
         public void Start()
@@ -27,54 +31,14 @@ namespace MarginTrading.Backend.Services.AssetPairs
             InitAssetPairs();
         }
 
-        private void InitAssetPairs()
+        public void InitAssetPairs()
         {
             lock (InitAssetPairsLock)
             {
-                var pairs = _assetPairsRepository.GetAsync().GetAwaiter().GetResult()
-                    .ToDictionary(a => a.Id, s => s);
+                var pairs = _assetPairs.List().GetAwaiter().GetResult()
+                    .ToDictionary(a => a.Id,
+                        s => (IAssetPair) _convertService.Convert<AssetPairContract, AssetPair>(s));
                 _assetPairsCache.InitPairsCache(pairs);
-            }
-        }
-
-        public async Task<IAssetPair> UpdateAssetPair(IAssetPair assetPair)
-        {
-            ValidatePair(assetPair);
-            await _assetPairsRepository.ReplaceAsync(assetPair);
-            InitAssetPairs();
-            return _assetPairsCache.GetAssetPairByIdOrDefault(assetPair.Id)
-                .RequiredNotNull("AssetPair " + assetPair.Id);
-        }
-
-        public async Task<IAssetPair> InsertAssetPair(IAssetPair assetPair)
-        {
-            ValidatePair(assetPair);
-            await _assetPairsRepository.InsertAsync(assetPair);
-            InitAssetPairs();
-            return _assetPairsCache.GetAssetPairByIdOrDefault(assetPair.Id)
-                .RequiredNotNull("AssetPair " + assetPair.Id);
-        }
-
-        public async Task<IAssetPair> DeleteAssetPair(string assetPairId)
-        {
-            var pair = await _assetPairsRepository.DeleteAsync(assetPairId);
-            InitAssetPairs();
-            return pair; 
-        }
-
-        private void ValidatePair(IAssetPair newValue)
-        {
-            if (newValue.BasePairId == null) 
-                return;
-
-            if (_assetPairsCache.GetAssetPairByIdOrDefault(newValue.BasePairId) == null)
-                throw new InvalidOperationException($"BasePairId {newValue.BasePairId} does not exist");
-
-            if (_assetPairsCache.GetAll().Any(s =>
-                s.Id != newValue.Id &&
-                s.BasePairId == newValue.BasePairId))
-            {
-                throw new InvalidOperationException($"BasePairId {newValue.BasePairId} cannot be added twice");
             }
         }
     }

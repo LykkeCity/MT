@@ -77,10 +77,6 @@ namespace MarginTrading.Backend.Modules
                 .SingleInstance()
                 .OnActivated(args => args.Instance.StartApplicationAsync().Wait());
 
-            builder.RegisterType<ClientAccountService>()
-                .As<IClientAccountService>()
-                .SingleInstance();
-
             builder.RegisterType<BackendMaintenanceModeService>()
                 .As<IMaintenanceModeService>()
                 .SingleInstance();

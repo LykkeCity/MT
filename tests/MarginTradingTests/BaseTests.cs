@@ -61,7 +61,8 @@ namespace MarginTradingTests
             builder.RegisterInstance(marginSettings).SingleInstance();
 
             builder.RegisterModule(new MockBaseServicesModule());
-            builder.RegisterModule(new MockRepositoriesModule(Accounts));
+            builder.RegisterModule(new MockRepositoriesModule());
+            builder.RegisterModule(new MockExternalServicesModule(Accounts));
             
             if (mockEvents)
             {
@@ -134,6 +135,8 @@ namespace MarginTradingTests
             builder.RegisterInstance(new Mock<IMarginTradingOperationsLogService>().Object)
                 .As<IMarginTradingOperationsLogService>()
                 .SingleInstance();
+            
+            builder.RegisterType<ConvertService>().As<IConvertService>().SingleInstance();
 
             var settings = new ScheduleSettings(
                 DayOfWeek.Sunday,
@@ -151,6 +154,7 @@ namespace MarginTradingTests
             var exchangeConnector = Mock.Of<IExchangeConnectorService>();
             builder.RegisterInstance(exchangeConnector).As<IExchangeConnectorService>();
 
+            builder.RegisterBuildCallback(c => c.Resolve<AccountManager>());
             builder.RegisterBuildCallback(c => c.Resolve<AccountAssetsManager>());
             builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
             builder.RegisterInstance(new Mock<IMtSlackNotificationsSender>(MockBehavior.Loose).Object).SingleInstance();
