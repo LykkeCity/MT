@@ -22,20 +22,18 @@ namespace MarginTradingTests.Modules
             var assetPairs = MarginTradingTestsUtils.GetPopulatedAssetPairs();
             var tradingConditions = MarginTradingTestsUtils.GetPopulatedTradingConditions();
             var tradingInstruments = MarginTradingTestsUtils.GetPopulatedTradingInstruments();
+            var meRoutes = MarginTradingTestsUtils.GetPopulatedMatchingEngineRoutes();
             
             var accountRepository = MarginTradingTestsUtils.GetPopulatedAccountsRepository(_accounts);
-            var meRoutesRepository = MarginTradingTestsUtils.GetPopulatedMatchingEngineRoutesRepository();
-
 
             builder.RegisterInstance(new LogToMemory()).As<ILog>();
             builder.RegisterInstance(assets).As<IAssetsApi>().SingleInstance();
             builder.RegisterInstance(assetPairs).As<IAssetPairsApi>().SingleInstance();
             builder.RegisterInstance(tradingConditions).As<ITradingConditionsApi>().SingleInstance();
             builder.RegisterInstance(tradingInstruments).As<ITradingInstrumentsApi>().SingleInstance();
+            builder.RegisterInstance(meRoutes).As<ITradingRoutesApi>().SingleInstance();
             
             builder.RegisterInstance(accountRepository).As<IMarginTradingAccountsRepository>().SingleInstance();
-            builder.RegisterInstance(meRoutesRepository).As<IMatchingEngineRoutesRepository>().SingleInstance();
-            
         }
     }
 }

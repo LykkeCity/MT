@@ -39,13 +39,17 @@ namespace MarginTrading.Backend.Services.TradingConditions
         {
             _console.WriteLine($"Started {nameof(InitTradingConditions)}");
 
-            var tradingConditions = (await _tradingConditions.List()).Select(t =>
-                (ITradingCondition) _convertService.Convert<TradingConditionContract, TradingCondition>(t)).ToList();
-            
-            _tradingConditionsCacheService.InitTradingConditionsCache(tradingConditions);
-            
+            var tradingConditions = await _tradingConditions.List();
+
+            if (tradingConditions != null)
+            {
+                _tradingConditionsCacheService.InitTradingConditionsCache(tradingConditions.Select(t =>
+                        (ITradingCondition) _convertService.Convert<TradingConditionContract, TradingCondition>(t))
+                    .ToList());
+            }
+
             _console.WriteLine(
-                $"Finished {nameof(InitTradingConditions)}. Count:{tradingConditions.Count})");
+                $"Finished {nameof(InitTradingConditions)}. Count:{tradingConditions?.Count ?? 0})");
         }
     }
 }

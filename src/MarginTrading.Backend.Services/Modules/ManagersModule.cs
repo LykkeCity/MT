@@ -34,11 +34,6 @@ namespace MarginTrading.Backend.Services.Modules
                 .SingleInstance()
                 .OnActivated(args => args.Instance.Start());
 
-            builder.RegisterType<MicrographManager>()
-                .AsSelf()
-                .SingleInstance()
-                .OnActivated(args => args.Instance.Start());
-
             builder.RegisterType<MatchingEngineRoutesManager>()
                 .AsSelf()
                 .As<IStartable>()

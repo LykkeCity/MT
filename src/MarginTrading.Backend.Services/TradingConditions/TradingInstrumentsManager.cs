@@ -32,10 +32,14 @@ namespace MarginTrading.Backend.Services.TradingConditions
 
         public async Task UpdateInstrumentsCache()
         {
-            var accountAssets = (await _tradingInstruments.List(string.Empty)).Select(i =>
-                (ITradingInstrument) _convertService.Convert<TradingInstrumentContract, TradingInstrument>(i)).ToList();
-            
-            _accountAssetsCacheService.InitAccountAssetsCache(accountAssets);
+            var instruments = await _tradingInstruments.List(string.Empty);
+
+            if (instruments != null)
+            {
+                _accountAssetsCacheService.InitAccountAssetsCache(instruments.Select(i =>
+                        (ITradingInstrument) _convertService.Convert<TradingInstrumentContract, TradingInstrument>(i))
+                    .ToList());
+            }
         }
     }
 }

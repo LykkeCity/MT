@@ -122,12 +122,6 @@ namespace MarginTrading.Backend.Services.Modules
 				.AsSelf()
 				.SingleInstance();
 
-			builder.RegisterType<MicrographCacheService>()
-				.As<IEventConsumer<BestPriceChangeEventArgs>>()
-				.As<IMicrographCacheService>()
-				.AsSelf()
-				.SingleInstance();
-
 			builder.RegisterType<MarginTradingEnabledCacheService>()
 				.As<IMarginTradingSettingsCacheService>()
 				.SingleInstance();

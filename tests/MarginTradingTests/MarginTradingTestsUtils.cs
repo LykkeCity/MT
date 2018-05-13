@@ -154,11 +154,9 @@ namespace MarginTradingTests
             return mock.Object;
         }
 
-        public static MatchingEngineRoutesRepository GetPopulatedMatchingEngineRoutesRepository()
+        public static ITradingRoutesApi GetPopulatedMatchingEngineRoutes()
         {
-            var repository = new MatchingEngineRoutesRepository(new NoSqlTableInMemory<MatchingEngineRouteEntity>());
-
-            return repository;
+            return Mock.Of<ITradingRoutesApi>();
         }
 
         public static IAssetPairsApi GetPopulatedAssetPairs()
