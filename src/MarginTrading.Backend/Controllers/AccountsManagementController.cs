@@ -23,17 +23,17 @@ namespace MarginTrading.Backend.Controllers
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly IDateService _dateService;
         private readonly AccountManager _accountManager;
-        private readonly AccountGroupCacheService _accountGroupCacheService;
+        private readonly TradingConditionsCacheService _tradingConditionsCache;
 
         public AccountsManagementController(IAccountsCacheService accountsCacheService,
             IDateService dateService,
             AccountManager accountManager,
-            AccountGroupCacheService accountGroupCacheService)
+            TradingConditionsCacheService tradingConditionsCache)
         {
             _accountsCacheService = accountsCacheService;
             _dateService = dateService;
             _accountManager = accountManager;
-            _accountGroupCacheService = accountGroupCacheService;
+            _tradingConditionsCache = tradingConditionsCache;
         }
 
 
@@ -95,18 +95,18 @@ namespace MarginTrading.Backend.Controllers
                 if (!request.IgnoreMarginLevel)
                 {
                     var account = accounts[accountId];
-                    var accountGroup =
-                        _accountGroupCacheService.GetAccountGroup(account.TradingConditionId, account.BaseAssetId);
+                    var tradingCondition =
+                        _tradingConditionsCache.GetTradingCondition(account.TradingConditionId);
                     var accountMarginUsageLevel = account.GetMarginUsageLevel();
 
-                    if (accountMarginUsageLevel > accountGroup.MarginCall)
+                    if (accountMarginUsageLevel > tradingCondition.MarginCall1)
                     {
                         result.Results.Add(new CloseAccountPositionsResult
                         {
                             AccountId = accountId,
                             ClosedPositions = new OrderFullContract[0],
                             ErrorMessage =
-                                $"Account margin usage level [{accountMarginUsageLevel}] is greater then margin call level [{accountGroup.MarginCall}]"
+                                $"Account margin usage level [{accountMarginUsageLevel}] is greater then margin call level [{tradingCondition.MarginCall1}]"
                         });
 
                         continue;

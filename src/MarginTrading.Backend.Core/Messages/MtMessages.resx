@@ -118,13 +118,13 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AccountAssetForTradingConditionNotFound" xml:space="preserve">
-    <value>Can't find AccountAsset for tradingConditionId: {0}, baseAssetId: {1}, instrument: {2}</value>
+    <value>Can't find AccountAsset for tradingConditionId: {0}, instrument: {1}</value>
   </data>
   <data name="LeverageMaintanceIncorrect" xml:space="preserve">
-    <value>LeverageMaintenance &lt; 1 for tradingConditionId: {0}, baseAssetId: {1}, instrument: {2}</value>
+    <value>LeverageMaintenance &lt; 1 for tradingConditionId: {0}, instrument: {1}</value>
   </data>
   <data name="LeverageInitIncorrect" xml:space="preserve">
-    <value>LeverageInit &lt; 1 for tradingConditionId: {0}, baseAssetId: {1}, instrument: {2}</value>
+    <value>LeverageInit &lt; 1 for tradingConditionId: {0}, instrument: {1}</value>
   </data>
   <data name="AccountByIdNotFound" xml:space="preserve">
     <value>Can't get account by id = {0}</value>

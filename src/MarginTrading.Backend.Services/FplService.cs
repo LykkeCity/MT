@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Services.Assets;
@@ -8,19 +9,20 @@ using MarginTrading.Backend.Services.TradingConditions;
 
 namespace MarginTrading.Backend.Services
 {
+    [UsedImplicitly]
     public class FplService : IFplService
     {
         private readonly ICfdCalculatorService _cfdCalculatorService;
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly IAccountsCacheService _accountsCacheService;
-        private readonly IAccountAssetsCacheService _accountAssetsCacheService;
+        private readonly ITradingInstrumnentsCacheService _accountAssetsCacheService;
         private readonly IAssetsCache _assetsCache;
 
         public FplService(
             ICfdCalculatorService cfdCalculatorService,
             IAssetPairsCache assetPairsCache,
             IAccountsCacheService accountsCacheService,
-            IAccountAssetsCacheService accountAssetsCacheService,
+            ITradingInstrumnentsCacheService accountAssetsCacheService,
             IAssetsCache assetsCache)
         {
             _cfdCalculatorService = cfdCalculatorService;
@@ -74,7 +76,8 @@ namespace MarginTrading.Backend.Services
 
         public void CalculateMargin(IOrder order, FplData fplData)
         {
-            var accountAsset = _accountAssetsCacheService.GetAccountAsset(order.TradingConditionId, order.AccountAssetId, order.Instrument);
+            var accountAsset =
+                _accountAssetsCacheService.GetTradingInstrument(order.TradingConditionId, order.Instrument);
 
             fplData.MarginRate = _cfdCalculatorService.GetQuoteRateForBaseAsset(order.AccountAssetId, order.Instrument, 
                 order.LegalEntity);

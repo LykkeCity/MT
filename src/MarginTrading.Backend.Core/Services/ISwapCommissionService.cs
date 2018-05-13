@@ -2,7 +2,7 @@
 {
     public interface ICommissionService
     {
-        void SetCommissionRates(string accountAssetId, string tradingConditionId, Order order);
+        void SetCommissionRates(string accountAssetId, Order order);
         decimal GetSwaps(IOrder order);
         decimal GetOvernightSwap(IOrder order, decimal swapRate);
     }

@@ -1,8 +1,8 @@
 ﻿﻿using System;
-using System.Linq;
+ using System.Collections.Generic;
+ using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
- using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
  using MarginTrading.Backend.Core.MatchingEngines;
@@ -13,7 +13,9 @@ using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Contract.BackendContracts;
-using Moq;
+ using MarginTrading.SettingsService.Contracts;
+ using MarginTrading.SettingsService.Contracts.TradingConditions;
+ using Moq;
 using NUnit.Framework;
 
 namespace MarginTradingTests
@@ -23,11 +25,11 @@ namespace MarginTradingTests
     {
         private ITradingEngine _tradingEngine;
         private IMarketMakerMatchingEngine _matchingEngine;
-        private IAccountAssetPairsRepository _accountAssetPairsRepository;
+        private ITradingInstrumentsApi _tradingInstruments;
         private const string MarketMaker1Id = "1";
         private string _acount1Id;
         private string _client1Id;
-        private AccountAssetsManager _accountAssetsManager;
+        private TradingInstrumentsManager _accountAssetsManager;
         private AccountManager _accountManager;
         private IAccountsCacheService _accountsCacheService;
         private IEventChannel<BestPriceChangeEventArgs> _bestPriceConsumer;
@@ -44,7 +46,7 @@ namespace MarginTradingTests
             _client1Id = Accounts[0].ClientId;
 
             _bestPriceConsumer = Container.Resolve<IEventChannel<BestPriceChangeEventArgs>>();
-            _accountAssetsManager = Container.Resolve<AccountAssetsManager>();
+            _accountAssetsManager = Container.Resolve<TradingInstrumentsManager>();
             _accountManager = Container.Resolve<AccountManager>();
             
             _accountsCacheService = Container.Resolve<IAccountsCacheService>();
@@ -61,7 +63,7 @@ namespace MarginTradingTests
             var quote = new InstrumentBidAskPair { Instrument = "BTCUSD", Bid = 829.69M, Ask = 829.8M };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
-            _accountAssetPairsRepository = Container.Resolve<IAccountAssetPairsRepository>();
+            _tradingInstruments = Container.Resolve<ITradingInstrumentsApi>();
 
             var ordersSet1 = new []
             {
@@ -942,21 +944,20 @@ namespace MarginTradingTests
                 FillType = OrderFillType.PartialFill
             };
 
-            _accountAssetPairsRepository.AddOrReplaceAsync(new AccountAssetPair
+            var instrumentContract = new TradingInstrumentContract
             {
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
-                BaseAssetId = "USD",
                 Instrument = "EURUSD",
                 LeverageInit = 100,
                 LeverageMaintenance = 150,
-                DeltaAsk = 30,
-                DeltaBid = 30,
-                CommissionShort = 0.5M,
-                CommissionLong = 1,
-                CommissionLot = 8
-            }).Wait();
+                Delta = 30,
+                CommissionRate = 0.5M
+            };
 
-            await _accountAssetsManager.UpdateAccountAssetsCache();
+            Mock.Get(_tradingInstruments).Setup(s => s.List(It.IsAny<string>()))
+                .ReturnsAsync(new List<TradingInstrumentContract> {instrumentContract});
+            
+            await _accountAssetsManager.UpdateInstrumentsCache();
            
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
@@ -966,7 +967,7 @@ namespace MarginTradingTests
             Assert.AreEqual(order.Volume, order.GetMatchedVolume());
             Assert.AreEqual(1.1125, order.OpenPrice);
             Assert.AreEqual(1.04875, order.ClosePrice);
-            Assert.AreEqual(-1.51, Math.Round(order.GetTotalFpl(), 3));
+            Assert.AreEqual(-4.51, Math.Round(order.GetTotalFpl(), 3));
             Assert.AreEqual(OrderStatus.Active, order.Status);
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.IsAny<OrderHistoryBackendContract>()), Times.Once());
@@ -1324,7 +1325,7 @@ namespace MarginTradingTests
         public void Is_Balance_LessThanZero_On_StopOut_Thru_Big_Spread()
         {
             //set account balance to 50000 eur
-            _accountManager.UpdateBalanceAsync(Accounts[1], 49000, AccountHistoryType.Deposit, "").Wait();
+            _accountManager.UpdateBalanceAsync(Accounts[1], 240000, AccountHistoryType.Deposit, "").Wait();
 
             var ordersSet = new[]
             {
@@ -1389,8 +1390,8 @@ namespace MarginTradingTests
             //add orders to create big spread
             ordersSet = new[]
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 1097.315M, Volume = 100000 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "2", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 1126.039M, Volume = -100000 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 107.315M, Volume = 100000 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "2", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 2126.039M, Volume = -100000 }
             };
 
             _matchingEngine.SetOrders(MarketMaker1Id, ordersSet, deleteAll: true);

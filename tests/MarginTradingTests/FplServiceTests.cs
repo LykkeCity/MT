@@ -102,7 +102,7 @@ namespace MarginTradingTests
 
             order.UpdateClosePrice(800);
 
-            Assert.AreEqual(98, order.GetTotalFpl());
+            Assert.AreEqual(80, order.GetTotalFpl());
         }
 
         [Test]

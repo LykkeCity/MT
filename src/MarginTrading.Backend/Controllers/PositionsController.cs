@@ -25,7 +25,7 @@ namespace MarginTrading.Backend.Controllers
     {
         private readonly IMarginTradingAccountHistoryRepository _accountsHistoryRepository;
         private readonly IMicrographCacheService _micrographCacheService;
-        private readonly IAccountAssetsCacheService _accountAssetsCacheService;
+        private readonly ITradingInstrumnentsCacheService _accountAssetsCacheService;
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly IMarketMakerMatchingEngine _matchingEngine;
         private readonly ITradingEngine _tradingEngine;
@@ -42,7 +42,7 @@ namespace MarginTrading.Backend.Controllers
         public PositionsController(
             IMarginTradingAccountHistoryRepository accountsHistoryRepository,
             IMicrographCacheService micrographCacheService,
-            IAccountAssetsCacheService accountAssetsCacheService,
+            ITradingInstrumnentsCacheService accountAssetsCacheService,
             IAssetPairsCache assetPairsCache,
             IMarketMakerMatchingEngine matchingEngine,
             ITradingEngine tradingEngine,

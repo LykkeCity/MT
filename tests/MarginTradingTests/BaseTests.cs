@@ -155,7 +155,7 @@ namespace MarginTradingTests
             builder.RegisterInstance(exchangeConnector).As<IExchangeConnectorService>();
 
             builder.RegisterBuildCallback(c => c.Resolve<AccountManager>());
-            builder.RegisterBuildCallback(c => c.Resolve<AccountAssetsManager>());
+            builder.RegisterBuildCallback(c => c.Resolve<TradingInstrumentsManager>());
             builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
             builder.RegisterInstance(new Mock<IMtSlackNotificationsSender>(MockBehavior.Loose).Object).SingleInstance();
             builder.RegisterInstance(Mock.Of<IRabbitMqService>()).As<IRabbitMqService>();

@@ -155,7 +155,7 @@ namespace MarginTrading.Backend
             builder.RegisterModule(new ExternalServicesModule(mtSettings));
             builder.RegisterModule(new BackendMigrationsModule());
 
-            builder.RegisterBuildCallback(c => c.Resolve<AccountAssetsManager>());
+            builder.RegisterBuildCallback(c => c.Resolve<TradingInstrumentsManager>());
             builder.RegisterBuildCallback(c => c.Resolve<OrderBookSaveService>());
             builder.RegisterBuildCallback(c => c.Resolve<MicrographManager>());
             builder.RegisterBuildCallback(c => c.Resolve<QuoteCacheService>());

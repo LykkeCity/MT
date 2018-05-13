@@ -3,7 +3,6 @@ using AzureStorage.Tables;
 using Common.Log;
 using Lykke.SettingsReader;
 using MarginTrading.AzureRepositories;
-using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.AzureRepositories.Entities;
 using MarginTrading.AzureRepositories.Logs;
 using MarginTrading.Backend.Core;

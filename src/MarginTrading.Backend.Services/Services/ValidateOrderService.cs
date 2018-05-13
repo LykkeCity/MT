@@ -15,7 +15,7 @@ namespace MarginTrading.Backend.Services
         private readonly IQuoteCacheService _quoteCashService;
         private readonly IAccountUpdateService _accountUpdateService;
         private readonly IAccountsCacheService _accountsCacheService;
-        private readonly IAccountAssetsCacheService _accountAssetsCacheService;
+        private readonly ITradingInstrumnentsCacheService _accountAssetsCacheService;
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly OrdersCache _ordersCache;
         private readonly IAssetPairDayOffService _assetDayOffService;
@@ -24,7 +24,7 @@ namespace MarginTrading.Backend.Services
             IQuoteCacheService quoteCashService,
             IAccountUpdateService accountUpdateService,
             IAccountsCacheService accountsCacheService,
-            IAccountAssetsCacheService accountAssetsCacheService,
+            ITradingInstrumnentsCacheService accountAssetsCacheService,
             IAssetPairsCache assetPairsCache,
             OrdersCache ordersCache,
             IAssetPairDayOffService assetDayOffService)
@@ -104,12 +104,13 @@ namespace MarginTrading.Backend.Services
                 }
             }
 
-            var accountAsset = _accountAssetsCacheService.GetAccountAsset(order.TradingConditionId, order.AccountAssetId, order.Instrument);
+            var accountAsset =
+                _accountAssetsCacheService.GetTradingInstrument(order.TradingConditionId, order.Instrument);
 
-            if (accountAsset.DealLimit > 0 && Math.Abs(order.Volume) > accountAsset.DealLimit)
+            if (accountAsset.DealMaxLimit > 0 && Math.Abs(order.Volume) > accountAsset.DealMaxLimit)
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidVolume,
-                    $"Margin Trading is in beta testing. The volume of a single order is temporarily limited to {accountAsset.DealLimit} {accountAsset.Instrument}. Thank you for using Lykke Margin Trading, the limit will be cancelled soon!");
+                    $"Margin Trading is in beta testing. The volume of a single order is temporarily limited to {accountAsset.DealMaxLimit} {accountAsset.Instrument}. Thank you for using Lykke Margin Trading, the limit will be cancelled soon!");
             }
 
             //set special account-quote instrument
@@ -130,7 +131,7 @@ namespace MarginTrading.Backend.Services
                 order.StopLoss = Math.Round(order.StopLoss.Value, order.AssetAccuracy);
             }
 
-            ValidateOrderStops(order.GetOrderType(), quote, accountAsset.DeltaBid, accountAsset.DeltaAsk, order.TakeProfit, order.StopLoss, order.ExpectedOpenPrice, order.AssetAccuracy);
+            ValidateOrderStops(order.GetOrderType(), quote, accountAsset.Delta, accountAsset.Delta, order.TakeProfit, order.StopLoss, order.ExpectedOpenPrice, order.AssetAccuracy);
 
             ValidateInstrumentPositionVolume(accountAsset, order);
 
@@ -233,7 +234,7 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public void ValidateInstrumentPositionVolume(IAccountAssetPair assetPair, Order order)
+        public void ValidateInstrumentPositionVolume(ITradingInstrument assetPair, Order order)
         {
             var existingPositionsVolume = _ordersCache.ActiveOrders.GetOrdersByInstrumentAndAccount(assetPair.Instrument, order.AccountId).Sum(o => o.Volume);
 

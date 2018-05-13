@@ -38,60 +38,6 @@ namespace MarginTrading.Backend.Core.Mappers
             };
         }
 
-        public static AssetPairBackendContract ToBackendContract(this IAssetPair src)
-        {
-            return new AssetPairBackendContract
-            {
-                Id = src.Id,
-                Name = src.Name,
-                BaseAssetId = src.BaseAssetId,
-                QuoteAssetId = src.QuoteAssetId,
-                Accuracy = src.Accuracy
-            };
-        }
-
-        public static AccountAssetPairModel ToBackendContract(this IAccountAssetPair src)
-        {
-            return new AccountAssetPairModel
-            {
-                TradingConditionId = src.TradingConditionId,
-                BaseAssetId = src.BaseAssetId,
-                Instrument = src.Instrument,
-                LeverageInit = src.LeverageInit,
-                LeverageMaintenance = src.LeverageMaintenance,
-                SwapLong = src.SwapLong,
-                SwapShort = src.SwapShort,
-                OvernightSwapLong = src.OvernightSwapLong,
-                OvernightSwapShort =src.OvernightSwapShort,
-                CommissionLong = src.CommissionLong,
-                CommissionShort = src.CommissionShort,
-                CommissionLot = src.CommissionLot,
-                DeltaBid = src.DeltaBid,
-                DeltaAsk = src.DeltaAsk,
-                DealLimit = src.DealLimit,
-                PositionLimit = src.PositionLimit
-            };
-        }
-
-        public static GraphBidAskPairBackendContract ToBackendContract(this GraphBidAskPair src)
-        {
-            return new GraphBidAskPairBackendContract
-            {
-                Ask = src.Ask,
-                Bid = src.Bid,
-                Date = src.Date
-            };
-        }
-
-        public static AggregatedOrderBookItemBackendContract ToBackendContract(this OrderBookLevel src)
-        {
-            return new AggregatedOrderBookItemBackendContract
-            {
-                Price = src.Price,
-                Volume = src.Volume
-            };
-        }
-
         public static AccountHistoryBackendContract ToBackendContract(this IMarginTradingAccountHistory src)
         {
             return new AccountHistoryBackendContract
@@ -430,44 +376,6 @@ namespace MarginTrading.Backend.Core.Mappers
                 Date = src.Date,
                 Bid = src.Bid,
                 Ask = src.Ask
-            };
-        }
-
-        public static TradingConditionModel ToBackendContract(this ITradingCondition src)
-        {
-            return new TradingConditionModel
-            {
-                Id = src.Id,
-                Name = src.Name,
-                IsDefault = src.IsDefault,
-                LegalEntity = src.LegalEntity,
-            };
-        }
-        
-        public static AccountGroupModel ToBackendContract(this IAccountGroup src)
-        {
-            return new AccountGroupModel
-            {
-                TradingConditionId = src.TradingConditionId,
-                BaseAssetId = src.BaseAssetId,
-                MarginCall = src.MarginCall,
-                StopOut = src.StopOut,
-                DepositTransferLimit = src.DepositTransferLimit,
-                ProfitWithdrawalLimit = src.ProfitWithdrawalLimit
-            };
-        }
-
-        public static MarginTradingAccountModel ToBackendContract(this IMarginTradingAccount src)
-        {
-            return new MarginTradingAccountModel
-            {
-                Id = src.Id,
-                ClientId = src.ClientId,
-                TradingConditionId = src.TradingConditionId,
-                BaseAssetId = src.BaseAssetId,
-                Balance = src.Balance,
-                WithdrawTransferLimit = src.WithdrawTransferLimit,
-                LegalEntity = src.LegalEntity,
             };
         }
     }

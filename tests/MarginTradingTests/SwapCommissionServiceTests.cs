@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Autofac;
-using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
-using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.TradingConditions;
+using MarginTrading.SettingsService.Contracts;
+using MarginTrading.SettingsService.Contracts.TradingConditions;
+using Moq;
 using NUnit.Framework;
 
 namespace MarginTradingTests
@@ -16,18 +17,18 @@ namespace MarginTradingTests
     public class SwapCommissionServiceTests : BaseTests
     {
         private ICommissionService _swapService;
-        private IAccountAssetPairsRepository _accountAssetsRepository;
+        private ITradingInstrumentsApi _tradingInstruments;
         private IEventChannel<BestPriceChangeEventArgs> _bestPriceConsumer;
-        private AccountAssetsManager _accountAssetsManager;
+        private TradingInstrumentsManager _accountAssetsManager;
 
         [OneTimeSetUp]
         public void SetUp()
         {
             RegisterDependencies();
 
-            _accountAssetsManager = Container.Resolve<AccountAssetsManager>();
+            _accountAssetsManager = Container.Resolve<TradingInstrumentsManager>();
             _swapService = Container.Resolve<ICommissionService>();
-            _accountAssetsRepository = Container.Resolve<IAccountAssetPairsRepository>();
+            _tradingInstruments = Container.Resolve<ITradingInstrumentsApi>();
             _bestPriceConsumer = Container.Resolve<IEventChannel<BestPriceChangeEventArgs>>();
         }
 
@@ -36,18 +37,20 @@ namespace MarginTradingTests
         {
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "EURUSD", Bid = 1.02M, Ask = 1.04M }));
 
-            _accountAssetsRepository.AddOrReplaceAsync(new AccountAssetPair
+            var instrumentContract = new TradingInstrumentContract
             {
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
-                BaseAssetId = "USD",
                 Instrument = "EURUSD",
                 LeverageInit = 100,
                 LeverageMaintenance = 150,
                 SwapLong = 100,
                 SwapShort = 100
-            }).Wait();
+            };
 
-            await _accountAssetsManager.UpdateAccountAssetsCache();
+            Mock.Get(_tradingInstruments).Setup(s => s.List(It.IsAny<string>()))
+                .ReturnsAsync(new List<TradingInstrumentContract> {instrumentContract});
+
+            await _accountAssetsManager.UpdateInstrumentsCache();
 
             var dayOrder = new Order
             {

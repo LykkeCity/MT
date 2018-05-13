@@ -47,14 +47,9 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<ITradingConditionsCacheService>()
 				.SingleInstance();
 
-			builder.RegisterType<AccountAssetsCacheService>()
+			builder.RegisterType<TradingInstrumnentsCacheService>()
 				.AsSelf()
-				.As<IAccountAssetsCacheService>()
-				.SingleInstance();
-
-			builder.RegisterType<AccountGroupCacheService>()
-				.AsSelf()
-				.As<IAccountGroupCacheService>()
+				.As<ITradingInstrumnentsCacheService>()
 				.SingleInstance();
 
 			builder.RegisterType<AccountUpdateService>()

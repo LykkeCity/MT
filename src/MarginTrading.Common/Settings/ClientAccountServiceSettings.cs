@@ -1,7 +1,9 @@
+using JetBrains.Annotations;
 using Lykke.SettingsReader.Attributes;
 
 namespace MarginTrading.Common.Settings
 {
+	[UsedImplicitly]
 	public class ClientAccountServiceSettings
 	{
 		[HttpCheck("/api/isalive")]

@@ -6,17 +6,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
-using JetBrains.Annotations;
-using Lykke.Service.ClientAccount.Client;
-using Lykke.Service.ClientAccount.Client.AutorestClient.Models;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Contract.RabbitMqMessageModels;
-using MarginTrading.Backend.Services.TradingConditions;
-using MarginTrading.Common.Extensions;
 using MoreLinq;
 
 namespace MarginTrading.Backend.Services
@@ -28,7 +23,6 @@ namespace MarginTrading.Backend.Services
         private readonly IConsole _console;
         private readonly MarginTradingSettings _marginSettings;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
-        private readonly IAccountGroupCacheService _accountGroupCacheService;
         private readonly IClientNotifyService _clientNotifyService;
         private readonly ILog _log;
         private readonly OrdersCache _ordersCache;
@@ -42,7 +36,6 @@ namespace MarginTrading.Backend.Services
             IConsole console,
             MarginTradingSettings marginSettings,
             IRabbitMqNotifyService rabbitMqNotifyService,
-            IAccountGroupCacheService accountGroupCacheService,
             IClientNotifyService clientNotifyService,
             ILog log,
             OrdersCache ordersCache,
@@ -55,7 +48,6 @@ namespace MarginTrading.Backend.Services
             _console = console;
             _marginSettings = marginSettings;
             _rabbitMqNotifyService = rabbitMqNotifyService;
-            _accountGroupCacheService = accountGroupCacheService;
             _log = log;
             _clientNotifyService = clientNotifyService;
             _ordersCache = ordersCache;
@@ -110,16 +102,6 @@ namespace MarginTrading.Backend.Services
         public async Task<string> UpdateBalanceAsync(IMarginTradingAccount account, decimal amount, AccountHistoryType historyType, 
             string comment, string eventSourceId = null, bool changeTransferLimit = false, string auditLog = null)
         {
-            if (historyType == AccountHistoryType.Deposit && changeTransferLimit)
-            {
-                CheckDepositLimits(account, amount);
-            }
-
-            if (changeTransferLimit)
-            {
-                CheckTransferLimits(account, amount);
-            }
-
             var semaphore = GetSemaphore(account);
 
             await semaphore.WaitAsync();
@@ -198,32 +180,6 @@ namespace MarginTrading.Backend.Services
 
         #region Helpers
 
-        private void CheckDepositLimits(IMarginTradingAccount account, decimal amount)
-        {
-            //limit can not be more then max after deposit
-            if (amount > 0)
-            {
-                var accountGroup =
-                    _accountGroupCacheService.GetAccountGroup(account.TradingConditionId, account.BaseAssetId);
-
-                if (accountGroup.DepositTransferLimit > 0 && accountGroup.DepositTransferLimit < account.Balance + amount)
-                {
-                    throw new Exception(
-                        $"Margin Trading is in beta testing. The cash-ins are temporarily limited when Total Capital exceeds {accountGroup.DepositTransferLimit} {accountGroup.BaseAssetId}. Thank you for using Lykke Margin Trading, the limit will be cancelled soon!");
-                }
-            }
-        }
-        
-        private void CheckTransferLimits(IMarginTradingAccount account, decimal amount)
-        {
-            //withdraw can not be more then limit
-            if (amount < 0 && account.WithdrawTransferLimit < Math.Abs(amount))
-            {
-                throw new Exception(
-                    $"Can not transfer {Math.Abs(amount)}. Current limit is {account.WithdrawTransferLimit}");
-            }
-        }
-        
         private SemaphoreSlim GetSemaphore(IMarginTradingAccount account)
         {
             var hash = account.Id.GetHashCode() % 100;

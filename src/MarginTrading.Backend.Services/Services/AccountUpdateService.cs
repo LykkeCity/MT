@@ -1,30 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.TradingConditions;
 
 namespace MarginTrading.Backend.Services
 {
+    [UsedImplicitly]
     public class AccountUpdateService : IAccountUpdateService
     {
         private readonly IFplService _fplService;
-        private readonly IAccountGroupCacheService _accountGroupCacheService;
+        private readonly ITradingConditionsCacheService _tradingConditionsCache;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly OrdersCache _ordersCache;
         private readonly IAssetsCache _assetsCache;
 
         public AccountUpdateService(
             IFplService fplService,
-            IAccountGroupCacheService accountGroupCacheService,
+            ITradingConditionsCacheService tradingConditionsCache,
             IAccountsCacheService accountsCacheService,
             OrdersCache ordersCache,
             IAssetsCache assetsCache)
         {
             _fplService = fplService;
-            _accountGroupCacheService = accountGroupCacheService;
+            _tradingConditionsCache = tradingConditionsCache;
             _accountsCacheService = accountsCacheService;
             _ordersCache = ordersCache;
             _assetsCache = assetsCache;
@@ -73,16 +74,10 @@ namespace MarginTrading.Backend.Services
             account.AccountFpl.MarginInit = Math.Round(activeOrdersInitMargin + pendingOrdersMargin, accuracy);
             account.AccountFpl.OpenPositionsCount = activeOrders.Count;
 
-            var accountGroup = _accountGroupCacheService.GetAccountGroup(account.TradingConditionId, account.BaseAssetId);
+            var tradingCondition = _tradingConditionsCache.GetTradingCondition(account.TradingConditionId);
 
-            if (accountGroup == null)
-            {
-                throw new Exception(string.Format(MtMessages.AccountGroupForTradingConditionNotFound,
-                    account.TradingConditionId, account.BaseAssetId));
-            }
-
-            account.AccountFpl.MarginCallLevel = accountGroup.MarginCall;
-            account.AccountFpl.StopoutLevel = accountGroup.StopOut;
+            account.AccountFpl.MarginCallLevel = tradingCondition.MarginCall1;
+            account.AccountFpl.StopoutLevel = tradingCondition.StopOut;
             account.AccountFpl.CalculatedHash = account.AccountFpl.ActualHash;
         }
 

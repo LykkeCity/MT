@@ -25,17 +25,14 @@ namespace MarginTrading.Backend.Services.Modules
             builder.RegisterType<TradingConditionsManager>()
                 .AsSelf()
                 .As<IStartable>()
+                .As<ITradingConditionsManager>()
                 .SingleInstance();
 
-            builder.RegisterType<AccountAssetsManager>()
+            builder.RegisterType<TradingInstrumentsManager>()
                 .AsSelf()
+                .As<ITradingInstrumentsManager>()
                 .SingleInstance()
                 .OnActivated(args => args.Instance.Start());
-
-            builder.RegisterType<AccountGroupManager>()
-                .AsSelf()
-                .As<IStartable>()
-                .SingleInstance();
 
             builder.RegisterType<MicrographManager>()
                 .AsSelf()

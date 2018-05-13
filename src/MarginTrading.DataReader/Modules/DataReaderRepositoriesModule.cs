@@ -2,9 +2,7 @@
 using Common.Log;
 using Lykke.SettingsReader;
 using MarginTrading.AzureRepositories;
-using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Common.Services;
 using MarginTrading.DataReader.Settings;
 

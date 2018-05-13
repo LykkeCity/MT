@@ -10,20 +10,6 @@ namespace MarginTrading.Backend.Core.Mappers
 {
     public static class BackendContractToDomainMapper
     {
-        public static LimitOrder ToDomain(this LimitOrderBackendContract src)
-        {
-            return new LimitOrder
-            {
-                Id = src.Id,
-                MarketMakerId = src.MarketMakerId,
-                Instrument = src.Instrument,
-                Volume = src.Volume,
-                Price = src.Price,
-                CreateDate = src.CreateDate,
-                MatchedOrders = new MatchedOrderCollection(src.MatchedOrders.Select(ToDomain))
-            };
-        }
-
         public static MatchedOrder ToDomain(this MatchedOrderBackendContract src)
         {
             return new MatchedOrder
@@ -119,53 +105,6 @@ namespace MarginTrading.Backend.Core.Mappers
                 OrderId = src.OrderId,
                 LegalEntity = src.LegalEntity,
                 AuditLog = src.AuditLog
-            };
-        }
-
-        public static ITradingCondition ToDomainContract(this TradingConditionModel src)
-        {
-            return new TradingCondition
-            {
-                Id = src.Id,
-                Name = src.Name,
-                IsDefault = src.IsDefault,
-                LegalEntity = src.LegalEntity
-            };
-        }
-
-        public static IAccountGroup ToDomainContract(this AccountGroupModel src)
-        {
-            return new AccountGroup
-            {
-                TradingConditionId = src.TradingConditionId,
-                BaseAssetId = src.BaseAssetId,
-                MarginCall = src.MarginCall,
-                StopOut = src.StopOut,
-                DepositTransferLimit = src.DepositTransferLimit,
-                ProfitWithdrawalLimit = src.ProfitWithdrawalLimit
-            };
-        }
-
-        public static IAccountAssetPair ToDomainContract(this AccountAssetPairModel src)
-        {
-            return new AccountAssetPair
-            {
-                TradingConditionId = src.TradingConditionId,
-                BaseAssetId = src.BaseAssetId,
-                Instrument = src.Instrument,
-                LeverageInit = src.LeverageInit,
-                LeverageMaintenance = src.LeverageMaintenance,
-                SwapLong = src.SwapLong,
-                SwapShort = src.SwapShort,
-                OvernightSwapLong = src.OvernightSwapLong,
-                OvernightSwapShort = src.OvernightSwapShort,
-                CommissionLong = src.CommissionLong,
-                CommissionShort = src.CommissionShort,
-                CommissionLot = src.CommissionLot,
-                DeltaBid = src.DeltaBid,
-                DeltaAsk = src.DeltaAsk,
-                DealLimit = src.DealLimit,
-                PositionLimit = src.PositionLimit
             };
         }
     }
