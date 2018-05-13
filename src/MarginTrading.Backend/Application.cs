@@ -7,14 +7,18 @@ using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;
+using MarginTrading.Backend.Services.AssetPairs;
+using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Backend.Services.Stp;
-using MarginTrading.Common.Extensions;
+using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
 using MarginTrading.OrderbookAggregator.Contracts.Messages;
+using MarginTrading.SettingsService.Contracts.Enums;
+using MarginTrading.SettingsService.Contracts.Messages;
 
 #pragma warning disable 1591
 
@@ -29,10 +33,14 @@ namespace MarginTrading.Backend
         private readonly MarginTradingSettings _marginSettings;
         private readonly IMaintenanceModeService _maintenanceModeService;
         private readonly IRabbitMqService _rabbitMqService;
-        private readonly MatchingEngineRoutesManager _matchingEngineRoutesManager;
+        private readonly IMatchingEngineRoutesManager _matchingEngineRoutesManager;
         private readonly IMigrationService _migrationService;
         private readonly IConvertService _convertService;
         private readonly ExternalOrderBooksList _externalOrderBooksList;
+        private readonly IAssetsManager _assetsManager;
+        private readonly IAssetPairsManager _assetPairsManager;
+        private readonly ITradingInstrumentsManager _tradingInstrumentsManager;
+        private readonly ITradingConditionsManager _tradingConditionsManager;
         private const string ServiceName = "MarginTrading.Backend";
 
         public Application(
@@ -46,7 +54,11 @@ namespace MarginTrading.Backend
             MatchingEngineRoutesManager matchingEngineRoutesManager,
             IMigrationService migrationService,
             IConvertService convertService,
-            ExternalOrderBooksList externalOrderBooksList)
+            ExternalOrderBooksList externalOrderBooksList,
+            IAssetsManager assetsManager,
+            IAssetPairsManager assetPairsManager,
+            ITradingInstrumentsManager tradingInstrumentsManager,
+            ITradingConditionsManager tradingConditionsManager)
         {
             _rabbitMqNotifyService = rabbitMqNotifyService;
             _consoleWriter = consoleWriter;
@@ -59,6 +71,10 @@ namespace MarginTrading.Backend
             _migrationService = migrationService;
             _convertService = convertService;
             _externalOrderBooksList = externalOrderBooksList;
+            _assetsManager = assetsManager;
+            _assetPairsManager = assetPairsManager;
+            _tradingInstrumentsManager = tradingInstrumentsManager;
+            _tradingConditionsManager = tradingConditionsManager;
         }
 
         public async Task StartApplicationAsync()
@@ -111,6 +127,16 @@ namespace MarginTrading.Backend
                     _logger.WriteInfo(ServiceName, nameof(StartApplicationAsync),
                         "RisksRabbitMqSettings is not configured");
                 }
+
+                var settingsChanged = new RabbitMqSettings
+                {
+                    ConnectionString = _marginSettings.MtRabbitMqConnString,
+                    ExchangeName = _marginSettings.RabbitMqQueues.SettingsChanged.ExchangeName
+                };
+
+                _rabbitMqService.Subscribe(settingsChanged,
+                    true, HandleChangeSettingsMessage,
+                    _rabbitMqService.GetJsonDeserializer<SettingsChangedEvent>());
             }
             catch (Exception ex)
             {
@@ -139,6 +165,37 @@ namespace MarginTrading.Backend
         private Task HandleNewOrdersMessage(MarketMakerOrderCommandsBatchMessage feedData)
         {
             _marketMakerService.ProcessOrderCommands(feedData);
+            return Task.CompletedTask;
+        }
+
+        private Task HandleChangeSettingsMessage(SettingsChangedEvent message)
+        {
+            switch (message.SettingsType)
+            {
+                case SettingsTypeContract.Asset:
+                    _assetsManager.UpdateCache();
+                    break;
+                
+                case SettingsTypeContract.AssetPair:
+                    _assetPairsManager.InitAssetPairs();
+                    break;
+                
+                case SettingsTypeContract.TradingCondition:
+                    _tradingConditionsManager.InitTradingConditions();
+                    break;
+                
+                case SettingsTypeContract.TradingInstrument:
+                    _tradingInstrumentsManager.UpdateTradingInstrumentsCache();
+                    break;
+                
+                case SettingsTypeContract.TradingRoute:
+                    _matchingEngineRoutesManager.UpdateRoutesCacheAsync();
+                    break;
+                
+                default:
+                    throw new NotImplementedException($"Type {message.SettingsType} is not supported");
+            }
+            
             return Task.CompletedTask;
         }
     }

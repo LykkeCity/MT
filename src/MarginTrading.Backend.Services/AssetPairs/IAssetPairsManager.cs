@@ -1,6 +1,6 @@
 ﻿namespace MarginTrading.Backend.Services.AssetPairs
 {
-    internal interface IAssetPairsManager
+    public interface IAssetPairsManager
     {
         /// <summary>
         /// Initialize asset pairs cache

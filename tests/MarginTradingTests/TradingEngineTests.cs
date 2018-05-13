@@ -957,7 +957,7 @@ namespace MarginTradingTests
             Mock.Get(_tradingInstruments).Setup(s => s.List(It.IsAny<string>()))
                 .ReturnsAsync(new List<TradingInstrumentContract> {instrumentContract});
             
-            await _accountAssetsManager.UpdateInstrumentsCache();
+            await _accountAssetsManager.UpdateTradingInstrumentsCache();
            
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 

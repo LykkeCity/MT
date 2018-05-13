@@ -69,11 +69,13 @@ namespace MarginTrading.Backend.Services
         
         public override void Start()
         {
+            _console.WriteLine("Started InitAccountsCache");
+            
             var accounts = _repository.GetAllAsync().GetAwaiter().GetResult()
                 .Select(MarginTradingAccount.Create).GroupBy(x => x.ClientId).ToDictionary(x => x.Key, x => x.ToArray());
 
             _accountsCacheService.InitAccountsCache(accounts);
-            _console.WriteLine($"InitAccountsCache (clients count:{accounts.Count})");
+            _console.WriteLine($"Finished InitAccountsCache. Count: {accounts.Count}");
 
             base.Start();
         }

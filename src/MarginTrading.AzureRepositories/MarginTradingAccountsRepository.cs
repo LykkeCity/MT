@@ -81,38 +81,10 @@ namespace MarginTrading.AzureRepositories
             return null;
         }
 
-        public async Task<IMarginTradingAccount> UpdateTradingConditionIdAsync(string clientId, string accountId,
-            string tradingConditionId)
-        {
-            return await _tableStorage.MergeAsync(MarginTradingAccountEntity.GeneratePartitionKey(clientId),
-                MarginTradingAccountEntity.GenerateRowKey(accountId),
-                a =>
-                {
-                    a.TradingConditionId = tradingConditionId;
-                    return a;
-                });
-        }
-
         public async Task AddAsync(MarginTradingAccount account)
         {
             var entity = MarginTradingAccountEntity.Create(account);
             await _tableStorage.InsertOrMergeAsync(entity);
-        }
-
-        public async Task<IMarginTradingAccount> GetAsync(string clientId, string accountId)
-        {
-            return await _tableStorage.GetDataAsync(MarginTradingAccountEntity.GeneratePartitionKey(clientId), MarginTradingAccountEntity.GenerateRowKey(accountId));
-        }
-
-        public async Task<IMarginTradingAccount> GetAsync(string accountId)
-        {
-            return (await _tableStorage.GetDataAsync(entity => entity.Id == accountId)).FirstOrDefault();
-        }
-
-        public async Task DeleteAsync(string clientId, string accountId)
-        {
-            await _tableStorage.DeleteAsync(MarginTradingAccountEntity.GeneratePartitionKey(clientId),
-                MarginTradingAccountEntity.GenerateRowKey(accountId));
         }
     }
 }

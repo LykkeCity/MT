@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Autofac;
 using Common;
 using Common.Log;
+using JetBrains.Annotations;
 using MarginTrading.AzureRepositories.Logs;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
@@ -15,7 +16,8 @@ using MarginTrading.SettingsService.Contracts.Routes;
 
 namespace MarginTrading.Backend.Services.MatchingEngines
 {
-    public class MatchingEngineRoutesManager : IStartable
+    [UsedImplicitly]
+    public class MatchingEngineRoutesManager : IStartable, IMatchingEngineRoutesManager
     {
         private const string AnyValue = "*";
 
@@ -176,7 +178,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             }
         }
 
-        private async Task HandleRiskManagerBlockTradingCommand(MatchingEngineRouteRisksCommand command)
+        public async Task HandleRiskManagerBlockTradingCommand(MatchingEngineRouteRisksCommand command)
         {
             switch (command.Action)
             {

@@ -37,6 +37,7 @@ namespace MarginTrading.Backend.Services.Modules
             builder.RegisterType<MatchingEngineRoutesManager>()
                 .AsSelf()
                 .As<IStartable>()
+                .As<IMatchingEngineRoutesManager>()
                 .SingleInstance();
 
             builder.RegisterType<AssetPairsManager>()

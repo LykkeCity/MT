@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Common.Services;
@@ -14,24 +15,29 @@ namespace MarginTrading.Backend.Services.TradingConditions
         private readonly TradingInstrumnentsCacheService _accountAssetsCacheService;
         private readonly ITradingInstrumentsApi _tradingInstruments;
         private readonly IConvertService _convertService;
+        private readonly IConsole _console;
 
         public TradingInstrumentsManager(
             TradingInstrumnentsCacheService accountAssetsCacheService,
             ITradingInstrumentsApi tradingInstruments,
-            IConvertService convertService)
+            IConvertService convertService,
+            IConsole console)
         {
             _accountAssetsCacheService = accountAssetsCacheService;
             _tradingInstruments = tradingInstruments;
             _convertService = convertService;
+            _console = console;
         }
 
         public void Start()
         {
-            UpdateInstrumentsCache().Wait();
+            UpdateTradingInstrumentsCache().Wait();
         }
 
-        public async Task UpdateInstrumentsCache()
+        public async Task UpdateTradingInstrumentsCache()
         {
+            _console.WriteLine($"Started {nameof(UpdateTradingInstrumentsCache)}");
+            
             var instruments = await _tradingInstruments.List(string.Empty);
 
             if (instruments != null)
@@ -40,6 +46,8 @@ namespace MarginTrading.Backend.Services.TradingConditions
                         (ITradingInstrument) _convertService.Convert<TradingInstrumentContract, TradingInstrument>(i))
                     .ToList());
             }
+
+            _console.WriteLine($"Finished {nameof(UpdateTradingInstrumentsCache)}. Count: {instruments?.Count ?? 0}");
         }
     }
 }
