@@ -28,14 +28,12 @@ namespace MarginTrading.DataReader.Modules
                 .SingleInstance();
             builder.RegisterType<MemoryCacheProvider>().As<ICacheProvider>()
                 .SingleInstance();
-            builder.RegisterType<Application>().As<IStartable>()
-                .SingleInstance();
             
             builder.Register(c =>
                 {
                     var settings = c.Resolve<IReloadingManager<DataReaderSettings>>();
                     return new RabbitMqService(c.Resolve<ILog>(), c.Resolve<IConsole>(),
-                        settings.Nested(s => s.Db.StateConnString), settings.CurrentValue.Env);
+                        settings.Nested(s => s.Db.StateConnString), Program.EnvInfo);
                 })
                 .As<IRabbitMqService>()
                 .SingleInstance();
