@@ -21,8 +21,8 @@ namespace MarginTrading.Backend.Contracts.Snow.Positions
         /// Get open positions with optional filtering
         /// </summary>
         [Get("/api/positions/open")]
-        Task<List<OpenPositionContract>> List([Query, CanBeNull] string accountId,
-            [Query, CanBeNull] string assetPairId);
+        Task<List<OpenPositionContract>> List([Query, CanBeNull] string accountId = null,
+            [Query, CanBeNull] string assetPairId = null);
 
         // todo: move to history?
 //        /// <summary>

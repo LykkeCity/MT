@@ -33,7 +33,8 @@ namespace MarginTrading.Backend.Contracts.Snow.Orders
         /// Get open orders with optional filtering
         /// </summary>
         [Get("/api/orders/open")]
-        Task<List<OrderContract>> ListOpen([Query, CanBeNull] string accountId, [Query, CanBeNull] string assetPairId);
+        Task<List<OrderContract>> ListOpen([Query, CanBeNull] string accountId = null,
+            [Query, CanBeNull] string assetPairId = null);
 
         // todo: add filter by positionId?
         //todo: move to history
@@ -41,7 +42,7 @@ namespace MarginTrading.Backend.Contracts.Snow.Orders
         /// Get executed orders with optional filtering
         /// </summary>
         [Get("/api/orders/executed")]
-        Task<List<OrderContract>> ListExecuted([Query, CanBeNull] string accountId,
-            [Query, CanBeNull] string assetPairId);
+        Task<List<OrderContract>> ListExecuted([Query, CanBeNull] string accountId = null,
+            [Query, CanBeNull] string assetPairId = null);
     }
 }
