@@ -69,7 +69,7 @@ namespace MarginTrading.AzureRepositories
 
             if (account != null)
             {
-                account.Balance += (double) amount;
+                account.Balance = (decimal.Parse(account.Balance) + amount).ToString();
 
                 if (changeLimit)
                     account.WithdrawTransferLimit += (double) amount;
