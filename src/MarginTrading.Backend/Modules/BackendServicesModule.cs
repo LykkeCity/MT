@@ -11,6 +11,8 @@ using MarginTrading.Backend.Middleware.Validator;
 using MarginTrading.Common.RabbitMq;
 using Microsoft.AspNetCore.Hosting;
 using Lykke.Service.EmailSender;
+using Lykke.Service.PersonalData.Client;
+using Lykke.Service.PersonalData.Contract;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;
@@ -102,6 +104,10 @@ namespace MarginTrading.Backend.Modules
 
             builder.RegisterType<EquivalentPricesService>()
                 .As<IEquivalentPricesService>()
+                .SingleInstance();
+            
+            builder.RegisterInstance<IPersonalDataService>(
+                    new PersonalDataService(_mtSettings.PersonalDataServiceSettings, _log))
                 .SingleInstance();
 
             RegisterPublishers(builder, consoleWriter);

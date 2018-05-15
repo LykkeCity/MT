@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Autofac;
 using Lykke.Common;
+using Lykke.Service.PersonalData.Contract;
 using Lykke.Service.Session;
 using MarginTrading.Common.Services.Client;
 using MarginTrading.Common.Services.Settings;
@@ -34,9 +35,12 @@ namespace MarginTrading.Frontend.Tests.Modules
                 .Setup(item => item.GetNotificationId(It.IsAny<string>()))
                 .Returns(() => Task.FromResult(Guid.NewGuid().ToString()));
             
+            var personalDataServiceMock = new Mock<IPersonalDataService>();
+            
             builder.RegisterInstance(httpRequestServiceMock.Object).As<IHttpRequestService>();
             builder.RegisterInstance(clientsRepositoryMock.Object).As<IClientsSessionsRepository>();
             builder.RegisterInstance(clientAccountsServiceMock.Object).As<IClientAccountService>();
+            builder.RegisterInstance(personalDataServiceMock.Object).As<IPersonalDataService>();
         }
     }
 

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Lykke.Service.PersonalData.Settings;
 using Lykke.SettingsReader.Attributes;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Settings;
@@ -12,6 +13,7 @@ namespace MarginTrading.Frontend.Settings
         public ClientAccountServiceSettings ClientAccountServiceClient { get; set; }
         public MtDataReaderClientSettings MtDataReaderLiveServiceClient { get; set; }
         public MtDataReaderClientSettings MtDataReaderDemoServiceClient { get; set; }
+        public PersonalDataServiceClientSettings PersonalDataServiceSettings { get; set; }
     }
 
     public class MtFrontendSettings

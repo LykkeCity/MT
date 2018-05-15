@@ -1,16 +1,21 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Lykke.Service.ClientAccount.Client;
+using Lykke.Service.PersonalData.Contract;
 
 namespace MarginTrading.Common.Services.Client
 {
     public class ClientAccountService : IClientAccountService
     {
         private readonly IClientAccountClient _clientAccountsClient;
+        private readonly IPersonalDataService _personalDataService;
 
-        public ClientAccountService(IClientAccountClient clientAccountsClient)
+        public ClientAccountService(
+            IClientAccountClient clientAccountsClient,
+            IPersonalDataService personalDataService)
         {
             _clientAccountsClient = clientAccountsClient;
+            _personalDataService = personalDataService;
         }
 
         public async Task<string> GetNotificationId(string clientId)
@@ -22,14 +27,12 @@ namespace MarginTrading.Common.Services.Client
                 return clientAcc.NotificationsId;
             }
 
-            throw new Exception(string.Format("Can't get notification Id for clientId = {0}", clientId));
+            throw new Exception($"Can't get notification Id for clientId = {clientId}");
         }
 
         public async Task<string> GetEmail(string clientId)
         {
-            var clientAcc = await _clientAccountsClient.GetByIdAsync(clientId);
-
-            return clientAcc?.Email;
+            return await _personalDataService.GetEmailAsync(clientId);
         }
 
         public async Task<bool> IsPushEnabled(string clientId)

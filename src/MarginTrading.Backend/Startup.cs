@@ -166,7 +166,7 @@ namespace MarginTrading.Backend
             builder.RegisterModule(new BackendServicesModule(mtSettings.CurrentValue, settings.CurrentValue,
                 environment, LogLocator.CommonLog));
             builder.RegisterModule(new MarginTradingCommonModule());
-            builder.RegisterModule(new ExternalServicesModule(mtSettings));
+            builder.RegisterModule(new ExternalServicesModule(mtSettings, LogLocator.CommonLog));
             builder.RegisterModule(new BackendMigrationsModule());
 
             builder.RegisterBuildCallback(c => c.Resolve<AccountAssetsManager>());
