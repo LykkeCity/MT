@@ -78,18 +78,7 @@ namespace MarginTrading.DataReader.Controllers.Snow
         [HttpGet, Route("by-parent-order/{parentOrderId}")]
         public async Task<List<OrderContract>> ListByParentOrder(string parentOrderId)
         {
-            var orderById = await _ordersByIdRepository.GetAsync(parentOrderId);
-            if (orderById == null)
-                return new List<OrderContract>();
-
-            var history = await _ordersHistoryRepository.GetHistoryAsync(new[] {orderById.AccountId},
-                orderById.OrderCreatedTime - TimeSpan.FromSeconds(1), null);
-
-            var lastHistoryRecords = history.Where(h => h.ParentPositionId == parentOrderId)
-                .OrderByDescending(h => h.UpdateTimestamp).GroupBy(o => o.Id,
-                    (id, orders) => orders.OrderByDescending(h => h.UpdateTimestamp).First());
-
-            return lastHistoryRecords.SelectMany(MakeOrderContractsFromHistory).ToList();
+            return new List<OrderContract>(); // todo
         }
 
         /// <summary>
@@ -98,7 +87,18 @@ namespace MarginTrading.DataReader.Controllers.Snow
         [HttpGet, Route("by-parent-position/{parentPositionId}")]
         public async Task<List<OrderContract>> ListByParentPosition(string parentPositionId)
         {
-            return new List<OrderContract>(); // todo
+            var orderById = await _ordersByIdRepository.GetAsync(parentPositionId);
+            if (orderById == null)
+                return new List<OrderContract>();
+
+            var history = await _ordersHistoryRepository.GetHistoryAsync(new[] {orderById.AccountId},
+                orderById.OrderCreatedTime - TimeSpan.FromSeconds(1), null);
+
+            var lastHistoryRecords = history.Where(h => h.ParentPositionId == parentPositionId)
+                .OrderByDescending(h => h.UpdateTimestamp).GroupBy(o => o.Id,
+                    (id, orders) => orders.OrderByDescending(h => h.UpdateTimestamp).First());
+
+            return lastHistoryRecords.SelectMany(MakeOrderContractsFromHistory).ToList();
         }
 
         /// <summary>
