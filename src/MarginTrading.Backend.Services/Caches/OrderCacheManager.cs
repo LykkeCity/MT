@@ -35,7 +35,7 @@ namespace MarginTrading.Backend.Services
                 // migrate orders to add LegalEntity field
                 // todo: can be removed once published to prod
                 if (o.LegalEntity == null)
-                    o.LegalEntity = _accountsCacheService.Get(o.ClientId, o.AccountId).LegalEntity;
+                    o.LegalEntity = _accountsCacheService.Get(o.AccountId).LegalEntity;
             });
 
             _orderCache.InitOrders(orders);

@@ -6,7 +6,6 @@ using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services.Client;
-using MarginTrading.Common.Settings;
 
 namespace MarginTrading.Backend.Services.EventsConsumers
 {
@@ -76,11 +75,11 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 				_clientNotifyService.NotifyOrderChanged(order);
 				
 				var totalFpl = order.GetTotalFpl();
-				var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+				var account = _accountsCacheService.Get(order.AccountId);
 				await _accountManager.UpdateBalanceAsync(account, totalFpl, AccountHistoryType.OrderClosed,
 					$"Balance changed on order close (id = {order.Id})", order.Id);
 
-				await SendOrderChangedNotification(order.ClientId, order);
+				await SendOrderChangedNotification(account.ClientId, order);
 			});
 		}
 
@@ -90,7 +89,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 			_threadSwitcher.SwitchThread(async () =>
 			{
 				_clientNotifyService.NotifyOrderChanged(order);
-				await SendOrderChangedNotification(order.ClientId, order);
+				var account = _accountsCacheService.Get(order.AccountId);
+				await SendOrderChangedNotification(account.ClientId, order);
 			});
 		}
 
@@ -100,7 +100,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 			_threadSwitcher.SwitchThread(async () =>
 			{
 				_clientNotifyService.NotifyOrderChanged(order);
-				await SendOrderChangedNotification(order.ClientId, order);
+				var account = _accountsCacheService.Get(order.AccountId);
+				await SendOrderChangedNotification(account.ClientId, order);
 			});
 		}
 

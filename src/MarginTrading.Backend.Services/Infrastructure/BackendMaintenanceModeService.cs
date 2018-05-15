@@ -1,5 +1,4 @@
-﻿using Lykke.Logs;
-using Lykke.SlackNotifications;
+﻿using Lykke.SlackNotifications;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Common.Enums;
 
@@ -8,10 +7,10 @@ namespace MarginTrading.Backend.Services.Infrastructure
     public class BackendMaintenanceModeService : IMaintenanceModeService
     {
         private readonly ISlackNotificationsSender _slackNotificationsSender;
-        private readonly MarginSettings _settings;
+        private readonly MarginTradingSettings _settings;
 
         public BackendMaintenanceModeService(ISlackNotificationsSender slackNotificationsSender,
-            MarginSettings settings)
+            MarginTradingSettings settings)
         {
             _slackNotificationsSender = slackNotificationsSender;
             _settings = settings;

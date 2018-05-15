@@ -4,7 +4,6 @@ using Autofac;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.TradingConditions;
-using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.TradingConditions;
 
@@ -14,7 +13,7 @@ namespace MarginTradingTests
     public class MatchingEngineRouteTests: BaseTests
     {
         private IAccountsCacheService _accountsCacheService;
-        private TradingConditionsManager _tradingConditionsManager;
+        private TradingConditionsCacheService _tradingConditionsCache;
         private MatchingEngineRoutesManager _matchingEngineRoutesManager;
         
         [OneTimeSetUp]
@@ -22,49 +21,45 @@ namespace MarginTradingTests
         {
             RegisterDependencies();
             _accountsCacheService = Container.Resolve<IAccountsCacheService>();
-            _tradingConditionsManager = Container.Resolve<TradingConditionsManager>();
+            _tradingConditionsCache = Container.Resolve<TradingConditionsCacheService>();
             _matchingEngineRoutesManager = Container.Resolve<MatchingEngineRoutesManager>();
             if (_matchingEngineRoutesManager == null)
                 throw new Exception("Unable to resolve MatchingEngineRoutesCacheService");
 
             // Add user accounts
-            var account1 = new MarginTradingAccount() {ClientId = "CLIENT001"};
-            var account2 = new MarginTradingAccount() {ClientId = "CLIENT002"};
-            var account3 = new MarginTradingAccount() {ClientId = "CLIENT003"};
-            var account4 = new MarginTradingAccount() {ClientId = "CLIENT004"};
-            _accountsCacheService.UpdateAccountsCache(account1.ClientId, new[] {account1});
-            _accountsCacheService.UpdateAccountsCache(account2.ClientId, new[] {account2});
-            _accountsCacheService.UpdateAccountsCache(account3.ClientId, new[] {account3});
-            _accountsCacheService.UpdateAccountsCache(account4.ClientId, new[] {account4});
+            var account1 = new MarginTradingAccount() {Id = "CLIENT001"};
+            var account2 = new MarginTradingAccount() {Id = "CLIENT002"};
+            var account3 = new MarginTradingAccount() {Id = "CLIENT003"};
+            var account4 = new MarginTradingAccount() {Id = "CLIENT004"};
+            _accountsCacheService.Update(account1);
+            _accountsCacheService.Update(account2);
+            _accountsCacheService.Update(account3);
+            _accountsCacheService.Update(account4);
 
             // Add trading conditions 
-            System.Threading.Tasks.Task.Run(async () =>
-            {
-                await _tradingConditionsManager.AddOrReplaceTradingConditionAsync(new TradingCondition() { Id = "TCID001", Name= "MarginTradingCondition 1", IsDefault = true });
-                await _tradingConditionsManager.AddOrReplaceTradingConditionAsync(new TradingCondition() { Id = "TCID003", Name = "MarginTradingCondition 3", IsDefault = false});
-                await _tradingConditionsManager.AddOrReplaceTradingConditionAsync(new TradingCondition() { Id = "TCID004", Name = "MarginTradingCondition 4", IsDefault = false });
-                await _tradingConditionsManager.AddOrReplaceTradingConditionAsync(new TradingCondition() { Id = "TCID005", Name = "MarginTradingCondition 5", IsDefault = false });
-            }).Wait();
-            
+                _tradingConditionsCache.AddOrUpdateTradingCondition(new TradingCondition() { Id = "TCID001", Name= "MarginTradingCondition 1", IsDefault = true });
+                _tradingConditionsCache.AddOrUpdateTradingCondition(new TradingCondition() { Id = "TCID003", Name = "MarginTradingCondition 3", IsDefault = false});
+                _tradingConditionsCache.AddOrUpdateTradingCondition(new TradingCondition() { Id = "TCID004", Name = "MarginTradingCondition 4", IsDefault = false });
+                _tradingConditionsCache.AddOrUpdateTradingCondition(new TradingCondition() { Id = "TCID005", Name = "MarginTradingCondition 5", IsDefault = false });
 
             System.Threading.Tasks.Task.Run(async () =>
             {
-                await _matchingEngineRoutesManager.AddOrReplaceRouteAsync(new MatchingEngineRoute() { Id = "1", Rank = 10, MatchingEngineId = "LYKKE" });
-                await _matchingEngineRoutesManager.AddOrReplaceRouteAsync(new MatchingEngineRoute() { Id = "2", Rank = 5, Instrument = "BTCUSD", MatchingEngineId = "ICM" });
-                await _matchingEngineRoutesManager.AddOrReplaceRouteAsync(new MatchingEngineRoute() { Id = "3", Rank = 4, TradingConditionId = "TCID001", Instrument = "EURCHF", Type = OrderDirection.Buy, MatchingEngineId = "LYKKE" });
-                await _matchingEngineRoutesManager.AddOrReplaceRouteAsync(new MatchingEngineRoute() { Id = "4", Rank = 3, TradingConditionId = "TCID001", ClientId = "CLIENT001", Instrument = "EURCHF", Type = OrderDirection.Buy, MatchingEngineId = "ICM" });
-                await _matchingEngineRoutesManager.AddOrReplaceRouteAsync(new MatchingEngineRoute() { Id = "5", Rank = 4, TradingConditionId = "TCID001", ClientId = "CLIENT002", Instrument = "EURCHF", Type = OrderDirection.Buy, MatchingEngineId = "LYKKE" });
-                await _matchingEngineRoutesManager.AddOrReplaceRouteAsync(new MatchingEngineRoute() { Id = "6", Rank = 4, Instrument = "EURCHF", Type = OrderDirection.Buy, MatchingEngineId = "LYKKE" });
-                await _matchingEngineRoutesManager.AddOrReplaceRouteAsync(new MatchingEngineRoute() { Id = "7", Rank = 4, Instrument = "EURCHF", MatchingEngineId = "LYKKE" });
-                await _matchingEngineRoutesManager.AddOrReplaceRouteAsync(new MatchingEngineRoute() { Id = "8", Rank = 5, ClientId = "CLIENT003", Instrument = "EURCHF", MatchingEngineId = "LYKKE" });
-                await _matchingEngineRoutesManager.AddOrReplaceRouteAsync(new MatchingEngineRoute() { Id = "9", Rank = 6, TradingConditionId = "TCID003", ClientId = "CLIENT002", Instrument = "EURCHF", Type = OrderDirection.Sell, MatchingEngineId = "ICM" });
-                await _matchingEngineRoutesManager.AddOrReplaceRouteAsync(new MatchingEngineRoute() { Id = "10", Rank = 4, TradingConditionId = "TCID004", ClientId = "CLIENT004", Instrument = "EURJPY", MatchingEngineId = "ICM" });
-                await _matchingEngineRoutesManager.AddOrReplaceRouteAsync(new MatchingEngineRoute() { Id = "11", Rank = 4, TradingConditionId = "TCID004", Instrument = "EURJPY", Type = OrderDirection.Buy, MatchingEngineId = "LYKKE" });
-                await _matchingEngineRoutesManager.AddOrReplaceRouteAsync(new MatchingEngineRoute() { Id = "12", Rank = 4, TradingConditionId = "TCID005", Instrument = "EURUSD", Type = OrderDirection.Buy, MatchingEngineId = "LYKKE" });
-                await _matchingEngineRoutesManager.AddOrReplaceRouteAsync(new MatchingEngineRoute() { Id = "13", Rank = 4, TradingConditionId = "TCID005", Instrument = "EURUSD", Type = OrderDirection.Buy, MatchingEngineId = "ICM" });
-                await _matchingEngineRoutesManager.AddOrReplaceRouteAsync(new MatchingEngineRoute() { Id = "14", Rank = 9, Instrument = "BTCEUR", MatchingEngineId = "LYKKE" });
-                await _matchingEngineRoutesManager.AddOrReplaceRouteAsync(new MatchingEngineRoute() { Id = "15", Rank = 7, Type = OrderDirection.Buy, MatchingEngineId = "ICM", Asset = "EUR" });
-                await _matchingEngineRoutesManager.AddOrReplaceRouteAsync(new MatchingEngineRoute() { Id = "16", Rank = 8, Type = OrderDirection.Sell, MatchingEngineId = "ICM", Asset = "EUR" });
+                await _matchingEngineRoutesManager.AddOrReplaceRouteInCacheAsync(new MatchingEngineRoute() { Id = "1", Rank = 10, MatchingEngineId = "LYKKE" });
+                await _matchingEngineRoutesManager.AddOrReplaceRouteInCacheAsync(new MatchingEngineRoute() { Id = "2", Rank = 5, Instrument = "BTCUSD", MatchingEngineId = "ICM" });
+                await _matchingEngineRoutesManager.AddOrReplaceRouteInCacheAsync(new MatchingEngineRoute() { Id = "3", Rank = 4, TradingConditionId = "TCID001", Instrument = "EURCHF", Type = OrderDirection.Buy, MatchingEngineId = "LYKKE" });
+                await _matchingEngineRoutesManager.AddOrReplaceRouteInCacheAsync(new MatchingEngineRoute() { Id = "4", Rank = 3, TradingConditionId = "TCID001", ClientId = "CLIENT001", Instrument = "EURCHF", Type = OrderDirection.Buy, MatchingEngineId = "ICM" });
+                await _matchingEngineRoutesManager.AddOrReplaceRouteInCacheAsync(new MatchingEngineRoute() { Id = "5", Rank = 4, TradingConditionId = "TCID001", ClientId = "CLIENT002", Instrument = "EURCHF", Type = OrderDirection.Buy, MatchingEngineId = "LYKKE" });
+                await _matchingEngineRoutesManager.AddOrReplaceRouteInCacheAsync(new MatchingEngineRoute() { Id = "6", Rank = 4, Instrument = "EURCHF", Type = OrderDirection.Buy, MatchingEngineId = "LYKKE" });
+                await _matchingEngineRoutesManager.AddOrReplaceRouteInCacheAsync(new MatchingEngineRoute() { Id = "7", Rank = 4, Instrument = "EURCHF", MatchingEngineId = "LYKKE" });
+                await _matchingEngineRoutesManager.AddOrReplaceRouteInCacheAsync(new MatchingEngineRoute() { Id = "8", Rank = 5, ClientId = "CLIENT003", Instrument = "EURCHF", MatchingEngineId = "LYKKE" });
+                await _matchingEngineRoutesManager.AddOrReplaceRouteInCacheAsync(new MatchingEngineRoute() { Id = "9", Rank = 6, TradingConditionId = "TCID003", ClientId = "CLIENT002", Instrument = "EURCHF", Type = OrderDirection.Sell, MatchingEngineId = "ICM" });
+                await _matchingEngineRoutesManager.AddOrReplaceRouteInCacheAsync(new MatchingEngineRoute() { Id = "10", Rank = 4, TradingConditionId = "TCID004", ClientId = "CLIENT004", Instrument = "EURJPY", MatchingEngineId = "ICM" });
+                await _matchingEngineRoutesManager.AddOrReplaceRouteInCacheAsync(new MatchingEngineRoute() { Id = "11", Rank = 4, TradingConditionId = "TCID004", Instrument = "EURJPY", Type = OrderDirection.Buy, MatchingEngineId = "LYKKE" });
+                await _matchingEngineRoutesManager.AddOrReplaceRouteInCacheAsync(new MatchingEngineRoute() { Id = "12", Rank = 4, TradingConditionId = "TCID005", Instrument = "EURUSD", Type = OrderDirection.Buy, MatchingEngineId = "LYKKE" });
+                await _matchingEngineRoutesManager.AddOrReplaceRouteInCacheAsync(new MatchingEngineRoute() { Id = "13", Rank = 4, TradingConditionId = "TCID005", Instrument = "EURUSD", Type = OrderDirection.Buy, MatchingEngineId = "ICM" });
+                await _matchingEngineRoutesManager.AddOrReplaceRouteInCacheAsync(new MatchingEngineRoute() { Id = "14", Rank = 9, Instrument = "BTCEUR", MatchingEngineId = "LYKKE" });
+                await _matchingEngineRoutesManager.AddOrReplaceRouteInCacheAsync(new MatchingEngineRoute() { Id = "15", Rank = 7, Type = OrderDirection.Buy, MatchingEngineId = "ICM", Asset = "EUR" });
+                await _matchingEngineRoutesManager.AddOrReplaceRouteInCacheAsync(new MatchingEngineRoute() { Id = "16", Rank = 8, Type = OrderDirection.Sell, MatchingEngineId = "ICM", Asset = "EUR" });
             }).Wait();
 
             /* TABLE PROTOTYPE

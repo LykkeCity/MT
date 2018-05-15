@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using Autofac;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
-using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
 using NUnit.Framework;
@@ -46,7 +44,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = Accounts[0].Id,
-                ClientId = Accounts[0].ClientId,
                 Instrument = instrument,
                 Volume = volume,
                 FillType = OrderFillType.FillOrKill
@@ -83,7 +80,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = Accounts[0].Id,
-                ClientId = Accounts[0].ClientId,
                 Instrument = instrument,
                 Volume = 110,
                 FillType = OrderFillType.FillOrKill
@@ -94,7 +90,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = Accounts[0].Id,
-                ClientId = Accounts[0].ClientId,
                 Instrument = instrument,
                 Volume = -12,
                 FillType = OrderFillType.FillOrKill
@@ -105,7 +100,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = Accounts[1].Id,
-                ClientId = Accounts[1].ClientId,
                 Instrument = instrument,
                 Volume = 49,
                 FillType = OrderFillType.FillOrKill
@@ -120,7 +114,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = Accounts[0].Id,
-                ClientId = Accounts[0].ClientId,
                 Instrument = instrument,
                 Volume = volume,
                 FillType = OrderFillType.FillOrKill
@@ -148,7 +141,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = Accounts[0].Id,
-                ClientId = Accounts[0].ClientId,
                 Instrument = instrument,
                 Volume = 10,
                 FillType = OrderFillType.FillOrKill
@@ -169,7 +161,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = accountId,
-                ClientId = Accounts[0].ClientId,
                 Instrument = "BTCUSD",
                 Volume = 10,
                 FillType = OrderFillType.FillOrKill
@@ -188,7 +179,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = Accounts[0].Id,
-                ClientId = Accounts[0].ClientId,
                 Instrument = "EURUSD",
                 Volume = 10,
                 FillType = OrderFillType.FillOrKill
@@ -211,7 +201,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = Accounts[0].Id,
-                ClientId = Accounts[0].ClientId,
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 AccountAssetId = Accounts[0].BaseAssetId,
                 Instrument = instrument,
@@ -238,7 +227,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = Accounts[0].Id,
-                ClientId = Accounts[0].ClientId,
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 AccountAssetId = Accounts[0].BaseAssetId,
                 Instrument = instrument,
@@ -265,7 +253,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = Accounts[0].Id,
-                ClientId = Accounts[0].ClientId,
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 AccountAssetId = Accounts[0].BaseAssetId,
                 Instrument = instrument,
@@ -293,7 +280,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = Accounts[0].Id,
-                ClientId = Accounts[0].ClientId,
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 AccountAssetId = Accounts[0].BaseAssetId,
                 Instrument = instrument,
@@ -322,7 +308,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = Accounts[0].Id,
-                ClientId = Accounts[0].ClientId,
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 AccountAssetId = Accounts[0].BaseAssetId,
                 Instrument = instrument,
@@ -350,7 +335,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = Accounts[0].Id,
-                ClientId = Accounts[0].ClientId,
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 AccountAssetId = Accounts[0].BaseAssetId,
                 Instrument = instrument,
@@ -378,7 +362,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = Accounts[0].Id,
-                ClientId = Accounts[0].ClientId,
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 AccountAssetId = Accounts[0].BaseAssetId,
                 Instrument = instrument,

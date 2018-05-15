@@ -10,7 +10,6 @@ using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Services.Client;
-using MarginTrading.Common.Settings;
 
 namespace MarginTrading.Backend.Services.EventsConsumers
 {
@@ -66,7 +65,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
                 var marginEventTask = _rabbitMqNotifyService.AccountMarginEvent(accountMarginEventMessage);
 
-                _operationsLogService.AddLog("margin call", account.ClientId, account.Id, "", ea.ToJson());
+                _operationsLogService.AddLog("margin call", account.Id, "", ea.ToJson());
 
                 var marginUsageLevel = account.GetMarginUsageLevel();
                 var marginUsedPerc = marginUsageLevel == 0 ? 0 : 1 / marginUsageLevel;

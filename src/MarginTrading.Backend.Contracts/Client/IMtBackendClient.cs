@@ -6,28 +6,13 @@ namespace MarginTrading.Backend.Contracts.Client
     public interface IMtBackendClient
     {
         /// <summary>
-        /// Manages day offs schedule and exclusions
+        /// Performing operations with orders
         /// </summary>
-        IScheduleSettingsApi ScheduleSettings { get; }
+        IOrdersApi Orders { get; }
         
         /// <summary>
-        /// Account deposit, withdraw and other operations with balace
+        /// Performing operations with positions
         /// </summary>
-        IAccountsBalanceApi AccountsBalance { get; }
-        
-        /// <summary>
-        /// Manages Asset Pairs
-        /// </summary>
-        IAssetPairsEditingApi AssetPairsEdit { get; }
-
-        /// <summary>
-        /// Manages Trading Conditions
-        /// </summary>
-        ITradingConditionsEditingApi TradingConditionsEdit { get; }
-        
-        /// <summary>
-        /// Performing trading operations
-        /// </summary>
-        ITradingApi Trading { get; }
+        IPositionsApi Positions { get; }
     }
 }

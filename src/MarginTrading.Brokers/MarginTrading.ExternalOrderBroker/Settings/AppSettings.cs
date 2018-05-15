@@ -1,5 +1,4 @@
 ﻿using MarginTrading.BrokerBase.Settings;
-using MarginTrading.Common.RabbitMq;
 
 namespace MarginTrading.ExternalOrderBroker.Settings
 {

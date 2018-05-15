@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Lykke.Service.ClientAccount.Client;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Messages;
@@ -8,7 +7,6 @@ using MarginTrading.Backend.Core.Notifications;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services.Client;
-using MarginTrading.Common.Settings;
 using MarginTrading.Contract.BackendContracts;
 
 namespace MarginTrading.Backend.Services

@@ -1,12 +1,12 @@
 ﻿using System.Threading.Tasks;
 using Common;
 using FluentAssertions;
-using Lykke.RabbitMqBroker.Publisher;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.ClientAccount.Client.Models;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;
 using MarginTrading.Common.RabbitMq;
+using MarginTrading.Common.Services.Client;
 using MarginTrading.Common.Services.Settings;
 using MarginTradingTests.Helpers;
 using Moq;
@@ -18,15 +18,15 @@ namespace MarginTradingTests.Services
     class MarginTradingEnablingServiceTests
     {
         private MarginTradingEnablingService _sut;
-        private IClientAccountClient _clientAccountsService;
+        private IClientAccountService _clientAccountsService;
         private MarginTradingEnabledChangedMessage _sentMessage = null;
         private IMarginTradingSettingsCacheService _marginTradingSettingsCacheService;
-        private MarginSettings _marginSettings;
+        private MarginTradingSettings _marginSettings;
 
         [SetUp]
         public void SetUp()
         {
-            _clientAccountsService = Mock.Of<IClientAccountClient>(r =>
+            _clientAccountsService = Mock.Of<IClientAccountService>(r =>
                 r.GetMarginEnabledAsync("id of client") == Task.FromResult(new MarginEnabledSettingsModel()));
             var publisher = Mock.Of<IMessageProducer<MarginTradingEnabledChangedMessage>>();
             Mock.Get(publisher)
@@ -41,7 +41,7 @@ namespace MarginTradingTests.Services
                 s.GetProducer(expectedRabbitMqSettings.Equivalent(), true,
                     s.GetJsonSerializer<MarginTradingEnabledChangedMessage>()) ==
                 publisher);
-            _marginSettings = new MarginSettings
+            _marginSettings = new MarginTradingSettings
             {
                 MtRabbitMqConnString = "conn str",
                 RabbitMqQueues = new RabbitMqQueues

@@ -1,5 +1,4 @@
-﻿using System;
-using MarginTrading.Backend.Core;
+﻿using MarginTrading.Backend.Core;
 
 namespace MarginTrading.Backend.Services.Events
 {

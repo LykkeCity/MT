@@ -47,12 +47,4 @@ namespace MarginTrading.Backend.Core.MatchingEngines
             };
         }
     }
-
-    public interface IMatchingEngineRoutesRepository
-    {
-        Task AddOrReplaceRouteAsync(IMatchingEngineRoute route);
-        Task DeleteRouteAsync(string id);
-        Task<IEnumerable<IMatchingEngineRoute>> GetAllRoutesAsync();
-        Task<IMatchingEngineRoute> GetRouteByIdAsync(string id);
-    }
 }

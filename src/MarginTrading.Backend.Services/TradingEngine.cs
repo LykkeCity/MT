@@ -8,7 +8,6 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
-using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
@@ -35,7 +34,7 @@ namespace MarginTrading.Backend.Services
         private readonly IEquivalentPricesService _equivalentPricesService;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly OrdersCache _ordersCache;
-        private readonly IAccountAssetsCacheService _accountAssetsCacheService;
+        private readonly ITradingInstrumnentsCacheService _accountAssetsCacheService;
         private readonly IMatchingEngineRouter _meRouter;
         private readonly IThreadSwitcher _threadSwitcher;
         private readonly IContextFactory _contextFactory;
@@ -60,7 +59,7 @@ namespace MarginTrading.Backend.Services
             IEquivalentPricesService equivalentPricesService,
             IAccountsCacheService accountsCacheService,
             OrdersCache ordersCache,
-            IAccountAssetsCacheService accountAssetsCacheService,
+            ITradingInstrumnentsCacheService accountAssetsCacheService,
             IMatchingEngineRouter meRouter,
             IThreadSwitcher threadSwitcher,
             IContextFactory contextFactory,
@@ -202,15 +201,16 @@ namespace MarginTrading.Backend.Services
             order.OpenDate = DateTime.UtcNow;
             order.Status = OrderStatus.Active;
 
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
-            _swapCommissionService.SetCommissionRates(account.TradingConditionId, account.BaseAssetId, order);
+            var account = _accountsCacheService.Get(order.AccountId);
+            _swapCommissionService.SetCommissionRates(account.TradingConditionId, order);
             _ordersCache.ActiveOrders.Add(order);
             _orderActivatedEventChannel.SendEvent(this, new OrderActivatedEventArgs(order));
         }
 
         private void CheckIfWeCanOpenPosition(Order order, MatchedOrderCollection matchedOrders)
         {
-            var accountAsset = _accountAssetsCacheService.GetAccountAsset(order.TradingConditionId, order.AccountAssetId, order.Instrument);
+            var accountAsset =
+                _accountAssetsCacheService.GetTradingInstrument(order.TradingConditionId, order.Instrument);
             _validateOrderService.ValidateInstrumentPositionVolume(accountAsset, order);
 
             order.MatchedOrders.AddRange(matchedOrders);
@@ -350,7 +350,7 @@ namespace MarginTrading.Backend.Services
                 if (null == anyOrder)
                     continue;
 
-                var account = _accountsCacheService.Get(anyOrder.ClientId, anyOrder.AccountId);
+                var account = _accountsCacheService.Get(anyOrder.AccountId);
                 var oldAccountLevel = account.GetAccountLevel();
 
                 foreach (var order in accountOrders.Value)
@@ -529,11 +529,11 @@ namespace MarginTrading.Backend.Services
                 var sl = stopLoss == 0 ? null : stopLoss;
                 var expOpenPrice = expectedOpenPrice == 0 ? null : expectedOpenPrice;
 
-                var accountAsset = _accountAssetsCacheService.GetAccountAsset(order.TradingConditionId,
-                    order.AccountAssetId, order.Instrument);
+                var accountAsset = _accountAssetsCacheService.GetTradingInstrument(order.TradingConditionId,
+                    order.Instrument);
 
                 _validateOrderService.ValidateOrderStops(order.GetOrderType(), quote,
-                    accountAsset.DeltaBid, accountAsset.DeltaAsk, tp, sl, expOpenPrice, order.AssetAccuracy);
+                    accountAsset.Delta, accountAsset.Delta, tp, sl, expOpenPrice, order.AssetAccuracy);
 
                 order.TakeProfit = tp.HasValue ? Math.Round(tp.Value, order.AssetAccuracy) : (decimal?)null;
                 order.StopLoss = sl.HasValue ? Math.Round(sl.Value, order.AssetAccuracy) : (decimal?)null;

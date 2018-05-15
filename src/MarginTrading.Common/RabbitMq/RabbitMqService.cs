@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using AzureStorage.Blob;
 using Common;
@@ -12,8 +11,6 @@ using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Publisher;
 using Lykke.RabbitMqBroker.Subscriber;
 using Lykke.SettingsReader;
-using Microsoft.Extensions.PlatformAbstractions;
-using Newtonsoft.Json;
 
 namespace MarginTrading.Common.RabbitMq
 {

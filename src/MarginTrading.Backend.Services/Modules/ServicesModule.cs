@@ -1,40 +1,28 @@
 ﻿using Autofac;
-using Autofac.Core;
 using Common.Log;
 using Autofac.Features.Variance;
 using Lykke.SettingsReader;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.MarketMakerFeed;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Settings;
-using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.EventsConsumers;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Quotes;
-using MarginTrading.Backend.Services.Services;
+using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.RabbitMq;
-using MarginTrading.Common.Services.Client;
 using MarginTrading.Common.Services.Settings;
 using MarginTrading.Common.Services.Telemetry;
-using MarginTrading.Common.Settings;
 
 namespace MarginTrading.Backend.Services.Modules
 {
 	public class ServicesModule : Module
 	{
-		private readonly IReloadingManager<RiskInformingSettings> _riskInformingSettings;
-
-		public ServicesModule(IReloadingManager<RiskInformingSettings> riskInformingSettings)
-		{
-			_riskInformingSettings = riskInformingSettings;
-		}
-
 		protected override void Load(ContainerBuilder builder)
 		{
 			builder.RegisterType<QuoteCacheService>()
@@ -53,14 +41,9 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<ITradingConditionsCacheService>()
 				.SingleInstance();
 
-			builder.RegisterType<AccountAssetsCacheService>()
+			builder.RegisterType<TradingInstrumnentsCacheService>()
 				.AsSelf()
-				.As<IAccountAssetsCacheService>()
-				.SingleInstance();
-
-			builder.RegisterType<AccountGroupCacheService>()
-				.AsSelf()
-				.As<IAccountGroupCacheService>()
+				.As<ITradingInstrumnentsCacheService>()
 				.SingleInstance();
 
 			builder.RegisterType<AccountUpdateService>()
@@ -73,10 +56,6 @@ namespace MarginTrading.Backend.Services.Modules
 
 			builder.RegisterType<CommissionService>()
 				.As<ICommissionService>()
-				.SingleInstance();
-
-			builder.RegisterType<ClientAccountService>()
-				.As<IClientAccountService>()
 				.SingleInstance();
 
 			builder.RegisterType<MarketMakerMatchingEngine>()
@@ -137,12 +116,6 @@ namespace MarginTrading.Backend.Services.Modules
 				.AsSelf()
 				.SingleInstance();
 
-			builder.RegisterType<MicrographCacheService>()
-				.As<IEventConsumer<BestPriceChangeEventArgs>>()
-				.As<IMicrographCacheService>()
-				.AsSelf()
-				.SingleInstance();
-
 			builder.RegisterType<MarginTradingEnabledCacheService>()
 				.As<IMarginTradingSettingsCacheService>()
 				.SingleInstance();
@@ -170,7 +143,7 @@ namespace MarginTrading.Backend.Services.Modules
 
 			builder.Register(c =>
 				{
-					var settings = c.Resolve<IReloadingManager<MarginSettings>>();
+					var settings = c.Resolve<IReloadingManager<MarginTradingSettings>>();
 					return new RabbitMqService(c.Resolve<ILog>(), c.Resolve<IConsole>(),
 						settings.Nested(s => s.Db.StateConnString), settings.CurrentValue.Env);
 				})
@@ -186,22 +159,9 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<IAlertSeverityLevelService>()
 				.SingleInstance();
 
-			builder.RegisterInstance(_riskInformingSettings)
-				.As<IReloadingManager<RiskInformingSettings>>()
-				.SingleInstance();
-
 			builder.RegisterType<MarginTradingEnablingService>()
 				.As<IMarginTradingEnablingService>()
 				.As<IStartable>()
-				.SingleInstance();
-
-			builder.RegisterType<OvernightSwapService>()
-				.As<IOvernightSwapService>()
-				.SingleInstance()
-				.OnActivated(args => args.Instance.Start());
-
-			builder.RegisterType<OvernightSwapNotificationService>()
-				.As<IOvernightSwapNotificationService>()
 				.SingleInstance();
 		}
 	}

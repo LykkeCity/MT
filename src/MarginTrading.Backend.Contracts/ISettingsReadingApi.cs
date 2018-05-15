@@ -1,6 +1,5 @@
 ﻿using JetBrains.Annotations;
 using Refit;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace MarginTrading.Backend.Contracts

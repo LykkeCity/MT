@@ -10,7 +10,6 @@ using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Services.Client;
-using MarginTrading.Common.Settings;
 
 namespace MarginTrading.Backend.Services
 {
@@ -63,7 +62,7 @@ namespace MarginTrading.Backend.Services
 
             _threadSwitcher.SwitchThread(async () =>
             {
-                _operationsLogService.AddLog("stopout", account.ClientId, account.Id, "", ea.ToJson());
+                _operationsLogService.AddLog("stopout", account.Id, "", ea.ToJson());
 
                 var marginEventTask = _rabbitMqNotifyService.AccountMarginEvent(accountMarginEventMessage);
 

@@ -14,11 +14,11 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         IEventConsumer<OrderCancelledEventArgs>
     {
         private readonly IAccountsCacheService _accountsCacheService;
-        private readonly MarginSettings _marginSettings;
+        private readonly MarginTradingSettings _marginSettings;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
 
         public UpdatedAccountsStatsConsumer(IAccountsCacheService accountsCacheService,
-            MarginSettings marginSettings,
+            MarginTradingSettings marginSettings,
             IRabbitMqNotifyService rabbitMqNotifyService)
         {
             _accountsCacheService = accountsCacheService;
@@ -33,17 +33,17 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
         public void ConsumeEvent(object sender, OrderPlacedEventArgs ea)
         {
-            NotifyAccountStatsChanged(ea.Order.ClientId, ea.Order.AccountId);
+            NotifyAccountStatsChanged(ea.Order.AccountId);
         }
 
         public void ConsumeEvent(object sender, OrderClosedEventArgs ea)
         {
-            NotifyAccountStatsChanged(ea.Order.ClientId, ea.Order.AccountId);
+            NotifyAccountStatsChanged(ea.Order.AccountId);
         }
 
         public void ConsumeEvent(object sender, OrderCancelledEventArgs ea)
         {
-            NotifyAccountStatsChanged(ea.Order.ClientId, ea.Order.AccountId);
+            NotifyAccountStatsChanged(ea.Order.AccountId);
         }
 
         public int ConsumerRank => 102;
@@ -55,9 +55,9 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             _rabbitMqNotifyService.UpdateAccountStats(new AccountStatsUpdateMessage {Accounts = new[] {stats}});
         }
         
-        private void NotifyAccountStatsChanged(string clientId, string accountId)
+        private void NotifyAccountStatsChanged(string accountId)
         {
-            var account = _accountsCacheService.Get(clientId, accountId);
+            var account = _accountsCacheService.Get(accountId);
 
             NotifyAccountStatsChanged(account);
         }

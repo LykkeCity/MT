@@ -1,9 +1,11 @@
 ﻿using System;
 using Common.Log;
+using JetBrains.Annotations;
 using Lykke.Common;
 
 namespace MarginTrading.Common.Services
 {
+    [UsedImplicitly]
     public sealed class MarginTradingOperationsLogService : IMarginTradingOperationsLogService
     {
         private readonly IMarginTradingOperationsLogRepository _operationsLogRepository;
@@ -20,7 +22,7 @@ namespace MarginTrading.Common.Services
             _log = log;
         }
 
-        public void AddLog(string name, string clientId, string accountId, string input, string data)
+        public void AddLog(string name, string accountId, string input, string data)
         {
             _threadSwitcher.SwitchThread(async () =>
             {
@@ -30,7 +32,6 @@ namespace MarginTrading.Common.Services
                     {
                         Name = name,
                         AccountId = accountId,
-                        ClientId = clientId,
                         Data = data,
                         Input = input
                     };
@@ -39,7 +40,7 @@ namespace MarginTrading.Common.Services
                 }
                 catch (Exception ex)
                 {
-                    _log.WriteErrorAsync(nameof(MarginTradingOperationsLogService), nameof(AddLog), $"{name}, clientId = {clientId}, accountId = {accountId}", ex).Wait();
+                    _log.WriteErrorAsync(nameof(MarginTradingOperationsLogService), nameof(AddLog), $"{name}, accountId = {accountId}", ex).Wait();
                 }
             });
         }

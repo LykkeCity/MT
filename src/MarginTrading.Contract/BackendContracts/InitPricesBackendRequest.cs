@@ -1,6 +1,6 @@
 ﻿namespace MarginTrading.Contract.BackendContracts
 {
-    public class InitPricesBackendRequest : ClientIdBackendRequest
+    public class InitPricesBackendRequest
     {
         public string[] AssetIds { get; set; }
     }

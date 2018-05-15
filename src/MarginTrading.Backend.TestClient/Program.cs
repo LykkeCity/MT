@@ -68,29 +68,6 @@ namespace MarginTrading.Backend.TestClient
             var container = builder.Build();
             var backendClient = container.Resolve<IMtBackendClient>();
 
-            await backendClient.ScheduleSettings.ListExclusions().Dump();
-            var excl = await backendClient.ScheduleSettings.CreateExclusion(new DayOffExclusionInputContract
-            {
-                AssetPairRegex = "lol",
-                Start = DateTime.Now.AddDays(-1),
-                End = DateTime.Now.Date,
-                IsTradeEnabled = false,
-            }).Dump();
-            var id = excl.Id;
-            var ex = await backendClient.ScheduleSettings.GetExclusion(id).Dump();
-            ex.AssetPairRegex = "^btc";
-            await backendClient.ScheduleSettings.UpdateExclusion(id, ex).Dump();
-            await backendClient.ScheduleSettings.GetExclusion(id).Dump();
-            await backendClient.ScheduleSettings.ListCompiledExclusions().Dump();
-            await backendClient.ScheduleSettings.DeleteExclusion(id).Dump();
-            await backendClient.ScheduleSettings.GetExclusion(id).Dump();
-
-            var s = await backendClient.ScheduleSettings.GetSchedule().Dump();
-            s.AssetPairsWithoutDayOff.Add("BTCRABBIT");
-            await backendClient.ScheduleSettings.SetSchedule(s).Dump();
-            s.AssetPairsWithoutDayOff.Remove("BTCRABBIT");
-            await backendClient.ScheduleSettings.SetSchedule(s).Dump();
-
             var assetPairSettingsInputContract = new AssetPairContract
             {
                 Id = "BTCUSD.test",
@@ -104,17 +81,6 @@ namespace MarginTrading.Backend.TestClient
                 BaseAssetId = "BTC",
                 QuoteAssetId = "USD",
             };
-
-            await backendClient.AssetPairsEdit.Delete("BTCUSD.test").Dump();
-            var result = await backendClient.AssetPairsEdit.Insert("BTCUSD.test", assetPairSettingsInputContract)
-                .Dump();
-            CheckAssetPair(result, assetPairSettingsInputContract);
-
-            assetPairSettingsInputContract.MatchingEngineMode = MatchingEngineModeContract.Stp;
-            var result2 = await backendClient.AssetPairsEdit.Update("BTCUSD.test", assetPairSettingsInputContract)
-                .Dump();
-            CheckAssetPair(result2, assetPairSettingsInputContract);
-
 
             var dataReaderClient = container.Resolve<IMtDataReaderClient>();
 
@@ -137,12 +103,6 @@ namespace MarginTrading.Backend.TestClient
                 .List("LYKKETEST", MatchingEngineModeContract.MarketMaker).Dump();
             getByOtherMode.Count(e => e.Id == "BTCUSD.test").RequiredEqualsTo(0, "getByOtherMode.Count");
 
-            var result3 = await backendClient.AssetPairsEdit.Delete("BTCUSD.test").Dump();
-            CheckAssetPair(result3, assetPairSettingsInputContract);
-
-            var nonexistentDelete = await backendClient.AssetPairsEdit.Delete("nonexistent").Dump();
-            nonexistentDelete.RequiredEqualsTo(null, nameof(nonexistentDelete));
-
             #region TradeMonitoring
 
             var assetSumary = await dataReaderClient.TradeMonitoringRead.AssetSummaryList().Dump();
@@ -151,9 +111,9 @@ namespace MarginTrading.Backend.TestClient
             var openPosition = openPositions.FirstOrDefault();
             if (openPosition != null)
             {
-                string clientId = openPosition.ClientId;
+                string accountId = openPosition.AccountId;
                 var openPositionsByClient =
-                    await dataReaderClient.TradeMonitoringRead.OpenPositionsByClient(clientId).Dump();
+                    await dataReaderClient.TradeMonitoringRead.OpenPositionsByClient(new[] {accountId}).Dump();
             }
 
             var openPositionsByDate = await dataReaderClient.TradeMonitoringRead
@@ -164,9 +124,9 @@ namespace MarginTrading.Backend.TestClient
             var pendingOrder = pendingOrders.FirstOrDefault();
             if (pendingOrder != null)
             {
-                string clientId = pendingOrder.ClientId;
+                string accountId = openPosition.AccountId;
                 var pendingOrdersByClient =
-                    await dataReaderClient.TradeMonitoringRead.PendingOrdersByClient(clientId).Dump();
+                    await dataReaderClient.TradeMonitoringRead.PendingOrdersByClient(new[] {accountId}).Dump();
             }
 
             var pendingOrdersByDate = await dataReaderClient.TradeMonitoringRead
@@ -199,67 +159,8 @@ namespace MarginTrading.Backend.TestClient
                 item.Should().BeEquivalentTo(accountAssetPair);
             }
 
-            firstAccountAssetPair.OvernightSwapLong = 0.1m;
-            var updatedAccountAssetPair = await backendClient.TradingConditionsEdit
-                .InsertOrUpdateAccountAsset(firstAccountAssetPair)
-                .Dump();
-            updatedAccountAssetPair.Result.Should().BeEquivalentTo(firstAccountAssetPair);
-
-            var tc = await backendClient.TradingConditionsEdit.InsertOrUpdate(
-                new Contracts.TradingConditions.TradingConditionContract
-                {
-                    Id = "LYKKETEST",
-                    LegalEntity = "LYKKEVA",
-                    IsDefault = false,
-                    Name = "Test Trading Condition",
-                }).Dump();
-            tc.Result.Id.RequiredEqualsTo("LYKKETEST", "tc.Result.Id");
-
-            var ag = await backendClient.TradingConditionsEdit.InsertOrUpdateAccountGroup(
-                    new Contracts.TradingConditions.AccountGroupContract
-                    {
-                        BaseAssetId = "BTC",
-                        TradingConditionId = tc.Result.Id,
-                        DepositTransferLimit = 0.1m,
-                        ProfitWithdrawalLimit = 0.2m,
-                        MarginCall = 0.3m,
-                        StopOut = 0.4m
-                    })
-                .Dump();
-            ag.Result.StopOut.RequiredEqualsTo(0.4m, "ag.Result.StopOut");
-
-            var aa = await backendClient.TradingConditionsEdit.InsertOrUpdateAccountAsset(new AccountAssetPairContract
-                {
-                    Instrument = "TSTLKK",
-                    BaseAssetId = "BTC",
-                    TradingConditionId = tc.Result.Id
-                })
-                .Dump();
-            aa.Result.Instrument.RequiredEqualsTo("TSTLKK", "aa.Result.Instrument");
-
-            var ai = await backendClient.TradingConditionsEdit.AssignInstruments(
-                    new Contracts.TradingConditions.AssignInstrumentsContract
-                    {
-                        BaseAssetId = "BTC",
-                        TradingConditionId = tc.Result.Id,
-                        Instruments = new string[] {"TSTLKK"}
-                    })
-                .Dump();
-
-            ai.IsOk.RequiredEqualsTo(true, "ai.IsOk");
-
             var tclist = await dataReaderClient.TradingConditionsRead.List().Dump();
             await dataReaderClient.TradingConditionsRead.Get(tclist.First().Id).Dump();
-
-            var manualCharge = await backendClient.AccountsBalance.ChargeManually(
-                    new Contracts.AccountBalance.AccountChargeManuallyRequest
-                    {
-                        ClientId = "232b3b04-7479-44e7-a6b3-ac131d8e6ccd",
-                        AccountId = "d_f4c745f19c834145bcf2d6b5f1a871f3",
-                        Amount = 1,
-                        Reason = "API TEST"
-                    })
-                .Dump();
 
             var accountGroups = await dataReaderClient.AccountGroups.List().Dump();
             var accountGroup1 = accountGroups.FirstOrDefault();

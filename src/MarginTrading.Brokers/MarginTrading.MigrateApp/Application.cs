@@ -5,7 +5,6 @@ using AzureStorage.Tables;
 using Common.Log;
 using Lykke.SettingsReader;
 using Lykke.SlackNotifications;
-using MarginTrading.AccountReportsBroker.Repositories.AzureRepositories.Entities;
 using MarginTrading.AzureRepositories;
 using MarginTrading.AzureRepositories.Snow.OrdersHistory;
 using MarginTrading.Backend.Core;

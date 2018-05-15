@@ -28,7 +28,6 @@ namespace MarginTrading.DataReader.Helpers
                 Code = src.Code,
                 AccountId = src.AccountId,
                 AccountAssetId = src.AccountAssetId,
-                ClientId = src.ClientId,
                 Instrument = src.Instrument,
                 Status = src.Status.ToType<OrderStatusContract>(),
                 CreateDate = src.CreateDate,

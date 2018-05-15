@@ -14,9 +14,9 @@ namespace MarginTrading.Backend.Core.Orderbooks
     /// </remarks>
     public class OrderBookList
     {
-        private readonly MarginSettings _marginSettings;
+        private readonly MarginTradingSettings _marginSettings;
 
-        public OrderBookList(MarginSettings marginSettings)
+        public OrderBookList(MarginTradingSettings marginSettings)
         {
             _marginSettings = marginSettings;
         }

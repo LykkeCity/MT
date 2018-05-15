@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
-using Lykke.SlackNotifications;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Infrastructure;
-using MarginTrading.Common.Enums;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services.Quotes
@@ -17,7 +15,7 @@ namespace MarginTrading.Backend.Services.Quotes
     {
         private readonly ILog _log;
         private readonly IMtSlackNotificationsSender _slackNotificationsSender;
-        private readonly MarginSettings _marginSettings;
+        private readonly MarginTradingSettings _marginSettings;
         private readonly IQuoteCacheService _quoteCacheService;
         private readonly IDateService _dateService;
         private readonly IAssetPairDayOffService _dayOffService;
@@ -30,7 +28,7 @@ namespace MarginTrading.Backend.Services.Quotes
 
         public QuotesMonitor(ILog log, 
             IMtSlackNotificationsSender slackNotificationsSender,
-            MarginSettings marginSettings,
+            MarginTradingSettings marginSettings,
             IQuoteCacheService quoteCacheService,
             IDateService dateService,
             IAssetPairDayOffService dayOffService,

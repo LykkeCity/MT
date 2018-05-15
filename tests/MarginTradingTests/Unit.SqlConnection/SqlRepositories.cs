@@ -1,10 +1,7 @@
 ﻿using Common.Log;
 using MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories;
-using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MarginTradingTests.Unit.SqlConnection

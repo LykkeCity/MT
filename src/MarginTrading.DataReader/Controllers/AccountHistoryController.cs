@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Contracts;
 using MarginTrading.Backend.Contracts.AccountHistory;
 using MarginTrading.Backend.Core;
-using MarginTrading.Common.Extensions;
 using MarginTrading.DataReader.Helpers;
 using MarginTrading.DataReader.Services;
 using Microsoft.AspNetCore.Authorization;

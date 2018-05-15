@@ -1,5 +1,4 @@
-﻿using System;
-using Autofac;
+﻿using Autofac;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Services.Events;
 using NUnit.Framework;

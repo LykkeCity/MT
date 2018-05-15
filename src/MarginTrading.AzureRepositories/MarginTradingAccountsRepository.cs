@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AzureStorage;
-using Common;
 using MarginTrading.Backend.Core;
 using Microsoft.WindowsAzure.Storage.Table;
 
@@ -15,8 +13,8 @@ namespace MarginTrading.AzureRepositories
         public string ClientId => PartitionKey;
         public string TradingConditionId { get; set; }
         public string BaseAssetId { get; set; }
-        decimal IMarginTradingAccount.Balance => (decimal) Balance;
-        public double Balance { get; set; }
+        decimal IMarginTradingAccount.Balance => decimal.Parse(Balance);
+        public string Balance { get; set; }
         decimal IMarginTradingAccount.WithdrawTransferLimit => (decimal) WithdrawTransferLimit;
         public AccountFpl AccountFpl => new AccountFpl();
         public string LegalEntity { get; set; }
@@ -42,7 +40,7 @@ namespace MarginTrading.AzureRepositories
                 RowKey = GenerateRowKey(src.Id),
                 TradingConditionId = src.TradingConditionId,
                 BaseAssetId = src.BaseAssetId,
-                Balance = (double) src.Balance,
+                Balance = src.Balance.ToString(),
                 WithdrawTransferLimit = (double) src.WithdrawTransferLimit,
                 LegalEntity = src.LegalEntity,
             };
@@ -71,7 +69,7 @@ namespace MarginTrading.AzureRepositories
 
             if (account != null)
             {
-                account.Balance += (double) amount;
+                account.Balance = (decimal.Parse(account.Balance) + amount).ToString();
 
                 if (changeLimit)
                     account.WithdrawTransferLimit += (double) amount;
@@ -83,38 +81,10 @@ namespace MarginTrading.AzureRepositories
             return null;
         }
 
-        public async Task<IMarginTradingAccount> UpdateTradingConditionIdAsync(string clientId, string accountId,
-            string tradingConditionId)
-        {
-            return await _tableStorage.MergeAsync(MarginTradingAccountEntity.GeneratePartitionKey(clientId),
-                MarginTradingAccountEntity.GenerateRowKey(accountId),
-                a =>
-                {
-                    a.TradingConditionId = tradingConditionId;
-                    return a;
-                });
-        }
-
         public async Task AddAsync(MarginTradingAccount account)
         {
             var entity = MarginTradingAccountEntity.Create(account);
             await _tableStorage.InsertOrMergeAsync(entity);
-        }
-
-        public async Task<IMarginTradingAccount> GetAsync(string clientId, string accountId)
-        {
-            return await _tableStorage.GetDataAsync(MarginTradingAccountEntity.GeneratePartitionKey(clientId), MarginTradingAccountEntity.GenerateRowKey(accountId));
-        }
-
-        public async Task<IMarginTradingAccount> GetAsync(string accountId)
-        {
-            return (await _tableStorage.GetDataAsync(entity => entity.Id == accountId)).FirstOrDefault();
-        }
-
-        public async Task DeleteAsync(string clientId, string accountId)
-        {
-            await _tableStorage.DeleteAsync(MarginTradingAccountEntity.GeneratePartitionKey(clientId),
-                MarginTradingAccountEntity.GenerateRowKey(accountId));
         }
     }
 }

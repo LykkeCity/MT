@@ -1,11 +1,8 @@
 ﻿using System.Threading.Tasks;
 using Common.Log;
 using Lykke.SlackNotifications;
-using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.BrokerBase;
 using MarginTrading.BrokerBase.Settings;
-using MarginTrading.Contract.BackendContracts;
 using MarginTrading.ExternalOrderBroker.Models;
 using MarginTrading.ExternalOrderBroker.Repositories;
 

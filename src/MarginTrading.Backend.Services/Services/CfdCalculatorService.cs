@@ -1,7 +1,4 @@
-﻿using System;
-using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Exceptions;
-using MarginTrading.Backend.Services.AssetPairs;
+﻿using MarginTrading.Backend.Core;
 
 namespace MarginTrading.Backend.Services
 {

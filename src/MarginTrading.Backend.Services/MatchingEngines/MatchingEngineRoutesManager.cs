@@ -1,47 +1,53 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
 using Common;
 using Common.Log;
+using JetBrains.Annotations;
 using MarginTrading.AzureRepositories.Logs;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
-using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Extensions;
+using MarginTrading.Common.Services;
+using MarginTrading.SettingsService.Contracts;
+using MarginTrading.SettingsService.Contracts.Routes;
 
 namespace MarginTrading.Backend.Services.MatchingEngines
 {
-    public class MatchingEngineRoutesManager : IStartable
+    [UsedImplicitly]
+    public class MatchingEngineRoutesManager : IStartable, IMatchingEngineRoutesManager
     {
         private const string AnyValue = "*";
 
         private readonly MatchingEngineRoutesCacheService _routesCacheService;
-        private readonly IMatchingEngineRoutesRepository _repository;
+        private readonly ITradingRoutesApi _routesApi;
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly ITradingConditionsCacheService _tradingConditionsCacheService;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly IRiskSystemCommandsLogRepository _riskSystemCommandsLogRepository;
         private readonly ILog _log;
+        private readonly IConvertService _convertService;
 
         public MatchingEngineRoutesManager(
             MatchingEngineRoutesCacheService routesCacheService,
-            IMatchingEngineRoutesRepository repository,
+            ITradingRoutesApi routesApi,
             IAssetPairsCache assetPairsCache,
             ITradingConditionsCacheService tradingConditionsCacheService,
             IAccountsCacheService accountsCacheService,
             IRiskSystemCommandsLogRepository riskSystemCommandsLogRepository,
-            ILog log)
+            ILog log,
+            IConvertService convertService)
         {
             _routesCacheService = routesCacheService;
-            _repository = repository;            
+            _routesApi = routesApi;            
             _assetPairsCache = assetPairsCache;
             _tradingConditionsCacheService = tradingConditionsCacheService;
             _accountsCacheService = accountsCacheService;
             _riskSystemCommandsLogRepository = riskSystemCommandsLogRepository;
             _log = log;
+            _convertService = convertService;
         }
 
         
@@ -54,24 +60,20 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         
         public async Task UpdateRoutesCacheAsync()
         {
-            var routes = await _repository.GetAllRoutesAsync();
+            var routes = await _routesApi.List();
+
+            if (routes != null)
+            {
+                _routesCacheService.InitCache(
+                    routes.Select(r => _convertService.Convert<MatchingEngineRouteContract, MatchingEngineRoute>(r)));
+            }
             
-            _routesCacheService.InitCache(routes);
+            
         }
         
         #endregion
 
         
-        public IEnumerable<IMatchingEngineRoute> GetRoutes()
-        {
-            return _routesCacheService.GetRoutes().Select(ToViewModel);
-        }
-
-        public IMatchingEngineRoute GetRouteById(string id)
-        {
-            return ToViewModel(_routesCacheService.GetRoute(id));
-        }
-
         public IMatchingEngineRoute FindRoute(string clientId, string tradingConditionId, string instrumentId, OrderDirection orderType)
         {
             var routes = _routesCacheService.GetRoutes();
@@ -123,24 +125,28 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             return null;
         }
 
-       public async Task AddOrReplaceRouteAsync(IMatchingEngineRoute route)
+       //TODO: remove 
+        
+       public Task AddOrReplaceRouteInCacheAsync(IMatchingEngineRoute route)
         {            
             // Create Editable Object 
             var matchingEngineRoute = MatchingEngineRoute.Create(route);
 
-            matchingEngineRoute.ClientId = GetValueOrAnyIfValid(route.ClientId, ValidateClient);
+            matchingEngineRoute.ClientId = GetValueOrAnyIfValid(route.ClientId, null);
             matchingEngineRoute.TradingConditionId = GetValueOrAnyIfValid(route.TradingConditionId, ValidateTradingCondition);
             matchingEngineRoute.Instrument = GetValueOrAnyIfValid(route.Instrument, ValidateInstrument);
             matchingEngineRoute.Asset = GetValueOrAnyIfValid(route.Asset, null);
 
-            await _repository.AddOrReplaceRouteAsync(matchingEngineRoute);
             _routesCacheService.SaveRoute(matchingEngineRoute);
-        }        
-                
-        public async Task DeleteRouteAsync(string routeId)
+            
+            return Task.CompletedTask;
+        }
+
+        public Task DeleteRouteFromCacheAsync(string routeId)
         {
-            await _repository.DeleteRouteAsync(routeId);
             _routesCacheService.DeleteRoute(routeId);
+            
+            return Task.CompletedTask;
         }
 
         public async Task HandleRiskManagerCommand(MatchingEngineRouteRisksCommand command)
@@ -172,7 +178,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             }
         }
 
-        private async Task HandleRiskManagerBlockTradingCommand(MatchingEngineRouteRisksCommand command)
+        public async Task HandleRiskManagerBlockTradingCommand(MatchingEngineRouteRisksCommand command)
         {
             switch (command.Action)
             {
@@ -205,7 +211,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                         RiskSystemMetricType = command.Type
                     };
 
-                    await AddOrReplaceRouteAsync(newRoute);
+                    await AddOrReplaceRouteInCacheAsync(newRoute);
                     break;
                     
                 case RiskManagerAction.Off:
@@ -216,7 +222,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                         throw new Exception(
                             $"Cannot disable BlockTradingForNewOrders route for command: {command.ToJson()}. Existing routes found for command: {existingRoutes.ToJson()}");
 
-                    await DeleteRouteAsync(existingRoutes[0].Id);
+                    await DeleteRouteFromCacheAsync(existingRoutes[0].Id);
                     break;
                     
                 default:
@@ -263,14 +269,6 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             validationAction?.Invoke(value);
 
             return value;
-        }
-
-        private void ValidateClient(string clientId)
-        {
-            var userAccounts = _accountsCacheService.GetAll(clientId);
-                
-            if (!userAccounts.Any())
-                throw new ArgumentException("Invalid ClientId");
         }
 
         private void ValidateTradingCondition(string tradingConditionId)

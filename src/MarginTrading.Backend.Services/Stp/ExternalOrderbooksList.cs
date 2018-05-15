@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
 using Common;
 using Common.Log;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Common.Extensions;
@@ -116,7 +114,8 @@ namespace MarginTrading.Backend.Services.Stp
 
             _bestPriceChangeEventChannel.SendEvent(this, new BestPriceChangeEventArgs(bba));
         }
-
+        
+        //TODO: sort prices of uncomment validation
         private bool ValidateOrderbook(ExternalOrderBook orderbook)
         {
             try
@@ -127,11 +126,11 @@ namespace MarginTrading.Backend.Services.Stp
                 
                 orderbook.Bids.RequiredNotNullOrEmpty("orderbook.Bids");
                 orderbook.Bids.RemoveAll(e => e == null || e.Price <= 0 || e.Volume == 0);
-                ValidatePricesSorted(orderbook.Bids, false);
+                //ValidatePricesSorted(orderbook.Bids, false);
                 
                 orderbook.Asks.RequiredNotNullOrEmpty("orderbook.Asks");
                 orderbook.Asks.RemoveAll(e => e == null || e.Price <= 0 || e.Volume == 0);
-                ValidatePricesSorted(orderbook.Asks, true);
+                //ValidatePricesSorted(orderbook.Asks, true);
 
                 return true;
             }
@@ -148,7 +147,9 @@ namespace MarginTrading.Backend.Services.Stp
             foreach (var current in volumePrices.Select(p => p.Price))
             {
                 if (previous != null && ascending ? current < previous : current > previous)
+                {
                     throw new Exception("Prices should be sorted best first");
+                }
                 
                 previous = current;
             }

@@ -85,7 +85,7 @@ namespace MarginTrading.Backend.Services
                 _lockSlim.ExitWriteLock();
             }
 
-            var account = MtServiceLocator.AccountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = MtServiceLocator.AccountsCacheService.Get(order.AccountId);
             account.CacheNeedsToBeUpdated();
         }
 
@@ -113,7 +113,7 @@ namespace MarginTrading.Backend.Services
                 _lockSlim.ExitWriteLock();
             }
 
-            var account = MtServiceLocator.AccountsCacheService?.Get(order.ClientId, order.AccountId);
+            var account = MtServiceLocator.AccountsCacheService?.Get(order.AccountId);
             account?.CacheNeedsToBeUpdated();
         }
 

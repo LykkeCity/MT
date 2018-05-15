@@ -1,18 +1,20 @@
 ﻿using System;
+using JetBrains.Annotations;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.TradingConditions;
 
 namespace MarginTrading.Backend.Services
 {
+    [UsedImplicitly]
     public class CommissionService : ICommissionService
     {
-        private readonly IAccountAssetsCacheService _accountAssetsCacheService;
+        private readonly ITradingInstrumnentsCacheService _accountAssetsCacheService;
         private readonly ICfdCalculatorService _cfdCalculatorService;
         private readonly IAssetsCache _assetsCache;
 
         public CommissionService(
-            IAccountAssetsCacheService accountAssetsCacheService,
+            ITradingInstrumnentsCacheService accountAssetsCacheService,
             ICfdCalculatorService cfdCalculatorService,
             IAssetsCache assetsCache)
         {
@@ -55,26 +57,13 @@ namespace MarginTrading.Backend.Services
                 Math.Abs(order.Volume), swapRate, order.LegalEntity);
         }
 
-        public void SetCommissionRates(string tradingConditionId, string accountAssetId, Order order)
+        public void SetCommissionRates(string tradingConditionId, Order order)
         {
             var accountAsset = _accountAssetsCacheService
-                .GetAccountAsset(tradingConditionId, accountAssetId, order.Instrument);
+                .GetTradingInstrument(tradingConditionId, order.Instrument);
 
-            order.CommissionLot = accountAsset.CommissionLot;
-
-            switch (order.GetOrderType())
-            {
-                case OrderDirection.Buy:
-                    order.OpenCommission = accountAsset.CommissionLong;
-                    order.CloseCommission = accountAsset.CommissionShort;
-                    order.SwapCommission = accountAsset.SwapLong;
-                    break;
-                case OrderDirection.Sell:
-                    order.OpenCommission = accountAsset.CommissionShort;
-                    order.CloseCommission = accountAsset.CommissionLong;
-                    order.SwapCommission = accountAsset.SwapShort;
-                    break;
-            }
+            order.OpenCommission = accountAsset.CommissionRate;
+            order.SwapCommission = accountAsset.SwapLong;
         }
     }
 }

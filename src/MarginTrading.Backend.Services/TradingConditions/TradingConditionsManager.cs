@@ -2,32 +2,32 @@
 using System.Threading.Tasks;
 using Autofac;
 using Common.Log;
-using MarginTrading.AzureRepositories.Contract;
-using MarginTrading.Backend.Core;
+using JetBrains.Annotations;
 using MarginTrading.Backend.Core.TradingConditions;
+using MarginTrading.Common.Services;
+using MarginTrading.SettingsService.Contracts;
+using MarginTrading.SettingsService.Contracts.TradingConditions;
 
 namespace MarginTrading.Backend.Services.TradingConditions
 {
-    public class TradingConditionsManager : IStartable
+    [UsedImplicitly]
+    public class TradingConditionsManager : IStartable, ITradingConditionsManager
     {
-        private readonly ITradingConditionRepository _repository;
+        private readonly ITradingConditionsApi _tradingConditions;
         private readonly TradingConditionsCacheService _tradingConditionsCacheService;
         private readonly IConsole _console;
-        private readonly AccountGroupManager _accountGroupManager;
-        private readonly IClientNotifyService _clientNotifyService;
+        private readonly IConvertService _convertService;
 
         public TradingConditionsManager(
-            ITradingConditionRepository repository,
+            ITradingConditionsApi tradingConditions,
             TradingConditionsCacheService tradingConditionsCacheService,
             IConsole console,
-            AccountGroupManager accountGroupManager,
-            IClientNotifyService clientNotifyService)
+            IConvertService convertService)
         {
-            _repository = repository;
             _tradingConditionsCacheService = tradingConditionsCacheService;
             _console = console;
-            _accountGroupManager = accountGroupManager;
-            _clientNotifyService = clientNotifyService;
+            _convertService = convertService;
+            _tradingConditions = tradingConditions;
         }
 
         public void Start()
@@ -35,59 +35,21 @@ namespace MarginTrading.Backend.Services.TradingConditions
             InitTradingConditions().Wait();
         }
 
-        public async Task<ITradingCondition> AddOrReplaceTradingConditionAsync(ITradingCondition tradingCondition)
-        {
-            var allTradingConditions = _tradingConditionsCacheService.GetAllTradingConditions();
-            
-            var defaultTradingCondition = allTradingConditions.FirstOrDefault(item => item.IsDefault);
-            
-            if (tradingCondition.IsDefault)
-            {
-                if (defaultTradingCondition != null && defaultTradingCondition.Id != tradingCondition.Id)
-                {
-                    await SetIsDefault(defaultTradingCondition, false);
-                }
-            }
-            else if (defaultTradingCondition?.Id == tradingCondition.Id)
-            {
-                var firstNotDefaultCondition = allTradingConditions.FirstOrDefault(item => !item.IsDefault);
-
-                if (firstNotDefaultCondition != null)
-                {
-                    await SetIsDefault(firstNotDefaultCondition, true);
-                }
-            }
-
-            await _repository.AddOrReplaceAsync(tradingCondition);
-            
-            if (!_tradingConditionsCacheService.IsTradingConditionExists(tradingCondition.Id))
-            {
-                await _accountGroupManager.AddAccountGroupsForTradingCondition(tradingCondition.Id);
-            }
-            
-            _tradingConditionsCacheService.AddOrUpdateTradingCondition(tradingCondition);
-            
-            await _clientNotifyService.NotifyTradingConditionsChanged(tradingCondition.Id);
-
-            return tradingCondition;
-        }
-
-        private async Task SetIsDefault(ITradingCondition tradingCondition, bool isDefault)
-        {
-            var existing = TradingCondition.Create(tradingCondition);
-            existing.IsDefault = isDefault;
-            await _repository.AddOrReplaceAsync(existing);
-        }
-
-        private async Task InitTradingConditions()
+        public async Task InitTradingConditions()
         {
             _console.WriteLine($"Started {nameof(InitTradingConditions)}");
-            
-            var tradingConditions = (await _repository.GetAllAsync()).ToList();
-            _tradingConditionsCacheService.InitTradingConditionsCache(tradingConditions);
-            
+
+            var tradingConditions = await _tradingConditions.List();
+
+            if (tradingConditions != null)
+            {
+                _tradingConditionsCacheService.InitTradingConditionsCache(tradingConditions.Select(t =>
+                        (ITradingCondition) _convertService.Convert<TradingConditionContract, TradingCondition>(t))
+                    .ToList());
+            }
+
             _console.WriteLine(
-                $"Finished {nameof(InitTradingConditions)}. Count:{tradingConditions.Count})");
+                $"Finished {nameof(InitTradingConditions)}. Count:{tradingConditions?.Count ?? 0})");
         }
     }
 }

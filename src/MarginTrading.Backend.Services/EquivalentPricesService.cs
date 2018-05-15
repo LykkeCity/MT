@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using MarginTrading.Backend.Core;
@@ -12,13 +11,13 @@ namespace MarginTrading.Backend.Services
 	{
 		private readonly IAccountsCacheService _accountsCacheService;
 		private readonly ICfdCalculatorService _cfdCalculatorService;
-		private readonly MarginSettings _marginSettings;
+		private readonly MarginTradingSettings _marginSettings;
 		private readonly ILog _log;
 
 		public EquivalentPricesService(
 			IAccountsCacheService accountsCacheService,
 			ICfdCalculatorService cfdCalculatorService,
-			MarginSettings marginSettings,
+			MarginTradingSettings marginSettings,
 			ILog log)
 		{
 			_accountsCacheService = accountsCacheService;
@@ -27,9 +26,9 @@ namespace MarginTrading.Backend.Services
 			_log = log;
 		}
 
-		private string GetEquivalentAsset(string clientId, string accountId)
+		private string GetEquivalentAsset(string accountId)
 		{
-			var account = _accountsCacheService.Get(clientId, accountId);
+			var account = _accountsCacheService.Get(accountId);
 			var equivalentSettings =
 				_marginSettings.ReportingEquivalentPricesSettings.FirstOrDefault(x => x.LegalEntity == account.LegalEntity);
 			
@@ -43,7 +42,7 @@ namespace MarginTrading.Backend.Services
 		{
 			try
 			{
-				order.EquivalentAsset = GetEquivalentAsset(order.ClientId, order.AccountId);
+				order.EquivalentAsset = GetEquivalentAsset(order.AccountId);
 
 				order.OpenPriceEquivalent = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.EquivalentAsset,
 					order.Instrument, order.LegalEntity);
@@ -60,7 +59,7 @@ namespace MarginTrading.Backend.Services
 			{
 				if (string.IsNullOrEmpty(order.EquivalentAsset))
 				{
-					order.EquivalentAsset = GetEquivalentAsset(order.ClientId, order.AccountId);
+					order.EquivalentAsset = GetEquivalentAsset(order.AccountId);
 				}
 				
 				order.ClosePriceEquivalent = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.EquivalentAsset,

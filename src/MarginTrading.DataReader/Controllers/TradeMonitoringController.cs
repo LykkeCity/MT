@@ -2,7 +2,6 @@
 using MarginTrading.Backend.Contracts.TradeMonitoring;
 using MarginTrading.Backend.Core;
 using MarginTrading.Common.Services;
-using MarginTrading.DataReader.Models;
 using MarginTrading.DataReader.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -133,7 +132,7 @@ namespace MarginTrading.DataReader.Controllers
         }
 
         /// <summary>
-        ///     Returns list of opened positions from a snapshot (blob) filtered by client
+        ///     Returns list of opened positions from a snapshot (blob) filtered by accounts
         /// </summary>
         /// <remarks>
         ///     <p>Returns list of client filtered opened positions</p>
@@ -141,11 +140,11 @@ namespace MarginTrading.DataReader.Controllers
         /// </remarks>
         /// <response code="200">Returns opened positions</response>
         [HttpGet]
-        [Route("openPositions/byClient/{clientId}")]
-        public async Task<List<DetailedOrderContract>> OpenPositionsByClient([FromRoute]string clientId)
+        [Route("openPositions/byAccounts")]
+        public async Task<List<DetailedOrderContract>> OpenPositionsByClient([FromQuery]string[] accountIds)
         {
             return (await _ordersSnapshotReaderService.GetActiveAsync())
-                .Where(order => order.ClientId == clientId)
+                .Where(order => accountIds.Contains(order.AccountId))
                 .Select(OrderExtensions.ToBaseContract)
                 .ToList();
         }
@@ -202,7 +201,7 @@ namespace MarginTrading.DataReader.Controllers
         }
 
         /// <summary>
-        ///     Returns list of pending orders from a snapshot (blob) filtered by client
+        ///     Returns list of pending orders from a snapshot (blob) filtered by accounts
         /// </summary>
         /// <remarks>
         ///     <p>Returns list of client filtered pending orders</p>
@@ -210,11 +209,11 @@ namespace MarginTrading.DataReader.Controllers
         /// </remarks>
         /// <response code="200">Returns pending orders</response>
         [HttpGet]
-        [Route("pendingOrders/byClient/{clientId}")]
-        public async Task<List<DetailedOrderContract>> PendingOrdersByClient([FromRoute]string clientId)
+        [Route("pendingOrders/byAccounts")]
+        public async Task<List<DetailedOrderContract>> PendingOrdersByClient([FromQuery]string[] accountIds)
         {
             return (await _ordersSnapshotReaderService.GetPendingAsync())
-                .Where(order => order.ClientId == clientId)
+                .Where(order => accountIds.Contains(order.AccountId))
                 .Select(OrderExtensions.ToBaseContract)
                 .ToList();
         }

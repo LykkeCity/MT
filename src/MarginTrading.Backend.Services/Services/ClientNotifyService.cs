@@ -14,14 +14,14 @@ namespace MarginTrading.Backend.Services
     {
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly IMarginTradingOperationsLogService _operationsLogService;
-        private readonly MarginSettings _marginSettings;
+        private readonly MarginTradingSettings _marginSettings;
         private readonly IConsole _consoleWriter;
         private readonly IAccountsCacheService _accountsCacheService;
 
         public ClientNotifyService(
             IRabbitMqNotifyService rabbitMqNotifyService,
             IMarginTradingOperationsLogService operationsLogService,
-            MarginSettings marginSettings,
+            MarginTradingSettings marginSettings,
             IConsole consoleWriter,
             IAccountsCacheService accountsCacheService)
         {
@@ -37,7 +37,7 @@ namespace MarginTrading.Backend.Services
             _rabbitMqNotifyService.OrderChanged(order);
             var queueName = QueueHelper.BuildQueueName(_marginSettings.RabbitMqQueues.OrderChanged.ExchangeName, _marginSettings.Env);
             _consoleWriter.WriteLine($"send order changed to queue {queueName}");
-            _operationsLogService.AddLog($"queue {queueName}", order.ClientId, order.AccountId, null, order.ToJson());
+            _operationsLogService.AddLog($"queue {queueName}", order.AccountId, null, order.ToJson());
         }
 
         public void NotifyAccountUpdated(IMarginTradingAccount account)
@@ -45,7 +45,7 @@ namespace MarginTrading.Backend.Services
             _rabbitMqNotifyService.AccountUpdated(account);
             var queueName = QueueHelper.BuildQueueName(_marginSettings.RabbitMqQueues.AccountChanged.ExchangeName, _marginSettings.Env);
             _consoleWriter.WriteLine($"send account changed to queue {queueName}");
-            _operationsLogService.AddLog($"queue {queueName}", account.ClientId, account.Id, null, account.ToJson());
+            _operationsLogService.AddLog($"queue {queueName}", account.Id, null, account.ToJson());
         }
 
         public void NotifyAccountStopout(string clientId, string accountId, int positionsCount, decimal totalPnl)
@@ -53,7 +53,7 @@ namespace MarginTrading.Backend.Services
             _rabbitMqNotifyService.AccountStopout(clientId, accountId, positionsCount, totalPnl);
             var queueName = QueueHelper.BuildQueueName(_marginSettings.RabbitMqQueues.AccountStopout.ExchangeName, _marginSettings.Env);
             _consoleWriter.WriteLine($"send account stopout to queue {queueName}");
-            _operationsLogService.AddLog($"queue {queueName}", clientId, accountId, null,
+            _operationsLogService.AddLog($"queue {queueName}", accountId, null,
                 new {clientId = clientId, accountId = accountId, positionsCount = positionsCount, totalPnl = totalPnl}.ToJson());
         }
         

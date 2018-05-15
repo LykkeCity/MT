@@ -1,6 +1,5 @@
 ﻿using System;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Extensions;
@@ -28,7 +27,6 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 {
                     Id = ea.Order.Id + '_' + tradeType, // todo: fix ids?
                     AccountId = ea.Order.AccountId,
-                    ClientId = ea.Order.ClientId,
                     OrderId = ea.Order.Id,
                     AssetPairId = ea.Order.Instrument,
                     Date = ea.Order.OpenDate.Value,
@@ -50,7 +48,6 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 {
                     Id = ea.Order.Id + '_' + tradeType, // todo: fix ids?,
                     AccountId = ea.Order.AccountId,
-                    ClientId = ea.Order.ClientId,
                     OrderId = ea.Order.Id,
                     AssetPairId = ea.Order.Instrument,
                     Date = ea.Order.CloseDate.Value,

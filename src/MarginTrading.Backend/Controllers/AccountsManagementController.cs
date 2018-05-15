@@ -12,35 +12,31 @@ using MarginTrading.Contract.BackendContracts;
 using MarginTrading.Contract.BackendContracts.AccountsManagement;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Swashbuckle.SwaggerGen.Annotations;
 
 namespace MarginTrading.Backend.Controllers
 {
     [Authorize]
-    [Route("api/[controller]")]
+    [Route("api/accounts-management")]
     [MiddlewareFilter(typeof(RequestLoggingPipeline))]
     public class AccountsManagementController : Controller
     {
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly IDateService _dateService;
         private readonly AccountManager _accountManager;
-        private readonly AccountGroupCacheService _accountGroupCacheService;
-        private readonly ITradingConditionsCacheService _tradingConditionsCacheService;
+        private readonly TradingConditionsCacheService _tradingConditionsCache;
 
         public AccountsManagementController(IAccountsCacheService accountsCacheService,
             IDateService dateService,
             AccountManager accountManager,
-            AccountGroupCacheService accountGroupCacheService,
-            ITradingConditionsCacheService tradingConditionsCacheService)
+            TradingConditionsCacheService tradingConditionsCache)
         {
             _accountsCacheService = accountsCacheService;
             _dateService = dateService;
             _accountManager = accountManager;
-            _accountGroupCacheService = accountGroupCacheService;
-            _tradingConditionsCacheService = tradingConditionsCacheService;
+            _tradingConditionsCache = tradingConditionsCache;
         }
-        
-        
+
+
         /// <summary>
         /// Get all accounts where (balance + pnl) / Used margin less or equal than threshold value
         /// </summary>
@@ -80,36 +76,37 @@ namespace MarginTrading.Backend.Controllers
         [ProducesResponseType(typeof(CloseAccountPositionsResponse), 200)]
         [Route("closePositions")]
         [HttpPost]
-        public async Task<CloseAccountPositionsResponse> CloseAccountPositions([FromBody] CloseAccountPositionsRequest request)
+        public async Task<CloseAccountPositionsResponse> CloseAccountPositions(
+            [FromBody] CloseAccountPositionsRequest request)
         {
             request.RequiredNotNull(nameof(request));
-            
+
             var accounts = request.IgnoreMarginLevel
                 ? null
                 : _accountsCacheService.GetAll().ToDictionary(a => a.Id);
-            
+
             var result = new CloseAccountPositionsResponse()
             {
                 Results = new List<CloseAccountPositionsResult>()
             };
-            
-            foreach (var accountId in request.AccountIds)    
+
+            foreach (var accountId in request.AccountIds)
             {
                 if (!request.IgnoreMarginLevel)
                 {
                     var account = accounts[accountId];
-                    var accountGroup =
-                        _accountGroupCacheService.GetAccountGroup(account.TradingConditionId, account.BaseAssetId);
+                    var tradingCondition =
+                        _tradingConditionsCache.GetTradingCondition(account.TradingConditionId);
                     var accountMarginUsageLevel = account.GetMarginUsageLevel();
 
-                    if (accountMarginUsageLevel > accountGroup.MarginCall)
+                    if (accountMarginUsageLevel > tradingCondition.MarginCall1)
                     {
                         result.Results.Add(new CloseAccountPositionsResult
                         {
                             AccountId = accountId,
                             ClosedPositions = new OrderFullContract[0],
                             ErrorMessage =
-                                $"Account margin usage level [{accountMarginUsageLevel}] is greater then margin call level [{accountGroup.MarginCall}]"
+                                $"Account margin usage level [{accountMarginUsageLevel}] is greater then margin call level [{tradingCondition.MarginCall1}]"
                         });
 
                         continue;
@@ -117,7 +114,7 @@ namespace MarginTrading.Backend.Controllers
                 }
 
                 var closedOrders = await _accountManager.CloseAccountOrders(accountId);
-                
+
                 result.Results.Add(new CloseAccountPositionsResult
                 {
                     AccountId = accountId,
@@ -133,76 +130,5 @@ namespace MarginTrading.Backend.Controllers
 
             return result;
         }
-
-        /// <summary>
-        /// Sets trading condition for account
-        /// </summary>
-        /// <response code="200">Returns changed account</response>
-        [HttpPost]
-        [Route("tradingCondition")]
-        [SwaggerOperation("SetTradingCondition")]
-        public async Task<MtBackendResponse<MarginTradingAccountModel>> SetTradingCondition(
-            [FromBody] SetTradingConditionModel model)
-        {
-            if (!_tradingConditionsCacheService.IsTradingConditionExists(model.TradingConditionId))
-            {
-                return MtBackendResponse<MarginTradingAccountModel>.Error(
-                    $"No trading condition {model.TradingConditionId} found in cache");
-            }
-            
-            var tradingCondition = _tradingConditionsCacheService.GetTradingCondition(model.TradingConditionId);
-            
-            var account =
-                await _accountManager.SetTradingCondition(model.ClientId, model.AccountId, model.TradingConditionId);
-            if (account == null)
-            {
-                return MtBackendResponse<MarginTradingAccountModel>.Error(
-                    $"Account for client [{model.ClientId}] with id [{model.AccountId}] was not found");
-            }
-
-            if (tradingCondition.LegalEntity != account.LegalEntity)
-            {
-                return MtBackendResponse<MarginTradingAccountModel>.Error(
-                    $"Account for client [{model.ClientId}] with id [{model.AccountId}] has LegalEntity " +
-                    $"[{account.LegalEntity}], but trading condition wit id [{tradingCondition.Id}] has " +
-                    $"LegalEntity [{tradingCondition.LegalEntity}]");
-            }
-
-            return MtBackendResponse<MarginTradingAccountModel>.Ok(account.ToBackendContract());
-        }
-
-        /// <summary>
-        /// Create accounts with requested base asset for all users 
-        /// that already have accounts with requested trading condition
-        /// </summary>
-        [HttpPost]
-        [Route("accountGroup/init")]
-        [SwaggerOperation("InitAccountGroup")]
-        public async Task<MtBackendResponse<IEnumerable<MarginTradingAccountModel>>> InitAccountGroup(
-            [FromBody] InitAccountGroupRequest request)
-        {
-            var tradingCondition = _tradingConditionsCacheService.GetTradingCondition(request.TradingConditionId);
-
-            if (tradingCondition == null)
-            {
-                return MtBackendResponse<IEnumerable<MarginTradingAccountModel>>.Error(
-                    $"No trading condition {request.TradingConditionId} found in cache");
-            }
-
-            var accountGroup =
-                _accountGroupCacheService.GetAccountGroup(request.TradingConditionId, request.BaseAssetId);
-
-            if (accountGroup == null)
-            {
-                return MtBackendResponse<IEnumerable<MarginTradingAccountModel>>.Error(
-                    $"No account group {request.TradingConditionId}_{request.BaseAssetId} found in cache");
-            }
-
-            var newAccounts = await _accountManager.CreateAccounts(request.TradingConditionId, request.BaseAssetId);
-
-            return MtBackendResponse<IEnumerable<MarginTradingAccountModel>>.Ok(
-                newAccounts.Select(a => a.ToBackendContract()));
-        }
-        
     }
 }

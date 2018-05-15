@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Reactive.Subjects;
+using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
 using Common.Log;
 using Lykke.Common;
+using Lykke.Service.ClientAccount.Client.Models;
 using Lykke.Service.Session.AutorestClient;
 using Lykke.Service.Session.AutorestClient.Models;
 using Microsoft.Rest;
@@ -16,7 +18,9 @@ using Lykke.SlackNotifications;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Services.Notifications;
+using MarginTrading.Backend.Services.Stubs;
 using MarginTrading.Common.Services;
+using MarginTrading.Common.Services.Client;
 
 namespace MarginTradingTests.Modules
 {
@@ -50,6 +54,13 @@ namespace MarginTradingTests.Modules
 
             var volumeEquivalentService = new Mock<IEquivalentPricesService>();
 
+            var clientAccountMock = new Mock<IClientAccountService>();
+            clientAccountMock.Setup(s => s.GetEmail(It.IsAny<string>())).ReturnsAsync("email@email.com");
+            clientAccountMock.Setup(s => s.GetMarginEnabledAsync(It.IsAny<string>())).ReturnsAsync(
+                new MarginEnabledSettingsModel() {Enabled = true, EnabledLive = true, TermsOfUseAgreed = true});
+            clientAccountMock.Setup(s => s.GetNotificationId(It.IsAny<string>())).ReturnsAsync("notificationId");
+            clientAccountMock.Setup(s => s.IsPushEnabled(It.IsAny<string>())).ReturnsAsync(true);
+
             builder.RegisterInstance(emailService.Object).As<IEmailService>();
             builder.RegisterInstance(appNotifications.Object).As<IAppNotifications>();
             builder.RegisterInstance(appNotifications).As<Mock<IAppNotifications>>();
@@ -61,6 +72,7 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(sessionServiceMock.Object).As<ISessionService>();
             builder.RegisterInstance(slackNotificationsMock.Object).As<ISlackNotificationsSender>();
             builder.RegisterInstance(volumeEquivalentService.Object).As<IEquivalentPricesService>();
+            builder.RegisterInstance(clientAccountMock.Object).As<IClientAccountService>();
 
             builder.RegisterType<DateService>()
                 .As<IDateService>()

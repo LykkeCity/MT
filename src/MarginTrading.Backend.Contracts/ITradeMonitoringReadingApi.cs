@@ -40,12 +40,12 @@ namespace MarginTrading.Backend.Contracts
         Task<List<DetailedOrderContract>> OpenPositionsByDate([Query] DateTime from, [Query] DateTime to);
 
         /// <summary>
-        /// Returns list of opened positions by client
+        /// Returns list of opened positions by accounts
         /// </summary>
-        /// <param name="clientId">Client Id</param>
+        /// <param name="accountIds">Account Ids</param>
         /// <returns></returns>
-        [Get("/api/trade/openPositions/byClient/{clientId}")]
-        Task<List<DetailedOrderContract>> OpenPositionsByClient(string clientId);
+        [Get("/api/trade/openPositions/byAccounts")]
+        Task<List<DetailedOrderContract>> OpenPositionsByClient(string[] accountIds);
 
         /// <summary>
         /// Returns list of pending orders 
@@ -71,12 +71,12 @@ namespace MarginTrading.Backend.Contracts
         Task<List<DetailedOrderContract>> PendingOrdersByDate([Query] DateTime from, [Query] DateTime to);
 
         /// <summary>
-        /// Returns list of pending orders by client
+        /// Returns list of pending orders by accounts
         /// </summary>
-        /// <param name="clientId">Client Id</param>
+        /// <param name="accountIds">Account Ids</param>
         /// <returns></returns>
-        [Get("/api/trade/pendingOrders/byClient/{clientId}")]
-        Task<List<DetailedOrderContract>> PendingOrdersByClient(string clientId);
+        [Get("/api/trade/pendingOrders/byAccounts")]
+        Task<List<DetailedOrderContract>> PendingOrdersByClient(string[] accountIds);
 
         /// <summary>
         /// Returns list of orderbooks

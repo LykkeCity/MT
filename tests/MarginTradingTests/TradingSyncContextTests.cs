@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Common.Services.Telemetry;
@@ -37,7 +36,7 @@ namespace MarginTradingTests
                         _callbacksCount++;
                     });
 
-            var settingsMock = new Mock<MarginSettings>();
+            var settingsMock = new Mock<MarginTradingSettings>();
             settingsMock.SetupGet(s => s.Telemetry)
                 .Returns(new TelemetrySettings {LockMetricThreshold = 0});
 

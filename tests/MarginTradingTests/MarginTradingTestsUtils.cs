@@ -1,18 +1,14 @@
 ﻿using System.Collections.Generic;
-using System.Threading;
 using AzureStorage.Tables;
-using Lykke.Service.Assets.Client;
 using MarginTrading.AzureRepositories;
-using MarginTrading.AzureRepositories.Contract;
-using MarginTrading.AzureRepositories.Entities;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.TradingConditions;
-using MarginTrading.Common.Services;
-using Microsoft.Rest;
+using MarginTrading.SettingsService.Contracts;
+using MarginTrading.SettingsService.Contracts.Asset;
+using MarginTrading.SettingsService.Contracts.Enums;
+using MarginTrading.SettingsService.Contracts.TradingConditions;
 using Moq;
-using Asset = Lykke.Service.Assets.Client.Models.Asset;
-using AssetPairEntity = MarginTrading.AzureRepositories.AssetPairsRepository.AssetPairEntity;
+using AssetPairContract = MarginTrading.SettingsService.Contracts.AssetPair.AssetPairContract;
 
 namespace MarginTradingTests
 {
@@ -20,25 +16,21 @@ namespace MarginTradingTests
     {
         public const string TradingConditionId = "1";
 
-        public static IAssetsService GetPopulatedAssetsService()
+        public static IAssetsApi GetPopulatedAssets()
         {
-            var assetsService = new Mock<IAssetsService>();
+            var assetsService = new Mock<IAssetsApi>();
            
-            var assets = new List<Asset>
+            var assets = new List<AssetContract>
             {
-                new Asset
+                new AssetContract
                 {
                     Id = "BTC",
                     Name = "BTC",
                     Accuracy = 8
                 }
             };
-            
-            var assetsResult = new HttpOperationResponse<IList<Asset>> {Body = assets};
 
-            assetsService
-                .Setup(s => s.AssetGetAllWithHttpMessagesAsync(false, It.IsAny<Dictionary<string, List<string>>>(),
-                    It.IsAny<CancellationToken>())).ReturnsAsync(assetsResult);
+            assetsService.Setup(s => s.List()).ReturnsAsync(assets);
 
             return assetsService.Object;
         }
@@ -55,209 +47,123 @@ namespace MarginTradingTests
             return accountRepository;
         }
 
-        public static AccountGroupRepository GetPopulatedAccountGroupRepository()
+        public static ITradingInstrumentsApi GetPopulatedTradingInstruments()
         {
-            var accountGroupRepository = new AccountGroupRepository(new NoSqlTableInMemory<AccountGroupEntity>());
-
-            var groups = new List<AccountGroup>
+            var instruments = new List<TradingInstrumentContract>
             {
-                new AccountGroup
+                new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
-                    BaseAssetId = "USD",
-                    MarginCall = 1.25M,
-                    StopOut = 1.05M
-                },
-                new AccountGroup
-                {
-                    TradingConditionId = TradingConditionId,
-                    BaseAssetId = "EUR",
-                    MarginCall = 1.25M,
-                    StopOut = 1.05M
-                },
-                new AccountGroup
-                {
-                    TradingConditionId = TradingConditionId,
-                    BaseAssetId = "CHF",
-                    MarginCall = 1.25M,
-                    StopOut = 1.05M
-                }
-            };
-
-            foreach (var group in groups)
-            {
-                accountGroupRepository.AddOrReplaceAsync(group).Wait();
-            }
-
-            return accountGroupRepository;
-        }
-
-        public static AccountAssetsPairsRepository GetPopulatedAccountAssetsRepository()
-        {
-            var repository = new AccountAssetsPairsRepository(new NoSqlTableInMemory<AccountAssetPairEntity>());
-            var assets = new List<AccountAssetPair>
-            {
-                new AccountAssetPair
-                {
-                    TradingConditionId = TradingConditionId,
-                    BaseAssetId = "USD",
                     Instrument = "BTCCHF",
                     LeverageInit = 10,
                     LeverageMaintenance = 15,
-                    DeltaAsk = 30,
-                    DeltaBid = 30
+                    Delta = 30
                 },
-                new AccountAssetPair
+                new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
-                    BaseAssetId = "USD",
                     Instrument = "EURUSD",
                     LeverageInit = 100,
                     LeverageMaintenance = 150,
-                    DeltaAsk = 30,
-                    DeltaBid = 30,
-                    DealLimit = 1000000,
+                    Delta = 30,
+                    DealMaxLimit = 1000000,
                     PositionLimit = 10000000
                 },
-                new AccountAssetPair
+                new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
-                    BaseAssetId = "USD",
                     Instrument = "BTCEUR",
                     LeverageInit = 10,
                     LeverageMaintenance = 15,
-                    DeltaAsk = 30,
-                    DeltaBid = 30
+                    Delta = 30
                 },
-                new AccountAssetPair
+                new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
-                    BaseAssetId = "USD",
                     Instrument = "BTCUSD",
                     LeverageInit = 10,
                     LeverageMaintenance = 15,
-                    DeltaAsk = 30,
-                    DeltaBid = 30,
-                    DealLimit = 10,
+                    Delta = 30,
+                    DealMaxLimit = 10,
                     PositionLimit = 100
                 },
-                new AccountAssetPair
+                new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
-                    BaseAssetId = "USD",
-                    Instrument = "BTCCHF",
-                    LeverageInit = 10,
-                    LeverageMaintenance = 15,
-                    DeltaAsk = 30,
-                    DeltaBid = 30
-                },
-                new AccountAssetPair
-                {
-                    TradingConditionId = TradingConditionId,
-                    BaseAssetId = "USD",
                     Instrument = "CHFJPY",
                     LeverageInit = 100,
                     LeverageMaintenance = 150,
-                    DeltaAsk = 30,
-                    DeltaBid = 30
+                    Delta = 30
                 },
-                new AccountAssetPair
+                new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
-                    BaseAssetId = "USD",
                     Instrument = "JPYUSD",
                     LeverageInit = 100,
                     LeverageMaintenance = 150,
-                    DeltaAsk = 30,
-                    DeltaBid = 30
+                    Delta = 30
                 },
-                new AccountAssetPair
+                new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
-                    BaseAssetId = "USD",
                     Instrument = "EURGBP",
                     LeverageInit = 100,
                     LeverageMaintenance = 150,
-                    DeltaAsk = 30,
-                    DeltaBid = 30
+                    Delta = 30
                 },
-                new AccountAssetPair
+                new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
-                    BaseAssetId = "USD",
                     Instrument = "GBPUSD",
                     LeverageInit = 100,
                     LeverageMaintenance = 150,
-                    DeltaAsk = 30,
-                    DeltaBid = 30
+                    Delta = 30
                 },
-                new AccountAssetPair
+                new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
-                    BaseAssetId = "EUR",
                     Instrument = "BTCJPY",
                     LeverageInit = 100,
                     LeverageMaintenance = 150,
-                    DeltaAsk = 30,
-                    DeltaBid = 30
-                },
-                new AccountAssetPair
-                {
-                    TradingConditionId = TradingConditionId,
-                    BaseAssetId = "EUR",
-                    Instrument = "BTCEUR",
-                    LeverageInit = 100,
-                    LeverageMaintenance = 150,
-                    DeltaAsk = 30,
-                    DeltaBid = 30
-                },
+                    Delta = 30
+                }
             };
 
-            foreach (var asset in assets)
-            {
-                repository.AddOrReplaceAsync(asset).Wait();
-            }
-
-            return repository;
+            var mock = new Mock<ITradingInstrumentsApi>();
+            mock.Setup(s => s.List(It.IsAny<string>())).ReturnsAsync(instruments);
+            
+            return mock.Object;
         }
 
-        public static TradingConditionsRepository GetPopulatedMarginTradingConditionsRepository()
+        public static ITradingConditionsApi GetPopulatedTradingConditions()
         {
-            var tradingConditionsRepository = new TradingConditionsRepository(new NoSqlTableInMemory<TradingConditionEntity>());
-
-            tradingConditionsRepository.AddOrReplaceAsync(new TradingCondition
+            var defaultTc = new TradingConditionContract
             {
                 Id = TradingConditionId,
                 IsDefault = true,
-                Name = "Default trading condition"
-            }).Wait();
+                Name = "Default trading condition",
+                BaseAssets = new List<string> {"USD", "EUR", "CHF"},
+                MarginCall1 = 1.25M,
+                MarginCall2 = 1.15M,
+                StopOut = 1.05M
+            };
+            
+            var mock = new Mock<ITradingConditionsApi>();
+            mock.Setup(s => s.List()).ReturnsAsync(new List<TradingConditionContract> {defaultTc});
 
-            return tradingConditionsRepository;
+            return mock.Object;
         }
 
-        public static MatchingEngineRoutesRepository GetPopulatedMatchingEngineRoutesRepository()
+        public static ITradingRoutesApi GetPopulatedMatchingEngineRoutes()
         {
-            var repository = new MatchingEngineRoutesRepository(new NoSqlTableInMemory<MatchingEngineRouteEntity>());
-
-            return repository;
+            return Mock.Of<ITradingRoutesApi>();
         }
 
-        public static OvernightSwapStateRepository GetOvernightSwapStateRepository()
+        public static IAssetPairsApi GetPopulatedAssetPairs()
         {
-            return new OvernightSwapStateRepository(new NoSqlTableInMemory<OvernightSwapStateEntity>());
-        }
-
-        public static OvernightSwapHistoryRepository GetOvernightSwapHistoryRepository()
-        {
-            return new OvernightSwapHistoryRepository(new NoSqlTableInMemory<OvernightSwapHistoryEntity>());
-        }
-
-        public static IAssetPairsRepository GetPopulatedAssetPairsRepository()
-        {
-            var table = new NoSqlTableInMemory<AssetPairEntity>();
-            var assetPairs = new List<AssetPairEntity>
+            var assetPairs = new List<AssetPairContract>
             {
-                new AssetPairEntity
+                new AssetPairContract
                 {
                     Id = "EURUSD",
                     Name = "EURUSD",
@@ -265,7 +171,7 @@ namespace MarginTradingTests
                     BaseAssetId = "EUR",
                     QuoteAssetId = "USD",
                 },
-                new AssetPairEntity
+                new AssetPairContract
                 {
                     Id = "BTCEUR",
                     Name = "BTCEUR",
@@ -273,7 +179,7 @@ namespace MarginTradingTests
                     BaseAssetId = "BTC",
                     QuoteAssetId = "EUR"
                 },
-                new AssetPairEntity
+                new AssetPairContract
                 {
                     Id = "BTCUSD",
                     Name = "BTCUSD",
@@ -281,7 +187,7 @@ namespace MarginTradingTests
                     BaseAssetId = "BTC",
                     QuoteAssetId = "USD"
                 },
-                new AssetPairEntity
+                new AssetPairContract
                 {
                     Id = "BTCCHF",
                     Name = "BTCCHF",
@@ -289,7 +195,7 @@ namespace MarginTradingTests
                     BaseAssetId = "BTC",
                     QuoteAssetId = "CHF"
                 },
-                new AssetPairEntity
+                new AssetPairContract
                 {
                     Id = "CHFJPY",
                     Name = "CHFJPY",
@@ -297,7 +203,7 @@ namespace MarginTradingTests
                     BaseAssetId = "CHF",
                     QuoteAssetId = "JPY"
                 },
-                new AssetPairEntity
+                new AssetPairContract
                 {
                     Id = "USDCHF",
                     Name = "USDCHF",
@@ -305,7 +211,7 @@ namespace MarginTradingTests
                     BaseAssetId = "USD",
                     QuoteAssetId = "CHF"
                 },
-                new AssetPairEntity
+                new AssetPairContract
                 {
                     Id = "EURCHF",
                     Name = "EURCHF",
@@ -313,7 +219,7 @@ namespace MarginTradingTests
                     BaseAssetId = "EUR",
                     QuoteAssetId = "CHF"
                 },
-                new AssetPairEntity
+                new AssetPairContract
                 {
                     Id = "BTCJPY",
                     Name = "BTCJPY",
@@ -321,7 +227,7 @@ namespace MarginTradingTests
                     BaseAssetId = "BTC",
                     QuoteAssetId = "JPY"
                 },
-                new AssetPairEntity
+                new AssetPairContract
                 {
                     Id = "EURJPY",
                     Name = "EURJPY",
@@ -329,7 +235,7 @@ namespace MarginTradingTests
                     BaseAssetId = "EUR",
                     QuoteAssetId = "JPY"
                 },
-                new AssetPairEntity
+                new AssetPairContract
                 {
                     Id = "JPYUSD",
                     Name = "JPYUSD",
@@ -337,7 +243,7 @@ namespace MarginTradingTests
                     BaseAssetId = "JPY",
                     QuoteAssetId = "USD"
                 },
-                new AssetPairEntity
+                new AssetPairContract
                 {
                     Id = "EURGBP",
                     Name = "EURGBP",
@@ -345,7 +251,7 @@ namespace MarginTradingTests
                     BaseAssetId = "EUR",
                     QuoteAssetId = "GBP"
                 },
-                new AssetPairEntity
+                new AssetPairContract
                 {
                     Id = "GBPUSD",
                     Name = "GBPUSD",
@@ -358,13 +264,16 @@ namespace MarginTradingTests
             foreach (var pair in assetPairs)
             {
                 pair.LegalEntity = "LYKKETEST";
-                pair.MatchingEngineMode = MatchingEngineMode.MarketMaker;
+                pair.MatchingEngineMode = MatchingEngineModeContract.MarketMaker;
                 pair.StpMultiplierMarkupAsk = 1;
                 pair.StpMultiplierMarkupBid = 1;
             }
 
-            table.InsertAsync(assetPairs).GetAwaiter().GetResult();
-            return new AssetPairsRepository(table, new ConvertService());
+            var mock = new Mock<IAssetPairsApi>();
+            mock.Setup(m => m.List(It.IsAny<string>(), It.IsAny<MatchingEngineModeContract?>()))
+                .ReturnsAsync(assetPairs);
+
+            return mock.Object;
         }
     }
 }

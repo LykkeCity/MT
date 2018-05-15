@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Lykke.Service.ClientAccount.Client;
+using MarginTrading.Common.Services.Client;
 using Rocks.Caching;
 
 namespace MarginTrading.Common.Services.Settings
@@ -12,14 +13,14 @@ namespace MarginTrading.Common.Services.Settings
         private static readonly CachingParameters ClientTradingEnabledCachingParameters =
             CachingParameters.InfiniteCache;
 
-        private readonly IClientAccountClient _clientAccountClient;
+        private readonly IClientAccountService _clientAccountService;
         private readonly ICacheProvider _cacheProvider;
 
         public MarginTradingEnabledCacheService(ICacheProvider cacheProvider,
-            IClientAccountClient clientAccountClient)
+            IClientAccountService clientAccountService)
         {
             _cacheProvider = cacheProvider;
-            _clientAccountClient = clientAccountClient;
+            _clientAccountService = clientAccountService;
         }
 
         public Task<EnabledMarginTradingTypes> IsMarginTradingEnabled(string clientId)
@@ -42,7 +43,7 @@ namespace MarginTrading.Common.Services.Settings
         {
             async Task<EnabledMarginTradingTypes> MarginEnabled()
             {
-                var marginEnabledSettings = await _clientAccountClient.GetMarginEnabledAsync(clientId);
+                var marginEnabledSettings = await _clientAccountService.GetMarginEnabledAsync(clientId);
                 return new EnabledMarginTradingTypes
                 {
                     Demo = marginEnabledSettings.Enabled,

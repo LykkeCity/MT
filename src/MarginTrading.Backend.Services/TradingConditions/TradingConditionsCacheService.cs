@@ -37,7 +37,7 @@ namespace MarginTrading.Backend.Services.TradingConditions
                 new ConcurrentDictionary<string, ITradingCondition>(tradingConditions.ToDictionary(c => c.Id));
         }
         
-        internal void AddOrUpdateTradingCondition(ITradingCondition tradingCondition)
+        public void AddOrUpdateTradingCondition(ITradingCondition tradingCondition)
         {
             _tradingConditions.AddOrUpdate(tradingCondition.Id, tradingCondition, (s, condition) => tradingCondition);
         }

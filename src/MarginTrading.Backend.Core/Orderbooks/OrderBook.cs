@@ -101,8 +101,7 @@ namespace MarginTrading.Backend.Core.Orderbooks
                             MarginTradingHelpers.VolumeAccuracy),
                         Volume = matchedVolume,
                         MatchedDate = DateTime.UtcNow,
-                        Price = pair.Key,
-                        ClientId = limitOrder.MarketMakerId
+                        Price = pair.Key
                     };
 
                     volumeToMatch = Math.Round(volumeToMatch - matchedVolume, MarginTradingHelpers.VolumeAccuracy);

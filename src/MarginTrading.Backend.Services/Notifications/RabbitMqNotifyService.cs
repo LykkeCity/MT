@@ -15,11 +15,11 @@ namespace MarginTrading.Backend.Services.Notifications
     public class RabbitMqNotifyService : IRabbitMqNotifyService
     {
         private readonly IDateService _dateService;
-        private readonly MarginSettings _settings;
+        private readonly MarginTradingSettings _settings;
         private readonly IIndex<string, IMessageProducer<string>> _publishers;
         private readonly ILog _log;
 
-        public RabbitMqNotifyService(IDateService dateService, MarginSettings settings,
+        public RabbitMqNotifyService(IDateService dateService, MarginTradingSettings settings,
             IIndex<string, IMessageProducer<string>> publishers, ILog log)
         {
             _dateService = dateService;

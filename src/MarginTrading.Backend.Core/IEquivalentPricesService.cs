@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace MarginTrading.Backend.Core
+﻿namespace MarginTrading.Backend.Core
 {
 	public interface IEquivalentPricesService
 	{

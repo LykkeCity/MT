@@ -11,7 +11,6 @@ namespace MarginTrading.Backend.Contracts.TradeMonitoring
     {
         public string Id { get; set; }
         public long Code { get; set; }
-        public string ClientId { get; set; }
         public string AccountId { get; set; }
         public string AccountAssetId { get; set; }
         public string Instrument { get; set; }

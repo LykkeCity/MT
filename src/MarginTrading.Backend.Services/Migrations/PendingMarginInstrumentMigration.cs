@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Services.Infrastructure;
-using MoreLinq;
 
 namespace MarginTrading.Backend.Services.Migrations
 {

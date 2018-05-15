@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using MarginTrading.Backend.Core.DayOffSettings;
-using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services.AssetPairs

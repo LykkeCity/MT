@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Contracts.AssetPairSettings;
-using MarginTrading.Backend.Contracts.Client;
 using Refit;
 
 namespace MarginTrading.Backend.Contracts

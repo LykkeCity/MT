@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using System.Reflection;
 using Autofac;
-using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Migrations;
 using Module = Autofac.Module;
 

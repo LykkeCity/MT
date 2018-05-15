@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc.Abstractions;
@@ -13,7 +12,6 @@ using Rocks.Caching;
 using MarginTrading.Backend.Attributes;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Common.Services.Settings;
-using MarginTrading.Common.Settings;
 
 namespace MarginTrading.Backend.Filters
 {
@@ -24,13 +22,13 @@ namespace MarginTrading.Backend.Filters
     /// </summary>
     public class MarginTradingEnabledFilter: ActionFilterAttribute
     {
-        private readonly MarginSettings _marginSettings;
+        private readonly MarginTradingSettings _marginSettings;
         private readonly IMarginTradingSettingsCacheService _marginTradingSettingsCacheService;
         private readonly ICacheProvider _cacheProvider;
         private readonly ILog _log;
 
         public MarginTradingEnabledFilter(
-            MarginSettings marginSettings,
+            MarginTradingSettings marginSettings,
             IMarginTradingSettingsCacheService marginTradingSettingsCacheService,
             ICacheProvider cacheProvider,
             ILog log)

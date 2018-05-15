@@ -1,5 +1,4 @@
 ﻿using System;
-using MarginTrading.Backend.Core.Messages;
 
 namespace MarginTrading.Backend.Core
 {
@@ -104,7 +103,7 @@ namespace MarginTrading.Backend.Core
             {
                 orderInstance.ClosePrice = closePrice;
                 orderInstance.FplData.ActualHash++;
-                var account = MtServiceLocator.AccountsCacheService.Get(order.ClientId, order.AccountId);
+                var account = MtServiceLocator.AccountsCacheService.Get(order.AccountId);
                 account.CacheNeedsToBeUpdated();
             }
         }
@@ -124,12 +123,12 @@ namespace MarginTrading.Backend.Core
 
         public static decimal GetOpenCommission(this IOrder order)
         {
-            return order.CommissionLot == 0 ? 0 : Math.Abs(order.Volume) / order.CommissionLot * order.OpenCommission;
+            return Math.Abs(order.Volume) * order.OpenCommission;
         }
 
         public static decimal GetCloseCommission(this IOrder order)
         {
-            return order.CommissionLot == 0 ? 0 : Math.Abs(order.GetMatchedCloseVolume()) / order.CommissionLot * order.CloseCommission;
+            return Math.Abs(order.GetMatchedCloseVolume()) * order.CloseCommission;
         }
 
         public static bool IsOpened(this IOrder order)
