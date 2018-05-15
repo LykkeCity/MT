@@ -97,7 +97,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "BTCCHF",
                 Volume = 4000,
                 FillType = OrderFillType.FillOrKill
@@ -128,7 +127,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "BTCCHF",
                 Volume = -4000,
                 FillType = OrderFillType.FillOrKill
@@ -148,7 +146,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 8,
                 FillType = OrderFillType.PartialFill
@@ -179,7 +176,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -8,
                 FillType = OrderFillType.PartialFill
@@ -210,7 +206,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 8,
                 FillType = OrderFillType.PartialFill
@@ -246,7 +241,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -8,
                 FillType = OrderFillType.PartialFill
@@ -283,7 +277,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 15,
                 FillType = OrderFillType.PartialFill
@@ -314,7 +307,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -13,
                 FillType = OrderFillType.PartialFill
@@ -344,7 +336,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 16,
                 FillType = OrderFillType.FillOrKill
@@ -366,7 +357,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -13,
                 FillType = OrderFillType.FillOrKill
@@ -388,7 +378,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 9,
                 FillType = OrderFillType.FillOrKill
@@ -417,7 +406,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -8,
                 FillType = OrderFillType.FillOrKill
@@ -446,13 +434,12 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 8,
                 FillType = OrderFillType.PartialFill
             };
 
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
             Assert.AreEqual(2, order.MatchedOrders.Count);
@@ -498,13 +485,12 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -8,
                 FillType = OrderFillType.PartialFill
             };
 
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
             Assert.AreEqual(2, order.MatchedOrders.Count);
@@ -539,13 +525,12 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 9,
                 FillType = OrderFillType.FillOrKill
             };
 
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
             Assert.AreEqual(2, order.MatchedOrders.Count);
@@ -584,13 +569,12 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -8,
                 FillType = OrderFillType.FillOrKill
             };
 
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
             Assert.AreEqual(2, order.MatchedOrders.Count);
@@ -629,13 +613,12 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 9,
                 FillType = OrderFillType.FillOrKill
             };
 
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
             Assert.AreEqual(2, order.MatchedOrders.Count);
@@ -685,7 +668,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -8,
                 FillType = OrderFillType.FillOrKill
@@ -737,7 +719,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 8,
                 FillType = OrderFillType.PartialFill
@@ -765,14 +746,13 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 8,
                 TakeProfit = 1.16M,
                 FillType = OrderFillType.PartialFill
             };
 
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
             Assert.AreEqual(2, order.MatchedOrders.Count);
@@ -809,14 +789,13 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -8,
                 TakeProfit = 0.8M,
                 FillType = OrderFillType.PartialFill
             };
 
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
             Assert.AreEqual(2, order.MatchedOrders.Count);
@@ -852,14 +831,13 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id, 
                 Instrument = "EURUSD",
                 Volume = 14,
                 StopLoss = 0.98M,
                 FillType = OrderFillType.FillOrKill
             };
 
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
             Assert.AreEqual(OrderStatus.Active, order.Status);
@@ -895,14 +873,13 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -11,
                 StopLoss = 1.15M,
                 FillType = OrderFillType.FillOrKill
             };
 
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
             Assert.AreEqual(2, order.MatchedOrders.Count);
@@ -938,7 +915,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 8,
                 FillType = OrderFillType.PartialFill
@@ -992,7 +968,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "BTCCHF",
                 Volume = 1,
                 FillType = OrderFillType.FillOrKill
@@ -1000,7 +975,7 @@ namespace MarginTradingTests
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(1, order.MatchedOrders.Count);
             Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
@@ -1034,7 +1009,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "BTCCHF",
                 Volume = 1,
                 FillType = OrderFillType.FillOrKill
@@ -1042,7 +1016,7 @@ namespace MarginTradingTests
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(1, order.MatchedOrders.Count);
             Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
@@ -1076,7 +1050,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "BTCCHF",
                 Volume = -1,
                 FillType = OrderFillType.FillOrKill
@@ -1084,7 +1057,7 @@ namespace MarginTradingTests
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(1, order.MatchedOrders.Count);
             Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
@@ -1118,7 +1091,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "BTCCHF",
                 Volume = -1,
                 FillType = OrderFillType.FillOrKill
@@ -1126,7 +1098,7 @@ namespace MarginTradingTests
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(1, order.MatchedOrders.Count);
             Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
@@ -1161,7 +1133,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "BTCCHF",
                 Volume = 11.0415493502M,  //10000 USD (with leverage)
                 FillType = OrderFillType.FillOrKill
@@ -1197,7 +1168,6 @@ namespace MarginTradingTests
                     CreateDate = DateTime.UtcNow,
                     Id = Guid.NewGuid().ToString("N"),
                     AccountId = _acount1Id,
-                    ClientId = _client1Id,
                     Instrument = "BTCCHF",
                     Volume = volume,
                     FillType = OrderFillType.FillOrKill
@@ -1218,7 +1188,7 @@ namespace MarginTradingTests
             order5 = _tradingEngine.PlaceOrderAsync(order5).Result;
             order6 = _tradingEngine.PlaceOrderAsync(order6).Result;
             
-            var account = _accountsCacheService.Get(_client1Id, _acount1Id);
+            var account = _accountsCacheService.Get(_acount1Id);
 
             Assert.AreEqual(OrderStatus.Active, order1.Status);
             Assert.AreEqual(OrderStatus.Active, order2.Status);
@@ -1268,14 +1238,13 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "BTCCHF",
                 Volume = 11.041549350204821M,  //10000 USD (with leverage)
                 FillType = OrderFillType.FillOrKill
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
-            var account = _accountsCacheService.Get(_client1Id, _acount1Id);
+            var account = _accountsCacheService.Get(_acount1Id);
 
             Assert.AreEqual(OrderStatus.Active, order.Status);
             Assert.AreEqual(1.63564m, Math.Round(account.GetMarginUsageLevel(), 5));
@@ -1288,7 +1257,7 @@ namespace MarginTradingTests
                 new []{new LimitOrder { CreateDate = DateTime.UtcNow, Id = "7", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 808.286M, Volume = 15000 }
             }, new[] { "6" });
 
-            account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(AccountLevel.MarginCall, account.GetAccountLevel());
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
@@ -1309,7 +1278,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = Accounts[1].Id,
-                ClientId = _client1Id,
                 Instrument = "BTCJPY",
                 Volume = 1,
                 FillType = OrderFillType.FillOrKill
@@ -1340,13 +1308,12 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = Accounts[1].Id,
-                ClientId = _client1Id,
                 Instrument = "BTCEUR",
                 Volume = 1000,
                 FillType = OrderFillType.PartialFill
             };
 
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
             Assert.AreEqual(1, order.MatchedOrders.Count);
@@ -1370,7 +1337,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = Accounts[1].Id,
-                ClientId = _client1Id,
                 Instrument = "BTCEUR",
                 Volume = 1000,
                 FillType = OrderFillType.PartialFill
@@ -1419,7 +1385,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURGBP",
                 Volume = 10000,
                 FillType = OrderFillType.FillOrKill,
@@ -1452,7 +1417,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "CHFJPY",
                 Volume = 1,
                 FillType = OrderFillType.FillOrKill,
@@ -1477,7 +1441,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 8,
                 ExpectedOpenPrice = 0,
@@ -1498,7 +1461,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 8,
                 ExpectedOpenPrice = 1.1M,
@@ -1518,7 +1480,7 @@ namespace MarginTradingTests
                 new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2M, Volume = 6 }
             });
 
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(2, order.MatchedOrders.Count);
             Assert.AreEqual(OrderStatus.Active, order.Status);
@@ -1536,7 +1498,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 8,
                 ExpectedOpenPrice = 1.055M,
@@ -1544,7 +1505,7 @@ namespace MarginTradingTests
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(0, order.MatchedOrders.Count);
             Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //is not active
@@ -1584,7 +1545,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -5,
                 ExpectedOpenPrice = 1.05M,
@@ -1600,7 +1560,7 @@ namespace MarginTradingTests
                 new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = 6 }
             });
 
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(1, order.MatchedOrders.Count);
             Assert.AreEqual(OrderStatus.Active, order.Status);
@@ -1618,7 +1578,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -1,
                 ExpectedOpenPrice = 1.07M,
@@ -1626,7 +1585,7 @@ namespace MarginTradingTests
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(0, order.MatchedOrders.Count);
             Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //is not active
@@ -1663,7 +1622,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 1,
                 ExpectedOpenPrice = 1.1M,
@@ -1681,7 +1639,7 @@ namespace MarginTradingTests
                 new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2M, Volume = 6 }
             });
 
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(1, order.MatchedOrders.Count);
             Assert.AreEqual(OrderStatus.Active, order.Status);
@@ -1700,7 +1658,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 1,
                 ExpectedOpenPrice = 1.055M,
@@ -1708,7 +1665,7 @@ namespace MarginTradingTests
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(0, order.MatchedOrders.Count);
             Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //is not active
@@ -1744,7 +1701,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -1,
                 ExpectedOpenPrice = 1.05M,
@@ -1760,7 +1716,7 @@ namespace MarginTradingTests
                 new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = 6 }
             });
 
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(1, order.MatchedOrders.Count);
             Assert.AreEqual(OrderStatus.Active, order.Status);
@@ -1778,7 +1734,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -1,
                 ExpectedOpenPrice = 1.07M,
@@ -1786,7 +1741,7 @@ namespace MarginTradingTests
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(0, order.MatchedOrders.Count);
             Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //is not active
@@ -1822,7 +1777,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = 8,
                 ExpectedOpenPrice = 1.12M,
@@ -1844,7 +1798,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -8,
                 ExpectedOpenPrice = 1.04M,
@@ -1866,7 +1819,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -1,
                 ExpectedOpenPrice = 1.07M,
@@ -1874,7 +1826,7 @@ namespace MarginTradingTests
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(0, order.MatchedOrders.Count);
             Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //is not active
@@ -1899,7 +1851,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -10000,
                 ExpectedOpenPrice = 1.07M,
@@ -1907,7 +1858,7 @@ namespace MarginTradingTests
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(0, order.MatchedOrders.Count);
             Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //is not active
@@ -1941,7 +1892,6 @@ namespace MarginTradingTests
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
                 AccountId = _acount1Id,
-                ClientId = _client1Id,
                 Instrument = "EURUSD",
                 Volume = -5,
                 ExpectedOpenPrice = 1.07M,
@@ -1949,7 +1899,7 @@ namespace MarginTradingTests
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(0, order.MatchedOrders.Count);
             Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //is not active

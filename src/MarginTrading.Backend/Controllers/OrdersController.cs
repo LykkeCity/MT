@@ -65,8 +65,6 @@ namespace MarginTrading.Backend.Controllers
                 Id = Guid.NewGuid().ToString("N"),
                 Code = code,
                 CreateDate = DateTime.UtcNow,
-                //TODO: remove ClientId
-                ClientId = request.AccountId,
                 AccountId = request.AccountId,
                 Instrument = request.InstrumentId,
                 Volume = request.Direction == OrderDirectionContract.Buy ? request.Volume : -request.Volume,
@@ -74,10 +72,15 @@ namespace MarginTrading.Backend.Controllers
             };
 
             var placedOrder = await _tradingEngine.PlaceOrderAsync(order);
-
+            
             _consoleWriter.WriteLine($"action order.place for accountId = {request.AccountId}");
-            _operationsLogService.AddLog("action order.place", request.AccountId, request.AccountId, request.ToJson(),
+            _operationsLogService.AddLog("action order.place", request.AccountId, request.ToJson(),
                 placedOrder.ToJson());
+
+            if (order.Status == OrderStatus.Rejected)
+            {
+                throw new Exception($"Order is rejected: {order.RejectReason} ({order.RejectReasonText})");
+            }
         }
 
         /// <summary>
@@ -110,7 +113,7 @@ namespace MarginTrading.Backend.Controllers
 
             _consoleWriter.WriteLine(
                 $"action order.cancel for accountId = {order.AccountId}, orderId = {orderId}");
-            _operationsLogService.AddLog("action order.cancel", order.ClientId, order.AccountId, request.ToJson(),
+            _operationsLogService.AddLog("action order.cancel", order.AccountId, request.ToJson(),
                 canceledOrder.ToJson());
             
             return Task.CompletedTask;
@@ -148,7 +151,7 @@ namespace MarginTrading.Backend.Controllers
             }
 
             _consoleWriter.WriteLine($"action order.changeLimits for orderId = {orderId}");
-            _operationsLogService.AddLog("action order.changeLimits", order.ClientId, order.AccountId, request.ToJson(),
+            _operationsLogService.AddLog("action order.changeLimits", order.AccountId, request.ToJson(),
                 "");
 
             return Task.CompletedTask;

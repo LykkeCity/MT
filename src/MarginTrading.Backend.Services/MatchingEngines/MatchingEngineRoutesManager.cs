@@ -132,7 +132,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             // Create Editable Object 
             var matchingEngineRoute = MatchingEngineRoute.Create(route);
 
-            matchingEngineRoute.ClientId = GetValueOrAnyIfValid(route.ClientId, ValidateClient);
+            matchingEngineRoute.ClientId = GetValueOrAnyIfValid(route.ClientId, null);
             matchingEngineRoute.TradingConditionId = GetValueOrAnyIfValid(route.TradingConditionId, ValidateTradingCondition);
             matchingEngineRoute.Instrument = GetValueOrAnyIfValid(route.Instrument, ValidateInstrument);
             matchingEngineRoute.Asset = GetValueOrAnyIfValid(route.Asset, null);
@@ -269,14 +269,6 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             validationAction?.Invoke(value);
 
             return value;
-        }
-
-        private void ValidateClient(string clientId)
-        {
-            var userAccounts = _accountsCacheService.GetAll(clientId);
-                
-            if (!userAccounts.Any())
-                throw new ArgumentException("Invalid ClientId");
         }
 
         private void ValidateTradingCondition(string tradingConditionId)

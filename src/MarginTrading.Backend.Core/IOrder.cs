@@ -7,7 +7,6 @@ namespace MarginTrading.Backend.Core
     public interface IOrder : IBaseOrder
     {
         long Code { get; set; }
-        string ClientId { get; }
         string AccountId { get; }
         string TradingConditionId { get; }
         string AccountAssetId { get; }
@@ -66,7 +65,6 @@ namespace MarginTrading.Backend.Core
     {
         public string Id { get; set; }
         public long Code { get; set; }
-        public string ClientId { get; set; }
         public string AccountId { get; set; }
         public string TradingConditionId { get; set; }
         public string AccountAssetId { get; set; }

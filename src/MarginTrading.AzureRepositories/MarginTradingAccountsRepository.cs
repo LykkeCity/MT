@@ -13,8 +13,8 @@ namespace MarginTrading.AzureRepositories
         public string ClientId => PartitionKey;
         public string TradingConditionId { get; set; }
         public string BaseAssetId { get; set; }
-        decimal IMarginTradingAccount.Balance => (decimal) Balance;
-        public double Balance { get; set; }
+        decimal IMarginTradingAccount.Balance => decimal.Parse(Balance);
+        public string Balance { get; set; }
         decimal IMarginTradingAccount.WithdrawTransferLimit => (decimal) WithdrawTransferLimit;
         public AccountFpl AccountFpl => new AccountFpl();
         public string LegalEntity { get; set; }
@@ -40,7 +40,7 @@ namespace MarginTrading.AzureRepositories
                 RowKey = GenerateRowKey(src.Id),
                 TradingConditionId = src.TradingConditionId,
                 BaseAssetId = src.BaseAssetId,
-                Balance = (double) src.Balance,
+                Balance = src.Balance.ToString(),
                 WithdrawTransferLimit = (double) src.WithdrawTransferLimit,
                 LegalEntity = src.LegalEntity,
             };

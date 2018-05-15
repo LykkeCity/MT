@@ -213,7 +213,6 @@ namespace MarginTrading.Backend.Core.Mappers
             {
                 Id = src.Id,
                 Code = src.Code,
-                ClientId = src.ClientId,
                 AccountId = src.AccountId,
                 TradingConditionId = src.TradingConditionId,
                 AccountAssetId = src.AccountAssetId,
@@ -283,7 +282,6 @@ namespace MarginTrading.Backend.Core.Mappers
                 Code = src.Code,
                 AccountId = src.AccountId,
                 AccountAssetId = src.AccountAssetId,
-                ClientId = src.ClientId,
                 Instrument = src.Instrument,
                 Status = src.Status.ToType<OrderStatusContract>(),
                 CreateDate = src.CreateDate,

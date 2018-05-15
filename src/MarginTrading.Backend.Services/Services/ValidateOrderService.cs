@@ -59,7 +59,7 @@ namespace MarginTrading.Backend.Services
                 throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, "Instrument not found");
             }
             
-            var account = _accountsCacheService.TryGet(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.TryGet(order.AccountId);
 
             if (account == null)
             {

@@ -88,7 +88,6 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                     {
                         new MatchedOrder
                         {
-                            ClientId = order.ClientId,
                             MarketMakerId = sourcePrice.source,
                             MatchedDate = _dateService.Now(),
                             OrderId = executionResult.ExchangeOrderId,
@@ -188,7 +187,6 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 {
                     new MatchedOrder
                     {
-                        ClientId = order.ClientId,
                         MarketMakerId = closeLp,
                         MatchedDate = _dateService.Now(),
                         OrderId = executionResult.ExchangeOrderId,

@@ -62,7 +62,7 @@ namespace MarginTrading.Backend.Services
 
             _threadSwitcher.SwitchThread(async () =>
             {
-                _operationsLogService.AddLog("stopout", account.ClientId, account.Id, "", ea.ToJson());
+                _operationsLogService.AddLog("stopout", account.Id, "", ea.ToJson());
 
                 var marginEventTask = _rabbitMqNotifyService.AccountMarginEvent(accountMarginEventMessage);
 

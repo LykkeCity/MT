@@ -35,7 +35,6 @@ namespace MarginTradingTests
             {
                 Id = Guid.NewGuid().ToString(),
                 AccountId = Accounts[0].Id,
-                ClientId = Accounts[0].ClientId,
                 AccountAssetId = Accounts[0].BaseAssetId,
                 TradingConditionId = Accounts[0].TradingConditionId,
                 Instrument = instrument,
@@ -61,7 +60,6 @@ namespace MarginTradingTests
             {
                 Id = Guid.NewGuid().ToString(),
                 AccountId = Accounts[0].Id,
-                ClientId = Accounts[0].ClientId,
                 AccountAssetId = Accounts[0].BaseAssetId,
                 TradingConditionId = Accounts[0].TradingConditionId,
                 Instrument = instrument,
@@ -87,7 +85,6 @@ namespace MarginTradingTests
             {
                 Id = Guid.NewGuid().ToString(),
                 AccountId = Accounts[0].Id,
-                ClientId = Accounts[0].ClientId,
                 AccountAssetId = Accounts[0].BaseAssetId,
                 TradingConditionId = Accounts[0].TradingConditionId,
                 Instrument = instrument,
@@ -117,7 +114,6 @@ namespace MarginTradingTests
             {
                 Id = Guid.NewGuid().ToString(),
                 AccountId = Accounts[0].Id,
-                ClientId = Accounts[0].ClientId,
                 AccountAssetId = Accounts[0].BaseAssetId,
                 TradingConditionId = Accounts[0].TradingConditionId,
                 Instrument = instrument,
@@ -145,7 +141,6 @@ namespace MarginTradingTests
             {
                 Id = Guid.NewGuid().ToString(),
                 AccountId = Accounts[0].Id,
-                ClientId = Accounts[0].ClientId,
                 AccountAssetId = Accounts[0].BaseAssetId,
                 TradingConditionId = Accounts[0].TradingConditionId,
                 Instrument = instrument,
@@ -180,7 +175,6 @@ namespace MarginTradingTests
                     CreateDate = DateTime.UtcNow,
                     Id = Guid.NewGuid().ToString("N"),
                     AccountId = Accounts[0].Id,
-                    ClientId = Accounts[0].ClientId,
                     TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                     AccountAssetId = Accounts[0].BaseAssetId,
                     AssetAccuracy = 5,
@@ -197,7 +191,6 @@ namespace MarginTradingTests
                     CreateDate = DateTime.UtcNow,
                     Id = Guid.NewGuid().ToString("N"),
                     AccountId = Accounts[0].Id,
-                    ClientId = Accounts[0].ClientId,
                     TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                     AccountAssetId = Accounts[0].BaseAssetId,
                     AssetAccuracy = 5,
@@ -214,7 +207,6 @@ namespace MarginTradingTests
                     CreateDate = DateTime.UtcNow,
                     Id = Guid.NewGuid().ToString("N"),
                     AccountId = Accounts[0].Id,
-                    ClientId = Accounts[0].ClientId,
                     TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                     AccountAssetId = Accounts[0].BaseAssetId,
                     AssetAccuracy = 5,
@@ -231,7 +223,6 @@ namespace MarginTradingTests
                     CreateDate = DateTime.UtcNow,
                     Id = Guid.NewGuid().ToString("N"),
                     AccountId = Accounts[0].Id,
-                    ClientId = Accounts[0].ClientId,
                     TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                     AccountAssetId = Accounts[0].BaseAssetId,
                     AssetAccuracy = 3,

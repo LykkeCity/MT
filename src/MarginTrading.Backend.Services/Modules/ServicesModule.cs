@@ -12,6 +12,7 @@ using MarginTrading.Backend.Services.EventsConsumers;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Quotes;
+using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.RabbitMq;
@@ -22,13 +23,6 @@ namespace MarginTrading.Backend.Services.Modules
 {
 	public class ServicesModule : Module
 	{
-		private readonly IReloadingManager<RiskInformingSettings> _riskInformingSettings;
-
-		public ServicesModule(IReloadingManager<RiskInformingSettings> riskInformingSettings)
-		{
-			_riskInformingSettings = riskInformingSettings;
-		}
-
 		protected override void Load(ContainerBuilder builder)
 		{
 			builder.RegisterType<QuoteCacheService>()
@@ -163,10 +157,6 @@ namespace MarginTrading.Backend.Services.Modules
 
 			builder.RegisterType<AlertSeverityLevelService>()
 				.As<IAlertSeverityLevelService>()
-				.SingleInstance();
-
-			builder.RegisterInstance(_riskInformingSettings)
-				.As<IReloadingManager<RiskInformingSettings>>()
 				.SingleInstance();
 
 			builder.RegisterType<MarginTradingEnablingService>()

@@ -28,9 +28,6 @@ namespace MarginTrading.Backend.Controllers
             _quoteCacheService = quoteCacheService;
         }
         
-        
-        #region Init data
-
         [Route("prices")]
         [HttpPost]
         [SkipMarginTradingEnabledCheck]
@@ -46,55 +43,30 @@ namespace MarginTrading.Backend.Controllers
             return allQuotes.ToDictionary(q => q.Key, q => q.Value.ToBackendContract());
         }
 
-        #endregion
-      
         
-        
-        #region State
-        
-        [Route("order.list")]
-        [HttpPost]
-        public OrderBackendContract[] GetOpenPositions([FromBody]ClientIdBackendRequest request)
+        [Route("orders/{accountId}")]
+        [HttpGet]
+        public List<OrderBackendContract> GetOrders(string accountId)
         {
-            var accountIds = _accountsCacheService.GetAll(request.ClientId).Select(item => item.Id).ToArray();
+            var account = _accountsCacheService.Get(accountId);
+            
+            var orders = _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(account.Id)
+                .Select(item => item.ToBackendContract()).ToList();
 
-            var positions = _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountIds).Select(item => item.ToBackendContract()).ToList();
-            var orders = _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(accountIds).Select(item => item.ToBackendContract()).ToList();
-
-            positions.AddRange(orders);
-            var result = positions.ToArray();
-
-            return result;
+            return orders;
         }
 
-        [Route("order.account.list")]
+        [Route("positions/{accountId}")]
         [HttpPost]
-        public OrderBackendContract[] GetAccountOpenPositions([FromBody]AccountClientIdBackendRequest request)
+        public List<OrderBackendContract>  GetOpenPositions(string accountId)
         {
-            var account = _accountsCacheService.Get(request.ClientId, request.AccountId);
+            var account = _accountsCacheService.Get(accountId);
 
-            var positions = _ordersCache.ActiveOrders.GetOrdersByAccountIds(account.Id).Select(item => item.ToBackendContract()).ToList();
-            var orders = _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(account.Id).Select(item => item.ToBackendContract()).ToList();
+            var positions = _ordersCache.ActiveOrders.GetOrdersByAccountIds(account.Id)
+                .Select(item => item.ToBackendContract()).ToList();
 
-            positions.AddRange(orders);
-            var result = positions.ToArray();
-
-            return result;
-        }
-
-        [Route("order.positions")]
-        [HttpPost]
-        public (List<Order> orders, List<Order> positions) GetClientOrders([FromBody]ClientIdBackendRequest request)
-        {
-            var accountIds = _accountsCacheService.GetAll(request.ClientId).Select(item => item.Id).ToArray();
-
-            var positions = _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountIds).ToList();
-            var orders = _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(accountIds).ToList();
-
-            return (orders, positions);
+            return positions;
         }
         
-        #endregion
-
     }
 }

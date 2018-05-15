@@ -45,7 +45,6 @@ namespace MarginTradingTests
                 Id = Guid.NewGuid().ToString("N"),
                 Instrument = "EURUSD",
                 AccountId = Accounts[0].Id,
-                ClientId = Accounts[0].ClientId,
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 AccountAssetId = Accounts[0].BaseAssetId,
                 AssetAccuracy = 5,
@@ -64,7 +63,7 @@ namespace MarginTradingTests
             order1.UpdateClosePrice(1.04M);
 
             order1.GetFpl();
-            var account = _accountsCacheService.Get(order1.ClientId, order1.AccountId);
+            var account = _accountsCacheService.Get(order1.AccountId);
 
             Assert.IsNotNull(account);
             Assert.AreEqual(1000, account.Balance);
@@ -79,7 +78,6 @@ namespace MarginTradingTests
                 Id = Guid.NewGuid().ToString("N"),
                 Instrument = "EURUSD",
                 AccountId = Accounts[0].Id,
-                ClientId = Accounts[0].ClientId,
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 AccountAssetId = Accounts[0].BaseAssetId,
                 AssetAccuracy = 5,
@@ -111,7 +109,6 @@ namespace MarginTradingTests
                 Id = Guid.NewGuid().ToString("N"),
                 Instrument = "EURUSD",
                 AccountId = Accounts[0].Id,
-                ClientId = Accounts[0].ClientId,
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 AccountAssetId = Accounts[0].BaseAssetId,
                 AssetAccuracy = 5,
@@ -125,7 +122,7 @@ namespace MarginTradingTests
             _ordersCache.ActiveOrders.Add(order);
             order.UpdateClosePrice(1.02M);
             order.GetFpl();
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.IsNotNull(account);
             Assert.IsTrue(account.GetMarginUsageLevel() <= 1.25M);
@@ -139,7 +136,6 @@ namespace MarginTradingTests
                 Id = Guid.NewGuid().ToString("N"),
                 Instrument = "EURUSD",
                 AccountId = Accounts[0].Id,
-                ClientId = Accounts[0].ClientId,
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 AccountAssetId = Accounts[0].BaseAssetId,
                 AssetAccuracy = 5,
@@ -157,7 +153,6 @@ namespace MarginTradingTests
                 Id = Guid.NewGuid().ToString("N"),
                 Instrument = "EURUSD",
                 AccountId = Accounts[0].Id,
-                ClientId = Accounts[0].ClientId,
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 AccountAssetId = Accounts[0].BaseAssetId,
                 AssetAccuracy = 5,

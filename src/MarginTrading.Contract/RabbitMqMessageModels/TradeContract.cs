@@ -7,7 +7,6 @@ namespace MarginTrading.Contract.RabbitMqMessageModels
     public class TradeContract
     {
         public string Id { get; set; }
-        public string ClientId { get; set; }
         public string AccountId { get; set; }
         public string OrderId { get; set; }
         public string AssetPairId { get; set; }

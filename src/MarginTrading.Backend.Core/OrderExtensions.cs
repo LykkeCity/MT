@@ -103,7 +103,7 @@ namespace MarginTrading.Backend.Core
             {
                 orderInstance.ClosePrice = closePrice;
                 orderInstance.FplData.ActualHash++;
-                var account = MtServiceLocator.AccountsCacheService.Get(order.ClientId, order.AccountId);
+                var account = MtServiceLocator.AccountsCacheService.Get(order.AccountId);
                 account.CacheNeedsToBeUpdated();
             }
         }

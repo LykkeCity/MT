@@ -90,13 +90,11 @@ namespace MarginTrading.Backend
 
             var settings = mtSettings.Nested(s => s.MtBackend);
             
-            var riskInformingSettings = mtSettings.Nested(s => s.RiskInformingSettings);
-
             Console.WriteLine($"IsLive: {settings.CurrentValue.IsLive}");
 
             SetupLoggers(services, mtSettings, settings);
 
-            RegisterModules(builder, mtSettings, settings, Environment, riskInformingSettings);
+            RegisterModules(builder, mtSettings, settings, Environment);
 
             builder.Populate(services);
             
@@ -139,16 +137,15 @@ namespace MarginTrading.Backend
         }
 
         private void RegisterModules(ContainerBuilder builder, IReloadingManager<MtBackendSettings> mtSettings,
-            IReloadingManager<MarginTradingSettings> settings, IHostingEnvironment environment,
-            IReloadingManager<RiskInformingSettings> riskInformingSettings)
+            IReloadingManager<MarginTradingSettings> settings, IHostingEnvironment environment)
         {
             builder.RegisterModule(new BaseServicesModule(mtSettings.CurrentValue, LogLocator.CommonLog));
-            builder.RegisterModule(new BackendSettingsModule(settings));
+            builder.RegisterModule(new BackendSettingsModule(mtSettings));
             builder.RegisterModule(new BackendRepositoriesModule(settings, LogLocator.CommonLog));
             builder.RegisterModule(new EventModule());
             builder.RegisterModule(new CacheModule());
             builder.RegisterModule(new ManagersModule());
-            builder.RegisterModule(new ServicesModule(riskInformingSettings));
+            builder.RegisterModule(new ServicesModule());
             builder.RegisterModule(new BackendServicesModule(mtSettings.CurrentValue, settings.CurrentValue,
                 environment, LogLocator.CommonLog));
             builder.RegisterModule(new MarginTradingCommonModule());

@@ -59,6 +59,24 @@ namespace MarginTradingTests
             };
 
             builder.RegisterInstance(marginSettings).SingleInstance();
+            builder.RegisterInstance(new RiskInformingSettings
+            {
+                Data = new[]
+                {
+                    new RiskInformingParams
+                    {
+                        EventTypeCode = "BE01",
+                        Level = "None",
+                        System = "QuotesMonitor",
+                    },
+                    new RiskInformingParams
+                    {
+                        EventTypeCode = "BE02",
+                        Level = "None",
+                        System = "QuotesMonitor",
+                    }
+                }
+            }).SingleInstance();
 
             builder.RegisterModule(new MockBaseServicesModule());
             builder.RegisterModule(new MockRepositoriesModule());
@@ -74,25 +92,7 @@ namespace MarginTradingTests
             }
 
             builder.RegisterModule(new CacheModule());
-            builder.RegisterModule(
-                new ServicesModule(new StaticSettingsManager<RiskInformingSettings>(new RiskInformingSettings
-                {
-                    Data = new[]
-                    {
-                        new RiskInformingParams
-                        {
-                            EventTypeCode = "BE01",
-                            Level = "None",
-                            System = "QuotesMonitor",
-                        },
-                        new RiskInformingParams
-                        {
-                            EventTypeCode = "BE02",
-                            Level = "None",
-                            System = "QuotesMonitor",
-                        }
-                    }
-                })));
+            builder.RegisterModule(new ServicesModule());
             builder.RegisterModule(new ManagersModule());
 
             builder.RegisterType<EventChannel<AccountBalanceChangedEventArgs>>()

@@ -2,6 +2,6 @@
 {
     public interface IMarginTradingOperationsLogService
     {
-        void AddLog(string name, string clientId, string accountId, string input, string data);
+        void AddLog(string name, string accountId, string input, string data);
     }
 }

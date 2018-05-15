@@ -61,7 +61,7 @@ namespace MarginTrading.Backend.Services
             
             fplData.TotalFplSnapshot = order.GetTotalFpl(fplData.SwapsSnapshot);
 
-            _accountsCacheService.Get(order.ClientId, order.AccountId).CacheNeedsToBeUpdated();
+            _accountsCacheService.Get(order.AccountId).CacheNeedsToBeUpdated();
         }
 
         private void UpdatePendingOrderMargin(IOrder order, FplData fplData)
@@ -71,7 +71,7 @@ namespace MarginTrading.Backend.Services
             CalculateMargin(order, fplData);
             
             fplData.CalculatedHash = fplData.ActualHash;
-            _accountsCacheService.Get(order.ClientId, order.AccountId).CacheNeedsToBeUpdated();
+            _accountsCacheService.Get(order.AccountId).CacheNeedsToBeUpdated();
         }
 
         public void CalculateMargin(IOrder order, FplData fplData)

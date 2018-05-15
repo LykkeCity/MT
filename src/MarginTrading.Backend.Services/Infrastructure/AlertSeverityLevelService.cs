@@ -10,18 +10,15 @@ namespace MarginTrading.Backend.Services.Infrastructure
 {
     public class AlertSeverityLevelService : IAlertSeverityLevelService
     {
-        private readonly IReloadingManager<ReadOnlyCollection<(EventTypeEnum Event, string SlackChannelType)>> _levels;
+        private readonly ReadOnlyCollection<(EventTypeEnum Event, string SlackChannelType)> _levels;
         
         private static readonly string _defaultLevel = "mt-critical";
 
-        public AlertSeverityLevelService(IReloadingManager<RiskInformingSettings> settings)
+        public AlertSeverityLevelService(RiskInformingSettings settings)
         {
-            _levels = settings.Nested(s =>
-            {
-                return s.Data.Where(d => d.System == "QuotesMonitor")
-                    .Select(d => (ConvertEventTypeCode(d.EventTypeCode), ConvertLevel(d.Level)))
-                    .ToList().AsReadOnly();
-            });
+            _levels = settings.Data.Where(d => d.System == "QuotesMonitor")
+                .Select(d => (ConvertEventTypeCode(d.EventTypeCode), ConvertLevel(d.Level)))
+                .ToList().AsReadOnly();
         }
 
         private static EventTypeEnum ConvertEventTypeCode(string eventTypeCode)
@@ -53,8 +50,10 @@ namespace MarginTrading.Backend.Services.Infrastructure
 
         public string GetSlackChannelType(EventTypeEnum eventType)
         {
-            return _levels.CurrentValue.Where(l => l.Event == eventType).Select(l => l.SlackChannelType)
-                .FallbackIfEmpty(_defaultLevel).Single();
+            return _levels != null
+                ? _levels.Where(l => l.Event == eventType).Select(l => l.SlackChannelType)
+                    .FallbackIfEmpty(_defaultLevel).Single()
+                : _defaultLevel;
         }
     }
 }

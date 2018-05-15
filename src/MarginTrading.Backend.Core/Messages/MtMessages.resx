@@ -132,8 +132,8 @@
   <data name="ClientIdNotFoundInCache" xml:space="preserve">
     <value>Client {0} doesn't exist in the cache</value>
   </data>
-  <data name="ClientAccountNotFoundInCache" xml:space="preserve">
-    <value>Client {0} doesn't have account {1} in the cache</value>
+  <data name="AccountNotFoundInCache" xml:space="preserve">
+    <value>Account {0} does not exist in the cache</value>
   </data>
   <data name="ClientHasAccountInCache" xml:space="preserve">
     <value>Client {0} already has account {1} in the cache</value>
@@ -148,7 +148,7 @@
     <value>Instrument {0} does not exist in cache</value>
   </data>
   <data name="InstrumentWithAssetsNotFound" xml:space="preserve">
-    <value>There is no instrument with assets {0} and {1}</value>
+    <value>There is no instrument with assets {0} and {1} in legal entity {2}</value>
   </data>
   <data name="Notifications_MarginCall" xml:space="preserve">
     <value>Margin used {0:P} ({1} Account)</value>

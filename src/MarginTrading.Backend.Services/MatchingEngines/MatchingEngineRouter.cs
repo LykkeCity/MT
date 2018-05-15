@@ -23,7 +23,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
         public IMatchingEngineBase GetMatchingEngineForOpen(IOrder order)
         {
-            var route = _routesManager.FindRoute(order.ClientId, order.TradingConditionId, order.Instrument,
+            var route = _routesManager.FindRoute(null, order.TradingConditionId, order.Instrument,
                 order.GetOrderType());
 
             if (route != null)

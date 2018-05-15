@@ -76,9 +76,9 @@ namespace MarginTrading.Backend.Core.Messages {
             }
         }
         
-        public static string ClientAccountNotFoundInCache {
+        public static string AccountNotFoundInCache {
             get {
-                return ResourceManager.GetString("ClientAccountNotFoundInCache", resourceCulture);
+                return ResourceManager.GetString("AccountNotFoundInCache", resourceCulture);
             }
         }
         

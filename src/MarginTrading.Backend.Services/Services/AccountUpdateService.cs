@@ -40,14 +40,14 @@ namespace MarginTrading.Backend.Services
         {
             _fplService.CalculateMargin(order, order.FplData);
             var orderMargin = order.GetMarginInit();
-            var accountMarginAvailable = _accountsCacheService.Get(order.ClientId, order.AccountId).GetMarginAvailable(); 
+            var accountMarginAvailable = _accountsCacheService.Get(order.AccountId).GetMarginAvailable(); 
             
             return accountMarginAvailable >= orderMargin;
         }
 
         public MarginTradingAccount GuessAccountWithNewActiveOrder(Order order)
         {
-            var newInstance = MarginTradingAccount.Create(_accountsCacheService.Get(order.ClientId, order.AccountId));
+            var newInstance = MarginTradingAccount.Create(_accountsCacheService.Get(order.AccountId));
 
             var activeOrders = GetActiveOrders(newInstance.Id);
             activeOrders.Add(order);

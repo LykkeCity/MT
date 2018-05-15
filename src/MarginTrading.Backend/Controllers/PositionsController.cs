@@ -23,54 +23,24 @@ namespace MarginTrading.Backend.Controllers
     [Route("api/positions")]
     public class PositionsController : Controller, IPositionsApi
     {
-        private readonly IMarginTradingAccountHistoryRepository _accountsHistoryRepository;
-        private readonly IMicrographCacheService _micrographCacheService;
-        private readonly ITradingInstrumnentsCacheService _accountAssetsCacheService;
-        private readonly IAssetPairsCache _assetPairsCache;
-        private readonly IMarketMakerMatchingEngine _matchingEngine;
         private readonly ITradingEngine _tradingEngine;
-        private readonly IAccountsCacheService _accountsCacheService;
         private readonly IMarginTradingOperationsLogService _operationsLogService;
         private readonly IConsole _consoleWriter;
         private readonly OrdersCache _ordersCache;
-        private readonly MarginTradingSettings _marginSettings;
-        private readonly AccountManager _accountManager;
         private readonly IAssetPairDayOffService _assetDayOffService;
-        private readonly IQuoteCacheService _quoteCacheService;
-        private readonly IIdentityGenerator _identityGenerator;
 
         public PositionsController(
-            IMarginTradingAccountHistoryRepository accountsHistoryRepository,
-            IMicrographCacheService micrographCacheService,
-            ITradingInstrumnentsCacheService accountAssetsCacheService,
-            IAssetPairsCache assetPairsCache,
-            IMarketMakerMatchingEngine matchingEngine,
             ITradingEngine tradingEngine,
-            IAccountsCacheService accountsCacheService,
             IMarginTradingOperationsLogService operationsLogService,
             IConsole consoleWriter,
             OrdersCache ordersCache,
-            MarginTradingSettings marginSettings,
-            AccountManager accountManager,
-            IAssetPairDayOffService assetDayOffService,
-            IQuoteCacheService quoteCacheService,
-            IIdentityGenerator identityGenerator)
+            IAssetPairDayOffService assetDayOffService)
         {
-            _accountsHistoryRepository = accountsHistoryRepository;
-            _micrographCacheService = micrographCacheService;
-            _accountAssetsCacheService = accountAssetsCacheService;
-            _assetPairsCache = assetPairsCache;
-            _matchingEngine = matchingEngine;
             _tradingEngine = tradingEngine;
-            _accountsCacheService = accountsCacheService;
             _operationsLogService = operationsLogService;
             _consoleWriter = consoleWriter;
             _ordersCache = ordersCache;
-            _marginSettings = marginSettings;
-            _accountManager = accountManager;
             _assetDayOffService = assetDayOffService;
-            _quoteCacheService = quoteCacheService;
-            _identityGenerator = identityGenerator;
         }
         
         /// <summary>
@@ -108,7 +78,7 @@ namespace MarginTrading.Backend.Controllers
 
             _consoleWriter.WriteLine(
                 $"action position.close, orderId = {positionId}");
-            _operationsLogService.AddLog("action order.close", order.ClientId, order.AccountId, request.ToJson(),
+            _operationsLogService.AddLog("action order.close", order.AccountId, request.ToJson(),
                 order.ToJson());
         }
 

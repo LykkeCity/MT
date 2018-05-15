@@ -201,7 +201,7 @@ namespace MarginTrading.Backend.Services
             order.OpenDate = DateTime.UtcNow;
             order.Status = OrderStatus.Active;
 
-            var account = _accountsCacheService.Get(order.ClientId, order.AccountId);
+            var account = _accountsCacheService.Get(order.AccountId);
             _swapCommissionService.SetCommissionRates(account.TradingConditionId, order);
             _ordersCache.ActiveOrders.Add(order);
             _orderActivatedEventChannel.SendEvent(this, new OrderActivatedEventArgs(order));
@@ -350,7 +350,7 @@ namespace MarginTrading.Backend.Services
                 if (null == anyOrder)
                     continue;
 
-                var account = _accountsCacheService.Get(anyOrder.ClientId, anyOrder.AccountId);
+                var account = _accountsCacheService.Get(anyOrder.AccountId);
                 var oldAccountLevel = account.GetAccountLevel();
 
                 foreach (var order in accountOrders.Value)

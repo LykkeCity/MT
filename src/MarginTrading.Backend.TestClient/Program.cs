@@ -111,9 +111,9 @@ namespace MarginTrading.Backend.TestClient
             var openPosition = openPositions.FirstOrDefault();
             if (openPosition != null)
             {
-                string clientId = openPosition.ClientId;
+                string accountId = openPosition.AccountId;
                 var openPositionsByClient =
-                    await dataReaderClient.TradeMonitoringRead.OpenPositionsByClient(clientId).Dump();
+                    await dataReaderClient.TradeMonitoringRead.OpenPositionsByClient(new[] {accountId}).Dump();
             }
 
             var openPositionsByDate = await dataReaderClient.TradeMonitoringRead
@@ -124,9 +124,9 @@ namespace MarginTrading.Backend.TestClient
             var pendingOrder = pendingOrders.FirstOrDefault();
             if (pendingOrder != null)
             {
-                string clientId = pendingOrder.ClientId;
+                string accountId = openPosition.AccountId;
                 var pendingOrdersByClient =
-                    await dataReaderClient.TradeMonitoringRead.PendingOrdersByClient(clientId).Dump();
+                    await dataReaderClient.TradeMonitoringRead.PendingOrdersByClient(new[] {accountId}).Dump();
             }
 
             var pendingOrdersByDate = await dataReaderClient.TradeMonitoringRead
