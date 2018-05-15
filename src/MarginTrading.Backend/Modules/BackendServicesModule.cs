@@ -113,7 +113,6 @@ namespace MarginTrading.Backend.Modules
             {
                 _settings.RabbitMqQueues.AccountHistory.ExchangeName,
                 _settings.RabbitMqQueues.OrderHistory.ExchangeName,
-                _settings.RabbitMqQueues.OrderRejected.ExchangeName,
                 _settings.RabbitMqQueues.OrderbookPrices.ExchangeName,
                 _settings.RabbitMqQueues.OrderChanged.ExchangeName,
                 _settings.RabbitMqQueues.AccountChanged.ExchangeName,

@@ -37,7 +37,7 @@ namespace MarginTrading.AccountReportsBroker
             if (settingsValue.ReportTarget == ReportTarget.All || settingsValue.ReportTarget == ReportTarget.Azure)
             {
                 builder.RegisterType<AccountStatAzureReportsApplication>()
-                    .As<IBrokerApplication>()
+                        .As<IBrokerApplication>()
                     .WithParameter(
                         new ResolvedParameter(
                             (pi, ctx) => pi.ParameterType == typeof(IAccountsStatsReportsRepository),

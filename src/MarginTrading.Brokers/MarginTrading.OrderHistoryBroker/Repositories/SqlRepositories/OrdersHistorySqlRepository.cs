@@ -6,12 +6,13 @@ using Common;
 using Common.Log;
 using Dapper;
 using MarginTrading.AzureRepositories;
+using MarginTrading.AzureRepositories.Snow.OrdersHistory;
 using MarginTrading.Backend.Core;
 using MarginTrading.BrokerBase;
 
 namespace MarginTrading.OrderHistoryBroker.Repositories.SqlRepositories
 {
-    public class MarginTradingOrdersHistorySqlRepository : IMarginTradingOrdersHistoryRepository
+    public class OrdersHistorySqlRepository : IOrdersHistoryRepository
     {
         private const string TableName = "OrdersChangeHistory";
 
@@ -66,7 +67,7 @@ namespace MarginTrading.OrderHistoryBroker.Repositories.SqlRepositories
         private readonly Settings _settings;
         private readonly ILog _log;
 
-        public MarginTradingOrdersHistorySqlRepository(Settings settings, ILog log)
+        public OrdersHistorySqlRepository(Settings settings, ILog log)
         {
             _settings = settings;
             _log = log;
@@ -105,7 +106,7 @@ namespace MarginTrading.OrderHistoryBroker.Repositories.SqlRepositories
 
                 try
                 {
-                    var entity = MarginTradingOrderHistoryEntity.Create(order);
+                    var entity = OrderHistoryEntity.Create(order);
                     await conn.ExecuteAsync(query, entity);
                 }
                 catch (Exception ex)
@@ -126,7 +127,7 @@ namespace MarginTrading.OrderHistoryBroker.Repositories.SqlRepositories
             throw new NotImplementedException();
         }
 
-        public Task<IReadOnlyList<IOrderHistory>> GetHistoryAsync(string clientId, string[] accountIds, DateTime? @from, DateTime? to)
+        public Task<IReadOnlyList<IOrderHistory>> GetHistoryAsync(string[] accountIds, DateTime? @from, DateTime? to)
         {
             throw new NotImplementedException();
         }

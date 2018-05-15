@@ -1,22 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using AzureStorage;
 using AzureStorage.Tables;
 using Common;
+using Lykke.AzureStorage.Tables;
+using Lykke.AzureStorage.Tables.Entity.Annotation;
+using Lykke.AzureStorage.Tables.Entity.Serializers;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
 using Microsoft.WindowsAzure.Storage.Table;
 
-namespace MarginTrading.AzureRepositories
+namespace MarginTrading.AzureRepositories.Snow.OrdersHistory
 {
-    public class MarginTradingOrderHistoryEntity : TableEntity, IOrderHistory
+    public class OrderHistoryEntity : TableEntity, IOrderHistory
     {
         public string Id { get; set; }
         public long Code { get; set; }
-        public string ClientId { get; set; }
         public string AccountId { get; set; }
         public string TradingConditionId { get; set; }
         public string AccountAssetId { get; set; }
@@ -52,12 +52,12 @@ namespace MarginTrading.AzureRepositories
         public double OpenCommission { get; set; }
         decimal IOrderHistory.CloseCommission => (decimal) CloseCommission;
         public double CloseCommission { get; set; }
-        decimal IOrderHistory.QuoteRate  => (decimal) QuoteRate;
+        decimal IOrderHistory.QuoteRate => (decimal) QuoteRate;
         public double QuoteRate { get; set; }
         public int AssetAccuracy { get; set; }
         decimal IOrderHistory.MarginInit => (decimal) MarginInit;
         public double MarginInit { get; set; }
-        decimal IOrderHistory.MarginMaintenance  => (decimal) MarginMaintenance;
+        decimal IOrderHistory.MarginMaintenance => (decimal) MarginMaintenance;
         public double MarginMaintenance { get; set; }
         public DateTime? StartClosingDate { get; set; }
         public string Type { get; set; }
@@ -76,7 +76,7 @@ namespace MarginTrading.AzureRepositories
         public List<MatchedOrder> MatchedCloseOrders { get; set; } = new List<MatchedOrder>();
         decimal IOrderHistory.SwapCommission => (decimal) SwapCommission;
         public double SwapCommission { get; set; }
-        
+
         public string EquivalentAsset { get; set; }
         decimal IOrderHistory.OpenPriceEquivalent => (decimal) OpenPriceEquivalent;
         public double OpenPriceEquivalent { get; set; }
@@ -85,9 +85,9 @@ namespace MarginTrading.AzureRepositories
 
         public string Orders { get; set; }
         public string ClosedOrders { get; set; }
-        
+
         OrderUpdateType IOrderHistory.OrderUpdateType => OrderUpdateType.ParseEnum(Backend.Core.OrderUpdateType.Close);
-        
+
         public string OpenExternalOrderId { get; set; }
         public string OpenExternalProviderId { get; set; }
         public string CloseExternalOrderId { get; set; }
@@ -97,22 +97,24 @@ namespace MarginTrading.AzureRepositories
 
         MatchingEngineMode IOrderHistory.MatchingEngineMode =>
             MatchingEngineMode.ParseEnum(Backend.Core.MatchingEngines.MatchingEngineMode.MarketMaker);
-         
-        public string OrderUpdateType { get; set; }
 
-        public static string GeneratePartitionKey(string clientId, string accountIds)
+        public string OrderUpdateType { get; set; }
+        public DateTime UpdateTimestamp { get; set; }
+        public string ParentPositionId { get; set; }
+        public string ParentOrderId { get; set; }
+
+        public static string GeneratePartitionKey(string accountIds)
         {
-            return $"{clientId}_{accountIds}";
+            return accountIds;
         }
 
-        public static MarginTradingOrderHistoryEntity Create(IOrderHistory src)
+        public static OrderHistoryEntity Create(IOrderHistory src)
         {
-            return new MarginTradingOrderHistoryEntity
+            return new OrderHistoryEntity
             {
-                PartitionKey = GeneratePartitionKey(src.ClientId, src.AccountId),
+                PartitionKey = GeneratePartitionKey(src.AccountId),
                 Id = src.Id,
                 Code = src.Code,
-                ClientId = src.ClientId,
                 AccountId = src.AccountId,
                 TradingConditionId = src.TradingConditionId,
                 AccountAssetId = src.AccountAssetId,
@@ -159,38 +161,10 @@ namespace MarginTrading.AzureRepositories
                 CloseExternalProviderId = src.CloseExternalProviderId,
                 MatchingEngineMode = src.MatchingEngineMode.ToString(),
                 LegalEntity = src.LegalEntity,
+                UpdateTimestamp = src.UpdateTimestamp,
+                ParentPositionId = src.ParentPositionId,
+                ParentOrderId = src.ParentOrderId,
             };
-        }
-    }
-
-    public class MarginTradingOrdersHistoryRepository : IMarginTradingOrdersHistoryRepository
-    {
-        private readonly INoSQLTableStorage<MarginTradingOrderHistoryEntity> _tableStorage;
-
-        public MarginTradingOrdersHistoryRepository(INoSQLTableStorage<MarginTradingOrderHistoryEntity> tableStorage)
-        {
-            _tableStorage = tableStorage;
-        }
-
-        public Task AddAsync(IOrderHistory order)
-        {
-            var entity = MarginTradingOrderHistoryEntity.Create(order);
-            // ReSharper disable once RedundantArgumentDefaultValue
-            return _tableStorage.InsertAndGenerateRowKeyAsDateTimeAsync(entity, entity.CloseDate ?? entity.OpenDate ?? entity.CreateDate, RowKeyDateTimeFormat.Iso);
-        }
-
-        public async Task<IReadOnlyList<IOrderHistory>> GetHistoryAsync(string clientId, string[] accountIds, DateTime? from, DateTime? to)
-        {
-            return (await _tableStorage.WhereAsync(accountIds.Select(a => clientId + '_' + a),
-                    from ?? DateTime.MinValue, to?.Date.AddDays(1) ?? DateTime.MaxValue, ToIntervalOption.IncludeTo))
-                .OrderByDescending(entity => entity.CloseDate ?? entity.OpenDate ?? entity.CreateDate).ToList();
-        }
-
-        public async Task<IEnumerable<IOrderHistory>> GetHistoryAsync()
-        {
-            var entities = (await _tableStorage.GetDataAsync()).OrderByDescending(item => item.Timestamp);
-
-            return entities;
         }
     }
 }
