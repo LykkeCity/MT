@@ -1,4 +1,5 @@
-﻿using MarginTrading.Backend.Core.TradingConditions;
+﻿using System.Threading.Tasks;
+using MarginTrading.Backend.Core.TradingConditions;
 
 namespace MarginTrading.Backend.Core
 {
@@ -8,6 +9,6 @@ namespace MarginTrading.Backend.Core
         void ValidateOrderStops(OrderDirection type, BidAskPair quote, decimal deltaBid, decimal deltaAsk, decimal? takeProfit,
             decimal? stopLoss, decimal? expectedOpenPrice, int assetAccuracy);
 
-        void ValidateInstrumentPositionVolume(IAccountAssetPair assetPair, Order order);
+        Task ValidateInstrumentPositionVolume(IAccountAssetPair assetPair, Order order);
     }
 }

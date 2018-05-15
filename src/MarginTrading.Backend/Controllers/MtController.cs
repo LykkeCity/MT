@@ -232,7 +232,7 @@ namespace MarginTrading.Backend.Controllers
             var orders = (await _ordersHistoryRepository.GetHistoryAsync(request.ClientId, clientAccountIds, request.From, request.To))
                 .Where(item => item.Status != OrderStatus.Rejected);
 
-            var openPositions = _ordersCache.ActiveOrders.GetOrdersByAccountIds(clientAccountIds).ToList();
+            var openPositions = (await _ordersCache.ActiveOrders.GetOrdersByAccountIds(clientAccountIds)).ToList();
 
             var result = BackendContractFactory.CreateAccountHistoryBackendResponse(accounts, openPositions, orders);
 
@@ -250,7 +250,7 @@ namespace MarginTrading.Backend.Controllers
             var accounts = (await _accountsHistoryRepository.GetAsync(clientAccountIds, request.From, request.To))
                 .Where(item => item.Type != AccountHistoryType.OrderClosed);
 
-            var openOrders = _ordersCache.ActiveOrders.GetOrdersByAccountIds(clientAccountIds);
+            var openOrders = await _ordersCache.ActiveOrders.GetOrdersByAccountIds(clientAccountIds);
 
             var historyOrders = (await _ordersHistoryRepository.GetHistoryAsync(request.ClientId, clientAccountIds, request.From, request.To))
                 .Where(item => item.Status != OrderStatus.Rejected);
@@ -300,7 +300,8 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         public async Task<BackendResponse<bool>> CloseOrder([FromBody] CloseOrderBackendRequest request)
         {
-            if (!_ordersCache.ActiveOrders.TryGetOrderById(request.OrderId, out var order))
+            var order = await _ordersCache.ActiveOrders.GetOrderByIdOrDefault(request.OrderId);
+            if (order == null)
             {
                 return BackendResponse<bool>.Error("Order not found");
             }
@@ -343,7 +344,8 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         public async Task<BackendResponse<bool>> CancelOrder([FromBody] CloseOrderBackendRequest request)
         {
-            if (!_ordersCache.WaitingForExecutionOrders.TryGetOrderById(request.OrderId, out var order))
+            var order = await _ordersCache.ActiveOrders.GetOrderByIdOrDefault(request.OrderId);
+            if (order == null)
             {
                 return BackendResponse<bool>.Error("Order not found");
             }
@@ -366,7 +368,7 @@ namespace MarginTrading.Backend.Controllers
 
             var reason = request.IsForcedByBroker ? OrderCloseReason.CanceledByBroker : OrderCloseReason.Canceled;
 
-            _tradingEngine.CancelPendingOrder(order.Id, reason, request.Comment);
+            await _tradingEngine.CancelPendingOrder(order.Id, reason, request.Comment);
 
             var result = new BackendResponse<bool> {Result = true};
 
@@ -380,12 +382,14 @@ namespace MarginTrading.Backend.Controllers
 
         [Route("order.list")]
         [HttpPost]
-        public OrderBackendContract[] GetOpenPositions([FromBody]ClientIdBackendRequest request)
+        public async Task<OrderBackendContract[]> GetOpenPositions([FromBody]ClientIdBackendRequest request)
         {
             var accountIds = _accountsCacheService.GetAll(request.ClientId).Select(item => item.Id).ToArray();
 
-            var positions = _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountIds).Select(item => item.ToBackendContract()).ToList();
-            var orders = _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(accountIds).Select(item => item.ToBackendContract()).ToList();
+            var positions = (await _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountIds))
+                .Select(item => item.ToBackendContract()).ToList();
+            var orders = (await _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(accountIds))
+                .Select(item => item.ToBackendContract()).ToList();
 
             positions.AddRange(orders);
             var result = positions.ToArray();
@@ -395,12 +399,14 @@ namespace MarginTrading.Backend.Controllers
 
         [Route("order.account.list")]
         [HttpPost]
-        public OrderBackendContract[] GetAccountOpenPositions([FromBody]AccountClientIdBackendRequest request)
+        public async Task<OrderBackendContract[]> GetAccountOpenPositions([FromBody]AccountClientIdBackendRequest request)
         {
             var account = _accountsCacheService.Get(request.ClientId, request.AccountId);
 
-            var positions = _ordersCache.ActiveOrders.GetOrdersByAccountIds(account.Id).Select(item => item.ToBackendContract()).ToList();
-            var orders = _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(account.Id).Select(item => item.ToBackendContract()).ToList();
+            var positions = (await _ordersCache.ActiveOrders.GetOrdersByAccountIds(account.Id))
+                .Select(item => item.ToBackendContract()).ToList();
+            var orders = (await _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(account.Id))
+                .Select(item => item.ToBackendContract()).ToList();
 
             positions.AddRange(orders);
             var result = positions.ToArray();
@@ -410,12 +416,12 @@ namespace MarginTrading.Backend.Controllers
 
         [Route("order.positions")]
         [HttpPost]
-        public ClientOrdersBackendResponse GetClientOrders([FromBody]ClientIdBackendRequest request)
+        public async Task<ClientOrdersBackendResponse> GetClientOrders([FromBody]ClientIdBackendRequest request)
         {
             var accountIds = _accountsCacheService.GetAll(request.ClientId).Select(item => item.Id).ToArray();
 
-            var positions = _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountIds).ToList();
-            var orders = _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(accountIds).ToList();
+            var positions = (await _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountIds)).ToList();
+            var orders = (await _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(accountIds)).ToList();
 
             var result = BackendContractFactory.CreateClientOrdersBackendResponse(positions, orders);
 
@@ -425,9 +431,10 @@ namespace MarginTrading.Backend.Controllers
         [Route("order.changeLimits")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [HttpPost]
-        public MtBackendResponse<bool> ChangeOrderLimits([FromBody]ChangeOrderLimitsBackendRequest request)
+        public async Task<MtBackendResponse<bool>> ChangeOrderLimits([FromBody]ChangeOrderLimitsBackendRequest request)
         {
-            if (!_ordersCache.TryGetOrderById(request.OrderId, out var order))
+            var order = await _ordersCache.GetOrderByIdOrDefault(request.OrderId);
+            if (order == null)
             {
                 return new MtBackendResponse<bool> {Message = "Order not found"};
             }
@@ -439,7 +446,7 @@ namespace MarginTrading.Backend.Controllers
 
             try
             {
-                _tradingEngine.ChangeOrderLimits(request.OrderId, request.StopLoss, request.TakeProfit,
+                await _tradingEngine.ChangeOrderLimits(request.OrderId, request.StopLoss, request.TakeProfit,
                     request.ExpectedOpenPrice);
             }
             catch (ValidateOrderException ex)

@@ -6,8 +6,8 @@ namespace MarginTrading.Backend.Core
     {
         Task<Order> PlaceOrderAsync(Order order);
         Task<Order> CloseActiveOrderAsync(string orderId, OrderCloseReason reason, string comment = null);
-        Order CancelPendingOrder(string orderId, OrderCloseReason reason, string comment = null);
-        void ChangeOrderLimits(string orderId, decimal? stopLoss, decimal? takeProfit, decimal? expectedOpenPrice);
+        Task<Order> CancelPendingOrder(string orderId, OrderCloseReason reason, string comment = null);
+        Task ChangeOrderLimits(string orderId, decimal? stopLoss, decimal? takeProfit, decimal? expectedOpenPrice);
         bool PingLock();
     }
 }

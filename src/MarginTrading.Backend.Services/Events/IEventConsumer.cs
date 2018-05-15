@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Backend.Services.Events
+﻿using System.Threading.Tasks;
+
+namespace MarginTrading.Backend.Services.Events
 {
     public interface IEventConsumer
     {
@@ -11,5 +13,10 @@
     public interface IEventConsumer<in TEventArgs> : IEventConsumer
     {
         void ConsumeEvent(object sender, TEventArgs ea);
+    }
+
+    public interface IAsyncEventConsumer<in TEventArgs> : IEventConsumer
+    {
+        Task ConsumeEvent(object sender, TEventArgs ea);
     }
 }

@@ -53,7 +53,7 @@ namespace MarginTrading.Backend.Services.TradingConditions
             {
                 var toRemove = currentInstruments.Where(x => !instruments.Contains(x.Instrument)).ToArray();
 
-                var existingOrderGroups = _orderReader.GetAll()
+                var existingOrderGroups = (await _orderReader.GetAll())
                     .Where(o => o.TradingConditionId == tradingConditionId && o.AccountAssetId == baseAssetId)
                     .GroupBy(o => o.Instrument)
                     .Where(o => toRemove.Any(i => i.Instrument == o.Key))

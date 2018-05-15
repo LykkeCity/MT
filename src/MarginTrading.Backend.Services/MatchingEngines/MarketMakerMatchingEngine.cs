@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
@@ -96,7 +97,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             }
         }
 
-        public void MatchMarketOrderForOpen(Order order, Func<MatchedOrderCollection, bool> matchedFunc)
+        public async Task MatchMarketOrderForOpen(Order order, Func<MatchedOrderCollection, Task<bool>> matchedFunc)
         {
             using (_contextFactory.GetWriteSyncContext($"{nameof(MarketMakerMatchingEngine)}.{nameof(MatchMarketOrderForOpen)}"))
             {
@@ -105,7 +106,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 var matchedOrders =
                     _orderBooks.Match(order, orderBookTypeToMatch, Math.Abs(order.Volume));
 
-                if (matchedFunc(matchedOrders))
+                if (await matchedFunc(matchedOrders))
                 {
                     _orderBooks.Update(order, orderBookTypeToMatch, matchedOrders);
                     ProduceBestPrice(order.Instrument);

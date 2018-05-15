@@ -78,13 +78,13 @@ namespace MarginTrading.Backend.Services
         
         #region TimePeriod
         
-        public override Task Execute()
+        public override async Task Execute()
         {
-            var accounts = GetAccountsToWriteStats();
+            var accounts = await GetAccountsToWriteStats();
             var accountsStatsMessages = GenerateAccountsStatsUpdateMessages(accounts);
             var tasks = accountsStatsMessages.Select(m => _rabbitMqNotifyService.UpdateAccountStats(m));
 
-            return Task.WhenAll(tasks);
+            await Task.WhenAll(tasks);
         }
         
         public override void Start()
@@ -98,9 +98,10 @@ namespace MarginTrading.Backend.Services
             base.Start();
         }
 
-        private IReadOnlyList<IMarginTradingAccount> GetAccountsToWriteStats()
+        private async Task<IReadOnlyList<IMarginTradingAccount>> GetAccountsToWriteStats()
         {
-            var accountsIdsToWrite = Enumerable.ToHashSet(_ordersCache.GetActive().Select(a => a.AccountId).Distinct());
+            var accountsIdsToWrite = Enumerable.ToHashSet((await _ordersCache.GetActive())
+                .Select(a => a.AccountId).Distinct());
             return _accountsCacheService.GetAll().Where(a => accountsIdsToWrite.Contains(a.Id)).ToList();
         }
 
@@ -171,7 +172,7 @@ namespace MarginTrading.Backend.Services
 
         public async Task DeleteAccountAsync(string clientId, string accountId)
         {
-            var orders = _ordersCache.GetAll().Where(o => o.AccountId == accountId).ToArray();
+            var orders = (await _ordersCache.GetAll()).Where(o => o.AccountId == accountId).ToArray();
             
             if (orders.Any())
             {
@@ -299,7 +300,7 @@ namespace MarginTrading.Backend.Services
         
         public async Task<List<IOrder>> CloseAccountOrders(string accountId)
         {
-            var openedOrders = _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountId).ToArray();
+            var openedOrders = (await _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountId)).ToArray();
             var closedOrders = new List<IOrder>();
 
             foreach (var order in openedOrders)
@@ -318,13 +319,13 @@ namespace MarginTrading.Backend.Services
                 }
             }
 
-            var pendingOrders = _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(accountId);
+            var pendingOrders = await _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(accountId);
             
             foreach (var order in pendingOrders)
             {
                 try
                 {
-                    var closedOrder = _tradingEngine.CancelPendingOrder(order.Id, OrderCloseReason.CanceledByBroker,
+                    var closedOrder = await _tradingEngine.CancelPendingOrder(order.Id, OrderCloseReason.CanceledByBroker,
                         "Close orders for account");
                     closedOrders.Add(closedOrder);
                 }

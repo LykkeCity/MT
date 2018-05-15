@@ -27,7 +27,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
 
         public override Task Execute()
         {
-            var pendingOrders = _orderReader.GetPending().GroupBy(o => o.Instrument);
+            var pendingOrders = _orderReader.GetPending().Result.GroupBy(o => o.Instrument);
             foreach (var gr in pendingOrders)
             {
                 if (!_assetDayOffService.ArePendingOrdersDisabled(gr.Key))

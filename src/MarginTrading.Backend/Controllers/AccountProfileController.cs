@@ -59,9 +59,10 @@ namespace MarginTrading.Backend.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("openPositions/{accountId}")]
-        public IEnumerable<OrderContract> GetAccountOrders(string accountId)
+        public async Task<IEnumerable<OrderContract>> GetAccountOrders(string accountId)
         {
-            return _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountId).Select(item => item.ToBaseContract());
+            return (await _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountId))
+                .Select(item => item.ToBaseContract());
         }
 
         /// <summary>
@@ -83,7 +84,7 @@ namespace MarginTrading.Backend.Controllers
             var historyOrders = (await _ordersHistoryRepository.GetHistoryAsync(clientId, new[] { accountId }, now.AddYears(-1), now))
                 .Where(item => item.Status != OrderStatus.Rejected);
 
-            var openPositions = _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountId);
+            var openPositions = await _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountId);
 
             return BackendContractFactory.CreateAccountHistoryBackendResponse(accounts, openPositions, historyOrders);
         }

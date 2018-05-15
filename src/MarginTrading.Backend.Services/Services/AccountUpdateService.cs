@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Services.Assets;
@@ -30,9 +31,9 @@ namespace MarginTrading.Backend.Services
             _assetsCache = assetsCache;
         }
 
-        public void UpdateAccount(IMarginTradingAccount account)
+        public async Task UpdateAccount(IMarginTradingAccount account)
         {
-            UpdateAccount(account, GetActiveOrders(account.Id), GetPendingOrders(account.Id));
+            UpdateAccount(account, await GetActiveOrders(account.Id), await GetPendingOrders(account.Id));
         }
 
         public bool IsEnoughBalance(Order order)
@@ -44,14 +45,14 @@ namespace MarginTrading.Backend.Services
             return accountMarginAvailable >= orderMargin;
         }
 
-        public MarginTradingAccount GuessAccountWithNewActiveOrder(Order order)
+        public async Task<MarginTradingAccount> GuessAccountWithNewActiveOrder(Order order)
         {
             var newInstance = MarginTradingAccount.Create(_accountsCacheService.Get(order.ClientId, order.AccountId));
 
-            var activeOrders = GetActiveOrders(newInstance.Id);
+            var activeOrders = await GetActiveOrders(newInstance.Id);
             activeOrders.Add(order);
             
-            var pendingOrders = GetPendingOrders(newInstance.Id);
+            var pendingOrders = await GetPendingOrders(newInstance.Id);
 
             UpdateAccount(newInstance, activeOrders, pendingOrders);
 
@@ -86,14 +87,14 @@ namespace MarginTrading.Backend.Services
             account.AccountFpl.CalculatedHash = account.AccountFpl.ActualHash;
         }
 
-        private ICollection<Order> GetActiveOrders(string accountId)
+        private async Task<ICollection<Order>> GetActiveOrders(string accountId)
         {
-            return _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountId);
+            return await _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountId);
         }
         
-        private ICollection<Order> GetPendingOrders(string accountId)
+        private async Task<ICollection<Order>> GetPendingOrders(string accountId)
         {
-            return _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(accountId);
+            return await _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(accountId);
         }
     }
 }

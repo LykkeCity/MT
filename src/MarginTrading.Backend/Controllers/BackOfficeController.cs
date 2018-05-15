@@ -61,10 +61,10 @@ namespace MarginTrading.Backend.Controllers
         [HttpGet]
         [Route("assetsInfo")]
         [ProducesResponseType(typeof(List<SummaryAssetInfo>), 200)]
-        public List<SummaryAssetInfo> GetAssetsInfo()
+        public async Task<List<SummaryAssetInfo>> GetAssetsInfo()
         {
             var result = new List<SummaryAssetInfo>();
-            var orders = _ordersReader.GetAll().ToList();
+            var orders = (await _ordersReader.GetAll()).ToList();
 
             foreach (var order in orders)
             {
@@ -113,7 +113,7 @@ namespace MarginTrading.Backend.Controllers
         public List<OrderContract> GetPositionsByVolume([FromQuery]decimal volume)
         {
             var result = new List<OrderContract>();
-            var orders = _ordersReader.GetActive();
+            var orders = _ordersReader.GetActive().Result;
 
             foreach (var order in orders)
             {
@@ -141,7 +141,7 @@ namespace MarginTrading.Backend.Controllers
         public List<OrderContract> GetPendingOrdersByVolume([FromQuery]decimal volume)
         {
             var result = new List<OrderContract>();
-            var orders = _ordersReader.GetPending();
+            var orders = _ordersReader.GetPending().Result;
 
             foreach (var order in orders)
             {

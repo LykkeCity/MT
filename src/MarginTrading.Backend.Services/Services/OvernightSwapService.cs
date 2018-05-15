@@ -83,7 +83,7 @@ namespace MarginTrading.Backend.Services.Services
 			_overnightSwapCache.Initialize(savedState.Select(OvernightSwapCalculation.Create));
 
 			//start calculation
-			CalculateAndChargeSwaps();
+			CalculateAndChargeSwaps().GetAwaiter().GetResult();
 			
 			//TODO if server was down more that a day.. calc N days
 		}
@@ -92,10 +92,10 @@ namespace MarginTrading.Backend.Services.Services
 		/// Filter orders that are already calculated
 		/// </summary>
 		/// <returns></returns>
-		private IEnumerable<Order> GetOrdersForCalculation()
+		private async Task<IEnumerable<Order>> GetOrdersForCalculation()
 		{
 			//read orders syncronously
-			var openOrders = _orderReader.GetActive();
+			var openOrders = await _orderReader.GetActive();
 			
 			//prepare the list of orders
 			var lastInvocationTime = CalcLastInvocationTime();
@@ -119,11 +119,11 @@ namespace MarginTrading.Backend.Services.Services
 			return filteredOrders;
 		}
 
-		public void CalculateAndChargeSwaps()
+		public async Task CalculateAndChargeSwaps()
 		{
 			_currentStartTimestamp = _dateService.Now();
 
-			var filteredOrders = GetOrdersForCalculation().ToList();
+			var filteredOrders = (await GetOrdersForCalculation()).ToList();
 			
 			//start calculation in a separate thread
 			_threadSwitcher.SwitchThread(async () =>

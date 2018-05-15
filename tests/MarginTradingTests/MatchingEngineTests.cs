@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Autofac;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
@@ -580,7 +581,7 @@ namespace MarginTradingTests
 
         #endregion
 
-        private bool ProcessOrders(Order order, MatchedOrderCollection matchedOrders)
+        private Task<bool> ProcessOrders(Order order, MatchedOrderCollection matchedOrders)
         {
             if (!matchedOrders.Any())
             {
@@ -588,7 +589,7 @@ namespace MarginTradingTests
                 order.Status = OrderStatus.Rejected;
                 order.RejectReason = OrderRejectReason.NoLiquidity;
                 order.RejectReasonText = "No orders to match";
-                return false;
+                return Task.FromResult(false);
             }
 
             if (matchedOrders.SummaryVolume < Math.Abs(order.Volume) && order.FillType == OrderFillType.FillOrKill)
@@ -597,7 +598,7 @@ namespace MarginTradingTests
                 order.Status = OrderStatus.Rejected;
                 order.RejectReason = OrderRejectReason.NoLiquidity;
                 order.RejectReasonText = "No orders to match or not fully matched";
-                return false;
+                return Task.FromResult(false);
             }
 
             //if (!CheckIfWeCanOpenPosition(order, matchedOrders))
@@ -612,7 +613,7 @@ namespace MarginTradingTests
             order.OpenPrice = Math.Round(order.MatchedOrders.WeightedAveragePrice, order.AssetAccuracy);
             order.OpenDate = DateTime.UtcNow;
             order.Status = OrderStatus.Active;
-            return true;
+            return Task.FromResult(true);
         }
     }
 }

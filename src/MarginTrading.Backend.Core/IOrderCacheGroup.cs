@@ -12,13 +12,13 @@ namespace MarginTrading.Backend.Core
 
         Task AddAsync(Order order);
         Task RemoveAsync(Order order);
-        Order GetOrderById(string orderId);
-        bool TryGetOrderById(string orderId, out Order result);
-        IReadOnlyCollection<Order> GetOrdersByInstrument(string instrument);
-        IReadOnlyCollection<Order> GetOrdersByMarginInstrument(string instrument);
-        ICollection<Order> GetOrdersByInstrumentAndAccount(string instrument, string accountId);
-        IReadOnlyCollection<Order> GetAllOrders();
-        ICollection<Order> GetOrdersByAccountIds(params string[] accountIds);
+        Task<Order> GetOrderById(string orderId);
+        Task<Order> GetOrderByIdOrDefault(string orderId);
+        Task<IReadOnlyCollection<Order>> GetOrdersByInstrument(string instrument);
+        Task<IReadOnlyCollection<Order>> GetOrdersByMarginInstrument(string instrument);
+        Task<ICollection<Order>> GetOrdersByInstrumentAndAccount(string instrument, string accountId);
+        Task<IReadOnlyCollection<Order>> GetAllOrders();
+        Task<ICollection<Order>> GetOrdersByAccountIds(params string[] accountIds);
         
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Messages;
@@ -233,9 +234,10 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public void ValidateInstrumentPositionVolume(IAccountAssetPair assetPair, Order order)
+        public async Task ValidateInstrumentPositionVolume(IAccountAssetPair assetPair, Order order)
         {
-            var existingPositionsVolume = _ordersCache.ActiveOrders.GetOrdersByInstrumentAndAccount(assetPair.Instrument, order.AccountId).Sum(o => o.Volume);
+            var existingPositionsVolume = (await _ordersCache.ActiveOrders
+                .GetOrdersByInstrumentAndAccount(assetPair.Instrument, order.AccountId)).Sum(o => o.Volume);
 
             if (assetPair.PositionLimit > 0 && Math.Abs(existingPositionsVolume + order.Volume) > assetPair.PositionLimit)
             {

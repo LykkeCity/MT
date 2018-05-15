@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using Lykke.Service.ExchangeConnector.Client;
@@ -45,13 +46,13 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         }
         
         //TODO: remove orderProcessed function and make all validations before match
-        public void MatchMarketOrderForOpen(Order order, Func<MatchedOrderCollection, bool> orderProcessed)
+        public async Task MatchMarketOrderForOpen(Order order, Func<MatchedOrderCollection, Task<bool>> orderProcessed)
         {
             var prices = _externalOrderBooksList.GetPricesForOpen(order);
 
             if (prices == null)
             {
-                orderProcessed(new MatchedOrderCollection());
+                await orderProcessed(new MatchedOrderCollection());
                 return;
             }
             
@@ -102,7 +103,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
                     _rabbitMqNotifyService.ExternalOrder(executionResult).GetAwaiter().GetResult();
 
-                    if (orderProcessed(matchedOrders))
+                    if (await orderProcessed(matchedOrders))
                     {
                         return;
                     }
@@ -126,7 +127,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 }
                 catch (Exception e)
                 {
-                    _log.WriteErrorAsync(nameof(StpMatchingEngine), nameof(MatchMarketOrderForOpen),
+                    await _log.WriteErrorAsync(nameof(StpMatchingEngine), nameof(MatchMarketOrderForOpen),
                         $"Internal order: {order.ToJson()}, External order model: {externalOrderModel.ToJson()}", e);
                 }
             }

@@ -16,7 +16,7 @@ using MarginTrading.Backend.Services.TradingConditions;
 
 namespace MarginTrading.Backend.Services
 {
-    public sealed class TradingEngine : ITradingEngine, IEventConsumer<BestPriceChangeEventArgs>
+    public sealed class TradingEngine : ITradingEngine, IAsyncEventConsumer<BestPriceChangeEventArgs>
     {
         private readonly IEventChannel<MarginCallEventArgs> _marginCallEventChannel;
         private readonly IEventChannel<StopOutEventArgs> _stopoutEventChannel;
@@ -118,7 +118,7 @@ namespace MarginTrading.Backend.Services
             order.OpenOrderbookId = matchingEngine.Id;
             order.MatchingEngineMode = matchingEngine.Mode;
             
-            matchingEngine.MatchMarketOrderForOpen(order, matchedOrders =>
+            matchingEngine.MatchMarketOrderForOpen(order, async matchedOrders =>
             {
                 if (!matchedOrders.Any())
                 {
@@ -140,7 +140,7 @@ namespace MarginTrading.Backend.Services
 
                 try
                 {
-                    CheckIfWeCanOpenPosition(order, matchedOrders);
+                    await CheckIfWeCanOpenPosition(order, matchedOrders);
                 }
                 catch (ValidateOrderException e)
                 {
@@ -208,10 +208,10 @@ namespace MarginTrading.Backend.Services
             _orderActivatedEventChannel.SendEvent(this, new OrderActivatedEventArgs(order));
         }
 
-        private void CheckIfWeCanOpenPosition(Order order, MatchedOrderCollection matchedOrders)
+        private async Task CheckIfWeCanOpenPosition(Order order, MatchedOrderCollection matchedOrders)
         {
             var accountAsset = _accountAssetsCacheService.GetAccountAsset(order.TradingConditionId, order.AccountAssetId, order.Instrument);
-            _validateOrderService.ValidateInstrumentPositionVolume(accountAsset, order);
+            await _validateOrderService.ValidateInstrumentPositionVolume(accountAsset, order);
 
             order.MatchedOrders.AddRange(matchedOrders);
             order.OpenPrice = Math.Round(order.MatchedOrders.WeightedAveragePrice, order.AssetAccuracy);
@@ -228,7 +228,7 @@ namespace MarginTrading.Backend.Services
             order.UpdateClosePrice(Math.Round(closePrice.Value, order.AssetAccuracy));
 
             //TODO: very strange check.. think about it one more time
-            var guessAccount = _accountUpdateService.GuessAccountWithNewActiveOrder(order);
+            var guessAccount = await _accountUpdateService.GuessAccountWithNewActiveOrder(order);
             var guessAccountLevel = guessAccount.GetAccountLevel();
 
             if (guessAccountLevel != AccountLevel.None)
@@ -264,11 +264,11 @@ namespace MarginTrading.Backend.Services
 
         #region Orders waiting for execution
         
-        private void ProcessOrdersWaitingForExecution(string instrument)
+        private async Task ProcessOrdersWaitingForExecution(string instrument)
         {
-            ProcessPendingOrdersMarginRecalc(instrument);
+            await ProcessPendingOrdersMarginRecalc(instrument);
             
-            var orders = GetPendingOrdersToBeExecuted(instrument).ToArray();
+            var orders = (await GetPendingOrdersToBeExecuted(instrument)).ToArray();
 
             if (orders.Length == 0)
                 return;
@@ -276,7 +276,7 @@ namespace MarginTrading.Backend.Services
             using (_contextFactory.GetWriteSyncContext($"{nameof(TradingEngine)}.{nameof(ProcessOrdersWaitingForExecution)}"))
             {
                 foreach (var order in orders)
-                    _ordersCache.WaitingForExecutionOrders.RemoveAsync(order);
+                    await _ordersCache.WaitingForExecutionOrders.RemoveAsync(order);
             }
 
             //TODO: think how to make sure that we don't loose orders
@@ -288,29 +288,29 @@ namespace MarginTrading.Backend.Services
 
         }
 
-        private IEnumerable<Order> GetPendingOrdersToBeExecuted(string instrument)
+        private async Task<IEnumerable<Order>> GetPendingOrdersToBeExecuted(string instrument)
         {
-            var pendingOrders = _ordersCache.WaitingForExecutionOrders.GetOrdersByInstrument(instrument)
+            var pendingOrders = (await _ordersCache.WaitingForExecutionOrders.GetOrdersByInstrument(instrument))
                 .OrderBy(item => item.CreateDate);
 
+            var result = new List<Order>();
             foreach (var order in pendingOrders)
             {
-                InstrumentBidAskPair pair;
+                if (!_quoteCashService.TryGetQuoteById(order.Instrument, out var pair)) 
+                    continue;
+                var price = pair.GetPriceForOrderType(order.GetCloseType());
 
-                if (_quoteCashService.TryGetQuoteById(order.Instrument, out pair))
-                {
-                    var price = pair.GetPriceForOrderType(order.GetCloseType());
-
-                    if (order.IsSuitablePriceForPendingOrder(price) &&
-                        !_assetPairDayOffService.ArePendingOrdersDisabled(order.Instrument))
-                        yield return order;
-                }
+                if (order.IsSuitablePriceForPendingOrder(price) &&
+                    !_assetPairDayOffService.ArePendingOrdersDisabled(order.Instrument))
+                    result.Add(order);
             }
+
+            return result;
         }
 
-        private void ProcessPendingOrdersMarginRecalc(string instrument)
+        private async Task ProcessPendingOrdersMarginRecalc(string instrument)
         {
-            var pendingOrders = _ordersCache.GetPendingForMarginRecalc(instrument);
+            var pendingOrders = await _ordersCache.GetPendingForMarginRecalc(instrument);
 
             foreach (var pendingOrder in pendingOrders)
             {
@@ -322,13 +322,13 @@ namespace MarginTrading.Backend.Services
 
         #region Active orders
 
-        private void ProcessOrdersActive(string instrument)
+        private async Task ProcessOrdersActive(string instrument)
         {
-            var stopoutAccounts = UpdateClosePriceAndDetectStopout(instrument).ToArray();
+            var stopoutAccounts = (await UpdateClosePriceAndDetectStopout(instrument)).ToArray();
             foreach (var account in stopoutAccounts)
-                CommitStopout(account);
+                await CommitStopout(account);
 
-            foreach (var order in _ordersCache.ActiveOrders.GetOrdersByInstrument(instrument))
+            foreach (var order in await _ordersCache.ActiveOrders.GetOrdersByInstrument(instrument))
             {
                 if (order.IsStopLoss())
                     SetOrderToClosingState(order, OrderCloseReason.StopLoss);
@@ -336,14 +336,15 @@ namespace MarginTrading.Backend.Services
                     SetOrderToClosingState(order, OrderCloseReason.TakeProfit);
             }
 
-            ProcessOrdersClosing(instrument);
+            await ProcessOrdersClosing(instrument);
         }
 
-        private IEnumerable<MarginTradingAccount> UpdateClosePriceAndDetectStopout(string instrument)
+        private async Task<IEnumerable<MarginTradingAccount>> UpdateClosePriceAndDetectStopout(string instrument)
         {
-            var openOrders = _ordersCache.ActiveOrders.GetOrdersByInstrument(instrument)
+            var openOrders = (await _ordersCache.ActiveOrders.GetOrdersByInstrument(instrument))
                 .GroupBy(x => x.AccountId).ToDictionary(x => x.Key, x => x.ToArray());
 
+            var accounts = new List<MarginTradingAccount>();
             foreach (var accountOrders in openOrders)
             {
                 var anyOrder = accountOrders.Value.FirstOrDefault();
@@ -372,24 +373,26 @@ namespace MarginTrading.Backend.Services
                     NotifyAccountLevelChanged(account, newAccountLevel);
 
                     if (newAccountLevel == AccountLevel.StopOUt)
-                        yield return account;
+                        accounts.Add(account);
                 }
             }
+
+            return accounts;
         }
 
-        private void CommitStopout(MarginTradingAccount account)
+        private async Task CommitStopout(MarginTradingAccount account)
         {
-            var pendingOrders = _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(account.Id);
+            var pendingOrders = await _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(account.Id);
 
             var cancelledPendingOrders = new List<Order>();
             
             foreach (var pendingOrder in pendingOrders)
             {
                 cancelledPendingOrders.Add(pendingOrder);
-                CancelPendingOrder(pendingOrder.Id, OrderCloseReason.CanceledBySystem, "Stop out");
+                await CancelPendingOrder(pendingOrder.Id, OrderCloseReason.CanceledBySystem, "Stop out");
             }
             
-            var activeOrders = _ordersCache.ActiveOrders.GetOrdersByAccountIds(account.Id);
+            var activeOrders = await _ordersCache.ActiveOrders.GetOrdersByAccountIds(account.Id);
             
             var ordersToClose = new List<Order>();
             var newAccountUsedMargin = account.GetUsedMargin();
@@ -474,20 +477,20 @@ namespace MarginTrading.Backend.Services
             return Task.FromResult(order);
         }
 
-        public Task<Order> CloseActiveOrderAsync(string orderId, OrderCloseReason reason, string comment = null)
+        public async Task<Order> CloseActiveOrderAsync(string orderId, OrderCloseReason reason, string comment = null)
         {
-            var order = GetActiveOrderForClose(orderId);
+            var order = await GetActiveOrderForClose(orderId);
 
             var me = _meRouter.GetMatchingEngineForClose(order);
 
-            return CloseActiveOrderByMatchingEngineAsync(order, me, reason, comment);
+            return await CloseActiveOrderByMatchingEngineAsync(order, me, reason, comment);
         }
 
-        public Order CancelPendingOrder(string orderId, OrderCloseReason reason, string comment = null)
+        public async Task<Order> CancelPendingOrder(string orderId, OrderCloseReason reason, string comment = null)
         {
             using (_contextFactory.GetWriteSyncContext($"{nameof(TradingEngine)}.{nameof(CancelPendingOrder)}"))
             {
-                var order = _ordersCache.WaitingForExecutionOrders.GetOrderById(orderId);
+                var order = await _ordersCache.WaitingForExecutionOrders.GetOrderById(orderId);
                 CancelWaitingForExecutionOrder(order, reason, comment);
                 return order;
             }
@@ -495,10 +498,12 @@ namespace MarginTrading.Backend.Services
         #endregion
 
 
-        private Order GetActiveOrderForClose(string orderId)
+        private async Task<Order> GetActiveOrderForClose(string orderId)
         {
             using (_contextFactory.GetReadSyncContext($"{nameof(TradingEngine)}.{nameof(GetActiveOrderForClose)}"))
-                return _ordersCache.ActiveOrders.GetOrderById(orderId);
+            {
+                return await _ordersCache.ActiveOrders.GetOrderById(orderId);
+            }
         }
 
         private void CancelWaitingForExecutionOrder(Order order, OrderCloseReason reason, string comment)
@@ -513,11 +518,11 @@ namespace MarginTrading.Backend.Services
             _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order));
         }
 
-        public void ChangeOrderLimits(string orderId, decimal? stopLoss, decimal? takeProfit, decimal? expectedOpenPrice)
+        public async Task ChangeOrderLimits(string orderId, decimal? stopLoss, decimal? takeProfit, decimal? expectedOpenPrice)
         {
             using (_contextFactory.GetWriteSyncContext($"{nameof(TradingEngine)}.{nameof(ChangeOrderLimits)}"))
             {
-                var order = _ordersCache.GetOrderById(orderId);
+                var order = await _ordersCache.GetOrderById(orderId);
 
                 if (order.Status != OrderStatus.WaitingForExecution && expectedOpenPrice > 0)
                 {
@@ -550,11 +555,11 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        private void ProcessOrdersClosing(string instrument = null)
+        private async Task ProcessOrdersClosing(string instrument = null)
         {
             var closingOrders = string.IsNullOrEmpty(instrument)
-                ? _ordersCache.ClosingOrders.GetAllOrders()
-                : _ordersCache.ClosingOrders.GetOrdersByInstrument(instrument);
+                ? await _ordersCache.ClosingOrders.GetAllOrders()
+                : await _ordersCache.ClosingOrders.GetOrdersByInstrument(instrument);
 
             if (closingOrders.Count == 0)
                 return;
@@ -609,11 +614,11 @@ namespace MarginTrading.Backend.Services
 
         int IEventConsumer.ConsumerRank => 100;
 
-        void IEventConsumer<BestPriceChangeEventArgs>.ConsumeEvent(object sender, BestPriceChangeEventArgs ea)
+        async Task IAsyncEventConsumer<BestPriceChangeEventArgs>.ConsumeEvent(object sender, BestPriceChangeEventArgs ea)
         {
-            ProcessOrdersClosing(ea.BidAskPair.Instrument);
-            ProcessOrdersActive(ea.BidAskPair.Instrument);
-            ProcessOrdersWaitingForExecution(ea.BidAskPair.Instrument);
+            await ProcessOrdersClosing(ea.BidAskPair.Instrument);
+            await ProcessOrdersActive(ea.BidAskPair.Instrument);
+            await ProcessOrdersWaitingForExecution(ea.BidAskPair.Instrument);
         }
     }
 }

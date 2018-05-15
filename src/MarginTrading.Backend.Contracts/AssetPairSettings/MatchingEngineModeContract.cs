@@ -1,8 +1,10 @@
 ﻿using JetBrains.Annotations;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace MarginTrading.Backend.Contracts.AssetPairSettings
 {
-    [PublicAPI]
+    [JsonConverter(typeof(StringEnumConverter))]
     public enum MatchingEngineModeContract
     {
         /// <summary>

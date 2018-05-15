@@ -54,6 +54,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
             var depth = _contextNestingDepth;
             _contextNestingDepth--;
             _sw.Stop();
+            
             Monitor.Exit(MarginTradingHelpers.TradingMatchingSync);
 
             var processingTime = _sw.ElapsedMilliseconds;

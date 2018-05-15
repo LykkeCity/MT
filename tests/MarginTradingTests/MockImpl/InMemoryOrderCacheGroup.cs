@@ -135,27 +135,27 @@ namespace MarginTradingTests.MockImpl
 
         #region Getters
 
-        public Order GetOrderById(string orderId)
+        public async Task<Order> GetOrderById(string orderId)
         {
-            if (TryGetOrderById(orderId, out var result))
-                return result;
+            var order = await GetOrderByIdOrDefault(orderId);
+            if (order != null)
+                return order;
 
             throw new Exception(string.Format(MtMessages.CantGetOrderWithStatus, orderId, Status));
         }
 
-        public bool TryGetOrderById(string orderId, out Order result)
+        public Task<Order> GetOrderByIdOrDefault(string orderId)
         {
             _lockSlim.EnterReadLock();
 
+            Order result = null;
             try
             {
-                if (!_ordersById.ContainsKey(orderId))
+                if (_ordersById.ContainsKey(orderId))
                 {
-                    result = null;
-                    return false;
+                    result = _ordersById[orderId];
                 }
-                result = _ordersById[orderId];
-                return true;
+                return Task.FromResult(result);
             }
             finally
             {
@@ -163,7 +163,7 @@ namespace MarginTradingTests.MockImpl
             }
         }
 
-        public IReadOnlyCollection<Order> GetOrdersByInstrument(string instrument)
+        public Task<IReadOnlyCollection<Order>> GetOrdersByInstrument(string instrument)
         {
             if (string.IsNullOrWhiteSpace(instrument))
                 throw new ArgumentException(nameof(instrument));
@@ -172,10 +172,10 @@ namespace MarginTradingTests.MockImpl
 
             try
             {
-                if (!_orderIdsByInstrumentId.ContainsKey(instrument))
-                    return new List<Order>();
-
-                return _orderIdsByInstrumentId[instrument].Select(id => _ordersById[id]).ToList();
+                IReadOnlyCollection<Order> result = !_orderIdsByInstrumentId.ContainsKey(instrument)
+                    ? new List<Order>()
+                    : _orderIdsByInstrumentId[instrument].Select(id => _ordersById[id]).ToList();
+                return Task.FromResult(result);
             }
             finally
             {
@@ -183,7 +183,7 @@ namespace MarginTradingTests.MockImpl
             }
         }
 
-        public IReadOnlyCollection<Order> GetOrdersByMarginInstrument(string instrument)
+        public Task<IReadOnlyCollection<Order>> GetOrdersByMarginInstrument(string instrument)
         {
             if (string.IsNullOrWhiteSpace(instrument))
                 throw new ArgumentException(nameof(instrument));
@@ -192,10 +192,10 @@ namespace MarginTradingTests.MockImpl
 
             try
             {
-                if (!_orderIdsByMarginInstrumentId.ContainsKey(instrument))
-                    return new List<Order>();
-
-                return _orderIdsByMarginInstrumentId[instrument].Select(id => _ordersById[id]).ToList();
+                IReadOnlyCollection<Order> result = !_orderIdsByMarginInstrumentId.ContainsKey(instrument)
+                    ? new List<Order>()
+                    : _orderIdsByMarginInstrumentId[instrument].Select(id => _ordersById[id]).ToList();
+                return Task.FromResult(result);
             }
             finally
             {
@@ -203,7 +203,7 @@ namespace MarginTradingTests.MockImpl
             }
         }
 
-        public ICollection<Order> GetOrdersByInstrumentAndAccount(string instrument, string accountId)
+        public Task<ICollection<Order>> GetOrdersByInstrumentAndAccount(string instrument, string accountId)
         {
             if (string.IsNullOrWhiteSpace(instrument))
                 throw new ArgumentException(nameof(instrument));
@@ -217,10 +217,10 @@ namespace MarginTradingTests.MockImpl
 
             try
             {
-                if (!_orderIdsByAccountIdAndInstrumentId.ContainsKey(key))
-                    return new List<Order>();
-
-                return _orderIdsByAccountIdAndInstrumentId[key].Select(id => _ordersById[id]).ToList();
+                ICollection<Order> result = !_orderIdsByAccountIdAndInstrumentId.ContainsKey(key)
+                    ? new List<Order>()
+                    : _orderIdsByAccountIdAndInstrumentId[key].Select(id => _ordersById[id]).ToList();
+                return Task.FromResult(result);
             }
             finally
             {
@@ -228,13 +228,14 @@ namespace MarginTradingTests.MockImpl
             }
         }
 
-        public IReadOnlyCollection<Order> GetAllOrders()
+        public Task<IReadOnlyCollection<Order>> GetAllOrders()
         {
             _lockSlim.EnterReadLock();
 
             try
             {
-                return _ordersById.Values;
+                IReadOnlyCollection<Order> result = _ordersById.Values;
+                return Task.FromResult(result);
             }
             finally
             {
@@ -242,7 +243,7 @@ namespace MarginTradingTests.MockImpl
             }
         }
 
-        public ICollection<Order> GetOrdersByAccountIds(params string[] accountIds)
+        public Task<ICollection<Order>> GetOrdersByAccountIds(params string[] accountIds)
         {
             _lockSlim.EnterReadLock();
 
@@ -259,7 +260,8 @@ namespace MarginTradingTests.MockImpl
                         result.Add(_ordersById[orderId]);
                 }
 
-                return result;
+                ICollection<Order> colResult = result;
+                return Task.FromResult(colResult);
             }
             finally
             {

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
@@ -12,9 +13,9 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
         public MatchingEngineMode Mode => MatchingEngineMode.MarketMaker;
 
-        public void MatchMarketOrderForOpen(Order order, Func<MatchedOrderCollection, bool> orderProcessed)
+        public async Task MatchMarketOrderForOpen(Order order, Func<MatchedOrderCollection, Task<bool>> orderProcessed)
         {
-            orderProcessed(new MatchedOrderCollection());
+            await orderProcessed(new MatchedOrderCollection());
         }
 
         public void MatchMarketOrderForClose(Order order, Func<MatchedOrderCollection, bool> orderProcessed)

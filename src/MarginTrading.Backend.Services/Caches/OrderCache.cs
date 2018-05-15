@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading.Tasks;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Services.Infrastructure;
@@ -13,9 +14,9 @@ namespace MarginTrading.Backend.Services
 {
     public interface IOrderReader
     {
-        ImmutableArray<Order> GetAll();
-        ImmutableArray<Order> GetActive();
-        ImmutableArray<Order> GetPending();
+        Task<ImmutableArray<Order>> GetAll();
+        Task<ImmutableArray<Order>> GetActive();
+        Task<ImmutableArray<Order>> GetPending();
     }
 
     public class OrdersCache : IOrderReader
@@ -36,39 +37,44 @@ namespace MarginTrading.Backend.Services
         public IOrderCacheGroup WaitingForExecutionOrders { get; private set; }
         public IOrderCacheGroup ClosingOrders { get; private set; }
         
-        public ImmutableArray<Order> GetAll()
+        public async Task<ImmutableArray<Order>> GetAll()
         {
-            using (_contextFactory.GetReadSyncContext($"{nameof(OrdersCache)}.{nameof(GetAll)}"))
-                return ActiveOrders.GetAllOrders()
-                    .Union(WaitingForExecutionOrders.GetAllOrders())
-                    .Union(ClosingOrders.GetAllOrders()).ToImmutableArray();
+            return (await ActiveOrders.GetAllOrders())
+                    .Union(await WaitingForExecutionOrders.GetAllOrders())
+                    .Union(await ClosingOrders.GetAllOrders()).ToImmutableArray();
         }
 
-        public ImmutableArray<Order> GetActive()
+        public async Task<ImmutableArray<Order>> GetActive()
         {
-            return ActiveOrders.GetAllOrders().ToImmutableArray();
+            return (await ActiveOrders.GetAllOrders()).ToImmutableArray();
         }
 
-        public ImmutableArray<Order> GetPending()
+        public async Task<ImmutableArray<Order>> GetPending()
         {
-            return WaitingForExecutionOrders.GetAllOrders().ToImmutableArray();
+            return (await WaitingForExecutionOrders.GetAllOrders()).ToImmutableArray();
         }
 
-        public ImmutableArray<Order> GetPendingForMarginRecalc(string instrument)
+        public async Task<ImmutableArray<Order>> GetPendingForMarginRecalc(string instrument)
         {
-            return WaitingForExecutionOrders.GetOrdersByMarginInstrument(instrument).ToImmutableArray();
+            return (await WaitingForExecutionOrders.GetOrdersByMarginInstrument(instrument)).ToImmutableArray();
         }
 
-        public bool TryGetOrderById(string orderId, out Order order)
+        public async Task<Order> GetOrderByIdOrDefault(string orderId)
         {
-            return WaitingForExecutionOrders.TryGetOrderById(orderId, out order) ||
-                   ActiveOrders.TryGetOrderById(orderId, out order);
+            var order = await WaitingForExecutionOrders.GetOrderByIdOrDefault(orderId);
+            if (order != null)
+            {
+                return order;
+            }
+            order = await ActiveOrders.GetOrderByIdOrDefault(orderId);
+            return order;
         }
         
-        public Order GetOrderById(string orderId)
+        public async Task<Order> GetOrderById(string orderId)
         {
-            if (TryGetOrderById(orderId, out var result))
-                return result;
+            var order = await GetOrderByIdOrDefault(orderId);
+            if (order != null)
+                return order;
 
             throw new Exception(string.Format(MtMessages.OrderNotFound, orderId));
         }

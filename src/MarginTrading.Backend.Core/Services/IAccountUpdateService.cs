@@ -1,10 +1,12 @@
-﻿namespace MarginTrading.Backend.Core
+﻿using System.Threading.Tasks;
+
+namespace MarginTrading.Backend.Core
 {
     public interface IAccountUpdateService
     {
-        void UpdateAccount(IMarginTradingAccount account);
+        Task UpdateAccount(IMarginTradingAccount account);
         bool IsEnoughBalance(Order order);
-        MarginTradingAccount GuessAccountWithNewActiveOrder(Order order);
+        Task<MarginTradingAccount> GuessAccountWithNewActiveOrder(Order order);
     }
 
     public class AccountFpl

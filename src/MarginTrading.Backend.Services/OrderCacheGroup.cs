@@ -193,23 +193,23 @@ namespace MarginTrading.Backend.Services
 
         #region Getters
 
-        public Order GetOrderById(string orderId)
+        public async Task<Order> GetOrderById(string orderId)
         {
-            if (TryGetOrderById(orderId, out var result))
-                return result;
+            var order = await GetOrderByIdOrDefault(orderId);
+            if (order != null)
+                return order;
 
             throw new Exception(string.Format(MtMessages.CantGetOrderWithStatus, orderId, Status));
         }
 
-        public bool TryGetOrderById(string orderId, out Order result)
+        public async Task<Order> GetOrderByIdOrDefault(string orderId)
         {
             _semaphoreSlim.Wait();
 
             try
             {
-                //TODO must be substituted with async version
-                var data = Database.HashGet(OrdersByIdKey, orderId);
-                return data.TryDeserialize(out result);
+                var data = await Database.HashGetAsync(OrdersByIdKey, orderId);
+                return data.TryDeserialize(out var result) ? result : null;
             }
             finally
             {
@@ -217,33 +217,7 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public IReadOnlyCollection<Order> GetOrdersByInstrument(string instrument)
-        {
-            if (string.IsNullOrWhiteSpace(instrument))
-                throw new ArgumentException(nameof(instrument));
-
-            _semaphoreSlim.Wait();
-
-            try
-            {
-                //TODO optimize
-                var orderIdsData = Database.SetMembers($"{OrderIdsByInstrumentIdKey}:{instrument}");
-                var orderIds = orderIdsData.Select(x => x.Deserialize<string>()).ToList();
-                var orders = orderIds.Select(x =>
-                {
-                    var data = Database.HashGet(OrdersByIdKey, x);
-                    data.TryDeserialize(out var result);
-                    return result;
-                }).ToList();
-                return orders;
-            }
-            finally
-            {
-                _semaphoreSlim.Release();
-            }
-        }
-
-        public IReadOnlyCollection<Order> GetOrdersByMarginInstrument(string instrument)
+        public async Task<IReadOnlyCollection<Order>> GetOrdersByInstrument(string instrument)
         {
             if (string.IsNullOrWhiteSpace(instrument))
                 throw new ArgumentException(nameof(instrument));
@@ -253,14 +227,15 @@ namespace MarginTrading.Backend.Services
             try
             {
                 //TODO optimize
-                var orderIdsData = Database.SetMembers($"{OrderIdsByMarginInstrumentIdKey}:{instrument}");
+                var orderIdsData = await Database.SetMembersAsync($"{OrderIdsByInstrumentIdKey}:{instrument}");
                 var orderIds = orderIdsData.Select(x => x.Deserialize<string>()).ToList();
-                var orders = orderIds.Select(x =>
+                var orders = new List<Order>();
+                foreach (var orderId in orderIds)
                 {
-                    var data = Database.HashGet(OrdersByIdKey, x);
+                    var data = await Database.HashGetAsync(OrdersByIdKey, orderId);
                     data.TryDeserialize(out var result);
-                    return result;
-                }).ToList();
+                    orders.Add(result);
+                }
                 return orders;
             }
             finally
@@ -269,7 +244,34 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public ICollection<Order> GetOrdersByInstrumentAndAccount(string instrument, string accountId)
+        public async Task<IReadOnlyCollection<Order>> GetOrdersByMarginInstrument(string instrument)
+        {
+            if (string.IsNullOrWhiteSpace(instrument))
+                throw new ArgumentException(nameof(instrument));
+
+            _semaphoreSlim.Wait();
+
+            try
+            {
+                //TODO optimize
+                var orderIdsData = await Database.SetMembersAsync($"{OrderIdsByMarginInstrumentIdKey}:{instrument}");
+                var orderIds = orderIdsData.Select(x => x.Deserialize<string>()).ToList();
+                var orders = new List<Order>();
+                foreach (var orderId in orderIds)
+                {
+                    var data = await Database.HashGetAsync(OrdersByIdKey, orderId);
+                    data.TryDeserialize(out var result);
+                    orders.Add(result);
+                }
+                return orders;
+            }
+            finally
+            {
+                _semaphoreSlim.Release();
+            }
+        }
+
+        public async Task<ICollection<Order>> GetOrdersByInstrumentAndAccount(string instrument, string accountId)
         {
             if (string.IsNullOrWhiteSpace(instrument))
                 throw new ArgumentException(nameof(instrument));
@@ -277,22 +279,21 @@ namespace MarginTrading.Backend.Services
             if (string.IsNullOrWhiteSpace(accountId))
                 throw new ArgumentException(nameof(instrument));
 
-            var key = GetAccountInstrumentCacheKey(accountId, instrument);
-
             _semaphoreSlim.Wait();
 
             try
             {
                 //TODO optimize
-                var orderIdsData = Database.SetMembers(
+                var orderIdsData = await Database.SetMembersAsync(
                     $"{OrderIdsByAccountIdAndInstrumentIdKey}:{GetAccountInstrumentCacheKey(accountId, instrument)}");
                 var orderIds = orderIdsData.Select(x => x.Deserialize<string>()).ToList();
-                var orders = orderIds.Select(x =>
+                var orders = new List<Order>();
+                foreach (var orderId in orderIds)
                 {
-                    var data = Database.HashGet(OrdersByIdKey, x);
+                    var data = await Database.HashGetAsync(OrdersByIdKey, orderId);
                     data.TryDeserialize(out var result);
-                    return result;
-                }).ToList();
+                    orders.Add(result);
+                }
                 return orders;
             }
             finally
@@ -301,14 +302,13 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public IReadOnlyCollection<Order> GetAllOrders()
+        public async Task<IReadOnlyCollection<Order>> GetAllOrders()
         {
             _semaphoreSlim.Wait();
 
             try
             {
-                //TODO optimize
-                var ordersData = Database.HashGetAll(OrdersByIdKey);
+                var ordersData = await Database.HashGetAllAsync(OrdersByIdKey);
                 var orders = ordersData.Select(x => x.Deserialize<Order>()).ToList();
                 return orders;
             }
@@ -318,7 +318,7 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public ICollection<Order> GetOrdersByAccountIds(params string[] accountIds)
+        public async Task<ICollection<Order>> GetOrdersByAccountIds(params string[] accountIds)
         {
             _semaphoreSlim.Wait();
 
@@ -329,14 +329,15 @@ namespace MarginTrading.Backend.Services
                 {
                     //TODO optimize
                     //todo maybe it's faster to grab $"{OrderIdsByAccountIdKey}:" and sort locally... depends on cases
-                    var orderIdsData = Database.SetMembers($"{OrderIdsByAccountIdKey}:{accountId}");
+                    var orderIdsData = await Database.SetMembersAsync($"{OrderIdsByAccountIdKey}:{accountId}");
                     var orderIds = orderIdsData.Select(x => x.Deserialize<string>()).ToList();
-                    var orders = orderIds.Select(x =>
+                    var orders = new List<Order>();
+                    foreach (var orderId in orderIds)
                     {
-                        var data = Database.HashGet(OrdersByIdKey, x);
-                        data.TryDeserialize(out var deserializedOrder);
-                        return deserializedOrder;
-                    }).ToList();
+                        var data = await Database.HashGetAsync(OrdersByIdKey, orderId);
+                        data.TryDeserialize(out var order);
+                        orders.Add(order);
+                    }
                     
                     result.AddRange(orders);
                 }

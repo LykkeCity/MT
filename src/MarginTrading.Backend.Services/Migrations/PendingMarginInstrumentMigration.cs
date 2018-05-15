@@ -34,8 +34,8 @@ namespace MarginTrading.Backend.Services.Migrations
             using (_contextFactory.GetWriteSyncContext($"{nameof(PendingMarginInstrumentMigration)}.{nameof(Invoke)}"))
             {
                 //open orders from cache
-                var allOrders = _orderCache.GetAll().ToList();
-                var pendingOrders = _orderCache.GetPending().Where(x => string.IsNullOrEmpty(x.MarginCalcInstrument)).ToList();
+                var allOrders = _orderCache.GetAll().Result.ToList();
+                var pendingOrders = _orderCache.GetPending().Result.Where(x => string.IsNullOrEmpty(x.MarginCalcInstrument)).ToList();
                 if (!pendingOrders.Any())
                     return Task.CompletedTask;
                 
