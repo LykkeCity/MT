@@ -48,5 +48,7 @@ namespace MarginTrading.Backend.Core.Settings
         
         [Optional]
         public bool UseAzureIdentityGenerator { get; set; }
+
+        public CqrsSettings Cqrs { get; set; }
     }
 }

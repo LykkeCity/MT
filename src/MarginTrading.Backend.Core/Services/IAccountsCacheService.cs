@@ -5,11 +5,14 @@ namespace MarginTrading.Backend.Core
 {
     public interface IAccountsCacheService
     {
-        IReadOnlyList<MarginTradingAccount> GetAll();
+        [NotNull]
         MarginTradingAccount Get(string accountId);
-        void UpdateBalance(MarginTradingAccount account);
+
+        [CanBeNull]
+        MarginTradingAccount TryGet(string accountId);
+
+        IReadOnlyList<MarginTradingAccount> GetAll();
         IEnumerable<string> GetClientIdsByTradingConditionId(string tradingConditionId, string accountId = null);
         void Update(MarginTradingAccount newValue);
-        MarginTradingAccount TryGet(string accountId);
     }
 }

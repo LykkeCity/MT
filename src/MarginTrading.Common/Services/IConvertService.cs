@@ -15,5 +15,7 @@ namespace MarginTrading.Common.Services
         /// Note that this method is slower than others.
         /// </summary>
         TResult ConvertWithConstructorArgs<TSource, TResult>(TSource source, object argumentsObject);
+
+        TResult Convert<TResult>(object source);
     }
 }

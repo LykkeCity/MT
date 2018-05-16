@@ -162,7 +162,7 @@ namespace MarginTradingTests
         public void Check_Calculations_As_In_Excel_Document()
         {
             Accounts[0].Balance = 50000;
-            _accountsCacheService.UpdateBalance(Accounts[0]);
+            _accountsCacheService.Update(Accounts[0]);
 
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "EURUSD", Ask = 1.061M, Bid = 1.06M }));
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCEUR", Ask = 1092M, Bid = 1091M }));

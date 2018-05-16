@@ -15,6 +15,7 @@
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
     <PackageReference Include="Lykke.HttpClientGenerator" Version="1.0.0" />
+    <PackageReference Include="MessagePack" Version="1.7.3.4" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.PlatformAbstractions" Version="1.1.0" />
     <PackageReference Include="Polly" Version="5.8.0" />
@@ -22,8 +23,5 @@
     <PackageReference Include="Refit" Version="4.3.0" />
     <PackageReference Include="System.Collections.Immutable" Version="1.4.0" />
     <PackageReference Include="System.Reflection.DispatchProxy" Version="4.4.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Snow" />
   </ItemGroup>
 </Project>

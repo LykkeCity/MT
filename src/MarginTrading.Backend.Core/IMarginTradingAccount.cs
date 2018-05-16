@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 namespace MarginTrading.Backend.Core
@@ -15,6 +13,7 @@ namespace MarginTrading.Backend.Core
         decimal WithdrawTransferLimit { get; }
         string LegalEntity { get; }
         [NotNull] AccountFpl AccountFpl { get; }
+        bool IsDisabled { get; set; }
     }
 
     public class MarginTradingAccount : IMarginTradingAccount, IComparable<MarginTradingAccount>
@@ -26,6 +25,7 @@ namespace MarginTrading.Backend.Core
         public decimal Balance { get; set; }
         public decimal WithdrawTransferLimit { get; set; }
         public string LegalEntity { get; set; }
+        public bool IsDisabled { get; set; } // todo: use it everywhere
 
         public AccountFpl AccountFpl { get; private set; } = new AccountFpl();
 
@@ -69,15 +69,6 @@ namespace MarginTrading.Backend.Core
         None = 0,
         MarginCall = 1,
         StopOUt = 2
-    }
-
-    public interface IMarginTradingAccountsRepository
-    {
-        Task<IEnumerable<IMarginTradingAccount>> GetAllAsync(string clientId = null);
-
-        Task<MarginTradingAccount> UpdateBalanceAsync(string clientId, string accountId, decimal amount,
-            bool changeLimit);
-
     }
 
     public static class MarginTradingAccountExtensions
