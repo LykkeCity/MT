@@ -58,5 +58,8 @@ namespace MarginTrading.Backend.Core.Settings
         
         [Optional]
         public bool UseAzureIdentityGenerator { get; set; }
+        
+        [Optional]
+        public string[] LegalEntitiesWithoutPendings { get; set; }
     }
 }
