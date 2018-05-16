@@ -64,6 +64,7 @@
     <PackageReference Include="Swashbuckle.SwaggerGen" Version="6.0.0-beta902" />
     <PackageReference Include="Swashbuckle.SwaggerUi" Version="6.0.0-beta902" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics" Version="2.0.3" />
+    <PackageReference Include="Moq" Version="4.7.9" />
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Connected Services" />

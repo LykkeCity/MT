@@ -3,12 +3,12 @@ using Autofac.Extensions.DependencyInjection;
 using Common.Log;
 using Lykke.HttpClientGenerator;
 using Lykke.Service.ClientAccount.Client;
-using Lykke.Service.PersonalData.Client;
 using Lykke.Service.PersonalData.Contract;
 using Lykke.SettingsReader;
 using MarginTrading.Backend.Contracts.DataReaderClient;
 using MarginTrading.Frontend.Settings;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 
 namespace MarginTrading.Frontend.Modules
 {
@@ -36,9 +36,8 @@ namespace MarginTrading.Frontend.Modules
             
             builder.RegisterLykkeServiceClient(_settings.CurrentValue.ClientAccountServiceClient.ServiceUrl);
             
-            builder.RegisterInstance<IPersonalDataService>(
-                    new PersonalDataService(_settings.CurrentValue.PersonalDataServiceSettings, _log))
-                .SingleInstance();
+            var personalDataServiceMock = new Mock<IPersonalDataService>(MockBehavior.Strict);
+            builder.RegisterInstance(personalDataServiceMock.Object).As<IPersonalDataService>();
             
             builder.Populate(services);
         }
