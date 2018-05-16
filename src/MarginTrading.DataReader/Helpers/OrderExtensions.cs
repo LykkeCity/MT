@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using MarginTrading.Backend.Contracts.AccountHistory;
 using MarginTrading.Backend.Contracts.AssetPairSettings;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
@@ -61,43 +60,5 @@ namespace MarginTrading.DataReader.Helpers
                 LegalEntity = src.LegalEntity,
             };
         }
-
-        public static OrderHistoryContract ToBackendHistoryContract(this Order src)
-        {
-            return new OrderHistoryContract
-            {
-                Id = src.Id,
-                Code = src.Code,
-                AccountId = src.AccountId,
-                Instrument = src.Instrument,
-                AssetAccuracy = src.AssetAccuracy,
-                Type = src.GetOrderType().ToType<OrderDirectionContract>(),
-                Status = src.Status.ToType<OrderStatusContract>(),
-                CloseReason = src.CloseReason.ToType<OrderCloseReasonContract>(),
-                OpenDate = src.OpenDate,
-                CloseDate = src.CloseDate,
-                OpenPrice = src.OpenPrice,
-                ClosePrice = src.ClosePrice,
-                Volume = src.Volume,
-                TakeProfit = src.TakeProfit,
-                StopLoss = src.StopLoss,
-                TotalPnl = src.FplData.TotalFplSnapshot,
-                Pnl = src.FplData.Fpl,
-                InterestRateSwap = src.FplData.SwapsSnapshot,
-                CommissionLot = src.CommissionLot,
-                OpenCommission = src.GetOpenCommission(),
-                CloseCommission = src.GetCloseCommission(),
-                EquivalentAsset = src.EquivalentAsset,
-                OpenPriceEquivalent = src.OpenPriceEquivalent,
-                ClosePriceEquivalent = src.ClosePriceEquivalent,
-                OpenExternalOrderId = src.OpenExternalOrderId,
-                OpenExternalProviderId = src.OpenExternalProviderId,
-                CloseExternalOrderId = src.CloseExternalOrderId,
-                CloseExternalProviderId = src.CloseExternalProviderId,
-                MatchingEngineMode = src.MatchingEngineMode
-                    .ToType<MatchingEngineModeContract>()
-            };
-        }
-
     }
 }

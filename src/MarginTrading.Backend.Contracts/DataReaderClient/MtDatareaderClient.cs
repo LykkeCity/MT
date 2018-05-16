@@ -5,7 +5,6 @@ namespace MarginTrading.Backend.Contracts.DataReaderClient
     internal class MtDataReaderClient : IMtDataReaderClient
     {
         public IAssetPairsReadingApi AssetPairsRead { get; }
-        public IAccountHistoryApi AccountHistory { get; }
         public IAccountsApi AccountsApi { get; }
         public IAccountAssetPairsReadingApi AccountAssetPairsRead { get; }
         public ITradeMonitoringReadingApi TradeMonitoringRead { get; }
@@ -18,7 +17,6 @@ namespace MarginTrading.Backend.Contracts.DataReaderClient
         public MtDataReaderClient(IHttpClientGenerator clientGenerator)
         {
             AssetPairsRead = clientGenerator.Generate<IAssetPairsReadingApi>();
-            AccountHistory = clientGenerator.Generate<IAccountHistoryApi>();
             AccountsApi = clientGenerator.Generate<IAccountsApi>();
             AccountAssetPairsRead = clientGenerator.Generate<IAccountAssetPairsReadingApi>();
             TradeMonitoringRead = clientGenerator.Generate<ITradeMonitoringReadingApi>();
