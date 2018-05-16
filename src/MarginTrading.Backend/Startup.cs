@@ -57,7 +57,7 @@ namespace MarginTrading.Backend
 
             Environment = env;
         }
-
+ 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             var loggerFactory = new LoggerFactory()
