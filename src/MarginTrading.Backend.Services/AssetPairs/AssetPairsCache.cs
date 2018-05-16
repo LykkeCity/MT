@@ -75,8 +75,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             if (_assetPairsByAssets.Get().TryGetValue(key, out var result))
                 return result;
 
-            throw new InstrumentByAssetsNotFoundException(asset1, asset2,
-                string.Format(MtMessages.InstrumentWithAssetsNotFound, asset1, asset2));
+            throw new InstrumentByAssetsNotFoundException(asset1, asset2, legalEntity);
         }
 
         public IAssetPair FindAssetPairOrDefault(string asset1, string asset2, string legalEntity)

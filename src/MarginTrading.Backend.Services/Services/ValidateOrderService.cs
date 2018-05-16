@@ -3,6 +3,7 @@ using System.Linq;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Messages;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Helpers;
@@ -19,6 +20,7 @@ namespace MarginTrading.Backend.Services
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly OrdersCache _ordersCache;
         private readonly IAssetPairDayOffService _assetDayOffService;
+        private readonly MarginSettings _settings;
 
         public ValidateOrderService(
             IQuoteCacheService quoteCashService,
@@ -27,7 +29,8 @@ namespace MarginTrading.Backend.Services
             IAccountAssetsCacheService accountAssetsCacheService,
             IAssetPairsCache assetPairsCache,
             OrdersCache ordersCache,
-            IAssetPairDayOffService assetDayOffService)
+            IAssetPairDayOffService assetDayOffService,
+            MarginSettings settings)
         {
             _quoteCashService = quoteCashService;
             _accountUpdateService = accountUpdateService;
@@ -36,6 +39,7 @@ namespace MarginTrading.Backend.Services
             _assetPairsCache = assetPairsCache;
             _ordersCache = ordersCache;
             _assetDayOffService = assetDayOffService;
+            _settings = settings;
         }
 
         //has to be beyond global lock
@@ -81,6 +85,12 @@ namespace MarginTrading.Backend.Services
             //check ExpectedOpenPrice for pending order
             if (order.ExpectedOpenPrice.HasValue)
             {
+                if (_settings.LegalEntitiesWithoutPendings?.Contains(order.LegalEntity) == true)
+                {
+                    throw new ValidateOrderException(OrderRejectReason.TradingConditionError,
+                        "Pending order is not yet available");
+                }
+                
                 if (_assetDayOffService.ArePendingOrdersDisabled(order.Instrument))
                 {
                     throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Trades for instrument are not available");
