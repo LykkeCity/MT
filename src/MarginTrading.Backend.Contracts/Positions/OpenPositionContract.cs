@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace MarginTrading.Backend.Contracts.Snow.Positions
+namespace MarginTrading.Backend.Contracts.Positions
 {
     /// <summary>
     /// Info about an open position

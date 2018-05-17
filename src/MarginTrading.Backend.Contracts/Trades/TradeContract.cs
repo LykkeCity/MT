@@ -1,7 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 
-namespace MarginTrading.Backend.Contracts.Snow.Trades
+namespace MarginTrading.Backend.Contracts.Trades
 {
     /// <summary>
     /// Info about a trade

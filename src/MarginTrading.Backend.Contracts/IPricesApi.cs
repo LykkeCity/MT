@@ -1,9 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using MarginTrading.Backend.Contracts.Prices;
+using MarginTrading.Backend.Contracts.Snow.Prices;
 using Refit;
 
-namespace MarginTrading.Backend.Contracts.Snow.Prices
+namespace MarginTrading.Backend.Contracts
 {
     /// <summary>                                                                                       
     /// Provides data about prices
@@ -18,6 +20,6 @@ namespace MarginTrading.Backend.Contracts.Snow.Prices
         /// Post because the query string will be too long otherwise
         /// </remarks>
         [Post("/api/prices/best")]
-        Task<List<BestPriceContract>> Best([Body] string[] assetPairsIds);
+        Task<Dictionary<string, BestPriceContract>> GetBestAsync([Body] InitPricesBackendRequest request);
     }
 }

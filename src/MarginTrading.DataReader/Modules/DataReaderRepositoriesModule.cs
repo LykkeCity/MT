@@ -45,10 +45,6 @@ namespace MarginTrading.DataReader.Modules
                 AzureRepoFactories.MarginTrading.CreateTradesRepository(
                     _settings.Nested(s => s.Db.HistoryConnString), _log, ctx.Resolve<IConvertService>())
             ).SingleInstance();
-            builder.Register(ctx =>
-                AzureRepoFactories.MarginTrading.CreateOrdersByIdRepository(
-                    _settings.Nested(s => s.Db.MarginTradingConnString), _log, ctx.Resolve<IConvertService>())
-            ).SingleInstance();
         }
     }
 }

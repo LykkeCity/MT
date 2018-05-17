@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
@@ -12,6 +14,7 @@ using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.TradingConditions;
+using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Middleware;
 using MarginTrading.Common.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -95,6 +98,64 @@ namespace MarginTrading.Backend.Controllers
             [FromBody] PositionCloseRequest request, [FromQuery] PositionDirectionContract? direction = null)
         {
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Get a position by id
+        /// </summary>
+        [HttpGet, Route("{positionId}")]
+        public async Task<OpenPositionContract> GetAsync(string positionId)
+        {
+            if (!_ordersCache.ActiveOrders.TryGetOrderById(positionId, out var order))
+                return null;
+
+            return Convert(order);
+        }
+
+        /// <summary>
+        /// Get open positions 
+        /// </summary>
+        [HttpGet, Route("")]
+        public async Task<List<OpenPositionContract>> ListAsync(string accountId, string assetPairId)
+        {
+            IEnumerable<Order> orders = _ordersCache.ActiveOrders.GetAllOrders();
+            if (!string.IsNullOrWhiteSpace(accountId))
+                orders = orders.Where(o => o.AccountId == accountId);
+
+            if (!string.IsNullOrWhiteSpace(assetPairId))
+                orders = orders.Where(o => o.Instrument == assetPairId);
+
+            return orders.Select(Convert).ToList();
+        }
+
+        private OpenPositionContract Convert(Order order)
+        {
+            return new OpenPositionContract
+            {
+                AccountId = order.AccountId,
+                AssetPairId = order.Instrument,
+                CurrentVolume = order.Volume,
+                Direction = Convert(order.GetOrderType()),
+                Id = order.Id,
+                OpenPrice = order.OpenPrice,
+                PnL = order.FplData.Fpl,
+                RelatedOrders = new List<string>(),
+                OpenTimestamp = order.OpenDate.RequiredNotNull(nameof(order.OpenDate)),
+                TradeId = order.Id + '_' + order.GetOrderType(),
+            };
+        }
+
+        private PositionDirectionContract Convert(OrderDirection orderOpenType)
+        {
+            switch (orderOpenType)
+            {
+                case OrderDirection.Buy:
+                    return PositionDirectionContract.Long;
+                case OrderDirection.Sell:
+                    return PositionDirectionContract.Short;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(orderOpenType), orderOpenType, null);
+            }
         }
     }
 }

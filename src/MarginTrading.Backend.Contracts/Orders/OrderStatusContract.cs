@@ -1,4 +1,4 @@
-﻿namespace MarginTrading.Backend.Contracts.Snow.Orders
+﻿namespace MarginTrading.Backend.Contracts.Orders
 {
     public enum OrderStatusContract
     {

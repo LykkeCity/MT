@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 using MarginTrading.AzureRepositories.Snow.Trades;
-using MarginTrading.Backend.Contracts.Snow.Orders;
-using MarginTrading.Backend.Contracts.Snow.Trades;
-using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Contracts;
+using MarginTrading.Backend.Contracts.Trades;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MarginTrading.DataReader.Controllers.Snow
+namespace MarginTrading.DataReader.Controllers
 {
     /// <summary>
     /// Provides data about trades

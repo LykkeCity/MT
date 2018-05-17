@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 
-namespace MarginTrading.Backend.Contracts.Snow.Orders
+namespace MarginTrading.Backend.Contracts.Orders
 {
     /// <summary>
     /// Info about an order

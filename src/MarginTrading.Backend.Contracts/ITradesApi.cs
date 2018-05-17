@@ -1,13 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using MarginTrading.Backend.Contracts.Trades;
 using Refit;
 
-namespace MarginTrading.Backend.Contracts.Snow.Trades
+namespace MarginTrading.Backend.Contracts
 {
     /// <summary>                                                                                       
     /// Provides data about trades
     /// </summary>
+    // todo move to history
     [PublicAPI]
     public interface ITradesApi
     {

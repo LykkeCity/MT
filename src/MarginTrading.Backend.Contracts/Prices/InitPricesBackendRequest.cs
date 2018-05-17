@@ -1,4 +1,4 @@
-﻿namespace MarginTrading.Contract.BackendContracts
+﻿namespace MarginTrading.Backend.Contracts.Prices
 {
     public class InitPricesBackendRequest
     {

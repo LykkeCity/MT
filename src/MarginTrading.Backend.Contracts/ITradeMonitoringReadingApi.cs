@@ -13,6 +13,7 @@ namespace MarginTrading.Backend.Contracts
         /// <summary>
         /// Returns summary info by assets
         /// </summary>
+        // todo remove
         [Get("/api/trade/assets/summary/")]
         Task<List<SummaryAssetContract>> AssetSummaryList();
                 
