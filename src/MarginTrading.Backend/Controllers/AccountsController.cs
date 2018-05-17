@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MarginTrading.AccountsManagement.Contracts;
+using MarginTrading.AzureRepositories;
+using MarginTrading.Backend.Contracts.Account;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Services;
@@ -12,30 +15,33 @@ using MarginTrading.Contract.BackendContracts;
 using MarginTrading.Contract.BackendContracts.AccountsManagement;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using IAccountsApi = MarginTrading.Backend.Contracts.IAccountsApi;
 
 namespace MarginTrading.Backend.Controllers
 {
     [Authorize]
-    [Route("api/accounts-management")]
+    [Route("api/accounts")]
     [MiddlewareFilter(typeof(RequestLoggingPipeline))]
-    public class AccountsManagementController : Controller
+    public class AccountsController : Controller, IAccountsApi
     {
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly IDateService _dateService;
         private readonly AccountManager _accountManager;
         private readonly TradingConditionsCacheService _tradingConditionsCache;
+        private readonly IMarginTradingAccountStatsRepository _accountStatsRepository;
 
-        public AccountsManagementController(IAccountsCacheService accountsCacheService,
+        public AccountsController(IAccountsCacheService accountsCacheService,
             IDateService dateService,
             AccountManager accountManager,
-            TradingConditionsCacheService tradingConditionsCache)
+            TradingConditionsCacheService tradingConditionsCache, 
+            IMarginTradingAccountStatsRepository accountStatsRepository)
         {
             _accountsCacheService = accountsCacheService;
             _dateService = dateService;
             _accountManager = accountManager;
             _tradingConditionsCache = tradingConditionsCache;
+            _accountStatsRepository = accountStatsRepository;
         }
-
 
         /// <summary>
         /// Get all accounts where (balance + pnl) / Used margin less or equal than threshold value
@@ -129,6 +135,36 @@ namespace MarginTrading.Backend.Controllers
             }
 
             return result;
+        }
+
+        /// <summary>
+        ///     Returns all account stats
+        /// </summary>
+        [HttpGet]
+        [Route("stats")]
+        public async Task<IEnumerable<DataReaderAccountStatsBackendContract>> GetAllAccountStats()
+        {
+            return (await _accountStatsRepository.GetAllAsync()).Select(Convert);
+        }
+        
+        private static DataReaderAccountStatsBackendContract Convert(IMarginTradingAccountStats item)
+        {
+            return new DataReaderAccountStatsBackendContract
+            {
+                AccountId = item.AccountId,
+                BaseAssetId = item.BaseAssetId,
+                MarginCall = item.MarginCall,
+                StopOut = item.StopOut,
+                TotalCapital = item.TotalCapital,
+                FreeMargin = item.FreeMargin,
+                MarginAvailable = item.MarginAvailable,
+                UsedMargin = item.UsedMargin,
+                MarginInit = item.MarginInit,
+                PnL = item.PnL,
+                OpenPositionsCount = item.OpenPositionsCount,
+                MarginUsageLevel = item.MarginUsageLevel,
+                LegalEntity = item.LegalEntity,
+            };
         }
     }
 }

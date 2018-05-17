@@ -7,20 +7,20 @@ using MarginTrading.Backend.Contracts.TradeMonitoring;
 
 namespace MarginTrading.Backend.Contracts
 {
-    [PublicAPI]
+    [PublicAPI, Obsolete]
     public interface ITradeMonitoringReadingApi
     {
         /// <summary>
         /// Returns summary info by assets
         /// </summary>
         // todo remove
-        [Get("/api/trade/assets/summary/")]
+        [Get("/api/trade/assets/summary/"), Obsolete]
         Task<List<SummaryAssetContract>> AssetSummaryList();
                 
         /// <summary>
         /// Returns list of opened positions
         /// </summary>
-        [Get("/api/trade/openPositions/")]
+        [Get("/api/trade/openPositions/"), Obsolete]
         Task<List<DetailedOrderContract>> OpenPositions();
 
         /// <summary>
@@ -28,7 +28,7 @@ namespace MarginTrading.Backend.Contracts
         /// </summary>
         /// <param name="volume">Target volume</param>
         /// <returns></returns>
-        [Get("/api/trade/openPositions/byVolume/{volume}")]
+        [Get("/api/trade/openPositions/byVolume/{volume}"), Obsolete]
         Task<List<DetailedOrderContract>> OpenPositionsByVolume(decimal volume);
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace MarginTrading.Backend.Contracts
         /// <param name="from">interval start</param>
         /// <param name="to">interval finish</param>
         /// <returns></returns>
-        [Get("/api/trade/openPositions/byDate/")]
+        [Get("/api/trade/openPositions/byDate/"), Obsolete]
         Task<List<DetailedOrderContract>> OpenPositionsByDate([Query] DateTime from, [Query] DateTime to);
 
         /// <summary>
@@ -45,13 +45,13 @@ namespace MarginTrading.Backend.Contracts
         /// </summary>
         /// <param name="accountIds">Account Ids</param>
         /// <returns></returns>
-        [Get("/api/trade/openPositions/byAccounts")]
+        [Get("/api/trade/openPositions/byAccounts"), Obsolete]
         Task<List<DetailedOrderContract>> OpenPositionsByClient(string[] accountIds);
 
         /// <summary>
         /// Returns list of pending orders 
         /// </summary>
-        [Get("/api/trade/pendingOrders/")]
+        [Get("/api/trade/pendingOrders/"), Obsolete]
         Task<List<DetailedOrderContract>> PendingOrders();
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace MarginTrading.Backend.Contracts
         /// </summary>
         /// <param name="volume">Target volume</param>
         /// <returns></returns>
-        [Get("/api/trade/pendingOrders/byVolume/{volume}")]
+        [Get("/api/trade/pendingOrders/byVolume/{volume}"), Obsolete]
         Task<List<DetailedOrderContract>> PendingOrdersByVolume(decimal volume);
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace MarginTrading.Backend.Contracts
         /// <param name="from">interval start</param>
         /// <param name="to">interval finish</param>
         /// <returns></returns>
-        [Get("/api/trade/pendingOrders/byDate/")]
+        [Get("/api/trade/pendingOrders/byDate/"), Obsolete]
         Task<List<DetailedOrderContract>> PendingOrdersByDate([Query] DateTime from, [Query] DateTime to);
 
         /// <summary>
@@ -76,15 +76,13 @@ namespace MarginTrading.Backend.Contracts
         /// </summary>
         /// <param name="accountIds">Account Ids</param>
         /// <returns></returns>
-        [Get("/api/trade/pendingOrders/byAccounts")]
+        [Get("/api/trade/pendingOrders/byAccounts"), Obsolete]
         Task<List<DetailedOrderContract>> PendingOrdersByClient(string[] accountIds);
 
         /// <summary>
         /// Returns list of orderbooks
         /// </summary>
-        /// <param name="clientId">Client Id</param>
-        /// <returns></returns>
-        [Get("/api/trade/orderbooks/byInstrument/{instrument}")]
+        [Get("/api/trade/orderbooks/byInstrument/{instrument}"), Obsolete]
         Task<List<OrderBookContract>> OrderBooksByInstrument(string instrument);
     }
 }

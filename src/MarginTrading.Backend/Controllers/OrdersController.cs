@@ -128,11 +128,10 @@ namespace MarginTrading.Backend.Controllers
         }
 
         /// <summary>
-        /// Change existion order
+        /// Change existing order
         /// </summary>
         /// <param name="orderId">Id of order to change</param>
         /// <param name="request">Values to change</param>
-        /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
         [Route("{orderId}")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
@@ -229,8 +228,8 @@ namespace MarginTrading.Backend.Controllers
         /// <summary>
         /// Get open orders with optional filtering
         /// </summary>
-        [HttpGet, Route("open")]
-        public async Task<List<OrderContract>> ListOpenAsync(string accountId = null, string assetPairId = null)
+        [HttpGet, Route("")]
+        public async Task<List<OrderContract>> ListAsync(string accountId = null, string assetPairId = null)
         {
             // do not call get by account, it's slower for single account 
             IEnumerable<Order> orders = _ordersCache.WaitingForExecutionOrders.GetAllOrders(); 
@@ -242,25 +241,6 @@ namespace MarginTrading.Backend.Controllers
                 orders = orders.Where(o => o.Instrument == assetPairId);
 
             return orders.Select(Convert).ToList(); // do not show a pending close order for closing status
-        }
-
-        //todo: move to history
-        /// <summary>
-        /// Get executed orders with optional filtering
-        /// </summary>
-        [HttpGet, Route("executed")]
-        public async Task<List<OrderContract>> ListExecutedAsync(string accountId, string assetPairId)
-        {
-            var history = !string.IsNullOrWhiteSpace(accountId)
-                ? await _ordersHistoryRepository.GetHistoryAsync(new[] {accountId}, null, null)
-                : await _ordersHistoryRepository.GetHistoryAsync();
-
-            if (!string.IsNullOrWhiteSpace(assetPairId))
-                history = history.Where(o => o.Instrument == assetPairId);
-
-            var pendingIds = _ordersCache.WaitingForExecutionOrders.GetAllOrders().Select(o => o.Id).ToHashSet();
-
-            return history.Where(h => !pendingIds.Contains(h.Id)).SelectMany(MakeOrderContractsFromHistory).ToList();
         }
 
         private static OrderContract Convert(IOrderHistory history, bool isCloseOrder)
@@ -283,7 +263,7 @@ namespace MarginTrading.Backend.Controllers
                 RelatedOrders = new List<string>(),
                 Status = Convert(history.Status),
                 TradesIds = GetTrades(history.Id, history.Status, orderDirection),
-                Type = history.OpenPrice == null ? OrderTypeContract.Market : OrderTypeContract.Limit,
+                Type = history.ExpectedOpenPrice == null ? OrderTypeContract.Market : OrderTypeContract.Limit,
                 ValidityTime = null,
                 Volume = history.Volume,
             };
@@ -342,7 +322,7 @@ namespace MarginTrading.Backend.Controllers
                 RelatedOrders = new List<string>(),
                 Status = Convert(order.Status),
                 TradesIds = GetTrades(order.Id, order.Status, orderDirection),
-                Type = order.OpenPrice == null ? OrderTypeContract.Market : OrderTypeContract.Limit,
+                Type = order.ExpectedOpenPrice == null ? OrderTypeContract.Market : OrderTypeContract.Limit,
                 ValidityTime = null,
                 Volume = order.Volume,
             };

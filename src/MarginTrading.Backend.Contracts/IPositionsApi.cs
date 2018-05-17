@@ -38,13 +38,5 @@ namespace MarginTrading.Backend.Contracts
         [Get("/api/positions")]
         Task<List<OpenPositionContract>> ListAsync([Query, CanBeNull] string accountId = null,
             [Query, CanBeNull] string assetPairId = null);
-
-        // todo: move to history
-//        /// <summary>
-//        /// Get closed positions
-//        /// </summary>
-//        [Get("/api/positions/closed")]
-//        Task<List<ClosedPositionContract>> ListClosed([Query, CanBeNull] string accountId,
-//            [Query, CanBeNull] string instrument);
     }
 }

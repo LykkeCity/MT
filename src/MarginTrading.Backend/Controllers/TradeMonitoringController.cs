@@ -1,34 +1,43 @@
-﻿using MarginTrading.Backend.Contracts;
-using MarginTrading.Backend.Contracts.TradeMonitoring;
-using MarginTrading.Backend.Core;
-using MarginTrading.Common.Services;
-using MarginTrading.DataReader.Services;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MarginTrading.Backend.Contracts;
+using MarginTrading.Backend.Contracts.AssetPairSettings;
+using MarginTrading.Backend.Contracts.TradeMonitoring;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Helpers;
+using MarginTrading.Backend.Core.Mappers;
+using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.Orderbooks;
-using OrderExtensions = MarginTrading.DataReader.Helpers.OrderExtensions;
+using MarginTrading.Backend.Services;
+using MarginTrading.Backend.Services.Infrastructure;
+using MarginTrading.Common.Extensions;
+using MarginTrading.Common.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
-namespace MarginTrading.DataReader.Controllers
+namespace MarginTrading.Backend.Controllers
 {
     [Authorize]
     [Route("api/trade/")]
+    [Obsolete]
     public class TradeMonitoringController : Controller, ITradeMonitoringReadingApi
     {
-        private readonly IOrdersSnapshotReaderService _ordersSnapshotReaderService;
-        private readonly IOrderBookSnapshotReaderService _orderBookSnapshotReaderService;
         private readonly IConvertService _convertService;
+        private readonly OrdersCache _ordersCache;
+        private readonly IMarginTradingBlobRepository _blobRepository;
+        private readonly OrderBookList _orderBookList;
+        private readonly IContextFactory _contextFactory;
 
-        public TradeMonitoringController(IOrdersSnapshotReaderService ordersSnapshotReaderService,
-            IOrderBookSnapshotReaderService orderBookSnapshotReaderService,
-            IConvertService convertService)
+        public TradeMonitoringController(IConvertService convertService, OrdersCache ordersCache,
+            IMarginTradingBlobRepository blobRepository, OrderBookList orderBookList, IContextFactory contextFactory)
         {
-            _ordersSnapshotReaderService = ordersSnapshotReaderService;
-            _orderBookSnapshotReaderService = orderBookSnapshotReaderService;
             _convertService = convertService;
+            _ordersCache = ordersCache;
+            _blobRepository = blobRepository;
+            _orderBookList = orderBookList;
+            _contextFactory = contextFactory;
         }
 
         /// <summary>
@@ -46,7 +55,7 @@ namespace MarginTrading.DataReader.Controllers
         public async Task<List<SummaryAssetContract>> AssetSummaryList()
         {
             var result = new List<SummaryAssetContract>();
-            var orders = await _ordersSnapshotReaderService.GetAllAsync();
+            var orders = _ordersCache.GetAll();
 
             foreach (var order in orders)
             {
@@ -90,12 +99,9 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns opened positions</response>
         [HttpGet]
         [Route("openPositions/byVolume/{volume}")]
-        public async Task<List<DetailedOrderContract>> OpenPositionsByVolume([FromRoute]decimal volume)
+        public async Task<List<DetailedOrderContract>> OpenPositionsByVolume([FromRoute] decimal volume)
         {
-            return (await _ordersSnapshotReaderService.GetActiveAsync())
-                .Where(order => order.GetMatchedVolume() >= volume)
-                .Select(OrderExtensions.ToBaseContract)
-                .ToList();
+            return _ordersCache.GetActive().Where(order => order.GetMatchedVolume() >= volume).Select(Convert).ToList();
         }
 
         /// <summary>
@@ -123,12 +129,11 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns opened positions</response>
         [HttpGet]
         [Route("openPositions/byDate")]
-        public async Task<List<DetailedOrderContract>> OpenPositionsByDate([FromQuery] DateTime from, [FromQuery] DateTime to)
+        public async Task<List<DetailedOrderContract>> OpenPositionsByDate([FromQuery] DateTime from,
+            [FromQuery] DateTime to)
         {
-            return (await _ordersSnapshotReaderService.GetActiveAsync())
-                .Where(order => order.OpenDate >= from.Date && order.OpenDate< to.Date)
-                .Select(OrderExtensions.ToBaseContract)
-                .ToList();
+            return _ordersCache.GetActive().Where(order => order.OpenDate >= from.Date && order.OpenDate < to.Date)
+                .Select(Convert).ToList();
         }
 
         /// <summary>
@@ -141,11 +146,9 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns opened positions</response>
         [HttpGet]
         [Route("openPositions/byAccounts")]
-        public async Task<List<DetailedOrderContract>> OpenPositionsByClient([FromQuery]string[] accountIds)
+        public async Task<List<DetailedOrderContract>> OpenPositionsByClient([FromQuery] string[] accountIds)
         {
-            return (await _ordersSnapshotReaderService.GetActiveAsync())
-                .Where(order => accountIds.Contains(order.AccountId))
-                .Select(OrderExtensions.ToBaseContract)
+            return _ordersCache.GetActive().Where(order => accountIds.Contains(order.AccountId)).Select(Convert)
                 .ToList();
         }
 
@@ -159,12 +162,9 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns pending orders</response>
         [HttpGet]
         [Route("pendingOrders/byVolume/{volume}")]
-        public async Task<List<DetailedOrderContract>> PendingOrdersByVolume([FromRoute]decimal volume)
+        public async Task<List<DetailedOrderContract>> PendingOrdersByVolume([FromRoute] decimal volume)
         {
-            return (await _ordersSnapshotReaderService.GetPendingAsync())
-                .Where(order => Math.Abs(order.Volume) >= volume)
-                .Select(OrderExtensions.ToBaseContract)
-                .ToList();
+            return _ordersCache.GetPending().Where(order => Math.Abs(order.Volume) >= volume).Select(Convert).ToList();
         }
 
         /// <summary>
@@ -192,12 +192,11 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns pending orders</response>
         [HttpGet]
         [Route("pendingOrders/byDate")]
-        public async Task<List<DetailedOrderContract>> PendingOrdersByDate([FromQuery] DateTime from, [FromQuery] DateTime to)
+        public async Task<List<DetailedOrderContract>> PendingOrdersByDate([FromQuery] DateTime from,
+            [FromQuery] DateTime to)
         {
-            return (await _ordersSnapshotReaderService.GetPendingAsync())
-                .Where(order => order.CreateDate >= from && order.CreateDate < to)
-                .Select(OrderExtensions.ToBaseContract)
-                .ToList();
+            return _ordersCache.GetPending().Where(order => order.CreateDate >= from && order.CreateDate < to)
+                .Select(Convert).ToList();
         }
 
         /// <summary>
@@ -210,11 +209,9 @@ namespace MarginTrading.DataReader.Controllers
         /// <response code="200">Returns pending orders</response>
         [HttpGet]
         [Route("pendingOrders/byAccounts")]
-        public async Task<List<DetailedOrderContract>> PendingOrdersByClient([FromQuery]string[] accountIds)
+        public async Task<List<DetailedOrderContract>> PendingOrdersByClient([FromQuery] string[] accountIds)
         {
-            return (await _ordersSnapshotReaderService.GetPendingAsync())
-                .Where(order => accountIds.Contains(order.AccountId))
-                .Select(OrderExtensions.ToBaseContract)
+            return _ordersCache.GetPending().Where(order => accountIds.Contains(order.AccountId)).Select(Convert)
                 .ToList();
         }
 
@@ -230,8 +227,13 @@ namespace MarginTrading.DataReader.Controllers
         [Route("orderbooks/byInstrument/{instrument}")]
         public async Task<List<OrderBookContract>> OrderBooksByInstrument(string instrument)
         {
-            var orderbook = await _orderBookSnapshotReaderService.GetOrderBook(instrument);
+            // todo dangerous
+            Dictionary<string, OrderBook> orderbookState;
+            using (_contextFactory.GetReadSyncContext(
+                $"{nameof(TradeMonitoringController)}.{nameof(OrderBooksByInstrument)}"))
+                orderbookState = _orderBookList.GetOrderBookState();
 
+            var orderbook = orderbookState.GetValueOrDefault(instrument, k => new OrderBook(instrument));
             return new List<OrderBookContract> {Convert(orderbook)};
         }
 
@@ -239,6 +241,57 @@ namespace MarginTrading.DataReader.Controllers
         {
             return _convertService.Convert<OrderBook, OrderBookContract>(domainContract);
         }
-        
+
+        public static DetailedOrderContract Convert(Order src)
+        {
+            MatchedOrderContract MatchedOrderToBackendContract(MatchedOrder o) =>
+                new MatchedOrderContract
+                {
+                    OrderId = o.OrderId,
+                    LimitOrderLeftToMatch = o.LimitOrderLeftToMatch,
+                    Volume = o.Volume,
+                    Price = o.Price,
+                    MatchedDate = o.MatchedDate
+                };
+
+            return new DetailedOrderContract
+            {
+                Id = src.Id,
+                Code = src.Code,
+                AccountId = src.AccountId,
+                AccountAssetId = src.AccountAssetId,
+                Instrument = src.Instrument,
+                Status = src.Status.ToType<OrderStatusContract>(),
+                CreateDate = src.CreateDate,
+                OpenDate = src.OpenDate,
+                CloseDate = src.CloseDate,
+                ExpectedOpenPrice = src.ExpectedOpenPrice,
+                OpenPrice = src.OpenPrice,
+                ClosePrice = src.ClosePrice,
+                Type = src.GetOrderType().ToType<OrderDirectionContract>(),
+                Volume = src.Volume,
+                MatchedVolume = src.GetMatchedVolume(),
+                MatchedCloseVolume = src.GetMatchedCloseVolume(),
+                TakeProfit = src.TakeProfit,
+                StopLoss = src.StopLoss,
+                Fpl = src.FplData.Fpl,
+                PnL = src.FplData.TotalFplSnapshot,
+                CloseReason = src.CloseReason.ToType<OrderCloseReasonContract>(),
+                RejectReason = src.RejectReason.ToType<OrderRejectReasonContract>(),
+                RejectReasonText = src.RejectReasonText,
+                CommissionLot = src.CommissionLot,
+                OpenCommission = src.GetOpenCommission(),
+                CloseCommission = src.GetCloseCommission(),
+                SwapCommission = src.SwapCommission,
+                MatchedOrders = src.MatchedOrders.Select(MatchedOrderToBackendContract).ToList(),
+                MatchedCloseOrders = src.MatchedCloseOrders.Select(MatchedOrderToBackendContract).ToList(),
+                OpenExternalOrderId = src.OpenExternalOrderId,
+                OpenExternalProviderId = src.OpenExternalProviderId,
+                CloseExternalOrderId = src.CloseExternalOrderId,
+                CloseExternalProviderId = src.CloseExternalProviderId,
+                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>(),
+                LegalEntity = src.LegalEntity,
+            };
+        }
     }
 }

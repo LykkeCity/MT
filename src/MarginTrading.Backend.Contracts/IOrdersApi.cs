@@ -52,16 +52,7 @@ namespace MarginTrading.Backend.Contracts
         /// Get open orders with optional filtering
         /// </summary>
         [Get("/api/orders")]
-        Task<List<OrderContract>> ListOpenAsync([Query, CanBeNull] string accountId = null,
-            [Query, CanBeNull] string assetPairId = null);
-
-        // todo: add filter by positionId?
-        //todo: move to history
-        /// <summary>
-        /// Get executed orders with optional filtering
-        /// </summary>
-        [Get("/api/orders/executed")]
-        Task<List<OrderContract>> ListExecutedAsync([Query, CanBeNull] string accountId = null,
+        Task<List<OrderContract>> ListAsync([Query, CanBeNull] string accountId = null,
             [Query, CanBeNull] string assetPairId = null);
     }
 }

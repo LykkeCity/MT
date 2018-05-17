@@ -6,7 +6,6 @@ using Newtonsoft.Json.Converters;
 
 namespace MarginTrading.Backend.Contracts.TradeMonitoring
 {
-
     public class DetailedOrderContract
     {
         public string Id { get; set; }
@@ -46,8 +45,8 @@ namespace MarginTrading.Backend.Contracts.TradeMonitoring
         public string OpenExternalProviderId { get; set; }
         public string CloseExternalOrderId { get; set; }
         public string CloseExternalProviderId { get; set; }
-        public List<MatchedOrderBackendContract> MatchedOrders { get; set; } = new List<MatchedOrderBackendContract>();
-        public List<MatchedOrderBackendContract> MatchedCloseOrders { get; set; } = new List<MatchedOrderBackendContract>();
+        public List<MatchedOrderContract> MatchedOrders { get; set; } = new List<MatchedOrderContract>();
+        public List<MatchedOrderContract> MatchedCloseOrders { get; set; } = new List<MatchedOrderContract>();
         public string LegalEntity { get; set; }  
         
         [JsonConverter(typeof(StringEnumConverter))]
