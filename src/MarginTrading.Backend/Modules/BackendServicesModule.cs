@@ -103,7 +103,7 @@ namespace MarginTrading.Backend.Modules
             builder.RegisterType<EquivalentPricesService>()
                 .As<IEquivalentPricesService>()
                 .SingleInstance();
-
+            
             RegisterPublishers(builder, consoleWriter);
         }
 

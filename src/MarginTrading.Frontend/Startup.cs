@@ -202,7 +202,7 @@ namespace MarginTrading.Frontend
             
             builder.RegisterModule(new FrontendModule(settings));
             builder.RegisterModule(new MarginTradingCommonModule());
-            builder.RegisterModule(new FrontendExternalServicesModule(appSettings));
+            builder.RegisterModule(new FrontendExternalServicesModule(appSettings, LogLocator.CommonLog));
         }
 
         private void SetSubscribers(MtFrontendSettings settings)
