@@ -51,6 +51,9 @@ namespace MarginTradingTests.Modules
 
             var volumeEquivalentService = new Mock<IEquivalentPricesService>();
             var personalDataServiceMock = new Mock<IPersonalDataService>();
+            personalDataServiceMock
+                .Setup(item => item.GetEmailAsync(It.IsAny<string>()))
+                .Returns(() => Task.FromResult("test@test.com"));
 
             builder.RegisterInstance(emailService.Object).As<IEmailService>();
             builder.RegisterInstance(appNotifications.Object).As<IAppNotifications>();
