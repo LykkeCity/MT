@@ -35,7 +35,7 @@ namespace MarginTrading.Backend.Services.Workflow
         [UsedImplicitly]
         public void Handle(AccountChangedEvent e)
         {
-            // todo: what happens if the events get reordered??
+            // todo: what happens if events get reordered??
             var updatedAccount = Convert(e.Account);
             _accountsCacheService.Update(updatedAccount);
             _clientNotifyService.NotifyAccountUpdated(updatedAccount);

@@ -30,6 +30,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 using GlobalErrorHandlerMiddleware = MarginTrading.Backend.Middleware.GlobalErrorHandlerMiddleware;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
@@ -64,8 +66,11 @@ namespace MarginTrading.Backend
             services.AddLogging();
             services.AddSingleton(Configuration);
             services.AddMvc(options => options.Filters.Add(typeof(MarginTradingEnabledFilter)))
-                .AddJsonOptions(
-                    options => { options.SerializerSettings.Converters = SerializerSettings.GetDefaultConverters(); });
+                .AddJsonOptions(options =>
+                {
+                    options.SerializerSettings.ContractResolver = new DefaultContractResolver();
+                    options.SerializerSettings.Converters.Add(new StringEnumConverter());
+                });
             services.AddAuthentication(KeyAuthOptions.AuthenticationScheme)
                 .AddScheme<KeyAuthOptions, KeyAuthHandler>(KeyAuthOptions.AuthenticationScheme, "", options => { });
 
