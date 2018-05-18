@@ -59,12 +59,6 @@ namespace MarginTrading.AzureRepositories
             {
                 return new DayOffSettingsRepository(new MarginTradingBlobRepository(connString));
             }
-            
-            public static MarginTradingAccountsRepository CreateAccountsRepository(IReloadingManager<string> connString, ILog log)
-            {
-                return new MarginTradingAccountsRepository(AzureTableStorage<MarginTradingAccountEntity>.Create(connString,
-                    "MarginTradingAccounts", log));
-            }
         }
     }
 }

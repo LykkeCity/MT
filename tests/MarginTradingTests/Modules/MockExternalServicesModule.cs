@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Autofac;
 using Common.Log;
+using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.SettingsService.Contracts;
@@ -23,8 +24,7 @@ namespace MarginTradingTests.Modules
             var tradingConditions = MarginTradingTestsUtils.GetPopulatedTradingConditions();
             var tradingInstruments = MarginTradingTestsUtils.GetPopulatedTradingInstruments();
             var meRoutes = MarginTradingTestsUtils.GetPopulatedMatchingEngineRoutes();
-            
-            var accountRepository = MarginTradingTestsUtils.GetPopulatedAccountsRepository(_accounts);
+            var accountApi = MarginTradingTestsUtils.GetPopulatedAccountsApi(_accounts);
 
             builder.RegisterInstance(new LogToMemory()).As<ILog>();
             builder.RegisterInstance(assets).As<IAssetsApi>().SingleInstance();
@@ -32,8 +32,7 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(tradingConditions).As<ITradingConditionsApi>().SingleInstance();
             builder.RegisterInstance(tradingInstruments).As<ITradingInstrumentsApi>().SingleInstance();
             builder.RegisterInstance(meRoutes).As<ITradingRoutesApi>().SingleInstance();
-            
-            builder.RegisterInstance(accountRepository).As<IMarginTradingAccountsRepository>().SingleInstance();
+            builder.RegisterInstance(accountApi).As<IAccountsApi>().SingleInstance();
         }
     }
 }

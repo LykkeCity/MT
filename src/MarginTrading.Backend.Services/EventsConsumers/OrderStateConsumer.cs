@@ -70,16 +70,13 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 		private void OnClosed(OrderUpdateBaseEventArgs ea)
 		{
 			var order = ea.Order;
-			_threadSwitcher.SwitchThread(async () =>
+			var totalFpl = order.GetTotalFpl();
+			var account = _accountsCacheService.Get(order.AccountId);
+			_accountManager.UpdateBalanceOnClosePosition(account, totalFpl, order.Id);
+			_threadSwitcher.SwitchThread(() =>
 			{
 				_clientNotifyService.NotifyOrderChanged(order);
-				
-				var totalFpl = order.GetTotalFpl();
-				var account = _accountsCacheService.Get(order.AccountId);
-				await _accountManager.UpdateBalanceAsync(account, totalFpl, AccountHistoryType.OrderClosed,
-					$"Balance changed on order close (id = {order.Id})", order.Id);
-
-				await SendOrderChangedNotification(account.ClientId, order);
+				return SendOrderChangedNotification(account.ClientId, order);
 			});
 		}
 

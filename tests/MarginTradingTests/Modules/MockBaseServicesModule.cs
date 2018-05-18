@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Autofac;
 using Common.Log;
 using Lykke.Common;
+using Lykke.Cqrs;
 using Lykke.Service.ClientAccount.Client.Models;
 using Lykke.Service.Session.AutorestClient;
 using Lykke.Service.Session.AutorestClient.Models;
@@ -17,8 +18,10 @@ using Lykke.Service.Session;
 using Lykke.SlackNotifications;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orderbooks;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Backend.Services.Stubs;
+using MarginTrading.Backend.Services.Workflow;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Services.Client;
 
@@ -28,9 +31,7 @@ namespace MarginTradingTests.Modules
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterType<ThreadSwitcherMock>()
-                .As<IThreadSwitcher>()
-                .SingleInstance();
+            builder.RegisterType<ThreadSwitcherMock>().As<IThreadSwitcher>().SingleInstance();
 
             var emailService = new Mock<IEmailService>();
             var appNotifications = new Mock<IAppNotifications>();
@@ -44,13 +45,16 @@ namespace MarginTradingTests.Modules
             var slackNotificationsMock = new Mock<ISlackNotificationsSender>();
 
             sessionServiceMock
-                .Setup(item => item.ApiSessionGetPostWithHttpMessagesAsync(It.IsAny<ClientSessionGetRequest>(), null, It.IsAny<CancellationToken>()))
-                .Returns(() => Task.FromResult(new HttpOperationResponse<ClientSessionGetResponse> { Body = new ClientSessionGetResponse { Session = new ClientSessionModel { ClientId = "1" }}}));
+                .Setup(item => item.ApiSessionGetPostWithHttpMessagesAsync(It.IsAny<ClientSessionGetRequest>(), null,
+                    It.IsAny<CancellationToken>())).Returns(() => Task.FromResult(
+                    new HttpOperationResponse<ClientSessionGetResponse>
+                    {
+                        Body = new ClientSessionGetResponse {Session = new ClientSessionModel {ClientId = "1"}}
+                    }));
 
             var clientsRepositoryMock = new Mock<IClientsSessionsRepository>();
-            clientsRepositoryMock
-                .Setup(item => item.GetAsync(It.IsAny<string>()))
-                .Returns(() => Task.FromResult((IClientSession)new ClientSession { ClientId = "1" }));
+            clientsRepositoryMock.Setup(item => item.GetAsync(It.IsAny<string>())).Returns(() =>
+                Task.FromResult((IClientSession) new ClientSession {ClientId = "1"}));
 
             var volumeEquivalentService = new Mock<IEquivalentPricesService>();
 
@@ -74,9 +78,11 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(volumeEquivalentService.Object).As<IEquivalentPricesService>();
             builder.RegisterInstance(clientAccountMock.Object).As<IClientAccountService>();
 
-            builder.RegisterType<DateService>()
-                .As<IDateService>()
+            builder.RegisterType<DateService>().As<IDateService>().SingleInstance();
+            builder.RegisterInstance(new Mock<ICqrsEngine>(MockBehavior.Loose).Object).As<ICqrsEngine>()
                 .SingleInstance();
+            builder.RegisterInstance(new CqrsContextNamesSettings()).AsSelf().SingleInstance();
+            builder.RegisterType<AccountsProjection>().AsSelf().SingleInstance();
         }
     }
 

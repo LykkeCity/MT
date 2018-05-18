@@ -10,6 +10,7 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MarginTrading.Backend.Contracts\MarginTrading.Backend.Contracts.csproj" />
     <ProjectReference Include="..\MarginTrading.Backend.Core.Mappers\MarginTrading.Backend.Core.Mappers.csproj" />
     <ProjectReference Include="..\MarginTrading.Contract\MarginTrading.Contract.csproj" />
     <ProjectReference Include="..\MarginTrading.Backend.Core\MarginTrading.Backend.Core.csproj" />
@@ -21,9 +22,11 @@
     <PackageReference Include="FluentScheduler" Version="5.3.0" />
     <PackageReference Include="Lykke.AzureQueueIntegration" Version="2.0.1" />
     <PackageReference Include="Lykke.Common" Version="6.6.0" />
-    <PackageReference Include="Lykke.MarginTrading.AccountsManagement.Contracts" Version="1.0.0-beta04" />
+    <PackageReference Include="Lykke.Cqrs" Version="4.5.0" />
+    <PackageReference Include="Lykke.MarginTrading.AccountsManagement.Contracts" Version="1.0.0-beta06" />
     <PackageReference Include="Lykke.MarginTrading.OrderbookAggregator.Contracts" Version="1.0.1" />
     <PackageReference Include="Lykke.MarginTrading.SettingsService.Contracts" Version="1.0.0-beta11" />
+    <PackageReference Include="Lykke.Messaging.RabbitMq" Version="2.0.0" />
     <PackageReference Include="Lykke.RabbitMqBroker" Version="7.0.0" />
     <PackageReference Include="Lykke.Rocks.Caching" Version="1.0.0" />
     <PackageReference Include="Lykke.Service.ClientAccount.Client" Version="1.1.22" />

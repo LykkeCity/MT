@@ -4,60 +4,59 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AutoMapper;
 using Common;
 using Common.Log;
+using JetBrains.Annotations;
+using Lykke.Cqrs;
+using MarginTrading.AccountsManagement.Contracts;
+using MarginTrading.AccountsManagement.Contracts.Commands;
+using MarginTrading.AccountsManagement.Contracts.Messages;
+using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Settings;
-using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
+using MarginTrading.Backend.Services.Settings;
+using MarginTrading.Common.Services;
 using MarginTrading.Contract.RabbitMqMessageModels;
 using MoreLinq;
 
 namespace MarginTrading.Backend.Services
 {
-    public class AccountManager: TimerPeriod 
+    public class AccountManager : TimerPeriod
     {
         private readonly AccountsCacheService _accountsCacheService;
-        private readonly IMarginTradingAccountsRepository _repository;
         private readonly IConsole _console;
         private readonly MarginTradingSettings _marginSettings;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
-        private readonly IClientNotifyService _clientNotifyService;
         private readonly ILog _log;
         private readonly OrdersCache _ordersCache;
-        private readonly IEventChannel<AccountBalanceChangedEventArgs> _acountBalanceChangedEventChannel;
         private readonly ITradingEngine _tradingEngine;
+        private readonly IAccountsApi _accountsApi;
+        private readonly IConvertService _convertService;
+        private readonly ICqrsEngine _cqrsEngine;
+        private readonly CqrsContextNamesSettings _cqrsContextNamesSettings;
 
-        private static readonly ConcurrentDictionary<int, SemaphoreSlim> Semaphores = new ConcurrentDictionary<int, SemaphoreSlim>();
-        
-        public AccountManager(AccountsCacheService accountsCacheService,
-            IMarginTradingAccountsRepository repository,
-            IConsole console,
-            MarginTradingSettings marginSettings,
-            IRabbitMqNotifyService rabbitMqNotifyService,
-            IClientNotifyService clientNotifyService,
-            ILog log,
-            OrdersCache ordersCache,
-            IEventChannel<AccountBalanceChangedEventArgs> acountBalanceChangedEventChannel,
-            ITradingEngine tradingEngine)
-            : base(nameof(AccountManager), 60000, log)
+        public AccountManager(AccountsCacheService accountsCacheService, IConsole console,
+            MarginTradingSettings marginSettings, IRabbitMqNotifyService rabbitMqNotifyService, ILog log,
+            OrdersCache ordersCache, ITradingEngine tradingEngine, IAccountsApi accountsApi,
+            IConvertService convertService, ICqrsEngine cqrsEngine, CqrsContextNamesSettings cqrsContextNamesSettings) :
+            base(nameof(AccountManager), 60000, log)
         {
             _accountsCacheService = accountsCacheService;
-            _repository = repository;
             _console = console;
             _marginSettings = marginSettings;
             _rabbitMqNotifyService = rabbitMqNotifyService;
             _log = log;
-            _clientNotifyService = clientNotifyService;
             _ordersCache = ordersCache;
-            _acountBalanceChangedEventChannel = acountBalanceChangedEventChannel;
             _tradingEngine = tradingEngine;
+            _accountsApi = accountsApi;
+            _convertService = convertService;
+            _cqrsEngine = cqrsEngine;
+            _cqrsContextNamesSettings = cqrsContextNamesSettings;
         }
 
-        
-        #region TimePeriod
-        
         public override Task Execute()
         {
             var accounts = GetAccountsToWriteStats();
@@ -66,13 +65,13 @@ namespace MarginTrading.Backend.Services
 
             return Task.WhenAll(tasks);
         }
-        
+
         public override void Start()
         {
-            _console.WriteLine("Started InitAccountsCache");
+            _console.WriteLine("Starting InitAccountsCache");
 
-            var accounts = _repository.GetAllAsync().GetAwaiter().GetResult()
-                .Select(MarginTradingAccount.Create).ToDictionary(x => x.Id);
+            var accounts = _accountsApi.List().GetAwaiter().GetResult()
+                .Select(Convert).ToDictionary(x => x.Id);
 
             _accountsCacheService.InitAccountsCache(accounts);
             _console.WriteLine($"Finished InitAccountsCache. Count: {accounts.Count}");
@@ -86,57 +85,21 @@ namespace MarginTrading.Backend.Services
             return _accountsCacheService.GetAll().Where(a => accountsIdsToWrite.Contains(a.Id)).ToList();
         }
 
-        private IEnumerable<AccountStatsUpdateMessage> GenerateAccountsStatsUpdateMessages(IReadOnlyList<IMarginTradingAccount> accounts)
+        // todo: extract this to a cqrs process
+        private IEnumerable<AccountStatsUpdateMessage> GenerateAccountsStatsUpdateMessages(
+            IEnumerable<IMarginTradingAccount> accounts)
         {
-            var accountStats = accounts.Select(a => a.ToRabbitMqContract(_marginSettings.IsLive));
-
-            var chunks = accountStats.Batch(100);
-
-            foreach (var chunk in chunks)
-            {
-                yield return new AccountStatsUpdateMessage {Accounts = chunk.ToArray()};
-            }
+            return accounts.Select(a => a.ToRabbitMqContract(_marginSettings.IsLive)).Batch(100)
+                .Select(ch => new AccountStatsUpdateMessage {Accounts = ch.ToArray()});
         }
-        
-        #endregion
-       
 
-        public async Task<string> UpdateBalanceAsync(IMarginTradingAccount account, decimal amount, AccountHistoryType historyType, 
-            string comment, string eventSourceId = null, bool changeTransferLimit = false, string auditLog = null)
+        public void UpdateBalanceOnClosePosition(IMarginTradingAccount account, decimal amountDelta, string positionId)
         {
-            var semaphore = GetSemaphore(account);
-
-            await semaphore.WaitAsync();
-
-            try
-            {
-                var updatedAccount =
-                    await _repository.UpdateBalanceAsync(account.ClientId, account.Id, amount, changeTransferLimit);
-                _acountBalanceChangedEventChannel.SendEvent(this, new AccountBalanceChangedEventArgs(updatedAccount));
-                //todo: move to separate event consumers
-                _accountsCacheService.UpdateBalance(updatedAccount);
-                _clientNotifyService.NotifyAccountUpdated(updatedAccount);
-
-                var transactionId = Guid.NewGuid().ToString("N");
-                
-                await _rabbitMqNotifyService.AccountHistory(
-                    transactionId,
-                    account.Id,
-                    account.ClientId,
-                    amount,
-                    updatedAccount.Balance,
-                    updatedAccount.WithdrawTransferLimit,
-                    historyType,
-                    comment,
-                    eventSourceId, 
-                    auditLog);
-
-                return transactionId;
-            }
-            finally
-            {
-                semaphore.Release();
-            }
+            _cqrsEngine.SendCommand(
+                new BeginClosePositionBalanceUpdateCommand(account.ClientId, account.Id, amountDelta,
+                    nameof(UpdateBalanceOnClosePosition) + '-' + positionId,
+                    $"Balance changed on position close (id = {positionId})", positionId),
+                _cqrsContextNamesSettings.TradingEngine, _cqrsContextNamesSettings.AccountsManagement);
         }
 
         public async Task<List<IOrder>> CloseAccountOrders(string accountId)
@@ -150,7 +113,7 @@ namespace MarginTrading.Backend.Services
                 {
                     var closedOrder = await _tradingEngine.CloseActiveOrderAsync(order.Id,
                         OrderCloseReason.ClosedByBroker, "Close orders for account");
-                    
+
                     closedOrders.Add(closedOrder);
                 }
                 catch (Exception e)
@@ -161,7 +124,6 @@ namespace MarginTrading.Backend.Services
             }
 
             var pendingOrders = _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(accountId);
-            
             foreach (var order in pendingOrders)
             {
                 try
@@ -180,16 +142,10 @@ namespace MarginTrading.Backend.Services
             return closedOrders;
         }
 
-        #region Helpers
-
-        private SemaphoreSlim GetSemaphore(IMarginTradingAccount account)
+        private MarginTradingAccount Convert(AccountContract accountContract)
         {
-            var hash = account.Id.GetHashCode() % 100;
-
-            return Semaphores.GetOrAdd(hash, new SemaphoreSlim(1, 1));
+            return _convertService.Convert<AccountContract, MarginTradingAccount>(accountContract,
+                o => o.ConfigureMap(MemberList.Source));
         }
-
-        #endregion
-        
     }
 }

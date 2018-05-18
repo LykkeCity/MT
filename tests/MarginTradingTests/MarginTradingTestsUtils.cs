@@ -1,5 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using AzureStorage.Tables;
+using MarginTrading.AccountsManagement.Contracts;
+using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.TradingConditions;
@@ -8,6 +12,7 @@ using MarginTrading.SettingsService.Contracts.Asset;
 using MarginTrading.SettingsService.Contracts.Enums;
 using MarginTrading.SettingsService.Contracts.TradingConditions;
 using Moq;
+using NUnit.Framework.Constraints;
 using AssetPairContract = MarginTrading.SettingsService.Contracts.AssetPair.AssetPairContract;
 
 namespace MarginTradingTests
@@ -19,7 +24,7 @@ namespace MarginTradingTests
         public static IAssetsApi GetPopulatedAssets()
         {
             var assetsService = new Mock<IAssetsApi>();
-           
+
             var assets = new List<AssetContract>
             {
                 new AssetContract
@@ -35,16 +40,20 @@ namespace MarginTradingTests
             return assetsService.Object;
         }
 
-        public static MarginTradingAccountsRepository GetPopulatedAccountsRepository(List<MarginTradingAccount> accounts)
+        public static IAccountsApi GetPopulatedAccountsApi(List<MarginTradingAccount> accounts)
         {
-            var accountRepository = new MarginTradingAccountsRepository(new NoSqlTableInMemory<MarginTradingAccountEntity>());
-
-            foreach (var account in accounts)
+            var list = accounts.Select(a => new AccountContract
             {
-                accountRepository.AddAsync(account).Wait();
-            }
-
-            return accountRepository;
+                Balance = a.Balance,
+                BaseAssetId = a.BaseAssetId,
+                ClientId = a.ClientId,
+                Id = a.Id,
+                IsDisabled = a.IsDisabled,
+                LegalEntity = a.LegalEntity,
+                TradingConditionId = a.TradingConditionId,
+                WithdrawTransferLimit = a.WithdrawTransferLimit,
+            }).ToList();
+            return Mock.Of<IAccountsApi>(a => a.List() == Task.FromResult(list));
         }
 
         public static ITradingInstrumentsApi GetPopulatedTradingInstruments()
@@ -131,7 +140,7 @@ namespace MarginTradingTests
 
             var mock = new Mock<ITradingInstrumentsApi>();
             mock.Setup(s => s.List(It.IsAny<string>())).ReturnsAsync(instruments);
-            
+
             return mock.Object;
         }
 
@@ -147,7 +156,7 @@ namespace MarginTradingTests
                 MarginCall2 = 1.15M,
                 StopOut = 1.05M
             };
-            
+
             var mock = new Mock<ITradingConditionsApi>();
             mock.Setup(s => s.List()).ReturnsAsync(new List<TradingConditionContract> {defaultTc});
 

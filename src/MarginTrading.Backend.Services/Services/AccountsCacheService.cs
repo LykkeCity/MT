@@ -20,11 +20,8 @@ namespace MarginTrading.Backend.Services
 
         public MarginTradingAccount Get(string accountId)
         {
-            var result = GetAccount(accountId);
-            if (null == result)
+            return GetAccount(accountId) ??
                 throw new AccountNotFoundException(accountId, string.Format(MtMessages.AccountByIdNotFound, accountId));
-
-            return result;
         }
 
         public void Update(MarginTradingAccount newValue)
@@ -45,24 +42,17 @@ namespace MarginTrading.Backend.Services
             return GetAccount(accountId);
         }
 
-        public void UpdateBalance(MarginTradingAccount account)
-        {
-            UpdateAccount(account.Id, x =>
-            {
-                x.Balance = account.Balance;
-                x.WithdrawTransferLimit = account.WithdrawTransferLimit;
-            });
-        }
-
         public IEnumerable<string> GetClientIdsByTradingConditionId(string tradingConditionId, string accountId = null)
         {
             _lockSlim.EnterReadLock();
             try
             {
                 foreach (var account in _accounts.Values)
+                {
                     if (account.TradingConditionId == tradingConditionId &&
                         (string.IsNullOrEmpty(accountId) || account.Id == accountId))
                         yield return account.ClientId;
+                }
             }
             finally
             {
@@ -83,26 +73,6 @@ namespace MarginTrading.Backend.Services
             finally
             {
                 _lockSlim.ExitReadLock();
-            }
-        }
-
-        private void UpdateAccount(string accountId, Action<MarginTradingAccount> updateAction)
-        {
-            _lockSlim.EnterWriteLock();
-            try
-            {
-                if (_accounts.TryGetValue(accountId, out var account))
-                {
-                    updateAction(account);
-                }
-                else
-                {
-                    throw new Exception(string.Format(MtMessages.AccountNotFoundInCache, accountId));
-                }
-            }
-            finally
-            {
-                _lockSlim.ExitWriteLock();
             }
         }
 

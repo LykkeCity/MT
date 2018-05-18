@@ -53,6 +53,11 @@ namespace MarginTrading.Common.Services
             return _mapper.Map<TSource, TResult>(source);
         }
 
+        public TResult Convert<TResult>(object source)
+        {
+            return _mapper.Map<TResult>(source);
+        }
+
         /// <summary>
         /// Get the properties and values of an object using an existing opimized implementation 
         /// </summary>

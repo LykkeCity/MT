@@ -22,6 +22,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 using Swashbuckle.Swagger.Model;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
@@ -56,7 +58,12 @@ namespace MarginTrading.DataReader
             services.AddSingleton(loggerFactory);
             services.AddLogging();
             services.AddSingleton(Configuration);
-            services.AddMvc();
+            services.AddMvc()
+                .AddJsonOptions(options =>
+                {
+                    options.SerializerSettings.ContractResolver = new DefaultContractResolver();
+                    options.SerializerSettings.Converters.Add(new StringEnumConverter());
+                });
             services.AddAuthentication(KeyAuthOptions.AuthenticationScheme)
                 .AddScheme<KeyAuthOptions, KeyAuthHandler>(KeyAuthOptions.AuthenticationScheme, "", options => { });
 

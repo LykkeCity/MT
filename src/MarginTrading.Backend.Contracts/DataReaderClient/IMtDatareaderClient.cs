@@ -6,7 +6,6 @@ namespace MarginTrading.Backend.Contracts.DataReaderClient
     public interface IMtDataReaderClient
     {
         IAssetPairsReadingApi AssetPairsRead { get; }
-        IAccountHistoryApi AccountHistory { get; }
         IAccountsApi AccountsApi { get; }
         IAccountAssetPairsReadingApi AccountAssetPairsRead { get; }
         ITradeMonitoringReadingApi TradeMonitoringRead { get; }
