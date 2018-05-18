@@ -5,6 +5,7 @@ using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.ClientAccount.Client.Models;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;
+using MarginTrading.Backend.Services.Services;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services.Client;
 using MarginTrading.Common.Services.Settings;

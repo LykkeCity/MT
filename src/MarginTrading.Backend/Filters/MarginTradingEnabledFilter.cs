@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Rocks.Caching;
 using MarginTrading.Backend.Attributes;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Services.Services;
 using MarginTrading.Common.Services.Settings;
 
 namespace MarginTrading.Backend.Filters
@@ -18,22 +19,17 @@ namespace MarginTrading.Backend.Filters
     /// <summary>
     /// Restricts access to actions for clients which are not allowed to use current type of margin trading (live/demo).
     /// Skips validation if current action method is marked with <see cref="SkipMarginTradingEnabledCheckAttribute"/>.
-    /// If ClientId is not found in the action parameters - does nothing.
+    /// If AccountId is not found in the action parameters - does nothing.
     /// </summary>
-    public class MarginTradingEnabledFilter: ActionFilterAttribute
+    public class MarginTradingEnabledFilter : ActionFilterAttribute
     {
-        private readonly MarginTradingSettings _marginSettings;
         private readonly IMarginTradingSettingsCacheService _marginTradingSettingsCacheService;
         private readonly ICacheProvider _cacheProvider;
         private readonly ILog _log;
 
-        public MarginTradingEnabledFilter(
-            MarginTradingSettings marginSettings,
-            IMarginTradingSettingsCacheService marginTradingSettingsCacheService,
-            ICacheProvider cacheProvider,
-            ILog log)
+        public MarginTradingEnabledFilter(IMarginTradingSettingsCacheService marginTradingSettingsCacheService,
+            ICacheProvider cacheProvider, ILog log)
         {
-            _marginSettings = marginSettings;
             _marginTradingSettingsCacheService = marginTradingSettingsCacheService;
             _cacheProvider = cacheProvider;
             _log = log;
@@ -42,15 +38,14 @@ namespace MarginTrading.Backend.Filters
         /// <inheritdoc />
         public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
-            await ValidateMarginTradingEnabledAsync(context);
+            ValidateMarginTradingEnabledAsync(context);
             await base.OnActionExecutionAsync(context, next);
         }
 
         /// <inheritdoc />
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            // this won't be called frequently as we have most actions async
-            ValidateMarginTradingEnabledAsync(context).Wait();
+            ValidateMarginTradingEnabledAsync(context);
         }
 
         /// <summary>
@@ -60,81 +55,86 @@ namespace MarginTrading.Backend.Filters
         /// </summary>
         /// <exception cref="InvalidOperationException">
         /// Using this type of margin trading is restricted for client or
-        /// a controller action has more then one ClientId in its parameters.
+        /// a controller action has more then one AccountId in its parameters.
         /// </exception>
-        private async Task ValidateMarginTradingEnabledAsync(ActionExecutingContext context)
+        private void ValidateMarginTradingEnabledAsync(ActionExecutingContext context)
         {
-            var controllerActionDescriptor = context.ActionDescriptor as ControllerActionDescriptor;
-            if (controllerActionDescriptor == null)
-            {
+            if (!(context.ActionDescriptor is ControllerActionDescriptor controllerActionDescriptor))
                 return;
-            }
 
-            var cacheKey = CacheKeyBuilder.Create(nameof(MarginTradingEnabledFilter), nameof(GetSingleClientIdGetter), controllerActionDescriptor.DisplayName);
-            var clientIdGetter = _cacheProvider.Get(cacheKey, () => new CachableResult<ClientIdGetter>(GetSingleClientIdGetter(controllerActionDescriptor), CachingParameters.InfiniteCache));
-            if (clientIdGetter != null)
+            var cacheKey = CacheKeyBuilder.Create(nameof(MarginTradingEnabledFilter), nameof(GetSingleAccountIdGetter),
+                controllerActionDescriptor.DisplayName);
+            var accountIdGetter = _cacheProvider.Get(cacheKey,
+                () => new CachableResult<AccountIdGetter>(GetSingleAccountIdGetter(controllerActionDescriptor),
+                    CachingParameters.InfiniteCache));
+            if (accountIdGetter != null)
             {
-                var clientId = clientIdGetter(context.ActionArguments);
-                if (string.IsNullOrWhiteSpace(clientId))
-                {
-                    await _log.WriteWarningAsync(nameof(MarginTradingEnabledFilter), nameof(ValidateMarginTradingEnabledAsync), context.ActionDescriptor.DisplayName, "ClientId is null but is expected. No validation will be performed");
-                }
-                else if (!await _marginTradingSettingsCacheService.IsMarginTradingEnabled(clientId, _marginSettings.IsLive))
-                {
-                    throw new InvalidOperationException("Using this type of margin trading is restricted for client " + clientId);
-                }
+                var accountId = accountIdGetter(context.ActionArguments);
+                if (string.IsNullOrWhiteSpace(accountId))
+                    _log.WriteWarningAsync(nameof(MarginTradingEnabledFilter),
+                        nameof(ValidateMarginTradingEnabledAsync), context.ActionDescriptor.DisplayName,
+                        "AccountId is null but is expected. No validation will be performed");
+                else if (!_marginTradingSettingsCacheService.IsMarginTradingEnabledByAccountId(accountId))
+                    throw new InvalidOperationException("Using this type of margin trading is restricted for client " +
+                        accountId);
             }
         }
 
         /// <summary>
-        /// Finds single clientId getter func for current action.
+        /// Finds single accountId getter func for current action.
         /// If none found returns null.
         /// If the action is marked to skip the MarginTradingEnabled check also returns null.
         /// </summary>
         [CanBeNull]
-        private static ClientIdGetter GetSingleClientIdGetter(ControllerActionDescriptor controllerActionDescriptor)
+        private static AccountIdGetter GetSingleAccountIdGetter(ControllerActionDescriptor controllerActionDescriptor)
         {
-            if (controllerActionDescriptor.MethodInfo.GetCustomAttribute<SkipMarginTradingEnabledCheckAttribute>() != null)
-            {
+            if (ActionHasSkipCkeckAttribute(controllerActionDescriptor))
                 return null;
-            }
 
-            var clientIdGetters = GetClientIdGetters(controllerActionDescriptor.Parameters).ToList();
-            switch (clientIdGetters.Count)
+            var accountIdGetters = GetAccountIdGetters(controllerActionDescriptor.Parameters).ToList();
+            switch (accountIdGetters.Count)
             {
                 case 0:
                     return null;
                 case 1:
-                    return clientIdGetters[0];
+                    return accountIdGetters[0];
                 default:
-                    throw new InvalidOperationException("A controller action cannot have more then one ClientId in its parameters");
+                    throw new InvalidOperationException(
+                        "A controller action cannot have more then one AccountId in its parameters");
             }
         }
 
+        private static bool ActionHasSkipCkeckAttribute(ControllerActionDescriptor controllerActionDescriptor)
+        {
+            return controllerActionDescriptor.MethodInfo.GetCustomAttribute<SkipMarginTradingEnabledCheckAttribute>() !=
+                null;
+        }
+
         /// <summary>
-        /// Searches the controller's actions parameters for the presence of ClientId
-        /// and returns a func to get the ClientId value from ActionArguments for each of found ClientIds parameters
+        /// Searches the controller's actions parameters for the presence of AccountId
+        /// and returns a func to get the AccountId value from ActionArguments for each of found AccountIds parameters
         /// </summary>
-        private static IEnumerable<ClientIdGetter> GetClientIdGetters(IList<ParameterDescriptor> parameterDescriptors)
+        private static IEnumerable<AccountIdGetter> GetAccountIdGetters(IEnumerable<ParameterDescriptor> parameterDescriptors)
         {
             foreach (var parameterDescriptor in parameterDescriptors)
             {
-                if (string.Compare(parameterDescriptor.Name, "ClientId", StringComparison.OrdinalIgnoreCase) == 0
-                    && parameterDescriptor.ParameterType == typeof(string))
+                if (string.Compare(parameterDescriptor.Name, "AccountId", StringComparison.OrdinalIgnoreCase) == 0 &&
+                    parameterDescriptor.ParameterType == typeof(string))
                 {
                     yield return d => (string) d[parameterDescriptor.Name];
                 }
                 else
                 {
-                    var clientIdPropertyInfo = parameterDescriptor.ParameterType.GetProperty("ClientId", typeof(string));
-                    if (clientIdPropertyInfo != null)
+                    var accountIdPropertyInfo =
+                        parameterDescriptor.ParameterType.GetProperty("AccountId", typeof(string));
+                    if (accountIdPropertyInfo != null)
                     {
-                        yield return d => (string) ((dynamic) d[parameterDescriptor.Name])?.ClientId;
+                        yield return d => (string) ((dynamic) d[parameterDescriptor.Name])?.AccountId;
                     }
                 }
             }
         }
 
-        private delegate string ClientIdGetter(IDictionary<string, object> actionArguments);
+        private delegate string AccountIdGetter(IDictionary<string, object> actionArguments);
     }
 }

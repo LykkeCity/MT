@@ -2,6 +2,7 @@
 using Autofac;
 using Common;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Services.Services;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services.Client;
 using MarginTrading.Common.Services.Settings;
