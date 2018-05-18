@@ -234,7 +234,7 @@ namespace MarginTrading.Backend.Controllers
                 ModifiedTimestamp = order.OpenDate ?? order.CreateDate,
                 Originator = OriginatorTypeContract.Investor,
                 ParentOrderId = null,
-                PositionId = order.Id,
+                PositionId = order.Status == OrderStatus.Active ? order.Id : null,
                 RelatedOrders = new List<string>(),
                 Status = Convert(order.Status),
                 TradesIds = GetTrades(order.Id, order.Status, orderDirection),

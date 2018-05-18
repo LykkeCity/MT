@@ -39,7 +39,7 @@ namespace MarginTrading.Backend.Contracts.Positions
         public decimal OpenPrice { get; set; }
         
         /// <summary>
-        /// Current position volume
+        /// Current position volume in quoting asset units
         /// </summary>
         public decimal CurrentVolume { get; set; }
         
