@@ -116,7 +116,8 @@ namespace MarginTrading.Backend.Controllers
         /// Get open positions 
         /// </summary>
         [HttpGet, Route("")]
-        public async Task<List<OpenPositionContract>> ListAsync(string accountId, string assetPairId)
+        public async Task<List<OpenPositionContract>> ListAsync([FromQuery]string accountId = null,
+            [FromQuery] string assetPairId = null)
         {
             IEnumerable<Order> orders = _ordersCache.ActiveOrders.GetAllOrders();
             if (!string.IsNullOrWhiteSpace(accountId))

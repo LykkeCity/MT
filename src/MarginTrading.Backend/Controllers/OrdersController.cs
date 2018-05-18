@@ -32,22 +32,14 @@ namespace MarginTrading.Backend.Controllers
         private readonly OrdersCache _ordersCache;
         private readonly IAssetPairDayOffService _assetDayOffService;
         private readonly IIdentityGenerator _identityGenerator;
-        
+
         private const string CloseOrderIdSiffix = "_close";
-        private readonly IOrdersHistoryRepository _ordersHistoryRepository;
         private readonly IOrdersByIdRepository _ordersByIdRepository;
 
-        public OrdersController(
-            IAssetPairsCache assetPairsCache,
-            ITradingEngine tradingEngine,
-            IAccountsCacheService accountsCacheService,
-            IMarginTradingOperationsLogService operationsLogService,
-            IConsole consoleWriter,
-            OrdersCache ordersCache,
-            IAssetPairDayOffService assetDayOffService,
-            IIdentityGenerator identityGenerator, 
-            IOrdersHistoryRepository ordersHistoryRepository, 
-            IOrdersByIdRepository ordersByIdRepository)
+        public OrdersController(IAssetPairsCache assetPairsCache, ITradingEngine tradingEngine,
+            IAccountsCacheService accountsCacheService, IMarginTradingOperationsLogService operationsLogService,
+            IConsole consoleWriter, OrdersCache ordersCache, IAssetPairDayOffService assetDayOffService,
+            IIdentityGenerator identityGenerator, IOrdersByIdRepository ordersByIdRepository)
         {
             _assetPairsCache = assetPairsCache;
             _tradingEngine = tradingEngine;
@@ -57,10 +49,9 @@ namespace MarginTrading.Backend.Controllers
             _ordersCache = ordersCache;
             _assetDayOffService = assetDayOffService;
             _identityGenerator = identityGenerator;
-            _ordersHistoryRepository = ordersHistoryRepository;
             _ordersByIdRepository = ordersByIdRepository;
         }
-        
+
         /// <summary>
         /// Place new order
         /// </summary>
@@ -84,7 +75,7 @@ namespace MarginTrading.Backend.Controllers
             };
 
             var placedOrder = await _tradingEngine.PlaceOrderAsync(order);
-            
+
             _consoleWriter.WriteLine($"action order.place for accountId = {request.AccountId}");
             _operationsLogService.AddLog("action order.place", request.AccountId, request.ToJson(),
                 placedOrder.ToJson());
@@ -119,11 +110,10 @@ namespace MarginTrading.Backend.Controllers
 
             var canceledOrder = _tradingEngine.CancelPendingOrder(order.Id, reason, request.Comment);
 
-            _consoleWriter.WriteLine(
-                $"action order.cancel for accountId = {order.AccountId}, orderId = {orderId}");
+            _consoleWriter.WriteLine($"action order.cancel for accountId = {order.AccountId}, orderId = {orderId}");
             _operationsLogService.AddLog("action order.cancel", order.AccountId, request.ToJson(),
                 canceledOrder.ToJson());
-            
+
             return Task.CompletedTask;
         }
 
@@ -136,7 +126,7 @@ namespace MarginTrading.Backend.Controllers
         [Route("{orderId}")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [HttpPut]
-        public Task ChangeAsync(string orderId, [FromBody]OrderChangeRequest request)
+        public Task ChangeAsync(string orderId, [FromBody] OrderChangeRequest request)
         {
             if (!_ordersCache.TryGetOrderById(orderId, out var order))
                 throw new InvalidOperationException("Order not found");
@@ -154,8 +144,7 @@ namespace MarginTrading.Backend.Controllers
             }
 
             _consoleWriter.WriteLine($"action order.changeLimits for orderId = {orderId}");
-            _operationsLogService.AddLog("action order.changeLimits", order.AccountId, request.ToJson(),
-                "");
+            _operationsLogService.AddLog("action order.changeLimits", order.AccountId, request.ToJson(), "");
 
             return Task.CompletedTask;
         }
@@ -164,109 +153,36 @@ namespace MarginTrading.Backend.Controllers
         /// Get order by id 
         /// </summary>
         [HttpGet, Route("{orderId}")]
-        public async Task<OrderContract> GetAsync(string orderId)
+        public Task<OrderContract> GetAsync(string orderId)
         {
-            var (realOrderId, isCloseOrder) = ParseFakeOrderId(orderId);
-            if (!isCloseOrder && _ordersCache.TryGetOrderById(realOrderId, out var order))
-                return Convert(order);
-
-            var orderById = await _ordersByIdRepository.GetAsync(realOrderId);
-            if (orderById == null)
-                return null;
-
-            var history = await _ordersHistoryRepository.GetHistoryAsync(new[] {orderById.AccountId},
-                orderById.OrderCreatedTime - TimeSpan.FromSeconds(1), null);
-
-            if (!history.Any())
-                return null;
-
-            var lastHistoryRecord =
-                history.Where(h => h.Id == orderId).OrderByDescending(h => h.UpdateTimestamp).First();
-
-            if (isCloseOrder && lastHistoryRecord.Status != OrderStatus.Closed)
-                return null;
-
-            return Convert(lastHistoryRecord, isCloseOrder);
-        }
-
-        private (string RealOrderId, bool IsCloseOrder) ParseFakeOrderId(string orderId)
-        {
-            return orderId.EndsWith(CloseOrderIdSiffix)
-                ? (orderId.Substring(0, orderId.Length - CloseOrderIdSiffix.Length), true)
-                : (orderId, false);
-        }
-
-        /// <summary>
-        /// Get orders by parent order id
-        /// </summary>
-        [HttpGet, Route("by-parent-order/{parentOrderId}")]
-        public async Task<List<OrderContract>> ListByParentOrderAsync(string parentOrderId)
-        {
-            return new List<OrderContract>(); // todo
-        }
-
-        /// <summary>
-        /// Get orders by parent position id
-        /// </summary>
-        [HttpGet, Route("by-parent-position/{parentPositionId}")]
-        public async Task<List<OrderContract>> ListByParentPositionAsync(string parentPositionId)
-        {
-            var orderById = await _ordersByIdRepository.GetAsync(parentPositionId);
-            if (orderById == null)
-                return new List<OrderContract>();
-
-            var history = await _ordersHistoryRepository.GetHistoryAsync(new[] {orderById.AccountId},
-                orderById.OrderCreatedTime - TimeSpan.FromSeconds(1), null);
-
-            var lastHistoryRecords = history.Where(h => h.ParentPositionId == parentPositionId)
-                .OrderByDescending(h => h.UpdateTimestamp).GroupBy(o => o.Id,
-                    (id, orders) => orders.OrderByDescending(h => h.UpdateTimestamp).First());
-
-            return lastHistoryRecords.SelectMany(MakeOrderContractsFromHistory).ToList();
+            return _ordersCache.TryGetOrderById(orderId, out var order)
+                ? Task.FromResult(Convert(order))
+                : Task.FromResult<OrderContract>(null);
         }
 
         /// <summary>
         /// Get open orders with optional filtering
         /// </summary>
         [HttpGet, Route("")]
-        public async Task<List<OrderContract>> ListAsync(string accountId = null, string assetPairId = null)
+        public Task<List<OrderContract>> ListAsync([FromQuery] string accountId = null,
+            [FromQuery] string assetPairId = null, [FromQuery] string parentPositionId = null,
+            [FromQuery] string parentOrderId = null)
         {
             // do not call get by account, it's slower for single account 
-            IEnumerable<Order> orders = _ordersCache.WaitingForExecutionOrders.GetAllOrders(); 
-            
+            IEnumerable<Order> orders = _ordersCache.WaitingForExecutionOrders.GetAllOrders();
+
             if (!string.IsNullOrWhiteSpace(accountId))
                 orders = orders.Where(o => o.AccountId == accountId);
 
             if (!string.IsNullOrWhiteSpace(assetPairId))
                 orders = orders.Where(o => o.Instrument == assetPairId);
 
-            return orders.Select(Convert).ToList(); // do not show a pending close order for closing status
-        }
+            if (!string.IsNullOrWhiteSpace(parentPositionId))
+                orders = orders.Where(o => o.Id == parentPositionId); // todo: fix when order will have a parentPositionId
+            if (!string.IsNullOrWhiteSpace(parentPositionId))
+                orders = orders.Where(o => o.Id == parentOrderId); // todo: fix when order will have a parentOrderId
 
-        private static OrderContract Convert(IOrderHistory history, bool isCloseOrder)
-        {
-            var orderDirection = GetOrderDirection(history.Type, isCloseOrder);
-            return new OrderContract
-            {
-                Id = history.Id + (isCloseOrder ? CloseOrderIdSiffix : ""),
-                AccountId = history.AccountId,
-                AssetPairId = history.Instrument,
-                CreatedTimestamp = history.CreateDate,
-                Direction = history.Type.ToType<OrderDirectionContract>(),
-                ExecutionPrice = history.OpenPrice,
-                ExpectedOpenPrice = history.ExpectedOpenPrice,
-                ForceOpen = true,
-                ModifiedTimestamp = history.UpdateTimestamp,
-                Originator = OriginatorTypeContract.Investor,
-                ParentOrderId = history.ParentOrderId,
-                PositionId = history.Id,
-                RelatedOrders = new List<string>(),
-                Status = Convert(history.Status),
-                TradesIds = GetTrades(history.Id, history.Status, orderDirection),
-                Type = history.ExpectedOpenPrice == null ? OrderTypeContract.Market : OrderTypeContract.Limit,
-                ValidityTime = null,
-                Volume = history.Volume,
-            };
+            return Task.FromResult(orders.Select(Convert).ToList());
         }
 
         private static List<string> GetTrades(string orderId, OrderStatus status, OrderDirection orderDirection)
@@ -290,7 +206,7 @@ namespace MarginTrading.Backend.Controllers
                 case OrderStatus.WaitingForExecution:
                     return OrderStatusContract.Active;
                 case OrderStatus.Active:
-                    return OrderStatusContract.Executed; // todo: fix
+                    return OrderStatusContract.Executed; // todo: fix when orders
                 case OrderStatus.Closed:
                     return OrderStatusContract.Executed;
                 case OrderStatus.Rejected:
@@ -326,14 +242,6 @@ namespace MarginTrading.Backend.Controllers
                 ValidityTime = null,
                 Volume = order.Volume,
             };
-        }
-
-        private static IEnumerable<OrderContract> MakeOrderContractsFromHistory(IOrderHistory r)
-        {
-            yield return Convert(r, false);
-
-            if (r.Status == OrderStatus.Closed)
-                yield return Convert(r, true);
         }
     }
 }
