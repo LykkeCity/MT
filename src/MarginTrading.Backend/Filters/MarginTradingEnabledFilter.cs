@@ -75,7 +75,7 @@ namespace MarginTrading.Backend.Filters
                         nameof(ValidateMarginTradingEnabledAsync), context.ActionDescriptor.DisplayName,
                         "AccountId is null but is expected. No validation will be performed");
                 else if (!_marginTradingSettingsCacheService.IsMarginTradingEnabledByAccountId(accountId))
-                    throw new InvalidOperationException("Using this type of margin trading is restricted for client " +
+                    throw new InvalidOperationException("Using this type of margin trading is restricted for account id " +
                         accountId);
             }
         }

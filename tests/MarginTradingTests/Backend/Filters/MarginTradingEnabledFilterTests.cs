@@ -24,27 +24,31 @@ namespace MarginTradingTests.Backend.Filters
     public class MarginTradingEnabledFilterTests
     {
         [Test]
-        public void ActionWithoutClientId_ShouldNotThrow()
+        public void ActionWithoutAccountId_ShouldNotThrow()
         {
             //arrange
-            var marginTradingSettingsService = Mock.Of<IMarginTradingSettingsCacheService>(s => s.IsMarginTradingEnabled("id of client", It.IsAny<bool>()) == Task.FromResult(false));
-            var sut = new MarginTradingEnabledFilter(new MarginTradingSettings(), marginTradingSettingsService, new DummyCacheProvider(), new Mock<ILog>().Object);
+            var marginTradingSettingsService =
+                Mock.Of<IMarginTradingSettingsCacheService>(s =>
+                    s.IsMarginTradingEnabledByAccountId("id of account") == false);
+            var sut = new MarginTradingEnabledFilter(marginTradingSettingsService, new DummyCacheProvider(),
+                new Mock<ILog>().Object);
 
             //act
             var context = new ActionExecutingContext(new ControllerContext
-                                                     {
-                                                         ActionDescriptor = new ControllerActionDescriptor
-                                                         {
-                                                             DisplayName = "action display name",
-                                                             Parameters = new List<ParameterDescriptor> { new ControllerParameterDescriptor { Name = "i", ParameterType = typeof(int), } },
-                                                             MethodInfo = typeof(TestController).GetMethod("ActionWithoutClientId"),
-                                                         },
-                                                         HttpContext = new DefaultHttpContext(),
-                                                         RouteData = new RouteData(),
-                                                     },
-                                                     new List<IFilterMetadata>(),
-                                                     new Dictionary<string, object>(),
-                                                     new TestController());
+            {
+                ActionDescriptor = new ControllerActionDescriptor
+                {
+                    DisplayName = "action display name",
+                    Parameters =
+                        new List<ParameterDescriptor>
+                        {
+                            new ControllerParameterDescriptor {Name = "i", ParameterType = typeof(int),}
+                        },
+                    MethodInfo = typeof(TestController).GetMethod("ActionWithoutAccountId"),
+                },
+                HttpContext = new DefaultHttpContext(),
+                RouteData = new RouteData(),
+            }, new List<IFilterMetadata>(), new Dictionary<string, object>(), new TestController());
 
             Func<Task> invocation = () => sut.OnActionExecutionAsync(context, NextFunc);
 
@@ -54,27 +58,32 @@ namespace MarginTradingTests.Backend.Filters
 
 
         [Test]
-        public void ActionWithClientIdParam_IfTradingEnabled_ShouldNotThrow()
+        public void ActionWithAccountIdParam_IfTradingEnabled_ShouldNotThrow()
         {
             //arrange
-            var marginTradingSettingsService = Mock.Of<IMarginTradingSettingsCacheService>(s => s.IsMarginTradingEnabled("id of client", It.IsAny<bool>()) == Task.FromResult(true));
-            var sut = new MarginTradingEnabledFilter(new MarginTradingSettings(), marginTradingSettingsService, new DummyCacheProvider(), new Mock<ILog>().Object);
+            var marginTradingSettingsService =
+                Mock.Of<IMarginTradingSettingsCacheService>(s =>
+                    s.IsMarginTradingEnabledByAccountId("id of account") == true);
+            var sut = new MarginTradingEnabledFilter(marginTradingSettingsService, new DummyCacheProvider(),
+                new Mock<ILog>().Object);
 
             //act
             var context = new ActionExecutingContext(new ControllerContext
-                                                     {
-                                                         ActionDescriptor = new ControllerActionDescriptor
-                                                         {
-                                                             DisplayName = "action display name",
-                                                             Parameters = new List<ParameterDescriptor> { new ControllerParameterDescriptor { Name = "clientId", ParameterType = typeof(string), } },
-                                                             MethodInfo = typeof(TestController).GetMethod("ActionWithClientIdParam"),
-                                                         },
-                                                         HttpContext = new DefaultHttpContext(),
-                                                         RouteData = new RouteData(),
-                                                     },
-                                                     new List<IFilterMetadata>(),
-                                                     new Dictionary<string, object> { { "clientId", "id of client" } },
-                                                     new TestController());
+                {
+                    ActionDescriptor = new ControllerActionDescriptor
+                    {
+                        DisplayName = "action display name",
+                        Parameters =
+                            new List<ParameterDescriptor>
+                            {
+                                new ControllerParameterDescriptor {Name = "accountId", ParameterType = typeof(string),}
+                            },
+                        MethodInfo = typeof(TestController).GetMethod("ActionWithAccountIdParam"),
+                    },
+                    HttpContext = new DefaultHttpContext(),
+                    RouteData = new RouteData(),
+                }, new List<IFilterMetadata>(), new Dictionary<string, object> {{"accountId", "id of account"}},
+                new TestController());
 
             Func<Task> invocation = () => sut.OnActionExecutionAsync(context, NextFunc);
 
@@ -84,32 +93,38 @@ namespace MarginTradingTests.Backend.Filters
 
 
         [Test]
-        public void ActionWithClientIdParam_IfTradingDisabled_ShouldThrow()
+        public void ActionWithAccountIdParam_IfTradingDisabled_ShouldThrow()
         {
             //arrange
-            var marginTradingSettingsService = Mock.Of<IMarginTradingSettingsCacheService>(s => s.IsMarginTradingEnabled("id of client", It.IsAny<bool>()) == Task.FromResult(false));
-            var sut = new MarginTradingEnabledFilter(new MarginTradingSettings(), marginTradingSettingsService, new DummyCacheProvider(), new Mock<ILog>().Object);
+            var marginTradingSettingsService =
+                Mock.Of<IMarginTradingSettingsCacheService>(s =>
+                    s.IsMarginTradingEnabledByAccountId("id of account") == false);
+            var sut = new MarginTradingEnabledFilter(marginTradingSettingsService, new DummyCacheProvider(),
+                new Mock<ILog>().Object);
 
             //act
             var context = new ActionExecutingContext(new ControllerContext
-                                                     {
-                                                         ActionDescriptor = new ControllerActionDescriptor
-                                                         {
-                                                             DisplayName = "action display name",
-                                                             Parameters = new List<ParameterDescriptor> { new ControllerParameterDescriptor { Name = "clientId", ParameterType = typeof(string), } },
-                                                             MethodInfo = typeof(TestController).GetMethod("ActionWithClientIdParam"),
-                                                         },
-                                                         HttpContext = new DefaultHttpContext(),
-                                                         RouteData = new RouteData(),
-                                                     },
-                                                     new List<IFilterMetadata>(),
-                                                     new Dictionary<string, object> { { "clientId", "id of client" } },
-                                                     new TestController());
+                {
+                    ActionDescriptor = new ControllerActionDescriptor
+                    {
+                        DisplayName = "action display name",
+                        Parameters =
+                            new List<ParameterDescriptor>
+                            {
+                                new ControllerParameterDescriptor {Name = "accountId", ParameterType = typeof(string),}
+                            },
+                        MethodInfo = typeof(TestController).GetMethod("ActionWithAccountIdParam"),
+                    },
+                    HttpContext = new DefaultHttpContext(),
+                    RouteData = new RouteData(),
+                }, new List<IFilterMetadata>(), new Dictionary<string, object> {{"accountId", "id of account"}},
+                new TestController());
 
             Func<Task> invocation = () => sut.OnActionExecutionAsync(context, NextFunc);
 
             //assert
-            invocation.Should().Throw<InvalidOperationException>().WithMessage("Using this type of margin trading is restricted for client id of client");
+            invocation.Should().Throw<InvalidOperationException>()
+                .WithMessage("Using this type of margin trading is restricted for account id id of account");
         }
 
 
@@ -117,24 +132,34 @@ namespace MarginTradingTests.Backend.Filters
         public void ActionWithRequestParam_IfTradingEnabled_ShouldNotThrow()
         {
             //arrange
-            var marginTradingSettingsService = Mock.Of<IMarginTradingSettingsCacheService>(s => s.IsMarginTradingEnabled("id of client", It.IsAny<bool>()) == Task.FromResult(true));
-            var sut = new MarginTradingEnabledFilter(new MarginTradingSettings(), marginTradingSettingsService, new DummyCacheProvider(), new Mock<ILog>().Object);
+            var marginTradingSettingsService =
+                Mock.Of<IMarginTradingSettingsCacheService>(s =>
+                    s.IsMarginTradingEnabledByAccountId("id of account") == true);
+            var sut = new MarginTradingEnabledFilter(marginTradingSettingsService, new DummyCacheProvider(),
+                new Mock<ILog>().Object);
 
             //act
             var context = new ActionExecutingContext(new ControllerContext
-                                                     {
-                                                         ActionDescriptor = new ControllerActionDescriptor
-                                                         {
-                                                             DisplayName = "action display name",
-                                                             Parameters = new List<ParameterDescriptor> { new ControllerParameterDescriptor { Name = "request", ParameterType = typeof(RequestWithClientId), } },
-                                                             MethodInfo = typeof(TestController).GetMethod("ActionWithRequestParam"),
-                                                         },
-                                                         HttpContext = new DefaultHttpContext(),
-                                                         RouteData = new RouteData(),
-                                                     },
-                                                     new List<IFilterMetadata>(),
-                                                     new Dictionary<string, object> { { "request", new RequestWithClientId { ClientId = "id of client" } } },
-                                                     new TestController());
+                {
+                    ActionDescriptor = new ControllerActionDescriptor
+                    {
+                        DisplayName = "action display name",
+                        Parameters =
+                            new List<ParameterDescriptor>
+                            {
+                                new ControllerParameterDescriptor
+                                {
+                                    Name = "request",
+                                    ParameterType = typeof(RequestWithAccountId),
+                                }
+                            },
+                        MethodInfo = typeof(TestController).GetMethod("ActionWithRequestParam"),
+                    },
+                    HttpContext = new DefaultHttpContext(),
+                    RouteData = new RouteData(),
+                }, new List<IFilterMetadata>(),
+                new Dictionary<string, object> {{"request", new RequestWithAccountId {AccountId = "id of account"}}},
+                new TestController());
 
             Func<Task> invocation = () => sut.OnActionExecutionAsync(context, NextFunc);
 
@@ -147,29 +172,40 @@ namespace MarginTradingTests.Backend.Filters
         public void ActionWithRequestParam_IfTradingDisabled_ShouldThrow()
         {
             //arrange
-            var marginTradingSettingsService = Mock.Of<IMarginTradingSettingsCacheService>(s => s.IsMarginTradingEnabled("id of client", It.IsAny<bool>()) == Task.FromResult(false));
-            var sut = new MarginTradingEnabledFilter(new MarginTradingSettings(), marginTradingSettingsService, new DummyCacheProvider(), new Mock<ILog>().Object);
+            var marginTradingSettingsService =
+                Mock.Of<IMarginTradingSettingsCacheService>(s =>
+                    s.IsMarginTradingEnabledByAccountId("id of account") == false);
+            var sut = new MarginTradingEnabledFilter(marginTradingSettingsService, new DummyCacheProvider(),
+                new Mock<ILog>().Object);
 
             //act
             var context = new ActionExecutingContext(new ControllerContext
-                                                     {
-                                                         ActionDescriptor = new ControllerActionDescriptor
-                                                         {
-                                                             DisplayName = "action display name",
-                                                             Parameters = new List<ParameterDescriptor> { new ControllerParameterDescriptor { Name = "request", ParameterType = typeof(RequestWithClientId), } },
-                                                             MethodInfo = typeof(TestController).GetMethod("ActionWithRequestParam"),
-                                                         },
-                                                         HttpContext = new DefaultHttpContext(),
-                                                         RouteData = new RouteData(),
-                                                     },
-                                                     new List<IFilterMetadata>(),
-                                                     new Dictionary<string, object> { { "request", new RequestWithClientId { ClientId = "id of client" } } },
-                                                     new TestController());
+                {
+                    ActionDescriptor = new ControllerActionDescriptor
+                    {
+                        DisplayName = "action display name",
+                        Parameters =
+                            new List<ParameterDescriptor>
+                            {
+                                new ControllerParameterDescriptor
+                                {
+                                    Name = "request",
+                                    ParameterType = typeof(RequestWithAccountId),
+                                }
+                            },
+                        MethodInfo = typeof(TestController).GetMethod("ActionWithRequestParam"),
+                    },
+                    HttpContext = new DefaultHttpContext(),
+                    RouteData = new RouteData(),
+                }, new List<IFilterMetadata>(),
+                new Dictionary<string, object> {{"request", new RequestWithAccountId {AccountId = "id of account"}}},
+                new TestController());
 
             Func<Task> invocation = () => sut.OnActionExecutionAsync(context, NextFunc);
 
             //assert
-            invocation.Should().Throw<InvalidOperationException>().WithMessage("Using this type of margin trading is restricted for client id of client");
+            invocation.Should().Throw<InvalidOperationException>()
+                .WithMessage("Using this type of margin trading is restricted for account id id of account");
         }
 
 
@@ -177,24 +213,29 @@ namespace MarginTradingTests.Backend.Filters
         public void ActionWithSkipAttribute_IfTradingDisabled_ShouldNotThrow()
         {
             //arrange
-            var marginTradingSettingsService = Mock.Of<IMarginTradingSettingsCacheService>(s => s.IsMarginTradingEnabled("id of client", It.IsAny<bool>()) == Task.FromResult(false));
-            var sut = new MarginTradingEnabledFilter(new MarginTradingSettings(), marginTradingSettingsService, new DummyCacheProvider(), new Mock<ILog>().Object);
+            var marginTradingSettingsService =
+                Mock.Of<IMarginTradingSettingsCacheService>(s =>
+                    s.IsMarginTradingEnabledByAccountId("id of account") == false);
+            var sut = new MarginTradingEnabledFilter(marginTradingSettingsService, new DummyCacheProvider(),
+                new Mock<ILog>().Object);
 
             //act
             var context = new ActionExecutingContext(new ControllerContext
-                                                     {
-                                                         ActionDescriptor = new ControllerActionDescriptor
-                                                         {
-                                                             DisplayName = "action display name",
-                                                             Parameters = new List<ParameterDescriptor> { new ControllerParameterDescriptor { Name = "clientId", ParameterType = typeof(string), } },
-                                                             MethodInfo = typeof(TestController).GetMethod("ActionWithSkipAttribute"),
-                                                         },
-                                                         HttpContext = new DefaultHttpContext(),
-                                                         RouteData = new RouteData(),
-                                                     },
-                                                     new List<IFilterMetadata>(),
-                                                     new Dictionary<string, object> { { "clientId", "id of client" } },
-                                                     new TestController());
+                {
+                    ActionDescriptor = new ControllerActionDescriptor
+                    {
+                        DisplayName = "action display name",
+                        Parameters =
+                            new List<ParameterDescriptor>
+                            {
+                                new ControllerParameterDescriptor {Name = "accountId", ParameterType = typeof(string),}
+                            },
+                        MethodInfo = typeof(TestController).GetMethod("ActionWithSkipAttribute"),
+                    },
+                    HttpContext = new DefaultHttpContext(),
+                    RouteData = new RouteData(),
+                }, new List<IFilterMetadata>(), new Dictionary<string, object> {{"accountId", "id of account"}},
+                new TestController());
 
             Func<Task> invocation = () => sut.OnActionExecutionAsync(context, NextFunc);
 
@@ -205,22 +246,24 @@ namespace MarginTradingTests.Backend.Filters
 
         private static Task<ActionExecutedContext> NextFunc()
         {
-            return Task.FromResult(new ActionExecutedContext(new ActionContext(new DefaultHttpContext(), new RouteData(), new ControllerActionDescriptor()), new List<IFilterMetadata>(), new TestController()));
+            return Task.FromResult(new ActionExecutedContext(
+                new ActionContext(new DefaultHttpContext(), new RouteData(), new ControllerActionDescriptor()),
+                new List<IFilterMetadata>(), new TestController()));
         }
 
         private class TestController
         {
-            public bool ActionWithoutClientId(int i) => true;
-            public bool ActionWithClientIdParam(string clientId) => true;
-            public bool ActionWithRequestParam(RequestWithClientId request) => true;
+            public bool ActionWithoutAccountId(int i) => true;
+            public bool ActionWithAccountIdParam(string accountId) => true;
+            public bool ActionWithRequestParam(RequestWithAccountId request) => true;
 
             [SkipMarginTradingEnabledCheck]
-            public bool ActionWithSkipAttribute(string clientId) => true;
+            public bool ActionWithSkipAttribute(string accountId) => true;
         }
 
-        public class RequestWithClientId
+        public class RequestWithAccountId
         {
-            public string ClientId { get; set; }
+            public string AccountId { get; set; }
         }
     }
 }
