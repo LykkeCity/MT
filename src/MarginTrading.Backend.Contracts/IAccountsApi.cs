@@ -12,6 +12,7 @@ namespace MarginTrading.Backend.Contracts
         /// <summary>
         ///     Returns all account stats
         /// </summary>
+        [Get("/api/accounts/stats")]
         Task<IEnumerable<DataReaderAccountStatsBackendContract>> GetAllAccountStats();
     }
 }

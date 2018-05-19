@@ -179,7 +179,8 @@ namespace MarginTrading.Backend.Controllers
 
             if (!string.IsNullOrWhiteSpace(parentPositionId))
                 orders = orders.Where(o => o.Id == parentPositionId); // todo: fix when order will have a parentPositionId
-            if (!string.IsNullOrWhiteSpace(parentPositionId))
+            
+            if (!string.IsNullOrWhiteSpace(parentOrderId))
                 orders = orders.Where(o => o.Id == parentOrderId); // todo: fix when order will have a parentOrderId
 
             return Task.FromResult(orders.Select(Convert).ToList());
