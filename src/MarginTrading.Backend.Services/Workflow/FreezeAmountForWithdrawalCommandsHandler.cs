@@ -29,7 +29,7 @@ namespace MarginTrading.Backend.Services.Workflow
         private void Handle(FreezeAmountForWithdrawalCommand command, IEventPublisher publisher)
         {
             var account = _accountsCacheService.Get(command.AccountId);
-            if (account.GetFreeMargin() <= command.Amount)
+            if (account.GetFreeMargin() >= command.Amount)
             {
                 // todo: check condition
                 // todo: add actual amount freezing (see MTC-117)

@@ -2,18 +2,9 @@
 using System.Linq;
 using System.Threading.Tasks;
 using AsyncFriendlyStackTrace;
-using Autofac;
-using Autofac.Extensions.DependencyInjection;
-using FluentAssertions;
 using Lykke.HttpClientGenerator;
 using Lykke.HttpClientGenerator.Retries;
-using MarginTrading.Backend.Contracts.AccountAssetPair;
-using MarginTrading.Backend.Contracts.AssetPairSettings;
-using MarginTrading.Backend.Contracts.Client;
-using MarginTrading.Backend.Contracts.DataReaderClient;
-using MarginTrading.Backend.Contracts.DayOffSettings;
-using MarginTrading.Common.Extensions;
-using Microsoft.Extensions.DependencyInjection;
+using MarginTrading.Backend.Contracts;
 using Newtonsoft.Json;
 using Refit;
 
@@ -57,144 +48,46 @@ namespace MarginTrading.Backend.TestClient
         // NOTE: Use Demo instances for tests
         private static async Task Run()
         {
-            var services = new ServiceCollection();
-            var builder = new ContainerBuilder();
             var retryStrategy = new LinearRetryStrategy(TimeSpan.FromSeconds(10), 50);
-            services.RegisterMtBackendClient(HttpClientGenerator.BuildForUrl("http://localhost:5000")
-                .WithApiKey("margintrading").WithRetriesStrategy(retryStrategy).Create());
-            services.RegisterMtDataReaderClient(HttpClientGenerator.BuildForUrl("http://localhost:5008")
-                .WithApiKey("margintrading").WithRetriesStrategy(retryStrategy).Create());
-            builder.Populate(services);
-            var container = builder.Build();
-            var backendClient = container.Resolve<IMtBackendClient>();
+            var dataReaderGenerator = HttpClientGenerator.BuildForUrl("http://localhost:5008")
+                .WithApiKey("margintrading").WithRetriesStrategy(retryStrategy).Create();
 
-            var assetPairSettingsInputContract = new AssetPairContract
-            {
-                Id = "BTCUSD.test",
-                BasePairId = "BTCUSD",
-                LegalEntity = "LYKKETEST",
-                StpMultiplierMarkupBid = 0.9m,
-                StpMultiplierMarkupAsk = 1.1m,
-                MatchingEngineMode = MatchingEngineModeContract.MarketMaker,
-                Name = "BTCUSD.test name",
-                Accuracy = 123,
-                BaseAssetId = "BTC",
-                QuoteAssetId = "USD",
-            };
-
-            var dataReaderClient = container.Resolve<IMtDataReaderClient>();
-
-            var list = await dataReaderClient.AssetPairsRead.List().Dump();
-            var ours = list.First(e => e.Id == "BTCUSD.test");
-            CheckAssetPair(ours, assetPairSettingsInputContract);
-
-            var get = await dataReaderClient.AssetPairsRead.Get("BTCUSD.test").Dump();
-            CheckAssetPair(get, assetPairSettingsInputContract);
-
-            var nonexistentGet = await dataReaderClient.AssetPairsRead.Get("nonexistent").Dump();
-            nonexistentGet.RequiredEqualsTo(null, nameof(nonexistentGet));
-
-            var getByMode = await dataReaderClient.AssetPairsRead.List("LYKKETEST", MatchingEngineModeContract.Stp)
-                .Dump();
-            var ours2 = getByMode.First(e => e.Id == "BTCUSD.test");
-            CheckAssetPair(ours2, assetPairSettingsInputContract);
-
-            var getByOtherMode = await dataReaderClient.AssetPairsRead
-                .List("LYKKETEST", MatchingEngineModeContract.MarketMaker).Dump();
-            getByOtherMode.Count(e => e.Id == "BTCUSD.test").RequiredEqualsTo(0, "getByOtherMode.Count");
-
-            #region TradeMonitoring
-
-            var assetSumary = await dataReaderClient.TradeMonitoringRead.AssetSummaryList().Dump();
-
-            var openPositions = await dataReaderClient.TradeMonitoringRead.OpenPositions().Dump();
-            var openPosition = openPositions.FirstOrDefault();
-            if (openPosition != null)
-            {
-                string accountId = openPosition.AccountId;
-                var openPositionsByClient =
-                    await dataReaderClient.TradeMonitoringRead.OpenPositionsByClient(new[] {accountId}).Dump();
-            }
-
-            var openPositionsByDate = await dataReaderClient.TradeMonitoringRead
-                .OpenPositionsByDate(DateTime.UtcNow.AddDays(-30), DateTime.UtcNow).Dump();
-            var openPositionsByVolume = await dataReaderClient.TradeMonitoringRead.OpenPositionsByVolume(100).Dump();
-
-            var pendingOrders = await dataReaderClient.TradeMonitoringRead.PendingOrders().Dump();
-            var pendingOrder = pendingOrders.FirstOrDefault();
-            if (pendingOrder != null)
-            {
-                string accountId = openPosition.AccountId;
-                var pendingOrdersByClient =
-                    await dataReaderClient.TradeMonitoringRead.PendingOrdersByClient(new[] {accountId}).Dump();
-            }
-
-            var pendingOrdersByDate = await dataReaderClient.TradeMonitoringRead
-                .PendingOrdersByDate(DateTime.UtcNow.AddDays(-30), DateTime.UtcNow).Dump();
-            var pendingOrdersByVolume = await dataReaderClient.TradeMonitoringRead.PendingOrdersByVolume(100).Dump();
-
-            var orderBooksByInstrument = await dataReaderClient.TradeMonitoringRead.OrderBooksByInstrument("BTCUSD");
-
-            #endregion
-
-            var accountAssetPairs = await dataReaderClient.AccountAssetPairsRead
-                .List()
-                .Dump();
-            var firstAccountAssetPair = accountAssetPairs.First();
-            var secondAccountAssetPair = await dataReaderClient.AccountAssetPairsRead
-                .Get(firstAccountAssetPair.TradingConditionId, firstAccountAssetPair.BaseAssetId,
-                    firstAccountAssetPair.Instrument)
-                .Dump();
-            firstAccountAssetPair.Should().BeEquivalentTo(secondAccountAssetPair);
-
-            var accountAssetPairsGetByTradingCondition = await dataReaderClient.AccountAssetPairsRead
-                .Get(firstAccountAssetPair.TradingConditionId, firstAccountAssetPair.BaseAssetId)
-                .Dump();
-            foreach (var accountAssetPair in accountAssetPairsGetByTradingCondition)
-            {
-                var item = accountAssetPairs
-                    .Single(x => x.TradingConditionId == accountAssetPair.TradingConditionId
-                                 && x.BaseAssetId == accountAssetPair.BaseAssetId
-                                 && x.Instrument == accountAssetPair.Instrument);
-                item.Should().BeEquivalentTo(accountAssetPair);
-            }
-
-            var tclist = await dataReaderClient.TradingConditionsRead.List().Dump();
-            await dataReaderClient.TradingConditionsRead.Get(tclist.First().Id).Dump();
-
-            var accountGroups = await dataReaderClient.AccountGroups.List().Dump();
-            var accountGroup1 = accountGroups.FirstOrDefault();
-            if (accountGroup1 != null)
-            {
-                var accountGroup =
-                    (await dataReaderClient.AccountGroups.GetByBaseAsset(accountGroup1.TradingConditionId,
-                        accountGroup1.BaseAssetId)).Dump();
-                accountGroup.Should().BeEquivalentTo(accountGroup1);
-            }
-
-            var assetPairs = await dataReaderClient.Dictionaries.AssetPairs().Dump();
-            var matchingEngines = await dataReaderClient.Dictionaries.MatchingEngines().Dump();
-            var orderTypes = await dataReaderClient.Dictionaries.OrderTypes().Dump();
-
-
-            var routes = await dataReaderClient.Routes.List().Dump();
-            var route1 = routes.FirstOrDefault();
-            if (route1 != null)
-            {
-                var route = await dataReaderClient.Routes.GetById(route1.Id).Dump();
-                route.Should().BeEquivalentTo(route1);
-            }
-
-            var isEnabled =
-                await dataReaderClient.Settings.IsMarginTradingEnabled("232b3b04-7479-44e7-a6b3-ac131d8e6ccd");
+            await CheckTradeMonitoring(dataReaderGenerator);
 
             Console.WriteLine("Successfuly finished");
         }
 
-        private static void CheckAssetPair(AssetPairContract actual,
-            AssetPairContract expected)
+        private static async Task CheckTradeMonitoring(HttpClientGenerator dataReaderGenerator)
         {
-            actual.Should().BeEquivalentTo(expected);
+            var tradeMonitoringApi = dataReaderGenerator.Generate<ITradeMonitoringReadingApi>();
+
+            var assetSumary = await tradeMonitoringApi.AssetSummaryList().Dump();
+
+            var openPositions = await tradeMonitoringApi.OpenPositions().Dump();
+            var openPosition = openPositions.FirstOrDefault();
+            if (openPosition != null)
+            {
+                string accountId = openPosition.AccountId;
+                var openPositionsByClient = await tradeMonitoringApi.OpenPositionsByClient(new[] {accountId}).Dump();
+            }
+
+            var openPositionsByDate =
+                await tradeMonitoringApi.OpenPositionsByDate(DateTime.UtcNow.AddDays(-30), DateTime.UtcNow).Dump();
+            var openPositionsByVolume = await tradeMonitoringApi.OpenPositionsByVolume(100).Dump();
+
+            var pendingOrders = await tradeMonitoringApi.PendingOrders().Dump();
+            var pendingOrder = pendingOrders.FirstOrDefault();
+            if (pendingOrder != null)
+            {
+                string accountId = openPosition.AccountId;
+                var pendingOrdersByClient = await tradeMonitoringApi.PendingOrdersByClient(new[] {accountId}).Dump();
+            }
+
+            var pendingOrdersByDate =
+                await tradeMonitoringApi.PendingOrdersByDate(DateTime.UtcNow.AddDays(-30), DateTime.UtcNow).Dump();
+            var pendingOrdersByVolume = await tradeMonitoringApi.PendingOrdersByVolume(100).Dump();
+
+            var orderBooksByInstrument = await tradeMonitoringApi.OrderBooksByInstrument("BTCUSD");
         }
 
         public static T Dump<T>(this T o)
