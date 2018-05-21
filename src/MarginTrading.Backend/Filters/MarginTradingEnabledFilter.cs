@@ -70,13 +70,10 @@ namespace MarginTrading.Backend.Filters
             if (accountIdGetter != null)
             {
                 var accountId = accountIdGetter(context.ActionArguments);
-                if (string.IsNullOrWhiteSpace(accountId))
-                    _log.WriteWarningAsync(nameof(MarginTradingEnabledFilter),
-                        nameof(ValidateMarginTradingEnabledAsync), context.ActionDescriptor.DisplayName,
-                        "AccountId is null but is expected. No validation will be performed");
-                else if (!_marginTradingSettingsCacheService.IsMarginTradingEnabledByAccountId(accountId))
-                    throw new InvalidOperationException("Using this type of margin trading is restricted for account id " +
-                        accountId);
+                if (!string.IsNullOrWhiteSpace(accountId) &&
+                    !_marginTradingSettingsCacheService.IsMarginTradingEnabledByAccountId(accountId))
+                    throw new InvalidOperationException(
+                        "Using this type of margin trading is restricted for account id " + accountId);
             }
         }
 
@@ -114,14 +111,15 @@ namespace MarginTrading.Backend.Filters
         /// Searches the controller's actions parameters for the presence of AccountId
         /// and returns a func to get the AccountId value from ActionArguments for each of found AccountIds parameters
         /// </summary>
-        private static IEnumerable<AccountIdGetter> GetAccountIdGetters(IEnumerable<ParameterDescriptor> parameterDescriptors)
+        private static IEnumerable<AccountIdGetter> GetAccountIdGetters(
+            IEnumerable<ParameterDescriptor> parameterDescriptors)
         {
             foreach (var parameterDescriptor in parameterDescriptors)
             {
                 if (string.Compare(parameterDescriptor.Name, "AccountId", StringComparison.OrdinalIgnoreCase) == 0 &&
                     parameterDescriptor.ParameterType == typeof(string))
                 {
-                    yield return d => (string) d[parameterDescriptor.Name];
+                    yield return d => d.TryGetValue(parameterDescriptor.Name, out var arg) ? (string) arg : null;
                 }
                 else
                 {
@@ -129,7 +127,10 @@ namespace MarginTrading.Backend.Filters
                         parameterDescriptor.ParameterType.GetProperty("AccountId", typeof(string));
                     if (accountIdPropertyInfo != null)
                     {
-                        yield return d => (string) ((dynamic) d[parameterDescriptor.Name])?.AccountId;
+                        yield return d =>
+                            d.TryGetValue(parameterDescriptor.Name, out var arg)
+                                ? (string) ((dynamic) arg)?.AccountId
+                                : null;
                     }
                 }
             }
