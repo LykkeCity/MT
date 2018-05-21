@@ -41,7 +41,7 @@ namespace MarginTrading.Backend.Contracts.Events
         public string PositionId { get; }
 
         /// <summary>
-        /// Profit & loss which will affect the balance
+        /// Profit loss which will affect the balance
         /// </summary>
         [Key(4)]
         public decimal BalanceDelta { get; }

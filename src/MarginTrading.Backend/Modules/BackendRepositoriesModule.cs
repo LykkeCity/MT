@@ -72,10 +72,6 @@ namespace MarginTrading.Backend.Modules
                     AzureRepoFactories.MarginTrading.CreateOrdersByIdRepository(
                         _settings.Nested(s => s.Db.MarginTradingConnString), _log, ctx.Resolve<IConvertService>()))
                 .SingleInstance();
-
-            builder.Register<IMarginTradingAccountStatsRepository>(ctx =>
-                AzureRepoFactories.MarginTrading.CreateAccountStatsRepository(
-                    _settings.Nested(s => s.Db.HistoryConnString), _log)).SingleInstance();
         }
     }
 }

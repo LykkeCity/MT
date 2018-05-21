@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MarginTrading.AccountsManagement.Contracts;
-using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Contracts.Account;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
@@ -28,19 +26,16 @@ namespace MarginTrading.Backend.Controllers
         private readonly IDateService _dateService;
         private readonly AccountManager _accountManager;
         private readonly TradingConditionsCacheService _tradingConditionsCache;
-        private readonly IMarginTradingAccountStatsRepository _accountStatsRepository;
 
         public AccountsController(IAccountsCacheService accountsCacheService,
             IDateService dateService,
             AccountManager accountManager,
-            TradingConditionsCacheService tradingConditionsCache, 
-            IMarginTradingAccountStatsRepository accountStatsRepository)
+            TradingConditionsCacheService tradingConditionsCache)
         {
             _accountsCacheService = accountsCacheService;
             _dateService = dateService;
             _accountManager = accountManager;
             _tradingConditionsCache = tradingConditionsCache;
-            _accountStatsRepository = accountStatsRepository;
         }
 
         /// <summary>
@@ -140,35 +135,46 @@ namespace MarginTrading.Backend.Controllers
         /// <summary>
         ///     Returns all account stats
         /// </summary>
-        /// <param name="accountId"></param>
         [HttpGet]
         [Route("stats")]
-        public async Task<List<AccountStatContract>> GetAllAccountStats(string accountId = null)
+        public Task<List<AccountStatContract>> GetAllAccountStats()
         {
-            var stats = await _accountStatsRepository.GetAllAsync();
-            if (accountId != null)
-                stats = stats.Where(s => s.AccountId == accountId);
-            
-            return stats.Select(Convert).ToList();
+            var stats = _accountsCacheService.GetAll();
+
+            return Task.FromResult(stats.Select(Convert).ToList());
         }
         
-        private static AccountStatContract Convert(IMarginTradingAccountStats item)
+        /// <summary>
+        ///     Returns stats of selected account
+        /// </summary>
+        /// <param name="accountId"></param>
+        [HttpGet]
+        [Route("stats/{accountId}")]
+        public Task<AccountStatContract> GetAccountStats(string accountId)
+        {
+            var stats = _accountsCacheService.Get(accountId);
+
+            return Task.FromResult(Convert(stats));
+        }
+        
+        private static AccountStatContract Convert(IMarginTradingAccount item)
         {
             return new AccountStatContract
             {
-                AccountId = item.AccountId,
+                AccountId = item.Id,
                 BaseAssetId = item.BaseAssetId,
-                MarginCall = item.MarginCall,
-                StopOut = item.StopOut,
-                TotalCapital = item.TotalCapital,
-                FreeMargin = item.FreeMargin,
-                MarginAvailable = item.MarginAvailable,
-                UsedMargin = item.UsedMargin,
-                MarginInit = item.MarginInit,
-                PnL = item.PnL,
-                OpenPositionsCount = item.OpenPositionsCount,
-                MarginUsageLevel = item.MarginUsageLevel,
-                LegalEntity = item.LegalEntity,
+                Balance = item.Balance,
+                MarginCallLevel = item.GetMarginCallLevel(),
+                StopOutLevel = item.GetStopOutLevel(),
+                TotalCapital = item.GetTotalCapital(),
+                FreeMargin = item.GetFreeMargin(),
+                MarginAvailable = item.GetMarginAvailable(),
+                UsedMargin = item.GetUsedMargin(),
+                MarginInit = item.GetMarginInit(),
+                PnL = item.GetPnl(),
+                OpenPositionsCount = item.GetOpenPositionsCount(),
+                MarginUsageLevel = item.GetMarginUsageLevel(),
+                LegalEntity = item.LegalEntity
             };
         }
     }

@@ -198,7 +198,9 @@ namespace MarginTrading.Backend.Services
 
         private void MakeOrderActive(Order order)
         {
-            order.OpenDate = DateTime.UtcNow;
+            var now = DateTime.UtcNow;
+            order.OpenDate = now;
+            order.LastModified = now;
             order.Status = OrderStatus.Active;
 
             var account = _accountsCacheService.Get(order.AccountId);
@@ -538,6 +540,7 @@ namespace MarginTrading.Backend.Services
                 order.TakeProfit = tp.HasValue ? Math.Round(tp.Value, order.AssetAccuracy) : (decimal?)null;
                 order.StopLoss = sl.HasValue ? Math.Round(sl.Value, order.AssetAccuracy) : (decimal?)null;
                 order.ExpectedOpenPrice = expOpenPrice.HasValue ? Math.Round(expOpenPrice.Value, order.AssetAccuracy) : (decimal?)null;
+                order.LastModified = DateTime.UtcNow;
                 _orderLimitsChangesEventChannel.SendEvent(this, new OrderLimitsChangedEventArgs(order));
             }
         }

@@ -63,11 +63,14 @@ namespace MarginTrading.Backend.Controllers
         {
             var code = await _identityGenerator.GenerateIdAsync(nameof(Order));
 
+            var now = DateTime.UtcNow;
+            
             var order = new Order
             {
                 Id = Guid.NewGuid().ToString("N"),
                 Code = code,
-                CreateDate = DateTime.UtcNow,
+                CreateDate = now,
+                LastModified = now, 
                 AccountId = request.AccountId,
                 Instrument = request.InstrumentId,
                 Volume = request.Direction == OrderDirectionContract.Buy ? request.Volume : -request.Volume,
@@ -232,7 +235,7 @@ namespace MarginTrading.Backend.Controllers
                 ExecutionPrice = order.OpenPrice,
                 ExpectedOpenPrice = order.ExpectedOpenPrice,
                 ForceOpen = true,
-                ModifiedTimestamp = order.OpenDate ?? order.CreateDate,
+                ModifiedTimestamp = order.LastModified ?? order.OpenDate ?? order.CreateDate,
                 Originator = OriginatorTypeContract.Investor,
                 ParentOrderId = null,
                 PositionId = order.Status == OrderStatus.Active ? order.Id : null,

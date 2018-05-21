@@ -88,35 +88,69 @@ namespace MarginTrading.Backend.Controllers
         /// <summary>
         /// Close group of opened positions by itrument and direction
         /// </summary>
-        /// <param name="assetPairId">Positions instrument</param>
+        /// <param name="instrument">Positions instrument</param>
         /// <param name="direction">Positions direction (Long or Short), optional</param>
         /// <param name="request">Additional info for close</param>
-        [Route("instrument-group/{assetPairId}")]
+        [Route("instrument-group/{instrument}")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [HttpDelete]
-        public Task CloseGroupAsync([FromRoute] string assetPairId,
+        public async Task CloseGroupAsync([FromRoute] string instrument,
             [FromBody] PositionCloseRequest request, [FromQuery] PositionDirectionContract? direction = null)
         {
-            throw new NotImplementedException();
+            var orders = _ordersCache.ActiveOrders.GetAllOrders();
+            
+            if (!string.IsNullOrWhiteSpace(instrument))
+                orders = orders.Where(o => o.Instrument == instrument).ToList();
+
+            if (direction != null)
+            {
+                var orderDirection = direction == PositionDirectionContract.Short
+                    ? OrderDirection.Sell
+                    : OrderDirection.Buy;
+
+                orders = orders.Where(o => o.GetOrderType() == orderDirection).ToList();
+            }
+
+            var reason =
+                request.Originator == OriginatorTypeContract.OnBehalf ||
+                request.Originator == OriginatorTypeContract.System
+                    ? OrderCloseReason.ClosedByBroker
+                    : OrderCloseReason.Close;
+            
+            foreach (var orderId in orders.Select(o => o.Id).ToList())
+            {
+                var closedOrder = await _tradingEngine.CloseActiveOrderAsync(orderId, reason, request.Comment);
+
+                if (closedOrder.Status != OrderStatus.Closed && closedOrder.Status != OrderStatus.Closing)
+                {
+                    throw new InvalidOperationException(closedOrder.CloseRejectReasonText);
+                }
+
+                _operationsLogService.AddLog("action close positions group", closedOrder.AccountId, request.ToJson(),
+                    orderId);
+            }
+            
+            _consoleWriter.WriteLine(
+                $"action close positions group. instrument = [{instrument}], direction = [{direction}]");
         }
 
         /// <summary>
         /// Get a position by id
         /// </summary>
         [HttpGet, Route("{positionId}")]
-        public async Task<OpenPositionContract> GetAsync(string positionId)
+        public Task<OpenPositionContract> GetAsync(string positionId)
         {
             if (!_ordersCache.ActiveOrders.TryGetOrderById(positionId, out var order))
                 return null;
 
-            return Convert(order);
+            return Task.FromResult(Convert(order));
         }
 
         /// <summary>
         /// Get open positions 
         /// </summary>
         [HttpGet, Route("")]
-        public async Task<List<OpenPositionContract>> ListAsync([FromQuery]string accountId = null,
+        public Task<List<OpenPositionContract>> ListAsync([FromQuery]string accountId = null,
             [FromQuery] string assetPairId = null)
         {
             IEnumerable<Order> orders = _ordersCache.ActiveOrders.GetAllOrders();
@@ -126,7 +160,7 @@ namespace MarginTrading.Backend.Controllers
             if (!string.IsNullOrWhiteSpace(assetPairId))
                 orders = orders.Where(o => o.Instrument == assetPairId);
 
-            return orders.Select(Convert).ToList();
+            return Task.FromResult(orders.Select(Convert).ToList());
         }
 
         private OpenPositionContract Convert(Order order)
@@ -139,7 +173,7 @@ namespace MarginTrading.Backend.Controllers
                 Direction = Convert(order.GetOrderType()),
                 Id = order.Id,
                 OpenPrice = order.OpenPrice,
-                PnL = order.FplData.Fpl,
+                PnL = order.GetFpl(),
                 RelatedOrders = new List<string>(),
                 OpenTimestamp = order.OpenDate.RequiredNotNull(nameof(order.OpenDate)),
                 TradeId = order.Id + '_' + order.GetOrderType(),
