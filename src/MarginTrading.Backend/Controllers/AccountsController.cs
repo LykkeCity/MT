@@ -140,16 +140,21 @@ namespace MarginTrading.Backend.Controllers
         /// <summary>
         ///     Returns all account stats
         /// </summary>
+        /// <param name="accountId"></param>
         [HttpGet]
         [Route("stats")]
-        public async Task<IEnumerable<DataReaderAccountStatsBackendContract>> GetAllAccountStats()
+        public async Task<List<AccountStatContract>> GetAllAccountStats(string accountId = null)
         {
-            return (await _accountStatsRepository.GetAllAsync()).Select(Convert);
+            var stats = await _accountStatsRepository.GetAllAsync();
+            if (accountId != null)
+                stats = stats.Where(s => s.AccountId == accountId);
+            
+            return stats.Select(Convert).ToList();
         }
         
-        private static DataReaderAccountStatsBackendContract Convert(IMarginTradingAccountStats item)
+        private static AccountStatContract Convert(IMarginTradingAccountStats item)
         {
-            return new DataReaderAccountStatsBackendContract
+            return new AccountStatContract
             {
                 AccountId = item.AccountId,
                 BaseAssetId = item.BaseAssetId,

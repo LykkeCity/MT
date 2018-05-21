@@ -15,6 +15,7 @@ using MarginTrading.AccountsManagement.Contracts.Messages;
 using MarginTrading.Backend.Contracts.Commands;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Backend.Services.Workflow;
 
@@ -41,6 +42,7 @@ namespace MarginTrading.Backend.Services.Modules
             builder.Register(context => new AutofacDependencyResolver(context)).As<IDependencyResolver>()
                 .SingleInstance();
             builder.RegisterType<AccountsProjection>().AsSelf().SingleInstance();
+            builder.RegisterType<CqrsSender>().As<ICqrsSender>().SingleInstance();
 
             var rabbitMqSettings = new RabbitMQ.Client.ConnectionFactory
             {

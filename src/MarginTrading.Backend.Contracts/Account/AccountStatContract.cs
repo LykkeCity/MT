@@ -1,6 +1,6 @@
 ﻿namespace MarginTrading.Backend.Contracts.Account
 {
-    public class DataReaderAccountStatsBackendContract
+    public class AccountStatContract
     {
         public string AccountId { get; set; }
         public string BaseAssetId { get; set; }

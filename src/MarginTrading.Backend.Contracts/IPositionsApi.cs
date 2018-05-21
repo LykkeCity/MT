@@ -22,8 +22,8 @@ namespace MarginTrading.Backend.Contracts
         /// <summary>
         /// Close close all positions by instrument and optionally direction 
         /// </summary>
-        [Delete("/api/positions/instrument-group/{instrumentId}")]
-        Task CloseGroupAsync(string instrument, PositionCloseRequest request,
+        [Delete("/api/positions/instrument-group/{assetPairId}")]
+        Task CloseGroupAsync(string assetPairId, PositionCloseRequest request,
             PositionDirectionContract? direction = null);
         
         /// <summary>
