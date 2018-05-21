@@ -9,6 +9,7 @@ using Lykke.AzureStorage.Tables.Entity.Serializers;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Orders;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace MarginTrading.AzureRepositories.Snow.OrdersHistory
@@ -86,7 +87,7 @@ namespace MarginTrading.AzureRepositories.Snow.OrdersHistory
         public string Orders { get; set; }
         public string ClosedOrders { get; set; }
 
-        OrderUpdateType IOrderHistory.OrderUpdateType => OrderUpdateType.ParseEnum(Backend.Core.OrderUpdateType.Close);
+        OrderUpdateType IOrderHistory.OrderUpdateType => OrderUpdateType.ParseEnum(Backend.Core.Orders.OrderUpdateType.Close);
 
         public string OpenExternalOrderId { get; set; }
         public string OpenExternalProviderId { get; set; }

@@ -5,18 +5,19 @@ using MarginTrading.Backend.Core.MatchingEngines;
 
 namespace MarginTrading.Backend.Services.MatchingEngines
 {
+    //TODO: rework
     public class MatchingEngineInMemoryRepository : IMatchingEngineRepository
     {
         private readonly Dictionary<string, IMatchingEngineBase> _matchingEngines;
         
         public MatchingEngineInMemoryRepository(
-            IMarketMakerMatchingEngine marketMakerMatchingEngine,
+            //IMarketMakerMatchingEngine marketMakerMatchingEngine,
             IStpMatchingEngine stpMatchingEngine)
         {
             var mes = new IMatchingEngineBase[]
             {
                 new RejectMatchingEngine(),
-                marketMakerMatchingEngine,
+                //marketMakerMatchingEngine,
                 stpMatchingEngine
             };
 

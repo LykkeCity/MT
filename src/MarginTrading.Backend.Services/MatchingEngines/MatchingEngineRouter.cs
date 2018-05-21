@@ -1,5 +1,6 @@
 ﻿using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Orders;
 
 namespace MarginTrading.Backend.Services.MatchingEngines
 {
@@ -21,10 +22,13 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             _assetPairsCache = assetPairsCache;
         }
 
+        //TODO: implement routes logic
         public IMatchingEngineBase GetMatchingEngineForOpen(IOrder order)
         {
+            
+            
             var route = _routesManager.FindRoute(null, order.TradingConditionId, order.Instrument,
-                order.GetOrderType());
+                order.GetOrderDirection());
 
             if (route != null)
             {
@@ -38,14 +42,14 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             //TODO: find ME with correct mode that ownes the same Entity as asset pair
             return _matchingEngineRepository.GetMatchingEngineById(
                 (assetPair?.MatchingEngineMode ?? MatchingEngineMode.MarketMaker) == MatchingEngineMode.MarketMaker
-                    ? MatchingEngineConstants.LykkeVuMm
-                    : MatchingEngineConstants.LykkeCyStp);
+                    ? MatchingEngineConstants.Reject
+                    : MatchingEngineConstants.DefaultStp);
         }
 
         public IMatchingEngineBase GetMatchingEngineForClose(IOrder order)
         {
             var meId = order.OpenOrderbookId == Lykke
-                ? MatchingEngineConstants.LykkeVuMm
+                ? MatchingEngineConstants.Reject
                 : order.OpenOrderbookId;
             
             return _matchingEngineRepository.GetMatchingEngineById(meId);

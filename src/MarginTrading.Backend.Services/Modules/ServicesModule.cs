@@ -65,6 +65,7 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<ICommissionService>()
 				.SingleInstance();
 
+			//TODO: rework ME registrations
 			builder.RegisterType<MarketMakerMatchingEngine>()
 				.As<IMarketMakerMatchingEngine>()
 				.WithParameter(TypedParameter.From(MatchingEngineConstants.LykkeVuMm))
@@ -72,7 +73,8 @@ namespace MarginTrading.Backend.Services.Modules
 
 			builder.RegisterType<StpMatchingEngine>()
 				.As<IStpMatchingEngine>()
-				.WithParameter(TypedParameter.From(MatchingEngineConstants.LykkeCyStp))
+				//.WithParameter(TypedParameter.From(MatchingEngineConstants.LykkeCyStp))
+				.WithParameter(TypedParameter.From(MatchingEngineConstants.DefaultStp))
 				.SingleInstance();
 
 			builder.RegisterType<TradingEngine>()

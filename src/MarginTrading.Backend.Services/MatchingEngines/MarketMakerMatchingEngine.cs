@@ -5,6 +5,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
 
@@ -80,7 +81,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         {
             using (_contextFactory.GetWriteSyncContext($"{nameof(MarketMakerMatchingEngine)}.{nameof(GetPriceForClose)}"))
             {
-                var orderBookTypeToMatch = order.GetCloseType().GetOrderTypeToMatchInOrderBook();
+                var orderBookTypeToMatch = order.GetCloseType().GetOrderDirectionToMatchInOrderBook();
 
                 var matchedOrders = _orderBooks.Match(order, orderBookTypeToMatch, Math.Abs(order.GetRemainingCloseVolume()));
 
@@ -100,7 +101,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         {
             using (_contextFactory.GetWriteSyncContext($"{nameof(MarketMakerMatchingEngine)}.{nameof(MatchMarketOrderForOpen)}"))
             {
-                var orderBookTypeToMatch = order.GetOrderType().GetOrderTypeToMatchInOrderBook();
+                var orderBookTypeToMatch = order.GetOrderDirection().GetOrderDirectionToMatchInOrderBook();
 
                 var matchedOrders =
                     _orderBooks.Match(order, orderBookTypeToMatch, Math.Abs(order.Volume));
@@ -117,7 +118,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         {
             using (_contextFactory.GetWriteSyncContext($"{nameof(MarketMakerMatchingEngine)}.{nameof(MatchMarketOrderForClose)}"))
             {
-                var orderBookTypeToMatch = order.GetCloseType().GetOrderTypeToMatchInOrderBook();
+                var orderBookTypeToMatch = order.GetCloseType().GetOrderDirectionToMatchInOrderBook();
 
                 var matchedOrders = _orderBooks.Match(order, orderBookTypeToMatch, Math.Abs(order.GetRemainingCloseVolume()));
 

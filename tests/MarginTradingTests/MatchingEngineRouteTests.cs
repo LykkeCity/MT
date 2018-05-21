@@ -3,6 +3,7 @@ using System;
 using Autofac;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.TradingConditions;

@@ -1,4 +1,5 @@
 ﻿using System;
+using MarginTrading.Backend.Core.Orders;
 
 namespace MarginTrading.Backend.Core
 {

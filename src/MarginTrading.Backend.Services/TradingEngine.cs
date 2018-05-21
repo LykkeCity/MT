@@ -8,6 +8,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
@@ -258,7 +259,7 @@ namespace MarginTrading.Backend.Services
             var me = _meRouter.GetMatchingEngineForOpen(order);
             order.MatchingEngineMode = me.Mode;
             
-            using (_contextFactory.GetWriteSyncContext($"{nameof(TradingEngine)}.{nameof(PlacePendingOrder)}"))
+            //using (_contextFactory.GetWriteSyncContext($"{nameof(TradingEngine)}.{nameof(PlacePendingOrder)}"))
                 _ordersCache.WaitingForExecutionOrders.Add(order);
 
             _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
@@ -275,11 +276,11 @@ namespace MarginTrading.Backend.Services
             if (orders.Length == 0)
                 return;
 
-            using (_contextFactory.GetWriteSyncContext($"{nameof(TradingEngine)}.{nameof(ProcessOrdersWaitingForExecution)}"))
-            {
+            //using (_contextFactory.GetWriteSyncContext($"{nameof(TradingEngine)}.{nameof(ProcessOrdersWaitingForExecution)}"))
+            //{
                 foreach (var order in orders)
                     _ordersCache.WaitingForExecutionOrders.Remove(order);
-            }
+            //}
 
             //TODO: think how to make sure that we don't loose orders
             _threadSwitcher.SwitchThread(async () =>
@@ -534,7 +535,7 @@ namespace MarginTrading.Backend.Services
                 var accountAsset = _accountAssetsCacheService.GetTradingInstrument(order.TradingConditionId,
                     order.Instrument);
 
-                _validateOrderService.ValidateOrderStops(order.GetOrderType(), quote,
+                _validateOrderService.ValidateOrderStops(order.GetOrderDirection(), quote,
                     accountAsset.Delta, accountAsset.Delta, tp, sl, expOpenPrice, order.AssetAccuracy);
 
                 order.TakeProfit = tp.HasValue ? Math.Round(tp.Value, order.AssetAccuracy) : (decimal?)null;

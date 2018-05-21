@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using MarginTrading.Backend.Core.Orders;
 
 namespace MarginTrading.Backend.Core.Orderbooks
 {

@@ -1,6 +1,7 @@
 ﻿using System;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.Orderbooks;
+using MarginTrading.Backend.Core.Orders;
 
 namespace MarginTrading.Backend.Core.MatchingEngines
 {

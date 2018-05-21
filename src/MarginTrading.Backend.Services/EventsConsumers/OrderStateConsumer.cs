@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Lykke.Common;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;

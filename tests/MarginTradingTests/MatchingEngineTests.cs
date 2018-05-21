@@ -4,6 +4,7 @@ using Autofac;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Orders;
 using NUnit.Framework;
 
 namespace MarginTradingTests
@@ -78,14 +79,14 @@ namespace MarginTradingTests
         public void Check_Order_Is_Buy()
         {
             var order = new Order {Volume = 10};
-            Assert.AreEqual(OrderDirection.Buy, order.GetOrderType());
+            Assert.AreEqual(OrderDirection.Buy, order.GetOrderDirection());
         }
 
         [Test]
         public void Check_Order_Is_Sell()
         {
             var order = new Order {Volume = -10};
-            Assert.AreEqual(OrderDirection.Sell, order.GetOrderType());
+            Assert.AreEqual(OrderDirection.Sell, order.GetOrderDirection());
         }
 
 //        [Test]

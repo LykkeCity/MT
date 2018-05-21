@@ -8,10 +8,12 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
+using OrderType = Lykke.Service.ExchangeConnector.Client.Models.OrderType;
 
 namespace MarginTrading.Backend.Services.MatchingEngines
 {
@@ -55,7 +57,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 return;
             }
             
-            prices = order.GetOrderType() == OrderDirection.Buy
+            prices = order.GetOrderDirection() == OrderDirection.Buy
                 ? prices.OrderBy(tuple => tuple.price).ToList()
                 : prices.OrderByDescending(tuple => tuple.price).ToList();
             
@@ -69,7 +71,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 try
                 {
                     externalOrderModel = new OrderModel(
-                        order.GetOrderType().ToType<TradeType>(),
+                        order.GetOrderDirection().ToType<TradeType>(),
                         OrderType.Market,
                         TimeInForce.FillOrKill,
                         (double) Math.Abs(order.Volume),
@@ -91,7 +93,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                             MarketMakerId = sourcePrice.source,
                             MatchedDate = _dateService.Now(),
                             OrderId = executionResult.ExchangeOrderId,
-                            Price = CalculatePriceWithMarkups(assetPair, order.GetOrderType(), executedPrice),
+                            Price = CalculatePriceWithMarkups(assetPair, order.GetOrderDirection(), executedPrice),
                             Volume = (decimal) executionResult.Volume
                         }
                     };
