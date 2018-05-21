@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using Lykke.Service.ExchangeConnector.Client;
@@ -47,7 +48,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         }
         
         //TODO: remove orderProcessed function and make all validations before match
-        public void MatchMarketOrderForOpen(Order order, Func<MatchedOrderCollection, bool> orderProcessed)
+        public async Task MatchMarketOrderForOpenAsync(Order order, Func<MatchedOrderCollection, bool> orderProcessed)
         {
             var prices = _externalOrderBooksList.GetPricesForOpen(order);
 
@@ -79,8 +80,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                         sourcePrice.source,
                         externalAssetPair);
 
-                    var executionResult = _exchangeConnectorService.CreateOrderAsync(externalOrderModel).GetAwaiter()
-                        .GetResult();
+                    var executionResult = await _exchangeConnectorService.CreateOrderAsync(externalOrderModel);
 
                     var executedPrice = Math.Abs(executionResult.Price) > 0
                         ? (decimal) executionResult.Price
@@ -101,7 +101,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                     order.OpenExternalProviderId = sourcePrice.source;
                     order.OpenExternalOrderId = executionResult.ExchangeOrderId;
 
-                    _rabbitMqNotifyService.ExternalOrder(executionResult).GetAwaiter().GetResult();
+                    await _rabbitMqNotifyService.ExternalOrder(executionResult);
 
                     if (orderProcessed(matchedOrders))
                     {
@@ -118,16 +118,16 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                             sourcePrice.source,
                             externalAssetPair);
 
-                        var cancelOrderResult = _exchangeConnectorService.CreateOrderAsync(cancelOrderModel).GetAwaiter().GetResult();
+                        var cancelOrderResult = await _exchangeConnectorService.CreateOrderAsync(cancelOrderModel);
                         
-                        _rabbitMqNotifyService.ExternalOrder(cancelOrderResult).GetAwaiter().GetResult();
+                        await _rabbitMqNotifyService.ExternalOrder(cancelOrderResult);
                     }
 
                     return;
                 }
                 catch (Exception e)
                 {
-                    _log.WriteErrorAsync(nameof(StpMatchingEngine), nameof(MatchMarketOrderForOpen),
+                    _log.WriteError($"{nameof(StpMatchingEngine)}:{nameof(MatchMarketOrderForOpenAsync)}",
                         $"Internal order: {order.ToJson()}, External order model: {externalOrderModel.ToJson()}", e);
                 }
             }
@@ -143,7 +143,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         }
 
         //TODO: remove orderProcessed function and make all validations before match
-        public void MatchMarketOrderForClose(Order order, Func<MatchedOrderCollection, bool> orderProcessed)
+        public async Task MatchMarketOrderForCloseAsync(Order order, Func<MatchedOrderCollection, bool> orderProcessed)
         {
             var closePrice = _externalOrderBooksList.GetPriceForClose(order);
 
@@ -171,8 +171,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                     closeLp,
                     externalAssetPair);
 
-                var executionResult = _exchangeConnectorService.CreateOrderAsync(externalOrderModel).GetAwaiter()
-                    .GetResult();
+                var executionResult = await _exchangeConnectorService.CreateOrderAsync(externalOrderModel);
 
                 var executedPrice = Math.Abs(executionResult.Price) > 0
                     ? (decimal) executionResult.Price
@@ -183,7 +182,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 order.ClosePrice =
                     CalculatePriceWithMarkups(assetPair, order.GetCloseType(), executedPrice);
 
-                _rabbitMqNotifyService.ExternalOrder(executionResult).GetAwaiter().GetResult();
+                await _rabbitMqNotifyService.ExternalOrder(executionResult);
                 
                 var matchedOrders = new MatchedOrderCollection
                 {
@@ -201,7 +200,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             }
             catch (Exception e)
             {
-                _log.WriteErrorAsync(nameof(StpMatchingEngine), nameof(MatchMarketOrderForClose),
+                _log.WriteError($"{nameof(StpMatchingEngine)}:{nameof(MatchMarketOrderForCloseAsync)}",
                     $"Internal order: {order.ToJson()}, External order model: {externalOrderModel.ToJson()}", e);
             }
 

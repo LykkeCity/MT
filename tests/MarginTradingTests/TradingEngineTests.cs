@@ -29,7 +29,7 @@ using NUnit.Framework;
 namespace MarginTradingTests
 {
     [TestFixture]
-    [Ignore("Not working. Fix in MTC-120")]
+    //[Ignore("Not working. Fix in MTC-120")]
     public class TradingEngineTests : BaseTests
     {
         private ITradingEngine _tradingEngine;
@@ -492,6 +492,7 @@ namespace MarginTradingTests
             Assert.AreEqual(OrderCloseReason.Close, order.CloseReason);
             Assert.AreEqual(1, order.MatchedCloseOrders.Count);
             Assert.AreEqual(0.7, order.GetTotalFpl());
+            account = _accountsCacheService.Get(order.AccountId);
             Assert.AreEqual(1000.7, account.Balance);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
@@ -534,6 +535,7 @@ namespace MarginTradingTests
             Assert.AreEqual(OrderCloseReason.Close, order.CloseReason);
             Assert.AreEqual(2, order.MatchedCloseOrders.Count);
             Assert.AreEqual(-0.51, order.GetTotalFpl());
+            account = _accountsCacheService.Get(order.AccountId);
             Assert.AreEqual(999.49, account.Balance);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
@@ -578,6 +580,7 @@ namespace MarginTradingTests
             Assert.AreEqual(-0.62001, Math.Round(order.GetFpl(), order.AssetAccuracy));
             Assert.AreEqual(OrderStatus.Closed, order.Status);
             Assert.AreEqual(OrderCloseReason.Close, order.CloseReason);
+            account = _accountsCacheService.Get(order.AccountId);
             Assert.AreEqual(999.37999, account.Balance);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
@@ -622,6 +625,7 @@ namespace MarginTradingTests
             Assert.AreEqual(-0.51, Math.Round(order.GetFpl(), 3));
             Assert.AreEqual(OrderStatus.Closed, order.Status);
             Assert.AreEqual(OrderCloseReason.Close, order.CloseReason);
+            account = _accountsCacheService.Get(order.AccountId);
             Assert.AreEqual(999.49, account.Balance);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
@@ -678,6 +682,7 @@ namespace MarginTradingTests
             Assert.AreEqual(OrderStatus.Closed, order.Status);
             Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedCloseVolume());
             Assert.AreEqual(-0.60003, order.GetTotalFpl());
+            account = _accountsCacheService.Get(order.AccountId);
             Assert.AreEqual(999.39997, account.Balance);
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
             _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
@@ -798,6 +803,7 @@ namespace MarginTradingTests
             Assert.AreEqual(OrderStatus.Closed, order.Status); //order should be closed on TakeProfit
             Assert.AreEqual(OrderCloseReason.TakeProfit, order.CloseReason);
             Assert.AreEqual(0.7, order.GetTotalFpl());
+            account = _accountsCacheService.Get(order.AccountId);
             Assert.AreEqual(1000.7, account.Balance);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
@@ -840,6 +846,7 @@ namespace MarginTradingTests
             Assert.AreEqual(OrderStatus.Closed, order.Status); //order should be closed on TakeProfit
             Assert.AreEqual(OrderCloseReason.TakeProfit, order.CloseReason);
             Assert.AreEqual(2.79, order.GetTotalFpl());
+            account = _accountsCacheService.Get(order.AccountId);
             Assert.AreEqual(1002.79, account.Balance);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
@@ -882,6 +889,7 @@ namespace MarginTradingTests
             Assert.AreEqual(OrderStatus.Closed, order.Status); //order is closed now on StopLoss
             Assert.AreEqual(OrderCloseReason.StopLoss, order.CloseReason);
             Assert.AreEqual(-2.14998, order.GetTotalFpl());
+            account = _accountsCacheService.Get(order.AccountId);
             Assert.AreEqual(997.85002, account.Balance);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
@@ -924,6 +932,7 @@ namespace MarginTradingTests
             Assert.AreEqual(OrderStatus.Closed, order.Status); //order should be closed on StopLoss
             Assert.AreEqual(OrderCloseReason.StopLoss, order.CloseReason);
             Assert.AreEqual(-1.29008, order.GetTotalFpl());
+            account = _accountsCacheService.Get(order.AccountId);
             Assert.AreEqual(998.70992, account.Balance);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
@@ -1231,6 +1240,8 @@ namespace MarginTradingTests
             Assert.AreEqual(4, account.GetOpenPositionsCount());
             Assert.AreEqual(399.4104m, account.GetUsedMargin());
 
+            account = _accountsCacheService.Get(_acount1Id);
+            
             _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<MarginTradingAccount>(o => o.GetUsedMargin() == 399.4104m && o.Balance == account.Balance)));
             _clientNotifyServiceMock.Verify(x => x.NotifyAccountStopout(
                 It.Is<string>(clientId => account.ClientId == clientId), 
@@ -1317,7 +1328,7 @@ namespace MarginTradingTests
         public void Is_Balance_LessThanZero_On_StopOut_Thru_Big_Spread()
         {
             var account = Accounts[1];
-            account.Balance = 50000;
+            account.Balance = 240000;
             _accountsCacheService.Update(account);
 
             var ordersSet = new[]
@@ -1381,12 +1392,13 @@ namespace MarginTradingTests
             //add orders to create big spread
             ordersSet = new[]
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 107.315M, Volume = 100000 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 197.315M, Volume = 100000 },
                 new LimitOrder { CreateDate = DateTime.UtcNow, Id = "2", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 2126.039M, Volume = -100000 }
             };
 
             _matchingEngine.SetOrders(MarketMaker1Id, ordersSet, deleteAll: true);
 
+            resultingAccount = _accountsCacheService.Get(order.AccountId);
             Assert.IsTrue(resultingAccount.Balance < 0);
         }
 
@@ -1953,6 +1965,7 @@ namespace MarginTradingTests
 
             Assert.AreEqual(OrderStatus.Closed, closedOrder.Status); //should be closed 
             Assert.AreEqual(-0.1, order.GetTotalFpl());
+            account = _accountsCacheService.Get(order.AccountId);
             Assert.AreEqual(999.9, account.Balance);
 
             _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));

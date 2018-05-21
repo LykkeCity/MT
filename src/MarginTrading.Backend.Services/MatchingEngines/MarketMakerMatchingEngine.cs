@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
@@ -97,9 +98,10 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             }
         }
 
-        public void MatchMarketOrderForOpen(Order order, Func<MatchedOrderCollection, bool> matchedFunc)
+        public Task MatchMarketOrderForOpenAsync(Order order, Func<MatchedOrderCollection, bool> matchedFunc)
         {
-            using (_contextFactory.GetWriteSyncContext($"{nameof(MarketMakerMatchingEngine)}.{nameof(MatchMarketOrderForOpen)}"))
+            using (_contextFactory.GetWriteSyncContext(
+                $"{nameof(MarketMakerMatchingEngine)}.{nameof(MatchMarketOrderForOpenAsync)}"))
             {
                 var orderBookTypeToMatch = order.GetOrderDirection().GetOrderDirectionToMatchInOrderBook();
 
@@ -112,22 +114,26 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                     ProduceBestPrice(order.Instrument);
                 }
             }
-        }
 
-        public void MatchMarketOrderForClose(Order order, Func<MatchedOrderCollection, bool> matchedAction)
+            return Task.CompletedTask;
+        }    
+
+        public Task MatchMarketOrderForCloseAsync(Order order, Func<MatchedOrderCollection, bool> matchedAction)
         {
-            using (_contextFactory.GetWriteSyncContext($"{nameof(MarketMakerMatchingEngine)}.{nameof(MatchMarketOrderForClose)}"))
+            using (_contextFactory.GetWriteSyncContext($"{nameof(MarketMakerMatchingEngine)}.{nameof(MatchMarketOrderForCloseAsync)}"))
             {
                 var orderBookTypeToMatch = order.GetCloseType().GetOrderDirectionToMatchInOrderBook();
 
                 var matchedOrders = _orderBooks.Match(order, orderBookTypeToMatch, Math.Abs(order.GetRemainingCloseVolume()));
 
                 if (!matchedAction(matchedOrders))
-                    return;
+                    return Task.CompletedTask;
 
                 _orderBooks.Update(order, orderBookTypeToMatch, matchedOrders);
                 ProduceBestPrice(order.Instrument);
             } // lock
+            
+            return Task.CompletedTask;
         }
 
         public bool PingLock()

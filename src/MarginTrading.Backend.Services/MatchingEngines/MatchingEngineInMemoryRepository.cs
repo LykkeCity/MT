@@ -11,13 +11,13 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         private readonly Dictionary<string, IMatchingEngineBase> _matchingEngines;
         
         public MatchingEngineInMemoryRepository(
-            //IMarketMakerMatchingEngine marketMakerMatchingEngine,
+            IMarketMakerMatchingEngine marketMakerMatchingEngine,
             IStpMatchingEngine stpMatchingEngine)
         {
             var mes = new IMatchingEngineBase[]
             {
                 new RejectMatchingEngine(),
-                //marketMakerMatchingEngine,
+                marketMakerMatchingEngine,
                 stpMatchingEngine
             };
 

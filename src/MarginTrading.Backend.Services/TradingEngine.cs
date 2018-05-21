@@ -113,12 +113,12 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        private Task<Order> PlaceMarketOrderByMatchingEngineAsync(Order order, IMatchingEngineBase matchingEngine)
+        private async Task<Order> PlaceMarketOrderByMatchingEngineAsync(Order order, IMatchingEngineBase matchingEngine)
         {
             order.OpenOrderbookId = matchingEngine.Id;
             order.MatchingEngineMode = matchingEngine.Mode;
             
-            matchingEngine.MatchMarketOrderForOpen(order, matchedOrders =>
+            await matchingEngine.MatchMarketOrderForOpenAsync(order, matchedOrders =>
             {
                 if (!matchedOrders.Any())
                 {
@@ -163,7 +163,7 @@ namespace MarginTrading.Backend.Services
                 _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
             }
 
-            return Task.FromResult(order);
+            return order;
         }
 
         private void RejectOrder(Order order, OrderRejectReason reason, string message, string comment = null)
@@ -444,7 +444,7 @@ namespace MarginTrading.Backend.Services
             order.CloseReason = reason;
             order.Comment = comment;
 
-            matchingEngine.MatchMarketOrderForClose(order, matchedOrders =>
+            matchingEngine.MatchMarketOrderForCloseAsync(order, matchedOrders =>
             {
                 if (!matchedOrders.Any())
                 {
@@ -575,7 +575,7 @@ namespace MarginTrading.Backend.Services
         {
             order.CloseOrderbookId = matchingEngine.Id;
             
-            matchingEngine.MatchMarketOrderForClose(order, matchedOrders =>
+            matchingEngine.MatchMarketOrderForCloseAsync(order, matchedOrders =>
             {
                 if (matchedOrders.Count == 0)
                 {
