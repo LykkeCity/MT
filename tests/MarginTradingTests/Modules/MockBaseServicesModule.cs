@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Autofac;
 using Common.Log;
 using Lykke.Common;
+using Lykke.Service.PersonalData.Contract;
 using Lykke.Service.Session.AutorestClient;
 using Lykke.Service.Session.AutorestClient.Models;
 using Microsoft.Rest;
@@ -49,6 +50,10 @@ namespace MarginTradingTests.Modules
                 .Returns(() => Task.FromResult((IClientSession)new ClientSession { ClientId = "1" }));
 
             var volumeEquivalentService = new Mock<IEquivalentPricesService>();
+            var personalDataServiceMock = new Mock<IPersonalDataService>();
+            personalDataServiceMock
+                .Setup(item => item.GetEmailAsync(It.IsAny<string>()))
+                .Returns(() => Task.FromResult("test@test.com"));
 
             builder.RegisterInstance(emailService.Object).As<IEmailService>();
             builder.RegisterInstance(appNotifications.Object).As<IAppNotifications>();
@@ -61,6 +66,7 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(sessionServiceMock.Object).As<ISessionService>();
             builder.RegisterInstance(slackNotificationsMock.Object).As<ISlackNotificationsSender>();
             builder.RegisterInstance(volumeEquivalentService.Object).As<IEquivalentPricesService>();
+            builder.RegisterInstance(personalDataServiceMock.Object).As<IPersonalDataService>();
 
             builder.RegisterType<DateService>()
                 .As<IDateService>()

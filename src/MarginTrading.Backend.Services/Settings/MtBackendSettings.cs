@@ -1,4 +1,5 @@
 using Lykke.Service.ExchangeConnector.Client;
+using Lykke.Service.PersonalData.Settings;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Common.Settings;
 
@@ -15,5 +16,6 @@ namespace MarginTrading.Backend.Services.Settings
         public AssetClientSettings Assets { get; set; }
         public ClientAccountServiceSettings ClientAccountServiceClient { get; set; }
         public ExchangeConnectorServiceSettings MtStpExchangeConnectorClient { get; set; }
+        public PersonalDataServiceClientSettings PersonalDataServiceSettings { get; set; }
     }
 }
