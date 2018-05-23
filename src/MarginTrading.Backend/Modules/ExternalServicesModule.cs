@@ -9,6 +9,7 @@ using Lykke.Service.EmailSender;
 using Lykke.Service.ExchangeConnector.Client;
 using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.Contracts;
+using MarginTrading.Backend.Services.FakeExchangeConnector;
 using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Backend.Services.Stubs;
 using MarginTrading.Common.Services.Client;
@@ -28,14 +29,15 @@ namespace MarginTrading.Backend.Modules
 
         protected override void Load(ContainerBuilder builder)
         {
-            var services = new ServiceCollection();
-            
-            builder.RegisterType<ExchangeConnectorService>()
+            /******* Fake Fake ExchangeConnector used instead for perf testing 
+             builder.RegisterType<ExchangeConnectorService>()
                 .As<IExchangeConnectorService>()
                 .WithParameter("settings", _settings.CurrentValue.MtStpExchangeConnectorClient)
+                .SingleInstance();*/
+            builder.RegisterType<FakeExchangeConnectorService>()
+                .As<IExchangeConnectorService>()
                 .SingleInstance();
             
-            builder.Populate(services);
 
             #region Client Account Service
             
