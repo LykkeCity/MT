@@ -74,7 +74,9 @@ namespace MarginTrading.Backend.Controllers
                 AccountId = request.AccountId,
                 Instrument = request.InstrumentId,
                 Volume = request.Direction == OrderDirectionContract.Buy ? request.Volume : -request.Volume,
-                ExpectedOpenPrice = request.Price
+                ExpectedOpenPrice = request.Price,
+                TakeProfit = request.TakeProfit,
+                StopLoss = request.StopLoss
             };
 
             var placedOrder = await _tradingEngine.PlaceOrderAsync(order);
