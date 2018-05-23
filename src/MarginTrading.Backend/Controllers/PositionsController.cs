@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using JetBrains.Annotations;
 using MarginTrading.Backend.Contracts;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
@@ -54,7 +55,7 @@ namespace MarginTrading.Backend.Controllers
         [Route("{positionId}")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [HttpDelete]
-        public async Task CloseAsync([FromRoute] string positionId, [FromBody] PositionCloseRequest request)
+        public async Task CloseAsync([CanBeNull] [FromRoute] string positionId/*, [FromBody] PositionCloseRequest request*/)
         {
             if (!_ordersCache.ActiveOrders.TryGetOrderById(positionId, out var order))
             {
@@ -66,13 +67,13 @@ namespace MarginTrading.Backend.Controllers
                 throw new InvalidOperationException("Trades for instrument are not available");
             }
 
-            var reason =
-                request.Originator == OriginatorTypeContract.OnBehalf ||
-                request.Originator == OriginatorTypeContract.System
-                    ? OrderCloseReason.ClosedByBroker
-                    : OrderCloseReason.Close;
+            var reason = OrderCloseReason.Close;
+//                request.Originator == OriginatorTypeContract.OnBehalf ||
+//                request.Originator == OriginatorTypeContract.System
+//                    ? OrderCloseReason.ClosedByBroker
+//                    : OrderCloseReason.Close;
 
-            order = await _tradingEngine.CloseActiveOrderAsync(positionId, reason, request.Comment);
+            order = await _tradingEngine.CloseActiveOrderAsync(positionId, reason, /*request.Comment*/ "");
 
             if (order.Status != OrderStatus.Closed && order.Status != OrderStatus.Closing)
             {
@@ -81,7 +82,7 @@ namespace MarginTrading.Backend.Controllers
 
             _consoleWriter.WriteLine(
                 $"action position.close, orderId = {positionId}");
-            _operationsLogService.AddLog("action order.close", order.AccountId, request.ToJson(),
+            _operationsLogService.AddLog("action order.close", order.AccountId, ""/*request.ToJson()*/,
                 order.ToJson());
         }
 
@@ -95,7 +96,7 @@ namespace MarginTrading.Backend.Controllers
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [HttpDelete]
         public async Task CloseGroupAsync([FromRoute] string instrument,
-            [FromBody] PositionCloseRequest request, [FromQuery] PositionDirectionContract? direction = null)
+            /*[FromBody] PositionCloseRequest request,*/ [FromQuery] PositionDirectionContract? direction = null)
         {
             var orders = _ordersCache.ActiveOrders.GetAllOrders();
             
@@ -111,22 +112,22 @@ namespace MarginTrading.Backend.Controllers
                 orders = orders.Where(o => o.GetOrderType() == orderDirection).ToList();
             }
 
-            var reason =
-                request.Originator == OriginatorTypeContract.OnBehalf ||
-                request.Originator == OriginatorTypeContract.System
-                    ? OrderCloseReason.ClosedByBroker
-                    : OrderCloseReason.Close;
+            var reason = OrderCloseReason.Close;
+//                request.Originator == OriginatorTypeContract.OnBehalf ||
+//                request.Originator == OriginatorTypeContract.System
+//                    ? OrderCloseReason.ClosedByBroker
+//                    : OrderCloseReason.Close;
             
             foreach (var orderId in orders.Select(o => o.Id).ToList())
             {
-                var closedOrder = await _tradingEngine.CloseActiveOrderAsync(orderId, reason, request.Comment);
+                var closedOrder = await _tradingEngine.CloseActiveOrderAsync(orderId, reason, /*request.Comment*/ "");
 
                 if (closedOrder.Status != OrderStatus.Closed && closedOrder.Status != OrderStatus.Closing)
                 {
                     throw new InvalidOperationException(closedOrder.CloseRejectReasonText);
                 }
 
-                _operationsLogService.AddLog("action close positions group", closedOrder.AccountId, request.ToJson(),
+                _operationsLogService.AddLog("action close positions group", closedOrder.AccountId, ""/* request.ToJson()*/,
                     orderId);
             }
             
