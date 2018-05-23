@@ -99,7 +99,7 @@ namespace MarginTrading.Backend.Controllers
         [Route("{orderId}")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [HttpDelete]
-        public Task CancelAsync(string orderId, [FromBody] OrderCancelRequest request)
+        public Task CancelAsync(string orderId/*, [FromBody] OrderCancelRequest request*/)
         {
             if (!_ordersCache.WaitingForExecutionOrders.TryGetOrderById(orderId, out var order))
                 throw new InvalidOperationException("Order not found");
@@ -107,16 +107,18 @@ namespace MarginTrading.Backend.Controllers
             if (_assetDayOffService.IsDayOff(order.Instrument))
                 throw new InvalidOperationException("Trades for instrument are not available");
 
-            var reason =
-                request.Originator == OriginatorTypeContract.OnBehalf ||
-                request.Originator == OriginatorTypeContract.System
-                    ? OrderCloseReason.CanceledByBroker
-                    : OrderCloseReason.Canceled;
+            var reason = OrderCloseReason.Canceled;
+            
+//            var reason =
+//                request.Originator == OriginatorTypeContract.OnBehalf ||
+//                request.Originator == OriginatorTypeContract.System
+//                    ? OrderCloseReason.CanceledByBroker
+//                    : OrderCloseReason.Canceled;
 
-            var canceledOrder = _tradingEngine.CancelPendingOrder(order.Id, reason, request.Comment);
+            var canceledOrder = _tradingEngine.CancelPendingOrder(order.Id, reason, "" /*request.Comment*/);
 
             _consoleWriter.WriteLine($"action order.cancel for accountId = {order.AccountId}, orderId = {orderId}");
-            _operationsLogService.AddLog("action order.cancel", order.AccountId, request.ToJson(),
+            _operationsLogService.AddLog("action order.cancel", order.AccountId, "" /* request.ToJson()*/,
                 canceledOrder.ToJson());
 
             return Task.CompletedTask;

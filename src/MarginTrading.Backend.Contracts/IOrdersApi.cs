@@ -28,7 +28,7 @@ namespace MarginTrading.Backend.Contracts
         /// Close existing order 
         /// </summary>
         [Delete("/api/orders/{orderId}")]
-        Task CancelAsync(string orderId, [Body] OrderCancelRequest request);
+        Task CancelAsync(string orderId/*, [Body] OrderCancelRequest request*/);
 
         /// <summary>
         /// Get order by id 
