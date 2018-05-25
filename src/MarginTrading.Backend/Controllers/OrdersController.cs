@@ -101,11 +101,38 @@ namespace MarginTrading.Backend.Controllers
         [HttpDelete]
         public Task CancelAsync(string orderId/*, [FromBody] OrderCancelRequest request*/)
         {
+            var isSl = orderId.Contains(OrderTypeContract.StopLoss.ToString());
+            var isTp = orderId.Contains(OrderTypeContract.TakeProfit.ToString());
+            
+            if (isSl || isTp)
+            {
+                orderId = orderId
+                    .Replace($"_{OrderTypeContract.StopLoss.ToString()}", "")
+                    .Replace($"_{OrderTypeContract.TakeProfit.ToString()}", "");
+                    
+                if (!_ordersCache.TryGetOrderById(orderId, out var baseOrder))
+                    throw new InvalidOperationException("Order not found");
+
+                try
+                {
+                    _tradingEngine.ChangeOrderLimits(orderId, 
+                        isSl ? null : baseOrder.StopLoss,
+                        isTp ? null : baseOrder.TakeProfit,
+                        baseOrder.ExpectedOpenPrice);
+                }
+                catch (ValidateOrderException ex)
+                {
+                    throw new InvalidOperationException(ex.Message);
+                }
+
+                _consoleWriter.WriteLine($"action order.changeLimits for orderId = {orderId}");
+                _operationsLogService.AddLog("action order.changeLimits", baseOrder.AccountId, orderId, "");
+
+                return Task.CompletedTask;
+            }
+            
             if (!_ordersCache.WaitingForExecutionOrders.TryGetOrderById(orderId, out var order))
                 throw new InvalidOperationException("Order not found");
-
-            if (_assetDayOffService.IsDayOff(order.Instrument))
-                throw new InvalidOperationException("Trades for instrument are not available");
 
             var reason = OrderCloseReason.Canceled;
             
@@ -135,15 +162,42 @@ namespace MarginTrading.Backend.Controllers
         [HttpPut]
         public Task ChangeAsync(string orderId, [FromBody] OrderChangeRequest request)
         {
+            var isSl = orderId.Contains(OrderTypeContract.StopLoss.ToString());
+            var isTp = orderId.Contains(OrderTypeContract.TakeProfit.ToString());
+            
+            if (isSl || isTp)
+            {
+                orderId = orderId
+                    .Replace($"_{OrderTypeContract.StopLoss.ToString()}", "")
+                    .Replace($"_{OrderTypeContract.TakeProfit.ToString()}", "");
+                
+                if (!_ordersCache.TryGetOrderById(orderId, out var baseOrder))
+                    throw new InvalidOperationException("Order not found");
+
+                try
+                {
+                    _tradingEngine.ChangeOrderLimits(orderId, 
+                        isSl ? request.Price : baseOrder.StopLoss,
+                        isTp ? request.Price : baseOrder.TakeProfit,
+                        baseOrder.ExpectedOpenPrice);
+                }
+                catch (ValidateOrderException ex)
+                {
+                    throw new InvalidOperationException(ex.Message);
+                }
+
+                _consoleWriter.WriteLine($"action order.changeLimits for orderId = {orderId}");
+                _operationsLogService.AddLog("action order.changeLimits", baseOrder.AccountId, orderId, "");
+
+                return Task.CompletedTask;
+            }
+            
             if (!_ordersCache.TryGetOrderById(orderId, out var order))
                 throw new InvalidOperationException("Order not found");
 
-            if (_assetDayOffService.IsDayOff(order.Instrument))
-                throw new InvalidOperationException("Trades for instrument are not available");
-
             try
             {
-                _tradingEngine.ChangeOrderLimits(orderId, null, null, request.Price);
+                _tradingEngine.ChangeOrderLimits(order.Id, order.StopLoss, order.TakeProfit, request.Price);
             }
             catch (ValidateOrderException ex)
             {
@@ -198,7 +252,7 @@ namespace MarginTrading.Backend.Controllers
             [FromQuery] string parentOrderId = null)
         {
             // do not call get by account, it's slower for single account 
-            IEnumerable<Order> orders = _ordersCache.WaitingForExecutionOrders.GetAllOrders();
+            IEnumerable<Order> orders = _ordersCache.GetActive();
 
             if (!string.IsNullOrWhiteSpace(accountId))
                 orders = orders.Where(o => o.AccountId == accountId);
@@ -266,7 +320,8 @@ namespace MarginTrading.Backend.Controllers
                 yield return tpOrder;
             }
 
-            yield return baseOrder;
+            if (baseOrder.Status != OrderStatusContract.Executed)
+                yield return baseOrder;
         }
 
         private static OrderContract Convert(Order order)
@@ -305,6 +360,13 @@ namespace MarginTrading.Backend.Controllers
             result.Id += $"_{type}";
             result.ExecutionPrice = null;
             result.ExpectedOpenPrice = type == OrderTypeContract.StopLoss ? order.StopLoss : order.TakeProfit;
+            result.Direction = result.Direction == OrderDirectionContract.Buy
+                ? OrderDirectionContract.Sell
+                : OrderDirectionContract.Buy;
+            result.ExecutionPrice = null;
+            result.ForceOpen = false;
+            result.RelatedOrders = new List<string>();
+            result.TradesIds = new List<string>();
 
             return result;
         }
