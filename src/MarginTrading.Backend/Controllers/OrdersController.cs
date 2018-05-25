@@ -162,6 +162,28 @@ namespace MarginTrading.Backend.Controllers
         [HttpGet, Route("{orderId}")]
         public Task<OrderContract> GetAsync(string orderId)
         {
+            if (orderId.Contains(OrderTypeContract.StopLoss.ToString()))
+            {
+                if (!_ordersCache.TryGetOrderById(orderId.Replace($"_{OrderTypeContract.StopLoss.ToString()}", ""),
+                    out var baseOrder))
+                {
+                    return Task.FromResult<OrderContract>(null);
+                }
+
+                return Task.FromResult(CreatePendingOrder(baseOrder, OrderTypeContract.StopLoss));
+            }
+
+            if (orderId.Contains(OrderTypeContract.TakeProfit.ToString()))
+            {
+                if (!_ordersCache.TryGetOrderById(orderId.Replace($"_{OrderTypeContract.TakeProfit.ToString()}", ""),
+                    out var baseOrder))
+                {
+                    return Task.FromResult<OrderContract>(null);
+                }
+                
+                return Task.FromResult(CreatePendingOrder(baseOrder, OrderTypeContract.TakeProfit));
+            }
+
             return _ordersCache.TryGetOrderById(orderId, out var order)
                 ? Task.FromResult(Convert(order))
                 : Task.FromResult<OrderContract>(null);
@@ -190,7 +212,7 @@ namespace MarginTrading.Backend.Controllers
             if (!string.IsNullOrWhiteSpace(parentOrderId))
                 orders = orders.Where(o => o.Id == parentOrderId); // todo: fix when order will have a parentOrderId
 
-            return Task.FromResult(orders.Select(Convert).ToList());
+            return Task.FromResult(orders.SelectMany(MakeOrderContracts).ToList());
         }
 
         private static List<string> GetTrades(string orderId, OrderStatus status, OrderDirection orderDirection)
@@ -225,6 +247,27 @@ namespace MarginTrading.Backend.Controllers
                     throw new ArgumentOutOfRangeException(nameof(orderStatus), orderStatus, null);
             }
         }
+        
+        private static IEnumerable<OrderContract> MakeOrderContracts(Order r)
+        {
+            var baseOrder = Convert(r);
+
+            if (r.StopLoss != null)
+            {
+                var slOrder = CreatePendingOrder(r, OrderTypeContract.StopLoss);
+                baseOrder.RelatedOrders.Add(slOrder.Id);
+                yield return slOrder;
+            }
+            
+            if (r.TakeProfit != null)
+            {
+                var tpOrder = CreatePendingOrder(r, OrderTypeContract.TakeProfit);
+                baseOrder.RelatedOrders.Add(tpOrder.Id);
+                yield return tpOrder;
+            }
+
+            yield return baseOrder;
+        }
 
         private static OrderContract Convert(Order order)
         {
@@ -250,6 +293,20 @@ namespace MarginTrading.Backend.Controllers
                 ValidityTime = null,
                 Volume = order.Volume,
             };
+        }
+        
+        private static OrderContract CreatePendingOrder(Order order, OrderTypeContract type)
+        {
+            var result = Convert(order);
+
+            result.Type = type;
+            result.Status = OrderStatusContract.Inactive;
+            result.ParentOrderId = result.Id;
+            result.Id += $"_{type}";
+            result.ExecutionPrice = null;
+            result.ExpectedOpenPrice = type == OrderTypeContract.StopLoss ? order.StopLoss : order.TakeProfit;
+
+            return result;
         }
     }
 }

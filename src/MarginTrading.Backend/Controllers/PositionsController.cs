@@ -166,6 +166,17 @@ namespace MarginTrading.Backend.Controllers
 
         private OpenPositionContract Convert(Order order)
         {
+            var relatedOrders = new List<string>();
+            
+            if (order.StopLoss != null)
+            {
+                relatedOrders.Add($"{order.Id}_{OrderTypeContract.StopLoss.ToString()}");
+            }
+            if (order.TakeProfit != null)
+            {
+                relatedOrders.Add($"{order.Id}_{OrderTypeContract.TakeProfit.ToString()}");
+            }
+            
             return new OpenPositionContract
             {
                 AccountId = order.AccountId,
@@ -175,7 +186,7 @@ namespace MarginTrading.Backend.Controllers
                 Id = order.Id,
                 OpenPrice = order.OpenPrice,
                 PnL = order.GetFpl(),
-                RelatedOrders = new List<string>(),
+                RelatedOrders = relatedOrders,
                 OpenTimestamp = order.OpenDate.RequiredNotNull(nameof(order.OpenDate)),
                 TradeId = order.Id + '_' + order.GetOrderType(),
             };
