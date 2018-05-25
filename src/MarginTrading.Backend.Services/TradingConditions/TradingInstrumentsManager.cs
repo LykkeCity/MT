@@ -12,13 +12,13 @@ namespace MarginTrading.Backend.Services.TradingConditions
     [UsedImplicitly]
     public class TradingInstrumentsManager : ITradingInstrumentsManager
     {
-        private readonly TradingInstrumnentsCacheService _accountAssetsCacheService;
+        private readonly TradingInstrumentsCacheService _accountAssetsCacheService;
         private readonly ITradingInstrumentsApi _tradingInstruments;
         private readonly IConvertService _convertService;
         private readonly IConsole _console;
 
         public TradingInstrumentsManager(
-            TradingInstrumnentsCacheService accountAssetsCacheService,
+            TradingInstrumentsCacheService accountAssetsCacheService,
             ITradingInstrumentsApi tradingInstruments,
             IConvertService convertService,
             IConsole console)

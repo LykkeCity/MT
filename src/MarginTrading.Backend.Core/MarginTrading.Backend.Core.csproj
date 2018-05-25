@@ -10,12 +10,10 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
+    <PackageReference Include="Lykke.MarginTrading.OrderbookAggregator.Contracts" Version="1.0.1" />
     <PackageReference Include="Lykke.SettingsReader" Version="2.1.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MarginTrading.Common\MarginTrading.Common.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Snow" />
   </ItemGroup>
 </Project>

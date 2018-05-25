@@ -30,6 +30,9 @@ namespace MarginTrading.Backend.Core.Settings
         [Optional, CanBeNull]
         public RabbitMqSettings StpAggregatorRabbitMqSettings { get; set; }
         
+        [Optional, CanBeNull] 
+        public RabbitMqSettings FxRateRabbitMqSettings { get; set; } 
+        
         [Optional, CanBeNull]
         public RabbitMqSettings RisksRabbitMqSettings { get; set; }
         

@@ -15,7 +15,7 @@ namespace MarginTrading.Backend.Services
         private readonly IQuoteCacheService _quoteCashService;
         private readonly IAccountUpdateService _accountUpdateService;
         private readonly IAccountsCacheService _accountsCacheService;
-        private readonly ITradingInstrumnentsCacheService _accountAssetsCacheService;
+        private readonly ITradingInstrumentsCacheService _accountAssetsCacheService;
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly OrdersCache _ordersCache;
         private readonly IAssetPairDayOffService _assetDayOffService;
@@ -24,7 +24,7 @@ namespace MarginTrading.Backend.Services
             IQuoteCacheService quoteCashService,
             IAccountUpdateService accountUpdateService,
             IAccountsCacheService accountsCacheService,
-            ITradingInstrumnentsCacheService accountAssetsCacheService,
+            ITradingInstrumentsCacheService accountAssetsCacheService,
             IAssetPairsCache assetPairsCache,
             OrdersCache ordersCache,
             IAssetPairDayOffService assetDayOffService)
