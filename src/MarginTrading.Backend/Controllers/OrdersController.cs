@@ -252,7 +252,7 @@ namespace MarginTrading.Backend.Controllers
             [FromQuery] string parentOrderId = null)
         {
             // do not call get by account, it's slower for single account 
-            IEnumerable<Order> orders = _ordersCache.GetActive();
+            IEnumerable<Order> orders = _ordersCache.GetPending();
 
             if (!string.IsNullOrWhiteSpace(accountId))
                 orders = orders.Where(o => o.AccountId == accountId);
