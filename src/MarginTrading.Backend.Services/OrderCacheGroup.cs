@@ -221,7 +221,7 @@ namespace MarginTrading.Backend.Services
 
             try
             {
-                return _ordersById.Values;
+                return _ordersById.Values.ToArray();
             }
             finally
             {
