@@ -335,6 +335,7 @@ namespace MarginTrading.Backend.Controllers
                 CreatedTimestamp = order.CreateDate,
                 Direction = order.GetOrderType().ToType<OrderDirectionContract>(),
                 ExecutionPrice = order.OpenPrice,
+                FxRate = order.GetFplRate(),
                 ExpectedOpenPrice = order.ExpectedOpenPrice,
                 ForceOpen = true,
                 ModifiedTimestamp = order.LastModified ?? order.OpenDate ?? order.CreateDate,

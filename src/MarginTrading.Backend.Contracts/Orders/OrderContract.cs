@@ -70,6 +70,11 @@ namespace MarginTrading.Backend.Contracts.Orders
         /// Execution open price in base asset units. Filled for executed orders only.
         /// </summary>
         public decimal? ExecutionPrice { get; set; }
+        
+        /// <summary>
+        /// Current FxRate
+        /// </summary>
+        public decimal FxRate { get; set; }
 
         /// <summary>
         /// Execution trades ids. Filled for executed orders only.

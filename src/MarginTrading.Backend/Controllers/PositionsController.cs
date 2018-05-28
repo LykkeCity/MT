@@ -182,6 +182,8 @@ namespace MarginTrading.Backend.Controllers
                 Id = order.Id,
                 OpenPrice = order.OpenPrice,
                 PnL = order.GetFpl(),
+                Margin = order.GetMarginMaintenance(),
+                FxRate = order.GetFplRate(),
                 RelatedOrders = relatedOrders,
                 OpenTimestamp = order.OpenDate.RequiredNotNull(nameof(order.OpenDate)),
                 TradeId = order.Id + '_' + order.GetOrderType(),

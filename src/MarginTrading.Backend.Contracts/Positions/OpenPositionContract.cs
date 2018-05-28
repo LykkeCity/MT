@@ -47,6 +47,16 @@ namespace MarginTrading.Backend.Contracts.Positions
         /// Profit and loss of the position in base asset units (without commissions)
         /// </summary>
         public decimal PnL { get; set; }
+        
+        /// <summary>
+        /// Current margin value
+        /// </summary>
+        public decimal Margin { get; set; }
+        
+        /// <summary>
+        /// Current FxRate
+        /// </summary>
+        public decimal FxRate { get; set; }
 
         /// <summary>
         /// The trade which opened the position
