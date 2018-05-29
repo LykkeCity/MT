@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using JetBrains.Annotations;
-using MarginTrading.AccountsManagement.Contracts.Messages;
+using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Services.Events;
@@ -39,7 +39,7 @@ namespace MarginTrading.Backend.Services.Workflow
             var updatedAccount = Convert(e.Account);
             _accountsCacheService.Update(updatedAccount);
             _clientNotifyService.NotifyAccountUpdated(updatedAccount);
-            if (e.EventType == AccountChangedEventType.BalanceUpdated)
+            if (e.EventType == AccountChangedEventTypeContract.BalanceUpdated)
                 _acountBalanceChangedEventChannel.SendEvent(this, new AccountBalanceChangedEventArgs(updatedAccount));
         }
 

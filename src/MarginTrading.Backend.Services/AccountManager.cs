@@ -10,7 +10,6 @@ using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts;
-using MarginTrading.AccountsManagement.Contracts.Messages;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
@@ -132,7 +131,7 @@ namespace MarginTrading.Backend.Services
         private MarginTradingAccount Convert(AccountContract accountContract)
         {
             return _convertService.Convert<AccountContract, MarginTradingAccount>(accountContract,
-                o => o.ConfigureMap(MemberList.Source));
+                o => o.ConfigureMap(MemberList.Source).ForSourceMember(x => x.ModificationTimestamp, c => c.Ignore()));
         }
     }
 }

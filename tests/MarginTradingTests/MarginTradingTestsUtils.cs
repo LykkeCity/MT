@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AzureStorage.Tables;
@@ -42,17 +43,8 @@ namespace MarginTradingTests
 
         public static IAccountsApi GetPopulatedAccountsApi(List<MarginTradingAccount> accounts)
         {
-            var list = accounts.Select(a => new AccountContract
-            {
-                Balance = a.Balance,
-                BaseAssetId = a.BaseAssetId,
-                ClientId = a.ClientId,
-                Id = a.Id,
-                IsDisabled = a.IsDisabled,
-                LegalEntity = a.LegalEntity,
-                TradingConditionId = a.TradingConditionId,
-                WithdrawTransferLimit = a.WithdrawTransferLimit,
-            }).ToList();
+            var list = accounts.Select(a => new AccountContract(a.Id, a.ClientId, a.TradingConditionId, a.BaseAssetId,
+                a.Balance, a.WithdrawTransferLimit, a.LegalEntity, a.IsDisabled, DateTimeOffset.UtcNow)).ToList();
             return Mock.Of<IAccountsApi>(a => a.List() == Task.FromResult(list));
         }
 
