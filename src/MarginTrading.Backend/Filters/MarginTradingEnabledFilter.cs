@@ -70,10 +70,20 @@ namespace MarginTrading.Backend.Filters
             if (accountIdGetter != null)
             {
                 var accountId = accountIdGetter(context.ActionArguments);
-                if (!string.IsNullOrWhiteSpace(accountId) &&
-                    !_marginTradingSettingsCacheService.IsMarginTradingEnabledByAccountId(accountId))
-                    throw new InvalidOperationException(
-                        "Using this type of margin trading is restricted for account id " + accountId);
+                if (!string.IsNullOrWhiteSpace(accountId))
+                {
+                    var isAccEnabled = _marginTradingSettingsCacheService.IsMarginTradingEnabledByAccountId(accountId);
+                    if (isAccEnabled == null)
+                    {
+                        throw new InvalidOperationException($"Account {accountId} does not exist");
+                    }
+
+                    if (!(bool) isAccEnabled)
+                    {
+                        throw new InvalidOperationException(
+                            "Using this type of margin trading is restricted for account id " + accountId);
+                    }
+                }
             }
         }
 

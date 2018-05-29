@@ -21,7 +21,7 @@ namespace MarginTrading.Backend.Services.Services
         /// <summary>
         /// Detects if margin trading for <paramref name="accountId"/>
         /// </summary>
-        bool IsMarginTradingEnabledByAccountId(string accountId);
+        bool? IsMarginTradingEnabledByAccountId(string accountId);
 
         /// <summary>
         /// Notifies the service of availability change 
