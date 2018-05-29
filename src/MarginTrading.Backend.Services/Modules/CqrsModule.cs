@@ -91,6 +91,8 @@ namespace MarginTrading.Backend.Services.Modules
             contextRegistration.ListeningEvents(typeof(AccountChangedEvent))
                 .From(_settings.ContextNames.AccountsManagement).On(EventsRoute)
                 .WithProjection(typeof(AccountsProjection), _settings.ContextNames.AccountsManagement);
+            
+            contextRegistration.PublishingEvents(typeof(PositionClosedEvent)).With(EventsRoute);
 
             return contextRegistration;
         }

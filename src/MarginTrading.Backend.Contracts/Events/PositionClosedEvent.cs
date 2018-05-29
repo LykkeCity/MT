@@ -37,13 +37,13 @@ namespace MarginTrading.Backend.Contracts.Events
         /// Closed position id
         /// </summary>
         [NotNull]
-        [Key(3)]
+        [Key(2)]
         public string PositionId { get; }
 
         /// <summary>
         /// Profit loss which will affect the balance
         /// </summary>
-        [Key(4)]
+        [Key(3)]
         public decimal BalanceDelta { get; }
     }
 }
