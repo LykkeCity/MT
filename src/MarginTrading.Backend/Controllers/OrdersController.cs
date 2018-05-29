@@ -356,7 +356,9 @@ namespace MarginTrading.Backend.Controllers
             var result = Convert(order);
 
             result.Type = type;
-            result.Status = OrderStatusContract.Inactive;
+            result.Status = result.Status == OrderStatusContract.Executed
+                ? OrderStatusContract.Active
+                : OrderStatusContract.Inactive;
             result.ParentOrderId = result.Id;
             result.Id += $"_{type}";
             result.ExecutionPrice = null;
