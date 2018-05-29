@@ -252,7 +252,7 @@ namespace MarginTrading.Backend.Controllers
             [FromQuery] string parentOrderId = null)
         {
             // do not call get by account, it's slower for single account 
-            IEnumerable<Order> orders = _ordersCache.GetPending();
+            IEnumerable<Order> orders = _ordersCache.GetAll();
 
             if (!string.IsNullOrWhiteSpace(accountId))
                 orders = orders.Where(o => o.AccountId == accountId);
@@ -296,7 +296,7 @@ namespace MarginTrading.Backend.Controllers
                 case OrderStatus.Rejected:
                     return OrderStatusContract.Rejected;
                 case OrderStatus.Closing:
-                    return OrderStatusContract.Active;
+                    return OrderStatusContract.Executed;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(orderStatus), orderStatus, null);
             }
@@ -368,6 +368,7 @@ namespace MarginTrading.Backend.Controllers
             result.ForceOpen = false;
             result.RelatedOrders = new List<string>();
             result.TradesIds = new List<string>();
+            result.Volume = -result.Volume;
 
             return result;
         }

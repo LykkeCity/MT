@@ -39,6 +39,11 @@ namespace MarginTrading.Backend.Contracts.Positions
         public decimal OpenPrice { get; set; }
         
         /// <summary>
+        /// Expected open price
+        /// </summary>
+        public decimal? ExpectedOpenPrice { get; set; }
+        
+        /// <summary>
         /// Current price for closing of position
         /// </summary>
         public decimal ClosePrice { get; set; }
