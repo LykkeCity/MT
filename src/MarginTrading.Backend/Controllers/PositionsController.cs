@@ -181,6 +181,7 @@ namespace MarginTrading.Backend.Controllers
                 Direction = Convert(order.GetOrderType()),
                 Id = order.Id,
                 OpenPrice = order.OpenPrice,
+                ClosePrice = order.ClosePrice,
                 PnL = order.GetFpl(),
                 Margin = order.GetMarginMaintenance(),
                 FxRate = order.GetFplRate(),

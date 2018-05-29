@@ -39,6 +39,11 @@ namespace MarginTrading.Backend.Contracts.Positions
         public decimal OpenPrice { get; set; }
         
         /// <summary>
+        /// Current price for closing of position
+        /// </summary>
+        public decimal ClosePrice { get; set; }
+        
+        /// <summary>
         /// Current position volume in quoting asset units
         /// </summary>
         public decimal CurrentVolume { get; set; }
