@@ -66,7 +66,7 @@ namespace MarginTrading.Backend.Services
             var accuracy = _assetsCache.GetAssetAccuracy(account.BaseAssetId);
             var activeOrdersMaintenanceMargin = activeOrders.Sum(item => item.GetMarginMaintenance());
             var activeOrdersInitMargin = activeOrders.Sum(item => item.GetMarginInit());
-            var pendingOrdersMargin = pendingOrders.Sum(item => item.GetMarginInit());
+            var pendingOrdersMargin = 0;// pendingOrders.Sum(item => item.GetMarginInit());
 
             account.AccountFpl.PnL = Math.Round(activeOrders.Sum(x => x.GetTotalFpl()), accuracy);
 

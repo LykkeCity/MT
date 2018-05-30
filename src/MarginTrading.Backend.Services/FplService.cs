@@ -34,11 +34,14 @@ namespace MarginTrading.Backend.Services
 
         public void UpdateOrderFpl(IOrder order, FplData fplData)
         {
-            var handler = order.Status != OrderStatus.WaitingForExecution
-                ? UpdateOrderFplData
-                : (Action<IOrder, FplData>)UpdatePendingOrderMargin;
+//            var handler = order.Status != OrderStatus.WaitingForExecution
+//                ? UpdateOrderFplData
+//                : (Action<IOrder, FplData>)UpdatePendingOrderMargin;
+//
+//            handler(order, fplData);
 
-            handler(order, fplData);
+            UpdateOrderFplData(order, fplData);
+
         }
 
         private void UpdateOrderFplData(IOrder order, FplData fplData)
@@ -51,10 +54,11 @@ namespace MarginTrading.Backend.Services
 
             fplData.Fpl = Math.Round(fpl, fplData.AccountBaseAssetAccuracy);
 
-            CalculateMargin(order, fplData);
-
             fplData.OpenPrice = order.OpenPrice;
             fplData.ClosePrice = order.ClosePrice;
+            
+            CalculateMargin(order, fplData);
+            
             fplData.SwapsSnapshot = order.GetSwaps();
             
             fplData.CalculatedHash = fplData.ActualHash;
@@ -79,8 +83,16 @@ namespace MarginTrading.Backend.Services
             var accountAsset =
                 _accountAssetsCacheService.GetTradingInstrument(order.TradingConditionId, order.Instrument);
 
-            fplData.MarginRate = _cfdCalculatorService.GetQuoteRateForBaseAsset(order.AccountAssetId, order.Instrument, 
-                order.LegalEntity);
+//            fplData.MarginRate = _cfdCalculatorService.GetQuoteRateForBaseAsset(order.AccountAssetId, order.Instrument, 
+//                order.LegalEntity);
+//            fplData.MarginInit =
+//                Math.Round(Math.Abs(order.Volume) * fplData.MarginRate / accountAsset.LeverageInit,
+//                    fplData.AccountBaseAssetAccuracy);
+//            fplData.MarginMaintenance =
+//                Math.Round(Math.Abs(order.Volume) * fplData.MarginRate / accountAsset.LeverageMaintenance,
+//                    fplData.AccountBaseAssetAccuracy);
+            
+            fplData.MarginRate = fplData.ClosePrice * fplData.FplRate;
             fplData.MarginInit =
                 Math.Round(Math.Abs(order.Volume) * fplData.MarginRate / accountAsset.LeverageInit,
                     fplData.AccountBaseAssetAccuracy);
