@@ -9,20 +9,26 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Core.Services;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Common.Extensions;
 using MarginTrading.OrderbookAggregator.Contracts.Messages;
 
 namespace MarginTrading.Backend.Services.Quotes
 {
-    public class FxRateCacheService : IFxRateCacheService
+    public class FxRateCacheService : TimerPeriod, IFxRateCacheService
     {
         private readonly ILog _log;
-        private readonly Dictionary<string, InstrumentBidAskPair> _quotes;
+        private readonly IMarginTradingBlobRepository _blobRepository;
+        private Dictionary<string, InstrumentBidAskPair> _quotes;
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
+        private static string BlobName = "FxRates";
 
-        public FxRateCacheService(ILog log)
+        public FxRateCacheService(ILog log, IMarginTradingBlobRepository blobRepository, 
+            MarginTradingSettings marginTradingSettings)
+            : base(nameof(FxRateCacheService), marginTradingSettings.BlobPersistence.FxRatesDumpPeriodMilliseconds, log)
         {
             _log = log;
+            _blobRepository = blobRepository;
             _quotes = new Dictionary<string, InstrumentBidAskPair>();
         }
 
@@ -177,6 +183,40 @@ namespace MarginTrading.Backend.Services.Quotes
             {
                 _log.WriteError(nameof(ExternalExchangeOrderbookMessage), orderbook.ToJson(), e);
                 return false;
+            }
+        }
+        
+        public override void Start()
+        {
+            _quotes =
+                _blobRepository
+                    .Read<Dictionary<string, InstrumentBidAskPair>>(LykkeConstants.StateBlobContainer, BlobName)
+                    ?.ToDictionary(d => d.Key, d => d.Value) ??
+                new Dictionary<string, InstrumentBidAskPair>();
+
+            base.Start();
+        }
+
+        public override Task Execute()
+        {
+            return DumpToRepository();
+        }
+
+        public override void Stop()
+        {
+            DumpToRepository().Wait();
+            base.Stop();
+        }
+
+        private async Task DumpToRepository()
+        {
+            try
+            {
+                await _blobRepository.Write(LykkeConstants.StateBlobContainer, BlobName, GetAllQuotes());
+            }
+            catch (Exception ex)
+            {
+                await _log.WriteErrorAsync(nameof(FxRateCacheService), "Save fx rates", "", ex);
             }
         }
     }

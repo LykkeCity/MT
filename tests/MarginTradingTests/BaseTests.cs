@@ -56,7 +56,17 @@ namespace MarginTradingTests
             var marginSettings = new MarginTradingSettings
             {
                 RabbitMqQueues =
-                    new RabbitMqQueues {MarginTradingEnabledChanged = new RabbitMqQueueInfo {ExchangeName = ""}}
+                    new RabbitMqQueues
+                    {
+                        MarginTradingEnabledChanged = new RabbitMqQueueInfo {ExchangeName = ""}
+                    },
+                BlobPersistence = new BlobPersistenceSettings()
+                {
+                    FxRatesDumpPeriodMilliseconds = 10000,
+                    QuotesDumpPeriodMilliseconds = 10000,
+                    OrderbooksDumpPeriodMilliseconds = 5000,
+                    OrdersDumpPeriodMilliseconds = 5000
+                }
             };
 
             builder.RegisterInstance(marginSettings).SingleInstance();
