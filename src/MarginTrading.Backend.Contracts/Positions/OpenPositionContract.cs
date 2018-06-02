@@ -39,6 +39,16 @@ namespace MarginTrading.Backend.Contracts.Positions
         public decimal OpenPrice { get; set; }
         
         /// <summary>
+        /// Expected open price
+        /// </summary>
+        public decimal? ExpectedOpenPrice { get; set; }
+        
+        /// <summary>
+        /// Current price for closing of position
+        /// </summary>
+        public decimal ClosePrice { get; set; }
+        
+        /// <summary>
         /// Current position volume in quoting asset units
         /// </summary>
         public decimal CurrentVolume { get; set; }
@@ -47,6 +57,16 @@ namespace MarginTrading.Backend.Contracts.Positions
         /// Profit and loss of the position in base asset units (without commissions)
         /// </summary>
         public decimal PnL { get; set; }
+        
+        /// <summary>
+        /// Current margin value
+        /// </summary>
+        public decimal Margin { get; set; }
+        
+        /// <summary>
+        /// Current FxRate
+        /// </summary>
+        public decimal FxRate { get; set; }
 
         /// <summary>
         /// The trade which opened the position

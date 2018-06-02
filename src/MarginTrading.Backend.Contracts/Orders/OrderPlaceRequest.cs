@@ -16,6 +16,9 @@ namespace MarginTrading.Backend.Contracts.Orders
         public decimal Volume { get; set; }
         public decimal? Price { get; set; } // null for market
         
+        public decimal? StopLoss { get; set; }
+        public decimal? TakeProfit { get; set; }
+        
         public bool ForceOpen { get; set; }
 
         public DateTime? Validity { get; set; } // null for market

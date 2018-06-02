@@ -6,6 +6,7 @@ using Lykke.HttpClientGenerator;
 using Lykke.HttpClientGenerator.Retries;
 using MarginTrading.Backend.Contracts;
 using MarginTrading.Backend.Contracts.Orders;
+using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Contracts.Prices;
 using Newtonsoft.Json;
 using Refit;
@@ -54,10 +55,11 @@ namespace MarginTrading.Backend.TestClient
             var generator = HttpClientGenerator.BuildForUrl("http://localhost:5000").WithApiKey("margintrading")
                 .WithRetriesStrategy(retryStrategy).Create();
 
-            await CheckAccountsAsync(generator);
-            await CheckOrdersAsync(generator);
             await CheckPositionsAsync(generator);
-            await CheckPricesAsync(generator);
+            
+            //await CheckAccountsAsync(generator);
+            //await CheckOrdersAsync(generator);
+            //await CheckPricesAsync(generator);
 
             Console.WriteLine("Successfuly finished");
         }
@@ -77,7 +79,13 @@ namespace MarginTrading.Backend.TestClient
         private static async Task CheckPositionsAsync(HttpClientGenerator generator)
         {
             var api = generator.Generate<IPositionsApi>();
-            await api.ListAsync().Dump();
+            var positions = await api.ListAsync().Dump();
+            var anyPosition = positions.FirstOrDefault();
+            if (anyPosition != null)
+            {
+                await api.CloseAsync(anyPosition.Id/*,
+                    new PositionCloseRequest {Comment = "111", Originator = OriginatorTypeContract.Investor}*/).Dump();
+            }
         }
 
         private static async Task CheckAccountsAsync(HttpClientGenerator generator)

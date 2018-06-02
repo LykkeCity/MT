@@ -5,8 +5,9 @@ using System.Threading.Tasks;
 using Autofac;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Commands;
- using MarginTrading.AccountsManagement.Contracts.Messages;
+ using MarginTrading.AccountsManagement.Contracts.Events;
  using MarginTrading.AccountsManagement.Contracts.Models;
+ using MarginTrading.Backend.Contracts.Events;
  using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.MatchingEngines;
@@ -86,20 +87,15 @@ namespace MarginTradingTests
             var accountsProjection = Container.Resolve<AccountsProjection>();
             var convertService = Container.Resolve<IConvertService>();
             Mock.Get(Container.Resolve<ICqrsEngine>()).Setup(s =>
-                s.SendCommand(It.IsNotNull<BeginClosePositionBalanceUpdateCommand>(), contextsNames.TradingEngine,
-                    contextsNames.AccountsManagement, 0U))
-                .Callback<BeginClosePositionBalanceUpdateCommand, string, string, uint>((command, s1, s2, u) =>
+                s.PublishEvent(It.IsNotNull<PositionClosedEvent>(), contextsNames.TradingEngine))
+                .Callback<PositionClosedEvent, string>((ev, s1) =>
                 {
                     // simulate the behaviour of account management service 
-                    var account = _accountsCacheService.Get(command.AccountId);
+                    var account = _accountsCacheService.Get(ev.AccountId);
+                    account.Balance += ev.BalanceDelta;
                     var accountContract = convertService.Convert<AccountContract>(account);
-                    accountContract.Balance += command.Amount;
-                    accountsProjection.Handle(new AccountChangedEvent
-                    {
-                        Account = accountContract,
-                        Date = DateTime.UtcNow,
-                        EventType = AccountChangedEventType.BalanceUpdated,
-                    });
+                    accountsProjection.Handle(new AccountChangedEvent(DateTime.UtcNow, accountContract,
+                        AccountChangedEventTypeContract.BalanceUpdated));
                 });
         }
 

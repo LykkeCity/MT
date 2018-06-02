@@ -34,7 +34,7 @@ namespace MarginTrading.Backend.Controllers
         [Route("best")]
         [HttpPost]
         [SkipMarginTradingEnabledCheck]
-        public async Task<Dictionary<string, BestPriceContract>> GetBestAsync(
+        public Task<Dictionary<string, BestPriceContract>> GetBestAsync(
             [FromBody] InitPricesBackendRequest request)
         {
             IEnumerable<KeyValuePair<string, InstrumentBidAskPair>> allQuotes = _quoteCacheService.GetAllQuotes();
@@ -42,7 +42,7 @@ namespace MarginTrading.Backend.Controllers
             if (request.AssetIds != null && request.AssetIds.Any())
                 allQuotes = allQuotes.Where(q => request.AssetIds.Contains(q.Key));
 
-            return allQuotes.ToDictionary(q => q.Key, q => Convert(q.Value));
+            return Task.FromResult(allQuotes.ToDictionary(q => q.Key, q => Convert(q.Value)));
         }
         
         private BestPriceContract Convert(InstrumentBidAskPair arg)

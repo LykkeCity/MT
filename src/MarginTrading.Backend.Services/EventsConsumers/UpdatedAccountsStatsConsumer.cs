@@ -50,6 +50,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
         private void NotifyAccountStatsChanged(IMarginTradingAccount account)
         {
+            account.CacheNeedsToBeUpdated();
+            
             var stats = account.ToRabbitMqContract(_marginSettings.IsLive);
 
             _rabbitMqNotifyService.UpdateAccountStats(new AccountStatsUpdateMessage {Accounts = new[] {stats}});

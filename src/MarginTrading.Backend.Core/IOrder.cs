@@ -19,6 +19,7 @@ namespace MarginTrading.Backend.Core
         
         DateTime? OpenDate { get; }
         DateTime? CloseDate { get; }
+        DateTime? LastModified { get; }
         decimal? ExpectedOpenPrice { get; }
         decimal OpenPrice { get; }
         decimal ClosePrice { get; }
@@ -75,6 +76,7 @@ namespace MarginTrading.Backend.Core
         public DateTime CreateDate { get; set; }
         public DateTime? OpenDate { get; set; }
         public DateTime? CloseDate { get; set; }
+        public DateTime? LastModified { get; set; }
         public decimal? ExpectedOpenPrice { get; set; }
         public decimal OpenPrice { get; set; }
         public decimal ClosePrice { get; set; }

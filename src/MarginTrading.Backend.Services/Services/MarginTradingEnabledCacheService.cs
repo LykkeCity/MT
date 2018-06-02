@@ -35,9 +35,10 @@ namespace MarginTrading.Backend.Services.Services
             return isLive ? enabledTypes.Live : enabledTypes.Demo;
         }
 
-        public bool IsMarginTradingEnabledByAccountId(string accountId)
+        public bool? IsMarginTradingEnabledByAccountId(string accountId)
         {
-            return !(_accountsCacheService.TryGet(accountId)?.IsDisabled ?? true); // todo review and fix?
+            var acc = _accountsCacheService.TryGet(accountId);
+            return !acc?.IsDisabled ; // todo review and fix?
         }
 
         public void OnMarginTradingEnabledChanged(MarginTradingEnabledChangedMessage message)

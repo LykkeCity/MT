@@ -25,7 +25,14 @@ namespace MarginTrading.Backend.Services.Infrastructure
 
         public void PublishEvent<T>(T ev)
         {
-            _cqrsEngine.PublishEvent(ev, _cqrsContextNamesSettings.AccountsManagement);
+            try
+            {
+                _cqrsEngine.PublishEvent(ev, _cqrsContextNamesSettings.TradingEngine);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
     }
 }

@@ -11,7 +11,7 @@ using Lykke.Messaging.Contract;
 using Lykke.Messaging.RabbitMq;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
-using MarginTrading.AccountsManagement.Contracts.Messages;
+using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.Backend.Contracts.Commands;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Core.Settings;
@@ -73,16 +73,10 @@ namespace MarginTrading.Backend.Services.Modules
                     environment: _settings.EnvironmentName);
             return new CqrsEngine(_log, ctx.Resolve<IDependencyResolver>(), messagingEngine,
                 new DefaultEndpointProvider(), true,
-                Register.DefaultEndpointResolver(rabbitMqConventionEndpointResolver), RegisterDefaultRouting(),
+                Register.DefaultEndpointResolver(rabbitMqConventionEndpointResolver),
                 RegisterContext());
         }
-
-        private PublishingCommandsDescriptor<IDefaultRoutingRegistration> RegisterDefaultRouting()
-        {
-            return Register.DefaultRouting.PublishingCommands(typeof(BeginClosePositionBalanceUpdateCommand))
-                .To(_settings.ContextNames.AccountsManagement).With(CommandsRoute);
-        }
-
+        
         private IRegistration RegisterContext()
         {
             var contextRegistration = Register.BoundedContext(_settings.ContextNames.TradingEngine)
@@ -94,12 +88,11 @@ namespace MarginTrading.Backend.Services.Modules
                 .PublishingEvents(typeof(AmountForWithdrawalFrozenEvent), typeof(AmountForWithdrawalFreezeFailedEvent))
                 .With(EventsRoute);
 
-            contextRegistration.PublishingCommands(typeof(BeginClosePositionBalanceUpdateCommand))
-                .To(_settings.ContextNames.AccountsManagement).With(CommandsRoute);
-
             contextRegistration.ListeningEvents(typeof(AccountChangedEvent))
                 .From(_settings.ContextNames.AccountsManagement).On(EventsRoute)
                 .WithProjection(typeof(AccountsProjection), _settings.ContextNames.AccountsManagement);
+            
+            contextRegistration.PublishingEvents(typeof(PositionClosedEvent)).With(EventsRoute);
 
             return contextRegistration;
         }
