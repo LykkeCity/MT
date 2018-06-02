@@ -1,9 +1,12 @@
-﻿namespace MarginTrading.Backend.Contracts.Events
+﻿using JetBrains.Annotations;
+
+namespace MarginTrading.Backend.Contracts.Events
 {
     public class AmountForWithdrawalFreezeFailedEvent : AccountBalanceMessageBase
     {
-        public AmountForWithdrawalFreezeFailedEvent(string clientId, string accountId, decimal amount,
-            string operationId, string reason) : base(clientId, accountId, amount, operationId, reason)
+        public AmountForWithdrawalFreezeFailedEvent([NotNull] string clientId, [NotNull] string accountId, 
+            decimal amount, [NotNull] string operationId, [NotNull] string reason) 
+            : base(clientId, accountId, amount, operationId, reason)
         {
         }
     }

@@ -16,25 +16,25 @@ namespace MarginTrading.Backend.Contracts
         /// Place new order
         /// </summary>
         [Post("/api/orders")]
-        Task PlaceAsync([Body] OrderPlaceRequest request);
+        Task PlaceAsync([Body][NotNull] OrderPlaceRequest request);
 
         /// <summary>
         /// Change existing order
         /// </summary>
         [Put("/api/orders/{orderId}")]
-        Task ChangeAsync(string orderId, [Body] OrderChangeRequest request);
+        Task ChangeAsync([NotNull] string orderId, [Body][NotNull] OrderChangeRequest request);
 
         /// <summary>
         /// Close existing order 
         /// </summary>
         [Delete("/api/orders/{orderId}")]
-        Task CancelAsync(string orderId/*, [Body] OrderCancelRequest request*/);
+        Task CancelAsync([NotNull] string orderId);
 
         /// <summary>
         /// Get order by id 
         /// </summary>
         [Get("/api/orders/{orderId}"), ItemCanBeNull]
-        Task<OrderContract> GetAsync(string orderId);
+        Task<OrderContract> GetAsync([NotNull] string orderId);
 
         /// <summary>
         /// Get open orders with optional filtering

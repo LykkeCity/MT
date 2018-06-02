@@ -19,6 +19,6 @@ namespace MarginTrading.Backend.Contracts
         ///     Returns stats of selected account
         /// </summary>
         [Get("/api/accounts/stats/{accountId}")]
-        Task<AccountStatContract> GetAccountStats(string accountId);
+        Task<AccountStatContract> GetAccountStats([NotNull] string accountId);
     }
 }

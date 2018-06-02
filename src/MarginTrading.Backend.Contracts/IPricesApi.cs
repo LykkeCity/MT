@@ -20,6 +20,6 @@ namespace MarginTrading.Backend.Contracts
         /// Post because the query string will be too long otherwise
         /// </remarks>
         [Post("/api/prices/best")]
-        Task<Dictionary<string, BestPriceContract>> GetBestAsync([Body] InitPricesBackendRequest request);
+        Task<Dictionary<string, BestPriceContract>> GetBestAsync([Body][NotNull] InitPricesBackendRequest request);
     }
 }
