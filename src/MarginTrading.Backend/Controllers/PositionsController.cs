@@ -88,13 +88,13 @@ namespace MarginTrading.Backend.Controllers
         /// <summary>
         /// Close group of opened positions by itrument and direction
         /// </summary>
-        /// <param name="instrumentId">Positions instrument</param>
+        /// <param name="assetPairId">Positions instrument</param>
         /// <param name="direction">Positions direction (Long or Short), optional</param>
         /// <param name="request">Additional info for close</param>
-        [Route("instrument-group/{instrumentId}")]
+        [Route("instrument-group/{assetPairId}")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [HttpDelete]
-        public Task CloseGroupAsync([FromRoute] string instrumentId,
+        public Task CloseGroupAsync([FromRoute] string assetPairId,
             [FromBody] PositionCloseRequest request, [FromQuery] PositionDirectionContract? direction = null)
         {
             throw new NotImplementedException();

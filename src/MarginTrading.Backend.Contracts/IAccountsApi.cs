@@ -10,9 +10,9 @@ namespace MarginTrading.Backend.Contracts
     public interface IAccountsApi
     {
         /// <summary>
-        ///     Returns all account stats
+        ///     Returns account stats with optional filtering  
         /// </summary>
         [Get("/api/accounts/stats")]
-        Task<IEnumerable<DataReaderAccountStatsBackendContract>> GetAllAccountStats();
+        Task<List<AccountStatContract>> GetAllAccountStats([Query, CanBeNull] string accountId = null);
     }
 }

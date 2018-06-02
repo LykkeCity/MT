@@ -5,6 +5,8 @@ using AsyncFriendlyStackTrace;
 using Lykke.HttpClientGenerator;
 using Lykke.HttpClientGenerator.Retries;
 using MarginTrading.Backend.Contracts;
+using MarginTrading.Backend.Contracts.Orders;
+using MarginTrading.Backend.Contracts.Prices;
 using Newtonsoft.Json;
 using Refit;
 
@@ -49,45 +51,39 @@ namespace MarginTrading.Backend.TestClient
         private static async Task Run()
         {
             var retryStrategy = new LinearRetryStrategy(TimeSpan.FromSeconds(10), 50);
-            var dataReaderGenerator = HttpClientGenerator.BuildForUrl("http://localhost:5008")
-                .WithApiKey("margintrading").WithRetriesStrategy(retryStrategy).Create();
+            var generator = HttpClientGenerator.BuildForUrl("http://localhost:5000").WithApiKey("margintrading")
+                .WithRetriesStrategy(retryStrategy).Create();
 
-            await CheckTradeMonitoring(dataReaderGenerator);
+            await CheckAccountsAsync(generator);
+            await CheckOrdersAsync(generator);
+            await CheckPositionsAsync(generator);
+            await CheckPricesAsync(generator);
 
             Console.WriteLine("Successfuly finished");
         }
 
-        private static async Task CheckTradeMonitoring(HttpClientGenerator dataReaderGenerator)
+        private static async Task CheckPricesAsync(HttpClientGenerator generator)
         {
-            var tradeMonitoringApi = dataReaderGenerator.Generate<ITradeMonitoringReadingApi>();
+            var api = generator.Generate<IPricesApi>();
+            await api.GetBestAsync(new InitPricesBackendRequest {AssetIds = new[] {"EURUSD"}}).Dump();
+        }
+        
+        private static async Task CheckOrdersAsync(HttpClientGenerator generator)
+        {
+            var api = generator.Generate<IOrdersApi>();
+            await api.ListAsync().Dump();
+        }
 
-            var assetSumary = await tradeMonitoringApi.AssetSummaryList().Dump();
+        private static async Task CheckPositionsAsync(HttpClientGenerator generator)
+        {
+            var api = generator.Generate<IPositionsApi>();
+            await api.ListAsync().Dump();
+        }
 
-            var openPositions = await tradeMonitoringApi.OpenPositions().Dump();
-            var openPosition = openPositions.FirstOrDefault();
-            if (openPosition != null)
-            {
-                string accountId = openPosition.AccountId;
-                var openPositionsByClient = await tradeMonitoringApi.OpenPositionsByClient(new[] {accountId}).Dump();
-            }
-
-            var openPositionsByDate =
-                await tradeMonitoringApi.OpenPositionsByDate(DateTime.UtcNow.AddDays(-30), DateTime.UtcNow).Dump();
-            var openPositionsByVolume = await tradeMonitoringApi.OpenPositionsByVolume(100).Dump();
-
-            var pendingOrders = await tradeMonitoringApi.PendingOrders().Dump();
-            var pendingOrder = pendingOrders.FirstOrDefault();
-            if (pendingOrder != null)
-            {
-                string accountId = openPosition.AccountId;
-                var pendingOrdersByClient = await tradeMonitoringApi.PendingOrdersByClient(new[] {accountId}).Dump();
-            }
-
-            var pendingOrdersByDate =
-                await tradeMonitoringApi.PendingOrdersByDate(DateTime.UtcNow.AddDays(-30), DateTime.UtcNow).Dump();
-            var pendingOrdersByVolume = await tradeMonitoringApi.PendingOrdersByVolume(100).Dump();
-
-            var orderBooksByInstrument = await tradeMonitoringApi.OrderBooksByInstrument("BTCUSD");
+        private static async Task CheckAccountsAsync(HttpClientGenerator generator)
+        {
+            var api = generator.Generate<IAccountsApi>();
+            await api.GetAllAccountStats().Dump();
         }
 
         public static T Dump<T>(this T o)

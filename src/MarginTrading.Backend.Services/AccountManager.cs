@@ -10,12 +10,12 @@ using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts;
-using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Messages;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Common.Services;
@@ -35,13 +35,11 @@ namespace MarginTrading.Backend.Services
         private readonly ITradingEngine _tradingEngine;
         private readonly IAccountsApi _accountsApi;
         private readonly IConvertService _convertService;
-        private readonly ICqrsEngine _cqrsEngine;
-        private readonly CqrsContextNamesSettings _cqrsContextNamesSettings;
 
         public AccountManager(AccountsCacheService accountsCacheService, IConsole console,
             MarginTradingSettings marginSettings, IRabbitMqNotifyService rabbitMqNotifyService, ILog log,
             OrdersCache ordersCache, ITradingEngine tradingEngine, IAccountsApi accountsApi,
-            IConvertService convertService, ICqrsEngine cqrsEngine, CqrsContextNamesSettings cqrsContextNamesSettings) :
+            IConvertService convertService) :
             base(nameof(AccountManager), 60000, log)
         {
             _accountsCacheService = accountsCacheService;
@@ -53,8 +51,6 @@ namespace MarginTrading.Backend.Services
             _tradingEngine = tradingEngine;
             _accountsApi = accountsApi;
             _convertService = convertService;
-            _cqrsEngine = cqrsEngine;
-            _cqrsContextNamesSettings = cqrsContextNamesSettings;
         }
 
         public override Task Execute()
@@ -91,15 +87,6 @@ namespace MarginTrading.Backend.Services
         {
             return accounts.Select(a => a.ToRabbitMqContract(_marginSettings.IsLive)).Batch(100)
                 .Select(ch => new AccountStatsUpdateMessage {Accounts = ch.ToArray()});
-        }
-
-        public void UpdateBalanceOnClosePosition(IMarginTradingAccount account, decimal amountDelta, string positionId)
-        {
-            _cqrsEngine.SendCommand(
-                new BeginClosePositionBalanceUpdateCommand(account.ClientId, account.Id, amountDelta,
-                    nameof(UpdateBalanceOnClosePosition) + '-' + positionId,
-                    $"Balance changed on position close (id = {positionId})", positionId),
-                _cqrsContextNamesSettings.TradingEngine, _cqrsContextNamesSettings.AccountsManagement);
         }
 
         public async Task<List<IOrder>> CloseAccountOrders(string accountId)
