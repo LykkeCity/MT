@@ -83,9 +83,12 @@ namespace MarginTrading.Backend.Services.Modules
                 .FailedCommandRetryDelay(_defaultRetryDelayMs).ProcessingOptions(CommandsRoute).MultiThreaded(8)
                 .QueueCapacity(1024);
 
-            contextRegistration.ListeningCommands(typeof(FreezeAmountForWithdrawalCommand)).On(CommandsRoute)
-                .WithCommandsHandler<FreezeAmountForWithdrawalCommandsHandler>()
-                .PublishingEvents(typeof(AmountForWithdrawalFrozenEvent), typeof(AmountForWithdrawalFreezeFailedEvent))
+            contextRegistration.ListeningCommands(typeof(FreezeAmountForWithdrawalCommand), 
+                    typeof(UnfreezeMarginWithdrawalCommand))
+                .On(CommandsRoute)
+                .WithCommandsHandler<WithdrawalCommandsHandler>()
+                .PublishingEvents(typeof(AmountForWithdrawalFrozenEvent), typeof(AmountForWithdrawalFreezeFailedEvent),
+                    typeof(UnfreezeMarginSucceededWithdrawalEvent))
                 .With(EventsRoute);
 
             contextRegistration.ListeningEvents(typeof(AccountChangedEvent))

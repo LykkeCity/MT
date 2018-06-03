@@ -36,6 +36,16 @@ namespace MarginTrading.Backend.Services
             UpdateAccount(account, GetActiveOrders(account.Id), GetPendingOrders(account.Id));
         }
 
+        public void FreezeWithdrawalMargin(IMarginTradingAccount account, string operationId, decimal amount)
+        {
+            account.AccountFpl.WithdrawalFrozenMarginData.TryAdd(operationId, amount);
+        }
+
+        public void UnfreezeWithdrawalMargin(IMarginTradingAccount account, string operationId)
+        {
+            account.AccountFpl.WithdrawalFrozenMarginData.Remove(operationId);
+        }
+
         public bool IsEnoughBalance(Order order)
         {
             _fplService.CalculateMargin(order, order.FplData);
