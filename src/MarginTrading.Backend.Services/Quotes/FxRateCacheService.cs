@@ -21,7 +21,7 @@ namespace MarginTrading.Backend.Services.Quotes
         private readonly IMarginTradingBlobRepository _blobRepository;
         private Dictionary<string, InstrumentBidAskPair> _quotes;
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
-        private static string BlobName = "FxRates";
+        private const string BlobName = "FxRates";
 
         public FxRateCacheService(ILog log, IMarginTradingBlobRepository blobRepository, 
             MarginTradingSettings marginTradingSettings)
@@ -38,29 +38,9 @@ namespace MarginTrading.Backend.Services.Quotes
             try
             {
                 if (!_quotes.TryGetValue(instrument, out var quote))
-                    throw new QuoteNotFoundException(instrument, string.Format(MtMessages.QuoteNotFound, instrument));
+                    throw new FxRateNotFoundException(instrument, string.Format(MtMessages.FxRateNotFound, instrument));
 
                 return quote;
-            }
-            finally
-            {
-                _lockSlim.ExitReadLock();
-            }
-        }
-
-        public bool TryGetQuoteById(string instrument, out InstrumentBidAskPair result)
-        {
-            _lockSlim.EnterReadLock();
-            try
-            {
-                if (!_quotes.TryGetValue(instrument, out var quote))
-                {
-                    result = null;
-                    return false;
-                }
-
-                result = quote;
-                return true;
             }
             finally
             {
@@ -78,22 +58,6 @@ namespace MarginTrading.Backend.Services.Quotes
             finally
             {
                 _lockSlim.ExitReadLock();
-            }
-        }
-
-        public void RemoveQuote(string assetPair)
-        {
-            _lockSlim.EnterWriteLock();
-            try
-            {
-                if (_quotes.ContainsKey(assetPair))
-                    _quotes.Remove(assetPair);
-                else
-                    throw new QuoteNotFoundException(assetPair, string.Format(MtMessages.QuoteNotFound, assetPair));
-            }
-            finally
-            {
-                _lockSlim.ExitWriteLock();
             }
         }
 
@@ -133,10 +97,10 @@ namespace MarginTrading.Backend.Services.Quotes
         
         private InstrumentBidAskPair CreatePair(ExternalExchangeOrderbookMessage message)
         {
-            /*if (!ValidateOrderbook(message))
+            if (!ValidateOrderbook(message))
             {
                 return null;
-            }*/
+            }
             
             var ask = GetBestPrice(true, message.Asks);
             var bid = GetBestPrice(false, message.Bids);
@@ -171,11 +135,11 @@ namespace MarginTrading.Backend.Services.Quotes
                 
                 orderbook.Bids.RequiredNotNullOrEmpty("orderbook.Bids");
                 orderbook.Bids.RemoveAll(e => e == null || e.Price <= 0 || e.Volume == 0);
-                //ValidatePricesSorted(orderbook.Bids, false);
+                orderbook.Bids.RequiredNotNullOrEmptyEnumerable("orderbook.Bids");
                 
                 orderbook.Asks.RequiredNotNullOrEmpty("orderbook.Asks");
                 orderbook.Asks.RemoveAll(e => e == null || e.Price <= 0 || e.Volume == 0);
-                //ValidatePricesSorted(orderbook.Asks, true);
+                orderbook.Asks.RequiredNotNullOrEmptyEnumerable("orderbook.Asks");
 
                 return true;
             }

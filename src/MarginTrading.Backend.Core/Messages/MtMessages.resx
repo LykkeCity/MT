@@ -165,6 +165,9 @@
   <data name="QuoteNotFound" xml:space="preserve">
     <value>There is no quote for instrument {0}</value>
   </data>
+  <data name="FxRateNotFound" xml:space="preserve">
+    <value>There is no fx rate for instrument {0}</value>
+  </data>
   <data name="Notifications_StopOutNotification" xml:space="preserve">
     <value>Stop out, {0} position(s) closed, PnL {1} {2}</value>
   </data>

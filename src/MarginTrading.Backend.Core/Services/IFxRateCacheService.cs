@@ -8,8 +8,6 @@ namespace MarginTrading.Backend.Core.Services
     {
         InstrumentBidAskPair GetQuote(string instrument);
         Dictionary<string, InstrumentBidAskPair> GetAllQuotes();
-        bool TryGetQuoteById(string instrument, out InstrumentBidAskPair result); 
-        void RemoveQuote(string assetPair);
         Task SetQuote(ExternalExchangeOrderbookMessage quote);
         void SetQuote(InstrumentBidAskPair bidAskPair);
     }
