@@ -15,14 +15,14 @@ namespace MarginTrading.Backend.Services
         private readonly ICfdCalculatorService _cfdCalculatorService;
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly IAccountsCacheService _accountsCacheService;
-        private readonly ITradingInstrumnentsCacheService _accountAssetsCacheService;
+        private readonly ITradingInstrumentsCacheService _accountAssetsCacheService;
         private readonly IAssetsCache _assetsCache;
 
         public FplService(
             ICfdCalculatorService cfdCalculatorService,
             IAssetPairsCache assetPairsCache,
             IAccountsCacheService accountsCacheService,
-            ITradingInstrumnentsCacheService accountAssetsCacheService,
+            ITradingInstrumentsCacheService accountAssetsCacheService,
             IAssetsCache assetsCache)
         {
             _cfdCalculatorService = cfdCalculatorService;

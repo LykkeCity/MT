@@ -142,6 +142,12 @@ namespace MarginTrading.Backend.Core.Messages {
             }
         }
         
+        public static string FxRateNotFound {
+            get {
+                return ResourceManager.GetString("FxRateNotFound", resourceCulture);
+            }
+        }
+        
         public static string Notifications_StopOutNotification {
             get {
                 return ResourceManager.GetString("Notifications_StopOutNotification", resourceCulture);

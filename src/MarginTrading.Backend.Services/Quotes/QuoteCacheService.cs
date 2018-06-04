@@ -8,6 +8,7 @@ using Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Messages;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Events;
 
 namespace MarginTrading.Backend.Services.Quotes
@@ -20,8 +21,9 @@ namespace MarginTrading.Backend.Services.Quotes
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
         private static string BlobName = "Quotes";
 
-        public QuoteCacheService(ILog log, IMarginTradingBlobRepository blobRepository) 
-            : base(nameof(QuoteCacheService), 10000, log)
+        public QuoteCacheService(ILog log, IMarginTradingBlobRepository blobRepository, 
+            MarginTradingSettings marginTradingSettings) 
+            : base(nameof(QuoteCacheService), marginTradingSettings.BlobPersistence.QuotesDumpPeriodMilliseconds, log)
         {
             _log = log;
             _blobRepository = blobRepository;

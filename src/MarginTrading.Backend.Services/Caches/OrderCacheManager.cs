@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Settings;
 
 namespace MarginTrading.Backend.Services
 {
@@ -17,8 +18,9 @@ namespace MarginTrading.Backend.Services
 
         public OrderCacheManager(OrdersCache orderCache,
             IMarginTradingBlobRepository marginTradingBlobRepository,
+            MarginTradingSettings marginTradingSettings,
             ILog log, IAccountsCacheService accountsCacheService) 
-            : base(nameof(OrderCacheManager), 5000, log)
+            : base(nameof(OrderCacheManager), marginTradingSettings.BlobPersistence.OrdersDumpPeriodMilliseconds, log)
         {
             _orderCache = orderCache;
             _marginTradingBlobRepository = marginTradingBlobRepository;

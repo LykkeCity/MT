@@ -6,6 +6,7 @@ using Common;
 using Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orderbooks;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Infrastructure;
 
 namespace MarginTrading.Backend.Services
@@ -22,8 +23,10 @@ namespace MarginTrading.Backend.Services
         public OrderBookSaveService(
             IMarginTradingBlobRepository blobRepository,
             OrderBookList orderBookList,
+            MarginTradingSettings marginTradingSettings,
             ILog log,
-            IContextFactory contextFactory) : base(nameof(OrderBookSaveService), 5000, log)
+            IContextFactory contextFactory) 
+            : base(nameof(OrderBookSaveService), marginTradingSettings.BlobPersistence.OrderbooksDumpPeriodMilliseconds, log)
         {
             _blobRepository = blobRepository;
             _orderBookList = orderBookList;

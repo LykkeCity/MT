@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Autofac;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
 using NUnit.Framework;
@@ -13,6 +14,7 @@ namespace MarginTradingTests
     public class FplServiceTests : BaseTests
     {
         private IEventChannel<BestPriceChangeEventArgs> _bestPriceConsumer;
+        private IFxRateCacheService _fxRateCacheService;
         private IAccountsCacheService _accountsCacheService;
         private OrdersCache _ordersCache;
 
@@ -21,6 +23,7 @@ namespace MarginTradingTests
         {
             RegisterDependencies();
             _bestPriceConsumer = Container.Resolve<IEventChannel<BestPriceChangeEventArgs>>();
+            _fxRateCacheService = Container.Resolve<IFxRateCacheService>();
             _accountsCacheService = Container.Resolve<IAccountsCacheService>();
             _ordersCache = Container.Resolve<OrdersCache>();
         }
@@ -109,7 +112,11 @@ namespace MarginTradingTests
 
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 1.072030M, Bid = 1.071940M }));
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCUSD", Ask = 1001M, Bid = 1000M }));
-
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Ask = 901M, Bid = 900M }));
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 1.072030M, Bid = 1.071940M });
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "BTCUSD", Ask = 1001M, Bid = 1000M });
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "BTCCHF", Ask = 901M, Bid = 900M });
+            
             var order = new Order
             {
                 Id = Guid.NewGuid().ToString(),
@@ -136,6 +143,10 @@ namespace MarginTradingTests
 
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 1.072030M, Bid = 1.071940M }));
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCUSD", Ask = 1001M, Bid = 1000M }));
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Ask = 901M, Bid = 900M }));
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 1.072030M, Bid = 1.071940M });
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "BTCUSD", Ask = 1001M, Bid = 1000M });
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair {Instrument = "BTCCHF", Ask = 901M, Bid = 900M});
 
             var order = new Order
             {
@@ -167,7 +178,10 @@ namespace MarginTradingTests
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "EURUSD", Ask = 1.061M, Bid = 1.06M }));
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCEUR", Ask = 1092M, Bid = 1091M }));
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCUSD", Ask = 1001M, Bid = 1000M }));
-
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair {Instrument = "EURUSD", Ask = 1.061M, Bid = 1.06M});
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "BTCEUR", Ask = 1092M, Bid = 1091M });
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "BTCUSD", Ask = 1001M, Bid = 1000M });
+            
             var orders = new List<Order>
             {
                 new Order
@@ -250,11 +264,11 @@ namespace MarginTradingTests
 
             Assert.AreEqual(50000, account.Balance);
             Assert.AreEqual(43676.000, Math.Round(account.GetTotalCapital(), 5));
-            Assert.AreEqual(34527.0, Math.Round(account.GetFreeMargin(), 1));
-            Assert.AreEqual(29952.5, Math.Round(account.GetMarginAvailable(), 1));
+            Assert.AreEqual(33476.3, Math.Round(account.GetFreeMargin(), 1));
+            Assert.AreEqual(28376.4, Math.Round(account.GetMarginAvailable(), 1));
             Assert.AreEqual(-6324.000, Math.Round(account.GetPnl(), 5));
-            Assert.AreEqual(9149.0, Math.Round(account.GetUsedMargin(), 1));
-            Assert.AreEqual(13723.5, Math.Round(account.GetMarginInit(), 1));
+            Assert.AreEqual(10199.7, Math.Round(account.GetUsedMargin(), 1));
+            Assert.AreEqual(15299.6, Math.Round(account.GetMarginInit(), 1));
 
         }
     }

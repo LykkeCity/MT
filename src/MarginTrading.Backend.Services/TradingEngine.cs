@@ -34,7 +34,7 @@ namespace MarginTrading.Backend.Services
         private readonly IEquivalentPricesService _equivalentPricesService;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly OrdersCache _ordersCache;
-        private readonly ITradingInstrumnentsCacheService _accountAssetsCacheService;
+        private readonly ITradingInstrumentsCacheService _accountAssetsCacheService;
         private readonly IMatchingEngineRouter _meRouter;
         private readonly IThreadSwitcher _threadSwitcher;
         private readonly IContextFactory _contextFactory;
@@ -59,7 +59,7 @@ namespace MarginTrading.Backend.Services
             IEquivalentPricesService equivalentPricesService,
             IAccountsCacheService accountsCacheService,
             OrdersCache ordersCache,
-            ITradingInstrumnentsCacheService accountAssetsCacheService,
+            ITradingInstrumentsCacheService accountAssetsCacheService,
             IMatchingEngineRouter meRouter,
             IThreadSwitcher threadSwitcher,
             IContextFactory contextFactory,
