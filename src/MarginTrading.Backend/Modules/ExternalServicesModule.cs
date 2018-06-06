@@ -29,14 +29,14 @@ namespace MarginTrading.Backend.Modules
 
         protected override void Load(ContainerBuilder builder)
         {
-             builder.RegisterType<ExchangeConnectorService>()
-                .As<IExchangeConnectorService>()
-                .WithParameter("settings", _settings.CurrentValue.MtStpExchangeConnectorClient)
-                .SingleInstance();
-            //swap upper registration with a fake below to use FakeExchangeConnector
-            /*builder.RegisterType<FakeExchangeConnectorService>()
-                .As<IExchangeConnectorService>()
-                .SingleInstance();*/
+            /*builder.RegisterType<ExchangeConnectorService>()
+               .As<IExchangeConnectorService>()
+               .WithParameter("settings", _settings.CurrentValue.MtStpExchangeConnectorClient)
+               .SingleInstance();*/
+           //swap upper registration with a fake below to use FakeExchangeConnector
+           builder.RegisterType<FakeExchangeConnectorService>()
+               .As<IExchangeConnectorService>()
+               .SingleInstance();
             
 
             #region Client Account Service
