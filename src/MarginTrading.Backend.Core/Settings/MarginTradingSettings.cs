@@ -1,7 +1,7 @@
 ﻿using JetBrains.Annotations;
 using Lykke.SettingsReader.Attributes;
-using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Settings;
+using RabbitMqSettings = MarginTrading.Common.RabbitMq.RabbitMqSettings;
 
 namespace MarginTrading.Backend.Core.Settings
 {
