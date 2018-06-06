@@ -31,6 +31,17 @@ namespace MarginTrading.Backend.Services.Stubs
             await _consoleLog.WriteInfoAsync(sender, ChannelTypes.MarginTrading, GetSlackMsg(message));
         }
 
+        public async Task SendAsync(DateTime moment, string type, string sender, string message)
+        {
+            if (type.Equals(ChannelTypes.Monitor, StringComparison.InvariantCultureIgnoreCase))
+            {
+                await _consoleLog.WriteInfoAsync(sender, type, message, moment);
+                return;
+            }
+
+            await _consoleLog.WriteInfoAsync(sender, ChannelTypes.MarginTrading, GetSlackMsg(message), moment);
+        }
+
         public Task SendRawAsync(string type, string sender, string message)
         {
             return _consoleLog.WriteInfoAsync(sender, type, message);

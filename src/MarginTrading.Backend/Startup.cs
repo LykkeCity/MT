@@ -22,7 +22,6 @@ using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Backend.Services.Stubs;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Extensions;
-using MarginTrading.Common.Json;
 using MarginTrading.Common.Modules;
 using MarginTrading.Common.Services;
 using Microsoft.AspNetCore.Builder;
@@ -79,7 +78,11 @@ namespace MarginTrading.Backend
             services.AddSwaggerGen(options =>
             {
                 options.DefaultLykkeConfiguration("v1", $"MarginTradingEngine_Api_{Configuration.ServerType()}");
-                options.OperationFilter<ApiKeyHeaderOperationFilter>();
+            });
+
+            services.ConfigureSwaggerGen(c =>
+            {
+                c.OperationFilter<ApiKeyHeaderOperationFilter>();
             });
 
             var builder = new ContainerBuilder();
@@ -121,7 +124,10 @@ namespace MarginTrading.Backend
             app.UseAuthentication();
             app.UseMvc();
 
-            app.UseSwagger();
+            app.UseSwagger(c =>
+            {
+                c.PreSerializeFilters.Add((swagger, httpReq) => swagger.Host = httpReq.Host.Value);
+            });
             app.UseSwaggerUi();
 
             appLifetime.ApplicationStopped.Register(() => ApplicationContainer.Dispose());

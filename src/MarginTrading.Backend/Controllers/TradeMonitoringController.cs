@@ -7,7 +7,6 @@ using MarginTrading.Backend.Contracts.AssetPairSettings;
 using MarginTrading.Backend.Contracts.TradeMonitoring;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Helpers;
-using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;

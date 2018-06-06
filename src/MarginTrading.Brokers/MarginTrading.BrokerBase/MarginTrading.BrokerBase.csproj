@@ -1,24 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
     <Version>1.0.1</Version>
+    <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Dapper" Version="1.50.2" />
-    <PackageReference Include="flurl.http" Version="1.2.0" />
+    <PackageReference Include="Dapper" Version="1.50.5" />
+    <PackageReference Include="flurl.http" Version="2.3.1" />
     <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
-    <PackageReference Include="Lykke.Logs" Version="3.6.2" />
-    <PackageReference Include="Lykke.RabbitMqBroker" Version="7.0.0" />
-    <PackageReference Include="Lykke.SettingsReader" Version="2.1.0" />
-    <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="2.0.1" />
-    <PackageReference Include="Microsoft.AspNetCore.ApplicationInsights.HostingStartup" Version="2.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.0.0" />
-    <PackageReference Include="microsoft.aspnetcore.Mvc" Version="2.0.3" />
-    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.0.0" />
-    <PackageReference Include="microsoft.extensions.configuration.binder" Version="2.0.0" />
-    <PackageReference Include="microsoft.extensions.configuration.json" Version="2.0.0" />
-    <PackageReference Include="microsoft.extensions.logging.console" Version="2.0.0" />
-    <PackageReference Include="microsoft.extensions.logging.debug" Version="2.0.0" />
+    <PackageReference Include="Lykke.Logs" Version="4.3.4" />
+    <PackageReference Include="Lykke.RabbitMqBroker" Version="7.0.1" />
+    <PackageReference Include="Lykke.SettingsReader" Version="2.4.0" />
+    <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="2.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.ApplicationInsights.HostingStartup" Version="2.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.1.0" />
+    <PackageReference Include="microsoft.aspnetcore.Mvc" Version="2.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.1.0" />
+    <PackageReference Include="microsoft.extensions.configuration.binder" Version="2.1.0" />
+    <PackageReference Include="microsoft.extensions.configuration.json" Version="2.1.0" />
+    <PackageReference Include="microsoft.extensions.logging.console" Version="2.1.0" />
+    <PackageReference Include="microsoft.extensions.logging.debug" Version="2.1.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\MarginTrading.Common\MarginTrading.Common.csproj" />

@@ -1,7 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Common;
 using FluentAssertions;
-using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.ClientAccount.Client.Models;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;

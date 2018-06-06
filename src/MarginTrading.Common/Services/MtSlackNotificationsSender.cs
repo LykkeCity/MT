@@ -30,6 +30,17 @@ namespace MarginTrading.Common.Services
             await _sender.SendAsync(ChannelTypes.MarginTrading, sender, GetSlackMsg(message));
         }
 
+        public async Task SendAsync(DateTime moment, string type, string sender, string message)
+        {
+            if (type.Equals(ChannelTypes.Monitor, StringComparison.InvariantCultureIgnoreCase))
+            {
+                await _sender.SendAsync(moment, type, sender, message);
+                return;
+            }
+
+            await _sender.SendAsync(moment, ChannelTypes.MarginTrading, sender, GetSlackMsg(message));
+        }
+
         public Task SendRawAsync(string type, string sender, string message)
         {
             return _sender.SendAsync(type, sender, message);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services.Events;

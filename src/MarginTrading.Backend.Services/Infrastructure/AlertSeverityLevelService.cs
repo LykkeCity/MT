@@ -2,7 +2,6 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using JetBrains.Annotations;
-using Lykke.SettingsReader;
 using MarginTrading.Backend.Core.Settings;
 using MoreLinq;
 

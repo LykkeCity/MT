@@ -1,17 +1,11 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
-using AzureStorage.Tables;
 using Common.Log;
 using Lykke.SettingsReader;
 using Lykke.SlackNotifications;
-using MarginTrading.AzureRepositories;
-using MarginTrading.AzureRepositories.Snow.OrdersHistory;
-using MarginTrading.Backend.Core;
 using MarginTrading.BrokerBase;
 using MarginTrading.BrokerBase.Settings;
 using MarginTrading.Contract.RabbitMqMessageModels;
-using MoreLinq;
 
 namespace MarginTrading.MigrateApp
 {

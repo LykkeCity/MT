@@ -10,9 +10,7 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Rocks.Caching;
 using MarginTrading.Backend.Attributes;
-using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Services;
-using MarginTrading.Common.Services.Settings;
 
 namespace MarginTrading.Backend.Filters
 {

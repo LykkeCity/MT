@@ -14,11 +14,9 @@ using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Quotes;
 using MarginTrading.Backend.Services.Services;
-using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.RabbitMq;
-using MarginTrading.Common.Services.Settings;
 using MarginTrading.Common.Services.Telemetry;
 
 namespace MarginTrading.Backend.Services.Modules

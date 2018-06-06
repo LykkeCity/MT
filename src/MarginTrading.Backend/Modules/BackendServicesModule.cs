@@ -10,7 +10,6 @@ using MarginTrading.Backend.Email;
 using MarginTrading.Backend.Middleware.Validator;
 using MarginTrading.Common.RabbitMq;
 using Microsoft.AspNetCore.Hosting;
-using Lykke.Service.EmailSender;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;
@@ -20,7 +19,6 @@ using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Quotes;
 using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Common.Services;
-using MarginTrading.Common.Services.Client;
 
 namespace MarginTrading.Backend.Modules
 {
