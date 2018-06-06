@@ -1246,7 +1246,7 @@ namespace MarginTradingTests
                 x => x.SendNotification(It.IsAny<string>(), NotificationType.MarginCall,
                     It.Is<string>(message => message.Contains("Stop out")), null), Times.Once());
             _emailServiceMock.Verify(
-                x => x.SendStopOutEmailAsync(It.IsAny<string>(), account.BaseAssetId, account.Id), Times.Once);
+                x => x.SendStopOutEmailAsync(account), Times.Once);
         }
 
         [Test]
@@ -1297,7 +1297,7 @@ namespace MarginTradingTests
                 x => x.SendNotification(It.IsAny<string>(), NotificationType.MarginCall, It.IsAny<string>(),
                     null), Times.Once());
             _emailServiceMock.Verify(
-                x => x.SendMarginCallEmailAsync(It.IsAny<string>(), account.BaseAssetId, account.Id), Times.Once);
+                x => x.SendMarginCallEmailAsync(account), Times.Once);
         }
 
         [Test]

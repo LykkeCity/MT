@@ -16,5 +16,7 @@
         public const string MigrationsBlobContainer = "migrations";
 
         public const string MaintenanceModeRoute = "maintenance";
+
+        public const string LykkeCyprusLegalEntity = "LYKKECY";
     }
 }
