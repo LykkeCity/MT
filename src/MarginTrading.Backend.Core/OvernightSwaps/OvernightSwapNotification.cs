@@ -9,6 +9,7 @@ namespace MarginTrading.Backend.Core
         public string CliendId { get; set; }
         public IReadOnlyList<AccountCalculations> CalculationsByAccount { get; set; }
         public string CurrentDate => DateTime.UtcNow.ToString("dd MMMM yyyy");
+        public string Year => DateTime.UtcNow.Year.ToString();
 
         public class AccountCalculations
         {
