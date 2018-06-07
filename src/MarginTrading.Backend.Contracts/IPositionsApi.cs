@@ -28,7 +28,7 @@ namespace MarginTrading.Backend.Contracts
         /// <summary>
         /// Close group of opened positions by account and instrument (optional)
         /// </summary>
-        [Delete("account-group/{accountId}")]
+        [Delete("/api/positions/account-group/{accountId}")]
         Task CloseGroupAsync([NotNull] string accountId, [Query, CanBeNull] string assetPairId = null);
         
         /// <summary>
