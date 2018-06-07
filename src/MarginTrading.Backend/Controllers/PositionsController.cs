@@ -149,7 +149,7 @@ namespace MarginTrading.Backend.Controllers
             }
 
             orders = orders.Where(o => o.AccountId == accountId
-                                       && (string.IsNullOrWhiteSpace(assetPairId)) || o.Instrument == assetPairId)
+                                       && (string.IsNullOrWhiteSpace(assetPairId) || o.Instrument == assetPairId))
                 .ToList();
 
             var reason = OrderCloseReason.Close;
