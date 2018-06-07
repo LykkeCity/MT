@@ -78,11 +78,7 @@ namespace MarginTrading.Backend
             services.AddSwaggerGen(options =>
             {
                 options.DefaultLykkeConfiguration("v1", $"MarginTradingEngine_Api_{Configuration.ServerType()}");
-            });
-
-            services.ConfigureSwaggerGen(c =>
-            {
-                c.OperationFilter<ApiKeyHeaderOperationFilter>();
+                options.OperationFilter<ApiKeyHeaderOperationFilter>();
             });
 
             var builder = new ContainerBuilder();
