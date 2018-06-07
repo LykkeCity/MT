@@ -73,11 +73,7 @@ namespace MarginTrading.Backend.Services
                     string.Format(MtMessages.Notifications_StopOutNotification, orders.Length, totalPnl,
                         account.BaseAssetId));
 
-                var clientEmail = await _clientAccountService.GetEmail(account.ClientId);
-                
-                var emailTask = !string.IsNullOrEmpty(clientEmail)
-                    ? _emailService.SendStopOutEmailAsync(clientEmail, account.BaseAssetId, account.Id)
-                    : Task.CompletedTask;
+                var emailTask = _emailService.SendStopOutEmailAsync(account);
 
                 await Task.WhenAll(marginEventTask, notificationTask, emailTask);
             });

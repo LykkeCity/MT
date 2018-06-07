@@ -75,11 +75,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     MtMessages.Notifications_MarginCall, marginUsedPerc,
                     account.BaseAssetId));
 
-                var clientEmail = await _clientAccountService.GetEmail(account.ClientId);
-
-                var emailTask = !string.IsNullOrEmpty(clientEmail)
-                    ? _emailService.SendMarginCallEmailAsync(clientEmail, account.BaseAssetId, account.Id)
-                    : Task.CompletedTask;
+                var emailTask = _emailService.SendMarginCallEmailAsync(account);
 
                 await Task.WhenAll(marginEventTask, notificationTask, emailTask);
 
