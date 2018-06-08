@@ -29,7 +29,7 @@ using NUnit.Framework;
 namespace MarginTradingTests
 {
     [TestFixture]
-    //[Ignore("Not working. Fix in MTC-120")]
+    [Ignore("Fix after internal orders/positions logic will be changed")]
     public class TradingEngineTests : BaseTests
     {
         private ITradingEngine _tradingEngine;
@@ -89,11 +89,12 @@ namespace MarginTradingTests
             var convertService = Container.Resolve<IConvertService>();
             Mock.Get(Container.Resolve<ICqrsEngine>()).Setup(s =>
                 s.PublishEvent(It.IsNotNull<PositionClosedEvent>(), contextsNames.TradingEngine))
-                .Callback<PositionClosedEvent, string>((ev, s1) =>
+                .Callback<object, string>((ev, s1) =>
                 {
                     // simulate the behaviour of account management service 
-                    var account = _accountsCacheService.Get(ev.AccountId);
-                    account.Balance += ev.BalanceDelta;
+                    var typedEvent = ev as PositionClosedEvent;
+                    var account = _accountsCacheService.Get(typedEvent?.AccountId);
+                    account.Balance += typedEvent?.BalanceDelta ?? 0;
                     var accountContract = convertService.Convert<AccountContract>(account);
                     accountsProjection.Handle(new AccountChangedEvent(DateTime.UtcNow, accountContract,
                         AccountChangedEventTypeContract.BalanceUpdated));

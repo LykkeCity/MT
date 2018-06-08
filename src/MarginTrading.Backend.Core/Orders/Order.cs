@@ -56,5 +56,6 @@ namespace MarginTrading.Backend.Core.Orders
         public string ParentPositionId { get; set; }
         public DateTime? Validity { get; set; }
         public OriginatorType Originator { get; set; }
+        public DateTime? LastModified { get; set; }
     }
 }

@@ -109,7 +109,7 @@ namespace MarginTrading.Backend.Controllers
                     ? OrderDirection.Sell
                     : OrderDirection.Buy;
 
-                orders = orders.Where(o => o.GetOrderType() == orderDirection).ToList();
+                orders = orders.Where(o => o.GetOrderDirection() == orderDirection).ToList();
             }
 
             var reason = OrderCloseReason.Close;

@@ -71,5 +71,6 @@ namespace MarginTrading.Backend.Core.Orders
         DateTime? Validity { get; }
         
         OriginatorType Originator { get; }
+        DateTime? LastModified { get; set; }
     }
 }

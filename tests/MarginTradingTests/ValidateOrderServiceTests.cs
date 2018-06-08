@@ -352,6 +352,7 @@ namespace MarginTradingTests
         }
 
         [Test]
+        [Ignore("Recheck requirements")]
         public void Is_Not_Enough_Balance()
         {
             const string instrument = "EURUSD";

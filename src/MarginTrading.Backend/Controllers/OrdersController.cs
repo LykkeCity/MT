@@ -79,7 +79,7 @@ namespace MarginTrading.Backend.Controllers
                 Volume = request.Direction == OrderDirectionContract.Buy ? request.Volume : -request.Volume,
                 ExpectedOpenPrice = request.Price,
                 TakeProfit = request.TakeProfit,
-                StopLoss = request.StopLoss
+                StopLoss = request.StopLoss,
                 OrderType = request.Type.ToType<OrderType>(),
                 ForceOpen = request.ForceOpen,
                 ParentOrderId = request.ParentOrderId,
