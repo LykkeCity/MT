@@ -34,7 +34,7 @@ namespace MarginTrading.Backend.Controllers
         private readonly IAssetPairDayOffService _assetDayOffService;
         private readonly IIdentityGenerator _identityGenerator;
 
-        private const string CloseOrderIdSiffix = "_close";
+        private const string CloseOrderIdSuffix = "_close";
         private readonly IOrdersByIdRepository _ordersByIdRepository;
         private readonly IDateService _dateService;
 

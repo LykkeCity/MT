@@ -39,7 +39,8 @@ namespace MarginTrading.Backend.Services
 
         public bool IsEnoughBalance(Order order)
         {
-            //_fplService.UpdateOrderFpl(order, order.FplData);
+            _fplService.CalculateMargin(order, order.FplData);
+            //TODO: always returns 0, need to be reworked
             var orderMargin = order.GetMarginInit();
             var accountMarginAvailable = _accountsCacheService.Get(order.AccountId).GetMarginAvailable(); 
             

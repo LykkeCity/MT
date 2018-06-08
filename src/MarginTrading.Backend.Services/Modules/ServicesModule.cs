@@ -73,7 +73,6 @@ namespace MarginTrading.Backend.Services.Modules
 
 			builder.RegisterType<StpMatchingEngine>()
 				.As<IStpMatchingEngine>()
-				//.WithParameter(TypedParameter.From(MatchingEngineConstants.LykkeCyStp))
 				.WithParameter(TypedParameter.From(MatchingEngineConstants.DefaultStp))
 				.SingleInstance();
 
