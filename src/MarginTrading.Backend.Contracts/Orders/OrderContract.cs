@@ -18,9 +18,9 @@ namespace MarginTrading.Backend.Contracts.Orders
         /// Account id
         /// </summary>
         public string AccountId { get; set; }
-        
+
         /// <summary>
-        /// Instrument id
+        /// Instrument id (e.g."BTCUSD", where BTC - base asset unit, USD - quoting unit)
         /// </summary>
         public string AssetPairId { get; set; }
         
@@ -37,37 +37,37 @@ namespace MarginTrading.Backend.Contracts.Orders
         public string PositionId { get; set; }
 
         /// <summary>
-        /// The order direction (buy or sell)
+        /// The order direction (Buy or Sell)
         /// </summary>
         public OrderDirectionContract Direction { get; set; }
-        
+
         /// <summary>
-        /// The order type (Market, Limit, etc.)
+        /// The order type (Market, Limit, Stop, TakeProfit, StopLoss or TrailingStop)
         /// </summary>
         public OrderTypeContract Type { get; set; }
-        
+
         /// <summary>
-        /// The order status (Active, Executed, etc.)
+        /// The order status (Active, Inactive, Executed, Canceled, Rejected or Expired)
         /// </summary>
         public OrderStatusContract Status { get; set; }
-        
+
         /// <summary>
-        /// Who created the order
+        /// Who created the order (Investor, System or OnBehalf)
         /// </summary>
         public OriginatorTypeContract Originator { get; set; }
 
         /// <summary>
-        /// Order volume in quoting asset units. Not filled for related orders.
+        /// Order volume in base asset units. Not filled for related orders (TakeProfit, StopLoss or TrailingStop).
         /// </summary>
         public decimal? Volume { get; set; }
-        
+
         /// <summary>
-        /// Expected open price in base asset units. Not filled for market orders.
+        /// Expected open price (in quoting asset units per one base unit). Not filled for Market orders.
         /// </summary>
         public decimal? ExpectedOpenPrice { get; set; }
-        
+
         /// <summary>
-        /// Execution open price in base asset units. Filled for executed orders only.
+        /// Execution open price (in quoting asset units per one base unit). Filled for executed orders only.
         /// </summary>
         public decimal? ExecutionPrice { get; set; }
         
@@ -89,7 +89,7 @@ namespace MarginTrading.Backend.Contracts.Orders
         public List<string> RelatedOrders { get; set; }
 
         /// <summary>
-        /// Force open a sepatate position, ignoring any exising ones
+        /// Force open separate position for the order, ignoring existing ones
         /// </summary>
         public bool ForceOpen { get; set; }
 
