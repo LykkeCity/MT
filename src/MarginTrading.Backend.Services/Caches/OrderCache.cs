@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Messages;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services.Infrastructure;
 
 namespace MarginTrading.Backend.Services

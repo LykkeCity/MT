@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.Orderbooks;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Contract.BackendContracts;
@@ -66,7 +67,7 @@ namespace MarginTrading.Backend.Core.Mappers
                 AccountId = src.AccountId,
                 Instrument = src.Instrument,
                 AssetAccuracy = src.AssetAccuracy,
-                Type = src.GetOrderType().ToType<OrderDirectionContract>(),
+                Type = src.GetOrderDirection().ToType<OrderDirectionContract>(),
                 Status = src.Status.ToType<OrderStatusContract>(),
                 CloseReason = src.CloseReason.ToType<OrderCloseReasonContract>(),
                 OpenDate = src.OpenDate,
@@ -174,7 +175,7 @@ namespace MarginTrading.Backend.Core.Mappers
                 Code = src.Code,
                 AccountId = src.AccountId,
                 Instrument = src.Instrument,
-                Type = src.GetOrderType().ToType<OrderDirectionContract>(),
+                Type = src.GetOrderDirection().ToType<OrderDirectionContract>(),
                 Status = src.Status.ToType<OrderStatusContract>(),
                 CloseReason = src.CloseReason.ToType<OrderCloseReasonContract>(),
                 RejectReason = src.RejectReason.ToType<OrderRejectReasonContract>(),
@@ -217,7 +218,7 @@ namespace MarginTrading.Backend.Core.Mappers
                 TradingConditionId = src.TradingConditionId,
                 AccountAssetId = src.AccountAssetId,
                 Instrument = src.Instrument,
-                Type = src.GetOrderType().ToType<OrderDirectionContract>(),
+                Type = src.GetOrderDirection().ToType<OrderDirectionContract>(),
                 CreateDate = src.CreateDate,
                 OpenDate = src.OpenDate,
                 CloseDate = src.CloseDate,
@@ -290,7 +291,7 @@ namespace MarginTrading.Backend.Core.Mappers
                 ExpectedOpenPrice = src.ExpectedOpenPrice,
                 OpenPrice = src.OpenPrice,
                 ClosePrice = src.ClosePrice,
-                Type = src.GetOrderType().ToType<OrderDirectionContract>(),
+                Type = src.GetOrderDirection().ToType<OrderDirectionContract>(),
                 Volume = src.Volume,
                 MatchedVolume = src.GetMatchedVolume(),
                 MatchedCloseVolume = src.GetMatchedCloseVolume(),

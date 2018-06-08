@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Messages;
+using MarginTrading.Backend.Core.Orders;
 
 namespace MarginTrading.Backend.Services
 {

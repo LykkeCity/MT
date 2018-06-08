@@ -1,5 +1,6 @@
 ﻿using System;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Extensions;
@@ -22,7 +23,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         {
             if (ea.Order.IsOpened())
             {
-                var tradeType = ea.Order.GetOrderType().ToType<TradeType>();
+                var tradeType = ea.Order.GetOrderDirection().ToType<TradeType>();
                 var trade = new TradeContract
                 {
                     Id = ea.Order.Id + '_' + tradeType, // todo: fix ids?

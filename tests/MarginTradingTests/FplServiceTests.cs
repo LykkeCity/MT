@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Autofac;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
@@ -264,11 +265,11 @@ namespace MarginTradingTests
 
             Assert.AreEqual(50000, account.Balance);
             Assert.AreEqual(43676.000, Math.Round(account.GetTotalCapital(), 5));
-            Assert.AreEqual(33476.3, Math.Round(account.GetFreeMargin(), 1));
-            Assert.AreEqual(28376.4, Math.Round(account.GetMarginAvailable(), 1));
+            Assert.AreEqual(33491.6, Math.Round(account.GetFreeMargin(), 1));
+            Assert.AreEqual(28399.4, Math.Round(account.GetMarginAvailable(), 1));
             Assert.AreEqual(-6324.000, Math.Round(account.GetPnl(), 5));
-            Assert.AreEqual(10199.7, Math.Round(account.GetUsedMargin(), 1));
-            Assert.AreEqual(15299.6, Math.Round(account.GetMarginInit(), 1));
+            Assert.AreEqual(10184.4, Math.Round(account.GetUsedMargin(), 1));
+            Assert.AreEqual(15276.6, Math.Round(account.GetMarginInit(), 1));
 
         }
     }

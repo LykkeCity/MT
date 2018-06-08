@@ -19,6 +19,7 @@ using Lykke.SlackNotifications;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Backend.Services.Stubs;
 using MarginTrading.Backend.Services.Workflow;
@@ -83,6 +84,7 @@ namespace MarginTradingTests.Modules
                 .SingleInstance();
             builder.RegisterInstance(new CqrsContextNamesSettings()).AsSelf().SingleInstance();
             builder.RegisterType<AccountsProjection>().AsSelf().SingleInstance();
+            builder.RegisterType<CqrsSender>().As<ICqrsSender>().SingleInstance();
         }
     }
 

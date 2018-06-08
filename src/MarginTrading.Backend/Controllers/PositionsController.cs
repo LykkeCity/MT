@@ -9,6 +9,10 @@ using MarginTrading.Backend.Contracts;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Common.Extensions;
@@ -105,7 +109,7 @@ namespace MarginTrading.Backend.Controllers
                     ? OrderDirection.Sell
                     : OrderDirection.Buy;
 
-                orders = orders.Where(o => o.GetOrderType() == orderDirection).ToList();
+                orders = orders.Where(o => o.GetOrderDirection() == orderDirection).ToList();
             }
 
             var reason = OrderCloseReason.Close;
@@ -178,7 +182,7 @@ namespace MarginTrading.Backend.Controllers
                 AccountId = order.AccountId,
                 AssetPairId = order.Instrument,
                 CurrentVolume = order.Volume,
-                Direction = Convert(order.GetOrderType()),
+                Direction = Convert(order.GetOrderDirection()),
                 Id = order.Id,
                 OpenPrice = order.OpenPrice,
                 ClosePrice = order.ClosePrice,
@@ -188,7 +192,7 @@ namespace MarginTrading.Backend.Controllers
                 FxRate = order.GetFplRate(),
                 RelatedOrders = relatedOrders,
                 OpenTimestamp = order.OpenDate.RequiredNotNull(nameof(order.OpenDate)),
-                TradeId = order.Id + '_' + order.GetOrderType(),
+                TradeId = order.Id + '_' + order.GetOrderDirection(),
             };
         }
 

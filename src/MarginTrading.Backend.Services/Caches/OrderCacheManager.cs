@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Settings;
 
 namespace MarginTrading.Backend.Services

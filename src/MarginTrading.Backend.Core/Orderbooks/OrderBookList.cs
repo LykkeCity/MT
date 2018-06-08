@@ -2,6 +2,7 @@
 using System.Linq;
 using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.MatchedOrders;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Settings;
 
 namespace MarginTrading.Backend.Core.Orderbooks

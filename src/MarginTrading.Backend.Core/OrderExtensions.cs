@@ -1,4 +1,5 @@
 ﻿using System;
+using MarginTrading.Backend.Core.Orders;
 
 namespace MarginTrading.Backend.Core
 {
@@ -6,20 +7,20 @@ namespace MarginTrading.Backend.Core
     {
         public static bool IsSuitablePriceForPendingOrder(this IOrder order, decimal price)
         {
-            return order.ExpectedOpenPrice.HasValue && (order.GetOrderType() == OrderDirection.Buy && price <= order.ExpectedOpenPrice
-                                                        || order.GetOrderType() == OrderDirection.Sell && price >= order.ExpectedOpenPrice);
+            return order.ExpectedOpenPrice.HasValue && (order.GetOrderDirection() == OrderDirection.Buy && price <= order.ExpectedOpenPrice
+                                                        || order.GetOrderDirection() == OrderDirection.Sell && price >= order.ExpectedOpenPrice);
         }
 
         public static bool IsStopLoss(this IOrder order)
         {
-            return order.GetOrderType() == OrderDirection.Buy
+            return order.GetOrderDirection() == OrderDirection.Buy
                 ? order.StopLoss.HasValue && order.StopLoss.Value > 0 && order.ClosePrice <= order.StopLoss
                 : order.StopLoss.HasValue && order.StopLoss.Value > 0 && order.ClosePrice >= order.StopLoss;
         }
 
         public static bool IsTakeProfit(this IOrder order)
         {
-            return order.GetOrderType() == OrderDirection.Buy
+            return order.GetOrderDirection() == OrderDirection.Buy
                 ? order.TakeProfit.HasValue && order.TakeProfit > 0 && order.ClosePrice >= order.TakeProfit
                 : order.TakeProfit.HasValue && order.TakeProfit > 0 && order.ClosePrice <= order.TakeProfit;
         }
@@ -150,6 +151,11 @@ namespace MarginTrading.Backend.Core
                    && order.CloseDate.HasValue
                    && order.ClosePrice > 0
                    && order.MatchedCloseOrders.SummaryVolume > 0;
+        }
+
+        public static OrderDirection GetOrderDirectionToMatchInOrderBook(this OrderDirection orderType)
+        {
+            return orderType == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy;
         }
     }
 }

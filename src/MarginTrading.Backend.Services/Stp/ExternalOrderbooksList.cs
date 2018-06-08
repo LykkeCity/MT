@@ -5,6 +5,7 @@ using Common;
 using Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orderbooks;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Helpers;
@@ -70,7 +71,7 @@ namespace MarginTrading.Backend.Services.Stp
 
         private static decimal? MatchBestPriceForOrder(ExternalOrderBook externalOrderbook, IOrder order, bool isOpening)
         {
-            var direction = isOpening ? order.GetOrderType() : order.GetCloseType();
+            var direction = isOpening ? order.GetOrderDirection() : order.GetCloseType();
             var volume = Math.Abs(order.Volume);
 
             return externalOrderbook.GetMatchedPrice(volume, direction);

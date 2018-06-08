@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.RabbitMq;

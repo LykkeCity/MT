@@ -4,6 +4,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.TradingConditions;
 

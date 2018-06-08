@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.TradingConditions;
 
@@ -39,6 +40,7 @@ namespace MarginTrading.Backend.Services
         public bool IsEnoughBalance(Order order)
         {
             _fplService.CalculateMargin(order, order.FplData);
+            //TODO: always returns 0, need to be reworked
             var orderMargin = order.GetMarginInit();
             var accountMarginAvailable = _accountsCacheService.Get(order.AccountId).GetMarginAvailable(); 
             
