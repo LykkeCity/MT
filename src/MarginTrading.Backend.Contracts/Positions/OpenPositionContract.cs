@@ -17,9 +17,9 @@ namespace MarginTrading.Backend.Contracts.Positions
         /// Account id
         /// </summary>
         public string AccountId { get; set; }
-        
+
         /// <summary>
-        /// Asset pair id
+        /// Instrument id (e.g."BTCUSD", where BTC - base asset unit, USD - quoting unit)
         /// </summary>
         public string AssetPairId { get; set; }
         
@@ -29,37 +29,37 @@ namespace MarginTrading.Backend.Contracts.Positions
         public DateTime OpenTimestamp { get; set; }
 
         /// <summary>
-        /// The direction of the position
+        /// The direction of the position (Long or Short)
         /// </summary>
         public PositionDirectionContract Direction { get; set; }
-        
+
         /// <summary>
-        /// Open price
+        /// Open price (in quoting asset units per one base unit)
         /// </summary>
         public decimal OpenPrice { get; set; }
-        
+
         /// <summary>
-        /// Expected open price
+        /// Expected open price (in quoting asset units per one base unit)
         /// </summary>
         public decimal? ExpectedOpenPrice { get; set; }
-        
+
         /// <summary>
-        /// Current price for closing of position
+        /// Current price for closing of position (in quoting asset units per one base unit)
         /// </summary>
         public decimal ClosePrice { get; set; }
-        
+
         /// <summary>
-        /// Current position volume in quoting asset units
+        /// Current position volume in base asset units
         /// </summary>
-        public decimal CurrentVolume { get; set; }
-        
+        public decimal CurrentVolume { get; set; } // TODO: RENAME TO 'Volume'
+
         /// <summary>
-        /// Profit and loss of the position in base asset units (without commissions)
+        /// Profit and loss of the position in account asset units (without commissions)
         /// </summary>
         public decimal PnL { get; set; }
-        
+
         /// <summary>
-        /// Current margin value
+        /// Current margin value in account asset units
         /// </summary>
         public decimal Margin { get; set; }
         
