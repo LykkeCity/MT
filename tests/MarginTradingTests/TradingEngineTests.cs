@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
 using Lykke.Cqrs;
-using MarginTrading.AccountsManagement.Contracts.Commands;
  using MarginTrading.AccountsManagement.Contracts.Events;
  using MarginTrading.AccountsManagement.Contracts.Models;
  using MarginTrading.Backend.Contracts.Events;

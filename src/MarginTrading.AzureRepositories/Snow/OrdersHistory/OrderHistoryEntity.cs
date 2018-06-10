@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using AzureStorage;
 using AzureStorage.Tables;
 using Common;
-using Lykke.AzureStorage.Tables;
-using Lykke.AzureStorage.Tables.Entity.Annotation;
-using Lykke.AzureStorage.Tables.Entity.Serializers;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;

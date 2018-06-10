@@ -22,7 +22,6 @@ using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Services.Settings;
-using MarginTradingTests.Helpers;
 using MarginTradingTests.Modules;
 using Moq;
 
