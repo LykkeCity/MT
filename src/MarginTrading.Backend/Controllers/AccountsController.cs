@@ -122,7 +122,7 @@ namespace MarginTrading.Backend.Controllers
                     AccountId = accountId,
                     ClosedPositions = closedOrders.Select(o =>
                     {
-                        var orderUpdateType = o.Status == OrderStatus.Closing
+                        var orderUpdateType = o.Status == PositionStatus.Closing
                             ? OrderUpdateType.Closing
                             : OrderUpdateType.Close;
                         return o.ToFullContract(orderUpdateType, _dateService.Now());

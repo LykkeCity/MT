@@ -4,7 +4,7 @@ using MarginTrading.Backend.Core.MatchingEngines;
 
 namespace MarginTrading.Backend.Core.Orders
 {
-    public class Order : IOrder
+    public class Position : IPosition
     {
         public string Id { get; set; }
         public long Code { get; set; }
@@ -38,7 +38,7 @@ namespace MarginTrading.Backend.Core.Orders
         public string CloseExternalOrderId { get; set; }
         public string CloseExternalProviderId { get; set; }
         public DateTime? StartClosingDate { get; set; }
-        public OrderStatus Status { get; set; }
+        public PositionStatus Status { get; set; }
         public OrderCloseReason CloseReason { get; set; }
         public OrderFillType FillType { get; set; }
         public OrderRejectReason RejectReason { get; set; }

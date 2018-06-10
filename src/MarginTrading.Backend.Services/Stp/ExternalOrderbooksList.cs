@@ -38,7 +38,7 @@ namespace MarginTrading.Backend.Services.Stp
         private readonly ReadWriteLockedDictionary<string, Dictionary<string, ExternalOrderBook>> _orderbooks =
             new ReadWriteLockedDictionary<string, Dictionary<string, ExternalOrderBook>>();
 
-        public List<(string source, decimal? price)> GetPricesForOpen(IOrder order)
+        public List<(string source, decimal? price)> GetPricesForOpen(IPosition order)
         {
             return _orderbooks.TryReadValue(order.Instrument, (dataExist, assetPairId, orderbooks)
                 => dataExist
@@ -46,7 +46,7 @@ namespace MarginTrading.Backend.Services.Stp
                     : null);
         }
 
-        public decimal? GetPriceForClose(IOrder order)
+        public decimal? GetPriceForClose(IPosition order)
         {
             decimal? CalculatePriceForClose(Dictionary<string, ExternalOrderBook> orderbooks)
             {
@@ -69,7 +69,7 @@ namespace MarginTrading.Backend.Services.Stp
                 (exists, assetPair, orderbooks) => orderbooks.Values.FirstOrDefault());
         }
 
-        private static decimal? MatchBestPriceForOrder(ExternalOrderBook externalOrderbook, IOrder order, bool isOpening)
+        private static decimal? MatchBestPriceForOrder(ExternalOrderBook externalOrderbook, IPosition order, bool isOpening)
         {
             var direction = isOpening ? order.GetOrderDirection() : order.GetCloseType();
             var volume = Math.Abs(order.Volume);

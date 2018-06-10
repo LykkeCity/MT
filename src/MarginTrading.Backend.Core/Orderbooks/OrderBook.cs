@@ -75,7 +75,7 @@ namespace MarginTrading.Backend.Core.Orderbooks
             }
         }
 
-        public IEnumerable<MatchedOrder> Match(Order order, OrderDirection orderTypeToMatch, decimal volumeToMatch, int maxMarketMakerLimitOrderAge)
+        public IEnumerable<MatchedOrder> Match(Position order, OrderDirection orderTypeToMatch, decimal volumeToMatch, int maxMarketMakerLimitOrderAge)
         {
             if (volumeToMatch == 0)
                 yield break;
@@ -111,7 +111,7 @@ namespace MarginTrading.Backend.Core.Orderbooks
                 }
         }
 
-        public void Update(Order order, OrderDirection orderTypeToMatch, IEnumerable<MatchedOrder> matchedOrders)
+        public void Update(Position order, OrderDirection orderTypeToMatch, IEnumerable<MatchedOrder> matchedOrders)
         {
             var source = orderTypeToMatch == OrderDirection.Buy ? Buy : Sell;
             foreach (var matchedOrder in matchedOrders)

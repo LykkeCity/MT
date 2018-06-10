@@ -75,7 +75,7 @@ namespace MarginTrading.Backend.Controllers
 
             order = await _tradingEngine.CloseActiveOrderAsync(positionId, reason, /*request.Comment*/ "");
 
-            if (order.Status != OrderStatus.Closed && order.Status != OrderStatus.Closing)
+            if (order.Status != PositionStatus.Closed && order.Status != PositionStatus.Closing)
             {
                 throw new InvalidOperationException(order.CloseRejectReasonText);
             }
@@ -122,7 +122,7 @@ namespace MarginTrading.Backend.Controllers
             {
                 var closedOrder = await _tradingEngine.CloseActiveOrderAsync(orderId, reason, /*request.Comment*/ "");
 
-                if (closedOrder.Status != OrderStatus.Closed && closedOrder.Status != OrderStatus.Closing)
+                if (closedOrder.Status != PositionStatus.Closed && closedOrder.Status != PositionStatus.Closing)
                 {
                     throw new InvalidOperationException(closedOrder.CloseRejectReasonText);
                 }
@@ -166,7 +166,7 @@ namespace MarginTrading.Backend.Controllers
             {
                 var closedOrder = await _tradingEngine.CloseActiveOrderAsync(orderId, reason, /*request.Comment*/ "");
 
-                if (closedOrder.Status != OrderStatus.Closed && closedOrder.Status != OrderStatus.Closing)
+                if (closedOrder.Status != PositionStatus.Closed && closedOrder.Status != PositionStatus.Closing)
                 {
                     throw new InvalidOperationException(closedOrder.CloseRejectReasonText);
                 }
@@ -198,7 +198,7 @@ namespace MarginTrading.Backend.Controllers
         public Task<List<OpenPositionContract>> ListAsync([FromQuery]string accountId = null,
             [FromQuery] string assetPairId = null)
         {
-            IEnumerable<Order> orders = _ordersCache.ActiveOrders.GetAllOrders();
+            IEnumerable<Position> orders = _ordersCache.ActiveOrders.GetAllOrders();
             if (!string.IsNullOrWhiteSpace(accountId))
                 orders = orders.Where(o => o.AccountId == accountId);
 
@@ -208,7 +208,7 @@ namespace MarginTrading.Backend.Controllers
             return Task.FromResult(orders.Select(Convert).ToList());
         }
 
-        private OpenPositionContract Convert(Order order)
+        private OpenPositionContract Convert(Position order)
         {
             var relatedOrders = new List<string>();
             

@@ -48,7 +48,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         }
         
         //TODO: remove orderProcessed function and make all validations before match
-        public async Task MatchMarketOrderForOpenAsync(Order order, Func<MatchedOrderCollection, bool> orderProcessed)
+        public async Task MatchMarketOrderForOpenAsync(Position order, Func<MatchedOrderCollection, bool> orderProcessed)
         {
             var prices = _externalOrderBooksList.GetPricesForOpen(order);
 
@@ -135,7 +135,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             if (string.IsNullOrEmpty(order.OpenExternalProviderId) ||
                 string.IsNullOrEmpty(order.OpenExternalOrderId))
             {
-                order.Status = OrderStatus.Rejected;
+                order.Status = PositionStatus.Rejected;
                 order.RejectReason = OrderRejectReason.NoLiquidity;
                 order.RejectReasonText = "Error executing external order";
             }
@@ -143,7 +143,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         }
 
         //TODO: remove orderProcessed function and make all validations before match
-        public async Task MatchMarketOrderForCloseAsync(Order order, Func<MatchedOrderCollection, bool> orderProcessed)
+        public async Task MatchMarketOrderForCloseAsync(Position order, Func<MatchedOrderCollection, bool> orderProcessed)
         {
             var closePrice = _externalOrderBooksList.GetPriceForClose(order);
 
@@ -206,7 +206,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
         }
 
-        public decimal? GetPriceForClose(Order order)
+        public decimal? GetPriceForClose(Position order)
         {
             return _externalOrderBooksList.GetPriceForClose(order);
         }

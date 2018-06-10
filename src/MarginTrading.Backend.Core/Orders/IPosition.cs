@@ -4,7 +4,7 @@ using MarginTrading.Backend.Core.MatchingEngines;
 
 namespace MarginTrading.Backend.Core.Orders
 {
-    public interface IOrder : IBaseOrder
+    public interface IPosition : IBaseOrder
     {
         long Code { get; set; }
         string AccountId { get; }
@@ -30,7 +30,7 @@ namespace MarginTrading.Backend.Core.Orders
         decimal QuoteRate { get; }
         int AssetAccuracy { get; }
         DateTime? StartClosingDate { get; }
-        OrderStatus Status { get; }
+        PositionStatus Status { get; }
         OrderCloseReason CloseReason { get; }
         OrderFillType FillType { get; }
         OrderRejectReason RejectReason { get; }

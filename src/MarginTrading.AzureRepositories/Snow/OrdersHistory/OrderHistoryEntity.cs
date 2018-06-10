@@ -60,7 +60,7 @@ namespace MarginTrading.AzureRepositories.Snow.OrdersHistory
         public string Type { get; set; }
         OrderDirection IOrderHistory.Type => Type.ParseEnum(OrderDirection.Buy);
         public string Status { get; set; }
-        OrderStatus IOrderHistory.Status => Status.ParseEnum(OrderStatus.Closed);
+        PositionStatus IOrderHistory.Status => Status.ParseEnum(PositionStatus.Closed);
         public string CloseReason { get; set; }
         OrderCloseReason IOrderHistory.CloseReason => CloseReason.ParseEnum(OrderCloseReason.Close);
         public string FillType { get; set; }

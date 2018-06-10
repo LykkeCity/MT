@@ -11,9 +11,9 @@ namespace MarginTrading.Backend.Services.Notifications
 		Task AccountHistory(string transactionId, string accountId, string clientId, decimal amount, decimal balance, 
 			decimal withdrawTransferLimit, AccountHistoryType type, string comment = null, string eventSourceId = null, 
 			string auditLog = null);
-		Task OrderHistory(IOrder order, OrderUpdateType orderUpdateType);
+		Task OrderHistory(IPosition order, OrderUpdateType orderUpdateType);
 		Task OrderBookPrice(InstrumentBidAskPair quote);
-		Task OrderChanged(IOrder order);
+		Task OrderChanged(IPosition order);
 		Task AccountUpdated(IMarginTradingAccount account);
 		Task AccountStopout(string clientId, string accountId, int positionsCount, decimal totalPnl);
 		Task UserUpdates(bool updateAccountAssets, bool updateAccounts, string[] clientIds);

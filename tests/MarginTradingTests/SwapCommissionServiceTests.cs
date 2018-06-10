@@ -53,7 +53,7 @@ namespace MarginTradingTests
 
             await _accountAssetsManager.UpdateTradingInstrumentsCache();
 
-            var dayOrder = new Order
+            var dayOrder = new Position
             {
                 AccountAssetId = "USD",
                 Instrument = "EURUSD",
@@ -67,7 +67,7 @@ namespace MarginTradingTests
 
             var swapsForDay = _swapService.GetSwaps(dayOrder);
 
-            var twoDayOrder = new Order
+            var twoDayOrder = new Position
             {
                 AccountAssetId = "USD",
                 Instrument = "EURUSD",

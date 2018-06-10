@@ -14,21 +14,21 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
         public MatchingEngineMode Mode => MatchingEngineMode.MarketMaker;
 
-        public Task MatchMarketOrderForOpenAsync(Order order, Func<MatchedOrderCollection, bool> orderProcessed)
+        public Task MatchMarketOrderForOpenAsync(Position order, Func<MatchedOrderCollection, bool> orderProcessed)
         {
             orderProcessed(new MatchedOrderCollection());
             
             return Task.CompletedTask;
         }
 
-        public Task MatchMarketOrderForCloseAsync(Order order, Func<MatchedOrderCollection, bool> orderProcessed)
+        public Task MatchMarketOrderForCloseAsync(Position order, Func<MatchedOrderCollection, bool> orderProcessed)
         {
             orderProcessed(new MatchedOrderCollection());
             
             return Task.CompletedTask;
         }
 
-        public decimal? GetPriceForClose(Order order)
+        public decimal? GetPriceForClose(Position order)
         {
             return null;
         }

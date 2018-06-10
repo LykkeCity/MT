@@ -78,7 +78,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             }
         }
 
-        public decimal? GetPriceForClose(Order order)
+        public decimal? GetPriceForClose(Position order)
         {
             using (_contextFactory.GetWriteSyncContext($"{nameof(MarketMakerMatchingEngine)}.{nameof(GetPriceForClose)}"))
             {
@@ -98,7 +98,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             }
         }
 
-        public Task MatchMarketOrderForOpenAsync(Order order, Func<MatchedOrderCollection, bool> matchedFunc)
+        public Task MatchMarketOrderForOpenAsync(Position order, Func<MatchedOrderCollection, bool> matchedFunc)
         {
             using (_contextFactory.GetWriteSyncContext(
                 $"{nameof(MarketMakerMatchingEngine)}.{nameof(MatchMarketOrderForOpenAsync)}"))
@@ -118,7 +118,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             return Task.CompletedTask;
         }    
 
-        public Task MatchMarketOrderForCloseAsync(Order order, Func<MatchedOrderCollection, bool> matchedAction)
+        public Task MatchMarketOrderForCloseAsync(Position order, Func<MatchedOrderCollection, bool> matchedAction)
         {
             using (_contextFactory.GetWriteSyncContext($"{nameof(MarketMakerMatchingEngine)}.{nameof(MatchMarketOrderForCloseAsync)}"))
             {

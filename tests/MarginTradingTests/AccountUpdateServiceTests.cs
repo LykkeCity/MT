@@ -41,7 +41,7 @@ namespace MarginTradingTests
         [Test]
         public void Check_Account_Calculations_Correct()
         {
-            var order1 = new Order
+            var order1 = new Position
             {
                 Id = Guid.NewGuid().ToString("N"),
                 Instrument = "EURUSD",
@@ -57,7 +57,7 @@ namespace MarginTradingTests
                         new MatchedOrder {MatchedDate = DateTime.UtcNow, Volume = 1000}
                     }), //need for GetMatchedVolume()
                 OpenPrice = 1.02M,
-                Status = OrderStatus.Active,
+                Status = PositionStatus.Active,
             };
 
             _ordersCache.ActiveOrders.Add(order1);
@@ -74,7 +74,7 @@ namespace MarginTradingTests
             Assert.AreEqual(1009.60, account.GetMarginAvailable());
             Assert.AreEqual(147.11538468611316571447748352m, account.GetMarginUsageLevel());
 
-            var order2 = new Order
+            var order2 = new Position
             {
                 Id = Guid.NewGuid().ToString("N"),
                 Instrument = "EURUSD",
@@ -86,7 +86,7 @@ namespace MarginTradingTests
                 Volume = -30000,
                 MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 30000 } }), //need for GetMatchedVolume()
                 OpenPrice = 1.02M,
-                Status = OrderStatus.Active,
+                Status = PositionStatus.Active,
             };
 
             _ordersCache.ActiveOrders.Add(order2);
@@ -105,7 +105,7 @@ namespace MarginTradingTests
         [Test]
         public void Check_Account_StopOut_Level()
         {
-            var order = new Order
+            var order = new Position
             {
                 Id = Guid.NewGuid().ToString("N"),
                 Instrument = "EURUSD",
@@ -117,7 +117,7 @@ namespace MarginTradingTests
                 Volume = 130000,
                 MatchedOrders = new MatchedOrderCollection( new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 130000} }), //need for GetMatchedVolume()
                 OpenPrice = 1.02M,
-                Status = OrderStatus.Active,
+                Status = PositionStatus.Active,
             };
 
             _ordersCache.ActiveOrders.Add(order);
@@ -133,7 +133,7 @@ namespace MarginTradingTests
         [Ignore("Recheck requirements")]
         public void Check_IsEnoughBalance()
         {
-            var order1 = new Order
+            var order1 = new Position
             {
                 Id = Guid.NewGuid().ToString("N"),
                 Instrument = "EURUSD",
@@ -144,13 +144,13 @@ namespace MarginTradingTests
                 LegalEntity = "LYKKETEST",
                 Volume = 96000,
                 OpenPrice = 1.02M,
-                Status = OrderStatus.Active,
+                Status = PositionStatus.Active,
             };
             
             var result1 = _accountUpdateService.IsEnoughBalance(order1);//account have 1000
             Assert.IsTrue(result1);
             
-            var order2 = new Order
+            var order2 = new Position
             {
                 Id = Guid.NewGuid().ToString("N"),
                 Instrument = "EURUSD",

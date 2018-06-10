@@ -49,7 +49,7 @@ namespace MarginTrading.Backend.Core.Mappers
                 CloseCommission = src.CloseCommission,
                 SwapCommission = src.SwapCommission,
                 StartClosingDate = src.StartClosingDate,
-                Status = src.Status.ToType<OrderStatus>(),
+                Status = src.Status.ToType<PositionStatus>(),
                 CloseReason = src.CloseReason.ToType<OrderCloseReason>(),
                 FillType = src.FillType.ToType<OrderFillType>(),
                 RejectReason = src.RejectReason.ToType<OrderRejectReason>(),

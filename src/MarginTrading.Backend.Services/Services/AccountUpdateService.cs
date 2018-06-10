@@ -37,7 +37,7 @@ namespace MarginTrading.Backend.Services
             UpdateAccount(account, GetActiveOrders(account.Id), GetPendingOrders(account.Id));
         }
 
-        public bool IsEnoughBalance(Order order)
+        public bool IsEnoughBalance(Position order)
         {
             _fplService.CalculateMargin(order, order.FplData);
             //TODO: always returns 0, need to be reworked
@@ -47,7 +47,7 @@ namespace MarginTrading.Backend.Services
             return accountMarginAvailable >= orderMargin;
         }
 
-        public MarginTradingAccount GuessAccountWithNewActiveOrder(Order order)
+        public MarginTradingAccount GuessAccountWithNewActiveOrder(Position order)
         {
             var newInstance = MarginTradingAccount.Create(_accountsCacheService.Get(order.AccountId));
 
@@ -62,8 +62,8 @@ namespace MarginTrading.Backend.Services
         }
         
         private void UpdateAccount(IMarginTradingAccount account,
-            ICollection<Order> activeOrders,
-            ICollection<Order> pendingOrders)
+            ICollection<Position> activeOrders,
+            ICollection<Position> pendingOrders)
         {
             var accuracy = _assetsCache.GetAssetAccuracy(account.BaseAssetId);
             var activeOrdersMaintenanceMargin = activeOrders.Sum(item => item.GetMarginMaintenance());
@@ -83,12 +83,12 @@ namespace MarginTrading.Backend.Services
             account.AccountFpl.CalculatedHash = account.AccountFpl.ActualHash;
         }
 
-        private ICollection<Order> GetActiveOrders(string accountId)
+        private ICollection<Position> GetActiveOrders(string accountId)
         {
             return _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountId);
         }
         
-        private ICollection<Order> GetPendingOrders(string accountId)
+        private ICollection<Position> GetPendingOrders(string accountId)
         {
             return _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(accountId);
         }

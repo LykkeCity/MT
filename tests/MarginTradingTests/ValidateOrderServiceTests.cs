@@ -40,7 +40,7 @@ namespace MarginTradingTests
             var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 1.55M, Ask = 1.57M };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -76,7 +76,7 @@ namespace MarginTradingTests
             var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 1.55M, Ask = 1.57M };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
-            var existingLong = new Order
+            var existingLong = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -86,7 +86,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.FillOrKill
             };
 
-            var existingShort = new Order
+            var existingShort = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -96,7 +96,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.FillOrKill
             };
 
-            var existingOtherAcc = new Order
+            var existingOtherAcc = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -110,7 +110,7 @@ namespace MarginTradingTests
             _ordersCache.ActiveOrders.Add(existingShort);
             _ordersCache.ActiveOrders.Add(existingOtherAcc);
 
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -137,7 +137,7 @@ namespace MarginTradingTests
         {
             const string instrument = "BADINSRT";
 
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -157,7 +157,7 @@ namespace MarginTradingTests
         {
             const string accountId = "nosuchaccountId";
 
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -175,7 +175,7 @@ namespace MarginTradingTests
         [Test]
         public void Is_No_Quote()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -197,7 +197,7 @@ namespace MarginTradingTests
             var quote = new InstrumentBidAskPair {Instrument = instrument, Bid = 1.55M, Ask = 1.57M};
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -223,7 +223,7 @@ namespace MarginTradingTests
             var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 1.55M, Ask = 1.57M };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -249,7 +249,7 @@ namespace MarginTradingTests
             var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 963.633M, Ask = 964.228M };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -276,7 +276,7 @@ namespace MarginTradingTests
             var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 963.633M, Ask = 964.228M };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -304,7 +304,7 @@ namespace MarginTradingTests
             var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 963.633M, Ask = 964.228M };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -331,7 +331,7 @@ namespace MarginTradingTests
             var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 963.633M, Ask = 964.228M };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -359,7 +359,7 @@ namespace MarginTradingTests
             var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 1.55M, Ask = 1.57M };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),

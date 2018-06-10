@@ -34,7 +34,7 @@ namespace MarginTrading.Backend.Core.Orderbooks
             _orderBooks = orderBook ?? new Dictionary<string, OrderBook>();
         }
 
-        public MatchedOrderCollection Match(Order order, OrderDirection orderTypeToMatch, decimal volumeToMatch)
+        public MatchedOrderCollection Match(Position order, OrderDirection orderTypeToMatch, decimal volumeToMatch)
         {
             if (!_orderBooks.ContainsKey(order.Instrument))
                 return new MatchedOrderCollection();
@@ -43,7 +43,7 @@ namespace MarginTrading.Backend.Core.Orderbooks
                 .Match(order, orderTypeToMatch, volumeToMatch, _marginSettings.MaxMarketMakerLimitOrderAge));
         }
 
-        public void Update(Order order, OrderDirection orderTypeToMatch, IEnumerable<MatchedOrder> matchedOrders)
+        public void Update(Position order, OrderDirection orderTypeToMatch, IEnumerable<MatchedOrder> matchedOrders)
         {
             if (_orderBooks.TryGetValue(order.Instrument, out var orderBook))
             {

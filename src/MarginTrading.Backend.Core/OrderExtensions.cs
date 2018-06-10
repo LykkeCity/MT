@@ -5,59 +5,59 @@ namespace MarginTrading.Backend.Core
 {
     public static class OrderExtensions
     {
-        public static bool IsSuitablePriceForPendingOrder(this IOrder order, decimal price)
+        public static bool IsSuitablePriceForPendingOrder(this IPosition order, decimal price)
         {
             return order.ExpectedOpenPrice.HasValue && (order.GetOrderDirection() == OrderDirection.Buy && price <= order.ExpectedOpenPrice
                                                         || order.GetOrderDirection() == OrderDirection.Sell && price >= order.ExpectedOpenPrice);
         }
 
-        public static bool IsStopLoss(this IOrder order)
+        public static bool IsStopLoss(this IPosition order)
         {
             return order.GetOrderDirection() == OrderDirection.Buy
                 ? order.StopLoss.HasValue && order.StopLoss.Value > 0 && order.ClosePrice <= order.StopLoss
                 : order.StopLoss.HasValue && order.StopLoss.Value > 0 && order.ClosePrice >= order.StopLoss;
         }
 
-        public static bool IsTakeProfit(this IOrder order)
+        public static bool IsTakeProfit(this IPosition order)
         {
             return order.GetOrderDirection() == OrderDirection.Buy
                 ? order.TakeProfit.HasValue && order.TakeProfit > 0 && order.ClosePrice >= order.TakeProfit
                 : order.TakeProfit.HasValue && order.TakeProfit > 0 && order.ClosePrice <= order.TakeProfit;
         }
 
-        public static decimal GetTotalFpl(this IOrder order, decimal swaps)
+        public static decimal GetTotalFpl(this IPosition order, decimal swaps)
         {
             return order.GetFpl() - order.GetOpenCommission() - order.GetCloseCommission() - swaps;
         }
 
-        public static decimal GetTotalFpl(this IOrder order)
+        public static decimal GetTotalFpl(this IPosition order)
         {
             return Math.Round(GetTotalFpl(order, order.GetSwaps()), order.CalculateFplData().AccountBaseAssetAccuracy);
         }
 
-        public static decimal GetMatchedVolume(this IOrder order)
+        public static decimal GetMatchedVolume(this IPosition order)
         {
             return order.MatchedOrders.SummaryVolume;
         }
 
-        public static decimal GetMatchedCloseVolume(this IOrder order)
+        public static decimal GetMatchedCloseVolume(this IPosition order)
         {
             return order.MatchedCloseOrders.SummaryVolume;
         }
 
-        public static decimal GetRemainingCloseVolume(this IOrder order)
+        public static decimal GetRemainingCloseVolume(this IPosition order)
         {
             return order.GetMatchedVolume() - order.GetMatchedCloseVolume();
         }
 
-        public static bool GetIsCloseFullfilled(this IOrder order)
+        public static bool GetIsCloseFullfilled(this IPosition order)
         {
             return Math.Round(order.GetRemainingCloseVolume(), MarginTradingHelpers.VolumeAccuracy) == 0;
         }
 
-        private static FplData CalculateFplData(this IOrder order)
+        private static FplData CalculateFplData(this IPosition order)
         {
-            if (order is Order orderInstance)
+            if (order is Position orderInstance)
             {
                 if (orderInstance.FplData.ActualHash != orderInstance.FplData.CalculatedHash)
                 {
@@ -73,34 +73,34 @@ namespace MarginTrading.Backend.Core
             return fplData;
         }
 
-        public static decimal GetFpl(this IOrder order)
+        public static decimal GetFpl(this IPosition order)
         {
             return order.CalculateFplData().Fpl;
         }
 
-        public static decimal GetFplRate(this IOrder order)
+        public static decimal GetFplRate(this IPosition order)
         {
             return order.CalculateFplData().FplRate;
         }
 
-        public static decimal GetMarginRate(this IOrder order)
+        public static decimal GetMarginRate(this IPosition order)
         {
             return order.CalculateFplData().MarginRate;
         }
 
-        public static decimal GetMarginMaintenance(this IOrder order)
+        public static decimal GetMarginMaintenance(this IPosition order)
         {
             return order.CalculateFplData().MarginMaintenance;
         }
 
-        public static decimal GetMarginInit(this IOrder order)
+        public static decimal GetMarginInit(this IPosition order)
         {
             return order.CalculateFplData().MarginInit;
         }
 
-        public static void UpdateClosePrice(this IOrder order, decimal closePrice)
+        public static void UpdateClosePrice(this IPosition order, decimal closePrice)
         {
-            if (order is Order orderInstance)
+            if (order is Position orderInstance)
             {
                 orderInstance.ClosePrice = closePrice;
                 orderInstance.FplData.ActualHash++;
@@ -109,40 +109,40 @@ namespace MarginTrading.Backend.Core
             }
         }
 
-        public static void UpdatePendingOrderMargin(this IOrder order)
+        public static void UpdatePendingOrderMargin(this IPosition order)
         {
-            if (order is Order orderInstance)
+            if (order is Position orderInstance)
             {
                 orderInstance.FplData.ActualHash++;
             }
         }
 
-        public static decimal GetSwaps(this IOrder order)
+        public static decimal GetSwaps(this IPosition order)
         {
             return MtServiceLocator.SwapCommissionService.GetSwaps(order);
         }
 
-        public static decimal GetOpenCommission(this IOrder order)
+        public static decimal GetOpenCommission(this IPosition order)
         {
             return Math.Abs(order.Volume) * order.OpenCommission;
         }
 
-        public static decimal GetCloseCommission(this IOrder order)
+        public static decimal GetCloseCommission(this IPosition order)
         {
             return Math.Abs(order.GetMatchedCloseVolume()) * order.CloseCommission;
         }
 
-        public static bool IsOpened(this IOrder order)
+        public static bool IsOpened(this IPosition order)
         {
-            return order.Status == OrderStatus.Active
+            return order.Status == PositionStatus.Active
                    && order.OpenDate.HasValue
                    && order.OpenPrice > 0
                    && order.MatchedOrders.SummaryVolume > 0;
         }
 
-        public static bool IsClosed(this IOrder order)
+        public static bool IsClosed(this IPosition order)
         {
-            return order.Status == OrderStatus.Closed
+            return order.Status == PositionStatus.Closed
                    && (order.CloseReason == OrderCloseReason.Close
                        || order.CloseReason == OrderCloseReason.ClosedByBroker
                        || order.CloseReason == OrderCloseReason.StopLoss

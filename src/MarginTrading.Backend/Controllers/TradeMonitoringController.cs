@@ -242,7 +242,7 @@ namespace MarginTrading.Backend.Controllers
             return _convertService.Convert<OrderBook, OrderBookContract>(domainContract);
         }
 
-        public static DetailedOrderContract Convert(Order src)
+        public static DetailedOrderContract Convert(Position src)
         {
             MatchedOrderContract MatchedOrderToBackendContract(MatchedOrder o) =>
                 new MatchedOrderContract

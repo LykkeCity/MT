@@ -1,13 +1,20 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
+using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Helpers;
 using MarginTrading.Backend.Services.TradingConditions;
+using MarginTrading.Common.Extensions;
+using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services
 {
@@ -20,6 +27,10 @@ namespace MarginTrading.Backend.Services
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly OrdersCache _ordersCache;
         private readonly IAssetPairDayOffService _assetDayOffService;
+        private readonly IIdentityGenerator _identityGenerator;
+        private readonly IDateService _dateService;
+        private readonly MarginTradingSettings _marginSettings;
+        private readonly ICfdCalculatorService _cfdCalculatorService;
 
         public ValidateOrderService(
             IQuoteCacheService quoteCashService,
@@ -28,7 +39,11 @@ namespace MarginTrading.Backend.Services
             ITradingInstrumentsCacheService accountAssetsCacheService,
             IAssetPairsCache assetPairsCache,
             OrdersCache ordersCache,
-            IAssetPairDayOffService assetDayOffService)
+            IAssetPairDayOffService assetDayOffService,
+            IIdentityGenerator identityGenerator,
+            IDateService dateService,
+            MarginTradingSettings marginSettings,
+            ICfdCalculatorService cfdCalculatorService)
         {
             _quoteCashService = quoteCashService;
             _accountUpdateService = accountUpdateService;
@@ -37,74 +52,92 @@ namespace MarginTrading.Backend.Services
             _assetPairsCache = assetPairsCache;
             _ordersCache = ordersCache;
             _assetDayOffService = assetDayOffService;
+            _identityGenerator = identityGenerator;
+            _dateService = dateService;
+            _marginSettings = marginSettings;
+            _cfdCalculatorService = cfdCalculatorService;
         }
 
-        //has to be beyond global lock
-        public void Validate(Order order)
+        public async Task<Order> ValidateRequestAndGetOrder(OrderPlaceRequest request)
         {
-            #region Validate input params
-            
-            if (_assetDayOffService.IsDayOff(order.Instrument))
+            if (_assetDayOffService.IsDayOff(request.InstrumentId))
             {
                 throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Trades for instrument are not available");
             }
 
-            if (order.Volume == 0)
+            if (request.Volume == 0)
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidVolume, "Volume cannot be 0");
             }
 
-            var asset = _assetPairsCache.GetAssetPairByIdOrDefault(order.Instrument); 
+            var asset = _assetPairsCache.GetAssetPairByIdOrDefault(request.InstrumentId); 
+            
             if (asset == null)
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, "Instrument not found");
             }
             
-            var account = _accountsCacheService.TryGet(order.AccountId);
+            var account = _accountsCacheService.TryGet(request.AccountId);
 
             if (account == null)
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidAccount, "Account not found");
             }
             
-            if (!_quoteCashService.TryGetQuoteById(order.Instrument, out var quote))
+            if (!_quoteCashService.TryGetQuoteById(request.InstrumentId, out var quote))
             {
                 throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Quote not found");
             }
-
-            #endregion
             
-            order.AssetAccuracy = asset.Accuracy;
-            order.AccountAssetId = account.BaseAssetId;
-            order.TradingConditionId = account.TradingConditionId;
-            order.LegalEntity = account.LegalEntity;
-            
+            var equivalentSettings =
+                _marginSettings.ReportingEquivalentPricesSettings.FirstOrDefault(x => x.LegalEntity == account.LegalEntity);
+			
+            if(string.IsNullOrEmpty(equivalentSettings?.EquivalentAsset))
+                throw new Exception($"No reporting equivalent prices asset found for legalEntity: {account.LegalEntity}");
+			
             //check ExpectedOpenPrice for pending order
-            if (order.ExpectedOpenPrice.HasValue)
+            if (request.Price.HasValue && request.Type == OrderTypeContract.Limit)
             {
-                if (_assetDayOffService.ArePendingOrdersDisabled(order.Instrument))
+                if (_assetDayOffService.ArePendingOrdersDisabled(request.InstrumentId))
                 {
                     throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Trades for instrument are not available");
                 }
                 
-                if (order.ExpectedOpenPrice <= 0)
+                if (request.Price <= 0)
                 {
                     throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice, "Incorrect expected open price");
                 }
 
-                order.ExpectedOpenPrice = Math.Round(order.ExpectedOpenPrice ?? 0, order.AssetAccuracy);
+                request.Price = Math.Round(request.Price ?? 0, asset.Accuracy);
 
-                if (order.GetOrderDirection() == OrderDirection.Buy && order.ExpectedOpenPrice > quote.Ask ||
-                    order.GetOrderDirection() == OrderDirection.Sell && order.ExpectedOpenPrice < quote.Bid)
+                if (request.Direction == OrderDirectionContract.Buy && request.Price > quote.Ask ||
+                    request.Direction == OrderDirectionContract.Sell && request.Price < quote.Bid)
                 {
-                    var reasonText = order.GetOrderDirection() == OrderDirection.Buy
-                        ? string.Format(MtMessages.Validation_PriceAboveAsk, order.ExpectedOpenPrice, quote.Ask)
-                        : string.Format(MtMessages.Validation_PriceBelowBid, order.ExpectedOpenPrice, quote.Bid);
+                    var reasonText = request.Direction == OrderDirectionContract.Buy
+                        ? string.Format(MtMessages.Validation_PriceAboveAsk, request.Price, quote.Ask)
+                        : string.Format(MtMessages.Validation_PriceBelowBid, request.Price, quote.Bid);
 
-                    throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice, reasonText, $"{order.Instrument} quote (bid/ask): {quote.Bid}/{quote.Ask}");
+                    throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice, reasonText, 
+                        $"{request.InstrumentId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
                 }
             }
+            
+            var id = Guid.NewGuid().ToString("N");
+            var code = await _identityGenerator.GenerateIdAsync(nameof(Position));
+            var now = _dateService.Now();
+            var equivalentPrice = _cfdCalculatorService.GetQuoteRateForQuoteAsset(equivalentSettings.EquivalentAsset,
+                request.InstrumentId, account.LegalEntity);
 
+            return new Order(id, code, request.InstrumentId, request.Volume, now, now, request.Validity, account.Id,
+                account.TradingConditionId, account.BaseAssetId, request.Price,
+                equivalentSettings.EquivalentAsset, OrderFillType.FillOrKill, string.Empty, account.LegalEntity,
+                request.ForceOpen, request.Type.ToType<OrderType>(), request.ParentOrderId, request.PositionId,
+                request.Originator.ToType<OriginatorType>(), equivalentPrice);
+        }
+        
+        //has to be beyond global lock
+        public void Validate(Position order)
+        {
             var accountAsset =
                 _accountAssetsCacheService.GetTradingInstrument(order.TradingConditionId, order.Instrument);
 
@@ -115,11 +148,11 @@ namespace MarginTrading.Backend.Services
             }
 
             //set special account-quote instrument
-            if (_assetPairsCache.TryGetAssetPairQuoteSubst(order.AccountAssetId, order.Instrument,
-                    order.LegalEntity, out var substAssetPair))
-            {
-                order.MarginCalcInstrument = substAssetPair.Id;
-            }
+//            if (_assetPairsCache.TryGetAssetPairQuoteSubst(order.AccountAssetId, order.Instrument,
+//                    order.LegalEntity, out var substAssetPair))
+//            {
+//                order.MarginCalcInstrument = substAssetPair.Id;
+//            }
 
             //check TP/SL
             if (order.TakeProfit.HasValue)
@@ -132,14 +165,14 @@ namespace MarginTrading.Backend.Services
                 order.StopLoss = Math.Round(order.StopLoss.Value, order.AssetAccuracy);
             }
 
-            ValidateOrderStops(order.GetOrderDirection(), quote, accountAsset.Delta, accountAsset.Delta, order.TakeProfit, order.StopLoss, order.ExpectedOpenPrice, order.AssetAccuracy);
+            //ValidateOrderStops(order.GetOrderDirection(), quote, accountAsset.Delta, accountAsset.Delta, order.TakeProfit, order.StopLoss, order.ExpectedOpenPrice, order.AssetAccuracy);
 
             ValidateInstrumentPositionVolume(accountAsset, order);
 
-            if (!_accountUpdateService.IsEnoughBalance(order))
-            {
-                throw new ValidateOrderException(OrderRejectReason.NotEnoughBalance, MtMessages.Validation_NotEnoughBalance, $"Account available balance is {account.GetTotalCapital()}");
-            }
+            //if (!_accountUpdateService.IsEnoughBalance(order))
+           // {
+            //    throw new ValidateOrderException(OrderRejectReason.NotEnoughBalance, MtMessages.Validation_NotEnoughBalance, $"Account available balance is {account.GetTotalCapital()}");
+            //}
         }
 
         public void ValidateOrderStops(OrderDirection type, BidAskPair quote, decimal deltaBid, decimal deltaAsk, decimal? takeProfit,
@@ -235,7 +268,7 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public void ValidateInstrumentPositionVolume(ITradingInstrument assetPair, Order order)
+        public void ValidateInstrumentPositionVolume(ITradingInstrument assetPair, Position order)
         {
             var existingPositionsVolume = _ordersCache.ActiveOrders.GetOrdersByInstrumentAndAccount(assetPair.Instrument, order.AccountId).Sum(o => o.Volume);
 

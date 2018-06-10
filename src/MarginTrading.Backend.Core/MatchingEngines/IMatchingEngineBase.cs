@@ -12,11 +12,11 @@ namespace MarginTrading.Backend.Core.MatchingEngines
         
         MatchingEngineMode Mode { get; }
         
-        Task MatchMarketOrderForOpenAsync(Order order, Func<MatchedOrderCollection, bool> orderProcessed);
+        Task MatchMarketOrderForOpenAsync(Position order, Func<MatchedOrderCollection, bool> orderProcessed);
         
-        Task MatchMarketOrderForCloseAsync(Order order, Func<MatchedOrderCollection, bool> orderProcessed);
+        Task MatchMarketOrderForCloseAsync(Position order, Func<MatchedOrderCollection, bool> orderProcessed);
         
-        decimal? GetPriceForClose(Order order);
+        decimal? GetPriceForClose(Position order);
         
         OrderBook GetOrderBook(string instrument);
     }

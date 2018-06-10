@@ -5,7 +5,7 @@ namespace MarginTrading.Backend.Services.Events
 {
     public class OrderCancelledEventArgs:OrderUpdateBaseEventArgs
     {
-        public OrderCancelledEventArgs(Order order): base(order)
+        public OrderCancelledEventArgs(Position order): base(order)
         {
         }
 

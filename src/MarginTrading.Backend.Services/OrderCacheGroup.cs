@@ -10,15 +10,15 @@ namespace MarginTrading.Backend.Services
 {
     public class OrderCacheGroup
     {
-        private readonly Dictionary<string, Order> _ordersById;
+        private readonly Dictionary<string, Position> _ordersById;
         private readonly Dictionary<string, HashSet<string>> _orderIdsByAccountId;
         private readonly Dictionary<string, HashSet<string>> _orderIdsByInstrumentId;
         private readonly Dictionary<(string, string), HashSet<string>> _orderIdsByAccountIdAndInstrumentId;
         private readonly Dictionary<string, HashSet<string>> _orderIdsByMarginInstrumentId;
-        private readonly OrderStatus _status;
+        private readonly PositionStatus _status;
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
 
-        public OrderCacheGroup(IReadOnlyCollection<Order> orders, OrderStatus status)
+        public OrderCacheGroup(IReadOnlyCollection<Position> orders, PositionStatus status)
         {
             _status = status;
 
@@ -52,7 +52,7 @@ namespace MarginTrading.Backend.Services
 
         #region Setters
 
-        public void Add(Order order)
+        public void Add(Position order)
         {
             _lockSlim.EnterWriteLock();
 
@@ -90,7 +90,7 @@ namespace MarginTrading.Backend.Services
             account.CacheNeedsToBeUpdated();
         }
 
-        public void Remove(Order order)
+        public void Remove(Position order)
         {
             _lockSlim.EnterWriteLock();
 
@@ -123,7 +123,7 @@ namespace MarginTrading.Backend.Services
 
         #region Getters
 
-        public Order GetOrderById(string orderId)
+        public Position GetOrderById(string orderId)
         {
             if (TryGetOrderById(orderId, out var result))
                 return result;
@@ -131,7 +131,7 @@ namespace MarginTrading.Backend.Services
             throw new Exception(string.Format(MtMessages.CantGetOrderWithStatus, orderId, _status));
         }
 
-        public bool TryGetOrderById(string orderId, out Order result)
+        public bool TryGetOrderById(string orderId, out Position result)
         {
             _lockSlim.EnterReadLock();
 
@@ -151,7 +151,7 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public IReadOnlyCollection<Order> GetOrdersByInstrument(string instrument)
+        public IReadOnlyCollection<Position> GetOrdersByInstrument(string instrument)
         {
             if (string.IsNullOrWhiteSpace(instrument))
                 throw new ArgumentException(nameof(instrument));
@@ -161,7 +161,7 @@ namespace MarginTrading.Backend.Services
             try
             {
                 if (!_orderIdsByInstrumentId.ContainsKey(instrument))
-                    return new List<Order>();
+                    return new List<Position>();
 
                 return _orderIdsByInstrumentId[instrument].Select(id => _ordersById[id]).ToList();
             }
@@ -171,7 +171,7 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public IReadOnlyCollection<Order> GetOrdersByMarginInstrument(string instrument)
+        public IReadOnlyCollection<Position> GetOrdersByMarginInstrument(string instrument)
         {
             if (string.IsNullOrWhiteSpace(instrument))
                 throw new ArgumentException(nameof(instrument));
@@ -181,7 +181,7 @@ namespace MarginTrading.Backend.Services
             try
             {
                 if (!_orderIdsByMarginInstrumentId.ContainsKey(instrument))
-                    return new List<Order>();
+                    return new List<Position>();
 
                 return _orderIdsByMarginInstrumentId[instrument].Select(id => _ordersById[id]).ToList();
             }
@@ -191,7 +191,7 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public ICollection<Order> GetOrdersByInstrumentAndAccount(string instrument, string accountId)
+        public ICollection<Position> GetOrdersByInstrumentAndAccount(string instrument, string accountId)
         {
             if (string.IsNullOrWhiteSpace(instrument))
                 throw new ArgumentException(nameof(instrument));
@@ -206,7 +206,7 @@ namespace MarginTrading.Backend.Services
             try
             {
                 if (!_orderIdsByAccountIdAndInstrumentId.ContainsKey(key))
-                    return new List<Order>();
+                    return new List<Position>();
 
                 return _orderIdsByAccountIdAndInstrumentId[key].Select(id => _ordersById[id]).ToList();
             }
@@ -216,7 +216,7 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public IReadOnlyCollection<Order> GetAllOrders()
+        public IReadOnlyCollection<Position> GetAllOrders()
         {
             _lockSlim.EnterReadLock();
 
@@ -230,11 +230,11 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public ICollection<Order> GetOrdersByAccountIds(params string[] accountIds)
+        public ICollection<Position> GetOrdersByAccountIds(params string[] accountIds)
         {
             _lockSlim.EnterReadLock();
 
-            var result = new List<Order>();
+            var result = new List<Position>();
 
             try
             {

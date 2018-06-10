@@ -6,7 +6,7 @@ namespace MarginTrading.Backend.Services.Events
 {
     public class OrderClosingEventArgs: OrderUpdateBaseEventArgs
     {
-        public OrderClosingEventArgs([NotNull] Order order) : base(order)
+        public OrderClosingEventArgs([NotNull] Position order) : base(order)
         {
         }
 

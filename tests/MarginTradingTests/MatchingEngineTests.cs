@@ -51,42 +51,42 @@ namespace MarginTradingTests
         [Test]
         public void Check_Default_Order_Status()
         {
-            var order = new Order();
-            Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status);
+            var order = new Position();
+            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status);
         }
 
         [Test]
         public void Check_Default_Order_Fill_Type()
         {
-            var order = new Order();
+            var order = new Position();
             Assert.AreEqual(OrderFillType.FillOrKill, order.FillType);
         }
 
         [Test]
         public void Check_Default_Reject_Reason()
         {
-            var order = new Order();
+            var order = new Position();
             Assert.AreEqual(OrderRejectReason.None, order.RejectReason);
         }
 
         [Test]
         public void Check_Default_Close_Reason()
         {
-            var order = new Order();
+            var order = new Position();
             Assert.AreEqual(OrderCloseReason.None, order.CloseReason);
         }
 
         [Test]
         public void Check_Order_Is_Buy()
         {
-            var order = new Order {Volume = 10};
+            var order = new Position {Volume = 10};
             Assert.AreEqual(OrderDirection.Buy, order.GetOrderDirection());
         }
 
         [Test]
         public void Check_Order_Is_Sell()
         {
-            var order = new Order {Volume = -10};
+            var order = new Position {Volume = -10};
             Assert.AreEqual(OrderDirection.Sell, order.GetOrderDirection());
         }
 
@@ -216,7 +216,7 @@ namespace MarginTradingTests
         {
             const string instrument = "EURUSD";
 
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -243,7 +243,7 @@ namespace MarginTradingTests
         [Test]
         public async Task Is_PartialFill_Sell_Fully_Matched()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -271,7 +271,7 @@ namespace MarginTradingTests
         [Test]
         public async Task Is_PartialFill_Buy_Partial_Matched()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -299,7 +299,7 @@ namespace MarginTradingTests
         [Test]
         public async Task Is_PartialFill_Sell_Partial_Matched()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -327,7 +327,7 @@ namespace MarginTradingTests
         [Test]
         public async Task Is_Order_NoLiquidity_ByInstrument_Rejected()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -343,7 +343,7 @@ namespace MarginTradingTests
             await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             Assert.AreEqual(0, order.MatchedOrders.Count);
-            Assert.AreEqual(OrderStatus.Rejected, order.Status);
+            Assert.AreEqual(PositionStatus.Rejected, order.Status);
             Assert.AreEqual(OrderRejectReason.NoLiquidity, order.RejectReason);
             Assert.IsNotNull(order.CloseDate);
         }
@@ -351,7 +351,7 @@ namespace MarginTradingTests
         [Test]
         public async Task Is_FillOrKill_Buy_Rejected()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -369,7 +369,7 @@ namespace MarginTradingTests
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
             Assert.AreEqual(0, order.MatchedOrders.Count);
-            Assert.AreEqual(OrderStatus.Rejected, order.Status);
+            Assert.AreEqual(PositionStatus.Rejected, order.Status);
             Assert.AreEqual(OrderRejectReason.NoLiquidity, order.RejectReason);
             Assert.IsNotNull(order.CloseDate);
             Assert.AreEqual(6, orderBooks.Sell[1.1M].First(item => item.Id == "3").GetRemainingVolume());
@@ -379,7 +379,7 @@ namespace MarginTradingTests
         [Test]
         public async Task Is_FillOrKill_Sell_Rejected()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -397,7 +397,7 @@ namespace MarginTradingTests
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
             Assert.AreEqual(0, order.MatchedOrders.Count);
-            Assert.AreEqual(OrderStatus.Rejected, order.Status);
+            Assert.AreEqual(PositionStatus.Rejected, order.Status);
             Assert.AreEqual(OrderRejectReason.NoLiquidity, order.RejectReason);
             Assert.IsNotNull(order.CloseDate);
             Assert.AreEqual(4, orderBooks.Buy[1.04M].First(item => item.Id == "1").GetRemainingVolume());
@@ -407,7 +407,7 @@ namespace MarginTradingTests
         [Test]
         public async Task Is_FillOrKill_Buy_Fully_Matched()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -435,7 +435,7 @@ namespace MarginTradingTests
         [Test]
         public async Task Is_FillOrKill_Sell_Fully_Matched()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -467,7 +467,7 @@ namespace MarginTradingTests
         [Test]
         public async Task Is_Buy_Partial_PendingOrder_Matched()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -486,7 +486,7 @@ namespace MarginTradingTests
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
             Assert.AreEqual(2, order.MatchedOrders.Count);
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
             Assert.IsFalse(orderBooks.Sell.ContainsKey(1.1M));
             Assert.AreEqual(6, orderBooks.Sell[1.15M][0].GetRemainingVolume());
         }
@@ -494,7 +494,7 @@ namespace MarginTradingTests
         [Test]
         public async Task Is_Buy_FillOrKill_PendingOrder_Matched()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -511,14 +511,14 @@ namespace MarginTradingTests
             await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             Assert.AreEqual(1, order.MatchedOrders.Count);
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
             Assert.AreEqual(1.1, order.OpenPrice);
         }
 
         [Test]
         public async Task Is_Sell_Partial_PendingOrder_Matched()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -537,7 +537,7 @@ namespace MarginTradingTests
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
             Assert.AreEqual(1, order.MatchedOrders.Count);
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
             Assert.AreEqual(1.05, order.OpenPrice);
             Assert.AreEqual(2, orderBooks.Buy[1.05M][0].GetRemainingVolume());
         }
@@ -545,7 +545,7 @@ namespace MarginTradingTests
         [Test]
         public async Task Is_Sell_FillOrKill_PendingOrder_Matched()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -564,19 +564,19 @@ namespace MarginTradingTests
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
             Assert.AreEqual(1, order.MatchedOrders.Count);
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
             Assert.AreEqual(1.05, order.OpenPrice);
             Assert.AreEqual(2, orderBooks.Buy[1.05M][0].GetRemainingVolume());
         }
 
         #endregion
 
-        private bool ProcessOrders(Order order, MatchedOrderCollection matchedOrders)
+        private bool ProcessOrders(Position order, MatchedOrderCollection matchedOrders)
         {
             if (!matchedOrders.Any())
             {
                 order.CloseDate = DateTime.UtcNow;
-                order.Status = OrderStatus.Rejected;
+                order.Status = PositionStatus.Rejected;
                 order.RejectReason = OrderRejectReason.NoLiquidity;
                 order.RejectReasonText = "No orders to match";
                 return false;
@@ -585,7 +585,7 @@ namespace MarginTradingTests
             if (matchedOrders.SummaryVolume < Math.Abs(order.Volume) && order.FillType == OrderFillType.FillOrKill)
             {
                 order.CloseDate = DateTime.UtcNow;
-                order.Status = OrderStatus.Rejected;
+                order.Status = PositionStatus.Rejected;
                 order.RejectReason = OrderRejectReason.NoLiquidity;
                 order.RejectReasonText = "No orders to match or not fully matched";
                 return false;
@@ -602,7 +602,7 @@ namespace MarginTradingTests
             order.MatchedOrders = matchedOrders;
             order.OpenPrice = Math.Round(order.MatchedOrders.WeightedAveragePrice, order.AssetAccuracy);
             order.OpenDate = DateTime.UtcNow;
-            order.Status = OrderStatus.Active;
+            order.Status = PositionStatus.Active;
             return true;
         }
     }

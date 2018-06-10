@@ -4,8 +4,8 @@ namespace MarginTrading.Backend.Core.MatchingEngines
 {
     public interface IMatchingEngineRouter
     {
-        IMatchingEngineBase GetMatchingEngineForOpen(IOrder order);
+        IMatchingEngineBase GetMatchingEngineForOpen(IPosition order);
         
-        IMatchingEngineBase GetMatchingEngineForClose(IOrder order);
+        IMatchingEngineBase GetMatchingEngineForClose(IPosition order);
     }
 }

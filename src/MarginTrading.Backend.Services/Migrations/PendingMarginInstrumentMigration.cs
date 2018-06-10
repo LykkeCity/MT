@@ -50,7 +50,7 @@ namespace MarginTrading.Backend.Services.Migrations
             return Task.CompletedTask;
         }
 
-        private void HandleOrder(Order order)
+        private void HandleOrder(Position order)
         {
             if (_assetPairsCache.TryGetAssetPairQuoteSubst(order.AccountAssetId, order.Instrument,
                 order.LegalEntity, out var substAssetPair))

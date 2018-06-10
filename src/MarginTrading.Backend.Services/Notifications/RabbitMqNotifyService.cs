@@ -52,7 +52,7 @@ namespace MarginTrading.Backend.Services.Notifications
                 record.ToBackendContract());
         }
 
-        public Task OrderHistory(IOrder order, OrderUpdateType orderUpdateType)
+        public Task OrderHistory(IPosition order, OrderUpdateType orderUpdateType)
         {
             return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderHistory.ExchangeName,
                 order.ToFullContract(orderUpdateType, _dateService.Now()));
@@ -64,7 +64,7 @@ namespace MarginTrading.Backend.Services.Notifications
                 quote.ToRabbitMqContract());
         }
 
-        public Task OrderChanged(IOrder order)
+        public Task OrderChanged(IPosition order)
         {
             var message = order.ToBaseContract();
             return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderChanged.ExchangeName, message);

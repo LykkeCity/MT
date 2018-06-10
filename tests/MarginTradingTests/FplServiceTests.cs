@@ -35,7 +35,7 @@ namespace MarginTradingTests
             const string instrument = "BTCUSD";
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument  = instrument, Ask = 800, Bid = 790 }));
 
-            var order = new Order
+            var order = new Position
             {
                 Id = Guid.NewGuid().ToString(),
                 AccountId = Accounts[0].Id,
@@ -46,7 +46,7 @@ namespace MarginTradingTests
                 MatchedOrders = new MatchedOrderCollection( new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 10 } }), //need for GetMatchedVolume()
                 OpenPrice = 790,
                 LegalEntity = "LYKKETEST",
-                Status = OrderStatus.Active,
+                Status = PositionStatus.Active,
             };
 
             order.UpdateClosePrice(800);
@@ -60,7 +60,7 @@ namespace MarginTradingTests
             const string instrument = "BTCUSD";
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = instrument, Ask = 800, Bid = 790 }));
 
-            var order = new Order
+            var order = new Position
             {
                 Id = Guid.NewGuid().ToString(),
                 AccountId = Accounts[0].Id,
@@ -71,7 +71,7 @@ namespace MarginTradingTests
                 MatchedOrders = new MatchedOrderCollection( new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 10 } }), //need for GetMatchedVolume()
                 OpenPrice = 790,
                 LegalEntity = "LYKKETEST",
-                Status = OrderStatus.Active,
+                Status = PositionStatus.Active,
             };
 
             order.UpdateClosePrice(800);
@@ -85,7 +85,7 @@ namespace MarginTradingTests
             const string instrument = "BTCUSD";
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = instrument, Ask = 800, Bid = 790 }));
 
-            var order = new Order
+            var order = new Position
             {
                 Id = Guid.NewGuid().ToString(),
                 AccountId = Accounts[0].Id,
@@ -98,7 +98,7 @@ namespace MarginTradingTests
                 OpenCommission = 2,
                 CommissionLot = 10,
                 LegalEntity = "LYKKETEST",
-                Status = OrderStatus.Active,
+                Status = PositionStatus.Active,
             };
 
             order.UpdateClosePrice(800);
@@ -118,7 +118,7 @@ namespace MarginTradingTests
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "BTCUSD", Ask = 1001M, Bid = 1000M });
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "BTCCHF", Ask = 901M, Bid = 900M });
             
-            var order = new Order
+            var order = new Position
             {
                 Id = Guid.NewGuid().ToString(),
                 AccountId = Accounts[0].Id,
@@ -129,7 +129,7 @@ namespace MarginTradingTests
                 MatchedOrders = new MatchedOrderCollection( new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 1000 } }), //need for GetMatchedVolume()
                 OpenPrice = 935.461M,
                 LegalEntity = "LYKKETEST",
-                Status = OrderStatus.Active,
+                Status = PositionStatus.Active,
             };
 
             order.UpdateClosePrice(935.61M);
@@ -149,7 +149,7 @@ namespace MarginTradingTests
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "BTCUSD", Ask = 1001M, Bid = 1000M });
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair {Instrument = "BTCCHF", Ask = 901M, Bid = 900M});
 
-            var order = new Order
+            var order = new Position
             {
                 Id = Guid.NewGuid().ToString(),
                 AccountId = Accounts[0].Id,
@@ -160,7 +160,7 @@ namespace MarginTradingTests
                 MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder { MatchedDate = DateTime.UtcNow, Volume = 1000 } }), //need for GetMatchedVolume()
                 OpenPrice = 935.461M,
                 LegalEntity = "LYKKETEST",
-                Status = OrderStatus.Active,
+                Status = PositionStatus.Active,
             };
 
             order.UpdateClosePrice(935.61M);
@@ -183,9 +183,9 @@ namespace MarginTradingTests
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "BTCEUR", Ask = 1092M, Bid = 1091M });
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "BTCUSD", Ask = 1001M, Bid = 1000M });
             
-            var orders = new List<Order>
+            var orders = new List<Position>
             {
-                new Order
+                new Position
                 {
                     CreateDate = DateTime.UtcNow,
                     Id = Guid.NewGuid().ToString("N"),
@@ -199,9 +199,9 @@ namespace MarginTradingTests
                     OpenPrice = 1.05M,
                     FillType = OrderFillType.FillOrKill,
                     LegalEntity = "LYKKETEST",
-                    Status = OrderStatus.Active,
+                    Status = PositionStatus.Active,
                 },
-                new Order
+                new Position
                 {
                     CreateDate = DateTime.UtcNow,
                     Id = Guid.NewGuid().ToString("N"),
@@ -215,9 +215,9 @@ namespace MarginTradingTests
                     OpenPrice = 1.04M,
                     FillType = OrderFillType.FillOrKill,
                     LegalEntity = "LYKKETEST",
-                    Status = OrderStatus.Active,
+                    Status = PositionStatus.Active,
                 },
-                new Order
+                new Position
                 {
                     CreateDate = DateTime.UtcNow,
                     Id = Guid.NewGuid().ToString("N"),
@@ -231,9 +231,9 @@ namespace MarginTradingTests
                     OpenPrice = 1.061M,
                     FillType = OrderFillType.FillOrKill,
                     LegalEntity = "LYKKETEST",
-                    Status = OrderStatus.Active,
+                    Status = PositionStatus.Active,
                 },
-                new Order
+                new Position
                 {
                     CreateDate = DateTime.UtcNow,
                     Id = Guid.NewGuid().ToString("N"),
@@ -247,7 +247,7 @@ namespace MarginTradingTests
                     OpenPrice = 1120,
                     FillType = OrderFillType.FillOrKill,
                     LegalEntity = "LYKKETEST",
-                    Status = OrderStatus.Active,
+                    Status = PositionStatus.Active,
                 }
             };
 

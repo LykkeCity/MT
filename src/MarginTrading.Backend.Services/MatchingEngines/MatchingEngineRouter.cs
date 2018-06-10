@@ -23,7 +23,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         }
 
         //TODO: implement routes logic
-        public IMatchingEngineBase GetMatchingEngineForOpen(IOrder order)
+        public IMatchingEngineBase GetMatchingEngineForOpen(IPosition order)
         {
             
             
@@ -46,7 +46,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                     : MatchingEngineConstants.DefaultStp);
         }
 
-        public IMatchingEngineBase GetMatchingEngineForClose(IOrder order)
+        public IMatchingEngineBase GetMatchingEngineForClose(IPosition order)
         {
             var meId = order.OpenOrderbookId == Lykke
                 ? MatchingEngineConstants.Reject

@@ -272,7 +272,7 @@ namespace MarginTradingTests.OrderBooks
             var orderbooks = GetNewOrderbooksList();
             orderbooks.SetOrderbook(_orderBook1);
             orderbooks.SetOrderbook(_orderBook2);
-            var order = new Order
+            var order = new Position
             {
                 Instrument = AssetPairId,
                 Volume = 1
@@ -296,7 +296,7 @@ namespace MarginTradingTests.OrderBooks
             var orderbooks = GetNewOrderbooksList();
             orderbooks.SetOrderbook(_orderBook1);
             orderbooks.SetOrderbook(_orderBook2);
-            var order = new Order
+            var order = new Position
             {
                 Instrument = AssetPairId,
                 Volume = -1
@@ -320,7 +320,7 @@ namespace MarginTradingTests.OrderBooks
             var orderbooks = GetNewOrderbooksList();
             orderbooks.SetOrderbook(_orderBook1);
             orderbooks.SetOrderbook(_orderBook2);
-            var order = new Order
+            var order = new Position
             {
                 Instrument = AssetPairId,
                 Volume = 1,
@@ -341,7 +341,7 @@ namespace MarginTradingTests.OrderBooks
             var orderbooks = GetNewOrderbooksList();
             orderbooks.SetOrderbook(_orderBook1);
             orderbooks.SetOrderbook(_orderBook2);
-            var order = new Order
+            var order = new Position
             {
                 Instrument = AssetPairId,
                 Volume = -1,

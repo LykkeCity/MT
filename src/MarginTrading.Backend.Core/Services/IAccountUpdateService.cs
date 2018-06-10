@@ -5,8 +5,8 @@ namespace MarginTrading.Backend.Core
     public interface IAccountUpdateService
     {
         void UpdateAccount(IMarginTradingAccount account);
-        bool IsEnoughBalance(Order order);
-        MarginTradingAccount GuessAccountWithNewActiveOrder(Order order);
+        bool IsEnoughBalance(Position order);
+        MarginTradingAccount GuessAccountWithNewActiveOrder(Position order);
     }
 
     public class AccountFpl

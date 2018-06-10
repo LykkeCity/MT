@@ -11,9 +11,9 @@ namespace MarginTrading.Backend.Services
 {
     public interface IOrderReader
     {
-        ImmutableArray<Order> GetAll();
-        ImmutableArray<Order> GetActive();
-        ImmutableArray<Order> GetPending();
+        ImmutableArray<Position> GetAll();
+        ImmutableArray<Position> GetActive();
+        ImmutableArray<Position> GetPending();
     }
 
     public class OrdersCache : IOrderReader
@@ -24,16 +24,16 @@ namespace MarginTrading.Backend.Services
         {
             _contextFactory = contextFactory;
             
-            ActiveOrders = new OrderCacheGroup(new Order[0], OrderStatus.Active);
-            WaitingForExecutionOrders = new OrderCacheGroup(new Order[0], OrderStatus.WaitingForExecution);
-            ClosingOrders = new OrderCacheGroup(new Order[0], OrderStatus.Closing);
+            ActiveOrders = new OrderCacheGroup(new Position[0], PositionStatus.Active);
+            WaitingForExecutionOrders = new OrderCacheGroup(new Position[0], PositionStatus.WaitingForExecution);
+            ClosingOrders = new OrderCacheGroup(new Position[0], PositionStatus.Closing);
         }
 
         public OrderCacheGroup ActiveOrders { get; private set; }
         public OrderCacheGroup WaitingForExecutionOrders { get; private set; }
         public OrderCacheGroup ClosingOrders { get; private set; }
         
-        public ImmutableArray<Order> GetAll()
+        public ImmutableArray<Position> GetAll()
         {
             using (_contextFactory.GetReadSyncContext($"{nameof(OrdersCache)}.{nameof(GetAll)}"))
                 return ActiveOrders.GetAllOrders()
@@ -41,28 +41,28 @@ namespace MarginTrading.Backend.Services
                     .Union(ClosingOrders.GetAllOrders()).ToImmutableArray();
         }
 
-        public ImmutableArray<Order> GetActive()
+        public ImmutableArray<Position> GetActive()
         {
             return ActiveOrders.GetAllOrders().ToImmutableArray();
         }
 
-        public ImmutableArray<Order> GetPending()
+        public ImmutableArray<Position> GetPending()
         {
             return WaitingForExecutionOrders.GetAllOrders().ToImmutableArray();
         }
 
-        public ImmutableArray<Order> GetPendingForMarginRecalc(string instrument)
+        public ImmutableArray<Position> GetPendingForMarginRecalc(string instrument)
         {
             return WaitingForExecutionOrders.GetOrdersByMarginInstrument(instrument).ToImmutableArray();
         }
 
-        public bool TryGetOrderById(string orderId, out Order order)
+        public bool TryGetOrderById(string orderId, out Position order)
         {
             return WaitingForExecutionOrders.TryGetOrderById(orderId, out order) ||
                    ActiveOrders.TryGetOrderById(orderId, out order);
         }
         
-        public Order GetOrderById(string orderId)
+        public Position GetOrderById(string orderId)
         {
             if (TryGetOrderById(orderId, out var result))
                 return result;
@@ -70,11 +70,11 @@ namespace MarginTrading.Backend.Services
             throw new Exception(string.Format(MtMessages.OrderNotFound, orderId));
         }
 
-        public void InitOrders(List<Order> orders)
+        public void InitOrders(List<Position> orders)
         {
-            ActiveOrders = new OrderCacheGroup(orders, OrderStatus.Active);
-            WaitingForExecutionOrders = new OrderCacheGroup(orders, OrderStatus.WaitingForExecution);
-            ClosingOrders = new OrderCacheGroup(orders, OrderStatus.Closing);
+            ActiveOrders = new OrderCacheGroup(orders, PositionStatus.Active);
+            WaitingForExecutionOrders = new OrderCacheGroup(orders, PositionStatus.WaitingForExecution);
+            ClosingOrders = new OrderCacheGroup(orders, PositionStatus.Closing);
         }
     }
 }

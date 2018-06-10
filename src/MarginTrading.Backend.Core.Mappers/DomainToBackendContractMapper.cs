@@ -55,7 +55,7 @@ namespace MarginTrading.Backend.Core.Mappers
             };
         }
 
-        public static OrderHistoryBackendContract ToBackendHistoryContract(this IOrder src)
+        public static OrderHistoryBackendContract ToBackendHistoryContract(this IPosition src)
         {
             return new OrderHistoryBackendContract
             {
@@ -137,7 +137,7 @@ namespace MarginTrading.Backend.Core.Mappers
                 Instrument = src.Instrument,
                 AssetAccuracy = src.AssetAccuracy,
                 Type = src.Type.ToType<OrderDirectionContract>(),
-                Status = OrderStatus.Active.ToType<OrderStatusContract>(),
+                Status = PositionStatus.Active.ToType<OrderStatusContract>(),
                 CloseReason = src.CloseReason.ToType<OrderCloseReasonContract>(),
                 OpenDate = src.OpenDate,
                 CloseDate = null,
@@ -164,7 +164,7 @@ namespace MarginTrading.Backend.Core.Mappers
             };
         }
 
-        public static OrderBackendContract ToBackendContract(this IOrder src)
+        public static OrderBackendContract ToBackendContract(this IPosition src)
         {
             return new OrderBackendContract
             {
@@ -204,7 +204,7 @@ namespace MarginTrading.Backend.Core.Mappers
             };
         }
 
-        public static OrderFullContract ToFullContract(this IOrder src, OrderUpdateType orderUpdateType, 
+        public static OrderFullContract ToFullContract(this IPosition src, OrderUpdateType orderUpdateType, 
             DateTime updateTimestamp)
         {
             var orderContract = new OrderFullContract
@@ -272,7 +272,7 @@ namespace MarginTrading.Backend.Core.Mappers
             return orderContract;
         }
 
-        public static OrderContract ToBaseContract(this IOrder src)
+        public static OrderContract ToBaseContract(this IPosition src)
         {
             var orderContract = new OrderContract
             {

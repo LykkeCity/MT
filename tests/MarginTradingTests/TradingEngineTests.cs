@@ -116,7 +116,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(MarketMaker1Id, ordersSet);
 
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -128,7 +128,7 @@ namespace MarginTradingTests
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
-            Assert.AreEqual(OrderStatus.Rejected, order.Status);
+            Assert.AreEqual(PositionStatus.Rejected, order.Status);
             Assert.AreEqual(OrderRejectReason.NotEnoughBalance, order.RejectReason);
         }
 
@@ -146,7 +146,7 @@ namespace MarginTradingTests
             var quote = new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0082M, Ask = 1.0083M };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -158,14 +158,14 @@ namespace MarginTradingTests
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
-            Assert.AreEqual(OrderStatus.Rejected, order.Status);
+            Assert.AreEqual(PositionStatus.Rejected, order.Status);
             Assert.AreEqual(OrderRejectReason.NotEnoughBalance, order.RejectReason);
         }
 
         [Test]
         public void Is_PartialFill_Buy_Fully_Matched()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -184,9 +184,9 @@ namespace MarginTradingTests
             Assert.AreEqual(1.1125, order.OpenPrice);
             Assert.AreEqual(1.04875, order.ClosePrice);
             Assert.AreEqual(-0.51, Math.Round(order.GetFpl(), 3));
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
 
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(
                 x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(),
                     It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
@@ -195,7 +195,7 @@ namespace MarginTradingTests
         [Test]
         public void Is_PartialFill_Sell_Fully_Matched()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -214,9 +214,9 @@ namespace MarginTradingTests
             Assert.AreEqual(1.04875, order.OpenPrice);
             Assert.AreEqual(1.1125, order.ClosePrice);
             Assert.AreEqual(-0.51, Math.Round(order.GetFpl(), 3));
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
 
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(
                 x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(),
                     It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
@@ -225,7 +225,7 @@ namespace MarginTradingTests
         [Test]
         public void Is_PartialFill_Buy_ClosePrice_Changed()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -242,7 +242,7 @@ namespace MarginTradingTests
             Assert.AreEqual(1.1125, order.OpenPrice);
             Assert.AreEqual(1.04875, order.ClosePrice);
             Assert.AreEqual(-0.51, Math.Round(order.GetFpl(), 3));
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
 
             _appNotificationsMock.Verify(
                 x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(),
@@ -254,13 +254,13 @@ namespace MarginTradingTests
             });
 
             Assert.AreEqual(1.2, order.ClosePrice);
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)), Times.AtLeastOnce());
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)), Times.AtLeastOnce());
         }
 
         [Test]
         public void Is_PartialFill_Sell_ClosePrice_Changed()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -279,7 +279,7 @@ namespace MarginTradingTests
             Assert.AreEqual(1.04875, order.OpenPrice);
             Assert.AreEqual(1.1125, order.ClosePrice);
             Assert.AreEqual(-0.51, Math.Round(order.GetFpl(), 3));
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
             _appNotificationsMock.Verify(
                 x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(),
                     It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
@@ -290,13 +290,13 @@ namespace MarginTradingTests
             });
 
             Assert.AreEqual(0.8, order.ClosePrice);
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)), Times.AtLeastOnce());
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)), Times.AtLeastOnce());
         }
 
         [Test]
         public void Is_PartialFill_Buy_Partial_Matched()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -315,9 +315,9 @@ namespace MarginTradingTests
             Assert.AreEqual(1.12857, order.OpenPrice);
             Assert.AreEqual(1.04636, order.ClosePrice);
             Assert.AreEqual(-1.23315, Math.Round(order.GetFpl(), 5));
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
 
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(
                 x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(),
                     It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
@@ -326,7 +326,7 @@ namespace MarginTradingTests
         [Test]
         public void Is_PartialFill_Sell_Partial_Matched()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -345,8 +345,8 @@ namespace MarginTradingTests
             Assert.AreEqual(1.04636, order.OpenPrice);
             Assert.AreEqual(1.12273, order.ClosePrice);
             Assert.AreEqual(-0.99281, Math.Round(order.GetFpl(), 5));
-            Assert.AreEqual(OrderStatus.Active, order.Status);
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            Assert.AreEqual(PositionStatus.Active, order.Status);
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(
                 x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(),
                     It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
@@ -355,7 +355,7 @@ namespace MarginTradingTests
         [Test]
         public void Is_FillOrKill_Buy_Not_Fully_Matched()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -369,14 +369,14 @@ namespace MarginTradingTests
 
             Assert.AreEqual(0, order.MatchedOrders.Count);
             Assert.AreEqual(0, order.GetMatchedVolume());
-            Assert.AreEqual(OrderStatus.Rejected, order.Status);
+            Assert.AreEqual(PositionStatus.Rejected, order.Status);
             Assert.AreEqual(OrderRejectReason.NoLiquidity, order.RejectReason);
         }
 
         [Test]
         public void Is_FillOrKill_Sell_Not_Fully_Matched()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -390,14 +390,14 @@ namespace MarginTradingTests
 
             Assert.AreEqual(0, order.MatchedOrders.Count);
             Assert.AreEqual(0, order.GetMatchedVolume());
-            Assert.AreEqual(OrderStatus.Rejected, order.Status);
+            Assert.AreEqual(PositionStatus.Rejected, order.Status);
             Assert.AreEqual(OrderRejectReason.NoLiquidity, order.RejectReason);
         }
 
         [Test]
         public void Is_FillOrKill_Buy_Fully_Matched()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -416,7 +416,7 @@ namespace MarginTradingTests
             Assert.AreEqual(1.11667, order.OpenPrice);
             Assert.AreEqual(1.04778, order.ClosePrice);
             Assert.AreEqual(-0.62001, Math.Round(order.GetFpl(), 5));
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(
                 x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(),
                     It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
@@ -425,7 +425,7 @@ namespace MarginTradingTests
         [Test]
         public void Is_FillOrKill_Sell_Fully_Matched()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -444,7 +444,7 @@ namespace MarginTradingTests
             Assert.AreEqual(1.04875, order.OpenPrice);
             Assert.AreEqual(1.1125, order.ClosePrice);
             Assert.AreEqual(-0.51, Math.Round(order.GetFpl(), 3));
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(
                 x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(),
                     It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
@@ -453,7 +453,7 @@ namespace MarginTradingTests
         [Test]
         public void Is_PartialFill_Buy_Order_Closed()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -471,10 +471,10 @@ namespace MarginTradingTests
             Assert.AreEqual(1.1125, order.OpenPrice);
             Assert.AreEqual(1.04875, order.ClosePrice);
             Assert.AreEqual(-0.51, Math.Round(order.GetFpl(), 3));
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
 
             Assert.AreEqual(1000, account.Balance);
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(
                 x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(),
                     It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
@@ -488,14 +488,14 @@ namespace MarginTradingTests
 
             order = _tradingEngine.CloseActiveOrderAsync(order.Id, OrderCloseReason.Close).Result;
 
-            Assert.AreEqual(OrderStatus.Closed, order.Status);
+            Assert.AreEqual(PositionStatus.Closed, order.Status);
             Assert.AreEqual(OrderCloseReason.Close, order.CloseReason);
             Assert.AreEqual(1, order.MatchedCloseOrders.Count);
             Assert.AreEqual(0.7, order.GetTotalFpl());
             account = _accountsCacheService.Get(order.AccountId);
             Assert.AreEqual(1000.7, account.Balance);
 
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Closed)));
             _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
             _appNotificationsMock.Verify(
                 x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(),
@@ -505,7 +505,7 @@ namespace MarginTradingTests
         [Test]
         public void Is_PartialFill_Sell_Order_Closed()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -525,20 +525,20 @@ namespace MarginTradingTests
             Assert.AreEqual(1.04875, order.OpenPrice);
             Assert.AreEqual(1.1125, order.ClosePrice);
             Assert.AreEqual(-0.51, Math.Round(order.GetFpl(), 3));
-            Assert.AreEqual(OrderStatus.Active, order.Status);
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            Assert.AreEqual(PositionStatus.Active, order.Status);
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
 
             order = _tradingEngine.CloseActiveOrderAsync(order.Id, OrderCloseReason.Close).Result;
 
-            Assert.AreEqual(OrderStatus.Closed, order.Status);
+            Assert.AreEqual(PositionStatus.Closed, order.Status);
             Assert.AreEqual(OrderCloseReason.Close, order.CloseReason);
             Assert.AreEqual(2, order.MatchedCloseOrders.Count);
             Assert.AreEqual(-0.51, order.GetTotalFpl());
             account = _accountsCacheService.Get(order.AccountId);
             Assert.AreEqual(999.49, account.Balance);
 
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Closed)));
             _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
         }
@@ -546,7 +546,7 @@ namespace MarginTradingTests
         [Test]
         public void Is_FillOrKill_Buy_Order_Closed()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -566,7 +566,7 @@ namespace MarginTradingTests
             Assert.AreEqual(1.11667, order.OpenPrice);
             Assert.AreEqual(1.04778, order.ClosePrice);
             Assert.AreEqual(-0.62001, Math.Round(order.GetFpl(), 5));
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
 
             order = _tradingEngine.CloseActiveOrderAsync(order.Id, OrderCloseReason.Close).Result;
@@ -578,12 +578,12 @@ namespace MarginTradingTests
             Assert.AreEqual(1.11667, order.OpenPrice);
             Assert.AreEqual(1.04778, order.ClosePrice);
             Assert.AreEqual(-0.62001, Math.Round(order.GetFpl(), order.AssetAccuracy));
-            Assert.AreEqual(OrderStatus.Closed, order.Status);
+            Assert.AreEqual(PositionStatus.Closed, order.Status);
             Assert.AreEqual(OrderCloseReason.Close, order.CloseReason);
             account = _accountsCacheService.Get(order.AccountId);
             Assert.AreEqual(999.37999, account.Balance);
 
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Closed)));
             _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
         }
@@ -591,7 +591,7 @@ namespace MarginTradingTests
         [Test]
         public void Is_FillOrKill_Sell_Order_Closed()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -611,7 +611,7 @@ namespace MarginTradingTests
             Assert.AreEqual(1.04875, order.OpenPrice);
             Assert.AreEqual(1.1125, order.ClosePrice);
             Assert.AreEqual(-0.51, Math.Round(order.GetFpl(), 3));
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
 
             order = _tradingEngine.CloseActiveOrderAsync(order.Id, OrderCloseReason.Close).Result;
@@ -623,12 +623,12 @@ namespace MarginTradingTests
             Assert.AreEqual(1.04875, order.OpenPrice);
             Assert.AreEqual(1.1125, order.ClosePrice);
             Assert.AreEqual(-0.51, Math.Round(order.GetFpl(), 3));
-            Assert.AreEqual(OrderStatus.Closed, order.Status);
+            Assert.AreEqual(PositionStatus.Closed, order.Status);
             Assert.AreEqual(OrderCloseReason.Close, order.CloseReason);
             account = _accountsCacheService.Get(order.AccountId);
             Assert.AreEqual(999.49, account.Balance);
 
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Closed)));
             _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
         }
@@ -636,7 +636,7 @@ namespace MarginTradingTests
         [Test]
         public void Is_FillOrKill_Buy_Order_Closed_When_FullyMatched()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -653,15 +653,15 @@ namespace MarginTradingTests
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "3"));
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "4"));
             Assert.AreEqual(order.Volume, order.GetMatchedVolume());
-            Assert.AreEqual(OrderStatus.Active, order.Status);
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            Assert.AreEqual(PositionStatus.Active, order.Status);
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
 
             //remove limit order, so when we are closing order we can't fully match it
             _matchingEngine.SetOrders("1", new LimitOrder[] {}, new [] { "1" });
 
             order = _tradingEngine.CloseActiveOrderAsync(order.Id, OrderCloseReason.Close).Result;
-            Assert.AreEqual(OrderStatus.Closing, order.Status); //order is in closing state
+            Assert.AreEqual(PositionStatus.Closing, order.Status); //order is in closing state
             Assert.AreEqual(7, order.GetMatchedCloseVolume()); //partially matched
 
             //add new limit order, so active order waiting for close can be matched
@@ -679,12 +679,12 @@ namespace MarginTradingTests
             });
 
             //order should now be fully matched and closed
-            Assert.AreEqual(OrderStatus.Closed, order.Status);
+            Assert.AreEqual(PositionStatus.Closed, order.Status);
             Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedCloseVolume());
             Assert.AreEqual(-0.60003, order.GetTotalFpl());
             account = _accountsCacheService.Get(order.AccountId);
             Assert.AreEqual(999.39997, account.Balance);
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Closed)));
             _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
         }
@@ -692,7 +692,7 @@ namespace MarginTradingTests
         [Test]
         public void Is_FillOrKill_Sell_Order_Closed_When_FullyMatched()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -708,15 +708,15 @@ namespace MarginTradingTests
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "1"));
             Assert.True(order.MatchedOrders.Any(item => item.OrderId == "2"));
             Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
-            Assert.AreEqual(OrderStatus.Active, order.Status);
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            Assert.AreEqual(PositionStatus.Active, order.Status);
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
 
             //remove limit order, so when we are closing order we can't fully match it
             _matchingEngine.SetOrders("1", new LimitOrder[] { }, new [] { "4" });
 
             order = _tradingEngine.CloseActiveOrderAsync(order.Id, OrderCloseReason.Close).Result;
-            Assert.AreEqual(OrderStatus.Closing, order.Status); //order is in closing state
+            Assert.AreEqual(PositionStatus.Closing, order.Status); //order is in closing state
             Assert.AreEqual(6, order.GetMatchedCloseVolume()); //partially matched
 
             //add new limit order, so active order waiting for close can be matched
@@ -734,16 +734,16 @@ namespace MarginTradingTests
             });
 
             ////order should fully matched and closed
-            Assert.AreEqual(OrderStatus.Closed, order.Status);
+            Assert.AreEqual(PositionStatus.Closed, order.Status);
             Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedCloseVolume());
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Closed)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
         }
 
         [Test]
         public void Is_Order_Limits_Changed()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -754,12 +754,12 @@ namespace MarginTradingTests
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
 
             Assert.IsNull(order.StopLoss);
             Assert.IsNull(order.TakeProfit);
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
 
             _tradingEngine.ChangeOrderLimits(order.Id, 0.99M, 1.3M, null);
 
@@ -770,7 +770,7 @@ namespace MarginTradingTests
         [Test]
         public void Is_Buy_Order_Closed_On_TakeProfit()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -789,10 +789,10 @@ namespace MarginTradingTests
             Assert.AreEqual(1.1125, order.OpenPrice);
             Assert.AreEqual(1.04875, order.ClosePrice);
             Assert.IsTrue(order.ClosePrice < order.TakeProfit);
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
             Assert.IsNull(order.StartClosingDate);
 
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
 
             _matchingEngine.SetOrders("1", new[]
@@ -800,13 +800,13 @@ namespace MarginTradingTests
                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2M, Volume = 8}
             });
 
-            Assert.AreEqual(OrderStatus.Closed, order.Status); //order should be closed on TakeProfit
+            Assert.AreEqual(PositionStatus.Closed, order.Status); //order should be closed on TakeProfit
             Assert.AreEqual(OrderCloseReason.TakeProfit, order.CloseReason);
             Assert.AreEqual(0.7, order.GetTotalFpl());
             account = _accountsCacheService.Get(order.AccountId);
             Assert.AreEqual(1000.7, account.Balance);
 
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Closed)));
             _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
         }
@@ -814,7 +814,7 @@ namespace MarginTradingTests
         [Test]
         public void Is_Sell_Order_Closed_On_TakeProfit()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -833,9 +833,9 @@ namespace MarginTradingTests
             Assert.AreEqual(1.04875, order.OpenPrice);
             Assert.AreEqual(1.1125, order.ClosePrice);
             Assert.IsTrue(order.ClosePrice > order.TakeProfit); //no takeprofit
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
             Assert.IsNull(order.StartClosingDate);
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
 
             _matchingEngine.SetOrders("1", new[]
@@ -843,13 +843,13 @@ namespace MarginTradingTests
                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 0.7M, Volume = -8}
             });
 
-            Assert.AreEqual(OrderStatus.Closed, order.Status); //order should be closed on TakeProfit
+            Assert.AreEqual(PositionStatus.Closed, order.Status); //order should be closed on TakeProfit
             Assert.AreEqual(OrderCloseReason.TakeProfit, order.CloseReason);
             Assert.AreEqual(2.79, order.GetTotalFpl());
             account = _accountsCacheService.Get(order.AccountId);
             Assert.AreEqual(1002.79, account.Balance);
 
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Closed)));
             _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
         }
@@ -857,7 +857,7 @@ namespace MarginTradingTests
         [Test]
         public void Is_Buy_Order_Closed_On_StopLoss()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -871,14 +871,14 @@ namespace MarginTradingTests
             var account = _accountsCacheService.Get(order.AccountId);
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
             Assert.AreEqual(2, order.MatchedOrders.Count);
             Assert.AreEqual(order.Volume, order.GetMatchedVolume());
             Assert.AreEqual(1.12857, order.OpenPrice);
             Assert.AreEqual(1.04636, order.ClosePrice);
             Assert.IsTrue(order.ClosePrice > order.StopLoss); //no stoploss
             Assert.IsNull(order.StartClosingDate);
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
 
             _matchingEngine.SetOrders("1", new[]
@@ -886,13 +886,13 @@ namespace MarginTradingTests
                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 0.9M, Volume = 20}
             }, new[] { "1"});
 
-            Assert.AreEqual(OrderStatus.Closed, order.Status); //order is closed now on StopLoss
+            Assert.AreEqual(PositionStatus.Closed, order.Status); //order is closed now on StopLoss
             Assert.AreEqual(OrderCloseReason.StopLoss, order.CloseReason);
             Assert.AreEqual(-2.14998, order.GetTotalFpl());
             account = _accountsCacheService.Get(order.AccountId);
             Assert.AreEqual(997.85002, account.Balance);
 
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Closed)));
             _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
         }
@@ -900,7 +900,7 @@ namespace MarginTradingTests
         [Test]
         public void Is_Sell_Order_Closed_On_StopLoss()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -919,9 +919,9 @@ namespace MarginTradingTests
             Assert.AreEqual(1.04636, order.OpenPrice);
             Assert.AreEqual(1.12273, order.ClosePrice);
             Assert.IsTrue(order.ClosePrice < order.StopLoss); // no stoploss
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
             Assert.IsNull(order.StartClosingDate);
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
 
             _matchingEngine.SetOrders("1", new []
@@ -929,13 +929,13 @@ namespace MarginTradingTests
                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2M, Volume = -8}
             }, new [] { "3" });
 
-            Assert.AreEqual(OrderStatus.Closed, order.Status); //order should be closed on StopLoss
+            Assert.AreEqual(PositionStatus.Closed, order.Status); //order should be closed on StopLoss
             Assert.AreEqual(OrderCloseReason.StopLoss, order.CloseReason);
             Assert.AreEqual(-1.29008, order.GetTotalFpl());
             account = _accountsCacheService.Get(order.AccountId);
             Assert.AreEqual(998.70992, account.Balance);
 
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Closed)));
             _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
         }
@@ -943,7 +943,7 @@ namespace MarginTradingTests
         [Test]
         public async Task Is_Order_Fpl_Correct_With_Commission()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -977,8 +977,8 @@ namespace MarginTradingTests
             Assert.AreEqual(1.1125, order.OpenPrice);
             Assert.AreEqual(1.04875, order.ClosePrice);
             Assert.AreEqual(-4.51, Math.Round(order.GetTotalFpl(), 3));
-            Assert.AreEqual(OrderStatus.Active, order.Status);
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            Assert.AreEqual(PositionStatus.Active, order.Status);
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.IsAny<OrderHistoryBackendContract>()), Times.Once());
         }
 
@@ -996,7 +996,7 @@ namespace MarginTradingTests
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0122M, Ask = 1.0124M }));
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Bid = 905.57M, Ask = 905.67M }));
 
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -1015,11 +1015,11 @@ namespace MarginTradingTests
             Assert.AreEqual(838.371, order.OpenPrice);
             Assert.AreEqual(834.286, order.ClosePrice);
             Assert.AreEqual(-4.035, Math.Round(order.GetFpl(), 3));
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
             Assert.IsNull(order.StartClosingDate);
             Assert.AreEqual(-4.035, Math.Round(account.GetPnl(), 3));
             Assert.AreEqual(order.GetMarginMaintenance(), account.GetUsedMargin());
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
         }
 
@@ -1037,7 +1037,7 @@ namespace MarginTradingTests
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0122M, Ask = 1.0124M }));
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Bid = 905.57M, Ask = 905.67M }));
 
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -1056,12 +1056,12 @@ namespace MarginTradingTests
             Assert.AreEqual(838.371, order.OpenPrice);
             Assert.AreEqual(834.286, order.ClosePrice);
             Assert.AreEqual(-4.035, Math.Round(order.GetFpl(), 3));
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
             Assert.IsNull(order.StartClosingDate);
 
             Assert.AreEqual(-4.035, Math.Round(account.GetPnl(), 3));
             Assert.AreEqual(order.GetMarginMaintenance(), account.GetUsedMargin());
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
         }
 
@@ -1078,7 +1078,7 @@ namespace MarginTradingTests
 
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0122M, Ask = 1.0124M}));
 
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -1097,12 +1097,12 @@ namespace MarginTradingTests
             Assert.AreEqual(834.286, order.OpenPrice);
             Assert.AreEqual(838.371, order.ClosePrice);
             Assert.AreEqual(-4.035, Math.Round(order.GetFpl(), 3));
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
             Assert.IsNull(order.StartClosingDate);
 
             Assert.AreEqual(-4.035, Math.Round(account.GetPnl(), 3));
             Assert.AreEqual(order.GetMarginMaintenance(), account.GetUsedMargin());
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
         }
 
@@ -1119,7 +1119,7 @@ namespace MarginTradingTests
 
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0122M, Ask = 1.0124M }));
 
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -1138,12 +1138,12 @@ namespace MarginTradingTests
             Assert.AreEqual(834.286, order.OpenPrice);
             Assert.AreEqual(838.371, order.ClosePrice);
             Assert.AreEqual(-4.035, Math.Round(order.GetFpl(), 3));
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
             Assert.IsNull(order.StartClosingDate);
 
             Assert.AreEqual(-4.035, Math.Round(account.GetPnl(), 3));
             Assert.AreEqual(order.GetMarginMaintenance(), account.GetUsedMargin());
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
         }
 
@@ -1161,7 +1161,7 @@ namespace MarginTradingTests
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Bid = 905.57M, Ask = 905.67M }));
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF",  Bid = 1.0092M, Ask = 1.0095M}));
 
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -1172,8 +1172,8 @@ namespace MarginTradingTests
             };
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
-            Assert.AreEqual(OrderStatus.Active, order.Status);
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            Assert.AreEqual(PositionStatus.Active, order.Status);
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
         }
 
@@ -1194,9 +1194,9 @@ namespace MarginTradingTests
             
             //3 orders = 10000 USD (with leverage)
 
-            Order CreateOrder(decimal volume)
+            Position CreateOrder(decimal volume)
             {
-                return new Order
+                return new Position
                 {
                     CreateDate = DateTime.UtcNow,
                     Id = Guid.NewGuid().ToString("N"),
@@ -1223,12 +1223,12 @@ namespace MarginTradingTests
             
             var account = _accountsCacheService.Get(_acount1Id);
 
-            Assert.AreEqual(OrderStatus.Active, order1.Status);
-            Assert.AreEqual(OrderStatus.Active, order2.Status);
-            Assert.AreEqual(OrderStatus.Active, order3.Status);
-            Assert.AreEqual(OrderStatus.Active, order4.Status);
-            Assert.AreEqual(OrderStatus.Active, order5.Status);
-            Assert.AreEqual(OrderStatus.Active, order6.Status);
+            Assert.AreEqual(PositionStatus.Active, order1.Status);
+            Assert.AreEqual(PositionStatus.Active, order2.Status);
+            Assert.AreEqual(PositionStatus.Active, order3.Status);
+            Assert.AreEqual(PositionStatus.Active, order4.Status);
+            Assert.AreEqual(PositionStatus.Active, order5.Status);
+            Assert.AreEqual(PositionStatus.Active, order6.Status);
             
             Assert.AreEqual(1.63144m, Math.Round(account.GetMarginUsageLevel(), 5));
             
@@ -1268,7 +1268,7 @@ namespace MarginTradingTests
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0092M, Ask = 1.0095M }));
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCUSD", Bid = 829.69M, Ask = 829.8M }));
 
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -1281,10 +1281,10 @@ namespace MarginTradingTests
             order = _tradingEngine.PlaceOrderAsync(order).Result;
             var account = _accountsCacheService.Get(_acount1Id);
 
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
             Assert.AreEqual(1.63564m, Math.Round(account.GetMarginUsageLevel(), 5));
             Assert.AreEqual(AccountLevel.None, account.GetAccountLevel()); //no margin call yet
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
 
             //add new order which will set account to stop out
@@ -1295,7 +1295,7 @@ namespace MarginTradingTests
             account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(AccountLevel.MarginCall, account.GetAccountLevel());
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(
                 x => x.SendNotification(It.IsAny<string>(), NotificationType.MarginCall, It.IsAny<string>(),
                     null), Times.Once());
@@ -1308,7 +1308,7 @@ namespace MarginTradingTests
         {
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCJPY", Bid = 109.857M, Ask = 130.957M }));
 
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -1339,7 +1339,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(MarketMaker1Id, ordersSet, deleteAll: true);
 
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -1356,7 +1356,7 @@ namespace MarginTradingTests
             Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
             Assert.AreEqual(1125.945, order.OpenPrice);
             Assert.AreEqual(1097.315, order.ClosePrice);
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
             Assert.AreEqual(-28630, Math.Round(order.GetTotalFpl()));
             Assert.AreEqual(-28630, Math.Round(resultingAccount.GetPnl()));
 
@@ -1368,7 +1368,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(MarketMaker1Id, ordersSet, deleteAll: true);
 
-            order = new Order
+            order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -1384,7 +1384,7 @@ namespace MarginTradingTests
             Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
             Assert.AreEqual(1126.039, order.OpenPrice);
             Assert.AreEqual(1125.039, order.ClosePrice);
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
             Assert.AreEqual(-1000, Math.Round(order.GetTotalFpl()));
             Assert.AreEqual(-1906, Math.Round(resultingAccount.GetPnl()));
 
@@ -1417,7 +1417,7 @@ namespace MarginTradingTests
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "EURUSD", Bid = 1.1M, Ask = 1.2M }));
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "GBPUSD", Bid = 1.5M, Ask = 2M }));
 
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -1449,7 +1449,7 @@ namespace MarginTradingTests
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "JPYUSD", Bid = 100.857M, Ask = 110.957M }));
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1M, Ask = 2M }));
 
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -1473,7 +1473,7 @@ namespace MarginTradingTests
         [Test]
         public void Is_PendingOrder_Rejected_On_Incorrect_ExpectedPrice()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -1486,14 +1486,14 @@ namespace MarginTradingTests
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
-            Assert.AreEqual(OrderStatus.Rejected, order.Status);
+            Assert.AreEqual(PositionStatus.Rejected, order.Status);
             Assert.AreEqual(OrderRejectReason.InvalidExpectedOpenPrice, order.RejectReason);
         }
 
         [Test]
         public void Is_Buy_Partial_PendingOrder_Opened()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -1507,7 +1507,7 @@ namespace MarginTradingTests
             order = _tradingEngine.PlaceOrderAsync(order).Result;
             order.UpdatePendingOrderMargin();
 
-            Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status);
+            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status);
             Assert.AreEqual(0.088, order.GetMarginInit());
             Assert.AreEqual(0.05866667, order.GetMarginMaintenance());
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("placed")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
@@ -1520,17 +1520,17 @@ namespace MarginTradingTests
             var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(2, order.MatchedOrders.Count);
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
             Assert.AreEqual(1.1125, order.OpenPrice);
             Assert.AreEqual(1, account.GetOpenPositionsCount());
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("triggered")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
         }
 
         [Test]
         public void Is_Buy_Partial_PendingOrder_Opened_When_Available()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -1545,17 +1545,17 @@ namespace MarginTradingTests
             var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(0, order.MatchedOrders.Count);
-            Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //is not active
+            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //is not active
             Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
             Assert.IsTrue(account.GetUsedMargin() == 0); //no used margin
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.WaitingForExecution)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.WaitingForExecution)));
 
             _matchingEngine.SetOrders(MarketMaker1Id, new []
             {
                 new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = -6 }
             });
 
-            Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //still not active
+            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //still not active
             Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
 
             _matchingEngine.SetOrders(MarketMaker1Id, new []
@@ -1563,12 +1563,12 @@ namespace MarginTradingTests
                 new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.055M, Volume = -6 }
             });
 
-            Assert.AreEqual(OrderStatus.Active, order.Status); //now its active
+            Assert.AreEqual(PositionStatus.Active, order.Status); //now its active
             Assert.AreEqual(2, order.MatchedOrders.Count);
             Assert.AreEqual(1.056, Math.Round(order.OpenPrice, 3));
             Assert.AreEqual(-0.06, Math.Round(order.GetFpl(), 3));
             Assert.AreEqual(1, account.GetOpenPositionsCount()); //position is opened
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
 
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(message => message.Contains("Pending order triggered")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
 
@@ -1577,7 +1577,7 @@ namespace MarginTradingTests
         [Test]
         public void Is_Sell_Partial_PendingOrder_Opened()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -1600,17 +1600,17 @@ namespace MarginTradingTests
             var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(1, order.MatchedOrders.Count);
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
             Assert.AreEqual(1.06, order.OpenPrice);
             Assert.AreEqual(1, account.GetOpenPositionsCount());
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("triggered")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
         }
 
         [Test]
         public void Is_Sell_Partial_PendingOrder_Opened_When_Available()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -1625,10 +1625,10 @@ namespace MarginTradingTests
             var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(0, order.MatchedOrders.Count);
-            Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //is not active
+            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //is not active
             Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
 
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.WaitingForExecution)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.WaitingForExecution)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("placed")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
 
             _matchingEngine.SetOrders(MarketMaker1Id, new []
@@ -1636,7 +1636,7 @@ namespace MarginTradingTests
                 new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = 6 }
             });
 
-            Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //still not active
+            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //still not active
             Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
 
             _matchingEngine.SetOrders(MarketMaker1Id, new []
@@ -1644,17 +1644,17 @@ namespace MarginTradingTests
                 new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.08M, Volume = 10 }
             });
 
-            Assert.AreEqual(OrderStatus.Active, order.Status); //now its active
+            Assert.AreEqual(PositionStatus.Active, order.Status); //now its active
             Assert.AreEqual(-0.02, Math.Round(order.GetFpl(), 3));
             Assert.AreEqual(1, account.GetOpenPositionsCount()); //position is opened
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("triggered")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
         }
 
         [Test]
         public void Is_Buy_FillOrKill_PendingOrder_Opened()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -1667,7 +1667,7 @@ namespace MarginTradingTests
 
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
-            Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status);
+            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status);
             
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("placed")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
 
@@ -1679,18 +1679,18 @@ namespace MarginTradingTests
             var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(1, order.MatchedOrders.Count);
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
             Assert.AreEqual(1.1, order.OpenPrice);
             Assert.AreEqual(1.2, order.ClosePrice);
             Assert.AreEqual(1, account.GetOpenPositionsCount());
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("triggered")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
         }
 
         [Test]
         public void Is_Buy_FillOrKill_PendingOrder_Opened_When_Available()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -1705,9 +1705,9 @@ namespace MarginTradingTests
             var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(0, order.MatchedOrders.Count);
-            Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //is not active
+            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //is not active
             Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.WaitingForExecution)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.WaitingForExecution)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("placed")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
 
             _matchingEngine.SetOrders(MarketMaker1Id, new []
@@ -1715,7 +1715,7 @@ namespace MarginTradingTests
                 new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = -6 }
             });
 
-            Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //still not active
+            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //still not active
             Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
 
             _matchingEngine.SetOrders(MarketMaker1Id, new []
@@ -1723,17 +1723,17 @@ namespace MarginTradingTests
                 new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.055M, Volume = -4 }
             });
 
-            Assert.AreEqual(OrderStatus.Active, order.Status); //now its active
+            Assert.AreEqual(PositionStatus.Active, order.Status); //now its active
             Assert.AreEqual(-0.005, Math.Round(order.GetFpl(), 3));
             Assert.AreEqual(1, account.GetOpenPositionsCount()); //position is opened
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("triggered")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
         }
 
         [Test]
         public void Is_Sell_FillOrKill_PendingOrder_Opened()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -1756,17 +1756,17 @@ namespace MarginTradingTests
             var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(1, order.MatchedOrders.Count);
-            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(PositionStatus.Active, order.Status);
             Assert.AreEqual(1.06, order.OpenPrice);
             Assert.AreEqual(1, account.GetOpenPositionsCount());
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("triggered")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
         }
 
         [Test]
         public void Is_Sell_FillOrKill_PendingOrder_Opened_When_Available()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -1781,9 +1781,9 @@ namespace MarginTradingTests
             var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(0, order.MatchedOrders.Count);
-            Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //is not active
+            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //is not active
             Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.WaitingForExecution)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.WaitingForExecution)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("placed")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
 
             _matchingEngine.SetOrders(MarketMaker1Id, new []
@@ -1791,7 +1791,7 @@ namespace MarginTradingTests
                 new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = 6 }
             });
 
-            Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //still not active
+            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //still not active
             Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
 
             _matchingEngine.SetOrders(MarketMaker1Id, new []
@@ -1799,17 +1799,17 @@ namespace MarginTradingTests
                 new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.08M, Volume = 10 }
             });
 
-            Assert.AreEqual(OrderStatus.Active, order.Status); //now its active
+            Assert.AreEqual(PositionStatus.Active, order.Status); //now its active
             Assert.AreEqual(-0.02, Math.Round(order.GetFpl(), 3));
             Assert.AreEqual(1, account.GetOpenPositionsCount()); //position is opened
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("triggered")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
         }
 
         [Test]
         public void Is_Buy_PendingOrder_Rejected_On_Expected_Price()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -1823,14 +1823,14 @@ namespace MarginTradingTests
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
             //current ask price for EURUSD = 1.1 and ExpectedOpenPrice = 1.12, so order should be rejected
-            Assert.AreEqual(OrderStatus.Rejected, order.Status);
+            Assert.AreEqual(PositionStatus.Rejected, order.Status);
             Assert.AreEqual(OrderRejectReason.InvalidExpectedOpenPrice, order.RejectReason);
         }
 
         [Test]
         public void Is_Sell_PendingOrder_Rejected_On_Expected_Price()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -1844,14 +1844,14 @@ namespace MarginTradingTests
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
             //current bid price for EURUSD = 1.05 and ExpectedOpenPrice = 1.04, so order should be rejected
-            Assert.AreEqual(OrderStatus.Rejected, order.Status);
+            Assert.AreEqual(PositionStatus.Rejected, order.Status);
             Assert.AreEqual(OrderRejectReason.InvalidExpectedOpenPrice, order.RejectReason);
         }
 
         [Test]
         public void Is_PendingOrder_Canceled()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -1866,24 +1866,24 @@ namespace MarginTradingTests
             var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(0, order.MatchedOrders.Count);
-            Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //is not active
+            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //is not active
             Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.WaitingForExecution)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.WaitingForExecution)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
 
             _tradingEngine.CancelPendingOrder(order.Id, OrderCloseReason.Canceled);
 
-            Assert.AreEqual(OrderStatus.Closed, order.Status);
+            Assert.AreEqual(PositionStatus.Closed, order.Status);
             Assert.AreEqual(OrderCloseReason.Canceled, order.CloseReason);
             Assert.IsNotNull(order.CloseDate);
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Closed)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
         }
 
         [Test]
         public void Is_PendingOrder_Rejected_On_Trigger()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -1898,9 +1898,9 @@ namespace MarginTradingTests
             var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(0, order.MatchedOrders.Count);
-            Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //is not active
+            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //is not active
             Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.WaitingForExecution)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.WaitingForExecution)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
 
             _matchingEngine.SetOrders(MarketMaker1Id, new[]
@@ -1908,7 +1908,7 @@ namespace MarginTradingTests
                 new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = 6 }
             });
 
-            Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //still not active
+            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //still not active
             Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
 
             _matchingEngine.SetOrders(MarketMaker1Id, new[]
@@ -1916,15 +1916,15 @@ namespace MarginTradingTests
                 new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.08M, Volume = 10 }
             });
 
-            Assert.AreEqual(OrderStatus.Rejected, order.Status); //should be rejected 
+            Assert.AreEqual(PositionStatus.Rejected, order.Status); //should be rejected 
             Assert.AreEqual(OrderRejectReason.NoLiquidity, order.RejectReason);
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Rejected)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Rejected)));
         }
 
         [Test]
         public void Is_PendingOrder_Closed_After_Trigger()
         {
-            var order = new Order
+            var order = new Position
             {
                 CreateDate = DateTime.UtcNow,
                 Id = Guid.NewGuid().ToString("N"),
@@ -1939,9 +1939,9 @@ namespace MarginTradingTests
             var account = _accountsCacheService.Get(order.AccountId);
 
             Assert.AreEqual(0, order.MatchedOrders.Count);
-            Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //is not active
+            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //is not active
             Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.WaitingForExecution)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.WaitingForExecution)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("placed")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
 
             _matchingEngine.SetOrders(MarketMaker1Id, new[]
@@ -1949,7 +1949,7 @@ namespace MarginTradingTests
                 new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = 6 }
             });
 
-            Assert.AreEqual(OrderStatus.WaitingForExecution, order.Status); //still not active
+            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //still not active
             Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
 
             _matchingEngine.SetOrders(MarketMaker1Id, new[]
@@ -1957,18 +1957,18 @@ namespace MarginTradingTests
                 new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.08M, Volume = 10 }
             });
 
-            Assert.AreEqual(OrderStatus.Active, order.Status); //should be active 
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Active)));
+            Assert.AreEqual(PositionStatus.Active, order.Status); //should be active 
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("triggered")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
 
             var closedOrder = _tradingEngine.CloseActiveOrderAsync(order.Id, OrderCloseReason.Close).Result;
 
-            Assert.AreEqual(OrderStatus.Closed, closedOrder.Status); //should be closed 
+            Assert.AreEqual(PositionStatus.Closed, closedOrder.Status); //should be closed 
             Assert.AreEqual(-0.1, order.GetTotalFpl());
             account = _accountsCacheService.Get(order.AccountId);
             Assert.AreEqual(999.9, account.Balance);
 
-            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Order>(o => o.Status == OrderStatus.Closed)));
+            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Closed)));
             _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
 
             _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionClosed, It.Is<string>(message => message.Contains("closed")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());

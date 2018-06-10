@@ -33,7 +33,7 @@ namespace MarginTrading.Backend.Services
             _accountsCacheService = accountsCacheService;
         }
 
-        public void NotifyOrderChanged(Order order)
+        public void NotifyOrderChanged(Position order)
         {
             _rabbitMqNotifyService.OrderChanged(order);
             var queueName = QueueHelper.BuildQueueName(_marginSettings.RabbitMqQueues.OrderChanged.ExchangeName, _marginSettings.Env);

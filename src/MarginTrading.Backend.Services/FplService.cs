@@ -33,7 +33,7 @@ namespace MarginTrading.Backend.Services
             _assetsCache = assetsCache;
         }
 
-        public void UpdateOrderFpl(IOrder order, FplData fplData)
+        public void UpdateOrderFpl(IPosition order, FplData fplData)
         {
 //            var handler = order.Status != OrderStatus.WaitingForExecution
 //                ? UpdateOrderFplData
@@ -45,7 +45,7 @@ namespace MarginTrading.Backend.Services
 
         }
 
-        private void UpdateOrderFplData(IOrder order, FplData fplData)
+        private void UpdateOrderFplData(IPosition order, FplData fplData)
         {
             fplData.AccountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(order.AccountAssetId);
             fplData.FplRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.AccountAssetId, order.Instrument, 
@@ -69,7 +69,7 @@ namespace MarginTrading.Backend.Services
             _accountsCacheService.Get(order.AccountId).CacheNeedsToBeUpdated();
         }
 
-        private void UpdatePendingOrderMargin(IOrder order, FplData fplData)
+        private void UpdatePendingOrderMargin(IPosition order, FplData fplData)
         {
             fplData.AccountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(order.AccountAssetId);
             
@@ -79,7 +79,7 @@ namespace MarginTrading.Backend.Services
             _accountsCacheService.Get(order.AccountId).CacheNeedsToBeUpdated();
         }
 
-        public void CalculateMargin(IOrder order, FplData fplData)
+        public void CalculateMargin(IPosition order, FplData fplData)
         {
             var accountAsset =
                 _accountAssetsCacheService.GetTradingInstrument(order.TradingConditionId, order.Instrument);

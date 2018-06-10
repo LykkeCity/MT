@@ -10,7 +10,6 @@ using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Orders;
-using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Common.Extensions;
@@ -32,7 +31,6 @@ namespace MarginTrading.Backend.Controllers
         private readonly IConsole _consoleWriter;
         private readonly OrdersCache _ordersCache;
         private readonly IAssetPairDayOffService _assetDayOffService;
-        private readonly IIdentityGenerator _identityGenerator;
 
         private const string CloseOrderIdSuffix = "_close";
         private readonly IOrdersByIdRepository _ordersByIdRepository;
@@ -40,8 +38,8 @@ namespace MarginTrading.Backend.Controllers
 
         public OrdersController(IAssetPairsCache assetPairsCache, ITradingEngine tradingEngine,
             IAccountsCacheService accountsCacheService, IMarginTradingOperationsLogService operationsLogService,
-            IConsole consoleWriter, OrdersCache ordersCache, IAssetPairDayOffService assetDayOffService,
-            IIdentityGenerator identityGenerator, IOrdersByIdRepository ordersByIdRepository, IDateService dateService)
+            IConsole consoleWriter, OrdersCache ordersCache, IAssetPairDayOffService assetDayOffService, 
+            IOrdersByIdRepository ordersByIdRepository, IDateService dateService)
         {
             _assetPairsCache = assetPairsCache;
             _tradingEngine = tradingEngine;
@@ -50,7 +48,6 @@ namespace MarginTrading.Backend.Controllers
             _consoleWriter = consoleWriter;
             _ordersCache = ordersCache;
             _assetDayOffService = assetDayOffService;
-            _identityGenerator = identityGenerator;
             _ordersByIdRepository = ordersByIdRepository;
             _dateService = dateService;
         }
@@ -64,14 +61,13 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         public async Task PlaceAsync([FromBody] OrderPlaceRequest request)
         {
-            var code = await _identityGenerator.GenerateIdAsync(nameof(Order));
+            
 
             var now = DateTime.UtcNow;
             
-            var order = new Order
+            var order = new Position
             {
                 Id = Guid.NewGuid().ToString("N"),
-                Code = code,
                 CreateDate = now,
                 LastModified = now, 
                 AccountId = request.AccountId,
@@ -94,7 +90,7 @@ namespace MarginTrading.Backend.Controllers
             _operationsLogService.AddLog("action order.place", request.AccountId, request.ToJson(),
                 placedOrder.ToJson());
 
-            if (order.Status == OrderStatus.Rejected)
+            if (order.Status == PositionStatus.Rejected)
             {
                 throw new Exception($"Order is rejected: {order.RejectReason} ({order.RejectReasonText})");
             }
@@ -261,7 +257,7 @@ namespace MarginTrading.Backend.Controllers
             [FromQuery] string parentOrderId = null)
         {
             // do not call get by account, it's slower for single account 
-            IEnumerable<Order> orders = _ordersCache.GetAll();
+            IEnumerable<Position> orders = _ordersCache.GetAll();
 
             if (!string.IsNullOrWhiteSpace(accountId))
                 orders = orders.Where(o => o.AccountId == accountId);
@@ -278,9 +274,9 @@ namespace MarginTrading.Backend.Controllers
             return Task.FromResult(orders.SelectMany(MakeOrderContracts).ToList());
         }
 
-        private static List<string> GetTrades(string orderId, OrderStatus status, OrderDirection orderDirection)
+        private static List<string> GetTrades(string orderId, PositionStatus status, OrderDirection orderDirection)
         {
-            if (status == OrderStatus.WaitingForExecution)
+            if (status == PositionStatus.WaitingForExecution)
                 return new List<string>();
 
             return new List<string> {orderId + '_' + orderDirection};
@@ -292,26 +288,26 @@ namespace MarginTrading.Backend.Controllers
                 openDirection == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy;
         }
 
-        private static OrderStatusContract Convert(OrderStatus orderStatus)
+        private static OrderStatusContract Convert(PositionStatus orderStatus)
         {
             switch (orderStatus)
             {
-                case OrderStatus.WaitingForExecution:
+                case PositionStatus.WaitingForExecution:
                     return OrderStatusContract.Active;
-                case OrderStatus.Active:
+                case PositionStatus.Active:
                     return OrderStatusContract.Executed; // todo: fix when orders
-                case OrderStatus.Closed:
+                case PositionStatus.Closed:
                     return OrderStatusContract.Executed;
-                case OrderStatus.Rejected:
+                case PositionStatus.Rejected:
                     return OrderStatusContract.Rejected;
-                case OrderStatus.Closing:
+                case PositionStatus.Closing:
                     return OrderStatusContract.Executed;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(orderStatus), orderStatus, null);
             }
         }
         
-        private static IEnumerable<OrderContract> MakeOrderContracts(Order r)
+        private static IEnumerable<OrderContract> MakeOrderContracts(Position r)
         {
             var baseOrder = Convert(r);
 
@@ -333,7 +329,7 @@ namespace MarginTrading.Backend.Controllers
                 yield return baseOrder;
         }
 
-        private static OrderContract Convert(Order order)
+        private static OrderContract Convert(Position order)
         {
             var orderDirection = GetOrderDirection(order.GetOrderDirection(), false);
             return new OrderContract
@@ -350,7 +346,7 @@ namespace MarginTrading.Backend.Controllers
                 ModifiedTimestamp = order.LastModified ?? order.OpenDate ?? order.CreateDate,
                 Originator = OriginatorTypeContract.Investor,
                 ParentOrderId = null,
-                PositionId = order.Status == OrderStatus.Active ? order.Id : null,
+                PositionId = order.Status == PositionStatus.Active ? order.Id : null,
                 RelatedOrders = new List<string>(),
                 Status = Convert(order.Status),
                 TradesIds = GetTrades(order.Id, order.Status, orderDirection),
@@ -360,7 +356,7 @@ namespace MarginTrading.Backend.Controllers
             };
         }
         
-        private static OrderContract CreatePendingOrder(Order order, OrderTypeContract type)
+        private static OrderContract CreatePendingOrder(Position order, OrderTypeContract type)
         {
             var result = Convert(order);
 

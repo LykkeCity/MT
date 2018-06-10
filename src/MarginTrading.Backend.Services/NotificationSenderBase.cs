@@ -31,9 +31,9 @@ namespace MarginTrading.Backend.Services
             _assetPairsCache = assetPairsCache;
         }
 
-        protected async Task SendOrderChangedNotification(string clientId, IOrder order)
+        protected async Task SendOrderChangedNotification(string clientId, IPosition order)
         {
-            var notificationType = order.Status == OrderStatus.Closed
+            var notificationType = order.Status == PositionStatus.Closed
                 ? NotificationType.PositionClosed
                 : NotificationType.PositionOpened;
 
@@ -57,7 +57,7 @@ namespace MarginTrading.Backend.Services
             }
         }
         
-        private string GetPushMessage(IOrder order)
+        private string GetPushMessage(IPosition order)
         {
             var message = string.Empty;
             var volume = Math.Abs(order.Volume);
@@ -67,17 +67,17 @@ namespace MarginTrading.Backend.Services
             
             switch (order.Status)
             {
-                case OrderStatus.WaitingForExecution:
+                case PositionStatus.WaitingForExecution:
                     message = string.Format(MtMessages.Notifications_PendingOrderPlaced, type, instrumentName, volume, Math.Round(order.ExpectedOpenPrice ?? 0, order.AssetAccuracy));
                     break;
-                case OrderStatus.Active:
+                case PositionStatus.Active:
                     message = order.ExpectedOpenPrice.HasValue
                         ? string.Format(MtMessages.Notifications_PendingOrderTriggered, type, instrumentName, volume,
                             Math.Round(order.OpenPrice, order.AssetAccuracy))
                         : string.Format(MtMessages.Notifications_OrderPlaced, type, instrumentName, volume,
                             Math.Round(order.OpenPrice, order.AssetAccuracy));
                     break;
-                case OrderStatus.Closed:
+                case PositionStatus.Closed:
                     var reason = string.Empty;
 
                     switch (order.CloseReason)
@@ -101,9 +101,9 @@ namespace MarginTrading.Backend.Services
                             order.GetTotalFpl().ToString($"F{accuracy}"),
                             order.AccountAssetId);
                     break;
-                case OrderStatus.Rejected:
+                case PositionStatus.Rejected:
                     break;
-                case OrderStatus.Closing:
+                case PositionStatus.Closing:
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();

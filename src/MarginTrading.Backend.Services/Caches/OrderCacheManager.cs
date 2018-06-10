@@ -31,7 +31,7 @@ namespace MarginTrading.Backend.Services
 
         public override void Start()
         {
-            var orders = _marginTradingBlobRepository.Read<List<Order>>(LykkeConstants.StateBlobContainer, BlobName) ?? new List<Order>();
+            var orders = _marginTradingBlobRepository.Read<List<Position>>(LykkeConstants.StateBlobContainer, BlobName) ?? new List<Position>();
             
             orders.ForEach(o =>
             {

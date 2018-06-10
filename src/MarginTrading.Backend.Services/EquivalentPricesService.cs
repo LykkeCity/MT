@@ -27,24 +27,10 @@ namespace MarginTrading.Backend.Services
 			_log = log;
 		}
 
-		private string GetEquivalentAsset(string accountId)
-		{
-			var account = _accountsCacheService.Get(accountId);
-			var equivalentSettings =
-				_marginSettings.ReportingEquivalentPricesSettings.FirstOrDefault(x => x.LegalEntity == account.LegalEntity);
-			
-			if(string.IsNullOrEmpty(equivalentSettings?.EquivalentAsset))
-				throw new Exception($"No reporting equivalent prices asset found for legalEntity: {account.LegalEntity}");
-			
-			return equivalentSettings.EquivalentAsset;
-		}
-
-		public void EnrichOpeningOrder(Order order)
+		public void EnrichOpeningOrder(Position order)
 		{
 			try
 			{
-				order.EquivalentAsset = GetEquivalentAsset(order.AccountId);
-
 				order.OpenPriceEquivalent = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.EquivalentAsset,
 					order.Instrument, order.LegalEntity);
 			}
@@ -54,15 +40,10 @@ namespace MarginTrading.Backend.Services
 			}
 		}
 
-		public void EnrichClosingOrder(Order order)
+		public void EnrichClosingOrder(Position order)
 		{
 			try
 			{
-				if (string.IsNullOrEmpty(order.EquivalentAsset))
-				{
-					order.EquivalentAsset = GetEquivalentAsset(order.AccountId);
-				}
-				
 				order.ClosePriceEquivalent = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.EquivalentAsset,
 					order.Instrument, order.LegalEntity);
 			}
