@@ -30,6 +30,11 @@ namespace MarginTrading.Backend.Core.Trading
         public decimal Volume { get; }
         
         /// <summary>
+        /// Ordr direction (Buy/Sell)
+        /// </summary>
+        public OrderDirection Direction { get; }
+        
+        /// <summary>
         /// Date when order was created 
         /// </summary>
         public DateTime Created { get; }
@@ -177,10 +182,12 @@ namespace MarginTrading.Backend.Core.Trading
         #endregion
 
 
-        public Order(string id, long code, string assetPairId, decimal volume, DateTime created, DateTime lastModified,
+        public Order(string id, long code, string assetPairId, decimal volume, OrderDirection direction,
+            DateTime created, DateTime lastModified,
             DateTime? validity, string accountId, string tradingConditionId, string accountAssetId, decimal? price,
             string equivalentAsset, OrderFillType fillType, string comment, string legalEntity, bool forceOpen,
-            OrderType orderType, string parentOrderId, string parentPositionId, OriginatorType originator, decimal currentEquivalentRate)
+            OrderType orderType, string parentOrderId, string parentPositionId, OriginatorType originator,
+            decimal currentEquivalentRate)
         {
             Id = id;
             Code = code;
@@ -203,10 +210,11 @@ namespace MarginTrading.Backend.Core.Trading
             ParentPositionId = parentPositionId;
             Originator = originator;
             CurrentEquivalentRate = currentEquivalentRate;
+            Direction = direction;
             Status = OrderStatus.Created;
         }
 
-        
+
         #region Actions
 
         public void ChangePrice(decimal newPrice, DateTime dateTime)
@@ -240,6 +248,12 @@ namespace MarginTrading.Backend.Core.Trading
             RejectReasonText = reasonText;
             Comment = comment;
             Rejected = dateTime;
+        }
+
+        public void SetMatchingEngine(string matchingEngineId)
+        {
+            Status = OrderStatus.Inactive;
+            MatchingEngineId = matchingEngineId;
         }
 
         #endregion

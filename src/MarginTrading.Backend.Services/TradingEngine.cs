@@ -97,7 +97,7 @@ namespace MarginTrading.Backend.Services
             _dateService = dateService;
         }
 
-        public async Task<Position> PlaceOrderAsync(Position order)
+        public async Task<Order> PlaceOrderAsync(Order order)
         {
             try
             {
@@ -175,13 +175,15 @@ namespace MarginTrading.Backend.Services
             //_orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
         }
 
-        private Task<Position> PlaceOrderByMarketPrice(Position order)
+        private Task<Order> PlaceOrderByMarketPrice(Order order)
         {
             try
             {
                 var me = _meRouter.GetMatchingEngineForOpen(order);
 
-                return PlaceMarketOrderByMatchingEngineAsync(order, me);
+                //TODO: implement
+                return null;
+                //return PlaceMarketOrderByMatchingEngineAsync(order, me);
             }
             catch (QuoteNotFoundException ex)
             {
@@ -253,14 +255,15 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        private void PlacePendingOrder(Position order)
+        private void PlacePendingOrder(Order order)
         {
             var me = _meRouter.GetMatchingEngineForOpen(order);
-            order.MatchingEngineMode = me.Mode;
+            order.SetMatchingEngine(me.Id);
             
-            _ordersCache.WaitingForExecutionOrders.Add(order);
+            //TODO: implement
+            //_ordersCache.WaitingForExecutionOrders.Add(order);
 
-            _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
+            //_orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
         }
 
         #region Orders waiting for execution
@@ -283,8 +286,9 @@ namespace MarginTrading.Backend.Services
             //TODO: think how to make sure that we don't loose orders
             _threadSwitcher.SwitchThread(async () =>
             {
-                foreach (var order in orders)
-                    await PlaceOrderByMarketPrice(order);
+                //TODO: implement
+                //foreach (var order in orders)
+                //    await PlaceOrderByMarketPrice(order);
             });
 
         }

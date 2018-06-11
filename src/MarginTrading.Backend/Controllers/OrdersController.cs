@@ -35,11 +35,13 @@ namespace MarginTrading.Backend.Controllers
         private const string CloseOrderIdSuffix = "_close";
         private readonly IOrdersByIdRepository _ordersByIdRepository;
         private readonly IDateService _dateService;
+        private readonly IValidateOrderService _validateOrderService;
 
         public OrdersController(IAssetPairsCache assetPairsCache, ITradingEngine tradingEngine,
             IAccountsCacheService accountsCacheService, IMarginTradingOperationsLogService operationsLogService,
-            IConsole consoleWriter, OrdersCache ordersCache, IAssetPairDayOffService assetDayOffService, 
-            IOrdersByIdRepository ordersByIdRepository, IDateService dateService)
+            IConsole consoleWriter, OrdersCache ordersCache, IAssetPairDayOffService assetDayOffService,
+            IOrdersByIdRepository ordersByIdRepository, IDateService dateService,
+            IValidateOrderService validateOrderService)
         {
             _assetPairsCache = assetPairsCache;
             _tradingEngine = tradingEngine;
@@ -50,6 +52,7 @@ namespace MarginTrading.Backend.Controllers
             _assetDayOffService = assetDayOffService;
             _ordersByIdRepository = ordersByIdRepository;
             _dateService = dateService;
+            _validateOrderService = validateOrderService;
         }
 
         /// <summary>
@@ -61,39 +64,20 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         public async Task PlaceAsync([FromBody] OrderPlaceRequest request)
         {
+            var order = await _validateOrderService.ValidateRequestAndGetOrder(request); 
             
-
-            var now = DateTime.UtcNow;
-            
-            var order = new Position
-            {
-                Id = Guid.NewGuid().ToString("N"),
-                CreateDate = now,
-                LastModified = now, 
-                AccountId = request.AccountId,
-                Instrument = request.InstrumentId,
-                Volume = request.Direction == OrderDirectionContract.Buy ? request.Volume : -request.Volume,
-                ExpectedOpenPrice = request.Price,
-                TakeProfit = request.TakeProfit,
-                StopLoss = request.StopLoss,
-                OrderType = request.Type.ToType<OrderType>(),
-                ForceOpen = request.ForceOpen,
-                ParentOrderId = request.ParentOrderId,
-                ParentPositionId = request.PositionId,
-                Validity = request.Validity,
-                Originator = request.Originator.ToType<OriginatorType>()
-            };
-
             var placedOrder = await _tradingEngine.PlaceOrderAsync(order);
 
             _consoleWriter.WriteLine($"action order.place for accountId = {request.AccountId}");
             _operationsLogService.AddLog("action order.place", request.AccountId, request.ToJson(),
                 placedOrder.ToJson());
 
-            if (order.Status == PositionStatus.Rejected)
+            if (order.Status == OrderStatus.Rejected)
             {
                 throw new Exception($"Order is rejected: {order.RejectReason} ({order.RejectReasonText})");
             }
+            
+            //TODO: create SL and TP orders if needed
         }
 
         /// <summary>

@@ -4,8 +4,6 @@ using System.Threading.Tasks;
 using Common;
 using Lykke.Common;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Messages;
-using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services;
@@ -14,8 +12,7 @@ using MarginTrading.Common.Services.Client;
 namespace MarginTrading.Backend.Services.EventsConsumers
 {
     // TODO: Rename by role
-    public class MarginCallConsumer : NotificationSenderBase,
-        IEventConsumer<MarginCallEventArgs>,
+    public class MarginCallConsumer : IEventConsumer<MarginCallEventArgs>,
         IEventConsumer<OrderPlacedEventArgs>,
         IEventConsumer<OrderClosedEventArgs>,
         IEventConsumer<OrderCancelledEventArgs>
@@ -30,15 +27,11 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         private readonly IDateService _dateService;
 
         public MarginCallConsumer(IThreadSwitcher threadSwitcher,
-            IAppNotifications appNotifications,
             IEmailService emailService,
             IClientAccountService clientAccountService,
             IMarginTradingOperationsLogService operationsLogService,
             IRabbitMqNotifyService rabbitMqNotifyService,
-            IDateService dateService,
-            IAssetsCache assetsCache,
-            IAssetPairsCache assetPairsCache)
-            : base(appNotifications, clientAccountService, assetsCache, assetPairsCache)
+            IDateService dateService)
         {
             _threadSwitcher = threadSwitcher;
             _emailService = emailService;
@@ -67,20 +60,13 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
                 _operationsLogService.AddLog("margin call", account.Id, "", ea.ToJson());
 
-                var marginUsageLevel = account.GetMarginUsageLevel();
-                var marginUsedPerc = marginUsageLevel == 0 ? 0 : 1 / marginUsageLevel;
-
-                var notificationTask = SendMarginEventNotification(account.ClientId, string.Format(
-                    MtMessages.Notifications_MarginCall, marginUsedPerc,
-                    account.BaseAssetId));
-
                 var clientEmail = await _clientAccountService.GetEmail(account.ClientId);
 
                 var emailTask = !string.IsNullOrEmpty(clientEmail)
                     ? _emailService.SendMarginCallEmailAsync(clientEmail, account.BaseAssetId, account.Id)
                     : Task.CompletedTask;
 
-                await Task.WhenAll(marginEventTask, notificationTask, emailTask);
+                await Task.WhenAll(marginEventTask, emailTask);
 
                 LastNotifications.AddOrUpdate(account.Id, eventTime, (s, time) => eventTime);
             });

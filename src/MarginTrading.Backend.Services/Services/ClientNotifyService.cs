@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.RabbitMq;
@@ -31,14 +30,6 @@ namespace MarginTrading.Backend.Services
             _marginSettings = marginSettings;
             _consoleWriter = consoleWriter;
             _accountsCacheService = accountsCacheService;
-        }
-
-        public void NotifyOrderChanged(Position order)
-        {
-            _rabbitMqNotifyService.OrderChanged(order);
-            var queueName = QueueHelper.BuildQueueName(_marginSettings.RabbitMqQueues.OrderChanged.ExchangeName, _marginSettings.Env);
-            _consoleWriter.WriteLine($"send order changed to queue {queueName}");
-            _operationsLogService.AddLog($"queue {queueName}", order.AccountId, null, order.ToJson());
         }
 
         public void NotifyAccountUpdated(IMarginTradingAccount account)

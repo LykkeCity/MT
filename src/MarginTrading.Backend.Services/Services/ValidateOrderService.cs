@@ -127,8 +127,10 @@ namespace MarginTrading.Backend.Services
             var now = _dateService.Now();
             var equivalentPrice = _cfdCalculatorService.GetQuoteRateForQuoteAsset(equivalentSettings.EquivalentAsset,
                 request.InstrumentId, account.LegalEntity);
+            var volume = request.Direction == OrderDirectionContract.Buy ? request.Volume : -request.Volume;
 
-            return new Order(id, code, request.InstrumentId, request.Volume, now, now, request.Validity, account.Id,
+            return new Order(id, code, request.InstrumentId, volume, request.Direction.ToType<OrderDirection>(), now,
+                now, request.Validity, account.Id,
                 account.TradingConditionId, account.BaseAssetId, request.Price,
                 equivalentSettings.EquivalentAsset, OrderFillType.FillOrKill, string.Empty, account.LegalEntity,
                 request.ForceOpen, request.Type.ToType<OrderType>(), request.ParentOrderId, request.PositionId,
