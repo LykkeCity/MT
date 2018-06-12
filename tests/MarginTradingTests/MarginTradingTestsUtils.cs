@@ -44,7 +44,7 @@ namespace MarginTradingTests
         public static IAccountsApi GetPopulatedAccountsApi(List<MarginTradingAccount> accounts)
         {
             var list = accounts.Select(a => new AccountContract(a.Id, a.ClientId, a.TradingConditionId, a.BaseAssetId,
-                a.Balance, a.WithdrawTransferLimit, a.LegalEntity, a.IsDisabled, DateTimeOffset.UtcNow)).ToList();
+                a.Balance, a.WithdrawTransferLimit, a.LegalEntity, a.IsDisabled, DateTime.UtcNow)).ToList();
             return Mock.Of<IAccountsApi>(a => a.List() == Task.FromResult(list));
         }
 
@@ -150,7 +150,7 @@ namespace MarginTradingTests
             };
 
             var mock = new Mock<ITradingConditionsApi>();
-            mock.Setup(s => s.List()).ReturnsAsync(new List<TradingConditionContract> {defaultTc});
+            mock.Setup(s => s.List(null)).ReturnsAsync(new List<TradingConditionContract> {defaultTc});
 
             return mock.Object;
         }

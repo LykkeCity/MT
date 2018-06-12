@@ -1,7 +1,7 @@
 ﻿using JetBrains.Annotations;
 using Lykke.Cqrs;
-using MarginTrading.Backend.Contracts.Commands;
-using MarginTrading.Backend.Contracts.Events;
+using MarginTrading.AccountsManagement.Contracts.Commands;
+using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.Backend.Core;
 using MarginTrading.Common.Services;
 
@@ -31,8 +31,6 @@ namespace MarginTrading.Backend.Services.Workflow
             var account = _accountsCacheService.Get(command.AccountId);
             if (account.GetFreeMargin() >= command.Amount)
             {
-                // todo: check condition
-                // todo: add actual amount freezing (see MTC-117)
                 _accountUpdateService.FreezeWithdrawalMargin(account, command.OperationId, command.Amount);
                 
                 publisher.PublishEvent(_convertService.Convert<AmountForWithdrawalFrozenEvent>(command));
@@ -43,9 +41,22 @@ namespace MarginTrading.Backend.Services.Workflow
                     command.Amount, command.OperationId, "Not enough free margin"));
             }
         }
-
+        
         /// <summary>
-        /// No matter if withdrawal succeeded of failed the margin must be unfrozen.
+        /// Withdrawal failed => margin must be unfrozen.
+        /// </summary>
+        [UsedImplicitly]
+        private void Handle(UnfreezeMarginOnFailWithdrawalCommand command, IEventPublisher publisher)
+        {
+            var account = _accountsCacheService.Get(command.AccountId);
+            _accountUpdateService.UnfreezeWithdrawalMargin(account, command.OperationId);
+            
+            publisher.PublishEvent(new UnfreezeMarginSucceededWithdrawalEvent(command.OperationId, command.ClientId, 
+                command.AccountId, command.Amount));
+        }
+        
+        /// <summary>
+        /// Withdrawal succeeded => margin must be unfrozen.
         /// </summary>
         [UsedImplicitly]
         private void Handle(UnfreezeMarginWithdrawalCommand command, IEventPublisher publisher)
