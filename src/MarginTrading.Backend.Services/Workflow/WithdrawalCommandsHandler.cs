@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
@@ -28,7 +29,17 @@ namespace MarginTrading.Backend.Services.Workflow
         [UsedImplicitly]
         private void Handle(FreezeAmountForWithdrawalCommand command, IEventPublisher publisher)
         {
-            var account = _accountsCacheService.Get(command.AccountId);
+            MarginTradingAccount account = null;
+            try
+            {
+                account = _accountsCacheService.Get(command.AccountId);
+            }
+            catch
+            {
+                publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.ClientId, command.AccountId,
+                    command.Amount, command.OperationId, $"Failed to get account {command.AccountId}"));
+            }
+            
             if (account.GetFreeMargin() >= command.Amount)
             {
                 _accountUpdateService.FreezeWithdrawalMargin(account, command.OperationId, command.Amount);
@@ -48,6 +59,7 @@ namespace MarginTrading.Backend.Services.Workflow
         [UsedImplicitly]
         private void Handle(UnfreezeMarginOnFailWithdrawalCommand command, IEventPublisher publisher)
         {
+            //errors not handled => if error occurs event will be retried
             var account = _accountsCacheService.Get(command.AccountId);
             _accountUpdateService.UnfreezeWithdrawalMargin(account, command.OperationId);
             
@@ -61,6 +73,7 @@ namespace MarginTrading.Backend.Services.Workflow
         [UsedImplicitly]
         private void Handle(UnfreezeMarginWithdrawalCommand command, IEventPublisher publisher)
         {
+            //errors not handled => if error occurs event will be retried
             var account = _accountsCacheService.Get(command.AccountId);
             _accountUpdateService.UnfreezeWithdrawalMargin(account, command.OperationId);
             
