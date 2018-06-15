@@ -3,7 +3,6 @@ using Autofac;
 using Common.Log;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.SettingsService.Contracts;
 
 namespace MarginTradingTests.Modules

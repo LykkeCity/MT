@@ -9,6 +9,7 @@ using MarginTrading.Backend.Contracts;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
@@ -33,13 +34,14 @@ namespace MarginTrading.Backend.Controllers
         private readonly IAssetPairDayOffService _assetDayOffService;
         private readonly IIdentityGenerator _identityGenerator;
 
-        private const string CloseOrderIdSiffix = "_close";
+        private const string CloseOrderIdSuffix = "_close";
         private readonly IOrdersByIdRepository _ordersByIdRepository;
+        private readonly IDateService _dateService;
 
         public OrdersController(IAssetPairsCache assetPairsCache, ITradingEngine tradingEngine,
             IAccountsCacheService accountsCacheService, IMarginTradingOperationsLogService operationsLogService,
             IConsole consoleWriter, OrdersCache ordersCache, IAssetPairDayOffService assetDayOffService,
-            IIdentityGenerator identityGenerator, IOrdersByIdRepository ordersByIdRepository)
+            IIdentityGenerator identityGenerator, IOrdersByIdRepository ordersByIdRepository, IDateService dateService)
         {
             _assetPairsCache = assetPairsCache;
             _tradingEngine = tradingEngine;
@@ -50,6 +52,7 @@ namespace MarginTrading.Backend.Controllers
             _assetDayOffService = assetDayOffService;
             _identityGenerator = identityGenerator;
             _ordersByIdRepository = ordersByIdRepository;
+            _dateService = dateService;
         }
 
         /// <summary>
@@ -76,7 +79,13 @@ namespace MarginTrading.Backend.Controllers
                 Volume = request.Direction == OrderDirectionContract.Buy ? request.Volume : -request.Volume,
                 ExpectedOpenPrice = request.Price,
                 TakeProfit = request.TakeProfit,
-                StopLoss = request.StopLoss
+                StopLoss = request.StopLoss,
+                OrderType = request.Type.ToType<OrderType>(),
+                ForceOpen = request.ForceOpen,
+                ParentOrderId = request.ParentOrderId,
+                ParentPositionId = request.PositionId,
+                Validity = request.Validity,
+                Originator = request.Originator.ToType<OriginatorType>()
             };
 
             var placedOrder = await _tradingEngine.PlaceOrderAsync(order);
@@ -326,14 +335,14 @@ namespace MarginTrading.Backend.Controllers
 
         private static OrderContract Convert(Order order)
         {
-            var orderDirection = GetOrderDirection(order.GetOrderType(), false);
+            var orderDirection = GetOrderDirection(order.GetOrderDirection(), false);
             return new OrderContract
             {
                 Id = order.Id,
                 AccountId = order.AccountId,
                 AssetPairId = order.Instrument,
                 CreatedTimestamp = order.CreateDate,
-                Direction = order.GetOrderType().ToType<OrderDirectionContract>(),
+                Direction = order.GetOrderDirection().ToType<OrderDirectionContract>(),
                 ExecutionPrice = order.OpenPrice,
                 FxRate = order.GetFplRate(),
                 ExpectedOpenPrice = order.ExpectedOpenPrice,

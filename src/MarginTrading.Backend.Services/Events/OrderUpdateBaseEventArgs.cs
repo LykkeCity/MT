@@ -1,6 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Orders;
 
 namespace MarginTrading.Backend.Services.Events
 {

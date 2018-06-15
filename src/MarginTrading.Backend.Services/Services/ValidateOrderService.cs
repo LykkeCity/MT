@@ -3,6 +3,7 @@ using System.Linq;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Messages;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Helpers;
@@ -15,7 +16,7 @@ namespace MarginTrading.Backend.Services
         private readonly IQuoteCacheService _quoteCashService;
         private readonly IAccountUpdateService _accountUpdateService;
         private readonly IAccountsCacheService _accountsCacheService;
-        private readonly ITradingInstrumnentsCacheService _accountAssetsCacheService;
+        private readonly ITradingInstrumentsCacheService _accountAssetsCacheService;
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly OrdersCache _ordersCache;
         private readonly IAssetPairDayOffService _assetDayOffService;
@@ -24,7 +25,7 @@ namespace MarginTrading.Backend.Services
             IQuoteCacheService quoteCashService,
             IAccountUpdateService accountUpdateService,
             IAccountsCacheService accountsCacheService,
-            ITradingInstrumnentsCacheService accountAssetsCacheService,
+            ITradingInstrumentsCacheService accountAssetsCacheService,
             IAssetPairsCache assetPairsCache,
             OrdersCache ordersCache,
             IAssetPairDayOffService assetDayOffService)
@@ -93,10 +94,10 @@ namespace MarginTrading.Backend.Services
 
                 order.ExpectedOpenPrice = Math.Round(order.ExpectedOpenPrice ?? 0, order.AssetAccuracy);
 
-                if (order.GetOrderType() == OrderDirection.Buy && order.ExpectedOpenPrice > quote.Ask ||
-                    order.GetOrderType() == OrderDirection.Sell && order.ExpectedOpenPrice < quote.Bid)
+                if (order.GetOrderDirection() == OrderDirection.Buy && order.ExpectedOpenPrice > quote.Ask ||
+                    order.GetOrderDirection() == OrderDirection.Sell && order.ExpectedOpenPrice < quote.Bid)
                 {
-                    var reasonText = order.GetOrderType() == OrderDirection.Buy
+                    var reasonText = order.GetOrderDirection() == OrderDirection.Buy
                         ? string.Format(MtMessages.Validation_PriceAboveAsk, order.ExpectedOpenPrice, quote.Ask)
                         : string.Format(MtMessages.Validation_PriceBelowBid, order.ExpectedOpenPrice, quote.Bid);
 
@@ -131,7 +132,7 @@ namespace MarginTrading.Backend.Services
                 order.StopLoss = Math.Round(order.StopLoss.Value, order.AssetAccuracy);
             }
 
-            ValidateOrderStops(order.GetOrderType(), quote, accountAsset.Delta, accountAsset.Delta, order.TakeProfit, order.StopLoss, order.ExpectedOpenPrice, order.AssetAccuracy);
+            ValidateOrderStops(order.GetOrderDirection(), quote, accountAsset.Delta, accountAsset.Delta, order.TakeProfit, order.StopLoss, order.ExpectedOpenPrice, order.AssetAccuracy);
 
             ValidateInstrumentPositionVolume(accountAsset, order);
 

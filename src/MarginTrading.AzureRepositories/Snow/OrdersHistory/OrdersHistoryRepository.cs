@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AzureStorage;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Orders;
 
 namespace MarginTrading.AzureRepositories.Snow.OrdersHistory
 {

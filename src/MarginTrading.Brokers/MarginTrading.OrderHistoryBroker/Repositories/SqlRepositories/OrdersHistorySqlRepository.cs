@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using Dapper;
-using MarginTrading.AzureRepositories;
 using MarginTrading.AzureRepositories.Snow.OrdersHistory;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.BrokerBase;
 
 namespace MarginTrading.OrderHistoryBroker.Repositories.SqlRepositories

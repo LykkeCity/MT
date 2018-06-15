@@ -7,9 +7,9 @@ using MarginTrading.Backend.Contracts.AssetPairSettings;
 using MarginTrading.Backend.Contracts.TradeMonitoring;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Helpers;
-using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.Orderbooks;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Common.Extensions;
@@ -67,15 +67,15 @@ namespace MarginTrading.Backend.Controllers
                     {
                         AssetPairId = order.Instrument,
                         PnL = order.FplData.Fpl,
-                        VolumeLong = order.GetOrderType() == OrderDirection.Buy ? order.GetMatchedVolume() : 0,
-                        VolumeShort = order.GetOrderType() == OrderDirection.Sell ? order.GetMatchedVolume() : 0
+                        VolumeLong = order.GetOrderDirection() == OrderDirection.Buy ? order.GetMatchedVolume() : 0,
+                        VolumeShort = order.GetOrderDirection() == OrderDirection.Sell ? order.GetMatchedVolume() : 0
                     });
                 }
                 else
                 {
                     assetInfo.PnL += order.FplData.Fpl;
 
-                    if (order.GetOrderType() == OrderDirection.Buy)
+                    if (order.GetOrderDirection() == OrderDirection.Buy)
                     {
                         assetInfo.VolumeLong += order.GetMatchedVolume();
                     }
@@ -268,7 +268,7 @@ namespace MarginTrading.Backend.Controllers
                 ExpectedOpenPrice = src.ExpectedOpenPrice,
                 OpenPrice = src.OpenPrice,
                 ClosePrice = src.ClosePrice,
-                Type = src.GetOrderType().ToType<OrderDirectionContract>(),
+                Type = src.GetOrderDirection().ToType<OrderDirectionContract>(),
                 Volume = src.Volume,
                 MatchedVolume = src.GetMatchedVolume(),
                 MatchedCloseVolume = src.GetMatchedCloseVolume(),

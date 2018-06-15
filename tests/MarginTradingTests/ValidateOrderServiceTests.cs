@@ -2,6 +2,7 @@
 using Autofac;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
 using NUnit.Framework;
@@ -351,6 +352,7 @@ namespace MarginTradingTests
         }
 
         [Test]
+        [Ignore("Recheck requirements")]
         public void Is_Not_Enough_Balance()
         {
             const string instrument = "EURUSD";

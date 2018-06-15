@@ -22,7 +22,6 @@ using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Services.Settings;
-using MarginTradingTests.Helpers;
 using MarginTradingTests.Modules;
 using Moq;
 
@@ -56,7 +55,17 @@ namespace MarginTradingTests
             var marginSettings = new MarginTradingSettings
             {
                 RabbitMqQueues =
-                    new RabbitMqQueues {MarginTradingEnabledChanged = new RabbitMqQueueInfo {ExchangeName = ""}}
+                    new RabbitMqQueues
+                    {
+                        MarginTradingEnabledChanged = new RabbitMqQueueInfo {ExchangeName = ""}
+                    },
+                BlobPersistence = new BlobPersistenceSettings()
+                {
+                    FxRatesDumpPeriodMilliseconds = 10000,
+                    QuotesDumpPeriodMilliseconds = 10000,
+                    OrderbooksDumpPeriodMilliseconds = 5000,
+                    OrdersDumpPeriodMilliseconds = 5000
+                }
             };
 
             builder.RegisterInstance(marginSettings).SingleInstance();

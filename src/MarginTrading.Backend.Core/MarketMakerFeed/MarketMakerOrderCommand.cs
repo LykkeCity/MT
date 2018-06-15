@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using MarginTrading.Backend.Core.Orders;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
 namespace MarginTrading.Backend.Core.MarketMakerFeed

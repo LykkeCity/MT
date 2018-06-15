@@ -2,18 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AzureStorage.Tables;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Models;
-using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.SettingsService.Contracts;
 using MarginTrading.SettingsService.Contracts.Asset;
 using MarginTrading.SettingsService.Contracts.Enums;
 using MarginTrading.SettingsService.Contracts.TradingConditions;
 using Moq;
-using NUnit.Framework.Constraints;
 using AssetPairContract = MarginTrading.SettingsService.Contracts.AssetPair.AssetPairContract;
 
 namespace MarginTradingTests
@@ -150,7 +146,7 @@ namespace MarginTradingTests
             };
 
             var mock = new Mock<ITradingConditionsApi>();
-            mock.Setup(s => s.List(null)).ReturnsAsync(new List<TradingConditionContract> {defaultTc});
+            mock.Setup(s => s.List(It.IsAny<bool?>())).ReturnsAsync(new List<TradingConditionContract> {defaultTc});
 
             return mock.Object;
         }

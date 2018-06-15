@@ -4,6 +4,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Core.Notifications;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services.Client;
@@ -60,7 +61,7 @@ namespace MarginTrading.Backend.Services
         {
             var message = string.Empty;
             var volume = Math.Abs(order.Volume);
-            var type = order.GetOrderType() == OrderDirection.Buy ? "Long" : "Short";
+            var type = order.GetOrderDirection() == OrderDirection.Buy ? "Long" : "Short";
             var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(order.Instrument);
             var instrumentName = assetPair?.Name ?? order.Instrument;
             

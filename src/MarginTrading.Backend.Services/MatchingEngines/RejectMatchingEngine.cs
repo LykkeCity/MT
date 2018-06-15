@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Threading.Tasks;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
+using MarginTrading.Backend.Core.Orders;
 
 namespace MarginTrading.Backend.Services.MatchingEngines
 {
@@ -12,14 +14,18 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
         public MatchingEngineMode Mode => MatchingEngineMode.MarketMaker;
 
-        public void MatchMarketOrderForOpen(Order order, Func<MatchedOrderCollection, bool> orderProcessed)
+        public Task MatchMarketOrderForOpenAsync(Order order, Func<MatchedOrderCollection, bool> orderProcessed)
         {
             orderProcessed(new MatchedOrderCollection());
+            
+            return Task.CompletedTask;
         }
 
-        public void MatchMarketOrderForClose(Order order, Func<MatchedOrderCollection, bool> orderProcessed)
+        public Task MatchMarketOrderForCloseAsync(Order order, Func<MatchedOrderCollection, bool> orderProcessed)
         {
             orderProcessed(new MatchedOrderCollection());
+            
+            return Task.CompletedTask;
         }
 
         public decimal? GetPriceForClose(Order order)

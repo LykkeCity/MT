@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Lykke.Service.ExchangeConnector.Client.Models;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Contract.RabbitMqMessageModels;
 
 namespace MarginTrading.Backend.Services.Notifications

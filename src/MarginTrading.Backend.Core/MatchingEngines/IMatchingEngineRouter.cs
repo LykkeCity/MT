@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Backend.Core.MatchingEngines
+﻿using MarginTrading.Backend.Core.Orders;
+
+namespace MarginTrading.Backend.Core.MatchingEngines
 {
     public interface IMatchingEngineRouter
     {

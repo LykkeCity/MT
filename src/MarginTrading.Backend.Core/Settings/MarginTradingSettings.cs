@@ -1,7 +1,7 @@
 ﻿using JetBrains.Annotations;
 using Lykke.SettingsReader.Attributes;
-using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Settings;
+using RabbitMqSettings = MarginTrading.Common.RabbitMq.RabbitMqSettings;
 
 namespace MarginTrading.Backend.Core.Settings
 {
@@ -30,6 +30,9 @@ namespace MarginTrading.Backend.Core.Settings
         [Optional, CanBeNull]
         public RabbitMqSettings StpAggregatorRabbitMqSettings { get; set; }
         
+        [Optional, CanBeNull] 
+        public RabbitMqSettings FxRateRabbitMqSettings { get; set; } 
+        
         [Optional, CanBeNull]
         public RabbitMqSettings RisksRabbitMqSettings { get; set; }
         
@@ -48,6 +51,8 @@ namespace MarginTrading.Backend.Core.Settings
         
         [Optional]
         public bool UseAzureIdentityGenerator { get; set; }
+        
+        public BlobPersistenceSettings BlobPersistence { get; set; } 
 
         public CqrsSettings Cqrs { get; set; }
     }

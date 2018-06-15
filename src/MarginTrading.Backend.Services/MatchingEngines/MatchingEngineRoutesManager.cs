@@ -8,6 +8,7 @@ using JetBrains.Annotations;
 using MarginTrading.AzureRepositories.Logs;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;

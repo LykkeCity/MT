@@ -5,8 +5,6 @@ using AsyncFriendlyStackTrace;
 using Lykke.HttpClientGenerator;
 using Lykke.HttpClientGenerator.Retries;
 using MarginTrading.Backend.Contracts;
-using MarginTrading.Backend.Contracts.Orders;
-using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Contracts.Prices;
 using Newtonsoft.Json;
 using Refit;
