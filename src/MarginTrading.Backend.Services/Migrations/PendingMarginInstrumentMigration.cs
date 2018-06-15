@@ -52,11 +52,11 @@ namespace MarginTrading.Backend.Services.Migrations
 
         private void HandleOrder(Position order)
         {
-            if (_assetPairsCache.TryGetAssetPairQuoteSubst(order.AccountAssetId, order.Instrument,
-                order.LegalEntity, out var substAssetPair))
-            {
-                order.MarginCalcInstrument = substAssetPair.Id;
-            }
+//            if (_assetPairsCache.TryGetAssetPairQuoteSubst(order.AccountAssetId, order.AssetPairId,
+//                order.LegalEntity, out var substAssetPair))
+//            {
+//                order.MarginCalcInstrument = substAssetPair.Id;
+//            }
         }
     }
 }

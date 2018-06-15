@@ -209,7 +209,7 @@ namespace MarginTrading.Backend.Services
         public void Validate(Position order)
         {
             var accountAsset =
-                _accountAssetsCacheService.GetTradingInstrument(order.TradingConditionId, order.Instrument);
+                _accountAssetsCacheService.GetTradingInstrument(order.TradingConditionId, order.AssetPairId);
 
             if (accountAsset.DealMaxLimit > 0 && Math.Abs(order.Volume) > accountAsset.DealMaxLimit)
             {
@@ -225,15 +225,15 @@ namespace MarginTrading.Backend.Services
 //            }
 
             //check TP/SL
-            if (order.TakeProfit.HasValue)
-            {
-                order.TakeProfit = Math.Round(order.TakeProfit.Value, order.AssetAccuracy);
-            }
-
-            if (order.StopLoss.HasValue)
-            {
-                order.StopLoss = Math.Round(order.StopLoss.Value, order.AssetAccuracy);
-            }
+//            if (order.TakeProfit.HasValue)
+//            {
+//                order.TakeProfit = Math.Round(order.TakeProfit.Value, order.AssetPairAccuracy);
+//            }
+//
+//            if (order.StopLoss.HasValue)
+//            {
+//                order.StopLoss = Math.Round(order.StopLoss.Value, order.AssetPairAccuracy);
+//            }
 
             //ValidateOrderStops(order.GetOrderDirection(), quote, accountAsset.Delta, accountAsset.Delta, order.TakeProfit, order.StopLoss, order.ExpectedOpenPrice, order.AssetAccuracy);
 

@@ -106,7 +106,7 @@ namespace MarginTrading.Backend.Controllers
             if (!_ordersCache.TryGetOrderById(orderId, out var order))
                 throw new InvalidOperationException("Order not found");
 
-            var reason = OrderCloseReason.Canceled;
+            var reason = PositionCloseReason.Canceled;
             
 //            var reason =
 //                request.Originator == OriginatorTypeContract.OnBehalf ||
@@ -189,39 +189,12 @@ namespace MarginTrading.Backend.Controllers
             return Task.FromResult(orders.Select(Convert).ToList());
         }
 
-        private static List<string> GetTrades(string orderId, PositionStatus status, OrderDirection orderDirection)
-        {
-            if (status == PositionStatus.WaitingForExecution)
-                return new List<string>();
-
-            return new List<string> {orderId + '_' + orderDirection};
-        }
-
         private static OrderDirection GetOrderDirection(OrderDirection openDirection, bool isCloseOrder)
         {
             return !isCloseOrder ? openDirection :
                 openDirection == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy;
         }
 
-        private static OrderStatusContract Convert(PositionStatus orderStatus)
-        {
-            switch (orderStatus)
-            {
-                case PositionStatus.WaitingForExecution:
-                    return OrderStatusContract.Active;
-                case PositionStatus.Active:
-                    return OrderStatusContract.Executed; // todo: fix when orders
-                case PositionStatus.Closed:
-                    return OrderStatusContract.Executed;
-                case PositionStatus.Rejected:
-                    return OrderStatusContract.Rejected;
-                case PositionStatus.Closing:
-                    return OrderStatusContract.Executed;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(orderStatus), orderStatus, null);
-            }
-        }
-        
         private static OrderContract Convert(Order order)
         {
             return new OrderContract

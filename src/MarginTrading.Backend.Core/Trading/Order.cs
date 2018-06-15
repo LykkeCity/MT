@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.Orders;
 
 namespace MarginTrading.Backend.Core.Trading
@@ -184,6 +186,11 @@ namespace MarginTrading.Backend.Core.Trading
         /// </summary>
         public OriginatorType Originator { get; }
         
+        /// <summary>
+        /// Matched orders for execution
+        /// </summary>
+        public MatchedOrderCollection MatchedOrders { get; private set; }
+        
         #endregion
 
 
@@ -241,11 +248,25 @@ namespace MarginTrading.Backend.Core.Trading
             Status = OrderStatus.ExecutionStarted;
         }
         
-        public void Execute(decimal price, DateTime dateTime, string externalOrderId, string externalProviderId)
+        public void Execute(DateTime dateTime, MatchedOrderCollection matchedOrders)
         {
+            var externalOrderId = string.Empty;
+            var externalProviderId = string.Empty;
+                
+            if (matchedOrders.Count == 1)
+            {
+                var matched = matchedOrders.First();
+
+                if (matched.IsExternal)
+                {
+                    externalOrderId = matched.OrderId;
+                    externalProviderId = matched.MarketMakerId;
+                }
+            }
+            
             Status = OrderStatus.Executed;
             Executed = dateTime;
-            ExecutionPrice = price;
+            ExecutionPrice = matchedOrders.WeightedAveragePrice;
             ExternalOrderId = externalOrderId;
             ExternalProviderId = externalProviderId;
         }

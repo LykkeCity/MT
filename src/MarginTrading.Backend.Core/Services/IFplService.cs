@@ -6,8 +6,8 @@ namespace MarginTrading.Backend.Core
 {
     public interface IFplService
     {
-        void UpdateOrderFpl(IPosition order, FplData fplData);
+        void UpdateOrderFpl(Position order, FplData fplData);
         decimal GetMatchedOrdersPrice(List<MatchedOrder> matchedOrders, string instrument);
-        void CalculateMargin(IPosition order, FplData fplData);
+        void CalculateMargin(Position order, FplData fplData);
     }
 }

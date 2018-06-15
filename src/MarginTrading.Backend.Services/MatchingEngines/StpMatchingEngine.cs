@@ -51,7 +51,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         //TODO: remove orderProcessed function and make all validations before match
         public async Task MatchMarketOrderForOpenAsync(Order order, Func<MatchedOrderCollection, bool> orderProcessed)
         {
-            var prices = _externalOrderBooksList.GetPricesForExecution(order);
+            var prices = _externalOrderBooksList.GetPricesForExecution(order.AssetPairId, order.Volume);
 
             if (prices == null)
             {
@@ -203,9 +203,10 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
         }
 
-        public decimal? GetPriceForClose(Position order)
+        public decimal? GetPriceForClose(Position position)
         {
-            return _externalOrderBooksList.GetPriceForPositionClose(order);
+            return _externalOrderBooksList.GetPriceForPositionClose(position.AssetPairId, position.Volume,
+                position.ExternalProviderId);
         }
 
         //TODO: implement orderbook        

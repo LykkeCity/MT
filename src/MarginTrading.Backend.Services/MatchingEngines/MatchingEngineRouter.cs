@@ -45,11 +45,11 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                     : MatchingEngineConstants.DefaultStp);
         }
 
-        public IMatchingEngineBase GetMatchingEngineForClose(IPosition order)
+        public IMatchingEngineBase GetMatchingEngineForClose(Position order)
         {
-            var meId = order.OpenOrderbookId == Lykke
+            var meId = order.OpenMatchingEngineId == Lykke
                 ? MatchingEngineConstants.Reject
-                : order.OpenOrderbookId;
+                : order.OpenMatchingEngineId;
             
             return _matchingEngineRepository.GetMatchingEngineById(meId);
         }

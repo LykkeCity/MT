@@ -31,7 +31,7 @@ namespace MarginTrading.Backend.Contracts.Orders
         public string ParentOrderId { get; set; }
         
         /// <summary>
-        /// Position id. Filled if it's a basic executed order.
+        /// Parent position id. Filled if it's a related order.
         /// </summary>
         [CanBeNull]
         public string PositionId { get; set; }

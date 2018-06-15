@@ -39,8 +39,8 @@ namespace MarginTrading.Backend.Services
 		{
 			try
 			{
-				order.ClosePriceEquivalent = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.EquivalentAsset,
-					order.Instrument, order.LegalEntity);
+				//order.ClosePriceEquivalent = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.EquivalentAsset,
+				//	order.AssetPairId, order.LegalEntity);
 			}
 			catch (Exception e)
 			{

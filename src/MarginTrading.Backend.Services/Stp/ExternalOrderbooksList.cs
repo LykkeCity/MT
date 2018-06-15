@@ -39,27 +39,27 @@ namespace MarginTrading.Backend.Services.Stp
         private readonly ReadWriteLockedDictionary<string, Dictionary<string, ExternalOrderBook>> _orderbooks =
             new ReadWriteLockedDictionary<string, Dictionary<string, ExternalOrderBook>>();
 
-        public List<(string source, decimal? price)> GetPricesForExecution(Order order)
+        public List<(string source, decimal? price)> GetPricesForExecution(string assetPairId, decimal volume)
         {
-            return _orderbooks.TryReadValue(order.AssetPairId, (dataExist, assetPairId, orderbooks)
+            return _orderbooks.TryReadValue(assetPairId, (dataExist, assetPair, orderbooks)
                 => dataExist
-                    ? orderbooks.Select(p => (p.Key, MatchBestPriceForOrderExecution(p.Value, order))).ToList()
+                    ? orderbooks.Select(p => (p.Key, MatchBestPriceForOrderExecution(p.Value, volume))).ToList()
                     : null);
         }
 
-        public decimal? GetPriceForPositionClose(Position position)
+        public decimal? GetPriceForPositionClose(string assetPairId, decimal volume, string externalProviderId)
         {
             decimal? CalculatePriceForClose(Dictionary<string, ExternalOrderBook> orderbooks)
             {
-                if (!orderbooks.TryGetValue(position.OpenExternalProviderId, out var orderBook))
+                if (!orderbooks.TryGetValue(externalProviderId, out var orderBook))
                 {
                     return null;
                 }
 
-                return MatchBestPriceForPositionClose(orderBook, position);
+                return MatchBestPriceForPositionClose(orderBook, volume);
             }
 
-            return _orderbooks.TryReadValue(position.Instrument, (dataExist, assetPairId, orderbooks)
+            return _orderbooks.TryReadValue(assetPairId, (dataExist, assetPair, orderbooks)
                 => dataExist ? CalculatePriceForClose(orderbooks) : null);
         }
 
@@ -70,20 +70,18 @@ namespace MarginTrading.Backend.Services.Stp
                 (exists, assetPair, orderbooks) => orderbooks.Values.FirstOrDefault());
         }
 
-        private static decimal? MatchBestPriceForOrderExecution(ExternalOrderBook externalOrderBook, Order order)
+        private static decimal? MatchBestPriceForOrderExecution(ExternalOrderBook externalOrderBook, decimal volume)
         {
-            var direction = order.Direction;
-            var volume = Math.Abs(order.Volume);
+            var direction = volume.GetOrderDirection();
 
-            return externalOrderBook.GetMatchedPrice(volume, direction);
+            return externalOrderBook.GetMatchedPrice(Math.Abs(volume), direction);
         }
 
-        private static decimal? MatchBestPriceForPositionClose(ExternalOrderBook externalOrderBook, IPosition position)
+        private static decimal? MatchBestPriceForPositionClose(ExternalOrderBook externalOrderBook, decimal volume)
         {
-            var direction = position.GetCloseType();
-            var volume = Math.Abs(position.Volume); 
+            var direction = volume.GetClosePositionOrderDirection();
             
-            return externalOrderBook.GetMatchedPrice(volume, direction);
+            return externalOrderBook.GetMatchedPrice(Math.Abs(volume), direction);
         }
 
         public void SetOrderbook(ExternalOrderBook orderbook)

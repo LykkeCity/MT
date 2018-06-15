@@ -94,7 +94,7 @@ namespace MarginTrading.Backend.Services
                 try
                 {
                     var closedOrder = await _tradingEngine.ClosePositionAsync(position.Id,
-                        OrderCloseReason.ClosedByBroker, "Close orders for account");
+                        PositionCloseReason.ClosedByBroker, "Close orders for account");
 
                     closedOrders.Add(closedOrder);
                 }
@@ -111,7 +111,7 @@ namespace MarginTrading.Backend.Services
             {
                 try
                 {
-                    var closedOrder = _tradingEngine.CancelPendingOrder(order.Id, OrderCloseReason.CanceledByBroker,
+                    var closedOrder = _tradingEngine.CancelPendingOrder(order.Id, PositionCloseReason.CanceledByBroker,
                         "Close orders for account");
                     closedOrders.Add(closedOrder);
                 }

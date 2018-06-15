@@ -7,6 +7,6 @@ namespace MarginTrading.Backend.Core.MatchingEngines
     {
         IMatchingEngineBase GetMatchingEngineForExecution(Order order);
         
-        IMatchingEngineBase GetMatchingEngineForClose(IPosition order);
+        IMatchingEngineBase GetMatchingEngineForClose(Position order);
     }
 }

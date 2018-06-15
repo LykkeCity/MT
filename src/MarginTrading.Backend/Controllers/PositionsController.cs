@@ -62,12 +62,12 @@ namespace MarginTrading.Backend.Controllers
                 throw new InvalidOperationException("Position not found");
             }
 
-            if (_assetDayOffService.IsDayOff(position.Instrument))
+            if (_assetDayOffService.IsDayOff(position.AssetPairId))
             {
                 throw new InvalidOperationException("Trades for instrument are not available");
             }
 
-            var reason = OrderCloseReason.Close;
+            var reason = PositionCloseReason.Close;
 //                request.Originator == OriginatorTypeContract.OnBehalf ||
 //                request.Originator == OriginatorTypeContract.System
 //                    ? OrderCloseReason.ClosedByBroker
@@ -98,27 +98,25 @@ namespace MarginTrading.Backend.Controllers
             /*[FromBody] PositionCloseRequest request,*/
             [FromQuery] PositionDirectionContract? direction = null)
         {
-            var orders = _ordersCache.Positions.GetAllOrders();
+            var positions = _ordersCache.Positions.GetAllOrders();
             
             if (!string.IsNullOrWhiteSpace(instrument))
-                orders = orders.Where(o => o.Instrument == instrument).ToList();
+                positions = positions.Where(o => o.AssetPairId == instrument).ToList();
 
             if (direction != null)
             {
-                var orderDirection = direction == PositionDirectionContract.Short
-                    ? OrderDirection.Sell
-                    : OrderDirection.Buy;
+                var positionDirection = direction.ToType<PositionDirection>();
 
-                orders = orders.Where(o => o.GetOrderDirection() == orderDirection).ToList();
+                positions = positions.Where(o => o.Direction == positionDirection).ToList();
             }
 
-            var reason = OrderCloseReason.Close;
+            var reason = PositionCloseReason.Close;
 //                request.Originator == OriginatorTypeContract.OnBehalf ||
 //                request.Originator == OriginatorTypeContract.System
 //                    ? OrderCloseReason.ClosedByBroker
 //                    : OrderCloseReason.Close;
             
-            foreach (var orderId in orders.Select(o => o.Id).ToList())
+            foreach (var orderId in positions.Select(o => o.Id).ToList())
             {
                 var closedOrder = await _tradingEngine.ClosePositionAsync(orderId, reason, /*request.Comment*/ "");
 
@@ -153,10 +151,10 @@ namespace MarginTrading.Backend.Controllers
             }
 
             orders = orders.Where(o => o.AccountId == accountId
-                                       && (string.IsNullOrWhiteSpace(assetPairId) || o.Instrument == assetPairId))
+                                       && (string.IsNullOrWhiteSpace(assetPairId) || o.AssetPairId == assetPairId))
                 .ToList();
 
-            var reason = OrderCloseReason.Close;
+            var reason = PositionCloseReason.Close;
 //                request.Originator == OriginatorTypeContract.OnBehalf ||
 //                request.Originator == OriginatorTypeContract.System
 //                    ? OrderCloseReason.ClosedByBroker
@@ -203,7 +201,7 @@ namespace MarginTrading.Backend.Controllers
                 orders = orders.Where(o => o.AccountId == accountId);
 
             if (!string.IsNullOrWhiteSpace(assetPairId))
-                orders = orders.Where(o => o.Instrument == assetPairId);
+                orders = orders.Where(o => o.AssetPairId == assetPairId);
 
             return Task.FromResult(orders.Select(Convert).ToList());
         }
@@ -212,21 +210,12 @@ namespace MarginTrading.Backend.Controllers
         {
             var relatedOrders = new List<string>();
             
-            if (order.StopLoss != null)
-            {
-                relatedOrders.Add($"{order.Id}_{OrderTypeContract.StopLoss.ToString()}");
-            }
-            if (order.TakeProfit != null)
-            {
-                relatedOrders.Add($"{order.Id}_{OrderTypeContract.TakeProfit.ToString()}");
-            }
-            
             return new OpenPositionContract
             {
                 AccountId = order.AccountId,
-                AssetPairId = order.Instrument,
+                AssetPairId = order.AssetPairId,
                 CurrentVolume = order.Volume,
-                Direction = Convert(order.GetOrderDirection()),
+                Direction = order.Direction.ToType<PositionDirectionContract>(),
                 Id = order.Id,
                 OpenPrice = order.OpenPrice,
                 ClosePrice = order.ClosePrice,
@@ -235,8 +224,8 @@ namespace MarginTrading.Backend.Controllers
                 Margin = order.GetMarginMaintenance(),
                 FxRate = order.GetFplRate(),
                 RelatedOrders = relatedOrders,
-                OpenTimestamp = order.OpenDate.RequiredNotNull(nameof(order.OpenDate)),
-                TradeId = order.Id + '_' + order.GetOrderDirection(),
+                OpenTimestamp = order.OpenDate,
+                TradeId = order.Id
             };
         }
 

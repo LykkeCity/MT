@@ -13,597 +13,597 @@ namespace MarginTradingTests
     [TestFixture]
     public class MatchingEngineTests : BaseTests
     {
-        private IQuoteCacheService _quoteCashService;
-        private IMarketMakerMatchingEngine _matchingEngine;
-        private string _marketMakerId1;
-
-        [OneTimeSetUp]
-        public void OneTimeSetUp()
-        {
-            RegisterDependencies();
-            _marketMakerId1 = "1";
-
-            _quoteCashService = Container.Resolve<IQuoteCacheService>();
-            _matchingEngine = Container.Resolve<IMarketMakerMatchingEngine>();
-
-        }
-
-        [SetUp]
-        public void SetUp()
-        {
-            var ordersSet = new[]
-            {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "EURUSD", MarketMakerId = _marketMakerId1, Price = 1.04M, Volume = 4 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "2", Instrument = "EURUSD", MarketMakerId = _marketMakerId1, Price = 1.05M, Volume = 7 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "3", Instrument = "EURUSD", MarketMakerId = _marketMakerId1, Price = 1.1M, Volume = -6 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "4", Instrument = "EURUSD", MarketMakerId = _marketMakerId1, Price = 1.15M, Volume = -8 }
-            };
-
-            _matchingEngine.SetOrders(_marketMakerId1, ordersSet);
-        }
-
-        [TearDown]
-        public void TeadDown()
-        {
-            _matchingEngine.SetOrders(_marketMakerId1, null, null, true);
-        }
-
-        [Test]
-        public void Check_Default_Order_Status()
-        {
-            var order = new Position();
-            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status);
-        }
-
-        [Test]
-        public void Check_Default_Order_Fill_Type()
-        {
-            var order = new Position();
-            Assert.AreEqual(OrderFillType.FillOrKill, order.FillType);
-        }
-
-        [Test]
-        public void Check_Default_Reject_Reason()
-        {
-            var order = new Position();
-            Assert.AreEqual(OrderRejectReason.None, order.RejectReason);
-        }
-
-        [Test]
-        public void Check_Default_Close_Reason()
-        {
-            var order = new Position();
-            Assert.AreEqual(OrderCloseReason.None, order.CloseReason);
-        }
-
-        [Test]
-        public void Check_Order_Is_Buy()
-        {
-            var order = new Position {Volume = 10};
-            Assert.AreEqual(OrderDirection.Buy, order.GetOrderDirection());
-        }
-
-        [Test]
-        public void Check_Order_Is_Sell()
-        {
-            var order = new Position {Volume = -10};
-            Assert.AreEqual(OrderDirection.Sell, order.GetOrderDirection());
-        }
-
-//        [Test]
-//        public void Is_Orders_Added_To_OrderBook()
+//        private IQuoteCacheService _quoteCashService;
+//        private IMarketMakerMatchingEngine _matchingEngine;
+//        private string _marketMakerId1;
+//
+//        [OneTimeSetUp]
+//        public void OneTimeSetUp()
 //        {
-//            const string instrument = "EURUSD";
+//            RegisterDependencies();
+//            _marketMakerId1 = "1";
 //
-//            var buyLevels = _aggregatedOrderBook.GetBuy(instrument);
-//            var sellLevels = _aggregatedOrderBook.GetSell(instrument);
-//            var quote = _quoteCashService.GetQuote(instrument);
+//            _quoteCashService = Container.Resolve<IQuoteCacheService>();
+//            _matchingEngine = Container.Resolve<IMarketMakerMatchingEngine>();
 //
-//            Assert.AreEqual(2, buyLevels.Count);
-//            Assert.AreEqual(2, sellLevels.Count);
-//
-//            Assert.AreEqual(1.05, quote.Bid);
-//            Assert.AreEqual(1.1, quote.Ask);
 //        }
-
-//        [Test]
-//        public void Is_Orders_Replaced_In_OrderBook()
-//        {
-//            const string instrument = "EURUSD";
 //
-//            _matchingEngine.SetOrders(_marketMakerId1, new[]
+//        [SetUp]
+//        public void SetUp()
+//        {
+//            var ordersSet = new[]
 //            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = instrument, MarketMakerId = "1", Price = 1.15M, Volume = -4 } //should replace volume for order id = 4 from -8 to -4
+//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "EURUSD", MarketMakerId = _marketMakerId1, Price = 1.04M, Volume = 4 },
+//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "2", Instrument = "EURUSD", MarketMakerId = _marketMakerId1, Price = 1.05M, Volume = 7 },
+//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "3", Instrument = "EURUSD", MarketMakerId = _marketMakerId1, Price = 1.1M, Volume = -6 },
+//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "4", Instrument = "EURUSD", MarketMakerId = _marketMakerId1, Price = 1.15M, Volume = -8 }
+//            };
+//
+//            _matchingEngine.SetOrders(_marketMakerId1, ordersSet);
+//        }
+//
+//        [TearDown]
+//        public void TeadDown()
+//        {
+//            _matchingEngine.SetOrders(_marketMakerId1, null, null, true);
+//        }
+//
+//        [Test]
+//        public void Check_Default_Order_Status()
+//        {
+//            var order = new Position();
+//            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status);
+//        }
+//
+//        [Test]
+//        public void Check_Default_Order_Fill_Type()
+//        {
+//            var order = new Position();
+//            Assert.AreEqual(OrderFillType.FillOrKill, order.FillType);
+//        }
+//
+//        [Test]
+//        public void Check_Default_Reject_Reason()
+//        {
+//            var order = new Position();
+//            Assert.AreEqual(OrderRejectReason.None, order.RejectReason);
+//        }
+//
+//        [Test]
+//        public void Check_Default_Close_Reason()
+//        {
+//            var order = new Position();
+//            Assert.AreEqual(OrderCloseReason.None, order.CloseReason);
+//        }
+//
+//        [Test]
+//        public void Check_Order_Is_Buy()
+//        {
+//            var order = new Position {Volume = 10};
+//            Assert.AreEqual(OrderDirection.Buy, order.GetOrderDirection());
+//        }
+//
+//        [Test]
+//        public void Check_Order_Is_Sell()
+//        {
+//            var order = new Position {Volume = -10};
+//            Assert.AreEqual(OrderDirection.Sell, order.GetOrderDirection());
+//        }
+//
+////        [Test]
+////        public void Is_Orders_Added_To_OrderBook()
+////        {
+////            const string instrument = "EURUSD";
+////
+////            var buyLevels = _aggregatedOrderBook.GetBuy(instrument);
+////            var sellLevels = _aggregatedOrderBook.GetSell(instrument);
+////            var quote = _quoteCashService.GetQuote(instrument);
+////
+////            Assert.AreEqual(2, buyLevels.Count);
+////            Assert.AreEqual(2, sellLevels.Count);
+////
+////            Assert.AreEqual(1.05, quote.Bid);
+////            Assert.AreEqual(1.1, quote.Ask);
+////        }
+//
+////        [Test]
+////        public void Is_Orders_Replaced_In_OrderBook()
+////        {
+////            const string instrument = "EURUSD";
+////
+////            _matchingEngine.SetOrders(_marketMakerId1, new[]
+////            {
+////                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = instrument, MarketMakerId = "1", Price = 1.15M, Volume = -4 } //should replace volume for order id = 4 from -8 to -4
+////            });
+////
+////            var sellLevels = _aggregatedOrderBook.GetSell(instrument);
+////            var quote = _quoteCashService.GetQuote(instrument);
+////
+////            Assert.AreEqual(2, sellLevels.Count);
+////            Assert.AreEqual(1, sellLevels.Count(item => item.Price == 1.15M));
+////            Assert.AreEqual(-4, sellLevels.First(item => item.Price == 1.15M).Volume); //replaced volume
+////
+////            Assert.AreEqual(1.05, quote.Bid);
+////            Assert.AreEqual(1.1, quote.Ask);
+////        }
+////
+////        [Test]
+////        public void Is_All_Orders_Deleted_From_OrderBook()
+////        {
+////            _matchingEngine.SetOrders(_marketMakerId1, null, true);
+////
+////            const string instrument = "EURUSD";
+////
+////            var buyLevels = _aggregatedOrderBook.GetBuy(instrument);
+////            var sellLevels = _aggregatedOrderBook.GetSell(instrument);
+////
+////            Assert.AreEqual(0, buyLevels.Count);
+////            Assert.AreEqual(0, sellLevels.Count);
+////        }
+////
+////        [Test]
+////        public void Is_Aggregated_OrderBook_Correct()
+////        {
+////            const string instrument = "EURUSD";
+////
+////            var buyLevels = _aggregatedOrderBook.GetBuy(instrument);
+////            var sellLevels = _aggregatedOrderBook.GetSell(instrument);
+////
+////            Assert.AreEqual(2, buyLevels.Count);
+////            Assert.AreEqual(2, sellLevels.Count);
+////            Assert.IsTrue(sellLevels.Any(item => item.Price == 1.15M && item.Volume == -8));
+////            Assert.IsTrue(sellLevels.Any(item => item.Price == 1.1M && item.Volume == -6));
+////            Assert.IsTrue(buyLevels.Any(item => item.Price == 1.04M && item.Volume == 4));
+////            Assert.IsTrue(buyLevels.Any(item => item.Price == 1.05M && item.Volume == 7));
+////
+////            _matchingEngine.SetOrders(_marketMakerId1, new[]
+////            {
+////                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = "1", Price = 1.15M, Volume = -4}
+////            });
+////
+////            buyLevels = _aggregatedOrderBook.GetBuy(instrument);
+////            sellLevels = _aggregatedOrderBook.GetSell(instrument);
+////
+////            Assert.AreEqual(2, buyLevels.Count);
+////            Assert.AreEqual(2, sellLevels.Count);
+////            Assert.IsTrue(sellLevels.Any(item => item.Price == 1.15M && item.Volume == -4));
+////        }
+//
+//        [Test]
+//        public void Is_Sell_Orders_Deleted_By_Instrument()
+//        {
+//            _matchingEngine.SetOrders(new SetOrderModel
+//            {
+//                MarketMakerId = _marketMakerId1,
+//                OrdersToAdd = new []
+//                {
+//                    new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = "1", Price = 1.16M, Volume = -10}
+//                },
+//                DeleteByInstrumentsSell = new[] {"EURUSD"}
 //            });
 //
-//            var sellLevels = _aggregatedOrderBook.GetSell(instrument);
-//            var quote = _quoteCashService.GetQuote(instrument);
+//           var orderBook = _matchingEngine.GetOrderBook("EURUSD");
 //
-//            Assert.AreEqual(2, sellLevels.Count);
-//            Assert.AreEqual(1, sellLevels.Count(item => item.Price == 1.15M));
-//            Assert.AreEqual(-4, sellLevels.First(item => item.Price == 1.15M).Volume); //replaced volume
-//
-//            Assert.AreEqual(1.05, quote.Bid);
-//            Assert.AreEqual(1.1, quote.Ask);
+//            Assert.AreEqual(1, orderBook.Sell.Count);
+//            Assert.AreEqual(1, orderBook.Sell.Count);
+//            Assert.AreEqual(1, orderBook.Sell.First().Value.Count);
 //        }
 //
 //        [Test]
-//        public void Is_All_Orders_Deleted_From_OrderBook()
+//        public void Is_Buy_Orders_Deleted_By_Instrument()
 //        {
-//            _matchingEngine.SetOrders(_marketMakerId1, null, true);
-//
-//            const string instrument = "EURUSD";
-//
-//            var buyLevels = _aggregatedOrderBook.GetBuy(instrument);
-//            var sellLevels = _aggregatedOrderBook.GetSell(instrument);
-//
-//            Assert.AreEqual(0, buyLevels.Count);
-//            Assert.AreEqual(0, sellLevels.Count);
-//        }
-//
-//        [Test]
-//        public void Is_Aggregated_OrderBook_Correct()
-//        {
-//            const string instrument = "EURUSD";
-//
-//            var buyLevels = _aggregatedOrderBook.GetBuy(instrument);
-//            var sellLevels = _aggregatedOrderBook.GetSell(instrument);
-//
-//            Assert.AreEqual(2, buyLevels.Count);
-//            Assert.AreEqual(2, sellLevels.Count);
-//            Assert.IsTrue(sellLevels.Any(item => item.Price == 1.15M && item.Volume == -8));
-//            Assert.IsTrue(sellLevels.Any(item => item.Price == 1.1M && item.Volume == -6));
-//            Assert.IsTrue(buyLevels.Any(item => item.Price == 1.04M && item.Volume == 4));
-//            Assert.IsTrue(buyLevels.Any(item => item.Price == 1.05M && item.Volume == 7));
-//
-//            _matchingEngine.SetOrders(_marketMakerId1, new[]
+//            _matchingEngine.SetOrders(new SetOrderModel
 //            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = "1", Price = 1.15M, Volume = -4}
+//                MarketMakerId = _marketMakerId1,
+//                OrdersToAdd = new []
+//                {
+//                    new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = "1", Price = 1.07M, Volume = 10}
+//                },
+//                DeleteByInstrumentsBuy = new[] {"EURUSD"}
 //            });
 //
-//            buyLevels = _aggregatedOrderBook.GetBuy(instrument);
-//            sellLevels = _aggregatedOrderBook.GetSell(instrument);
+//           var orderBook = _matchingEngine.GetOrderBook("EURUSD");
 //
-//            Assert.AreEqual(2, buyLevels.Count);
-//            Assert.AreEqual(2, sellLevels.Count);
-//            Assert.IsTrue(sellLevels.Any(item => item.Price == 1.15M && item.Volume == -4));
+//            Assert.AreEqual(1, orderBook.Buy.Count);
+//            Assert.AreEqual(1, orderBook.Buy.Count);
+//            Assert.AreEqual(1, orderBook.Buy.First().Value.Count);
 //        }
-
-        [Test]
-        public void Is_Sell_Orders_Deleted_By_Instrument()
-        {
-            _matchingEngine.SetOrders(new SetOrderModel
-            {
-                MarketMakerId = _marketMakerId1,
-                OrdersToAdd = new []
-                {
-                    new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = "1", Price = 1.16M, Volume = -10}
-                },
-                DeleteByInstrumentsSell = new[] {"EURUSD"}
-            });
-
-           var orderBook = _matchingEngine.GetOrderBook("EURUSD");
-
-            Assert.AreEqual(1, orderBook.Sell.Count);
-            Assert.AreEqual(1, orderBook.Sell.Count);
-            Assert.AreEqual(1, orderBook.Sell.First().Value.Count);
-        }
-
-        [Test]
-        public void Is_Buy_Orders_Deleted_By_Instrument()
-        {
-            _matchingEngine.SetOrders(new SetOrderModel
-            {
-                MarketMakerId = _marketMakerId1,
-                OrdersToAdd = new []
-                {
-                    new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = "1", Price = 1.07M, Volume = 10}
-                },
-                DeleteByInstrumentsBuy = new[] {"EURUSD"}
-            });
-
-           var orderBook = _matchingEngine.GetOrderBook("EURUSD");
-
-            Assert.AreEqual(1, orderBook.Buy.Count);
-            Assert.AreEqual(1, orderBook.Buy.Count);
-            Assert.AreEqual(1, orderBook.Buy.First().Value.Count);
-        }
-
-        #region Market orders
-
-        [Test]
-        public async Task Is_PartialFill_Buy_Fully_Matched()
-        {
-            const string instrument = "EURUSD";
-
-            var order = new Position
-            {
-                CreateDate = DateTime.UtcNow,
-                Id = Guid.NewGuid().ToString("N"),
-                AccountId = Accounts[0].Id,
-                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
-                AccountAssetId = Accounts[0].BaseAssetId,
-                AssetAccuracy = 5,
-                Instrument = instrument,
-                Volume = 8,
-                FillType = OrderFillType.PartialFill
-            };
-
-            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
-
-            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
-
-            Assert.AreEqual(2, order.MatchedOrders.Count);
-            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "3"));
-            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "4"));
-            Assert.AreEqual(order.Volume, order.GetMatchedVolume());
-            Assert.AreEqual(6, orderBooks.Sell[1.15M].First(item => item.Id == "4").GetRemainingVolume());
-        }
-
-        [Test]
-        public async Task Is_PartialFill_Sell_Fully_Matched()
-        {
-            var order = new Position
-            {
-                CreateDate = DateTime.UtcNow,
-                Id = Guid.NewGuid().ToString("N"),
-                AccountId = Accounts[0].Id,
-                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
-                AccountAssetId = Accounts[0].BaseAssetId,
-                AssetAccuracy = 5,
-                Instrument = "EURUSD",
-                Volume = -8,
-                FillType = OrderFillType.PartialFill
-            };
-
-            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
-
-            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
-
-            Assert.AreEqual(2, order.MatchedOrders.Count);
-            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "1"));
-            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "2"));
-            Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
-            Assert.AreEqual(3, orderBooks.Buy[1.04M].First(item => item.Id == "1").GetRemainingVolume());
-            Assert.IsFalse(orderBooks.Buy.ContainsKey(1.5M));
-        }
-
-        [Test]
-        public async Task Is_PartialFill_Buy_Partial_Matched()
-        {
-            var order = new Position
-            {
-                CreateDate = DateTime.UtcNow,
-                Id = Guid.NewGuid().ToString("N"),
-                AccountId = Accounts[0].Id,
-                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
-                AccountAssetId = Accounts[0].BaseAssetId,
-                AssetAccuracy = 5,
-                Instrument = "EURUSD",
-                Volume = 15,
-                FillType = OrderFillType.PartialFill
-            };
-
-            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
-
-            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
-
-            Assert.AreEqual(2, order.MatchedOrders.Count);
-            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "3"));
-            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "4"));
-            Assert.AreEqual(1, order.Volume - order.GetMatchedVolume());
-            Assert.IsFalse(orderBooks.Sell.ContainsKey(1.1M));
-            Assert.IsFalse(orderBooks.Sell.ContainsKey(1.15M));
-        }
-
-        [Test]
-        public async Task Is_PartialFill_Sell_Partial_Matched()
-        {
-            var order = new Position
-            {
-                CreateDate = DateTime.UtcNow,
-                Id = Guid.NewGuid().ToString("N"),
-                AccountId = Accounts[0].Id,
-                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
-                AccountAssetId = Accounts[0].BaseAssetId,
-                AssetAccuracy = 5,
-                Instrument = "EURUSD",
-                Volume = -13,
-                FillType = OrderFillType.PartialFill
-            };
-
-            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
-
-            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
-
-            Assert.AreEqual(2, order.MatchedOrders.Count);
-            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "1"));
-            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "2"));
-            Assert.AreEqual(2, Math.Abs(order.Volume) - order.GetMatchedVolume());
-            Assert.IsFalse(orderBooks.Buy.ContainsKey(1.05M));
-            Assert.IsFalse(orderBooks.Buy.ContainsKey(1.04M));
-        }
-
-        [Test]
-        public async Task Is_Order_NoLiquidity_ByInstrument_Rejected()
-        {
-            var order = new Position
-            {
-                CreateDate = DateTime.UtcNow,
-                Id = Guid.NewGuid().ToString("N"),
-                AccountId = Accounts[0].Id,
-                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
-                AccountAssetId = Accounts[0].BaseAssetId,
-                AssetAccuracy = 5,
-                Instrument = "BTCUSD",
-                Volume = 10,
-                FillType = OrderFillType.PartialFill
-            };
-
-            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
-
-            Assert.AreEqual(0, order.MatchedOrders.Count);
-            Assert.AreEqual(PositionStatus.Rejected, order.Status);
-            Assert.AreEqual(OrderRejectReason.NoLiquidity, order.RejectReason);
-            Assert.IsNotNull(order.CloseDate);
-        }
-
-        [Test]
-        public async Task Is_FillOrKill_Buy_Rejected()
-        {
-            var order = new Position
-            {
-                CreateDate = DateTime.UtcNow,
-                Id = Guid.NewGuid().ToString("N"),
-                AccountId = Accounts[0].Id,
-                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
-                AccountAssetId = Accounts[0].BaseAssetId,
-                AssetAccuracy = 5,
-                Instrument = "EURUSD",
-                Volume = 16,
-                FillType = OrderFillType.FillOrKill
-            };
-
-            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
-
-            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
-
-            Assert.AreEqual(0, order.MatchedOrders.Count);
-            Assert.AreEqual(PositionStatus.Rejected, order.Status);
-            Assert.AreEqual(OrderRejectReason.NoLiquidity, order.RejectReason);
-            Assert.IsNotNull(order.CloseDate);
-            Assert.AreEqual(6, orderBooks.Sell[1.1M].First(item => item.Id == "3").GetRemainingVolume());
-            Assert.AreEqual(8, orderBooks.Sell[1.15M].First(item => item.Id == "4").GetRemainingVolume());
-        }
-
-        [Test]
-        public async Task Is_FillOrKill_Sell_Rejected()
-        {
-            var order = new Position
-            {
-                CreateDate = DateTime.UtcNow,
-                Id = Guid.NewGuid().ToString("N"),
-                AccountId = Accounts[0].Id,
-                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
-                AccountAssetId = Accounts[0].BaseAssetId,
-                AssetAccuracy = 5,
-                Instrument = "EURUSD",
-                Volume = -14,
-                FillType = OrderFillType.FillOrKill
-            };
-
-            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
-
-            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
-
-            Assert.AreEqual(0, order.MatchedOrders.Count);
-            Assert.AreEqual(PositionStatus.Rejected, order.Status);
-            Assert.AreEqual(OrderRejectReason.NoLiquidity, order.RejectReason);
-            Assert.IsNotNull(order.CloseDate);
-            Assert.AreEqual(4, orderBooks.Buy[1.04M].First(item => item.Id == "1").GetRemainingVolume());
-            Assert.AreEqual(7, orderBooks.Buy[1.05M].First(item => item.Id == "2").GetRemainingVolume());
-        }
-
-        [Test]
-        public async Task Is_FillOrKill_Buy_Fully_Matched()
-        {
-            var order = new Position
-            {
-                CreateDate = DateTime.UtcNow,
-                Id = Guid.NewGuid().ToString("N"),
-                AccountId = Accounts[0].Id,
-                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
-                AccountAssetId = Accounts[0].BaseAssetId,
-                AssetAccuracy = 5,
-                Instrument = "EURUSD",
-                Volume = 9,
-                FillType = OrderFillType.FillOrKill
-            };
-
-            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
-
-            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
-
-            Assert.AreEqual(2, order.MatchedOrders.Count);
-            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "3"));
-            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "4"));
-            Assert.AreEqual(1, orderBooks.Sell.Count);
-            Assert.IsFalse(orderBooks.Sell.ContainsKey(1.1M));
-            Assert.AreEqual(5, orderBooks.Sell[1.15M][0].GetRemainingVolume());
-        }
-
-        [Test]
-        public async Task Is_FillOrKill_Sell_Fully_Matched()
-        {
-            var order = new Position
-            {
-                CreateDate = DateTime.UtcNow,
-                Id = Guid.NewGuid().ToString("N"),
-                AccountId = Accounts[0].Id,
-                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
-                AccountAssetId = Accounts[0].BaseAssetId,
-                AssetAccuracy = 5,
-                Instrument = "EURUSD",
-                Volume = -8,
-                FillType = OrderFillType.FillOrKill
-            };
-
-            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
-
-            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
-
-            Assert.AreEqual(2, order.MatchedOrders.Count);
-            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "1"));
-            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "2"));
-            Assert.AreEqual(1, orderBooks.Buy.Count);
-            Assert.IsFalse(orderBooks.Buy.ContainsKey(1.05M));
-            Assert.AreEqual(3, orderBooks.Buy[1.04M][0].GetRemainingVolume());
-        }
-
-        #endregion
-
-        #region Pending orders
-
-        [Test]
-        public async Task Is_Buy_Partial_PendingOrder_Matched()
-        {
-            var order = new Position
-            {
-                CreateDate = DateTime.UtcNow,
-                Id = Guid.NewGuid().ToString("N"),
-                AccountId = Accounts[0].Id,
-                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
-                AccountAssetId = Accounts[0].BaseAssetId,
-                AssetAccuracy = 5,
-                Instrument = "EURUSD",
-                Volume = 8,
-                ExpectedOpenPrice = 1.12M,
-                FillType = OrderFillType.PartialFill
-            };
-
-            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
-
-            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
-
-            Assert.AreEqual(2, order.MatchedOrders.Count);
-            Assert.AreEqual(PositionStatus.Active, order.Status);
-            Assert.IsFalse(orderBooks.Sell.ContainsKey(1.1M));
-            Assert.AreEqual(6, orderBooks.Sell[1.15M][0].GetRemainingVolume());
-        }
-
-        [Test]
-        public async Task Is_Buy_FillOrKill_PendingOrder_Matched()
-        {
-            var order = new Position
-            {
-                CreateDate = DateTime.UtcNow,
-                Id = Guid.NewGuid().ToString("N"),
-                AccountId = Accounts[0].Id,
-                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
-                AccountAssetId = Accounts[0].BaseAssetId,
-                AssetAccuracy = 5,
-                Instrument = "EURUSD",
-                Volume = 1,
-                ExpectedOpenPrice = 1.12M,
-                FillType = OrderFillType.FillOrKill
-            };
-
-            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
-
-            Assert.AreEqual(1, order.MatchedOrders.Count);
-            Assert.AreEqual(PositionStatus.Active, order.Status);
-            Assert.AreEqual(1.1, order.OpenPrice);
-        }
-
-        [Test]
-        public async Task Is_Sell_Partial_PendingOrder_Matched()
-        {
-            var order = new Position
-            {
-                CreateDate = DateTime.UtcNow,
-                Id = Guid.NewGuid().ToString("N"),
-                AccountId = Accounts[0].Id,
-                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
-                AccountAssetId = Accounts[0].BaseAssetId,
-                AssetAccuracy = 5,
-                Instrument = "EURUSD",
-                Volume = -5,
-                ExpectedOpenPrice = 1.04M,
-                FillType = OrderFillType.PartialFill
-            };
-
-            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
-
-            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
-
-            Assert.AreEqual(1, order.MatchedOrders.Count);
-            Assert.AreEqual(PositionStatus.Active, order.Status);
-            Assert.AreEqual(1.05, order.OpenPrice);
-            Assert.AreEqual(2, orderBooks.Buy[1.05M][0].GetRemainingVolume());
-        }
-
-        [Test]
-        public async Task Is_Sell_FillOrKill_PendingOrder_Matched()
-        {
-            var order = new Position
-            {
-                CreateDate = DateTime.UtcNow,
-                Id = Guid.NewGuid().ToString("N"),
-                AccountId = Accounts[0].Id,
-                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
-                AccountAssetId = Accounts[0].BaseAssetId,
-                AssetAccuracy = 5,
-                Instrument = "EURUSD",
-                Volume = -5,
-                ExpectedOpenPrice = 1.04M,
-                FillType = OrderFillType.FillOrKill
-            };
-
-            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
-
-            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
-
-            Assert.AreEqual(1, order.MatchedOrders.Count);
-            Assert.AreEqual(PositionStatus.Active, order.Status);
-            Assert.AreEqual(1.05, order.OpenPrice);
-            Assert.AreEqual(2, orderBooks.Buy[1.05M][0].GetRemainingVolume());
-        }
-
-        #endregion
-
-        private bool ProcessOrders(Position order, MatchedOrderCollection matchedOrders)
-        {
-            if (!matchedOrders.Any())
-            {
-                order.CloseDate = DateTime.UtcNow;
-                order.Status = PositionStatus.Rejected;
-                order.RejectReason = OrderRejectReason.NoLiquidity;
-                order.RejectReasonText = "No orders to match";
-                return false;
-            }
-
-            if (matchedOrders.SummaryVolume < Math.Abs(order.Volume) && order.FillType == OrderFillType.FillOrKill)
-            {
-                order.CloseDate = DateTime.UtcNow;
-                order.Status = PositionStatus.Rejected;
-                order.RejectReason = OrderRejectReason.NoLiquidity;
-                order.RejectReasonText = "No orders to match or not fully matched";
-                return false;
-            }
-
-            //if (!CheckIfWeCanOpenPosition(order, matchedOrders))
-            //{
-            //    order.Status = OrderStatus.Rejected;
-            //    order.RejectReason = OrderRejectReason.AccountStopOut;
-            //    order.RejectReasonText = "Opening the position will lead to account Stop Out level";
-            //    return false;
-            //}
-
-            order.MatchedOrders = matchedOrders;
-            order.OpenPrice = Math.Round(order.MatchedOrders.WeightedAveragePrice, order.AssetAccuracy);
-            order.OpenDate = DateTime.UtcNow;
-            order.Status = PositionStatus.Active;
-            return true;
-        }
+//
+//        #region Market orders
+//
+//        [Test]
+//        public async Task Is_PartialFill_Buy_Fully_Matched()
+//        {
+//            const string instrument = "EURUSD";
+//
+//            var order = new Position
+//            {
+//                CreateDate = DateTime.UtcNow,
+//                Id = Guid.NewGuid().ToString("N"),
+//                AccountId = Accounts[0].Id,
+//                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
+//                AccountAssetId = Accounts[0].BaseAssetId,
+//                AssetAccuracy = 5,
+//                Instrument = instrument,
+//                Volume = 8,
+//                FillType = OrderFillType.PartialFill
+//            };
+//
+//            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+//
+//            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
+//
+//            Assert.AreEqual(2, order.MatchedOrders.Count);
+//            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "3"));
+//            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "4"));
+//            Assert.AreEqual(order.Volume, order.GetMatchedVolume());
+//            Assert.AreEqual(6, orderBooks.Sell[1.15M].First(item => item.Id == "4").GetRemainingVolume());
+//        }
+//
+//        [Test]
+//        public async Task Is_PartialFill_Sell_Fully_Matched()
+//        {
+//            var order = new Position
+//            {
+//                CreateDate = DateTime.UtcNow,
+//                Id = Guid.NewGuid().ToString("N"),
+//                AccountId = Accounts[0].Id,
+//                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
+//                AccountAssetId = Accounts[0].BaseAssetId,
+//                AssetAccuracy = 5,
+//                Instrument = "EURUSD",
+//                Volume = -8,
+//                FillType = OrderFillType.PartialFill
+//            };
+//
+//            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+//
+//            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
+//
+//            Assert.AreEqual(2, order.MatchedOrders.Count);
+//            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "1"));
+//            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "2"));
+//            Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
+//            Assert.AreEqual(3, orderBooks.Buy[1.04M].First(item => item.Id == "1").GetRemainingVolume());
+//            Assert.IsFalse(orderBooks.Buy.ContainsKey(1.5M));
+//        }
+//
+//        [Test]
+//        public async Task Is_PartialFill_Buy_Partial_Matched()
+//        {
+//            var order = new Position
+//            {
+//                CreateDate = DateTime.UtcNow,
+//                Id = Guid.NewGuid().ToString("N"),
+//                AccountId = Accounts[0].Id,
+//                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
+//                AccountAssetId = Accounts[0].BaseAssetId,
+//                AssetAccuracy = 5,
+//                Instrument = "EURUSD",
+//                Volume = 15,
+//                FillType = OrderFillType.PartialFill
+//            };
+//
+//            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+//
+//            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
+//
+//            Assert.AreEqual(2, order.MatchedOrders.Count);
+//            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "3"));
+//            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "4"));
+//            Assert.AreEqual(1, order.Volume - order.GetMatchedVolume());
+//            Assert.IsFalse(orderBooks.Sell.ContainsKey(1.1M));
+//            Assert.IsFalse(orderBooks.Sell.ContainsKey(1.15M));
+//        }
+//
+//        [Test]
+//        public async Task Is_PartialFill_Sell_Partial_Matched()
+//        {
+//            var order = new Position
+//            {
+//                CreateDate = DateTime.UtcNow,
+//                Id = Guid.NewGuid().ToString("N"),
+//                AccountId = Accounts[0].Id,
+//                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
+//                AccountAssetId = Accounts[0].BaseAssetId,
+//                AssetAccuracy = 5,
+//                Instrument = "EURUSD",
+//                Volume = -13,
+//                FillType = OrderFillType.PartialFill
+//            };
+//
+//            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+//
+//            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
+//
+//            Assert.AreEqual(2, order.MatchedOrders.Count);
+//            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "1"));
+//            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "2"));
+//            Assert.AreEqual(2, Math.Abs(order.Volume) - order.GetMatchedVolume());
+//            Assert.IsFalse(orderBooks.Buy.ContainsKey(1.05M));
+//            Assert.IsFalse(orderBooks.Buy.ContainsKey(1.04M));
+//        }
+//
+//        [Test]
+//        public async Task Is_Order_NoLiquidity_ByInstrument_Rejected()
+//        {
+//            var order = new Position
+//            {
+//                CreateDate = DateTime.UtcNow,
+//                Id = Guid.NewGuid().ToString("N"),
+//                AccountId = Accounts[0].Id,
+//                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
+//                AccountAssetId = Accounts[0].BaseAssetId,
+//                AssetAccuracy = 5,
+//                Instrument = "BTCUSD",
+//                Volume = 10,
+//                FillType = OrderFillType.PartialFill
+//            };
+//
+//            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+//
+//            Assert.AreEqual(0, order.MatchedOrders.Count);
+//            Assert.AreEqual(PositionStatus.Rejected, order.Status);
+//            Assert.AreEqual(OrderRejectReason.NoLiquidity, order.RejectReason);
+//            Assert.IsNotNull(order.CloseDate);
+//        }
+//
+//        [Test]
+//        public async Task Is_FillOrKill_Buy_Rejected()
+//        {
+//            var order = new Position
+//            {
+//                CreateDate = DateTime.UtcNow,
+//                Id = Guid.NewGuid().ToString("N"),
+//                AccountId = Accounts[0].Id,
+//                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
+//                AccountAssetId = Accounts[0].BaseAssetId,
+//                AssetAccuracy = 5,
+//                Instrument = "EURUSD",
+//                Volume = 16,
+//                FillType = OrderFillType.FillOrKill
+//            };
+//
+//            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+//
+//            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
+//
+//            Assert.AreEqual(0, order.MatchedOrders.Count);
+//            Assert.AreEqual(PositionStatus.Rejected, order.Status);
+//            Assert.AreEqual(OrderRejectReason.NoLiquidity, order.RejectReason);
+//            Assert.IsNotNull(order.CloseDate);
+//            Assert.AreEqual(6, orderBooks.Sell[1.1M].First(item => item.Id == "3").GetRemainingVolume());
+//            Assert.AreEqual(8, orderBooks.Sell[1.15M].First(item => item.Id == "4").GetRemainingVolume());
+//        }
+//
+//        [Test]
+//        public async Task Is_FillOrKill_Sell_Rejected()
+//        {
+//            var order = new Position
+//            {
+//                CreateDate = DateTime.UtcNow,
+//                Id = Guid.NewGuid().ToString("N"),
+//                AccountId = Accounts[0].Id,
+//                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
+//                AccountAssetId = Accounts[0].BaseAssetId,
+//                AssetAccuracy = 5,
+//                Instrument = "EURUSD",
+//                Volume = -14,
+//                FillType = OrderFillType.FillOrKill
+//            };
+//
+//            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+//
+//            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
+//
+//            Assert.AreEqual(0, order.MatchedOrders.Count);
+//            Assert.AreEqual(PositionStatus.Rejected, order.Status);
+//            Assert.AreEqual(OrderRejectReason.NoLiquidity, order.RejectReason);
+//            Assert.IsNotNull(order.CloseDate);
+//            Assert.AreEqual(4, orderBooks.Buy[1.04M].First(item => item.Id == "1").GetRemainingVolume());
+//            Assert.AreEqual(7, orderBooks.Buy[1.05M].First(item => item.Id == "2").GetRemainingVolume());
+//        }
+//
+//        [Test]
+//        public async Task Is_FillOrKill_Buy_Fully_Matched()
+//        {
+//            var order = new Position
+//            {
+//                CreateDate = DateTime.UtcNow,
+//                Id = Guid.NewGuid().ToString("N"),
+//                AccountId = Accounts[0].Id,
+//                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
+//                AccountAssetId = Accounts[0].BaseAssetId,
+//                AssetAccuracy = 5,
+//                Instrument = "EURUSD",
+//                Volume = 9,
+//                FillType = OrderFillType.FillOrKill
+//            };
+//
+//            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+//
+//            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
+//
+//            Assert.AreEqual(2, order.MatchedOrders.Count);
+//            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "3"));
+//            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "4"));
+//            Assert.AreEqual(1, orderBooks.Sell.Count);
+//            Assert.IsFalse(orderBooks.Sell.ContainsKey(1.1M));
+//            Assert.AreEqual(5, orderBooks.Sell[1.15M][0].GetRemainingVolume());
+//        }
+//
+//        [Test]
+//        public async Task Is_FillOrKill_Sell_Fully_Matched()
+//        {
+//            var order = new Position
+//            {
+//                CreateDate = DateTime.UtcNow,
+//                Id = Guid.NewGuid().ToString("N"),
+//                AccountId = Accounts[0].Id,
+//                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
+//                AccountAssetId = Accounts[0].BaseAssetId,
+//                AssetAccuracy = 5,
+//                Instrument = "EURUSD",
+//                Volume = -8,
+//                FillType = OrderFillType.FillOrKill
+//            };
+//
+//            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+//
+//            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
+//
+//            Assert.AreEqual(2, order.MatchedOrders.Count);
+//            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "1"));
+//            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "2"));
+//            Assert.AreEqual(1, orderBooks.Buy.Count);
+//            Assert.IsFalse(orderBooks.Buy.ContainsKey(1.05M));
+//            Assert.AreEqual(3, orderBooks.Buy[1.04M][0].GetRemainingVolume());
+//        }
+//
+//        #endregion
+//
+//        #region Pending orders
+//
+//        [Test]
+//        public async Task Is_Buy_Partial_PendingOrder_Matched()
+//        {
+//            var order = new Position
+//            {
+//                CreateDate = DateTime.UtcNow,
+//                Id = Guid.NewGuid().ToString("N"),
+//                AccountId = Accounts[0].Id,
+//                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
+//                AccountAssetId = Accounts[0].BaseAssetId,
+//                AssetAccuracy = 5,
+//                Instrument = "EURUSD",
+//                Volume = 8,
+//                ExpectedOpenPrice = 1.12M,
+//                FillType = OrderFillType.PartialFill
+//            };
+//
+//            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+//
+//            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
+//
+//            Assert.AreEqual(2, order.MatchedOrders.Count);
+//            Assert.AreEqual(PositionStatus.Active, order.Status);
+//            Assert.IsFalse(orderBooks.Sell.ContainsKey(1.1M));
+//            Assert.AreEqual(6, orderBooks.Sell[1.15M][0].GetRemainingVolume());
+//        }
+//
+//        [Test]
+//        public async Task Is_Buy_FillOrKill_PendingOrder_Matched()
+//        {
+//            var order = new Position
+//            {
+//                CreateDate = DateTime.UtcNow,
+//                Id = Guid.NewGuid().ToString("N"),
+//                AccountId = Accounts[0].Id,
+//                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
+//                AccountAssetId = Accounts[0].BaseAssetId,
+//                AssetAccuracy = 5,
+//                Instrument = "EURUSD",
+//                Volume = 1,
+//                ExpectedOpenPrice = 1.12M,
+//                FillType = OrderFillType.FillOrKill
+//            };
+//
+//            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+//
+//            Assert.AreEqual(1, order.MatchedOrders.Count);
+//            Assert.AreEqual(PositionStatus.Active, order.Status);
+//            Assert.AreEqual(1.1, order.OpenPrice);
+//        }
+//
+//        [Test]
+//        public async Task Is_Sell_Partial_PendingOrder_Matched()
+//        {
+//            var order = new Position
+//            {
+//                CreateDate = DateTime.UtcNow,
+//                Id = Guid.NewGuid().ToString("N"),
+//                AccountId = Accounts[0].Id,
+//                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
+//                AccountAssetId = Accounts[0].BaseAssetId,
+//                AssetAccuracy = 5,
+//                Instrument = "EURUSD",
+//                Volume = -5,
+//                ExpectedOpenPrice = 1.04M,
+//                FillType = OrderFillType.PartialFill
+//            };
+//
+//            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+//
+//            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
+//
+//            Assert.AreEqual(1, order.MatchedOrders.Count);
+//            Assert.AreEqual(PositionStatus.Active, order.Status);
+//            Assert.AreEqual(1.05, order.OpenPrice);
+//            Assert.AreEqual(2, orderBooks.Buy[1.05M][0].GetRemainingVolume());
+//        }
+//
+//        [Test]
+//        public async Task Is_Sell_FillOrKill_PendingOrder_Matched()
+//        {
+//            var order = new Position
+//            {
+//                CreateDate = DateTime.UtcNow,
+//                Id = Guid.NewGuid().ToString("N"),
+//                AccountId = Accounts[0].Id,
+//                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
+//                AccountAssetId = Accounts[0].BaseAssetId,
+//                AssetAccuracy = 5,
+//                Instrument = "EURUSD",
+//                Volume = -5,
+//                ExpectedOpenPrice = 1.04M,
+//                FillType = OrderFillType.FillOrKill
+//            };
+//
+//            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+//
+//            var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
+//
+//            Assert.AreEqual(1, order.MatchedOrders.Count);
+//            Assert.AreEqual(PositionStatus.Active, order.Status);
+//            Assert.AreEqual(1.05, order.OpenPrice);
+//            Assert.AreEqual(2, orderBooks.Buy[1.05M][0].GetRemainingVolume());
+//        }
+//
+//        #endregion
+//
+//        private bool ProcessOrders(Position order, MatchedOrderCollection matchedOrders)
+//        {
+//            if (!matchedOrders.Any())
+//            {
+//                order.CloseDate = DateTime.UtcNow;
+//                order.Status = PositionStatus.Rejected;
+//                order.RejectReason = OrderRejectReason.NoLiquidity;
+//                order.RejectReasonText = "No orders to match";
+//                return false;
+//            }
+//
+//            if (matchedOrders.SummaryVolume < Math.Abs(order.Volume) && order.FillType == OrderFillType.FillOrKill)
+//            {
+//                order.CloseDate = DateTime.UtcNow;
+//                order.Status = PositionStatus.Rejected;
+//                order.RejectReason = OrderRejectReason.NoLiquidity;
+//                order.RejectReasonText = "No orders to match or not fully matched";
+//                return false;
+//            }
+//
+//            //if (!CheckIfWeCanOpenPosition(order, matchedOrders))
+//            //{
+//            //    order.Status = OrderStatus.Rejected;
+//            //    order.RejectReason = OrderRejectReason.AccountStopOut;
+//            //    order.RejectReasonText = "Opening the position will lead to account Stop Out level";
+//            //    return false;
+//            //}
+//
+//            order.MatchedOrders = matchedOrders;
+//            order.OpenPrice = Math.Round(order.MatchedOrders.WeightedAveragePrice, order.AssetAccuracy);
+//            order.OpenDate = DateTime.UtcNow;
+//            order.Status = PositionStatus.Active;
+//            return true;
+//        }
     }
 }

@@ -65,7 +65,7 @@ namespace MarginTrading.Backend.Services.Notifications
                 quote.ToRabbitMqContract());
         }
 
-        public Task OrderChanged(IPosition order)
+        public Task OrderChanged(Position order)
         {
             var message = order.ToBaseContract();
             return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderChanged.ExchangeName, message);

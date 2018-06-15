@@ -1,14 +1,5 @@
 ﻿namespace MarginTrading.Backend.Core.Orders
 {
-    public enum PositionStatus
-    {
-        WaitingForExecution,
-        Active,
-        Closed,
-        Rejected,
-        Closing
-    }
-
     public enum OrderStatus
     {
         Created = 0,

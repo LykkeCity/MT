@@ -44,27 +44,27 @@ namespace MarginTrading.Backend.Services
             return result;
         }
 
-        public decimal GetSwaps(IPosition order)
+        public decimal GetSwaps(Position order)
         {
-            return GetSwaps(order.AccountAssetId, order.Instrument, order.OpenDate, order.CloseDate,
-                order.GetMatchedVolume(), order.SwapCommission, order.LegalEntity);
+            return GetSwaps(order.AccountAssetId, order.AssetPairId, order.OpenDate, order.CloseDate,
+                Math.Abs(order.Volume), order.SwapCommission, order.LegalEntity);
         }
 
-        public decimal GetOvernightSwap(IPosition order, decimal swapRate)
+        public decimal GetOvernightSwap(Position order, decimal swapRate)
         {
             var openDate = DateTime.UtcNow;
             var closeDate = openDate.AddDays(1);
-            return GetSwaps(order.AccountAssetId, order.Instrument, openDate, closeDate,
+            return GetSwaps(order.AccountAssetId, order.AssetPairId, openDate, closeDate,
                 Math.Abs(order.Volume), swapRate, order.LegalEntity);
         }
 
         public void SetCommissionRates(string tradingConditionId, Position order)
         {
-            var accountAsset = _accountAssetsCacheService
-                .GetTradingInstrument(tradingConditionId, order.Instrument);
-
-            order.OpenCommission = accountAsset.CommissionRate;
-            order.SwapCommission = accountAsset.SwapLong;
+//            var accountAsset = _accountAssetsCacheService
+//                .GetTradingInstrument(tradingConditionId, order.AssetPairId);
+//
+//            order.OpenCommission = accountAsset.CommissionRate;
+//            order.SwapCommission = accountAsset.SwapLong;
         }
     }
 }

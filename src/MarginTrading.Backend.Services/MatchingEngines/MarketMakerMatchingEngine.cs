@@ -85,8 +85,8 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             {
                 var orderBookTypeToMatch = order.GetCloseType().GetOrderDirectionToMatchInOrderBook();
 
-                var matchedOrders = _orderBooks.Match(order.Instrument, orderBookTypeToMatch,
-                    Math.Abs(order.GetRemainingCloseVolume()));
+                var matchedOrders = _orderBooks.Match(order.AssetPairId, orderBookTypeToMatch,
+                    Math.Abs(order.Volume));
 
                 return matchedOrders.Any() ? matchedOrders.WeightedAveragePrice : (decimal?) null;
             } // lock

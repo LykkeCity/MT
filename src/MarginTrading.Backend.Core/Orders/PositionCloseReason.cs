@@ -1,6 +1,6 @@
 ﻿namespace MarginTrading.Backend.Core.Orders
 {
-    public enum OrderCloseReason
+    public enum PositionCloseReason
     {
         None,
         Close,

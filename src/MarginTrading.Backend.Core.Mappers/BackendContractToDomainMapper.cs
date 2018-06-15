@@ -50,7 +50,7 @@ namespace MarginTrading.Backend.Core.Mappers
                 SwapCommission = src.SwapCommission,
                 StartClosingDate = src.StartClosingDate,
                 Status = src.Status.ToType<PositionStatus>(),
-                CloseReason = src.CloseReason.ToType<OrderCloseReason>(),
+                CloseReason = src.CloseReason.ToType<PositionCloseReason>(),
                 FillType = src.FillType.ToType<OrderFillType>(),
                 RejectReason = src.RejectReason.ToType<OrderRejectReason>(),
                 RejectReasonText = src.RejectReasonText,

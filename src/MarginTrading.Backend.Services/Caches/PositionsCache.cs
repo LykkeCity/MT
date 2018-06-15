@@ -24,13 +24,13 @@ namespace MarginTrading.Backend.Services
             {
                 _ordersById = positions.ToDictionary(x => x.Id);
 
-                _orderIdsByInstrumentId = positions.GroupBy(x => x.Instrument)
+                _orderIdsByInstrumentId = positions.GroupBy(x => x.AssetPairId)
                     .ToDictionary(x => x.Key, x => x.Select(o => o.Id).ToHashSet());
 
                 _orderIdsByAccountId = positions.GroupBy(x => x.AccountId)
                     .ToDictionary(x => x.Key, x => x.Select(o => o.Id).ToHashSet());
 
-                _orderIdsByAccountIdAndInstrumentId = positions.GroupBy(x => GetAccountInstrumentCacheKey(x.AccountId, x.Instrument))
+                _orderIdsByAccountIdAndInstrumentId = positions.GroupBy(x => GetAccountInstrumentCacheKey(x.AccountId, x.AssetPairId))
                     .ToDictionary(x => x.Key, x => x.Select(o => o.Id).ToHashSet());
             }
             finally 
@@ -53,11 +53,11 @@ namespace MarginTrading.Backend.Services
                     _orderIdsByAccountId.Add(order.AccountId, new HashSet<string>());
                 _orderIdsByAccountId[order.AccountId].Add(order.Id);
 
-                if (!_orderIdsByInstrumentId.ContainsKey(order.Instrument))
-                    _orderIdsByInstrumentId.Add(order.Instrument, new HashSet<string>());
-                _orderIdsByInstrumentId[order.Instrument].Add(order.Id);
+                if (!_orderIdsByInstrumentId.ContainsKey(order.AssetPairId))
+                    _orderIdsByInstrumentId.Add(order.AssetPairId, new HashSet<string>());
+                _orderIdsByInstrumentId[order.AssetPairId].Add(order.Id);
 
-                var accountInstrumentCacheKey = GetAccountInstrumentCacheKey(order.AccountId, order.Instrument);
+                var accountInstrumentCacheKey = GetAccountInstrumentCacheKey(order.AccountId, order.AssetPairId);
 
                 if (!_orderIdsByAccountIdAndInstrumentId.ContainsKey(accountInstrumentCacheKey))
                     _orderIdsByAccountIdAndInstrumentId.Add(accountInstrumentCacheKey, new HashSet<string>());
@@ -80,9 +80,9 @@ namespace MarginTrading.Backend.Services
             {
                 if (_ordersById.Remove(order.Id))
                 {
-                    _orderIdsByInstrumentId[order.Instrument].Remove(order.Id);
+                    _orderIdsByInstrumentId[order.AssetPairId].Remove(order.Id);
                     _orderIdsByAccountId[order.AccountId].Remove(order.Id);
-                    _orderIdsByAccountIdAndInstrumentId[GetAccountInstrumentCacheKey(order.AccountId, order.Instrument)].Remove(order.Id);
+                    _orderIdsByAccountIdAndInstrumentId[GetAccountInstrumentCacheKey(order.AccountId, order.AssetPairId)].Remove(order.Id);
                 }
                 else
                     throw new Exception(string.Format(MtMessages.CantRemovePosition, order.Id));
