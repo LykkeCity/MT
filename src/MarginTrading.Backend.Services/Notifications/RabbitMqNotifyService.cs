@@ -8,6 +8,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Common.Services;
 using MarginTrading.Contract.RabbitMqMessageModels;
 
@@ -52,7 +53,7 @@ namespace MarginTrading.Backend.Services.Notifications
                 record.ToBackendContract());
         }
 
-        public Task OrderHistory(IPosition order, OrderUpdateType orderUpdateType)
+        public Task OrderHistory(Order order, OrderUpdateType orderUpdateType)
         {
             return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderHistory.ExchangeName,
                 order.ToFullContract(orderUpdateType, _dateService.Now()));

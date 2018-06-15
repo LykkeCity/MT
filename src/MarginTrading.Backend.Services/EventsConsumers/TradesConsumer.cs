@@ -8,9 +8,10 @@ using MarginTrading.Contract.RabbitMqMessageModels;
 
 namespace MarginTrading.Backend.Services.EventsConsumers
 {
+    //TODO: change events and models
     public class TradesConsumer:
-        IEventConsumer<OrderPlacedEventArgs>,
-        IEventConsumer<OrderClosedEventArgs>
+        IEventConsumer<OrderActivatedEventArgs>,
+        IEventConsumer<OrderExecutedEventArgs>
     {
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
 
@@ -18,47 +19,41 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         {
             _rabbitMqNotifyService = rabbitMqNotifyService;
         }
-        
-        public void ConsumeEvent(object sender, OrderPlacedEventArgs ea)
-        {
-            if (ea.Order.IsOpened())
-            {
-                var tradeType = ea.Order.GetOrderDirection().ToType<TradeType>();
-                var trade = new TradeContract
-                {
-                    Id = ea.Order.Id + '_' + tradeType, // todo: fix ids?
-                    AccountId = ea.Order.AccountId,
-                    OrderId = ea.Order.Id,
-                    AssetPairId = ea.Order.Instrument,
-                    Date = ea.Order.OpenDate.Value,
-                    Price = ea.Order.OpenPrice,
-                    Volume = ea.Order.MatchedOrders.SummaryVolume,
-                    Type = tradeType
-                };
 
-                _rabbitMqNotifyService.NewTrade(trade);
-            }
+        public void ConsumeEvent(object sender, OrderActivatedEventArgs ea)
+        {
+            var tradeType = ea.Order.Direction.ToType<TradeType>();
+            var trade = new TradeContract
+            {
+                Id = ea.Order.Id + '_' + tradeType, // todo: fix ids?
+                AccountId = ea.Order.AccountId,
+                OrderId = ea.Order.Id,
+                AssetPairId = ea.Order.AssetPairId,
+                Date = ea.Order.Executed.Value,
+                Price = ea.Order.ExecutionPrice.Value,
+                Volume = ea.Order.Volume,
+                Type = tradeType
+            };
+
+            _rabbitMqNotifyService.NewTrade(trade);
         }
 
-        public void ConsumeEvent(object sender, OrderClosedEventArgs ea)
+        public void ConsumeEvent(object sender, OrderExecutedEventArgs ea)
         {
-            if (ea.Order.IsClosed())
+            var tradeType = ea.Order.Direction.ToType<TradeType>();
+            var trade = new TradeContract
             {
-                var tradeType = ea.Order.GetCloseType().ToType<TradeType>();
-                var trade = new TradeContract
-                {
-                    Id = ea.Order.Id + '_' + tradeType, // todo: fix ids?,
-                    AccountId = ea.Order.AccountId,
-                    OrderId = ea.Order.Id,
-                    AssetPairId = ea.Order.Instrument,
-                    Date = ea.Order.CloseDate.Value,
-                    Price = ea.Order.ClosePrice,
-                    Volume = ea.Order.MatchedCloseOrders.SummaryVolume,
-                    Type = tradeType
-                };
+                Id = ea.Order.Id + '_' + tradeType, // todo: fix ids?,
+                AccountId = ea.Order.AccountId,
+                OrderId = ea.Order.Id,
+                AssetPairId = ea.Order.AssetPairId,
+                Date = ea.Order.Executed.Value,
+                Price = ea.Order.ExecutionPrice.Value,
+                Volume = ea.Order.Volume,
+                Type = tradeType
+            };
 
-                _rabbitMqNotifyService.NewTrade(trade);
-            }
+            _rabbitMqNotifyService.NewTrade(trade);
         }
 
         public int ConsumerRank => 101;

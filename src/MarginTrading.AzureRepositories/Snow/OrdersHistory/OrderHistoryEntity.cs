@@ -83,7 +83,7 @@ namespace MarginTrading.AzureRepositories.Snow.OrdersHistory
         public string Orders { get; set; }
         public string ClosedOrders { get; set; }
 
-        OrderUpdateType IOrderHistory.OrderUpdateType => OrderUpdateType.ParseEnum(Backend.Core.Orders.OrderUpdateType.Close);
+        OrderUpdateType IOrderHistory.OrderUpdateType => OrderUpdateType.ParseEnum(Backend.Core.Orders.OrderUpdateType.Executed);
 
         public string OpenExternalOrderId { get; set; }
         public string OpenExternalProviderId { get; set; }

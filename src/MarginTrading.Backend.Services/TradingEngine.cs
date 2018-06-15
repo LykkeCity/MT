@@ -23,10 +23,10 @@ namespace MarginTrading.Backend.Services
         private readonly IEventChannel<MarginCallEventArgs> _marginCallEventChannel;
         private readonly IEventChannel<StopOutEventArgs> _stopoutEventChannel;
         private readonly IEventChannel<OrderPlacedEventArgs> _orderPlacedEventChannel;
-        private readonly IEventChannel<OrderClosedEventArgs> _orderClosedEventChannel;
+        private readonly IEventChannel<OrderExecutedEventArgs> _orderExecutedEventChannel;
         private readonly IEventChannel<OrderCancelledEventArgs> _orderCancelledEventChannel;
-        private readonly IEventChannel<OrderLimitsChangedEventArgs> _orderLimitsChangesEventChannel;
-        private readonly IEventChannel<OrderClosingEventArgs> _orderClosingEventChannel;
+        private readonly IEventChannel<OrderChangedEventArgs> _orderLimitsChangesEventChannel;
+        private readonly IEventChannel<OrderExecutionStartedEventArgs> _orderClosingEventChannel;
         private readonly IEventChannel<OrderActivatedEventArgs> _orderActivatedEventChannel;
         private readonly IEventChannel<OrderRejectedEventArgs> _orderRejectedEventChannel;
 
@@ -44,18 +44,18 @@ namespace MarginTrading.Backend.Services
         private readonly IAssetPairDayOffService _assetPairDayOffService;
         private readonly ILog _log;
         private readonly IDateService _dateService;
+        private readonly ICfdCalculatorService _cfdCalculatorService;
 
         public TradingEngine(
             IEventChannel<MarginCallEventArgs> marginCallEventChannel,
             IEventChannel<StopOutEventArgs> stopoutEventChannel,
             IEventChannel<OrderPlacedEventArgs> orderPlacedEventChannel,
-            IEventChannel<OrderClosedEventArgs> orderClosedEventChannel,
+            IEventChannel<OrderExecutedEventArgs> orderClosedEventChannel,
             IEventChannel<OrderCancelledEventArgs> orderCancelledEventChannel, 
-            IEventChannel<OrderLimitsChangedEventArgs> orderLimitsChangesEventChannel,
-            IEventChannel<OrderClosingEventArgs> orderClosingEventChannel,
+            IEventChannel<OrderChangedEventArgs> orderLimitsChangesEventChannel,
+            IEventChannel<OrderExecutionStartedEventArgs> orderClosingEventChannel,
             IEventChannel<OrderActivatedEventArgs> orderActivatedEventChannel, 
             IEventChannel<OrderRejectedEventArgs> orderRejectedEventChannel,
-            
             IValidateOrderService validateOrderService,
             IQuoteCacheService quoteCashService,
             IAccountUpdateService accountUpdateService,
@@ -69,12 +69,13 @@ namespace MarginTrading.Backend.Services
             IContextFactory contextFactory,
             IAssetPairDayOffService assetPairDayOffService,
             ILog log,
-            IDateService dateService)
+            IDateService dateService,
+            ICfdCalculatorService cfdCalculatorService)
         {
             _marginCallEventChannel = marginCallEventChannel;
             _stopoutEventChannel = stopoutEventChannel;
             _orderPlacedEventChannel = orderPlacedEventChannel;
-            _orderClosedEventChannel = orderClosedEventChannel;
+            _orderExecutedEventChannel = orderClosedEventChannel;
             _orderCancelledEventChannel = orderCancelledEventChannel;
             _orderActivatedEventChannel = orderActivatedEventChannel;
             _orderClosingEventChannel = orderClosingEventChannel;
@@ -95,6 +96,7 @@ namespace MarginTrading.Backend.Services
             _assetPairDayOffService = assetPairDayOffService;
             _log = log;
             _dateService = dateService;
+            _cfdCalculatorService = cfdCalculatorService;
         }
 
         public async Task<Order> PlaceOrderAsync(Order order)
@@ -111,104 +113,112 @@ namespace MarginTrading.Backend.Services
             }
             catch (ValidateOrderException ex)
             {
-                //RejectOrder(order, ex.RejectReason, ex.Message, ex.Comment);
+                RejectOrder(order, ex.RejectReason, ex.Message, ex.Comment);
                 return order;
             }
         }
 
-        private async Task<Position> PlaceMarketOrderByMatchingEngineAsync(Position order, IMatchingEngineBase matchingEngine)
+        private async Task<Order> PlaceMarketOrderByMatchingEngineAsync(Order order, IMatchingEngineBase matchingEngine)
         {
-            order.OpenOrderbookId = matchingEngine.Id;
-            order.MatchingEngineMode = matchingEngine.Mode;
+            order.SetMatchingEngine(matchingEngine.Id);
+
+            var equivalentRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.EquivalentAsset,
+                order.AssetPairId, order.LegalEntity);
+            var fxRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.AccountAssetId,
+                order.AssetPairId, order.LegalEntity);
+
+            order.SetRates(equivalentRate, fxRate);
             
             await matchingEngine.MatchMarketOrderForOpenAsync(order, matchedOrders =>
             {
                 if (!matchedOrders.Any())
                 {
-                    order.CloseDate = DateTime.UtcNow;
-                    order.Status = PositionStatus.Rejected;
-                    order.RejectReason = OrderRejectReason.NoLiquidity;
-                    order.RejectReasonText = "No orders to match";
+                    order.Reject(OrderRejectReason.NoLiquidity, "No orders to match", "", _dateService.Now());
                     return false;
                 }
 
                 if (matchedOrders.SummaryVolume < Math.Abs(order.Volume) && order.FillType == OrderFillType.FillOrKill)
                 {
-                    order.CloseDate = DateTime.UtcNow;
-                    order.Status = PositionStatus.Rejected;
-                    order.RejectReason = OrderRejectReason.NoLiquidity;
-                    order.RejectReasonText = "Not fully matched";
+                    order.Reject(OrderRejectReason.NoLiquidity, "Not fully matched", "", _dateService.Now());
                     return false;
                 }
 
                 try
                 {
-                    CheckIfWeCanOpenPosition(order, matchedOrders);
+                    //TODO: make this validation Pre-Trade
+                    //CheckIfWeCanOpenPosition(order, matchedOrders);
                 }
                 catch (ValidateOrderException e)
                 {
-                    order.CloseDate = DateTime.UtcNow;
-                    order.Status = PositionStatus.Rejected;
-                    order.RejectReason = e.RejectReason;
-                    order.RejectReasonText = e.Message;
-                    return false;
+//                    order.CloseDate = DateTime.UtcNow;
+//                    order.Status = PositionStatus.Rejected;
+//                    order.RejectReason = e.RejectReason;
+//                    order.RejectReasonText = e.Message;
+//                    return false;
                 }
 
-                _equivalentPricesService.EnrichOpeningOrder(order);
+                var externalOrderId = string.Empty;
+                var externalProviderId = string.Empty;
                 
-                MakeOrderActive(order);
+                if (matchedOrders.Count == 1)
+                {
+                    var matched = matchedOrders.First();
+
+                    if (matched.IsExternal)
+                    {
+                        externalOrderId = matched.OrderId;
+                        externalProviderId = matched.MarketMakerId;
+                    }
+                }
+
+                order.Execute(matchedOrders.WeightedAveragePrice, _dateService.Now(), externalOrderId,
+                    externalProviderId);
 
                 return true;
             });
 
-            if (order.Status == PositionStatus.Rejected)
+            if (order.Status == OrderStatus.Rejected)
             {
                 _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
             }
+            else
+            {
+                _orderExecutedEventChannel.SendEvent(this, new OrderExecutedEventArgs(order));
+            }
 
+            if (order.OrderType != OrderType.Market)
+            {
+                _ordersCache.Active.Remove(order);
+            }
+            
             return order;
         }
 
         private void RejectOrder(Order order, OrderRejectReason reason, string message, string comment = null)
         {
             order.Reject(reason, message, comment, _dateService.Now());
-            //_orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
+            _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
         }
 
         private Task<Order> PlaceOrderByMarketPrice(Order order)
         {
             try
             {
-                var me = _meRouter.GetMatchingEngineForOpen(order);
+                var me = _meRouter.GetMatchingEngineForExecution(order);
 
-                //TODO: implement
-                return null;
-                //return PlaceMarketOrderByMatchingEngineAsync(order, me);
+                return PlaceMarketOrderByMatchingEngineAsync(order, me);
             }
             catch (QuoteNotFoundException ex)
             {
-                //RejectOrder(order, OrderRejectReason.NoLiquidity, ex.Message);
+                RejectOrder(order, OrderRejectReason.NoLiquidity, ex.Message);
                 return Task.FromResult(order);
             }
             catch (Exception ex)
             {
-                //RejectOrder(order, OrderRejectReason.TechnicalError, ex.Message);
+                RejectOrder(order, OrderRejectReason.TechnicalError, ex.Message);
                 _log.WriteError(nameof(TradingEngine), nameof(PlaceOrderByMarketPrice), ex);
                 return Task.FromResult(order);
             }
-        }
-
-        private void MakeOrderActive(Position order)
-        {
-            var now = DateTime.UtcNow;
-            order.OpenDate = now;
-            order.LastModified = now;
-            order.Status = PositionStatus.Active;
-
-            var account = _accountsCacheService.Get(order.AccountId);
-            _swapCommissionService.SetCommissionRates(account.TradingConditionId, order);
-            _ordersCache.ActiveOrders.Add(order);
-            _orderActivatedEventChannel.SendEvent(this, new OrderActivatedEventArgs(order));
         }
 
         private void CheckIfWeCanOpenPosition(Position order, MatchedOrderCollection matchedOrders)
@@ -257,20 +267,31 @@ namespace MarginTrading.Backend.Services
 
         private void PlacePendingOrder(Order order)
         {
-            var me = _meRouter.GetMatchingEngineForOpen(order);
+            var me = _meRouter.GetMatchingEngineForExecution(order);
             order.SetMatchingEngine(me.Id);
-            
-            //TODO: implement
-            //_ordersCache.WaitingForExecutionOrders.Add(order);
 
-            //_orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
+            if (order.Status == OrderStatus.Inactive)
+            {
+                _ordersCache.Inactive.Add(order);
+            }
+            else if (order.Status == OrderStatus.Active)
+            {
+                _ordersCache.Active.Add(order);
+            }
+            else
+            {
+                throw new ValidateOrderException(OrderRejectReason.TechnicalError,
+                    $"Invalid order status: {order.Status}");
+            }
+                
+            _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
         }
 
         #region Orders waiting for execution
         
         private void ProcessOrdersWaitingForExecution(string instrument)
         {
-            ProcessPendingOrdersMarginRecalc(instrument);
+            //ProcessPendingOrdersMarginRecalc(instrument);
             
             var orders = GetPendingOrdersToBeExecuted(instrument).ToArray();
 
@@ -280,48 +301,48 @@ namespace MarginTrading.Backend.Services
             //using (_contextFactory.GetWriteSyncContext($"{nameof(TradingEngine)}.{nameof(ProcessOrdersWaitingForExecution)}"))
             //{
                 foreach (var order in orders)
-                    _ordersCache.WaitingForExecutionOrders.Remove(order);
+                    _ordersCache.Active.Remove(order);
             //}
 
             //TODO: think how to make sure that we don't loose orders
             _threadSwitcher.SwitchThread(async () =>
             {
                 //TODO: implement
-                //foreach (var order in orders)
-                //    await PlaceOrderByMarketPrice(order);
+                foreach (var order in orders)
+                    await PlaceOrderByMarketPrice(order);
             });
 
         }
 
-        private IEnumerable<Position> GetPendingOrdersToBeExecuted(string instrument)
+        private IEnumerable<Order> GetPendingOrdersToBeExecuted(string instrument)
         {
-            var pendingOrders = _ordersCache.WaitingForExecutionOrders.GetOrdersByInstrument(instrument)
-                .OrderBy(item => item.CreateDate);
+            var pendingOrders = _ordersCache.Active.GetOrdersByInstrument(instrument)
+                .OrderBy(item => item.Created);
 
             foreach (var order in pendingOrders)
             {
                 InstrumentBidAskPair pair;
 
-                if (_quoteCashService.TryGetQuoteById(order.Instrument, out pair))
+                if (_quoteCashService.TryGetQuoteById(order.AssetPairId, out pair))
                 {
-                    var price = pair.GetPriceForOrderType(order.GetCloseType());
+                    var price = pair.GetPriceForOrderType(order.Direction);
 
                     if (order.IsSuitablePriceForPendingOrder(price) &&
-                        !_assetPairDayOffService.ArePendingOrdersDisabled(order.Instrument))
+                        !_assetPairDayOffService.ArePendingOrdersDisabled(order.AssetPairId))
                         yield return order;
                 }
             }
         }
 
-        private void ProcessPendingOrdersMarginRecalc(string instrument)
-        {
-            var pendingOrders = _ordersCache.GetPendingForMarginRecalc(instrument);
-
-            foreach (var pendingOrder in pendingOrders)
-            {
-                pendingOrder.UpdatePendingOrderMargin();
-            }
-        }
+//        private void ProcessPendingOrdersMarginRecalc(string instrument)
+//        {
+//            var pendingOrders = _ordersCache.GetPendingForMarginRecalc(instrument);
+//
+//            foreach (var pendingOrder in pendingOrders)
+//            {
+//                pendingOrder.UpdatePendingOrderMargin();
+//            }
+//        }
 
         #endregion
 
@@ -333,7 +354,7 @@ namespace MarginTrading.Backend.Services
             foreach (var account in stopoutAccounts)
                 CommitStopout(account);
 
-            foreach (var order in _ordersCache.ActiveOrders.GetOrdersByInstrument(instrument))
+            foreach (var order in _ordersCache.Positions.GetOrdersByInstrument(instrument))
             {
                 if (order.IsStopLoss())
                     SetOrderToClosingState(order, OrderCloseReason.StopLoss);
@@ -341,12 +362,12 @@ namespace MarginTrading.Backend.Services
                     SetOrderToClosingState(order, OrderCloseReason.TakeProfit);
             }
 
-            ProcessOrdersClosing(instrument);
+            ProcessInProgressOrders(instrument);
         }
 
         private IEnumerable<MarginTradingAccount> UpdateClosePriceAndDetectStopout(string instrument)
         {
-            var openOrders = _ordersCache.ActiveOrders.GetOrdersByInstrument(instrument)
+            var openOrders = _ordersCache.Positions.GetOrdersByInstrument(instrument)
                 .GroupBy(x => x.AccountId).ToDictionary(x => x.Key, x => x.ToArray());
 
             foreach (var accountOrders in openOrders)
@@ -384,9 +405,9 @@ namespace MarginTrading.Backend.Services
 
         private void CommitStopout(MarginTradingAccount account)
         {
-            var pendingOrders = _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(account.Id);
+            var pendingOrders = _ordersCache.Active.GetOrdersByAccountIds(account.Id);
 
-            var cancelledPendingOrders = new List<Position>();
+            var cancelledPendingOrders = new List<Order>();
             
             foreach (var pendingOrder in pendingOrders)
             {
@@ -394,7 +415,7 @@ namespace MarginTrading.Backend.Services
                 CancelPendingOrder(pendingOrder.Id, OrderCloseReason.CanceledBySystem, "Stop out");
             }
             
-            var activeOrders = _ordersCache.ActiveOrders.GetOrdersByAccountIds(account.Id);
+            var activeOrders = _ordersCache.Positions.GetOrdersByAccountIds(account.Id);
             
             var ordersToClose = new List<Position>();
             var newAccountUsedMargin = account.GetUsedMargin();
@@ -413,7 +434,7 @@ namespace MarginTrading.Backend.Services
                 return;
 
             _stopoutEventChannel.SendEvent(this,
-                new StopOutEventArgs(account, ordersToClose.Concat(cancelledPendingOrders).ToArray()));
+                new StopOutEventArgs(account, ordersToClose/*.Concat(cancelledPendingOrders)*/.ToArray()));
 
             foreach (var order in ordersToClose)
                 SetOrderToClosingState(order, OrderCloseReason.StopOut);
@@ -425,8 +446,8 @@ namespace MarginTrading.Backend.Services
             order.StartClosingDate = DateTime.UtcNow;
             order.CloseReason = reason;
 
-            _ordersCache.ClosingOrders.Add(order);
-            _ordersCache.ActiveOrders.Remove(order);
+            //_ordersCache.ClosingOrders.Add(order);
+            _ordersCache.Positions.Remove(order);
         }
 
         private void NotifyAccountLevelChanged(MarginTradingAccount account, AccountLevel newAccountLevel)
@@ -439,60 +460,22 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        private async Task<Position> CloseActiveOrderByMatchingEngineAsync(Position order, IMatchingEngineBase matchingEngine, OrderCloseReason reason, string comment)
+        public Task<Order> ClosePositionAsync(string positionId, OrderCloseReason reason, string comment = null)
         {
-            order.CloseOrderbookId = matchingEngine.Id;
-            order.StartClosingDate = DateTime.UtcNow;
-            order.CloseReason = reason;
-            order.Comment = comment;
+            var position = _ordersCache.Positions.GetOrderById(positionId);
 
-            await matchingEngine.MatchMarketOrderForCloseAsync(order, matchedOrders =>
-            {
-                if (!matchedOrders.Any())
-                {
-                    order.CloseRejectReasonText = "No orders to match";
-                    return false;
-                }
-                
-                order.MatchedCloseOrders.AddRange(matchedOrders);
+            var me = _meRouter.GetMatchingEngineForClose(position);
 
-                _equivalentPricesService.EnrichClosingOrder(order);
+            Order closeOrder = null;
 
-                if (!order.GetIsCloseFullfilled())
-                {
-                    order.Status = PositionStatus.Closing;
-                    _ordersCache.ActiveOrders.Remove(order);
-                    _ordersCache.ClosingOrders.Add(order);
-                    _orderClosingEventChannel.SendEvent(this, new OrderClosingEventArgs(order));
-                }
-                else
-                {
-                    order.Status = PositionStatus.Closed;
-                    order.CloseDate = DateTime.UtcNow;
-                    _ordersCache.ActiveOrders.Remove(order);
-                    _orderClosedEventChannel.SendEvent(this, new OrderClosedEventArgs(order));
-                }
-
-                return true;
-            });
-
-            return order;
+            return PlaceMarketOrderByMatchingEngineAsync(closeOrder, me /*, reason, comment*/);
         }
 
-        public Task<Position> CloseActiveOrderAsync(string orderId, OrderCloseReason reason, string comment = null)
-        {
-            var order = GetActiveOrderForClose(orderId);
-
-            var me = _meRouter.GetMatchingEngineForClose(order);
-
-            return CloseActiveOrderByMatchingEngineAsync(order, me, reason, comment);
-        }
-
-        public Position CancelPendingOrder(string orderId, OrderCloseReason reason, string comment = null)
+        public Order CancelPendingOrder(string orderId, OrderCloseReason reason, string comment = null)
         {
             using (_contextFactory.GetWriteSyncContext($"{nameof(TradingEngine)}.{nameof(CancelPendingOrder)}"))
             {
-                var order = _ordersCache.WaitingForExecutionOrders.GetOrderById(orderId);
+                var order = _ordersCache.Active.GetOrderById(orderId);
                 CancelWaitingForExecutionOrder(order, reason, comment);
                 return order;
             }
@@ -500,52 +483,25 @@ namespace MarginTrading.Backend.Services
         #endregion
 
 
-        private Position GetActiveOrderForClose(string orderId)
+        private void CancelWaitingForExecutionOrder(Order order, OrderCloseReason reason, string comment)
         {
-            using (_contextFactory.GetReadSyncContext($"{nameof(TradingEngine)}.{nameof(GetActiveOrderForClose)}"))
-                return _ordersCache.ActiveOrders.GetOrderById(orderId);
-        }
-
-        private void CancelWaitingForExecutionOrder(Position order, OrderCloseReason reason, string comment)
-        {
-            order.Status = PositionStatus.Closed;
-            order.CloseDate = DateTime.UtcNow;
-            order.CloseReason = reason;
-            order.Comment = comment;
+//            order.Status = PositionStatus.Closed;
+//            order.CloseDate = DateTime.UtcNow;
+//            order.CloseReason = reason;
+//            order.Comment = comment;
             
-            _ordersCache.WaitingForExecutionOrders.Remove(order);
+            _ordersCache.Active.Remove(order);
 
             _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order));
         }
 
-        public void ChangeOrderLimits(string orderId, decimal? stopLoss, decimal? takeProfit, decimal? expectedOpenPrice)
+        public void ChangeOrderLimits(string orderId, decimal price)
         {
-            using (_contextFactory.GetWriteSyncContext($"{nameof(TradingEngine)}.{nameof(ChangeOrderLimits)}"))
-            {
-                var order = _ordersCache.GetOrderById(orderId);
+            var order = _ordersCache.GetOrderById(orderId);
 
-                if (order.Status != PositionStatus.WaitingForExecution && expectedOpenPrice > 0)
-                {
-                    return;
-                }
+            order.ChangePrice(price, _dateService.Now());
 
-                var quote = _quoteCashService.GetQuote(order.Instrument);
-                var tp = takeProfit == 0 ? null : takeProfit;
-                var sl = stopLoss == 0 ? null : stopLoss;
-                var expOpenPrice = expectedOpenPrice == 0 ? null : expectedOpenPrice;
-
-                var accountAsset = _accountAssetsCacheService.GetTradingInstrument(order.TradingConditionId,
-                    order.Instrument);
-
-                _validateOrderService.ValidateOrderStops(order.GetOrderDirection(), quote,
-                    accountAsset.Delta, accountAsset.Delta, tp, sl, expOpenPrice, order.AssetAccuracy);
-
-                order.TakeProfit = tp.HasValue ? Math.Round(tp.Value, order.AssetAccuracy) : (decimal?)null;
-                order.StopLoss = sl.HasValue ? Math.Round(sl.Value, order.AssetAccuracy) : (decimal?)null;
-                order.ExpectedOpenPrice = expOpenPrice.HasValue ? Math.Round(expOpenPrice.Value, order.AssetAccuracy) : (decimal?)null;
-                order.LastModified = DateTime.UtcNow;
-                _orderLimitsChangesEventChannel.SendEvent(this, new OrderLimitsChangedEventArgs(order));
-            }
+            _orderLimitsChangesEventChannel.SendEvent(this, new OrderChangedEventArgs(order));
         }
 
         public bool PingLock()
@@ -556,60 +512,20 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        private void ProcessOrdersClosing(string instrument = null)
+        private void ProcessInProgressOrders(string instrument = null)
         {
-            var closingOrders = string.IsNullOrEmpty(instrument)
-                ? _ordersCache.ClosingOrders.GetAllOrders()
-                : _ordersCache.ClosingOrders.GetOrdersByInstrument(instrument);
+            var orders = string.IsNullOrEmpty(instrument)
+                ? _ordersCache.InProgress.GetAllOrders()
+                : _ordersCache.InProgress.GetOrdersByInstrument(instrument);
 
-            if (closingOrders.Count == 0)
+            if (orders.Count == 0)
                 return;
 
-            foreach (var order in closingOrders)
+            foreach (var order in orders)
             {
-                var me = _meRouter.GetMatchingEngineForClose(order);
+                var me = _meRouter.GetMatchingEngineForExecution(order);
 
-                ProcessOrdersClosingByMatchingEngine(order, me);
-            }
-        }
-
-        private void ProcessOrdersClosingByMatchingEngine(Position order, IMatchingEngineBase matchingEngine)
-        {
-            order.CloseOrderbookId = matchingEngine.Id;
-
-            matchingEngine.MatchMarketOrderForCloseAsync(order, matchedOrders =>
-            {
-                if (matchedOrders.Count == 0)
-                {
-                    //if order did not started to close yet and for any reason we did not close it now - make active
-                    if (!order.MatchedCloseOrders.Any())
-                    {
-                        order.Status = PositionStatus.Active;
-                        order.CloseRejectReasonText = "No orders to match";
-
-                        _ordersCache.ActiveOrders.Add(order);
-                        _ordersCache.ClosingOrders.Remove(order);
-                    }
-
-                    return false;
-                }
-
-                MakeOrderClosed(order, matchedOrders);
-
-                return true;
-            }).GetAwaiter().GetResult();
-        }
-
-        private void MakeOrderClosed(Position order, MatchedOrderCollection matchedOrders)
-        {
-            order.MatchedCloseOrders.AddRange(matchedOrders);
-
-            if (order.GetIsCloseFullfilled())
-            {
-                order.Status = PositionStatus.Closed;
-                order.CloseDate = DateTime.UtcNow;
-                _ordersCache.ClosingOrders.Remove(order);
-                _orderClosedEventChannel.SendEvent(this, new OrderClosedEventArgs(order));
+                PlaceMarketOrderByMatchingEngineAsync(order, me);
             }
         }
 
@@ -617,7 +533,7 @@ namespace MarginTrading.Backend.Services
 
         void IEventConsumer<BestPriceChangeEventArgs>.ConsumeEvent(object sender, BestPriceChangeEventArgs ea)
         {
-            ProcessOrdersClosing(ea.BidAskPair.Instrument);
+            ProcessInProgressOrders(ea.BidAskPair.Instrument);
             ProcessOrdersActive(ea.BidAskPair.Instrument);
             ProcessOrdersWaitingForExecution(ea.BidAskPair.Instrument);
         }

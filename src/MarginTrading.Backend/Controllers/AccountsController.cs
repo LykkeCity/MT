@@ -81,54 +81,54 @@ namespace MarginTrading.Backend.Controllers
         public async Task<CloseAccountPositionsResponse> CloseAccountPositions(
             [FromBody] CloseAccountPositionsRequest request)
         {
-            request.RequiredNotNull(nameof(request));
-
-            var accounts = request.IgnoreMarginLevel
-                ? null
-                : _accountsCacheService.GetAll().ToDictionary(a => a.Id);
-
+//            request.RequiredNotNull(nameof(request));
+//
+//            var accounts = request.IgnoreMarginLevel
+//                ? null
+//                : _accountsCacheService.GetAll().ToDictionary(a => a.Id);
+//
             var result = new CloseAccountPositionsResponse()
             {
                 Results = new List<CloseAccountPositionsResult>()
             };
-
-            foreach (var accountId in request.AccountIds)
-            {
-                if (!request.IgnoreMarginLevel)
-                {
-                    var account = accounts[accountId];
-                    var tradingCondition =
-                        _tradingConditionsCache.GetTradingCondition(account.TradingConditionId);
-                    var accountMarginUsageLevel = account.GetMarginUsageLevel();
-
-                    if (accountMarginUsageLevel > tradingCondition.MarginCall1)
-                    {
-                        result.Results.Add(new CloseAccountPositionsResult
-                        {
-                            AccountId = accountId,
-                            ClosedPositions = new OrderFullContract[0],
-                            ErrorMessage =
-                                $"Account margin usage level [{accountMarginUsageLevel}] is greater then margin call level [{tradingCondition.MarginCall1}]"
-                        });
-
-                        continue;
-                    }
-                }
-
-                var closedOrders = await _accountManager.CloseAccountOrders(accountId);
-
-                result.Results.Add(new CloseAccountPositionsResult
-                {
-                    AccountId = accountId,
-                    ClosedPositions = closedOrders.Select(o =>
-                    {
-                        var orderUpdateType = o.Status == PositionStatus.Closing
-                            ? OrderUpdateType.Closing
-                            : OrderUpdateType.Close;
-                        return o.ToFullContract(orderUpdateType, _dateService.Now());
-                    }).ToArray()
-                });
-            }
+//
+//            foreach (var accountId in request.AccountIds)
+//            {
+//                if (!request.IgnoreMarginLevel)
+//                {
+//                    var account = accounts[accountId];
+//                    var tradingCondition =
+//                        _tradingConditionsCache.GetTradingCondition(account.TradingConditionId);
+//                    var accountMarginUsageLevel = account.GetMarginUsageLevel();
+//
+//                    if (accountMarginUsageLevel > tradingCondition.MarginCall1)
+//                    {
+//                        result.Results.Add(new CloseAccountPositionsResult
+//                        {
+//                            AccountId = accountId,
+//                            ClosedPositions = new OrderFullContract[0],
+//                            ErrorMessage =
+//                                $"Account margin usage level [{accountMarginUsageLevel}] is greater then margin call level [{tradingCondition.MarginCall1}]"
+//                        });
+//
+//                        continue;
+//                    }
+//                }
+//
+//                var closedOrders = await _accountManager.CloseAccountOrders(accountId);
+//
+//                result.Results.Add(new CloseAccountPositionsResult
+//                {
+//                    AccountId = accountId,
+//                    ClosedPositions = closedOrders.Select(o =>
+//                    {
+//                        var orderUpdateType = o.Status == PositionStatus.Closing
+//                            ? OrderUpdateType.Closing
+//                            : OrderUpdateType.Close;
+//                        return o.ToFullContract(orderUpdateType, _dateService.Now());
+//                    }).ToArray()
+//                });
+//            }
 
             return result;
         }

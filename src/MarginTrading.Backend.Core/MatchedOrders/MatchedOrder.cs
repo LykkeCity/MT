@@ -10,5 +10,6 @@ namespace MarginTrading.Backend.Core.MatchedOrders
         public decimal Volume { get; set; }
         public decimal Price { get; set; }
         public DateTime MatchedDate { get; set; }
+        public bool IsExternal { get; set; }
     }
 }

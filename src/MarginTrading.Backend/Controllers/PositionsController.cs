@@ -57,12 +57,12 @@ namespace MarginTrading.Backend.Controllers
         [HttpDelete]
         public async Task CloseAsync([CanBeNull] [FromRoute] string positionId/*, [FromBody] PositionCloseRequest request*/)
         {
-            if (!_ordersCache.ActiveOrders.TryGetOrderById(positionId, out var order))
+            if (!_ordersCache.Positions.TryGetOrderById(positionId, out var position))
             {
                 throw new InvalidOperationException("Position not found");
             }
 
-            if (_assetDayOffService.IsDayOff(order.Instrument))
+            if (_assetDayOffService.IsDayOff(position.Instrument))
             {
                 throw new InvalidOperationException("Trades for instrument are not available");
             }
@@ -73,11 +73,11 @@ namespace MarginTrading.Backend.Controllers
 //                    ? OrderCloseReason.ClosedByBroker
 //                    : OrderCloseReason.Close;
 
-            order = await _tradingEngine.CloseActiveOrderAsync(positionId, reason, /*request.Comment*/ "");
+            var order = await _tradingEngine.ClosePositionAsync(positionId, reason, /*request.Comment*/ "");
 
-            if (order.Status != PositionStatus.Closed && order.Status != PositionStatus.Closing)
+            if (order.Status != OrderStatus.Executed && order.Status != OrderStatus.ExecutionStarted)
             {
-                throw new InvalidOperationException(order.CloseRejectReasonText);
+                throw new InvalidOperationException(order.RejectReasonText);
             }
 
             _consoleWriter.WriteLine(
@@ -98,7 +98,7 @@ namespace MarginTrading.Backend.Controllers
             /*[FromBody] PositionCloseRequest request,*/
             [FromQuery] PositionDirectionContract? direction = null)
         {
-            var orders = _ordersCache.ActiveOrders.GetAllOrders();
+            var orders = _ordersCache.Positions.GetAllOrders();
             
             if (!string.IsNullOrWhiteSpace(instrument))
                 orders = orders.Where(o => o.Instrument == instrument).ToList();
@@ -120,11 +120,11 @@ namespace MarginTrading.Backend.Controllers
             
             foreach (var orderId in orders.Select(o => o.Id).ToList())
             {
-                var closedOrder = await _tradingEngine.CloseActiveOrderAsync(orderId, reason, /*request.Comment*/ "");
+                var closedOrder = await _tradingEngine.ClosePositionAsync(orderId, reason, /*request.Comment*/ "");
 
-                if (closedOrder.Status != PositionStatus.Closed && closedOrder.Status != PositionStatus.Closing)
+                if (closedOrder.Status != OrderStatus.Executed && closedOrder.Status != OrderStatus.ExecutionStarted)
                 {
-                    throw new InvalidOperationException(closedOrder.CloseRejectReasonText);
+                    throw new InvalidOperationException(closedOrder.RejectReasonText);
                 }
 
                 _operationsLogService.AddLog("action close positions group", closedOrder.AccountId, ""/* request.ToJson()*/,
@@ -145,7 +145,7 @@ namespace MarginTrading.Backend.Controllers
         [HttpDelete]
         public async Task CloseGroupAsync([FromRoute] string accountId, [FromQuery] string assetPairId = null)
         {
-            var orders = _ordersCache.ActiveOrders.GetAllOrders();
+            var orders = _ordersCache.Positions.GetAllOrders();
 
             if (string.IsNullOrWhiteSpace(accountId))
             {
@@ -164,11 +164,11 @@ namespace MarginTrading.Backend.Controllers
             
             foreach (var orderId in orders.Select(o => o.Id).ToList())
             {
-                var closedOrder = await _tradingEngine.CloseActiveOrderAsync(orderId, reason, /*request.Comment*/ "");
+                var closedOrder = await _tradingEngine.ClosePositionAsync(orderId, reason, /*request.Comment*/ "");
 
-                if (closedOrder.Status != PositionStatus.Closed && closedOrder.Status != PositionStatus.Closing)
+                if (closedOrder.Status != OrderStatus.Executed && closedOrder.Status != OrderStatus.ExecutionStarted)
                 {
-                    throw new InvalidOperationException(closedOrder.CloseRejectReasonText);
+                    throw new InvalidOperationException(closedOrder.RejectReasonText);
                 }
 
                 _operationsLogService.AddLog("action close positions group", closedOrder.AccountId, ""/* request.ToJson()*/,
@@ -185,7 +185,7 @@ namespace MarginTrading.Backend.Controllers
         [HttpGet, Route("{positionId}")]
         public Task<OpenPositionContract> GetAsync(string positionId)
         {
-            if (!_ordersCache.ActiveOrders.TryGetOrderById(positionId, out var order))
+            if (!_ordersCache.Positions.TryGetOrderById(positionId, out var order))
                 return null;
 
             return Task.FromResult(Convert(order));
@@ -198,7 +198,7 @@ namespace MarginTrading.Backend.Controllers
         public Task<List<OpenPositionContract>> ListAsync([FromQuery]string accountId = null,
             [FromQuery] string assetPairId = null)
         {
-            IEnumerable<Position> orders = _ordersCache.ActiveOrders.GetAllOrders();
+            IEnumerable<Position> orders = _ordersCache.Positions.GetAllOrders();
             if (!string.IsNullOrWhiteSpace(accountId))
                 orders = orders.Where(o => o.AccountId == accountId);
 

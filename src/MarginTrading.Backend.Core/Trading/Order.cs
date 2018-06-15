@@ -107,7 +107,12 @@ namespace MarginTrading.Backend.Core.Trading
         /// <summary>
         /// Rate for calculation of equivalent price
         /// </summary>
-        public decimal CurrentEquivalentRate { get; }
+        public decimal EquivalentRate { get; private set; }
+        
+        /// <summary>
+        /// Rate for calculation of price in account asset
+        /// </summary>
+        public decimal FxRate { get; private set; }
         
         /// <summary>
         /// Current order status
@@ -172,7 +177,7 @@ namespace MarginTrading.Backend.Core.Trading
         /// <summary>
         /// ID of parent position (for related orders)
         /// </summary>
-        public string ParentPositionId { get; private set; }
+        public string ParentPositionId { get; }
 
         /// <summary>
         /// Order originator
@@ -187,7 +192,7 @@ namespace MarginTrading.Backend.Core.Trading
             DateTime? validity, string accountId, string tradingConditionId, string accountAssetId, decimal? price,
             string equivalentAsset, OrderFillType fillType, string comment, string legalEntity, bool forceOpen,
             OrderType orderType, string parentOrderId, string parentPositionId, OriginatorType originator,
-            decimal currentEquivalentRate)
+            decimal equivalentRate, decimal fxRate)
         {
             Id = id;
             Code = code;
@@ -209,7 +214,8 @@ namespace MarginTrading.Backend.Core.Trading
             ParentOrderId = parentOrderId;
             ParentPositionId = parentPositionId;
             Originator = originator;
-            CurrentEquivalentRate = currentEquivalentRate;
+            EquivalentRate = equivalentRate;
+            FxRate = fxRate;
             Direction = direction;
             Status = OrderStatus.Created;
         }
@@ -235,10 +241,19 @@ namespace MarginTrading.Backend.Core.Trading
             Status = OrderStatus.ExecutionStarted;
         }
         
-        public void Execute(decimal price, DateTime dateTime)
+        public void Execute(decimal price, DateTime dateTime, string externalOrderId, string externalProviderId)
         {
+            Status = OrderStatus.Executed;
             Executed = dateTime;
             ExecutionPrice = price;
+            ExternalOrderId = externalOrderId;
+            ExternalProviderId = externalProviderId;
+        }
+
+        public void SetRates(decimal equivalentRate, decimal fxRate)
+        {
+            EquivalentRate = equivalentRate;
+            FxRate = fxRate;
         }
 
         public void Reject(OrderRejectReason reason, string reasonText, string comment, DateTime dateTime)
@@ -255,7 +270,7 @@ namespace MarginTrading.Backend.Core.Trading
             Status = OrderStatus.Inactive;
             MatchingEngineId = matchingEngineId;
         }
-
+        
         #endregion
         
     }

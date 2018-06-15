@@ -26,20 +26,20 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         {
             SendOrderHistory(ea);
 
-            if (ea.UpdateType == OrderUpdateType.Close)
-            {
-                OnClosed(ea);
-            }
+            //if (ea.UpdateType == OrderUpdateType.Close)
+            //{
+            //    OnClosed(ea);
+            //}
         }
 
         int IEventConsumer.ConsumerRank => 100;
 
         private void OnClosed(OrderUpdateBaseEventArgs ea)
         {
-            var order = ea.Order;
-            var totalFpl = order.GetTotalFpl();
-            var account = _accountsCacheService.Get(order.AccountId);
-            _cqrsSender.PublishEvent(new PositionClosedEvent(account.Id, account.ClientId, order.Id, totalFpl));
+            //var order = ea.Order;
+            //var totalFpl = order.GetTotalFpl();
+            //var account = _accountsCacheService.Get(order.AccountId);
+            //_cqrsSender.PublishEvent(new PositionClosedEvent(account.Id, account.ClientId, order.Id, totalFpl));
         }
 
         private void SendOrderHistory(OrderUpdateBaseEventArgs ea)

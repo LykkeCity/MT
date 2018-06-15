@@ -82,7 +82,7 @@ namespace MarginTrading.Backend.Modules
             builder.RegisterType<UpdatedAccountsStatsConsumer>()
                 .As<IEventConsumer<AccountBalanceChangedEventArgs>>()
                 .As<IEventConsumer<OrderPlacedEventArgs>>()
-                .As<IEventConsumer<OrderClosedEventArgs>>()
+                .As<IEventConsumer<OrderExecutedEventArgs>>()
                 .As<IEventConsumer<OrderCancelledEventArgs>>()
                 .SingleInstance();
 

@@ -279,7 +279,8 @@ namespace MarginTradingTests.OrderBooks
             };
             
             //Act
-            var prices = orderbooks.GetPricesForOpen(order);
+            var prices = orderbooks.GetPricesForExecution(null);
+            //var prices = orderbooks.GetPricesForOpen(order);
             
             //Assert
             Assert.AreEqual(2, prices.Count);
@@ -303,7 +304,8 @@ namespace MarginTradingTests.OrderBooks
             };
             
             //Act
-            var prices = orderbooks.GetPricesForOpen(order);
+            var prices = orderbooks.GetPricesForExecution(null);
+            //var prices = orderbooks.GetPricesForOpen(order);
             
             //Assert
             Assert.AreEqual(2, prices.Count);
@@ -328,8 +330,8 @@ namespace MarginTradingTests.OrderBooks
             };
             
             //Act
-            var price = orderbooks.GetPriceForClose(order);
-            
+            //var price = orderbooks.GetPriceForClose(order);
+            var price = orderbooks.GetPriceForPositionClose(null);
             //Assert
             Assert.AreEqual(9M, price);
         }
@@ -349,7 +351,8 @@ namespace MarginTradingTests.OrderBooks
             };
             
             //Act
-            var price = orderbooks.GetPriceForClose(order);
+            var price = orderbooks.GetPriceForPositionClose(null);
+            //var price = orderbooks.GetPriceForClose(order);
             
             //Assert
             Assert.AreEqual(100, price);

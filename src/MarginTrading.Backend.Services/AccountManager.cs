@@ -11,6 +11,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services;
 using MarginTrading.Contract.RabbitMqMessageModels;
@@ -71,7 +72,7 @@ namespace MarginTrading.Backend.Services
 
         private IReadOnlyList<IMarginTradingAccount> GetAccountsToWriteStats()
         {
-            var accountsIdsToWrite = Enumerable.ToHashSet(_ordersCache.GetActive().Select(a => a.AccountId).Distinct());
+            var accountsIdsToWrite = Enumerable.ToHashSet(_ordersCache.GetPositions().Select(a => a.AccountId).Distinct());
             return _accountsCacheService.GetAll().Where(a => accountsIdsToWrite.Contains(a.Id)).ToList();
         }
 
@@ -83,16 +84,16 @@ namespace MarginTrading.Backend.Services
                 .Select(ch => new AccountStatsUpdateMessage {Accounts = ch.ToArray()});
         }
 
-        public async Task<List<IPosition>> CloseAccountOrders(string accountId)
+        public async Task<List<Order>> CloseAccountOrders(string accountId)
         {
-            var openedOrders = _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountId).ToArray();
-            var closedOrders = new List<IPosition>();
+            var positions = _ordersCache.Positions.GetOrdersByAccountIds(accountId).ToArray();
+            var closedOrders = new List<Order>();
 
-            foreach (var order in openedOrders)
+            foreach (var position in positions)
             {
                 try
                 {
-                    var closedOrder = await _tradingEngine.CloseActiveOrderAsync(order.Id,
+                    var closedOrder = await _tradingEngine.ClosePositionAsync(position.Id,
                         OrderCloseReason.ClosedByBroker, "Close orders for account");
 
                     closedOrders.Add(closedOrder);
@@ -100,12 +101,13 @@ namespace MarginTrading.Backend.Services
                 catch (Exception e)
                 {
                     await _log.WriteWarningAsync(nameof(AccountManager), "CloseAccountActiveOrders",
-                        $"AccountId: {accountId}, OrderId: {order.Id}", $"Error closing order: {e.Message}");
+                        $"AccountId: {accountId}, OrderId: {position.Id}", $"Error closing order: {e.Message}");
                 }
             }
 
-            var pendingOrders = _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(accountId);
-            foreach (var order in pendingOrders)
+            var activeOrders = _ordersCache.Active.GetOrdersByAccountIds(accountId);
+            
+            foreach (var order in activeOrders)
             {
                 try
                 {

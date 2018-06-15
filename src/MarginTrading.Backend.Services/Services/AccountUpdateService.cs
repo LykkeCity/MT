@@ -4,6 +4,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.TradingConditions;
 
@@ -34,7 +35,7 @@ namespace MarginTrading.Backend.Services
 
         public void UpdateAccount(IMarginTradingAccount account)
         {
-            UpdateAccount(account, GetActiveOrders(account.Id), GetPendingOrders(account.Id));
+            UpdateAccount(account, GetPositions(account.Id), GetActiveOrders(account.Id));
         }
 
         public bool IsEnoughBalance(Position order)
@@ -51,10 +52,10 @@ namespace MarginTrading.Backend.Services
         {
             var newInstance = MarginTradingAccount.Create(_accountsCacheService.Get(order.AccountId));
 
-            var activeOrders = GetActiveOrders(newInstance.Id);
+            var activeOrders = GetPositions(newInstance.Id);
             activeOrders.Add(order);
             
-            var pendingOrders = GetPendingOrders(newInstance.Id);
+            var pendingOrders = GetActiveOrders(newInstance.Id);
 
             UpdateAccount(newInstance, activeOrders, pendingOrders);
 
@@ -63,7 +64,7 @@ namespace MarginTrading.Backend.Services
         
         private void UpdateAccount(IMarginTradingAccount account,
             ICollection<Position> activeOrders,
-            ICollection<Position> pendingOrders)
+            ICollection<Order> pendingOrders)
         {
             var accuracy = _assetsCache.GetAssetAccuracy(account.BaseAssetId);
             var activeOrdersMaintenanceMargin = activeOrders.Sum(item => item.GetMarginMaintenance());
@@ -83,14 +84,14 @@ namespace MarginTrading.Backend.Services
             account.AccountFpl.CalculatedHash = account.AccountFpl.ActualHash;
         }
 
-        private ICollection<Position> GetActiveOrders(string accountId)
+        private ICollection<Position> GetPositions(string accountId)
         {
-            return _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountId);
+            return _ordersCache.Positions.GetOrdersByAccountIds(accountId);
         }
         
-        private ICollection<Position> GetPendingOrders(string accountId)
+        private ICollection<Order> GetActiveOrders(string accountId)
         {
-            return _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(accountId);
+            return _ordersCache.Active.GetOrdersByAccountIds(accountId);
         }
     }
 }

@@ -1,14 +1,15 @@
 ﻿using System;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Trading;
 
 namespace MarginTrading.Backend.Core
 {
     public static class OrderExtensions
     {
-        public static bool IsSuitablePriceForPendingOrder(this IPosition order, decimal price)
+        public static bool IsSuitablePriceForPendingOrder(this Order order, decimal price)
         {
-            return order.ExpectedOpenPrice.HasValue && (order.GetOrderDirection() == OrderDirection.Buy && price <= order.ExpectedOpenPrice
-                                                        || order.GetOrderDirection() == OrderDirection.Sell && price >= order.ExpectedOpenPrice);
+            return order.Price.HasValue && (order.Direction == OrderDirection.Buy && price <= order.Price
+                                            || order.Direction == OrderDirection.Sell && price >= order.Price);
         }
 
         public static bool IsStopLoss(this IPosition order)
@@ -130,27 +131,6 @@ namespace MarginTrading.Backend.Core
         public static decimal GetCloseCommission(this IPosition order)
         {
             return Math.Abs(order.GetMatchedCloseVolume()) * order.CloseCommission;
-        }
-
-        public static bool IsOpened(this IPosition order)
-        {
-            return order.Status == PositionStatus.Active
-                   && order.OpenDate.HasValue
-                   && order.OpenPrice > 0
-                   && order.MatchedOrders.SummaryVolume > 0;
-        }
-
-        public static bool IsClosed(this IPosition order)
-        {
-            return order.Status == PositionStatus.Closed
-                   && (order.CloseReason == OrderCloseReason.Close
-                       || order.CloseReason == OrderCloseReason.ClosedByBroker
-                       || order.CloseReason == OrderCloseReason.StopLoss
-                       || order.CloseReason == OrderCloseReason.StopOut
-                       || order.CloseReason == OrderCloseReason.TakeProfit)
-                   && order.CloseDate.HasValue
-                   && order.ClosePrice > 0
-                   && order.MatchedCloseOrders.SummaryVolume > 0;
         }
 
         public static OrderDirection GetOrderDirectionToMatchInOrderBook(this OrderDirection orderType)

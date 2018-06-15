@@ -5,15 +5,16 @@ using System.Linq;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Infrastructure;
 
 namespace MarginTrading.Backend.Services
 {
     public interface IOrderReader
     {
-        ImmutableArray<Position> GetAll();
-        ImmutableArray<Position> GetActive();
-        ImmutableArray<Position> GetPending();
+        ImmutableArray<Order> GetAllOrders();
+        ImmutableArray<Position> GetPositions();
+        ImmutableArray<Order> GetPending();
     }
 
     public class OrdersCache : IOrderReader
@@ -24,45 +25,48 @@ namespace MarginTrading.Backend.Services
         {
             _contextFactory = contextFactory;
             
-            ActiveOrders = new OrderCacheGroup(new Position[0], PositionStatus.Active);
-            WaitingForExecutionOrders = new OrderCacheGroup(new Position[0], PositionStatus.WaitingForExecution);
-            ClosingOrders = new OrderCacheGroup(new Position[0], PositionStatus.Closing);
+            Active = new OrderCacheGroup(new Order[0], OrderStatus.Active);
+            Inactive = new OrderCacheGroup(new Order[0], OrderStatus.Inactive);
+            InProgress = new OrderCacheGroup(new Order[0], OrderStatus.ExecutionStarted);
+            Positions = new PositionsCache(new Position[0]);
         }
 
-        public OrderCacheGroup ActiveOrders { get; private set; }
-        public OrderCacheGroup WaitingForExecutionOrders { get; private set; }
-        public OrderCacheGroup ClosingOrders { get; private set; }
+        public OrderCacheGroup Active { get; private set; }
+        public OrderCacheGroup Inactive { get; private set; }
+        public OrderCacheGroup InProgress { get; private set; }
+        public PositionsCache Positions { get; private set; }
         
-        public ImmutableArray<Position> GetAll()
+        public ImmutableArray<Order> GetAllOrders()
         {
-            using (_contextFactory.GetReadSyncContext($"{nameof(OrdersCache)}.{nameof(GetAll)}"))
-                return ActiveOrders.GetAllOrders()
-                    .Union(WaitingForExecutionOrders.GetAllOrders())
-                    .Union(ClosingOrders.GetAllOrders()).ToImmutableArray();
+            using (_contextFactory.GetReadSyncContext($"{nameof(OrdersCache)}.{nameof(GetAllOrders)}"))
+                return Active.GetAllOrders()
+                    .Union(Inactive.GetAllOrders())
+                    .Union(InProgress.GetAllOrders()).ToImmutableArray();
         }
 
-        public ImmutableArray<Position> GetActive()
+        public ImmutableArray<Position> GetPositions()
         {
-            return ActiveOrders.GetAllOrders().ToImmutableArray();
+            return Positions.GetAllOrders().ToImmutableArray();
         }
 
-        public ImmutableArray<Position> GetPending()
+        public ImmutableArray<Order> GetPending()
         {
-            return WaitingForExecutionOrders.GetAllOrders().ToImmutableArray();
+            return Active.GetAllOrders().ToImmutableArray();
         }
 
-        public ImmutableArray<Position> GetPendingForMarginRecalc(string instrument)
-        {
-            return WaitingForExecutionOrders.GetOrdersByMarginInstrument(instrument).ToImmutableArray();
-        }
+//        public ImmutableArray<Position> GetPendingForMarginRecalc(string instrument)
+//        {
+//            return WaitingForExecutionOrders.GetOrdersByMarginInstrument(instrument).ToImmutableArray();
+//        }
 
-        public bool TryGetOrderById(string orderId, out Position order)
+        public bool TryGetOrderById(string orderId, out Order order)
         {
-            return WaitingForExecutionOrders.TryGetOrderById(orderId, out order) ||
-                   ActiveOrders.TryGetOrderById(orderId, out order);
+            return Active.TryGetOrderById(orderId, out order) ||
+                   Inactive.TryGetOrderById(orderId, out order) || 
+                    InProgress.TryGetOrderById(orderId, out order);
         }
         
-        public Position GetOrderById(string orderId)
+        public Order GetOrderById(string orderId)
         {
             if (TryGetOrderById(orderId, out var result))
                 return result;
@@ -70,11 +74,12 @@ namespace MarginTrading.Backend.Services
             throw new Exception(string.Format(MtMessages.OrderNotFound, orderId));
         }
 
-        public void InitOrders(List<Position> orders)
+        public void InitOrders(List<Order> orders, List<Position> positions)
         {
-            ActiveOrders = new OrderCacheGroup(orders, PositionStatus.Active);
-            WaitingForExecutionOrders = new OrderCacheGroup(orders, PositionStatus.WaitingForExecution);
-            ClosingOrders = new OrderCacheGroup(orders, PositionStatus.Closing);
+            Active = new OrderCacheGroup(orders, OrderStatus.Active);
+            Inactive = new OrderCacheGroup(orders, OrderStatus.Inactive);
+            InProgress = new OrderCacheGroup(orders, OrderStatus.ExecutionStarted);
+            Positions = new PositionsCache(positions);
         }
     }
 }

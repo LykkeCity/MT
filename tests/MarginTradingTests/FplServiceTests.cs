@@ -253,7 +253,7 @@ namespace MarginTradingTests
 
             foreach (var order in orders)
             {
-                _ordersCache.ActiveOrders.Add(order);
+                //_ordersCache.ActiveOrders.Add(order);
             }
 
             orders[0].UpdateClosePrice(1.06M);

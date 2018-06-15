@@ -10,7 +10,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
     public class UpdatedAccountsStatsConsumer :
         IEventConsumer<AccountBalanceChangedEventArgs>,
         IEventConsumer<OrderPlacedEventArgs>,
-        IEventConsumer<OrderClosedEventArgs>,
+        IEventConsumer<OrderExecutedEventArgs>,
         IEventConsumer<OrderCancelledEventArgs>
     {
         private readonly IAccountsCacheService _accountsCacheService;
@@ -36,7 +36,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             NotifyAccountStatsChanged(ea.Order.AccountId);
         }
 
-        public void ConsumeEvent(object sender, OrderClosedEventArgs ea)
+        public void ConsumeEvent(object sender, OrderExecutedEventArgs ea)
         {
             NotifyAccountStatsChanged(ea.Order.AccountId);
         }

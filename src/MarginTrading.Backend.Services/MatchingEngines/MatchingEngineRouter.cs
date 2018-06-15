@@ -24,7 +24,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         }
 
         //TODO: implement routes logic
-        public IMatchingEngineBase GetMatchingEngineForOpen(Order order)
+        public IMatchingEngineBase GetMatchingEngineForExecution(Order order)
         {
             var route = _routesManager.FindRoute(null, order.TradingConditionId, order.AssetPairId,
                 order.Direction);

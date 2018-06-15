@@ -14,7 +14,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
     // TODO: Rename by role
     public class MarginCallConsumer : IEventConsumer<MarginCallEventArgs>,
         IEventConsumer<OrderPlacedEventArgs>,
-        IEventConsumer<OrderClosedEventArgs>,
+        IEventConsumer<OrderExecutedEventArgs>,
         IEventConsumer<OrderCancelledEventArgs>
     {
         private readonly IThreadSwitcher _threadSwitcher;
@@ -77,7 +77,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             LastNotifications.TryRemove(ea.Order.AccountId, out var tmp);
         }
 
-        public void ConsumeEvent(object sender, OrderClosedEventArgs ea)
+        public void ConsumeEvent(object sender, OrderExecutedEventArgs ea)
         {
             LastNotifications.TryRemove(ea.Order.AccountId, out var tmp);
         }

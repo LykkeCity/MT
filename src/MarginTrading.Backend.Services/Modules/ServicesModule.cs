@@ -82,7 +82,7 @@ namespace MarginTrading.Backend.Services.Modules
 			builder.RegisterType<MarginCallConsumer>()
 				.As<IEventConsumer<MarginCallEventArgs>>()
 				.As<IEventConsumer<OrderPlacedEventArgs>>()
-				.As<IEventConsumer<OrderClosedEventArgs>>()
+				.As<IEventConsumer<OrderExecutedEventArgs>>()
 				.As<IEventConsumer<OrderCancelledEventArgs>>()
 				.SingleInstance();
 
@@ -93,17 +93,17 @@ namespace MarginTrading.Backend.Services.Modules
 			builder.RegisterSource(new ContravariantRegistrationSource());
 			builder.RegisterType<OrderStateConsumer>()
 				.As<IEventConsumer<OrderPlacedEventArgs>>()
-				.As<IEventConsumer<OrderClosedEventArgs>>()
+				.As<IEventConsumer<OrderExecutedEventArgs>>()
 				.As<IEventConsumer<OrderCancelledEventArgs>>()
-				.As<IEventConsumer<OrderLimitsChangedEventArgs>>()
-				.As<IEventConsumer<OrderClosingEventArgs>>()
+				.As<IEventConsumer<OrderChangedEventArgs>>()
+				.As<IEventConsumer<OrderExecutionStartedEventArgs>>()
 				.As<IEventConsumer<OrderActivatedEventArgs>>()
 				.As<IEventConsumer<OrderRejectedEventArgs>>()
 				.SingleInstance();
 
 			builder.RegisterType<TradesConsumer>()
-				.As<IEventConsumer<OrderPlacedEventArgs>>()
-				.As<IEventConsumer<OrderClosedEventArgs>>()
+				.As<IEventConsumer<OrderActivatedEventArgs>>()
+				.As<IEventConsumer<OrderExecutedEventArgs>>()
 				.SingleInstance();
 
 			builder.RegisterType<CfdCalculatorService>()

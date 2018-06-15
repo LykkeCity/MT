@@ -4,12 +4,12 @@ using MarginTrading.Backend.Core.Trading;
 
 namespace MarginTrading.Backend.Services.Events
 {
-    public class OrderPlacedEventArgs: OrderUpdateBaseEventArgs
+    public class OrderChangedEventArgs: OrderUpdateBaseEventArgs
     {
-        public OrderPlacedEventArgs(Order order):base(order)
+        public OrderChangedEventArgs(Order order):base(order)
         {
         }
 
-        public override OrderUpdateType UpdateType => OrderUpdateType.Place;
+        public override OrderUpdateType UpdateType => OrderUpdateType.Change;
     }
 }

@@ -3,6 +3,7 @@ using System.Linq;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Contract.BackendContracts;
@@ -202,6 +203,13 @@ namespace MarginTrading.Backend.Core.Mappers
                 MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>(),
                 LegalEntity = src.LegalEntity,
             };
+        }
+
+        public static OrderFullContract ToFullContract(this Order src, OrderUpdateType orderUpdateType,
+            DateTime updateTimestamp)
+        {
+            //TODO: implement
+            return new OrderFullContract();
         }
 
         public static OrderFullContract ToFullContract(this IPosition src, OrderUpdateType orderUpdateType, 

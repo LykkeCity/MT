@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Contracts.Orders;
@@ -58,12 +59,14 @@ namespace MarginTrading.Backend.Services
             _cfdCalculatorService = cfdCalculatorService;
         }
 
-        public async Task<Order> ValidateRequestAndGetOrder(OrderPlaceRequest request)
+        //TODO: make all validations
+        public async Task<(Order order, List<Order> relatedOrders)> ValidateRequestAndGetOrders(
+            OrderPlaceRequest request)
         {
-            if (_assetDayOffService.IsDayOff(request.InstrumentId))
-            {
-                throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Trades for instrument are not available");
-            }
+//            if (_assetDayOffService.IsDayOff(request.InstrumentId))
+//            {
+//                throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Trades for instrument are not available");
+//            }
 
             if (request.Volume == 0)
             {
@@ -94,6 +97,13 @@ namespace MarginTrading.Backend.Services
 			
             if(string.IsNullOrEmpty(equivalentSettings?.EquivalentAsset))
                 throw new Exception($"No reporting equivalent prices asset found for legalEntity: {account.LegalEntity}");
+
+            if (request.Type == OrderTypeContract.StopLoss || request.Type == OrderTypeContract.TakeProfit)
+            {
+                var order = await ValidateAndGetSlorTpOrder(request, account, equivalentSettings, null);
+
+                return (order, new List<Order>());
+            }
 			
             //check ExpectedOpenPrice for pending order
             if (request.Price.HasValue && request.Type == OrderTypeContract.Limit)
@@ -127,14 +137,72 @@ namespace MarginTrading.Backend.Services
             var now = _dateService.Now();
             var equivalentPrice = _cfdCalculatorService.GetQuoteRateForQuoteAsset(equivalentSettings.EquivalentAsset,
                 request.InstrumentId, account.LegalEntity);
+            var fxPrice = _cfdCalculatorService.GetQuoteRateForQuoteAsset(account.BaseAssetId,
+                request.InstrumentId, account.LegalEntity);
             var volume = request.Direction == OrderDirectionContract.Buy ? request.Volume : -request.Volume;
 
-            return new Order(id, code, request.InstrumentId, volume, request.Direction.ToType<OrderDirection>(), now,
+            var baseOrder =  new Order(id, code, request.InstrumentId, volume, request.Direction.ToType<OrderDirection>(), now,
                 now, request.Validity, account.Id,
                 account.TradingConditionId, account.BaseAssetId, request.Price,
                 equivalentSettings.EquivalentAsset, OrderFillType.FillOrKill, string.Empty, account.LegalEntity,
                 request.ForceOpen, request.Type.ToType<OrderType>(), request.ParentOrderId, request.PositionId,
-                request.Originator.ToType<OriginatorType>(), equivalentPrice);
+                request.Originator.ToType<OriginatorType>(), equivalentPrice, fxPrice);
+            
+            var relatedOrders = new List<Order>();
+
+            if (request.StopLoss.HasValue)
+            {
+                var sl = await ValidateAndGetSlorTpOrder(request, account, equivalentSettings, baseOrder);
+                
+                if (sl != null)
+                    relatedOrders.Add(sl);    
+            }
+            
+            if (request.TakeProfit.HasValue)
+            {
+                var tp = await ValidateAndGetSlorTpOrder(request, account, equivalentSettings, baseOrder);
+                
+                if (tp != null)
+                    relatedOrders.Add(tp);    
+            }
+
+            return (baseOrder, relatedOrders);
+        }
+
+        private async Task<Order> ValidateAndGetSlorTpOrder(OrderPlaceRequest request, IMarginTradingAccount account, 
+            ReportingEquivalentPricesSettings equivalentSettings, Order parentOrder)
+        {
+            if (parentOrder == null)
+            {
+                if (!string.IsNullOrEmpty(request.ParentOrderId))
+                {
+                    parentOrder = _ordersCache.GetOrderById(request.ParentOrderId);
+                }
+            }
+
+            if (parentOrder != null)
+            {
+                //TODO: validate SL/TP order
+                
+                var id = Guid.NewGuid().ToString("N");
+                var code = await _identityGenerator.GenerateIdAsync(nameof(Position));
+                var now = _dateService.Now();
+                var equivalentPrice = _cfdCalculatorService.GetQuoteRateForQuoteAsset(equivalentSettings.EquivalentAsset,
+                    request.InstrumentId, account.LegalEntity);
+                var fxPrice = _cfdCalculatorService.GetQuoteRateForQuoteAsset(parentOrder.AccountAssetId,
+                    request.InstrumentId, account.LegalEntity);
+                var direction = parentOrder.Direction == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy;
+
+                return new Order(id, code, parentOrder.AssetPairId, -parentOrder.Volume, direction, now, now,
+                    request.Validity, parentOrder.AccountId, parentOrder.TradingConditionId, parentOrder.AccountAssetId,
+                    request.Price, parentOrder.EquivalentAsset, OrderFillType.FillOrKill, string.Empty,
+                    parentOrder.LegalEntity, false, request.Type.ToType<OrderType>(), parentOrder.Id, null,
+                    request.Originator.ToType<OriginatorType>(), equivalentPrice, fxPrice);
+            }
+            
+            //TODO: check parent position and create order
+
+            return null;
         }
         
         //has to be beyond global lock
@@ -272,7 +340,7 @@ namespace MarginTrading.Backend.Services
 
         public void ValidateInstrumentPositionVolume(ITradingInstrument assetPair, Position order)
         {
-            var existingPositionsVolume = _ordersCache.ActiveOrders.GetOrdersByInstrumentAndAccount(assetPair.Instrument, order.AccountId).Sum(o => o.Volume);
+            var existingPositionsVolume = _ordersCache.Positions.GetOrdersByInstrumentAndAccount(assetPair.Instrument, order.AccountId).Sum(o => o.Volume);
 
             if (assetPair.PositionLimit > 0 && Math.Abs(existingPositionsVolume + order.Volume) > assetPair.PositionLimit)
             {

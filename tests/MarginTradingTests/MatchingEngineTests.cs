@@ -229,7 +229,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.PartialFill
             };
 
-            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
@@ -256,7 +256,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.PartialFill
             };
 
-            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
@@ -284,7 +284,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.PartialFill
             };
 
-            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
@@ -312,7 +312,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.PartialFill
             };
 
-            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
@@ -340,7 +340,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.PartialFill
             };
 
-            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             Assert.AreEqual(0, order.MatchedOrders.Count);
             Assert.AreEqual(PositionStatus.Rejected, order.Status);
@@ -364,7 +364,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.FillOrKill
             };
 
-            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
@@ -392,7 +392,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.FillOrKill
             };
 
-            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
@@ -420,7 +420,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.FillOrKill
             };
 
-            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
@@ -448,7 +448,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.FillOrKill
             };
 
-            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
@@ -481,7 +481,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.PartialFill
             };
 
-            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
@@ -508,7 +508,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.FillOrKill
             };
 
-            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             Assert.AreEqual(1, order.MatchedOrders.Count);
             Assert.AreEqual(PositionStatus.Active, order.Status);
@@ -532,7 +532,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.PartialFill
             };
 
-            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
@@ -559,7 +559,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.FillOrKill
             };
 
-            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
+            //await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 

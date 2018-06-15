@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Trading;
 
 namespace MarginTrading.Backend.Core.MatchingEngines
 {
@@ -12,9 +13,9 @@ namespace MarginTrading.Backend.Core.MatchingEngines
         
         MatchingEngineMode Mode { get; }
         
-        Task MatchMarketOrderForOpenAsync(Position order, Func<MatchedOrderCollection, bool> orderProcessed);
+        Task MatchMarketOrderForOpenAsync(Order order, Func<MatchedOrderCollection, bool> orderProcessed);
         
-        Task MatchMarketOrderForCloseAsync(Position order, Func<MatchedOrderCollection, bool> orderProcessed);
+        //Task MatchMarketOrderForCloseAsync(Position order, Func<MatchedOrderCollection, bool> orderProcessed);
         
         decimal? GetPriceForClose(Position order);
         

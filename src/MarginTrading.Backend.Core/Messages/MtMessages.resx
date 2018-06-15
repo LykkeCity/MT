@@ -159,8 +159,14 @@
   <data name="CantRemoveOrderWithStatus" xml:space="preserve">
     <value>Cannot remove order with id = {0} and status {1}</value>
   </data>
+   <data name="CantRemovePosition" xml:space="preserve">
+    <value>Cannot remove position with id = {0}</value>
+  </data>
   <data name="CantGetOrderWithStatus" xml:space="preserve">
     <value>Cannot get order with id = {0} and status {1}</value>
+  </data>
+  <data name="CantGetPosition" xml:space="preserve">
+    <value>Cannot get position with id = {0}</value>
   </data>
   <data name="QuoteNotFound" xml:space="preserve">
     <value>There is no quote for instrument {0}</value>
