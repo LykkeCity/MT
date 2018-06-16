@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.Orders;
@@ -29,7 +30,7 @@ namespace MarginTrading.Backend.Core.Trading
         /// <summary>
         /// Order size 
         /// </summary>
-        public decimal Volume { get; }
+        public decimal Volume { get; private set; }
         
         /// <summary>
         /// Ordr direction (Buy/Sell)
@@ -67,9 +68,9 @@ namespace MarginTrading.Backend.Core.Trading
         public DateTime? Executed { get; private set; }
         
         /// <summary>
-        /// Date when order was cancelled
+        /// Date when order was canceled
         /// </summary>
-        public DateTime? Cancelled { get; private set; }
+        public DateTime? Canceled { get; private set; }
         
         /// <summary>
         /// Date when order was rejected
@@ -174,12 +175,12 @@ namespace MarginTrading.Backend.Core.Trading
         /// <summary>
         /// ID of parent order (for related orders)
         /// </summary>
-        public string ParentOrderId { get; } 
+        public string ParentOrderId { get; private set; } 
         
         /// <summary>
         /// ID of parent position (for related orders)
         /// </summary>
-        public string ParentPositionId { get; }
+        public string ParentPositionId { get; private set; }
 
         /// <summary>
         /// Order originator
@@ -190,6 +191,11 @@ namespace MarginTrading.Backend.Core.Trading
         /// Matched orders for execution
         /// </summary>
         public MatchedOrderCollection MatchedOrders { get; private set; }
+        
+        /// <summary>
+        /// Related orders
+        /// </summary>
+        public List<RelatedOrderInfo> RelatedOrders { get; }
         
         #endregion
 
@@ -224,7 +230,9 @@ namespace MarginTrading.Backend.Core.Trading
             EquivalentRate = equivalentRate;
             FxRate = fxRate;
             Direction = volume.GetOrderDirection();
-            Status = OrderStatus.Created;
+            Status = OrderStatus.Placed;
+            MatchedOrders = new MatchedOrderCollection();
+            RelatedOrders = new List<RelatedOrderInfo>();
         }
 
 
@@ -235,21 +243,43 @@ namespace MarginTrading.Backend.Core.Trading
             LastModified = dateTime;
             Price = newPrice;
         }
+        
+        public void ChangeVolume(decimal newVolume, DateTime dateTime)
+        {
+            LastModified = dateTime;
+            Volume = newVolume;
+        }
 
-        public void Activate(DateTime dateTime)
+        public void MakeInactive(DateTime dateTime)
+        {
+            Status = OrderStatus.Inactive;
+            LastModified = dateTime;
+        }
+        
+        public void Activate(DateTime dateTime, bool relinkFromOrderToPosition)
         {
             Status = OrderStatus.Active;
             Activated = dateTime;
+            LastModified = dateTime;
+
+            if (relinkFromOrderToPosition)
+            {
+                ParentPositionId = ParentOrderId;
+                ParentOrderId = null;
+            }
         }
         
-        public void StartExecution(DateTime dateTime)
+        public void StartExecution(DateTime dateTime, string matchingEngineId)
         {
-            ExecutionStarted = dateTime;
             Status = OrderStatus.ExecutionStarted;
+            ExecutionStarted = dateTime;
+            MatchingEngineId = matchingEngineId;
         }
         
         public void Execute(DateTime dateTime, MatchedOrderCollection matchedOrders)
         {
+            Status = OrderStatus.Executed;
+            
             var externalOrderId = string.Empty;
             var externalProviderId = string.Empty;
                 
@@ -264,11 +294,11 @@ namespace MarginTrading.Backend.Core.Trading
                 }
             }
             
-            Status = OrderStatus.Executed;
             Executed = dateTime;
             ExecutionPrice = matchedOrders.WeightedAveragePrice;
             ExternalOrderId = externalOrderId;
             ExternalProviderId = externalProviderId;
+            MatchedOrders = matchedOrders;
         }
 
         public void SetRates(decimal equivalentRate, decimal fxRate)
@@ -286,12 +316,20 @@ namespace MarginTrading.Backend.Core.Trading
             Rejected = dateTime;
         }
 
-        public void SetMatchingEngine(string matchingEngineId)
+        public void Cancel(DateTime dateTime)
         {
-            Status = OrderStatus.Inactive;
-            MatchingEngineId = matchingEngineId;
+            Status = OrderStatus.Canceled;
+            Canceled = dateTime;
         }
-        
+
+        public void AddRelatedOrder(Order order)
+        {
+            var info = new RelatedOrderInfo {Type = order.OrderType, Id = order.Id};
+            
+            if (!RelatedOrders.Contains(info))
+                RelatedOrders.Add(info);
+        }
+
         #endregion
         
     }

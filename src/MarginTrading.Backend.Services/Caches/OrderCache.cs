@@ -62,8 +62,7 @@ namespace MarginTrading.Backend.Services
         public bool TryGetOrderById(string orderId, out Order order)
         {
             return Active.TryGetOrderById(orderId, out order) ||
-                   Inactive.TryGetOrderById(orderId, out order) || 
-                    InProgress.TryGetOrderById(orderId, out order);
+                   Inactive.TryGetOrderById(orderId, out order);
         }
         
         public Order GetOrderById(string orderId)

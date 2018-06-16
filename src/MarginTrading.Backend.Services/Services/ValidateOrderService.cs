@@ -113,7 +113,7 @@ namespace MarginTrading.Backend.Services
 			
             if(string.IsNullOrEmpty(equivalentSettings?.EquivalentAsset))
                 throw new Exception($"No reporting equivalent prices asset found for legalEntity: {account.LegalEntity}");
-            
+
             //set special account-quote instrument
 //            if (_assetPairsCache.TryGetAssetPairQuoteSubst(order.AccountAssetId, order.Instrument,
 //                    order.LegalEntity, out var substAssetPair))
@@ -376,13 +376,14 @@ namespace MarginTrading.Backend.Services
         
         #region Pre-trade validations
         
-        public void MakePreTradeValidation(Order order)
+        public void MakePreTradeValidation(Order order, bool validateMargin)
         {
             ValidateAssetPairIsAvailableForTrading(order.AssetPairId, order.TradingConditionId);
 
             ValidateTradeLimits(order.AssetPairId, order.TradingConditionId, order.AccountId, order.Volume);
 
-            ValidateMargin(order);
+            if (validateMargin)
+                ValidateMargin(order);
 
         }
         

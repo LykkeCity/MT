@@ -13,6 +13,7 @@ using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
+using MarginTrading.Backend.Services.Mappers;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Middleware;
 using MarginTrading.Common.Services;
@@ -83,7 +84,7 @@ namespace MarginTrading.Backend.Controllers
                 foreach (var order in orders.relatedOrders)
                 {
                     var placedRelatedOrder = await _tradingEngine.PlaceOrderAsync(order);
-
+                    
                     _consoleWriter.WriteLine(
                         $"Related order place. Account: [{request.AccountId}], Order: [{placedRelatedOrder.Id}]");
             
@@ -159,7 +160,7 @@ namespace MarginTrading.Backend.Controllers
         public Task<OrderContract> GetAsync(string orderId)
         {
             return _ordersCache.TryGetOrderById(orderId, out var order)
-                ? Task.FromResult(Convert(order))
+                ? Task.FromResult(order.ConvertToContract())
                 : Task.FromResult<OrderContract>(null);
         }
 
@@ -186,62 +187,9 @@ namespace MarginTrading.Backend.Controllers
             if (!string.IsNullOrWhiteSpace(parentOrderId))
                 orders = orders.Where(o => o.Id == parentOrderId); // todo: fix when order will have a parentOrderId
 
-            return Task.FromResult(orders.Select(Convert).ToList());
+            return Task.FromResult(orders.Select(o => o.ConvertToContract()).ToList());
         }
 
-        private static OrderDirection GetOrderDirection(OrderDirection openDirection, bool isCloseOrder)
-        {
-            return !isCloseOrder ? openDirection :
-                openDirection == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy;
-        }
-
-        private static OrderContract Convert(Order order)
-        {
-            return new OrderContract
-            {
-                Id = order.Id,
-                AccountId = order.AccountId,
-                AssetPairId = order.AssetPairId,
-                CreatedTimestamp = order.Created,
-                Direction = order.Direction.ToType<OrderDirectionContract>(),
-                ExecutionPrice = order.ExecutionPrice,
-                FxRate = order.FxRate,
-                ExpectedOpenPrice = order.Price,
-                ForceOpen = order.ForceOpen,
-                ModifiedTimestamp = order.LastModified,
-                Originator = order.Originator.ToType<OriginatorTypeContract>(),
-                ParentOrderId = order.ParentOrderId,
-                PositionId = order.ParentPositionId,
-                RelatedOrders = new List<string>(),
-                Status = order.Status.ToType<OrderStatusContract>(),
-                Type = order.OrderType.ToType<OrderTypeContract>(),
-                ValidityTime = order.Validity,
-                Volume = order.Volume,
-            };
-        }
         
-//        private static OrderContract CreatePendingOrder(Position order, OrderTypeContract type)
-//        {
-//            var result = Convert(order);
-//
-//            result.Type = type;
-//            result.Status = result.Status == OrderStatusContract.Executed
-//                ? OrderStatusContract.Active
-//                : OrderStatusContract.Inactive;
-//            result.ParentOrderId = result.Id;
-//            result.Id += $"_{type}";
-//            result.ExecutionPrice = null;
-//            result.ExpectedOpenPrice = type == OrderTypeContract.StopLoss ? order.StopLoss : order.TakeProfit;
-//            result.Direction = result.Direction == OrderDirectionContract.Buy
-//                ? OrderDirectionContract.Sell
-//                : OrderDirectionContract.Buy;
-//            result.ExecutionPrice = null;
-//            result.ForceOpen = false;
-//            result.RelatedOrders = new List<string>();
-//            result.TradesIds = new List<string>();
-//            result.Volume = -result.Volume;
-//
-//            return result;
-//        }
     }
 }

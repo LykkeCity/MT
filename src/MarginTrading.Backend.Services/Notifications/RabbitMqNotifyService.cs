@@ -4,11 +4,14 @@ using Autofac.Features.Indexed;
 using Common;
 using Common.Log;
 using Lykke.Service.ExchangeConnector.Client.Models;
+using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
+using MarginTrading.Backend.Services.Mappers;
+using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
 using MarginTrading.Contract.RabbitMqMessageModels;
 
@@ -30,33 +33,16 @@ namespace MarginTrading.Backend.Services.Notifications
             _log = log;
         }
 
-        public Task AccountHistory(string transactionId, string accountId, string clientId, decimal amount,
-            decimal balance, decimal withdrawTransferLimit, AccountHistoryType type, string comment = null,
-            string eventSourceId = null, string auditLog = null)
-        {
-            var record = new MarginTradingAccountHistory
-            {
-                Id = transactionId,
-                AccountId = accountId,
-                ClientId = clientId,
-                Type = type,
-                Amount = amount,
-                Balance = balance,
-                WithdrawTransferLimit = withdrawTransferLimit,
-                Date = DateTime.UtcNow,
-                Comment = comment,
-                OrderId = type == AccountHistoryType.OrderClosed ? eventSourceId : null,
-                AuditLog = auditLog
-            };
-
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountHistory.ExchangeName,
-                record.ToBackendContract());
-        }
-
         public Task OrderHistory(Order order, OrderUpdateType orderUpdateType)
         {
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderHistory.ExchangeName,
-                order.ToFullContract(orderUpdateType, _dateService.Now()));
+            var historyEvent = new OrderHistoryEvent
+            {
+                OrderSnapshot = order.ConvertToContract(),
+                Timestamp = _dateService.Now(),
+                Type = orderUpdateType.ToType<OrderHistoryTypeContract>()
+            };
+            
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderHistory.ExchangeName, historyEvent);
         }
 
         public Task OrderBookPrice(InstrumentBidAskPair quote)
@@ -65,25 +51,9 @@ namespace MarginTrading.Backend.Services.Notifications
                 quote.ToRabbitMqContract());
         }
 
-        public Task OrderChanged(Position order)
-        {
-            var message = order.ToBaseContract();
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderChanged.ExchangeName, message);
-        }
-
         public Task AccountUpdated(IMarginTradingAccount account)
         {
             return AccountChanged(account, AccountEventTypeEnum.Updated);
-        }
-
-        public Task AccountDeleted(IMarginTradingAccount account)
-        {
-            return AccountChanged(account, AccountEventTypeEnum.Deleted);
-        }
-
-        public Task AccountCreated(IMarginTradingAccount account)
-        {
-            return AccountChanged(account, AccountEventTypeEnum.Created);
         }
 
         private Task AccountChanged(IMarginTradingAccount account, AccountEventTypeEnum eventType)
@@ -134,6 +104,11 @@ namespace MarginTrading.Backend.Services.Notifications
         {
             return TryProduceMessageAsync(_settings.RabbitMqQueues.ExternalOrder.ExchangeName, trade);
         }
+        
+        public Task PositionHistory(PositionHistoryEvent historyEvent)
+        {
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.PositionHistory.ExchangeName, historyEvent);
+        }
 
         private async Task TryProduceMessageAsync(string exchangeName, object message)
         {
@@ -162,6 +137,7 @@ namespace MarginTrading.Backend.Services.Notifications
             ((IStopable) _publishers[_settings.RabbitMqQueues.AccountMarginEvents.ExchangeName]).Stop();
             ((IStopable) _publishers[_settings.RabbitMqQueues.AccountStats.ExchangeName]).Stop();
             ((IStopable) _publishers[_settings.RabbitMqQueues.Trades.ExchangeName]).Stop();
+            ((IStopable) _publishers[_settings.RabbitMqQueues.PositionHistory.ExchangeName]).Stop();
             ((IStopable) _publishers[_settings.RabbitMqQueues.ExternalOrder.ExchangeName]).Stop();
         }
     }

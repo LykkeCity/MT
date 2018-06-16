@@ -208,7 +208,6 @@ namespace MarginTrading.Backend.Core.Mappers
         public static OrderFullContract ToFullContract(this Order src, OrderUpdateType orderUpdateType,
             DateTime updateTimestamp)
         {
-            //TODO: implement
             return new OrderFullContract();
         }
 

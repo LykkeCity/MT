@@ -47,7 +47,7 @@ namespace MarginTrading.Backend.Services
         public decimal GetSwaps(Position order)
         {
             return GetSwaps(order.AccountAssetId, order.AssetPairId, order.OpenDate, order.CloseDate,
-                Math.Abs(order.Volume), order.SwapCommission, order.LegalEntity);
+                Math.Abs(order.Volume), order.SwapCommissionRate, order.LegalEntity);
         }
 
         public decimal GetOvernightSwap(Position order, decimal swapRate)
@@ -58,13 +58,12 @@ namespace MarginTrading.Backend.Services
                 Math.Abs(order.Volume), swapRate, order.LegalEntity);
         }
 
-        public void SetCommissionRates(string tradingConditionId, Position order)
+        public void SetCommissionRates(string tradingConditionId, Position position)
         {
-//            var accountAsset = _accountAssetsCacheService
-//                .GetTradingInstrument(tradingConditionId, order.AssetPairId);
-//
-//            order.OpenCommission = accountAsset.CommissionRate;
-//            order.SwapCommission = accountAsset.SwapLong;
+            var tradingInstrument = _accountAssetsCacheService
+                .GetTradingInstrument(tradingConditionId, position.AssetPairId);
+
+            //TODO: understand what to do with comissions
         }
     }
 }

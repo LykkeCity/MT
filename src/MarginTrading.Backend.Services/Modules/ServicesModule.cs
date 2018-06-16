@@ -102,7 +102,10 @@ namespace MarginTrading.Backend.Services.Modules
 				.SingleInstance();
 
 			builder.RegisterType<TradesConsumer>()
-				.As<IEventConsumer<OrderActivatedEventArgs>>()
+				.As<IEventConsumer<OrderExecutedEventArgs>>()
+				.SingleInstance();
+			
+			builder.RegisterType<PositionsConsumer>()
 				.As<IEventConsumer<OrderExecutedEventArgs>>()
 				.SingleInstance();
 

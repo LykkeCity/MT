@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using MarginTrading.Backend.Contracts.TradeMonitoring;
 
 namespace MarginTrading.Backend.Contracts.Orders
 {
@@ -100,5 +101,101 @@ namespace MarginTrading.Backend.Contracts.Orders
         /// Last modification date and time
         /// </summary>
         public DateTime ModifiedTimestamp { get; set; }
+        
+////--------------
+        
+        /// <summary>
+        /// Digit order code
+        /// </summary>
+        public long Code { get; set; }
+        
+        /// <summary>
+        /// Date when order was activated 
+        /// </summary>
+        public DateTime ActivatedTimestamp { get; set; }
+        
+        /// <summary>
+        /// Date when order started execution
+        /// </summary>
+        public DateTime? ExecutionStartedTimestamp { get; set; }
+        
+        /// <summary>
+        /// Date when order was executed
+        /// </summary>
+        public DateTime? ExecutedTimestamp { get; set; }
+        
+        /// <summary>
+        /// Date when order was canceled
+        /// </summary>
+        public DateTime? CanceledTimestamp { get; set; }
+        
+        /// <summary>
+        /// Date when order was rejected
+        /// </summary>
+        public DateTime? Rejected { get; set; }
+        
+        /// <summary>
+        /// Trading conditions ID
+        /// </summary>
+        public string TradingConditionId { get; set; }
+        
+        /// <summary>
+        /// Account base asset ID
+        /// </summary>
+        public string AccountAssetId { get; set; }
+
+        /// Asset for representation of equivalent price
+        /// </summary>
+        public string EquivalentAsset { get; }
+        
+        /// <summary>
+        /// Rate for calculation of equivalent price
+        /// </summary>
+        public decimal EquivalentRate { get; set; }
+        
+        /// <summary>
+        /// Reject reason
+        /// </summary>
+        public OrderRejectReasonContract RejectReason { get; set; }
+        
+        /// <summary>
+        /// Human-readable reject reason
+        /// </summary>
+        public string RejectReasonText { get; set; }
+        
+        /// <summary>
+        /// Additional comment
+        /// </summary>
+        public string Comment { get; set; }
+        
+        /// <summary>
+        /// ID of exernal order (for STP mode)
+        /// </summary>
+        public string ExternalOrderId { get; set; }
+        
+        /// <summary>
+        /// ID of exernal LP (for STP mode)
+        /// </summary>
+        public string ExternalProviderId { get; set; }
+        
+        /// <summary>
+        /// Matching engine ID
+        /// </summary>
+        public string MatchingEngineId { get; set; }
+        
+        /// <summary>
+        /// Legal Entity ID
+        /// </summary>
+        public string LegalEntity { get; set; }
+        
+        /// <summary>
+        /// Matched orders for execution
+        /// </summary>
+        public List<MatchedOrderContract> MatchedOrders { get; set; }
+        
+        /// <summary>
+        /// Related orders
+        /// </summary>
+        public List<RelatedOrderInfoContract> RelatedOrderInfos { get; set; }
     }
 }

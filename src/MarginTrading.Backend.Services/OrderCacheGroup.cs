@@ -99,9 +99,7 @@ namespace MarginTrading.Backend.Services
             {
                 if (_ordersById.Remove(order.Id))
                 {
-                    _orderIdsByInstrumentId[order.AssetPairId].Remove(order.Id);
-                    _orderIdsByAccountId[order.AccountId].Remove(order.Id);
-                    _orderIdsByAccountIdAndInstrumentId[GetAccountInstrumentCacheKey(order.AccountId, order.AssetPairId)].Remove(order.Id);
+                    OnRemove(order);
 
 //                    if (!string.IsNullOrEmpty(order.MarginCalcInstrument)
 //                        && (_orderIdsByMarginInstrumentId[order.MarginCalcInstrument]?.Contains(order.Id) ?? false))
@@ -117,6 +115,36 @@ namespace MarginTrading.Backend.Services
 
             var account = MtServiceLocator.AccountsCacheService?.Get(order.AccountId);
             account?.CacheNeedsToBeUpdated();
+        }
+        
+        public bool TryPopById(string orderId, out Order result)
+        {
+            _lockSlim.EnterWriteLock();
+
+            try
+            {
+                if (!_ordersById.ContainsKey(orderId))
+                {
+                    result = null;
+                    return false;
+                }
+                result = _ordersById[orderId];
+                _ordersById.Remove(orderId);
+                OnRemove(result);
+                return true;
+            }
+            finally
+            {
+                _lockSlim.ExitWriteLock();
+            }
+        }
+
+        private void OnRemove(Order order)
+        {
+            _orderIdsByInstrumentId[order.AssetPairId].Remove(order.Id);
+            _orderIdsByAccountId[order.AccountId].Remove(order.Id);
+            _orderIdsByAccountIdAndInstrumentId[GetAccountInstrumentCacheKey(order.AccountId, order.AssetPairId)]
+                .Remove(order.Id);
         }
 
         #endregion
@@ -151,7 +179,7 @@ namespace MarginTrading.Backend.Services
                 _lockSlim.ExitReadLock();
             }
         }
-
+        
         public IReadOnlyCollection<Order> GetOrdersByInstrument(string instrument)
         {
             if (string.IsNullOrWhiteSpace(instrument))

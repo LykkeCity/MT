@@ -8,8 +8,19 @@ namespace MarginTrading.Backend.Core
     {
         public static bool IsSuitablePriceForPendingOrder(this Order order, decimal price)
         {
-            return order.Price.HasValue && (order.Direction == OrderDirection.Buy && price <= order.Price
-                                            || order.Direction == OrderDirection.Sell && price >= order.Price);
+            switch (order.OrderType)
+            {
+                case OrderType.Limit:
+                case OrderType.TakeProfit:
+                    return order.Direction == OrderDirection.Buy && price <= order.Price
+                           || order.Direction == OrderDirection.Sell && price >= order.Price;
+                case OrderType.Stop:
+                case OrderType.StopLoss:
+                    return order.Direction == OrderDirection.Buy && price >= order.Price
+                           || order.Direction == OrderDirection.Sell && price <= order.Price;
+                default:
+                    return false;
+            }
         }
         
         public static OrderDirection GetCloseType(this Position order)
@@ -85,17 +96,45 @@ namespace MarginTrading.Backend.Core
 
         public static decimal GetOpenCommission(this Position order)
         {
-            return Math.Abs(order.Volume) * order.OpenCommission;
+            return Math.Abs(order.Volume) * order.OpenCommissionRate;
         }
 
         public static decimal GetCloseCommission(this Position order)
         {
-            return Math.Abs(order.Volume) * order.CloseCommission;
+            return Math.Abs(order.Volume) * order.CloseCommissionRate;
         }
 
-        public static OrderDirection GetOrderDirectionToMatchInOrderBook(this OrderDirection orderType)
+        public static OrderDirection GetOpositeDirection(this OrderDirection orderType)
         {
             return orderType == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy;
+        }
+        
+        public static PositionDirection GetClosePositionDirection(this OrderDirection orderType)
+        {
+            return orderType == OrderDirection.Buy ? PositionDirection.Short : PositionDirection.Long;
+        }
+        
+        public static OrderDirection GetOrderDirectionToMatchInOrderBook(this OrderDirection orderType)
+        {
+            return orderType.GetOpositeDirection();
+        }
+
+        public static bool IsBasicPending(this Order order)
+        {
+            return order.OrderType == OrderType.Limit || order.OrderType == OrderType.Stop;
+        }
+
+        public static PositionCloseReason GetCloseReason(this OrderType orderType)
+        {
+            switch (orderType)
+            {
+                case OrderType.StopLoss:
+                    return PositionCloseReason.StopLoss;
+                case OrderType.TakeProfit:
+                    return PositionCloseReason.TakeProfit;
+                default:
+                    return PositionCloseReason.Close;
+            }
         }
     }
 }

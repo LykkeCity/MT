@@ -100,24 +100,23 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             }
         }
 
-        public Task MatchMarketOrderForOpenAsync(Order order, Func<MatchedOrderCollection, bool> matchedFunc)
+        public Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition)
         {
             using (_contextFactory.GetWriteSyncContext(
-                $"{nameof(MarketMakerMatchingEngine)}.{nameof(MatchMarketOrderForOpenAsync)}"))
+                $"{nameof(MarketMakerMatchingEngine)}.{nameof(MatchOrderAsync)}"))
             {
                 var orderBookTypeToMatch = order.Direction.GetOrderDirectionToMatchInOrderBook();
+                
+                //TODO: validate oposite direction if will open new porition
 
                 var matchedOrders =
                     _orderBooks.Match(order.AssetPairId, orderBookTypeToMatch, Math.Abs(order.Volume));
 
-                if (matchedFunc(matchedOrders))
-                {
-                    _orderBooks.Update(order.AssetPairId, orderBookTypeToMatch, matchedOrders);
-                    ProduceBestPrice(order.AssetPairId);
-                }
-            }
+                _orderBooks.Update(order.AssetPairId, orderBookTypeToMatch, matchedOrders);
+                ProduceBestPrice(order.AssetPairId);
 
-            return Task.CompletedTask;
+                return Task.FromResult(matchedOrders);
+            }
         }
 
         public bool PingLock()

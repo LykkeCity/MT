@@ -2,7 +2,7 @@
 {
     public enum OrderStatus
     {
-        Created = 0,
+        Placed = 0,
         Inactive = 1,
         Active = 2,
         ExecutionStarted = 3,

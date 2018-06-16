@@ -53,8 +53,8 @@ namespace MarginTradingTests
 
             await _accountAssetsManager.UpdateTradingInstrumentsCache();
 
-            var dayOrder = new Position
-            {
+            Position dayOrder = null; //new Position
+            //{
 //                AccountAssetId = "USD",
 //                AssetPairId = "EURUSD",
 //                Volume = 20,
@@ -63,11 +63,11 @@ namespace MarginTradingTests
 //                //MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder() { Volume = 20} }),
 //                SwapCommission = 100,
 //                LegalEntity = "LYKKETEST",
-            };
+//        };
 
             var swapsForDay = _swapService.GetSwaps(dayOrder);
 
-            var twoDayOrder = new Position
+            Position twoDayOrder = null;//new Position
             {
 //                AccountAssetId = "USD",
 //                AssetPairId = "EURUSD",

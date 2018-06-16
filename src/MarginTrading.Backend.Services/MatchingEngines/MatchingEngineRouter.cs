@@ -45,13 +45,9 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                     : MatchingEngineConstants.DefaultStp);
         }
 
-        public IMatchingEngineBase GetMatchingEngineForClose(Position order)
+        public IMatchingEngineBase GetMatchingEngineForClose(Position position)
         {
-            var meId = order.OpenMatchingEngineId == Lykke
-                ? MatchingEngineConstants.Reject
-                : order.OpenMatchingEngineId;
-            
-            return _matchingEngineRepository.GetMatchingEngineById(meId);
+            return _matchingEngineRepository.GetMatchingEngineById(position.OpenMatchingEngineId);
         }
     }
 }
