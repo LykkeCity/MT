@@ -210,7 +210,7 @@ namespace MarginTrading.Backend.Services
         {
             var accountAsset =
                 _accountAssetsCacheService.GetTradingInstrument(order.TradingConditionId, order.AssetPairId);
-            _validateOrderService.ValidateInstrumentPositionVolume(accountAsset, order);
+            //_validateOrderService.MakePreTradeValidation(order);
 
             //order.MatchedOrders.AddRange(matchedOrders);
             //order.OpenPrice = Math.Round(order.MatchedOrders.WeightedAveragePrice, order.AssetPairAccuracy);

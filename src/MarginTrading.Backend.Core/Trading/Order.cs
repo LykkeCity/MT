@@ -194,7 +194,7 @@ namespace MarginTrading.Backend.Core.Trading
         #endregion
 
 
-        public Order(string id, long code, string assetPairId, decimal volume, OrderDirection direction,
+        public Order(string id, long code, string assetPairId, decimal volume,
             DateTime created, DateTime lastModified,
             DateTime? validity, string accountId, string tradingConditionId, string accountAssetId, decimal? price,
             string equivalentAsset, OrderFillType fillType, string comment, string legalEntity, bool forceOpen,
@@ -223,7 +223,7 @@ namespace MarginTrading.Backend.Core.Trading
             Originator = originator;
             EquivalentRate = equivalentRate;
             FxRate = fxRate;
-            Direction = direction;
+            Direction = volume.GetOrderDirection();
             Status = OrderStatus.Created;
         }
 

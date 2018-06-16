@@ -10,13 +10,11 @@ namespace MarginTrading.Backend.Services
 {
     public interface IValidateOrderService
     {
-        void Validate(Position order);
-        
         void ValidateOrderStops(OrderDirection type, BidAskPair quote, decimal deltaBid, decimal deltaAsk, decimal? takeProfit,
             decimal? stopLoss, decimal? expectedOpenPrice, int assetAccuracy);
 
-        void ValidateInstrumentPositionVolume(ITradingInstrument assetPair, Position order);
-
         Task<(Order order, List<Order> relatedOrders)> ValidateRequestAndGetOrders(OrderPlaceRequest request);
+
+        void MakePreTradeValidation(Order order);
     }
 }

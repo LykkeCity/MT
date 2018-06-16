@@ -1,11 +1,12 @@
 ﻿using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Trading;
 
 namespace MarginTrading.Backend.Core
 {
     public interface IAccountUpdateService
     {
         void UpdateAccount(IMarginTradingAccount account);
-        bool IsEnoughBalance(Position order);
+        bool IsEnoughBalance(Order order);
         MarginTradingAccount GuessAccountWithNewActiveOrder(Position order);
     }
 
