@@ -35,7 +35,7 @@ namespace MarginTrading.Backend.Services
                 _marginTradingBlobRepository.Read<List<Order>>(LykkeConstants.StateBlobContainer, OrdersBlobName) ??
                 new List<Order>();
             var positions =
-                _marginTradingBlobRepository.Read<List<Position>>(LykkeConstants.StateBlobContainer, OrdersBlobName) ??
+                _marginTradingBlobRepository.Read<List<Position>>(LykkeConstants.StateBlobContainer, PositionsBlobName) ??
                 new List<Position>();
             
             _orderCache.InitOrders(orders, positions);
