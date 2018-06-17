@@ -27,7 +27,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly ITradingConditionsCacheService _tradingConditionsCacheService;
         private readonly IAccountsCacheService _accountsCacheService;
-        private readonly IRiskSystemCommandsLogRepository _riskSystemCommandsLogRepository;
+        //private readonly IRiskSystemCommandsLogRepository _riskSystemCommandsLogRepository;
         private readonly ILog _log;
         private readonly IConvertService _convertService;
 
@@ -37,7 +37,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             IAssetPairsCache assetPairsCache,
             ITradingConditionsCacheService tradingConditionsCacheService,
             IAccountsCacheService accountsCacheService,
-            IRiskSystemCommandsLogRepository riskSystemCommandsLogRepository,
+            //IRiskSystemCommandsLogRepository riskSystemCommandsLogRepository,
             ILog log,
             IConvertService convertService)
         {
@@ -46,7 +46,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             _assetPairsCache = assetPairsCache;
             _tradingConditionsCacheService = tradingConditionsCacheService;
             _accountsCacheService = accountsCacheService;
-            _riskSystemCommandsLogRepository = riskSystemCommandsLogRepository;
+            //_riskSystemCommandsLogRepository = riskSystemCommandsLogRepository;
             _log = log;
             _convertService = convertService;
         }
@@ -168,13 +168,13 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                         throw new NotSupportedException($"Command of type [{command.ActionType}] from risk manager is not supported");
                 }
 
-                await _riskSystemCommandsLogRepository.AddProcessedAsync(command.ActionType.ToString(),
-                    command.ToJson());
+                //await _riskSystemCommandsLogRepository.AddProcessedAsync(command.ActionType.ToString(),
+                //    command.ToJson());
             }
             catch (Exception e)
             {
-                await _riskSystemCommandsLogRepository.AddErrorAsync(command.ActionType.ToString(), command.ToJson(),
-                    e.Message);
+                //await _riskSystemCommandsLogRepository.AddErrorAsync(command.ActionType.ToString(), command.ToJson(),
+                //    e.Message);
                 throw;
             }
         }
@@ -189,9 +189,9 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
                     if (routes.Any())
                     {
-                        await _riskSystemCommandsLogRepository.AddErrorAsync(command.ActionType.ToString(),
-                            command.ToJson(),
-                            $"Route already exists: {routes.ToJson()}");
+                        //await _riskSystemCommandsLogRepository.AddErrorAsync(command.ActionType.ToString(),
+                        //    command.ToJson(),
+                        //    $"Route already exists: {routes.ToJson()}");
                         await _log.WriteWarningAsync(nameof(MatchingEngineRoutesManager),
                             nameof(HandleRiskManagerBlockTradingCommand), routes.ToJson(),
                             $"Route already exists. Command from risk system is not processed: {command.ToJson()} ");

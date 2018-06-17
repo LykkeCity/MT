@@ -62,10 +62,10 @@ namespace MarginTrading.Backend.Controllers
                 throw new InvalidOperationException("Position not found");
             }
 
-            if (_assetDayOffService.IsDayOff(position.AssetPairId))
-            {
-                throw new InvalidOperationException("Trades for instrument are not available");
-            }
+            //if (_assetDayOffService.IsDayOff(position.AssetPairId))
+            //{
+            //    throw new InvalidOperationException("Trades for instrument are not available");
+            //}
 
             var reason = PositionCloseReason.Close;
 //                request.Originator == OriginatorTypeContract.OnBehalf ||

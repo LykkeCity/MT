@@ -33,17 +33,13 @@ namespace MarginTrading.Backend.Controllers
         private readonly IConsole _consoleWriter;
         private readonly OrdersCache _ordersCache;
         private readonly IAssetPairDayOffService _assetDayOffService;
-
-        private const string CloseOrderIdSuffix = "_close";
-        private readonly IOrdersByIdRepository _ordersByIdRepository;
         private readonly IDateService _dateService;
         private readonly IValidateOrderService _validateOrderService;
 
         public OrdersController(IAssetPairsCache assetPairsCache, ITradingEngine tradingEngine,
             IAccountsCacheService accountsCacheService, IMarginTradingOperationsLogService operationsLogService,
             IConsole consoleWriter, OrdersCache ordersCache, IAssetPairDayOffService assetDayOffService,
-            IOrdersByIdRepository ordersByIdRepository, IDateService dateService,
-            IValidateOrderService validateOrderService)
+            IDateService dateService, IValidateOrderService validateOrderService)
         {
             _assetPairsCache = assetPairsCache;
             _tradingEngine = tradingEngine;
@@ -52,7 +48,6 @@ namespace MarginTrading.Backend.Controllers
             _consoleWriter = consoleWriter;
             _ordersCache = ordersCache;
             _assetDayOffService = assetDayOffService;
-            _ordersByIdRepository = ordersByIdRepository;
             _dateService = dateService;
             _validateOrderService = validateOrderService;
         }

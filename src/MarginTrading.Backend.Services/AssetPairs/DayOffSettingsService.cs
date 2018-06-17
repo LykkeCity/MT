@@ -17,13 +17,13 @@ namespace MarginTrading.Backend.Services.AssetPairs
         [CanBeNull] private DayOffSettingsRoot _cache;
         private static readonly object _updateLock = new object();
 
-        private readonly IDayOffSettingsRepository _dayOffSettingsRepository;
+        //private readonly IDayOffSettingsRepository _dayOffSettingsRepository;
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly ICachedCalculation<ImmutableDictionary<string, ImmutableArray<DayOffExclusion>>> _exclusionsByAssetPairId;
 
-        public DayOffSettingsService(IDayOffSettingsRepository dayOffSettingsRepository, IAssetPairsCache assetPairsCache)
+        public DayOffSettingsService(/*IDayOffSettingsRepository dayOffSettingsRepository,*/ IAssetPairsCache assetPairsCache)
         {
-            _dayOffSettingsRepository = dayOffSettingsRepository;
+            //_dayOffSettingsRepository = dayOffSettingsRepository;
             _assetPairsCache = assetPairsCache;
             _exclusionsByAssetPairId = GetExclusionsByAssetPairIdCache();
         }
@@ -105,13 +105,13 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         public void Start()
         {
-            _cache = _dayOffSettingsRepository.Read()
-                     ?? new DayOffSettingsRoot(ImmutableDictionary<Guid, DayOffExclusion>.Empty,
+            _cache = //_dayOffSettingsRepository.Read() ??
+                     new DayOffSettingsRoot(ImmutableDictionary<Guid, DayOffExclusion>.Empty,
                          new ScheduleSettings(
-                             dayOffStartDay: DayOfWeek.Friday,
-                             dayOffStartTime: new TimeSpan(20, 55, 0),
-                             dayOffEndDay: DayOfWeek.Sunday,
-                             dayOffEndTime: new TimeSpan(22, 05, 0),
+                             dayOffStartDay: DayOfWeek.Saturday,
+                             dayOffStartTime: new TimeSpan(22, 55, 0),
+                             dayOffEndDay: DayOfWeek.Friday,
+                             dayOffEndTime: new TimeSpan(23, 05, 0),
                              assetPairsWithoutDayOff: new[] {"BTCUSD"}.ToHashSet(),
                              pendingOrdersCutOff: new TimeSpan(0, 55, 0)));
         }
@@ -127,7 +127,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             {
                 var oldSettings = _cache;
                 var settings = changeFunc(oldSettings);
-                _dayOffSettingsRepository.Write(settings);
+                //_dayOffSettingsRepository.Write(settings);
                 _cache = settings;
             }
         }

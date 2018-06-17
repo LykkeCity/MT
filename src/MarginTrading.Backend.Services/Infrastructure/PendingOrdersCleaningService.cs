@@ -26,13 +26,16 @@ namespace MarginTrading.Backend.Services.Infrastructure
             _assetDayOffService = assetDayOffService;
         }
 
+        //TODO: add setting
         public override Task Execute()
         {
+            return Task.CompletedTask;
+            
             var pendingOrders = _orderReader.GetPending().GroupBy(o => o.AssetPairId);
             foreach (var gr in pendingOrders)
             {
-                if (!_assetDayOffService.ArePendingOrdersDisabled(gr.Key))
-                    continue;
+                //if (!_assetDayOffService.ArePendingOrdersDisabled(gr.Key))
+                //    continue;
 
                 foreach (var pendingOrder in gr)
                 {
