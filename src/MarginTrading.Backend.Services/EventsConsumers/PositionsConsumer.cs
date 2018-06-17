@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using AutoMapper;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core;
@@ -182,9 +183,13 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 _cqrsSender.PublishEvent(new PositionClosedEvent(account.Id, account.ClientId, position.Id, fpl));
             }
 
+            var positionContract = _convertService.Convert<Position, PositionContract>(position,
+                o => o.ConfigureMap(MemberList.Destination).ForMember(x => x.TotalPnL, c => c.Ignore()));
+            positionContract.TotalPnL = position.GetTotalFpl();
+
             var historyEvent = new PositionHistoryEvent
             {
-                PositionSnapshot = _convertService.Convert<PositionContract>(position),
+                PositionSnapshot = positionContract,
                 Deal = deal,
                 EventType = historyType,
                 Timestamp = _dateService.Now()
