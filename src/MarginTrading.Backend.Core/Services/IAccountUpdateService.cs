@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;
 
 namespace MarginTrading.Backend.Core

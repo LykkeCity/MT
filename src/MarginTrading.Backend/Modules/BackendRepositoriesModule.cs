@@ -82,7 +82,7 @@ namespace MarginTrading.Backend.Modules
             {
                 var settings = c.Resolve<IReloadingManager<MarginTradingSettings>>();
 
-                return settings.CurrentValue.UseAzureIdentityGenerator
+                return settings.CurrentValue.UseDbIdentityGenerator
                     ? (IIdentityGenerator) new AzureIdentityGenerator(
                         AzureTableStorage<IdentityEntity>.Create(settings.Nested(s => s.Db.MarginTradingConnString),
                             "Identity", _log))
