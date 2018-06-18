@@ -53,7 +53,7 @@
 				Volume = externalContract.Volume * 
 				         (externalContract.Type == Lykke.Service.ExchangeConnector.Client.Models.TradeType.Buy ? 1 : -1),
 				Fee = externalContract.Fee,
-				Id = externalContract.ExchangeOrderId,
+				Id = externalContract.ClientOrderId,
 				Status = externalContract.ExecutionStatus.ToString(),
 				Message = externalContract.Message ?? ""
 			};
