@@ -78,18 +78,6 @@ namespace MarginTrading.Backend.Services.Notifications
             return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountStopout.ExchangeName, message);
         }
 
-        public Task UserUpdates(bool updateAccountAssets, bool updateAccounts, string[] clientIds)
-        {
-            var message = new
-            {
-                updateAccountAssetPairs = updateAccountAssets,
-                UpdateAccounts = updateAccounts,
-                clientIds
-            };
-
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.UserUpdates.ExchangeName, message);
-        }
-
         public Task UpdateAccountStats(AccountStatsUpdateMessage message)
         {
             return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountStats.ExchangeName, message);
@@ -128,12 +116,10 @@ namespace MarginTrading.Backend.Services.Notifications
 
         public void Stop()
         {
-            ((IStopable) _publishers[_settings.RabbitMqQueues.AccountHistory.ExchangeName]).Stop();
             ((IStopable) _publishers[_settings.RabbitMqQueues.OrderHistory.ExchangeName]).Stop();
             ((IStopable) _publishers[_settings.RabbitMqQueues.OrderbookPrices.ExchangeName]).Stop();
             ((IStopable) _publishers[_settings.RabbitMqQueues.AccountStopout.ExchangeName]).Stop();
             ((IStopable) _publishers[_settings.RabbitMqQueues.AccountChanged.ExchangeName]).Stop();
-            ((IStopable) _publishers[_settings.RabbitMqQueues.UserUpdates.ExchangeName]).Stop();
             ((IStopable) _publishers[_settings.RabbitMqQueues.AccountMarginEvents.ExchangeName]).Stop();
             ((IStopable) _publishers[_settings.RabbitMqQueues.AccountStats.ExchangeName]).Stop();
             ((IStopable) _publishers[_settings.RabbitMqQueues.Trades.ExchangeName]).Stop();

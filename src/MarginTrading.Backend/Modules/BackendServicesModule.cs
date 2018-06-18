@@ -101,13 +101,10 @@ namespace MarginTrading.Backend.Modules
         {
             var publishers = new List<string>
             {
-                _settings.RabbitMqQueues.AccountHistory.ExchangeName,
                 _settings.RabbitMqQueues.OrderHistory.ExchangeName,
                 _settings.RabbitMqQueues.OrderbookPrices.ExchangeName,
-                _settings.RabbitMqQueues.OrderChanged.ExchangeName,
                 _settings.RabbitMqQueues.AccountChanged.ExchangeName,
                 _settings.RabbitMqQueues.AccountStopout.ExchangeName,
-                _settings.RabbitMqQueues.UserUpdates.ExchangeName,
                 _settings.RabbitMqQueues.AccountMarginEvents.ExchangeName,
                 _settings.RabbitMqQueues.AccountStats.ExchangeName,
                 _settings.RabbitMqQueues.Trades.ExchangeName,

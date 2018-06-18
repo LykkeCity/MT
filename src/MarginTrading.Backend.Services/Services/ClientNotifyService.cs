@@ -48,21 +48,5 @@ namespace MarginTrading.Backend.Services
             _operationsLogService.AddLog($"queue {queueName}", accountId, null,
                 new {clientId = clientId, accountId = accountId, positionsCount = positionsCount, totalPnl = totalPnl}.ToJson());
         }
-        
-        public async Task NotifyTradingConditionsChanged(string tradingConditionId = null, string accountId = null)
-        {
-            if (!string.IsNullOrEmpty(tradingConditionId))
-            {
-                var clientIds = _accountsCacheService
-                    .GetClientIdsByTradingConditionId(tradingConditionId, accountId).ToArray();
-
-                if (clientIds.Length > 0)
-                {
-                    await _rabbitMqNotifyService.UserUpdates(true, false, clientIds);
-                    _consoleWriter.WriteLine(
-                        $"send user updates to queue {QueueHelper.BuildQueueName(_marginSettings.RabbitMqQueues.UserUpdates.ExchangeName, _marginSettings.Env)}");
-                }
-            }
-        }
     }
 }
