@@ -15,6 +15,7 @@ using NUnit.Framework;
 namespace MarginTradingTests
 {
     [TestFixture]
+    [Ignore("Change logic")]
     public class SwapCommissionServiceTests : BaseTests
     {
         private ICommissionService _swapService;

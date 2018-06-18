@@ -329,7 +329,7 @@ namespace MarginTradingTests.OrderBooks
             var price = orderbooks.GetPriceForPositionClose(AssetPairId, -1, _orderBook1.ExchangeName);
             
             //Assert
-            Assert.AreEqual(100, price);
+            Assert.AreEqual(10, price);
         }
         
         #endregion
