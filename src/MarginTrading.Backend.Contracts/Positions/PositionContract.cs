@@ -20,6 +20,7 @@ namespace MarginTrading.Backend.Contracts.Positions
         public DateTime OpenDate { get; set; }
         public string OpenTradeId { get; set; }
         public decimal OpenPrice { get; set; }
+        public decimal OpenFxPrice { get; set; }
         public string EquivalentAsset { get; set; }
         public decimal OpenPriceEquivalent { get; set; }
         public List<RelatedOrderInfoContract> RelatedOrders { get; set; }
@@ -32,6 +33,7 @@ namespace MarginTrading.Backend.Contracts.Positions
         public decimal CommissionLot { get; set; }
         public string CloseMatchingEngineId { get; set; }
         public decimal ClosePrice { get; set; }
+        public decimal CloseFxPrice { get; set; }
         public decimal ClosePriceEquivalent { get; set; }
         public DateTime? StartClosingDate { get; set; }
         public DateTime? CloseDate { get; set; }

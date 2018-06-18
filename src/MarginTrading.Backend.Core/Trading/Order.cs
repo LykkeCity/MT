@@ -45,7 +45,7 @@ namespace MarginTrading.Backend.Core.Trading
         /// <summary>
         /// Date when order was activated 
         /// </summary>
-        public DateTime Activated { get; private set; }
+        public DateTime? Activated { get; private set; }
         
         /// <summary>
         /// Date when order was modified 

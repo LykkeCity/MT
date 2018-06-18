@@ -112,7 +112,7 @@ namespace MarginTrading.Backend.Contracts.Orders
         /// <summary>
         /// Date when order was activated 
         /// </summary>
-        public DateTime ActivatedTimestamp { get; set; }
+        public DateTime? ActivatedTimestamp { get; set; }
         
         /// <summary>
         /// Date when order started execution
