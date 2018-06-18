@@ -6,26 +6,26 @@ namespace MarginTrading.Backend.Core.Orders
 {
     public class Position
     {
-        public string Id { get; }
-        public long Code { get; }
-        public string AssetPairId { get; }
-        public PositionDirection Direction { get; }
+        public string Id { get; private set; }
+        public long Code { get; private set; }
+        public string AssetPairId { get; private set; }
+        public PositionDirection Direction { get; private set; }
         public decimal Volume { get; private set; }
-        public string AccountId { get; }
-        public string TradingConditionId { get; }
-        public string AccountAssetId { get; }
-        public decimal? ExpectedOpenPrice { get; }
-        public string OpenMatchingEngineId { get; }
-        public DateTime OpenDate { get; }
-        public string OpenTradeId { get; }
-        public decimal OpenPrice { get; }
-        public decimal OpenFxPrice { get; }
-        public string EquivalentAsset { get; }
-        public decimal OpenPriceEquivalent { get; }
-        public List<RelatedOrderInfo> RelatedOrders { get; }
-        public string LegalEntity { get; }  
-        public OriginatorType OpenOriginator { get; }
-        public string ExternalProviderId { get; }
+        public string AccountId { get; private set; }
+        public string TradingConditionId { get; private set; }
+        public string AccountAssetId { get; private set; }
+        public decimal? ExpectedOpenPrice { get; private set; }
+        public string OpenMatchingEngineId { get; private set; }
+        public DateTime OpenDate { get; private set; }
+        public string OpenTradeId { get; private set; }
+        public decimal OpenPrice { get; private set; }
+        public decimal OpenFxPrice { get; private set; }
+        public string EquivalentAsset { get; private set; }
+        public decimal OpenPriceEquivalent { get; private set; }
+        public List<RelatedOrderInfo> RelatedOrders { get; private set; }
+        public string LegalEntity { get; private set; }  
+        public OriginatorType OpenOriginator { get; private set; }
+        public string ExternalProviderId { get; private set; }
 
         public decimal SwapCommissionRate { get; private set; }
         public decimal OpenCommissionRate { get; private set; }
@@ -41,13 +41,13 @@ namespace MarginTrading.Backend.Core.Orders
         public OriginatorType? CloseOriginator { get; private set; }
         public PositionCloseReason CloseReason { get; private set; }
         public string CloseComment { get; private set; }
-        public List<string> CloseTrades { get; }
+        public List<string> CloseTrades { get; private set; }
         
         public PositionStatus Status { get; private set; }
         
         public DateTime? LastModified { get; private set; }
 
-        public FplData FplData { get; } = new FplData();
+        public FplData FplData { get; private set; } = new FplData();
 
         public Position(string id, long code, string assetPairId, decimal volume, string accountId,
             string tradingConditionId, string accountAssetId, decimal? expectedOpenPrice,

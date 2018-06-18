@@ -206,40 +206,27 @@ namespace MarginTrading.Backend.Controllers
             return Task.FromResult(orders.Select(Convert).ToList());
         }
 
-        private OpenPositionContract Convert(Position order)
+        private OpenPositionContract Convert(Position position)
         {
-            var relatedOrders = new List<string>();
-            
             return new OpenPositionContract
             {
-                AccountId = order.AccountId,
-                AssetPairId = order.AssetPairId,
-                CurrentVolume = order.Volume,
-                Direction = order.Direction.ToType<PositionDirectionContract>(),
-                Id = order.Id,
-                OpenPrice = order.OpenPrice,
-                ClosePrice = order.ClosePrice,
-                ExpectedOpenPrice = order.ExpectedOpenPrice,
-                PnL = order.GetFpl(),
-                Margin = order.GetMarginMaintenance(),
-                FxRate = order.GetFplRate(),
-                RelatedOrders = relatedOrders,
-                OpenTimestamp = order.OpenDate,
-                TradeId = order.Id
+                AccountId = position.AccountId,
+                AssetPairId = position.AssetPairId,
+                CurrentVolume = position.Volume,
+                Direction = position.Direction.ToType<PositionDirectionContract>(),
+                Id = position.Id,
+                OpenPrice = position.OpenPrice,
+                ClosePrice = position.ClosePrice,
+                ExpectedOpenPrice = position.ExpectedOpenPrice,
+                PnL = position.GetFpl(),
+                Margin = position.GetMarginMaintenance(),
+                FxRate = position.GetFplRate(),
+                RelatedOrders = position.RelatedOrders.Select(o => o.Id).ToList(),
+                RelatedOrderInfos = position.RelatedOrders.Select(o =>
+                    new RelatedOrderInfoContract {Id = o.Id, Type = o.Type.ToType<OrderTypeContract>()}).ToList(),
+                OpenTimestamp = position.OpenDate,
+                TradeId = position.Id
             };
-        }
-
-        private PositionDirectionContract Convert(OrderDirection orderOpenType)
-        {
-            switch (orderOpenType)
-            {
-                case OrderDirection.Buy:
-                    return PositionDirectionContract.Long;
-                case OrderDirection.Sell:
-                    return PositionDirectionContract.Short;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(orderOpenType), orderOpenType, null);
-            }
         }
     }
 }

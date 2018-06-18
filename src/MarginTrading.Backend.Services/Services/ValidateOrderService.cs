@@ -148,7 +148,7 @@ namespace MarginTrading.Backend.Services
                 OrderFillType.FillOrKill, string.Empty, account.LegalEntity, request.ForceOpen,
                 request.Type.ToType<OrderType>(), request.ParentOrderId, request.PositionId,
                 request.Originator.ToType<OriginatorType>(), initialParameters.equivalentPrice,
-                initialParameters.fxPrice);
+                initialParameters.fxPrice, OrderStatus.Placed);
             
             var relatedOrders = new List<Order>();
 
@@ -212,7 +212,7 @@ namespace MarginTrading.Backend.Services
                     price, parentOrder.EquivalentAsset, OrderFillType.FillOrKill, string.Empty,
                     parentOrder.LegalEntity, false, type.ToType<OrderType>(), parentOrder.Id, null,
                     request.Originator.ToType<OriginatorType>(), initialParameters.equivalentPrice,
-                    initialParameters.fxPrice);
+                    initialParameters.fxPrice, OrderStatus.Placed);
             }
 
             if (!string.IsNullOrEmpty(request.PositionId))
@@ -228,7 +228,7 @@ namespace MarginTrading.Backend.Services
                     price, position.EquivalentAsset, OrderFillType.FillOrKill, string.Empty,
                     position.LegalEntity, false, type.ToType<OrderType>(), null, position.Id,
                     request.Originator.ToType<OriginatorType>(), initialParameters.equivalentPrice,
-                    initialParameters.fxPrice);
+                    initialParameters.fxPrice, OrderStatus.Placed);
             }
 
             throw new ValidateOrderException(OrderRejectReason.InvalidParent,

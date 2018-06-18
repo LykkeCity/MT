@@ -1,6 +1,8 @@
-﻿using System.IO;
+﻿using System;
+using System.Data.SqlClient;
+using System.Linq;
 using System.Threading.Tasks;
-using Lykke.SettingsReader;
+using Dapper;
 using MarginTrading.Backend.Core;
 using Newtonsoft.Json;
 
@@ -8,43 +10,69 @@ namespace MarginTrading.SqlRepositories
 {
     public class SqlBlobRepository : IMarginTradingBlobRepository
     {
-        public SqlBlobRepository()
+        private const string TableName = "BlobData";
+        private const string CreateTableScript = "CREATE TABLE [{0}](" +
+                                                 "[BlobKey] [nvarchar] (64) NOT NULL PRIMARY KEY, " +
+                                                 "[Data] [nvarchar] (MAX) NULL, " +
+                                                 "[Timestamp] [DateTime] NULL " +
+                                                 ");";
+        
+        private readonly string _connectionString;
+        
+        public SqlBlobRepository(string connectionString)
         {
+            _connectionString = connectionString;
+            
+            using (var conn = new SqlConnection(_connectionString))
+            {
+                conn.CreateTableIfDoesntExists(CreateTableScript, TableName);
+            }
         }
-
+        
         public T Read<T>(string blobContainer, string key)
         {
-            var filename = $"{blobContainer}_{key}.json";
-
-            if (File.Exists(filename))
-            {
-                var str = File.ReadAllText(filename);
-
-                return JsonConvert.DeserializeObject<T>(str);
-            }
-//            if (_blobStorage.HasBlobAsync(blobContainer, key).Result)
-//            {
-//                var data = _blobStorage.GetAsync(blobContainer, key).Result.ToBytes();
-//                var str = Encoding.UTF8.GetString(data);
-//
-//                return JsonConvert.DeserializeObject<T>(str);
-//            }
-
-            return default(T);
+            return ReadAsync<T>(blobContainer, key).GetAwaiter().GetResult();
         }
 
-
-        public Task<T> ReadAsync<T>(string blobContainer, string key)
+        public async Task<T> ReadAsync<T>(string blobContainer, string key)
         {
-            return Task.FromResult(Read<T>(blobContainer, key));
+            using (var conn = new SqlConnection(_connectionString))
+            {
+                var data = (await conn.QueryAsync<string>(
+                    $"SELECT Data FROM {TableName} WHERE BlobKey=@blobKey",
+                    new {blobKey = $"{blobContainer}_{key}"})).SingleOrDefault();
+
+                if (string.IsNullOrEmpty(data))
+                    return default(T);
+                
+                return JsonConvert.DeserializeObject<T>(data); 
+            }
         }
 
         public async Task Write<T>(string blobContainer, string key, T obj)
         {
-            var filename = $"{blobContainer}_{key}.json";
-            File.WriteAllText(filename, JsonConvert.SerializeObject(obj));
-//            var data = JsonConvert.SerializeObject(obj).ToUtf8Bytes();
-//            await _blobStorage.SaveBlobAsync(blobContainer, key, data);
+            var request = new
+            {
+                data = JsonConvert.SerializeObject(obj),
+                blobKey = $"{blobContainer}_{key}",
+                timestamp = DateTime.Now
+            };
+            
+            using (var conn = new SqlConnection(_connectionString))
+            {
+                try
+                {
+                    await conn.ExecuteAsync(
+                        $"insert into {TableName} (BlobKey, Data, Timestamp) values (@blobKey, @data, @timestamp)",
+                        request);
+                }
+                catch
+                {
+                    await conn.ExecuteAsync(
+                        $"update {TableName} set Data=@data, Timestamp = @timestamp where BlobKey=@blobKey",
+                        request);
+                }
+            }
         }
     }
 }

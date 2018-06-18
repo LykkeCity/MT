@@ -35,13 +35,12 @@ namespace MarginTrading.Backend.Services
         public OrderCacheGroup Inactive { get; private set; }
         public OrderCacheGroup InProgress { get; private set; }
         public PositionsCache Positions { get; private set; }
-        
+
         public ImmutableArray<Order> GetAllOrders()
         {
-            using (_contextFactory.GetReadSyncContext($"{nameof(OrdersCache)}.{nameof(GetAllOrders)}"))
-                return Active.GetAllOrders()
-                    .Union(Inactive.GetAllOrders())
-                    .Union(InProgress.GetAllOrders()).ToImmutableArray();
+            return Active.GetAllOrders()
+                .Union(Inactive.GetAllOrders())
+                .Union(InProgress.GetAllOrders()).ToImmutableArray();
         }
 
         public ImmutableArray<Position> GetPositions()

@@ -401,7 +401,7 @@ namespace MarginTrading.Backend.Services
             var order = new Order(id, code, position.AssetPairId, -position.Volume, now, now, null, position.AccountId,
                 position.TradingConditionId, position.AccountAssetId, null, position.EquivalentAsset,
                 OrderFillType.FillOrKill, "Stop out", position.LegalEntity, false, OrderType.Market, null, position.Id,
-                OriginatorType.System, 0, 0);
+                OriginatorType.System, 0, 0, OrderStatus.Placed);
             
             _ordersCache.InProgress.Add(order);
         }
@@ -429,7 +429,7 @@ namespace MarginTrading.Backend.Services
             var order = new Order(id, code, position.AssetPairId, -position.Volume, now, now, null, position.AccountId,
                 position.TradingConditionId, position.AccountAssetId, null, position.EquivalentAsset,
                 OrderFillType.FillOrKill, "Close position", position.LegalEntity, false, OrderType.Market, null, position.Id,
-                OriginatorType.Investor, 0, 0);
+                OriginatorType.Investor, 0, 0, OrderStatus.Placed);
 
             return ExecuteOrderByMatchingEngineAsync(order, me /*, reason, comment*/);
         }
