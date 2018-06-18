@@ -82,7 +82,7 @@ namespace MarginTrading.Backend.Modules
             builder.RegisterType<UpdatedAccountsStatsConsumer>()
                 .As<IEventConsumer<AccountBalanceChangedEventArgs>>()
                 .As<IEventConsumer<OrderPlacedEventArgs>>()
-                .As<IEventConsumer<OrderClosedEventArgs>>()
+                .As<IEventConsumer<OrderExecutedEventArgs>>()
                 .As<IEventConsumer<OrderCancelledEventArgs>>()
                 .SingleInstance();
 
@@ -101,16 +101,14 @@ namespace MarginTrading.Backend.Modules
         {
             var publishers = new List<string>
             {
-                _settings.RabbitMqQueues.AccountHistory.ExchangeName,
                 _settings.RabbitMqQueues.OrderHistory.ExchangeName,
                 _settings.RabbitMqQueues.OrderbookPrices.ExchangeName,
-                _settings.RabbitMqQueues.OrderChanged.ExchangeName,
                 _settings.RabbitMqQueues.AccountChanged.ExchangeName,
                 _settings.RabbitMqQueues.AccountStopout.ExchangeName,
-                _settings.RabbitMqQueues.UserUpdates.ExchangeName,
                 _settings.RabbitMqQueues.AccountMarginEvents.ExchangeName,
                 _settings.RabbitMqQueues.AccountStats.ExchangeName,
                 _settings.RabbitMqQueues.Trades.ExchangeName,
+                _settings.RabbitMqQueues.PositionHistory.ExchangeName,
                 _settings.RabbitMqQueues.ExternalOrder.ExchangeName
             };
 

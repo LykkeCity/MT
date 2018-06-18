@@ -272,14 +272,9 @@ namespace MarginTradingTests.OrderBooks
             var orderbooks = GetNewOrderbooksList();
             orderbooks.SetOrderbook(_orderBook1);
             orderbooks.SetOrderbook(_orderBook2);
-            var order = new Order
-            {
-                Instrument = AssetPairId,
-                Volume = 1
-            };
             
             //Act
-            var prices = orderbooks.GetPricesForOpen(order);
+            var prices = orderbooks.GetPricesForExecution(AssetPairId, 1, false);
             
             //Assert
             Assert.AreEqual(2, prices.Count);
@@ -296,14 +291,9 @@ namespace MarginTradingTests.OrderBooks
             var orderbooks = GetNewOrderbooksList();
             orderbooks.SetOrderbook(_orderBook1);
             orderbooks.SetOrderbook(_orderBook2);
-            var order = new Order
-            {
-                Instrument = AssetPairId,
-                Volume = -1
-            };
-            
+
             //Act
-            var prices = orderbooks.GetPricesForOpen(order);
+            var prices = orderbooks.GetPricesForExecution(AssetPairId, -1, false);
             
             //Assert
             Assert.AreEqual(2, prices.Count);
@@ -320,16 +310,9 @@ namespace MarginTradingTests.OrderBooks
             var orderbooks = GetNewOrderbooksList();
             orderbooks.SetOrderbook(_orderBook1);
             orderbooks.SetOrderbook(_orderBook2);
-            var order = new Order
-            {
-                Instrument = AssetPairId,
-                Volume = 1,
-                OpenExternalProviderId = _orderBook1.ExchangeName
-            };
             
             //Act
-            var price = orderbooks.GetPriceForClose(order);
-            
+            var price = orderbooks.GetPriceForPositionClose(AssetPairId, 1, _orderBook1.ExchangeName);
             //Assert
             Assert.AreEqual(9M, price);
         }
@@ -341,18 +324,12 @@ namespace MarginTradingTests.OrderBooks
             var orderbooks = GetNewOrderbooksList();
             orderbooks.SetOrderbook(_orderBook1);
             orderbooks.SetOrderbook(_orderBook2);
-            var order = new Order
-            {
-                Instrument = AssetPairId,
-                Volume = -1,
-                OpenExternalProviderId = _orderBook2.ExchangeName
-            };
             
             //Act
-            var price = orderbooks.GetPriceForClose(order);
+            var price = orderbooks.GetPriceForPositionClose(AssetPairId, -1, _orderBook1.ExchangeName);
             
             //Assert
-            Assert.AreEqual(100, price);
+            Assert.AreEqual(10, price);
         }
         
         #endregion

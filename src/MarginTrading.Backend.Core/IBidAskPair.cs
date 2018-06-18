@@ -32,7 +32,7 @@ namespace MarginTrading.Backend.Core
     {
         public static decimal GetPriceForOrderType(this IBidAskPair bidAskPair, OrderDirection orderType)
         {
-            return orderType == OrderDirection.Buy ? bidAskPair.Bid : bidAskPair.Ask;
+            return orderType == OrderDirection.Buy ? bidAskPair.Ask : bidAskPair.Bid;
         }
     }
 }

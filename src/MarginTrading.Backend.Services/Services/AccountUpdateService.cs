@@ -4,6 +4,7 @@ using System.Linq;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.TradingConditions;
 
@@ -34,7 +35,7 @@ namespace MarginTrading.Backend.Services
 
         public void UpdateAccount(IMarginTradingAccount account)
         {
-            UpdateAccount(account, GetActiveOrders(account.Id), GetPendingOrders(account.Id));
+            UpdateAccount(account, GetPositions(account.Id), GetActiveOrders(account.Id));
         }
 
         public void FreezeWithdrawalMargin(string accountId, string operationId, decimal amount)
@@ -62,22 +63,20 @@ namespace MarginTrading.Backend.Services
 
         public bool IsEnoughBalance(Order order)
         {
-            _fplService.CalculateMargin(order, order.FplData);
-            //TODO: always returns 0, need to be reworked
-            var orderMargin = order.GetMarginInit();
+            var orderMargin = _fplService.GetInitMarginForOrder(order);
             var accountMarginAvailable = _accountsCacheService.Get(order.AccountId).GetMarginAvailable(); 
             
             return accountMarginAvailable >= orderMargin;
         }
 
-        public MarginTradingAccount GuessAccountWithNewActiveOrder(Order order)
+        public MarginTradingAccount GuessAccountWithNewActiveOrder(Position order)
         {
             var newInstance = MarginTradingAccount.Create(_accountsCacheService.Get(order.AccountId));
 
-            var activeOrders = GetActiveOrders(newInstance.Id);
+            var activeOrders = GetPositions(newInstance.Id);
             activeOrders.Add(order);
             
-            var pendingOrders = GetPendingOrders(newInstance.Id);
+            var pendingOrders = GetActiveOrders(newInstance.Id);
 
             UpdateAccount(newInstance, activeOrders, pendingOrders);
 
@@ -85,7 +84,7 @@ namespace MarginTrading.Backend.Services
         }
         
         private void UpdateAccount(IMarginTradingAccount account,
-            ICollection<Order> activeOrders,
+            ICollection<Position> activeOrders,
             ICollection<Order> pendingOrders)
         {
             var accuracy = _assetsCache.GetAssetAccuracy(account.BaseAssetId);
@@ -106,14 +105,14 @@ namespace MarginTrading.Backend.Services
             account.AccountFpl.CalculatedHash = account.AccountFpl.ActualHash;
         }
 
-        private ICollection<Order> GetActiveOrders(string accountId)
+        private ICollection<Position> GetPositions(string accountId)
         {
-            return _ordersCache.ActiveOrders.GetOrdersByAccountIds(accountId);
+            return _ordersCache.Positions.GetOrdersByAccountIds(accountId);
         }
         
-        private ICollection<Order> GetPendingOrders(string accountId)
+        private ICollection<Order> GetActiveOrders(string accountId)
         {
-            return _ordersCache.WaitingForExecutionOrders.GetOrdersByAccountIds(accountId);
+            return _ordersCache.Active.GetOrdersByAccountIds(accountId);
         }
     }
 }

@@ -13,6 +13,7 @@
         InvalidStoploss,
         InvalidInstrument,
         InvalidAccount,
+        InvalidParent,
         TradingConditionError,
         TechnicalError
     }

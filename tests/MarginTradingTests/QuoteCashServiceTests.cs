@@ -6,6 +6,7 @@ using NUnit.Framework;
 namespace MarginTradingTests
 {
     [TestFixture]
+    [Ignore("Change logic")]
     public class QuoteCashServiceTests : BaseTests
     {
         private IQuoteCacheService _quoteCacheService;

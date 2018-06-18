@@ -34,8 +34,8 @@ namespace MarginTrading.Backend.Core.Orders
         decimal OpenPriceEquivalent { get; }
         decimal ClosePriceEquivalent { get; }
         DateTime? StartClosingDate { get; }
-        OrderStatus Status { get; }
-        OrderCloseReason CloseReason { get; }
+        PositionStatus Status { get; }
+        PositionCloseReason CloseReason { get; }
         OrderFillType FillType { get; }
         OrderRejectReason RejectReason { get; }
         string RejectReasonText { get; }

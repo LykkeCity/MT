@@ -55,7 +55,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.OrderbookBest
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.MigrateApp", "src\MarginTrading.Brokers\MarginTrading.MigrateApp\MarginTrading.MigrateApp.csproj", "{921B4212-E0C8-4422-A689-A19095BD5CDC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.SqlRepositories", "src\MarginTrading.SqlRepositories\MarginTrading.SqlRepositories.csproj", "{9C66119B-C71C-4E13-85F6-9740D699115B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.SqlRepositories", "src\MarginTrading.SqlRepositories\MarginTrading.SqlRepositories.csproj", "{115EFE4D-B269-4D62-944D-12C9FC1AE56A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -135,10 +135,10 @@ Global
 		{921B4212-E0C8-4422-A689-A19095BD5CDC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{921B4212-E0C8-4422-A689-A19095BD5CDC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{921B4212-E0C8-4422-A689-A19095BD5CDC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9C66119B-C71C-4E13-85F6-9740D699115B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9C66119B-C71C-4E13-85F6-9740D699115B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9C66119B-C71C-4E13-85F6-9740D699115B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9C66119B-C71C-4E13-85F6-9740D699115B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{115EFE4D-B269-4D62-944D-12C9FC1AE56A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{115EFE4D-B269-4D62-944D-12C9FC1AE56A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{115EFE4D-B269-4D62-944D-12C9FC1AE56A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{115EFE4D-B269-4D62-944D-12C9FC1AE56A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -162,7 +162,7 @@ Global
 		{AE4DA150-F395-4E80-B1A2-2D0D4FDB89D8} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
 		{B9DD492A-58CC-4716-879F-725AE2218AB7} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
 		{921B4212-E0C8-4422-A689-A19095BD5CDC} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
-		{9C66119B-C71C-4E13-85F6-9740D699115B} = {5AD188EF-3F19-4527-816C-A361746EE9C2}
+		{115EFE4D-B269-4D62-944D-12C9FC1AE56A} = {5AD188EF-3F19-4527-816C-A361746EE9C2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {16BCEC97-771D-46F8-BD02-379A8FC34CDD}

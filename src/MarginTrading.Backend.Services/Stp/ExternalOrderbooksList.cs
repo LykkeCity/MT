@@ -6,6 +6,7 @@ using Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Helpers;
@@ -38,27 +39,29 @@ namespace MarginTrading.Backend.Services.Stp
         private readonly ReadWriteLockedDictionary<string, Dictionary<string, ExternalOrderBook>> _orderbooks =
             new ReadWriteLockedDictionary<string, Dictionary<string, ExternalOrderBook>>();
 
-        public List<(string source, decimal? price)> GetPricesForOpen(IOrder order)
+        public List<(string source, decimal? price)> GetPricesForExecution(string assetPairId, decimal volume,
+            bool validateOpositeDirectionVolume)
         {
-            return _orderbooks.TryReadValue(order.Instrument, (dataExist, assetPairId, orderbooks)
+            return _orderbooks.TryReadValue(assetPairId, (dataExist, assetPair, orderbooks)
                 => dataExist
-                    ? orderbooks.Select(p => (p.Key, MatchBestPriceForOrder(p.Value, order, true))).ToList()
+                    ? orderbooks.Select(p => (p.Key,
+                        MatchBestPriceForOrderExecution(p.Value, volume, validateOpositeDirectionVolume))).ToList()
                     : null);
         }
 
-        public decimal? GetPriceForClose(IOrder order)
+        public decimal? GetPriceForPositionClose(string assetPairId, decimal volume, string externalProviderId)
         {
             decimal? CalculatePriceForClose(Dictionary<string, ExternalOrderBook> orderbooks)
             {
-                if (!orderbooks.TryGetValue(order.OpenExternalProviderId, out var orderBook))
+                if (!orderbooks.TryGetValue(externalProviderId, out var orderBook))
                 {
                     return null;
                 }
 
-                return MatchBestPriceForOrder(orderBook, order, false);
+                return MatchBestPriceForPositionClose(orderBook, volume);
             }
 
-            return _orderbooks.TryReadValue(order.Instrument, (dataExist, assetPairId, orderbooks)
+            return _orderbooks.TryReadValue(assetPairId, (dataExist, assetPair, orderbooks)
                 => dataExist ? CalculatePriceForClose(orderbooks) : null);
         }
 
@@ -69,12 +72,30 @@ namespace MarginTrading.Backend.Services.Stp
                 (exists, assetPair, orderbooks) => orderbooks.Values.FirstOrDefault());
         }
 
-        private static decimal? MatchBestPriceForOrder(ExternalOrderBook externalOrderbook, IOrder order, bool isOpening)
+        private static decimal? MatchBestPriceForOrderExecution(ExternalOrderBook externalOrderBook, decimal volume,
+            bool validateOpositeDirectionVolume)
         {
-            var direction = isOpening ? order.GetOrderDirection() : order.GetCloseType();
-            var volume = Math.Abs(order.Volume);
+            var direction = volume.GetOrderDirection();
 
-            return externalOrderbook.GetMatchedPrice(volume, direction);
+            var price = externalOrderBook.GetMatchedPrice(Math.Abs(volume), direction);
+
+            if (price != null && validateOpositeDirectionVolume)
+            {
+                var closePrice = externalOrderBook.GetMatchedPrice(Math.Abs(volume), direction.GetOpositeDirection());
+
+                //if no liquidity for close, should not use price for open
+                if (closePrice == null)
+                    return null;
+            }
+
+            return price;
+        }
+
+        private static decimal? MatchBestPriceForPositionClose(ExternalOrderBook externalOrderBook, decimal volume)
+        {
+            var direction = volume.GetClosePositionOrderDirection();
+            
+            return externalOrderBook.GetMatchedPrice(Math.Abs(volume), direction);
         }
 
         public void SetOrderbook(ExternalOrderBook orderbook)

@@ -57,27 +57,27 @@ namespace MarginTrading.Backend.Controllers
         [HttpDelete]
         public async Task CloseAsync([CanBeNull] [FromRoute] string positionId/*, [FromBody] PositionCloseRequest request*/)
         {
-            if (!_ordersCache.ActiveOrders.TryGetOrderById(positionId, out var order))
+            if (!_ordersCache.Positions.TryGetOrderById(positionId, out var position))
             {
                 throw new InvalidOperationException("Position not found");
             }
 
-            if (_assetDayOffService.IsDayOff(order.Instrument))
-            {
-                throw new InvalidOperationException("Trades for instrument are not available");
-            }
+            //if (_assetDayOffService.IsDayOff(position.AssetPairId))
+            //{
+            //    throw new InvalidOperationException("Trades for instrument are not available");
+            //}
 
-            var reason = OrderCloseReason.Close;
+            var reason = PositionCloseReason.Close;
 //                request.Originator == OriginatorTypeContract.OnBehalf ||
 //                request.Originator == OriginatorTypeContract.System
 //                    ? OrderCloseReason.ClosedByBroker
 //                    : OrderCloseReason.Close;
 
-            order = await _tradingEngine.CloseActiveOrderAsync(positionId, reason, /*request.Comment*/ "");
+            var order = await _tradingEngine.ClosePositionAsync(positionId, reason, /*request.Comment*/ "");
 
-            if (order.Status != OrderStatus.Closed && order.Status != OrderStatus.Closing)
+            if (order.Status != OrderStatus.Executed && order.Status != OrderStatus.ExecutionStarted)
             {
-                throw new InvalidOperationException(order.CloseRejectReasonText);
+                throw new InvalidOperationException(order.RejectReasonText);
             }
 
             _consoleWriter.WriteLine(
@@ -98,33 +98,31 @@ namespace MarginTrading.Backend.Controllers
             /*[FromBody] PositionCloseRequest request,*/
             [FromQuery] PositionDirectionContract? direction = null)
         {
-            var orders = _ordersCache.ActiveOrders.GetAllOrders();
+            var positions = _ordersCache.Positions.GetAllOrders();
             
             if (!string.IsNullOrWhiteSpace(instrument))
-                orders = orders.Where(o => o.Instrument == instrument).ToList();
+                positions = positions.Where(o => o.AssetPairId == instrument).ToList();
 
             if (direction != null)
             {
-                var orderDirection = direction == PositionDirectionContract.Short
-                    ? OrderDirection.Sell
-                    : OrderDirection.Buy;
+                var positionDirection = direction.ToType<PositionDirection>();
 
-                orders = orders.Where(o => o.GetOrderDirection() == orderDirection).ToList();
+                positions = positions.Where(o => o.Direction == positionDirection).ToList();
             }
 
-            var reason = OrderCloseReason.Close;
+            var reason = PositionCloseReason.Close;
 //                request.Originator == OriginatorTypeContract.OnBehalf ||
 //                request.Originator == OriginatorTypeContract.System
 //                    ? OrderCloseReason.ClosedByBroker
 //                    : OrderCloseReason.Close;
             
-            foreach (var orderId in orders.Select(o => o.Id).ToList())
+            foreach (var orderId in positions.Select(o => o.Id).ToList())
             {
-                var closedOrder = await _tradingEngine.CloseActiveOrderAsync(orderId, reason, /*request.Comment*/ "");
+                var closedOrder = await _tradingEngine.ClosePositionAsync(orderId, reason, /*request.Comment*/ "");
 
-                if (closedOrder.Status != OrderStatus.Closed && closedOrder.Status != OrderStatus.Closing)
+                if (closedOrder.Status != OrderStatus.Executed && closedOrder.Status != OrderStatus.ExecutionStarted)
                 {
-                    throw new InvalidOperationException(closedOrder.CloseRejectReasonText);
+                    throw new InvalidOperationException(closedOrder.RejectReasonText);
                 }
 
                 _operationsLogService.AddLog("action close positions group", closedOrder.AccountId, ""/* request.ToJson()*/,
@@ -145,7 +143,7 @@ namespace MarginTrading.Backend.Controllers
         [HttpDelete]
         public async Task CloseGroupAsync([FromRoute] string accountId, [FromQuery] string assetPairId = null)
         {
-            var orders = _ordersCache.ActiveOrders.GetAllOrders();
+            var orders = _ordersCache.Positions.GetAllOrders();
 
             if (string.IsNullOrWhiteSpace(accountId))
             {
@@ -153,10 +151,10 @@ namespace MarginTrading.Backend.Controllers
             }
 
             orders = orders.Where(o => o.AccountId == accountId
-                                       && (string.IsNullOrWhiteSpace(assetPairId) || o.Instrument == assetPairId))
+                                       && (string.IsNullOrWhiteSpace(assetPairId) || o.AssetPairId == assetPairId))
                 .ToList();
 
-            var reason = OrderCloseReason.Close;
+            var reason = PositionCloseReason.Close;
 //                request.Originator == OriginatorTypeContract.OnBehalf ||
 //                request.Originator == OriginatorTypeContract.System
 //                    ? OrderCloseReason.ClosedByBroker
@@ -164,11 +162,11 @@ namespace MarginTrading.Backend.Controllers
             
             foreach (var orderId in orders.Select(o => o.Id).ToList())
             {
-                var closedOrder = await _tradingEngine.CloseActiveOrderAsync(orderId, reason, /*request.Comment*/ "");
+                var closedOrder = await _tradingEngine.ClosePositionAsync(orderId, reason, /*request.Comment*/ "");
 
-                if (closedOrder.Status != OrderStatus.Closed && closedOrder.Status != OrderStatus.Closing)
+                if (closedOrder.Status != OrderStatus.Executed && closedOrder.Status != OrderStatus.ExecutionStarted)
                 {
-                    throw new InvalidOperationException(closedOrder.CloseRejectReasonText);
+                    throw new InvalidOperationException(closedOrder.RejectReasonText);
                 }
 
                 _operationsLogService.AddLog("action close positions group", closedOrder.AccountId, ""/* request.ToJson()*/,
@@ -185,7 +183,7 @@ namespace MarginTrading.Backend.Controllers
         [HttpGet, Route("{positionId}")]
         public Task<OpenPositionContract> GetAsync(string positionId)
         {
-            if (!_ordersCache.ActiveOrders.TryGetOrderById(positionId, out var order))
+            if (!_ordersCache.Positions.TryGetOrderById(positionId, out var order))
                 return null;
 
             return Task.FromResult(Convert(order));
@@ -198,59 +196,37 @@ namespace MarginTrading.Backend.Controllers
         public Task<List<OpenPositionContract>> ListAsync([FromQuery]string accountId = null,
             [FromQuery] string assetPairId = null)
         {
-            IEnumerable<Order> orders = _ordersCache.ActiveOrders.GetAllOrders();
+            IEnumerable<Position> orders = _ordersCache.Positions.GetAllOrders();
             if (!string.IsNullOrWhiteSpace(accountId))
                 orders = orders.Where(o => o.AccountId == accountId);
 
             if (!string.IsNullOrWhiteSpace(assetPairId))
-                orders = orders.Where(o => o.Instrument == assetPairId);
+                orders = orders.Where(o => o.AssetPairId == assetPairId);
 
             return Task.FromResult(orders.Select(Convert).ToList());
         }
 
-        private OpenPositionContract Convert(Order order)
+        private OpenPositionContract Convert(Position position)
         {
-            var relatedOrders = new List<string>();
-            
-            if (order.StopLoss != null)
-            {
-                relatedOrders.Add($"{order.Id}_{OrderTypeContract.StopLoss.ToString()}");
-            }
-            if (order.TakeProfit != null)
-            {
-                relatedOrders.Add($"{order.Id}_{OrderTypeContract.TakeProfit.ToString()}");
-            }
-            
             return new OpenPositionContract
             {
-                AccountId = order.AccountId,
-                AssetPairId = order.Instrument,
-                CurrentVolume = order.Volume,
-                Direction = Convert(order.GetOrderDirection()),
-                Id = order.Id,
-                OpenPrice = order.OpenPrice,
-                ClosePrice = order.ClosePrice,
-                ExpectedOpenPrice = order.ExpectedOpenPrice,
-                PnL = order.GetFpl(),
-                Margin = order.GetMarginMaintenance(),
-                FxRate = order.GetFplRate(),
-                RelatedOrders = relatedOrders,
-                OpenTimestamp = order.OpenDate.RequiredNotNull(nameof(order.OpenDate)),
-                TradeId = order.Id + '_' + order.GetOrderDirection(),
+                AccountId = position.AccountId,
+                AssetPairId = position.AssetPairId,
+                CurrentVolume = position.Volume,
+                Direction = position.Direction.ToType<PositionDirectionContract>(),
+                Id = position.Id,
+                OpenPrice = position.OpenPrice,
+                ClosePrice = position.ClosePrice,
+                ExpectedOpenPrice = position.ExpectedOpenPrice,
+                PnL = position.GetFpl(),
+                Margin = position.GetMarginMaintenance(),
+                FxRate = position.GetFplRate(),
+                RelatedOrders = position.RelatedOrders.Select(o => o.Id).ToList(),
+                RelatedOrderInfos = position.RelatedOrders.Select(o =>
+                    new RelatedOrderInfoContract {Id = o.Id, Type = o.Type.ToType<OrderTypeContract>()}).ToList(),
+                OpenTimestamp = position.OpenDate,
+                TradeId = position.Id
             };
-        }
-
-        private PositionDirectionContract Convert(OrderDirection orderOpenType)
-        {
-            switch (orderOpenType)
-            {
-                case OrderDirection.Buy:
-                    return PositionDirectionContract.Long;
-                case OrderDirection.Sell:
-                    return PositionDirectionContract.Short;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(orderOpenType), orderOpenType, null);
-            }
         }
     }
 }

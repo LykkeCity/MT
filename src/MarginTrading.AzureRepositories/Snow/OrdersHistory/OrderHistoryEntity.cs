@@ -60,9 +60,9 @@ namespace MarginTrading.AzureRepositories.Snow.OrdersHistory
         public string Type { get; set; }
         OrderDirection IOrderHistory.Type => Type.ParseEnum(OrderDirection.Buy);
         public string Status { get; set; }
-        OrderStatus IOrderHistory.Status => Status.ParseEnum(OrderStatus.Closed);
+        PositionStatus IOrderHistory.Status => Status.ParseEnum(PositionStatus.Closed);
         public string CloseReason { get; set; }
-        OrderCloseReason IOrderHistory.CloseReason => CloseReason.ParseEnum(OrderCloseReason.Close);
+        PositionCloseReason IOrderHistory.CloseReason => CloseReason.ParseEnum(PositionCloseReason.Close);
         public string FillType { get; set; }
         OrderFillType IOrderHistory.FillType => FillType.ParseEnum(OrderFillType.FillOrKill);
         public string RejectReason { get; set; }
@@ -83,7 +83,7 @@ namespace MarginTrading.AzureRepositories.Snow.OrdersHistory
         public string Orders { get; set; }
         public string ClosedOrders { get; set; }
 
-        OrderUpdateType IOrderHistory.OrderUpdateType => OrderUpdateType.ParseEnum(Backend.Core.Orders.OrderUpdateType.Close);
+        OrderUpdateType IOrderHistory.OrderUpdateType => OrderUpdateType.ParseEnum(Backend.Core.Orders.OrderUpdateType.Executed);
 
         public string OpenExternalOrderId { get; set; }
         public string OpenExternalProviderId { get; set; }

@@ -8,10 +8,21 @@ namespace MarginTrading.Backend.Core.Orders
         {
             return order.Volume >= 0 ? OrderDirection.Buy : OrderDirection.Sell;
         }
-
-        public static OrderDirection GetCloseType(this IBaseOrder order)
+        
+        public static OrderDirection GetOrderDirection(this decimal volume)
         {
-            return order.Volume >= 0 ? OrderDirection.Sell : OrderDirection.Buy;
+            return volume >= 0 ? OrderDirection.Buy : OrderDirection.Sell;
+        }
+        
+        public static PositionDirection GetPositionDirection(this decimal volume)
+        {
+            return volume >= 0 ? PositionDirection.Long : PositionDirection.Short;
+        }
+        
+        
+        public static OrderDirection GetClosePositionOrderDirection(this decimal volume)
+        {
+            return volume >= 0 ? OrderDirection.Sell : OrderDirection.Buy;
         }
 
         public static bool GetIsFullfilled(this IBaseOrder order)

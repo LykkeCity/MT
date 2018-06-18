@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using MarginTrading.Backend.Contracts.Orders;
 
 namespace MarginTrading.Backend.Contracts.Positions
 {
@@ -74,8 +75,13 @@ namespace MarginTrading.Backend.Contracts.Positions
         public string TradeId { get; set; }
         
         /// <summary>
-        /// The related orders (sl, tp orders) 
+        /// The related order Ids (sl, tp orders) 
         /// </summary>
         public List<string> RelatedOrders { get; set; }
+        
+        /// <summary>
+        /// The related orders (sl, tp orders) 
+        /// </summary>
+        public List<RelatedOrderInfoContract> RelatedOrderInfos { get; set; }
     }
 }

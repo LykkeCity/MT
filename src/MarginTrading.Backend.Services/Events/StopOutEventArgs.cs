@@ -6,7 +6,7 @@ namespace MarginTrading.Backend.Services.Events
 {
     public class StopOutEventArgs
     {
-        public StopOutEventArgs(MarginTradingAccount account, Order[] orders)
+        public StopOutEventArgs(MarginTradingAccount account, Position[] orders)
         {
             if (account == null) throw new ArgumentNullException(nameof(account));
             if (orders == null) throw new ArgumentNullException(nameof(orders));
@@ -15,6 +15,6 @@ namespace MarginTrading.Backend.Services.Events
         }
 
         public MarginTradingAccount Account { get; }
-        public Order[] Orders { get; }
+        public Position[] Orders { get; }
     }
 }

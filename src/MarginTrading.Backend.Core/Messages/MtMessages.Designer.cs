@@ -130,9 +130,21 @@ namespace MarginTrading.Backend.Core.Messages {
             }
         }
         
+        public static string CantRemovePosition {
+            get {
+                return ResourceManager.GetString("CantRemovePosition", resourceCulture);
+            }
+        }
+        
         public static string CantGetOrderWithStatus {
             get {
                 return ResourceManager.GetString("CantGetOrderWithStatus", resourceCulture);
+            }
+        }
+        
+        public static string CantGetPosition {
+            get {
+                return ResourceManager.GetString("CantGetPosition", resourceCulture);
             }
         }
         

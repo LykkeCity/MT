@@ -5,6 +5,7 @@ using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Trading;
 
 namespace MarginTrading.Backend.Services.MatchingEngines
 {
@@ -14,21 +15,19 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
         public MatchingEngineMode Mode => MatchingEngineMode.MarketMaker;
 
-        public Task MatchMarketOrderForOpenAsync(Order order, Func<MatchedOrderCollection, bool> orderProcessed)
+        public Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition)
+        {
+            return Task.FromResult(new MatchedOrderCollection());
+        }
+
+        public Task MatchMarketOrderForCloseAsync(Position order, Func<MatchedOrderCollection, bool> orderProcessed)
         {
             orderProcessed(new MatchedOrderCollection());
             
             return Task.CompletedTask;
         }
 
-        public Task MatchMarketOrderForCloseAsync(Order order, Func<MatchedOrderCollection, bool> orderProcessed)
-        {
-            orderProcessed(new MatchedOrderCollection());
-            
-            return Task.CompletedTask;
-        }
-
-        public decimal? GetPriceForClose(Order order)
+        public decimal? GetPriceForClose(Position order)
         {
             return null;
         }

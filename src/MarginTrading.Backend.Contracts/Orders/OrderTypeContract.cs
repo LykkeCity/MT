@@ -18,7 +18,7 @@
         /// <summary>
         /// Stop order, a basic one (closing only)
         /// </summary>
-        Stop = 3, //todo why this is not a related one?
+        Stop = 3,
 
         /// <summary>
         /// Take profit order, related to another parent one
@@ -28,7 +28,7 @@
         /// <summary>
         /// Stop loss order, related to another parent one
         /// </summary>
-        StopLoss = 5, // todo what's the difference with Stop order
+        StopLoss = 5,
 
         /// <summary>
         /// Trailing stop order, related to another parent one

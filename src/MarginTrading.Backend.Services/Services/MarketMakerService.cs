@@ -33,8 +33,8 @@ namespace MarginTrading.Backend.Services
             if (_maintenanceModeService.CheckIsEnabled())
                 return;
             
-            if (_assetPairDayOffService.IsDayOff(batch.AssetPairId))
-                return;
+            //if (_assetPairDayOffService.IsDayOff(batch.AssetPairId))
+            //    return;
 
             var model = new SetOrderModel {MarketMakerId = batch.MarketMakerId};
 

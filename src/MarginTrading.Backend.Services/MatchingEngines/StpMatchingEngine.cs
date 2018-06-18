@@ -10,6 +10,7 @@ using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Common.Extensions;
@@ -47,23 +48,21 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             Id = id;
         }
         
-        //TODO: remove orderProcessed function and make all validations before match
-        public async Task MatchMarketOrderForOpenAsync(Order order, Func<MatchedOrderCollection, bool> orderProcessed)
+        public async Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition)
         {
-            var prices = _externalOrderBooksList.GetPricesForOpen(order);
+            var prices = _externalOrderBooksList.GetPricesForExecution(order.AssetPairId, order.Volume, shouldOpenNewPosition);
 
             if (prices == null)
             {
-                orderProcessed(new MatchedOrderCollection());
-                return;
+                return new MatchedOrderCollection();
             }
             
-            prices = order.GetOrderDirection() == OrderDirection.Buy
+            prices = order.Direction == OrderDirection.Buy
                 ? prices.OrderBy(tuple => tuple.price).ToList()
                 : prices.OrderByDescending(tuple => tuple.price).ToList();
             
-            var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(order.Instrument);
-            var externalAssetPair = assetPair?.BasePairId ?? order.Instrument;
+            var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(order.AssetPairId);
+            var externalAssetPair = assetPair?.BasePairId ?? order.AssetPairId;
 
             foreach (var sourcePrice in prices)
             {
@@ -72,7 +71,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 try
                 {
                     externalOrderModel = new OrderModel(
-                        order.GetOrderDirection().ToType<TradeType>(),
+                        order.Direction.ToType<TradeType>(),
                         OrderType.Market,
                         TimeInForce.FillOrKill,
                         (double) Math.Abs(order.Volume),
@@ -93,122 +92,30 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                             MarketMakerId = sourcePrice.source,
                             MatchedDate = _dateService.Now(),
                             OrderId = executionResult.ExchangeOrderId,
-                            Price = CalculatePriceWithMarkups(assetPair, order.GetOrderDirection(), executedPrice),
-                            Volume = (decimal) executionResult.Volume
+                            Price = CalculatePriceWithMarkups(assetPair, order.Direction, executedPrice),
+                            Volume = (decimal) executionResult.Volume,
+                            IsExternal = true
                         }
                     };
-                    
-                    order.OpenExternalProviderId = sourcePrice.source;
-                    order.OpenExternalOrderId = executionResult.ExchangeOrderId;
 
                     await _rabbitMqNotifyService.ExternalOrder(executionResult);
 
-                    if (orderProcessed(matchedOrders))
-                    {
-                        return;
-                    }
-                    else
-                    {
-                        var cancelOrderModel = new OrderModel(
-                            order.GetCloseType().ToType<TradeType>(),
-                            OrderType.Market,
-                            TimeInForce.FillOrKill,
-                            (double) Math.Abs(order.Volume),
-                            _dateService.Now(),
-                            sourcePrice.source,
-                            externalAssetPair);
-
-                        var cancelOrderResult = await _exchangeConnectorService.CreateOrderAsync(cancelOrderModel);
-                        
-                        await _rabbitMqNotifyService.ExternalOrder(cancelOrderResult);
-                    }
-
-                    return;
+                    return matchedOrders;
                 }
                 catch (Exception e)
                 {
-                    _log.WriteError($"{nameof(StpMatchingEngine)}:{nameof(MatchMarketOrderForOpenAsync)}",
+                    _log.WriteError($"{nameof(StpMatchingEngine)}:{nameof(MatchOrderAsync)}",
                         $"Internal order: {order.ToJson()}, External order model: {externalOrderModel.ToJson()}", e);
                 }
             }
 
-            if (string.IsNullOrEmpty(order.OpenExternalProviderId) ||
-                string.IsNullOrEmpty(order.OpenExternalOrderId))
-            {
-                order.Status = OrderStatus.Rejected;
-                order.RejectReason = OrderRejectReason.NoLiquidity;
-                order.RejectReasonText = "Error executing external order";
-            }
-            
+            return new MatchedOrderCollection();
         }
 
-        //TODO: remove orderProcessed function and make all validations before match
-        public async Task MatchMarketOrderForCloseAsync(Order order, Func<MatchedOrderCollection, bool> orderProcessed)
+        public decimal? GetPriceForClose(Position position)
         {
-            var closePrice = _externalOrderBooksList.GetPriceForClose(order);
-
-            //TODO: rework!
-            if (!closePrice.HasValue)
-            {
-                orderProcessed(new MatchedOrderCollection());
-                return;
-            }
-            
-            var closeLp = order.OpenExternalProviderId;
-            var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(order.Instrument);
-            var externalAssetPair = assetPair?.BasePairId ?? order.Instrument;
-
-            var externalOrderModel = new OrderModel();
-
-            try
-            {
-                externalOrderModel = new OrderModel(
-                    order.GetCloseType().ToType<TradeType>(),
-                    OrderType.Market,
-                    TimeInForce.FillOrKill,
-                    (double) Math.Abs(order.Volume),
-                    _dateService.Now(),
-                    closeLp,
-                    externalAssetPair);
-
-                var executionResult = await _exchangeConnectorService.CreateOrderAsync(externalOrderModel);
-
-                var executedPrice = Math.Abs(executionResult.Price) > 0
-                    ? (decimal) executionResult.Price
-                    : closePrice.Value;
-
-                order.CloseExternalProviderId = closeLp;
-                order.CloseExternalOrderId = executionResult.ExchangeOrderId;
-                order.ClosePrice =
-                    CalculatePriceWithMarkups(assetPair, order.GetCloseType(), executedPrice);
-
-                await _rabbitMqNotifyService.ExternalOrder(executionResult);
-                
-                var matchedOrders = new MatchedOrderCollection
-                {
-                    new MatchedOrder
-                    {
-                        MarketMakerId = closeLp,
-                        MatchedDate = _dateService.Now(),
-                        OrderId = executionResult.ExchangeOrderId,
-                        Price = order.ClosePrice,
-                        Volume = Math.Abs(order.Volume)
-                    }
-                };
-
-                orderProcessed(matchedOrders);
-            }
-            catch (Exception e)
-            {
-                _log.WriteError($"{nameof(StpMatchingEngine)}:{nameof(MatchMarketOrderForCloseAsync)}",
-                    $"Internal order: {order.ToJson()}, External order model: {externalOrderModel.ToJson()}", e);
-            }
-
-        }
-
-        public decimal? GetPriceForClose(Order order)
-        {
-            return _externalOrderBooksList.GetPriceForClose(order);
+            return _externalOrderBooksList.GetPriceForPositionClose(position.AssetPairId, position.Volume,
+                position.ExternalProviderId);
         }
 
         //TODO: implement orderbook        
