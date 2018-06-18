@@ -18,15 +18,17 @@ namespace MarginTrading.Backend.Services.Workflow
         private readonly IClientNotifyService _clientNotifyService;
         private readonly IEventChannel<AccountBalanceChangedEventArgs> _acountBalanceChangedEventChannel;
         private readonly IConvertService _convertService;
+        private readonly IAccountUpdateService _accountUpdateService;
 
         public AccountsProjection(AccountsCacheService accountsCacheService, IClientNotifyService clientNotifyService,
             IEventChannel<AccountBalanceChangedEventArgs> acountBalanceChangedEventChannel,
-            IConvertService convertService)
+            IConvertService convertService, IAccountUpdateService accountUpdateService)
         {
             _accountsCacheService = accountsCacheService;
             _clientNotifyService = clientNotifyService;
             _acountBalanceChangedEventChannel = acountBalanceChangedEventChannel;
             _convertService = convertService;
+            _accountUpdateService = accountUpdateService;
         }
 
         /// <summary>
@@ -37,10 +39,19 @@ namespace MarginTrading.Backend.Services.Workflow
         {
             // todo: what happens if events get reordered??
             var updatedAccount = Convert(e.Account);
-            _accountsCacheService.Update(updatedAccount);
+            _accountsCacheService.UpdateAccountChanges(updatedAccount.Id, updatedAccount.TradingConditionId, 
+                updatedAccount.Balance, updatedAccount.WithdrawTransferLimit);
             _clientNotifyService.NotifyAccountUpdated(updatedAccount);
+
+            if (e.Source == "Withdraw")
+            {
+                _accountUpdateService.UnfreezeWithdrawalMargin(updatedAccount.Id, e.BalanceChange.Id);
+            }
+
             if (e.EventType == AccountChangedEventTypeContract.BalanceUpdated)
+            {
                 _acountBalanceChangedEventChannel.SendEvent(this, new AccountBalanceChangedEventArgs(updatedAccount));
+            }
         }
 
         private MarginTradingAccount Convert(AccountContract accountContract)

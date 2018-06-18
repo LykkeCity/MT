@@ -6,8 +6,8 @@ using Lykke.Cqrs.Configuration;
 using Lykke.Messaging;
 using Lykke.Messaging.Contract;
 using Lykke.Messaging.RabbitMq;
+using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
-using MarginTrading.Backend.Contracts.Commands;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Infrastructure;
@@ -78,7 +78,7 @@ namespace MarginTrading.Backend.Services.Modules
                 .QueueCapacity(1024);
 
             contextRegistration.ListeningCommands(typeof(FreezeAmountForWithdrawalCommand), 
-                    typeof(UnfreezeMarginWithdrawalCommand), typeof(UnfreezeMarginOnFailWithdrawalCommand))
+                     typeof(UnfreezeMarginOnFailWithdrawalCommand))
                 .On(CommandsRoute)
                 .WithCommandsHandler<WithdrawalCommandsHandler>()
                 .PublishingEvents(typeof(AmountForWithdrawalFrozenEvent), typeof(AmountForWithdrawalFreezeFailedEvent),

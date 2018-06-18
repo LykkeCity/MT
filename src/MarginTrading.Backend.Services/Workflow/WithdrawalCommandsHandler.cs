@@ -43,7 +43,7 @@ namespace MarginTrading.Backend.Services.Workflow
             
             if (account.GetFreeMargin() >= command.Amount)
             {
-                _accountUpdateService.FreezeWithdrawalMargin(account, command.OperationId, command.Amount);
+                _accountUpdateService.FreezeWithdrawalMargin(command.AccountId, command.OperationId, command.Amount);
                 
                 publisher.PublishEvent(_convertService.Convert<AmountForWithdrawalFrozenEvent>(command));
             }
@@ -61,8 +61,7 @@ namespace MarginTrading.Backend.Services.Workflow
         private void Handle(UnfreezeMarginOnFailWithdrawalCommand command, IEventPublisher publisher)
         {
             //errors not handled => if error occurs event will be retried
-            var account = _accountsCacheService.Get(command.AccountId);
-            _accountUpdateService.UnfreezeWithdrawalMargin(account, command.OperationId);
+            _accountUpdateService.UnfreezeWithdrawalMargin(command.AccountId, command.OperationId);
             
             publisher.PublishEvent(new UnfreezeMarginSucceededWithdrawalEvent(command.OperationId, command.ClientId, 
                 command.AccountId, command.Amount));
@@ -74,12 +73,6 @@ namespace MarginTrading.Backend.Services.Workflow
         [UsedImplicitly]
         private void Handle(UnfreezeMarginWithdrawalCommand command, IEventPublisher publisher)
         {
-            //errors not handled => if error occurs event will be retried
-            var account = _accountsCacheService.Get(command.AccountId);
-            _accountUpdateService.UnfreezeWithdrawalMargin(account, command.OperationId);
-            
-            publisher.PublishEvent(new UnfreezeMarginSucceededWithdrawalEvent(command.OperationId, command.ClientId, 
-                command.AccountId, command.Amount));
         }
     }
 }

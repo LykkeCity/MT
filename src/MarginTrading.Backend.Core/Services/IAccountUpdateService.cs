@@ -7,8 +7,8 @@ namespace MarginTrading.Backend.Core
     public interface IAccountUpdateService
     {
         void UpdateAccount(IMarginTradingAccount account);
-        void FreezeWithdrawalMargin(IMarginTradingAccount account, string operationId, decimal amount);
-        void UnfreezeWithdrawalMargin(IMarginTradingAccount account, string operationId);
+        void FreezeWithdrawalMargin(string accountId, string operationId, decimal amount);
+        void UnfreezeWithdrawalMargin(string accountId, string operationId);
         bool IsEnoughBalance(Order order);
         MarginTradingAccount GuessAccountWithNewActiveOrder(Order order);
     }
