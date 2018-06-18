@@ -28,6 +28,7 @@
     <ProjectReference Include="..\MarginTrading.AzureRepositories\MarginTrading.AzureRepositories.csproj" />
     <ProjectReference Include="..\MarginTrading.Contract\MarginTrading.Contract.csproj" />
     <ProjectReference Include="..\MarginTrading.Backend.Services\MarginTrading.Backend.Services.csproj" />
+    <ProjectReference Include="..\MarginTrading.SqlRepositories\MarginTrading.SqlRepositories.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FluentScheduler" Version="5.3.0" />

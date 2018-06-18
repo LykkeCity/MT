@@ -23,8 +23,8 @@ namespace MarginTrading.Backend.Services.Modules
                 .As<IEventChannel<OrderPlacedEventArgs>>()
                 .SingleInstance();
 
-            builder.RegisterType<EventChannel<OrderClosedEventArgs>>()
-                .As<IEventChannel<OrderClosedEventArgs>>()
+            builder.RegisterType<EventChannel<OrderExecutedEventArgs>>()
+                .As<IEventChannel<OrderExecutedEventArgs>>()
                 .SingleInstance();
 
             builder.RegisterType<EventChannel<StopOutEventArgs>>()
@@ -39,12 +39,12 @@ namespace MarginTrading.Backend.Services.Modules
                 .As<IEventChannel<AccountBalanceChangedEventArgs>>()
                 .SingleInstance();
             
-            builder.RegisterType<EventChannel<OrderLimitsChangedEventArgs>>()
-                .As<IEventChannel<OrderLimitsChangedEventArgs>>()
+            builder.RegisterType<EventChannel<OrderChangedEventArgs>>()
+                .As<IEventChannel<OrderChangedEventArgs>>()
                 .SingleInstance();
 
-            builder.RegisterType<EventChannel<OrderClosingEventArgs>>()
-                .As<IEventChannel<OrderClosingEventArgs>>()
+            builder.RegisterType<EventChannel<OrderExecutionStartedEventArgs>>()
+                .As<IEventChannel<OrderExecutionStartedEventArgs>>()
                 .SingleInstance();
 
             builder.RegisterType<EventChannel<OrderActivatedEventArgs>>()

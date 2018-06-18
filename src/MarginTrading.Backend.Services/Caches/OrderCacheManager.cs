@@ -6,6 +6,7 @@ using Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Core.Trading;
 
 namespace MarginTrading.Backend.Services
 {
@@ -14,34 +15,30 @@ namespace MarginTrading.Backend.Services
         private readonly OrdersCache _orderCache;
         private readonly IMarginTradingBlobRepository _marginTradingBlobRepository;
         private readonly ILog _log;
-        private readonly IAccountsCacheService _accountsCacheService;
-        private const string BlobName= "orders";
+        private const string OrdersBlobName= "orders";
+        private const string PositionsBlobName= "positions";
 
         public OrderCacheManager(OrdersCache orderCache,
             IMarginTradingBlobRepository marginTradingBlobRepository,
             MarginTradingSettings marginTradingSettings,
-            ILog log, IAccountsCacheService accountsCacheService) 
+            ILog log) 
             : base(nameof(OrderCacheManager), marginTradingSettings.BlobPersistence.OrdersDumpPeriodMilliseconds, log)
         {
             _orderCache = orderCache;
             _marginTradingBlobRepository = marginTradingBlobRepository;
             _log = log;
-            _accountsCacheService = accountsCacheService;
         }
 
         public override void Start()
         {
-            var orders = _marginTradingBlobRepository.Read<List<Order>>(LykkeConstants.StateBlobContainer, BlobName) ?? new List<Order>();
+            var orders =
+                _marginTradingBlobRepository.Read<List<Order>>(LykkeConstants.StateBlobContainer, OrdersBlobName) ??
+                new List<Order>();
+            var positions =
+                _marginTradingBlobRepository.Read<List<Position>>(LykkeConstants.StateBlobContainer, PositionsBlobName) ??
+                new List<Position>();
             
-            orders.ForEach(o =>
-            {
-                // migrate orders to add LegalEntity field
-                // todo: can be removed once published to prod
-                if (o.LegalEntity == null)
-                    o.LegalEntity = _accountsCacheService.Get(o.AccountId).LegalEntity;
-            });
-
-            _orderCache.InitOrders(orders);
+            _orderCache.InitOrders(orders, positions);
 
             base.Start();
         }
@@ -62,16 +59,30 @@ namespace MarginTrading.Backend.Services
 
             try
             {
-                var orders = _orderCache.GetAll();
+                var orders = _orderCache.GetAllOrders();
 
                 if (orders != null)
                 {
-                    await _marginTradingBlobRepository.Write(LykkeConstants.StateBlobContainer, BlobName, orders);
+                    await _marginTradingBlobRepository.Write(LykkeConstants.StateBlobContainer, OrdersBlobName, orders);
                 }
             }
             catch (Exception ex)
             {
                 await _log.WriteErrorAsync(nameof(OrdersCache), "Save orders", "", ex);
+            }
+            
+            try
+            {
+                var positions = _orderCache.GetPositions();
+
+                if (positions != null)
+                {
+                    await _marginTradingBlobRepository.Write(LykkeConstants.StateBlobContainer, PositionsBlobName, positions);
+                }
+            }
+            catch (Exception ex)
+            {
+                await _log.WriteErrorAsync(nameof(OrdersCache), "Save positions", "", ex);
             }
         }
     }

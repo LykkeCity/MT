@@ -1,4 +1,5 @@
 ﻿using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Trading;
 
 namespace MarginTrading.Backend.Core
 {
@@ -6,7 +7,7 @@ namespace MarginTrading.Backend.Core
     {
         void UpdateAccount(IMarginTradingAccount account);
         bool IsEnoughBalance(Order order);
-        MarginTradingAccount GuessAccountWithNewActiveOrder(Order order);
+        MarginTradingAccount GuessAccountWithNewActiveOrder(Position order);
     }
 
     public class AccountFpl

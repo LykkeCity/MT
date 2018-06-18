@@ -50,7 +50,7 @@ namespace MarginTrading.Backend.Core.Settings
         public ReportingEquivalentPricesSettings[] ReportingEquivalentPricesSettings { get; set; }
         
         [Optional]
-        public bool UseAzureIdentityGenerator { get; set; }
+        public bool UseDbIdentityGenerator { get; set; }
         
         public BlobPersistenceSettings BlobPersistence { get; set; } 
 

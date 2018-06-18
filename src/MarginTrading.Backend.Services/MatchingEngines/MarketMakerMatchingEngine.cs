@@ -7,6 +7,7 @@ using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
 
@@ -78,13 +79,14 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             }
         }
 
-        public decimal? GetPriceForClose(Order order)
+        public decimal? GetPriceForClose(Position order)
         {
             using (_contextFactory.GetWriteSyncContext($"{nameof(MarketMakerMatchingEngine)}.{nameof(GetPriceForClose)}"))
             {
                 var orderBookTypeToMatch = order.GetCloseType().GetOrderDirectionToMatchInOrderBook();
 
-                var matchedOrders = _orderBooks.Match(order, orderBookTypeToMatch, Math.Abs(order.GetRemainingCloseVolume()));
+                var matchedOrders = _orderBooks.Match(order.AssetPairId, orderBookTypeToMatch,
+                    Math.Abs(order.Volume));
 
                 return matchedOrders.Any() ? matchedOrders.WeightedAveragePrice : (decimal?) null;
             } // lock
@@ -98,42 +100,23 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             }
         }
 
-        public Task MatchMarketOrderForOpenAsync(Order order, Func<MatchedOrderCollection, bool> matchedFunc)
+        public Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition)
         {
             using (_contextFactory.GetWriteSyncContext(
-                $"{nameof(MarketMakerMatchingEngine)}.{nameof(MatchMarketOrderForOpenAsync)}"))
+                $"{nameof(MarketMakerMatchingEngine)}.{nameof(MatchOrderAsync)}"))
             {
-                var orderBookTypeToMatch = order.GetOrderDirection().GetOrderDirectionToMatchInOrderBook();
+                var orderBookTypeToMatch = order.Direction.GetOrderDirectionToMatchInOrderBook();
+                
+                //TODO: validate oposite direction if will open new porition
 
                 var matchedOrders =
-                    _orderBooks.Match(order, orderBookTypeToMatch, Math.Abs(order.Volume));
+                    _orderBooks.Match(order.AssetPairId, orderBookTypeToMatch, Math.Abs(order.Volume));
 
-                if (matchedFunc(matchedOrders))
-                {
-                    _orderBooks.Update(order, orderBookTypeToMatch, matchedOrders);
-                    ProduceBestPrice(order.Instrument);
-                }
+                _orderBooks.Update(order.AssetPairId, orderBookTypeToMatch, matchedOrders);
+                ProduceBestPrice(order.AssetPairId);
+
+                return Task.FromResult(matchedOrders);
             }
-
-            return Task.CompletedTask;
-        }    
-
-        public Task MatchMarketOrderForCloseAsync(Order order, Func<MatchedOrderCollection, bool> matchedAction)
-        {
-            using (_contextFactory.GetWriteSyncContext($"{nameof(MarketMakerMatchingEngine)}.{nameof(MatchMarketOrderForCloseAsync)}"))
-            {
-                var orderBookTypeToMatch = order.GetCloseType().GetOrderDirectionToMatchInOrderBook();
-
-                var matchedOrders = _orderBooks.Match(order, orderBookTypeToMatch, Math.Abs(order.GetRemainingCloseVolume()));
-
-                if (!matchedAction(matchedOrders))
-                    return Task.CompletedTask;
-
-                _orderBooks.Update(order, orderBookTypeToMatch, matchedOrders);
-                ProduceBestPrice(order.Instrument);
-            } // lock
-            
-            return Task.CompletedTask;
         }
 
         public bool PingLock()

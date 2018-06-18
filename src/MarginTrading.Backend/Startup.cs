@@ -8,6 +8,7 @@ using Lykke.Logs;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
 using Lykke.SlackNotifications;
+using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Filters;
@@ -24,6 +25,7 @@ using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Modules;
 using MarginTrading.Common.Services;
+using MarginTrading.SqlRepositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -93,7 +95,7 @@ namespace MarginTrading.Backend
                 });
 
             var settings = mtSettings.Nested(s => s.MtBackend);
-            
+
             Console.WriteLine($"IsLive: {settings.CurrentValue.IsLive}");
 
             SetupLoggers(services, mtSettings, settings);
@@ -101,7 +103,7 @@ namespace MarginTrading.Backend
             RegisterModules(builder, mtSettings, settings, Environment);
 
             builder.Populate(services);
-            
+
             ApplicationContainer = builder.Build();
 
             MtServiceLocator.FplService = ApplicationContainer.Resolve<IFplService>();
@@ -127,7 +129,7 @@ namespace MarginTrading.Backend
             app.UseSwaggerUi();
 
             appLifetime.ApplicationStopped.Register(() => ApplicationContainer.Dispose());
-            
+
             var application = app.ApplicationServices.GetService<Application>();
 
             appLifetime.ApplicationStarted.Register(() =>
@@ -174,7 +176,7 @@ namespace MarginTrading.Backend
             var consoleLogger = new LogToConsole();
 
             IMtSlackNotificationsSender slackService = null;
-            
+
             if (mtSettings.CurrentValue.SlackNotifications != null)
             {
                 var azureQueue = new AzureQueueSettings
@@ -194,17 +196,30 @@ namespace MarginTrading.Backend
                 slackService =
                     new MtSlackNotificationsSenderLogStub("MT Backend", settings.CurrentValue.Env, consoleLogger);
             }
-            
+
             services.AddSingleton<ISlackNotificationsSender>(slackService);
             services.AddSingleton<IMtSlackNotificationsSender>(slackService);
 
             // Order of logs registration is important - UseLogToAzureStorage() registers ILog in container.
             // Last registration wins.
-            LogLocator.RequestsLog = services.UseLogToAzureStorage(settings.Nested(s => s.Db.LogsConnString),
-                slackService, "MarginTradingBackendRequestsLog", consoleLogger);
 
-            LogLocator.CommonLog = services.UseLogToAzureStorage(settings.Nested(s => s.Db.LogsConnString),
-                slackService, "MarginTradingBackendLog", consoleLogger);
+            if (settings.CurrentValue.Db.StorageMode == StorageMode.SqlServer)
+            {
+                LogLocator.RequestsLog = new LogToSql(new SqlLogRepository("MarginTradingBackendRequestsLog",
+                    settings.CurrentValue.Db.LogsConnString));
+
+                LogLocator.CommonLog = new LogToSql(new SqlLogRepository("MarginTradingBackendLog",
+                    settings.CurrentValue.Db.LogsConnString));
+            }
+            else if (settings.CurrentValue.Db.StorageMode == StorageMode.Azure)
+            {
+                LogLocator.RequestsLog = services.UseLogToAzureStorage(settings.Nested(s => s.Db.LogsConnString),
+                    slackService, "MarginTradingBackendRequestsLog", consoleLogger);
+
+                LogLocator.CommonLog = services.UseLogToAzureStorage(settings.Nested(s => s.Db.LogsConnString),
+                    slackService, "MarginTradingBackendLog", consoleLogger);
+
+            }
         }
     }
 }

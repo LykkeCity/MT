@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Trading;
 
 namespace MarginTrading.Backend.Core.Orderbooks
 {
@@ -75,7 +76,7 @@ namespace MarginTrading.Backend.Core.Orderbooks
             }
         }
 
-        public IEnumerable<MatchedOrder> Match(Order order, OrderDirection orderTypeToMatch, decimal volumeToMatch, int maxMarketMakerLimitOrderAge)
+        public IEnumerable<MatchedOrder> Match(OrderDirection orderTypeToMatch, decimal volumeToMatch, int maxMarketMakerLimitOrderAge)
         {
             if (volumeToMatch == 0)
                 yield break;
@@ -111,7 +112,7 @@ namespace MarginTrading.Backend.Core.Orderbooks
                 }
         }
 
-        public void Update(Order order, OrderDirection orderTypeToMatch, IEnumerable<MatchedOrder> matchedOrders)
+        public void Update(OrderDirection orderTypeToMatch, IEnumerable<MatchedOrder> matchedOrders)
         {
             var source = orderTypeToMatch == OrderDirection.Buy ? Buy : Sell;
             foreach (var matchedOrder in matchedOrders)

@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.RabbitMq;
@@ -33,14 +32,6 @@ namespace MarginTrading.Backend.Services
             _accountsCacheService = accountsCacheService;
         }
 
-        public void NotifyOrderChanged(Order order)
-        {
-            _rabbitMqNotifyService.OrderChanged(order);
-            var queueName = QueueHelper.BuildQueueName(_marginSettings.RabbitMqQueues.OrderChanged.ExchangeName, _marginSettings.Env);
-            _consoleWriter.WriteLine($"send order changed to queue {queueName}");
-            _operationsLogService.AddLog($"queue {queueName}", order.AccountId, null, order.ToJson());
-        }
-
         public void NotifyAccountUpdated(IMarginTradingAccount account)
         {
             _rabbitMqNotifyService.AccountUpdated(account);
@@ -56,22 +47,6 @@ namespace MarginTrading.Backend.Services
             _consoleWriter.WriteLine($"send account stopout to queue {queueName}");
             _operationsLogService.AddLog($"queue {queueName}", accountId, null,
                 new {clientId = clientId, accountId = accountId, positionsCount = positionsCount, totalPnl = totalPnl}.ToJson());
-        }
-        
-        public async Task NotifyTradingConditionsChanged(string tradingConditionId = null, string accountId = null)
-        {
-            if (!string.IsNullOrEmpty(tradingConditionId))
-            {
-                var clientIds = _accountsCacheService
-                    .GetClientIdsByTradingConditionId(tradingConditionId, accountId).ToArray();
-
-                if (clientIds.Length > 0)
-                {
-                    await _rabbitMqNotifyService.UserUpdates(true, false, clientIds);
-                    _consoleWriter.WriteLine(
-                        $"send user updates to queue {QueueHelper.BuildQueueName(_marginSettings.RabbitMqQueues.UserUpdates.ExchangeName, _marginSettings.Env)}");
-                }
-            }
         }
     }
 }

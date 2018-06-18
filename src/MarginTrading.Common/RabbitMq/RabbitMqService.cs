@@ -27,7 +27,7 @@ namespace MarginTrading.Common.RabbitMq
             new ConcurrentDictionary<RabbitMqSubscriptionSettings, Lazy<IStopable>>(
                 new SubscriptionSettingsEqualityComparer());
 
-        [ItemCanBeNull] private readonly Lazy<MessagePackBlobPublishingQueueRepository> _queueRepository;
+        //[ItemCanBeNull] private readonly Lazy<MessagePackBlobPublishingQueueRepository> _queueRepository;
 
         public RabbitMqService(ILog logger, IConsole consoleWriter, 
             [CanBeNull] IReloadingManager<string> queueRepositoryConnectionString, string env)
@@ -35,18 +35,18 @@ namespace MarginTrading.Common.RabbitMq
             _logger = logger;
             _env = env;
             _consoleWriter = consoleWriter;
-            _queueRepository = new Lazy<MessagePackBlobPublishingQueueRepository>(() =>
-            {
-                if (string.IsNullOrWhiteSpace(queueRepositoryConnectionString?.CurrentValue))
-                {
-                    _logger.WriteWarning(nameof(RabbitMqService), "",
-                        "QueueRepositoryConnectionString is not configured");
-                    return null;
-                }
+            //_queueRepository = new Lazy<MessagePackBlobPublishingQueueRepository>(() =>
+//            {
+//                if (string.IsNullOrWhiteSpace(queueRepositoryConnectionString?.CurrentValue))
+//                {
+//                    _logger.WriteWarning(nameof(RabbitMqService), "",
+//                        "QueueRepositoryConnectionString is not configured");
+//                    return null;
+//                }
 
-                var blob = AzureBlobStorage.Create(queueRepositoryConnectionString);
-                return new MessagePackBlobPublishingQueueRepository(blob);
-            });
+                //var blob = AzureBlobStorage.Create(queueRepositoryConnectionString);
+                //return new MessagePackBlobPublishingQueueRepository(blob);
+            //});
         }
 
         public void Dispose()
@@ -98,9 +98,9 @@ namespace MarginTrading.Common.RabbitMq
                 {
                     var publisher = new RabbitMqPublisher<TMessage>(s);
 
-                    if (isDurable && _queueRepository.Value != null)
-                        publisher.SetQueueRepository(_queueRepository.Value);
-                    else
+                    //if (isDurable && _queueRepository.Value != null)
+                    //    publisher.SetQueueRepository(_queueRepository.Value);
+                    //else
                         publisher.DisableInMemoryQueuePersistence();
 
                     return publisher

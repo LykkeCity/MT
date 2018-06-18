@@ -4,6 +4,7 @@ using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Core.Trading;
 
 namespace MarginTrading.Backend.Core.Orderbooks
 {
@@ -34,20 +35,20 @@ namespace MarginTrading.Backend.Core.Orderbooks
             _orderBooks = orderBook ?? new Dictionary<string, OrderBook>();
         }
 
-        public MatchedOrderCollection Match(Order order, OrderDirection orderTypeToMatch, decimal volumeToMatch)
+        public MatchedOrderCollection Match(string assetPairId, OrderDirection orderTypeToMatch, decimal volumeToMatch)
         {
-            if (!_orderBooks.ContainsKey(order.Instrument))
+            if (!_orderBooks.ContainsKey(assetPairId))
                 return new MatchedOrderCollection();
 
-            return new MatchedOrderCollection(_orderBooks[order.Instrument]
-                .Match(order, orderTypeToMatch, volumeToMatch, _marginSettings.MaxMarketMakerLimitOrderAge));
+            return new MatchedOrderCollection(_orderBooks[assetPairId]
+                .Match(orderTypeToMatch, volumeToMatch, _marginSettings.MaxMarketMakerLimitOrderAge));
         }
 
-        public void Update(Order order, OrderDirection orderTypeToMatch, IEnumerable<MatchedOrder> matchedOrders)
+        public void Update(string assetPairId, OrderDirection orderTypeToMatch, IEnumerable<MatchedOrder> matchedOrders)
         {
-            if (_orderBooks.TryGetValue(order.Instrument, out var orderBook))
+            if (_orderBooks.TryGetValue(assetPairId, out var orderBook))
             {
-                orderBook.Update(order, orderTypeToMatch, matchedOrders);
+                orderBook.Update(orderTypeToMatch, matchedOrders);
             }
         }
 

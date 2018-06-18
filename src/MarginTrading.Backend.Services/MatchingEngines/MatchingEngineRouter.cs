@@ -1,6 +1,7 @@
 ﻿using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Trading;
 
 namespace MarginTrading.Backend.Services.MatchingEngines
 {
@@ -23,12 +24,10 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         }
 
         //TODO: implement routes logic
-        public IMatchingEngineBase GetMatchingEngineForOpen(IOrder order)
+        public IMatchingEngineBase GetMatchingEngineForExecution(Order order)
         {
-            
-            
-            var route = _routesManager.FindRoute(null, order.TradingConditionId, order.Instrument,
-                order.GetOrderDirection());
+            var route = _routesManager.FindRoute(null, order.TradingConditionId, order.AssetPairId,
+                order.Direction);
 
             if (route != null)
             {
@@ -37,7 +36,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 return _matchingEngineRepository.GetMatchingEngineById(route.MatchingEngineId);
             }
 
-            var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(order.Instrument);
+            var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(order.AssetPairId);
 
             //TODO: find ME with correct mode that ownes the same Entity as asset pair
             return _matchingEngineRepository.GetMatchingEngineById(
@@ -46,13 +45,9 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                     : MatchingEngineConstants.DefaultStp);
         }
 
-        public IMatchingEngineBase GetMatchingEngineForClose(IOrder order)
+        public IMatchingEngineBase GetMatchingEngineForClose(Position position)
         {
-            var meId = order.OpenOrderbookId == Lykke
-                ? MatchingEngineConstants.Reject
-                : order.OpenOrderbookId;
-            
-            return _matchingEngineRepository.GetMatchingEngineById(meId);
+            return _matchingEngineRepository.GetMatchingEngineById(position.OpenMatchingEngineId);
         }
     }
 }

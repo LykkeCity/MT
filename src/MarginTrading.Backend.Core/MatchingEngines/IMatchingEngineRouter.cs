@@ -1,11 +1,12 @@
 ﻿using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Trading;
 
 namespace MarginTrading.Backend.Core.MatchingEngines
 {
     public interface IMatchingEngineRouter
     {
-        IMatchingEngineBase GetMatchingEngineForOpen(IOrder order);
+        IMatchingEngineBase GetMatchingEngineForExecution(Order order);
         
-        IMatchingEngineBase GetMatchingEngineForClose(IOrder order);
+        IMatchingEngineBase GetMatchingEngineForClose(Position order);
     }
 }

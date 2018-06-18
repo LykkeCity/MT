@@ -24,8 +24,8 @@ namespace MarginTradingTests.Modules
                 .As<IEventChannel<OrderPlacedEventArgs>>()
                 .SingleInstance();
 
-            builder.RegisterInstance(new Mock<IEventChannel<OrderClosedEventArgs>>().Object)
-                .As<IEventChannel<OrderClosedEventArgs>>()
+            builder.RegisterInstance(new Mock<IEventChannel<OrderExecutedEventArgs>>().Object)
+                .As<IEventChannel<OrderExecutedEventArgs>>()
                 .SingleInstance();
 
             builder.RegisterInstance(new Mock<IEventChannel<StopOutEventArgs>>().Object)

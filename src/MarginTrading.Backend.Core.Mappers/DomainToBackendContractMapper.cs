@@ -3,6 +3,7 @@ using System.Linq;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Contract.BackendContracts;
@@ -55,40 +56,40 @@ namespace MarginTrading.Backend.Core.Mappers
             };
         }
 
-        public static OrderHistoryBackendContract ToBackendHistoryContract(this IOrder src)
+        public static OrderHistoryBackendContract ToBackendHistoryContract(this Position src)
         {
             return new OrderHistoryBackendContract
             {
-                Id = src.Id,
-                Code = src.Code,
-                AccountId = src.AccountId,
-                Instrument = src.Instrument,
-                AssetAccuracy = src.AssetAccuracy,
-                Type = src.GetOrderDirection().ToType<OrderDirectionContract>(),
-                Status = src.Status.ToType<OrderStatusContract>(),
-                CloseReason = src.CloseReason.ToType<OrderCloseReasonContract>(),
-                OpenDate = src.OpenDate,
-                CloseDate = src.CloseDate,
-                OpenPrice = src.OpenPrice,
-                ClosePrice = src.ClosePrice,
-                Volume = src.Volume,
-                TakeProfit = src.TakeProfit,
-                StopLoss = src.StopLoss,
-                TotalPnl = src.GetTotalFpl(),
-                Pnl = src.GetFpl(),
-                InterestRateSwap = src.GetSwaps(),
-                CommissionLot = src.CommissionLot,
-                OpenCommission = src.GetOpenCommission(),
-                CloseCommission = src.GetCloseCommission(),
-                EquivalentAsset = src.EquivalentAsset,
-                OpenPriceEquivalent = src.OpenPriceEquivalent,
-                ClosePriceEquivalent = src.ClosePriceEquivalent,
-                OpenExternalOrderId = src.OpenExternalOrderId,
-                OpenExternalProviderId = src.OpenExternalProviderId,
-                CloseExternalOrderId = src.CloseExternalOrderId,
-                CloseExternalProviderId = src.CloseExternalProviderId,
-                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>(),
-                LegalEntity = src.LegalEntity,
+//                Id = src.Id,
+//                Code = src.Code,
+//                AccountId = src.AccountId,
+//                Instrument = src.AssetPairId,
+//                AssetAccuracy = src.AssetPairAccuracy,
+//                Type = src.GetOrderDirection().ToType<OrderDirectionContract>(),
+//                Status = src.Status.ToType<OrderStatusContract>(),
+//                CloseReason = src.CloseReason.ToType<OrderCloseReasonContract>(),
+//                OpenDate = src.OpenDate,
+//                CloseDate = src.CloseDate,
+//                OpenPrice = src.OpenPrice,
+//                ClosePrice = src.ClosePrice,
+//                Volume = src.Volume,
+//                TakeProfit = src.TakeProfit,
+//                StopLoss = src.StopLoss,
+//                TotalPnl = src.GetTotalFpl(),
+//                Pnl = src.GetFpl(),
+//                InterestRateSwap = src.GetSwaps(),
+//                CommissionLot = src.CommissionLot,
+//                OpenCommission = src.GetOpenCommission(),
+//                CloseCommission = src.GetCloseCommission(),
+//                EquivalentAsset = src.EquivalentAsset,
+//                OpenPriceEquivalent = src.OpenPriceEquivalent,
+//                ClosePriceEquivalent = src.ClosePriceEquivalent,
+//                OpenExternalOrderId = src.OpenExternalOrderId,
+//                OpenExternalProviderId = src.OpenExternalProviderId,
+//                CloseExternalOrderId = src.CloseExternalOrderId,
+//                CloseExternalProviderId = src.CloseExternalProviderId,
+//                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>(),
+//                LegalEntity = src.LegalEntity,
             };
         }
 
@@ -137,7 +138,7 @@ namespace MarginTrading.Backend.Core.Mappers
                 Instrument = src.Instrument,
                 AssetAccuracy = src.AssetAccuracy,
                 Type = src.Type.ToType<OrderDirectionContract>(),
-                Status = OrderStatus.Active.ToType<OrderStatusContract>(),
+                Status = PositionStatus.Active.ToType<OrderStatusContract>(),
                 CloseReason = src.CloseReason.ToType<OrderCloseReasonContract>(),
                 OpenDate = src.OpenDate,
                 CloseDate = null,
@@ -164,165 +165,171 @@ namespace MarginTrading.Backend.Core.Mappers
             };
         }
 
-        public static OrderBackendContract ToBackendContract(this IOrder src)
+        public static OrderBackendContract ToBackendContract(this Position src)
         {
             return new OrderBackendContract
             {
-                Id = src.Id,
-                Code = src.Code,
-                AccountId = src.AccountId,
-                Instrument = src.Instrument,
-                Type = src.GetOrderDirection().ToType<OrderDirectionContract>(),
-                Status = src.Status.ToType<OrderStatusContract>(),
-                CloseReason = src.CloseReason.ToType<OrderCloseReasonContract>(),
-                RejectReason = src.RejectReason.ToType<OrderRejectReasonContract>(),
-                RejectReasonText = src.RejectReasonText,
-                ExpectedOpenPrice = src.ExpectedOpenPrice,
-                OpenDate = src.OpenDate,
-                CloseDate = src.CloseDate,
-                OpenPrice = src.OpenPrice,
-                ClosePrice = src.ClosePrice,
-                Volume = src.Volume,
-                MatchedVolume = src.GetMatchedVolume(),
-                MatchedCloseVolume = src.GetMatchedCloseVolume(),
-                TakeProfit = src.TakeProfit,
-                StopLoss = src.StopLoss,
-                Fpl = src.GetTotalFpl(),
-                CommissionLot = src.CommissionLot,
-                OpenCommission = src.GetOpenCommission(),
-                CloseCommission = src.GetCloseCommission(),
-                SwapCommission = src.SwapCommission,
-                EquivalentAsset = src.EquivalentAsset,
-                OpenPriceEquivalent = src.OpenPriceEquivalent,
-                ClosePriceEquivalent = src.ClosePriceEquivalent,
-                OpenExternalOrderId = src.OpenExternalOrderId,
-                OpenExternalProviderId = src.OpenExternalProviderId,
-                CloseExternalOrderId = src.CloseExternalOrderId,
-                CloseExternalProviderId = src.CloseExternalProviderId,
-                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>(),
-                LegalEntity = src.LegalEntity,
+//                Id = src.Id,
+//                Code = src.Code,
+//                AccountId = src.AccountId,
+//                Instrument = src.AssetPairId,
+//                Type = src.GetOrderDirection().ToType<OrderDirectionContract>(),
+//                Status = src.Status.ToType<OrderStatusContract>(),
+//                CloseReason = src.CloseReason.ToType<OrderCloseReasonContract>(),
+//                RejectReason = src.RejectReason.ToType<OrderRejectReasonContract>(),
+//                RejectReasonText = src.RejectReasonText,
+//                ExpectedOpenPrice = src.ExpectedOpenPrice,
+//                OpenDate = src.OpenDate,
+//                CloseDate = src.CloseDate,
+//                OpenPrice = src.OpenPrice,
+//                ClosePrice = src.ClosePrice,
+//                Volume = src.Volume,
+//                MatchedVolume = src.GetMatchedVolume(),
+//                MatchedCloseVolume = src.GetMatchedCloseVolume(),
+//                TakeProfit = src.TakeProfit,
+//                StopLoss = src.StopLoss,
+//                Fpl = src.GetTotalFpl(),
+//                CommissionLot = src.CommissionLot,
+//                OpenCommission = src.GetOpenCommission(),
+//                CloseCommission = src.GetCloseCommission(),
+//                SwapCommission = src.SwapCommission,
+//                EquivalentAsset = src.EquivalentAsset,
+//                OpenPriceEquivalent = src.OpenPriceEquivalent,
+//                ClosePriceEquivalent = src.ClosePriceEquivalent,
+//                OpenExternalOrderId = src.OpenExternalOrderId,
+//                OpenExternalProviderId = src.OpenExternalProviderId,
+//                CloseExternalOrderId = src.CloseExternalOrderId,
+//                CloseExternalProviderId = src.CloseExternalProviderId,
+//                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>(),
+//                LegalEntity = src.LegalEntity,
             };
         }
 
-        public static OrderFullContract ToFullContract(this IOrder src, OrderUpdateType orderUpdateType, 
+        public static OrderFullContract ToFullContract(this Order src, OrderUpdateType orderUpdateType,
+            DateTime updateTimestamp)
+        {
+            return new OrderFullContract();
+        }
+
+        public static OrderFullContract ToFullContract(this Position src, OrderUpdateType orderUpdateType, 
             DateTime updateTimestamp)
         {
             var orderContract = new OrderFullContract
             {
-                Id = src.Id,
-                Code = src.Code,
-                AccountId = src.AccountId,
-                TradingConditionId = src.TradingConditionId,
-                AccountAssetId = src.AccountAssetId,
-                Instrument = src.Instrument,
-                Type = src.GetOrderDirection().ToType<OrderDirectionContract>(),
-                CreateDate = src.CreateDate,
-                OpenDate = src.OpenDate,
-                CloseDate = src.CloseDate,
-                ExpectedOpenPrice = src.ExpectedOpenPrice,
-                OpenPrice = src.OpenPrice,
-                ClosePrice = src.ClosePrice,
-                QuoteRate = src.GetFplRate(),
-                MarginRate = src.GetMarginRate(),
-                AssetAccuracy = src.AssetAccuracy,
-                Volume = src.Volume,
-                TakeProfit = src.TakeProfit,
-                StopLoss = src.StopLoss,
-                CommissionLot = src.CommissionLot,
-                OpenCommission = src.GetOpenCommission(),
-                CloseCommission = src.GetCloseCommission(),
-                SwapCommission = src.SwapCommission,
-                EquivalentAsset = src.EquivalentAsset,
-                OpenPriceEquivalent = src.OpenPriceEquivalent,
-                ClosePriceEquivalent = src.ClosePriceEquivalent,
-                OpenExternalOrderId = src.OpenExternalOrderId,
-                OpenExternalProviderId = src.OpenExternalProviderId,
-                CloseExternalOrderId = src.CloseExternalOrderId,
-                CloseExternalProviderId = src.CloseExternalProviderId,
-                StartClosingDate = src.StartClosingDate,
-                Status = src.Status.ToType<OrderStatusContract>(),
-                CloseReason = src.CloseReason.ToType<OrderCloseReasonContract>(),
-                FillType = src.FillType.ToType<OrderFillTypeContract>(),
-                RejectReason = src.RejectReason.ToType<OrderRejectReasonContract>(),
-                RejectReasonText = src.RejectReasonText,
-                Comment = src.Comment,
-                MatchedVolume = src.GetMatchedVolume(),
-                MatchedCloseVolume = src.GetMatchedCloseVolume(),
-                PnL = src.GetTotalFpl(),
-                Fpl = src.GetFpl(),
-                InterestRateSwap = src.GetSwaps(),
-                MarginInit = src.GetMarginInit(),
-                MarginMaintenance = src.GetMarginMaintenance(),
-                OrderUpdateType = orderUpdateType.ToType<OrderUpdateTypeContract>(),
-                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>(),
-                LegalEntity = src.LegalEntity,
-                UpdateTimestamp = updateTimestamp,
+//                Id = src.Id,
+//                Code = src.Code,
+//                AccountId = src.AccountId,
+//                TradingConditionId = src.TradingConditionId,
+//                AccountAssetId = src.AccountAssetId,
+//                Instrument = src.AssetPairId,
+//                Type = src.GetOrderDirection().ToType<OrderDirectionContract>(),
+//                CreateDate = src.CreateDate,
+//                OpenDate = src.OpenDate,
+//                CloseDate = src.CloseDate,
+//                ExpectedOpenPrice = src.ExpectedOpenPrice,
+//                OpenPrice = src.OpenPrice,
+//                ClosePrice = src.ClosePrice,
+//                QuoteRate = src.GetFplRate(),
+//                MarginRate = src.GetMarginRate(),
+//                AssetAccuracy = src.AssetPairAccuracy,
+//                Volume = src.Volume,
+//                TakeProfit = src.TakeProfit,
+//                StopLoss = src.StopLoss,
+//                CommissionLot = src.CommissionLot,
+//                OpenCommission = src.GetOpenCommission(),
+//                CloseCommission = src.GetCloseCommission(),
+//                SwapCommission = src.SwapCommission,
+//                EquivalentAsset = src.EquivalentAsset,
+//                OpenPriceEquivalent = src.OpenPriceEquivalent,
+//                ClosePriceEquivalent = src.ClosePriceEquivalent,
+//                OpenExternalOrderId = src.OpenExternalOrderId,
+//                OpenExternalProviderId = src.OpenExternalProviderId,
+//                CloseExternalOrderId = src.CloseExternalOrderId,
+//                CloseExternalProviderId = src.CloseExternalProviderId,
+//                StartClosingDate = src.StartClosingDate,
+//                Status = src.Status.ToType<OrderStatusContract>(),
+//                CloseReason = src.CloseReason.ToType<OrderCloseReasonContract>(),
+//                FillType = src.FillType.ToType<OrderFillTypeContract>(),
+//                RejectReason = src.RejectReason.ToType<OrderRejectReasonContract>(),
+//                RejectReasonText = src.RejectReasonText,
+//                Comment = src.Comment,
+//                MatchedVolume = src.GetMatchedVolume(),
+//                MatchedCloseVolume = src.GetMatchedCloseVolume(),
+//                PnL = src.GetTotalFpl(),
+//                Fpl = src.GetFpl(),
+//                InterestRateSwap = src.GetSwaps(),
+//                MarginInit = src.GetMarginInit(),
+//                MarginMaintenance = src.GetMarginMaintenance(),
+//                OrderUpdateType = orderUpdateType.ToType<OrderUpdateTypeContract>(),
+//                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>(),
+//                LegalEntity = src.LegalEntity,
+//                UpdateTimestamp = updateTimestamp,
             };
 
-            foreach (var order in src.MatchedOrders)
-            {
-                orderContract.MatchedOrders.Add(order.ToBackendContract());
-            }
-
-            foreach (var order in src.MatchedCloseOrders)
-            {
-                orderContract.MatchedCloseOrders.Add(order.ToBackendContract());
-            }
+//            foreach (var order in src.MatchedOrders)
+//            {
+//                orderContract.MatchedOrders.Add(order.ToBackendContract());
+//            }
+//
+//            foreach (var order in src.MatchedCloseOrders)
+//            {
+//                orderContract.MatchedCloseOrders.Add(order.ToBackendContract());
+//            }
 
             return orderContract;
         }
 
-        public static OrderContract ToBaseContract(this IOrder src)
+        public static OrderContract ToBaseContract(this Position src)
         {
             var orderContract = new OrderContract
             {
-                Id = src.Id,
-                Code = src.Code,
-                AccountId = src.AccountId,
-                AccountAssetId = src.AccountAssetId,
-                Instrument = src.Instrument,
-                Status = src.Status.ToType<OrderStatusContract>(),
-                CreateDate = src.CreateDate,
-                OpenDate = src.OpenDate,
-                CloseDate = src.CloseDate,
-                ExpectedOpenPrice = src.ExpectedOpenPrice,
-                OpenPrice = src.OpenPrice,
-                ClosePrice = src.ClosePrice,
-                Type = src.GetOrderDirection().ToType<OrderDirectionContract>(),
-                Volume = src.Volume,
-                MatchedVolume = src.GetMatchedVolume(),
-                MatchedCloseVolume = src.GetMatchedCloseVolume(),
-                TakeProfit = src.TakeProfit,
-                StopLoss = src.StopLoss,
-                Fpl = src.GetFpl(),
-                PnL = src.GetTotalFpl(),
-                CloseReason = src.CloseReason.ToType<OrderCloseReasonContract>(),
-                RejectReason = src.RejectReason.ToType<OrderRejectReasonContract>(),
-                RejectReasonText = src.RejectReasonText,
-                CommissionLot = src.CommissionLot,
-                OpenCommission = src.GetOpenCommission(),
-                CloseCommission = src.GetCloseCommission(),
-                SwapCommission = src.SwapCommission,
-                EquivalentAsset = src.EquivalentAsset,
-                OpenPriceEquivalent = src.OpenPriceEquivalent,
-                ClosePriceEquivalent = src.ClosePriceEquivalent,
-                OpenExternalOrderId = src.OpenExternalOrderId,
-                OpenExternalProviderId = src.OpenExternalProviderId,
-                CloseExternalOrderId = src.CloseExternalOrderId,
-                CloseExternalProviderId = src.CloseExternalProviderId,
-                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>(),
-                LegalEntity = src.LegalEntity,
+//                Id = src.Id,
+//                Code = src.Code,
+//                AccountId = src.AccountId,
+//                AccountAssetId = src.AccountAssetId,
+//                Instrument = src.AssetPairId,
+//                Status = src.Status.ToType<OrderStatusContract>(),
+//                CreateDate = src.CreateDate,
+//                OpenDate = src.OpenDate,
+//                CloseDate = src.CloseDate,
+//                ExpectedOpenPrice = src.ExpectedOpenPrice,
+//                OpenPrice = src.OpenPrice,
+//                ClosePrice = src.ClosePrice,
+//                Type = src.GetOrderDirection().ToType<OrderDirectionContract>(),
+//                Volume = src.Volume,
+//                MatchedVolume = src.GetMatchedVolume(),
+//                MatchedCloseVolume = src.GetMatchedCloseVolume(),
+//                TakeProfit = src.TakeProfit,
+//                StopLoss = src.StopLoss,
+//                Fpl = src.GetFpl(),
+//                PnL = src.GetTotalFpl(),
+//                CloseReason = src.CloseReason.ToType<OrderCloseReasonContract>(),
+//                RejectReason = src.RejectReason.ToType<OrderRejectReasonContract>(),
+//                RejectReasonText = src.RejectReasonText,
+//                CommissionLot = src.CommissionLot,
+//                OpenCommission = src.GetOpenCommission(),
+//                CloseCommission = src.GetCloseCommission(),
+//                SwapCommission = src.SwapCommission,
+//                EquivalentAsset = src.EquivalentAsset,
+//                OpenPriceEquivalent = src.OpenPriceEquivalent,
+//                ClosePriceEquivalent = src.ClosePriceEquivalent,
+//                OpenExternalOrderId = src.OpenExternalOrderId,
+//                OpenExternalProviderId = src.OpenExternalProviderId,
+//                CloseExternalOrderId = src.CloseExternalOrderId,
+//                CloseExternalProviderId = src.CloseExternalProviderId,
+//                MatchingEngineMode = src.MatchingEngineMode.ToType<MatchingEngineModeContract>(),
+//                LegalEntity = src.LegalEntity,
             };
 
-            foreach (var order in src.MatchedOrders)
-            {
-                orderContract.MatchedOrders.Add(order.ToBackendContract());
-            }
-
-            foreach (var order in src.MatchedCloseOrders)
-            {
-                orderContract.MatchedCloseOrders.Add(order.ToBackendContract());
-            }
+//            foreach (var order in src.MatchedOrders)
+//            {
+//                orderContract.MatchedOrders.Add(order.ToBackendContract());
+//            }
+//
+//            foreach (var order in src.MatchedCloseOrders)
+//            {
+//                orderContract.MatchedCloseOrders.Add(order.ToBackendContract());
+//            }
 
             return orderContract;
         }
