@@ -12,6 +12,7 @@ using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Common.Services;
+using MarginTrading.SqlRepositories.Repositories;
 
 namespace MarginTrading.Backend.Modules
 {
@@ -71,6 +72,11 @@ namespace MarginTrading.Backend.Modules
             builder.Register(ctx =>
                     AzureRepoFactories.MarginTrading.CreateOrdersByIdRepository(
                         _settings.Nested(s => s.Db.MarginTradingConnString), _log, ctx.Resolve<IConvertService>()))
+                .SingleInstance();
+            
+            //SQL PLACE
+            builder.RegisterType<AccountMarginFreezingRepository>()
+                .As<IAccountMarginFreezingRepository>()
                 .SingleInstance();
         }
     }

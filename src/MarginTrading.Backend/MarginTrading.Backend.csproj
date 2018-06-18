@@ -28,6 +28,7 @@
     <ProjectReference Include="..\MarginTrading.AzureRepositories\MarginTrading.AzureRepositories.csproj" />
     <ProjectReference Include="..\MarginTrading.Contract\MarginTrading.Contract.csproj" />
     <ProjectReference Include="..\MarginTrading.Backend.Services\MarginTrading.Backend.Services.csproj" />
+    <ProjectReference Include="..\MarginTrading.SqlRepositories\MarginTrading.SqlRepositories.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FluentScheduler" Version="5.3.0" />
@@ -35,7 +36,7 @@
     <PackageReference Include="Lykke.Common.ApiLibrary" Version="1.0.14" />
     <PackageReference Include="Lykke.HttpClientGenerator" Version="1.0.0" />
     <PackageReference Include="Lykke.Logs" Version="3.6.2" />
-    <PackageReference Include="Lykke.MarginTrading.AccountsManagement.Contracts" Version="1.0.4" />
+    <PackageReference Include="Lykke.MarginTrading.AccountsManagement.Contracts" Version="1.0.8" />
     <PackageReference Include="Lykke.RabbitMqBroker" Version="7.0.0" />
     <PackageReference Include="Lykke.Service.EmailSender" Version="1.0.13" />
     <PackageReference Include="Lykke.SettingsReader" Version="2.1.0" />

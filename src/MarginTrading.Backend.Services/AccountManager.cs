@@ -13,6 +13,7 @@ using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
+using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Notifications;
@@ -67,7 +68,7 @@ namespace MarginTrading.Backend.Services
 
             var accounts = _accountsApi.List().GetAwaiter().GetResult()
                 .Select(Convert).ToDictionary(x => x.Id);
-
+            
             _accountsCacheService.InitAccountsCache(accounts);
             _console.WriteLine($"Finished InitAccountsCache. Count: {accounts.Count}");
 

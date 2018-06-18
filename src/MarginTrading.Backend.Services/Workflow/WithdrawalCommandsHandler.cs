@@ -4,6 +4,7 @@ using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services.Workflow

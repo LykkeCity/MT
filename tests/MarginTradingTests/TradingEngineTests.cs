@@ -94,7 +94,7 @@ namespace MarginTradingTests
                     var account = _accountsCacheService.Get(ev.AccountId);
                     account.Balance += ev.BalanceDelta;
                     var accountContract = convertService.Convert<AccountContract>(account);
-                    accountsProjection.Handle(new AccountChangedEvent(DateTime.UtcNow, accountContract,
+                    accountsProjection.Handle(new AccountChangedEvent(DateTime.UtcNow, "1", accountContract,
                         AccountChangedEventTypeContract.BalanceUpdated));
                 });
         }

@@ -25,8 +25,8 @@ namespace MarginTrading.Backend.Core
         public int OpenPositionsCount { get; set; }
         public decimal MarginCallLevel { get; set; }
         public decimal StopoutLevel { get; set; }
-        
-        public decimal WithdrawalFrozenMargin => WithdrawalFrozenMarginData.Values.Sum();
+
+        public decimal WithdrawalFrozenMargin { get; set; }
         public Dictionary<string, decimal> WithdrawalFrozenMarginData { get; set; } = new Dictionary<string, decimal>(); 
 
         public int CalculatedHash { get; set; }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.TradingConditions;
 
@@ -38,12 +39,21 @@ namespace MarginTrading.Backend.Services
 
         public void FreezeWithdrawalMargin(IMarginTradingAccount account, string operationId, decimal amount)
         {
-            account.AccountFpl.WithdrawalFrozenMarginData.TryAdd(operationId, amount);
+            if (account.AccountFpl.WithdrawalFrozenMarginData.TryAdd(operationId, amount))
+            {
+                account.AccountFpl.WithdrawalFrozenMargin = account.AccountFpl.WithdrawalFrozenMarginData.Values.Sum();
+                _accountsCacheService.FreezeWithdrawalMargin(operationId, account.ClientId, account.Id, amount)
+                    .GetAwaiter().GetResult();//todo make async
+            }
         }
 
         public void UnfreezeWithdrawalMargin(IMarginTradingAccount account, string operationId)
         {
-            account.AccountFpl.WithdrawalFrozenMarginData.Remove(operationId);
+            if (account.AccountFpl.WithdrawalFrozenMarginData.Remove(operationId))
+            {
+                account.AccountFpl.WithdrawalFrozenMargin = account.AccountFpl.WithdrawalFrozenMarginData.Values.Sum();
+                _accountsCacheService.UnfreezeWithdrawalMargin(operationId).GetAwaiter().GetResult();//todo make async
+            }
         }
 
         public bool IsEnoughBalance(Order order)
