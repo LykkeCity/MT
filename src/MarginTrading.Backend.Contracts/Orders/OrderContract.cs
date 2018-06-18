@@ -146,7 +146,7 @@ namespace MarginTrading.Backend.Contracts.Orders
 
         /// Asset for representation of equivalent price
         /// </summary>
-        public string EquivalentAsset { get; }
+        public string EquivalentAsset { get; set; }
         
         /// <summary>
         /// Rate for calculation of equivalent price

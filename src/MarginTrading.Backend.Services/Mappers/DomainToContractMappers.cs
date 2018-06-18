@@ -35,6 +35,7 @@ namespace MarginTrading.Backend.Services.Mappers
                 Volume = order.Volume,
                 //------
                 AccountAssetId = order.AccountAssetId,
+                EquivalentAsset = order.EquivalentAsset,
                 ActivatedTimestamp = order.Activated,
                 CanceledTimestamp = order.Canceled,
                 Code = order.Code,

@@ -265,7 +265,6 @@ namespace MarginTrading.Backend.Core.Trading
             if (relinkFromOrderToPosition)
             {
                 ParentPositionId = ParentOrderId;
-                ParentOrderId = null;
             }
         }
         
@@ -273,6 +272,7 @@ namespace MarginTrading.Backend.Core.Trading
         {
             Status = OrderStatus.ExecutionStarted;
             ExecutionStarted = dateTime;
+            LastModified = dateTime;
             MatchingEngineId = matchingEngineId;
         }
         
@@ -295,6 +295,7 @@ namespace MarginTrading.Backend.Core.Trading
             }
             
             Executed = dateTime;
+            LastModified = dateTime;
             ExecutionPrice = matchedOrders.WeightedAveragePrice;
             ExternalOrderId = externalOrderId;
             ExternalProviderId = externalProviderId;
@@ -314,12 +315,14 @@ namespace MarginTrading.Backend.Core.Trading
             RejectReasonText = reasonText;
             Comment = comment;
             Rejected = dateTime;
+            LastModified = dateTime;
         }
 
         public void Cancel(DateTime dateTime)
         {
             Status = OrderStatus.Canceled;
             Canceled = dateTime;
+            LastModified = dateTime;
         }
 
         public void AddRelatedOrder(Order order)

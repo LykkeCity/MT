@@ -138,7 +138,9 @@ namespace MarginTrading.Backend.Services
             var initialParameters = await GetOrderInitialParameters(request.InstrumentId, account.LegalEntity,
                 equivalentSettings, account.BaseAssetId);
 
-            var volume = request.Direction == OrderDirectionContract.Sell ? -request.Volume : request.Volume;
+            var volume = request.Direction == OrderDirectionContract.Sell ? -Math.Abs(request.Volume)
+                : request.Direction == OrderDirectionContract.Buy ? Math.Abs(request.Volume)
+                : request.Volume;
 
             var baseOrder = new Order(initialParameters.id, initialParameters.code, request.InstrumentId, volume,
                 initialParameters.now, initialParameters.now, request.Validity, account.Id,
