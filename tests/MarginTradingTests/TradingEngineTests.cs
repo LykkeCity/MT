@@ -23,6 +23,7 @@ using MarginTrading.SettingsService.Contracts;
 using MarginTrading.SettingsService.Contracts.TradingConditions;
 using Moq;
 using NUnit.Framework;
+
 //
 //namespace MarginTradingTests
 //{

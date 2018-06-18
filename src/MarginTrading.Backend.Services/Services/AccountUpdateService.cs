@@ -38,6 +38,29 @@ namespace MarginTrading.Backend.Services
             UpdateAccount(account, GetPositions(account.Id), GetActiveOrders(account.Id));
         }
 
+        public void FreezeWithdrawalMargin(string accountId, string operationId, decimal amount)
+        {
+            var account = _accountsCacheService.Get(accountId);
+            
+            if (account.AccountFpl.WithdrawalFrozenMarginData.TryAdd(operationId, amount))
+            {
+                account.AccountFpl.WithdrawalFrozenMargin = account.AccountFpl.WithdrawalFrozenMarginData.Values.Sum();
+                _accountsCacheService.FreezeWithdrawalMargin(operationId, account.ClientId, accountId, amount)
+                    .GetAwaiter().GetResult();//todo make async
+            }
+        }
+
+        public void UnfreezeWithdrawalMargin(string accountId, string operationId)
+        {
+            var account = _accountsCacheService.Get(accountId);
+            
+            if (account.AccountFpl.WithdrawalFrozenMarginData.Remove(operationId))
+            {
+                account.AccountFpl.WithdrawalFrozenMargin = account.AccountFpl.WithdrawalFrozenMarginData.Values.Sum();
+                _accountsCacheService.UnfreezeWithdrawalMargin(operationId).GetAwaiter().GetResult();//todo make async
+            }
+        }
+
         public bool IsEnoughBalance(Order order)
         {
             var orderMargin = _fplService.GetInitMarginForOrder(order);

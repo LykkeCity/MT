@@ -1,10 +1,12 @@
-﻿using Autofac;
+using System.Collections.Generic;
+using Autofac;
 using AzureStorage.Tables;
 using Common.Log;
 using MarginTrading.AzureRepositories;
 using MarginTrading.AzureRepositories.Logs;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Services.MatchingEngines;
 using Moq;
 
@@ -17,6 +19,10 @@ namespace MarginTradingTests.Modules
             var blobRepository = new Mock<IMarginTradingBlobRepository>();
             var orderHistoryRepository = new Mock<IOrdersHistoryRepository>();
             var riskSystemCommandsLogRepository = new Mock<IRiskSystemCommandsLogRepository>();
+            var accountMarginFreezingRepository = new Mock<IAccountMarginFreezingRepository>();
+
+            accountMarginFreezingRepository.Setup(x => x.GetAllAsync())
+                .ReturnsAsync(new List<IAccountMarginFreezing>().AsReadOnly());
 
             builder.RegisterInstance(new LogToMemory()).As<ILog>();
             builder.RegisterInstance(
@@ -31,6 +37,9 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(riskSystemCommandsLogRepository.Object).As<IRiskSystemCommandsLogRepository>()
                 .SingleInstance();
             builder.Register<IDayOffSettingsRepository>(c => new DayOffSettingsRepository(blobRepository.Object))
+                .SingleInstance();
+
+            builder.RegisterInstance(accountMarginFreezingRepository.Object).As<IAccountMarginFreezingRepository>()
                 .SingleInstance();
         }
     }

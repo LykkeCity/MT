@@ -63,7 +63,7 @@ namespace MarginTrading.Backend.Services
 
             var accounts = _accountsApi.List().GetAwaiter().GetResult()
                 .Select(Convert).ToDictionary(x => x.Id);
-
+            
             _accountsCacheService.InitAccountsCache(accounts);
             _console.WriteLine($"Finished InitAccountsCache. Count: {accounts.Count}");
 

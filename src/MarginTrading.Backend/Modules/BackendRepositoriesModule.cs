@@ -12,6 +12,7 @@ using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Common.Services;
+using MarginTrading.SqlRepositories.Repositories;
 using MarginTrading.SqlRepositories;
 using OperationLogEntity = MarginTrading.AzureRepositories.OperationLogEntity;
 
@@ -77,6 +78,26 @@ namespace MarginTrading.Backend.Modules
             
             builder.RegisterType<MatchingEngineInMemoryRepository>().As<IMatchingEngineRepository>().SingleInstance();
 
+            builder.Register(c =>
+            {
+                var settings = c.Resolve<IReloadingManager<MarginTradingSettings>>();
+
+                return settings.CurrentValue.UseAzureIdentityGenerator
+                    ? (IIdentityGenerator) new AzureIdentityGenerator(
+                        AzureTableStorage<IdentityEntity>.Create(settings.Nested(s => s.Db.MarginTradingConnString),
+                            "Identity", _log))
+                    : (IIdentityGenerator) new FakeIdentityGenerator();
+            }).As<IIdentityGenerator>().SingleInstance();
+
+            builder.Register(ctx =>
+                    AzureRepoFactories.MarginTrading.CreateOrdersByIdRepository(
+                        _settings.Nested(s => s.Db.MarginTradingConnString), _log, ctx.Resolve<IConvertService>()))
+                .SingleInstance();
+            
+            //SQL PLACE
+            builder.RegisterType<AccountMarginFreezingRepository>()
+                .As<IAccountMarginFreezingRepository>()
+                .SingleInstance();
             //            builder.Register(ctx =>
 //                AzureRepoFactories.MarginTrading.CreateDayOffSettingsRepository(
 //                    _settings.Nested(s => s.Db.MarginTradingConnString))).SingleInstance();

@@ -29,12 +29,7 @@ namespace MarginTrading.Backend.Core
 
         public AccountFpl AccountFpl { get; private set; } = new AccountFpl();
 
-        public static MarginTradingAccount Create(IMarginTradingAccount src)
-        {
-            return Create(src, null);
-        }
-
-        public static MarginTradingAccount Create(IMarginTradingAccount src, AccountFpl accountFpl)
+        public static MarginTradingAccount Create(IMarginTradingAccount src, AccountFpl accountFpl = null)
         {
             return new MarginTradingAccount
             {
@@ -44,18 +39,15 @@ namespace MarginTrading.Backend.Core
                 BaseAssetId = src.BaseAssetId,
                 Balance = src.Balance,
                 WithdrawTransferLimit = src.WithdrawTransferLimit,
-                AccountFpl = accountFpl ?? new AccountFpl() {ActualHash = 1},
+                AccountFpl = accountFpl ?? new AccountFpl {ActualHash = 1},
                 LegalEntity = src.LegalEntity,
             };
         }
 
         public int CompareTo(MarginTradingAccount other)
         {
-            var result = Id.CompareTo(other.Id);
-            if(0 != result)
-                return result;
-
-            return ClientId.CompareTo(other.ClientId);
+            var result = string.Compare(Id, other.Id, StringComparison.Ordinal);
+            return 0 != result ? result : string.Compare(ClientId, other.ClientId, StringComparison.Ordinal);
         }
 
         public override int GetHashCode()
@@ -116,7 +108,7 @@ namespace MarginTrading.Backend.Core
 
         public static decimal GetTotalCapital(this IMarginTradingAccount account)
         {
-            return account.Balance + account.GetPnl();
+            return account.Balance + account.GetPnl() - account.GetFrozenMargin();
         }
 
         public static decimal GetPnl(this IMarginTradingAccount account)
@@ -142,6 +134,11 @@ namespace MarginTrading.Backend.Core
         public static decimal GetMarginAvailable(this IMarginTradingAccount account)
         {
             return account.GetTotalCapital() - account.GetMarginInit();
+        }
+
+        public static decimal GetFrozenMargin(this IMarginTradingAccount account)
+        {
+            return account.GetAccountFpl().WithdrawalFrozenMargin;
         }
 
         public static decimal GetMarginCallLevel(this IMarginTradingAccount account)
