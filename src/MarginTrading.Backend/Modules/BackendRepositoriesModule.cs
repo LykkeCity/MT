@@ -62,7 +62,7 @@ namespace MarginTrading.Backend.Modules
                     .SingleInstance();
 
                 builder.Register<IMarginTradingBlobRepository>(ctx =>
-                        new SqlBlobRepository())
+                        new SqlBlobRepository(_settings.CurrentValue.Db.StateConnString))
                     .SingleInstance();
 
                 builder.Register(c =>

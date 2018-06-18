@@ -15,17 +15,17 @@ namespace MarginTrading.Backend.Core.Trading
         /// <summary>
         /// Order ID
         /// </summary>
-        public string Id { get; }
+        public string Id { get; private set; }
         
         /// <summary>
         /// Digit order code
         /// </summary>
-        public long Code { get; }
+        public long Code { get; private set; }
         
         /// <summary>
         /// Asset Pair ID (eg. EURUSD) 
         /// </summary>
-        public string AssetPairId { get; }
+        public string AssetPairId { get; private set; }
         
         /// <summary>
         /// Order size 
@@ -35,12 +35,12 @@ namespace MarginTrading.Backend.Core.Trading
         /// <summary>
         /// Ordr direction (Buy/Sell)
         /// </summary>
-        public OrderDirection Direction { get; }
+        public OrderDirection Direction { get; private set; }
         
         /// <summary>
         /// Date when order was created 
         /// </summary>
-        public DateTime Created { get; }
+        public DateTime Created { get; private set; }
         
         /// <summary>
         /// Date when order was activated 
@@ -55,7 +55,7 @@ namespace MarginTrading.Backend.Core.Trading
         /// <summary>
         /// Date when order will expire (null for Market)
         /// </summary>
-        public DateTime? Validity { get; }
+        public DateTime? Validity { get; private set; }
         
         /// <summary>
         /// Date when order started execution
@@ -80,17 +80,17 @@ namespace MarginTrading.Backend.Core.Trading
         /// <summary>
         /// Trading account ID
         /// </summary>
-        public string AccountId { get; }
+        public string AccountId { get; private set; }
         
         /// <summary>
         /// Trading conditions ID
         /// </summary>
-        public string TradingConditionId { get; }
+        public string TradingConditionId { get; private set; }
         
         /// <summary>
         /// Account base asset ID
         /// </summary>
-        public string AccountAssetId { get; }
+        public string AccountAssetId { get; private set; }
 
         /// <summary>
         /// Price level when order should be executed
@@ -105,7 +105,7 @@ namespace MarginTrading.Backend.Core.Trading
         /// <summary>
         /// Asset for representation of equivalent price
         /// </summary>
-        public string EquivalentAsset { get; }
+        public string EquivalentAsset { get; private set; }
         
         /// <summary>
         /// Rate for calculation of equivalent price
@@ -125,7 +125,7 @@ namespace MarginTrading.Backend.Core.Trading
         /// <summary>
         /// Order fill type
         /// </summary>
-        public OrderFillType FillType { get; }
+        public OrderFillType FillType { get; private set; }
         
         /// <summary>
         /// Reject reason
@@ -160,17 +160,17 @@ namespace MarginTrading.Backend.Core.Trading
         /// <summary>
         /// Legal Entity ID
         /// </summary>
-        public string LegalEntity { get; }
+        public string LegalEntity { get; private set; }
         
         /// <summary>
         /// Force open of new position
         /// </summary>
-        public bool ForceOpen { get; }
+        public bool ForceOpen { get; private set; }
         
         /// <summary>
         /// Order type
         /// </summary>
-        public OrderType OrderType { get; }
+        public OrderType OrderType { get; private set; }
         
         /// <summary>
         /// ID of parent order (for related orders)
@@ -185,17 +185,17 @@ namespace MarginTrading.Backend.Core.Trading
         /// <summary>
         /// Order originator
         /// </summary>
-        public OriginatorType Originator { get; }
+        public OriginatorType Originator { get; private set; }
         
         /// <summary>
         /// Matched orders for execution
         /// </summary>
-        public MatchedOrderCollection MatchedOrders { get; private set; }
+        public MatchedOrderCollection MatchedOrders { get; private set; } = new MatchedOrderCollection();
         
         /// <summary>
         /// Related orders
         /// </summary>
-        public List<RelatedOrderInfo> RelatedOrders { get; }
+        public List<RelatedOrderInfo> RelatedOrders { get; private set; } = new List<RelatedOrderInfo>();
         
         #endregion
 
@@ -205,7 +205,7 @@ namespace MarginTrading.Backend.Core.Trading
             DateTime? validity, string accountId, string tradingConditionId, string accountAssetId, decimal? price,
             string equivalentAsset, OrderFillType fillType, string comment, string legalEntity, bool forceOpen,
             OrderType orderType, string parentOrderId, string parentPositionId, OriginatorType originator,
-            decimal equivalentRate, decimal fxRate)
+            decimal equivalentRate, decimal fxRate, OrderStatus status)
         {
             Id = id;
             Code = code;
@@ -230,9 +230,7 @@ namespace MarginTrading.Backend.Core.Trading
             EquivalentRate = equivalentRate;
             FxRate = fxRate;
             Direction = volume.GetOrderDirection();
-            Status = OrderStatus.Placed;
-            MatchedOrders = new MatchedOrderCollection();
-            RelatedOrders = new List<RelatedOrderInfo>();
+            Status = status;
         }
 
 

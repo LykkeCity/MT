@@ -6,7 +6,7 @@ namespace MarginTrading.Backend.Services.Settings
     [UsedImplicitly]
     public class AccountsManagementServiceClient
     {
-        [HttpCheck("/api/isalive")]
+        //[HttpCheck("/api/isalive")]
         public string ServiceUrl { get; set; }
     }
 }
