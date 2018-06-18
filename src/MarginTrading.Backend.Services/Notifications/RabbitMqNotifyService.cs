@@ -6,6 +6,7 @@ using Common.Log;
 using Lykke.Service.ExchangeConnector.Client.Models;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Common.Services;
 using MarginTrading.Contract.RabbitMqMessageModels;

@@ -20,10 +20,16 @@ namespace MarginTrading.Backend.Contracts
         Task CloseAsync([NotNull] string positionId);
 
         /// <summary>
-        /// Close close all positions by instrument and optionally direction 
+        /// Close group of opened positions by instrument and direction (optional) 
         /// </summary>
         [Delete("/api/positions/instrument-group/{assetPairId}")]
-        Task CloseGroupAsync([NotNull] string assetPairId, PositionDirectionContract? direction = null);
+        Task CloseGroupAsync([NotNull] string assetPairId, [Query, CanBeNull] PositionDirectionContract? direction = null);
+
+        /// <summary>
+        /// Close group of opened positions by account and instrument (optional)
+        /// </summary>
+        [Delete("/api/positions/account-group/{accountId}")]
+        Task CloseGroupAsync([NotNull] string accountId, [Query, CanBeNull] string assetPairId = null);
         
         /// <summary>
         /// Get a position by id

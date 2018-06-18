@@ -5,6 +5,7 @@ using Lykke.SettingsReader;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
@@ -13,11 +14,9 @@ using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Quotes;
 using MarginTrading.Backend.Services.Services;
-using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.RabbitMq;
-using MarginTrading.Common.Services.Settings;
 using MarginTrading.Common.Services.Telemetry;
 
 namespace MarginTrading.Backend.Services.Modules
@@ -32,6 +31,11 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<IEventConsumer<BestPriceChangeEventArgs>>()
 				.SingleInstance()
 				.OnActivated(args => args.Instance.Start());
+ 
+			builder.RegisterType<FxRateCacheService>() 
+				.As<IFxRateCacheService>()
+				.SingleInstance()
+				.OnActivated(args => args.Instance.Start()); 
 
 			builder.RegisterType<FplService>()
 				.As<IFplService>()
@@ -42,9 +46,9 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<ITradingConditionsCacheService>()
 				.SingleInstance();
 
-			builder.RegisterType<TradingInstrumnentsCacheService>()
+			builder.RegisterType<TradingInstrumentsCacheService>()
 				.AsSelf()
-				.As<ITradingInstrumnentsCacheService>()
+				.As<ITradingInstrumentsCacheService>()
 				.SingleInstance();
 
 			builder.RegisterType<AccountUpdateService>()
@@ -59,6 +63,7 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<ICommissionService>()
 				.SingleInstance();
 
+			//TODO: rework ME registrations
 			builder.RegisterType<MarketMakerMatchingEngine>()
 				.As<IMarketMakerMatchingEngine>()
 				.WithParameter(TypedParameter.From(MatchingEngineConstants.LykkeVuMm))
@@ -66,7 +71,7 @@ namespace MarginTrading.Backend.Services.Modules
 
 			builder.RegisterType<StpMatchingEngine>()
 				.As<IStpMatchingEngine>()
-				.WithParameter(TypedParameter.From(MatchingEngineConstants.LykkeCyStp))
+				.WithParameter(TypedParameter.From(MatchingEngineConstants.DefaultStp))
 				.SingleInstance();
 
 			builder.RegisterType<TradingEngine>()

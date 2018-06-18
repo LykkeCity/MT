@@ -5,6 +5,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MarketMakerFeed;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
@@ -36,6 +37,7 @@ namespace MarginTrading.Backend
         private readonly IMatchingEngineRoutesManager _matchingEngineRoutesManager;
         private readonly IMigrationService _migrationService;
         private readonly IConvertService _convertService;
+        private readonly IFxRateCacheService _fxRateCacheService; 
         private readonly ExternalOrderBooksList _externalOrderBooksList;
         private readonly IAssetsManager _assetsManager;
         private readonly IAssetPairsManager _assetPairsManager;
@@ -54,6 +56,7 @@ namespace MarginTrading.Backend
             MatchingEngineRoutesManager matchingEngineRoutesManager,
             IMigrationService migrationService,
             IConvertService convertService,
+            IFxRateCacheService fxRateCacheService, 
             ExternalOrderBooksList externalOrderBooksList,
             IAssetsManager assetsManager,
             IAssetPairsManager assetPairsManager,
@@ -70,6 +73,7 @@ namespace MarginTrading.Backend
             _matchingEngineRoutesManager = matchingEngineRoutesManager;
             _migrationService = migrationService;
             _convertService = convertService;
+            _fxRateCacheService = fxRateCacheService; 
             _externalOrderBooksList = externalOrderBooksList;
             _assetsManager = assetsManager;
             _assetPairsManager = assetPairsManager;
@@ -102,6 +106,12 @@ namespace MarginTrading.Backend
                 {
                     _logger.WriteInfo(ServiceName, nameof(StartApplicationAsync),
                         "MarketMakerRabbitMqSettings is not configured");
+                }
+
+                if (_marginSettings.FxRateRabbitMqSettings != null)
+                {
+                    _rabbitMqService.Subscribe(_marginSettings.FxRateRabbitMqSettings, false,
+                        _fxRateCacheService.SetQuote, _rabbitMqService.GetMsgPackDeserializer<ExternalExchangeOrderbookMessage>());
                 }
                 
                 if (_marginSettings.StpAggregatorRabbitMqSettings != null)

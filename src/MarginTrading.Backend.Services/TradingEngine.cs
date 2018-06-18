@@ -8,6 +8,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
@@ -34,7 +35,7 @@ namespace MarginTrading.Backend.Services
         private readonly IEquivalentPricesService _equivalentPricesService;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly OrdersCache _ordersCache;
-        private readonly ITradingInstrumnentsCacheService _accountAssetsCacheService;
+        private readonly ITradingInstrumentsCacheService _accountAssetsCacheService;
         private readonly IMatchingEngineRouter _meRouter;
         private readonly IThreadSwitcher _threadSwitcher;
         private readonly IContextFactory _contextFactory;
@@ -59,7 +60,7 @@ namespace MarginTrading.Backend.Services
             IEquivalentPricesService equivalentPricesService,
             IAccountsCacheService accountsCacheService,
             OrdersCache ordersCache,
-            ITradingInstrumnentsCacheService accountAssetsCacheService,
+            ITradingInstrumentsCacheService accountAssetsCacheService,
             IMatchingEngineRouter meRouter,
             IThreadSwitcher threadSwitcher,
             IContextFactory contextFactory,
@@ -112,12 +113,12 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        private Task<Order> PlaceMarketOrderByMatchingEngineAsync(Order order, IMatchingEngineBase matchingEngine)
+        private async Task<Order> PlaceMarketOrderByMatchingEngineAsync(Order order, IMatchingEngineBase matchingEngine)
         {
             order.OpenOrderbookId = matchingEngine.Id;
             order.MatchingEngineMode = matchingEngine.Mode;
             
-            matchingEngine.MatchMarketOrderForOpen(order, matchedOrders =>
+            await matchingEngine.MatchMarketOrderForOpenAsync(order, matchedOrders =>
             {
                 if (!matchedOrders.Any())
                 {
@@ -162,7 +163,7 @@ namespace MarginTrading.Backend.Services
                 _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
             }
 
-            return Task.FromResult(order);
+            return order;
         }
 
         private void RejectOrder(Order order, OrderRejectReason reason, string message, string comment = null)
@@ -258,8 +259,7 @@ namespace MarginTrading.Backend.Services
             var me = _meRouter.GetMatchingEngineForOpen(order);
             order.MatchingEngineMode = me.Mode;
             
-            using (_contextFactory.GetWriteSyncContext($"{nameof(TradingEngine)}.{nameof(PlacePendingOrder)}"))
-                _ordersCache.WaitingForExecutionOrders.Add(order);
+            _ordersCache.WaitingForExecutionOrders.Add(order);
 
             _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
         }
@@ -275,11 +275,11 @@ namespace MarginTrading.Backend.Services
             if (orders.Length == 0)
                 return;
 
-            using (_contextFactory.GetWriteSyncContext($"{nameof(TradingEngine)}.{nameof(ProcessOrdersWaitingForExecution)}"))
-            {
+            //using (_contextFactory.GetWriteSyncContext($"{nameof(TradingEngine)}.{nameof(ProcessOrdersWaitingForExecution)}"))
+            //{
                 foreach (var order in orders)
                     _ordersCache.WaitingForExecutionOrders.Remove(order);
-            }
+            //}
 
             //TODO: think how to make sure that we don't loose orders
             _threadSwitcher.SwitchThread(async () =>
@@ -436,14 +436,14 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        private Task<Order> CloseActiveOrderByMatchingEngineAsync(Order order, IMatchingEngineBase matchingEngine, OrderCloseReason reason, string comment)
+        private async Task<Order> CloseActiveOrderByMatchingEngineAsync(Order order, IMatchingEngineBase matchingEngine, OrderCloseReason reason, string comment)
         {
             order.CloseOrderbookId = matchingEngine.Id;
             order.StartClosingDate = DateTime.UtcNow;
             order.CloseReason = reason;
             order.Comment = comment;
 
-            matchingEngine.MatchMarketOrderForClose(order, matchedOrders =>
+            await matchingEngine.MatchMarketOrderForCloseAsync(order, matchedOrders =>
             {
                 if (!matchedOrders.Any())
                 {
@@ -473,7 +473,7 @@ namespace MarginTrading.Backend.Services
                 return true;
             });
 
-            return Task.FromResult(order);
+            return order;
         }
 
         public Task<Order> CloseActiveOrderAsync(string orderId, OrderCloseReason reason, string comment = null)
@@ -534,7 +534,7 @@ namespace MarginTrading.Backend.Services
                 var accountAsset = _accountAssetsCacheService.GetTradingInstrument(order.TradingConditionId,
                     order.Instrument);
 
-                _validateOrderService.ValidateOrderStops(order.GetOrderType(), quote,
+                _validateOrderService.ValidateOrderStops(order.GetOrderDirection(), quote,
                     accountAsset.Delta, accountAsset.Delta, tp, sl, expOpenPrice, order.AssetAccuracy);
 
                 order.TakeProfit = tp.HasValue ? Math.Round(tp.Value, order.AssetAccuracy) : (decimal?)null;
@@ -573,8 +573,8 @@ namespace MarginTrading.Backend.Services
         private void ProcessOrdersClosingByMatchingEngine(Order order, IMatchingEngineBase matchingEngine)
         {
             order.CloseOrderbookId = matchingEngine.Id;
-            
-            matchingEngine.MatchMarketOrderForClose(order, matchedOrders =>
+
+            matchingEngine.MatchMarketOrderForCloseAsync(order, matchedOrders =>
             {
                 if (matchedOrders.Count == 0)
                 {
@@ -583,7 +583,7 @@ namespace MarginTrading.Backend.Services
                     {
                         order.Status = OrderStatus.Active;
                         order.CloseRejectReasonText = "No orders to match";
-                        
+
                         _ordersCache.ActiveOrders.Add(order);
                         _ordersCache.ClosingOrders.Remove(order);
                     }
@@ -594,7 +594,7 @@ namespace MarginTrading.Backend.Services
                 MakeOrderClosed(order, matchedOrders);
 
                 return true;
-            });
+            }).GetAwaiter().GetResult();
         }
 
         private void MakeOrderClosed(Order order, MatchedOrderCollection matchedOrders)

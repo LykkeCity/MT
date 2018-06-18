@@ -108,7 +108,7 @@ namespace MarginTrading.Backend.Core
 
         public static decimal GetTotalCapital(this IMarginTradingAccount account)
         {
-            return account.Balance + account.GetPnl() - account.GetFrozedMargin();
+            return account.Balance + account.GetPnl() - account.GetFrozenMargin();
         }
 
         public static decimal GetPnl(this IMarginTradingAccount account)
@@ -136,7 +136,7 @@ namespace MarginTrading.Backend.Core
             return account.GetTotalCapital() - account.GetMarginInit();
         }
 
-        public static decimal GetFrozedMargin(this IMarginTradingAccount account)
+        public static decimal GetFrozenMargin(this IMarginTradingAccount account)
         {
             return account.GetAccountFpl().WithdrawalFrozenMargin;
         }

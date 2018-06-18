@@ -2,7 +2,7 @@
 
 namespace MarginTrading.Backend.Services.TradingConditions
 {
-    public interface ITradingInstrumnentsCacheService
+    public interface ITradingInstrumentsCacheService
     {
         ITradingInstrument GetTradingInstrument(string tradingConditionId, string instrument);
     }

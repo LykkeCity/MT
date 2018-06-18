@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Backend.Core.MatchedOrders
+﻿using MarginTrading.Backend.Core.Orders;
+
+namespace MarginTrading.Backend.Core.MatchedOrders
 {
     public static class MatchedOrderExtension
     {

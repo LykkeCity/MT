@@ -5,6 +5,7 @@ using System.Linq;
 using Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orderbooks;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Common.Services;

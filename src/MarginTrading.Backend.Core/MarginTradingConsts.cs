@@ -11,5 +11,6 @@
         public const string Reject = "REJECT";
         public const string LykkeVuMm = "LYKKEVU_MM";
         public const string LykkeCyStp = "LYKKECY_STP";
+        public const string DefaultStp = "STP";
     }
 }

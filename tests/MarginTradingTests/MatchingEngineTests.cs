@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Autofac;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Orders;
 using NUnit.Framework;
 
 namespace MarginTradingTests
@@ -78,14 +80,14 @@ namespace MarginTradingTests
         public void Check_Order_Is_Buy()
         {
             var order = new Order {Volume = 10};
-            Assert.AreEqual(OrderDirection.Buy, order.GetOrderType());
+            Assert.AreEqual(OrderDirection.Buy, order.GetOrderDirection());
         }
 
         [Test]
         public void Check_Order_Is_Sell()
         {
             var order = new Order {Volume = -10};
-            Assert.AreEqual(OrderDirection.Sell, order.GetOrderType());
+            Assert.AreEqual(OrderDirection.Sell, order.GetOrderDirection());
         }
 
 //        [Test]
@@ -210,7 +212,7 @@ namespace MarginTradingTests
         #region Market orders
 
         [Test]
-        public void Is_PartialFill_Buy_Fully_Matched()
+        public async Task Is_PartialFill_Buy_Fully_Matched()
         {
             const string instrument = "EURUSD";
 
@@ -227,7 +229,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.PartialFill
             };
 
-            _matchingEngine.MatchMarketOrderForOpen(order, orders => ProcessOrders(order, orders));
+            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
@@ -239,7 +241,7 @@ namespace MarginTradingTests
         }
 
         [Test]
-        public void Is_PartialFill_Sell_Fully_Matched()
+        public async Task Is_PartialFill_Sell_Fully_Matched()
         {
             var order = new Order
             {
@@ -254,7 +256,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.PartialFill
             };
 
-            _matchingEngine.MatchMarketOrderForOpen(order, orders => ProcessOrders(order, orders));
+            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
@@ -267,7 +269,7 @@ namespace MarginTradingTests
         }
 
         [Test]
-        public void Is_PartialFill_Buy_Partial_Matched()
+        public async Task Is_PartialFill_Buy_Partial_Matched()
         {
             var order = new Order
             {
@@ -282,7 +284,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.PartialFill
             };
 
-            _matchingEngine.MatchMarketOrderForOpen(order, orders => ProcessOrders(order, orders));
+            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
@@ -295,7 +297,7 @@ namespace MarginTradingTests
         }
 
         [Test]
-        public void Is_PartialFill_Sell_Partial_Matched()
+        public async Task Is_PartialFill_Sell_Partial_Matched()
         {
             var order = new Order
             {
@@ -310,7 +312,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.PartialFill
             };
 
-            _matchingEngine.MatchMarketOrderForOpen(order, orders => ProcessOrders(order, orders));
+            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
@@ -323,7 +325,7 @@ namespace MarginTradingTests
         }
 
         [Test]
-        public void Is_Order_NoLiquidity_ByInstrument_Rejected()
+        public async Task Is_Order_NoLiquidity_ByInstrument_Rejected()
         {
             var order = new Order
             {
@@ -338,7 +340,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.PartialFill
             };
 
-            _matchingEngine.MatchMarketOrderForOpen(order, orders => ProcessOrders(order, orders));
+            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             Assert.AreEqual(0, order.MatchedOrders.Count);
             Assert.AreEqual(OrderStatus.Rejected, order.Status);
@@ -347,7 +349,7 @@ namespace MarginTradingTests
         }
 
         [Test]
-        public void Is_FillOrKill_Buy_Rejected()
+        public async Task Is_FillOrKill_Buy_Rejected()
         {
             var order = new Order
             {
@@ -362,7 +364,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.FillOrKill
             };
 
-            _matchingEngine.MatchMarketOrderForOpen(order, orders => ProcessOrders(order, orders));
+            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
@@ -375,7 +377,7 @@ namespace MarginTradingTests
         }
 
         [Test]
-        public void Is_FillOrKill_Sell_Rejected()
+        public async Task Is_FillOrKill_Sell_Rejected()
         {
             var order = new Order
             {
@@ -390,7 +392,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.FillOrKill
             };
 
-            _matchingEngine.MatchMarketOrderForOpen(order, orders => ProcessOrders(order, orders));
+            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
@@ -403,7 +405,7 @@ namespace MarginTradingTests
         }
 
         [Test]
-        public void Is_FillOrKill_Buy_Fully_Matched()
+        public async Task Is_FillOrKill_Buy_Fully_Matched()
         {
             var order = new Order
             {
@@ -418,7 +420,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.FillOrKill
             };
 
-            _matchingEngine.MatchMarketOrderForOpen(order, orders => ProcessOrders(order, orders));
+            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
@@ -431,7 +433,7 @@ namespace MarginTradingTests
         }
 
         [Test]
-        public void Is_FillOrKill_Sell_Fully_Matched()
+        public async Task Is_FillOrKill_Sell_Fully_Matched()
         {
             var order = new Order
             {
@@ -446,7 +448,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.FillOrKill
             };
 
-            _matchingEngine.MatchMarketOrderForOpen(order, orders => ProcessOrders(order, orders));
+            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
@@ -463,7 +465,7 @@ namespace MarginTradingTests
         #region Pending orders
 
         [Test]
-        public void Is_Buy_Partial_PendingOrder_Matched()
+        public async Task Is_Buy_Partial_PendingOrder_Matched()
         {
             var order = new Order
             {
@@ -479,7 +481,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.PartialFill
             };
 
-            _matchingEngine.MatchMarketOrderForOpen(order, orders => ProcessOrders(order, orders));
+            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
@@ -490,7 +492,7 @@ namespace MarginTradingTests
         }
 
         [Test]
-        public void Is_Buy_FillOrKill_PendingOrder_Matched()
+        public async Task Is_Buy_FillOrKill_PendingOrder_Matched()
         {
             var order = new Order
             {
@@ -506,7 +508,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.FillOrKill
             };
 
-            _matchingEngine.MatchMarketOrderForOpen(order, orders => ProcessOrders(order, orders));
+            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             Assert.AreEqual(1, order.MatchedOrders.Count);
             Assert.AreEqual(OrderStatus.Active, order.Status);
@@ -514,7 +516,7 @@ namespace MarginTradingTests
         }
 
         [Test]
-        public void Is_Sell_Partial_PendingOrder_Matched()
+        public async Task Is_Sell_Partial_PendingOrder_Matched()
         {
             var order = new Order
             {
@@ -530,7 +532,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.PartialFill
             };
 
-            _matchingEngine.MatchMarketOrderForOpen(order, orders => ProcessOrders(order, orders));
+            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 
@@ -541,7 +543,7 @@ namespace MarginTradingTests
         }
 
         [Test]
-        public void Is_Sell_FillOrKill_PendingOrder_Matched()
+        public async Task Is_Sell_FillOrKill_PendingOrder_Matched()
         {
             var order = new Order
             {
@@ -557,7 +559,7 @@ namespace MarginTradingTests
                 FillType = OrderFillType.FillOrKill
             };
 
-            _matchingEngine.MatchMarketOrderForOpen(order, orders => ProcessOrders(order, orders));
+            await _matchingEngine.MatchMarketOrderForOpenAsync(order, orders => ProcessOrders(order, orders));
 
             var orderBooks = _matchingEngine.GetOrderBook("EURUSD");
 

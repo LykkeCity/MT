@@ -5,7 +5,7 @@ using MarginTrading.Backend.Core.Settings;
 
 namespace MarginTrading.Backend.Services.Infrastructure
 {
-    internal class CqrsSender : ICqrsSender
+    public class CqrsSender : ICqrsSender
     {
         [NotNull] private readonly ICqrsEngine _cqrsEngine;
         [NotNull] private readonly CqrsContextNamesSettings _cqrsContextNamesSettings;

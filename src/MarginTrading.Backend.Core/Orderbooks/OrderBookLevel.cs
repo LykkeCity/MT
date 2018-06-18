@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Backend.Core.Orderbooks
+﻿using MarginTrading.Backend.Core.Orders;
+
+namespace MarginTrading.Backend.Core.Orderbooks
 {
     public class OrderBookLevel
     {
@@ -11,7 +13,7 @@
         {
             return new OrderBookLevel
             {
-                Direction = order.GetOrderType(),
+                Direction = order.GetOrderDirection(),
                 Instrument = order.Instrument,
                 Volume = order.Volume,
                 Price = order.Price
@@ -33,7 +35,7 @@
         {
             return new OrderBookLevel
             {
-                Direction = order.GetOrderType(),
+                Direction = order.GetOrderDirection(),
                 Instrument = order.Instrument,
                 Volume = 0,
                 Price = order.Price

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using MarginTrading.Backend.Core.MatchedOrders;
+using MarginTrading.Backend.Core.Orders;
 
 namespace MarginTrading.Backend.Core.Orderbooks
 {
@@ -133,7 +134,7 @@ namespace MarginTrading.Backend.Core.Orderbooks
         
         public void AddMarketMakerOrder(LimitOrder order)
         {
-            var src = order.GetOrderType() == OrderDirection.Buy ? Buy : Sell;
+            var src = order.GetOrderDirection() == OrderDirection.Buy ? Buy : Sell;
             
             if (!src.ContainsKey(order.Price))
                 src.Add(order.Price, new List<LimitOrder>());

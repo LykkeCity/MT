@@ -1,6 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.TradingConditions;
 
@@ -9,12 +10,12 @@ namespace MarginTrading.Backend.Services
     [UsedImplicitly]
     public class CommissionService : ICommissionService
     {
-        private readonly ITradingInstrumnentsCacheService _accountAssetsCacheService;
+        private readonly ITradingInstrumentsCacheService _accountAssetsCacheService;
         private readonly ICfdCalculatorService _cfdCalculatorService;
         private readonly IAssetsCache _assetsCache;
 
         public CommissionService(
-            ITradingInstrumnentsCacheService accountAssetsCacheService,
+            ITradingInstrumentsCacheService accountAssetsCacheService,
             ICfdCalculatorService cfdCalculatorService,
             IAssetsCache assetsCache)
         {
