@@ -91,14 +91,14 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                             ClientId = order.ClientId,
                             MarketMakerId = sourcePrice.source,
                             MatchedDate = _dateService.Now(),
-                            OrderId = executionResult.ExchangeOrderId,
+                            OrderId = executionResult.ClientOrderId,
                             Price = CalculatePriceWithMarkups(assetPair, order.GetOrderType(), executedPrice),
                             Volume = (decimal) executionResult.Volume
                         }
                     };
                     
                     order.OpenExternalProviderId = sourcePrice.source;
-                    order.OpenExternalOrderId = executionResult.ExchangeOrderId;
+                    order.OpenExternalOrderId = executionResult.ClientOrderId;
 
                     _rabbitMqNotifyService.ExternalOrder(executionResult).GetAwaiter().GetResult();
 
@@ -178,7 +178,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                     : closePrice.Value;
 
                 order.CloseExternalProviderId = closeLp;
-                order.CloseExternalOrderId = executionResult.ExchangeOrderId;
+                order.CloseExternalOrderId = executionResult.ClientOrderId;
                 order.ClosePrice =
                     CalculatePriceWithMarkups(assetPair, order.GetCloseType(), executedPrice);
 
@@ -191,7 +191,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                         ClientId = order.ClientId,
                         MarketMakerId = closeLp,
                         MatchedDate = _dateService.Now(),
-                        OrderId = executionResult.ExchangeOrderId,
+                        OrderId = executionResult.ClientOrderId,
                         Price = order.ClosePrice,
                         Volume = Math.Abs(order.Volume)
                     }
