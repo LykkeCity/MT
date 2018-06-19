@@ -59,11 +59,11 @@ namespace MarginTrading.Backend.Services
            
             var rate = metricIsPositive
                 ? assetPairSubst.BaseAssetId == assetPair.QuoteAssetId
-                    ? _quoteCacheService.GetQuote(assetPairSubst.Id).Ask
-                    : 1 / _quoteCacheService.GetQuote(assetPairSubst.Id).Bid
+                    ? _fxRateCacheService.GetQuote(assetPairSubst.Id).Ask
+                    : 1 / _fxRateCacheService.GetQuote(assetPairSubst.Id).Bid
                 : assetPairSubst.BaseAssetId == assetPair.QuoteAssetId
-                    ? _quoteCacheService.GetQuote(assetPairSubst.Id).Bid
-                    : 1 / _quoteCacheService.GetQuote(assetPairSubst.Id).Ask;
+                    ? _fxRateCacheService.GetQuote(assetPairSubst.Id).Bid
+                    : 1 / _fxRateCacheService.GetQuote(assetPairSubst.Id).Ask;
             
             return rate;
         }
