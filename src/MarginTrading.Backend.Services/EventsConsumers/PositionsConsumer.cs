@@ -182,7 +182,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     OpenFxPrice = position.OpenFxPrice,
                     ClosePrice = dealOrder.ExecutionPrice.Value,
                     CloseFxPrice = dealOrder.FxRate,
-                    Fpl = fpl
+                    Fpl = fpl,
+                    AdditionalInfo = dealOrder.AdditionalInfo
                 };
                 
                 var account = _accountsCacheService.Get(position.AccountId);
