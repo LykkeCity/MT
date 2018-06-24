@@ -97,20 +97,19 @@ namespace MarginTrading.Backend.Controllers
         [Route("{orderId}")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [HttpDelete]
-        public Task CancelAsync(string orderId/*, [FromBody] OrderCancelRequest request*/)
+        public Task CancelAsync(string orderId, [FromBody] OrderCancelRequest request = null)
         {
             if (!_ordersCache.TryGetOrderById(orderId, out var order))
                 throw new InvalidOperationException("Order not found");
 
-            var reason = PositionCloseReason.Canceled;
-            
-//            var reason =
-//                request.Originator == OriginatorTypeContract.OnBehalf ||
-//                request.Originator == OriginatorTypeContract.System
-//                    ? OrderCloseReason.CanceledByBroker
-//                    : OrderCloseReason.Canceled;
+            var reason =
+                request?.Originator == OriginatorTypeContract.OnBehalf ||
+                request?.Originator == OriginatorTypeContract.System
+                    ? PositionCloseReason.CanceledByBroker
+                    : PositionCloseReason.Canceled;
 
-            var canceledOrder = _tradingEngine.CancelPendingOrder(order.Id, reason, "" /*request.Comment*/);
+            var canceledOrder =
+                _tradingEngine.CancelPendingOrder(order.Id, reason, request?.AdditionalInfo, request?.Comment);
 
             _consoleWriter.WriteLine($"action order.cancel for accountId = {order.AccountId}, orderId = {orderId}");
             _operationsLogService.AddLog("action order.cancel", order.AccountId, "" /* request.ToJson()*/,
@@ -135,7 +134,7 @@ namespace MarginTrading.Backend.Controllers
 
             try
             {
-                _tradingEngine.ChangeOrderLimits(order.Id, request.Price);
+                _tradingEngine.ChangeOrderLimits(order.Id, request.Price, request.AdditionalInfo);
             }
             catch (ValidateOrderException ex)
             {

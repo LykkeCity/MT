@@ -7,5 +7,7 @@ namespace MarginTrading.Backend.Contracts.Positions
         public OriginatorTypeContract Originator { get; set; }
 
         public string Comment { get; set; }
+        
+        public string AdditionalInfo { get; set; }
     }
 }

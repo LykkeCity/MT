@@ -197,6 +197,11 @@ namespace MarginTrading.Backend.Core.Trading
         /// </summary>
         public List<RelatedOrderInfo> RelatedOrders { get; private set; } = new List<RelatedOrderInfo>();
         
+        /// <summary>
+        /// Additional information about order, changed every time, when order is changed via user request
+        /// </summary>
+        public string AdditionalInfo { get; private set; }
+        
         #endregion
 
 
@@ -205,7 +210,7 @@ namespace MarginTrading.Backend.Core.Trading
             DateTime? validity, string accountId, string tradingConditionId, string accountAssetId, decimal? price,
             string equivalentAsset, OrderFillType fillType, string comment, string legalEntity, bool forceOpen,
             OrderType orderType, string parentOrderId, string parentPositionId, OriginatorType originator,
-            decimal equivalentRate, decimal fxRate, OrderStatus status)
+            decimal equivalentRate, decimal fxRate, OrderStatus status, string additionalInfo)
         {
             Id = id;
             Code = code;
@@ -231,15 +236,17 @@ namespace MarginTrading.Backend.Core.Trading
             FxRate = fxRate;
             Direction = volume.GetOrderDirection();
             Status = status;
+            AdditionalInfo = additionalInfo;
         }
 
 
         #region Actions
 
-        public void ChangePrice(decimal newPrice, DateTime dateTime)
+        public void ChangePrice(decimal newPrice, DateTime dateTime, string additionalInfo)
         {
             LastModified = dateTime;
             Price = newPrice;
+            AdditionalInfo = additionalInfo ?? AdditionalInfo;
         }
         
         public void ChangeVolume(decimal newVolume, DateTime dateTime)
@@ -316,11 +323,12 @@ namespace MarginTrading.Backend.Core.Trading
             LastModified = dateTime;
         }
 
-        public void Cancel(DateTime dateTime)
+        public void Cancel(DateTime dateTime, string additionalInfo)
         {
             Status = OrderStatus.Canceled;
             Canceled = dateTime;
             LastModified = dateTime;
+            AdditionalInfo = additionalInfo ?? AdditionalInfo;
         }
 
         public void AddRelatedOrder(Order order)
