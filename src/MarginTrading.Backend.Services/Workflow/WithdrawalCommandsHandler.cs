@@ -45,7 +45,8 @@ namespace MarginTrading.Backend.Services.Workflow
             {
                 _accountUpdateService.FreezeWithdrawalMargin(command.AccountId, command.OperationId, command.Amount);
                 
-                publisher.PublishEvent(_convertService.Convert<AmountForWithdrawalFrozenEvent>(command));
+                publisher.PublishEvent(new AmountForWithdrawalFrozenEvent(command.OperationId, new DateTime(), 
+                    command.ClientId, command.AccountId, command.Amount, command.Reason));
             }
             else
             {
