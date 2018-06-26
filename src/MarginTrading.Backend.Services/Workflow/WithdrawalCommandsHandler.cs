@@ -37,8 +37,8 @@ namespace MarginTrading.Backend.Services.Workflow
             }
             catch
             {
-                publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.ClientId, command.AccountId,
-                    command.Amount, command.OperationId, $"Failed to get account {command.AccountId}"));
+                publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId, new DateTime(), 
+                    command.ClientId, command.AccountId, command.Amount, $"Failed to get account {command.AccountId}"));
             }
             
             if (account.GetFreeMargin() >= command.Amount)
@@ -49,8 +49,8 @@ namespace MarginTrading.Backend.Services.Workflow
             }
             else
             {
-                publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.ClientId, command.AccountId,
-                    command.Amount, command.OperationId, "Not enough free margin"));
+                publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId, new DateTime(), 
+                    command.ClientId, command.AccountId, command.Amount, "Not enough free margin"));
             }
         }
         
@@ -63,8 +63,8 @@ namespace MarginTrading.Backend.Services.Workflow
             //errors not handled => if error occurs event will be retried
             _accountUpdateService.UnfreezeWithdrawalMargin(command.AccountId, command.OperationId);
             
-            publisher.PublishEvent(new UnfreezeMarginSucceededWithdrawalEvent(command.OperationId, command.ClientId, 
-                command.AccountId, command.Amount));
+            publisher.PublishEvent(new UnfreezeMarginOnFailSucceededWithdrawalEvent(command.OperationId, new DateTime(), 
+                command.ClientId, command.AccountId, command.Amount));
         }
         
         /// <summary>
