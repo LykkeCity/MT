@@ -6,10 +6,6 @@
         Close,
         StopLoss,
         TakeProfit,
-        StopOut,
-        Canceled,
-        CanceledBySystem,
-        CanceledByBroker,
-        ClosedByBroker,
+        StopOut
     }
 }

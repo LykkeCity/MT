@@ -102,14 +102,10 @@ namespace MarginTrading.Backend.Controllers
             if (!_ordersCache.TryGetOrderById(orderId, out var order))
                 throw new InvalidOperationException("Order not found");
 
-            var reason =
-                request?.Originator == OriginatorTypeContract.OnBehalf ||
-                request?.Originator == OriginatorTypeContract.System
-                    ? PositionCloseReason.CanceledByBroker
-                    : PositionCloseReason.Canceled;
-
             var canceledOrder =
-                _tradingEngine.CancelPendingOrder(order.Id, reason, request?.AdditionalInfo, request?.Comment);
+                _tradingEngine.CancelPendingOrder(order.Id,
+                    request?.Originator.ToType<OriginatorType>() ?? OriginatorType.Investor, request?.AdditionalInfo,
+                    request?.Comment);
 
             _consoleWriter.WriteLine($"action order.cancel for accountId = {order.AccountId}, orderId = {orderId}");
             _operationsLogService.AddLog("action order.cancel", order.AccountId, "" /* request.ToJson()*/,
@@ -134,7 +130,8 @@ namespace MarginTrading.Backend.Controllers
 
             try
             {
-                _tradingEngine.ChangeOrderLimits(order.Id, request.Price, request.AdditionalInfo);
+                _tradingEngine.ChangeOrderLimits(order.Id, request.Price, request.Originator.ToType<OriginatorType>(),
+                    request.AdditionalInfo);
             }
             catch (ValidateOrderException ex)
             {
@@ -176,14 +173,12 @@ namespace MarginTrading.Backend.Controllers
                 orders = orders.Where(o => o.AssetPairId == assetPairId);
 
             if (!string.IsNullOrWhiteSpace(parentPositionId))
-                orders = orders.Where(o => o.Id == parentPositionId); // todo: fix when order will have a parentPositionId
-            
+                orders = orders.Where(o => o.ParentPositionId == parentPositionId);
+
             if (!string.IsNullOrWhiteSpace(parentOrderId))
-                orders = orders.Where(o => o.Id == parentOrderId); // todo: fix when order will have a parentOrderId
+                orders = orders.Where(o => o.ParentOrderId == parentOrderId);
 
             return Task.FromResult(orders.Select(o => o.ConvertToContract()).ToList());
         }
-
-        
     }
 }
