@@ -357,7 +357,10 @@ namespace MarginTrading.Backend.Services
                                         Math.Abs(trailingOrder.TrailingDistance.Value))
                                     {
                                         var newPrice = closePrice.Value + trailingOrder.TrailingDistance.Value;
-                                        trailingOrder.ChangePrice(newPrice, _dateService.Now());
+                                        trailingOrder.ChangePrice(newPrice,
+                                            _dateService.Now(),
+                                            trailingOrder.Originator,
+                                            null);
                                     }
                                 }
                                 else
