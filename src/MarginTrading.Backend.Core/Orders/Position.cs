@@ -120,11 +120,12 @@ namespace MarginTrading.Backend.Core.Orders
             CloseTrades.Add(tradeId);
         }
 
-        public void PartiallyClose(DateTime date, decimal closedVolume, string tradeId)
+        public void PartiallyClose(DateTime date, decimal closedVolume, string tradeId, decimal chargedPnl)
         {
             LastModified = date;
             Volume = Volume > 0 ? Volume - closedVolume : Volume + closedVolume;
             CloseTrades.Add(tradeId);
+            ChargedPnL -= chargedPnl;
         }
 
         public void UpdateClosePrice(decimal closePrice)

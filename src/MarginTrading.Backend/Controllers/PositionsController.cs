@@ -213,6 +213,7 @@ namespace MarginTrading.Backend.Controllers
                 ClosePrice = position.ClosePrice,
                 ExpectedOpenPrice = position.ExpectedOpenPrice,
                 PnL = position.GetFpl(),
+                ChargedPnl = position.ChargedPnL,
                 Margin = position.GetMarginMaintenance(),
                 FxRate = position.GetFplRate(),
                 RelatedOrders = position.RelatedOrders.Select(o => o.Id).ToList(),

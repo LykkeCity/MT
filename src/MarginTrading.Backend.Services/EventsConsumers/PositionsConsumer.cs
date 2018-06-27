@@ -130,10 +130,12 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 }
                 else
                 {
-                    openedPosition.PartiallyClose(order.Executed.Value, leftVolumeToMatch, order.Id);
+                    var chargedPnl = leftVolumeToMatch / openedPosition.Volume * openedPosition.ChargedPnL;
                     
+                    openedPosition.PartiallyClose(order.Executed.Value, leftVolumeToMatch, order.Id, chargedPnl);
+
                     SendPositionHistoryEvent(openedPosition, PositionHistoryTypeContract.PartiallyClose, order,
-                        Math.Abs(leftVolumeToMatch));
+                        Math.Abs(leftVolumeToMatch), chargedPnl);
 
                     ChangeRelatedOrderVolume(openedPosition.RelatedOrders, -openedPosition.Volume);
                 }
@@ -165,7 +167,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         }
 
         private void SendPositionHistoryEvent(Position position, PositionHistoryTypeContract historyType,
-            Order dealOrder = null, decimal? dealVolume = null)
+            Order dealOrder = null, decimal? dealVolume = null, decimal chargedPnl = 0)
         {
             DealContract deal = null;
 
