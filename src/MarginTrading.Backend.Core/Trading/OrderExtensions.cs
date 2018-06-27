@@ -29,9 +29,10 @@ namespace MarginTrading.Backend.Core
             return order.Volume >= 0 ? OrderDirection.Sell : OrderDirection.Buy;
         }
 
-        public static decimal GetTotalFpl(this Position order, decimal swaps)
+        public static decimal GetTotalFpl(this Position position, decimal swaps)
         {
-            return order.GetFpl() - order.GetOpenCommission() - order.GetCloseCommission() - swaps;
+            return position.GetFpl() - position.GetOpenCommission() - position.GetCloseCommission() - swaps -
+                   position.ChargedPnL;
         }
 
         public static decimal GetTotalFpl(this Position order)

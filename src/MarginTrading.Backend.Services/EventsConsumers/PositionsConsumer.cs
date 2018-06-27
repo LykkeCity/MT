@@ -194,7 +194,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
             var positionContract = _convertService.Convert<Position, PositionContract>(position,
                 o => o.ConfigureMap(MemberList.Destination).ForMember(x => x.TotalPnL, c => c.Ignore()));
-            positionContract.TotalPnL = position.GetTotalFpl();
+            positionContract.TotalPnL = position.GetFpl();
 
             var historyEvent = new PositionHistoryEvent
             {
