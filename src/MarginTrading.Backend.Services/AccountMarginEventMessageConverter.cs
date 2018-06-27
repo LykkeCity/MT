@@ -1,18 +1,19 @@
 ﻿using System;
+using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Core;
-using MarginTrading.Contract.RabbitMqMessageModels;
 
 namespace MarginTrading.Backend.Services
 {
     class AccountMarginEventMessageConverter
     {
-        public static AccountMarginEventMessage Create(IMarginTradingAccount account, bool isStopout, DateTime eventTime)
+        public static MarginEventMessage Create(IMarginTradingAccount account, MarginEventTypeContract eventType,
+            DateTime eventTime)
         {
-            return new AccountMarginEventMessage
+            return new MarginEventMessage
             {
                 EventId = Guid.NewGuid().ToString("N"),
                 EventTime = eventTime,
-                IsEventStopout = isStopout,
+                EventType = eventType,
 
                 ClientId = account.ClientId,
                 AccountId = account.Id,
@@ -21,8 +22,9 @@ namespace MarginTrading.Backend.Services
                 Balance = account.Balance,
                 WithdrawTransferLimit = account.WithdrawTransferLimit,
 
-                MarginCall = account.GetMarginCallLevel(),
-                StopOut = account.GetStopOutLevel(),
+                MarginCall1Level = account.GetMarginCall1Level(),
+                MarginCall2Level = account.GetMarginCall2Level(),
+                StopOutLevel = account.GetStopOutLevel(),
                 TotalCapital = account.GetTotalCapital(),
                 FreeMargin = account.GetFreeMargin(),
                 MarginAvailable = account.GetMarginAvailable(),

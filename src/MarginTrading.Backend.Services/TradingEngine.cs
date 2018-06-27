@@ -373,7 +373,7 @@ namespace MarginTrading.Backend.Services
             foreach (var order in positions.OrderBy(o => o.GetTotalFpl()))
             {
                 if (newAccountUsedMargin <= 0 ||
-                    account.GetTotalCapital() / newAccountUsedMargin > account.GetMarginCallLevel())
+                    account.GetTotalCapital() / newAccountUsedMargin > account.GetMarginCall1Level())
                     break;
                 
                 positionsToClose.Add(order);
@@ -410,8 +410,12 @@ namespace MarginTrading.Backend.Services
         {
             switch (newAccountLevel)
             {
-                case AccountLevel.MarginCall:
-                    _marginCallEventChannel.SendEvent(this, new MarginCallEventArgs(account));
+                case AccountLevel.MarginCall1:
+                    _marginCallEventChannel.SendEvent(this, new MarginCallEventArgs(account, newAccountLevel));
+                    break;
+                
+                case AccountLevel.MarginCall2:
+                    _marginCallEventChannel.SendEvent(this, new MarginCallEventArgs(account, newAccountLevel));
                     break;
             }
         }

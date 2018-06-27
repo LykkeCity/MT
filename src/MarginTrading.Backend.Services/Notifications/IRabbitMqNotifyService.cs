@@ -15,7 +15,7 @@ namespace MarginTrading.Backend.Services.Notifications
 		Task AccountUpdated(IMarginTradingAccount account);
 		Task AccountStopout(string clientId, string accountId, int positionsCount, decimal totalPnl);
 		void Stop();
-	    Task AccountMarginEvent(AccountMarginEventMessage eventMessage);
+	    Task AccountMarginEvent(MarginEventMessage eventMessage);
 		Task UpdateAccountStats(AccountStatsUpdateMessage message);
 		Task NewTrade(TradeContract trade);
 		Task ExternalOrder(ExecutionReport trade);

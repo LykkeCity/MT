@@ -3,13 +3,13 @@ using Common.Log;
 using Lykke.SlackNotifications;
 using MarginTrading.BrokerBase;
 using MarginTrading.BrokerBase.Settings;
-using MarginTrading.Contract.RabbitMqMessageModels;
 using MarginTrading.AccountMarginEventsBroker.Repositories;
 using MarginTrading.AccountMarginEventsBroker.Repositories.Models;
+using MarginTrading.Backend.Contracts.Events;
 
 namespace MarginTrading.AccountMarginEventsBroker
 {
-    internal class Application : BrokerApplicationBase<AccountMarginEventMessage>
+    internal class Application : BrokerApplicationBase<MarginEventMessage>
     {
         private readonly IAccountMarginEventsReportsRepository _accountMarginEventsReportsRepository;
         private readonly Settings _settings;
@@ -27,13 +27,13 @@ namespace MarginTrading.AccountMarginEventsBroker
         protected override BrokerSettingsBase Settings => _settings;
         protected override string ExchangeName => _settings.RabbitMqQueues.AccountMarginEvents.ExchangeName;
 
-        protected override Task HandleMessage(AccountMarginEventMessage message)
+        protected override Task HandleMessage(MarginEventMessage message)
         {
             return _accountMarginEventsReportsRepository.InsertOrReplaceAsync(new AccountMarginEventReport
             {
                 EventId = message.EventId,
                 EventTime = message.EventTime,
-                IsEventStopout = message.IsEventStopout,
+                IsEventStopout = message.EventType == MarginEventTypeContract.Stopout,
 
                 ClientId = message.ClientId,
                 AccountId = message.AccountId,
@@ -42,8 +42,8 @@ namespace MarginTrading.AccountMarginEventsBroker
                 Balance = (double) message.Balance,
                 WithdrawTransferLimit = (double) message.WithdrawTransferLimit,
 
-                MarginCall = (double) message.MarginCall,
-                StopOut = (double) message.StopOut,
+                MarginCall = (double) message.MarginCall1Level,
+                StopOut = (double) message.StopOutLevel,
                 TotalCapital = (double) message.TotalCapital,
                 FreeMargin = (double) message.FreeMargin,
                 MarginAvailable = (double) message.MarginAvailable,

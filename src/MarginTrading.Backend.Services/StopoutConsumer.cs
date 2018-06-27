@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Lykke.Common;
+using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Services.Assets;
@@ -51,7 +52,8 @@ namespace MarginTrading.Backend.Services
             var account = ea.Account;
             var orders = ea.Orders;
             var eventTime = _dateService.Now();
-            var accountMarginEventMessage = AccountMarginEventMessageConverter.Create(account, true, eventTime);
+            var accountMarginEventMessage =
+                AccountMarginEventMessageConverter.Create(account, MarginEventTypeContract.Stopout, eventTime);
             var accuracy = _assetsCache.GetAssetAccuracy(account.BaseAssetId);
             var totalPnl = Math.Round(orders.Sum(x => x.GetTotalFpl()), accuracy);
 

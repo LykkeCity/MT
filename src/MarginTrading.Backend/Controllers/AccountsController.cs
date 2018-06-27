@@ -165,7 +165,7 @@ namespace MarginTrading.Backend.Controllers
                 AccountId = item.Id,
                 BaseAssetId = item.BaseAssetId,
                 Balance = item.Balance,
-                MarginCallLevel = item.GetMarginCallLevel(),
+                MarginCallLevel = item.GetMarginCall1Level(),
                 StopOutLevel = item.GetStopOutLevel(),
                 TotalCapital = item.GetTotalCapital(),
                 FreeMargin = item.GetFreeMargin(),
