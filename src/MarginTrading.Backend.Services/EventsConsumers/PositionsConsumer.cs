@@ -173,7 +173,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
             if (dealOrder != null && dealVolume != null)
             {
-                var fpl = (dealOrder.ExecutionPrice.Value - position.OpenPrice) * dealOrder.FxRate * dealVolume.Value;
+                var fpl = (dealOrder.ExecutionPrice.Value - position.OpenPrice) * dealOrder.FxRate *
+                          Math.Abs(dealVolume.Value);
                 
                 deal = new DealContract
                 {
