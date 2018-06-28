@@ -16,6 +16,7 @@ namespace MarginTrading.Backend.Core
                            || order.Direction == OrderDirection.Sell && price >= order.Price;
                 case OrderType.Stop:
                 case OrderType.StopLoss:
+                case OrderType.TrailingStop:
                     return order.Direction == OrderDirection.Buy && price >= order.Price
                            || order.Direction == OrderDirection.Sell && price <= order.Price;
                 default:
@@ -129,6 +130,7 @@ namespace MarginTrading.Backend.Core
             switch (orderType)
             {
                 case OrderType.StopLoss:
+                case OrderType.TrailingStop:
                     return PositionCloseReason.StopLoss;
                 case OrderType.TakeProfit:
                     return PositionCloseReason.TakeProfit;

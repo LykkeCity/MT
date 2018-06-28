@@ -317,27 +317,51 @@ namespace MarginTrading.Backend.Services
 
         private IEnumerable<MarginTradingAccount> UpdateClosePriceAndDetectStopout(string instrument)
         {
-            var openOrders = _ordersCache.Positions.GetOrdersByInstrument(instrument)
+            var openPositions = _ordersCache.Positions.GetOrdersByInstrument(instrument)
                 .GroupBy(x => x.AccountId).ToDictionary(x => x.Key, x => x.ToArray());
 
-            foreach (var accountOrders in openOrders)
+            foreach (var accountPositions in openPositions)
             {
-                var anyOrder = accountOrders.Value.FirstOrDefault();
-                if (null == anyOrder)
+                var anyPosition = accountPositions.Value.FirstOrDefault();
+                if (null == anyPosition)
                     continue;
 
-                var account = _accountsCacheService.Get(anyOrder.AccountId);
+                var account = _accountsCacheService.Get(anyPosition.AccountId);
                 var oldAccountLevel = account.GetAccountLevel();
 
-                foreach (var order in accountOrders.Value)
+                foreach (var position in accountPositions.Value)
                 {
-                    var defaultMatchingEngine = _meRouter.GetMatchingEngineForClose(order);
+                    var defaultMatchingEngine = _meRouter.GetMatchingEngineForClose(position);
 
-                    var closePrice = defaultMatchingEngine.GetPriceForClose(order);
+                    var closePrice = defaultMatchingEngine.GetPriceForClose(position);
 
                     if (closePrice.HasValue)
                     {
-                        order.UpdateClosePrice(closePrice.Value);
+                        position.UpdateClosePrice(closePrice.Value);
+
+                        var trailingOrderIds = position.RelatedOrders.Where(o => o.Type == OrderType.TrailingStop)
+                            .Select(o => o.Id);
+
+                        foreach (var trailingOrderId in trailingOrderIds)
+                        {
+                            if (_ordersCache.TryGetOrderById(trailingOrderId, out var trailingOrder)
+                                && trailingOrder.Price.HasValue)
+                            {
+                                if (trailingOrder.TrailingDistance.HasValue)
+                                {
+                                    if (Math.Abs(trailingOrder.Price.Value - closePrice.Value) >
+                                        Math.Abs(trailingOrder.TrailingDistance.Value))
+                                    {
+                                        var newPrice = closePrice.Value + trailingOrder.TrailingDistance.Value;
+                                        trailingOrder.ChangePrice(newPrice, _dateService.Now());
+                                    }
+                                }
+                                else
+                                {
+                                    trailingOrder.SetTrailingDistance(closePrice.Value);
+                                }
+                            }
+                        }
                     }
                 }
 

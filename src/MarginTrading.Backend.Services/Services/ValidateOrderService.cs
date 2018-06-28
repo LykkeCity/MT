@@ -122,15 +122,17 @@ namespace MarginTrading.Backend.Services
 //            }
 
             #endregion
-            
-            if (request.Type == OrderTypeContract.StopLoss || request.Type == OrderTypeContract.TakeProfit)
+
+            if (request.Type == OrderTypeContract.StopLoss ||
+                request.Type == OrderTypeContract.TakeProfit ||
+                request.Type == OrderTypeContract.TrailingStop)
             {
                 var order = await ValidateAndGetSlorTpOrder(request, request.Type, request.Price, equivalentSettings,
                     null);
 
                 return (order, new List<Order>());
             }
-            
+
             //TODO: add setting for every type of validation (needed or not)
             //ValidateLimitPrice(request, assetPair, quote);
             //ValidateOrderStops();
@@ -164,7 +166,9 @@ namespace MarginTrading.Backend.Services
                         $"StopLoss can not be 0");
                 }
 
-                var sl = await ValidateAndGetSlorTpOrder(request, OrderTypeContract.StopLoss, request.StopLoss,
+                var orderType = request.UseTrailingStop ? OrderTypeContract.TrailingStop : OrderTypeContract.StopLoss;
+                
+                var sl = await ValidateAndGetSlorTpOrder(request, orderType, request.StopLoss,
                     equivalentSettings, baseOrder);
                 
                 if (sl != null)
