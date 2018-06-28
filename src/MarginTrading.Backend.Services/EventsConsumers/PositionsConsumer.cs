@@ -235,7 +235,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         {
             foreach (var relatedOrderInfo in relatedOrderInfos)
             {
-                if (_ordersCache.Active.TryGetOrderById(relatedOrderInfo.Id, out var relatedOrder))
+                if (_ordersCache.TryGetOrderById(relatedOrderInfo.Id, out var relatedOrder))
                 {
                     relatedOrder.ChangeVolume(newVolume, _dateService.Now());
                     _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(relatedOrder));
