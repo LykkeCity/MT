@@ -157,6 +157,10 @@ namespace MarginTrading.Backend.Services
                 else if (_ordersCache.Positions.TryGetOrderById(order.ParentOrderId, out var parentPosition))
                 {
                     parentPosition.AddRelatedOrder(order);
+                    if (parentPosition.Volume != -order.Volume)
+                    {
+                        order.ChangeVolume(-parentPosition.Volume, _dateService.Now());
+                    }
                     order.Activate(_dateService.Now(), true);
                     _ordersCache.Active.Add(order);
                     _orderActivatedEventChannel.SendEvent(this, new OrderActivatedEventArgs(order));
