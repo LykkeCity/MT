@@ -37,7 +37,7 @@ namespace MarginTrading.Backend.Services.Workflow
             }
             catch
             {
-                publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId, new DateTime(), 
+                publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId, DateTime.UtcNow, 
                     command.ClientId, command.AccountId, command.Amount, $"Failed to get account {command.AccountId}"));
             }
             
@@ -45,12 +45,12 @@ namespace MarginTrading.Backend.Services.Workflow
             {
                 _accountUpdateService.FreezeWithdrawalMargin(command.AccountId, command.OperationId, command.Amount);
                 
-                publisher.PublishEvent(new AmountForWithdrawalFrozenEvent(command.OperationId, new DateTime(), 
+                publisher.PublishEvent(new AmountForWithdrawalFrozenEvent(command.OperationId, DateTime.UtcNow, 
                     command.ClientId, command.AccountId, command.Amount, command.Reason));
             }
             else
             {
-                publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId, new DateTime(), 
+                publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId, DateTime.UtcNow, 
                     command.ClientId, command.AccountId, command.Amount, "Not enough free margin"));
             }
         }
@@ -64,7 +64,7 @@ namespace MarginTrading.Backend.Services.Workflow
             //errors not handled => if error occurs event will be retried
             _accountUpdateService.UnfreezeWithdrawalMargin(command.AccountId, command.OperationId);
             
-            publisher.PublishEvent(new UnfreezeMarginOnFailSucceededWithdrawalEvent(command.OperationId, new DateTime(), 
+            publisher.PublishEvent(new UnfreezeMarginOnFailSucceededWithdrawalEvent(command.OperationId, DateTime.UtcNow, 
                 command.ClientId, command.AccountId, command.Amount));
         }
         
