@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
 using MarginTrading.Backend.Contracts.Events;
+using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
@@ -11,6 +12,7 @@ using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Notifications;
+using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services.EventsConsumers
@@ -185,11 +187,13 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     ClosePrice = dealOrder.ExecutionPrice.Value,
                     CloseFxPrice = dealOrder.FxRate,
                     Fpl = fpl,
-                    AdditionalInfo = dealOrder.AdditionalInfo
+                    AdditionalInfo = dealOrder.AdditionalInfo,
+                    Originator = dealOrder.Originator.ToType<OriginatorTypeContract>()
                 };
                 
                 var account = _accountsCacheService.Get(position.AccountId);
-                _cqrsSender.PublishEvent(new PositionClosedEvent(account.Id, account.ClientId, position.Id, fpl));
+                _cqrsSender.PublishEvent(new PositionClosedEvent(account.Id, account.ClientId,
+                    $"{position.Id}_{dealOrder.Id}", fpl));
             }
 
             var positionContract = _convertService.Convert<Position, PositionContract>(position,
