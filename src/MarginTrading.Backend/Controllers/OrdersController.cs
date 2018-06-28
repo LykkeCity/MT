@@ -102,10 +102,10 @@ namespace MarginTrading.Backend.Controllers
             if (!_ordersCache.TryGetOrderById(orderId, out var order))
                 throw new InvalidOperationException("Order not found");
 
+            var originator = GetOriginator(request?.Originator);
+
             var canceledOrder =
-                _tradingEngine.CancelPendingOrder(order.Id,
-                    request?.Originator.ToType<OriginatorType>() ?? OriginatorType.Investor, request?.AdditionalInfo,
-                    request?.Comment);
+                _tradingEngine.CancelPendingOrder(order.Id, originator, request?.AdditionalInfo, request?.Comment);
 
             _consoleWriter.WriteLine($"action order.cancel for accountId = {order.AccountId}, orderId = {orderId}");
             _operationsLogService.AddLog("action order.cancel", order.AccountId, "" /* request.ToJson()*/,
@@ -130,8 +130,9 @@ namespace MarginTrading.Backend.Controllers
 
             try
             {
-                _tradingEngine.ChangeOrderLimits(order.Id, request.Price, request.Originator.ToType<OriginatorType>(),
-                    request.AdditionalInfo);
+                var originator = GetOriginator(request.Originator);
+
+                _tradingEngine.ChangeOrderLimits(order.Id, request.Price, originator, request.AdditionalInfo);
             }
             catch (ValidateOrderException ex)
             {
@@ -179,6 +180,16 @@ namespace MarginTrading.Backend.Controllers
                 orders = orders.Where(o => o.ParentOrderId == parentOrderId);
 
             return Task.FromResult(orders.Select(o => o.ConvertToContract()).ToList());
+        }
+
+        private OriginatorType GetOriginator(OriginatorTypeContract? originator)
+        {
+            if (originator == null || originator.Value == default(OriginatorTypeContract))
+            {
+                return OriginatorType.Investor;
+            }
+
+            return originator.ToType<OriginatorType>();
         }
     }
 }

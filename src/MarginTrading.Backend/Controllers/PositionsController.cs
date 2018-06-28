@@ -68,7 +68,7 @@ namespace MarginTrading.Backend.Controllers
             //    throw new InvalidOperationException("Trades for instrument are not available");
             //}
 
-            var originator = request?.Originator.ToType<OriginatorType>() ?? OriginatorType.Investor;
+            var originator = GetOriginator(request?.Originator);
 
             var order = await _tradingEngine.ClosePositionAsync(positionId, originator, request?.AdditionalInfo,
                 request?.Comment);
@@ -109,7 +109,7 @@ namespace MarginTrading.Backend.Controllers
                 positions = positions.Where(o => o.Direction == positionDirection).ToList();
             }
 
-            var originator = request?.Originator.ToType<OriginatorType>() ?? OriginatorType.Investor;
+            var originator = GetOriginator(request?.Originator);
             
             foreach (var orderId in positions.Select(o => o.Id).ToList())
             {
@@ -151,7 +151,7 @@ namespace MarginTrading.Backend.Controllers
             orders = orders.Where(o => o.AccountId == accountId && 
                                        (string.IsNullOrWhiteSpace(assetPairId) || o.AssetPairId == assetPairId)).ToList();
 
-            var originator = request?.Originator.ToType<OriginatorType>() ?? OriginatorType.Investor;
+            var originator = GetOriginator(request?.Originator);
             
             foreach (var orderId in orders.Select(o => o.Id).ToList())
             {
@@ -221,6 +221,16 @@ namespace MarginTrading.Backend.Controllers
                 OpenTimestamp = position.OpenDate,
                 TradeId = position.Id
             };
+        }
+        
+        private OriginatorType GetOriginator(OriginatorTypeContract? originator)
+        {
+            if (originator == null || originator.Value == default(OriginatorTypeContract))
+            {
+                return OriginatorType.Investor;
+            }
+
+            return originator.ToType<OriginatorType>();
         }
     }
 }

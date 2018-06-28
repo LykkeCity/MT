@@ -175,7 +175,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 {
                     PositionId = position.Id,
                     Volume = dealVolume.Value,
-                    Created = position.CloseDate.Value,
+                    Created = dealOrder.Executed.Value,
                     OpenTradeId = position.OpenTradeId,
                     CloseTradeId = dealOrder.Id,
                     OpenPrice = position.OpenPrice,
