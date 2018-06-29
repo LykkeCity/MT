@@ -196,7 +196,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 
                 var account = _accountsCacheService.Get(position.AccountId);
                 _cqrsSender.PublishEvent(new PositionClosedEvent(account.Id, account.ClientId,
-                    $"{position.Id}_{dealOrder.Id}", fpl));
+                    $"{position.Id}_{dealOrder.Id}", fpl - chargedPnl));
             }
 
             var positionContract = _convertService.Convert<Position, PositionContract>(position,
