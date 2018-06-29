@@ -17,12 +17,12 @@ namespace MarginTrading.SqlRepositories
                                                  "[Env] [nvarchar] (64) NULL, " +
                                                  "[AppName] [nvarchar] (256) NULL, " +
                                                  "[Version] [nvarchar] (256) NULL, " +
-                                                 "[Component] [nvarchar] (256) NULL, " +
-                                                 "[Process] [nvarchar] (256) NULL, " +
-                                                 "[Context] [nvarchar] (256) NULL, " +
-                                                 "[Type] [nvarchar] (256) NULL, " +
-                                                 "[Stack] [text] NULL, " +
-                                                 "[Msg] [text] NULL " +
+                                                 "[Component] [nvarchar] (max) NULL, " +
+                                                 "[Process] [nvarchar] (max) NULL, " +
+                                                 "[Context] [nvarchar] (max) NULL, " +
+                                                 "[Type] [nvarchar] (max) NULL, " +
+                                                 "[Stack] [nvarchar] (max) NULL, " +
+                                                 "[Msg] [nvarchar] (max) NULL " +
                                                  ");";
         
         private static Type DataType => typeof(ILogEntity);

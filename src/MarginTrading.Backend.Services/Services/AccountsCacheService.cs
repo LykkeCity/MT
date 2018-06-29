@@ -136,5 +136,23 @@ namespace MarginTrading.Backend.Services
                 _lockSlim.ExitWriteLock();
             }
         }
+
+        public void AddNew(MarginTradingAccount account)
+        {
+            _lockSlim.EnterWriteLock();
+            try
+            {
+                if (_accounts.ContainsKey(account.Id))
+                {
+                    throw new ArgumentException("Account already exists in cache.", nameof(account));
+                }
+                
+                _accounts.Add(account.Id, account);
+            }
+            finally
+            {
+                _lockSlim.ExitWriteLock();
+            }
+        }
     }
 }
