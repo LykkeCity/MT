@@ -206,6 +206,11 @@ namespace MarginTrading.Backend.Core.Trading
         /// Additional information about order, changed every time, when order is changed via user request
         /// </summary>
         public string AdditionalInfo { get; private set; }
+
+        /// <summary>
+        /// Max distance between order price and parent order price (only for trailing order)
+        /// </summary>
+        public decimal? TrailingDistance { get; private set; }
         
         #endregion
 
@@ -249,6 +254,11 @@ namespace MarginTrading.Backend.Core.Trading
 
         public void ChangePrice(decimal newPrice, DateTime dateTime, OriginatorType originator, string additionalInfo)
         {
+            if (OrderType == OrderType.TrailingStop)
+            {
+                TrailingDistance += Price - newPrice;
+            }
+            
             LastModified = dateTime;
             Price = newPrice;
             Originator = originator;
@@ -278,7 +288,15 @@ namespace MarginTrading.Backend.Core.Trading
                 ParentPositionId = ParentOrderId;
             }
         }
-        
+
+        public void SetTrailingDistance(decimal parentOrderPrice)
+        {
+            if (OrderType == OrderType.TrailingStop && Price.HasValue)
+            {
+                TrailingDistance = Price.Value - parentOrderPrice;
+            }
+        }
+
         public void StartExecution(DateTime dateTime, string matchingEngineId)
         {
             Status = OrderStatus.ExecutionStarted;

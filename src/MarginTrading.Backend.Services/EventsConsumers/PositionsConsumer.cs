@@ -135,7 +135,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     SendPositionHistoryEvent(openedPosition, PositionHistoryTypeContract.PartiallyClose, order,
                         Math.Abs(leftVolumeToMatch));
 
-                    ChangeRelatedOrderVolume(openedPosition.RelatedOrders, openedPosition.Volume);
+                    ChangeRelatedOrderVolume(openedPosition.RelatedOrders, -openedPosition.Volume);
                 }
                 
                 leftVolumeToMatch = leftVolumeToMatch - Math.Abs(openedPosition.Volume);
@@ -157,6 +157,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 _ordersCache.Positions.Add(position);
 
                 SendPositionHistoryEvent(position, PositionHistoryTypeContract.Open);
+
+                ChangeRelatedOrderVolume(position.RelatedOrders, -volume);
                 
                 ActivateRelatedOrders(position.RelatedOrders);
             }
@@ -233,7 +235,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         {
             foreach (var relatedOrderInfo in relatedOrderInfos)
             {
-                if (_ordersCache.Active.TryGetOrderById(relatedOrderInfo.Id, out var relatedOrder))
+                if (_ordersCache.TryGetOrderById(relatedOrderInfo.Id, out var relatedOrder))
                 {
                     relatedOrder.ChangeVolume(newVolume, _dateService.Now());
                     _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(relatedOrder));
