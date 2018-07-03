@@ -197,5 +197,10 @@ namespace MarginTrading.Backend.Contracts.Orders
         /// Related orders
         /// </summary>
         public List<RelatedOrderInfoContract> RelatedOrderInfos { get; set; }
+
+        /// <summary>
+        /// Additional info from last user request
+        /// </summary>
+        public string AdditionalInfo { get; set; }
     }
 }

@@ -46,7 +46,7 @@ namespace MarginTrading.Backend.Controllers
             _ordersCache = ordersCache;
             _assetDayOffService = assetDayOffService;
         }
-        
+
         /// <summary>
         /// Close opened position
         /// </summary>
@@ -55,7 +55,8 @@ namespace MarginTrading.Backend.Controllers
         [Route("{positionId}")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [HttpDelete]
-        public async Task CloseAsync([CanBeNull] [FromRoute] string positionId/*, [FromBody] PositionCloseRequest request*/)
+        public async Task CloseAsync([CanBeNull] [FromRoute] string positionId,
+            [FromBody] PositionCloseRequest request = null)
         {
             if (!_ordersCache.Positions.TryGetOrderById(positionId, out var position))
             {
@@ -67,13 +68,13 @@ namespace MarginTrading.Backend.Controllers
             //    throw new InvalidOperationException("Trades for instrument are not available");
             //}
 
-            var reason = PositionCloseReason.Close;
-//                request.Originator == OriginatorTypeContract.OnBehalf ||
-//                request.Originator == OriginatorTypeContract.System
-//                    ? OrderCloseReason.ClosedByBroker
-//                    : OrderCloseReason.Close;
+            var reason = request?.Originator == OriginatorTypeContract.OnBehalf ||
+                         request?.Originator == OriginatorTypeContract.System
+                ? PositionCloseReason.ClosedByBroker
+                : PositionCloseReason.Close;
 
-            var order = await _tradingEngine.ClosePositionAsync(positionId, reason, /*request.Comment*/ "");
+            var order = await _tradingEngine.ClosePositionAsync(positionId, reason, request?.AdditionalInfo,
+                request?.Comment);
 
             if (order.Status != OrderStatus.Executed && order.Status != OrderStatus.ExecutionStarted)
             {
@@ -82,7 +83,7 @@ namespace MarginTrading.Backend.Controllers
 
             _consoleWriter.WriteLine(
                 $"action position.close, orderId = {positionId}");
-            _operationsLogService.AddLog("action order.close", order.AccountId, ""/*request.ToJson()*/,
+            _operationsLogService.AddLog("action order.close", order.AccountId, "" /*request.ToJson()*/,
                 order.ToJson());
         }
 
@@ -90,13 +91,14 @@ namespace MarginTrading.Backend.Controllers
         /// Close group of opened positions by instrument and direction (optional)
         /// </summary>
         /// <param name="instrument">Positions instrument</param>
+        /// <param name="request">Additional info for close</param>
         /// <param name="direction">Positions direction (Long or Short), optional</param>
         [Route("instrument-group/{instrument}")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [HttpDelete]
         public async Task CloseGroupAsync([FromRoute] string instrument,
-            /*[FromBody] PositionCloseRequest request,*/
-            [FromQuery] PositionDirectionContract? direction = null)
+            [FromQuery] PositionDirectionContract? direction = null,
+            [FromBody] PositionCloseRequest request = null)
         {
             var positions = _ordersCache.Positions.GetAllOrders();
             
@@ -110,15 +112,16 @@ namespace MarginTrading.Backend.Controllers
                 positions = positions.Where(o => o.Direction == positionDirection).ToList();
             }
 
-            var reason = PositionCloseReason.Close;
-//                request.Originator == OriginatorTypeContract.OnBehalf ||
-//                request.Originator == OriginatorTypeContract.System
-//                    ? OrderCloseReason.ClosedByBroker
-//                    : OrderCloseReason.Close;
+            var reason =
+                request?.Originator == OriginatorTypeContract.OnBehalf ||
+                request?.Originator == OriginatorTypeContract.System
+                    ? PositionCloseReason.ClosedByBroker
+                    : PositionCloseReason.Close;
             
             foreach (var orderId in positions.Select(o => o.Id).ToList())
             {
-                var closedOrder = await _tradingEngine.ClosePositionAsync(orderId, reason, /*request.Comment*/ "");
+                var closedOrder =
+                    await _tradingEngine.ClosePositionAsync(orderId, reason, request?.AdditionalInfo, request?.Comment);
 
                 if (closedOrder.Status != OrderStatus.Executed && closedOrder.Status != OrderStatus.ExecutionStarted)
                 {
@@ -138,10 +141,12 @@ namespace MarginTrading.Backend.Controllers
         /// </summary>
         /// <param name="accountId">Account id</param>
         /// <param name="assetPairId">Instrument id, optional</param>
+        /// <param name="request">Additional info for close</param>
         [Route("account-group/{accountId}")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [HttpDelete]
-        public async Task CloseGroupAsync([FromRoute] string accountId, [FromQuery] string assetPairId = null)
+        public async Task CloseGroupAsync([FromRoute] string accountId, [FromQuery] string assetPairId = null, 
+            [FromBody] PositionCloseRequest request = null)
         {
             var orders = _ordersCache.Positions.GetAllOrders();
 
@@ -150,19 +155,19 @@ namespace MarginTrading.Backend.Controllers
                 throw new ArgumentNullException(nameof(accountId));
             }
 
-            orders = orders.Where(o => o.AccountId == accountId
-                                       && (string.IsNullOrWhiteSpace(assetPairId) || o.AssetPairId == assetPairId))
-                .ToList();
+            orders = orders.Where(o => o.AccountId == accountId && 
+                                       (string.IsNullOrWhiteSpace(assetPairId) || o.AssetPairId == assetPairId)).ToList();
 
-            var reason = PositionCloseReason.Close;
-//                request.Originator == OriginatorTypeContract.OnBehalf ||
-//                request.Originator == OriginatorTypeContract.System
-//                    ? OrderCloseReason.ClosedByBroker
-//                    : OrderCloseReason.Close;
+            var reason =
+                request?.Originator == OriginatorTypeContract.OnBehalf ||
+                request?.Originator == OriginatorTypeContract.System
+                    ? PositionCloseReason.ClosedByBroker
+                    : PositionCloseReason.Close;
             
             foreach (var orderId in orders.Select(o => o.Id).ToList())
             {
-                var closedOrder = await _tradingEngine.ClosePositionAsync(orderId, reason, /*request.Comment*/ "");
+                var closedOrder =
+                    await _tradingEngine.ClosePositionAsync(orderId, reason, request?.AdditionalInfo, request?.Comment);
 
                 if (closedOrder.Status != OrderStatus.Executed && closedOrder.Status != OrderStatus.ExecutionStarted)
                 {

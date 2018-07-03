@@ -62,7 +62,8 @@ namespace MarginTrading.Backend.Services.Mappers
                 RejectReasonText = order.RejectReasonText,
                 RelatedOrderInfos = order.RelatedOrders.Select(o =>
                     new RelatedOrderInfoContract {Id = o.Id, Type = o.Type.ToType<OrderTypeContract>()}).ToList(),
-                TradingConditionId = order.TradingConditionId
+                TradingConditionId = order.TradingConditionId,
+                AdditionalInfo = order.AdditionalInfo
             };
         }
     }

@@ -24,6 +24,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         private readonly IDateService _dateService;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly ICqrsSender _cqrsSender;
+        private readonly IEventChannel<OrderCancelledEventArgs> _orderCancelledEventChannel;
+        private readonly IEventChannel<OrderChangedEventArgs> _orderChangedEventChannel;
 
         private static readonly ConcurrentDictionary<string, object> LockObjects =
             new ConcurrentDictionary<string, object>();
@@ -35,7 +37,9 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             IConvertService convertService,
             IDateService dateService,
             IAccountsCacheService accountsCacheService,
-            ICqrsSender cqrsSender)
+            ICqrsSender cqrsSender,
+            IEventChannel<OrderCancelledEventArgs> orderCancelledEventChannel,
+            IEventChannel<OrderChangedEventArgs> orderChangedEventChannel)
         {
             _ordersCache = ordersCache;
             _rabbitMqNotifyService = rabbitMqNotifyService;
@@ -43,6 +47,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             _dateService = dateService;
             _accountsCacheService = accountsCacheService;
             _cqrsSender = cqrsSender;
+            _orderCancelledEventChannel = orderCancelledEventChannel;
+            _orderChangedEventChannel = orderChangedEventChannel;
         }
         
         public void ConsumeEvent(object sender, OrderExecutedEventArgs ea)
@@ -176,7 +182,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     OpenFxPrice = position.OpenFxPrice,
                     ClosePrice = dealOrder.ExecutionPrice.Value,
                     CloseFxPrice = dealOrder.FxRate,
-                    Fpl = fpl
+                    Fpl = fpl,
+                    AdditionalInfo = dealOrder.AdditionalInfo
                 };
                 
                 var account = _accountsCacheService.Get(position.AccountId);
@@ -216,7 +223,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             {
                 if (_ordersCache.Active.TryPopById(relatedOrderInfo.Id, out var relatedOrder))
                 {
-                    relatedOrder.Cancel(_dateService.Now());
+                    relatedOrder.Cancel(_dateService.Now(), null);
+                    _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(relatedOrder));
                 }
             }
         }
@@ -228,6 +236,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 if (_ordersCache.Active.TryGetOrderById(relatedOrderInfo.Id, out var relatedOrder))
                 {
                     relatedOrder.ChangeVolume(newVolume, _dateService.Now());
+                    _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(relatedOrder));
                 }
             }
         }

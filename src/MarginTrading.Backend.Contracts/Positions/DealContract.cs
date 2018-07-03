@@ -14,5 +14,6 @@ namespace MarginTrading.Backend.Contracts.Positions
         public decimal ClosePrice { get; set; }
         public decimal CloseFxPrice { get; set; }
         public decimal Fpl { get; set; }
+        public string AdditionalInfo { get; set; }
     }
 }

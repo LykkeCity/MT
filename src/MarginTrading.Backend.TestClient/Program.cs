@@ -5,6 +5,8 @@ using AsyncFriendlyStackTrace;
 using Lykke.HttpClientGenerator;
 using Lykke.HttpClientGenerator.Retries;
 using MarginTrading.Backend.Contracts;
+using MarginTrading.Backend.Contracts.Orders;
+using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Contracts.Prices;
 using Newtonsoft.Json;
 using Refit;
@@ -71,7 +73,13 @@ namespace MarginTrading.Backend.TestClient
         private static async Task CheckOrdersAsync(HttpClientGenerator generator)
         {
             var api = generator.Generate<IOrdersApi>();
-            await api.ListAsync().Dump();
+            var orders = await api.ListAsync().Dump();
+
+            if (orders.Any())
+            {
+                await api.CancelAsync(orders.First().Id, new OrderCancelRequest() {AdditionalInfo = "test"});
+            }
+            
         }
 
         private static async Task CheckPositionsAsync(HttpClientGenerator generator)
@@ -81,8 +89,8 @@ namespace MarginTrading.Backend.TestClient
             var anyPosition = positions.FirstOrDefault();
             if (anyPosition != null)
             {
-                await api.CloseAsync(anyPosition.Id/*,
-                    new PositionCloseRequest {Comment = "111", Originator = OriginatorTypeContract.Investor}*/).Dump();
+                await api.CloseAsync(anyPosition.Id,
+                    new PositionCloseRequest {Comment = "111", Originator = OriginatorTypeContract.Investor}).Dump();
             }
         }
 

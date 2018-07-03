@@ -23,6 +23,8 @@ namespace MarginTrading.Backend.Contracts.Orders
         public bool ForceOpen { get; set; }
 
         public DateTime? Validity { get; set; } // null for market
+        
+        public string AdditionalInfo { get; set; }
 
     }
 }
