@@ -42,7 +42,7 @@ namespace MarginTrading.Backend.Services.Workflow
 
             if (e.EventType == AccountChangedEventTypeContract.Created)
             {
-                _accountsCacheService.AddNew(MarginTradingAccount.Create(updatedAccount));
+                _accountsCacheService.TryAddNew(MarginTradingAccount.Create(updatedAccount));
             }
             else
             {
