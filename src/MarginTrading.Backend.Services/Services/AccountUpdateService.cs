@@ -100,7 +100,8 @@ namespace MarginTrading.Backend.Services
 
             var tradingCondition = _tradingConditionsCache.GetTradingCondition(account.TradingConditionId);
 
-            account.AccountFpl.MarginCallLevel = tradingCondition.MarginCall1;
+            account.AccountFpl.MarginCall1Level = tradingCondition.MarginCall1;
+            account.AccountFpl.MarginCall2Level = tradingCondition.MarginCall2;
             account.AccountFpl.StopoutLevel = tradingCondition.StopOut;
             account.AccountFpl.CalculatedHash = account.AccountFpl.ActualHash;
         }

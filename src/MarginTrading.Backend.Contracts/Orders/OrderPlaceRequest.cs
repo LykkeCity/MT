@@ -18,6 +18,7 @@ namespace MarginTrading.Backend.Contracts.Orders
         
         public decimal? StopLoss { get; set; }
         public decimal? TakeProfit { get; set; }
+        public bool UseTrailingStop { get; set; }
         
         public bool ForceOpen { get; set; }
 

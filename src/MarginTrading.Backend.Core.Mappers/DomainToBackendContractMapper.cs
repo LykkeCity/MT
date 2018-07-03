@@ -22,7 +22,7 @@ namespace MarginTrading.Backend.Core.Mappers
                 BaseAssetId = src.BaseAssetId,
                 Balance = src.Balance,
                 WithdrawTransferLimit = src.WithdrawTransferLimit,
-                MarginCall = src.GetMarginCallLevel(),
+                MarginCall = src.GetMarginCall1Level(),
                 StopOut = src.GetStopOutLevel(),
                 TotalCapital = src.GetTotalCapital(),
                 FreeMargin = src.GetFreeMargin(),
