@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using Common;
+using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Contracts.Models;
@@ -19,16 +21,21 @@ namespace MarginTrading.Backend.Services.Workflow
         private readonly IEventChannel<AccountBalanceChangedEventArgs> _acountBalanceChangedEventChannel;
         private readonly IConvertService _convertService;
         private readonly IAccountUpdateService _accountUpdateService;
+        private readonly OrdersCache _ordersCache;
+        private readonly ILog _log;
 
         public AccountsProjection(AccountsCacheService accountsCacheService, IClientNotifyService clientNotifyService,
             IEventChannel<AccountBalanceChangedEventArgs> acountBalanceChangedEventChannel,
-            IConvertService convertService, IAccountUpdateService accountUpdateService)
+            IConvertService convertService, IAccountUpdateService accountUpdateService,
+            OrdersCache ordersCache, ILog log)
         {
             _accountsCacheService = accountsCacheService;
             _clientNotifyService = clientNotifyService;
             _acountBalanceChangedEventChannel = acountBalanceChangedEventChannel;
             _convertService = convertService;
             _accountUpdateService = accountUpdateService;
+            _ordersCache = ordersCache;
+            _log = log;
         }
 
         /// <summary>
@@ -39,17 +46,42 @@ namespace MarginTrading.Backend.Services.Workflow
         {
             // todo: what happens if events get reordered??
             var updatedAccount = Convert(e.Account);
-            _accountsCacheService.UpdateAccountChanges(updatedAccount.Id, updatedAccount.TradingConditionId, 
+            _accountsCacheService.UpdateAccountChanges(updatedAccount.Id, updatedAccount.TradingConditionId,
                 updatedAccount.Balance, updatedAccount.WithdrawTransferLimit);
             _clientNotifyService.NotifyAccountUpdated(updatedAccount);
 
-            if (e.Source == "Withdraw")
-            {
-                _accountUpdateService.UnfreezeWithdrawalMargin(updatedAccount.Id, e.BalanceChange.Id);
-            }
-
             if (e.EventType == AccountChangedEventTypeContract.BalanceUpdated)
             {
+                if (e.BalanceChange != null)
+                {
+                    switch (e.BalanceChange.ReasonType)
+                    {
+                        case AccountBalanceChangeReasonTypeContract.Withdraw:
+                            _accountUpdateService.UnfreezeWithdrawalMargin(updatedAccount.Id, e.BalanceChange.Id);
+                            
+                            break;
+
+                        case AccountBalanceChangeReasonTypeContract.UnrealizedDailyPnL:
+                            
+                            if (_ordersCache.Positions.TryGetOrderById(e.BalanceChange.EventSourceId, out var position))
+                            {
+                                position.ChargePnL(e.BalanceChange.Id, e.BalanceChange.ChangeAmount);
+                            }
+                            else
+                            {
+                                _log.WriteWarning("AccountChangedEvent Handler", e.ToJson(),
+                                    $"Position [{e.BalanceChange.EventSourceId} was not found]");
+                            }
+
+                            break;
+                    }
+                }
+                else
+                {
+                    _log.WriteWarning("AccountChangedEvent Handler", e.ToJson(),
+                        $"BalanceChange info is empty");
+                }
+
                 _acountBalanceChangedEventChannel.SendEvent(this, new AccountBalanceChangedEventArgs(updatedAccount));
             }
         }

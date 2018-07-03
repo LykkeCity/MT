@@ -357,7 +357,10 @@ namespace MarginTrading.Backend.Services
                                         Math.Abs(trailingOrder.TrailingDistance.Value))
                                     {
                                         var newPrice = closePrice.Value + trailingOrder.TrailingDistance.Value;
-                                        trailingOrder.ChangePrice(newPrice, _dateService.Now());
+                                        trailingOrder.ChangePrice(newPrice,
+                                            _dateService.Now(),
+                                            trailingOrder.Originator,
+                                            null);
                                     }
                                 }
                                 else
@@ -420,7 +423,7 @@ namespace MarginTrading.Backend.Services
 
         private void StartClosingPosition(Position position, PositionCloseReason reason)
         {
-            position.StartClosing(_dateService.Now(), reason, OriginatorType.System, "");
+            //position.StartClosing(_dateService.Now(), reason, OriginatorType.Investor, "");
             
             var id = Guid.NewGuid().ToString("N");
             var code = _identityGenerator.GenerateIdAsync(nameof(Order)).GetAwaiter().GetResult();

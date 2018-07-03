@@ -42,7 +42,7 @@ namespace MarginTrading.Backend.Services
 //
 //            handler(order, fplData);
 
-            UpdateOrderFplData(order, fplData);
+            UpdatePositionFplData(order, fplData);
 
         }
 
@@ -59,28 +59,28 @@ namespace MarginTrading.Backend.Services
 
         }
 
-        private void UpdateOrderFplData(Position order, FplData fplData)
+        private void UpdatePositionFplData(Position position, FplData fplData)
         {
-            fplData.AccountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(order.AccountAssetId);
-            fplData.FplRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.AccountAssetId, order.AssetPairId, 
-                order.LegalEntity, order.Volume * (order.ClosePrice - order.OpenPrice) > 0);
+            fplData.AccountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(position.AccountAssetId);
+            fplData.FplRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(position.AccountAssetId, position.AssetPairId, 
+                position.LegalEntity, position.Volume * (position.ClosePrice - position.OpenPrice) > 0);
 
-            var fpl = (order.ClosePrice - order.OpenPrice) * fplData.FplRate * order.Volume;
+            var fpl = (position.ClosePrice - position.OpenPrice) * fplData.FplRate * position.Volume;
 
             fplData.Fpl = Math.Round(fpl, fplData.AccountBaseAssetAccuracy);
 
-            fplData.OpenPrice = order.OpenPrice;
-            fplData.ClosePrice = order.ClosePrice;
+            fplData.OpenPrice = position.OpenPrice;
+            fplData.ClosePrice = position.ClosePrice;
             
-            CalculateMargin(order, fplData);
+            CalculateMargin(position, fplData);
             
-            fplData.SwapsSnapshot = order.GetSwaps();
+            fplData.SwapsSnapshot = position.GetSwaps();
             
             fplData.CalculatedHash = fplData.ActualHash;
             
-            fplData.TotalFplSnapshot = order.GetTotalFpl(fplData.SwapsSnapshot);
+            fplData.TotalFplSnapshot = position.GetTotalFpl(fplData.SwapsSnapshot);
 
-            _accountsCacheService.Get(order.AccountId).CacheNeedsToBeUpdated();
+            _accountsCacheService.Get(position.AccountId).CacheNeedsToBeUpdated();
         }
 
         private void UpdatePendingOrderMargin(Position order, FplData fplData)

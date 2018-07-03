@@ -58,6 +58,11 @@ namespace MarginTrading.Backend.Contracts.Positions
         /// Profit and loss of the position in account asset units (without commissions)
         /// </summary>
         public decimal PnL { get; set; }
+        
+        /// <summary>
+        /// PnL changed on account balance
+        /// </summary>
+        public decimal ChargedPnl { get; set; }
 
         /// <summary>
         /// Current margin value in account asset units
