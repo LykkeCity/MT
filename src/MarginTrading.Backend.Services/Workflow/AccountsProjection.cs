@@ -46,9 +46,18 @@ namespace MarginTrading.Backend.Services.Workflow
         {
             // todo: what happens if events get reordered??
             var updatedAccount = Convert(e.Account);
-            _accountsCacheService.UpdateAccountChanges(updatedAccount.Id, updatedAccount.TradingConditionId,
-                updatedAccount.Balance, updatedAccount.WithdrawTransferLimit);
-            _clientNotifyService.NotifyAccountUpdated(updatedAccount);
+
+            if (e.EventType == AccountChangedEventTypeContract.Created)
+            {
+                _accountsCacheService.TryAddNew(MarginTradingAccount.Create(updatedAccount));
+            }
+            else
+            {
+                _accountsCacheService.UpdateAccountChanges(updatedAccount.Id, updatedAccount.TradingConditionId,
+                    updatedAccount.Balance, updatedAccount.WithdrawTransferLimit);
+
+                _clientNotifyService.NotifyAccountUpdated(updatedAccount);
+            }
 
             if (e.EventType == AccountChangedEventTypeContract.BalanceUpdated)
             {

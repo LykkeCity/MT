@@ -136,5 +136,18 @@ namespace MarginTrading.Backend.Services
                 _lockSlim.ExitWriteLock();
             }
         }
+
+        public void TryAddNew(MarginTradingAccount account)
+        {
+            _lockSlim.EnterWriteLock();
+            try
+            {
+                _accounts.TryAdd(account.Id, account);
+            }
+            finally
+            {
+                _lockSlim.ExitWriteLock();
+            }
+        }
     }
 }
