@@ -77,17 +77,21 @@ namespace MarginTrading.Backend.Services.Modules
                 .FailedCommandRetryDelay(_defaultRetryDelayMs).ProcessingOptions(CommandsRoute).MultiThreaded(8)
                 .QueueCapacity(1024);
 
-            contextRegistration.ListeningCommands(typeof(FreezeAmountForWithdrawalCommand), 
-                     typeof(UnfreezeMarginOnFailWithdrawalCommand))
+            contextRegistration.ListeningCommands(
+                    typeof(FreezeAmountForWithdrawalCommand), 
+                    typeof(UnfreezeMarginOnFailWithdrawalCommand))
                 .On(CommandsRoute)
                 .WithCommandsHandler<WithdrawalCommandsHandler>()
-                .PublishingEvents(typeof(AmountForWithdrawalFrozenEvent), typeof(AmountForWithdrawalFreezeFailedEvent),
-                    typeof(UnfreezeMarginSucceededWithdrawalEvent))
+                .PublishingEvents(
+                    typeof(AmountForWithdrawalFrozenEvent), 
+                    typeof(AmountForWithdrawalFreezeFailedEvent))
                 .With(EventsRoute);
 
-            contextRegistration.ListeningEvents(typeof(AccountChangedEvent))
+            contextRegistration.ListeningEvents(
+                    typeof(AccountChangedEvent))
                 .From(_settings.ContextNames.AccountsManagement).On(EventsRoute)
-                .WithProjection(typeof(AccountsProjection), _settings.ContextNames.AccountsManagement);
+                .WithProjection(
+                    typeof(AccountsProjection), _settings.ContextNames.AccountsManagement);
             
             contextRegistration.PublishingEvents(typeof(PositionClosedEvent)).With(EventsRoute);
 

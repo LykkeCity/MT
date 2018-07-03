@@ -31,6 +31,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using GlobalErrorHandlerMiddleware = MarginTrading.Backend.Middleware.GlobalErrorHandlerMiddleware;
@@ -205,11 +206,16 @@ namespace MarginTrading.Backend
 
             if (settings.CurrentValue.Db.StorageMode == StorageMode.SqlServer)
             {
-                LogLocator.RequestsLog = new LogToSql(new SqlLogRepository("MarginTradingBackendRequestsLog",
-                    settings.CurrentValue.Db.LogsConnString));
 
-                LogLocator.CommonLog = new LogToSql(new SqlLogRepository("MarginTradingBackendLog",
-                    settings.CurrentValue.Db.LogsConnString));
+                LogLocator.RequestsLog = new AggregateLogger(
+                    new LogToSql(new SqlLogRepository("MarginTradingBackendRequestsLog",
+                        settings.CurrentValue.Db.LogsConnString)),
+                    new LogToConsole());
+
+                LogLocator.CommonLog = new AggregateLogger(
+                    new LogToSql(new SqlLogRepository("MarginTradingBackendLog",
+                        settings.CurrentValue.Db.LogsConnString)),
+                    new LogToConsole());
             }
             else if (settings.CurrentValue.Db.StorageMode == StorageMode.Azure)
             {
