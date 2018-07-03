@@ -28,12 +28,12 @@ namespace MarginTrading.OrderbookBestPricesBroker
 
         protected override Task HandleMessage(BidAskPairRabbitMqContract message)
         {
-            return _orderbookBestPricesRepository.InsertAsync(new OrderbookBestPricesHistoryEntity
+            return Task.Run(() => _orderbookBestPricesRepository.InsertAsync(new OrderbookBestPricesHistoryEntity
             {
                 AssetPairId = message.Instrument,
                 Bid = message.Bid,
                 Ask = message.Ask
-            }, message.Date);
+            }, message.Date));
         }
     }
 }
