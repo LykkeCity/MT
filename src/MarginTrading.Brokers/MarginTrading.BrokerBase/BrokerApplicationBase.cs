@@ -15,7 +15,7 @@ namespace MarginTrading.BrokerBase
         protected readonly ILog _logger;
         private readonly ISlackNotificationsSender _slackNotificationsSender;
         protected readonly CurrentApplicationInfo ApplicationInfo;
-        private RabbitMqSubscriber<TMessage> _connector;
+        private RabbitMqSubscriber<TMessage>[] _connector = new RabbitMqSubscriber<TMessage>[100];
 
         protected abstract BrokerSettingsBase Settings { get; }
         protected abstract string ExchangeName { get; }
@@ -49,14 +49,18 @@ namespace MarginTrading.BrokerBase
             try
             {
                 var settings = GetRabbitMqSubscriptionSettings();
-                _connector =
-                    new RabbitMqSubscriber<TMessage>(settings,
-                            new ResilientErrorHandlingStrategy(_logger, settings, TimeSpan.FromSeconds(1)))
-                        .SetMessageDeserializer(new JsonMessageDeserializer<TMessage>())
-                        .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
-                        .Subscribe(HandleMessage)
-                        .SetLogger(_logger)
-                        .Start();
+                for(int i = 0; i < 100; i++)
+                {
+                    _connector[i] =
+                        new RabbitMqSubscriber<TMessage>(settings,
+                                new ResilientErrorHandlingStrategy(_logger, settings, TimeSpan.FromSeconds(1)))
+                            .SetMessageDeserializer(new JsonMessageDeserializer<TMessage>())
+                            .SetMessageReadStrategy(new MessageReadWithTemporaryQueueStrategy())
+                            .Subscribe(HandleMessage)
+                            .SetLogger(_logger)
+                            .Start();
+                 };
+       
 
                 WriteInfoToLogAndSlack("Broker listening queue " + settings.QueueName);
             }
@@ -71,7 +75,10 @@ namespace MarginTrading.BrokerBase
         {
             Console.WriteLine($"Closing {ApplicationInfo.ApplicationFullName}...");
             WriteInfoToLogAndSlack("Stopping listening exchange " + ExchangeName);
-            _connector.Stop();
+            foreach(var conn in _connector)
+            {
+                conn.Stop();
+            }
         }
 
         protected void WriteInfoToLogAndSlack(string infoMessage)
