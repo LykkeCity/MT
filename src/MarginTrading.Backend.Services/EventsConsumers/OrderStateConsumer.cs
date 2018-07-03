@@ -50,12 +50,12 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             {
                 if (_ordersCache.Inactive.TryPopById(relatedOrderInfo.Id, out var inactiveRelatedOrder))
                 {
-                    inactiveRelatedOrder.Cancel(_dateService.Now(), null);
+                    inactiveRelatedOrder.Cancel(_dateService.Now(), OriginatorType.System, null);
                     _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(inactiveRelatedOrder));
                 } 
                 else if (_ordersCache.Active.TryPopById(relatedOrderInfo.Id, out var activeRelatedOrder))
                 {
-                    activeRelatedOrder.Cancel(_dateService.Now(), null);
+                    activeRelatedOrder.Cancel(_dateService.Now(), OriginatorType.System, null);
                     _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(activeRelatedOrder));
                 }
             }

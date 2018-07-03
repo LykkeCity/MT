@@ -56,6 +56,11 @@ namespace MarginTrading.Backend.Contracts.Orders
         /// Who created the order (Investor, System or OnBehalf)
         /// </summary>
         public OriginatorTypeContract Originator { get; set; }
+        
+        /// <summary>
+        /// Who cancelled/rejected the order (Investor, System or OnBehalf)
+        /// </summary>
+        public OriginatorTypeContract? CancellationOriginator { get; set; }
 
         /// <summary>
         /// Order volume in base asset units. Not filled for related orders (TakeProfit, StopLoss or TrailingStop).

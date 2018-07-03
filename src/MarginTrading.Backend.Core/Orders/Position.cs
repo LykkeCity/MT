@@ -109,7 +109,7 @@ namespace MarginTrading.Backend.Core.Orders
             ClosePrice = closePrice;
             CloseFxPrice = closeFxPrice;
             ClosePriceEquivalent = closePriceEquivalent;
-            CloseOriginator = originator;
+            CloseOriginator = CloseOriginator ?? originator;
             CloseReason = closeReason;
             CloseComment = comment;
             CloseTrades.Add(tradeId);

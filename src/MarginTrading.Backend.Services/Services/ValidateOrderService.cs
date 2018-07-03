@@ -142,13 +142,15 @@ namespace MarginTrading.Backend.Services
                 : request.Direction == OrderDirectionContract.Buy ? Math.Abs(request.Volume)
                 : request.Volume;
 
+            var originator = GetOriginator(request.Originator);
+
             var baseOrder = new Order(initialParameters.id, initialParameters.code, request.InstrumentId, volume,
                 initialParameters.now, initialParameters.now, request.Validity, account.Id,
                 account.TradingConditionId, account.BaseAssetId, request.Price, equivalentSettings.EquivalentAsset,
                 OrderFillType.FillOrKill, string.Empty, account.LegalEntity, request.ForceOpen,
-                request.Type.ToType<OrderType>(), request.ParentOrderId, request.PositionId,
-                request.Originator.ToType<OriginatorType>(), initialParameters.equivalentPrice,
-                initialParameters.fxPrice, OrderStatus.Placed, request.AdditionalInfo);
+                request.Type.ToType<OrderType>(), request.ParentOrderId, request.PositionId, originator,
+                initialParameters.equivalentPrice, initialParameters.fxPrice, OrderStatus.Placed,
+                request.AdditionalInfo);
             
             var relatedOrders = new List<Order>();
 
@@ -206,12 +208,14 @@ namespace MarginTrading.Backend.Services
                 var initialParameters = await GetOrderInitialParameters(parentOrder.AssetPairId,
                     parentOrder.LegalEntity, equivalentSettings, parentOrder.AccountAssetId);
 
+                var originator = GetOriginator(request.Originator);
+                
                 return new Order(initialParameters.id, initialParameters.code, parentOrder.AssetPairId,
                     -parentOrder.Volume, initialParameters.now, initialParameters.now,
                     request.Validity, parentOrder.AccountId, parentOrder.TradingConditionId, parentOrder.AccountAssetId,
                     price, parentOrder.EquivalentAsset, OrderFillType.FillOrKill, string.Empty,
                     parentOrder.LegalEntity, false, type.ToType<OrderType>(), parentOrder.Id, null,
-                    request.Originator.ToType<OriginatorType>(), initialParameters.equivalentPrice,
+                    originator, initialParameters.equivalentPrice,
                     initialParameters.fxPrice, OrderStatus.Placed, request.AdditionalInfo);
             }
 
@@ -221,13 +225,15 @@ namespace MarginTrading.Backend.Services
 
                 var initialParameters = await GetOrderInitialParameters(position.AssetPairId,
                     position.LegalEntity, equivalentSettings, position.AccountAssetId);
+                
+                var originator = GetOriginator(request.Originator);
 
                 return new Order(initialParameters.id, initialParameters.code, position.AssetPairId,
                     -position.Volume, initialParameters.now, initialParameters.now,
                     request.Validity, position.AccountId, position.TradingConditionId, position.AccountAssetId,
                     price, position.EquivalentAsset, OrderFillType.FillOrKill, string.Empty,
                     position.LegalEntity, false, type.ToType<OrderType>(), null, position.Id,
-                    request.Originator.ToType<OriginatorType>(), initialParameters.equivalentPrice,
+                    originator, initialParameters.equivalentPrice,
                     initialParameters.fxPrice, OrderStatus.Placed, request.AdditionalInfo);
             }
 
@@ -371,6 +377,16 @@ namespace MarginTrading.Backend.Services
                     }
                 }
             }
+        }
+        
+        private OriginatorType GetOriginator(OriginatorTypeContract? originator)
+        {
+            if (originator == null || originator.Value == default(OriginatorTypeContract))
+            {
+                return OriginatorType.Investor;
+            }
+
+            return originator.ToType<OriginatorType>();
         }
         
         #endregion

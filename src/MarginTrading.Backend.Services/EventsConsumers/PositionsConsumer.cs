@@ -80,7 +80,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             var position = _ordersCache.Positions.GetOrderById(order.ParentPositionId);
 
             position.Close(order.Executed.Value, order.MatchingEngineId, order.ExecutionPrice.Value,
-                order.EquivalentRate, order.FxRate, order.Originator, order.OrderType.GetCloseReason(), "",
+                order.EquivalentRate, order.FxRate, order.Originator, order.OrderType.GetCloseReason(), order.Comment,
                 order.Id);
 
             _ordersCache.Positions.Remove(position);
@@ -118,8 +118,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 if (Math.Abs(openedPosition.Volume) <= leftVolumeToMatch)
                 {
                     openedPosition.Close(order.Executed.Value, order.MatchingEngineId, order.ExecutionPrice.Value,
-                        order.EquivalentRate, order.FxRate, order.Originator, order.OrderType.GetCloseReason(), "",
-                        order.Id);
+                        order.EquivalentRate, order.FxRate, order.Originator, order.OrderType.GetCloseReason(),
+                        order.Comment, order.Id);
                     
                     _ordersCache.Positions.Remove(openedPosition);
 
@@ -175,7 +175,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 {
                     PositionId = position.Id,
                     Volume = dealVolume.Value,
-                    Created = position.CloseDate.Value,
+                    Created = dealOrder.Executed.Value,
                     OpenTradeId = position.OpenTradeId,
                     CloseTradeId = dealOrder.Id,
                     OpenPrice = position.OpenPrice,
@@ -223,7 +223,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             {
                 if (_ordersCache.Active.TryPopById(relatedOrderInfo.Id, out var relatedOrder))
                 {
-                    relatedOrder.Cancel(_dateService.Now(), null);
+                    relatedOrder.Cancel(_dateService.Now(), OriginatorType.System, null);
                     _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(relatedOrder));
                 }
             }

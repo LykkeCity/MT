@@ -26,6 +26,7 @@ namespace MarginTrading.Backend.Services.Mappers
                 ForceOpen = order.ForceOpen,
                 ModifiedTimestamp = order.LastModified,
                 Originator = order.Originator.ToType<OriginatorTypeContract>(),
+                CancellationOriginator = order.CancellationOriginator?.ToType<OriginatorTypeContract>(),
                 ParentOrderId = order.ParentOrderId,
                 PositionId = order.ParentPositionId,
                 RelatedOrders = order.RelatedOrders.Select(o => o.Id).ToList(),

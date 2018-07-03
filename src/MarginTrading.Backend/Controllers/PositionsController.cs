@@ -68,12 +68,9 @@ namespace MarginTrading.Backend.Controllers
             //    throw new InvalidOperationException("Trades for instrument are not available");
             //}
 
-            var reason = request?.Originator == OriginatorTypeContract.OnBehalf ||
-                         request?.Originator == OriginatorTypeContract.System
-                ? PositionCloseReason.ClosedByBroker
-                : PositionCloseReason.Close;
+            var originator = GetOriginator(request?.Originator);
 
-            var order = await _tradingEngine.ClosePositionAsync(positionId, reason, request?.AdditionalInfo,
+            var order = await _tradingEngine.ClosePositionAsync(positionId, originator, request?.AdditionalInfo,
                 request?.Comment);
 
             if (order.Status != OrderStatus.Executed && order.Status != OrderStatus.ExecutionStarted)
@@ -112,16 +109,12 @@ namespace MarginTrading.Backend.Controllers
                 positions = positions.Where(o => o.Direction == positionDirection).ToList();
             }
 
-            var reason =
-                request?.Originator == OriginatorTypeContract.OnBehalf ||
-                request?.Originator == OriginatorTypeContract.System
-                    ? PositionCloseReason.ClosedByBroker
-                    : PositionCloseReason.Close;
+            var originator = GetOriginator(request?.Originator);
             
             foreach (var orderId in positions.Select(o => o.Id).ToList())
             {
                 var closedOrder =
-                    await _tradingEngine.ClosePositionAsync(orderId, reason, request?.AdditionalInfo, request?.Comment);
+                    await _tradingEngine.ClosePositionAsync(orderId, originator, request?.AdditionalInfo, request?.Comment);
 
                 if (closedOrder.Status != OrderStatus.Executed && closedOrder.Status != OrderStatus.ExecutionStarted)
                 {
@@ -158,16 +151,12 @@ namespace MarginTrading.Backend.Controllers
             orders = orders.Where(o => o.AccountId == accountId && 
                                        (string.IsNullOrWhiteSpace(assetPairId) || o.AssetPairId == assetPairId)).ToList();
 
-            var reason =
-                request?.Originator == OriginatorTypeContract.OnBehalf ||
-                request?.Originator == OriginatorTypeContract.System
-                    ? PositionCloseReason.ClosedByBroker
-                    : PositionCloseReason.Close;
+            var originator = GetOriginator(request?.Originator);
             
             foreach (var orderId in orders.Select(o => o.Id).ToList())
             {
                 var closedOrder =
-                    await _tradingEngine.ClosePositionAsync(orderId, reason, request?.AdditionalInfo, request?.Comment);
+                    await _tradingEngine.ClosePositionAsync(orderId, originator, request?.AdditionalInfo, request?.Comment);
 
                 if (closedOrder.Status != OrderStatus.Executed && closedOrder.Status != OrderStatus.ExecutionStarted)
                 {
@@ -232,6 +221,16 @@ namespace MarginTrading.Backend.Controllers
                 OpenTimestamp = position.OpenDate,
                 TradeId = position.Id
             };
+        }
+        
+        private OriginatorType GetOriginator(OriginatorTypeContract? originator)
+        {
+            if (originator == null || originator.Value == default(OriginatorTypeContract))
+            {
+                return OriginatorType.Investor;
+            }
+
+            return originator.ToType<OriginatorType>();
         }
     }
 }

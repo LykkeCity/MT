@@ -183,9 +183,14 @@ namespace MarginTrading.Backend.Core.Trading
         public string ParentPositionId { get; private set; }
 
         /// <summary>
-        /// Order originator
+        /// Order initiator
         /// </summary>
         public OriginatorType Originator { get; private set; }
+        
+        /// <summary>
+        /// Order cancellation initiator
+        /// </summary>
+        public OriginatorType? CancellationOriginator { get; private set; }
         
         /// <summary>
         /// Matched orders for execution
@@ -242,10 +247,11 @@ namespace MarginTrading.Backend.Core.Trading
 
         #region Actions
 
-        public void ChangePrice(decimal newPrice, DateTime dateTime, string additionalInfo)
+        public void ChangePrice(decimal newPrice, DateTime dateTime, OriginatorType originator, string additionalInfo)
         {
             LastModified = dateTime;
             Price = newPrice;
+            Originator = originator;
             AdditionalInfo = additionalInfo ?? AdditionalInfo;
         }
         
@@ -316,6 +322,7 @@ namespace MarginTrading.Backend.Core.Trading
         public void Reject(OrderRejectReason reason, string reasonText, string comment, DateTime dateTime)
         {
             Status = OrderStatus.Rejected;
+            CancellationOriginator = OriginatorType.System;
             RejectReason = reason;
             RejectReasonText = reasonText;
             Comment = comment;
@@ -323,12 +330,13 @@ namespace MarginTrading.Backend.Core.Trading
             LastModified = dateTime;
         }
 
-        public void Cancel(DateTime dateTime, string additionalInfo)
+        public void Cancel(DateTime dateTime, OriginatorType originator, string additionalInfo)
         {
             Status = OrderStatus.Canceled;
             Canceled = dateTime;
             LastModified = dateTime;
             AdditionalInfo = additionalInfo ?? AdditionalInfo;
+            CancellationOriginator = originator;
         }
 
         public void AddRelatedOrder(Order order)

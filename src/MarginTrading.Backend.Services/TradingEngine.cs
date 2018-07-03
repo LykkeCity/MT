@@ -179,7 +179,7 @@ namespace MarginTrading.Backend.Services
                 if (!_ordersCache.Positions.TryGetOrderById(order.ParentPositionId, out var position) ||
                     position.Status != PositionStatus.Active)
                 {
-                    order.Cancel(_dateService.Now(), null);
+                    order.Cancel(_dateService.Now(), OriginatorType.System, null);
                     _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order));
                     return order;
                 }
@@ -387,12 +387,12 @@ namespace MarginTrading.Backend.Services
                 new StopOutEventArgs(account, positionsToClose/*.Concat(cancelledPendingOrders)*/.ToArray()));
 
             foreach (var position in positionsToClose)
-                StartClosingCosition(position, PositionCloseReason.StopOut);
+                StartClosingPosition(position, PositionCloseReason.StopOut);
         }
 
-        private void StartClosingCosition(Position position, PositionCloseReason reason)
+        private void StartClosingPosition(Position position, PositionCloseReason reason)
         {
-            position.StartClosing(_dateService.Now(), reason, OriginatorType.Investor, "");
+            position.StartClosing(_dateService.Now(), reason, OriginatorType.System, "");
             
             var id = Guid.NewGuid().ToString("N");
             var code = _identityGenerator.GenerateIdAsync(nameof(Order)).GetAwaiter().GetResult();
@@ -420,7 +420,8 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public Task<Order> ClosePositionAsync(string positionId, PositionCloseReason reason, string additionalInfo, string comment = null)
+        public Task<Order> ClosePositionAsync(string positionId, OriginatorType originator, string additionalInfo,
+            string comment = null)
         {
             var position = _ordersCache.Positions.GetOrderById(positionId);
 
@@ -432,13 +433,14 @@ namespace MarginTrading.Backend.Services
 
             var order = new Order(id, code, position.AssetPairId, -position.Volume, now, now, null, position.AccountId,
                 position.TradingConditionId, position.AccountAssetId, null, position.EquivalentAsset,
-                OrderFillType.FillOrKill, "Close position", position.LegalEntity, false, OrderType.Market, null, position.Id,
-                OriginatorType.Investor, 0, 0, OrderStatus.Placed, additionalInfo);
+                OrderFillType.FillOrKill, $"Close position. {comment}", position.LegalEntity, false, OrderType.Market, null,
+                position.Id,
+                originator, 0, 0, OrderStatus.Placed, additionalInfo);
 
             return ExecuteOrderByMatchingEngineAsync(order, me /*, reason, comment*/);
         }
 
-        public Order CancelPendingOrder(string orderId, PositionCloseReason reason, string additionalInfo, string comment = null)
+        public Order CancelPendingOrder(string orderId, OriginatorType originator, string additionalInfo, string comment = null)
         {
             var order = _ordersCache.GetOrderById(orderId);
 
@@ -455,7 +457,7 @@ namespace MarginTrading.Backend.Services
                 throw new InvalidOperationException($"Order in state {order.Status} can not be cancelled");
             }
             
-            order.Cancel(_dateService.Now(), additionalInfo);
+            order.Cancel(_dateService.Now(), originator, additionalInfo);
             
             _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order));
             
@@ -465,11 +467,11 @@ namespace MarginTrading.Backend.Services
         #endregion
 
 
-        public void ChangeOrderLimits(string orderId, decimal price, string additionalInfo)
+        public void ChangeOrderLimits(string orderId, decimal price, OriginatorType originator, string additionalInfo)
         {
             var order = _ordersCache.GetOrderById(orderId);
 
-            order.ChangePrice(price, _dateService.Now(), additionalInfo);
+            order.ChangePrice(price, _dateService.Now(), originator, additionalInfo);
 
             _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order));
         }
