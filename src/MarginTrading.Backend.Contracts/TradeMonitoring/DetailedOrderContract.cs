@@ -15,7 +15,7 @@ namespace MarginTrading.Backend.Contracts.TradeMonitoring
         public string Instrument { get; set; }
         public OrderDirectionContract Type { get; set; }
         public OrderStatusContract Status { get; set; }
-        public OrderCloseReasonContract CloseReason { get; set; }
+        public PositionCloseReasonContract CloseReason { get; set; }
         public OrderRejectReasonContract RejectReason { get; set; }
         public string RejectReasonText { get; set; }
         public decimal? ExpectedOpenPrice { get; set; }

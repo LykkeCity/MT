@@ -18,10 +18,13 @@ namespace MarginTrading.Backend.Contracts.Orders
         
         public decimal? StopLoss { get; set; }
         public decimal? TakeProfit { get; set; }
+        public bool UseTrailingStop { get; set; }
         
         public bool ForceOpen { get; set; }
 
         public DateTime? Validity { get; set; } // null for market
+        
+        public string AdditionalInfo { get; set; }
 
     }
 }

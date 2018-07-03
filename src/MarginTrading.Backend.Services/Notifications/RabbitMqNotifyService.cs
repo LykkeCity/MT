@@ -67,7 +67,7 @@ namespace MarginTrading.Backend.Services.Notifications
             return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountChanged.ExchangeName, message);
         }
 
-        public Task AccountMarginEvent(AccountMarginEventMessage eventMessage)
+        public Task AccountMarginEvent(MarginEventMessage eventMessage)
         {
             return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountMarginEvents.ExchangeName, eventMessage);
         }

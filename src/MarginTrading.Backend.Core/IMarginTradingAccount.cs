@@ -59,8 +59,9 @@ namespace MarginTrading.Backend.Core
     public enum AccountLevel
     {
         None = 0,
-        MarginCall = 1,
-        StopOUt = 2
+        MarginCall1 = 1,
+        MarginCall2 = 2,
+        StopOUt = 3
     }
 
     public static class MarginTradingAccountExtensions
@@ -87,8 +88,11 @@ namespace MarginTrading.Backend.Core
             if (marginUsageLevel <= account.GetStopOutLevel())
                 return AccountLevel.StopOUt;
 
-            if (marginUsageLevel <= account.GetMarginCallLevel())
-                return AccountLevel.MarginCall;
+            if (marginUsageLevel <= account.GetMarginCall2Level())
+                return AccountLevel.MarginCall2;
+            
+            if (marginUsageLevel <= account.GetMarginCall1Level())
+                return AccountLevel.MarginCall1;
 
             return AccountLevel.None;
         }
@@ -141,9 +145,14 @@ namespace MarginTrading.Backend.Core
             return account.GetAccountFpl().WithdrawalFrozenMargin;
         }
 
-        public static decimal GetMarginCallLevel(this IMarginTradingAccount account)
+        public static decimal GetMarginCall1Level(this IMarginTradingAccount account)
         {
-            return account.GetAccountFpl().MarginCallLevel;
+            return account.GetAccountFpl().MarginCall1Level;
+        }
+        
+        public static decimal GetMarginCall2Level(this IMarginTradingAccount account)
+        {
+            return account.GetAccountFpl().MarginCall2Level;
         }
 
         public static decimal GetStopOutLevel(this IMarginTradingAccount account)

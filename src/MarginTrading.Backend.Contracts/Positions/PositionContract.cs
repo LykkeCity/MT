@@ -38,10 +38,11 @@ namespace MarginTrading.Backend.Contracts.Positions
         public DateTime? StartClosingDate { get; set; }
         public DateTime? CloseDate { get; set; }
         public OriginatorTypeContract? CloseOriginator { get; set; }
-        public OrderCloseReasonContract CloseReason { get; set; }
+        public PositionCloseReasonContract CloseReason { get; set; }
         public string CloseComment { get; set; }
         public List<string> CloseTrades { get; set; }
         public DateTime? LastModified { get; set; }
         public decimal TotalPnL { get; set; }
+        public decimal ChargedPnl { get; set; }
     }
 }

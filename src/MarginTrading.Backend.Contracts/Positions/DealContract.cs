@@ -1,4 +1,5 @@
 ﻿using System;
+using MarginTrading.Backend.Contracts.Orders;
 
 namespace MarginTrading.Backend.Contracts.Positions
 {
@@ -14,5 +15,7 @@ namespace MarginTrading.Backend.Contracts.Positions
         public decimal ClosePrice { get; set; }
         public decimal CloseFxPrice { get; set; }
         public decimal Fpl { get; set; }
+        public string AdditionalInfo { get; set; }
+        public OriginatorTypeContract Originator { get; set; }
     }
 }

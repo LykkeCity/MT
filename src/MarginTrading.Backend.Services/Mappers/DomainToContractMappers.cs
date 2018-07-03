@@ -26,6 +26,7 @@ namespace MarginTrading.Backend.Services.Mappers
                 ForceOpen = order.ForceOpen,
                 ModifiedTimestamp = order.LastModified,
                 Originator = order.Originator.ToType<OriginatorTypeContract>(),
+                CancellationOriginator = order.CancellationOriginator?.ToType<OriginatorTypeContract>(),
                 ParentOrderId = order.ParentOrderId,
                 PositionId = order.ParentPositionId,
                 RelatedOrders = order.RelatedOrders.Select(o => o.Id).ToList(),
@@ -62,7 +63,8 @@ namespace MarginTrading.Backend.Services.Mappers
                 RejectReasonText = order.RejectReasonText,
                 RelatedOrderInfos = order.RelatedOrders.Select(o =>
                     new RelatedOrderInfoContract {Id = o.Id, Type = o.Type.ToType<OrderTypeContract>()}).ToList(),
-                TradingConditionId = order.TradingConditionId
+                TradingConditionId = order.TradingConditionId,
+                AdditionalInfo = order.AdditionalInfo
             };
         }
     }

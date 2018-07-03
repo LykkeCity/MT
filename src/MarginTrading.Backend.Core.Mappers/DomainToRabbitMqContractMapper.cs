@@ -25,7 +25,7 @@ namespace MarginTrading.Backend.Core.Mappers
                 BaseAssetId = account.BaseAssetId,
                 Balance = account.Balance,
                 WithdrawTransferLimit = account.WithdrawTransferLimit,
-                MarginCallLevel = account.GetMarginCallLevel(),
+                MarginCallLevel = account.GetMarginCall1Level(),
                 StopOutLevel = account.GetStopOutLevel(),
                 TotalCapital = account.GetTotalCapital(),
                 FreeMargin = account.GetFreeMargin(),

@@ -1,12 +1,12 @@
 ﻿using System;
 
-namespace MarginTrading.Contract.RabbitMqMessageModels
+namespace MarginTrading.Backend.Contracts.Events
 {
-    public class AccountMarginEventMessage
+    public class MarginEventMessage
     {
         public string EventId { get; set; }
         public DateTime EventTime { get; set; }
-        public bool IsEventStopout { get; set; }
+        public MarginEventTypeContract EventType { get; set; }
 
         public string AccountId { get; set; }
         public string ClientId { get; set; }
@@ -15,8 +15,9 @@ namespace MarginTrading.Contract.RabbitMqMessageModels
         public decimal Balance { get; set; }
         public decimal WithdrawTransferLimit { get; set; }
 
-        public decimal MarginCall { get; set; }
-        public decimal StopOut { get; set; }
+        public decimal MarginCall1Level { get; set; }
+        public decimal MarginCall2Level { get; set; }
+        public decimal StopOutLevel { get; set; }
         public decimal TotalCapital { get; set; }
         public decimal FreeMargin { get; set; }
         public decimal MarginAvailable { get; set; }

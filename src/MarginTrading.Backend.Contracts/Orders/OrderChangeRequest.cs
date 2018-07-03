@@ -5,5 +5,7 @@
         public decimal Price { get; set; }
         
         public OriginatorTypeContract Originator { get; set; }
+        
+        public string AdditionalInfo { get; set; }
     }
 }

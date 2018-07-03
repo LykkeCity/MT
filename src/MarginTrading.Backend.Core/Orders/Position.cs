@@ -47,6 +47,10 @@ namespace MarginTrading.Backend.Core.Orders
         
         public DateTime? LastModified { get; private set; }
 
+        public decimal ChargedPnL { get; private set; }
+        
+        public HashSet<string> ChargePnlOperations { get; private set; }
+        
         public FplData FplData { get; private set; } = new FplData();
 
         public Position(string id, long code, string assetPairId, decimal volume, string accountId,
@@ -76,6 +80,7 @@ namespace MarginTrading.Backend.Core.Orders
             OpenOriginator = openOriginator;
             ExternalProviderId = externalProviderId;
             CloseTrades = new List<string>();
+            ChargePnlOperations = new HashSet<string>();
         }
 
         public void StartClosing(DateTime date, PositionCloseReason reason, OriginatorType originator, string comment)
@@ -109,17 +114,18 @@ namespace MarginTrading.Backend.Core.Orders
             ClosePrice = closePrice;
             CloseFxPrice = closeFxPrice;
             ClosePriceEquivalent = closePriceEquivalent;
-            CloseOriginator = originator;
+            CloseOriginator = CloseOriginator ?? originator;
             CloseReason = closeReason;
             CloseComment = comment;
             CloseTrades.Add(tradeId);
         }
 
-        public void PartiallyClose(DateTime date, decimal closedVolume, string tradeId)
+        public void PartiallyClose(DateTime date, decimal closedVolume, string tradeId, decimal chargedPnl)
         {
             LastModified = date;
             Volume = Volume > 0 ? Volume - closedVolume : Volume + closedVolume;
             CloseTrades.Add(tradeId);
+            ChargedPnL -= chargedPnl;
         }
 
         public void UpdateClosePrice(decimal closePrice)
@@ -145,6 +151,16 @@ namespace MarginTrading.Backend.Core.Orders
             
             if (!RelatedOrders.Contains(info))
                 RelatedOrders.Add(info);
+        }
+
+        public void ChargePnL(string operationId, decimal value)
+        {
+            //if operation was already processed - it is duplicated event
+            if (ChargePnlOperations.Contains(operationId))
+                return;
+
+            ChargePnlOperations.Add(operationId);
+            ChargedPnL += value;
         }
     }
 }

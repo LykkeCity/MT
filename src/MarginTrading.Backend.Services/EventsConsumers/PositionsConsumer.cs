@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
 using MarginTrading.Backend.Contracts.Events;
+using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
@@ -11,6 +12,7 @@ using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Notifications;
+using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services.EventsConsumers
@@ -24,6 +26,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         private readonly IDateService _dateService;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly ICqrsSender _cqrsSender;
+        private readonly IEventChannel<OrderCancelledEventArgs> _orderCancelledEventChannel;
+        private readonly IEventChannel<OrderChangedEventArgs> _orderChangedEventChannel;
 
         private static readonly ConcurrentDictionary<string, object> LockObjects =
             new ConcurrentDictionary<string, object>();
@@ -35,7 +39,9 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             IConvertService convertService,
             IDateService dateService,
             IAccountsCacheService accountsCacheService,
-            ICqrsSender cqrsSender)
+            ICqrsSender cqrsSender,
+            IEventChannel<OrderCancelledEventArgs> orderCancelledEventChannel,
+            IEventChannel<OrderChangedEventArgs> orderChangedEventChannel)
         {
             _ordersCache = ordersCache;
             _rabbitMqNotifyService = rabbitMqNotifyService;
@@ -43,6 +49,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             _dateService = dateService;
             _accountsCacheService = accountsCacheService;
             _cqrsSender = cqrsSender;
+            _orderCancelledEventChannel = orderCancelledEventChannel;
+            _orderChangedEventChannel = orderChangedEventChannel;
         }
         
         public void ConsumeEvent(object sender, OrderExecutedEventArgs ea)
@@ -74,12 +82,13 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             var position = _ordersCache.Positions.GetOrderById(order.ParentPositionId);
 
             position.Close(order.Executed.Value, order.MatchingEngineId, order.ExecutionPrice.Value,
-                order.EquivalentRate, order.FxRate, order.Originator, order.OrderType.GetCloseReason(), "",
+                order.EquivalentRate, order.FxRate, order.Originator, order.OrderType.GetCloseReason(), order.Comment,
                 order.Id);
 
             _ordersCache.Positions.Remove(position);
 
-            SendPositionHistoryEvent(position, PositionHistoryTypeContract.Close, order, Math.Abs(position.Volume));
+            SendPositionHistoryEvent(position, PositionHistoryTypeContract.Close,
+                position.ChargedPnL, order, Math.Abs(position.Volume));
 
             CancelRelatedOrders(position.RelatedOrders);
         }
@@ -94,7 +103,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
             _ordersCache.Positions.Add(position);
 
-            SendPositionHistoryEvent(position, PositionHistoryTypeContract.Open);
+            SendPositionHistoryEvent(position, PositionHistoryTypeContract.Open, 0);
             
             ActivateRelatedOrders(position.RelatedOrders);
         }
@@ -112,24 +121,24 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 if (Math.Abs(openedPosition.Volume) <= leftVolumeToMatch)
                 {
                     openedPosition.Close(order.Executed.Value, order.MatchingEngineId, order.ExecutionPrice.Value,
-                        order.EquivalentRate, order.FxRate, order.Originator, order.OrderType.GetCloseReason(), "",
-                        order.Id);
+                        order.EquivalentRate, order.FxRate, order.Originator, order.OrderType.GetCloseReason(),
+                        order.Comment, order.Id);
                     
                     _ordersCache.Positions.Remove(openedPosition);
 
-                    SendPositionHistoryEvent(openedPosition, PositionHistoryTypeContract.Close, order,
-                        Math.Abs(openedPosition.Volume));
+                    SendPositionHistoryEvent(openedPosition, PositionHistoryTypeContract.Close, openedPosition.ChargedPnL, order, Math.Abs(openedPosition.Volume));
                     
                     CancelRelatedOrders(openedPosition.RelatedOrders);
                 }
                 else
                 {
-                    openedPosition.PartiallyClose(order.Executed.Value, leftVolumeToMatch, order.Id);
+                    var chargedPnl = leftVolumeToMatch / openedPosition.Volume * openedPosition.ChargedPnL;
                     
-                    SendPositionHistoryEvent(openedPosition, PositionHistoryTypeContract.PartiallyClose, order,
-                        Math.Abs(leftVolumeToMatch));
+                    openedPosition.PartiallyClose(order.Executed.Value, leftVolumeToMatch, order.Id, chargedPnl);
 
-                    ChangeRelatedOrderVolume(openedPosition.RelatedOrders, openedPosition.Volume);
+                    SendPositionHistoryEvent(openedPosition, PositionHistoryTypeContract.PartiallyClose, chargedPnl, order, Math.Abs(leftVolumeToMatch));
+
+                    ChangeRelatedOrderVolume(openedPosition.RelatedOrders, -openedPosition.Volume);
                 }
                 
                 leftVolumeToMatch = leftVolumeToMatch - Math.Abs(openedPosition.Volume);
@@ -150,42 +159,49 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
                 _ordersCache.Positions.Add(position);
 
-                SendPositionHistoryEvent(position, PositionHistoryTypeContract.Open);
+                SendPositionHistoryEvent(position, PositionHistoryTypeContract.Open, 0);
+
+                ChangeRelatedOrderVolume(position.RelatedOrders, -volume);
                 
                 ActivateRelatedOrders(position.RelatedOrders);
             }
         }
 
-        private void SendPositionHistoryEvent(Position position, PositionHistoryTypeContract historyType,
-            Order dealOrder = null, decimal? dealVolume = null)
+        private void SendPositionHistoryEvent(Position position, PositionHistoryTypeContract historyType, decimal chargedPnl, Order dealOrder = null, decimal? dealVolume = null)
         {
             DealContract deal = null;
 
             if (dealOrder != null && dealVolume != null)
             {
-                var fpl = (dealOrder.ExecutionPrice.Value - position.OpenPrice) * dealOrder.FxRate * dealVolume.Value;
+                var sign = position.Volume > 0 ? 1 : -1;
+
+                var fpl = (dealOrder.ExecutionPrice.Value - position.OpenPrice) *
+                          dealOrder.FxRate * dealVolume.Value * sign;
                 
                 deal = new DealContract
                 {
                     PositionId = position.Id,
                     Volume = dealVolume.Value,
-                    Created = position.CloseDate.Value,
+                    Created = dealOrder.Executed.Value,
                     OpenTradeId = position.OpenTradeId,
                     CloseTradeId = dealOrder.Id,
                     OpenPrice = position.OpenPrice,
                     OpenFxPrice = position.OpenFxPrice,
                     ClosePrice = dealOrder.ExecutionPrice.Value,
                     CloseFxPrice = dealOrder.FxRate,
-                    Fpl = fpl
+                    Fpl = fpl,
+                    AdditionalInfo = dealOrder.AdditionalInfo,
+                    Originator = dealOrder.Originator.ToType<OriginatorTypeContract>()
                 };
                 
                 var account = _accountsCacheService.Get(position.AccountId);
-                _cqrsSender.PublishEvent(new PositionClosedEvent(account.Id, account.ClientId, position.Id, fpl));
+                _cqrsSender.PublishEvent(new PositionClosedEvent(account.Id, account.ClientId,
+                    $"{position.Id}_{dealOrder.Id}", fpl - chargedPnl));
             }
 
             var positionContract = _convertService.Convert<Position, PositionContract>(position,
                 o => o.ConfigureMap(MemberList.Destination).ForMember(x => x.TotalPnL, c => c.Ignore()));
-            positionContract.TotalPnL = position.GetTotalFpl();
+            positionContract.TotalPnL = position.GetFpl();
 
             var historyEvent = new PositionHistoryEvent
             {
@@ -216,7 +232,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             {
                 if (_ordersCache.Active.TryPopById(relatedOrderInfo.Id, out var relatedOrder))
                 {
-                    relatedOrder.Cancel(_dateService.Now());
+                    relatedOrder.Cancel(_dateService.Now(), OriginatorType.System, null);
+                    _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(relatedOrder));
                 }
             }
         }
@@ -225,9 +242,10 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         {
             foreach (var relatedOrderInfo in relatedOrderInfos)
             {
-                if (_ordersCache.Active.TryGetOrderById(relatedOrderInfo.Id, out var relatedOrder))
+                if (_ordersCache.TryGetOrderById(relatedOrderInfo.Id, out var relatedOrder))
                 {
                     relatedOrder.ChangeVolume(newVolume, _dateService.Now());
+                    _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(relatedOrder));
                 }
             }
         }

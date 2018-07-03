@@ -5,12 +5,15 @@ namespace MarginTrading.Backend.Services.Events
 {
     public class MarginCallEventArgs
     {
-        public MarginCallEventArgs(MarginTradingAccount account)
+        public MarginCallEventArgs(MarginTradingAccount account, AccountLevel level)
         {
             if (account == null) throw new ArgumentNullException(nameof(account));
             Account = account;
+            MarginCallLevel = level;
         }
 
-        public MarginTradingAccount Account { get; set; }
+        public AccountLevel MarginCallLevel { get; }
+        
+        public MarginTradingAccount Account { get; }
     }
 }

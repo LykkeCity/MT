@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Common;
 using Lykke.Common;
+using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
@@ -47,7 +48,10 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         {
             var account = ea.Account;
             var eventTime = _dateService.Now();
-            var accountMarginEventMessage = AccountMarginEventMessageConverter.Create(account, false, eventTime);
+            var level = ea.MarginCallLevel == AccountLevel.MarginCall2
+                ? MarginEventTypeContract.MarginCall2
+                : MarginEventTypeContract.MarginCall1;
+            var accountMarginEventMessage = AccountMarginEventMessageConverter.Create(account, level, eventTime);
             _threadSwitcher.SwitchThread(async () =>
             {
                 if (LastNotifications.TryGetValue(account.Id, out var lastNotification)

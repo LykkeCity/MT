@@ -183,9 +183,14 @@ namespace MarginTrading.Backend.Core.Trading
         public string ParentPositionId { get; private set; }
 
         /// <summary>
-        /// Order originator
+        /// Order initiator
         /// </summary>
         public OriginatorType Originator { get; private set; }
+        
+        /// <summary>
+        /// Order cancellation initiator
+        /// </summary>
+        public OriginatorType? CancellationOriginator { get; private set; }
         
         /// <summary>
         /// Matched orders for execution
@@ -197,6 +202,16 @@ namespace MarginTrading.Backend.Core.Trading
         /// </summary>
         public List<RelatedOrderInfo> RelatedOrders { get; private set; } = new List<RelatedOrderInfo>();
         
+        /// <summary>
+        /// Additional information about order, changed every time, when order is changed via user request
+        /// </summary>
+        public string AdditionalInfo { get; private set; }
+
+        /// <summary>
+        /// Max distance between order price and parent order price (only for trailing order)
+        /// </summary>
+        public decimal? TrailingDistance { get; private set; }
+        
         #endregion
 
 
@@ -205,7 +220,7 @@ namespace MarginTrading.Backend.Core.Trading
             DateTime? validity, string accountId, string tradingConditionId, string accountAssetId, decimal? price,
             string equivalentAsset, OrderFillType fillType, string comment, string legalEntity, bool forceOpen,
             OrderType orderType, string parentOrderId, string parentPositionId, OriginatorType originator,
-            decimal equivalentRate, decimal fxRate, OrderStatus status)
+            decimal equivalentRate, decimal fxRate, OrderStatus status, string additionalInfo)
         {
             Id = id;
             Code = code;
@@ -231,15 +246,23 @@ namespace MarginTrading.Backend.Core.Trading
             FxRate = fxRate;
             Direction = volume.GetOrderDirection();
             Status = status;
+            AdditionalInfo = additionalInfo;
         }
 
 
         #region Actions
 
-        public void ChangePrice(decimal newPrice, DateTime dateTime)
+        public void ChangePrice(decimal newPrice, DateTime dateTime, OriginatorType originator, string additionalInfo)
         {
+            if (OrderType == OrderType.TrailingStop)
+            {
+                TrailingDistance += Price - newPrice;
+            }
+            
             LastModified = dateTime;
             Price = newPrice;
+            Originator = originator;
+            AdditionalInfo = additionalInfo ?? AdditionalInfo;
         }
         
         public void ChangeVolume(decimal newVolume, DateTime dateTime)
@@ -265,7 +288,15 @@ namespace MarginTrading.Backend.Core.Trading
                 ParentPositionId = ParentOrderId;
             }
         }
-        
+
+        public void SetTrailingDistance(decimal parentOrderPrice)
+        {
+            if (OrderType == OrderType.TrailingStop && Price.HasValue)
+            {
+                TrailingDistance = Price.Value - parentOrderPrice;
+            }
+        }
+
         public void StartExecution(DateTime dateTime, string matchingEngineId)
         {
             Status = OrderStatus.ExecutionStarted;
@@ -309,6 +340,7 @@ namespace MarginTrading.Backend.Core.Trading
         public void Reject(OrderRejectReason reason, string reasonText, string comment, DateTime dateTime)
         {
             Status = OrderStatus.Rejected;
+            CancellationOriginator = OriginatorType.System;
             RejectReason = reason;
             RejectReasonText = reasonText;
             Comment = comment;
@@ -316,11 +348,13 @@ namespace MarginTrading.Backend.Core.Trading
             LastModified = dateTime;
         }
 
-        public void Cancel(DateTime dateTime)
+        public void Cancel(DateTime dateTime, OriginatorType originator, string additionalInfo)
         {
             Status = OrderStatus.Canceled;
             Canceled = dateTime;
             LastModified = dateTime;
+            AdditionalInfo = additionalInfo ?? AdditionalInfo;
+            CancellationOriginator = originator;
         }
 
         public void AddRelatedOrder(Order order)
