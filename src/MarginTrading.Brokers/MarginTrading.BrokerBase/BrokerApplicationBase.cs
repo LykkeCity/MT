@@ -15,7 +15,7 @@ namespace MarginTrading.BrokerBase
         protected readonly ILog _logger;
         private readonly ISlackNotificationsSender _slackNotificationsSender;
         protected readonly CurrentApplicationInfo ApplicationInfo;
-        private RabbitMqSubscriber<TMessage>[] _connector = new RabbitMqSubscriber<TMessage>[100];
+        private RabbitMqSubscriber<TMessage>[] _connector;
 
         protected abstract BrokerSettingsBase Settings { get; }
         protected abstract string ExchangeName { get; }
@@ -48,8 +48,14 @@ namespace MarginTrading.BrokerBase
             
             try
             {
+                int NSubscribers = 1;
+                if (Settings.NumOfSubscribers != null)
+                {
+                    NSubscribers = (int)Settings.NumOfSubscribers;
+                }
+                _connector = new RabbitMqSubscriber<TMessage>[NSubscribers];
                 var settings = GetRabbitMqSubscriptionSettings();
-                for(int i = 0; i < 100; i++)
+                for(int i = 0; i < NSubscribers; i++)
                 {
                     _connector[i] =
                         new RabbitMqSubscriber<TMessage>(settings,
