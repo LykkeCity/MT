@@ -53,7 +53,7 @@ namespace MarginTrading.Backend.Modules
                         ? (IIdentityGenerator) new AzureIdentityGenerator(
                             AzureTableStorage<IdentityEntity>.Create(settings.Nested(s => s.Db.MarginTradingConnString),
                                 "Identity", _log))
-                        : (IIdentityGenerator) new FakeIdentityGenerator();
+                        : (IIdentityGenerator) new SimpleIdentityGenerator();
                 }).As<IIdentityGenerator>().SingleInstance();
             }
             else if (_settings.CurrentValue.Db.StorageMode == StorageMode.SqlServer)
@@ -72,7 +72,7 @@ namespace MarginTrading.Backend.Modules
 
                     return settings.CurrentValue.UseDbIdentityGenerator
                         ? (IIdentityGenerator) new SqlIdentityGenerator()
-                        : (IIdentityGenerator) new FakeIdentityGenerator();
+                        : (IIdentityGenerator) new SimpleIdentityGenerator();
                 }).As<IIdentityGenerator>().SingleInstance();
             }
             
@@ -86,7 +86,7 @@ namespace MarginTrading.Backend.Modules
                     ? (IIdentityGenerator) new AzureIdentityGenerator(
                         AzureTableStorage<IdentityEntity>.Create(settings.Nested(s => s.Db.MarginTradingConnString),
                             "Identity", _log))
-                    : (IIdentityGenerator) new FakeIdentityGenerator();
+                    : (IIdentityGenerator) new SimpleIdentityGenerator();
             }).As<IIdentityGenerator>().SingleInstance();
 
             builder.Register(ctx =>
