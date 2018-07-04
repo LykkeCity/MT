@@ -28,7 +28,7 @@ namespace MarginTrading.OrderbookBestPricesBroker
 
         protected override Task HandleMessage(BidAskPairRabbitMqContract message)
         {
-            return _orderbookBestPricesRepository.InsertAsync(new OrderbookBestPricesHistoryEntity
+            return  _orderbookBestPricesRepository.InsertAsync(new OrderbookBestPricesHistoryEntity
             {
                 AssetPairId = message.Instrument,
                 Bid = message.Bid,
