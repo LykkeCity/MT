@@ -249,7 +249,7 @@ namespace MarginTrading.Backend.Services
             GetOrderInitialParameters(string assetPairId, string legalEntity,
                 ReportingEquivalentPricesSettings equivalentSettings, string accountAssetId)
         {
-            var id = Guid.NewGuid().ToString("N");
+            var id = _identityGenerator.GenerateAlphanumericId();
             var code = await _identityGenerator.GenerateIdAsync(nameof(Order));
             var now = _dateService.Now();
             var equivalentPrice = _cfdCalculatorService.GetQuoteRateForQuoteAsset(equivalentSettings.EquivalentAsset,

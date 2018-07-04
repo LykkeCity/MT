@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using MarginTrading.Backend.Core.Repositories;
 
 namespace MarginTrading.SqlRepositories
@@ -31,6 +32,11 @@ namespace MarginTrading.SqlRepositories
 //                throw new InvalidOperationException("Error generating ID");
 //
 //            return id;
+        }
+
+        public string GenerateAlphanumericId()
+        {
+            return Guid.NewGuid().ToString("N");
         }
     }
 }

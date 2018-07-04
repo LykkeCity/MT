@@ -425,7 +425,7 @@ namespace MarginTrading.Backend.Services
         {
             //position.StartClosing(_dateService.Now(), reason, OriginatorType.Investor, "");
             
-            var id = Guid.NewGuid().ToString("N");
+            var id = _identityGenerator.GenerateAlphanumericId();
             var code = _identityGenerator.GenerateIdAsync(nameof(Order)).GetAwaiter().GetResult();
             var now = _dateService.Now();
 
@@ -458,7 +458,7 @@ namespace MarginTrading.Backend.Services
 
             var me = _meRouter.GetMatchingEngineForClose(position);
 
-            var id = Guid.NewGuid().ToString("N");
+            var id = _identityGenerator.GenerateAlphanumericId();
             var code = _identityGenerator.GenerateIdAsync(nameof(Order)).GetAwaiter().GetResult();
             var now = _dateService.Now();
 
