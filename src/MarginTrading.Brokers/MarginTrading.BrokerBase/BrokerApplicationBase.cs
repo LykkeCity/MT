@@ -48,14 +48,10 @@ namespace MarginTrading.BrokerBase
             
             try
             {
-                int NSubscribers = 1;
-                if (Settings.NumOfSubscribers != null)
-                {
-                    NSubscribers = (int)Settings.NumOfSubscribers;
-                }
-                _connector = new RabbitMqSubscriber<TMessage>[NSubscribers];
+                var nSubscribers = Settings.NumOfSubscribers ?? 1;
+                _connector = new RabbitMqSubscriber<TMessage>[nSubscribers];
                 var settings = GetRabbitMqSubscriptionSettings();
-                for(int i = 0; i < NSubscribers; i++)
+                for(int i = 0; i < nSubscribers; i++)
                 {
                     _connector[i] =
                         new RabbitMqSubscriber<TMessage>(settings,
