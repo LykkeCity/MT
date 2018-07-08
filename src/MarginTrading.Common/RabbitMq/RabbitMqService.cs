@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AzureStorage.Blob;
 using Common;
@@ -20,8 +21,8 @@ namespace MarginTrading.Common.RabbitMq
         private readonly string _env;
         private readonly IConsole _consoleWriter;
 
-        private readonly ConcurrentDictionary<RabbitMqSubscriptionSettings, IStopable> _subscribers =
-            new ConcurrentDictionary<RabbitMqSubscriptionSettings, IStopable>(new SubscriptionSettingsEqualityComparer());
+        private readonly ConcurrentDictionary<(RabbitMqSubscriptionSettings, int), IStopable> _subscribers =
+            new ConcurrentDictionary<(RabbitMqSubscriptionSettings, int), IStopable>(new SubscriptionSettingsWithNumberEqualityComparer());
 
         private readonly ConcurrentDictionary<RabbitMqSubscriptionSettings, Lazy<IStopable>> _producers =
             new ConcurrentDictionary<RabbitMqSubscriptionSettings, Lazy<IStopable>>(
@@ -112,33 +113,39 @@ namespace MarginTrading.Common.RabbitMq
             }
         }
 
+        
         public void Subscribe<TMessage>(RabbitMqSettings settings, bool isDurable,
             Func<TMessage, Task> handler, IMessageDeserializer<TMessage> deserializer)
         {
-            var subscriptionSettings = new RabbitMqSubscriptionSettings
+            var consumerCount = settings.ConsumerCount == 0 ? 1 : settings.ConsumerCount;
+            
+            foreach (var consumerNumber in Enumerable.Range(1, consumerCount))
             {
-                ConnectionString = settings.ConnectionString,
-                QueueName = QueueHelper.BuildQueueName(settings.ExchangeName, _env),
-                ExchangeName = settings.ExchangeName,
-                IsDurable = isDurable,
-            };
+                var subscriptionSettings = new RabbitMqSubscriptionSettings
+                {
+                    ConnectionString = settings.ConnectionString,
+                    QueueName = QueueHelper.BuildQueueName(settings.ExchangeName, _env),
+                    ExchangeName = settings.ExchangeName,
+                    IsDurable = isDurable,
+                };
+                
+                var rabbitMqSubscriber = new RabbitMqSubscriber<TMessage>(subscriptionSettings,
+                        new DefaultErrorHandlingStrategy(_logger, subscriptionSettings))
+                    .SetMessageDeserializer(deserializer)
+                    .Subscribe(handler)
+                    .SetLogger(_logger)
+                    .SetConsole(_consoleWriter);
 
-            var rabbitMqSubscriber = new RabbitMqSubscriber<TMessage>(subscriptionSettings,
-                    new DefaultErrorHandlingStrategy(_logger, subscriptionSettings))
-                .SetMessageDeserializer(deserializer)
-                .Subscribe(handler)
-                .SetLogger(_logger)
-                .SetConsole(_consoleWriter);
+                if (!_subscribers.TryAdd((subscriptionSettings, consumerNumber), rabbitMqSubscriber))
+                {
+                    throw new InvalidOperationException(
+                        $"A subscriber number {consumerNumber} for queue {subscriptionSettings.QueueName} was already initialized");
+                }
 
-            if (!_subscribers.TryAdd(subscriptionSettings, rabbitMqSubscriber))
-            {
-                throw new InvalidOperationException(
-                    $"A subscriber for queue {subscriptionSettings.QueueName} was already initialized");
+                rabbitMqSubscriber.Start();
             }
-
-            rabbitMqSubscriber.Start();
         }
-
+        
         /// <remarks>
         ///     ReSharper auto-generated
         /// </remarks>
@@ -160,6 +167,32 @@ namespace MarginTrading.Common.RabbitMq
                 {
                     return ((obj.ConnectionString != null ? obj.ConnectionString.GetHashCode() : 0) * 397) ^
                            (obj.ExchangeName != null ? obj.ExchangeName.GetHashCode() : 0);
+                }
+            }
+        }
+
+        /// <remarks>
+        ///     ReSharper auto-generated
+        /// </remarks>
+        private sealed class SubscriptionSettingsWithNumberEqualityComparer : IEqualityComparer<(RabbitMqSubscriptionSettings, int)>
+        {
+            public bool Equals((RabbitMqSubscriptionSettings, int) x, (RabbitMqSubscriptionSettings, int) y)
+            {
+                if (ReferenceEquals(x.Item1, y.Item1) && x.Item2 == y.Item2) return true;
+                if (ReferenceEquals(x.Item1, null)) return false;
+                if (ReferenceEquals(y.Item1, null)) return false;
+                if (x.Item1.GetType() != y.Item1.GetType()) return false;
+                return string.Equals(x.Item1.ConnectionString, y.Item1.ConnectionString)
+                       && string.Equals(x.Item1.ExchangeName, y.Item1.ExchangeName)
+                       && x.Item2 == y.Item2;
+            }
+
+            public int GetHashCode((RabbitMqSubscriptionSettings, int) obj)
+            {
+                unchecked
+                {
+                    return ((obj.Item1.ConnectionString != null ? obj.Item1.ConnectionString.GetHashCode() : 0) * 397) ^
+                           (obj.Item1.ExchangeName != null ? obj.Item1.ExchangeName.GetHashCode() : 0);
                 }
             }
         }

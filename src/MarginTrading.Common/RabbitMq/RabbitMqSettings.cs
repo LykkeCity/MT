@@ -1,4 +1,5 @@
-﻿using Lykke.SettingsReader.Attributes;
+﻿using JetBrains.Annotations;
+using Lykke.SettingsReader.Attributes;
 
 namespace MarginTrading.Common.RabbitMq
 {
@@ -7,5 +8,8 @@ namespace MarginTrading.Common.RabbitMq
         [AmqpCheck]
         public string ConnectionString { get; set; }
         public string ExchangeName { get; set; }
+        [Optional]
+        //By default = 1
+        public int ConsumerCount { get; set; }
     }
 }
