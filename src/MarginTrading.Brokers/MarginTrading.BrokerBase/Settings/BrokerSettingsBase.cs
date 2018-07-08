@@ -9,5 +9,7 @@ namespace MarginTrading.BrokerBase.Settings
         public bool IsLive { get; set; }
         [Optional]
         public string Env { get; set; }
+        [Optional]
+        public int? NumOfSubscribers { get; set; }
     }
 }
