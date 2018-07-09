@@ -58,6 +58,11 @@
         public decimal PnL { get; set; }
         
         /// <summary>
+        /// Unrealized daily PnL
+        /// </summary>
+        public decimal UnrealizedDailyPnl { get; set; }
+        
+        /// <summary>
         /// Number of opened positions
         /// </summary>
         public decimal OpenPositionsCount { get; set; }
