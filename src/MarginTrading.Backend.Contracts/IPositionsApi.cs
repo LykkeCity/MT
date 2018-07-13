@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Contracts.Positions;
@@ -20,9 +21,20 @@ namespace MarginTrading.Backend.Contracts
         Task CloseAsync([NotNull] string positionId, [Body] PositionCloseRequest request = null);
 
         /// <summary>
+        /// Close group of opened positions optionally by assetPairId, accountId and direction.
+        /// AssetPairId or AccountId must be passed.
+        /// </summary>
+        [Delete("/api/positions/close-group")]
+        Task CloseGroupAsync([Query, CanBeNull] string assetPairId = null,
+            [Query, CanBeNull] string accountId = null,
+            [Query, CanBeNull] PositionDirectionContract? direction = null,
+            [Body] PositionCloseRequest request = null);
+        
+        /// <summary>
         /// Close group of opened positions by instrument and direction (optional) 
         /// </summary>
         [Delete("/api/positions/instrument-group/{assetPairId}")]
+        [Obsolete("Will be removed soon. Use close-group with instrument, account and direction.")]
         Task CloseGroupAsync([NotNull] string assetPairId,
             [Query, CanBeNull] PositionDirectionContract? direction = null,
             [Body] PositionCloseRequest request = null);
@@ -31,6 +43,7 @@ namespace MarginTrading.Backend.Contracts
         /// Close group of opened positions by account and instrument (optional)
         /// </summary>
         [Delete("/api/positions/account-group/{accountId}")]
+        [Obsolete("Will be removed soon. Use close-group with instrument, account and direction.")]
         Task CloseGroupAsync([NotNull] string accountId, 
             [Query, CanBeNull] string assetPairId = null,
             [Body] PositionCloseRequest request = null);

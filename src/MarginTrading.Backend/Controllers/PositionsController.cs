@@ -85,6 +85,53 @@ namespace MarginTrading.Backend.Controllers
         }
 
         /// <summary>
+        /// Close group of opened positions optionally by assetPairId, accountId and direction.
+        /// AssetPairId or AccountId must be passed.
+        /// </summary>
+        /// <param name="assetPairId"></param>
+        /// <param name="accountId"></param>
+        /// <param name="direction"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
+        [Route("close-group")]
+        [MiddlewareFilter(typeof(RequestLoggingPipeline))]
+        [HttpDelete]
+        public async Task CloseGroupAsync([FromQuery] string assetPairId = null, [FromQuery] string accountId = null, 
+            [FromQuery] PositionDirectionContract? direction = null, [FromBody] PositionCloseRequest request = null)
+        {
+            if (string.IsNullOrWhiteSpace(assetPairId) && string.IsNullOrWhiteSpace(accountId))
+            {
+                throw new ArgumentNullException(nameof(assetPairId), "AssetPairId or accountId must be set.");
+            }
+
+            var positions = _ordersCache.Positions.GetAllOrders()
+                .Where(x => (string.IsNullOrWhiteSpace(assetPairId) || x.AssetPairId == assetPairId)
+                            && (string.IsNullOrWhiteSpace(accountId) || x.AccountId == accountId)
+                            && (direction == null || x.Direction == direction.ToType<PositionDirection>()))
+                .ToList();
+            
+            var originator = GetOriginator(request?.Originator);
+            
+            foreach (var orderId in positions.Select(o => o.Id).ToList())
+            {
+                var closedOrder =
+                    await _tradingEngine.ClosePositionAsync(orderId, originator, request?.AdditionalInfo, request?.Comment);
+
+                if (closedOrder.Status != OrderStatus.Executed && closedOrder.Status != OrderStatus.ExecutionStarted)
+                {
+                    throw new InvalidOperationException(closedOrder.RejectReasonText);
+                }
+
+                _operationsLogService.AddLog("action close positions group", closedOrder.AccountId, "", orderId);
+            }
+
+            _consoleWriter.WriteLine(
+                $"action close positions group. instrument = [{assetPairId}], account = [{accountId}], direction = [{direction}]");
+        }
+
+        /// <summary>
         /// Close group of opened positions by instrument and direction (optional)
         /// </summary>
         /// <param name="instrument">Positions instrument</param>
@@ -93,6 +140,7 @@ namespace MarginTrading.Backend.Controllers
         [Route("instrument-group/{instrument}")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [HttpDelete]
+        [Obsolete("Will be removed soon. Use close-group with instrument, account and direction.")]
         public async Task CloseGroupAsync([FromRoute] string instrument,
             [FromQuery] PositionDirectionContract? direction = null,
             [FromBody] PositionCloseRequest request = null)
@@ -138,6 +186,7 @@ namespace MarginTrading.Backend.Controllers
         [Route("account-group/{accountId}")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [HttpDelete]
+        [Obsolete("Will be removed soon. Use close-group with instrument, account and direction.")]
         public async Task CloseGroupAsync([FromRoute] string accountId, [FromQuery] string assetPairId = null, 
             [FromBody] PositionCloseRequest request = null)
         {
