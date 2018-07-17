@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services;
@@ -12,16 +14,19 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         private readonly OrdersCache _ordersCache;
         private readonly IDateService _dateService;
         private readonly IEventChannel<OrderCancelledEventArgs> _orderCancelledEventChannel;
+        private readonly IEventChannel<OrderChangedEventArgs> _orderChangedEventChannel;
 
         public OrderStateConsumer(IRabbitMqNotifyService rabbitMqNotifyService,
             OrdersCache ordersCache,
             IDateService dateService,
-            IEventChannel<OrderCancelledEventArgs> orderCancelledEventChannel)
+            IEventChannel<OrderCancelledEventArgs> orderCancelledEventChannel,
+            IEventChannel<OrderChangedEventArgs> orderChangedEventChannel)
         {
             _rabbitMqNotifyService = rabbitMqNotifyService;
             _ordersCache = ordersCache;
             _dateService = dateService;
             _orderCancelledEventChannel = orderCancelledEventChannel;
+            _orderChangedEventChannel = orderChangedEventChannel;
         }
 
         void IEventConsumer<OrderUpdateBaseEventArgs>.ConsumeEvent(object sender, OrderUpdateBaseEventArgs ea)
@@ -33,6 +38,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 case OrderUpdateType.Cancel:
                 case OrderUpdateType.Reject:
                     CancelRelatedOrders(ea.Order.RelatedOrders);
+                    RemoveRelatedOrderFromParent(ea.Order);
                     break;
             }
         }
@@ -58,6 +64,22 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     activeRelatedOrder.Cancel(_dateService.Now(), OriginatorType.System, null);
                     _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(activeRelatedOrder));
                 }
+            }
+        }
+
+        private void RemoveRelatedOrderFromParent(Order order)
+        {
+            if (!string.IsNullOrEmpty(order.ParentOrderId)
+                && _ordersCache.TryGetOrderById(order.ParentOrderId, out var parentOrder))
+            {
+                parentOrder.RemoveRelatedOrder(order.Id);
+                _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(parentOrder));
+            }
+            
+            if (!string.IsNullOrEmpty(order.ParentPositionId)
+                && _ordersCache.Positions.TryGetOrderById(order.ParentPositionId, out var parentPosition))
+            {
+                parentPosition.RemoveRelatedOrder(order.Id);
             }
         }
     }
