@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using MarginTrading.Backend.Core.Trading;
 
 namespace MarginTrading.Backend.Core.Orders
@@ -151,6 +152,14 @@ namespace MarginTrading.Backend.Core.Orders
             
             if (!RelatedOrders.Contains(info))
                 RelatedOrders.Add(info);
+        }
+        
+        public void RemoveRelatedOrder(string relatedOrderId)
+        {
+            var relatedOrder = RelatedOrders.FirstOrDefault(o => o.Id == relatedOrderId);
+
+            if (relatedOrder != null)
+                RelatedOrders.Remove(relatedOrder);
         }
 
         public void ChargePnL(string operationId, decimal value)

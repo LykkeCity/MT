@@ -364,6 +364,14 @@ namespace MarginTrading.Backend.Core.Trading
             if (!RelatedOrders.Contains(info))
                 RelatedOrders.Add(info);
         }
+        
+        public void RemoveRelatedOrder(string relatedOrderId)
+        {
+            var relatedOrder = RelatedOrders.FirstOrDefault(o => o.Id == relatedOrderId);
+
+            if (relatedOrder != null)
+                RelatedOrders.Remove(relatedOrder);
+        }
 
         #endregion
         

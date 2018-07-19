@@ -199,6 +199,8 @@ namespace MarginTrading.Backend.Services
         private async Task<Order> ValidateAndGetSlorTpOrder(OrderPlaceRequest request, OrderTypeContract type,
             decimal? price, ReportingEquivalentPricesSettings equivalentSettings, Order parentOrder)
         {
+            var orderType = type.ToType<OrderType>();
+            
             if (parentOrder == null)
             {
                 if (!string.IsNullOrEmpty(request.ParentOrderId))
@@ -209,6 +211,8 @@ namespace MarginTrading.Backend.Services
 
             if (parentOrder != null)
             {
+                ValidateRelatedOrderAlreadyExists(parentOrder.RelatedOrders, orderType);
+                
                 var initialParameters = await GetOrderInitialParameters(parentOrder.AssetPairId,
                     parentOrder.LegalEntity, equivalentSettings, parentOrder.AccountAssetId);
 
@@ -218,7 +222,7 @@ namespace MarginTrading.Backend.Services
                     -parentOrder.Volume, initialParameters.now, initialParameters.now,
                     request.Validity, parentOrder.AccountId, parentOrder.TradingConditionId, parentOrder.AccountAssetId,
                     price, parentOrder.EquivalentAsset, OrderFillType.FillOrKill, string.Empty,
-                    parentOrder.LegalEntity, false, type.ToType<OrderType>(), parentOrder.Id, null,
+                    parentOrder.LegalEntity, false, orderType, parentOrder.Id, null,
                     originator, initialParameters.equivalentPrice,
                     initialParameters.fxPrice, OrderStatus.Placed, request.AdditionalInfo);
             }
@@ -226,6 +230,8 @@ namespace MarginTrading.Backend.Services
             if (!string.IsNullOrEmpty(request.PositionId))
             {
                 var position = _ordersCache.Positions.GetOrderById(request.PositionId);
+                
+                ValidateRelatedOrderAlreadyExists(position.RelatedOrders, orderType);
 
                 var initialParameters = await GetOrderInitialParameters(position.AssetPairId,
                     position.LegalEntity, equivalentSettings, position.AccountAssetId);
@@ -236,13 +242,25 @@ namespace MarginTrading.Backend.Services
                     -position.Volume, initialParameters.now, initialParameters.now,
                     request.Validity, position.AccountId, position.TradingConditionId, position.AccountAssetId,
                     price, position.EquivalentAsset, OrderFillType.FillOrKill, string.Empty,
-                    position.LegalEntity, false, type.ToType<OrderType>(), null, position.Id,
+                    position.LegalEntity, false, orderType, null, position.Id,
                     originator, initialParameters.equivalentPrice,
                     initialParameters.fxPrice, OrderStatus.Placed, request.AdditionalInfo);
             }
 
             throw new ValidateOrderException(OrderRejectReason.InvalidParent,
                 "Related order must have parent order or position");
+        }
+
+        private static void ValidateRelatedOrderAlreadyExists(List<RelatedOrderInfo> relatedOrders, OrderType orderType)
+        {
+            if ((orderType == OrderType.TakeProfit
+                 && relatedOrders.Any(o => o.Type == OrderType.TakeProfit))
+                || ((orderType == OrderType.StopLoss || orderType == OrderType.TrailingStop)
+                    && relatedOrders.Any(o => o.Type == OrderType.StopLoss || o.Type == OrderType.TrailingStop)))
+            {
+                throw new ValidateOrderException(OrderRejectReason.InvalidParent,
+                    $"Parent order already has related order with type {orderType}");
+            }
         }
 
         private async Task<(string id, long code, DateTime now, decimal equivalentPrice, decimal fxPrice)>
