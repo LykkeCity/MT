@@ -22,6 +22,7 @@ namespace MarginTrading.Backend.Core
         }
         
         public decimal PnL { get; set; }
+        public decimal UnrealizedDailyPnl { get; set; }
         public decimal UsedMargin { get; set; }
         public decimal MarginInit { get; set; }
         public int OpenPositionsCount { get; set; }

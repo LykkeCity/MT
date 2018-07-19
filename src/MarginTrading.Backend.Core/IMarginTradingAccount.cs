@@ -120,6 +120,11 @@ namespace MarginTrading.Backend.Core
             return account.GetAccountFpl().PnL;
         }
 
+        public static decimal GetUnrealizedDailyPnl(this IMarginTradingAccount account)
+        {
+            return account.GetAccountFpl().UnrealizedDailyPnl;
+        }
+
         public static decimal GetUsedMargin(this IMarginTradingAccount account)
         {
             return account.GetAccountFpl().UsedMargin;

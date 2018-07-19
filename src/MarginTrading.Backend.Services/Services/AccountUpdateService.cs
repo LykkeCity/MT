@@ -93,6 +93,8 @@ namespace MarginTrading.Backend.Services
             var pendingOrdersMargin = 0;// pendingOrders.Sum(item => item.GetMarginInit());
 
             account.AccountFpl.PnL = Math.Round(activeOrders.Sum(x => x.GetTotalFpl()), accuracy);
+            account.AccountFpl.UnrealizedDailyPnl =
+                Math.Round(activeOrders.Sum(x => x.GetTotalFpl() - x.ChargedPnL), accuracy);
 
             account.AccountFpl.UsedMargin = Math.Round(activeOrdersMaintenanceMargin + pendingOrdersMargin, accuracy);
             account.AccountFpl.MarginInit = Math.Round(activeOrdersInitMargin + pendingOrdersMargin, accuracy);
