@@ -27,6 +27,17 @@ namespace MarginTrading.Backend.Services
             return _accounts.Values.ToArray();
         }
 
+        public PaginatedResponse<MarginTradingAccount> GetAllByPages(int? skip = null, int? take = null)
+        {
+            var accounts = _accounts.Values.OrderBy(x => x.Id).ToList();//todo think again about ordering
+            return new PaginatedResponse<MarginTradingAccount>(
+                contents: !take.HasValue ? accounts : accounts.Skip(skip.Value).Take(take.Value).ToList(),
+                start: skip ?? 0,
+                size: take ?? accounts.Count,
+                totalSize: accounts.Count
+            );
+        }
+
         public MarginTradingAccount Get(string accountId)
         {
             return GetAccount(accountId) ??

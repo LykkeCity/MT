@@ -13,6 +13,7 @@ namespace MarginTrading.Backend.Core
         MarginTradingAccount TryGet(string accountId);
 
         IReadOnlyList<MarginTradingAccount> GetAll();
+        PaginatedResponse<MarginTradingAccount> GetAllByPages(int? skip = null, int? take = null);
         IEnumerable<string> GetClientIdsByTradingConditionId(string tradingConditionId, string accountId = null);
         void Update(MarginTradingAccount newValue);
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Contracts.Positions;
 using Refit;
 using PositionDirectionContract = MarginTrading.Backend.Contracts.Positions.PositionDirectionContract;
@@ -60,5 +61,14 @@ namespace MarginTrading.Backend.Contracts
         [Get("/api/positions")]
         Task<List<OpenPositionContract>> ListAsync([Query, CanBeNull] string accountId = null,
             [Query, CanBeNull] string assetPairId = null);
+
+        /// <summary>
+        /// Get positions with optional filtering and pagination
+        /// </summary>
+        [Get("/api/positions/by-pages")]
+        Task<PaginatedResponseContract<OpenPositionContract>> ListAsyncByPages(
+            [Query] [CanBeNull] string accountId = null,
+            [Query] [CanBeNull] string assetPairId = null,
+            [Query] [CanBeNull] int? skip = null, [Query] [CanBeNull] int? take = null);
     }
 }

@@ -6,6 +6,7 @@ using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Contracts;
+using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core;
@@ -239,14 +240,51 @@ namespace MarginTrading.Backend.Controllers
         public Task<List<OpenPositionContract>> ListAsync([FromQuery]string accountId = null,
             [FromQuery] string assetPairId = null)
         {
-            IEnumerable<Position> orders = _ordersCache.Positions.GetAllOrders();
+            var positions = _ordersCache.Positions.GetAllOrders().AsEnumerable();
+            
             if (!string.IsNullOrWhiteSpace(accountId))
-                orders = orders.Where(o => o.AccountId == accountId);
+                positions = positions.Where(o => o.AccountId == accountId);
 
             if (!string.IsNullOrWhiteSpace(assetPairId))
-                orders = orders.Where(o => o.AssetPairId == assetPairId);
+                positions = positions.Where(o => o.AssetPairId == assetPairId);
 
-            return Task.FromResult(orders.Select(Convert).ToList());
+            return Task.FromResult(positions.Select(Convert).ToList());
+        }
+
+        /// <summary>
+        /// Get positions with optional filtering and pagination
+        /// </summary>
+        [HttpGet, Route("by-pages")]
+        public Task<PaginatedResponseContract<OpenPositionContract>> ListAsyncByPages(string accountId = null,
+            string assetPairId = null, int? skip = null, int? take = null)
+        {
+            if ((skip.HasValue && !take.HasValue) || (!skip.HasValue && take.HasValue))
+            {
+                throw new ArgumentOutOfRangeException(nameof(skip), "Both skip and take must be set or unset");
+            }
+
+            if (take.HasValue && (take <= 0 || skip < 0))
+            {
+                throw new ArgumentOutOfRangeException(nameof(skip), "Skip must be >= 0, take must be > 0");
+            }
+            
+            var positions = _ordersCache.Positions.GetAllOrders().AsEnumerable();
+            
+            if (!string.IsNullOrWhiteSpace(accountId))
+                positions = positions.Where(o => o.AccountId == accountId);
+
+            if (!string.IsNullOrWhiteSpace(assetPairId))
+                positions = positions.Where(o => o.AssetPairId == assetPairId);
+
+            var positionList = positions.OrderByDescending(x => x.OpenDate).ToList();
+            var filtered = take == null ? positionList : positionList.Skip(skip.Value).Take(take.Value).ToList();
+
+            return Task.FromResult(new PaginatedResponseContract<OpenPositionContract>(
+                contents: filtered.Select(Convert).ToList(),
+                start: skip ?? 0,
+                size: filtered.Count,
+                totalSize: positionList.Count
+            ));
         }
 
         private OpenPositionContract Convert(Position position)
