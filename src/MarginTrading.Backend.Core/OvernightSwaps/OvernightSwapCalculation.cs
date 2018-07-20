@@ -7,7 +7,7 @@ namespace MarginTrading.Backend.Core
 {
 	public class OvernightSwapCalculation : IOvernightSwapHistory, IOvernightSwapState
 	{
-		public string Key => GetKey(AccountId, Instrument, Direction);
+		public string Key => GetKey(AccountId, Instrument, Direction, OpenOrderIds[0]);
 		
 		public string ClientId { get; set; }
 		public string AccountId { get; set; }
