@@ -7,7 +7,7 @@ namespace MarginTrading.Backend.Core
 {
 	public class OvernightSwapCalculation : IOvernightSwapHistory, IOvernightSwapState
 	{
-		public string Key => GetKey(AccountId, Instrument, Direction);
+		public string Key => GetKey(AccountId, Instrument, Direction, OpenOrderIds[0]);
 		
 		public string ClientId { get; set; }
 		public string AccountId { get; set; }
@@ -25,7 +25,10 @@ namespace MarginTrading.Backend.Core
 		public static string GetKey(string accountId, string instrument, OrderDirection? direction) =>
 			$"{accountId}_{instrument ?? ""}_{direction?.ToString() ?? ""}";
 
-		public static OvernightSwapCalculation Create(IOvernightSwapState state)
+	    public static string GetKey(string accountId, string instrument, OrderDirection? direction,string orderId) =>
+	        $"{accountId}_{instrument ?? ""}_{direction?.ToString() ?? ""}_{orderId ?? ""}";
+
+        public static OvernightSwapCalculation Create(IOvernightSwapState state)
 		{
 			return new OvernightSwapCalculation
 			{
