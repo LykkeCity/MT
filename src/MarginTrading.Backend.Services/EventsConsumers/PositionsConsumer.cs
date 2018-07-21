@@ -90,7 +90,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             SendPositionHistoryEvent(position, PositionHistoryTypeContract.Close,
                 position.ChargedPnL, order, Math.Abs(position.Volume));
 
-            CancelRelatedOrders(position.RelatedOrders);
+            CancelRelatedOrders(position.RelatedOrders, order.CorrelationId);
         }
 
         private void OpenNewPosition(Order order)
@@ -128,7 +128,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
                     SendPositionHistoryEvent(openedPosition, PositionHistoryTypeContract.Close, openedPosition.ChargedPnL, order, Math.Abs(openedPosition.Volume));
                     
-                    CancelRelatedOrders(openedPosition.RelatedOrders);
+                    CancelRelatedOrders(openedPosition.RelatedOrders, order.CorrelationId);
                 }
                 else
                 {
@@ -226,13 +226,13 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             }
         }
         
-        private void CancelRelatedOrders(List<RelatedOrderInfo> relatedOrderInfos)
+        private void CancelRelatedOrders(List<RelatedOrderInfo> relatedOrderInfos, string correlationId)
         {
             foreach (var relatedOrderInfo in relatedOrderInfos)
             {
                 if (_ordersCache.Active.TryPopById(relatedOrderInfo.Id, out var relatedOrder))
                 {
-                    relatedOrder.Cancel(_dateService.Now(), OriginatorType.System, null);
+                    relatedOrder.Cancel(_dateService.Now(), OriginatorType.System, null, correlationId);
                     _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(relatedOrder));
                 }
             }

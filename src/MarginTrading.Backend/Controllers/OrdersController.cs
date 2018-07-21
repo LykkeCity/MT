@@ -10,6 +10,7 @@ using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
@@ -35,11 +36,12 @@ namespace MarginTrading.Backend.Controllers
         private readonly IAssetPairDayOffService _assetDayOffService;
         private readonly IDateService _dateService;
         private readonly IValidateOrderService _validateOrderService;
+        private readonly IIdentityGenerator _identityGenerator;
 
         public OrdersController(IAssetPairsCache assetPairsCache, ITradingEngine tradingEngine,
             IAccountsCacheService accountsCacheService, IMarginTradingOperationsLogService operationsLogService,
             IConsole consoleWriter, OrdersCache ordersCache, IAssetPairDayOffService assetDayOffService,
-            IDateService dateService, IValidateOrderService validateOrderService)
+            IDateService dateService, IValidateOrderService validateOrderService, IIdentityGenerator identityGenerator)
         {
             _assetPairsCache = assetPairsCache;
             _tradingEngine = tradingEngine;
@@ -50,6 +52,7 @@ namespace MarginTrading.Backend.Controllers
             _assetDayOffService = assetDayOffService;
             _dateService = dateService;
             _validateOrderService = validateOrderService;
+            _identityGenerator = identityGenerator;
         }
 
         /// <summary>
@@ -104,8 +107,12 @@ namespace MarginTrading.Backend.Controllers
 
             var originator = GetOriginator(request?.Originator);
 
-            var canceledOrder =
-                _tradingEngine.CancelPendingOrder(order.Id, originator, request?.AdditionalInfo, request?.Comment);
+            var correlationId = string.IsNullOrWhiteSpace(request?.CorrelationId)
+                ? _identityGenerator.GenerateGuid()
+                : request.CorrelationId;
+
+            var canceledOrder = _tradingEngine.CancelPendingOrder(order.Id, originator, request?.AdditionalInfo, 
+                correlationId, request?.Comment);
 
             _consoleWriter.WriteLine($"action order.cancel for accountId = {order.AccountId}, orderId = {orderId}");
             _operationsLogService.AddLog("action order.cancel", order.AccountId, "" /* request.ToJson()*/,
@@ -132,7 +139,12 @@ namespace MarginTrading.Backend.Controllers
             {
                 var originator = GetOriginator(request.Originator);
 
-                _tradingEngine.ChangeOrderLimits(order.Id, request.Price, originator, request.AdditionalInfo);
+                var correlationId = string.IsNullOrWhiteSpace(request?.CorrelationId)
+                    ? _identityGenerator.GenerateGuid()
+                    : request.CorrelationId;
+
+                _tradingEngine.ChangeOrderLimits(order.Id, request.Price, originator, request.AdditionalInfo, 
+                    correlationId);
             }
             catch (ValidateOrderException ex)
             {

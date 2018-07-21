@@ -37,7 +37,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             {
                 case OrderUpdateType.Cancel:
                 case OrderUpdateType.Reject:
-                    CancelRelatedOrders(ea.Order.RelatedOrders);
+                    CancelRelatedOrders(ea.Order.RelatedOrders, ea.Order.CorrelationId);
                     RemoveRelatedOrderFromParent(ea.Order);
                     break;
             }
@@ -50,18 +50,18 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             _rabbitMqNotifyService.OrderHistory(ea.Order, ea.UpdateType);
         }
         
-        private void CancelRelatedOrders(List<RelatedOrderInfo> relatedOrderInfos)
+        private void CancelRelatedOrders(List<RelatedOrderInfo> relatedOrderInfos, string correlationId)
         {
             foreach (var relatedOrderInfo in relatedOrderInfos)
             {
                 if (_ordersCache.Inactive.TryPopById(relatedOrderInfo.Id, out var inactiveRelatedOrder))
                 {
-                    inactiveRelatedOrder.Cancel(_dateService.Now(), OriginatorType.System, null);
+                    inactiveRelatedOrder.Cancel(_dateService.Now(), OriginatorType.System, null, correlationId);
                     _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(inactiveRelatedOrder));
                 } 
                 else if (_ordersCache.Active.TryPopById(relatedOrderInfo.Id, out var activeRelatedOrder))
                 {
-                    activeRelatedOrder.Cancel(_dateService.Now(), OriginatorType.System, null);
+                    activeRelatedOrder.Cancel(_dateService.Now(), OriginatorType.System, null, correlationId);
                     _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(activeRelatedOrder));
                 }
             }

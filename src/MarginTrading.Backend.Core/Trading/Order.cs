@@ -261,7 +261,8 @@ namespace MarginTrading.Backend.Core.Trading
 
         #region Actions
 
-        public void ChangePrice(decimal newPrice, DateTime dateTime, OriginatorType originator, string additionalInfo)
+        public void ChangePrice(decimal newPrice, DateTime dateTime, OriginatorType originator, string additionalInfo,
+            string correlationId)
         {
             if (OrderType == OrderType.TrailingStop)
             {
@@ -272,6 +273,7 @@ namespace MarginTrading.Backend.Core.Trading
             Price = newPrice;
             Originator = originator;
             AdditionalInfo = additionalInfo ?? AdditionalInfo;
+            CorrelationId = correlationId;
         }
         
         public void ChangeVolume(decimal newVolume, DateTime dateTime)
@@ -357,13 +359,14 @@ namespace MarginTrading.Backend.Core.Trading
             LastModified = dateTime;
         }
 
-        public void Cancel(DateTime dateTime, OriginatorType originator, string additionalInfo)
+        public void Cancel(DateTime dateTime, OriginatorType originator, string additionalInfo, string correlationId)
         {
             Status = OrderStatus.Canceled;
             Canceled = dateTime;
             LastModified = dateTime;
             AdditionalInfo = additionalInfo ?? AdditionalInfo;
             CancellationOriginator = originator;
+            CorrelationId = correlationId;
         }
 
         public void AddRelatedOrder(Order order)
