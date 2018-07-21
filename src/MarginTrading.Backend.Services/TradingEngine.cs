@@ -432,7 +432,7 @@ namespace MarginTrading.Backend.Services
             var order = new Order(id, code, position.AssetPairId, -position.Volume, now, now, null, position.AccountId,
                 position.TradingConditionId, position.AccountAssetId, null, position.EquivalentAsset,
                 OrderFillType.FillOrKill, "Stop out", position.LegalEntity, false, OrderType.Market, null, position.Id,
-                OriginatorType.System, 0, 0, OrderStatus.Placed, "", "Stop out");
+                OriginatorType.System, 0, 0, OrderStatus.Placed, "", _identityGenerator.GenerateGuid());
             
             _ordersCache.InProgress.Add(order);
         }
