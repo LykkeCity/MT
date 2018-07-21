@@ -84,7 +84,7 @@ namespace MarginTrading.Backend.Services
                 .Select(ch => new AccountStatsUpdateMessage {Accounts = ch.ToArray()});
         }
 
-        public async Task<List<Order>> CloseAccountOrders(string accountId)
+        /*public async Task<List<Order>> CloseAccountOrders(string accountId)
         {
             var positions = _ordersCache.Positions.GetOrdersByAccountIds(accountId).ToArray();
             var closedOrders = new List<Order>();
@@ -122,7 +122,7 @@ namespace MarginTrading.Backend.Services
             }
 
             return closedOrders;
-        }
+        }*/
 
         private MarginTradingAccount Convert(AccountContract accountContract)
         {

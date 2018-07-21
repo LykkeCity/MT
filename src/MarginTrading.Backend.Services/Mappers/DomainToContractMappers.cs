@@ -64,7 +64,8 @@ namespace MarginTrading.Backend.Services.Mappers
                 RelatedOrderInfos = order.RelatedOrders.Select(o =>
                     new RelatedOrderInfoContract {Id = o.Id, Type = o.Type.ToType<OrderTypeContract>()}).ToList(),
                 TradingConditionId = order.TradingConditionId,
-                AdditionalInfo = order.AdditionalInfo
+                AdditionalInfo = order.AdditionalInfo,
+                CorrelationId = order.CorrelationId,
             };
         }
     }

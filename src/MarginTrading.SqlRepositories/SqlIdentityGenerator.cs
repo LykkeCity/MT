@@ -38,5 +38,10 @@ namespace MarginTrading.SqlRepositories
         {
             return Guid.NewGuid().ToString("N");
         }
+
+        public string GenerateGuid()
+        {
+            return Guid.NewGuid().ToString("N");
+        }
     }
 }

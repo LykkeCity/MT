@@ -432,7 +432,7 @@ namespace MarginTrading.Backend.Services
             var order = new Order(id, code, position.AssetPairId, -position.Volume, now, now, null, position.AccountId,
                 position.TradingConditionId, position.AccountAssetId, null, position.EquivalentAsset,
                 OrderFillType.FillOrKill, "Stop out", position.LegalEntity, false, OrderType.Market, null, position.Id,
-                OriginatorType.System, 0, 0, OrderStatus.Placed, "");
+                OriginatorType.System, 0, 0, OrderStatus.Placed, "", "Stop out");
             
             _ordersCache.InProgress.Add(order);
         }
@@ -452,7 +452,7 @@ namespace MarginTrading.Backend.Services
         }
 
         public Task<Order> ClosePositionAsync(string positionId, OriginatorType originator, string additionalInfo,
-            string comment = null)
+            string correlationId, string comment = null)
         {
             var position = _ordersCache.Positions.GetOrderById(positionId);
 
@@ -466,7 +466,7 @@ namespace MarginTrading.Backend.Services
                 position.TradingConditionId, position.AccountAssetId, null, position.EquivalentAsset,
                 OrderFillType.FillOrKill, $"Close position. {comment}", position.LegalEntity, false, OrderType.Market, null,
                 position.Id,
-                originator, 0, 0, OrderStatus.Placed, additionalInfo);
+                originator, 0, 0, OrderStatus.Placed, additionalInfo, correlationId);
 
             return ExecuteOrderByMatchingEngineAsync(order, me /*, reason, comment*/);
         }

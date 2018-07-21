@@ -120,6 +120,10 @@ namespace MarginTrading.Backend.Services
 //            {
 //                order.MarginCalcInstrument = substAssetPair.Id;
 //            }
+            if (string.IsNullOrWhiteSpace(request.CorrelationId)) //todo do we need to check complexity of passed id's ?
+            {
+                request.CorrelationId = _identityGenerator.GenerateGuid();
+            }
 
             #endregion
 
@@ -152,7 +156,7 @@ namespace MarginTrading.Backend.Services
                 OrderFillType.FillOrKill, string.Empty, account.LegalEntity, request.ForceOpen,
                 request.Type.ToType<OrderType>(), request.ParentOrderId, request.PositionId, originator,
                 initialParameters.equivalentPrice, initialParameters.fxPrice, OrderStatus.Placed,
-                request.AdditionalInfo);
+                request.AdditionalInfo, request.CorrelationId);
             
             var relatedOrders = new List<Order>();
 
@@ -224,7 +228,7 @@ namespace MarginTrading.Backend.Services
                     price, parentOrder.EquivalentAsset, OrderFillType.FillOrKill, string.Empty,
                     parentOrder.LegalEntity, false, orderType, parentOrder.Id, null,
                     originator, initialParameters.equivalentPrice,
-                    initialParameters.fxPrice, OrderStatus.Placed, request.AdditionalInfo);
+                    initialParameters.fxPrice, OrderStatus.Placed, request.AdditionalInfo, request.CorrelationId);
             }
 
             if (!string.IsNullOrEmpty(request.PositionId))
@@ -244,7 +248,7 @@ namespace MarginTrading.Backend.Services
                     price, position.EquivalentAsset, OrderFillType.FillOrKill, string.Empty,
                     position.LegalEntity, false, orderType, null, position.Id,
                     originator, initialParameters.equivalentPrice,
-                    initialParameters.fxPrice, OrderStatus.Placed, request.AdditionalInfo);
+                    initialParameters.fxPrice, OrderStatus.Placed, request.AdditionalInfo, request.CorrelationId);
             }
 
             throw new ValidateOrderException(OrderRejectReason.InvalidParent,

@@ -30,5 +30,10 @@ namespace MarginTrading.Backend.Services.Infrastructure
             var chars = Enumerable.Range(0, 10).Select(x => Pool[_random.Next(0, Pool.Length)]);
             return new string(chars.ToArray());
         }
+
+        public string GenerateGuid()
+        {
+            return Guid.NewGuid().ToString("N");
+        }
     }
 }
