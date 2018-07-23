@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.Backend.Core;
@@ -14,6 +15,7 @@ using AssetPairContract = MarginTrading.SettingsService.Contracts.AssetPair.Asse
 
 namespace MarginTradingTests
 {
+    [UsedImplicitly]
     public class MarginTradingTestsUtils
     {
         public const string TradingConditionId = "1";
