@@ -270,9 +270,8 @@ namespace MarginTrading.Backend.Services
             {
                 _threadSwitcher.SwitchThread(async () =>
                 {
-
-                    await PlaceOrderByMarketPrice(order);
                     _ordersCache.Active.Remove(order);
+                    await PlaceOrderByMarketPrice(order);
                 });
             }
         }
