@@ -231,9 +231,18 @@ namespace MarginTrading.Backend.Services
             {
                 RejectOrder(order, OrderRejectReason.NoLiquidity, "No orders to match", "");
             } 
-            else if (matchedOrders.SummaryVolume < Math.Abs(order.Volume) && order.FillType == OrderFillType.FillOrKill)
+            else if (matchedOrders.SummaryVolume < Math.Abs(order.Volume))
             {
-                RejectOrder(order, OrderRejectReason.NoLiquidity, "Not fully matched", "");
+                if (order.FillType == OrderFillType.FillOrKill)
+                {
+                    RejectOrder(order, OrderRejectReason.NoLiquidity, "Not fully matched", "");
+                }
+                else
+                {
+                    order.PartiallyExecute(_dateService.Now(), matchedOrders);
+                    _ordersCache.InProgress.Add(order);
+                    return order;
+                }
             }
 
             if (order.Status != OrderStatus.Rejected)

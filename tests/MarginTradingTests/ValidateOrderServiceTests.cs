@@ -12,6 +12,50 @@ namespace MarginTradingTests
     [TestFixture]
     public class ValidateOrderServiceTests :BaseTests
     {
+//        
+//        [Test]
+//        public void Check_Default_Order_Status()
+//        {
+//            var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
+//                MarginTradingTestsUtils.TradingConditionId, 1);
+//            Assert.AreEqual(OrderStatus.Placed, order.Status);
+//        }
+//
+//        [Test]
+//        public void Check_Default_Order_Fill_Type()
+//        {
+//            var order = new Position();
+//            Assert.AreEqual(OrderFillType.FillOrKill, order.FillType);
+//        }
+//
+//        [Test]
+//        public void Check_Default_Reject_Reason()
+//        {
+//            var order = new Position();
+//            Assert.AreEqual(OrderRejectReason.None, order.RejectReason);
+//        }
+//
+//        [Test]
+//        public void Check_Default_Close_Reason()
+//        {
+//            var order = new Position();
+//            Assert.AreEqual(OrderCloseReason.None, order.CloseReason);
+//        }
+//
+//        [Test]
+//        public void Check_Order_Is_Buy()
+//        {
+//            var order = new Position {Volume = 10};
+//            Assert.AreEqual(OrderDirection.Buy, order.GetOrderDirection());
+//        }
+//
+//        [Test]
+//        public void Check_Order_Is_Sell()
+//        {
+//            var order = new Position {Volume = -10};
+//            Assert.AreEqual(OrderDirection.Sell, order.GetOrderDirection());
+//        }
+        
 //        private IValidateOrderService _validateOrderService;
 //        private IEventChannel<BestPriceChangeEventArgs> _bestPriceConsumer;
 //        private OrdersCache _ordersCache;

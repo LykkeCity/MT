@@ -335,7 +335,13 @@ namespace MarginTrading.Backend.Core.Trading
             ExecutionPrice = matchedOrders.WeightedAveragePrice;
             ExternalOrderId = externalOrderId;
             ExternalProviderId = externalProviderId;
-            MatchedOrders = matchedOrders;
+            MatchedOrders.AddRange(matchedOrders);
+        }
+        
+        public void PartiallyExecute(DateTime dateTime, MatchedOrderCollection matchedOrders)
+        {
+            LastModified = dateTime;
+            MatchedOrders.AddRange(matchedOrders);
         }
 
         public void SetRates(decimal equivalentRate, decimal fxRate)
