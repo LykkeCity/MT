@@ -10,6 +10,7 @@ using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
@@ -277,7 +278,7 @@ namespace MarginTrading.Backend.Controllers
                 positions = positions.Where(o => o.AssetPairId == assetPairId);
 
             var positionList = positions.OrderByDescending(x => x.OpenDate).ToList();
-            var filtered = take == null ? positionList : positionList.Skip(skip.Value).Take(take.Value).ToList();
+            var filtered = take == null ? positionList : positionList.Skip(skip.Value).Take(PaginationHelper.GetTake(take)).ToList();
 
             return Task.FromResult(new PaginatedResponseContract<OpenPositionContract>(
                 contents: filtered.Select(Convert).ToList(),

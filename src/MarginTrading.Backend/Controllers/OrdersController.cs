@@ -10,6 +10,7 @@ using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services;
@@ -218,7 +219,7 @@ namespace MarginTrading.Backend.Controllers
                 orders = orders.Where(o => o.ParentOrderId == parentOrderId);
 
             var orderList = orders.OrderByDescending(x => x.Created).ToList();
-            var filtered = take == null ? orderList : orderList.Skip(skip.Value).Take(take.Value).ToList();
+            var filtered = take == null ? orderList : orderList.Skip(skip.Value).Take(PaginationHelper.GetTake(take)).ToList();
 
             return Task.FromResult(new PaginatedResponseContract<OrderContract>(
                 contents: filtered.Select(o => o.ConvertToContract()).ToList(),

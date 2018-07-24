@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Core.Repositories;
 
@@ -31,7 +32,7 @@ namespace MarginTrading.Backend.Services
         {
             var accounts = _accounts.Values.OrderBy(x => x.Id).ToList();//todo think again about ordering
             return new PaginatedResponse<MarginTradingAccount>(
-                contents: !take.HasValue ? accounts : accounts.Skip(skip.Value).Take(take.Value).ToList(),
+                contents: !take.HasValue ? accounts : accounts.Skip(skip.Value).Take(PaginationHelper.GetTake(take)).ToList(),
                 start: skip ?? 0,
                 size: take ?? accounts.Count,
                 totalSize: accounts.Count
