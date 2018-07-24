@@ -174,6 +174,8 @@ namespace MarginTrading.Backend.Services
 
         private async Task<Order> ExecuteOrderByMatchingEngineAsync(Order order, IMatchingEngineBase matchingEngine)
         {
+            //TODO: think how not to execute one order twice!!!
+            
             order.StartExecution(_dateService.Now(), matchingEngine.Id);
 
             _orderExecutionStartedEvenChannel.SendEvent(this, new OrderExecutionStartedEventArgs(order));
@@ -239,11 +241,6 @@ namespace MarginTrading.Backend.Services
                 _orderExecutedEventChannel.SendEvent(this, new OrderExecutedEventArgs(order));
             }
 
-            if (order.OrderType != OrderType.Market)
-            {
-                _ordersCache.Active.Remove(order);
-            }
-
             return order;
         }
 
@@ -255,27 +252,28 @@ namespace MarginTrading.Backend.Services
         }
 
         #region Orders waiting for execution
-        
+
         private void ProcessOrdersWaitingForExecution(string instrument)
         {
             //ProcessPendingOrdersMarginRecalc(instrument);
-            
+
             var orders = GetPendingOrdersToBeExecuted(instrument).ToArray();
 
             if (orders.Length == 0)
                 return;
 
-            foreach (var order in orders)
-                _ordersCache.Active.Remove(order);
 
             //TODO: think how to make sure that we don't loose orders
             // + change logic according validation and execution rules
-            _threadSwitcher.SwitchThread(async () =>
-            {
-                foreach (var order in orders)
-                    await PlaceOrderByMarketPrice(order);
-            });
 
+            foreach (var order in orders)
+            {
+                _threadSwitcher.SwitchThread(async () =>
+                {
+                    _ordersCache.Active.Remove(order);
+                    await PlaceOrderByMarketPrice(order);
+                });
+            }
         }
 
         private IEnumerable<Order> GetPendingOrdersToBeExecuted(string instrument)
