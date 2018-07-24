@@ -120,7 +120,7 @@ namespace MarginTrading.Backend.Services
 //            {
 //                order.MarginCalcInstrument = substAssetPair.Id;
 //            }
-            if (string.IsNullOrWhiteSpace(request.CorrelationId)) //todo do we need to check complexity of passed id's ?
+            if (string.IsNullOrWhiteSpace(request.CorrelationId))
             {
                 request.CorrelationId = _identityGenerator.GenerateGuid();
             }
