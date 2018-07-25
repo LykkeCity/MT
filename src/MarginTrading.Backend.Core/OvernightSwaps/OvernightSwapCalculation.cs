@@ -7,7 +7,7 @@ namespace MarginTrading.Backend.Core
 {
 	public class OvernightSwapCalculation : IOvernightSwapHistory, IOvernightSwapState
 	{
-		public string Key => GetKey(AccountId, Instrument, Direction, OpenOrderIds[0]);
+		public string Key => GetKey(AccountId, Instrument, Direction, OpenOrderId);
 		
 		public string ClientId { get; set; }
 		public string AccountId { get; set; }
@@ -17,7 +17,7 @@ namespace MarginTrading.Backend.Core
 		public decimal Volume { get; set; }
 		public decimal Value { get; set; }
 		public decimal SwapRate { get; set; }
-		public List<string> OpenOrderIds { get; set; }
+		public string OpenOrderId { get; set; }
 		
 		public bool IsSuccess { get; set; }
 		public Exception Exception { get; set; }
@@ -40,13 +40,13 @@ namespace MarginTrading.Backend.Core
 				Volume = state.Volume,
 				Value = state.Value,
 				SwapRate = state.SwapRate,
-				OpenOrderIds = state.OpenOrderIds,
+				OpenOrderId = state.OpenOrderId,
 				IsSuccess = true
 			};
 		}
 		
 		public static OvernightSwapCalculation Create(string clientId, string accountId, string instrument,
-			List<string> orderIds, DateTime timestamp, bool isSuccess, Exception exception = null, decimal volume = default(decimal),
+			string orderId, DateTime timestamp, bool isSuccess, Exception exception = null, decimal volume = default(decimal),
 			decimal value = default(decimal), decimal swapRate = default(decimal), OrderDirection? direction = null)
 		{
 			return new OvernightSwapCalculation
@@ -59,7 +59,7 @@ namespace MarginTrading.Backend.Core
 				Volume = volume,
 				Value = value,
 				SwapRate = swapRate,
-				OpenOrderIds = orderIds,
+				OpenOrderId = orderId,
 				IsSuccess = isSuccess,
 				Exception = exception,
 			};
@@ -76,7 +76,7 @@ namespace MarginTrading.Backend.Core
 					Time = newCalc.Time,
 					Volume = newCalc.Volume,
 					Value = newCalc.Value + lastCalc.Value,
-					OpenOrderIds = newCalc.OpenOrderIds.Concat(lastCalc.OpenOrderIds).ToList(),
+					OpenOrderId = newCalc.OpenOrderId,
 					SwapRate = newCalc.SwapRate,
 					IsSuccess = true
 				};
