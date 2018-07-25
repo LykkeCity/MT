@@ -31,11 +31,12 @@ namespace MarginTrading.Backend.Services
         public PaginatedResponse<MarginTradingAccount> GetAllByPages(int? skip = null, int? take = null)
         {
             var accounts = _accounts.Values.OrderBy(x => x.Id).ToList();//todo think again about ordering
+            var data = (!take.HasValue ? accounts : accounts.Skip(skip.Value))
+                .Take(PaginationHelper.GetTake(take)).ToList();
             return new PaginatedResponse<MarginTradingAccount>(
-                contents: (!take.HasValue ? accounts : accounts.Skip(skip.Value))
-                    .Take(PaginationHelper.GetTake(take)).ToList(),
+                contents: data,
                 start: skip ?? 0,
-                size: take ?? accounts.Count,
+                size: data.Count,
                 totalSize: accounts.Count
             );
         }
