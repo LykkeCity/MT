@@ -32,7 +32,8 @@ namespace MarginTrading.Backend.Services
         {
             var accounts = _accounts.Values.OrderBy(x => x.Id).ToList();//todo think again about ordering
             return new PaginatedResponse<MarginTradingAccount>(
-                contents: !take.HasValue ? accounts : accounts.Skip(skip.Value).Take(PaginationHelper.GetTake(take)).ToList(),
+                contents: (!take.HasValue ? accounts : accounts.Skip(skip.Value))
+                    .Take(PaginationHelper.GetTake(take)).ToList(),
                 start: skip ?? 0,
                 size: take ?? accounts.Count,
                 totalSize: accounts.Count

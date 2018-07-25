@@ -219,7 +219,8 @@ namespace MarginTrading.Backend.Controllers
                 orders = orders.Where(o => o.ParentOrderId == parentOrderId);
 
             var orderList = orders.OrderByDescending(x => x.Created).ToList();
-            var filtered = take == null ? orderList : orderList.Skip(skip.Value).Take(PaginationHelper.GetTake(take)).ToList();
+            var filtered = (take == null ? orderList : orderList.Skip(skip.Value))
+                .Take(PaginationHelper.GetTake(take)).ToList();
 
             return Task.FromResult(new PaginatedResponseContract<OrderContract>(
                 contents: filtered.Select(o => o.ConvertToContract()).ToList(),

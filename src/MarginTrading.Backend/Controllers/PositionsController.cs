@@ -278,7 +278,8 @@ namespace MarginTrading.Backend.Controllers
                 positions = positions.Where(o => o.AssetPairId == assetPairId);
 
             var positionList = positions.OrderByDescending(x => x.OpenDate).ToList();
-            var filtered = take == null ? positionList : positionList.Skip(skip.Value).Take(PaginationHelper.GetTake(take)).ToList();
+            var filtered = (take == null ? positionList : positionList.Skip(skip.Value))
+                .Take(PaginationHelper.GetTake(take)).ToList();
 
             return Task.FromResult(new PaginatedResponseContract<OpenPositionContract>(
                 contents: filtered.Select(Convert).ToList(),
