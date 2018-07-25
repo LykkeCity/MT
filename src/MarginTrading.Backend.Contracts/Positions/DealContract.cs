@@ -5,6 +5,7 @@ namespace MarginTrading.Backend.Contracts.Positions
 {
     public class DealContract
     {
+        public string DealId { get; set; }
         public string PositionId { get; set; }
         public DateTime Created { get; set; }
         public string OpenTradeId { get; set; }
