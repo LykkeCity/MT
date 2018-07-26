@@ -18,7 +18,7 @@ namespace MarginTrading.AzureRepositories.Entities
 		public double Volume { get; set; }
 		decimal IOvernightSwapState.Volume => (decimal) Volume;
 		public string OpenOrderId { get; set; }
-		string IOvernightSwapState.OpenOrderId => JsonConvert.DeserializeObject<string>(OpenOrderId);
+		string IOvernightSwapState.OpenOrderId => OpenOrderId;
 		public double Value { get; set; }
 		decimal IOvernightSwapState.Value => (decimal) Value;
 		public double SwapRate { get; set; }

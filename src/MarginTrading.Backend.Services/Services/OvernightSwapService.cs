@@ -135,41 +135,46 @@ namespace MarginTrading.Backend.Services.Services
 					await _log.WriteInfoAsync(nameof(OvernightSwapService), nameof(CalculateAndChargeSwaps),
 						$"Started, # of orders: {filteredOrders.Count}.", DateTime.UtcNow);
 					
-					foreach (var order in filteredOrders)
+					foreach (var accountOrders in filteredOrders.GroupBy(x => x.AccountId))
 					{
-						var clientId = order.ClientId;
+						var clientId = accountOrders.First().ClientId;
+					    var orders = accountOrders.ToList();
 						MarginTradingAccount account;
 						try
 						{
-							account = _accountsCacheService.Get(clientId, order.AccountId);
+							account = _accountsCacheService.Get(clientId, accountOrders.Key);
 						}
 						catch (Exception ex)
 						{
-						    List<Order> failedOrderList = new List<Order>();
-                            await ProcessFailedOrder(order, clientId, order.AccountId, null, ex);
-                            continue;
+						    await ProcessFailedOrders(orders, clientId, accountOrders.Key, null, ex);
+						    continue;
 						}
-					    IAccountAssetPair accountAssetPair;
-                        try
-                        {
-                            accountAssetPair = _accountAssetsCacheService.GetAccountAsset(
-                                order?.TradingConditionId, order?.AccountAssetId, order?.Instrument);
-                        }
-                        catch (Exception ex)
-                        {
-                            await ProcessFailedOrder(order, clientId, account.Id, order.AccountId, ex);
-                            continue;
-                        }
+					   
+					    foreach (var order in orders)
+					    {
+					        IAccountAssetPair accountAssetPair;
+                            try
+					        {
+					            accountAssetPair = _accountAssetsCacheService.GetAccountAsset(
+					                order?.TradingConditionId, order?.AccountAssetId, order?.Instrument);
+					        }
+					        catch (Exception ex)
+					        {
+					            await ProcessFailedOrder(order, clientId, account.Id, order.AccountId, ex);
+					            continue;
+					        }
 
-					    try
-                        {
-                            await ProcessOrder(order, account, accountAssetPair);
+					        try
+					        {
+					            await ProcessOrder(order, account, accountAssetPair);
+					        }
+					        catch (Exception ex)
+					        {
+					            await ProcessFailedOrder(order, clientId, account.Id, order.AccountId, ex);
+					            continue;
+					        }
                         }
-                        catch (Exception ex)
-                        {
-                            await ProcessFailedOrder(order, clientId, account.Id, order.AccountId, ex);
-                            continue;
-                        }
+                       
                     }
 
 
@@ -201,7 +206,7 @@ namespace MarginTrading.Backend.Services.Services
         {
 
             //check if swaps had already been taken
-            var lastCalcExists = _overnightSwapCache.TryGet(OvernightSwapCalculation.GetKey(account.Id, order.Instrument, order.GetOrderType(), order.Id),
+            var lastCalcExists = _overnightSwapCache.TryGet(OvernightSwapCalculation.GetKey(order.Id),
                                      out var lastCalc)
                                  && lastCalc.Time >= CalcLastInvocationTime();
             if (lastCalcExists)
@@ -214,25 +219,33 @@ namespace MarginTrading.Backend.Services.Services
             //calc swaps
             var swapRate = order.GetOrderType() == OrderDirection.Buy ? accountAssetPair.OvernightSwapLong : accountAssetPair.OvernightSwapShort;
             if (swapRate == 0)
+            {
+                await _log.WriteInfoAsync(nameof(OvernightSwapService), nameof(ProcessOrder),
+                    $"Overnight swaprate on order {order.Id } is 0, what will not be calculated", DateTime.UtcNow);
                 return;
+            }
+            
 
             var total = _commissionService.GetOvernightSwap(order, swapRate);
             if (total == 0)
+            {
+                await _log.WriteInfoAsync(nameof(OvernightSwapService), nameof(ProcessOrder),
+                    $"Overnight swaprate on order {order.Id } is 0, what will not be calculated", DateTime.UtcNow);
+
                 return;
+            }
+                
 
             //create calculation obj & add to cache
             var volume = order.Volume;
             var calculation = OvernightSwapCalculation.Create(account.ClientId, account.Id, order.Instrument,
                 order.Id, _currentStartTimestamp, true, null, volume, total, swapRate, order.GetOrderType());
 
-            //charge comission
-            var instrumentName = _assetPairsCache.GetAssetPairByIdOrDefault(accountAssetPair.Instrument)?.Name
-                                 ?? accountAssetPair.Instrument;
             await _accountManager.UpdateBalanceAsync(
                 account: account,
                 amount: total,
                 historyType: AccountHistoryType.Swap,
-                comment: $"{instrumentName} {(order.GetOrderType() == OrderDirection.Buy ? "long" : "short")} swaps. Volume: {volume}. Positions count: {1}. Rate: {swapRate}. Time: {_currentStartTimestamp:u}.",
+                comment: $"Position {order.Id}  swaps. Time: {_currentStartTimestamp:u}.",
                 auditLog: calculation.ToJson(),
                 eventSourceId: order.Id);
 
@@ -292,7 +305,7 @@ namespace MarginTrading.Backend.Services.Services
 	        var failedCalculation = OvernightSwapCalculation.Create(clientId, accountId, instrument,
 	            order.Id, _currentStartTimestamp, false, exception, volume);
 
-	        await _log.WriteErrorAsync(nameof(OvernightSwapService), nameof(ProcessFailedOrders),
+	        await _log.WriteErrorAsync(nameof(OvernightSwapService), nameof(ProcessFailedOrder),
 	            new Exception(failedCalculation.ToJson()), DateTime.UtcNow);
 
 	        await _overnightSwapHistoryRepository.AddAsync(failedCalculation);
