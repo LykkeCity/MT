@@ -13,6 +13,6 @@ namespace MarginTrading.Backend.Core
 	 	decimal Volume { get; }
 		decimal Value { get; }
 		decimal SwapRate { get; }
-		List<string> OpenOrderIds { get; }
+		string OpenOrderId { get; }
 	}
 }

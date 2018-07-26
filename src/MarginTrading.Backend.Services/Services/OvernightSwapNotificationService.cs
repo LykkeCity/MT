@@ -99,7 +99,7 @@ namespace MarginTrading.Backend.Services.Services
                                                     Volume = calc.Volume,
                                                     SwapRate = calc.SwapRate,
                                                     Cost = calc.Value,
-                                                    PositionIds = calc.OpenOrderIds,
+                                                    PositionId = calc.OpenOrderId,
                                                 };
                                             }).ToList()
                                         };
