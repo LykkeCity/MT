@@ -1,41 +1,59 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
 using Lykke.Service.Assets.Client;
+using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.Backend.Core;
+using MarginTrading.Common.Extensions;
 
 namespace MarginTrading.Backend.Services.Assets
 {
-    public class AssetsManager : IStartable
+    public class AssetsManager : IStartable, IAssetManager
     {
-        private readonly IAssetsService _assetsService;
+        private readonly IAssetRepository _assetRepository;
         private readonly AssetsCache _assetsCache;
 
-        public AssetsManager(IAssetsService assetsService,
+        public AssetsManager(IAssetRepository assetRepository,
             AssetsCache assetsCache)
         {
-            _assetsService = assetsService;
+            _assetRepository = assetRepository;
             _assetsCache = assetsCache;
         }
 
         public void Start()
         {
-            UpdateCache().Wait();
+            InitCache();
         }
 
-        public async Task UpdateCache()
+        public void InitCache()
         {
-            var assets = (await _assetsService.AssetGetAllAsync())
-                .ToDictionary(
-                    a => a.Id,
-                    a => (IAsset) new Asset
-                    {
-                        Id = a.Id,
-                        Name = a.Name,
-                        Accuracy = a.Accuracy
-                    });
-            
+            var assets = _assetRepository.GetAsync().GetAwaiter().GetResult()
+                .ToDictionary(a => a.Id, s => s);
             _assetsCache.Init(assets);
+        }
+
+        public async Task<IAsset> UpdateAsset(IAsset asset)
+        {
+            await _assetRepository.ReplaceAsync(asset);
+            InitCache();
+            return _assetsCache.GetAssetById(asset.Id)
+                .RequiredNotNull("Asset " + asset.Id);
+        }
+
+        public async Task<IAsset> InsertAsset(IAsset asset)
+        {
+            await _assetRepository.InsertAsync(asset);
+            InitCache();
+            return _assetsCache.GetAssetById(asset.Id)
+                .RequiredNotNull("Asset " + asset.Id);
+        }
+
+        public async Task<IAsset> DeleteAsset(string assetId)
+        {
+            var asset = await _assetRepository.DeleteAsync(assetId);
+            InitCache();
+            return asset;
         }
     }
 }

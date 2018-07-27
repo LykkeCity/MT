@@ -94,7 +94,12 @@ namespace MarginTrading.Backend.Modules
 					_settings.Nested(s => s.Db.MarginTradingConnString), _log, ctx.Resolve<IConvertService>())
 			).SingleInstance();
 
-			builder.RegisterType<MatchingEngineInMemoryRepository>()
+		    builder.Register(ctx =>
+		        AzureRepoFactories.MarginTrading.CreateAssetSettingsRepository(
+		            _settings.Nested(s => s.Db.MarginTradingConnString), _log, ctx.Resolve<IConvertService>())
+		    ).SingleInstance();
+
+            builder.RegisterType<MatchingEngineInMemoryRepository>()
 				.As<IMatchingEngineRepository>()
 				.SingleInstance();
 
