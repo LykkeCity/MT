@@ -6,7 +6,7 @@ using JetBrains.Annotations;
 namespace MarginTrading.Backend.Contracts.AssetSettings
 {
     [PublicAPI]
-    public class AssetContract : AssetSettings.AssetInputContract
+    public class AssetContract : AssetInputContract
     {
         /// <summary>
         /// Instrument id
