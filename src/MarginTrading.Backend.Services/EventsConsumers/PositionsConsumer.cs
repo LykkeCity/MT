@@ -8,6 +8,7 @@ using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
@@ -25,6 +26,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         private readonly IConvertService _convertService;
         private readonly IDateService _dateService;
         private readonly IAccountsCacheService _accountsCacheService;
+        private readonly IIdentityGenerator _identityGenerator;
         private readonly ICqrsSender _cqrsSender;
         private readonly IEventChannel<OrderCancelledEventArgs> _orderCancelledEventChannel;
         private readonly IEventChannel<OrderChangedEventArgs> _orderChangedEventChannel;
@@ -39,6 +41,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             IConvertService convertService,
             IDateService dateService,
             IAccountsCacheService accountsCacheService,
+            IIdentityGenerator identityGenerator,
             ICqrsSender cqrsSender,
             IEventChannel<OrderCancelledEventArgs> orderCancelledEventChannel,
             IEventChannel<OrderChangedEventArgs> orderChangedEventChannel)
@@ -48,6 +51,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             _convertService = convertService;
             _dateService = dateService;
             _accountsCacheService = accountsCacheService;
+            _identityGenerator = identityGenerator;
             _cqrsSender = cqrsSender;
             _orderCancelledEventChannel = orderCancelledEventChannel;
             _orderChangedEventChannel = orderChangedEventChannel;
@@ -180,6 +184,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 
                 deal = new DealContract
                 {
+                    DealId = _identityGenerator.GenerateAlphanumericId(),
                     PositionId = position.Id,
                     Volume = dealVolume.Value,
                     Created = dealOrder.Executed.Value,
@@ -188,7 +193,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     OpenPrice = position.OpenPrice,
                     OpenFxPrice = position.OpenFxPrice,
                     ClosePrice = dealOrder.ExecutionPrice.Value,
-                    CloseFxPrice = dealOrder.FxRate,
+                    CloseFxPrice = dealOrder.FxRate,    
                     Fpl = fpl,
                     AdditionalInfo = dealOrder.AdditionalInfo,
                     Originator = dealOrder.Originator.ToType<OriginatorTypeContract>()
