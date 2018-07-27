@@ -6,9 +6,11 @@ using Common;
 using Common.Log;
 using MarginTrading.AzureRepositories.Snow.OrdersById;
 using MarginTrading.Backend.Contracts;
+using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services;
@@ -180,6 +182,52 @@ namespace MarginTrading.Backend.Controllers
                 orders = orders.Where(o => o.ParentOrderId == parentOrderId);
 
             return Task.FromResult(orders.Select(o => o.ConvertToContract()).ToList());
+        }
+
+        /// <summary>
+        /// Get open orders with optional filtering and pagination
+        /// </summary>
+        [HttpGet, Route("by-pages")]
+        public Task<PaginatedResponseContract<OrderContract>> ListAsyncByPages(
+            [FromQuery] string accountId = null,
+            [FromQuery] string assetPairId = null, [FromQuery] string parentPositionId = null,
+            [FromQuery] string parentOrderId = null,
+            [FromQuery] int? skip = null, [FromQuery] int? take = null)
+        {
+            if ((skip.HasValue && !take.HasValue) || (!skip.HasValue && take.HasValue))
+            {
+                throw new ArgumentOutOfRangeException(nameof(skip), "Both skip and take must be set or unset");
+            }
+
+            if (take.HasValue && (take <= 0 || skip < 0))
+            {
+                throw new ArgumentOutOfRangeException(nameof(skip), "Skip must be >= 0, take must be > 0");
+            }
+            
+            var orders = _ordersCache.GetAllOrders().AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(accountId))
+                orders = orders.Where(o => o.AccountId == accountId);
+
+            if (!string.IsNullOrWhiteSpace(assetPairId))
+                orders = orders.Where(o => o.AssetPairId == assetPairId);
+
+            if (!string.IsNullOrWhiteSpace(parentPositionId))
+                orders = orders.Where(o => o.ParentPositionId == parentPositionId);
+
+            if (!string.IsNullOrWhiteSpace(parentOrderId))
+                orders = orders.Where(o => o.ParentOrderId == parentOrderId);
+
+            var orderList = orders.OrderByDescending(x => x.Created).ToList();
+            var filtered = (take == null ? orderList : orderList.Skip(skip.Value))
+                .Take(PaginationHelper.GetTake(take)).ToList();
+
+            return Task.FromResult(new PaginatedResponseContract<OrderContract>(
+                contents: filtered.Select(o => o.ConvertToContract()).ToList(),
+                start: skip ?? 0,
+                size: filtered.Count,
+                totalSize: orderList.Count
+            ));
         }
 
         private OriginatorType GetOriginator(OriginatorTypeContract? originator)

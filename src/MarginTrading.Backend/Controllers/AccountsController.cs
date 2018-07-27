@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Contracts.Account;
+using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Orders;
@@ -134,7 +136,7 @@ namespace MarginTrading.Backend.Controllers
         }
 
         /// <summary>
-        ///     Returns all account stats
+        /// Returns all account stats
         /// </summary>
         [HttpGet]
         [Route("stats")]
@@ -144,9 +146,32 @@ namespace MarginTrading.Backend.Controllers
 
             return Task.FromResult(stats.Select(Convert).ToList());
         }
-        
+
         /// <summary>
-        ///     Returns stats of selected account
+        /// Returns all accounts stats, optionally paginated. Both skip and take must be set or unset.
+        /// </summary>
+        [HttpGet]
+        [Route("stats/by-pages")]
+        public Task<PaginatedResponseContract<AccountStatContract>> GetAllAccountStatsByPages(
+            int? skip = null, int? take = null)
+        {
+            if ((skip.HasValue && !take.HasValue) || (!skip.HasValue && take.HasValue))
+            {
+                throw new ArgumentOutOfRangeException(nameof(skip), "Both skip and take must be set or unset");
+            }
+
+            if (take.HasValue && (take <= 0 || skip < 0))
+            {
+                throw new ArgumentOutOfRangeException(nameof(skip), "Skip must be >= 0, take must be > 0");
+            }
+            
+            var stats = _accountsCacheService.GetAllByPages(skip, take);
+
+            return Task.FromResult(Convert(stats));
+        }
+
+        /// <summary>
+        /// Returns stats of selected account
         /// </summary>
         /// <param name="accountId"></param>
         [HttpGet]
@@ -178,6 +203,16 @@ namespace MarginTrading.Backend.Controllers
                 MarginUsageLevel = item.GetMarginUsageLevel(),
                 LegalEntity = item.LegalEntity
             };
+        }
+
+        private PaginatedResponseContract<AccountStatContract> Convert(PaginatedResponse<MarginTradingAccount> accounts)
+        {
+            return new PaginatedResponseContract<AccountStatContract>(
+                contents: accounts.Contents.Select(Convert).ToList(),
+                start: accounts.Start,
+                size: accounts.Size,
+                totalSize: accounts.TotalSize
+            );
         }
     }
 }
