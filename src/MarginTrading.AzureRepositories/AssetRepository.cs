@@ -15,10 +15,10 @@ namespace MarginTrading.AzureRepositories
 {
     public class AssetRepository : IAssetRepository
     {
-        private readonly INoSQLTableStorage<AssetPairsRepository.AssetPairEntity> _tableStorage;
+        private readonly INoSQLTableStorage<AssetRepository.AssetEntity> _tableStorage;
         private readonly IConvertService _convertService;
 
-        public AssetRepository(INoSQLTableStorage<AssetPairsRepository.AssetPairEntity> tableStorage,
+        public AssetRepository(INoSQLTableStorage<AssetRepository.AssetEntity> tableStorage,
             IConvertService convertService)
         {
             _tableStorage = tableStorage;
@@ -40,33 +40,33 @@ namespace MarginTrading.AzureRepositories
             return _tableStorage.ReplaceAsync(Convert(settings));
         }
 
-        public async Task<IAsset> DeleteAsync(string assetPairId)
+        public async Task<IAsset> DeleteAsync(string assetId)
         {
-            return Convert(await _tableStorage.DeleteAsync(AssetPairsRepository.AssetPairEntity.GeneratePartitionKey(),
-                AssetPairsRepository.AssetPairEntity.GenerateRowKey(assetPairId)));
+            return Convert(await _tableStorage.DeleteAsync(AssetRepository.AssetEntity.GeneratePartitionKey(),
+                AssetRepository.AssetEntity.GenerateRowKey(assetId)));
         }
 
-        public async Task<IAsset> GetAsync(string assetPairId)
+        public async Task<IAsset> GetAsync(string assetId)
         {
-            return Convert(await _tableStorage.GetDataAsync(AssetPairsRepository.AssetPairEntity.GeneratePartitionKey(),
-                AssetPairsRepository.AssetPairEntity.GenerateRowKey(assetPairId)));
+            return Convert(await _tableStorage.GetDataAsync(AssetRepository.AssetEntity.GeneratePartitionKey(),
+                AssetRepository.AssetEntity.GenerateRowKey(assetId)));
         }
 
-        private static IReadOnlyList<IAssetPair> Convert(
-            IEnumerable<AssetPairsRepository.AssetPairEntity> accountAssetPairEntities)
+        private static IReadOnlyList<IAsset> Convert(
+            IEnumerable<AssetRepository.AssetEntity> assetEntities)
         {
-            return accountAssetPairEntities.ToList<IAssetPair>();
+            return assetEntities.ToList<IAsset>();
         }
 
-        private AssetPairsRepository.AssetPairEntity Convert(IAssetPair accountAssetPair)
+        private AssetRepository.AssetEntity Convert(IAsset asset)
         {
-            return _convertService.Convert<IAssetPair, AssetPairsRepository.AssetPairEntity>(accountAssetPair,
+            return _convertService.Convert<IAsset, AssetRepository.AssetEntity>(asset,
                 o => o.ConfigureMap(MemberList.Source).ForMember(e => e.ETag, e => e.UseValue("*")));
         }
 
-        internal class AssetPairEntity : AzureTableEntity, IAssetPair
+        public class AssetEntity : AzureTableEntity, IAsset
         {
-            public AssetPairEntity()
+            public AssetEntity()
             {
                 PartitionKey = GeneratePartitionKey();
             }
@@ -78,24 +78,17 @@ namespace MarginTrading.AzureRepositories
             }
 
             public string Name { get; set; }
-            public string BaseAssetId { get; set; }
-            public string QuoteAssetId { get; set; }
             public int Accuracy { get; set; }
 
-            public string LegalEntity { get; set; }
-            public string BasePairId { get; set; }
-            public MatchingEngineMode MatchingEngineMode { get; set; }
-            public decimal StpMultiplierMarkupBid { get; set; }
-            public decimal StpMultiplierMarkupAsk { get; set; }
 
             public static string GeneratePartitionKey()
             {
-                return "AssetPairs";
+                return "Asset";
             }
 
-            public static string GenerateRowKey(string assetPairId)
+            public static string GenerateRowKey(string assetId)
             {
-                return assetPairId;
+                return assetId;
             }
         }
     }
