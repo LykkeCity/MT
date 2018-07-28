@@ -21,6 +21,8 @@ namespace MarginTrading.Backend.Services.AssetPairs
     /// </remarks>
     public class AssetPairsCache : IAssetPairsInitializableCache
     {
+        public const int DefaultAssetPairAccuracy = 5;
+        
         private IReadOnlyDictionary<string, IAssetPair> _assetPairs = 
             ImmutableSortedDictionary<string, IAssetPair>.Empty;
 

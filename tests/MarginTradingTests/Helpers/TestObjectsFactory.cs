@@ -12,7 +12,7 @@ namespace MarginTradingTests.Helpers
             string tradingConditionId, decimal volume, decimal openPrice)
         {
             return new Position(Guid.NewGuid().ToString("N"), 0, assetPairId, volume, account.Id, tradingConditionId,
-                account.BaseAssetId, null, "TestME", DateTime.UtcNow, "OpenTrade", openPrice, 1, "USD", openPrice,
+                account.BaseAssetId, null, MatchingEngineConstants.DefaultMm, DateTime.UtcNow, "OpenTrade", openPrice, 1, "USD", openPrice,
                 new List<RelatedOrderInfo>(), "LYKKETEST", OriginatorType.Investor, "");
         }
         

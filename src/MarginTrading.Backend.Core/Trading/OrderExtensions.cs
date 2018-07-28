@@ -40,22 +40,14 @@ namespace MarginTrading.Backend.Core
             return Math.Round(GetTotalFpl(order, order.GetSwaps()), order.CalculateFplData().AccountBaseAssetAccuracy);
         }
 
-        private static FplData CalculateFplData(this Position order)
+        private static FplData CalculateFplData(this Position position)
         {
-            if (order is Position orderInstance)
+            if (position.FplData.ActualHash != position.FplData.CalculatedHash)
             {
-                if (orderInstance.FplData.ActualHash != orderInstance.FplData.CalculatedHash)
-                {
-                    MtServiceLocator.FplService.UpdateOrderFpl(orderInstance, orderInstance.FplData);
-                }
-
-                return orderInstance.FplData;
+                MtServiceLocator.FplService.UpdateOrderFpl(position, position.FplData);
             }
 
-            var fplData = new FplData();
-            MtServiceLocator.FplService.UpdateOrderFpl(order, fplData);
-
-            return fplData;
+            return position.FplData;
         }
 
         public static decimal GetFpl(this Position order)

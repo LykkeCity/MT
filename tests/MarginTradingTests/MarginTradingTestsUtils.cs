@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.SettingsService.Contracts;
 using MarginTrading.SettingsService.Contracts.Asset;
 using MarginTrading.SettingsService.Contracts.Enums;
@@ -16,7 +17,7 @@ using AssetPairContract = MarginTrading.SettingsService.Contracts.AssetPair.Asse
 namespace MarginTradingTests
 {
     [UsedImplicitly]
-    public class MarginTradingTestsUtils
+    public static class MarginTradingTestsUtils
     {
         public const string TradingConditionId = "1";
 
@@ -273,6 +274,23 @@ namespace MarginTradingTests
                 .ReturnsAsync(assetPairs);
 
             return mock.Object;
+        }
+
+        public static void SetOrders(this IMarketMakerMatchingEngine matchingEngine, string marketMakerId, LimitOrder[] ordersToAdd = null, string[] orderIdsToDelete = null, bool deleteAll = false)
+        {
+            var model = new SetOrderModel
+            {
+                MarketMakerId = marketMakerId,
+                OrdersToAdd = ordersToAdd,
+                OrderIdsToDelete = orderIdsToDelete
+            };
+
+            if (deleteAll)
+            {
+                model.DeleteAllBuy = true;
+                model.DeleteAllSell = true;
+            }
+            matchingEngine.SetOrders(model);
         }
     }
 }

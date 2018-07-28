@@ -312,7 +312,7 @@ namespace MarginTrading.Backend.Core.Trading
             MatchingEngineId = matchingEngineId;
         }
         
-        public void Execute(DateTime dateTime, MatchedOrderCollection matchedOrders)
+        public void Execute(DateTime dateTime, MatchedOrderCollection matchedOrders, int assetPairAccuracy)
         {
             Status = OrderStatus.Executed;
             
@@ -332,7 +332,7 @@ namespace MarginTrading.Backend.Core.Trading
             
             Executed = dateTime;
             LastModified = dateTime;
-            ExecutionPrice = matchedOrders.WeightedAveragePrice;
+            ExecutionPrice = Math.Round(matchedOrders.WeightedAveragePrice, assetPairAccuracy);
             ExternalOrderId = externalOrderId;
             ExternalProviderId = externalProviderId;
             MatchedOrders.AddRange(matchedOrders);

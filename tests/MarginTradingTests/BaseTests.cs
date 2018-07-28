@@ -13,6 +13,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.DayOffSettings;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
@@ -106,7 +107,7 @@ namespace MarginTradingTests
             builder.RegisterModule(new CacheModule());
             builder.RegisterModule(new ServicesModule());
             builder.RegisterModule(new ManagersModule());
-
+            
             builder.RegisterType<EventChannel<AccountBalanceChangedEventArgs>>()
                 .As<IEventChannel<AccountBalanceChangedEventArgs>>()
                 .SingleInstance();

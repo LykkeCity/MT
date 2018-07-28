@@ -112,13 +112,13 @@ namespace MarginTrading.Backend.Core.Orders
             CloseDate = date;
             LastModified = date;
             CloseMatchingEngineId = closeMatchingEngineId;
-            ClosePrice = closePrice;
             CloseFxPrice = closeFxPrice;
             ClosePriceEquivalent = closePriceEquivalent;
             CloseOriginator = CloseOriginator ?? originator;
             CloseReason = closeReason;
             CloseComment = comment;
             CloseTrades.Add(tradeId);
+            UpdateClosePrice(closePrice);
         }
 
         public void PartiallyClose(DateTime date, decimal closedVolume, string tradeId, decimal chargedPnl)
