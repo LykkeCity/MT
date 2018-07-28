@@ -127,7 +127,7 @@ namespace MarginTrading.Backend
             {
                 c.PreSerializeFilters.Add((swagger, httpReq) => swagger.Host = httpReq.Host.Value);
             });
-            app.UseSwaggerUi();
+            app.UseSwaggerUI(a => a.SwaggerEndpoint("/swagger/v1/swagger.json", "Trading Engine API Swagger"));
 
             appLifetime.ApplicationStopped.Register(() => ApplicationContainer.Dispose());
 
