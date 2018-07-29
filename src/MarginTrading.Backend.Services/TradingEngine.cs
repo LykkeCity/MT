@@ -153,13 +153,14 @@ namespace MarginTrading.Backend.Services
                     order.MakeInactive(_dateService.Now());
                     _ordersCache.Inactive.Add(order);
                 }
+                
                 //may be it was market and now it is position
                 else if (_ordersCache.Positions.TryGetOrderById(order.ParentOrderId, out var parentPosition))
                 {
                     parentPosition.AddRelatedOrder(order);
                     if (parentPosition.Volume != -order.Volume)
                     {
-                        order.ChangeVolume(-parentPosition.Volume, _dateService.Now());
+                        order.ChangeVolume(-parentPosition.Volume, _dateService.Now(), OriginatorType.System);
                     }
                     order.Activate(_dateService.Now(), true);
                     _ordersCache.Active.Add(order);
@@ -466,7 +467,9 @@ namespace MarginTrading.Backend.Services
                 OrderFillType.FillOrKill, $"Close position. {comment}", position.LegalEntity, false, OrderType.Market, null,
                 position.Id,
                 originator, 0, 0, OrderStatus.Placed, additionalInfo, correlationId);
-
+            
+            _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
+                
             return ExecuteOrderByMatchingEngineAsync(order, me /*, reason, comment*/);
         }
 
