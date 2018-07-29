@@ -84,7 +84,7 @@ namespace MarginTrading.Backend.Services
                 .Select(ch => new AccountStatsUpdateMessage {Accounts = ch.ToArray()});
         }
 
-        public async Task<List<Order>> CloseAccountOrders(string accountId)
+        public async Task<List<Order>> CloseAccountOrders(string accountId, string correlationId)
         {
             var positions = _ordersCache.Positions.GetOrdersByAccountIds(accountId).ToArray();
             var closedOrders = new List<Order>();
@@ -111,7 +111,7 @@ namespace MarginTrading.Backend.Services
                 try
                 {
                     var closedOrder = _tradingEngine.CancelPendingOrder(order.Id, OriginatorType.OnBehalf,
-                        "Close orders for account");
+                        "Close orders for account", correlationId);
                     closedOrders.Add(closedOrder);
                 }
                 catch (Exception e)

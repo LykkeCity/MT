@@ -42,5 +42,10 @@ namespace MarginTrading.AzureRepositories
         {
             return Guid.NewGuid().ToString("N");
         }
+
+        public string GenerateGuid()
+        {
+            return Guid.NewGuid().ToString("N");
+        }
     }
 }

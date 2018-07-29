@@ -34,19 +34,22 @@ namespace MarginTrading.Backend.Controllers
         private readonly IConsole _consoleWriter;
         private readonly OrdersCache _ordersCache;
         private readonly IAssetPairDayOffService _assetDayOffService;
+        private readonly IIdentityGenerator _identityGenerator;
 
         public PositionsController(
             ITradingEngine tradingEngine,
             IMarginTradingOperationsLogService operationsLogService,
             IConsole consoleWriter,
             OrdersCache ordersCache,
-            IAssetPairDayOffService assetDayOffService)
+            IAssetPairDayOffService assetDayOffService,
+            IIdentityGenerator identityGenerator)
         {
             _tradingEngine = tradingEngine;
             _operationsLogService = operationsLogService;
             _consoleWriter = consoleWriter;
             _ordersCache = ordersCache;
             _assetDayOffService = assetDayOffService;
+            _identityGenerator = identityGenerator;
         }
 
         /// <summary>
@@ -72,8 +75,10 @@ namespace MarginTrading.Backend.Controllers
 
             var originator = GetOriginator(request?.Originator);
 
+            var correlationId = request?.CorrelationId ?? _identityGenerator.GenerateGuid();
+
             var order = await _tradingEngine.ClosePositionAsync(positionId, originator, request?.AdditionalInfo,
-                request?.Comment);
+                correlationId, request?.Comment);
 
             if (order.Status != OrderStatus.Executed && order.Status != OrderStatus.ExecutionStarted)
             {
@@ -116,10 +121,13 @@ namespace MarginTrading.Backend.Controllers
             
             var originator = GetOriginator(request?.Originator);
             
+            var correlationId = request?.CorrelationId ?? _identityGenerator.GenerateGuid();
+            
             foreach (var orderId in positions.Select(o => o.Id).ToList())
             {
                 var closedOrder =
-                    await _tradingEngine.ClosePositionAsync(orderId, originator, request?.AdditionalInfo, request?.Comment);
+                    await _tradingEngine.ClosePositionAsync(orderId, originator, request?.AdditionalInfo, 
+                        correlationId, request?.Comment);
 
                 if (closedOrder.Status != OrderStatus.Executed && closedOrder.Status != OrderStatus.ExecutionStarted)
                 {
@@ -161,10 +169,13 @@ namespace MarginTrading.Backend.Controllers
 
             var originator = GetOriginator(request?.Originator);
             
+            var correlationId = request?.CorrelationId ?? _identityGenerator.GenerateGuid();
+            
             foreach (var orderId in positions.Select(o => o.Id).ToList())
             {
                 var closedOrder =
-                    await _tradingEngine.ClosePositionAsync(orderId, originator, request?.AdditionalInfo, request?.Comment);
+                    await _tradingEngine.ClosePositionAsync(orderId, originator, request?.AdditionalInfo, 
+                        correlationId, request?.Comment);
 
                 if (closedOrder.Status != OrderStatus.Executed && closedOrder.Status != OrderStatus.ExecutionStarted)
                 {
@@ -204,10 +215,13 @@ namespace MarginTrading.Backend.Controllers
 
             var originator = GetOriginator(request?.Originator);
             
+            var correlationId = request?.CorrelationId ?? _identityGenerator.GenerateGuid();
+            
             foreach (var orderId in orders.Select(o => o.Id).ToList())
             {
                 var closedOrder =
-                    await _tradingEngine.ClosePositionAsync(orderId, originator, request?.AdditionalInfo, request?.Comment);
+                    await _tradingEngine.ClosePositionAsync(orderId, originator, request?.AdditionalInfo, 
+                        correlationId, request?.Comment);
 
                 if (closedOrder.Status != OrderStatus.Executed && closedOrder.Status != OrderStatus.ExecutionStarted)
                 {

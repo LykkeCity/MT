@@ -7,5 +7,7 @@ namespace MarginTrading.Backend.Core.Repositories
         Task<long> GenerateIdAsync(string entityType);
 
         string GenerateAlphanumericId();
+        
+        string GenerateGuid();
     }
 }

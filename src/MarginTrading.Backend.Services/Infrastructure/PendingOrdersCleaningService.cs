@@ -5,6 +5,7 @@ using Common;
 using Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Services.AssetPairs;
 
 namespace MarginTrading.Backend.Services.Infrastructure
@@ -15,15 +16,17 @@ namespace MarginTrading.Backend.Services.Infrastructure
         private readonly IOrderReader _orderReader;
         private readonly ITradingEngine _tradingEngine;
         private readonly IAssetPairDayOffService _assetDayOffService;
+        private readonly IIdentityGenerator _identityGenerator;
 
         public PendingOrdersCleaningService(ILog log, IOrderReader orderReader, ITradingEngine tradingEngine,
-            IAssetPairDayOffService assetDayOffService)
+            IAssetPairDayOffService assetDayOffService, IIdentityGenerator identityGenerator)
             : base(nameof(PendingOrdersCleaningService), 60000, log)
         {
             _log = log;
             _orderReader = orderReader;
             _tradingEngine = tradingEngine;
             _assetDayOffService = assetDayOffService;
+            _identityGenerator = identityGenerator;
         }
 
         //TODO: add setting
@@ -41,7 +44,8 @@ namespace MarginTrading.Backend.Services.Infrastructure
                 {
                     try
                     {
-                        _tradingEngine.CancelPendingOrder(pendingOrder.Id, OriginatorType.System, "Day off started");
+                        _tradingEngine.CancelPendingOrder(pendingOrder.Id, OriginatorType.System, "Day off started", 
+                            _identityGenerator.GenerateGuid());
                     }
                     catch (Exception e)
                     {
