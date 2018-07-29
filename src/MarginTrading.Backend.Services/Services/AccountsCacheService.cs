@@ -135,7 +135,7 @@ namespace MarginTrading.Backend.Services
         }
 
         public void UpdateAccountChanges(string accountId, string updatedTradingConditionId, decimal updatedBalance,
-            decimal updatedWithdrawTransferLimit)
+            decimal updatedWithdrawTransferLimit, bool isDisabled)
         {
             _lockSlim.EnterWriteLock();
             try
@@ -144,6 +144,7 @@ namespace MarginTrading.Backend.Services
                 account.TradingConditionId = updatedTradingConditionId;
                 account.Balance = updatedBalance;
                 account.WithdrawTransferLimit = updatedWithdrawTransferLimit;
+                account.IsDisabled = isDisabled;
             }
             finally
             {

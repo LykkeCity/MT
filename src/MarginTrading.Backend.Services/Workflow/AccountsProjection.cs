@@ -54,7 +54,7 @@ namespace MarginTrading.Backend.Services.Workflow
             else
             {
                 _accountsCacheService.UpdateAccountChanges(updatedAccount.Id, updatedAccount.TradingConditionId,
-                    updatedAccount.Balance, updatedAccount.WithdrawTransferLimit);
+                    updatedAccount.Balance, updatedAccount.WithdrawTransferLimit, updatedAccount.IsDisabled);
 
                 _clientNotifyService.NotifyAccountUpdated(updatedAccount);
             }
