@@ -188,11 +188,6 @@ namespace MarginTrading.Backend.Core.Trading
         public OriginatorType Originator { get; private set; }
         
         /// <summary>
-        /// Order cancellation initiator
-        /// </summary>
-        public OriginatorType? CancellationOriginator { get; private set; }
-        
-        /// <summary>
         /// Matched orders for execution
         /// </summary>
         public MatchedOrderCollection MatchedOrders { get; private set; } = new MatchedOrderCollection();
@@ -276,10 +271,11 @@ namespace MarginTrading.Backend.Core.Trading
             CorrelationId = correlationId;
         }
         
-        public void ChangeVolume(decimal newVolume, DateTime dateTime)
+        public void ChangeVolume(decimal newVolume, DateTime dateTime, OriginatorType originator)
         {
             LastModified = dateTime;
             Volume = newVolume;
+            Originator = originator;
         }
 
         public void MakeInactive(DateTime dateTime)
@@ -351,7 +347,7 @@ namespace MarginTrading.Backend.Core.Trading
         public void Reject(OrderRejectReason reason, string reasonText, string comment, DateTime dateTime)
         {
             Status = OrderStatus.Rejected;
-            CancellationOriginator = OriginatorType.System;
+            Originator = OriginatorType.System;
             RejectReason = reason;
             RejectReasonText = reasonText;
             Comment = comment;
@@ -365,7 +361,7 @@ namespace MarginTrading.Backend.Core.Trading
             Canceled = dateTime;
             LastModified = dateTime;
             AdditionalInfo = additionalInfo ?? AdditionalInfo;
-            CancellationOriginator = originator;
+            Originator = originator;
             CorrelationId = correlationId;
         }
 

@@ -30,6 +30,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         private readonly ICqrsSender _cqrsSender;
         private readonly IEventChannel<OrderCancelledEventArgs> _orderCancelledEventChannel;
         private readonly IEventChannel<OrderChangedEventArgs> _orderChangedEventChannel;
+        private readonly IEventChannel<OrderActivatedEventArgs> _orderActivatedEventChannel;
 
         private static readonly ConcurrentDictionary<string, object> LockObjects =
             new ConcurrentDictionary<string, object>();
@@ -44,7 +45,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             IIdentityGenerator identityGenerator,
             ICqrsSender cqrsSender,
             IEventChannel<OrderCancelledEventArgs> orderCancelledEventChannel,
-            IEventChannel<OrderChangedEventArgs> orderChangedEventChannel)
+            IEventChannel<OrderChangedEventArgs> orderChangedEventChannel,
+            IEventChannel<OrderActivatedEventArgs> orderActivatedEventChannel)
         {
             _ordersCache = ordersCache;
             _rabbitMqNotifyService = rabbitMqNotifyService;
@@ -55,6 +57,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             _cqrsSender = cqrsSender;
             _orderCancelledEventChannel = orderCancelledEventChannel;
             _orderChangedEventChannel = orderChangedEventChannel;
+            _orderActivatedEventChannel = orderActivatedEventChannel;
         }
         
         public void ConsumeEvent(object sender, OrderExecutedEventArgs ea)
@@ -227,6 +230,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 {
                     relatedOrder.Activate(_dateService.Now(), true);
                     _ordersCache.Active.Add(relatedOrder);
+                    _orderActivatedEventChannel.SendEvent(this, new OrderActivatedEventArgs(relatedOrder));
                 }
             }
         }
@@ -247,9 +251,10 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         {
             foreach (var relatedOrderInfo in relatedOrderInfos)
             {
-                if (_ordersCache.TryGetOrderById(relatedOrderInfo.Id, out var relatedOrder))
+                if (_ordersCache.TryGetOrderById(relatedOrderInfo.Id, out var relatedOrder)
+                    && relatedOrder.Volume != newVolume)
                 {
-                    relatedOrder.ChangeVolume(newVolume, _dateService.Now());
+                    relatedOrder.ChangeVolume(newVolume, _dateService.Now(), OriginatorType.System);
                     _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(relatedOrder));
                 }
             }
