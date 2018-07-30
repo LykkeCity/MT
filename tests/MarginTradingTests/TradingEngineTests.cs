@@ -44,6 +44,7 @@ namespace MarginTradingTests
         private IEventChannel<BestPriceChangeEventArgs> _bestPriceChannel;
         private Mock<IEventChannel<OrderExecutedEventArgs>> _orderExecutedChannelMock;
         private OrdersCache _ordersCache;
+        private IFxRateCacheService _fxRateCacheService;
         
         [SetUp]
         public void SetUp()
@@ -95,13 +96,14 @@ namespace MarginTradingTests
                         AccountChangedEventTypeContract.BalanceUpdated));
                 });
             
-            var fxRateCacheService = Container.Resolve<IFxRateCacheService>();
-            fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "EURCHF", Ask = 1, Bid = 1 });
-            fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 1, Bid = 1 });
-            fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "EURUSD", Ask = 1, Bid = 1 });
+            
+            _fxRateCacheService = Container.Resolve<IFxRateCacheService>();
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "EURCHF", Ask = 1, Bid = 1 });
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 1, Bid = 1 });
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "EURUSD", Ask = 1, Bid = 1 });
         }
 
-        //#region Market orders
+        #region Market orders
 
         [Test]
         public void Is_Buy_Order_Rejected_No_Balance()
@@ -323,550 +325,241 @@ namespace MarginTradingTests
 
         }
 
-//        [Test]
-//        public void Is_FillOrKill_Buy_Order_Closed_When_FullyMatched()
-//        {
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "EURUSD",
-//                Volume = 9,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            var account = _accountsCacheService.Get(order.AccountId);
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//
-//            Assert.AreEqual(2, order.MatchedOrders.Count);
-//            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "3"));
-//            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "4"));
-//            Assert.AreEqual(order.Volume, order.GetMatchedVolume());
-//            Assert.AreEqual(PositionStatus.Active, order.Status);
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//
-//            //remove limit order, so when we are closing order we can't fully match it
-//            _matchingEngine.SetOrders("1", new LimitOrder[] {}, new [] { "1" });
-//
-//            order = _tradingEngine.CloseActiveOrderAsync(order.Id, OrderCloseReason.Close).Result;
-//            Assert.AreEqual(PositionStatus.Closing, order.Status); //order is in closing state
-//            Assert.AreEqual(7, order.GetMatchedCloseVolume()); //partially matched
-//
-//            //add new limit order, so active order waiting for close can be matched
-//            _matchingEngine.SetOrders("1", new[]
-//            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.04M, Volume = 1}
-//            });
-//
-//            Assert.AreEqual(8, order.GetMatchedCloseVolume());
-//
-//            //adding another order which should fill the active order
-//            _matchingEngine.SetOrders("1", new[]
-//            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.04M, Volume = 1}
-//            });
-//
-//            //order should now be fully matched and closed
-//            Assert.AreEqual(PositionStatus.Closed, order.Status);
-//            Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedCloseVolume());
-//            Assert.AreEqual(-0.60003, order.GetTotalFpl());
-//            account = _accountsCacheService.Get(order.AccountId);
-//            Assert.AreEqual(999.39997, account.Balance);
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Closed)));
-//            _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//        }
-//
-//        [Test]
-//        public void Is_FillOrKill_Sell_Order_Closed_When_FullyMatched()
-//        {
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "EURUSD",
-//                Volume = -8,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//
-//            Assert.AreEqual(2, order.MatchedOrders.Count);
-//            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "1"));
-//            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "2"));
-//            Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
-//            Assert.AreEqual(PositionStatus.Active, order.Status);
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//
-//            //remove limit order, so when we are closing order we can't fully match it
-//            _matchingEngine.SetOrders("1", new LimitOrder[] { }, new [] { "4" });
-//
-//            order = _tradingEngine.CloseActiveOrderAsync(order.Id, OrderCloseReason.Close).Result;
-//            Assert.AreEqual(PositionStatus.Closing, order.Status); //order is in closing state
-//            Assert.AreEqual(6, order.GetMatchedCloseVolume()); //partially matched
-//
-//            //add new limit order, so active order waiting for close can be matched
-//            _matchingEngine.SetOrders("1", new[]
-//            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.1M, Volume = -1}
-//            });
-//
-//            Assert.AreEqual(7, order.GetMatchedCloseVolume());
-//
-//            //adding another order which should fill the active order
-//            _matchingEngine.SetOrders("1", new[]
-//            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.1M, Volume = -1}
-//            });
-//
-//            ////order should fully matched and closed
-//            Assert.AreEqual(PositionStatus.Closed, order.Status);
-//            Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedCloseVolume());
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Closed)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//        }
-//
-//        [Test]
-//        public void Is_Order_Limits_Changed()
-//        {
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "EURUSD",
-//                Volume = 8,
-//                FillType = OrderFillType.PartialFill
-//            };
-//
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//
-//            Assert.IsNull(order.StopLoss);
-//            Assert.IsNull(order.TakeProfit);
-//            Assert.AreEqual(PositionStatus.Active, order.Status);
-//
-//            _tradingEngine.ChangeOrderLimits(order.Id, 0.99M, 1.3M, null);
-//
-//            Assert.AreEqual(0.99, order.StopLoss);
-//            Assert.AreEqual(1.3, order.TakeProfit);
-//        }
-//
-//        [Test]
-//        public void Is_Buy_Order_Closed_On_TakeProfit()
-//        {
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "EURUSD",
-//                Volume = 8,
-//                TakeProfit = 1.16M,
-//                FillType = OrderFillType.PartialFill
-//            };
-//
-//            var account = _accountsCacheService.Get(order.AccountId);
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//
-//            Assert.AreEqual(2, order.MatchedOrders.Count);
-//            Assert.AreEqual(order.Volume, order.GetMatchedVolume());
-//            Assert.AreEqual(1.1125, order.OpenPrice);
-//            Assert.AreEqual(1.04875, order.ClosePrice);
-//            Assert.IsTrue(order.ClosePrice < order.TakeProfit);
-//            Assert.AreEqual(PositionStatus.Active, order.Status);
-//            Assert.IsNull(order.StartClosingDate);
-//
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//
-//            _matchingEngine.SetOrders("1", new[]
-//            {
-//               new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2M, Volume = 8}
-//            });
-//
-//            Assert.AreEqual(PositionStatus.Closed, order.Status); //order should be closed on TakeProfit
-//            Assert.AreEqual(OrderCloseReason.TakeProfit, order.CloseReason);
-//            Assert.AreEqual(0.7, order.GetTotalFpl());
-//            account = _accountsCacheService.Get(order.AccountId);
-//            Assert.AreEqual(1000.7, account.Balance);
-//
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Closed)));
-//            _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//        }
-//
-//        [Test]
-//        public void Is_Sell_Order_Closed_On_TakeProfit()
-//        {
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "EURUSD",
-//                Volume = -8,
-//                TakeProfit = 0.8M,
-//                FillType = OrderFillType.PartialFill
-//            };
-//
-//            var account = _accountsCacheService.Get(order.AccountId);
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//
-//            Assert.AreEqual(2, order.MatchedOrders.Count);
-//            Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
-//            Assert.AreEqual(1.04875, order.OpenPrice);
-//            Assert.AreEqual(1.1125, order.ClosePrice);
-//            Assert.IsTrue(order.ClosePrice > order.TakeProfit); //no takeprofit
-//            Assert.AreEqual(PositionStatus.Active, order.Status);
-//            Assert.IsNull(order.StartClosingDate);
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//
-//            _matchingEngine.SetOrders("1", new[]
-//            {
-//               new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 0.7M, Volume = -8}
-//            });
-//
-//            Assert.AreEqual(PositionStatus.Closed, order.Status); //order should be closed on TakeProfit
-//            Assert.AreEqual(OrderCloseReason.TakeProfit, order.CloseReason);
-//            Assert.AreEqual(2.79, order.GetTotalFpl());
-//            account = _accountsCacheService.Get(order.AccountId);
-//            Assert.AreEqual(1002.79, account.Balance);
-//
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Closed)));
-//            _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//        }
-//
-//        [Test]
-//        public void Is_Buy_Order_Closed_On_StopLoss()
-//        {
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "EURUSD",
-//                Volume = 14,
-//                StopLoss = 0.98M,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            var account = _accountsCacheService.Get(order.AccountId);
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//
-//            Assert.AreEqual(PositionStatus.Active, order.Status);
-//            Assert.AreEqual(2, order.MatchedOrders.Count);
-//            Assert.AreEqual(order.Volume, order.GetMatchedVolume());
-//            Assert.AreEqual(1.12857, order.OpenPrice);
-//            Assert.AreEqual(1.04636, order.ClosePrice);
-//            Assert.IsTrue(order.ClosePrice > order.StopLoss); //no stoploss
-//            Assert.IsNull(order.StartClosingDate);
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//
-//            _matchingEngine.SetOrders("1", new[]
-//            {
-//               new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 0.9M, Volume = 20}
-//            }, new[] { "1"});
-//
-//            Assert.AreEqual(PositionStatus.Closed, order.Status); //order is closed now on StopLoss
-//            Assert.AreEqual(OrderCloseReason.StopLoss, order.CloseReason);
-//            Assert.AreEqual(-2.14998, order.GetTotalFpl());
-//            account = _accountsCacheService.Get(order.AccountId);
-//            Assert.AreEqual(997.85002, account.Balance);
-//
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Closed)));
-//            _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//        }
-//
-//        [Test]
-//        public void Is_Sell_Order_Closed_On_StopLoss()
-//        {
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "EURUSD",
-//                Volume = -11,
-//                StopLoss = 1.15M,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            var account = _accountsCacheService.Get(order.AccountId);
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//
-//            Assert.AreEqual(2, order.MatchedOrders.Count);
-//            Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
-//            Assert.AreEqual(1.04636, order.OpenPrice);
-//            Assert.AreEqual(1.12273, order.ClosePrice);
-//            Assert.IsTrue(order.ClosePrice < order.StopLoss); // no stoploss
-//            Assert.AreEqual(PositionStatus.Active, order.Status);
-//            Assert.IsNull(order.StartClosingDate);
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//
-//            _matchingEngine.SetOrders("1", new []
-//            {
-//               new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2M, Volume = -8}
-//            }, new [] { "3" });
-//
-//            Assert.AreEqual(PositionStatus.Closed, order.Status); //order should be closed on StopLoss
-//            Assert.AreEqual(OrderCloseReason.StopLoss, order.CloseReason);
-//            Assert.AreEqual(-1.29008, order.GetTotalFpl());
-//            account = _accountsCacheService.Get(order.AccountId);
-//            Assert.AreEqual(998.70992, account.Balance);
-//
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Closed)));
-//            _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//        }
-//
-//        [Test]
-//        public async Task Is_Order_Fpl_Correct_With_Commission()
-//        {
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "EURUSD",
-//                Volume = 8,
-//                FillType = OrderFillType.PartialFill
-//            };
-//
-//            var instrumentContract = new TradingInstrumentContract
-//            {
-//                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
-//                Instrument = "EURUSD",
-//                LeverageInit = 100,
-//                LeverageMaintenance = 150,
-//                Delta = 30,
-//                CommissionRate = 0.5M
-//            };
-//
-//            Mock.Get(_tradingInstruments).Setup(s => s.List(It.IsAny<string>()))
-//                .ReturnsAsync(new List<TradingInstrumentContract> {instrumentContract});
-//            
-//            await _accountAssetsManager.UpdateTradingInstrumentsCache();
-//           
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//
-//            Assert.AreEqual(2, order.MatchedOrders.Count);
-//            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "3"));
-//            Assert.True(order.MatchedOrders.Any(item => item.OrderId == "4"));
-//            Assert.AreEqual(order.Volume, order.GetMatchedVolume());
-//            Assert.AreEqual(1.1125, order.OpenPrice);
-//            Assert.AreEqual(1.04875, order.ClosePrice);
-//            Assert.AreEqual(-4.51, Math.Round(order.GetTotalFpl(), 3));
-//            Assert.AreEqual(PositionStatus.Active, order.Status);
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.IsAny<OrderHistoryBackendContract>()), Times.Once());
-//        }
-//
-//        [Test]
-//        public void Is_Buy_Cross_Order_Fpl_Correct()
-//        {
-//            var ordersSet = new []
-//            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 838.371M, Volume = -15 },
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286M, Volume = 10 }
-//            };
-//
-//            _matchingEngine.SetOrders(MarketMaker1Id, ordersSet);
-//
-//            _bestPriceChannel.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0122M, Ask = 1.0124M }));
-//            _bestPriceChannel.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Bid = 905.57M, Ask = 905.67M }));
-//
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "BTCCHF",
-//                Volume = 1,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//
-//            var account = _accountsCacheService.Get(order.AccountId);
-//
-//            Assert.AreEqual(1, order.MatchedOrders.Count);
-//            Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
-//            Assert.AreEqual(838.371, order.OpenPrice);
-//            Assert.AreEqual(834.286, order.ClosePrice);
-//            Assert.AreEqual(-4.035, Math.Round(order.GetFpl(), 3));
-//            Assert.AreEqual(PositionStatus.Active, order.Status);
-//            Assert.IsNull(order.StartClosingDate);
-//            Assert.AreEqual(-4.035, Math.Round(account.GetPnl(), 3));
-//            Assert.AreEqual(order.GetMarginMaintenance(), account.GetUsedMargin());
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//        }
-//
-//        [Test]
-//        public void Is_Buy_Cross_Order_Fpl_Correct1()
-//        {
-//            var ordersSet = new []
-//            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 838.371M, Volume = -15 },
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286M, Volume = 10 }
-//            };
-//
-//            _matchingEngine.SetOrders(MarketMaker1Id, ordersSet);
-//
-//            _bestPriceChannel.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0122M, Ask = 1.0124M }));
-//            _bestPriceChannel.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Bid = 905.57M, Ask = 905.67M }));
-//
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "BTCCHF",
-//                Volume = 1,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//
-//            var account = _accountsCacheService.Get(order.AccountId);
-//
-//            Assert.AreEqual(1, order.MatchedOrders.Count);
-//            Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
-//            Assert.AreEqual(838.371, order.OpenPrice);
-//            Assert.AreEqual(834.286, order.ClosePrice);
-//            Assert.AreEqual(-4.035, Math.Round(order.GetFpl(), 3));
-//            Assert.AreEqual(PositionStatus.Active, order.Status);
-//            Assert.IsNull(order.StartClosingDate);
-//
-//            Assert.AreEqual(-4.035, Math.Round(account.GetPnl(), 3));
-//            Assert.AreEqual(order.GetMarginMaintenance(), account.GetUsedMargin());
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//        }
-//
-//        [Test]
-//        public void Is_Sell_Cross_Order_Fpl_Correct()
-//        {
-//            var ordersSet = new []
-//            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 838.371M, Volume = -15 },
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286M, Volume = 10 }
-//            };
-//
-//            _matchingEngine.SetOrders(MarketMaker1Id, ordersSet);
-//
-//            _bestPriceChannel.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0122M, Ask = 1.0124M}));
-//
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "BTCCHF",
-//                Volume = -1,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//
-//            var account = _accountsCacheService.Get(order.AccountId);
-//
-//            Assert.AreEqual(1, order.MatchedOrders.Count);
-//            Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
-//            Assert.AreEqual(834.286, order.OpenPrice);
-//            Assert.AreEqual(838.371, order.ClosePrice);
-//            Assert.AreEqual(-4.035, Math.Round(order.GetFpl(), 3));
-//            Assert.AreEqual(PositionStatus.Active, order.Status);
-//            Assert.IsNull(order.StartClosingDate);
-//
-//            Assert.AreEqual(-4.035, Math.Round(account.GetPnl(), 3));
-//            Assert.AreEqual(order.GetMarginMaintenance(), account.GetUsedMargin());
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//        }
-//
-//        [Test]
-//        public void Is_Sell_Cross_Order_Fpl_Correct1()
-//        {
-//            var ordersSet = new []
-//            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 838.371M, Volume = -15 },
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286M, Volume = 10 }
-//            };
-//
-//            _matchingEngine.SetOrders(MarketMaker1Id, ordersSet);
-//
-//            _bestPriceChannel.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0122M, Ask = 1.0124M }));
-//
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "BTCCHF",
-//                Volume = -1,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//
-//            var account = _accountsCacheService.Get(order.AccountId);
-//
-//            Assert.AreEqual(1, order.MatchedOrders.Count);
-//            Assert.AreEqual(Math.Abs(order.Volume), order.GetMatchedVolume());
-//            Assert.AreEqual(834.286, order.OpenPrice);
-//            Assert.AreEqual(838.371, order.ClosePrice);
-//            Assert.AreEqual(-4.035, Math.Round(order.GetFpl(), 3));
-//            Assert.AreEqual(PositionStatus.Active, order.Status);
-//            Assert.IsNull(order.StartClosingDate);
-//
-//            Assert.AreEqual(-4.035, Math.Round(account.GetPnl(), 3));
-//            Assert.AreEqual(order.GetMarginMaintenance(), account.GetUsedMargin());
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//        }
-//
-//        [Test]
-//        public void Is_Order_Opened_On_Full_Balance()
-//        {
-//            var ordersSet = new []
-//            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.370M, Volume = -15000 },
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286M, Volume = 10000 }
-//            };
-//
-//            _matchingEngine.SetOrders(MarketMaker1Id, ordersSet);
-//
-//            _bestPriceChannel.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Bid = 905.57M, Ask = 905.67M }));
-//            _bestPriceChannel.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF",  Bid = 1.0092M, Ask = 1.0095M}));
-//
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "BTCCHF",
-//                Volume = 11.0415493502M,  //10000 USD (with leverage)
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//            Assert.AreEqual(PositionStatus.Active, order.Status);
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//        }
-//
+        [Test]
+        public void Is_Order_Limits_Changed()
+        {
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, 8, price: 1);
+            
+            order = _tradingEngine.PlaceOrderAsync(order).Result;
+            
+            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(1, order.Price);
+            Assert.AreEqual(OriginatorType.Investor, order.Originator);
+            Assert.AreEqual(string.Empty, order.AdditionalInfo);
+            
+            _tradingEngine.ChangeOrderLimits(order.Id, 0.9M, OriginatorType.OnBehalf, "info");
+
+            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(0.9M, order.Price);
+            Assert.AreEqual(OriginatorType.OnBehalf, order.Originator);
+            Assert.AreEqual("info", order.AdditionalInfo);
+        }
+
+        [Test]
+        public void Is_Long_Position_Closed_On_TakeProfit()
+        {
+            var position = TestObjectsFactory.CreateOpenedPosition("EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, 8, 1.1125M);
+            
+            _ordersCache.Positions.Add(position);
+
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.TakeProfit, "EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, -8, parentPositionId: position.Id, price: 1.16M);
+
+            order = _tradingEngine.PlaceOrderAsync(order).GetAwaiter().GetResult();            
+            
+            _matchingEngine.SetOrders("1", new[]
+            {
+               new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2M, Volume = 8}
+            });
+
+            ValidatePositionIsClosed(position, 1.2M, 0.7M, PositionCloseReason.TakeProfit);
+            
+            Assert.AreEqual(1000.7, _account.Balance);
+        }
+
+        [Test]
+        public void Is_Short_Position_Closed_On_TakeProfit()
+        {
+            var position = TestObjectsFactory.CreateOpenedPosition("EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, -8, 1.04875M);
+            
+            _ordersCache.Positions.Add(position);
+
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.TakeProfit, "EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, 8, parentPositionId: position.Id, price: 0.8M);
+
+            order = _tradingEngine.PlaceOrderAsync(order).GetAwaiter().GetResult();            
+            
+            _matchingEngine.SetOrders("1", new[]
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 0.7M, Volume = -8}
+            });
+
+            ValidatePositionIsClosed(position, 0.7M, 2.79M, PositionCloseReason.TakeProfit);
+            
+            Assert.AreEqual(1002.79, _account.Balance);
+        }
+
+        [Test]
+        public void Is_Long_Position_Closed_On_StopLoss()
+        {
+            var position = TestObjectsFactory.CreateOpenedPosition("EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, 14, 1.12857M);
+            
+            _ordersCache.Positions.Add(position);
+
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.StopLoss, "EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, -14, parentPositionId: position.Id, price: 0.98M);
+
+            order = _tradingEngine.PlaceOrderAsync(order).GetAwaiter().GetResult();            
+            
+            _matchingEngine.SetOrders("1", new[]
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 0.9M, Volume = 20}
+            }, new[] { "1"});
+            
+            ValidateOrderIsExecuted(order, new []{"6"}, 0.9M);
+
+            ValidatePositionIsClosed(position, 0.9M, -2.14998M, PositionCloseReason.StopLoss);
+            
+            Assert.AreEqual(997.85002, _account.Balance);
+        }
+
+        [Test]
+        public void Is_Short_Position_Closed_On_StopLoss()
+        {
+            var position = TestObjectsFactory.CreateOpenedPosition("EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, -11, 1.04636M);
+            
+            _ordersCache.Positions.Add(position);
+
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.StopLoss, "EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, 11, parentPositionId: position.Id, price: 1.15M);
+
+            order = _tradingEngine.PlaceOrderAsync(order).GetAwaiter().GetResult();            
+            
+            _matchingEngine.SetOrders("1", new []
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2M, Volume = -8}
+            }, new [] { "3" });
+
+            ValidatePositionIsClosed(position, 1.16364M, -1.29008M, PositionCloseReason.StopLoss);
+            
+            Assert.AreEqual(998.70992, _account.Balance);
+        }
+
+        [Test]
+        public async Task Is_Order_Fpl_Correct_With_Commission()
+        {
+            var position = TestObjectsFactory.CreateOpenedPosition("EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, 8, 1.1125M);
+            
+            var instrumentContract = new TradingInstrumentContract
+            {
+                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
+                Instrument = "EURUSD",
+                LeverageInit = 100,
+                LeverageMaintenance = 150,
+                Delta = 30,
+                CommissionRate = 0.5M
+            };
+
+            Mock.Get(_tradingInstruments).Setup(s => s.List(It.IsAny<string>()))
+                .ReturnsAsync(new List<TradingInstrumentContract> {instrumentContract});
+            
+            await _accountAssetsManager.UpdateTradingInstrumentsCache();
+           
+            position.UpdateClosePrice(1.04875M);
+
+            position.GetFpl();
+
+            Assert.AreEqual(-4.51, Math.Round(position.GetTotalFpl(), 3));
+        }
+
+        [Test]
+        public void Is_Buy_Cross_Order_Fpl_Correct()
+        {
+            var ordersSet = new []
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 838.371M, Volume = -15 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286M, Volume = 10 }
+            };
+
+            _matchingEngine.SetOrders(MarketMaker1Id, ordersSet);
+
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 1.0124M, Bid = 1.0122M });
+            //_fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "BTCCHF", Ask = 905.67M, Bid = 905.57M });
+            
+            //_bestPriceChannel.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0122M, Ask = 1.0124M }));
+            //_bestPriceChannel.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Bid = 905.57M, Ask = 905.67M }));
+
+            
+            var position = TestObjectsFactory.CreateOpenedPosition("BTCCHF", _account,
+                MarginTradingTestsUtils.TradingConditionId, 1, 838.371M);
+            
+            _ordersCache.Positions.Add(position);
+            
+            position.UpdateClosePrice(834.286M);
+
+            position.GetFpl();
+            
+            var account = _accountsCacheService.Get(position.AccountId);
+
+            Assert.AreEqual(-4.035, Math.Round(position.GetFpl(), 3));
+            
+            Assert.AreEqual(-4.035, Math.Round(account.GetPnl(), 3));
+            
+            Assert.AreEqual(position.GetMarginMaintenance(), account.GetUsedMargin());
+        }
+
+        [Test]
+        public void Is_Sell_Cross_Order_Fpl_Correct()
+        {
+            var ordersSet = new []
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 838.371M, Volume = -15 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286M, Volume = 10 }
+            };
+
+            _matchingEngine.SetOrders(MarketMaker1Id, ordersSet);
+            
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 1.0124M, Bid = 1.0122M });
+
+            //_bestPriceChannel.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0122M, Ask = 1.0124M}));
+
+            var position = TestObjectsFactory.CreateOpenedPosition("BTCCHF", _account,
+                MarginTradingTestsUtils.TradingConditionId, -1, 834.286M);
+            
+            _ordersCache.Positions.Add(position);
+            
+            position.UpdateClosePrice(838.371M);
+
+            position.GetFpl();
+            
+            var account = _accountsCacheService.Get(position.AccountId);
+
+            Assert.AreEqual(-4.035, Math.Round(position.GetFpl(), 3));
+            
+            Assert.AreEqual(-4.035, Math.Round(account.GetPnl(), 3));
+            
+            Assert.AreEqual(position.GetMarginMaintenance(), account.GetUsedMargin());
+            
+        }
+
+        [Test]
+        public void Is_Order_Opened_On_Full_Balance()
+        {
+            var ordersSet = new []
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.370M, Volume = -15000 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286M, Volume = 10000 }
+            };
+
+            _matchingEngine.SetOrders(MarketMaker1Id, ordersSet);
+
+            _bestPriceChannel.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Bid = 905.57M, Ask = 905.67M }));
+            _bestPriceChannel.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF",  Bid = 1.0092M, Ask = 1.0095M}));
+
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "BTCCHF", _account,
+                MarginTradingTestsUtils.TradingConditionId, 11.0415493502M); //10000 USD (with leverage)
+            
+            order = _tradingEngine.PlaceOrderAsync(order).Result;
+
+            ValidateOrderIsExecuted(order, new[] {"5"}, 834.370M);
+        }
+
 //        [Test]
 //        public void Is_Orders_Closed_On_Stopout()
 //        {
@@ -1155,10 +848,11 @@ namespace MarginTradingTests
 //            Assert.AreEqual(0.00666667, order.GetMarginMaintenance());
 //            Assert.AreEqual(0.01, order.GetMarginInit());
 //        }
-//
-//        #endregion
-//
-//        #region Pending orders
+
+        #endregion
+
+        
+        #region Pending orders
 //
 //        [Test]
 //        public void Is_PendingOrder_Rejected_On_Incorrect_ExpectedPrice()
@@ -1664,7 +1358,8 @@ namespace MarginTradingTests
 //            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionClosed, It.Is<string>(message => message.Contains("closed")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
 //        }
 //
-//        #endregion
+        #endregion
+        
         
         #region Assert helpers
         
@@ -1680,6 +1375,7 @@ namespace MarginTradingTests
             Assert.NotNull(order.Executed);
             Assert.AreEqual(order.Executed, order.LastModified);
 
+            //TODO: create mocks for event chanels
 //            _orderExecutedChannelMock.Verify(x => x.SendEvent(It.IsAny<object>(),
 //                    It.Is<OrderExecutedEventArgs>(e =>
 //                        e.Order.Id == order.Id && e.Order.Status == OrderStatus.ExecutionStarted)),
@@ -1734,17 +1430,20 @@ namespace MarginTradingTests
             //Assert.AreEqual(positionFpl, Math.Round(position.GetFpl(), 3));
             Assert.AreEqual(PositionStatus.Active, position.Status);
         }
-        
-        private void ValidatePositionIsClosed(Position position, decimal closePrice, decimal positionFpl)
+
+        private void ValidatePositionIsClosed(Position position, decimal closePrice, decimal positionFpl,
+            PositionCloseReason closeReason = PositionCloseReason.Close)
         {
-            Assert.IsFalse(_ordersCache.Positions.TryGetOrderById(position.Id, out var tmp), "Position is still opened");
-              
-            
+            Assert.IsFalse(_ordersCache.Positions.TryGetOrderById(position.Id, out var tmp),
+                "Position is still opened");
+
+
             Assert.AreEqual(closePrice, position.ClosePrice);
             Assert.AreEqual(positionFpl, Math.Round(position.GetFpl(), 3));
             Assert.AreEqual(PositionStatus.Closed, position.Status);
+            Assert.AreEqual(closeReason, position.CloseReason);
         }
-        
+
         #endregion 
     }
 }

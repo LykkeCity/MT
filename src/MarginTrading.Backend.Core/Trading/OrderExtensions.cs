@@ -44,7 +44,7 @@ namespace MarginTrading.Backend.Core
         {
             if (position.FplData.ActualHash != position.FplData.CalculatedHash)
             {
-                MtServiceLocator.FplService.UpdateOrderFpl(position, position.FplData);
+                MtServiceLocator.FplService.UpdatePositionFpl(position);
             }
 
             return position.FplData;

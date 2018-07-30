@@ -34,7 +34,7 @@ namespace MarginTrading.Backend.Services
             _assetsCache = assetsCache;
         }
 
-        public void UpdateOrderFpl(Position order, FplData fplData)
+        public void UpdatePositionFpl(Position position)
         {
 //            var handler = order.Status != OrderStatus.WaitingForExecution
 //                ? UpdateOrderFplData
@@ -42,7 +42,7 @@ namespace MarginTrading.Backend.Services
 //
 //            handler(order, fplData);
 
-            UpdatePositionFplData(order, fplData);
+            UpdatePositionFplData(position, position.FplData);
 
         }
 
