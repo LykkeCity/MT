@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.Backend.Contracts;
-using MarginTrading.Backend.Contracts.AssetPairSettings;
 using MarginTrading.Backend.Contracts.AssetSettings;
 using MarginTrading.Backend.Core;
 using MarginTrading.Common.Services;
