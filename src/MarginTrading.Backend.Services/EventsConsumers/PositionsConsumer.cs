@@ -136,6 +136,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     SendPositionHistoryEvent(openedPosition, PositionHistoryTypeContract.Close, openedPosition.ChargedPnL, order, Math.Abs(openedPosition.Volume));
                     
                     CancelRelatedOrders(openedPosition.RelatedOrders, order.CorrelationId);
+                
+                    leftVolumeToMatch = leftVolumeToMatch - Math.Abs(openedPosition.Volume);
                 }
                 else
                 {
@@ -146,9 +148,9 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     SendPositionHistoryEvent(openedPosition, PositionHistoryTypeContract.PartiallyClose, chargedPnl, order, Math.Abs(leftVolumeToMatch));
 
                     ChangeRelatedOrderVolume(openedPosition.RelatedOrders, -openedPosition.Volume);
-                }
                 
-                leftVolumeToMatch = leftVolumeToMatch - Math.Abs(openedPosition.Volume);
+                    leftVolumeToMatch = 0;
+                }
 
                 if (leftVolumeToMatch <= 0)
                     break;
