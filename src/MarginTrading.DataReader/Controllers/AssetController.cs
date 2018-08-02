@@ -37,9 +37,9 @@ namespace MarginTrading.DataReader.Controllers
         /// Get asset by id
         /// </summary>
         [HttpGet, Route("{assetId}")]
-        public async Task<AssetContract> Get(string assetPairId)
+        public async Task<AssetContract> Get(string assetId)
         {
-            return Convert(await _assetRepository.GetAsync(assetPairId));
+            return Convert(await _assetRepository.GetAsync(assetId));
         }
 
         private AssetContract Convert(IAsset settings)
