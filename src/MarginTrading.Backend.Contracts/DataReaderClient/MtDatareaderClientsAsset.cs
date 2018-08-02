@@ -1,10 +1,21 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace MarginTrading.Backend.Contracts.DataReaderClient
 {
-    class MtDatareaderClientsAsset
+    internal class MtDataReaderClientsAssets : IMtDataReaderClientsAsset
     {
+        public IMtDataReaderClient Demo { get; }
+        public IMtDataReaderClient Live { get; }
+
+        public IMtDataReaderClient Get(bool isLive)
+        {
+            return isLive ? Live : Demo;
+        }
+
+        public MtDataReaderClientsAssets(IMtDataReaderClient demo, IMtDataReaderClient live)
+        {
+            Demo = demo ?? throw new ArgumentNullException(nameof(demo));
+            Live = live ?? throw new ArgumentNullException(nameof(live));
+        }
     }
 }
