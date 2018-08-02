@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using MarginTrading.Backend.Contracts.AssetPairSettings;
 using MarginTrading.Backend.Contracts.AssetSettings;
 using Refit;
 
@@ -27,7 +26,7 @@ namespace MarginTrading.Backend.Contracts
         /// <summary>
         /// Delete existing asset
         /// </summary>
-        [Delete("/api/Asset/{assetPairId}")]
+        [Delete("/api/Asset/{assetId}")]
         Task<AssetContract> Delete(string assetId);
     }
 }
