@@ -2,7 +2,7 @@
 
 namespace MarginTrading.Backend.Contracts.DataReaderClient
 {
-    internal class MtDataReaderClientsAsset : IMtDataReaderClientsAsset
+    internal class MtDataReaderClientsAssets : IMtDataReaderClientsAssets
     {
         public IMtDataReaderClient Demo { get; }
         public IMtDataReaderClient Live { get; }
@@ -12,7 +12,7 @@ namespace MarginTrading.Backend.Contracts.DataReaderClient
             return isLive ? Live : Demo;
         }
 
-        public MtDataReaderClientsAsset(IMtDataReaderClient demo, IMtDataReaderClient live)
+        public MtDataReaderClientsAssets(IMtDataReaderClient demo, IMtDataReaderClient live)
         {
             Demo = demo ?? throw new ArgumentNullException(nameof(demo));
             Live = live ?? throw new ArgumentNullException(nameof(live));

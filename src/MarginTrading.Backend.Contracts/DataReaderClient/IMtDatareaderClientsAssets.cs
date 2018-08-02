@@ -3,7 +3,7 @@
 namespace MarginTrading.Backend.Contracts.DataReaderClient
 {
     [PublicAPI]
-    public interface IMtDataReaderClientsAsset
+    public interface IMtDataReaderClientsAssets
     {
         IMtDataReaderClient Demo { get; }
         IMtDataReaderClient Live { get; }
