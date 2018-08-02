@@ -22,6 +22,6 @@ namespace MarginTrading.Backend.Contracts
         /// Get pair by id
         /// </summary>
         [Get("/api/Asset/{assetId}")]
-        Task<AssetContract> Get(string assetPairId);
+        Task<AssetContract> Get(string assetId);
     }
 }
