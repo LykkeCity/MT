@@ -16,6 +16,15 @@ namespace MarginTrading.Backend.Contracts.DataReaderClient
         }
 
         [PublicAPI]
+        public static void RegisterMtDataReaderClientsAsset(this IServiceCollection services, IHttpClientGenerator demo,
+            IHttpClientGenerator live)
+        {
+            services.AddSingleton<IMtDataReaderClientsAsset>(p => new MtDataReaderClientsAsset(
+                new MtDataReaderClient(demo),
+                new MtDataReaderClient(live)));
+        }
+
+        [PublicAPI]
         public static void RegisterMtDataReaderClient(this IServiceCollection services, IHttpClientGenerator clientProxyGenerator)
         {
             services.AddSingleton<IMtDataReaderClient>(p => new MtDataReaderClient(clientProxyGenerator));
