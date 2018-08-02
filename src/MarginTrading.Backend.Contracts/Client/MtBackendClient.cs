@@ -14,8 +14,11 @@ namespace MarginTrading.Backend.Contracts.Client
         
         public ITradingApi Trading { get; }
 
+        public IAssetEditingApi AssetEdit { get; }
+
         public MtBackendClient(IHttpClientGenerator clientProxyGenerator)
         {
+            AssetEdit = clientProxyGenerator.Generate<IAssetEditingApi>();
             ScheduleSettings = clientProxyGenerator.Generate<IScheduleSettingsApi>();
             AccountsBalance = clientProxyGenerator.Generate<IAccountsBalanceApi>();
             AssetPairsEdit = clientProxyGenerator.Generate<IAssetPairsEditingApi>();
