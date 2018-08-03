@@ -376,19 +376,19 @@ namespace MarginTradingTests
                 {
                     Id = "EUR",
                     Name = "EUR",
-                    Accuracy = 5,
+                    Accuracy = 8,
                 },
                 new AssetRepository.AssetEntity
                 {
                     Id = "BTC",
                     Name = "BTC",
-                    Accuracy = 3
+                    Accuracy = 8
                 },
                 new AssetRepository.AssetEntity
                 {
                     Id = "USD",
                     Name = "USD",
-                    Accuracy = 3
+                    Accuracy = 8
                 }
             };
 
