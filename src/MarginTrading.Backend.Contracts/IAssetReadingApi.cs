@@ -12,7 +12,7 @@ namespace MarginTrading.Backend.Contracts
     public interface IAssetReadingApi
     {
         /// <summary>
-        /// Get all pairs.
+        /// Get all Assets.
         /// Cached on client for 3 minutes 
         /// </summary>
         [Get("/api/Asset/"), ClientCaching(Minutes = 3)]

@@ -16,15 +16,6 @@ namespace MarginTrading.Backend.Contracts.Client
         }
 
         [PublicAPI]
-        public static void RegisterMtBackendClientsAsset(this IServiceCollection services, IHttpClientGenerator demo,
-            IHttpClientGenerator live)
-        {
-            services.AddSingleton<IMtBackendClientsAssets>(p => new MtBackendClientsAssets(
-                new MtBackendClient(demo),
-                new MtBackendClient(live)));
-        }
-
-        [PublicAPI]
         public static void RegisterMtBackendClient(this IServiceCollection services, IHttpClientGenerator clientProxyGenerator)
         {
             services.AddSingleton<IMtBackendClient>(p => new MtBackendClient(clientProxyGenerator));
