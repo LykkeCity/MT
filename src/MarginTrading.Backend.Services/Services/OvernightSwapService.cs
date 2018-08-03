@@ -243,7 +243,7 @@ namespace MarginTrading.Backend.Services.Services
 
             await _accountManager.UpdateBalanceAsync(
                 account: account,
-                amount: total,
+                amount: -total,
                 historyType: AccountHistoryType.Swap,
                 comment: $"Position {order.Id}  swaps. Time: {_currentStartTimestamp:u}.",
                 auditLog: calculation.ToJson(),
