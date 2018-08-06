@@ -27,7 +27,24 @@ namespace MarginTrading.Backend.Services.Assets
                 _lockSlim.ExitReadLock();
             }
         }
-        
+
+        public IAsset GetAssetById(string assetId)
+        {
+            _lockSlim.EnterReadLock();
+
+            try
+            {
+                if (_assets.TryGetValue(assetId, out var result))
+                    return result;
+
+                return null;
+            }
+            finally
+            {
+                _lockSlim.ExitReadLock();
+            }
+        }
+
         internal void Init(Dictionary<string, IAsset> assets)
         {
             _lockSlim.EnterWriteLock();

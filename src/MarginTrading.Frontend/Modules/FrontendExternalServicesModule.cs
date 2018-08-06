@@ -33,7 +33,7 @@ namespace MarginTrading.Frontend.Modules
                 HttpClientGenerator.BuildForUrl(_settings.CurrentValue.MtDataReaderLiveServiceClient.ServiceUrl)
                     .WithApiKey(_settings.CurrentValue.MtDataReaderLiveServiceClient.ApiKey)
                     .Create());
-            
+
             builder.RegisterLykkeServiceClient(_settings.CurrentValue.ClientAccountServiceClient.ServiceUrl);
             
             var personalDataServiceMock = new Mock<IPersonalDataService>(MockBehavior.Strict);

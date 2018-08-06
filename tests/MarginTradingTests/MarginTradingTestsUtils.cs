@@ -366,5 +366,34 @@ namespace MarginTradingTests
             table.InsertAsync(assetPairs).GetAwaiter().GetResult();
             return new AssetPairsRepository(table, new ConvertService());
         }
+
+        public static IAssetRepository GetPopulatedAssetRepository()
+        {
+            var table = new NoSqlTableInMemory<AssetRepository.AssetEntity>();
+            var assets = new List<AssetRepository.AssetEntity>
+            {
+                new AssetRepository.AssetEntity
+                {
+                    Id = "EUR",
+                    Name = "EUR",
+                    Accuracy = 8,
+                },
+                new AssetRepository.AssetEntity
+                {
+                    Id = "BTC",
+                    Name = "BTC",
+                    Accuracy = 8
+                },
+                new AssetRepository.AssetEntity
+                {
+                    Id = "USD",
+                    Name = "USD",
+                    Accuracy = 8
+                }
+            };
+
+            table.InsertAsync(assets).GetAwaiter().GetResult();
+            return new AssetRepository(table, new ConvertService());
+        }
     }
 }

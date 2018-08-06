@@ -102,6 +102,14 @@ namespace MarginTrading.AzureRepositories
                     AzureTableStorage<AssetPairsRepository.AssetPairEntity>.Create(connString,
                         "AssetPairs", log), convertService);
             }
+
+            public static IAssetRepository CreateAssetSettingsRepository(IReloadingManager<string> connString,
+                ILog log, IConvertService convertService)
+            {
+                return new AssetRepository(
+                    AzureTableStorage<AssetRepository.AssetEntity>.Create(connString,
+                        "Asset", log), convertService);
+            }
         }
     }
 }

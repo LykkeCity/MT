@@ -56,6 +56,7 @@ namespace MarginTrading.Backend.Services.Modules
             builder.RegisterType<AssetsManager>()
                 .AsSelf()
                 .As<IStartable>()
+                .As<IAssetManager>()
                 .SingleInstance();
             
             builder.RegisterType<PendingOrdersCleaningService>()

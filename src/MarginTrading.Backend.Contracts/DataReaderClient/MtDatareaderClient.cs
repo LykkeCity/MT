@@ -14,9 +14,11 @@ namespace MarginTrading.Backend.Contracts.DataReaderClient
         public IDictionariesReadingApi Dictionaries { get; }
         public IRoutesReadingApi Routes { get; }
         public ISettingsReadingApi Settings { get; }
+        public IAssetReadingApi AssetRead { get; }
 
         public MtDataReaderClient(IHttpClientGenerator clientGenerator)
         {
+            AssetRead = clientGenerator.Generate<IAssetReadingApi>();
             AssetPairsRead = clientGenerator.Generate<IAssetPairsReadingApi>();
             AccountHistory = clientGenerator.Generate<IAccountHistoryApi>();
             AccountsApi = clientGenerator.Generate<IAccountsApi>();

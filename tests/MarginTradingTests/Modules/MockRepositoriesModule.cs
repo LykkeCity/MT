@@ -64,6 +64,8 @@ namespace MarginTradingTests.Modules
                 .SingleInstance();
             builder.RegisterInstance(MarginTradingTestsUtils.GetPopulatedAssetPairsRepository())
                 .As<IAssetPairsRepository>().SingleInstance();
+            builder.RegisterInstance(MarginTradingTestsUtils.GetPopulatedAssetRepository())
+                .As<IAssetRepository>().SingleInstance();
         }
     }
 }
