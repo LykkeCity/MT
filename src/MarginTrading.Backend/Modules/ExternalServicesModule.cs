@@ -8,6 +8,7 @@ using Lykke.Service.EmailSender;
 using Lykke.Service.ExchangeConnector.Client;
 using Lykke.SettingsReader;
 using MarginTrading.AccountsManagement.Contracts;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.FakeExchangeConnector;
 using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Backend.Services.Stubs;
@@ -27,14 +28,19 @@ namespace MarginTrading.Backend.Modules
 
         protected override void Load(ContainerBuilder builder)
         {
-            /*builder.RegisterType<ExchangeConnectorService>()
-               .As<IExchangeConnectorService>()
-               .WithParameter("settings", _settings.CurrentValue.MtStpExchangeConnectorClient)
-               .SingleInstance();*/
-           //swap upper registration with a fake below to use FakeExchangeConnector
-           builder.RegisterType<FakeExchangeConnectorService>()
-               .As<IExchangeConnectorService>()
-               .SingleInstance();
+            if (_settings.CurrentValue.MtBackend.ExchangeConnector == ExchangeConnectorType.Gavel)
+            {
+                builder.RegisterType<ExchangeConnectorService>()
+                .As<IExchangeConnectorService>()
+                .WithParameter("settings", _settings.CurrentValue.MtStpExchangeConnectorClient)
+                .SingleInstance();
+            }
+            if (_settings.CurrentValue.MtBackend.ExchangeConnector == ExchangeConnectorType.Fake)
+            {
+                builder.RegisterType<FakeExchangeConnectorService>()
+                    .As<IExchangeConnectorService>()
+                    .SingleInstance();
+            }
             
 
             #region Client Account Service
