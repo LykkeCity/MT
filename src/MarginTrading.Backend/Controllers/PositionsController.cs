@@ -313,6 +313,7 @@ namespace MarginTrading.Backend.Controllers
                 Direction = position.Direction.ToType<PositionDirectionContract>(),
                 Id = position.Id,
                 OpenPrice = position.OpenPrice,
+                OpenFxPrice = position.OpenFxPrice,
                 ClosePrice = position.ClosePrice,
                 ExpectedOpenPrice = position.ExpectedOpenPrice,
                 PnL = position.GetFpl(),
