@@ -28,14 +28,14 @@ namespace MarginTrading.Backend.Modules
 
         protected override void Load(ContainerBuilder builder)
         {
-            if (_settings.CurrentValue.MtBackend.ExchangeConnector == ExchangeConnectorType.Gavel)
+            if (_settings.CurrentValue.MtBackend.ExchangeConnector == ExchangeConnectorType.RealExchangeConnector)
             {
                 builder.RegisterType<ExchangeConnectorService>()
                 .As<IExchangeConnectorService>()
                 .WithParameter("settings", _settings.CurrentValue.MtStpExchangeConnectorClient)
                 .SingleInstance();
             }
-            if (_settings.CurrentValue.MtBackend.ExchangeConnector == ExchangeConnectorType.Fake)
+            if (_settings.CurrentValue.MtBackend.ExchangeConnector == ExchangeConnectorType.FakeExchangeConnector)
             {
                 builder.RegisterType<FakeExchangeConnectorService>()
                     .As<IExchangeConnectorService>()
