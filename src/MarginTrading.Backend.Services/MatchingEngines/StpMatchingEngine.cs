@@ -177,10 +177,11 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                     ? (decimal) executionResult.Price
                     : closePrice.Value;
 
+                var price = CalculatePriceWithMarkups(assetPair, order.GetCloseType(), executedPrice);
+                
                 order.CloseExternalProviderId = closeLp;
                 order.CloseExternalOrderId = executionResult.ClientOrderId;
-                order.ClosePrice =
-                    CalculatePriceWithMarkups(assetPair, order.GetCloseType(), executedPrice);
+                order.UpdateClosePrice(price);
 
                 _rabbitMqNotifyService.ExternalOrder(executionResult).GetAwaiter().GetResult();
                 
