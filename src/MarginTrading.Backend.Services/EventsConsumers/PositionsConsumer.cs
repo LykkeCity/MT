@@ -7,6 +7,7 @@ using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Trading;
@@ -31,6 +32,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         private readonly IEventChannel<OrderCancelledEventArgs> _orderCancelledEventChannel;
         private readonly IEventChannel<OrderChangedEventArgs> _orderChangedEventChannel;
         private readonly IEventChannel<OrderActivatedEventArgs> _orderActivatedEventChannel;
+        private readonly IMatchingEngineRouter _meRouter;
 
         private static readonly ConcurrentDictionary<string, object> LockObjects =
             new ConcurrentDictionary<string, object>();
@@ -46,7 +48,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             ICqrsSender cqrsSender,
             IEventChannel<OrderCancelledEventArgs> orderCancelledEventChannel,
             IEventChannel<OrderChangedEventArgs> orderChangedEventChannel,
-            IEventChannel<OrderActivatedEventArgs> orderActivatedEventChannel)
+            IEventChannel<OrderActivatedEventArgs> orderActivatedEventChannel,
+            IMatchingEngineRouter meRouter)
         {
             _ordersCache = ordersCache;
             _rabbitMqNotifyService = rabbitMqNotifyService;
@@ -58,6 +61,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             _orderCancelledEventChannel = orderCancelledEventChannel;
             _orderChangedEventChannel = orderChangedEventChannel;
             _orderActivatedEventChannel = orderActivatedEventChannel;
+            _meRouter = meRouter;
         }
         
         public void ConsumeEvent(object sender, OrderExecutedEventArgs ea)
@@ -68,7 +72,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             {
                 if (order.ForceOpen)
                 {
-                    OpenNewPosition(order);
+                    OpenNewPosition(order, order.Volume);
 
                     return;
                 }
@@ -100,19 +104,27 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             CancelRelatedOrders(position.RelatedOrders, order.CorrelationId);
         }
 
-        private void OpenNewPosition(Order order)
+        private void OpenNewPosition(Order order, decimal volume)
         {
-            var position = new Position(order.Id, order.Code, order.AssetPairId, order.Volume, order.AccountId,
+            var position = new Position(order.Id, order.Code, order.AssetPairId, volume, order.AccountId,
                 order.TradingConditionId, order.AccountAssetId, order.Price, order.MatchingEngineId,
                 order.Executed.Value, order.Id, order.ExecutionPrice.Value, order.FxRate, order.EquivalentAsset,
                 order.EquivalentRate, order.RelatedOrders, order.LegalEntity, order.Originator,
                 order.ExternalProviderId);
+            
+            var defaultMatchingEngine = _meRouter.GetMatchingEngineForClose(position);
+
+            var closePrice = defaultMatchingEngine.GetPriceForClose(position);
+
+            if (closePrice.HasValue)
+                position.UpdateClosePrice(closePrice.Value);
 
             _ordersCache.Positions.Add(position);
 
             SendPositionHistoryEvent(position, PositionHistoryTypeContract.Open, 0);
             
             ActivateRelatedOrders(position.RelatedOrders);
+            
         }
 
         private void MatchOrderOnExistingPositions(Order order)
@@ -160,19 +172,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             {
                 var volume = order.Volume > 0 ? leftVolumeToMatch : -leftVolumeToMatch;
                 
-                var position = new Position(order.Id, order.Code, order.AssetPairId, volume, order.AccountId,
-                    order.TradingConditionId, order.AccountAssetId, order.Price, order.MatchingEngineId,
-                    order.Executed.Value, order.Id, order.ExecutionPrice.Value, order.FxRate, order.EquivalentAsset,
-                    order.EquivalentRate, order.RelatedOrders, order.LegalEntity, order.Originator,
-                    order.ExternalProviderId);
-
-                _ordersCache.Positions.Add(position);
-
-                SendPositionHistoryEvent(position, PositionHistoryTypeContract.Open, 0);
-
-                ChangeRelatedOrderVolume(position.RelatedOrders, -volume);
-                
-                ActivateRelatedOrders(position.RelatedOrders);
+                OpenNewPosition(order, volume);
             }
         }
 
