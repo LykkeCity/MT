@@ -23,7 +23,7 @@ namespace MarginTradingTests.Helpers
             return new Order(Guid.NewGuid().ToString("N"), 0, assetPairId, volume, DateTime.UtcNow, DateTime.UtcNow,
                 validity, account.Id, tradingConditionId, account.BaseAssetId, price, "EUR", fillType,
                 null, "LYKKETEST", forceOpen, orderType, parentOrderId, parentPositionId, OriginatorType.Investor, 1,
-                1, OrderStatus.Placed, null);
+                1, OrderStatus.Placed, null, Guid.NewGuid().ToString());
         }
     }
 }
