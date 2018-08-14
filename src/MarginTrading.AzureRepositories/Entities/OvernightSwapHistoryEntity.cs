@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using Lykke.AzureStorage.Tables;
 using MarginTrading.Backend.Core;
 using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
 
 namespace MarginTrading.AzureRepositories.Entities
 {
-	public class OvernightSwapHistoryEntity : TableEntity, IOvernightSwapHistory
+	public class OvernightSwapHistoryEntity : AzureTableEntity, IOvernightSwapHistory
 	{
 		public string ClientId { get; set; }
 		public string AccountId { get; set; }
@@ -17,8 +18,8 @@ namespace MarginTrading.AzureRepositories.Entities
 		public DateTime Time { get; set; }
 		public double Volume { get; set; }
 		decimal IOvernightSwapState.Volume => (decimal) Volume;
-		public string OpenOrderId { get; set; }
-		string IOvernightSwapState.OpenOrderId => OpenOrderId;
+		public string OpenOrderId => PartitionKey; 
+		string IOvernightSwapState.OpenOrderId => PartitionKey;
 		public double Value { get; set; }
 		decimal IOvernightSwapState.Value => (decimal) Value;
 		public double SwapRate { get; set; }
@@ -32,7 +33,7 @@ namespace MarginTrading.AzureRepositories.Entities
 		{
 			return new OvernightSwapHistoryEntity
 			{
-				PartitionKey = obj.AccountId,
+				PartitionKey = obj.OpenOrderId,
 				RowKey = $"{obj.Time:O}",
 				ClientId = obj.ClientId,
 				AccountId = obj.AccountId,
@@ -42,7 +43,6 @@ namespace MarginTrading.AzureRepositories.Entities
 				Volume = (double) obj.Volume,
 				Value = (double) obj.Value,
 				SwapRate = (double) obj.SwapRate,
-				OpenOrderId = JsonConvert.SerializeObject(obj.OpenOrderId),
 				IsSuccess = obj.IsSuccess,
 				Exception = JsonConvert.SerializeObject(obj.Exception)
 			};
