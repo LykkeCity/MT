@@ -771,511 +771,169 @@ namespace MarginTradingTests
 
         
         #region Pending orders
-//
-//        [Test]
-//        public void Is_PendingOrder_Rejected_On_Incorrect_ExpectedPrice()
-//        {
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "EURUSD",
-//                Volume = 8,
-//                ExpectedOpenPrice = 0,
-//                FillType = OrderFillType.PartialFill
-//            };
-//
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//
-//            Assert.AreEqual(PositionStatus.Rejected, order.Status);
-//            Assert.AreEqual(OrderRejectReason.InvalidExpectedOpenPrice, order.RejectReason);
-//        }
-//
-//        [Test]
-//        public void Is_Buy_Partial_PendingOrder_Opened()
-//        {
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "EURUSD",
-//                Volume = 8,
-//                ExpectedOpenPrice = 1.1M,
-//                FillType = OrderFillType.PartialFill
-//            };
-//
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//            order.UpdatePendingOrderMargin();
-//
-//            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status);
-//            Assert.AreEqual(0.088, order.GetMarginInit());
-//            Assert.AreEqual(0.05866667, order.GetMarginMaintenance());
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("placed")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//
-//            _matchingEngine.SetOrders(MarketMaker1Id, new[]
-//            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2M, Volume = 6 }
-//            });
-//
-//            var account = _accountsCacheService.Get(order.AccountId);
-//
-//            Assert.AreEqual(2, order.MatchedOrders.Count);
-//            Assert.AreEqual(PositionStatus.Active, order.Status);
-//            Assert.AreEqual(1.1125, order.OpenPrice);
-//            Assert.AreEqual(1, account.GetOpenPositionsCount());
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("triggered")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//        }
-//
-//        [Test]
-//        public void Is_Buy_Partial_PendingOrder_Opened_When_Available()
-//        {
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "EURUSD",
-//                Volume = 8,
-//                ExpectedOpenPrice = 1.055M,
-//                FillType = OrderFillType.PartialFill
-//            };
-//
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//            var account = _accountsCacheService.Get(order.AccountId);
-//
-//            Assert.AreEqual(0, order.MatchedOrders.Count);
-//            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //is not active
-//            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
-//            Assert.IsTrue(account.GetUsedMargin() == 0); //no used margin
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.WaitingForExecution)));
-//
-//            _matchingEngine.SetOrders(MarketMaker1Id, new []
-//            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = -6 }
-//            });
-//
-//            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //still not active
-//            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
-//
-//            _matchingEngine.SetOrders(MarketMaker1Id, new []
-//            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.055M, Volume = -6 }
-//            });
-//
-//            Assert.AreEqual(PositionStatus.Active, order.Status); //now its active
-//            Assert.AreEqual(2, order.MatchedOrders.Count);
-//            Assert.AreEqual(1.056, Math.Round(order.OpenPrice, 3));
-//            Assert.AreEqual(-0.06, Math.Round(order.GetFpl(), 3));
-//            Assert.AreEqual(1, account.GetOpenPositionsCount()); //position is opened
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
-//
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(message => message.Contains("Pending order triggered")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//
-//        }
-//
-//        [Test]
-//        public void Is_Sell_Partial_PendingOrder_Opened()
-//        {
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "EURUSD",
-//                Volume = -5,
-//                ExpectedOpenPrice = 1.05M,
-//                FillType = OrderFillType.PartialFill
-//            };
-//
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("placed")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//            
-//            _matchingEngine.SetOrders(MarketMaker1Id, new[]
-//            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = 6 }
-//            });
-//
-//            var account = _accountsCacheService.Get(order.AccountId);
-//
-//            Assert.AreEqual(1, order.MatchedOrders.Count);
-//            Assert.AreEqual(PositionStatus.Active, order.Status);
-//            Assert.AreEqual(1.06, order.OpenPrice);
-//            Assert.AreEqual(1, account.GetOpenPositionsCount());
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("triggered")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//        }
-//
-//        [Test]
-//        public void Is_Sell_Partial_PendingOrder_Opened_When_Available()
-//        {
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "EURUSD",
-//                Volume = -1,
-//                ExpectedOpenPrice = 1.07M,
-//                FillType = OrderFillType.PartialFill
-//            };
-//
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//            var account = _accountsCacheService.Get(order.AccountId);
-//
-//            Assert.AreEqual(0, order.MatchedOrders.Count);
-//            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //is not active
-//            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
-//
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.WaitingForExecution)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("placed")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//
-//            _matchingEngine.SetOrders(MarketMaker1Id, new []
-//            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = 6 }
-//            });
-//
-//            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //still not active
-//            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
-//
-//            _matchingEngine.SetOrders(MarketMaker1Id, new []
-//            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.08M, Volume = 10 }
-//            });
-//
-//            Assert.AreEqual(PositionStatus.Active, order.Status); //now its active
-//            Assert.AreEqual(-0.02, Math.Round(order.GetFpl(), 3));
-//            Assert.AreEqual(1, account.GetOpenPositionsCount()); //position is opened
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("triggered")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//        }
-//
-//        [Test]
-//        public void Is_Buy_FillOrKill_PendingOrder_Opened()
-//        {
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "EURUSD",
-//                Volume = 1,
-//                ExpectedOpenPrice = 1.1M,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//
-//            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status);
-//            
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("placed")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//
-//            _matchingEngine.SetOrders(MarketMaker1Id, new[]
-//            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2M, Volume = 6 }
-//            });
-//
-//            var account = _accountsCacheService.Get(order.AccountId);
-//
-//            Assert.AreEqual(1, order.MatchedOrders.Count);
-//            Assert.AreEqual(PositionStatus.Active, order.Status);
-//            Assert.AreEqual(1.1, order.OpenPrice);
-//            Assert.AreEqual(1.2, order.ClosePrice);
-//            Assert.AreEqual(1, account.GetOpenPositionsCount());
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("triggered")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//        }
-//
-//        [Test]
-//        public void Is_Buy_FillOrKill_PendingOrder_Opened_When_Available()
-//        {
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "EURUSD",
-//                Volume = 1,
-//                ExpectedOpenPrice = 1.055M,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//            var account = _accountsCacheService.Get(order.AccountId);
-//
-//            Assert.AreEqual(0, order.MatchedOrders.Count);
-//            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //is not active
-//            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.WaitingForExecution)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("placed")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//
-//            _matchingEngine.SetOrders(MarketMaker1Id, new []
-//            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = -6 }
-//            });
-//
-//            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //still not active
-//            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
-//
-//            _matchingEngine.SetOrders(MarketMaker1Id, new []
-//            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.055M, Volume = -4 }
-//            });
-//
-//            Assert.AreEqual(PositionStatus.Active, order.Status); //now its active
-//            Assert.AreEqual(-0.005, Math.Round(order.GetFpl(), 3));
-//            Assert.AreEqual(1, account.GetOpenPositionsCount()); //position is opened
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("triggered")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//        }
-//
-//        [Test]
-//        public void Is_Sell_FillOrKill_PendingOrder_Opened()
-//        {
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "EURUSD",
-//                Volume = -1,
-//                ExpectedOpenPrice = 1.05M,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//            
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("placed")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//
-//            _matchingEngine.SetOrders(MarketMaker1Id, new[]
-//            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = 6 }
-//            });
-//
-//            var account = _accountsCacheService.Get(order.AccountId);
-//
-//            Assert.AreEqual(1, order.MatchedOrders.Count);
-//            Assert.AreEqual(PositionStatus.Active, order.Status);
-//            Assert.AreEqual(1.06, order.OpenPrice);
-//            Assert.AreEqual(1, account.GetOpenPositionsCount());
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("triggered")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//        }
-//
-//        [Test]
-//        public void Is_Sell_FillOrKill_PendingOrder_Opened_When_Available()
-//        {
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "EURUSD",
-//                Volume = -1,
-//                ExpectedOpenPrice = 1.07M,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//            var account = _accountsCacheService.Get(order.AccountId);
-//
-//            Assert.AreEqual(0, order.MatchedOrders.Count);
-//            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //is not active
-//            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.WaitingForExecution)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("placed")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//
-//            _matchingEngine.SetOrders(MarketMaker1Id, new []
-//            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = 6 }
-//            });
-//
-//            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //still not active
-//            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
-//
-//            _matchingEngine.SetOrders(MarketMaker1Id, new []
-//            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.08M, Volume = 10 }
-//            });
-//
-//            Assert.AreEqual(PositionStatus.Active, order.Status); //now its active
-//            Assert.AreEqual(-0.02, Math.Round(order.GetFpl(), 3));
-//            Assert.AreEqual(1, account.GetOpenPositionsCount()); //position is opened
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("triggered")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//        }
-//
-//        [Test]
-//        public void Is_Buy_PendingOrder_Rejected_On_Expected_Price()
-//        {
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "EURUSD",
-//                Volume = 8,
-//                ExpectedOpenPrice = 1.12M,
-//                FillType = OrderFillType.PartialFill
-//            };
-//
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//
-//            //current ask price for EURUSD = 1.1 and ExpectedOpenPrice = 1.12, so order should be rejected
-//            Assert.AreEqual(PositionStatus.Rejected, order.Status);
-//            Assert.AreEqual(OrderRejectReason.InvalidExpectedOpenPrice, order.RejectReason);
-//        }
-//
-//        [Test]
-//        public void Is_Sell_PendingOrder_Rejected_On_Expected_Price()
-//        {
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "EURUSD",
-//                Volume = -8,
-//                ExpectedOpenPrice = 1.04M,
-//                FillType = OrderFillType.PartialFill
-//            };
-//
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//
-//            //current bid price for EURUSD = 1.05 and ExpectedOpenPrice = 1.04, so order should be rejected
-//            Assert.AreEqual(PositionStatus.Rejected, order.Status);
-//            Assert.AreEqual(OrderRejectReason.InvalidExpectedOpenPrice, order.RejectReason);
-//        }
-//
-//        [Test]
-//        public void Is_PendingOrder_Canceled()
-//        {
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "EURUSD",
-//                Volume = -1,
-//                ExpectedOpenPrice = 1.07M,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//            var account = _accountsCacheService.Get(order.AccountId);
-//
-//            Assert.AreEqual(0, order.MatchedOrders.Count);
-//            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //is not active
-//            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.WaitingForExecution)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//
-//            _tradingEngine.CancelPendingOrder(order.Id, OrderCloseReason.Canceled);
-//
-//            Assert.AreEqual(PositionStatus.Closed, order.Status);
-//            Assert.AreEqual(OrderCloseReason.Canceled, order.CloseReason);
-//            Assert.IsNotNull(order.CloseDate);
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Closed)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//        }
-//
-//        [Test]
-//        public void Is_PendingOrder_Rejected_On_Trigger()
-//        {
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "EURUSD",
-//                Volume = -10000,
-//                ExpectedOpenPrice = 1.07M,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//            var account = _accountsCacheService.Get(order.AccountId);
-//
-//            Assert.AreEqual(0, order.MatchedOrders.Count);
-//            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //is not active
-//            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.WaitingForExecution)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.IsAny<string>(), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//
-//            _matchingEngine.SetOrders(MarketMaker1Id, new[]
-//            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = 6 }
-//            });
-//
-//            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //still not active
-//            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
-//
-//            _matchingEngine.SetOrders(MarketMaker1Id, new[]
-//            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.08M, Volume = 10 }
-//            });
-//
-//            Assert.AreEqual(PositionStatus.Rejected, order.Status); //should be rejected 
-//            Assert.AreEqual(OrderRejectReason.NoLiquidity, order.RejectReason);
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Rejected)));
-//        }
-//
-//        [Test]
-//        public void Is_PendingOrder_Closed_After_Trigger()
-//        {
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = _acount1Id,
-//                Instrument = "EURUSD",
-//                Volume = -5,
-//                ExpectedOpenPrice = 1.07M,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            order = _tradingEngine.PlaceOrderAsync(order).Result;
-//            var account = _accountsCacheService.Get(order.AccountId);
-//
-//            Assert.AreEqual(0, order.MatchedOrders.Count);
-//            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //is not active
-//            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.WaitingForExecution)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("placed")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//
-//            _matchingEngine.SetOrders(MarketMaker1Id, new[]
-//            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = 6 }
-//            });
-//
-//            Assert.AreEqual(PositionStatus.WaitingForExecution, order.Status); //still not active
-//            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
-//
-//            _matchingEngine.SetOrders(MarketMaker1Id, new[]
-//            {
-//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.08M, Volume = 10 }
-//            });
-//
-//            Assert.AreEqual(PositionStatus.Active, order.Status); //should be active 
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Active)));
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionOpened, It.Is<string>(m => m.Contains("triggered")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//
-//            var closedOrder = _tradingEngine.CloseActiveOrderAsync(order.Id, OrderCloseReason.Close).Result;
-//
-//            Assert.AreEqual(PositionStatus.Closed, closedOrder.Status); //should be closed 
-//            Assert.AreEqual(-0.1, order.GetTotalFpl());
-//            account = _accountsCacheService.Get(order.AccountId);
-//            Assert.AreEqual(999.9, account.Balance);
-//
-//            _clientNotifyServiceMock.Verify(x => x.NotifyOrderChanged(It.Is<Position>(o => o.Status == PositionStatus.Closed)));
-//            _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.Is<IMarginTradingAccount>(a => a.Balance == account.Balance)));
-//
-//            _appNotificationsMock.Verify(x => x.SendNotification(It.IsAny<string>(), NotificationType.PositionClosed, It.Is<string>(message => message.Contains("closed")), It.Is<OrderHistoryBackendContract>(o => o.Id == order.Id)), Times.Once());
-//        }
-//
+
+       
+        [Test]
+        public void Is_Buy_LimitOrder_Opened()
+        {
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Limit, "EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, 8, price: 1.1M);
+            
+            order = _tradingEngine.PlaceOrderAsync(order).Result;
+            //TODO: make pending order margin optional
+            //order.UpdatePendingOrderMargin();
+
+            Assert.AreEqual(OrderStatus.Active, order.Status);
+            //Assert.AreEqual(0.088, order.GetMarginInit());
+            //Assert.AreEqual(0.05866667, order.GetMarginMaintenance());
+
+            _matchingEngine.SetOrders(MarketMaker1Id, new[]
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2M, Volume = 6 }
+            });
+
+            var account = _accountsCacheService.Get(order.AccountId);
+
+            ValidateOrderIsExecuted(order, new []{"3","4"}, 1.1125M);
+            
+            Assert.AreEqual(1, account.GetOpenPositionsCount());
+        }
+
+        [Test]
+        public void Is_Buy_LimitOrder_Opened_When_Available()
+        {
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Limit, "EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, 8, price: 1.055M);
+            
+            order = _tradingEngine.PlaceOrderAsync(order).Result;
+            var account = _accountsCacheService.Get(order.AccountId);
+
+            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
+            Assert.IsTrue(account.GetUsedMargin() == 0); //no used margin
+
+            _matchingEngine.SetOrders(MarketMaker1Id, new []
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = -6 }
+            });
+
+            Assert.AreEqual(OrderStatus.Active, order.Status); //still not active
+            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
+
+            _matchingEngine.SetOrders(MarketMaker1Id, new []
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.055M, Volume = -6 }
+            });
+
+
+            ValidateOrderIsExecuted(order, new[] {"5", "6"}, 1.05625M);
+
+            ValidatePositionIsOpened(order.Id, 1.04875M, -0.06M);
+           
+            Assert.AreEqual(1, account.GetOpenPositionsCount()); //position is opened
+        }
+
+        [Test]
+        public void Is_Sell_LimitOrder_Opened()
+        {
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Limit, "EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, -1, price: 1.05M);
+            
+            order = _tradingEngine.PlaceOrderAsync(order).Result;
+
+            Assert.AreEqual(OrderStatus.Active, order.Status);
+            
+            _matchingEngine.SetOrders(MarketMaker1Id, new[]
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = 6 }
+            });
+
+            var account = _accountsCacheService.Get(order.AccountId);
+
+            ValidateOrderIsExecuted(order, new[] {"5"}, 1.06M);
+
+            ValidatePositionIsOpened(order.Id, 1.1M, -0.04M);
+            
+            Assert.AreEqual(1, account.GetOpenPositionsCount());
+        }
+
+        [Test]
+        public void Is_Sell_Partial_PendingOrder_Opened_When_Available()
+        {
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Limit, "EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, -1, price: 1.07M);
+            
+            order = _tradingEngine.PlaceOrderAsync(order).Result;
+            var account = _accountsCacheService.Get(order.AccountId);
+
+            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
+
+            _matchingEngine.SetOrders(MarketMaker1Id, new []
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = 6 }
+            });
+
+            Assert.AreEqual(OrderStatus.Active, order.Status);
+            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
+
+            _matchingEngine.SetOrders(MarketMaker1Id, new []
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.08M, Volume = 10 }
+            });
+
+            ValidateOrderIsExecuted(order, new []{"6"}, 1.08M);
+
+            ValidatePositionIsOpened(order.Id, 1.1M, -0.02M);
+        }
+
+        [Test]
+        public void Is_PendingOrder_Canceled()
+        {
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Limit, "EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, -1, price: 1.07M);
+            
+            order = _tradingEngine.PlaceOrderAsync(order).Result;
+            var account = _accountsCacheService.Get(order.AccountId);
+
+            Assert.AreEqual(OrderStatus.Active, order.Status); //is not executed
+            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
+
+            _tradingEngine.CancelPendingOrder(order.Id, OriginatorType.Investor, "", Guid.NewGuid().ToString());
+
+            Assert.AreEqual(OrderStatus.Canceled, order.Status);
+        }
+
+        [Test]
+        public void Is_PendingOrder_Rejected_On_Trigger()
+        {
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Limit, "EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, -10000, price: 1.07M);
+            
+            order = _tradingEngine.PlaceOrderAsync(order).Result;
+            var account = _accountsCacheService.Get(order.AccountId);
+
+            Assert.AreEqual(OrderStatus.Active, order.Status); //is not executed
+            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
+            
+            _matchingEngine.SetOrders(MarketMaker1Id, new[]
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = 6 }
+            });
+
+            Assert.AreEqual(OrderStatus.Active, order.Status); //is not executed
+            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
+
+            _matchingEngine.SetOrders(MarketMaker1Id, new[]
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.08M, Volume = 10 }
+            });
+
+            Assert.AreEqual(OrderStatus.Rejected, order.Status); //should be rejected 
+            Assert.AreEqual(OrderRejectReason.NoLiquidity, order.RejectReason);
+        }
+
+        
         #endregion
         
         
