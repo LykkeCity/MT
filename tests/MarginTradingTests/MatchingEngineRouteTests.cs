@@ -12,7 +12,6 @@ using MarginTrading.Backend.Services.TradingConditions;
 namespace MarginTradingTests
 {
     [TestFixture]
-    [Ignore("Change logic")]
     public class MatchingEngineRouteTests: BaseTests
     {
         private IAccountsCacheService _accountsCacheService;

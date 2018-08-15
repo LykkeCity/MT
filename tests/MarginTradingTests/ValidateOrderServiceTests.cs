@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Autofac;
+using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
+using MarginTradingTests.Helpers;
 using NUnit.Framework;
 
 namespace MarginTradingTests
@@ -12,227 +15,183 @@ namespace MarginTradingTests
     [TestFixture]
     public class ValidateOrderServiceTests :BaseTests
     {
-//        
-//        [Test]
-//        public void Check_Default_Order_Status()
-//        {
-//            var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
-//                MarginTradingTestsUtils.TradingConditionId, 1);
-//            Assert.AreEqual(OrderStatus.Placed, order.Status);
-//        }
-//
-//        [Test]
-//        public void Check_Default_Order_Fill_Type()
-//        {
-//            var order = new Position();
-//            Assert.AreEqual(OrderFillType.FillOrKill, order.FillType);
-//        }
-//
-//        [Test]
-//        public void Check_Default_Reject_Reason()
-//        {
-//            var order = new Position();
-//            Assert.AreEqual(OrderRejectReason.None, order.RejectReason);
-//        }
-//
-//        [Test]
-//        public void Check_Default_Close_Reason()
-//        {
-//            var order = new Position();
-//            Assert.AreEqual(OrderCloseReason.None, order.CloseReason);
-//        }
-//
-//        [Test]
-//        public void Check_Order_Is_Buy()
-//        {
-//            var order = new Position {Volume = 10};
-//            Assert.AreEqual(OrderDirection.Buy, order.GetOrderDirection());
-//        }
-//
-//        [Test]
-//        public void Check_Order_Is_Sell()
-//        {
-//            var order = new Position {Volume = -10};
-//            Assert.AreEqual(OrderDirection.Sell, order.GetOrderDirection());
-//        }
         
-//        private IValidateOrderService _validateOrderService;
-//        private IEventChannel<BestPriceChangeEventArgs> _bestPriceConsumer;
-//        private OrdersCache _ordersCache;
-//
-//        [SetUp]
-//        public void Setup()
-//        {
-//            RegisterDependencies();
-//            _validateOrderService = Container.Resolve<IValidateOrderService>();
-//            _bestPriceConsumer = Container.Resolve<IEventChannel<BestPriceChangeEventArgs>>();
-//            _ordersCache = Container.Resolve<OrdersCache>();
-//        }
-//
-//        [Test]
-//        [TestCase(0, false)]
-//        [TestCase(1, true)]
-//        [TestCase(10, true)]
-//        [TestCase(11, false)]
-//        [TestCase(-1, true)]
-//        [TestCase(-10, true)]
-//        [TestCase(-11, false)]
-//        public void Is_Volume_Ivalid(decimal volume, bool isValid)
-//        {
-//            const string instrument = "BTCUSD";
-//
-//            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 1.55M, Ask = 1.57M };
-//            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
-//
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = Accounts[0].Id,
-//                AssetPairId = instrument,
-//                Volume = volume,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            if (isValid)
-//            {
-//                Assert.DoesNotThrow(() => _validateOrderService.Validate(order));
-//            }
-//            else
-//            {
-//                var ex = Assert.Throws<ValidateOrderException>(() => _validateOrderService.Validate(order));
-//
-//                Assert.That(ex.RejectReason == OrderRejectReason.InvalidVolume);
-//            }
-//        }
-//
-//        [Test]
-//        [TestCase(2, true)]
-//        [TestCase(-2, true)]
-//        [TestCase(3, false)]
-//        [TestCase(-3, true)]
-//        [TestCase(10, false)]
-//        [TestCase(-10, true)]
-//        public void Is_Summary_Volume_Ivalid(decimal volume, bool isValid)
-//        {
-//            const string instrument = "BTCUSD";
-//
-//            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 1.55M, Ask = 1.57M };
-//            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
-//
-//            var existingLong = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = Accounts[0].Id,
-//                AssetPairId = instrument,
-//                Volume = 110,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            var existingShort = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = Accounts[0].Id,
-//                AssetPairId = instrument,
-//                Volume = -12,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            var existingOtherAcc = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = Accounts[1].Id,
-//                AssetPairId = instrument,
-//                Volume = 49,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            //_ordersCache.ActiveOrders.Add(existingLong);
-//            //_ordersCache.ActiveOrders.Add(existingShort);
-//            //_ordersCache.ActiveOrders.Add(existingOtherAcc);
-//
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = Accounts[0].Id,
-//                AssetPairId = instrument,
-//                Volume = volume,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            if (isValid)
-//            {
-//                Assert.DoesNotThrow(() => _validateOrderService.Validate(order));
-//            }
-//            else
-//            {
-//                var ex = Assert.Throws<ValidateOrderException>(() => _validateOrderService.Validate(order));
-//
-//                Assert.That(ex.RejectReason == OrderRejectReason.InvalidVolume);
-//            }
-//        }
-//
-//        [Test]
-//        public void Is_Instrument_Ivalid()
-//        {
-//            const string instrument = "BADINSRT";
-//
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = Accounts[0].Id,
-//                AssetPairId = instrument,
-//                Volume = 10,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            var ex = Assert.Throws<ValidateOrderException>(() => _validateOrderService.Validate(order));
-//
-//            Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
-//        }
-//
-//        [Test]
-//        public void Is_Account_Ivalid()
-//        {
-//            const string accountId = "nosuchaccountId";
-//
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = accountId,
-//                AssetPairId = "BTCUSD",
-//                Volume = 10,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            var ex = Assert.Throws<ValidateOrderException>(() => _validateOrderService.Validate(order));
-//
-//            Assert.That(ex.RejectReason == OrderRejectReason.InvalidAccount);
-//        }
-//
-//        [Test]
-//        public void Is_No_Quote()
-//        {
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = Accounts[0].Id,
-//                AssetPairId = "EURUSD",
-//                Volume = 10,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            var ex = Assert.Throws<ValidateOrderException>(() => _validateOrderService.Validate(order));
-//
-//            Assert.That(ex.RejectReason == OrderRejectReason.NoLiquidity);
-//        }
+        private IValidateOrderService _validateOrderService;
+        private IEventChannel<BestPriceChangeEventArgs> _bestPriceConsumer;
+        private OrdersCache _ordersCache;
+
+        [SetUp]
+        public void Setup()
+        {
+            RegisterDependencies();
+            _validateOrderService = Container.Resolve<IValidateOrderService>();
+            _bestPriceConsumer = Container.Resolve<IEventChannel<BestPriceChangeEventArgs>>();
+            _ordersCache = Container.Resolve<OrdersCache>();
+        }
+
+        [Test]
+        [TestCase(0, false)]
+        [TestCase(1, true)]
+        [TestCase(10, true)]
+        [TestCase(11, false)]
+        [TestCase(-1, true)]
+        [TestCase(-10, true)]
+        [TestCase(-11, false)]
+        public void Is_Volume_Ivalid(decimal volume, bool isValid)
+        {
+            const string instrument = "BTCUSD";
+
+            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 1.55M, Ask = 1.57M };
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
+
+            var request = new OrderPlaceRequest
+            {
+                AccountId = Accounts[0].Id,
+                CorrelationId = Guid.NewGuid().ToString(),
+                Direction = OrderDirectionContract.Buy,
+                InstrumentId = instrument,
+                Type = OrderTypeContract.Market,
+                Volume = volume
+            };
+
+            if (isValid)
+            {
+                Assert.DoesNotThrow(
+                    () =>
+                    {
+                        var order = _validateOrderService.ValidateRequestAndGetOrders(request).Result.order;
+                        _validateOrderService.MakePreTradeValidation(order, true);
+
+                    });
+            }
+            else
+            {
+                var ex = Assert.ThrowsAsync<ValidateOrderException>(
+                    async () =>
+                    {
+                        var order = (await _validateOrderService.ValidateRequestAndGetOrders(request)).order;
+                        _validateOrderService.MakePreTradeValidation(order, true);
+
+                    });
+
+                Assert.That(ex.RejectReason == OrderRejectReason.InvalidVolume);
+            }
+        }
+
+        [Test]
+        [TestCase(2, true)]
+        [TestCase(-2, true)]
+        [TestCase(3, false)]
+        [TestCase(-3, true)]
+        [TestCase(10, false)]
+        [TestCase(-10, true)]
+        public void Is_Summary_Volume_Ivalid(decimal volume, bool isValid)
+        {
+            const string instrument = "BTCUSD";
+
+            var quote = new InstrumentBidAskPair {Instrument = instrument, Bid = 1.55M, Ask = 1.57M};
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
+
+            var existingLong = TestObjectsFactory.CreateOpenedPosition(instrument, Accounts[0],
+                MarginTradingTestsUtils.TradingConditionId, 110, 1.57M);
+
+            var existingShort = TestObjectsFactory.CreateOpenedPosition(instrument, Accounts[0],
+                MarginTradingTestsUtils.TradingConditionId, -12, 1.55M);
+
+            var existingOtherAcc = TestObjectsFactory.CreateOpenedPosition(instrument, Accounts[1],
+                MarginTradingTestsUtils.TradingConditionId, 49, 1.57M);
+
+            _ordersCache.Positions.Add(existingLong);
+            _ordersCache.Positions.Add(existingShort);
+            _ordersCache.Positions.Add(existingOtherAcc);
+
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, instrument, Accounts[0],
+                MarginTradingTestsUtils.TradingConditionId, volume);
+
+            if (isValid)
+            {
+                Assert.DoesNotThrow(() => _validateOrderService.MakePreTradeValidation(order, true));
+            }
+            else
+            {
+                var ex = Assert.Throws<ValidateOrderException>(() =>
+                    _validateOrderService.MakePreTradeValidation(order, true));
+
+                Assert.That(ex.RejectReason == OrderRejectReason.InvalidVolume);
+            }
+        }
+
+
+        [Test]
+        public void Is_Instrument_Ivalid()
+        {
+            const string instrument = "BADINSRT";
+            
+            var request = new OrderPlaceRequest
+            {
+                AccountId = Accounts[0].Id,
+                CorrelationId = Guid.NewGuid().ToString(),
+                Direction = OrderDirectionContract.Buy,
+                InstrumentId = instrument,
+                Type = OrderTypeContract.Market,
+                Volume = 10
+            };
+
+            var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
+                await _validateOrderService.ValidateRequestAndGetOrders(request));
+
+            Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
+        }
+
+        [Test]
+        public void Is_Account_Ivalid()
+        {
+            const string accountId = "nosuchaccountId";
+
+            var request = new OrderPlaceRequest
+            {
+                AccountId = accountId,
+                CorrelationId = Guid.NewGuid().ToString(),
+                Direction = OrderDirectionContract.Buy,
+                InstrumentId = "BTCUSD",
+                Type = OrderTypeContract.Market,
+                Volume = 10
+            };
+            
+            var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
+                await _validateOrderService.ValidateRequestAndGetOrders(request));
+
+            Assert.That(ex.RejectReason == OrderRejectReason.InvalidAccount);
+        }
+
+        [Test]
+        public void Is_No_Quote()
+        {
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
+                MarginTradingTestsUtils.TradingConditionId, 10);
+            
+            var ex = Assert.Throws<QuoteNotFoundException>(() => _validateOrderService.MakePreTradeValidation(order, true));
+
+            Assert.That(ex.InstrumentId == "EURUSD");
+        }
+        
+        [Test]
+        public void Is_Not_Enough_Balance()
+        {
+            const string instrument = "EURUSD";
+            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 1.55M, Ask = 1.57M };
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
+
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, instrument, Accounts[0],
+                MarginTradingTestsUtils.TradingConditionId, 150000);
+
+            var ex = Assert.Throws<ValidateOrderException>(() =>
+                _validateOrderService.MakePreTradeValidation(order, true));
+
+            Assert.That(ex.RejectReason == OrderRejectReason.NotEnoughBalance);
+        }
+        
+        //TODO: Intruduce order prices validations in MTC-280
 //
 //        [Test]
 //        public void Is_Buy_Order_ExpectedOpenPrice_Invalid()
@@ -395,29 +354,5 @@ namespace MarginTradingTests
 //            StringAssert.Contains("more", ex.Message);
 //        }
 //
-//        [Test]
-//        [Ignore("Recheck requirements")]
-//        public void Is_Not_Enough_Balance()
-//        {
-//            const string instrument = "EURUSD";
-//            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 1.55M, Ask = 1.57M };
-//            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
-//
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = Accounts[0].Id,
-//                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
-//                AccountAssetId = Accounts[0].BaseAssetId,
-//                AssetPairId = instrument,
-//                Volume = 150000,
-//                FillType = OrderFillType.FillOrKill,
-//            };
-//
-//            var ex = Assert.Throws<ValidateOrderException>(() => _validateOrderService.Validate(order));
-//
-//            Assert.That(ex.RejectReason == OrderRejectReason.NotEnoughBalance);
-//        }
     }
 }

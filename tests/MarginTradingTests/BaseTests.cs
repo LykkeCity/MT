@@ -68,7 +68,9 @@ namespace MarginTradingTests
                     QuotesDumpPeriodMilliseconds = 10000,
                     OrderbooksDumpPeriodMilliseconds = 5000,
                     OrdersDumpPeriodMilliseconds = 5000
-                }
+                },
+                ReportingEquivalentPricesSettings = new[]
+                    {new ReportingEquivalentPricesSettings {EquivalentAsset = "USD", LegalEntity = "LYKKETEST"}}
             };
 
             builder.RegisterInstance(marginSettings).SingleInstance();
