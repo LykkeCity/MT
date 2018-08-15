@@ -78,7 +78,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                         dateTime: _dateService.Now(),
                         exchangeName: sourcePrice.source,
                         instrument: externalAssetPair,
-                        price: null,
+                        price: (double?)sourcePrice.price,
                         orderId: order.Id);
 
                     var executionResult = await _exchangeConnectorService.CreateOrderAsync(externalOrderModel);
