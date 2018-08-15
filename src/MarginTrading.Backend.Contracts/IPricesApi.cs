@@ -21,5 +21,14 @@ namespace MarginTrading.Backend.Contracts
         /// </remarks>
         [Post("/api/prices/best")]
         Task<Dictionary<string, BestPriceContract>> GetBestAsync([Body][NotNull] InitPricesBackendRequest request);
+        
+        /// <summary>
+        /// Get current best fx prices
+        /// </summary>
+        /// <remarks>
+        /// Post because the query string will be too long otherwise
+        /// </remarks>
+        [Post("/api/prices/bestFx")]
+        Task<Dictionary<string, BestPriceContract>> GetBestFxAsync([Body][NotNull] InitPricesBackendRequest request);
     }
 }
