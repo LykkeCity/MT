@@ -10,15 +10,6 @@ namespace MarginTrading.Backend.Contracts.Events
     [MessagePackObject]
     public class PositionClosedEvent
     {
-        public PositionClosedEvent([NotNull] string accountId, [NotNull] string clientId, [NotNull] string positionId,
-            decimal balanceDelta)
-        {
-            AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
-            ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
-            PositionId = positionId ?? throw new ArgumentNullException(nameof(positionId));
-            BalanceDelta = balanceDelta;
-        }
-
         /// <summary>
         /// Account id
         /// </summary>
@@ -39,11 +30,28 @@ namespace MarginTrading.Backend.Contracts.Events
         [NotNull]
         [Key(2)]
         public string PositionId { get; }
+        
+        /// <summary>
+        /// Position asset pair Id
+        /// </summary>
+        [NotNull]
+        [Key(3)]
+        public string AssetPairId { get; }
 
         /// <summary>
         /// Profit loss which will affect the balance
         /// </summary>
-        [Key(3)]
+        [Key(4)]
         public decimal BalanceDelta { get; }
+
+        public PositionClosedEvent([NotNull] string accountId, [NotNull] string clientId, [NotNull] string positionId,
+            [NotNull] string assetPairId, decimal balanceDelta)
+        {
+            AccountId = accountId ?? throw new ArgumentNullException(nameof(accountId));
+            ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
+            PositionId = positionId ?? throw new ArgumentNullException(nameof(positionId));
+            AssetPairId = assetPairId ?? throw new ArgumentNullException(nameof(assetPairId));
+            BalanceDelta = balanceDelta;
+        }
     }
 }
