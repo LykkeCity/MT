@@ -206,7 +206,6 @@ namespace MarginTrading.Backend
 
             if (settings.CurrentValue.Db.StorageMode == StorageMode.SqlServer)
             {
-
                 LogLocator.RequestsLog = new AggregateLogger(
                     new LogToSql(new SqlLogRepository("MarginTradingBackendRequestsLog",
                         settings.CurrentValue.Db.LogsConnString)),

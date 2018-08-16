@@ -5,7 +5,6 @@ namespace MarginTrading.Common.Services
     public interface IOperationLog
     {
         string Name { get; }
-        string ClientId { get; }
         string AccountId { get; }
         string Input { get; }
         string Data { get; }
@@ -14,7 +13,6 @@ namespace MarginTrading.Common.Services
     public class OperationLog : IOperationLog
     {
         public string Name { get; set; }
-        public string ClientId { get; set; }
         public string AccountId { get; set; }
         public string Input { get; set; }
         public string Data { get; set; }
