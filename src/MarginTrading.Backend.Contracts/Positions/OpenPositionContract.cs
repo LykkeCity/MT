@@ -38,6 +38,11 @@ namespace MarginTrading.Backend.Contracts.Positions
         /// Open price (in quoting asset units per one base unit)
         /// </summary>
         public decimal OpenPrice { get; set; }
+        
+        /// <summary>
+        /// Opening FX Rate
+        /// </summary>
+        public decimal OpenFxPrice { get; set; }
 
         /// <summary>
         /// Expected open price (in quoting asset units per one base unit)
