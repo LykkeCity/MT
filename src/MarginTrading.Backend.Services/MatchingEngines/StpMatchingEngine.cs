@@ -71,13 +71,15 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 try
                 {
                     externalOrderModel = new OrderModel(
-                        order.Direction.ToType<TradeType>(),
-                        OrderType.Market,
-                        TimeInForce.FillOrKill,
-                        (double) Math.Abs(order.Volume),
-                        _dateService.Now(),
-                        sourcePrice.source,
-                        externalAssetPair);
+                        tradeType: order.Direction.ToType<TradeType>(),
+                        orderType: OrderType.Market,
+                        timeInForce: TimeInForce.FillOrKill,
+                        volume: (double) Math.Abs(order.Volume),
+                        dateTime: _dateService.Now(),
+                        exchangeName: sourcePrice.source,
+                        instrument: externalAssetPair,
+                        price: (double?)sourcePrice.price,
+                        orderId: order.Id);
 
                     var executionResult = await _exchangeConnectorService.CreateOrderAsync(externalOrderModel);
 
