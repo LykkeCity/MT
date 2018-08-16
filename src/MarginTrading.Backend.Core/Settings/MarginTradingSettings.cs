@@ -55,5 +55,7 @@ namespace MarginTrading.Backend.Core.Settings
         public BlobPersistenceSettings BlobPersistence { get; set; } 
 
         public CqrsSettings Cqrs { get; set; }
+        
+        public ExchangeConnectorType ExchangeConnector { get; set; }
     }
 }
