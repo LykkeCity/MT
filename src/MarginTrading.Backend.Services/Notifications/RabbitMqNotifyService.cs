@@ -42,7 +42,7 @@ namespace MarginTrading.Backend.Services.Notifications
                 WithdrawTransferLimit = withdrawTransferLimit,
                 Date = DateTime.UtcNow,
                 Comment = comment,
-                OrderId = type == AccountHistoryType.OrderClosed ? eventSourceId : null,
+                OrderId = type == AccountHistoryType.OrderClosed || type == AccountHistoryType.Swap ? eventSourceId : null,
                 AuditLog = auditLog,
                 LegalEntity = legalEntity,
                 AmountInUsd = amountInUsd,

@@ -94,7 +94,7 @@ namespace MarginTrading.Backend.Services.Services
 		/// <returns></returns>
 		private IEnumerable<Order> GetOrdersForCalculation()
 		{
-			//read orders syncronously
+			//read orders synchronously
 			var openOrders = _orderReader.GetActive();
 			
 			//prepare the list of orders
@@ -177,7 +177,6 @@ namespace MarginTrading.Backend.Services.Services
                        
                     }
 
-
                     await ClearOldState();
 					
 					await _log.WriteInfoAsync(nameof(OvernightSwapService), nameof(CalculateAndChargeSwaps),
@@ -202,7 +201,6 @@ namespace MarginTrading.Backend.Services.Services
 		private async Task ProcessOrder(Order order, IMarginTradingAccount account,
                 IAccountAssetPair accountAssetPair)
         {
-
             //check if swaps had already been taken
             var lastCalcExists = _overnightSwapCache.TryGet(OvernightSwapCalculation.GetKey(order.Id),
                                      out var lastCalc)
@@ -211,7 +209,6 @@ namespace MarginTrading.Backend.Services.Services
             {
                 await _log.WriteErrorAsync(nameof(OvernightSwapService), nameof(ProcessOrder),
                     new Exception($"Overnight swap had already been taken, filtering: {JsonConvert.SerializeObject(lastCalc)}"), DateTime.UtcNow);
-
             }
 
             //calc swaps
@@ -219,21 +216,25 @@ namespace MarginTrading.Backend.Services.Services
             if (swapRate == 0)
             {
                 await _log.WriteInfoAsync(nameof(OvernightSwapService), nameof(ProcessOrder),
-                    $"Overnight swaprate on order {order.Id } is 0, what will not be calculated", DateTime.UtcNow);
+                    $"Overnight swap rate on order {order.Id } is 0, what will not be calculated", DateTime.UtcNow);
                 return;
             }
+	        
+	        //special rule for Wednesday
+	        if (_currentStartTimestamp.DayOfWeek == DayOfWeek.Wednesday)
+	        {
+		        swapRate *= 3;
+	        }
             
-
             var total = _commissionService.GetOvernightSwap(order, swapRate);
             if (total == 0)
             {
                 await _log.WriteInfoAsync(nameof(OvernightSwapService), nameof(ProcessOrder),
-                    $"Overnight swaprate on order {order.Id } is 0, what will not be calculated", DateTime.UtcNow);
+                    $"Overnight swap rate on order {order.Id } is 0, what will not be calculated", DateTime.UtcNow);
 
                 return;
             }
-                
-
+            
             //create calculation obj & add to cache
             var volume = order.Volume;
             var calculation = OvernightSwapCalculation.Create(account.ClientId, account.Id, order.Instrument,
@@ -272,7 +273,6 @@ namespace MarginTrading.Backend.Services.Services
         private async Task ProcessFailedOrders(IReadOnlyList<Order> orders, string clientId, string accountId, 
 			string instrument, Exception exception)
 		{
-			
 		    foreach (var order in orders)
 		    {
 		        var volume = order.Volume;
@@ -284,7 +284,6 @@ namespace MarginTrading.Backend.Services.Services
 
 		        await _overnightSwapHistoryRepository.AddAsync(failedCalculation);
             }
-			
 		}
 
 	    /// <summary>
