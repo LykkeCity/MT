@@ -30,7 +30,7 @@ namespace MarginTrading.Backend.Controllers
     public class PositionsController : Controller, IPositionsApi
     {
         private readonly ITradingEngine _tradingEngine;
-        private readonly IMarginTradingOperationsLogService _operationsLogService;
+        private readonly IOperationsLogService _operationsLogService;
         private readonly IConsole _consoleWriter;
         private readonly OrdersCache _ordersCache;
         private readonly IAssetPairDayOffService _assetDayOffService;
@@ -38,7 +38,7 @@ namespace MarginTrading.Backend.Controllers
 
         public PositionsController(
             ITradingEngine tradingEngine,
-            IMarginTradingOperationsLogService operationsLogService,
+            IOperationsLogService operationsLogService,
             IConsole consoleWriter,
             OrdersCache ordersCache,
             IAssetPairDayOffService assetDayOffService,

@@ -11,7 +11,7 @@ using Microsoft.WindowsAzure.Storage.Table;
 
 namespace MarginTrading.SqlRepositories
 {
-    public class SqlMarginTradingOperationsLogRepository : IMarginTradingOperationsLogRepository
+    public class SqlOperationsLogRepository : IOperationsLogRepository
     {
         private readonly string _tableName;
         private const string CreateTableScript = "CREATE TABLE [{0}](" +
@@ -30,7 +30,7 @@ namespace MarginTrading.SqlRepositories
         private readonly IDateService _dateService;
         private readonly string _connectionString;
         
-        public SqlMarginTradingOperationsLogRepository(IDateService dateService, string logTableName, string connectionString)
+        public SqlOperationsLogRepository(IDateService dateService, string logTableName, string connectionString)
         {
             _dateService = dateService;
             

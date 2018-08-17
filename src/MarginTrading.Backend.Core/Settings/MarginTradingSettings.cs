@@ -57,5 +57,7 @@ namespace MarginTrading.Backend.Core.Settings
         public CqrsSettings Cqrs { get; set; }
         
         public ExchangeConnectorType ExchangeConnector { get; set; }
+        
+        public bool WriteOperationLog { get; set; }
     }
 }

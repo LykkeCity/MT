@@ -18,7 +18,7 @@ namespace MarginTrading.Common.Services
         public string Data { get; set; }
     }
 
-    public interface IMarginTradingOperationsLogRepository
+    public interface IOperationsLogRepository
     {
         Task AddLogAsync(IOperationLog logEntity);
     }

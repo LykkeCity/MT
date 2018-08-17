@@ -31,11 +31,11 @@ namespace MarginTrading.AzureRepositories
         } 
     }
 
-    public class MarginTradingOperationsLogRepository : IMarginTradingOperationsLogRepository
+    public class OperationsLogRepository : IOperationsLogRepository
     {
         private readonly INoSQLTableStorage<OperationLogEntity> _tableStorage;
 
-        public MarginTradingOperationsLogRepository(INoSQLTableStorage<OperationLogEntity> tableStorage)
+        public OperationsLogRepository(INoSQLTableStorage<OperationLogEntity> tableStorage)
         {
             _tableStorage = tableStorage;
         }

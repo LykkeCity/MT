@@ -36,8 +36,8 @@ namespace MarginTrading.Backend.Modules
 
             if (_settings.CurrentValue.Db.StorageMode == StorageMode.Azure)
             {
-                builder.Register<IMarginTradingOperationsLogRepository>(ctx =>
-                        new MarginTradingOperationsLogRepository(AzureTableStorage<OperationLogEntity>.Create(
+                builder.Register<IOperationsLogRepository>(ctx =>
+                        new OperationsLogRepository(AzureTableStorage<OperationLogEntity>.Create(
                             _settings.Nested(s => s.Db.LogsConnString), "MarginTradingBackendOperationsLog", _log)))
                     .SingleInstance();
 
@@ -59,8 +59,8 @@ namespace MarginTrading.Backend.Modules
             }
             else if (_settings.CurrentValue.Db.StorageMode == StorageMode.SqlServer)
             {
-                builder.Register<IMarginTradingOperationsLogRepository>(ctx =>
-                        new SqlMarginTradingOperationsLogRepository(ctx.Resolve<IDateService>(), 
+                builder.Register<IOperationsLogRepository>(ctx =>
+                        new SqlOperationsLogRepository(ctx.Resolve<IDateService>(), 
                             "MarginTradingBackendOperationsLog", _settings.CurrentValue.Db.LogsConnString))
                     .SingleInstance();
 

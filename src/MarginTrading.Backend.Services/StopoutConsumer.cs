@@ -21,7 +21,7 @@ namespace MarginTrading.Backend.Services
         private readonly IClientAccountService _clientAccountService;
         private readonly IClientNotifyService _notifyService;
         private readonly IEmailService _emailService;
-        private readonly IMarginTradingOperationsLogService _operationsLogService;
+        private readonly IOperationsLogService _operationsLogService;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly IDateService _dateService;
         private readonly IAssetsCache _assetsCache;
@@ -30,7 +30,7 @@ namespace MarginTrading.Backend.Services
             IClientAccountService clientAccountService,
             IClientNotifyService notifyService,
             IEmailService emailService,
-            IMarginTradingOperationsLogService operationsLogService,
+            IOperationsLogService operationsLogService,
             IRabbitMqNotifyService rabbitMqNotifyService,
             IDateService dateService,
             IAssetsCache assetsCache)

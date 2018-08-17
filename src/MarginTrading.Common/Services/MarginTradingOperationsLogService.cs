@@ -6,24 +6,32 @@ using Lykke.Common;
 namespace MarginTrading.Common.Services
 {
     [UsedImplicitly]
-    public sealed class MarginTradingOperationsLogService : IMarginTradingOperationsLogService
+    public sealed class OperationsLogService : IOperationsLogService
     {
-        private readonly IMarginTradingOperationsLogRepository _operationsLogRepository;
+        private readonly IOperationsLogRepository _operationsLogRepository;
         private readonly IThreadSwitcher _threadSwitcher;
         private readonly ILog _log;
+        private readonly bool _writeOperationLog;
 
-        public MarginTradingOperationsLogService(
-            IMarginTradingOperationsLogRepository operationsLogRepository,
+        public OperationsLogService(
+            IOperationsLogRepository operationsLogRepository,
             IThreadSwitcher threadSwitcher,
-            ILog log)
+            ILog log,
+            bool writeOperationLog)
         {
             _operationsLogRepository = operationsLogRepository;
             _threadSwitcher = threadSwitcher;
             _log = log;
+            _writeOperationLog = writeOperationLog;
         }
 
         public void AddLog(string name, string accountId, string input, string data)
         {
+            if (!_writeOperationLog)
+            {
+                return;
+            }
+            
             _threadSwitcher.SwitchThread(async () =>
             {
                 try
@@ -40,7 +48,7 @@ namespace MarginTrading.Common.Services
                 }
                 catch (Exception ex)
                 {
-                    _log.WriteErrorAsync(nameof(MarginTradingOperationsLogService), nameof(AddLog), $"{name}, accountId = {accountId}", ex).Wait();
+                    _log.WriteErrorAsync(nameof(OperationsLogService), nameof(AddLog), $"{name}, accountId = {accountId}", ex).Wait();
                 }
             });
         }

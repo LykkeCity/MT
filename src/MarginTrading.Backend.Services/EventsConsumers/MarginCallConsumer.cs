@@ -21,7 +21,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         private readonly IThreadSwitcher _threadSwitcher;
         private readonly IEmailService _emailService;
         private readonly IClientAccountService _clientAccountService;
-        private readonly IMarginTradingOperationsLogService _operationsLogService;
+        private readonly IOperationsLogService _operationsLogService;
         private static readonly ConcurrentDictionary<string, DateTime> LastNotifications = new ConcurrentDictionary<string, DateTime>();
         private const int NotificationsTimeout = 30;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
@@ -30,7 +30,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         public MarginCallConsumer(IThreadSwitcher threadSwitcher,
             IEmailService emailService,
             IClientAccountService clientAccountService,
-            IMarginTradingOperationsLogService operationsLogService,
+            IOperationsLogService operationsLogService,
             IRabbitMqNotifyService rabbitMqNotifyService,
             IDateService dateService)
         {

@@ -13,14 +13,14 @@ namespace MarginTrading.Backend.Services
     public class ClientNotifyService : IClientNotifyService
     {
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
-        private readonly IMarginTradingOperationsLogService _operationsLogService;
+        private readonly IOperationsLogService _operationsLogService;
         private readonly MarginTradingSettings _marginSettings;
         private readonly IConsole _consoleWriter;
         private readonly IAccountsCacheService _accountsCacheService;
 
         public ClientNotifyService(
             IRabbitMqNotifyService rabbitMqNotifyService,
-            IMarginTradingOperationsLogService operationsLogService,
+            IOperationsLogService operationsLogService,
             MarginTradingSettings marginSettings,
             IConsole consoleWriter,
             IAccountsCacheService accountsCacheService)

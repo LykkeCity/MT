@@ -24,6 +24,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         private readonly ExternalOrderBooksList _externalOrderBooksList;
         private readonly IExchangeConnectorService _exchangeConnectorService;
         private readonly ILog _log;
+        private readonly IOperationsLogService _operationsLogService;
         private readonly IDateService _dateService;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly IAssetPairsCache _assetPairsCache;
@@ -35,6 +36,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             ExternalOrderBooksList externalOrderBooksList,
             IExchangeConnectorService exchangeConnectorService,
             ILog log,
+            IOperationsLogService operationsLogService,
             IDateService dateService,
             IRabbitMqNotifyService rabbitMqNotifyService,
             IAssetPairsCache assetPairsCache)
@@ -42,6 +44,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             _externalOrderBooksList = externalOrderBooksList;
             _exchangeConnectorService = exchangeConnectorService;
             _log = log;
+            _operationsLogService = operationsLogService;
             _dateService = dateService;
             _rabbitMqNotifyService = rabbitMqNotifyService;
             _assetPairsCache = assetPairsCache;
@@ -101,6 +104,9 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                     };
 
                     await _rabbitMqNotifyService.ExternalOrder(executionResult);
+                    
+                    _operationsLogService.AddLog("action external order created", order.AccountId, 
+                        externalOrderModel.ToJson(), executionResult.ToJson());
 
                     return matchedOrders;
                 }
