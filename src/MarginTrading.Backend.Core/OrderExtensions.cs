@@ -100,7 +100,7 @@ namespace MarginTrading.Backend.Core
 
         public static void UpdateClosePrice(this IOrder order, decimal closePrice)
         {
-            if (order is Order orderInstance)
+            if (order is Order orderInstance && orderInstance.Status != OrderStatus.Closed)
             {
                 orderInstance.ClosePrice = closePrice;
                 orderInstance.FplData.ActualHash++;

@@ -234,7 +234,7 @@ namespace MarginTrading.Backend.Services
             if (guessAccountLevel != AccountLevel.None)
             {
                 order.OpenPrice = 0;
-                order.ClosePrice = 0;
+                order.UpdateClosePrice(0);
                 order.MatchedOrders = new MatchedOrderCollection();
             }
 
