@@ -12,10 +12,13 @@ using Lykke.Service.ExchangeConnector.Client;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.DayOffSettings;
 using MarginTrading.Backend.Core.Orderbooks;
+using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
+using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Modules;
 using MarginTrading.Backend.Services.Services;
 using MarginTrading.Backend.Services.TradingConditions;
@@ -65,7 +68,9 @@ namespace MarginTradingTests
                     QuotesDumpPeriodMilliseconds = 10000,
                     OrderbooksDumpPeriodMilliseconds = 5000,
                     OrdersDumpPeriodMilliseconds = 5000
-                }
+                },
+                ReportingEquivalentPricesSettings = new[]
+                    {new ReportingEquivalentPricesSettings {EquivalentAsset = "USD", LegalEntity = "LYKKETEST"}}
             };
 
             builder.RegisterInstance(marginSettings).SingleInstance();
@@ -104,7 +109,7 @@ namespace MarginTradingTests
             builder.RegisterModule(new CacheModule());
             builder.RegisterModule(new ServicesModule());
             builder.RegisterModule(new ManagersModule());
-
+            
             builder.RegisterType<EventChannel<AccountBalanceChangedEventArgs>>()
                 .As<IEventChannel<AccountBalanceChangedEventArgs>>()
                 .SingleInstance();
@@ -169,6 +174,8 @@ namespace MarginTradingTests
             builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
             builder.RegisterInstance(new Mock<IMtSlackNotificationsSender>(MockBehavior.Loose).Object).SingleInstance();
             builder.RegisterInstance(Mock.Of<IRabbitMqService>()).As<IRabbitMqService>();
+
+            builder.RegisterType<SimpleIdentityGenerator>().As<IIdentityGenerator>();
             Container = builder.Build();
 
             MtServiceLocator.FplService = Container.Resolve<IFplService>();

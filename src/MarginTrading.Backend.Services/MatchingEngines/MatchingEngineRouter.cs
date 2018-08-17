@@ -41,7 +41,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             //TODO: find ME with correct mode that ownes the same Entity as asset pair
             return _matchingEngineRepository.GetMatchingEngineById(
                 (assetPair?.MatchingEngineMode ?? MatchingEngineMode.MarketMaker) == MatchingEngineMode.MarketMaker
-                    ? MatchingEngineConstants.LykkeVuMm
+                    ? MatchingEngineConstants.DefaultMm
                     : MatchingEngineConstants.DefaultStp);
         }
 

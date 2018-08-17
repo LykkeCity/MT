@@ -87,6 +87,8 @@ namespace MarginTrading.Backend.Services
             ICollection<Position> activeOrders,
             ICollection<Order> pendingOrders)
         {
+            account.AccountFpl.CalculatedHash = account.AccountFpl.ActualHash;
+            
             var accuracy = _assetsCache.GetAssetAccuracy(account.BaseAssetId);
             var activeOrdersMaintenanceMargin = activeOrders.Sum(item => item.GetMarginMaintenance());
             var activeOrdersInitMargin = activeOrders.Sum(item => item.GetMarginInit());
@@ -105,7 +107,6 @@ namespace MarginTrading.Backend.Services
             account.AccountFpl.MarginCall1Level = tradingCondition.MarginCall1;
             account.AccountFpl.MarginCall2Level = tradingCondition.MarginCall2;
             account.AccountFpl.StopoutLevel = tradingCondition.StopOut;
-            account.AccountFpl.CalculatedHash = account.AccountFpl.ActualHash;
         }
 
         private ICollection<Position> GetPositions(string accountId)

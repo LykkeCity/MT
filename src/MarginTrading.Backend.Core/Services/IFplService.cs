@@ -5,7 +5,8 @@ namespace MarginTrading.Backend.Core
 {
     public interface IFplService
     {
-        void UpdateOrderFpl(Position order, FplData fplData);
+        void UpdatePositionFpl(Position order);
+        
         decimal GetInitMarginForOrder(Order order);
     }
 }

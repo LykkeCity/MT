@@ -8,12 +8,15 @@ namespace MarginTrading.Backend.Core
     {
         Task<Order> PlaceOrderAsync(Order order);
 
-        Task<Order> ClosePositionAsync(string orderId, OriginatorType originator, string additionalInfo,
+        Task<Order> ClosePositionAsync(string positionId, OriginatorType originator, string additionalInfo,
             string correlationId, string comment = null);
+            
         Order CancelPendingOrder(string orderId, OriginatorType originator, string additionalInfo, string correlationId,
             string comment = null);
+            
         void ChangeOrderLimits(string orderId, decimal price, OriginatorType originator, string additionalInfo,
             string correlationId);
+            
         bool PingLock();
     }
 }

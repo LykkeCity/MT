@@ -66,7 +66,7 @@ namespace MarginTrading.Backend.Services.Modules
 			//TODO: rework ME registrations
 			builder.RegisterType<MarketMakerMatchingEngine>()
 				.As<IMarketMakerMatchingEngine>()
-				.WithParameter(TypedParameter.From(MatchingEngineConstants.LykkeVuMm))
+				.WithParameter(TypedParameter.From(MatchingEngineConstants.DefaultMm))
 				.SingleInstance();
 
 			builder.RegisterType<StpMatchingEngine>()

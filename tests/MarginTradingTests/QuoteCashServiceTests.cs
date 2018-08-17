@@ -1,17 +1,19 @@
 ﻿using Autofac;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Services.Events;
 using NUnit.Framework;
 
 namespace MarginTradingTests
 {
     [TestFixture]
-    [Ignore("Change logic")]
+    //[Ignore("Change logic")]
     public class QuoteCashServiceTests : BaseTests
     {
         private IQuoteCacheService _quoteCacheService;
         private IEventChannel<BestPriceChangeEventArgs> _bestPriceConsumer;
         private ICfdCalculatorService _cfdCalculatorService;
+        private IFxRateCacheService _fxRateCacheService;
 
         [OneTimeSetUp]
         public void SetUp()
@@ -20,6 +22,7 @@ namespace MarginTradingTests
             _quoteCacheService = Container.Resolve<IQuoteCacheService>();
             _bestPriceConsumer = Container.Resolve<IEventChannel<BestPriceChangeEventArgs>>();
             _cfdCalculatorService = Container.Resolve<ICfdCalculatorService>();
+            _fxRateCacheService = Container.Resolve<IFxRateCacheService>();
         }
 
         [Test]
@@ -62,10 +65,10 @@ namespace MarginTradingTests
         public void Is_GetQuoteRateForQuoteAsset_Correct()
         {
             const string instrument = "USDCHF";
+            
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 0.9982M, Bid = 0.9980M });
 
-            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 0.9982M, Bid = 0.9980M }));
-
-            var quote = _quoteCacheService.GetQuote(instrument);
+            var quote = _fxRateCacheService.GetQuote(instrument);
 
             Assert.IsNotNull(quote);
             Assert.AreEqual(0.9980, quote.Bid);

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Autofac;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.TradingConditions;
@@ -15,7 +14,6 @@ using NUnit.Framework;
 namespace MarginTradingTests
 {
     [TestFixture]
-    [Ignore("Change logic")]
     public class SwapCommissionServiceTests : BaseTests
     {
         private ICommissionService _swapService;
@@ -54,33 +52,31 @@ namespace MarginTradingTests
 
             await _accountAssetsManager.UpdateTradingInstrumentsCache();
 
-            Position dayOrder = null; //new Position
-            //{
-//                AccountAssetId = "USD",
-//                AssetPairId = "EURUSD",
-//                Volume = 20,
-//                OpenDate = new DateTime(2017, 01, 01, 20, 50, 0),
-//                CloseDate = new DateTime(2017, 01, 02, 20, 50, 0),
-//                //MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder() { Volume = 20} }),
-//                SwapCommission = 100,
-//                LegalEntity = "LYKKETEST",
-//        };
 
-            var swapsForDay = _swapService.GetSwaps(dayOrder);
 
-            Position twoDayOrder = null;//new Position
-            {
-//                AccountAssetId = "USD",
-//                AssetPairId = "EURUSD",
-//                Volume = 20,
-//                OpenDate = new DateTime(2017, 01, 01, 20, 50, 0),
-//                CloseDate = new DateTime(2017, 01, 03, 20, 50, 0),
-//                //MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder>() { new MatchedOrder() { Volume = 20 } }),
-//                SwapCommission = 100,
-//                LegalEntity = "LYKKETEST",
-            };
+            var dayPosition = new Position(Guid.NewGuid().ToString("N"), 0, "EURUSD", 20, Accounts[0].Id,
+                MarginTradingTestsUtils.TradingConditionId, Accounts[0].BaseAssetId, null, MatchingEngineConstants.DefaultMm,
+                new DateTime(2017, 01, 01, 20, 50, 0), "OpenTrade", 1, 1, "USD", 1,
+                new List<RelatedOrderInfo>(), "LYKKETEST", OriginatorType.Investor, "");
 
-            var swapsFor2Days = _swapService.GetSwaps(twoDayOrder);
+            dayPosition.SetCommissionRates(100, 0, 0, 1);
+            
+            dayPosition.Close(new DateTime(2017, 01, 02, 20, 50, 0), MatchingEngineConstants.DefaultMm, 2, 1, 1, OriginatorType.Investor,
+                PositionCloseReason.Close, "", "CloseTrade");
+            
+            var swapsForDay = _swapService.GetSwaps(dayPosition);
+
+            var twoDayPosition = new Position(Guid.NewGuid().ToString("N"), 0, "EURUSD", 20, Accounts[0].Id,
+                MarginTradingTestsUtils.TradingConditionId, Accounts[0].BaseAssetId, null, MatchingEngineConstants.DefaultMm,
+                new DateTime(2017, 01, 01, 20, 50, 0), "OpenTrade", 1, 1, "USD", 1,
+                new List<RelatedOrderInfo>(), "LYKKETEST", OriginatorType.Investor, "");
+
+            twoDayPosition.SetCommissionRates(100, 0, 0, 1);
+            
+            twoDayPosition.Close(new DateTime(2017, 01, 03, 20, 50, 0), MatchingEngineConstants.DefaultMm, 2, 1, 1, OriginatorType.Investor,
+                PositionCloseReason.Close, "", "CloseTrade");
+            
+            var swapsFor2Days = _swapService.GetSwaps(twoDayPosition);
 
             Assert.AreEqual(5.69863014m, swapsForDay);
             Assert.AreEqual(11.39726027m, swapsFor2Days);

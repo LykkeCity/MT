@@ -41,6 +41,7 @@ namespace MarginTrading.Backend.Services
         private readonly IDateService _dateService;
         private readonly ICfdCalculatorService _cfdCalculatorService;
         private readonly IIdentityGenerator _identityGenerator;
+        private readonly IAssetPairsCache _assetPairsCache;
 
         public TradingEngine(
             IEventChannel<MarginCallEventArgs> marginCallEventChannel,
@@ -63,7 +64,8 @@ namespace MarginTrading.Backend.Services
             ILog log,
             IDateService dateService,
             ICfdCalculatorService cfdCalculatorService,
-            IIdentityGenerator identityGenerator)
+            IIdentityGenerator identityGenerator,
+            IAssetPairsCache assetPairsCache)
         {
             _marginCallEventChannel = marginCallEventChannel;
             _stopoutEventChannel = stopoutEventChannel;
@@ -87,6 +89,7 @@ namespace MarginTrading.Backend.Services
             _dateService = dateService;
             _cfdCalculatorService = cfdCalculatorService;
             _identityGenerator = identityGenerator;
+            _assetPairsCache = assetPairsCache;
         }
 
         public async Task<Order> PlaceOrderAsync(Order order)
@@ -203,7 +206,7 @@ namespace MarginTrading.Backend.Services
 
             var shouldOpenNewPosition = order.ForceOpen;
 
-            if (!shouldOpenNewPosition)
+            if (string.IsNullOrEmpty(order.ParentPositionId) && !shouldOpenNewPosition)
             {
                 var existingPositions =
                     _ordersCache.Positions.GetOrdersByInstrumentAndAccount(order.AssetPairId, order.AccountId);
@@ -231,14 +234,27 @@ namespace MarginTrading.Backend.Services
             {
                 RejectOrder(order, OrderRejectReason.NoLiquidity, "No orders to match", "");
             } 
-            else if (matchedOrders.SummaryVolume < Math.Abs(order.Volume) && order.FillType == OrderFillType.FillOrKill)
+            else if (matchedOrders.SummaryVolume < Math.Abs(order.Volume))
             {
-                RejectOrder(order, OrderRejectReason.NoLiquidity, "Not fully matched", "");
+                if (order.FillType == OrderFillType.FillOrKill)
+                {
+                    RejectOrder(order, OrderRejectReason.NoLiquidity, "Not fully matched", "");
+                }
+                else
+                {
+                    order.PartiallyExecute(_dateService.Now(), matchedOrders);
+                    _ordersCache.InProgress.Add(order);
+                    return order;
+                }
             }
 
             if (order.Status != OrderStatus.Rejected)
             {
-                order.Execute(_dateService.Now(), matchedOrders);
+                var accuracy = _assetPairsCache.GetAssetPairByIdOrDefault(order.AssetPairId)?.Accuracy ??
+                               AssetPairsCache.DefaultAssetPairAccuracy;
+                
+                order.Execute(_dateService.Now(), matchedOrders, accuracy);
+                
                 _orderExecutedEventChannel.SendEvent(this, new OrderExecutedEventArgs(order));
             }
 
@@ -307,9 +323,10 @@ namespace MarginTrading.Backend.Services
 
         #endregion
 
-        #region Active orders
+        
+        #region Positions
 
-        private void ProcessOrdersActive(string instrument)
+        private void ProcessPositions(string instrument)
         {
             var stopoutAccounts = UpdateClosePriceAndDetectStopout(instrument).ToArray();
             foreach (var account in stopoutAccounts)
@@ -544,7 +561,7 @@ namespace MarginTrading.Backend.Services
         void IEventConsumer<BestPriceChangeEventArgs>.ConsumeEvent(object sender, BestPriceChangeEventArgs ea)
         {
             ProcessInProgressOrders(ea.BidAskPair.Instrument);
-            ProcessOrdersActive(ea.BidAskPair.Instrument);
+            ProcessPositions(ea.BidAskPair.Instrument);
             ProcessOrdersWaitingForExecution(ea.BidAskPair.Instrument);
         }
     }

@@ -8,28 +8,52 @@ namespace MarginTradingTests.Modules
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterInstance(new Mock<IEventChannel<BestPriceChangeEventArgs>>().Object)
+            builder.RegisterInstance(new Mock<EventChannel<BestPriceChangeEventArgs>>().Object)
                 .As<IEventChannel<BestPriceChangeEventArgs>>()
                 .SingleInstance();
 
-            builder.RegisterInstance(new Mock<IEventChannel<MarginCallEventArgs>>().Object)
+            builder.RegisterInstance(new Mock<EventChannel<MarginCallEventArgs>>().Object)
                 .As<IEventChannel<MarginCallEventArgs>>()
                 .SingleInstance();
 
-            builder.RegisterInstance(new Mock<IEventChannel<OrderCancelledEventArgs>>().Object)
+            builder.RegisterInstance(new Mock<EventChannel<OrderCancelledEventArgs>>().Object)
                 .As<IEventChannel<OrderCancelledEventArgs>>()
                 .SingleInstance();
 
-            builder.RegisterInstance(new Mock<IEventChannel<OrderPlacedEventArgs>>().Object)
+            builder.RegisterInstance(new Mock<EventChannel<OrderPlacedEventArgs>>().Object)
                 .As<IEventChannel<OrderPlacedEventArgs>>()
                 .SingleInstance();
 
-            builder.RegisterInstance(new Mock<IEventChannel<OrderExecutedEventArgs>>().Object)
+            builder.RegisterInstance(new Mock<EventChannel<OrderExecutedEventArgs>>().Object)
                 .As<IEventChannel<OrderExecutedEventArgs>>()
                 .SingleInstance();
 
-            builder.RegisterInstance(new Mock<IEventChannel<StopOutEventArgs>>().Object)
+            builder.RegisterInstance(new Mock<EventChannel<StopOutEventArgs>>().Object)
                 .As<IEventChannel<StopOutEventArgs>>()
+                .SingleInstance();
+            
+            builder.RegisterInstance(new Mock<EventChannel<PositionUpdateEventArgs>>().Object)
+                .As<IEventChannel<PositionUpdateEventArgs>>()
+                .SingleInstance();
+            
+            builder.RegisterInstance(new Mock<EventChannel<AccountBalanceChangedEventArgs>>().Object)
+                .As<IEventChannel<AccountBalanceChangedEventArgs>>()
+                .SingleInstance();
+            
+            builder.RegisterInstance(new Mock<EventChannel<OrderChangedEventArgs>>().Object)
+                .As<IEventChannel<OrderChangedEventArgs>>()
+                .SingleInstance();
+            
+            builder.RegisterInstance(new Mock<EventChannel<OrderExecutionStartedEventArgs>>().Object)
+                .As<IEventChannel<OrderExecutionStartedEventArgs>>()
+                .SingleInstance();
+
+            builder.RegisterInstance(new Mock<EventChannel<OrderActivatedEventArgs>>().Object)
+                .As<IEventChannel<OrderActivatedEventArgs>>()
+                .SingleInstance();
+            
+            builder.RegisterInstance(new Mock<EventChannel<OrderRejectedEventArgs>>().Object)
+                .As<IEventChannel<OrderRejectedEventArgs>>()
                 .SingleInstance();
         }
     }
