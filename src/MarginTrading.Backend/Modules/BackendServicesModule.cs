@@ -62,8 +62,9 @@ namespace MarginTrading.Backend.Modules
                 .As<IConsole>()
                 .SingleInstance();
 
-            builder.RegisterType<MarginTradingOperationsLogService>()
-                .As<IMarginTradingOperationsLogService>()
+            builder.RegisterType<OperationsLogService>()
+                .As<IOperationsLogService>()
+                .WithParameter(new TypedParameter(typeof(bool), _settings.WriteOperationLog))
                 .SingleInstance();
 
             builder.RegisterType<PricesUpdateRabbitMqNotifier>()

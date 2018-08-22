@@ -32,7 +32,7 @@ namespace MarginTrading.Backend.Controllers
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly ITradingEngine _tradingEngine;
         private readonly IAccountsCacheService _accountsCacheService;
-        private readonly IMarginTradingOperationsLogService _operationsLogService;
+        private readonly IOperationsLogService _operationsLogService;
         private readonly IConsole _consoleWriter;
         private readonly OrdersCache _ordersCache;
         private readonly IAssetPairDayOffService _assetDayOffService;
@@ -41,7 +41,7 @@ namespace MarginTrading.Backend.Controllers
         private readonly IIdentityGenerator _identityGenerator;
 
         public OrdersController(IAssetPairsCache assetPairsCache, ITradingEngine tradingEngine,
-            IAccountsCacheService accountsCacheService, IMarginTradingOperationsLogService operationsLogService,
+            IAccountsCacheService accountsCacheService, IOperationsLogService operationsLogService,
             IConsole consoleWriter, OrdersCache ordersCache, IAssetPairDayOffService assetDayOffService,
             IDateService dateService, IValidateOrderService validateOrderService, IIdentityGenerator identityGenerator)
         {
@@ -117,7 +117,7 @@ namespace MarginTrading.Backend.Controllers
                 correlationId, request?.Comment);
 
             _consoleWriter.WriteLine($"action order.cancel for accountId = {order.AccountId}, orderId = {orderId}");
-            _operationsLogService.AddLog("action order.cancel", order.AccountId, "" /* request.ToJson()*/,
+            _operationsLogService.AddLog("action order.cancel", order.AccountId, request?.ToJson(),
                 canceledOrder.ToJson());
 
             return Task.CompletedTask;

@@ -147,8 +147,8 @@ namespace MarginTradingTests
                 .As<IClientAccountClient>()
                 .SingleInstance();
 
-            builder.RegisterInstance(new Mock<IMarginTradingOperationsLogService>().Object)
-                .As<IMarginTradingOperationsLogService>()
+            builder.RegisterInstance(new Mock<IOperationsLogService>().Object)
+                .As<IOperationsLogService>()
                 .SingleInstance();
             
             builder.RegisterType<ConvertService>().As<IConvertService>().SingleInstance();

@@ -14,6 +14,7 @@ using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Common.Services;
 using MarginTrading.SqlRepositories.Repositories;
 using MarginTrading.SqlRepositories;
+using Microsoft.Extensions.Internal;
 using OperationLogEntity = MarginTrading.AzureRepositories.OperationLogEntity;
 
 namespace MarginTrading.Backend.Modules
@@ -35,8 +36,8 @@ namespace MarginTrading.Backend.Modules
 
             if (_settings.CurrentValue.Db.StorageMode == StorageMode.Azure)
             {
-                builder.Register<IMarginTradingOperationsLogRepository>(ctx =>
-                        new MarginTradingOperationsLogRepository(AzureTableStorage<OperationLogEntity>.Create(
+                builder.Register<IOperationsLogRepository>(ctx =>
+                        new OperationsLogRepository(AzureTableStorage<OperationLogEntity>.Create(
                             _settings.Nested(s => s.Db.LogsConnString), "MarginTradingBackendOperationsLog", _log)))
                     .SingleInstance();
 
@@ -58,22 +59,21 @@ namespace MarginTrading.Backend.Modules
             }
             else if (_settings.CurrentValue.Db.StorageMode == StorageMode.SqlServer)
             {
-                builder.Register<IMarginTradingOperationsLogRepository>(ctx =>
-                        new SqlMarginTradingOperationsLogRepository())
+                builder.Register<IOperationsLogRepository>(ctx =>
+                        new SqlOperationsLogRepository(ctx.Resolve<IDateService>(), 
+                            "MarginTradingBackendOperationsLog", _settings.CurrentValue.Db.LogsConnString))
                     .SingleInstance();
 
                 builder.Register<IMarginTradingBlobRepository>(ctx =>
                         new SqlBlobRepository(_settings.CurrentValue.Db.StateConnString))
                     .SingleInstance();
 
-                builder.Register(c =>
-                {
-                    var settings = c.Resolve<IReloadingManager<MarginTradingSettings>>();
-
-                    return settings.CurrentValue.UseDbIdentityGenerator
+                builder.Register(c => c.Resolve<IReloadingManager<MarginTradingSettings>>().CurrentValue
+                        .UseDbIdentityGenerator
                         ? (IIdentityGenerator) new SqlIdentityGenerator()
-                        : (IIdentityGenerator) new SimpleIdentityGenerator();
-                }).As<IIdentityGenerator>().SingleInstance();
+                        : (IIdentityGenerator) new SimpleIdentityGenerator())
+                    .As<IIdentityGenerator>()
+                    .SingleInstance();
             }
             
             builder.RegisterType<MatchingEngineInMemoryRepository>().As<IMatchingEngineRepository>().SingleInstance();
