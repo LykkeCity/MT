@@ -62,7 +62,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
                 var marginEventTask = _rabbitMqNotifyService.AccountMarginEvent(accountMarginEventMessage);
 
-                _operationsLogService.AddLog("margin call", account.Id, "", ea.ToJson());
+                _operationsLogService.AddLog($"margin call: {level.ToString()}", account.Id, "", ea.ToJson());
 
                 var clientEmail = await _clientAccountService.GetEmail(account.ClientId);
 

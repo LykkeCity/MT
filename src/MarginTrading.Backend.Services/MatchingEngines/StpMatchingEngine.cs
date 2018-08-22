@@ -105,7 +105,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
                     await _rabbitMqNotifyService.ExternalOrder(executionResult);
                     
-                    _operationsLogService.AddLog("action external order created", order.AccountId, 
+                    _operationsLogService.AddLog("external order executed", order.AccountId, 
                         externalOrderModel.ToJson(), executionResult.ToJson());
 
                     return matchedOrders;

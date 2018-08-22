@@ -87,7 +87,7 @@ namespace MarginTrading.Backend.Controllers
 
             _consoleWriter.WriteLine(
                 $"action position.close, orderId = {positionId}");
-            _operationsLogService.AddLog("action order.close", order.AccountId, "" /*request.ToJson()*/,
+            _operationsLogService.AddLog("action order.close", order.AccountId, request?.ToJson(),
                 order.ToJson());
         }
 
@@ -134,7 +134,8 @@ namespace MarginTrading.Backend.Controllers
                     throw new InvalidOperationException(closedOrder.RejectReasonText);
                 }
 
-                _operationsLogService.AddLog("action close positions group", closedOrder.AccountId, "", orderId);
+                _operationsLogService.AddLog("action close positions group", closedOrder.AccountId, request?.ToJson(),
+                    orderId);
             }
 
             _consoleWriter.WriteLine(
@@ -182,7 +183,7 @@ namespace MarginTrading.Backend.Controllers
                     throw new InvalidOperationException(closedOrder.RejectReasonText);
                 }
 
-                _operationsLogService.AddLog("action close positions group", closedOrder.AccountId, ""/* request.ToJson()*/,
+                _operationsLogService.AddLog("action close positions group", closedOrder.AccountId, request?.ToJson(),
                     orderId);
             }
             
@@ -228,7 +229,7 @@ namespace MarginTrading.Backend.Controllers
                     throw new InvalidOperationException(closedOrder.RejectReasonText);
                 }
 
-                _operationsLogService.AddLog("action close positions group", closedOrder.AccountId, ""/* request.ToJson()*/,
+                _operationsLogService.AddLog("action close positions group", closedOrder.AccountId, request?.ToJson(),
                     orderId);
             }
             

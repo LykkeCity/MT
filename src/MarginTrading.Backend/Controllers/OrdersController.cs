@@ -117,7 +117,7 @@ namespace MarginTrading.Backend.Controllers
                 correlationId, request?.Comment);
 
             _consoleWriter.WriteLine($"action order.cancel for accountId = {order.AccountId}, orderId = {orderId}");
-            _operationsLogService.AddLog("action order.cancel", order.AccountId, "" /* request.ToJson()*/,
+            _operationsLogService.AddLog("action order.cancel", order.AccountId, request?.ToJson(),
                 canceledOrder.ToJson());
 
             return Task.CompletedTask;

@@ -23,7 +23,7 @@ namespace MarginTrading.SqlRepositories
                                                  "[Data] [nvarchar] (MAX) NULL, " +
                                                  ");";
         
-        private static Type DataType => typeof(IOperationLog);
+        private static Type DataType => typeof(OperationLogEntity);
         private static readonly string GetColumns = string.Join(",", DataType.GetProperties().Select(x => x.Name));
         private static readonly string GetFields = string.Join(",", DataType.GetProperties().Select(x => "@" + x.Name));
 
