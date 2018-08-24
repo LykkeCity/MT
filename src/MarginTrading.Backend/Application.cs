@@ -18,6 +18,7 @@ using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
 using MarginTrading.OrderbookAggregator.Contracts.Messages;
+using MarginTrading.SettingsService.Contracts.AssetPair;
 using MarginTrading.SettingsService.Contracts.Enums;
 using MarginTrading.SettingsService.Contracts.Messages;
 
@@ -187,7 +188,7 @@ namespace MarginTrading.Backend
                     break;
                 
                 case SettingsTypeContract.AssetPair:
-                    _assetPairsManager.InitAssetPairs();
+                    //AssetPair change handled in AssetPairProjection
                     break;
                 
                 case SettingsTypeContract.TradingCondition:

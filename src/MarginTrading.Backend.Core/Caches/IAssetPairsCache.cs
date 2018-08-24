@@ -27,5 +27,7 @@ namespace MarginTrading.Backend.Core
         bool TryGetAssetPairQuoteSubst(string substAsset, string instrument, string legalEntity, 
             out IAssetPair assetPair);
         ImmutableHashSet<string> GetAllIds();
+
+        void AddOrUpdate(IAssetPair assetPair);
     }
 }

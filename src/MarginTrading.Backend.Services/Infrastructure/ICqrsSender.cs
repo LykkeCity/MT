@@ -6,6 +6,7 @@
     public interface ICqrsSender
     {
         void SendCommandToAccountManagement<T>(T command);
+        void SendCommandToSettingsService<T>(T command);
         void PublishEvent<T>(T ev);
     }
 }

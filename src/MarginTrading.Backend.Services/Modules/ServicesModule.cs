@@ -31,6 +31,11 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<IEventConsumer<BestPriceChangeEventArgs>>()
 				.SingleInstance()
 				.OnActivated(args => args.Instance.Start());
+
+			builder.RegisterType<ZeroQuoteWatchService>()
+				.AsSelf()
+				.As<IEventConsumer<BestPriceChangeEventArgs>>()
+				.SingleInstance();
  
 			builder.RegisterType<FxRateCacheService>() 
 				.As<IFxRateCacheService>()

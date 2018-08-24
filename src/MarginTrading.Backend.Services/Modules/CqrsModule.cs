@@ -3,6 +3,8 @@ using Autofac;
 using Common.Log;
 using Lykke.Cqrs;
 using Lykke.Cqrs.Configuration;
+using Lykke.Cqrs.Configuration.Routing;
+using Lykke.Cqrs.Configuration.Saga;
 using Lykke.Messaging;
 using Lykke.Messaging.Contract;
 using Lykke.Messaging.RabbitMq;
@@ -12,6 +14,7 @@ using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Workflow;
+using MarginTrading.SettingsService.Contracts.AssetPair;
 
 namespace MarginTrading.Backend.Services.Modules
 {
@@ -68,6 +71,7 @@ namespace MarginTrading.Backend.Services.Modules
             return new CqrsEngine(_log, ctx.Resolve<IDependencyResolver>(), messagingEngine,
                 new DefaultEndpointProvider(), true,
                 Register.DefaultEndpointResolver(rabbitMqConventionEndpointResolver),
+                RegisterDefaultRouting(),
                 RegisterContext());
         }
         
@@ -92,10 +96,27 @@ namespace MarginTrading.Backend.Services.Modules
                 .From(_settings.ContextNames.AccountsManagement).On(EventsRoute)
                 .WithProjection(
                     typeof(AccountsProjection), _settings.ContextNames.AccountsManagement);
+
+            contextRegistration.ListeningEvents(
+                    typeof(AssetPairChangedEvent))
+                .From(_settings.ContextNames.SettingsService).On(EventsRoute)
+                .WithProjection(
+                    typeof(AssetPairProjection), _settings.ContextNames.SettingsService);
             
             contextRegistration.PublishingEvents(typeof(PositionClosedEvent)).With(EventsRoute);
 
             return contextRegistration;
+        }
+
+        private PublishingCommandsDescriptor<IDefaultRoutingRegistration> RegisterDefaultRouting()
+        {
+            return Register.DefaultRouting
+                .PublishingCommands(
+                    typeof(SuspendAssetPairCommand),
+                    typeof(UnsuspendAssetPairCommand)
+                )
+                .To(_settings.ContextNames.SettingsService)
+                .With(CommandsRoute);
         }
     }
 }
