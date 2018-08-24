@@ -298,8 +298,17 @@ namespace MarginTrading.Backend.Services
             var pendingOrders = _ordersCache.Active.GetOrdersByInstrument(instrument)
                 .OrderBy(item => item.Created);
 
+            var now = _dateService.Now();
+            
             foreach (var order in pendingOrders)
             {
+                if (order.Validity.HasValue && now >= order.Validity.Value)
+                {
+                    _ordersCache.Active.Remove(order);
+                    order.Expire(now);
+                    continue;
+                }
+                
                 if (_quoteCashService.TryGetQuoteById(order.AssetPairId, out var pair))
                 {
                     var price = pair.GetPriceForOrderType(order.Direction);
