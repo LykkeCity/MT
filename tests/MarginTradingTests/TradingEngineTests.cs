@@ -714,6 +714,36 @@ namespace MarginTradingTests
             resultingAccount = _accountsCacheService.Get(order.AccountId);
             Assert.IsTrue(resultingAccount.Balance < 0);
         }
+        
+        [Test]
+        public void Is_Big_Spread_Leads_To_Stopout()
+        {
+            var account = Accounts[1];
+            account.Balance = 24;
+            _accountsCacheService.Update(account);
+            
+            var ordersSet = new[]
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "GBPUSD", MarketMakerId = MarketMaker1Id, Price = 2, Volume = 100000 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "2", Instrument = "GBPUSD", MarketMakerId = MarketMaker1Id, Price = 6, Volume = -100000 },
+            };
+
+            _matchingEngine.SetOrders(MarketMaker1Id, ordersSet, deleteAll: true);
+
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair {Instrument = "EURUSD", Ask = 1.5748M, Bid = 1.5748M});
+
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "GBPUSD", Accounts[1],
+                MarginTradingTestsUtils.TradingConditionId, 100);
+            
+            var resultingAccount = _accountsCacheService.Get(order.AccountId);
+            
+            order = _tradingEngine.PlaceOrderAsync(order).Result;
+            
+            ValidateOrderIsExecuted(order, new []{"2"}, 6);
+            
+            resultingAccount = _accountsCacheService.Get(order.AccountId);
+            Assert.IsTrue(resultingAccount.Balance < 0);
+        }
 
         [Test]
         public void Is_Fpl_Margin_Calculated_For_Straight_Pair_Correct()
@@ -731,14 +761,14 @@ namespace MarginTradingTests
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "EURGBP", Ask = 0.8M, Bid = 0.7M });
             
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURGBP", _account,
-                MarginTradingTestsUtils.TradingConditionId, 10000);
+                MarginTradingTestsUtils.TradingConditionId, 1000);
             
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
-            var position = ValidatePositionIsOpened(order.Id, 0.8M, -3000);
+            var position = ValidatePositionIsOpened(order.Id, 0.8M, -300);
             
-            Assert.AreEqual(80.0, position.GetMarginMaintenance());
-            Assert.AreEqual(120.0, position.GetMarginInit());
+            Assert.AreEqual(8.0, position.GetMarginMaintenance());
+            Assert.AreEqual(12.0, position.GetMarginInit());
         }
         
         [Test]
