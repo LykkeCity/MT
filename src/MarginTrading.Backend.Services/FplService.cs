@@ -51,7 +51,7 @@ namespace MarginTrading.Backend.Services
             var accountAsset =
                 _accountAssetsCacheService.GetTradingInstrument(order.TradingConditionId, order.AssetPairId);
             var marginRate = _cfdCalculatorService.GetQuoteRateForBaseAsset(order.AccountAssetId, order.AssetPairId,
-                order.LegalEntity);
+                order.LegalEntity, order.Direction == OrderDirection.Buy);
             var accountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(order.AccountAssetId);
 
             return Math.Round(Math.Abs(order.Volume) * marginRate / accountAsset.LeverageInit,

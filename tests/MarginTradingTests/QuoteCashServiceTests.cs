@@ -52,7 +52,7 @@ namespace MarginTradingTests
             Assert.AreEqual(905.1, quote.Bid);
             Assert.AreEqual(905.35, quote.Ask);
 
-            var quoteRate = _cfdCalculatorService.GetQuoteRateForBaseAsset(Accounts[0].BaseAssetId, instrument, "LYKKETEST");
+            var quoteRate = _cfdCalculatorService.GetQuoteRateForBaseAsset(Accounts[0].BaseAssetId, instrument, "LYKKETEST", true);
 
             Assert.AreEqual(905.35, quoteRate);
             

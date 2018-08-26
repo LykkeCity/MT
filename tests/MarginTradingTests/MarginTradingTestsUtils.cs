@@ -91,8 +91,8 @@ namespace MarginTradingTests
                 {
                     TradingConditionId = TradingConditionId,
                     Instrument = "CHFJPY",
-                    LeverageInit = 100,
-                    LeverageMaintenance = 150,
+                    LeverageInit = 10,
+                    LeverageMaintenance = 15,
                     Delta = 30
                 },
                 new TradingInstrumentContract

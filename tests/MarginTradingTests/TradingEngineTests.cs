@@ -763,8 +763,8 @@ namespace MarginTradingTests
             
             var position = ValidatePositionIsOpened(order.Id, 100.1M, 0.001M);
 
-            Assert.AreEqual(0.00734067M, position.GetMarginMaintenance());
-            Assert.AreEqual(0.011011M, position.GetMarginInit());
+            Assert.AreEqual(0.07340667M, position.GetMarginMaintenance());
+            Assert.AreEqual(0.11011M, position.GetMarginInit());
         }
 
         #endregion

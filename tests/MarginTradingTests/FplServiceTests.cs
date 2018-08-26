@@ -18,6 +18,7 @@ namespace MarginTradingTests
         private IFxRateCacheService _fxRateCacheService;
         private IAccountsCacheService _accountsCacheService;
         private OrdersCache _ordersCache;
+        private IFplService _fplService;
 
         [OneTimeSetUp]
         public void SetUp()
@@ -27,6 +28,7 @@ namespace MarginTradingTests
             _fxRateCacheService = Container.Resolve<IFxRateCacheService>();
             _accountsCacheService = Container.Resolve<IAccountsCacheService>();
             _ordersCache = Container.Resolve<OrdersCache>();
+            _fplService = Container.Resolve<IFplService>();
         }
 
         [Test]
@@ -163,6 +165,30 @@ namespace MarginTradingTests
             Assert.AreEqual(10184.4, Math.Round(account.GetUsedMargin(), 1));
             Assert.AreEqual(15276.6, Math.Round(account.GetMarginInit(), 1));
 
+        }
+
+        [Test]
+        public void Check_Order_InitialMargin()
+        {
+            _bestPriceConsumer.SendEvent(this,
+                new BestPriceChangeEventArgs(
+                    new InstrumentBidAskPair {Instrument = "EURUSD", Ask = 1.3M, Bid = 1.2M}));
+
+            _bestPriceConsumer.SendEvent(this,
+                new BestPriceChangeEventArgs(
+                    new InstrumentBidAskPair {Instrument = "CHFJPY", Ask = 2.5M, Bid = 2.3M}));
+            
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair {Instrument = "EURUSD", Ask = 1.25M, Bid = 1.25M});
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "EURJPY", Ask = 2.3M, Bid = 2.3M });
+
+            var order1 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[1],
+                MarginTradingTestsUtils.TradingConditionId, 1000);
+            
+            var order2 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "CHFJPY", Accounts[1],
+                MarginTradingTestsUtils.TradingConditionId, -100);
+            
+            Assert.AreEqual(10.4M, _fplService.GetInitMarginForOrder(order1));
+            Assert.AreEqual(10M, _fplService.GetInitMarginForOrder(order2));
         }
     }
 }
