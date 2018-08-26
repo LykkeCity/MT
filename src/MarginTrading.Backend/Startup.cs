@@ -67,12 +67,13 @@ namespace MarginTrading.Backend
             services.AddSingleton(loggerFactory);
             services.AddLogging();
             services.AddSingleton(Configuration);
-            services.AddMvc(options => options.Filters.Add(typeof(MarginTradingEnabledFilter)))
-                .AddJsonOptions(options =>
-                {
-                    options.SerializerSettings.ContractResolver = new DefaultContractResolver();
-                    options.SerializerSettings.Converters.Add(new StringEnumConverter());
-                });
+            services.AddMvc()
+            .AddJsonOptions(options =>
+            {
+                options.SerializerSettings.ContractResolver = new DefaultContractResolver();
+                options.SerializerSettings.Converters.Add(new StringEnumConverter());
+            });
+            services.AddScoped<MarginTradingEnabledFilter>();
             services.AddAuthentication(KeyAuthOptions.AuthenticationScheme)
                 .AddScheme<KeyAuthOptions, KeyAuthHandler>(KeyAuthOptions.AuthenticationScheme, "", options => { });
 
