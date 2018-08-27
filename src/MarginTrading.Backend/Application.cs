@@ -39,7 +39,7 @@ namespace MarginTrading.Backend
         private readonly IMigrationService _migrationService;
         private readonly IConvertService _convertService;
         private readonly IFxRateCacheService _fxRateCacheService; 
-        private readonly ExternalOrderBooksList _externalOrderBooksList;
+        private readonly IExternalOrderbookService _externalOrderbookService;
         private readonly IAssetsManager _assetsManager;
         private readonly IAssetPairsManager _assetPairsManager;
         private readonly ITradingInstrumentsManager _tradingInstrumentsManager;
@@ -58,7 +58,7 @@ namespace MarginTrading.Backend
             IMigrationService migrationService,
             IConvertService convertService,
             IFxRateCacheService fxRateCacheService, 
-            ExternalOrderBooksList externalOrderBooksList,
+            IExternalOrderbookService externalOrderbookService,
             IAssetsManager assetsManager,
             IAssetPairsManager assetPairsManager,
             ITradingInstrumentsManager tradingInstrumentsManager,
@@ -75,7 +75,7 @@ namespace MarginTrading.Backend
             _migrationService = migrationService;
             _convertService = convertService;
             _fxRateCacheService = fxRateCacheService; 
-            _externalOrderBooksList = externalOrderBooksList;
+            _externalOrderbookService = externalOrderbookService;
             _assetsManager = assetsManager;
             _assetPairsManager = assetPairsManager;
             _tradingInstrumentsManager = tradingInstrumentsManager;
@@ -159,7 +159,7 @@ namespace MarginTrading.Backend
         private Task HandleStpOrderbook(ExternalExchangeOrderbookMessage message)
         {
             var orderbook = _convertService.Convert<ExternalExchangeOrderbookMessage, ExternalOrderBook>(message);
-            _externalOrderBooksList.SetOrderbook(orderbook);
+            _externalOrderbookService.SetOrderbook(orderbook);
             return Task.CompletedTask;
         }
 

@@ -6,7 +6,9 @@ using Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Services.Events;
+using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Common.Services;
 using Moq;
@@ -53,6 +55,9 @@ namespace MarginTradingTests.OrderBooks
 
         private Mock<IEventChannel<BestPriceChangeEventArgs>> _bestPricesChannelMock;
         private Mock<IDateService> _dateServiceMock;
+        private Mock<IAssetPairsCache> _assetPairsCacheMock;
+        private Mock<ICqrsSender> _cqrsSenderMock;
+        private Mock<IIdentityGenerator> _identityGeneratorMock;
         private Mock<ILog> _logMock;
         
         
@@ -66,6 +71,9 @@ namespace MarginTradingTests.OrderBooks
         {
             _bestPricesChannelMock = new Mock<IEventChannel<BestPriceChangeEventArgs>>();
             _dateServiceMock = new Mock<IDateService>();
+            _assetPairsCacheMock = new Mock<IAssetPairsCache>();
+            _cqrsSenderMock = new Mock<ICqrsSender>();
+            _identityGeneratorMock = new Mock<IIdentityGenerator>();
             _logMock = new Mock<ILog>();
         }
         
@@ -74,10 +82,10 @@ namespace MarginTradingTests.OrderBooks
         
         #region Helpers
 
-        private ExternalOrderBooksList GetNewOrderbooksList()
+        private ExternalOrderbookService GetNewOrderbooksList()
         {
-            return new ExternalOrderBooksList(_bestPricesChannelMock.Object, _dateServiceMock.Object,
-                _logMock.Object);
+            return new ExternalOrderbookService(_bestPricesChannelMock.Object, _dateServiceMock.Object,
+                _assetPairsCacheMock.Object, _cqrsSenderMock.Object, _identityGeneratorMock.Object, _logMock.Object);
         }
 
         private void AssertErrorLogged(string expectedErrorMessage)

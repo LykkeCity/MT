@@ -17,6 +17,7 @@ using MarginTrading.Backend.Services.Services;
 using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.RabbitMq;
+using MarginTrading.Common.Services;
 using MarginTrading.Common.Services.Telemetry;
 
 namespace MarginTrading.Backend.Services.Modules
@@ -31,11 +32,6 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<IEventConsumer<BestPriceChangeEventArgs>>()
 				.SingleInstance()
 				.OnActivated(args => args.Instance.Start());
-
-			builder.RegisterType<ZeroQuoteWatchService>()
-				.AsSelf()
-				.As<IEventConsumer<BestPriceChangeEventArgs>>()
-				.SingleInstance();
  
 			builder.RegisterType<FxRateCacheService>() 
 				.As<IFxRateCacheService>()
@@ -122,8 +118,8 @@ namespace MarginTrading.Backend.Services.Modules
 				.AsSelf()
 				.SingleInstance();
 
-			builder.RegisterType<ExternalOrderBooksList>()
-				.AsSelf()
+			builder.RegisterType<ExternalOrderbookService>()
+				.As<IExternalOrderbookService>()
 				.SingleInstance();
 
 			builder.RegisterType<MarketMakerService>()

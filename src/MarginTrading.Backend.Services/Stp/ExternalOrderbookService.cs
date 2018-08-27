@@ -6,25 +6,40 @@ using Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Events;
+using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Helpers;
 using MarginTrading.Common.Services;
+using MarginTrading.SettingsService.Contracts.AssetPair;
 
 namespace MarginTrading.Backend.Services.Stp
 {
-    public class ExternalOrderBooksList
+    public class ExternalOrderbookService : IExternalOrderbookService
     {
         private readonly IEventChannel<BestPriceChangeEventArgs> _bestPriceChangeEventChannel;
         private readonly IDateService _dateService;
+        private readonly IAssetPairsCache _assetPairsCache;
+        private readonly ICqrsSender _cqrsSender;
+        private readonly IIdentityGenerator _identityGenerator;
         private readonly ILog _log;
 
-        public ExternalOrderBooksList(IEventChannel<BestPriceChangeEventArgs> bestPriceChangeEventChannel,
-            IDateService dateService, ILog log)
+        public ExternalOrderbookService(
+            IEventChannel<BestPriceChangeEventArgs> bestPriceChangeEventChannel,
+            IDateService dateService,
+            IAssetPairsCache assetPairsCache,
+            ICqrsSender cqrsSender,
+            IIdentityGenerator identityGenerator,
+            ILog log)
         {
             _bestPriceChangeEventChannel = bestPriceChangeEventChannel;
             _dateService = dateService;
+            _assetPairsCache = assetPairsCache;
+            _cqrsSender = cqrsSender;
+            _identityGenerator = identityGenerator;
             _log = log;
         }
 
@@ -40,12 +55,12 @@ namespace MarginTrading.Backend.Services.Stp
             new ReadWriteLockedDictionary<string, Dictionary<string, ExternalOrderBook>>();
 
         public List<(string source, decimal? price)> GetPricesForExecution(string assetPairId, decimal volume,
-            bool validateOpositeDirectionVolume)
+            bool validateOppositeDirectionVolume)
         {
             return _orderbooks.TryReadValue(assetPairId, (dataExist, assetPair, orderbooks)
                 => dataExist
                     ? orderbooks.Select(p => (p.Key,
-                        MatchBestPriceForOrderExecution(p.Value, volume, validateOpositeDirectionVolume))).ToList()
+                        MatchBestPriceForOrderExecution(p.Value, volume, validateOppositeDirectionVolume))).ToList()
                     : null);
         }
 
@@ -100,7 +115,8 @@ namespace MarginTrading.Backend.Services.Stp
 
         public void SetOrderbook(ExternalOrderBook orderbook)
         {
-            if (!ValidateOrderbook(orderbook))
+            if (!ValidateOrderbook(orderbook) 
+                || !CheckZeroQuote(orderbook))
                 return;
 
             var bba = new InstrumentBidAskPair
@@ -158,7 +174,7 @@ namespace MarginTrading.Backend.Services.Stp
             }
             catch (Exception e)
             {
-                _log.WriteError(nameof(ExternalOrderBooksList), orderbook.ToJson(), e);
+                _log.WriteError(nameof(ExternalOrderbookService), orderbook.ToJson(), e);
                 return false;
             }
         }
@@ -175,6 +191,44 @@ namespace MarginTrading.Backend.Services.Stp
                 
                 previous = current;
             }
+        }
+        
+        private bool CheckZeroQuote(ExternalOrderBook orderbook)
+        {
+            var isOrderbookValid = orderbook.Asks.Count > 0 && orderbook.Bids.Count > 0;//after validations
+            
+            var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(orderbook.AssetPairId);
+            if (assetPair == null)
+            {
+                return isOrderbookValid;
+            }
+            
+            if (!isOrderbookValid)
+            {
+                if (!assetPair.IsSuspended)
+                {
+                    assetPair.IsSuspended = true;//todo apply changes to trading engine
+                    _cqrsSender.SendCommandToSettingsService(new SuspendAssetPairCommand
+                    {
+                        AssetPairId = assetPair.Id,
+                        OperationId = _identityGenerator.GenerateGuid(),
+                    });
+                }
+            }
+            else
+            {
+                if (assetPair.IsSuspended)
+                {
+                    assetPair.IsSuspended = false;//todo apply changes to trading engine
+                    _cqrsSender.SendCommandToSettingsService(new UnsuspendAssetPairCommand
+                    {
+                        AssetPairId = assetPair.Id,
+                        OperationId = _identityGenerator.GenerateGuid(),
+                    });   
+                }
+            }
+
+            return isOrderbookValid;
         }
     }
 }
