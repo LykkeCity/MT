@@ -19,11 +19,13 @@ namespace MarginTrading.SqlRepositories.Repositories
     {
         private const string TableName = "MarginTradingExecutionInfo";
         private const string CreateTableScript = "CREATE TABLE [{0}](" +
-                                                 "[Id] [nvarchar] (64) NOT NULL PRIMARY KEY," +
+                                                 "[Oid] [bigint] NOT NULL IDENTITY(1,1) PRIMARY KEY," +
+                                                 "[Id] [nvarchar] (64) NOT NULL," +
                                                  "[LastModified] [datetime] NOT NULL, " +
                                                  "[OperationName] [nvarchar] (64) NULL, " +
                                                  "[Version] [nvarchar] (64) NULL, " +
-                                                 "[Data] [nvarchar] (MAX) NOT NULL " +
+                                                 "[Data] [nvarchar] (MAX) NOT NULL," +
+                                                 "CONSTRAINT [MTEx_Id] UNIQUE NONCLUSTERED ([Id], [OperationName])" +
                                                  ");";
         
         private static Type DataType => typeof(IOperationExecutionInfo<object>);
@@ -32,17 +34,15 @@ namespace MarginTrading.SqlRepositories.Repositories
         private static readonly string GetUpdateClause = string.Join(",", 
             DataType.GetProperties().Select(x => "[" + x.Name + "]=@" + x.Name));
 
-        private readonly IConvertService _convertService;
         private readonly string _connectionString;
         private readonly ILog _log;
         private readonly ISystemClock _systemClock;
 
-        public OperationExecutionInfoRepository(IConvertService convertService, 
+        public OperationExecutionInfoRepository( 
             string connectionString, 
             ILog log,
             ISystemClock systemClock)
         {
-            _convertService = convertService;
             _connectionString = connectionString;
             _log = log;
             _systemClock = systemClock;
@@ -66,7 +66,8 @@ namespace MarginTrading.SqlRepositories.Repositories
                 using (var conn = new SqlConnection(_connectionString))
                 {
                     var operationInfo = await conn.QueryFirstOrDefaultAsync<OperationExecutionInfoEntity>(
-                        $"SELECT * FROM {TableName} WHERE Id = @operationId", new {operationId});
+                        $"SELECT * FROM {TableName} WHERE Id=@operationId and OperationName=@operationName",
+                        new {operationId, operationName});
 
                     if (operationInfo == null)
                     {
@@ -94,7 +95,8 @@ namespace MarginTrading.SqlRepositories.Repositories
             using (var conn = new SqlConnection(_connectionString))
             {
                 var operationInfo = await conn.QuerySingleOrDefaultAsync<OperationExecutionInfoEntity>(
-                    $"SELECT * FROM {TableName} WHERE Id = @id", new { id });
+                    $"SELECT * FROM {TableName} WHERE Id = @id and OperationName=@operationName",
+                    new {id, operationName});
 
                 return operationInfo == null ? null : Convert<TData>(operationInfo);
             }
