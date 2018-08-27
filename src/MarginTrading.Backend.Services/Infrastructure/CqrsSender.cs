@@ -23,6 +23,12 @@ namespace MarginTrading.Backend.Services.Infrastructure
                 _cqrsContextNamesSettings.AccountsManagement);
         }
 
+        public void SendCommandToSelf<T>(T command)
+        {
+            _cqrsEngine.SendCommand(command, _cqrsContextNamesSettings.TradingEngine,
+                _cqrsContextNamesSettings.TradingEngine);
+        }
+
         public void PublishEvent<T>(T ev)
         {
             try

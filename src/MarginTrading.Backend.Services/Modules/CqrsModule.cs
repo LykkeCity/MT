@@ -3,15 +3,23 @@ using Autofac;
 using Common.Log;
 using Lykke.Cqrs;
 using Lykke.Cqrs.Configuration;
+using Lykke.Cqrs.Configuration.BoundedContext;
+using Lykke.Cqrs.Configuration.Routing;
+using Lykke.Cqrs.Configuration.Saga;
 using Lykke.Messaging;
 using Lykke.Messaging.Contract;
 using Lykke.Messaging.RabbitMq;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.Backend.Contracts.Events;
+using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Commands;
+using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Events;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Workflow;
+using MarginTrading.Backend.Services.Workflow.SpecialLiquidation;
+using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
+using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Events;
 
 namespace MarginTrading.Backend.Services.Modules
 {
@@ -68,34 +76,113 @@ namespace MarginTrading.Backend.Services.Modules
             return new CqrsEngine(_log, ctx.Resolve<IDependencyResolver>(), messagingEngine,
                 new DefaultEndpointProvider(), true,
                 Register.DefaultEndpointResolver(rabbitMqConventionEndpointResolver),
+                RegisterSpecialLiquidationSaga(),
                 RegisterContext());
         }
-        
+
         private IRegistration RegisterContext()
         {
             var contextRegistration = Register.BoundedContext(_settings.ContextNames.TradingEngine)
                 .FailedCommandRetryDelay(_defaultRetryDelayMs).ProcessingOptions(CommandsRoute).MultiThreaded(8)
                 .QueueCapacity(1024);
 
-            contextRegistration.ListeningCommands(
-                    typeof(FreezeAmountForWithdrawalCommand), 
-                    typeof(UnfreezeMarginOnFailWithdrawalCommand))
-                .On(CommandsRoute)
-                .WithCommandsHandler<WithdrawalCommandsHandler>()
-                .PublishingEvents(
-                    typeof(AmountForWithdrawalFrozenEvent), 
-                    typeof(AmountForWithdrawalFreezeFailedEvent))
-                .With(EventsRoute);
+            RegisterWithdrawalCommandsHandler(contextRegistration);
+            RegisterSpecialLiquidationCommandsHandler(contextRegistration);
+            RegisterAccountsProjection(contextRegistration);
+            
+            contextRegistration.PublishingEvents(typeof(PositionClosedEvent)).With(EventsRoute);
 
+            return contextRegistration;
+        }
+
+        private void RegisterAccountsProjection(
+            ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
+        {
             contextRegistration.ListeningEvents(
                     typeof(AccountChangedEvent))
                 .From(_settings.ContextNames.AccountsManagement).On(EventsRoute)
                 .WithProjection(
                     typeof(AccountsProjection), _settings.ContextNames.AccountsManagement);
-            
-            contextRegistration.PublishingEvents(typeof(PositionClosedEvent)).With(EventsRoute);
+        }
 
-            return contextRegistration;
+        private void RegisterWithdrawalCommandsHandler(
+            ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
+        {
+            contextRegistration.ListeningCommands(
+                    typeof(FreezeAmountForWithdrawalCommand),
+                    typeof(UnfreezeMarginOnFailWithdrawalCommand))
+                .On(CommandsRoute)
+                .WithCommandsHandler<WithdrawalCommandsHandler>()
+                .PublishingEvents(
+                    typeof(AmountForWithdrawalFrozenEvent),
+                    typeof(AmountForWithdrawalFreezeFailedEvent))
+                .With(EventsRoute);
+        }
+
+        private IRegistration RegisterSpecialLiquidationSaga()
+        {
+            var sagaRegistration = RegisterSaga<SpecialLiquidationSaga>();
+                
+            sagaRegistration.ListeningEvents(
+                    typeof(PriceForSpecialLiquidationCalculatedEvent)
+                )
+                .From(_settings.ContextNames.Gavel)
+                .On(EventsRoute)
+                .PublishingCommands(
+                    typeof(ExecuteSpecialLiquidationOrderCommand)
+                )
+                .To(_settings.ContextNames.Gavel)
+                .With(CommandsRoute);
+            
+            sagaRegistration.ListeningEvents(
+                    typeof(PriceForSpecialLiquidationCalculationFailedEvent),
+                    typeof(SpecialLiquidationOrderExecutedEvent),
+                    typeof(SpecialLiquidationOrderExecutionFailedEvent)
+                )
+                .From(_settings.ContextNames.Gavel)
+                .On(EventsRoute)
+                .PublishingCommands(
+                    typeof(FailSpecialLiquidationInternalCommand),
+                    typeof(ExecuteSpecialLiquidationOrdersInternalCommand)
+                )
+                .To(_settings.ContextNames.TradingEngine)
+                .With(CommandsRoute);
+            
+            sagaRegistration.ListeningEvents(
+                    typeof(SpecialLiquidationStartedInternalEvent)
+                )
+                .From(_settings.ContextNames.TradingEngine)
+                .On(EventsRoute)
+                .PublishingCommands(
+                    typeof(GetPriceForSpecialLiquidationCommand)
+                )
+                .To(_settings.ContextNames.Gavel)
+                .With(CommandsRoute);
+            
+            return sagaRegistration;
+        }
+
+        private void RegisterSpecialLiquidationCommandsHandler(
+            ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
+        {
+            contextRegistration.ListeningCommands(
+                    typeof(StartSpecialLiquidationInternalCommand),
+                    typeof(FailSpecialLiquidationInternalCommand),
+                    typeof(ExecuteSpecialLiquidationOrdersInternalCommand)
+                )
+                .On(CommandsRoute)
+                .WithCommandsHandler<SpecialLiquidationCommandsHandler>()
+                .PublishingEvents(
+                    typeof(SpecialLiquidationStartedInternalEvent),
+                    typeof(SpecialLiquidationFinishedEvent),
+                    typeof(SpecialLiquidationFailedEvent)
+                )
+                .With(EventsRoute);
+        }
+
+        private ISagaRegistration RegisterSaga<TSaga>()
+        {
+            return Register.Saga<TSaga>($"{_settings.ContextNames.TradingEngine}.{typeof(TSaga).Name}");
         }
     }
 }
