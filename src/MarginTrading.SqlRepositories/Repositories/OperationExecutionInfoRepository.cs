@@ -36,16 +36,16 @@ namespace MarginTrading.SqlRepositories.Repositories
 
         private readonly string _connectionString;
         private readonly ILog _log;
-        private readonly ISystemClock _systemClock;
+        private readonly IDateService _dateService;
 
         public OperationExecutionInfoRepository( 
             string connectionString, 
             ILog log,
-            ISystemClock systemClock)
+            IDateService dateService)
         {
             _connectionString = connectionString;
             _log = log;
-            _systemClock = systemClock;
+            _dateService = dateService;
             
             using (var conn = new SqlConnection(_connectionString))
             {
@@ -72,7 +72,7 @@ namespace MarginTrading.SqlRepositories.Repositories
                     if (operationInfo == null)
                     {
                         var entity = Convert(factory());
-                        entity.LastModified = _systemClock.UtcNow.UtcDateTime;
+                        entity.LastModified = _dateService.Now();
 
                         await conn.ExecuteAsync(
                             $"insert into {TableName} ({GetColumns}) values ({GetFields})", entity);
@@ -105,7 +105,7 @@ namespace MarginTrading.SqlRepositories.Repositories
         public async Task Save<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class
         {
             var entity = Convert(executionInfo);
-            entity.LastModified = _systemClock.UtcNow.UtcDateTime;
+            entity.LastModified = _dateService.Now();
             
             using (var conn = new SqlConnection(_connectionString))
             {
