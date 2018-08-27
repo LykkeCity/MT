@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using JetBrains.Annotations;
 using MarginTrading.Common.Helpers;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Settings;
@@ -12,6 +13,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace MarginTrading.Common.Middleware
 {
+    [UsedImplicitly]
     public class RequestsLoggingMiddleware
     {
         private readonly RequestDelegate _next;
@@ -30,6 +32,7 @@ namespace MarginTrading.Common.Middleware
             _requestsLog = LogLocator.RequestsLog;
         }
 
+        [UsedImplicitly]
         public async Task Invoke(HttpContext context)
         {
             var requestContext =

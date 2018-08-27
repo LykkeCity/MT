@@ -40,7 +40,7 @@ namespace MarginTradingTests
         private TradingInstrumentsManager _accountAssetsManager;
         private IAccountsCacheService _accountsCacheService;
         private IEventChannel<BestPriceChangeEventArgs> _bestPriceChannel;
-        private Mock<IEventChannel<OrderExecutedEventArgs>> _orderExecutedChannelMock;
+        //private Mock<IEventChannel<OrderExecutedEventArgs>> _orderExecutedChannelMock;
         private OrdersCache _ordersCache;
         private IFxRateCacheService _fxRateCacheService;
         
@@ -642,17 +642,16 @@ namespace MarginTradingTests
         }
 
         [Test]
-        public void Check_No_FxRate()
+        public async Task Check_No_FxRate()
         {
             _bestPriceChannel.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCJPY", Bid = 109.857M, Ask = 130.957M }));
 
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "BTCJPY", Accounts[1],
                 MarginTradingTestsUtils.TradingConditionId, 1);
 
-            Assert.ThrowsAsync<FxRateNotFoundException>(async () =>
-            {
-                order = await _tradingEngine.PlaceOrderAsync(order);
-            });
+            order = await _tradingEngine.PlaceOrderAsync(order);
+
+            Assert.AreEqual(OrderStatus.Rejected, order.Status);
         }
 
         [Test]
@@ -714,6 +713,36 @@ namespace MarginTradingTests
             resultingAccount = _accountsCacheService.Get(order.AccountId);
             Assert.IsTrue(resultingAccount.Balance < 0);
         }
+        
+        [Test]
+        public void Is_Big_Spread_Leads_To_Stopout()
+        {
+            var account = Accounts[1];
+            account.Balance = 24;
+            _accountsCacheService.Update(account);
+            
+            var ordersSet = new[]
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "GBPUSD", MarketMakerId = MarketMaker1Id, Price = 2, Volume = 100000 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "2", Instrument = "GBPUSD", MarketMakerId = MarketMaker1Id, Price = 6, Volume = -100000 },
+            };
+
+            _matchingEngine.SetOrders(MarketMaker1Id, ordersSet, deleteAll: true);
+
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair {Instrument = "EURUSD", Ask = 1.5748M, Bid = 1.5748M});
+
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "GBPUSD", Accounts[1],
+                MarginTradingTestsUtils.TradingConditionId, 100);
+            
+            var resultingAccount = _accountsCacheService.Get(order.AccountId);
+            
+            order = _tradingEngine.PlaceOrderAsync(order).Result;
+            
+            ValidateOrderIsExecuted(order, new []{"2"}, 6);
+            
+            resultingAccount = _accountsCacheService.Get(order.AccountId);
+            Assert.IsTrue(resultingAccount.Balance < 0);
+        }
 
         [Test]
         public void Is_Fpl_Margin_Calculated_For_Straight_Pair_Correct()
@@ -726,19 +755,18 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(MarketMaker1Id, ordersSet, deleteAll: true);
             
-            _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "EURUSD", Ask = 1.2M, Bid = 1.1M });
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "GBPUSD", Ask = 2M, Bid = 1.5M });
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "EURGBP", Ask = 0.8M, Bid = 0.7M });
             
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURGBP", _account,
-                MarginTradingTestsUtils.TradingConditionId, 10000);
+                MarginTradingTestsUtils.TradingConditionId, 1000);
             
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
-            var position = ValidatePositionIsOpened(order.Id, 0.8M, -3000);
+            var position = ValidatePositionIsOpened(order.Id, 0.8M, -300);
             
-            Assert.AreEqual(80.0, position.GetMarginMaintenance());
-            Assert.AreEqual(120.0, position.GetMarginInit());
+            Assert.AreEqual(10.66666667m, position.GetMarginMaintenance());
+            Assert.AreEqual(16.0, position.GetMarginInit());
         }
         
         [Test]
@@ -763,8 +791,8 @@ namespace MarginTradingTests
             
             var position = ValidatePositionIsOpened(order.Id, 100.1M, 0.001M);
 
-            Assert.AreEqual(0.00734067M, position.GetMarginMaintenance());
-            Assert.AreEqual(0.011011M, position.GetMarginInit());
+            Assert.AreEqual(0.07340667M, position.GetMarginMaintenance());
+            Assert.AreEqual(0.11011M, position.GetMarginInit());
         }
 
         #endregion
@@ -933,7 +961,81 @@ namespace MarginTradingTests
             Assert.AreEqual(OrderRejectReason.NoLiquidity, order.RejectReason);
         }
 
+        [Test]
+        public void Is_PendingOrder_Expires()
+        {
+            var targetValidity = new DateTime(2100, 1, 1);
+            
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Limit, "EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, -1, price: 1.07M, validity: targetValidity);
+            
+            order = _tradingEngine.PlaceOrderAsync(order).Result;
+            var account = _accountsCacheService.Get(order.AccountId);
+
+            Assert.AreEqual(OrderStatus.Active, order.Status); //is not executed
+            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
+
+            _matchingEngine.SetOrders(MarketMaker1Id, new[]
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = 6 }
+            });
+
+            Assert.AreEqual(OrderStatus.Active, order.Status); //is not executed
+            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
+            
+            var ds = Container.Resolve<IDateService>();
+            Mock.Get(ds).Setup(s => s.Now()).Returns(targetValidity.AddSeconds(1));
+
+            _matchingEngine.SetOrders(MarketMaker1Id, new[]
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.08M, Volume = 10 }
+            });
+
+            Assert.AreEqual(OrderStatus.Expired, order.Status); 
+        }    
         
+        #endregion
+        
+        
+        #region Common functions
+
+        [Test]
+        [TestCase(new int[0], 1, true)]
+        [TestCase(new int[0], -1, true)]
+        [TestCase(new[] { 1 }, 1, true)]
+        [TestCase(new[] { 1, 2 }, 1, true)]
+        [TestCase(new[] { -1, 2 }, 1, true)]
+        [TestCase(new[] { -1 }, -1, true)]
+        [TestCase(new[] { -1, -2 }, -1, true)]
+        [TestCase(new[] { 1, -2 }, -1, true)]
+        [TestCase(new[] { -1 }, 1, false)]
+        [TestCase(new[] { 1 }, -1, false)]
+        [TestCase(new[] { 2 }, -1, false)]
+        [TestCase(new[] { -2 }, 1, false)]
+        [TestCase(new[] { 2 }, -3, true)]
+        [TestCase(new[] { -2 }, 3, true)]
+        public void Test_That_Position_Should_Be_Opened_Is_Checked_Correctly(int[] existingVolumes, int newVolume,
+            bool shouldOpenPosition)
+        {
+            foreach (var existingVolume in existingVolumes)
+            {
+                var position = TestObjectsFactory.CreateOpenedPosition("EURUSD", _account,
+                    MarginTradingTestsUtils.TradingConditionId, existingVolume, 1);
+
+                _ordersCache.Positions.Add(position);
+            }
+
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, newVolume);
+
+            Assert.AreEqual(shouldOpenPosition, _tradingEngine.ShouldOpenNewPosition(order));
+
+            var orderWithForce = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, newVolume, forceOpen: true);
+
+            Assert.AreEqual(true, _tradingEngine.ShouldOpenNewPosition(orderWithForce));
+        }
+
         #endregion
         
         

@@ -371,6 +371,14 @@ namespace MarginTrading.Backend.Core.Trading
             CorrelationId = correlationId;
         }
 
+        public void Expire(DateTime dateTime)
+        {
+            Status = OrderStatus.Expired;
+            Canceled = dateTime;
+            LastModified = dateTime;
+            Originator = OriginatorType.System;
+        }
+
         public void AddRelatedOrder(Order order)
         {
             var info = new RelatedOrderInfo {Type = order.OrderType, Id = order.Id};

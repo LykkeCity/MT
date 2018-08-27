@@ -111,26 +111,32 @@ namespace MarginTrading.Backend.Services
                 RejectOrder(order, ex.RejectReason, ex.Message, ex.Comment);
                 return order;
             }
+            catch (Exception ex)
+            {
+                RejectOrder(order, OrderRejectReason.TechnicalError, ex.Message);
+                _log.WriteError(nameof(TradingEngine), nameof(PlaceOrderByMarketPrice), ex);
+                return order;
+            }
         }
         
-        private Task<Order> PlaceOrderByMarketPrice(Order order)
+        private async Task<Order> PlaceOrderByMarketPrice(Order order)
         {
             try
             {
                 var me = _meRouter.GetMatchingEngineForExecution(order);
 
-                return ExecuteOrderByMatchingEngineAsync(order, me);
+                return await ExecuteOrderByMatchingEngineAsync(order, me, true);
             }
             catch (QuoteNotFoundException ex)
             {
                 RejectOrder(order, OrderRejectReason.NoLiquidity, ex.Message);
-                return Task.FromResult(order);
+                return order;
             }
             catch (Exception ex)
             {
                 RejectOrder(order, OrderRejectReason.TechnicalError, ex.Message);
                 _log.WriteError(nameof(TradingEngine), nameof(PlaceOrderByMarketPrice), ex);
-                return Task.FromResult(order);
+                return order;
             }
         }
 
@@ -176,7 +182,7 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        private async Task<Order> ExecuteOrderByMatchingEngineAsync(Order order, IMatchingEngineBase matchingEngine)
+        private async Task<Order> ExecuteOrderByMatchingEngineAsync(Order order, IMatchingEngineBase matchingEngine, bool checkStopout)
         {
             //TODO: think how not to execute one order twice!!!
             
@@ -204,19 +210,7 @@ namespace MarginTrading.Backend.Services
 
             order.SetRates(equivalentRate, fxRate);
 
-            var shouldOpenNewPosition = order.ForceOpen;
-
-            if (string.IsNullOrEmpty(order.ParentPositionId) && !shouldOpenNewPosition)
-            {
-                var existingPositions =
-                    _ordersCache.Positions.GetOrdersByInstrumentAndAccount(order.AssetPairId, order.AccountId);
-                var netVolume = existingPositions.Where(p => p.Status == PositionStatus.Active).Sum(p => p.Volume);
-                var newNetVolume = netVolume + order.Volume;
-
-                shouldOpenNewPosition = (netVolume == 0 && newNetVolume != 0) ||
-                                        (netVolume < 0 && newNetVolume > 0) ||
-                                        (netVolume > 0 && newNetVolume < 0);
-            }
+            var shouldOpenNewPosition = ShouldOpenNewPosition(order);
 
             try
             {
@@ -256,9 +250,38 @@ namespace MarginTrading.Backend.Services
                 order.Execute(_dateService.Now(), matchedOrders, accuracy);
                 
                 _orderExecutedEventChannel.SendEvent(this, new OrderExecutedEventArgs(order));
+
+                if (checkStopout)
+                {
+                    var account = _accountsCacheService.Get(order.AccountId);
+                    var accountLevel = account.GetAccountLevel();
+
+                    if (accountLevel == AccountLevel.StopOUt)
+                    {
+                        CommitStopout(account);
+                    }
+                }
             }
 
             return order;
+        }
+
+        public bool ShouldOpenNewPosition(Order order)
+        {
+            var shouldOpenNewPosition = order.ForceOpen;
+
+            if (string.IsNullOrEmpty(order.ParentPositionId) && !shouldOpenNewPosition)
+            {
+                var existingPositions =
+                    _ordersCache.Positions.GetOrdersByInstrumentAndAccount(order.AssetPairId, order.AccountId);
+                var netVolume = existingPositions.Where(p => p.Status == PositionStatus.Active).Sum(p => p.Volume);
+                var newNetVolume = netVolume + order.Volume;
+
+                shouldOpenNewPosition = (Math.Sign(netVolume) != Math.Sign(newNetVolume) && newNetVolume != 0) ||
+                                        Math.Abs(netVolume) < Math.Abs(newNetVolume);
+            }
+
+            return shouldOpenNewPosition;
         }
 
         private void RejectOrder(Order order, OrderRejectReason reason, string message, string comment = null)
@@ -298,8 +321,18 @@ namespace MarginTrading.Backend.Services
             var pendingOrders = _ordersCache.Active.GetOrdersByInstrument(instrument)
                 .OrderBy(item => item.Created);
 
+            var now = _dateService.Now();
+            
             foreach (var order in pendingOrders)
             {
+                if (order.Validity.HasValue && now >= order.Validity.Value)
+                {
+                    _ordersCache.Active.Remove(order);
+                    order.Expire(now);
+                    _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order));
+                    continue;
+                }
+                
                 if (_quoteCashService.TryGetQuoteById(order.AssetPairId, out var pair))
                 {
                     var price = pair.GetPriceForOrderType(order.Direction);
@@ -331,8 +364,6 @@ namespace MarginTrading.Backend.Services
             var stopoutAccounts = UpdateClosePriceAndDetectStopout(instrument).ToArray();
             foreach (var account in stopoutAccounts)
                 CommitStopout(account);
-
-            ProcessInProgressOrders(instrument);
         }
 
         private IEnumerable<MarginTradingAccount> UpdateClosePriceAndDetectStopout(string instrument)
@@ -401,6 +432,7 @@ namespace MarginTrading.Backend.Services
             }
         }
 
+        //TODO: change liquidation flow in MTC-98 (use Saga)
         private void CommitStopout(MarginTradingAccount account)
         {
             //var pendingOrders = _ordersCache.Active.GetOrdersByAccountIds(account.Id);
@@ -451,7 +483,9 @@ namespace MarginTrading.Backend.Services
                 OrderFillType.FillOrKill, "Stop out", position.LegalEntity, false, OrderType.Market, null, position.Id,
                 OriginatorType.System, 0, 0, OrderStatus.Placed, "", _identityGenerator.GenerateGuid());//todo in fact price change correlationId must be used
             
-            _ordersCache.InProgress.Add(order);
+            var me = _meRouter.GetMatchingEngineForExecution(order);
+
+            ExecuteOrderByMatchingEngineAsync(order, me, false).GetAwaiter().GetResult();
         }
 
         private void NotifyAccountLevelChanged(MarginTradingAccount account, AccountLevel newAccountLevel)
@@ -487,7 +521,7 @@ namespace MarginTrading.Backend.Services
             
             _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
                 
-            return ExecuteOrderByMatchingEngineAsync(order, me /*, reason, comment*/);
+            return ExecuteOrderByMatchingEngineAsync(order, me, true);
         }
 
         public Order CancelPendingOrder(string orderId, OriginatorType originator, string additionalInfo, 
@@ -536,31 +570,10 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        //TODO: think about this method one more time
-        private void ProcessInProgressOrders(string instrument = null)
-        {
-            var orders = string.IsNullOrEmpty(instrument)
-                ? _ordersCache.InProgress.GetAllOrders()
-                : _ordersCache.InProgress.GetOrdersByInstrument(instrument);
-
-            if (orders.Count == 0)
-                return;
-
-            foreach (var order in orders)
-            {
-                var me = _meRouter.GetMatchingEngineForExecution(order);
-
-                ExecuteOrderByMatchingEngineAsync(order, me).GetAwaiter().GetResult();
-                
-                _ordersCache.InProgress.Remove(order);
-            }
-        }
-
         int IEventConsumer.ConsumerRank => 100;
 
         void IEventConsumer<BestPriceChangeEventArgs>.ConsumeEvent(object sender, BestPriceChangeEventArgs ea)
         {
-            ProcessInProgressOrders(ea.BidAskPair.Instrument);
             ProcessPositions(ea.BidAskPair.Instrument);
             ProcessOrdersWaitingForExecution(ea.BidAskPair.Instrument);
         }

@@ -34,28 +34,29 @@ namespace MarginTrading.Backend.Services.Infrastructure
         {
             return Task.CompletedTask;
             
-            var pendingOrders = _orderReader.GetPending().GroupBy(o => o.AssetPairId);
-            foreach (var gr in pendingOrders)
-            {
-                //if (!_assetDayOffService.ArePendingOrdersDisabled(gr.Key))
-                //    continue;
-
-                foreach (var pendingOrder in gr)
-                {
-                    try
-                    {
-                        _tradingEngine.CancelPendingOrder(pendingOrder.Id, OriginatorType.System, "Day off started", 
-                            _identityGenerator.GenerateGuid());
-                    }
-                    catch (Exception e)
-                    {
-                        _log.WriteErrorAsync(nameof(PendingOrdersCleaningService),
-                            $"Cancelling pending order {pendingOrder.Id}", pendingOrder.ToJson(), e);
-                    }
-                }
-            }
-
-            return Task.CompletedTask;
+            //TODO: add flag to settings in MTC-155
+//            var pendingOrders = _orderReader.GetPending().GroupBy(o => o.AssetPairId);
+//            foreach (var gr in pendingOrders)
+//            {
+//                //if (!_assetDayOffService.ArePendingOrdersDisabled(gr.Key))
+//                //    continue;
+//
+//                foreach (var pendingOrder in gr)
+//                {
+//                    try
+//                    {
+//                        _tradingEngine.CancelPendingOrder(pendingOrder.Id, OriginatorType.System, "Day off started", 
+//                            _identityGenerator.GenerateGuid());
+//                    }
+//                    catch (Exception e)
+//                    {
+//                        _log.WriteErrorAsync(nameof(PendingOrdersCleaningService),
+//                            $"Cancelling pending order {pendingOrder.Id}", pendingOrder.ToJson(), e);
+//                    }
+//                }
+//            }
+//
+//            return Task.CompletedTask;
         }
     }
 }

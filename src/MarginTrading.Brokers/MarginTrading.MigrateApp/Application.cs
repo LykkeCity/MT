@@ -51,8 +51,9 @@ namespace MarginTrading.MigrateApp
             }
         }
 
-        private async Task ProcessOrders()
+        private Task ProcessOrders()
         {
+            return Task.CompletedTask;            
 //            var repository = AzureTableStorage<OrderHistoryEntity>.Create(
 //                _reloadingManager.Nested(s => s.Db.MarginTradingConnString), "MarginTradingOrdersHistory", _logger);
 //            (await repository.GetDataAsync())

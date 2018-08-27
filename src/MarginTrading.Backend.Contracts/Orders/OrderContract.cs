@@ -144,6 +144,7 @@ namespace MarginTrading.Backend.Contracts.Orders
         /// </summary>
         public string AccountAssetId { get; set; }
 
+        /// <summary>
         /// Asset for representation of equivalent price
         /// </summary>
         public string EquivalentAsset { get; set; }

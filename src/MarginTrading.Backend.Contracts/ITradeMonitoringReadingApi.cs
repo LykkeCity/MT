@@ -7,7 +7,7 @@ using MarginTrading.Backend.Contracts.TradeMonitoring;
 
 namespace MarginTrading.Backend.Contracts
 {
-    [PublicAPI, Obsolete]
+    [PublicAPI]
     public interface ITradeMonitoringReadingApi
     {
         /// <summary>

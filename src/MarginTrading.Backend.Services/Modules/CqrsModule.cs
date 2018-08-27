@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Autofac;
 using Common.Log;
 using Lykke.Cqrs;
@@ -17,6 +18,7 @@ using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Events;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Workflow;
+using MarginTrading.SettingsService.Contracts.AssetPair;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Events;
@@ -43,7 +45,6 @@ namespace MarginTrading.Backend.Services.Modules
             builder.RegisterInstance(_settings.ContextNames).AsSelf().SingleInstance();
             builder.Register(context => new AutofacDependencyResolver(context)).As<IDependencyResolver>()
                 .SingleInstance();
-            builder.RegisterType<AccountsProjection>().AsSelf().SingleInstance();
             builder.RegisterType<CqrsSender>().As<ICqrsSender>().SingleInstance();
 
             var rabbitMqSettings = new RabbitMQ.Client.ConnectionFactory
@@ -61,8 +62,8 @@ namespace MarginTrading.Backend.Services.Modules
                 }), new RabbitMqTransportFactory());
 
             // Sagas & command handlers
-            builder.RegisterAssemblyTypes(GetType().Assembly)
-                .Where(t => t.Name.EndsWith("Saga") || t.Name.EndsWith("CommandsHandler")).AsSelf();
+            builder.RegisterAssemblyTypes(GetType().Assembly).Where(t => 
+                new [] {"Saga", "CommandsHandler", "Projection"}.Any(ending=> t.Name.EndsWith(ending))).AsSelf();
 
             builder.Register(ctx => CreateEngine(ctx, messagingEngine)).As<ICqrsEngine>().SingleInstance()
                 .AutoActivate();
@@ -76,6 +77,7 @@ namespace MarginTrading.Backend.Services.Modules
             return new CqrsEngine(_log, ctx.Resolve<IDependencyResolver>(), messagingEngine,
                 new DefaultEndpointProvider(), true,
                 Register.DefaultEndpointResolver(rabbitMqConventionEndpointResolver),
+                RegisterDefaultRouting(),
                 RegisterSpecialLiquidationSaga(),
                 RegisterContext());
         }
@@ -89,10 +91,22 @@ namespace MarginTrading.Backend.Services.Modules
             RegisterWithdrawalCommandsHandler(contextRegistration);
             RegisterSpecialLiquidationCommandsHandler(contextRegistration);
             RegisterAccountsProjection(contextRegistration);
+            RegisterAssetPairsProjection(contextRegistration);
             
             contextRegistration.PublishingEvents(typeof(PositionClosedEvent)).With(EventsRoute);
 
             return contextRegistration;
+        }
+
+        private void RegisterAssetPairsProjection(
+            ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
+        {
+            contextRegistration.ListeningEvents(
+                    typeof(AssetPairChangedEvent))
+                .From(_settings.ContextNames.SettingsService)
+                .On(EventsRoute)
+                .WithProjection(
+                    typeof(AssetPairProjection), _settings.ContextNames.SettingsService);
         }
 
         private void RegisterAccountsProjection(
@@ -183,6 +197,17 @@ namespace MarginTrading.Backend.Services.Modules
         private ISagaRegistration RegisterSaga<TSaga>()
         {
             return Register.Saga<TSaga>($"{_settings.ContextNames.TradingEngine}.{typeof(TSaga).Name}");
+        }
+
+        private PublishingCommandsDescriptor<IDefaultRoutingRegistration> RegisterDefaultRouting()
+        {
+            return Register.DefaultRouting
+                .PublishingCommands(
+                    typeof(SuspendAssetPairCommand),
+                    typeof(UnsuspendAssetPairCommand)
+                )
+                .To(_settings.ContextNames.SettingsService)
+                .With(CommandsRoute);
         }
     }
 }

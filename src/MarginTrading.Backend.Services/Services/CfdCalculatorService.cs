@@ -20,29 +20,26 @@ namespace MarginTrading.Backend.Services
         }
 
         public decimal GetQuoteRateForBaseAsset(string accountAssetId, string assetPairId, string legalEntity, 
-            bool metricIsPositive = true)
+            bool useAsk)
         {
             var assetPair = _assetPairsCache.GetAssetPairById(assetPairId);
             
-            if (accountAssetId == assetPair.BaseAssetId)
-                return 1;
+            // two step transform: base -> quote from QuoteCache, quote -> account from FxCache
+            // if accountAssetId == assetPair.BaseAssetId, rate != 1, because trading and fx rates can be different
             
-            //two step transform: base -> quote from QuoteCache, quote -> account from FxCache
             var assetPairQuote = _quoteCacheService.GetQuote(assetPairId);
-            if (assetPair.QuoteAssetId == accountAssetId)
-                return metricIsPositive ? assetPairQuote.Ask : assetPairQuote.Bid;
-            //todo think... what if there's no Fx pair.. maybe we should use trade quote in such case?
-            var assetPairSubst =
-                _assetPairsCache.FindAssetPair(assetPair.QuoteAssetId, accountAssetId, legalEntity);
-            var assetPairSubstQuote = _fxRateCacheService.GetQuote(assetPairSubst.Id);
+            var tradingRate = useAsk ? assetPairQuote.Ask : assetPairQuote.Bid;
 
-            var rate = metricIsPositive
-                ? assetPairSubst.BaseAssetId == assetPair.QuoteAssetId
-                    ? assetPairSubstQuote.Ask * assetPairQuote.Ask
-                    : (1 / assetPairSubstQuote.Bid) * assetPairQuote.Ask
-                : assetPairSubst.BaseAssetId == assetPair.QuoteAssetId
-                    ? assetPairSubstQuote.Bid * assetPairQuote.Bid
-                    : (1 / assetPairSubstQuote.Ask) * assetPairQuote.Bid;
+            if (assetPair.QuoteAssetId == accountAssetId)
+                return tradingRate;
+            
+            var fxPair =
+                _assetPairsCache.FindAssetPair(assetPair.QuoteAssetId, accountAssetId, legalEntity);
+            var fxQuote = _fxRateCacheService.GetQuote(fxPair.Id);
+
+            var rate = fxPair.BaseAssetId == assetPair.QuoteAssetId
+                ? fxQuote.Ask * tradingRate
+                : 1 / fxQuote.Bid * tradingRate;
 
             return rate;
         }
@@ -55,15 +52,18 @@ namespace MarginTrading.Backend.Services
             if (accountAssetId == assetPair.QuoteAssetId)
                 return 1;
 
-            var assetPairSubst = _assetPairsCache.FindAssetPair(assetPair.QuoteAssetId, accountAssetId, legalEntity);
+            var fxPair =
+                _assetPairsCache.FindAssetPair(assetPair.QuoteAssetId, accountAssetId, legalEntity);
+            var fxQuote = _fxRateCacheService.GetQuote(fxPair.Id);
            
+            //TODO: SNOW fx rate is always mid, thus there is no any difference
             var rate = metricIsPositive
-                ? assetPairSubst.BaseAssetId == assetPair.QuoteAssetId
-                    ? _fxRateCacheService.GetQuote(assetPairSubst.Id).Ask
-                    : 1 / _fxRateCacheService.GetQuote(assetPairSubst.Id).Bid
-                : assetPairSubst.BaseAssetId == assetPair.QuoteAssetId
-                    ? _fxRateCacheService.GetQuote(assetPairSubst.Id).Bid
-                    : 1 / _fxRateCacheService.GetQuote(assetPairSubst.Id).Ask;
+                ? fxPair.BaseAssetId == assetPair.QuoteAssetId
+                    ? fxQuote.Ask
+                    : 1 / fxQuote.Bid
+                : fxPair.BaseAssetId == assetPair.QuoteAssetId
+                    ? fxQuote.Bid
+                    : 1 / fxQuote.Ask;
             
             return rate;
         }

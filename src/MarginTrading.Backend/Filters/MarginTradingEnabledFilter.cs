@@ -9,53 +9,49 @@ using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Rocks.Caching;
-using MarginTrading.Backend.Attributes;
 using MarginTrading.Backend.Services.Services;
 
 namespace MarginTrading.Backend.Filters
 {
     /// <summary>
     /// Restricts access to actions for clients which are not allowed to use current type of margin trading (live/demo).
-    /// Skips validation if current action method is marked with <see cref="SkipMarginTradingEnabledCheckAttribute"/>.
     /// If AccountId is not found in the action parameters - does nothing.
     /// </summary>
     public class MarginTradingEnabledFilter : ActionFilterAttribute
     {
         private readonly IMarginTradingSettingsCacheService _marginTradingSettingsCacheService;
         private readonly ICacheProvider _cacheProvider;
-        private readonly ILog _log;
 
-        public MarginTradingEnabledFilter(IMarginTradingSettingsCacheService marginTradingSettingsCacheService,
-            ICacheProvider cacheProvider, ILog log)
+        public MarginTradingEnabledFilter(
+            IMarginTradingSettingsCacheService marginTradingSettingsCacheService,
+            ICacheProvider cacheProvider)
         {
             _marginTradingSettingsCacheService = marginTradingSettingsCacheService;
             _cacheProvider = cacheProvider;
-            _log = log;
         }
 
         /// <inheritdoc />
         public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
-            ValidateMarginTradingEnabledAsync(context);
+            ValidateMarginTradingEnabled(context);
             await base.OnActionExecutionAsync(context, next);
         }
 
         /// <inheritdoc />
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            ValidateMarginTradingEnabledAsync(context);
+            ValidateMarginTradingEnabled(context);
         }
 
         /// <summary>
         /// Performs a validation if current type of margin trading is enabled globally and for the particular client
         /// (which is extracted from the action parameters).
-        /// Skips validation if current action method is marked with <see cref="SkipMarginTradingEnabledCheckAttribute"/>.
         /// </summary>
         /// <exception cref="InvalidOperationException">
         /// Using this type of margin trading is restricted for client or
         /// a controller action has more then one AccountId in its parameters.
         /// </exception>
-        private void ValidateMarginTradingEnabledAsync(ActionExecutingContext context)
+        private void ValidateMarginTradingEnabled(ActionExecutingContext context)
         {
             if (!(context.ActionDescriptor is ControllerActionDescriptor controllerActionDescriptor))
                 return;
@@ -93,9 +89,6 @@ namespace MarginTrading.Backend.Filters
         [CanBeNull]
         private static AccountIdGetter GetSingleAccountIdGetter(ControllerActionDescriptor controllerActionDescriptor)
         {
-            if (ActionHasSkipCkeckAttribute(controllerActionDescriptor))
-                return null;
-
             var accountIdGetters = GetAccountIdGetters(controllerActionDescriptor.Parameters).ToList();
             switch (accountIdGetters.Count)
             {
@@ -107,12 +100,6 @@ namespace MarginTrading.Backend.Filters
                     throw new InvalidOperationException(
                         "A controller action cannot have more then one AccountId in its parameters");
             }
-        }
-
-        private static bool ActionHasSkipCkeckAttribute(ControllerActionDescriptor controllerActionDescriptor)
-        {
-            return controllerActionDescriptor.MethodInfo.GetCustomAttribute<SkipMarginTradingEnabledCheckAttribute>() !=
-                null;
         }
 
         /// <summary>

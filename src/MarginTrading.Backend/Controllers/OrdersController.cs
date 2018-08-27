@@ -14,6 +14,8 @@ using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Trading;
+using MarginTrading.Backend.Filters;
+using MarginTrading.Backend.Middleware;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Mappers;
@@ -63,6 +65,7 @@ namespace MarginTrading.Backend.Controllers
         /// <param name="request">Order model</param>
         [Route("")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
+        [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpPost]
         public async Task PlaceAsync([FromBody] OrderPlaceRequest request)
         {
@@ -95,12 +98,13 @@ namespace MarginTrading.Backend.Controllers
         }
 
         /// <summary>
-        /// Cancel existiong order
+        /// Cancel existing order
         /// </summary>
         /// <param name="orderId">Id of order to cancel</param>
         /// <param name="request">Additional cancellation info</param>
         [Route("{orderId}")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
+        [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpDelete]
         public Task CancelAsync(string orderId, [FromBody] OrderCancelRequest request = null)
         {
@@ -131,6 +135,7 @@ namespace MarginTrading.Backend.Controllers
         /// <exception cref="InvalidOperationException"></exception>
         [Route("{orderId}")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
+        [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpPut]
         public Task ChangeAsync(string orderId, [FromBody] OrderChangeRequest request)
         {

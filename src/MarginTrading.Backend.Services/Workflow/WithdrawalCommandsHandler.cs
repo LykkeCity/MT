@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Common.Services;
 
@@ -11,28 +13,44 @@ namespace MarginTrading.Backend.Services.Workflow
 {
     public class WithdrawalCommandsHandler
     {
-        private readonly IConvertService _convertService;
         private readonly IDateService _dateService;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly IAccountUpdateService _accountUpdateService;
+        private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
+        private const string OperationName = "FreezeAmountForWithdrawal";
 
-        public WithdrawalCommandsHandler(IConvertService convertService,
+        public WithdrawalCommandsHandler(
             IDateService dateService,
             IAccountsCacheService accountsCacheService,
-            IAccountUpdateService accountUpdateService)
+            IAccountUpdateService accountUpdateService,
+            IOperationExecutionInfoRepository operationExecutionInfoRepository)
         {
-            _convertService = convertService;
             _dateService = dateService;
             _accountsCacheService = accountsCacheService;
             _accountUpdateService = accountUpdateService;
+            _operationExecutionInfoRepository = operationExecutionInfoRepository;
         }
 
         /// <summary>
         /// Freeze the the amount in the margin.
         /// </summary>
         [UsedImplicitly]
-        private void Handle(FreezeAmountForWithdrawalCommand command, IEventPublisher publisher)
+        private async Task Handle(FreezeAmountForWithdrawalCommand command, IEventPublisher publisher)
         {
+            //ensure idempotency
+            var executionInfo = await _operationExecutionInfoRepository.GetOrAddAsync(
+                operationName: OperationName,
+                operationId: command.OperationId,
+                factory: () => new OperationExecutionInfo<OperationData>(
+                    operationName: OperationName,
+                    id: command.OperationId,
+                    lastModified: _dateService.Now(),
+                    data: new OperationData
+                    {
+                        State = OperationState.Initiated,
+                    }
+                ));
+            
             MarginTradingAccount account = null;
             try
             {
@@ -44,36 +62,56 @@ namespace MarginTrading.Backend.Services.Workflow
                     command.ClientId, command.AccountId, command.Amount, $"Failed to get account {command.AccountId}"));
                 return;
             }
-            
-            if (account.GetFreeMargin() >= command.Amount)
+
+            if (executionInfo.Data.SwitchState(OperationState.Initiated, OperationState.Started))
             {
-                _accountUpdateService.FreezeWithdrawalMargin(command.AccountId, command.OperationId, command.Amount);
-                
-                publisher.PublishEvent(new AmountForWithdrawalFrozenEvent(command.OperationId, _dateService.Now(), 
-                    command.ClientId, command.AccountId, command.Amount, command.Reason));
-            }
-            else
-            {
-                publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId, _dateService.Now(), 
-                    command.ClientId, command.AccountId, command.Amount, "Not enough free margin"));
+                if (account.GetFreeMargin() >= command.Amount)
+                {
+                    await _accountUpdateService.FreezeWithdrawalMargin(command.AccountId, command.OperationId,
+                        command.Amount);
+
+                    publisher.PublishEvent(new AmountForWithdrawalFrozenEvent(command.OperationId, _dateService.Now(),
+                        command.ClientId, command.AccountId, command.Amount, command.Reason));
+                }
+                else
+                {
+                    publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId,
+                        _dateService.Now(),
+                        command.ClientId, command.AccountId, command.Amount, "Not enough free margin"));
+                }
+
+                await _operationExecutionInfoRepository.Save(executionInfo);
             }
         }
         
         /// <summary>
         /// Withdrawal failed => margin must be unfrozen.
         /// </summary>
+        /// <remarks>Errors are not handled => if error occurs event will be retried</remarks>
         [UsedImplicitly]
-        private void Handle(UnfreezeMarginOnFailWithdrawalCommand command, IEventPublisher publisher)
+        private async Task Handle(UnfreezeMarginOnFailWithdrawalCommand command, IEventPublisher publisher)
         {
-            //errors not handled => if error occurs event will be retried
-            _accountUpdateService.UnfreezeWithdrawalMargin(command.AccountId, command.OperationId);
-            
-            publisher.PublishEvent(new UnfreezeMarginOnFailSucceededWithdrawalEvent(command.OperationId, _dateService.Now(), 
-                command.ClientId, command.AccountId, command.Amount));
+            //ensure operation idempotency
+            var executionInfo = await _operationExecutionInfoRepository.GetAsync<OperationData>(
+                operationName: OperationName,
+                id: command.OperationId
+            );
+
+            // ReSharper disable once PossibleNullReferenceException
+            if (executionInfo.Data.SwitchState(OperationState.Started, OperationState.Finished))
+            {
+                await _accountUpdateService.UnfreezeWithdrawalMargin(command.AccountId, command.OperationId);
+
+                publisher.PublishEvent(new UnfreezeMarginOnFailSucceededWithdrawalEvent(command.OperationId,
+                    _dateService.Now(),
+                    command.ClientId, command.AccountId, command.Amount));
+                
+                await _operationExecutionInfoRepository.Save(executionInfo);
+            }
         }
         
         /// <summary>
-        /// Withdrawal succeeded => margin must be unfrozen.
+        /// Withdrawal succeeded => no action required, margin is already unfrozen.
         /// </summary>
         [UsedImplicitly]
         private void Handle(UnfreezeMarginWithdrawalCommand command, IEventPublisher publisher)
