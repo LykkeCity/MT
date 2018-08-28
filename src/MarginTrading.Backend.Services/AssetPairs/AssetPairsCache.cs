@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Messages;
@@ -13,81 +15,166 @@ namespace MarginTrading.Backend.Services.AssetPairs
     /// <summary>
     /// Cashes data about assets in the backend app.
     /// </summary>
-    /// <remarks>
-    /// Note this type is thread-safe, though it has no synchronization.
-    /// This is due to the fact that the <see cref="_assetPairs"/> dictionary
-    /// is used as read-only: never updated, only reference-assigned.
-    /// Their contents are also readonly.
-    /// </remarks>
     public class AssetPairsCache : IAssetPairsInitializableCache
     {
         public const int DefaultAssetPairAccuracy = 5;
         
-        private IReadOnlyDictionary<string, IAssetPair> _assetPairs = 
-            ImmutableSortedDictionary<string, IAssetPair>.Empty;
+        private Dictionary<string, IAssetPair> _assetPairs = new Dictionary<string, IAssetPair>();
 
-        private readonly ICachedCalculation<IReadOnlyDictionary<AssetPairKey, IAssetPair>> _assetPairsByAssets;
-        private readonly ICachedCalculation<ImmutableHashSet<string>> _assetPairsIds;
+        private readonly ReaderWriterLockSlim _readerWriterLockSlim = new ReaderWriterLockSlim();
+
+        private ICachedCalculation<IReadOnlyDictionary<AssetPairKey, IAssetPair>> _assetPairsByAssets;
+        private ICachedCalculation<ImmutableHashSet<string>> _assetPairsIds;
+
+        private Func<Dictionary<string, IAssetPair>, Dictionary<string, IAssetPair>, bool>
+            CacheChangedCondition => (first, second) => first.Count == second.Count
+                                                        && first.All(x =>
+                                                            second.ContainsKey(x.Key) && x.Value.Equals(second[x.Key]));
 
         public AssetPairsCache()
         {
             _assetPairsByAssets = GetAssetPairsByAssetsCache();
-            _assetPairsIds = Calculate.Cached(() => _assetPairs, ReferenceEquals, p => p.Keys.ToImmutableHashSet());
+            _assetPairsIds = Calculate.Cached(() => _assetPairs, CacheChangedCondition, p => p.Keys.ToImmutableHashSet());
         }
 
         public IAssetPair GetAssetPairById(string assetPairId)
         {
-            return _assetPairs.TryGetValue(assetPairId, out var result)
-                ? result
-                : throw new AssetPairNotFoundException(assetPairId,
-                    string.Format(MtMessages.InstrumentNotFoundInCache, assetPairId));
+            _readerWriterLockSlim.EnterReadLock();
+
+            try
+            {
+                return _assetPairs.TryGetValue(assetPairId, out var result)
+                    ? result
+                    : throw new AssetPairNotFoundException(assetPairId,
+                        string.Format(MtMessages.InstrumentNotFoundInCache, assetPairId));
+            }
+            finally
+            {
+                _readerWriterLockSlim.ExitReadLock();
+            }
         }
 
         public IAssetPair GetAssetPairByIdOrDefault(string assetPairId)
         {
-            return _assetPairs.GetValueOrDefault(assetPairId);
+            _readerWriterLockSlim.EnterReadLock();
+
+            try
+            {
+                return _assetPairs.GetValueOrDefault(assetPairId);
+            }
+            finally
+            {
+                _readerWriterLockSlim.ExitReadLock();
+            }
         }
 
         public IEnumerable<IAssetPair> GetAll()
         {
-            return _assetPairs.Values;
+            _readerWriterLockSlim.EnterReadLock();
+
+            try
+            {
+                return _assetPairs.Values;
+            }
+            finally
+            {
+                _readerWriterLockSlim.ExitReadLock();
+            }
         }
 
         public ImmutableHashSet<string> GetAllIds()
         {
-            return _assetPairsIds.Get();
+            _readerWriterLockSlim.EnterReadLock();
+
+            try
+            {
+                return _assetPairsIds.Get();
+            }
+            finally
+            {
+                _readerWriterLockSlim.ExitReadLock();
+            }
         }
-        
+
+        public void AddOrUpdate(IAssetPair assetPair)
+        {
+            _readerWriterLockSlim.EnterWriteLock();
+
+            try
+            {
+                if (_assetPairs.ContainsKey(assetPair.Id))
+                {
+                    _assetPairs.Remove(assetPair.Id);
+                }
+                
+                _assetPairs.Add(assetPair.Id, assetPair);
+                
+                _assetPairsByAssets = GetAssetPairsByAssetsCache();
+                _assetPairsIds = Calculate.Cached(() => _assetPairs, CacheChangedCondition, p => p.Keys.ToImmutableHashSet());
+            }
+            finally
+            {
+                _readerWriterLockSlim.ExitWriteLock();
+            }
+        }
+
         public bool TryGetAssetPairQuoteSubst(string substAsset, string instrument, string legalEntity, 
             out IAssetPair assetPair)
         {
-            assetPair = null;
-            var baseAssetPair = GetAssetPairByIdOrDefault(instrument);
-            if (baseAssetPair == null)
-                return false;
+            _readerWriterLockSlim.EnterReadLock();
+
+            try
+            {
+                assetPair = null;
+                var baseAssetPair = GetAssetPairByIdOrDefault(instrument);
+                if (baseAssetPair == null)
+                    return false;
             
-            return _assetPairsByAssets.Get().TryGetValue(
-                GetAssetPairKey(baseAssetPair.BaseAssetId, substAsset, legalEntity), out assetPair);
+                return _assetPairsByAssets.Get().TryGetValue(
+                    GetAssetPairKey(baseAssetPair.BaseAssetId, substAsset, legalEntity), out assetPair);
+            }
+            finally
+            {
+                _readerWriterLockSlim.ExitReadLock();
+            }
         }
 
         public IAssetPair FindAssetPair(string asset1, string asset2, string legalEntity)
         {
-            var key = GetAssetPairKey(asset1, asset2, legalEntity);
-            
-            if (_assetPairsByAssets.Get().TryGetValue(key, out var result))
-                return result;
+            _readerWriterLockSlim.EnterReadLock();
 
-            throw new InstrumentByAssetsNotFoundException(asset1, asset2, legalEntity);
+            try
+            {
+                var key = GetAssetPairKey(asset1, asset2, legalEntity);
+            
+                if (_assetPairsByAssets.Get().TryGetValue(key, out var result))
+                    return result;
+
+                throw new InstrumentByAssetsNotFoundException(asset1, asset2, legalEntity);
+            }
+            finally
+            {
+                _readerWriterLockSlim.ExitReadLock();
+            }
         }
 
         void IAssetPairsInitializableCache.InitPairsCache(Dictionary<string, IAssetPair> instruments)
         {
-            _assetPairs = instruments;
+            _readerWriterLockSlim.EnterWriteLock();
+
+            try
+            {
+                _assetPairs = instruments;
+            }
+            finally
+            {
+                _readerWriterLockSlim.ExitWriteLock();
+            }
         }
 
         private ICachedCalculation<IReadOnlyDictionary<AssetPairKey, IAssetPair>> GetAssetPairsByAssetsCache()
         {
-            return Calculate.Cached(() => _assetPairs, ReferenceEquals,
+            return Calculate.Cached(() => _assetPairs, CacheChangedCondition,
                 pairs => pairs.Values.SelectMany(p => new []
                 {
                     (GetAssetPairKey(p.BaseAssetId, p.QuoteAssetId, p.LegalEntity), p),
