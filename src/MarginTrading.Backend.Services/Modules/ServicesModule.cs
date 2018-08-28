@@ -75,6 +75,11 @@ namespace MarginTrading.Backend.Services.Modules
 				.WithParameter(TypedParameter.From(MatchingEngineConstants.DefaultStp))
 				.SingleInstance();
 
+//			builder.RegisterType<SpecialLiquidationMatchingEngine>()
+//				.As<ISpecialLiquidationMatchingEngine>()
+//				
+//				.InstancePerDependency();
+
 			builder.RegisterType<TradingEngine>()
 				.As<ITradingEngine>()
 				.As<IEventConsumer<BestPriceChangeEventArgs>>()

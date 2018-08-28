@@ -14,6 +14,7 @@ namespace MarginTrading.Backend.Services
     {
         ImmutableArray<Order> GetAllOrders();
         ImmutableArray<Position> GetPositions();
+        ImmutableArray<Position> GetPositions(string instrument);
         ImmutableArray<Order> GetPending();
     }
 
@@ -46,6 +47,11 @@ namespace MarginTrading.Backend.Services
         public ImmutableArray<Position> GetPositions()
         {
             return Positions.GetAllOrders().ToImmutableArray();
+        }
+
+        public ImmutableArray<Position> GetPositions(string instrument)
+        {
+            return Positions.GetOrdersByInstrument(instrument).ToImmutableArray();
         }
 
         public ImmutableArray<Order> GetPending()

@@ -38,5 +38,11 @@ namespace MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Events
         /// </summary>
         [Key(5)]
         public decimal Price { get; set; }
+        
+        /// <summary>
+        /// Streaming number of request. Increases in case when price arrived, but volume has changed. 
+        /// </summary>
+        [Key(6)]
+        public int RequestNumber { get; set; }
     }
 }

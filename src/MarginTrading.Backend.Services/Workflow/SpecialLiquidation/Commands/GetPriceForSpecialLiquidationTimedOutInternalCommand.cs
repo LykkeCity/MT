@@ -4,7 +4,7 @@ using MessagePack;
 namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands
 {
     [MessagePackObject]
-    public class StartSpecialLiquidationInternalCommand
+    public class GetPriceForSpecialLiquidationTimedOutInternalCommand
     {
         [Key(0)]
         public string OperationId { get; set; }
@@ -13,6 +13,6 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands
         public DateTime CreationTime { get; set; }
         
         [Key(2)]
-        public string Instrument { get; set; }
+        public int TimeoutMilliseconds { get; set; }
     }
 }

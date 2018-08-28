@@ -11,5 +11,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Events
         
         [Key(1)]
         public DateTime CreationTime { get; set; }
+        
+        [Key(2)]
+        public string Instrument { get; set; }
     }
 }

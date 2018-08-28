@@ -1,5 +1,7 @@
+using System.Linq;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Lykke.Common;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
 using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Commands;
@@ -7,6 +9,7 @@ using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Events;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Events;
@@ -20,6 +23,11 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private readonly IDateService _dateService;
         private readonly IChaosKitty _chaosKitty;
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
+        private readonly IThreadSwitcher _threadSwitcher;
+        private readonly IOrderReader _orderReader;
+        private readonly IFakeGavelService _fakeGavel;
+
+        private readonly MarginTradingSettings _marginTradingSettings;
         private readonly CqrsContextNamesSettings _cqrsContextNamesSettings;
         
         public const string OperationName = "SpecialLiquidation";
@@ -28,11 +36,19 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             IDateService dateService,
             IChaosKitty chaosKitty,
             IOperationExecutionInfoRepository operationExecutionInfoRepository,
+            IThreadSwitcher threadSwitcher,
+            IOrderReader orderReader,
+            IFakeGavelService fakeGavel,
+            MarginTradingSettings marginTradingSettings,
             CqrsContextNamesSettings cqrsContextNamesSettings)
         {
             _dateService = dateService;
             _chaosKitty = chaosKitty;
             _operationExecutionInfoRepository = operationExecutionInfoRepository;
+            _threadSwitcher = threadSwitcher;
+            _orderReader = orderReader;
+            _fakeGavel = fakeGavel;
+            _marginTradingSettings = marginTradingSettings;
             _cqrsContextNamesSettings = cqrsContextNamesSettings;
         }
 
@@ -46,18 +62,31 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.Started, 
                 SpecialLiquidationOperationState.PriceRequested))
             {
-                //todo grab data here
-                //todo use timeout for a call, generate SpecialLiquidationFailedEvent on timeout and break
-                
-                //send it to the Gavel
-                sender.SendCommand(new GetPriceForSpecialLiquidationCommand
+                var positionsVolume = _orderReader.GetPositions(e.Instrument).Sum(x => x.Volume);
+                //todo use timeout for a call, generate GetPriceForSpecialLiquidationTimedOutInternalCommand on timeout
+                //todo and instantly turn the state to OnTheWayToFail
+//                _threadSwitcher.SwitchThread(() =>
+//                {
+//                    
+//                });
+
+                if (_marginTradingSettings.ExchangeConnector == ExchangeConnectorType.RealExchangeConnector)
                 {
-                    OperationId = e.OperationId,
-                    CreationTime = _dateService.Now(),
-                    Instrument = "",//TODO fix
-                    Volume = default,//TODO fix
-                }, _cqrsContextNamesSettings.Gavel);
-                
+                    //send it to the Gavel
+                    sender.SendCommand(new GetPriceForSpecialLiquidationCommand
+                    {
+                        OperationId = e.OperationId,
+                        CreationTime = _dateService.Now(),
+                        Instrument = e.Instrument,
+                        Volume = positionsVolume,
+                        RequestNumber = 1,
+                    }, _cqrsContextNamesSettings.Gavel);
+                }
+                else //if (_marginTradingSettings.ExchangeConnector == ExchangeConnectorType.FakeExchangeConnector)
+                {
+                    _fakeGavel.GetPriceForSpecialLiquidation(e.OperationId, e.Instrument, positionsVolume);
+                }
+
                 _chaosKitty.Meow(e.OperationId);
 
                 await _operationExecutionInfoRepository.Save(executionInfo);
@@ -74,23 +103,43 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceRequested,
                 SpecialLiquidationOperationState.PriceReceived))
             {
-                //some logic to peek either to execute order or not
-                //TODO i.e. validate that volume didn't changed
+                //validate that volume didn't changed to peek either to execute order or request the price again
+                var currentVolume = _orderReader.GetPositions(e.Instrument).Sum(x => x.Volume);
+                if (currentVolume != e.Volume)
+                {
+                    sender.SendCommand(new GetPriceForSpecialLiquidationCommand
+                    {
+                        OperationId = e.OperationId,
+                        CreationTime = _dateService.Now(),
+                        Instrument = e.Instrument,
+                        Volume = currentVolume,
+                        RequestNumber = e.RequestNumber++,
+                    }, _cqrsContextNamesSettings.Gavel);
+                    
+                    return;//wait for the new price
+                }
 
                 executionInfo.Data.Instrument = e.Instrument;
                 executionInfo.Data.Volume = e.Volume;
                 executionInfo.Data.Price = e.Price;
-                
-                //send command to execute order in Gavel
-                sender.SendCommand(new ExecuteSpecialLiquidationOrderCommand
+
+                if (_marginTradingSettings.ExchangeConnector == ExchangeConnectorType.RealExchangeConnector)
                 {
-                    OperationId = e.OperationId,
-                    CreationTime = _dateService.Now(),
-                    Instrument = e.Instrument,
-                    Volume = e.Volume,
-                    Price = e.Price,
-                }, _cqrsContextNamesSettings.Gavel);
-                
+                    //send command to execute order in Gavel
+                    sender.SendCommand(new ExecuteSpecialLiquidationOrderCommand
+                    {
+                        OperationId = e.OperationId,
+                        CreationTime = _dateService.Now(),
+                        Instrument = e.Instrument,
+                        Volume = e.Volume,
+                        Price = e.Price,
+                    }, _cqrsContextNamesSettings.Gavel);
+                }
+                else //if (_marginTradingSettings.ExchangeConnector == ExchangeConnectorType.FakeExchangeConnector)
+                {
+                    _fakeGavel.ExecuteSpecialLiquidationOrder(e.OperationId, e.Instrument, e.Volume, e.Price);
+                }
+
                 _chaosKitty.Meow(e.OperationId);
 
                 await _operationExecutionInfoRepository.Save(executionInfo);

@@ -59,5 +59,7 @@ namespace MarginTrading.Backend.Core.Settings
         public ExchangeConnectorType ExchangeConnector { get; set; }
         
         public bool WriteOperationLog { get; set; }
+        
+        public SpecialLiquidationSettings SpecialLiquidation { get; set; }
     }
 }

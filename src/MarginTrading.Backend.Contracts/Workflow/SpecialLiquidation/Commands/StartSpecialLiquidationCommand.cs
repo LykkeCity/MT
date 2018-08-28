@@ -4,10 +4,10 @@ using MessagePack;
 namespace MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Commands
 {
     /// <summary>
-    /// Quote request for particular instrument and volume.
+    /// Command from Corporate Actions to close all positions by instrument
     /// </summary>
     [MessagePackObject]
-    public class GetPriceForSpecialLiquidationCommand
+    public class StartSpecialLiquidationCommand
     {
         /// <summary>
         /// Operation Id
@@ -26,17 +26,5 @@ namespace MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Commands
         /// </summary>
         [Key(3)]
         public string Instrument { get; set; }
-        
-        /// <summary>
-        /// Position volume
-        /// </summary>
-        [Key(4)]
-        public decimal Volume { get; set; }
-        
-        /// <summary>
-        /// Streaming number of request. Increases in case when price arrived, but volume has changed. 
-        /// </summary>
-        [Key(5)]
-        public int RequestNumber { get; set; }
     }
 }
