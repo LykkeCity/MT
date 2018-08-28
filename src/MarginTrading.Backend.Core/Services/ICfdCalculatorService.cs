@@ -3,7 +3,7 @@
     public interface ICfdCalculatorService
     {
         decimal GetQuoteRateForBaseAsset(string accountAssetId, string instrument, string legalEntity, 
-            bool isBuy);
+            bool useAsk);
         decimal GetQuoteRateForQuoteAsset(string accountAssetId, string instrument, string legalEntity, 
             bool metricIsPositive = true);
     }

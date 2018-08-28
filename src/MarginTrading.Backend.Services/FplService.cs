@@ -17,20 +17,20 @@ namespace MarginTrading.Backend.Services
         private readonly ICfdCalculatorService _cfdCalculatorService;
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly IAccountsCacheService _accountsCacheService;
-        private readonly ITradingInstrumentsCacheService _accountAssetsCacheService;
+        private readonly ITradingInstrumentsCacheService _tradingInstrumentsCache;
         private readonly IAssetsCache _assetsCache;
 
         public FplService(
             ICfdCalculatorService cfdCalculatorService,
             IAssetPairsCache assetPairsCache,
             IAccountsCacheService accountsCacheService,
-            ITradingInstrumentsCacheService accountAssetsCacheService,
+            ITradingInstrumentsCacheService tradingInstrumentsCache,
             IAssetsCache assetsCache)
         {
             _cfdCalculatorService = cfdCalculatorService;
             _assetPairsCache = assetPairsCache;
             _accountsCacheService = accountsCacheService;
-            _accountAssetsCacheService = accountAssetsCacheService;
+            _tradingInstrumentsCache = tradingInstrumentsCache;
             _assetsCache = assetsCache;
         }
 
@@ -49,7 +49,7 @@ namespace MarginTrading.Backend.Services
         public decimal GetInitMarginForOrder(Order order)
         {
             var accountAsset =
-                _accountAssetsCacheService.GetTradingInstrument(order.TradingConditionId, order.AssetPairId);
+                _tradingInstrumentsCache.GetTradingInstrument(order.TradingConditionId, order.AssetPairId);
             var marginRate = _cfdCalculatorService.GetQuoteRateForBaseAsset(order.AccountAssetId, order.AssetPairId,
                 order.LegalEntity, order.Direction == OrderDirection.Buy);
             var accountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(order.AccountAssetId);
@@ -62,8 +62,9 @@ namespace MarginTrading.Backend.Services
         private void UpdatePositionFplData(Position position, FplData fplData)
         {
             fplData.AccountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(position.AccountAssetId);
-            fplData.FplRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(position.AccountAssetId, position.AssetPairId, 
-                position.LegalEntity, position.Volume * (position.ClosePrice - position.OpenPrice) > 0);
+            fplData.FplRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(position.AccountAssetId,
+                position.AssetPairId, position.LegalEntity,
+                position.Volume * (position.ClosePrice - position.OpenPrice) > 0);
 
             var fpl = (position.ClosePrice - position.OpenPrice) * fplData.FplRate * position.Volume;
 
@@ -93,26 +94,18 @@ namespace MarginTrading.Backend.Services
             _accountsCacheService.Get(order.AccountId).CacheNeedsToBeUpdated();
         }
 
-        public void CalculateMargin(Position order, FplData fplData)
+        private void CalculateMargin(Position position, FplData fplData)
         {
-            var accountAsset =
-                _accountAssetsCacheService.GetTradingInstrument(order.TradingConditionId, order.AssetPairId);
+            var tradingInstrument =
+                _tradingInstrumentsCache.GetTradingInstrument(position.TradingConditionId, position.AssetPairId);
 
-//            fplData.MarginRate = _cfdCalculatorService.GetQuoteRateForBaseAsset(order.AccountAssetId, order.Instrument, 
-//                order.LegalEntity);
-//            fplData.MarginInit =
-//                Math.Round(Math.Abs(order.Volume) * fplData.MarginRate / accountAsset.LeverageInit,
-//                    fplData.AccountBaseAssetAccuracy);
-//            fplData.MarginMaintenance =
-//                Math.Round(Math.Abs(order.Volume) * fplData.MarginRate / accountAsset.LeverageMaintenance,
-//                    fplData.AccountBaseAssetAccuracy);
-            
-            fplData.MarginRate = fplData.ClosePrice * fplData.FplRate;
+            fplData.MarginRate = _cfdCalculatorService.GetQuoteRateForBaseAsset(position.AccountAssetId, position.AssetPairId, 
+                position.LegalEntity, position.Direction == PositionDirection.Short); // to use close price
             fplData.MarginInit =
-                Math.Round(Math.Abs(order.Volume) * fplData.MarginRate / accountAsset.LeverageInit,
+                Math.Round(Math.Abs(position.Volume) * fplData.MarginRate / tradingInstrument.LeverageInit,
                     fplData.AccountBaseAssetAccuracy);
             fplData.MarginMaintenance =
-                Math.Round(Math.Abs(order.Volume) * fplData.MarginRate / accountAsset.LeverageMaintenance,
+                Math.Round(Math.Abs(position.Volume) * fplData.MarginRate / tradingInstrument.LeverageMaintenance,
                     fplData.AccountBaseAssetAccuracy);
         }
     }

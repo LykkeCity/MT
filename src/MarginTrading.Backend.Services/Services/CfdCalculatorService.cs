@@ -20,7 +20,7 @@ namespace MarginTrading.Backend.Services
         }
 
         public decimal GetQuoteRateForBaseAsset(string accountAssetId, string assetPairId, string legalEntity, 
-            bool isBuy)
+            bool useAsk)
         {
             var assetPair = _assetPairsCache.GetAssetPairById(assetPairId);
             
@@ -28,7 +28,7 @@ namespace MarginTrading.Backend.Services
             // if accountAssetId == assetPair.BaseAssetId, rate != 1, because trading and fx rates can be different
             
             var assetPairQuote = _quoteCacheService.GetQuote(assetPairId);
-            var tradingRate = isBuy ? assetPairQuote.Ask : assetPairQuote.Bid;
+            var tradingRate = useAsk ? assetPairQuote.Ask : assetPairQuote.Bid;
 
             if (assetPair.QuoteAssetId == accountAssetId)
                 return tradingRate;
@@ -54,6 +54,7 @@ namespace MarginTrading.Backend.Services
 
             var assetPairSubst = _assetPairsCache.FindAssetPair(assetPair.QuoteAssetId, accountAssetId, legalEntity);
            
+            //TODO: SNOW fx rate is always mid, thus there is no any difference
             var rate = metricIsPositive
                 ? assetPairSubst.BaseAssetId == assetPair.QuoteAssetId
                     ? _fxRateCacheService.GetQuote(assetPairSubst.Id).Ask
