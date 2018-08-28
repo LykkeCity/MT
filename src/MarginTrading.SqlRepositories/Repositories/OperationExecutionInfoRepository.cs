@@ -117,7 +117,7 @@ namespace MarginTrading.SqlRepositories.Repositories
                 catch (SqlException)
                 {
                     await conn.ExecuteAsync(
-                        $"update {TableName} set {GetUpdateClause} where Id=@Id", entity);
+                        $"update {TableName} set {GetUpdateClause} where Id=@Id and OperationName=@OperationName", entity);
                 }
             }
         }
