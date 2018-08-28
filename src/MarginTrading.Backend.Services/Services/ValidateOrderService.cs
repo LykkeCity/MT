@@ -71,13 +71,9 @@ namespace MarginTrading.Backend.Services
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidVolume, "Volume can not be 0");
             }
-            
-            var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(request.InstrumentId); 
-            
-            if (assetPair == null)
-            {
-                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, "Instrument not found");
-            }
+
+            var assetPair = GetAssetPairIfAvailableForTrading(request.InstrumentId, request.Type.ToType<OrderType>(),
+                request.ForceOpen, false);
 
             if (!request.Price.HasValue)
             {
@@ -131,7 +127,7 @@ namespace MarginTrading.Backend.Services
                 request.Type == OrderTypeContract.TakeProfit ||
                 request.Type == OrderTypeContract.TrailingStop)
             {
-                var order = await ValidateAndGetSlorTpOrder(request, request.Type, request.Price, equivalentSettings,
+                var order = await ValidateAndGetSlOrTpOrder(request, request.Type, request.Price, equivalentSettings,
                     null);
 
                 return (order, new List<Order>());
@@ -172,7 +168,7 @@ namespace MarginTrading.Backend.Services
 
                 var orderType = request.UseTrailingStop ? OrderTypeContract.TrailingStop : OrderTypeContract.StopLoss;
                 
-                var sl = await ValidateAndGetSlorTpOrder(request, orderType, request.StopLoss,
+                var sl = await ValidateAndGetSlOrTpOrder(request, orderType, request.StopLoss,
                     equivalentSettings, baseOrder);
                 
                 if (sl != null)
@@ -189,7 +185,7 @@ namespace MarginTrading.Backend.Services
                         $"TakeProfit can not be 0");
                 }
 
-                var tp = await ValidateAndGetSlorTpOrder(request, OrderTypeContract.TakeProfit, request.TakeProfit,
+                var tp = await ValidateAndGetSlOrTpOrder(request, OrderTypeContract.TakeProfit, request.TakeProfit,
                     equivalentSettings, baseOrder);
                 
                 if (tp != null)
@@ -200,7 +196,7 @@ namespace MarginTrading.Backend.Services
         }
         
         //TODO: check, if we need to validate SL and TP prices
-        private async Task<Order> ValidateAndGetSlorTpOrder(OrderPlaceRequest request, OrderTypeContract type,
+        private async Task<Order> ValidateAndGetSlOrTpOrder(OrderPlaceRequest request, OrderTypeContract type,
             decimal? price, ReportingEquivalentPricesSettings equivalentSettings, Order parentOrder)
         {
             var orderType = type.ToType<OrderType>();
@@ -420,20 +416,56 @@ namespace MarginTrading.Backend.Services
         
         #region Pre-trade validations
         
-        public void MakePreTradeValidation(Order order, bool validateMargin)
+        public void MakePreTradeValidation(Order order, bool shouldOpenNewPosition)
         {
-            ValidateAssetPairIsAvailableForTrading(order.AssetPairId, order.TradingConditionId);
+            GetAssetPairIfAvailableForTrading(order.AssetPairId, order.OrderType, shouldOpenNewPosition, true);
 
             ValidateTradeLimits(order.AssetPairId, order.TradingConditionId, order.AccountId, order.Volume);
 
-            if (validateMargin)
+            if (shouldOpenNewPosition)
                 ValidateMargin(order);
 
         }
         
-        //TODO: validate instrument status + schedule settings 
-        private void ValidateAssetPairIsAvailableForTrading(string assetPairId, string tradingConditionId)
+        //TODO: validate schedule settings https://lykke-snow.atlassian.net/browse/MTC-274
+        private IAssetPair GetAssetPairIfAvailableForTrading(string assetPairId, OrderType orderType, bool shouldOpenNewPosition, bool isPreTradeValidation)
         {
+            var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(assetPairId); 
+            
+            if (assetPair == null)
+            {
+                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, "Instrument not found");
+            }
+            
+            if (assetPair.IsDiscontinued)
+            {
+                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, 
+                    "Trading for the instrument is discontinued");
+            }
+
+            if (assetPair.IsSuspended)
+            {
+                if (isPreTradeValidation)
+                {
+                    throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, 
+                        "Orders execution for instrument is temporarily unavailable");
+                }
+               
+                if (orderType == OrderType.Market)
+                {
+                    throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, 
+                        "Market orders for instrument are temporarily unavailable");
+                }
+            } 
+            
+            if (assetPair.IsFrozen && shouldOpenNewPosition)
+            {
+                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, 
+                    "Opening new positions is temporarily unavailable");
+            }
+
+            return assetPair;
+
 //            if (_assetDayOffService.IsDayOff(request.InstrumentId))
 //            {
 //                throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Trades for instrument are not available");

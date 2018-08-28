@@ -15,6 +15,6 @@ namespace MarginTrading.Backend.Services
 
         Task<(Order order, List<Order> relatedOrders)> ValidateRequestAndGetOrders(OrderPlaceRequest request);
 
-        void MakePreTradeValidation(Order order, bool validateMargin);
+        void MakePreTradeValidation(Order order, bool shouldOpenNewPosition);
     }
 }
