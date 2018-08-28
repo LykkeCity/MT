@@ -47,6 +47,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 SpecialLiquidationOperationState.PriceRequested))
             {
                 //todo grab data here
+                //todo use timeout for a call, generate SpecialLiquidationFailedEvent on timeout and break
                 
                 //send it to the Gavel
                 sender.SendCommand(new GetPriceForSpecialLiquidationCommand
@@ -104,7 +105,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 id: e.OperationId);
 
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceRequested,
-                SpecialLiquidationOperationState.Failed))
+                SpecialLiquidationOperationState.OnTheWayToFail))
             {
                 sender.SendCommand(new FailSpecialLiquidationInternalCommand
                 {
@@ -127,7 +128,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 id: e.OperationId);
 
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceReceived,
-                SpecialLiquidationOperationState.OrderExecuted))
+                SpecialLiquidationOperationState.ExternalOrderExecuted))
             {
                 sender.SendCommand(new ExecuteSpecialLiquidationOrdersInternalCommand
                 {
@@ -152,7 +153,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 id: e.OperationId);
 
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceReceived,
-                SpecialLiquidationOperationState.Failed))
+                SpecialLiquidationOperationState.OnTheWayToFail))
             {
                 sender.SendCommand(new FailSpecialLiquidationInternalCommand
                 {
@@ -174,7 +175,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 operationName: OperationName,
                 id: e.OperationId);
 
-            if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.OrderExecuted,
+            if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.ExternalOrderExecuted,
                 SpecialLiquidationOperationState.Finished))
             {
                 //do nothing
