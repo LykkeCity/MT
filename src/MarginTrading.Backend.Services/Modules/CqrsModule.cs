@@ -46,6 +46,7 @@ namespace MarginTrading.Backend.Services.Modules
             builder.Register(context => new AutofacDependencyResolver(context)).As<IDependencyResolver>()
                 .SingleInstance();
             builder.RegisterType<CqrsSender>().As<ICqrsSender>().SingleInstance();
+            builder.RegisterInstance(new CqrsContextNamesSettings()).AsSelf().SingleInstance();
 
             var rabbitMqSettings = new RabbitMQ.Client.ConnectionFactory
             {

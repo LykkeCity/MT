@@ -1,10 +1,12 @@
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Lykke.Common.Chaos;
 using Lykke.Cqrs;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
+using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Events;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
@@ -13,9 +15,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
     public class SpecialLiquidationCommandsHandler
     {
         private readonly IDateService _dateService;
+        private readonly IChaosKitty _chaosKitty;
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
-
-        private const string OperationName = "SpecialLiquidation";
         
         public SpecialLiquidationCommandsHandler(
             IDateService dateService,
@@ -30,21 +31,27 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         {
             //ensure idempotency
             var executionInfo = await _operationExecutionInfoRepository.GetOrAddAsync(
-                operationName: OperationName,
+                operationName: SpecialLiquidationSaga.OperationName,
                 operationId: command.OperationId,
-                factory: () => new OperationExecutionInfo<OperationData>(
-                    operationName: OperationName,
+                factory: () => new OperationExecutionInfo<SpecialLiquidationOperationData>(
+                    operationName: SpecialLiquidationSaga.OperationName,
                     id: command.OperationId,
                     lastModified: _dateService.Now(),
-                    data: new OperationData
+                    data: new SpecialLiquidationOperationData
                     {
-                        State = OperationState.Initiated,
+                        State = SpecialLiquidationOperationState.Initiated,
                     }
                 ));
 
-            if (executionInfo.Data.SwitchState(OperationState.Initiated, OperationState.Started))
+            if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.Initiated, SpecialLiquidationOperationState.Started))
             {
+                publisher.PublishEvent(new SpecialLiquidationStartedInternalEvent
+                {
+                    OperationId = command.OperationId,
+                    CreationTime = _dateService.Now(),
+                });
                 
+                _chaosKitty.Meow(command.OperationId);
 
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }
