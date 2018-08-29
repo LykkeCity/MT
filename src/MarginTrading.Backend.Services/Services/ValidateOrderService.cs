@@ -246,7 +246,7 @@ namespace MarginTrading.Backend.Services
 
             if (!string.IsNullOrEmpty(request.PositionId))
             {
-                var position = _ordersCache.Positions.GetOrderById(request.PositionId);
+                var position = _ordersCache.Positions.GetPositionById(request.PositionId);
                 
                 ValidateRelatedOrderAlreadyExists(position.RelatedOrders, orderType);
 

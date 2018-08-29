@@ -90,7 +90,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
         private void CloseExistingPosition(Order order)
         {
-            var position = _ordersCache.Positions.GetOrderById(order.ParentPositionId);
+            var position = _ordersCache.Positions.GetPositionById(order.ParentPositionId);
 
             position.Close(order.Executed.Value, order.MatchingEngineId, order.ExecutionPrice.Value,
                 order.EquivalentRate, order.FxRate, order.Originator, order.OrderType.GetCloseReason(), order.Comment,

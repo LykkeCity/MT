@@ -5,6 +5,7 @@ namespace MarginTrading.Backend.Core
         public SpecialLiquidationOperationState State { get; set; }
         
         public string Instrument { get; set; }
+        public string[] PositionIds { get; set; }
         public decimal Volume { get; set; }
         public decimal Price { get; set; }
     }

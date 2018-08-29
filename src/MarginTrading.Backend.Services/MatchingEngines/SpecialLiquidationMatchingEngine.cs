@@ -17,35 +17,34 @@ namespace MarginTrading.Backend.Services.MatchingEngines
     /// </summary>
     public class SpecialLiquidationMatchingEngine : ISpecialLiquidationMatchingEngine
     {
-        private readonly IDateService _dateService;
-        private readonly IIdentityGenerator _identityGenerator;
-        
         public string Id => MatchingEngineConstants.DefaultSpecialLiquidation;
         public MatchingEngineMode Mode => MatchingEngineMode.MarketMaker;
         private readonly decimal _price;
-        private readonly string _marketMaker;
+        private readonly string _marketMakerId;
+        private readonly string _externalOrderId;
+        private readonly DateTime _externalExecutionTime;
 
         public SpecialLiquidationMatchingEngine(
-            IDateService dateService, 
-            IIdentityGenerator identityGenerator,
             decimal price,
-            string marketMaker)
+            string marketMakerId,
+            string externalOrderId,
+            DateTime externalExecutionTime)
         {
-            _dateService = dateService;
-            _identityGenerator = identityGenerator;
             _price = price;
-            _marketMaker = marketMaker;
+            _marketMakerId = marketMakerId;
+            _externalOrderId = externalOrderId;
+            _externalExecutionTime = externalExecutionTime;
         }
         
         public Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition)
         {
             var col = new MatchedOrderCollection(new [] {new MatchedOrder
             {
-                OrderId = _identityGenerator.GenerateAlphanumericId(),
-                MarketMakerId = _marketMaker,
+                OrderId = _externalOrderId,
+                MarketMakerId = _marketMakerId,
                 Volume = Math.Abs(order.Volume),
                 Price = _price,
-                MatchedDate = _dateService.Now(),
+                MatchedDate = _externalExecutionTime,
                 IsExternal = true,
             }});
             return Task.FromResult(col);

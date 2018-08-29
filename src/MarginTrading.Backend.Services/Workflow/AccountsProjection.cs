@@ -72,7 +72,7 @@ namespace MarginTrading.Backend.Services.Workflow
 
                         case AccountBalanceChangeReasonTypeContract.UnrealizedDailyPnL:
                             
-                            if (_ordersCache.Positions.TryGetOrderById(e.BalanceChange.EventSourceId, out var position))
+                            if (_ordersCache.Positions.TryGetPositionById(e.BalanceChange.EventSourceId, out var position))
                             {
                                 position.ChargePnL(e.BalanceChange.Id, e.BalanceChange.ChangeAmount);
                             }

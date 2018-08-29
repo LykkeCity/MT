@@ -818,10 +818,10 @@ namespace MarginTradingTests
             ValidateOrderIsExecuted(order2, new[] {"2"}, 1.05M);
             ValidatePositionIsOpened(order2.Id, 1.15M, -0.2M);
             
-            var orders = _tradingEngine.LiquidatePositionsAsync(new SpecialLiquidationMatchingEngine(new DateService(),
-                identityGeneratorMock.Object, 2.5M, "Test"), "EURUSD", "Test").Result;
+            var orders = _tradingEngine.LiquidatePositionsAsync(new SpecialLiquidationMatchingEngine(2.5M, "Test",
+                "test", DateTime.UtcNow), new [] {order1.Id, order2.Id}, "Test").Result;
             
-            orders.ForEach(o => ValidateOrderIsExecuted(o, new[] {"fake"}, 2.5M));
+            orders.ForEach(o => ValidateOrderIsExecuted(o, new[] {"test"}, 2.5M));
             Assert.AreEqual(2, orders.Max(x => x.Volume));
             Assert.AreEqual(-8, orders.Min(x => x.Volume));
             Assert.AreEqual(0, _ordersCache.Positions.GetPositionsByInstrument("EURUSD").Count);
@@ -1133,7 +1133,7 @@ namespace MarginTradingTests
 
         private Position ValidatePositionIsOpened(string positionId, decimal currentPositionClosePrice, decimal positionFpl)
         {
-            Assert.IsTrue(_ordersCache.Positions.TryGetOrderById(positionId, out var position), "Position was not opened");
+            Assert.IsTrue(_ordersCache.Positions.TryGetPositionById(positionId, out var position), "Position was not opened");
                 
             Assert.AreEqual(currentPositionClosePrice, Math.Round(position.ClosePrice, 5));
             Assert.AreEqual(positionFpl, Math.Round(position.GetFpl(), 3));
@@ -1145,7 +1145,7 @@ namespace MarginTradingTests
         private void ValidatePositionIsClosed(Position position, decimal closePrice, decimal positionFpl,
             PositionCloseReason closeReason = PositionCloseReason.Close)
         {
-            Assert.IsFalse(_ordersCache.Positions.TryGetOrderById(position.Id, out var tmp),
+            Assert.IsFalse(_ordersCache.Positions.TryGetPositionById(position.Id, out var tmp),
                 "Position is still opened");
 
 

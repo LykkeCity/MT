@@ -65,10 +65,16 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 var positionsVolume = _orderReader.GetPositions(e.Instrument).Sum(x => x.Volume);
                 //todo use timeout for a call, generate GetPriceForSpecialLiquidationTimedOutInternalCommand on timeout
                 //todo and instantly turn the state to OnTheWayToFail
-//                _threadSwitcher.SwitchThread(() =>
-//                {
-//                    
-//                });
+                _threadSwitcher.SwitchThread(() =>
+                {
+                    sender.SendCommand(new GetPriceForSpecialLiquidationTimedOutInternalCommand
+                    {
+                        OperationId = e.OperationId,
+                        CreationTime = _dateService.Now(),
+                        TimeoutSeconds = _marginTradingSettings.SpecialLiquidation.PriceRequestTimeoutSec,
+                    }, _cqrsContextNamesSettings.TradingEngine);
+                    return Task.CompletedTask;
+                });
 
                 if (_marginTradingSettings.ExchangeConnector == ExchangeConnectorType.RealExchangeConnector)
                 {
@@ -187,6 +193,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     Volume = executionInfo.Data.Volume,
                     Price = executionInfo.Data.Price,
                     MarketMakerId = e.MarketMakerId,
+                    ExternalOrderId = e.OrderId,
+                    ExternalExecutionTime = e.ExecutionTime,
                 }, _cqrsContextNamesSettings.Gavel);
                 
                 _chaosKitty.Meow(e.OperationId);

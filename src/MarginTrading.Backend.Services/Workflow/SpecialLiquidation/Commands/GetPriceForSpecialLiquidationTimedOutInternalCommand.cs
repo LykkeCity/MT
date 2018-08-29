@@ -13,6 +13,6 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands
         public DateTime CreationTime { get; set; }
         
         [Key(2)]
-        public int TimeoutMilliseconds { get; set; }
+        public int TimeoutSeconds { get; set; }
     }
 }

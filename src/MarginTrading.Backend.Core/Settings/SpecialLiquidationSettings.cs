@@ -8,5 +8,8 @@ namespace MarginTrading.Backend.Core.Settings
 
         [Optional]
         public decimal FakePrice { get; set; } = 10;
+
+        [Optional]
+        public int PriceRequestTimeoutSec { get; set; } = 3600;
     }
 }

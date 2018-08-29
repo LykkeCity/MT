@@ -23,5 +23,11 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands
         
         [Key(6)]
         public string MarketMakerId { get; set; }
+        
+        [Key(7)]
+        public string ExternalOrderId { get; set; }
+        
+        [Key(8)]
+        public DateTime ExternalExecutionTime { get; set; }
     }
 }

@@ -65,7 +65,7 @@ namespace MarginTrading.Backend.Controllers
         public async Task CloseAsync([CanBeNull] [FromRoute] string positionId,
             [FromBody] PositionCloseRequest request = null)
         {
-            if (!_ordersCache.Positions.TryGetOrderById(positionId, out var position))
+            if (!_ordersCache.Positions.TryGetPositionById(positionId, out var position))
             {
                 throw new InvalidOperationException("Position not found");
             }
@@ -248,7 +248,7 @@ namespace MarginTrading.Backend.Controllers
         [HttpGet, Route("{positionId}")]
         public Task<OpenPositionContract> GetAsync(string positionId)
         {
-            if (!_ordersCache.Positions.TryGetOrderById(positionId, out var order))
+            if (!_ordersCache.Positions.TryGetPositionById(positionId, out var order))
                 return null;
 
             return Task.FromResult(Convert(order));
