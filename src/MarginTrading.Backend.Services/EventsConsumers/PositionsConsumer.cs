@@ -132,7 +132,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             var leftVolumeToMatch = Math.Abs(order.Volume);
             
             var openedPositions =
-                _ordersCache.Positions.GetOrdersByInstrumentAndAccount(order.AssetPairId, order.AccountId)
+                _ordersCache.Positions.GetPositionsByInstrumentAndAccount(order.AssetPairId, order.AccountId)
                     .Where(p => p.Direction == order.Direction.GetClosePositionDirection());
             
             foreach (var openedPosition in openedPositions)

@@ -273,7 +273,7 @@ namespace MarginTrading.Backend.Services
             if (string.IsNullOrEmpty(order.ParentPositionId) && !shouldOpenNewPosition)
             {
                 var existingPositions =
-                    _ordersCache.Positions.GetOrdersByInstrumentAndAccount(order.AssetPairId, order.AccountId);
+                    _ordersCache.Positions.GetPositionsByInstrumentAndAccount(order.AssetPairId, order.AccountId);
                 var netVolume = existingPositions.Where(p => p.Status == PositionStatus.Active).Sum(p => p.Volume);
                 var newNetVolume = netVolume + order.Volume;
 
@@ -368,7 +368,7 @@ namespace MarginTrading.Backend.Services
 
         private IEnumerable<MarginTradingAccount> UpdateClosePriceAndDetectStopout(string instrument)
         {
-            var openPositions = _ordersCache.Positions.GetOrdersByInstrument(instrument)
+            var openPositions = _ordersCache.Positions.GetPositionsByInstrument(instrument)
                 .GroupBy(x => x.AccountId).ToDictionary(x => x.Key, x => x.ToArray());
 
             foreach (var accountPositions in openPositions)
@@ -445,7 +445,7 @@ namespace MarginTrading.Backend.Services
             //    CancelPendingOrder(pendingOrder.Id, PositionCloseReason.CanceledBySystem, "Stop out");
             //}
             
-            var positions = _ordersCache.Positions.GetOrdersByAccountIds(account.Id);
+            var positions = _ordersCache.Positions.GetPositionsByAccountIds(account.Id);
             
             var positionsToClose = new List<Position>();
             var newAccountUsedMargin = account.GetUsedMargin();
@@ -503,11 +503,11 @@ namespace MarginTrading.Backend.Services
         }
 
         public Task<Order> ClosePositionAsync(string positionId, OriginatorType originator, string additionalInfo,
-            string correlationId, string comment = null)
+            string correlationId, string comment = null, IMatchingEngineBase me = null)
         {
             var position = _ordersCache.Positions.GetOrderById(positionId);
 
-            var me = _meRouter.GetMatchingEngineForClose(position);
+            me = me ?? _meRouter.GetMatchingEngineForClose(position);
 
             var id = _identityGenerator.GenerateAlphanumericId();
             var code = _identityGenerator.GenerateIdAsync(nameof(Order)).GetAwaiter().GetResult();
@@ -522,6 +522,13 @@ namespace MarginTrading.Backend.Services
             _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
                 
             return ExecuteOrderByMatchingEngineAsync(order, me, true);
+        }
+
+        public Task<Order[]> LiquidatePositionsAsync(IMatchingEngineBase me, string instrument, string correlationId)
+        {
+            return Task.WhenAll(_ordersCache.Positions.GetPositionsByInstrument(instrument)
+                .Select(x =>
+                    ClosePositionAsync(x.Id, OriginatorType.System, string.Empty, correlationId, "", me)));
         }
 
         public Order CancelPendingOrder(string orderId, OriginatorType originator, string additionalInfo, 

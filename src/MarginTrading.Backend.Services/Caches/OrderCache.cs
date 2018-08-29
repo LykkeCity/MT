@@ -46,12 +46,12 @@ namespace MarginTrading.Backend.Services
 
         public ImmutableArray<Position> GetPositions()
         {
-            return Positions.GetAllOrders().ToImmutableArray();
+            return Positions.GetAllPositions().ToImmutableArray();
         }
 
         public ImmutableArray<Position> GetPositions(string instrument)
         {
-            return Positions.GetOrdersByInstrument(instrument).ToImmutableArray();
+            return Positions.GetPositionsByInstrument(instrument).ToImmutableArray();
         }
 
         public ImmutableArray<Order> GetPending()

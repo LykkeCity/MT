@@ -10,6 +10,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Events;
 using MarginTrading.Common.Services;
@@ -19,20 +20,26 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
     [UsedImplicitly]
     public class SpecialLiquidationCommandsHandler
     {
+        private readonly ITradingEngine _tradingEngine;
         private readonly IDateService _dateService;
+        private readonly IIdentityGenerator _identityGenerator;
         private readonly IChaosKitty _chaosKitty;
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
         private readonly ILog _log;
         private readonly SpecialLiquidationSettings _specialLiquidationSettings;
         
         public SpecialLiquidationCommandsHandler(
+            ITradingEngine tradingEngine,
             IDateService dateService,
+            IIdentityGenerator identityGenerator,
             IChaosKitty chaosKitty,
             IOperationExecutionInfoRepository operationExecutionInfoRepository,
             ILog log,
             SpecialLiquidationSettings specialLiquidationSettings)
         {
+            _tradingEngine = tradingEngine;
             _dateService = dateService;
+            _identityGenerator = identityGenerator;
             _chaosKitty = chaosKitty;
             _operationExecutionInfoRepository = operationExecutionInfoRepository;
             _log = log;
@@ -91,7 +98,12 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 try
                 {
                     //close positions with the quote from gavel
-                    //todo make positions close
+                    //TODO think what if positions are liquidated partially, when exception is thrown
+                    await _tradingEngine.LiquidatePositionsAsync(
+                        me: new SpecialLiquidationMatchingEngine(_dateService, _identityGenerator, command.Price, 
+                            command.MarketMakerId), 
+                        instrument: command.Instrument, 
+                        correlationId: command.OperationId);
                     
                     publisher.PublishEvent(new SpecialLiquidationFinishedEvent
                     {

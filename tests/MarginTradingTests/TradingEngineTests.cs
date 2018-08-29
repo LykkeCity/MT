@@ -12,11 +12,14 @@ using Autofac;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.MatchingEngines;
  using MarginTrading.Backend.Core.Orders;
+ using MarginTrading.Backend.Core.Repositories;
  using MarginTrading.Backend.Core.Services;
  using MarginTrading.Backend.Core.Settings;
  using MarginTrading.Backend.Core.Trading;
  using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
+ using MarginTrading.Backend.Services.Infrastructure;
+ using MarginTrading.Backend.Services.MatchingEngines;
  using MarginTrading.Backend.Services.TradingConditions;
  using MarginTrading.Backend.Services.Workflow;
  using MarginTrading.Common.Services;
@@ -24,7 +27,8 @@ using MarginTrading.SettingsService.Contracts;
 using MarginTrading.SettingsService.Contracts.TradingConditions;
  using MarginTradingTests.Helpers;
  using Moq;
-using NUnit.Framework;
+ using MoreLinq;
+ using NUnit.Framework;
 
 
 namespace MarginTradingTests
@@ -793,6 +797,34 @@ namespace MarginTradingTests
 
             Assert.AreEqual(0.07340667M, position.GetMarginMaintenance());
             Assert.AreEqual(0.11011M, position.GetMarginInit());
+        }
+
+        [Test]
+        public void Is_Positions_Liquidated()
+        {
+            var identityGeneratorMock = new Mock<IIdentityGenerator>();
+            identityGeneratorMock.Setup(x => x.GenerateAlphanumericId()).Returns("fake");
+            
+            var order1 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
+                MarginTradingTestsUtils.TradingConditionId, 8, OrderFillType.PartialFill);
+            var order2 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[1],
+                MarginTradingTestsUtils.TradingConditionId, -2, OrderFillType.PartialFill);
+            
+            order1 = _tradingEngine.PlaceOrderAsync(order1).Result;
+            order2 = _tradingEngine.PlaceOrderAsync(order2).Result;
+
+            ValidateOrderIsExecuted(order1, new[] {"3", "4"}, 1.1125M);
+            ValidatePositionIsOpened(order1.Id, 1.04625M, -0.53M);
+            ValidateOrderIsExecuted(order2, new[] {"2"}, 1.05M);
+            ValidatePositionIsOpened(order2.Id, 1.15M, -0.2M);
+            
+            var orders = _tradingEngine.LiquidatePositionsAsync(new SpecialLiquidationMatchingEngine(new DateService(),
+                identityGeneratorMock.Object, 2.5M, "Test"), "EURUSD", "Test").Result;
+            
+            orders.ForEach(o => ValidateOrderIsExecuted(o, new[] {"fake"}, 2.5M));
+            Assert.AreEqual(2, orders.Max(x => x.Volume));
+            Assert.AreEqual(-8, orders.Min(x => x.Volume));
+            Assert.AreEqual(0, _ordersCache.Positions.GetPositionsByInstrument("EURUSD").Count);
         }
 
         #endregion

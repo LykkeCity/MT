@@ -186,6 +186,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     Instrument = executionInfo.Data.Instrument,
                     Volume = executionInfo.Data.Volume,
                     Price = executionInfo.Data.Price,
+                    MarketMakerId = e.MarketMakerId,
                 }, _cqrsContextNamesSettings.Gavel);
                 
                 _chaosKitty.Meow(e.OperationId);

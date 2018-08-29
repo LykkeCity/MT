@@ -116,7 +116,7 @@ namespace MarginTrading.Backend.Controllers
                 throw new ArgumentNullException(nameof(assetPairId), "AssetPairId or accountId must be set.");
             }
 
-            var positions = _ordersCache.Positions.GetAllOrders()
+            var positions = _ordersCache.Positions.GetAllPositions()
                 .Where(x => (string.IsNullOrWhiteSpace(assetPairId) || x.AssetPairId == assetPairId)
                             && (string.IsNullOrWhiteSpace(accountId) || x.AccountId == accountId)
                             && (direction == null || x.Direction == direction.ToType<PositionDirection>()))
@@ -160,7 +160,7 @@ namespace MarginTrading.Backend.Controllers
             [FromQuery] PositionDirectionContract? direction = null,
             [FromBody] PositionCloseRequest request = null)
         {
-            var positions = _ordersCache.Positions.GetAllOrders();
+            var positions = _ordersCache.Positions.GetAllPositions();
             
             if (!string.IsNullOrWhiteSpace(instrument))
                 positions = positions.Where(o => o.AssetPairId == instrument).ToList();
@@ -209,7 +209,7 @@ namespace MarginTrading.Backend.Controllers
         public async Task CloseGroupAsync([FromRoute] string accountId, [FromQuery] string assetPairId = null, 
             [FromBody] PositionCloseRequest request = null)
         {
-            var orders = _ordersCache.Positions.GetAllOrders();
+            var orders = _ordersCache.Positions.GetAllPositions();
 
             if (string.IsNullOrWhiteSpace(accountId))
             {
@@ -261,7 +261,7 @@ namespace MarginTrading.Backend.Controllers
         public Task<List<OpenPositionContract>> ListAsync([FromQuery]string accountId = null,
             [FromQuery] string assetPairId = null)
         {
-            var positions = _ordersCache.Positions.GetAllOrders().AsEnumerable();
+            var positions = _ordersCache.Positions.GetAllPositions().AsEnumerable();
             
             if (!string.IsNullOrWhiteSpace(accountId))
                 positions = positions.Where(o => o.AccountId == accountId);
@@ -289,7 +289,7 @@ namespace MarginTrading.Backend.Controllers
                 throw new ArgumentOutOfRangeException(nameof(skip), "Skip must be >= 0, take must be > 0");
             }
             
-            var positions = _ordersCache.Positions.GetAllOrders().AsEnumerable();
+            var positions = _ordersCache.Positions.GetAllPositions().AsEnumerable();
             
             if (!string.IsNullOrWhiteSpace(accountId))
                 positions = positions.Where(o => o.AccountId == accountId);

@@ -20,5 +20,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands
         
         [Key(5)]
         public decimal Price { get; set; }
+        
+        [Key(6)]
+        public string MarketMakerId { get; set; }
     }
 }

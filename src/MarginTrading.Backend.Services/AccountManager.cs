@@ -86,7 +86,7 @@ namespace MarginTrading.Backend.Services
 
         public async Task<List<Order>> CloseAccountOrders(string accountId, string correlationId)
         {
-            var positions = _ordersCache.Positions.GetOrdersByAccountIds(accountId).ToArray();
+            var positions = _ordersCache.Positions.GetPositionsByAccountIds(accountId).ToArray();
             var closedOrders = new List<Order>();
 
             foreach (var position in positions)

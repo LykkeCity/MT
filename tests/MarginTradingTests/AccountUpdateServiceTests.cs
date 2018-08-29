@@ -35,7 +35,7 @@ namespace MarginTradingTests
         [SetUp]
         public void SetUp()
         {
-            foreach (var o in _ordersCache.Positions.GetAllOrders().ToList())
+            foreach (var o in _ordersCache.Positions.GetAllPositions().ToList())
                 _ordersCache.Positions.Remove(o);
         }
 
