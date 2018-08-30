@@ -527,7 +527,7 @@ namespace MarginTrading.Backend.Services
         public async Task<Order[]> LiquidatePositionsAsync(IMatchingEngineBase me, string[] positionIds,
             string correlationId)
         {
-            //TODO any position may be already closed... used try catch
+            //any position may be already closed
             return await Task.WhenAll(_ordersCache.Positions.GetAllPositions().Where(x => positionIds.Contains(x.Id))
                 .Select(async x =>
                 {

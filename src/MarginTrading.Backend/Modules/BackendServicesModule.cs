@@ -4,6 +4,7 @@ using System.IO;
 using Autofac;
 using Common;
 using Common.Log;
+using Lykke.Common.Chaos;
 using Lykke.RabbitMqBroker.Publisher;
 using Lykke.RabbitMqBroker.Subscriber;
 using MarginTrading.Backend.Email;
@@ -99,7 +100,10 @@ namespace MarginTrading.Backend.Modules
 
             builder.RegisterType<FakeGavelService>()
                 .As<IFakeGavelService>()
+                .PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies)
                 .SingleInstance();
+            
+            builder.RegisterChaosKitty(_settings.ChaosKitty);
 
             RegisterPublishers(builder, consoleWriter);
         }

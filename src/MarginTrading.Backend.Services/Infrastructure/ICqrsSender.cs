@@ -8,6 +8,6 @@
         void SendCommandToAccountManagement<T>(T command);
         void SendCommandToSettingsService<T>(T command);
         void SendCommandToSelf<T>(T command);
-        void PublishEvent<T>(T ev);
+        void PublishEvent<T>(T ev, string boundedContext = null);
     }
 }

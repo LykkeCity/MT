@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -62,19 +63,15 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.Started, 
                 SpecialLiquidationOperationState.PriceRequested))
             {
-                var positionsVolume = _orderReader.GetPositions(e.Instrument).Sum(x => x.Volume);
-                //todo use timeout for a call, generate GetPriceForSpecialLiquidationTimedOutInternalCommand on timeout
-                //todo and instantly turn the state to OnTheWayToFail
-                _threadSwitcher.SwitchThread(() =>
+                var positionsVolume = GetCurrentVolume(executionInfo.Data.PositionIds);
+                //special command is sent instantly for timeout control.. it is retried until timeout occurs
+                //
+                sender.SendCommand(new GetPriceForSpecialLiquidationTimeoutInternalCommand
                 {
-                    sender.SendCommand(new GetPriceForSpecialLiquidationTimedOutInternalCommand
-                    {
-                        OperationId = e.OperationId,
-                        CreationTime = _dateService.Now(),
-                        TimeoutSeconds = _marginTradingSettings.SpecialLiquidation.PriceRequestTimeoutSec,
-                    }, _cqrsContextNamesSettings.TradingEngine);
-                    return Task.CompletedTask;
-                });
+                    OperationId = e.OperationId,
+                    CreationTime = _dateService.Now(),
+                    TimeoutSeconds = _marginTradingSettings.SpecialLiquidation.PriceRequestTimeoutSec,
+                }, _cqrsContextNamesSettings.TradingEngine);
 
                 if (_marginTradingSettings.ExchangeConnector == ExchangeConnectorType.RealExchangeConnector)
                 {
@@ -110,7 +107,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 SpecialLiquidationOperationState.PriceReceived))
             {
                 //validate that volume didn't changed to peek either to execute order or request the price again
-                var currentVolume = _orderReader.GetPositions(e.Instrument).Sum(x => x.Volume);
+                var currentVolume = GetCurrentVolume(executionInfo.Data.PositionIds);
                 if (currentVolume != e.Volume)
                 {
                     sender.SendCommand(new GetPriceForSpecialLiquidationCommand
@@ -195,7 +192,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     MarketMakerId = e.MarketMakerId,
                     ExternalOrderId = e.OrderId,
                     ExternalExecutionTime = e.ExecutionTime,
-                }, _cqrsContextNamesSettings.Gavel);
+                }, _cqrsContextNamesSettings.TradingEngine);
                 
                 _chaosKitty.Meow(e.OperationId);
 
@@ -260,6 +257,11 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
 
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }
+        }
+
+        private decimal GetCurrentVolume(List<string> positionIds)
+        {
+            return _orderReader.GetPositions().Where(x => positionIds.Contains(x.Id)).Sum(x => x.Volume);
         }
     }
 }

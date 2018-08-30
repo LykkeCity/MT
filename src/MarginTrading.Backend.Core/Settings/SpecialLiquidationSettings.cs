@@ -1,3 +1,4 @@
+using System;
 using Lykke.SettingsReader.Attributes;
 
 namespace MarginTrading.Backend.Core.Settings
@@ -11,5 +12,8 @@ namespace MarginTrading.Backend.Core.Settings
 
         [Optional]
         public int PriceRequestTimeoutSec { get; set; } = 3600;
+
+        [Optional]
+        public TimeSpan RetryTimeout { get; set; } = new TimeSpan(0, 1, 0);
     }
 }

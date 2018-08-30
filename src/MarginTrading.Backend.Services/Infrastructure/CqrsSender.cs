@@ -7,39 +7,38 @@ namespace MarginTrading.Backend.Services.Infrastructure
 {
     public class CqrsSender : ICqrsSender
     {
-        [NotNull] private readonly ICqrsEngine _cqrsEngine;
+        [NotNull] public ICqrsEngine CqrsEngine { get; set; }//property injection
         [NotNull] private readonly CqrsContextNamesSettings _cqrsContextNamesSettings;
 
-        public CqrsSender([NotNull] ICqrsEngine cqrsEngine, [NotNull] CqrsContextNamesSettings cqrsContextNamesSettings)
+        public CqrsSender([NotNull] CqrsContextNamesSettings cqrsContextNamesSettings)
         {
-            _cqrsEngine = cqrsEngine ?? throw new ArgumentNullException(nameof(cqrsEngine));
             _cqrsContextNamesSettings = cqrsContextNamesSettings ??
                 throw new ArgumentNullException(nameof(cqrsContextNamesSettings));
         }
 
         public void SendCommandToAccountManagement<T>(T command)
         {
-            _cqrsEngine.SendCommand(command, _cqrsContextNamesSettings.TradingEngine,
+            CqrsEngine.SendCommand(command, _cqrsContextNamesSettings.TradingEngine,
                 _cqrsContextNamesSettings.AccountsManagement);
         }
 
         public void SendCommandToSettingsService<T>(T command)
         {
-            _cqrsEngine.SendCommand(command, _cqrsContextNamesSettings.TradingEngine,
+            CqrsEngine.SendCommand(command, _cqrsContextNamesSettings.TradingEngine,
                 _cqrsContextNamesSettings.SettingsService);
         }
         
         public void SendCommandToSelf<T>(T command)
         {
-            _cqrsEngine.SendCommand(command, _cqrsContextNamesSettings.TradingEngine,
+            CqrsEngine.SendCommand(command, _cqrsContextNamesSettings.TradingEngine,
                 _cqrsContextNamesSettings.TradingEngine);
         }
 
-        public void PublishEvent<T>(T ev)
+        public void PublishEvent<T>(T ev, string boundedContext = null)
         {
             try
             {
-                _cqrsEngine.PublishEvent(ev, _cqrsContextNamesSettings.TradingEngine);
+                CqrsEngine.PublishEvent(ev, boundedContext ?? _cqrsContextNamesSettings.TradingEngine);
             }
             catch (Exception ex)
             {

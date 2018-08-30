@@ -1,5 +1,9 @@
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
 namespace MarginTrading.Backend.Core
 {
+    [JsonConverter(typeof(StringEnumConverter))]
     public enum SpecialLiquidationOperationState
     {
         Initiated = 0,

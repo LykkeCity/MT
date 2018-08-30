@@ -1,4 +1,5 @@
 ﻿using JetBrains.Annotations;
+using Lykke.Common.Chaos;
 using Lykke.SettingsReader.Attributes;
 using MarginTrading.Common.Settings;
 using RabbitMqSettings = MarginTrading.Common.RabbitMq.RabbitMqSettings;
@@ -61,5 +62,8 @@ namespace MarginTrading.Backend.Core.Settings
         public bool WriteOperationLog { get; set; }
         
         public SpecialLiquidationSettings SpecialLiquidation { get; set; }
+        
+        [Optional, CanBeNull]
+        public ChaosSettings ChaosKitty { get; set; }
     }
 }

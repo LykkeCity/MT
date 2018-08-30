@@ -18,6 +18,8 @@ using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Filters;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
+using MarginTrading.Backend.Services.Infrastructure;
+using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Middleware;
 using MarginTrading.Common.Services;
@@ -36,6 +38,7 @@ namespace MarginTrading.Backend.Controllers
         private readonly OrdersCache _ordersCache;
         private readonly IAssetPairDayOffService _assetDayOffService;
         private readonly IIdentityGenerator _identityGenerator;
+        private readonly ICqrsSender _cqrsSender;
 
         public PositionsController(
             ITradingEngine tradingEngine,
@@ -43,7 +46,8 @@ namespace MarginTrading.Backend.Controllers
             IConsole consoleWriter,
             OrdersCache ordersCache,
             IAssetPairDayOffService assetDayOffService,
-            IIdentityGenerator identityGenerator)
+            IIdentityGenerator identityGenerator,
+            ICqrsSender cqrsSender)
         {
             _tradingEngine = tradingEngine;
             _operationsLogService = operationsLogService;
@@ -51,6 +55,7 @@ namespace MarginTrading.Backend.Controllers
             _ordersCache = ordersCache;
             _assetDayOffService = assetDayOffService;
             _identityGenerator = identityGenerator;
+            _cqrsSender = cqrsSender;
         }
 
         /// <summary>
@@ -307,6 +312,20 @@ namespace MarginTrading.Backend.Controllers
                 size: filtered.Count,
                 totalSize: positionList.Count
             ));
+        }
+
+        /// <summary>
+        /// FOR TEST PURPOSES ONLY!
+        /// </summary>
+        [HttpPost, Route("special-liquidation")]
+        public void StartSpecialLiquidation(string[] positionIds)
+        {
+            _cqrsSender.SendCommandToSelf(new StartSpecialLiquidationInternalCommand
+            {
+                OperationId = _identityGenerator.GenerateGuid(),
+                CreationTime = DateTime.UtcNow,
+                PositionIds = positionIds,
+            });
         }
 
         private OpenPositionContract Convert(Position position)

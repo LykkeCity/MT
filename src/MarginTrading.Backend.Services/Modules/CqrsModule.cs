@@ -22,6 +22,8 @@ using MarginTrading.SettingsService.Contracts.AssetPair;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Events;
+using MarginTrading.SettingsService.Contracts.AssetPair;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MarginTrading.Backend.Services.Modules
 {
@@ -30,12 +32,14 @@ namespace MarginTrading.Backend.Services.Modules
         private const string EventsRoute = "events";
         private const string CommandsRoute = "commands";
         private readonly CqrsSettings _settings;
+        private readonly MarginTradingSettings _marginTradingSettings;
         private readonly ILog _log;
         private readonly long _defaultRetryDelayMs;
 
-        public CqrsModule(CqrsSettings settings, ILog log)
+        public CqrsModule(CqrsSettings settings, ILog log, MarginTradingSettings marginTradingSettings)
         {
             _settings = settings;
+            _marginTradingSettings = marginTradingSettings;
             _log = log;
             _defaultRetryDelayMs = (long) _settings.RetryDelay.TotalMilliseconds;
         }
@@ -45,7 +49,9 @@ namespace MarginTrading.Backend.Services.Modules
             builder.RegisterInstance(_settings.ContextNames).AsSelf().SingleInstance();
             builder.Register(context => new AutofacDependencyResolver(context)).As<IDependencyResolver>()
                 .SingleInstance();
-            builder.RegisterType<CqrsSender>().As<ICqrsSender>().SingleInstance();
+            builder.RegisterType<CqrsSender>().As<ICqrsSender>()
+                .PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies)
+                .SingleInstance();
             builder.RegisterInstance(new CqrsContextNamesSettings()).AsSelf().SingleInstance();
 
             var rabbitMqSettings = new RabbitMQ.Client.ConnectionFactory
@@ -80,7 +86,30 @@ namespace MarginTrading.Backend.Services.Modules
                 Register.DefaultEndpointResolver(rabbitMqConventionEndpointResolver),
                 RegisterDefaultRouting(),
                 RegisterSpecialLiquidationSaga(),
-                RegisterContext());
+                RegisterContext(),
+                RegisterGavelContextIfNeeded());
+        }
+
+        private IRegistration RegisterGavelContextIfNeeded()
+        {
+            if (_marginTradingSettings.ExchangeConnector == ExchangeConnectorType.FakeExchangeConnector)
+            {
+                var contextRegistration = Register.BoundedContext(_settings.ContextNames.Gavel)
+                    .FailedCommandRetryDelay(_defaultRetryDelayMs).ProcessingOptions(CommandsRoute).MultiThreaded(8)
+                    .QueueCapacity(1024);
+                
+                contextRegistration
+                    .PublishingEvents(
+                        typeof(PriceForSpecialLiquidationCalculatedEvent),
+                        typeof(SpecialLiquidationOrderExecutedEvent)
+                    ).With(EventsRoute);
+                
+                return contextRegistration;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         private IRegistration RegisterContext()
@@ -108,6 +137,22 @@ namespace MarginTrading.Backend.Services.Modules
                 .On(EventsRoute)
                 .WithProjection(
                     typeof(AssetPairProjection), _settings.ContextNames.SettingsService);
+		}
+                    
+        private PublishingCommandsDescriptor<IDefaultRoutingRegistration> RegisterDefaultRouting()
+        {
+            return Register.DefaultRouting
+                .PublishingCommands(
+                    typeof(SuspendAssetPairCommand),
+                    typeof(UnsuspendAssetPairCommand)
+                )
+                .To(_settings.ContextNames.SettingsService)
+                .With(CommandsRoute)
+                .PublishingCommands(
+                    typeof(StartSpecialLiquidationInternalCommand)
+                )
+                .To(_settings.ContextNames.TradingEngine)
+                .With(CommandsRoute);
         }
 
         private void RegisterAccountsProjection(
@@ -137,11 +182,11 @@ namespace MarginTrading.Backend.Services.Modules
         private IRegistration RegisterSpecialLiquidationSaga()
         {
             var sagaRegistration = RegisterSaga<SpecialLiquidationSaga>();
-                
+            
             sagaRegistration.ListeningEvents(
                     typeof(PriceForSpecialLiquidationCalculatedEvent)
                 )
-                .From(_settings.ContextNames.Gavel)
+                .From(_settings.ContextNames.Gavel) 
                 .On(EventsRoute)
                 .PublishingCommands(
                     typeof(ExecuteSpecialLiquidationOrderCommand)
@@ -155,6 +200,11 @@ namespace MarginTrading.Backend.Services.Modules
                     typeof(SpecialLiquidationOrderExecutionFailedEvent)
                 )
                 .From(_settings.ContextNames.Gavel)
+                .On(EventsRoute)
+                .ListeningEvents(
+                    typeof(SpecialLiquidationOrderExecutedEvent)
+                )
+                .From(_settings.ContextNames.TradingEngine)
                 .On(EventsRoute)
                 .PublishingCommands(
                     typeof(FailSpecialLiquidationInternalCommand),
@@ -172,6 +222,11 @@ namespace MarginTrading.Backend.Services.Modules
                     typeof(GetPriceForSpecialLiquidationCommand)
                 )
                 .To(_settings.ContextNames.Gavel)
+                .With(CommandsRoute)
+                .PublishingCommands(
+                    typeof(GetPriceForSpecialLiquidationTimeoutInternalCommand)    
+                )
+                .To(_settings.ContextNames.TradingEngine)
                 .With(CommandsRoute);
             
             return sagaRegistration;
@@ -181,7 +236,9 @@ namespace MarginTrading.Backend.Services.Modules
             ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
         {
             contextRegistration.ListeningCommands(
+                    typeof(StartSpecialLiquidationCommand),
                     typeof(StartSpecialLiquidationInternalCommand),
+                    typeof(GetPriceForSpecialLiquidationTimeoutInternalCommand),
                     typeof(FailSpecialLiquidationInternalCommand),
                     typeof(ExecuteSpecialLiquidationOrdersInternalCommand)
                 )
@@ -198,17 +255,6 @@ namespace MarginTrading.Backend.Services.Modules
         private ISagaRegistration RegisterSaga<TSaga>()
         {
             return Register.Saga<TSaga>($"{_settings.ContextNames.TradingEngine}.{typeof(TSaga).Name}");
-        }
-
-        private PublishingCommandsDescriptor<IDefaultRoutingRegistration> RegisterDefaultRouting()
-        {
-            return Register.DefaultRouting
-                .PublishingCommands(
-                    typeof(SuspendAssetPairCommand),
-                    typeof(UnsuspendAssetPairCommand)
-                )
-                .To(_settings.ContextNames.SettingsService)
-                .With(CommandsRoute);
         }
     }
 }

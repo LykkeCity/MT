@@ -89,7 +89,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     data: new SpecialLiquidationOperationData
                     {
                         State = SpecialLiquidationOperationState.Initiated,
-                        PositionIds = command.PositionIds,
+                        Instrument = positions.FirstOrDefault()?.AssetPairId,
+                        PositionIds = command.PositionIds.ToList(),
                     }
                 ));
 
@@ -147,7 +148,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     {
                         State = SpecialLiquidationOperationState.Initiated,
                         PositionIds = _orderReader.GetPositions().Where(x => x.AssetPairId == command.Instrument)
-                            .Select(x => x.Id).ToArray(),
+                            .Select(x => x.Id).ToList(),
                     }
                 ));
 
@@ -164,6 +165,34 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
 
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }
+        }
+
+        private async Task<CommandHandlingResult> Handle(GetPriceForSpecialLiquidationTimeoutInternalCommand command,
+            IEventPublisher publisher)
+        {
+            if (_dateService.Now() > command.CreationTime.AddSeconds(command.TimeoutSeconds))
+            {
+                var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
+                    operationName: SpecialLiquidationSaga.OperationName,
+                    id: command.OperationId);
+
+                if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceRequested,
+                    SpecialLiquidationOperationState.Failed))
+                {
+                    publisher.PublishEvent(new SpecialLiquidationFailedEvent
+                    {
+                        OperationId = command.OperationId,
+                        CreationTime = _dateService.Now(),
+                        Reason = $"Timeout of {command.TimeoutSeconds} seconds from {command.CreationTime:s}",
+                    });
+
+                    await _operationExecutionInfoRepository.Save(executionInfo);
+                }
+                
+                return CommandHandlingResult.Ok();
+            }
+
+            return CommandHandlingResult.Fail(_marginTradingSettings.SpecialLiquidation.RetryTimeout);
         }
 
         [UsedImplicitly]
@@ -183,7 +212,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     await _tradingEngine.LiquidatePositionsAsync(
                         me: new SpecialLiquidationMatchingEngine(command.Price, command.MarketMakerId,
                             command.ExternalOrderId, command.ExternalExecutionTime), 
-                        positionIds: executionInfo.Data.PositionIds, 
+                        positionIds: executionInfo.Data.PositionIds.ToArray(), 
                         correlationId: command.OperationId);
                     
                     publisher.PublishEvent(new SpecialLiquidationFinishedEvent
@@ -194,7 +223,6 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 }
                 catch (Exception ex)
                 {
-                    
                     publisher.PublishEvent(new SpecialLiquidationFailedEvent
                     {
                         OperationId = command.OperationId,
