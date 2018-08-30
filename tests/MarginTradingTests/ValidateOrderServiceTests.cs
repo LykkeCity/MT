@@ -163,6 +163,27 @@ namespace MarginTradingTests
 
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidAccount);
         }
+        
+        [Test]
+        public void Is_ValidityDate_Invalid_ForNotMarket()
+        {
+            var request = new OrderPlaceRequest
+            {
+                AccountId = Accounts[0].Id,
+                CorrelationId = Guid.NewGuid().ToString(),
+                Direction = OrderDirectionContract.Buy,
+                InstrumentId = "BTCUSD",
+                Type = OrderTypeContract.Limit,
+                Price = 1,
+                Validity = DateTime.UtcNow.AddSeconds(-1),
+                Volume = 10
+            };
+            
+            var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
+                await _validateOrderService.ValidateRequestAndGetOrders(request));
+
+            Assert.That(ex.RejectReason == OrderRejectReason.TechnicalError);
+        }
 
         [Test]
         public void Is_No_Quote()

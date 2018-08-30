@@ -306,6 +306,7 @@ namespace MarginTrading.Backend.Services
                 {
                     _ordersCache.Active.Remove(order);
                     order.Expire(now);
+                    _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order));
                     continue;
                 }
                 
