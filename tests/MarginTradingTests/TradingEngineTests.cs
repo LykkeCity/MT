@@ -642,17 +642,16 @@ namespace MarginTradingTests
         }
 
         [Test]
-        public void Check_No_FxRate()
+        public async Task Check_No_FxRate()
         {
             _bestPriceChannel.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCJPY", Bid = 109.857M, Ask = 130.957M }));
 
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "BTCJPY", Accounts[1],
                 MarginTradingTestsUtils.TradingConditionId, 1);
 
-            Assert.ThrowsAsync<FxRateNotFoundException>(async () =>
-            {
-                order = await _tradingEngine.PlaceOrderAsync(order);
-            });
+            order = await _tradingEngine.PlaceOrderAsync(order);
+
+            Assert.AreEqual(OrderStatus.Rejected, order.Status);
         }
 
         [Test]
