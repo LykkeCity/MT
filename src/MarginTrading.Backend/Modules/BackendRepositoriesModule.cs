@@ -56,6 +56,12 @@ namespace MarginTrading.Backend.Modules
                                 "Identity", _log))
                         : (IIdentityGenerator) new SimpleIdentityGenerator();
                 }).As<IIdentityGenerator>().SingleInstance();
+                
+                builder.RegisterType<AzureRepositories.OperationExecutionInfoRepository>()
+                    .As<IOperationExecutionInfoRepository>()
+                    .WithParameter(new NamedParameter("connectionStringManager",
+                        _settings.Nested(x => x.Db.MarginTradingConnString)))
+                    .SingleInstance();
             }
             else if (_settings.CurrentValue.Db.StorageMode == StorageMode.SqlServer)
             {
@@ -73,6 +79,12 @@ namespace MarginTrading.Backend.Modules
                         ? (IIdentityGenerator) new SqlIdentityGenerator()
                         : (IIdentityGenerator) new SimpleIdentityGenerator())
                     .As<IIdentityGenerator>()
+                    .SingleInstance();
+                
+                builder.RegisterType<SqlRepositories.Repositories.OperationExecutionInfoRepository>()
+                    .As<IOperationExecutionInfoRepository>()
+                    .WithParameter(new NamedParameter("connectionString", 
+                        _settings.CurrentValue.Db.SqlConnectionString))
                     .SingleInstance();
             }
             
