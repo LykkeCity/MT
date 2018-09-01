@@ -726,7 +726,6 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(MarketMaker1Id, ordersSet, deleteAll: true);
             
-            _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "EURUSD", Ask = 1.2M, Bid = 1.1M });
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "GBPUSD", Ask = 2M, Bid = 1.5M });
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "EURGBP", Ask = 0.8M, Bid = 0.7M });
             
@@ -737,8 +736,8 @@ namespace MarginTradingTests
 
             var position = ValidatePositionIsOpened(order.Id, 0.8M, -3000);
             
-            Assert.AreEqual(80.0, position.GetMarginMaintenance());
-            Assert.AreEqual(120.0, position.GetMarginInit());
+            Assert.AreEqual(106.66666667m, position.GetMarginMaintenance());
+            Assert.AreEqual(160.0, position.GetMarginInit());
         }
         
         [Test]
@@ -763,8 +762,8 @@ namespace MarginTradingTests
             
             var position = ValidatePositionIsOpened(order.Id, 100.1M, 0.001M);
 
-            Assert.AreEqual(0.00734067M, position.GetMarginMaintenance());
-            Assert.AreEqual(0.011011M, position.GetMarginInit());
+            Assert.AreEqual(0.07340667M, position.GetMarginMaintenance());
+            Assert.AreEqual(0.11011M, position.GetMarginInit());
         }
 
         #endregion
