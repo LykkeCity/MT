@@ -52,16 +52,18 @@ namespace MarginTrading.Backend.Services
             if (accountAssetId == assetPair.QuoteAssetId)
                 return 1;
 
-            var assetPairSubst = _assetPairsCache.FindAssetPair(assetPair.QuoteAssetId, accountAssetId, legalEntity);
+            var fxPair =
+                _assetPairsCache.FindAssetPair(assetPair.QuoteAssetId, accountAssetId, legalEntity);
+            var fxQuote = _fxRateCacheService.GetQuote(fxPair.Id);
            
             //TODO: SNOW fx rate is always mid, thus there is no any difference
             var rate = metricIsPositive
-                ? assetPairSubst.BaseAssetId == assetPair.QuoteAssetId
-                    ? _fxRateCacheService.GetQuote(assetPairSubst.Id).Ask
-                    : 1 / _fxRateCacheService.GetQuote(assetPairSubst.Id).Bid
-                : assetPairSubst.BaseAssetId == assetPair.QuoteAssetId
-                    ? _fxRateCacheService.GetQuote(assetPairSubst.Id).Bid
-                    : 1 / _fxRateCacheService.GetQuote(assetPairSubst.Id).Ask;
+                ? fxPair.BaseAssetId == assetPair.QuoteAssetId
+                    ? fxQuote.Ask
+                    : 1 / fxQuote.Bid
+                : fxPair.BaseAssetId == assetPair.QuoteAssetId
+                    ? fxQuote.Bid
+                    : 1 / fxQuote.Ask;
             
             return rate;
         }
