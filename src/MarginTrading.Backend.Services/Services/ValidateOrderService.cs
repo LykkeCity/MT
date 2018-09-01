@@ -102,6 +102,13 @@ namespace MarginTrading.Backend.Services
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidAccount, "Account not found");
             }
+
+            if (request.Validity.HasValue &&
+                request.Type != OrderTypeContract.Market &&
+                request.Validity.Value <= _dateService.Now())
+            {
+                throw new ValidateOrderException(OrderRejectReason.TechnicalError, "Invalid validity date");
+            }
             
             if (!_quoteCashService.TryGetQuoteById(request.InstrumentId, out var quote))
             {

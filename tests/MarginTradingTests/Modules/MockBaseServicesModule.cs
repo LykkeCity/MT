@@ -73,7 +73,9 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(volumeEquivalentService.Object).As<IEquivalentPricesService>();
             builder.RegisterInstance(clientAccountMock.Object).As<IClientAccountService>();
 
-            builder.RegisterType<DateService>().As<IDateService>().SingleInstance();
+            var dateServiceMock = new Mock<IDateService>();
+            dateServiceMock.Setup(s => s.Now()).Returns(() => DateTime.UtcNow);
+            builder.RegisterInstance(dateServiceMock.Object).As<IDateService>().SingleInstance();
             builder.RegisterInstance(new Mock<ICqrsEngine>(MockBehavior.Loose).Object).As<ICqrsEngine>()
                 .SingleInstance();
             builder.RegisterInstance(new CqrsContextNamesSettings()).AsSelf().SingleInstance();

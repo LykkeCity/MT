@@ -932,6 +932,38 @@ namespace MarginTradingTests
             Assert.AreEqual(OrderRejectReason.NoLiquidity, order.RejectReason);
         }
 
+        [Test]
+        public void Is_PendingOrder_Expires()
+        {
+            var targetValidity = new DateTime(2100, 1, 1);
+            
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Limit, "EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, -1, price: 1.07M, validity: targetValidity);
+            
+            order = _tradingEngine.PlaceOrderAsync(order).Result;
+            var account = _accountsCacheService.Get(order.AccountId);
+
+            Assert.AreEqual(OrderStatus.Active, order.Status); //is not executed
+            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
+
+            _matchingEngine.SetOrders(MarketMaker1Id, new[]
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = 6 }
+            });
+
+            Assert.AreEqual(OrderStatus.Active, order.Status); //is not executed
+            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
+            
+            var ds = Container.Resolve<IDateService>();
+            Mock.Get(ds).Setup(s => s.Now()).Returns(targetValidity.AddSeconds(1));
+
+            _matchingEngine.SetOrders(MarketMaker1Id, new[]
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.08M, Volume = 10 }
+            });
+
+            Assert.AreEqual(OrderStatus.Expired, order.Status); 
+        }    
         
         #endregion
         
