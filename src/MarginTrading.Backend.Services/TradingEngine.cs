@@ -111,26 +111,32 @@ namespace MarginTrading.Backend.Services
                 RejectOrder(order, ex.RejectReason, ex.Message, ex.Comment);
                 return order;
             }
+            catch (Exception ex)
+            {
+                RejectOrder(order, OrderRejectReason.TechnicalError, ex.Message);
+                _log.WriteError(nameof(TradingEngine), nameof(PlaceOrderByMarketPrice), ex);
+                return order;
+            }
         }
         
-        private Task<Order> PlaceOrderByMarketPrice(Order order)
+        private async Task<Order> PlaceOrderByMarketPrice(Order order)
         {
             try
             {
                 var me = _meRouter.GetMatchingEngineForExecution(order);
 
-                return ExecuteOrderByMatchingEngineAsync(order, me, true);
+                return await ExecuteOrderByMatchingEngineAsync(order, me, true);
             }
             catch (QuoteNotFoundException ex)
             {
                 RejectOrder(order, OrderRejectReason.NoLiquidity, ex.Message);
-                return Task.FromResult(order);
+                return order;
             }
             catch (Exception ex)
             {
                 RejectOrder(order, OrderRejectReason.TechnicalError, ex.Message);
                 _log.WriteError(nameof(TradingEngine), nameof(PlaceOrderByMarketPrice), ex);
-                return Task.FromResult(order);
+                return order;
             }
         }
 

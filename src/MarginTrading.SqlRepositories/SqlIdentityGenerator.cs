@@ -10,9 +10,9 @@ namespace MarginTrading.SqlRepositories
         {
         }
 
-        public async Task<long> GenerateIdAsync(string entityType)
+        public Task<long> GenerateIdAsync(string entityType)
         {
-            return 0;
+            return Task.FromResult<long>(0);
 //            long id = 0;
 //            var result =
 //                await

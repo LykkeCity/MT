@@ -173,6 +173,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             }
             catch (Exception e)
             {
+                _log.WriteError(nameof(HandleRiskManagerCommand), command, e);
                 //await _riskSystemCommandsLogRepository.AddErrorAsync(command.ActionType.ToString(), command.ToJson(),
                 //    e.Message);
                 throw;
