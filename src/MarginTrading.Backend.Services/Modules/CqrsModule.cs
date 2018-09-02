@@ -78,16 +78,28 @@ namespace MarginTrading.Backend.Services.Modules
 
         private CqrsEngine CreateEngine(IComponentContext ctx, IMessagingEngine messagingEngine)
         {
+            
+            
             var rabbitMqConventionEndpointResolver =
                 new RabbitMqConventionEndpointResolver("RabbitMq", "messagepack",
                     environment: _settings.EnvironmentName);
-            return new CqrsEngine(_log, ctx.Resolve<IDependencyResolver>(), messagingEngine,
-                new DefaultEndpointProvider(), true,
+
+            var registrations = new List<IRegistration>
+            {
                 Register.DefaultEndpointResolver(rabbitMqConventionEndpointResolver),
                 RegisterDefaultRouting(),
                 RegisterSpecialLiquidationSaga(),
                 RegisterContext(),
-                RegisterGavelContextIfNeeded());
+            };
+
+            var fakeGavel = RegisterGavelContextIfNeeded();
+
+            if (fakeGavel != null)
+                registrations.Add(fakeGavel);
+
+
+            return new CqrsEngine(_log, ctx.Resolve<IDependencyResolver>(), messagingEngine,
+                new DefaultEndpointProvider(), true, registrations.ToArray());
         }
 
         private IRegistration RegisterGavelContextIfNeeded()
