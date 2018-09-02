@@ -241,7 +241,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             if (executionInfo == null)
                 return;
             
-            if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.ExternalOrderExecuted,
+            if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.InternalOrdersExecuted,
                 SpecialLiquidationOperationState.Finished))
             {
                 //do nothing
