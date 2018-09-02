@@ -53,6 +53,14 @@ namespace MarginTrading.Backend.Services.Workflow
             }
             else
             {
+                var account = _accountsCacheService.TryGet(e.Account.Id);
+
+                if (account == null)
+                {
+                    _log.WriteWarning(nameof(AccountsProjection), e, $"Account with id {e.Account.Id} was not found");
+                    return;
+                }
+                
                 _accountsCacheService.UpdateAccountChanges(updatedAccount.Id, updatedAccount.TradingConditionId,
                     updatedAccount.Balance, updatedAccount.WithdrawTransferLimit, updatedAccount.IsDisabled);
 

@@ -43,7 +43,7 @@ namespace MarginTrading.Backend.Services
 
         public MarginTradingAccount Get(string accountId)
         {
-            return GetAccount(accountId) ??
+            return TryGetAccount(accountId) ??
                 throw new AccountNotFoundException(accountId, string.Format(MtMessages.AccountByIdNotFound, accountId));
         }
 
@@ -62,7 +62,7 @@ namespace MarginTrading.Backend.Services
 
         public MarginTradingAccount TryGet(string accountId)
         {
-            return GetAccount(accountId);
+            return TryGetAccount(accountId);
         }
 
         public IEnumerable<string> GetClientIdsByTradingConditionId(string tradingConditionId, string accountId = null)
@@ -83,13 +83,12 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        private MarginTradingAccount GetAccount(string accountId, bool throwIfNotExists = false)
+        private MarginTradingAccount TryGetAccount(string accountId)
         {
             _lockSlim.EnterReadLock();
             try
             {
-                if (!_accounts.TryGetValue(accountId, out var result) && throwIfNotExists)
-                    throw new Exception(string.Format(MtMessages.AccountNotFoundInCache, accountId));
+                _accounts.TryGetValue(accountId, out var result);
 
                 return result;
             }

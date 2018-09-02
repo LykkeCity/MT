@@ -22,8 +22,6 @@ using MarginTrading.SettingsService.Contracts.AssetPair;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Events;
-using MarginTrading.SettingsService.Contracts.AssetPair;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MarginTrading.Backend.Services.Modules
 {
@@ -194,52 +192,41 @@ namespace MarginTrading.Backend.Services.Modules
         private IRegistration RegisterSpecialLiquidationSaga()
         {
             var sagaRegistration = RegisterSaga<SpecialLiquidationSaga>();
-            
-            sagaRegistration.ListeningEvents(
-                    typeof(PriceForSpecialLiquidationCalculatedEvent)
-                )
-                .From(_settings.ContextNames.Gavel) 
-                .On(EventsRoute)
+
+            sagaRegistration
+
                 .PublishingCommands(
+                    typeof(GetPriceForSpecialLiquidationCommand),
                     typeof(ExecuteSpecialLiquidationOrderCommand)
                 )
                 .To(_settings.ContextNames.Gavel)
-                .With(CommandsRoute);
-            
-            sagaRegistration.ListeningEvents(
+                .With(CommandsRoute)
+
+                .ListeningEvents(
+                    typeof(PriceForSpecialLiquidationCalculatedEvent),
                     typeof(PriceForSpecialLiquidationCalculationFailedEvent),
                     typeof(SpecialLiquidationOrderExecutedEvent),
                     typeof(SpecialLiquidationOrderExecutionFailedEvent)
                 )
                 .From(_settings.ContextNames.Gavel)
                 .On(EventsRoute)
-                .ListeningEvents(
-                    typeof(SpecialLiquidationOrderExecutedEvent)
-                )
-                .From(_settings.ContextNames.TradingEngine)
-                .On(EventsRoute)
+
                 .PublishingCommands(
                     typeof(FailSpecialLiquidationInternalCommand),
-                    typeof(ExecuteSpecialLiquidationOrdersInternalCommand)
+                    typeof(ExecuteSpecialLiquidationOrdersInternalCommand),
+                    typeof(GetPriceForSpecialLiquidationTimeoutInternalCommand)
                 )
                 .To(_settings.ContextNames.TradingEngine)
-                .With(CommandsRoute);
-            
-            sagaRegistration.ListeningEvents(
-                    typeof(SpecialLiquidationStartedInternalEvent)
+                .With(CommandsRoute)
+
+                .ListeningEvents(
+                    typeof(SpecialLiquidationOrderExecutedEvent),
+                    typeof(SpecialLiquidationStartedInternalEvent),
+                    typeof(SpecialLiquidationFinishedEvent),
+                    typeof(SpecialLiquidationFailedEvent)
                 )
                 .From(_settings.ContextNames.TradingEngine)
-                .On(EventsRoute)
-                .PublishingCommands(
-                    typeof(GetPriceForSpecialLiquidationCommand)
-                )
-                .To(_settings.ContextNames.Gavel)
-                .With(CommandsRoute)
-                .PublishingCommands(
-                    typeof(GetPriceForSpecialLiquidationTimeoutInternalCommand)    
-                )
-                .To(_settings.ContextNames.TradingEngine)
-                .With(CommandsRoute);
+                .On(EventsRoute);
             
             return sagaRegistration;
         }
