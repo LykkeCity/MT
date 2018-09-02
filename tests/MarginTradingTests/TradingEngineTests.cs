@@ -997,6 +997,48 @@ namespace MarginTradingTests
         #endregion
         
         
+        #region Common functions
+
+        [Test]
+        [TestCase(new int[0], 1, true)]
+        [TestCase(new int[0], -1, true)]
+        [TestCase(new[] { 1 }, 1, true)]
+        [TestCase(new[] { 1, 2 }, 1, true)]
+        [TestCase(new[] { -1, 2 }, 1, true)]
+        [TestCase(new[] { -1 }, -1, true)]
+        [TestCase(new[] { -1, -2 }, -1, true)]
+        [TestCase(new[] { 1, -2 }, -1, true)]
+        [TestCase(new[] { -1 }, 1, false)]
+        [TestCase(new[] { 1 }, -1, false)]
+        [TestCase(new[] { 2 }, -1, false)]
+        [TestCase(new[] { -2 }, 1, false)]
+        [TestCase(new[] { 2 }, -3, true)]
+        [TestCase(new[] { -2 }, 3, true)]
+        public void Test_That_Position_Should_Be_Opened_Is_Checked_Correctly(int[] existingVolumes, int newVolume,
+            bool shouldOpenPosition)
+        {
+            foreach (var existingVolume in existingVolumes)
+            {
+                var position = TestObjectsFactory.CreateOpenedPosition("EURUSD", _account,
+                    MarginTradingTestsUtils.TradingConditionId, existingVolume, 1);
+
+                _ordersCache.Positions.Add(position);
+            }
+
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, newVolume);
+
+            Assert.AreEqual(shouldOpenPosition, _tradingEngine.ShouldOpenNewPosition(order));
+
+            var orderWithForce = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, newVolume, forceOpen: true);
+
+            Assert.AreEqual(true, _tradingEngine.ShouldOpenNewPosition(orderWithForce));
+        }
+
+        #endregion
+        
+        
         #region Assert helpers
         
         private void ValidateOrderIsExecuted(Order order, string[] expectedMatchedOrderIds, 

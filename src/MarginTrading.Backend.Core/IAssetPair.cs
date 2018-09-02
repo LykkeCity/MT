@@ -80,10 +80,6 @@ namespace MarginTrading.Backend.Core
         /// </summary>
         bool IsDiscontinued { get; }
         
-        /// <summary>
-        /// Current asset pair state depending on <see cref="IsSuspended"/>, <see cref="IsFrozen"/> and <see cref="IsDiscontinued"/>
-        /// </summary>
-        bool IsDisabled { get; }
     }
 
     public class AssetPair : IAssetPair
@@ -125,8 +121,6 @@ namespace MarginTrading.Backend.Core
         public bool IsSuspended { get; set; }
         public bool IsFrozen { get; }
         public bool IsDiscontinued { get; }
-        
-        public bool IsDisabled => IsSuspended || IsFrozen || IsDiscontinued; 
         
         protected bool Equals(AssetPair other)
         {

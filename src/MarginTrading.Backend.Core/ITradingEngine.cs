@@ -18,5 +18,7 @@ namespace MarginTrading.Backend.Core
             string correlationId);
             
         bool PingLock();
+        
+        bool ShouldOpenNewPosition(Order order);
     }
 }

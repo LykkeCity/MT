@@ -4,6 +4,7 @@ using Autofac;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
@@ -19,6 +20,7 @@ namespace MarginTradingTests
         private IValidateOrderService _validateOrderService;
         private IEventChannel<BestPriceChangeEventArgs> _bestPriceConsumer;
         private OrdersCache _ordersCache;
+        private IAssetPairsCache _assetPairsCache;
 
         [SetUp]
         public void Setup()
@@ -27,6 +29,7 @@ namespace MarginTradingTests
             _validateOrderService = Container.Resolve<IValidateOrderService>();
             _bestPriceConsumer = Container.Resolve<IEventChannel<BestPriceChangeEventArgs>>();
             _ordersCache = Container.Resolve<OrdersCache>();
+            _assetPairsCache = Container.Resolve<IAssetPairsCache>();
         }
 
         [Test]
@@ -123,7 +126,7 @@ namespace MarginTradingTests
 
 
         [Test]
-        public void Is_Instrument_Ivalid()
+        public void Is_Not_Existing_Instrument_Invalid()
         {
             const string instrument = "BADINSRT";
             
@@ -141,6 +144,197 @@ namespace MarginTradingTests
                 await _validateOrderService.ValidateRequestAndGetOrders(request));
 
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
+        }
+        
+        [Test]
+        public void Is_Discontinued_Instrument_Invalid()
+        {
+            const string instrument = "EURUSD";
+
+            SetupAssetPair(instrument, isDiscontinued: true);
+            
+            var request = new OrderPlaceRequest
+            {
+                AccountId = Accounts[0].Id,
+                CorrelationId = Guid.NewGuid().ToString(),
+                Direction = OrderDirectionContract.Buy,
+                InstrumentId = instrument,
+                Type = OrderTypeContract.Market,
+                Volume = 10
+            };
+
+            var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
+                await _validateOrderService.ValidateRequestAndGetOrders(request));
+
+            Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
+        }
+        
+        [Test]
+        public void Is_Discontinued_Instrument_Invalid_Pre_Traid()
+        {
+            const string instrument = "EURUSD";
+
+            SetupAssetPair(instrument, isDiscontinued: true);
+            
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, instrument, Accounts[0],
+                MarginTradingTestsUtils.TradingConditionId, 10);
+
+            var ex = Assert.Throws<ValidateOrderException>(() =>
+                _validateOrderService.MakePreTradeValidation(order, true));
+            
+            Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
+        }
+        
+        [Test]
+        public void Is_Suspended_Instrument_Invalid_For_Market()
+        {
+            const string instrument = "EURUSD";
+
+            SetupAssetPair(instrument, isSuspended: true);
+            
+            var request = new OrderPlaceRequest
+            {
+                AccountId = Accounts[0].Id,
+                CorrelationId = Guid.NewGuid().ToString(),
+                Direction = OrderDirectionContract.Buy,
+                InstrumentId = instrument,
+                Type = OrderTypeContract.Market,
+                Volume = 10
+            };
+
+            var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
+                await _validateOrderService.ValidateRequestAndGetOrders(request));
+
+            Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
+        }
+        
+        [Test]
+        public void Is_Suspended_Instrument_Valid_For_Limit()
+        {
+            const string instrument = "EURUSD";
+
+            SetupAssetPair(instrument, isSuspended: true);
+            
+            var request = new OrderPlaceRequest
+            {
+                AccountId = Accounts[0].Id,
+                CorrelationId = Guid.NewGuid().ToString(),
+                Direction = OrderDirectionContract.Buy,
+                InstrumentId = instrument,
+                Type = OrderTypeContract.Limit,
+                Price = 1,
+                Volume = 10
+            };
+
+            Assert.DoesNotThrowAsync(async () =>
+                await _validateOrderService.ValidateRequestAndGetOrders(request));
+        }
+        
+        [Test]
+        public void Is_Suspended_Instrument_Invalid_For_Market_Pre_Traid()
+        {
+            const string instrument = "EURUSD";
+
+            SetupAssetPair(instrument, isSuspended: true);
+            
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, instrument, Accounts[0],
+                MarginTradingTestsUtils.TradingConditionId, 10);
+
+            var ex = Assert.Throws<ValidateOrderException>(() =>
+                _validateOrderService.MakePreTradeValidation(order, true));
+            
+            Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
+        }
+        
+        [Test]
+        public void Is_Suspended_Instrument_Invalid_For_Limit_Pre_Traid()
+        {
+            const string instrument = "EURUSD";
+
+            SetupAssetPair(instrument, isSuspended: true);
+
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Limit, instrument, Accounts[0],
+                MarginTradingTestsUtils.TradingConditionId, 10, price: 1);
+
+            var ex = Assert.Throws<ValidateOrderException>(() =>
+                _validateOrderService.MakePreTradeValidation(order, true));
+            
+            Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
+        }
+        
+        [Test]
+        public void Is_Frozen_Instrument_Invalid_For_ForceOpen()
+        {
+            const string instrument = "EURUSD";
+
+            SetupAssetPair(instrument, isFrozen: true);
+            
+            var request = new OrderPlaceRequest
+            {
+                AccountId = Accounts[0].Id,
+                CorrelationId = Guid.NewGuid().ToString(),
+                Direction = OrderDirectionContract.Buy,
+                InstrumentId = instrument,
+                Type = OrderTypeContract.Market,
+                Volume = 10,
+                ForceOpen = true
+            };
+
+            var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
+                await _validateOrderService.ValidateRequestAndGetOrders(request));
+
+            Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
+        }
+        
+        [Test]
+        public void Is_Frozen_Instrument_Valid_For_Not_ForceOpen()
+        {
+            const string instrument = "EURUSD";
+
+            SetupAssetPair(instrument, isFrozen: true);
+            
+            var request = new OrderPlaceRequest
+            {
+                AccountId = Accounts[0].Id,
+                CorrelationId = Guid.NewGuid().ToString(),
+                Direction = OrderDirectionContract.Buy,
+                InstrumentId = instrument,
+                Type = OrderTypeContract.Market,
+                Volume = 10,
+                ForceOpen = false
+            };
+
+            Assert.DoesNotThrowAsync(async () =>
+                await _validateOrderService.ValidateRequestAndGetOrders(request));
+        }
+        
+        [Test]
+        public void Is_Frozen_Instrument_Invalid_For_NewPosition_Pre_Traid()
+        {
+            const string instrument = "EURUSD";
+
+            SetupAssetPair(instrument, isFrozen: true);
+            
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, instrument, Accounts[0],
+                MarginTradingTestsUtils.TradingConditionId, 10);
+
+            var ex = Assert.Throws<ValidateOrderException>(() =>
+                _validateOrderService.MakePreTradeValidation(order, true));
+            
+            Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
+        }
+        
+        [Test]
+        public void Is_Frozen_Instrument_Valid_For_PositionClose_Pre_Traid()
+        {
+            const string instrument = "EURUSD";
+
+            SetupAssetPair(instrument, isFrozen: true);
+            
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, instrument, Accounts[0],
+                MarginTradingTestsUtils.TradingConditionId, 10);
+
+            Assert.DoesNotThrow(() => _validateOrderService.MakePreTradeValidation(order, false));
         }
 
         [Test]
@@ -374,6 +568,21 @@ namespace MarginTradingTests
 //            StringAssert.Contains($"{quote.Bid}/{quote.Ask}", ex.Comment);
 //            StringAssert.Contains("more", ex.Message);
 //        }
+
+        private void SetupAssetPair(string id, bool isDiscontinued = false, bool isFrozen = false,
+            bool isSuspended = false)
+        {
+            var pair = _assetPairsCache.GetAssetPairById(id);
+            
+            _assetPairsCache.AddOrUpdate(
+                new AssetPair(pair.Id, pair.Name, pair.BaseAssetId, pair.QuoteAssetId,
+                    pair.Accuracy, pair.LegalEntity, pair.BaseAssetId, pair.MatchingEngineMode,
+                    pair.StpMultiplierMarkupAsk, pair.StpMultiplierMarkupBid,
+                    isSuspended, isFrozen, isDiscontinued));
+            
+            var quote = new InstrumentBidAskPair { Instrument = id, Bid = 1.55M, Ask = 1.57M };
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
+        }
 //
     }
 }
