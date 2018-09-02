@@ -756,7 +756,6 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(MarketMaker1Id, ordersSet, deleteAll: true);
             
-            _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "EURUSD", Ask = 1.2M, Bid = 1.1M });
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "GBPUSD", Ask = 2M, Bid = 1.5M });
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "EURGBP", Ask = 0.8M, Bid = 0.7M });
             
@@ -767,8 +766,8 @@ namespace MarginTradingTests
 
             var position = ValidatePositionIsOpened(order.Id, 0.8M, -300);
             
-            Assert.AreEqual(8.0, position.GetMarginMaintenance());
-            Assert.AreEqual(12.0, position.GetMarginInit());
+            Assert.AreEqual(10.66666667m, position.GetMarginMaintenance());
+            Assert.AreEqual(16.0, position.GetMarginInit());
         }
         
         [Test]
@@ -793,8 +792,8 @@ namespace MarginTradingTests
             
             var position = ValidatePositionIsOpened(order.Id, 100.1M, 0.001M);
 
-            Assert.AreEqual(0.00734067M, position.GetMarginMaintenance());
-            Assert.AreEqual(0.011011M, position.GetMarginInit());
+            Assert.AreEqual(0.07340667M, position.GetMarginMaintenance());
+            Assert.AreEqual(0.11011M, position.GetMarginInit());
         }
 
         #endregion
@@ -963,6 +962,38 @@ namespace MarginTradingTests
             Assert.AreEqual(OrderRejectReason.NoLiquidity, order.RejectReason);
         }
 
+        [Test]
+        public void Is_PendingOrder_Expires()
+        {
+            var targetValidity = new DateTime(2100, 1, 1);
+            
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Limit, "EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, -1, price: 1.07M, validity: targetValidity);
+            
+            order = _tradingEngine.PlaceOrderAsync(order).Result;
+            var account = _accountsCacheService.Get(order.AccountId);
+
+            Assert.AreEqual(OrderStatus.Active, order.Status); //is not executed
+            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
+
+            _matchingEngine.SetOrders(MarketMaker1Id, new[]
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.06M, Volume = 6 }
+            });
+
+            Assert.AreEqual(OrderStatus.Active, order.Status); //is not executed
+            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
+            
+            var ds = Container.Resolve<IDateService>();
+            Mock.Get(ds).Setup(s => s.Now()).Returns(targetValidity.AddSeconds(1));
+
+            _matchingEngine.SetOrders(MarketMaker1Id, new[]
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.08M, Volume = 10 }
+            });
+
+            Assert.AreEqual(OrderStatus.Expired, order.Status); 
+        }    
         
         #endregion
         

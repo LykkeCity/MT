@@ -10,6 +10,7 @@ using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Backend.Services.Stp;
@@ -21,7 +22,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 {
     public class StpMatchingEngine : IStpMatchingEngine
     {
-        private readonly ExternalOrderBooksList _externalOrderBooksList;
+        private readonly IExternalOrderbookService _externalOrderbookService;
         private readonly IExchangeConnectorService _exchangeConnectorService;
         private readonly ILog _log;
         private readonly IOperationsLogService _operationsLogService;
@@ -33,7 +34,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         public MatchingEngineMode Mode => MatchingEngineMode.Stp;
 
         public StpMatchingEngine(string id, 
-            ExternalOrderBooksList externalOrderBooksList,
+            IExternalOrderbookService externalOrderbookService,
             IExchangeConnectorService exchangeConnectorService,
             ILog log,
             IOperationsLogService operationsLogService,
@@ -41,7 +42,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             IRabbitMqNotifyService rabbitMqNotifyService,
             IAssetPairsCache assetPairsCache)
         {
-            _externalOrderBooksList = externalOrderBooksList;
+            _externalOrderbookService = externalOrderbookService;
             _exchangeConnectorService = exchangeConnectorService;
             _log = log;
             _operationsLogService = operationsLogService;
@@ -53,7 +54,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         
         public async Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition)
         {
-            var prices = _externalOrderBooksList.GetPricesForExecution(order.AssetPairId, order.Volume, shouldOpenNewPosition);
+            var prices = _externalOrderbookService.GetPricesForExecution(order.AssetPairId, order.Volume, shouldOpenNewPosition);
 
             if (prices == null)
             {
@@ -122,7 +123,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
         public decimal? GetPriceForClose(Position position)
         {
-            return _externalOrderBooksList.GetPriceForPositionClose(position.AssetPairId, position.Volume,
+            return _externalOrderbookService.GetPriceForPositionClose(position.AssetPairId, position.Volume,
                 position.ExternalProviderId);
         }
 

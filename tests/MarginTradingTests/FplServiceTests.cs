@@ -18,6 +18,7 @@ namespace MarginTradingTests
         private IFxRateCacheService _fxRateCacheService;
         private IAccountsCacheService _accountsCacheService;
         private OrdersCache _ordersCache;
+        private IFplService _fplService;
 
         [OneTimeSetUp]
         public void SetUp()
@@ -27,6 +28,7 @@ namespace MarginTradingTests
             _fxRateCacheService = Container.Resolve<IFxRateCacheService>();
             _accountsCacheService = Container.Resolve<IAccountsCacheService>();
             _ordersCache = Container.Resolve<OrdersCache>();
+            _fplService = Container.Resolve<IFplService>();
         }
 
         [Test]
@@ -157,12 +159,92 @@ namespace MarginTradingTests
 
             Assert.AreEqual(50000, account.Balance);
             Assert.AreEqual(43676.000, Math.Round(account.GetTotalCapital(), 5));
-            Assert.AreEqual(33491.6, Math.Round(account.GetFreeMargin(), 1));
-            Assert.AreEqual(28399.4, Math.Round(account.GetMarginAvailable(), 1));
+            Assert.AreEqual(33484.3M, Math.Round(account.GetFreeMargin(), 1));
+            Assert.AreEqual(28388.5M, Math.Round(account.GetMarginAvailable(), 1));
             Assert.AreEqual(-6324.000, Math.Round(account.GetPnl(), 5));
-            Assert.AreEqual(10184.4, Math.Round(account.GetUsedMargin(), 1));
-            Assert.AreEqual(15276.6, Math.Round(account.GetMarginInit(), 1));
+            Assert.AreEqual(10191.7M, Math.Round(account.GetUsedMargin(), 1));
+            Assert.AreEqual(15287.5M, Math.Round(account.GetMarginInit(), 1));
 
+        }
+
+        [Test]
+        public void Check_Order_InitialMargin()
+        {
+            _bestPriceConsumer.SendEvent(this,
+                new BestPriceChangeEventArgs(
+                    new InstrumentBidAskPair {Instrument = "EURUSD", Ask = 1.3M, Bid = 1.2M}));
+
+            _bestPriceConsumer.SendEvent(this,
+                new BestPriceChangeEventArgs(
+                    new InstrumentBidAskPair {Instrument = "CHFJPY", Ask = 2.5M, Bid = 2.3M}));
+            
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair {Instrument = "EURUSD", Ask = 1.25M, Bid = 1.25M});
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "EURJPY", Ask = 2.3M, Bid = 2.3M });
+
+            var order1 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[1],
+                MarginTradingTestsUtils.TradingConditionId, 1000);
+            
+            var order2 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "CHFJPY", Accounts[1],
+                MarginTradingTestsUtils.TradingConditionId, -100);
+            
+            Assert.AreEqual(10.4M, _fplService.GetInitMarginForOrder(order1));
+            Assert.AreEqual(10M, _fplService.GetInitMarginForOrder(order2));
+        }
+
+        [Test]
+        public void Check_Position_Margin()
+        {
+            _bestPriceConsumer.SendEvent(this,
+                new BestPriceChangeEventArgs(
+                    new InstrumentBidAskPair {Instrument = "EURUSD", Ask = 1.3M, Bid = 1.2M}));
+
+            _bestPriceConsumer.SendEvent(this,
+                new BestPriceChangeEventArgs(
+                    new InstrumentBidAskPair {Instrument = "CHFJPY", Ask = 2.5M, Bid = 2.3M}));
+            
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair {Instrument = "EURUSD", Ask = 9000M, Bid = 9000M});
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "EURJPY", Ask = 2.3M, Bid = 2.3M });
+
+            var position1 = TestObjectsFactory.CreateOpenedPosition("EURUSD", Accounts[1],
+                MarginTradingTestsUtils.TradingConditionId, 15000, 1.3M);
+            position1.UpdateClosePrice(1.2M);
+            
+            var position2 = TestObjectsFactory.CreateOpenedPosition("CHFJPY", Accounts[1],
+                MarginTradingTestsUtils.TradingConditionId, -100, 2.3M);
+            position2.UpdateClosePrice(2.5M);
+            
+            Assert.AreEqual(0.02M, position1.GetMarginInit());
+            Assert.AreEqual(0.01333333M, position1.GetMarginMaintenance());
+            
+            Assert.AreEqual(10.86956522M, position2.GetMarginInit());
+            Assert.AreEqual(7.24637681M, position2.GetMarginMaintenance());
+        }
+        
+        [Test]
+        public void Check_Position_PnL()
+        {
+            _bestPriceConsumer.SendEvent(this,
+                new BestPriceChangeEventArgs(
+                    new InstrumentBidAskPair {Instrument = "EURUSD", Ask = 1.25M, Bid = 1.15M}));
+
+            _bestPriceConsumer.SendEvent(this,
+                new BestPriceChangeEventArgs(
+                    new InstrumentBidAskPair {Instrument = "CHFJPY", Ask = 6.036M, Bid = 1.9M}));
+            
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair {Instrument = "EURUSD", Ask = 9000M, Bid = 9000M});
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "EURJPY", Ask = 0.83M, Bid = 0.83M });
+
+            var position1 = TestObjectsFactory.CreateOpenedPosition("EURUSD", Accounts[1],
+                MarginTradingTestsUtils.TradingConditionId, 15000, 1.3M);
+            position1.UpdateClosePrice(1.15M);
+            
+            var position2 = TestObjectsFactory.CreateOpenedPosition("CHFJPY", Accounts[1],
+                MarginTradingTestsUtils.TradingConditionId, -23, 1.96M);
+            position2.UpdateClosePrice(6.036M);
+            
+
+            Assert.AreEqual(-0.25M, position1.GetFpl());
+            Assert.AreEqual(-112.94939759M, position2.GetFpl());
         }
     }
 }
