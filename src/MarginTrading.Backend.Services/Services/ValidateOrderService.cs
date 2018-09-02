@@ -24,7 +24,7 @@ namespace MarginTrading.Backend.Services
         private readonly IQuoteCacheService _quoteCashService;
         private readonly IAccountUpdateService _accountUpdateService;
         private readonly IAccountsCacheService _accountsCacheService;
-        private readonly ITradingInstrumentsCacheService _accountAssetsCacheService;
+        private readonly ITradingInstrumentsCacheService _tradingInstrumentsCache;
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly OrdersCache _ordersCache;
         private readonly IAssetPairDayOffService _assetDayOffService;
@@ -49,7 +49,7 @@ namespace MarginTrading.Backend.Services
             _quoteCashService = quoteCashService;
             _accountUpdateService = accountUpdateService;
             _accountsCacheService = accountsCacheService;
-            _accountAssetsCacheService = accountAssetsCacheService;
+            _tradingInstrumentsCache = accountAssetsCacheService;
             _assetPairsCache = assetPairsCache;
             _ordersCache = ordersCache;
             _assetDayOffService = assetDayOffService;
@@ -108,6 +108,16 @@ namespace MarginTrading.Backend.Services
                 request.Validity.Value <= _dateService.Now())
             {
                 throw new ValidateOrderException(OrderRejectReason.TechnicalError, "Invalid validity date");
+            }
+             
+            try
+            {
+                _tradingInstrumentsCache.GetTradingInstrument(account.TradingConditionId, assetPair.Id);
+            }
+            catch
+            {
+                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
+                    "Instrument is not available for trading on selected account");
             }
             
             if (!_quoteCashService.TryGetQuoteById(request.InstrumentId, out var quote))
@@ -450,7 +460,7 @@ namespace MarginTrading.Backend.Services
         private void ValidateTradeLimits(string assetPairId, string tradingConditionId, string accountId, decimal volume)
         {
             var tradingInstrument =
-                _accountAssetsCacheService.GetTradingInstrument(tradingConditionId, assetPairId);
+                _tradingInstrumentsCache.GetTradingInstrument(tradingConditionId, assetPairId);
 
             if (tradingInstrument.DealMaxLimit > 0 && Math.Abs(volume) > tradingInstrument.DealMaxLimit)
             {
