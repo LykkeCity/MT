@@ -63,11 +63,12 @@ namespace MarginTrading.Backend.Services.FakeExchangeConnector
             throw new NotImplementedException();
         }
 
-        public async Task<HttpOperationResponse<ExecutionReport>> CreateOrderWithHttpMessagesAsync(OrderModel orderModel = null, Dictionary<string, List<string>> customHeaders = null,
+        public Task<HttpOperationResponse<ExecutionReport>> CreateOrderWithHttpMessagesAsync(OrderModel orderModel = null, Dictionary<string, List<string>> customHeaders = null,
             CancellationToken cancellationToken = new CancellationToken())
         {
             if (orderModel == null || orderModel.Volume == 0)
-                return new HttpOperationResponse<ExecutionReport>
+            {
+                var report = new HttpOperationResponse<ExecutionReport>
                 {
                     Response = new HttpResponseMessage()
                     {
@@ -76,9 +77,12 @@ namespace MarginTrading.Backend.Services.FakeExchangeConnector
                     }
                 };
 
+                return Task.FromResult(report);
+            }
+                
             var quote = _quoteService.GetQuote(orderModel.Instrument);
             
-            return new HttpOperationResponse<ExecutionReport>
+            var result = new HttpOperationResponse<ExecutionReport>
             {
                 Body = new ExecutionReport(
                     type: orderModel.TradeType.ToType<TradeType>(), 
@@ -96,9 +100,11 @@ namespace MarginTrading.Backend.Services.FakeExchangeConnector
                     exchangeOrderId: Guid.NewGuid().ToString(), 
                     instrument: new Instrument(orderModel.Instrument, orderModel.ExchangeName))
             };
+
+            return Task.FromResult(result);
         }
 
-        public async Task<HttpOperationResponse<IList<PositionModel>>> GetOpenedPositionWithHttpMessagesAsync(string exchangeName = null, Dictionary<string, List<string>> customHeaders = null,
+        public Task<HttpOperationResponse<IList<PositionModel>>> GetOpenedPositionWithHttpMessagesAsync(string exchangeName = null, Dictionary<string, List<string>> customHeaders = null,
             CancellationToken cancellationToken = new CancellationToken())
         {
             throw new NotImplementedException();

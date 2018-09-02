@@ -146,5 +146,10 @@ namespace MarginTrading.Backend.Core
             if (obj.GetType() != this.GetType()) return false;
             return Equals((AssetPair) obj);
         }
+
+        public override int GetHashCode()
+        {
+            return Id.GetHashCode();
+        }
     }
 }

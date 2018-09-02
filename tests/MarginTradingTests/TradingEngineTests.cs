@@ -40,7 +40,7 @@ namespace MarginTradingTests
         private TradingInstrumentsManager _accountAssetsManager;
         private IAccountsCacheService _accountsCacheService;
         private IEventChannel<BestPriceChangeEventArgs> _bestPriceChannel;
-        private Mock<IEventChannel<OrderExecutedEventArgs>> _orderExecutedChannelMock;
+        //private Mock<IEventChannel<OrderExecutedEventArgs>> _orderExecutedChannelMock;
         private OrdersCache _ordersCache;
         private IFxRateCacheService _fxRateCacheService;
         
