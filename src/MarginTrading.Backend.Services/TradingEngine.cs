@@ -578,6 +578,8 @@ namespace MarginTrading.Backend.Services
         {
             var order = _ordersCache.GetOrderById(orderId);
 
+            _validateOrderService.ValidatePrice(order.OrderType, order.Direction, order.AssetPairId, price);
+
             order.ChangePrice(price, _dateService.Now(), originator, additionalInfo, correlationId);
 
             _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order));

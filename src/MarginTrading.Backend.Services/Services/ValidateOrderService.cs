@@ -60,7 +60,13 @@ namespace MarginTrading.Backend.Services
         }
         
         #region Base validations
-        
+
+        public void ValidateOrderStops(OrderDirection type, BidAskPair quote, decimal deltaBid, decimal deltaAsk, decimal? takeProfit,
+            decimal? stopLoss, decimal? expectedOpenPrice, int assetAccuracy)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<(Order order, List<Order> relatedOrders)> ValidateRequestAndGetOrders(
             OrderPlaceRequest request)
         {
@@ -75,23 +81,25 @@ namespace MarginTrading.Backend.Services
             var assetPair = GetAssetPairIfAvailableForTrading(request.InstrumentId, request.Type.ToType<OrderType>(),
                 request.ForceOpen, false);
 
-            if (!request.Price.HasValue)
+            if (request.Type != OrderTypeContract.Market)
             {
-                if (request.Type != OrderTypeContract.Market)
-                    throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
-                        $"Price is required for {request.Type} order");
-            }
-            else
-            {
-                request.Price = Math.Round(request.Price.Value, assetPair.Accuracy);
-
-                if (request.Price == 0)
+                if (!request.Price.HasValue)
                 {
                     throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
-                        $"Price can not be 0");
+                        $"Price is required for {request.Type} order");
+                }
+                else
+                {
+                    request.Price = Math.Round(request.Price.Value, assetPair.Accuracy);
+
+                    if (request.Price <= 0)
+                    {
+                        throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
+                            $"Price should be more then 0");
+                    }
                 }
             }
-            
+
             var account = _accountsCacheService.TryGet(request.AccountId);
 
             if (account == null)
@@ -114,11 +122,6 @@ namespace MarginTrading.Backend.Services
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
                     "Instrument is not available for trading on selected account");
-            }
-            
-            if (!_quoteCashService.TryGetQuoteById(request.InstrumentId, out var quote))
-            {
-                throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Quote not found");
             }
             
             var equivalentSettings =
@@ -150,10 +153,6 @@ namespace MarginTrading.Backend.Services
                 return (order, new List<Order>());
             }
 
-            //TODO: add setting for every type of validation (needed or not)
-            //ValidateLimitPrice(request, assetPair, quote);
-            //ValidateOrderStops();
-			
             var initialParameters = await GetOrderInitialParameters(request.InstrumentId, account.LegalEntity,
                 equivalentSettings, account.BaseAssetId);
 
@@ -170,17 +169,19 @@ namespace MarginTrading.Backend.Services
                 request.Type.ToType<OrderType>(), request.ParentOrderId, request.PositionId, originator,
                 initialParameters.equivalentPrice, initialParameters.fxPrice, OrderStatus.Placed,
                 request.AdditionalInfo, request.CorrelationId);
-            
+
+            ValidatePrice(baseOrder.OrderType, baseOrder.Direction, baseOrder.AssetPairId, baseOrder.Price);
+
             var relatedOrders = new List<Order>();
 
             if (request.StopLoss.HasValue)
             {
                 request.StopLoss = Math.Round(request.StopLoss.Value, assetPair.Accuracy);
 
-                if (request.StopLoss == 0)
+                if (request.StopLoss <= 0)
                 {
                     throw new ValidateOrderException(OrderRejectReason.InvalidStoploss,
-                        $"StopLoss can not be 0");
+                        $"StopLoss should be more then 0");
                 }
 
                 var orderType = request.UseTrailingStop ? OrderTypeContract.TrailingStop : OrderTypeContract.StopLoss;
@@ -196,10 +197,10 @@ namespace MarginTrading.Backend.Services
             {
                 request.TakeProfit = Math.Round(request.TakeProfit.Value, assetPair.Accuracy);
 
-                if (request.TakeProfit == 0)
+                if (request.TakeProfit <= 0)
                 {
                     throw new ValidateOrderException(OrderRejectReason.InvalidTakeProfit,
-                        $"TakeProfit can not be 0");
+                        $"TakeProfit should be more then 0");
                 }
 
                 var tp = await ValidateAndGetSlOrTpOrder(request, OrderTypeContract.TakeProfit, request.TakeProfit,
@@ -208,11 +209,12 @@ namespace MarginTrading.Backend.Services
                 if (tp != null)
                     relatedOrders.Add(tp);    
             }
+            
+            //ValidateOrderStops();
 
             return (baseOrder, relatedOrders);
         }
         
-        //TODO: check, if we need to validate SL and TP prices
         private async Task<Order> ValidateAndGetSlOrTpOrder(OrderPlaceRequest request, OrderTypeContract type,
             decimal? price, ReportingEquivalentPricesSettings equivalentSettings, Order parentOrder)
         {
@@ -293,39 +295,81 @@ namespace MarginTrading.Backend.Services
                 assetPairId, legalEntity);
             return (id, code, now, equivalentPrice, fxPrice);
         }
-        
-        private void ValidateLimitPrice(OrderPlaceRequest request, IAssetPair assetPair, InstrumentBidAskPair quote)
+
+        public void ValidatePrice(OrderType orderType, OrderDirection orderDirection,
+            string assetPairId, decimal? orderPrice)
         {
-            if (request.Type != OrderTypeContract.Limit && request.Type != OrderTypeContract.Stop)
+            if (!_quoteCashService.TryGetQuoteById(assetPairId, out var quote))
+            {
+                throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Quote not found");
+            }
+
+            //TODO: implement in MTC-155            
+//            if (_assetDayOffService.ArePendingOrdersDisabled(order.AssetPairId))
+//            {
+//                throw new ValidateOrderException(OrderRejectReason.NoLiquidity,
+//                    "Trades for instrument are not available");
+//            }
+
+            if (orderType != OrderType.Stop)
                 return;
 
-            if (_assetDayOffService.ArePendingOrdersDisabled(request.InstrumentId))
+            if (orderDirection == OrderDirection.Buy && quote.Ask >= orderPrice ||
+                orderDirection == OrderDirection.Sell && quote.Bid <= orderPrice )
             {
-                throw new ValidateOrderException(OrderRejectReason.NoLiquidity,
-                    "Trades for instrument are not available");
-            }
-
-            if (request.Price <= 0)
-            {
-                throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
-                    "Incorrect expected open price");
-            }
-
-            request.Price = Math.Round(request.Price ?? 0, assetPair.Accuracy);
-
-            if (request.Direction == OrderDirectionContract.Buy && request.Price > quote.Ask ||
-                request.Direction == OrderDirectionContract.Sell && request.Price < quote.Bid)
-            {
-                var reasonText = request.Direction == OrderDirectionContract.Buy
-                    ? string.Format(MtMessages.Validation_PriceAboveAsk, request.Price, quote.Ask)
-                    : string.Format(MtMessages.Validation_PriceBelowBid, request.Price, quote.Bid);
+                var reasonText = orderDirection == OrderDirection.Buy
+                    ? string.Format(MtMessages.Validation_PriceAboveAsk, orderPrice, quote.Ask)
+                    : string.Format(MtMessages.Validation_PriceBelowBid, orderPrice, quote.Bid);
 
                 throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice, reasonText,
-                    $"{request.InstrumentId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
+                    $"{assetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
             }
         }
+
+        private void ValidateRelatedOrderPriceAgainstBaseOrder(OrderType orderType, OrderDirection orderDirection,
+            string assetPairId, decimal? orderPrice, decimal parentOrderPrice)
+        {
+            
+        }
         
-        public void ValidateOrderStops(OrderDirection type, BidAskPair quote, decimal deltaBid, decimal deltaAsk, decimal? takeProfit,
+        private void ValidateRelatedOrderPriceAgainstPosition(OrderType orderType, OrderDirection orderDirection,
+            string assetPairId, decimal? orderPrice)
+        {
+            
+        }
+
+//        private void ValidateTakeProfitOrderPrice(OrderDirection orderDirection, decimal? orderPrice, decimal basePrice)
+//        {
+//            if (orderDirection == OrderDirection.Buy && orderPrice >= basePrice ||
+//                orderDirection == OrderDirection.Sell && orderPrice <= quote.Bid)
+//            {
+//                var reasonText = orderDirection == OrderDirection.Buy
+//                    ? string.Format(MtMessages.Validation_PriceAboveAsk, orderPrice, quote.Ask)
+//                    : string.Format(MtMessages.Validation_PriceBelowBid, orderPrice, quote.Bid);
+//
+//                throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice, reasonText,
+//                    $"{assetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
+//            }
+//        }
+//        
+//        private void ValidateStopLossOrderPrice(OrderDirection orderDirection, decimal? orderPrice, decimal basePrice)
+//        {
+//            if (orderDirection == OrderDirection.Buy && orderPrice >= quote.Ask ||
+//                orderDirection == OrderDirection.Sell && orderPrice <= quote.Bid)
+//            {
+//                var reasonText = orderDirection == OrderDirection.Buy
+//                    ? string.Format(MtMessages.Validation_PriceAboveAsk, orderPrice, quote.Ask)
+//                    : string.Format(MtMessages.Validation_PriceBelowBid, orderPrice, quote.Bid);
+//
+//                throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice, reasonText,
+//                    $"{assetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
+//            }
+//        }
+        
+        
+        
+        
+        public void ValidateRelatedOrders(OrderDirection type, BidAskPair quote, decimal deltaBid, decimal deltaAsk, decimal? takeProfit,
             decimal? stopLoss, decimal? expectedOpenPrice, int assetAccuracy)
         {
             var deltaBidValue = MarginTradingCalculations.GetVolumeFromPoints(deltaBid, assetAccuracy);

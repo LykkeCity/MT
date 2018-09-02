@@ -406,59 +406,51 @@ namespace MarginTradingTests
             Assert.That(ex.RejectReason == OrderRejectReason.NotEnoughBalance);
         }
 
-        //TODO: Intruduce order prices validations in MTC-280
-//
-//        [Test]
-//        public void Is_Buy_Order_ExpectedOpenPrice_Invalid()
-//        {
-//            const string instrument = "EURUSD";
-//            var quote = new InstrumentBidAskPair {Instrument = instrument, Bid = 1.55M, Ask = 1.57M};
-//            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
-//
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = Accounts[0].Id,
-//                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
-//                AccountAssetId = Accounts[0].BaseAssetId,
-//                AssetPairId = instrument,
-//                Volume = 10,
-//                ExpectedOpenPrice = 1.58567459M,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            var ex = Assert.Throws<ValidateOrderException>(() => _validateOrderService.Validate(order));
-//
-//            Assert.That(ex.RejectReason == OrderRejectReason.InvalidExpectedOpenPrice);
-//            StringAssert.Contains($"{quote.Bid}/{quote.Ask}", ex.Comment);
-//        }
-//
-//        [Test]
-//        public void Is_Sell_Order_ExpectedOpenPrice_Invalid()
-//        {
-//            const string instrument = "EURUSD";
-//            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 1.55M, Ask = 1.57M };
-//            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
-//
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = Accounts[0].Id,
-//                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
-//                AccountAssetId = Accounts[0].BaseAssetId,
-//                AssetPairId = instrument,
-//                Volume = -10,
-//                ExpectedOpenPrice = 1.54532567434M,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            var ex = Assert.Throws<ValidateOrderException>(() => _validateOrderService.Validate(order));
-//
-//            Assert.That(ex.RejectReason == OrderRejectReason.InvalidExpectedOpenPrice);
-//            StringAssert.Contains($"{quote.Bid}/{quote.Ask}", ex.Comment);
-//        }
+
+        [Test]
+        [TestCase(OrderDirectionContract.Buy, OrderTypeContract.Stop, 1, false)]
+        [TestCase(OrderDirectionContract.Buy, OrderTypeContract.Stop, 1.56, false)]
+        [TestCase(OrderDirectionContract.Buy, OrderTypeContract.Stop, 2, true)]
+        [TestCase(OrderDirectionContract.Sell, OrderTypeContract.Stop, 1, true)]
+        [TestCase(OrderDirectionContract.Sell, OrderTypeContract.Stop, 1.56, false)]
+        [TestCase(OrderDirectionContract.Sell, OrderTypeContract.Stop, 2, false)]
+        [TestCase(OrderDirectionContract.Buy, OrderTypeContract.Limit, 2, true)]
+        [TestCase(OrderDirectionContract.Sell, OrderTypeContract.Limit, 1, true)]
+        [TestCase(OrderDirectionContract.Buy, OrderTypeContract.Market, 2, true)]
+        [TestCase(OrderDirectionContract.Sell, OrderTypeContract.Market, 1, true)]
+        public void Is_Order_ExpectedOpenPrice_Validated_Correctly(OrderDirectionContract direction, OrderTypeContract orderType, 
+            decimal? price, bool isValid)
+        {
+            const string instrument = "EURUSD";
+            var quote = new InstrumentBidAskPair {Instrument = instrument, Bid = 1.55M, Ask = 1.57M};
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
+
+            var request = new OrderPlaceRequest
+            {
+                AccountId = Accounts[0].Id,
+                CorrelationId = Guid.NewGuid().ToString(),
+                Direction = direction,
+                InstrumentId = "EURUSD",
+                Type = orderType,
+                Price = price,
+                Volume = 1
+            };
+
+            if (isValid)
+            {
+                Assert.DoesNotThrowAsync(async () =>
+                    await _validateOrderService.ValidateRequestAndGetOrders(request));
+            }
+            else
+            {
+                var ex = Assert.ThrowsAsync<ValidateOrderException>(() =>
+                    _validateOrderService.ValidateRequestAndGetOrders(request));
+
+                Assert.That(ex.RejectReason == OrderRejectReason.InvalidExpectedOpenPrice);
+                StringAssert.Contains($"{quote.Bid}/{quote.Ask}", ex.Comment);
+            }
+        }
+
 //
 //        [Test]
 //        public void Is_MarketOrder_Buy_TakeProfit_Invalid()

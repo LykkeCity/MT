@@ -4,7 +4,6 @@ using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;
-using MarginTrading.Backend.Core.TradingConditions;
 
 namespace MarginTrading.Backend.Services
 {
@@ -16,5 +15,8 @@ namespace MarginTrading.Backend.Services
         Task<(Order order, List<Order> relatedOrders)> ValidateRequestAndGetOrders(OrderPlaceRequest request);
 
         void MakePreTradeValidation(Order order, bool shouldOpenNewPosition);
+
+        void ValidatePrice(OrderType orderType, OrderDirection orderDirection, 
+            string assetPairId, decimal? orderPrice);
     }
 }
