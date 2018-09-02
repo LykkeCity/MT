@@ -1,8 +1,6 @@
-using System.Threading.Tasks;
-
 namespace MarginTrading.Backend.Core.Services
 {
-    public interface IFakeGavelService
+    public interface IFakeSpecialLiquidationService
     {
         void GetPriceForSpecialLiquidation(string operationId, string instrument, decimal volume);
         

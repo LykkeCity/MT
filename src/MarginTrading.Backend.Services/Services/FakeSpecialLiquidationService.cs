@@ -8,23 +8,26 @@ using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services.Services
 {
-    public class FakeGavelService : IFakeGavelService
+    public class FakeSpecialLiquidationService : IFakeSpecialLiquidationService
     {
         private readonly ICqrsSender _cqrsSender;
         private readonly IDateService _dateService;
         private readonly IThreadSwitcher _threadSwitcher;
         private readonly SpecialLiquidationSettings _specialLiquidationSettings;
+        private readonly CqrsContextNamesSettings _cqrsContextNamesSettings;
 
-        public FakeGavelService(
+        public FakeSpecialLiquidationService(
             ICqrsSender cqrsSender,
             IDateService dateService,
             IThreadSwitcher threadSwitcher,
-            SpecialLiquidationSettings specialLiquidationSettings)
+            SpecialLiquidationSettings specialLiquidationSettings,
+            CqrsContextNamesSettings cqrsContextNamesSettings)
         {
             _cqrsSender = cqrsSender;
             _dateService = dateService;
             _threadSwitcher = threadSwitcher;
             _specialLiquidationSettings = specialLiquidationSettings;
+            _cqrsContextNamesSettings = cqrsContextNamesSettings;
         }
         
         public void GetPriceForSpecialLiquidation(string operationId, string instrument, decimal volume)
@@ -39,7 +42,7 @@ namespace MarginTrading.Backend.Services.Services
                     Instrument = instrument,
                     Volume = volume,
                     Price = _specialLiquidationSettings.FakePrice,
-                }, "Gavel");
+                }, _cqrsContextNamesSettings.Gavel);
             });
         }
 
@@ -53,7 +56,7 @@ namespace MarginTrading.Backend.Services.Services
                 {
                     OperationId = operationId,
                     CreationTime = _dateService.Now(),
-                }, "Gavel");
+                }, _cqrsContextNamesSettings.Gavel);
             });
         }
     }

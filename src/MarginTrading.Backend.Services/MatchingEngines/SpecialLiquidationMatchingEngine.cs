@@ -18,7 +18,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
     public class SpecialLiquidationMatchingEngine : ISpecialLiquidationMatchingEngine
     {
         public string Id => MatchingEngineConstants.DefaultSpecialLiquidation;
-        public MatchingEngineMode Mode => MatchingEngineMode.MarketMaker;
+        public MatchingEngineMode Mode => MatchingEngineMode.Stp;
         private readonly decimal _price;
         private readonly string _marketMakerId;
         private readonly string _externalOrderId;

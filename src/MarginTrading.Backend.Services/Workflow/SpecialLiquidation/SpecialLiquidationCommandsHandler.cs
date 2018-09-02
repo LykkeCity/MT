@@ -12,6 +12,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Events;
@@ -30,7 +31,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
         private readonly ILog _log;
         private readonly MarginTradingSettings _marginTradingSettings;
-        
+        private readonly IAssetPairDayOffService _assetPairDayOffService;
+
         public SpecialLiquidationCommandsHandler(
             IAssetPairsCache assetPairsCache,
             ITradingEngine tradingEngine,
@@ -39,7 +41,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             IChaosKitty chaosKitty,
             IOperationExecutionInfoRepository operationExecutionInfoRepository,
             ILog log,
-            MarginTradingSettings marginTradingSettings)
+            MarginTradingSettings marginTradingSettings,
+            IAssetPairDayOffService assetPairDayOffService)
         {
             _assetPairsCache = assetPairsCache;
             _tradingEngine = tradingEngine;
@@ -49,11 +52,23 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             _operationExecutionInfoRepository = operationExecutionInfoRepository;
             _log = log;
             _marginTradingSettings = marginTradingSettings;
+            _assetPairDayOffService = assetPairDayOffService;
         }
         
         [UsedImplicitly]
         private async Task Handle(StartSpecialLiquidationInternalCommand command, IEventPublisher publisher)
         {
+            if (!_marginTradingSettings.SpecialLiquidation.Enabled)
+            {
+                publisher.PublishEvent(new SpecialLiquidationFailedEvent
+                {
+                    OperationId = command.OperationId,
+                    CreationTime = _dateService.Now(),
+                    Reason = "Special liquidation is disabled in settings",
+                });
+                return;
+            }
+            
             //validate the list of positions contain only the same instrument
             var positions = _orderReader.GetPositions().Where(x => command.PositionIds.Contains(x.Id)).ToList();
             if (positions.Select(x => x.AssetPairId).Distinct().Count() > 1)
@@ -66,14 +81,14 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 });
                 return;
             }
-            
-            if (!_marginTradingSettings.SpecialLiquidation.Enabled)
+
+            if (!positions.Any())
             {
                 publisher.PublishEvent(new SpecialLiquidationFailedEvent
                 {
                     OperationId = command.OperationId,
                     CreationTime = _dateService.Now(),
-                    Reason = "Special liquidation is disabled in settings",
+                    Reason = "No positions to liquidate",
                 });
                 return;
             }
@@ -125,16 +140,19 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             
             //Validate that market is closed for instrument .. only in ExchangeConnector == Real mode
             if (_marginTradingSettings.ExchangeConnector == ExchangeConnectorType.RealExchangeConnector 
-                && !_assetPairsCache.GetAssetPairById(command.Instrument).IsDisabled)
+                && !_assetPairDayOffService.IsDayOff(command.Instrument))
             {
                 publisher.PublishEvent(new SpecialLiquidationFailedEvent
                 {
                     OperationId = command.OperationId,
                     CreationTime = _dateService.Now(),
-                    Reason = $"Asset pair {command.Instrument} must be disabled to start Special Liquidation",
+                    Reason = $"Asset pair {command.Instrument} market must be disabled to start Special Liquidation",
                 });
                 return;
             }
+
+            var openedPositions = _orderReader.GetPositions().Where(x => x.AssetPairId == command.Instrument)
+                .Select(x => x.Id).ToList();
             
             //ensure idempotency
             var executionInfo = await _operationExecutionInfoRepository.GetOrAddAsync(
@@ -147,8 +165,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     data: new SpecialLiquidationOperationData
                     {
                         State = SpecialLiquidationOperationState.Initiated,
-                        PositionIds = _orderReader.GetPositions().Where(x => x.AssetPairId == command.Instrument)
-                            .Select(x => x.Id).ToList(),
+                        PositionIds = openedPositions
                     }
                 ));
 
@@ -170,26 +187,34 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private async Task<CommandHandlingResult> Handle(GetPriceForSpecialLiquidationTimeoutInternalCommand command,
             IEventPublisher publisher)
         {
-            if (_dateService.Now() > command.CreationTime.AddSeconds(command.TimeoutSeconds))
+            var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
+                operationName: SpecialLiquidationSaga.OperationName,
+                id: command.OperationId);
+
+            if (executionInfo != null)
             {
-                var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
-                    operationName: SpecialLiquidationSaga.OperationName,
-                    id: command.OperationId);
-
-                if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceRequested,
-                    SpecialLiquidationOperationState.Failed))
+                if (executionInfo.Data.State >= SpecialLiquidationOperationState.PriceRequested)
                 {
-                    publisher.PublishEvent(new SpecialLiquidationFailedEvent
-                    {
-                        OperationId = command.OperationId,
-                        CreationTime = _dateService.Now(),
-                        Reason = $"Timeout of {command.TimeoutSeconds} seconds from {command.CreationTime:s}",
-                    });
-
-                    await _operationExecutionInfoRepository.Save(executionInfo);
+                    return CommandHandlingResult.Ok();
                 }
                 
-                return CommandHandlingResult.Ok();
+                if (_dateService.Now() > command.CreationTime.AddSeconds(command.TimeoutSeconds))
+                {
+                    if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceRequested,
+                        SpecialLiquidationOperationState.Failed))
+                    {
+                        publisher.PublishEvent(new SpecialLiquidationFailedEvent
+                        {
+                            OperationId = command.OperationId,
+                            CreationTime = _dateService.Now(),
+                            Reason = $"Timeout of {command.TimeoutSeconds} seconds from {command.CreationTime:s}",
+                        });
+
+                        await _operationExecutionInfoRepository.Save(executionInfo);
+                    }
+
+                    return CommandHandlingResult.Ok();
+                }
             }
 
             return CommandHandlingResult.Fail(_marginTradingSettings.SpecialLiquidation.RetryTimeout);
@@ -201,6 +226,11 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
                 operationName: SpecialLiquidationSaga.OperationName,
                 id: command.OperationId);
+
+            if (executionInfo == null)
+            {
+                return;
+            }
 
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.ExternalOrderExecuted,
                 SpecialLiquidationOperationState.InternalOrdersExecuted))
@@ -244,6 +274,11 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 operationName: SpecialLiquidationSaga.OperationName,
                 id: command.OperationId);
 
+            if (executionInfo == null)
+            {
+                return;
+            }
+            
             if (executionInfo.Data.SwitchState(executionInfo.Data.State,//from any state
                 SpecialLiquidationOperationState.OnTheWayToFail))
             {

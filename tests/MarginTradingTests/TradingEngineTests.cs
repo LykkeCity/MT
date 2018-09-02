@@ -802,21 +802,29 @@ namespace MarginTradingTests
         [Test]
         public void Is_Positions_Liquidated()
         {
+            var ordersSet1 = new []
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "7", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.04M, Volume = 100 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "8", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.05M, Volume = -100 }
+            };
+
+            _matchingEngine.SetOrders(MarketMaker1Id, ordersSet1, deleteAll: true);
+            
             var identityGeneratorMock = new Mock<IIdentityGenerator>();
             identityGeneratorMock.Setup(x => x.GenerateAlphanumericId()).Returns("fake");
             
-            var order1 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
-                MarginTradingTestsUtils.TradingConditionId, 8, OrderFillType.PartialFill);
-            var order2 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[1],
-                MarginTradingTestsUtils.TradingConditionId, -2, OrderFillType.PartialFill);
+            var order1 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[3],
+                MarginTradingTestsUtils.TradingConditionId, 8);
+            var order2 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[4],
+                MarginTradingTestsUtils.TradingConditionId, -2);
             
             order1 = _tradingEngine.PlaceOrderAsync(order1).Result;
             order2 = _tradingEngine.PlaceOrderAsync(order2).Result;
 
-            ValidateOrderIsExecuted(order1, new[] {"3", "4"}, 1.1125M);
-            ValidatePositionIsOpened(order1.Id, 1.04625M, -0.53M);
-            ValidateOrderIsExecuted(order2, new[] {"2"}, 1.05M);
-            ValidatePositionIsOpened(order2.Id, 1.15M, -0.2M);
+            ValidateOrderIsExecuted(order1, new[] {"8",}, 1.05M);
+            ValidatePositionIsOpened(order1.Id, 1.04M, -0.08M);
+            ValidateOrderIsExecuted(order2, new[] {"7"}, 1.04M);
+            ValidatePositionIsOpened(order2.Id, 1.05M, -0.02M);
             
             var orders = _tradingEngine.LiquidatePositionsAsync(new SpecialLiquidationMatchingEngine(2.5M, "Test",
                 "test", DateTime.UtcNow), new [] {order1.Id, order2.Id}, "Test").Result;

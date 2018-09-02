@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using Lykke.Common;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
 using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Commands;
@@ -24,9 +23,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private readonly IDateService _dateService;
         private readonly IChaosKitty _chaosKitty;
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
-        private readonly IThreadSwitcher _threadSwitcher;
         private readonly IOrderReader _orderReader;
-        private readonly IFakeGavelService _fakeGavel;
+        private readonly IFakeSpecialLiquidationService _fakeGavel;
 
         private readonly MarginTradingSettings _marginTradingSettings;
         private readonly CqrsContextNamesSettings _cqrsContextNamesSettings;
@@ -37,16 +35,14 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             IDateService dateService,
             IChaosKitty chaosKitty,
             IOperationExecutionInfoRepository operationExecutionInfoRepository,
-            IThreadSwitcher threadSwitcher,
             IOrderReader orderReader,
-            IFakeGavelService fakeGavel,
+            IFakeSpecialLiquidationService fakeGavel,
             MarginTradingSettings marginTradingSettings,
             CqrsContextNamesSettings cqrsContextNamesSettings)
         {
             _dateService = dateService;
             _chaosKitty = chaosKitty;
             _operationExecutionInfoRepository = operationExecutionInfoRepository;
-            _threadSwitcher = threadSwitcher;
             _orderReader = orderReader;
             _fakeGavel = fakeGavel;
             _marginTradingSettings = marginTradingSettings;
@@ -64,8 +60,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 SpecialLiquidationOperationState.PriceRequested))
             {
                 var positionsVolume = GetCurrentVolume(executionInfo.Data.PositionIds);
+                
                 //special command is sent instantly for timeout control.. it is retried until timeout occurs
-                //
                 sender.SendCommand(new GetPriceForSpecialLiquidationTimeoutInternalCommand
                 {
                     OperationId = e.OperationId,
@@ -85,7 +81,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         RequestNumber = 1,
                     }, _cqrsContextNamesSettings.Gavel);
                 }
-                else //if (_marginTradingSettings.ExchangeConnector == ExchangeConnectorType.FakeExchangeConnector)
+                else
                 {
                     _fakeGavel.GetPriceForSpecialLiquidation(e.OperationId, e.Instrument, positionsVolume);
                 }
@@ -102,6 +98,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
                 operationName: OperationName,
                 id: e.OperationId);
+            
+            if (executionInfo == null)
+                return;
 
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceRequested,
                 SpecialLiquidationOperationState.PriceReceived))
@@ -138,7 +137,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         Price = e.Price,
                     }, _cqrsContextNamesSettings.Gavel);
                 }
-                else //if (_marginTradingSettings.ExchangeConnector == ExchangeConnectorType.FakeExchangeConnector)
+                else
                 {
                     _fakeGavel.ExecuteSpecialLiquidationOrder(e.OperationId, e.Instrument, e.Volume, e.Price);
                 }
@@ -155,6 +154,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
                 operationName: OperationName,
                 id: e.OperationId);
+            
+            if (executionInfo == null)
+                return;
 
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceRequested,
                 SpecialLiquidationOperationState.OnTheWayToFail))
@@ -179,6 +181,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 operationName: OperationName,
                 id: e.OperationId);
 
+            if (executionInfo == null)
+                return;
+            
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceReceived,
                 SpecialLiquidationOperationState.ExternalOrderExecuted))
             {
@@ -206,6 +211,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
                 operationName: OperationName,
                 id: e.OperationId);
+            
+            if (executionInfo == null)
+                return;
 
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceReceived,
                 SpecialLiquidationOperationState.OnTheWayToFail))
@@ -230,6 +238,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 operationName: OperationName,
                 id: e.OperationId);
 
+            if (executionInfo == null)
+                return;
+            
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.ExternalOrderExecuted,
                 SpecialLiquidationOperationState.Finished))
             {
@@ -247,6 +258,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
                 operationName: OperationName,
                 id: e.OperationId);
+            
+            if (executionInfo == null)
+                return;
 
             if (executionInfo.Data.SwitchState(executionInfo.Data.State,//from any state
                 SpecialLiquidationOperationState.Failed))
