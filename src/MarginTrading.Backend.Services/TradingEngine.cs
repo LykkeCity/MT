@@ -204,19 +204,7 @@ namespace MarginTrading.Backend.Services
 
             order.SetRates(equivalentRate, fxRate);
 
-            var shouldOpenNewPosition = order.ForceOpen;
-
-            if (string.IsNullOrEmpty(order.ParentPositionId) && !shouldOpenNewPosition)
-            {
-                var existingPositions =
-                    _ordersCache.Positions.GetOrdersByInstrumentAndAccount(order.AssetPairId, order.AccountId);
-                var netVolume = existingPositions.Where(p => p.Status == PositionStatus.Active).Sum(p => p.Volume);
-                var newNetVolume = netVolume + order.Volume;
-
-                shouldOpenNewPosition = (netVolume == 0 && newNetVolume != 0) ||
-                                        (netVolume < 0 && newNetVolume > 0) ||
-                                        (netVolume > 0 && newNetVolume < 0);
-            }
+            var shouldOpenNewPosition = ShouldOpenNewPosition(order);
 
             try
             {
@@ -259,6 +247,24 @@ namespace MarginTrading.Backend.Services
             }
 
             return order;
+        }
+
+        public bool ShouldOpenNewPosition(Order order)
+        {
+            var shouldOpenNewPosition = order.ForceOpen;
+
+            if (string.IsNullOrEmpty(order.ParentPositionId) && !shouldOpenNewPosition)
+            {
+                var existingPositions =
+                    _ordersCache.Positions.GetOrdersByInstrumentAndAccount(order.AssetPairId, order.AccountId);
+                var netVolume = existingPositions.Where(p => p.Status == PositionStatus.Active).Sum(p => p.Volume);
+                var newNetVolume = netVolume + order.Volume;
+
+                shouldOpenNewPosition = (Math.Sign(netVolume) != Math.Sign(newNetVolume) && newNetVolume != 0) ||
+                                        Math.Abs(netVolume) < Math.Abs(newNetVolume);
+            }
+
+            return shouldOpenNewPosition;
         }
 
         private void RejectOrder(Order order, OrderRejectReason reason, string message, string comment = null)
