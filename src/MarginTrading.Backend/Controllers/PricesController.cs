@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using MarginTrading.Backend.Attributes;
 using MarginTrading.Backend.Contracts;
 using MarginTrading.Backend.Contracts.Prices;
 using MarginTrading.Backend.Contracts.Snow.Prices;
@@ -38,7 +37,6 @@ namespace MarginTrading.Backend.Controllers
         /// </remarks>
         [Route("best")]
         [HttpPost]
-        [SkipMarginTradingEnabledCheck]
         public Task<Dictionary<string, BestPriceContract>> GetBestAsync(
             [FromBody] InitPricesBackendRequest request)
         {
@@ -58,7 +56,6 @@ namespace MarginTrading.Backend.Controllers
         /// </remarks>
         [Route("bestFx")]
         [HttpPost]
-        [SkipMarginTradingEnabledCheck]
         public Task<Dictionary<string, BestPriceContract>> GetBestFxAsync(
             [FromBody] InitPricesBackendRequest request)
         {

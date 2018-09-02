@@ -15,6 +15,7 @@ using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Filters;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Common.Extensions;
@@ -59,6 +60,7 @@ namespace MarginTrading.Backend.Controllers
         /// <param name="request">Additional info for close</param>
         [Route("{positionId}")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
+        [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpDelete]
         public async Task CloseAsync([CanBeNull] [FromRoute] string positionId,
             [FromBody] PositionCloseRequest request = null)
@@ -104,6 +106,7 @@ namespace MarginTrading.Backend.Controllers
         /// <exception cref="InvalidOperationException"></exception>
         [Route("close-group")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
+        [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpDelete]
         public async Task CloseGroupAsync([FromQuery] string assetPairId = null, [FromQuery] string accountId = null, 
             [FromQuery] PositionDirectionContract? direction = null, [FromBody] PositionCloseRequest request = null)
@@ -150,6 +153,7 @@ namespace MarginTrading.Backend.Controllers
         /// <param name="direction">Positions direction (Long or Short), optional</param>
         [Route("instrument-group/{instrument}")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
+        [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpDelete]
         [Obsolete("Will be removed soon. Use close-group with instrument, account and direction.")]
         public async Task CloseGroupAsync([FromRoute] string instrument,
@@ -199,6 +203,7 @@ namespace MarginTrading.Backend.Controllers
         /// <param name="request">Additional info for close</param>
         [Route("account-group/{accountId}")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
+        [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpDelete]
         [Obsolete("Will be removed soon. Use close-group with instrument, account and direction.")]
         public async Task CloseGroupAsync([FromRoute] string accountId, [FromQuery] string assetPairId = null, 
