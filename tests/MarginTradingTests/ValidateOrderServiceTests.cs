@@ -144,7 +144,7 @@ namespace MarginTradingTests
         }
 
         [Test]
-        public void Is_Account_Ivalid()
+        public void Is_Account_Invalid()
         {
             const string accountId = "nosuchaccountId";
 
@@ -211,7 +211,7 @@ namespace MarginTradingTests
 
             Assert.That(ex.RejectReason == OrderRejectReason.NotEnoughBalance);
         }
-        
+
         //TODO: Intruduce order prices validations in MTC-280
 //
 //        [Test]
