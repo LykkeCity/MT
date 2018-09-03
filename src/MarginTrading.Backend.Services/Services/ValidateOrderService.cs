@@ -246,7 +246,7 @@ namespace MarginTrading.Backend.Services
 
             if (!string.IsNullOrEmpty(request.PositionId))
             {
-                var position = _ordersCache.Positions.GetOrderById(request.PositionId);
+                var position = _ordersCache.Positions.GetPositionById(request.PositionId);
                 
                 ValidateRelatedOrderAlreadyExists(position.RelatedOrders, orderType);
 
@@ -500,7 +500,7 @@ namespace MarginTrading.Backend.Services
                     $"Margin Trading is in beta testing. The volume of a single order is temporarily limited to {tradingInstrument.DealMaxLimit} {tradingInstrument.Instrument}. Thank you for using Lykke Margin Trading, the limit will be cancelled soon!");
             }
 
-            var existingPositionsVolume = _ordersCache.Positions.GetOrdersByInstrumentAndAccount(assetPairId, accountId)
+            var existingPositionsVolume = _ordersCache.Positions.GetPositionsByInstrumentAndAccount(assetPairId, accountId)
                 .Sum(o => o.Volume);
 
             if (tradingInstrument.PositionLimit > 0 &&

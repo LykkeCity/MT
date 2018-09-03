@@ -4,6 +4,7 @@ using System.IO;
 using Autofac;
 using Common;
 using Common.Log;
+using Lykke.Common.Chaos;
 using Lykke.RabbitMqBroker.Publisher;
 using Lykke.RabbitMqBroker.Subscriber;
 using MarginTrading.Backend.Email;
@@ -11,12 +12,14 @@ using MarginTrading.Backend.Middleware.Validator;
 using MarginTrading.Common.RabbitMq;
 using Microsoft.AspNetCore.Hosting;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.EventsConsumers;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Quotes;
+using MarginTrading.Backend.Services.Services;
 using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Common.Services;
 
@@ -94,6 +97,13 @@ namespace MarginTrading.Backend.Modules
             builder.RegisterType<EquivalentPricesService>()
                 .As<IEquivalentPricesService>()
                 .SingleInstance();
+
+            builder.RegisterType<FakeSpecialLiquidationService>()
+                .As<IFakeSpecialLiquidationService>()
+                .PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies)
+                .SingleInstance();
+            
+            builder.RegisterChaosKitty(_settings.ChaosKitty);
 
             RegisterPublishers(builder, consoleWriter);
         }

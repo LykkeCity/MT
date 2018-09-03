@@ -9,5 +9,7 @@ namespace MarginTrading.Backend.Core.Settings
         [Optional] public string TradingEngine { get; set; } = nameof(TradingEngine);
 
         [Optional] public string SettingsService { get; set; } = nameof(SettingsService);
+        
+        [Optional] public string Gavel { get; set; } = nameof(Gavel);
     }
 }

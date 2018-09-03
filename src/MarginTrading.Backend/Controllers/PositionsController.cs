@@ -18,6 +18,8 @@ using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Filters;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
+using MarginTrading.Backend.Services.Infrastructure;
+using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Middleware;
 using MarginTrading.Common.Services;
@@ -36,6 +38,7 @@ namespace MarginTrading.Backend.Controllers
         private readonly OrdersCache _ordersCache;
         private readonly IAssetPairDayOffService _assetDayOffService;
         private readonly IIdentityGenerator _identityGenerator;
+        private readonly ICqrsSender _cqrsSender;
 
         public PositionsController(
             ITradingEngine tradingEngine,
@@ -43,7 +46,8 @@ namespace MarginTrading.Backend.Controllers
             IConsole consoleWriter,
             OrdersCache ordersCache,
             IAssetPairDayOffService assetDayOffService,
-            IIdentityGenerator identityGenerator)
+            IIdentityGenerator identityGenerator,
+            ICqrsSender cqrsSender)
         {
             _tradingEngine = tradingEngine;
             _operationsLogService = operationsLogService;
@@ -51,6 +55,7 @@ namespace MarginTrading.Backend.Controllers
             _ordersCache = ordersCache;
             _assetDayOffService = assetDayOffService;
             _identityGenerator = identityGenerator;
+            _cqrsSender = cqrsSender;
         }
 
         /// <summary>
@@ -65,7 +70,7 @@ namespace MarginTrading.Backend.Controllers
         public async Task CloseAsync([CanBeNull] [FromRoute] string positionId,
             [FromBody] PositionCloseRequest request = null)
         {
-            if (!_ordersCache.Positions.TryGetOrderById(positionId, out var position))
+            if (!_ordersCache.Positions.TryGetPositionById(positionId, out var position))
             {
                 throw new InvalidOperationException("Position not found");
             }
@@ -116,7 +121,7 @@ namespace MarginTrading.Backend.Controllers
                 throw new ArgumentNullException(nameof(assetPairId), "AssetPairId or accountId must be set.");
             }
 
-            var positions = _ordersCache.Positions.GetAllOrders()
+            var positions = _ordersCache.Positions.GetAllPositions()
                 .Where(x => (string.IsNullOrWhiteSpace(assetPairId) || x.AssetPairId == assetPairId)
                             && (string.IsNullOrWhiteSpace(accountId) || x.AccountId == accountId)
                             && (direction == null || x.Direction == direction.ToType<PositionDirection>()))
@@ -160,7 +165,7 @@ namespace MarginTrading.Backend.Controllers
             [FromQuery] PositionDirectionContract? direction = null,
             [FromBody] PositionCloseRequest request = null)
         {
-            var positions = _ordersCache.Positions.GetAllOrders();
+            var positions = _ordersCache.Positions.GetAllPositions();
             
             if (!string.IsNullOrWhiteSpace(instrument))
                 positions = positions.Where(o => o.AssetPairId == instrument).ToList();
@@ -209,7 +214,7 @@ namespace MarginTrading.Backend.Controllers
         public async Task CloseGroupAsync([FromRoute] string accountId, [FromQuery] string assetPairId = null, 
             [FromBody] PositionCloseRequest request = null)
         {
-            var orders = _ordersCache.Positions.GetAllOrders();
+            var orders = _ordersCache.Positions.GetAllPositions();
 
             if (string.IsNullOrWhiteSpace(accountId))
             {
@@ -248,7 +253,7 @@ namespace MarginTrading.Backend.Controllers
         [HttpGet, Route("{positionId}")]
         public Task<OpenPositionContract> GetAsync(string positionId)
         {
-            if (!_ordersCache.Positions.TryGetOrderById(positionId, out var order))
+            if (!_ordersCache.Positions.TryGetPositionById(positionId, out var order))
                 return null;
 
             return Task.FromResult(Convert(order));
@@ -261,7 +266,7 @@ namespace MarginTrading.Backend.Controllers
         public Task<List<OpenPositionContract>> ListAsync([FromQuery]string accountId = null,
             [FromQuery] string assetPairId = null)
         {
-            var positions = _ordersCache.Positions.GetAllOrders().AsEnumerable();
+            var positions = _ordersCache.Positions.GetAllPositions().AsEnumerable();
             
             if (!string.IsNullOrWhiteSpace(accountId))
                 positions = positions.Where(o => o.AccountId == accountId);
@@ -289,7 +294,7 @@ namespace MarginTrading.Backend.Controllers
                 throw new ArgumentOutOfRangeException(nameof(skip), "Skip must be >= 0, take must be > 0");
             }
             
-            var positions = _ordersCache.Positions.GetAllOrders().AsEnumerable();
+            var positions = _ordersCache.Positions.GetAllPositions().AsEnumerable();
             
             if (!string.IsNullOrWhiteSpace(accountId))
                 positions = positions.Where(o => o.AccountId == accountId);
@@ -307,6 +312,20 @@ namespace MarginTrading.Backend.Controllers
                 size: filtered.Count,
                 totalSize: positionList.Count
             ));
+        }
+
+        /// <summary>
+        /// FOR TEST PURPOSES ONLY!
+        /// </summary>
+        [HttpPost, Route("special-liquidation")]
+        public void StartSpecialLiquidation(string[] positionIds)
+        {
+            _cqrsSender.SendCommandToSelf(new StartSpecialLiquidationInternalCommand
+            {
+                OperationId = _identityGenerator.GenerateGuid(),
+                CreationTime = DateTime.UtcNow,
+                PositionIds = positionIds,
+            });
         }
 
         private OpenPositionContract Convert(Position position)

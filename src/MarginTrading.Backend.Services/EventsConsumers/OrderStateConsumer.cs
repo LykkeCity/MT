@@ -77,7 +77,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             }
             
             if (!string.IsNullOrEmpty(order.ParentPositionId)
-                && _ordersCache.Positions.TryGetOrderById(order.ParentPositionId, out var parentPosition))
+                && _ordersCache.Positions.TryGetPositionById(order.ParentPositionId, out var parentPosition))
             {
                 parentPosition.RemoveRelatedOrder(order.Id);
             }

@@ -12,11 +12,14 @@ using Autofac;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.MatchingEngines;
  using MarginTrading.Backend.Core.Orders;
+ using MarginTrading.Backend.Core.Repositories;
  using MarginTrading.Backend.Core.Services;
  using MarginTrading.Backend.Core.Settings;
  using MarginTrading.Backend.Core.Trading;
  using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
+ using MarginTrading.Backend.Services.Infrastructure;
+ using MarginTrading.Backend.Services.MatchingEngines;
  using MarginTrading.Backend.Services.TradingConditions;
  using MarginTrading.Backend.Services.Workflow;
  using MarginTrading.Common.Services;
@@ -24,7 +27,8 @@ using MarginTrading.SettingsService.Contracts;
 using MarginTrading.SettingsService.Contracts.TradingConditions;
  using MarginTradingTests.Helpers;
  using Moq;
-using NUnit.Framework;
+ using MoreLinq;
+ using NUnit.Framework;
 
 
 namespace MarginTradingTests
@@ -795,6 +799,42 @@ namespace MarginTradingTests
             Assert.AreEqual(0.11011M, position.GetMarginInit());
         }
 
+        [Test]
+        public void Is_Positions_Liquidated()
+        {
+            var ordersSet1 = new []
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "7", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.04M, Volume = 100 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "8", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.05M, Volume = -100 }
+            };
+
+            _matchingEngine.SetOrders(MarketMaker1Id, ordersSet1, deleteAll: true);
+            
+            var identityGeneratorMock = new Mock<IIdentityGenerator>();
+            identityGeneratorMock.Setup(x => x.GenerateAlphanumericId()).Returns("fake");
+            
+            var order1 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[3],
+                MarginTradingTestsUtils.TradingConditionId, 8);
+            var order2 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[4],
+                MarginTradingTestsUtils.TradingConditionId, -2);
+            
+            order1 = _tradingEngine.PlaceOrderAsync(order1).Result;
+            order2 = _tradingEngine.PlaceOrderAsync(order2).Result;
+
+            ValidateOrderIsExecuted(order1, new[] {"8",}, 1.05M);
+            ValidatePositionIsOpened(order1.Id, 1.04M, -0.08M);
+            ValidateOrderIsExecuted(order2, new[] {"7"}, 1.04M);
+            ValidatePositionIsOpened(order2.Id, 1.05M, -0.02M);
+            
+            var orders = _tradingEngine.LiquidatePositionsAsync(new SpecialLiquidationMatchingEngine(2.5M, "Test",
+                "test", DateTime.UtcNow), new [] {order1.Id, order2.Id}, "Test").Result;
+            
+            orders.ForEach(o => ValidateOrderIsExecuted(o, new[] {"test"}, 2.5M));
+            Assert.AreEqual(2, orders.Max(x => x.Volume));
+            Assert.AreEqual(-8, orders.Min(x => x.Volume));
+            Assert.AreEqual(0, _ordersCache.Positions.GetPositionsByInstrument("EURUSD").Count);
+        }
+
         #endregion
 
         
@@ -1101,7 +1141,7 @@ namespace MarginTradingTests
 
         private Position ValidatePositionIsOpened(string positionId, decimal currentPositionClosePrice, decimal positionFpl)
         {
-            Assert.IsTrue(_ordersCache.Positions.TryGetOrderById(positionId, out var position), "Position was not opened");
+            Assert.IsTrue(_ordersCache.Positions.TryGetPositionById(positionId, out var position), "Position was not opened");
                 
             Assert.AreEqual(currentPositionClosePrice, Math.Round(position.ClosePrice, 5));
             Assert.AreEqual(positionFpl, Math.Round(position.GetFpl(), 3));
@@ -1113,7 +1153,7 @@ namespace MarginTradingTests
         private void ValidatePositionIsClosed(Position position, decimal closePrice, decimal positionFpl,
             PositionCloseReason closeReason = PositionCloseReason.Close)
         {
-            Assert.IsFalse(_ordersCache.Positions.TryGetOrderById(position.Id, out var tmp),
+            Assert.IsFalse(_ordersCache.Positions.TryGetPositionById(position.Id, out var tmp),
                 "Position is still opened");
 
 

@@ -8,6 +8,7 @@ using Lykke.SettingsReader;
 using MarginTrading.AzureRepositories.Entities;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Common.Services;
 using Microsoft.Extensions.Internal;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -17,16 +18,16 @@ namespace MarginTrading.AzureRepositories
     public class OperationExecutionInfoRepository : IOperationExecutionInfoRepository
     {
         private readonly INoSQLTableStorage<OperationExecutionInfoEntity> _tableStorage;
-        private readonly ISystemClock _systemClock;
+        private readonly IDateService _dateService;
 
         public OperationExecutionInfoRepository(IReloadingManager<string> connectionStringManager, 
-            ILog log, ISystemClock systemClock)
+            ILog log, IDateService dateService)
         {
             _tableStorage = AzureTableStorage<OperationExecutionInfoEntity>.Create(
                 connectionStringManager,
                 "MarginTradingExecutionInfo",
                 log);
-            _systemClock = systemClock;
+            _dateService = dateService;
         }
         
         public async Task<IOperationExecutionInfo<TData>> GetOrAddAsync<TData>(
@@ -38,7 +39,7 @@ namespace MarginTrading.AzureRepositories
                 createNew: () =>
                 {
                     var result = Convert(factory());
-                    result.LastModified = _systemClock.UtcNow.UtcDateTime;
+                    result.LastModified = _dateService.Now();
                     return result;
                 });
                 
@@ -59,7 +60,7 @@ namespace MarginTrading.AzureRepositories
         public async Task Save<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class
         {
             var entity = Convert(executionInfo);
-            entity.LastModified = _systemClock.UtcNow.UtcDateTime;
+            entity.LastModified = _dateService.Now();
             await _tableStorage.ReplaceAsync(entity);
         }
 

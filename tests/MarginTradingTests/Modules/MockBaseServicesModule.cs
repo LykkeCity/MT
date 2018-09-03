@@ -80,7 +80,9 @@ namespace MarginTradingTests.Modules
                 .SingleInstance();
             builder.RegisterInstance(new CqrsContextNamesSettings()).AsSelf().SingleInstance();
             builder.RegisterType<AccountsProjection>().AsSelf().SingleInstance();
-            builder.RegisterType<CqrsSender>().As<ICqrsSender>().SingleInstance();
+            builder.RegisterType<CqrsSender>().As<ICqrsSender>()
+                .PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies)
+                .SingleInstance();
         }
     }
 

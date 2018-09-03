@@ -12,5 +12,6 @@
         public const string DefaultMm = "MM";
         public const string LykkeCyStp = "LYKKECY_STP";
         public const string DefaultStp = "STP";
+        public const string DefaultSpecialLiquidation = "SPECIAL_LIQUIDATION";
     }
 }

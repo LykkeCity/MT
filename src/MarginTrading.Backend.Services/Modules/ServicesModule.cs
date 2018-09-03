@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using Common.Log;
 using Autofac.Features.Variance;
+using Lykke.Common.Chaos;
 using Lykke.SettingsReader;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;

@@ -111,7 +111,7 @@ namespace MarginTrading.Backend.Services
 
         private ICollection<Position> GetPositions(string accountId)
         {
-            return _ordersCache.Positions.GetOrdersByAccountIds(accountId);
+            return _ordersCache.Positions.GetPositionsByAccountIds(accountId);
         }
         
         private ICollection<Order> GetActiveOrders(string accountId)
