@@ -474,7 +474,7 @@ namespace MarginTradingTests
             Mock.Get(_tradingInstruments).Setup(s => s.List(It.IsAny<string>()))
                 .ReturnsAsync(new List<TradingInstrumentContract> {instrumentContract});
             
-            await _accountAssetsManager.UpdateTradingInstrumentsCache();
+            await _accountAssetsManager.UpdateTradingInstrumentsCacheAsync();
            
             position.UpdateClosePrice(1.04875M);
 

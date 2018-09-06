@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.Linq;
+using System.Text.RegularExpressions;
 using JetBrains.Annotations;
+using MarginTrading.Backend.Core.DayOffSettings;
+using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services.AssetPairs
@@ -8,12 +12,12 @@ namespace MarginTrading.Backend.Services.AssetPairs
     public class AssetPairDayOffService : IAssetPairDayOffService
     {
         private readonly IDateService _dateService;
-        private readonly IDayOffSettingsService _dayOffSettingsService;
+        private readonly IScheduleSettingsCacheService _scheduleSettingsCacheService;
 
-        public AssetPairDayOffService(IDateService dateService, IDayOffSettingsService dayOffSettingsService)
+        public AssetPairDayOffService(IDateService dateService, IScheduleSettingsCacheService scheduleSettingsCacheService)
         {
             _dateService = dateService;
-            _dayOffSettingsService = dayOffSettingsService;
+            _scheduleSettingsCacheService = scheduleSettingsCacheService;
         }
 
         public bool IsDayOff(string assetPairId)
@@ -23,7 +27,8 @@ namespace MarginTrading.Backend.Services.AssetPairs
         
         public bool ArePendingOrdersDisabled(string assetPairId)
         {
-            return IsNowNotInSchedule(assetPairId, _dayOffSettingsService.GetScheduleSettings().PendingOrdersCutOff);
+            //TODO TBD in https://lykke-snow.atlassian.net/browse/MTC-155
+            return false; //IsNowNotInSchedule(assetPairId, _dayOffSettingsService.GetScheduleSettings().PendingOrdersCutOff);
         }
 
         /// <summary>
@@ -37,42 +42,39 @@ namespace MarginTrading.Backend.Services.AssetPairs
         private bool IsNowNotInSchedule(string assetPairId, TimeSpan scheduleCutOff)
         {
             var currentDateTime = _dateService.Now();
-            var isDayOffByExclusion = IsDayOffByExclusion(assetPairId, scheduleCutOff, currentDateTime);
-            if (isDayOffByExclusion != null)
-                return isDayOffByExclusion.Value; 
             
-            var scheduleSettings = _dayOffSettingsService.GetScheduleSettings();
-            if (scheduleSettings.AssetPairsWithoutDayOff.Contains(assetPairId))
-                return false;
+            var scheduleSettings = _scheduleSettingsCacheService.GetScheduleSettings(assetPairId);
             
-            var closestDayOffStart = GetNextWeekday(currentDateTime, scheduleSettings.DayOffStartDay)
-                                    .Add(scheduleSettings.DayOffStartTime.Subtract(scheduleCutOff));
-
-            var closestDayOffEnd = GetNextWeekday(currentDateTime, scheduleSettings.DayOffEndDay)
-                                    .Add(scheduleSettings.DayOffEndTime.Add(scheduleCutOff));
-
-            if (closestDayOffStart > closestDayOffEnd)
-            {
-                closestDayOffStart = closestDayOffEnd.AddDays(-7);
-            }
-
-            return (currentDateTime >= closestDayOffStart && currentDateTime < closestDayOffEnd)
-                   //don't even try to understand
-                   || currentDateTime < closestDayOffEnd.AddDays(-7);
-        }
-
-        [CanBeNull]
-        private bool? IsDayOffByExclusion(string assetPairId, TimeSpan scheduleCutOff, DateTime currentDateTime)
-        {
-            var dayOffExclusions = _dayOffSettingsService.GetExclusions(assetPairId);
-            return dayOffExclusions
-                .Where(e =>
+            //get recurring closest intervals
+            var recurring = scheduleSettings
+                .Where(x => x.Start.Date == null)//validated in settings
+                .SelectMany(sch =>
                 {
-                    var start = e.IsTradeEnabled ? e.Start.Add(scheduleCutOff) : e.Start.Subtract(scheduleCutOff);
-                    var end = e.IsTradeEnabled ? e.End.Subtract(scheduleCutOff) : e.End.Add(scheduleCutOff);
-                    return IsBetween(currentDateTime, start, end);
-                }).DefaultIfEmpty()
-                .Select(e => e == null ? (bool?) null : !e.IsTradeEnabled).Max();
+                    var currentStart = GetCurrentWeekday(currentDateTime, sch.Start.DayOfWeek.Value)
+                        .Add(sch.Start.Time.Subtract(scheduleCutOff));
+                    var currentEnd = GetCurrentWeekday(currentDateTime, sch.End.DayOfWeek.Value)
+                        .Add(sch.End.Time.Add(scheduleCutOff));
+                    if (currentEnd < currentStart)
+                    {
+                        currentEnd = currentEnd.AddDays(7);
+                    }
+                     
+                    return new []
+                    {
+                        (sch, currentStart, currentEnd),
+                        (sch, currentStart.AddDays(-7), currentEnd.AddDays(-7))
+                    };
+                });
+            //get separate intervals
+            var separate = scheduleSettings
+                .Where(x => x.Start.Date != null)
+                .Select(sch => (sch, sch.Start.Date.Value.Add(sch.Start.Time.Subtract(scheduleCutOff)),
+                    sch.End.Date.Value.Add(sch.End.Time.Add(scheduleCutOff))));
+
+            var intersecting = recurring.Concat(separate).Where(x => IsBetween(currentDateTime, x.Item2, x.Item3));
+
+            return !(intersecting.OrderByDescending(x => x.sch.Rank)
+                         .Select(x => x.sch).FirstOrDefault()?.IsTradeEnabled ?? true);
         }
 
         private static bool IsBetween(DateTime currentDateTime, DateTime start, DateTime end)
@@ -80,9 +82,9 @@ namespace MarginTrading.Backend.Services.AssetPairs
             return start <= currentDateTime && currentDateTime <= end;
         }
 
-        private static DateTime GetNextWeekday(DateTime start, DayOfWeek day)
+        private static DateTime GetCurrentWeekday(DateTime start, DayOfWeek day)
         {
-            var daysToAdd = ((int) day - (int) start.DayOfWeek + 7) % 7;
+            var daysToAdd = ((int) day - (int) start.DayOfWeek) % 7;
             return start.Date.AddDays(daysToAdd);
         }
     }

@@ -16,6 +16,7 @@ using MarginTrading.Backend.Infrastructure;
 using MarginTrading.Backend.Middleware;
 using MarginTrading.Backend.Modules;
 using MarginTrading.Backend.Services;
+using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Modules;
 using MarginTrading.Backend.Services.Quotes;
@@ -168,6 +169,7 @@ namespace MarginTrading.Backend
             builder.RegisterBuildCallback(c => c.Resolve<OrderBookSaveService>());
             builder.RegisterBuildCallback(c => c.Resolve<QuoteCacheService>());
             builder.RegisterBuildCallback(c => c.Resolve<AccountManager>()); // note the order here is important!
+            builder.RegisterBuildCallback(c => c.Resolve<IScheduleSettingsCacheService>());
             builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
             builder.RegisterBuildCallback(c => c.Resolve<PendingOrdersCleaningService>());
         }

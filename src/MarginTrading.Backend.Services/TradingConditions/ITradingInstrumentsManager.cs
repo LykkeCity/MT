@@ -4,6 +4,6 @@ namespace MarginTrading.Backend.Services.TradingConditions
 {
     public interface ITradingInstrumentsManager
     {
-        Task UpdateTradingInstrumentsCache();
+        Task UpdateTradingInstrumentsCacheAsync();
     }
 }

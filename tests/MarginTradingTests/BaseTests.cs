@@ -153,18 +153,18 @@ namespace MarginTradingTests
             
             builder.RegisterType<ConvertService>().As<IConvertService>().SingleInstance();
 
-            var settings = new ScheduleSettings(
-                DayOfWeek.Sunday,
-                new TimeSpan(21, 0, 0),
-                DayOfWeek.Sunday,
-                new TimeSpan(21, 0, 0),
-                new[] {"BTCCHF"}.ToHashSet(),
-                TimeSpan.Zero);
-            var dayOffSettingsService = new Mock<IDayOffSettingsService>(MockBehavior.Strict);
-            dayOffSettingsService.Setup(s => s.GetScheduleSettings()).Returns(settings);
-            dayOffSettingsService.Setup(s => s.GetExclusions(It.IsNotNull<string>()))
-                .Returns(ImmutableArray<DayOffExclusion>.Empty);
-            builder.RegisterInstance(dayOffSettingsService.Object).SingleInstance();
+//            var settings = new ScheduleSettingsOld(
+//                DayOfWeek.Sunday,
+//                new TimeSpan(21, 0, 0),
+//                DayOfWeek.Sunday,
+//                new TimeSpan(21, 0, 0),
+//                new[] {"BTCCHF"}.ToHashSet(),
+//                TimeSpan.Zero);
+//            var dayOffSettingsService = new Mock<IScheduleSettingsCacheService>(MockBehavior.Strict);
+//            dayOffSettingsService.Setup(s => s.GetScheduleSettings(TODO)).Returns(settings);
+//            dayOffSettingsService.Setup(s => s.GetExclusions(It.IsNotNull<string>()))
+//                .Returns(ImmutableArray<DayOffExclusion>.Empty);
+//            builder.RegisterInstance(dayOffSettingsService.Object).SingleInstance();
 
             var exchangeConnector = Mock.Of<IExchangeConnectorService>();
             builder.RegisterInstance(exchangeConnector).As<IExchangeConnectorService>();

@@ -1,27 +1,39 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
+using MarginTrading.SettingsService.Contracts.Scheduling;
 
 namespace MarginTrading.Backend.Core.DayOffSettings
 {
     public class ScheduleSettings
     {
-        public DayOfWeek DayOffStartDay { get; }
-        public TimeSpan DayOffStartTime { get; }
-        public DayOfWeek DayOffEndDay { get; }
-        public TimeSpan DayOffEndTime { get; }
-        public HashSet<string> AssetPairsWithoutDayOff { get; }
-        public TimeSpan PendingOrdersCutOff { get; }
+        public string Id { get; set; }
+        public int Rank { get; set; }
+        public bool? IsTradeEnabled { get; set; } = false;
+        public TimeSpan? PendingOrdersCutOff { get; set; }
 
-        public ScheduleSettings(DayOfWeek dayOffStartDay, TimeSpan dayOffStartTime, DayOfWeek dayOffEndDay,
-            TimeSpan dayOffEndTime, HashSet<string> assetPairsWithoutDayOff, TimeSpan pendingOrdersCutOff)
+        public ScheduleConstraint Start { get; set; }
+        public ScheduleConstraint End { get; set; }
+
+        public static ScheduleSettings Create(CompiledScheduleSettingsContract scheduleSettingsContract)
         {
-            DayOffStartDay = dayOffStartDay;
-            DayOffStartTime = dayOffStartTime;
-            DayOffEndDay = dayOffEndDay;
-            DayOffEndTime = dayOffEndTime;
-            AssetPairsWithoutDayOff = assetPairsWithoutDayOff ??
-                                      throw new ArgumentNullException(nameof(assetPairsWithoutDayOff));
-            PendingOrdersCutOff = pendingOrdersCutOff;
+            return new ScheduleSettings
+            {
+                Id = scheduleSettingsContract.Id,
+                Rank = scheduleSettingsContract.Rank,
+                IsTradeEnabled = scheduleSettingsContract.IsTradeEnabled,
+                PendingOrdersCutOff = scheduleSettingsContract.PendingOrdersCutOff,
+                Start = new ScheduleConstraint
+                {
+                    Date = DateTime.TryParse(scheduleSettingsContract.Start.Date, out var start) ? start : (DateTime?)null,
+                    DayOfWeek = scheduleSettingsContract.Start.DayOfWeek,
+                    Time = scheduleSettingsContract.Start.Time
+                },
+                End = new ScheduleConstraint
+                {
+                    Date = DateTime.TryParse(scheduleSettingsContract.End.Date, out var end) ? end : (DateTime?)null,
+                    DayOfWeek = scheduleSettingsContract.End.DayOfWeek,
+                    Time = scheduleSettingsContract.End.Time,
+                }
+            };
         }
     }
 }

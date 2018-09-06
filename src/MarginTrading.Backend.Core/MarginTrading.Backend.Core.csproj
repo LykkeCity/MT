@@ -17,4 +17,9 @@
   <ItemGroup>
     <ProjectReference Include="..\MarginTrading.Common\MarginTrading.Common.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Reference Include="MarginTrading.SettingsService.Contracts, Version=1.1.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>..\..\..\..\.nuget\packages\lykke.margintrading.settingsservice.contracts\1.1.0\lib\netstandard2.0\MarginTrading.SettingsService.Contracts.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 </Project>
