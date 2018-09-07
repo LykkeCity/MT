@@ -36,6 +36,9 @@ namespace MarginTrading.DataReader.Controllers
             _ordersSnapshotReaderService = ordersSnapshotReaderService;
         }
 
+        /// <summary>
+        /// Returns account history aggregate. Call without clientId might be slow.
+        /// </summary>
         [Route("byTypes")]
         [HttpGet]
         public async Task<AccountHistoryResponse> ByTypes([FromQuery] AccountHistoryRequest request)
