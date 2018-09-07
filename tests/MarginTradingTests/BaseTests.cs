@@ -25,6 +25,8 @@ using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Services.Settings;
+using MarginTrading.SettingsService.Contracts;
+using MarginTrading.SettingsService.Contracts.Scheduling;
 using MarginTradingTests.Modules;
 using Moq;
 
@@ -152,6 +154,11 @@ namespace MarginTradingTests
                 .SingleInstance();
             
             builder.RegisterType<ConvertService>().As<IConvertService>().SingleInstance();
+
+            var scheduleSettingsApiMock = new Mock<IScheduleSettingsApi>();
+            scheduleSettingsApiMock.Setup(m => m.StateList(It.IsAny<string[]>()))
+                .ReturnsAsync(new List<CompiledScheduleContract>());
+            builder.RegisterInstance(scheduleSettingsApiMock.Object).As<IScheduleSettingsApi>();
 
             var exchangeConnector = Mock.Of<IExchangeConnectorService>();
             builder.RegisterInstance(exchangeConnector).As<IExchangeConnectorService>();

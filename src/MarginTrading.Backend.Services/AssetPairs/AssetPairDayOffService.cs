@@ -70,6 +70,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 .Where(x => x.Start.Date != null)
                 .Select(sch => (sch, sch.Start.Date.Value.Add(sch.Start.Time.Subtract(scheduleCutOff)),
                     sch.End.Date.Value.Add(sch.End.Time.Add(scheduleCutOff))));
+            //TODO probably we can cache it for some time.. if needed.
 
             var intersecting = recurring.Concat(separate).Where(x => IsBetween(currentDateTime, x.Item2, x.Item3));
 

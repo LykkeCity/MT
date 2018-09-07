@@ -57,7 +57,9 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
             try
             {
-                return _cache[assetPairId];
+                return !string.IsNullOrEmpty(assetPairId) && _cache.TryGetValue(assetPairId, out var settings) 
+                    ? settings 
+                    : new List<ScheduleSettings>();
             }
             finally
             {
