@@ -25,6 +25,7 @@ using MarginTrading.Common.Middleware;
 using MarginTrading.Common.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MoreLinq;
 
 namespace MarginTrading.Backend.Controllers
 {
@@ -75,10 +76,7 @@ namespace MarginTrading.Backend.Controllers
                 throw new InvalidOperationException("Position not found");
             }
 
-            //if (_assetDayOffService.IsDayOff(position.AssetPairId))
-            //{
-            //    throw new InvalidOperationException("Trades for instrument are not available");
-            //}
+            ValidateDayOff(position.AssetPairId);
 
             var originator = GetOriginator(request?.Originator);
 
@@ -126,6 +124,8 @@ namespace MarginTrading.Backend.Controllers
                             && (string.IsNullOrWhiteSpace(accountId) || x.AccountId == accountId)
                             && (direction == null || x.Direction == direction.ToType<PositionDirection>()))
                 .ToList();
+
+            ValidateDayOff(positions.Select(x => x.AssetPairId).Distinct().ToArray());
             
             var originator = GetOriginator(request?.Originator);
             
@@ -176,6 +176,8 @@ namespace MarginTrading.Backend.Controllers
 
                 positions = positions.Where(o => o.Direction == positionDirection).ToList();
             }
+            
+            ValidateDayOff(positions.Select(x => x.AssetPairId).Distinct().ToArray());
 
             var originator = GetOriginator(request?.Originator);
             
@@ -214,21 +216,23 @@ namespace MarginTrading.Backend.Controllers
         public async Task CloseGroupAsync([FromRoute] string accountId, [FromQuery] string assetPairId = null, 
             [FromBody] PositionCloseRequest request = null)
         {
-            var orders = _ordersCache.Positions.GetAllPositions();
+            var positions = _ordersCache.Positions.GetAllPositions();
 
             if (string.IsNullOrWhiteSpace(accountId))
             {
                 throw new ArgumentNullException(nameof(accountId));
             }
 
-            orders = orders.Where(o => o.AccountId == accountId && 
+            positions = positions.Where(o => o.AccountId == accountId && 
                                        (string.IsNullOrWhiteSpace(assetPairId) || o.AssetPairId == assetPairId)).ToList();
+            
+            ValidateDayOff(positions.Select(x => x.AssetPairId).Distinct().ToArray());
 
             var originator = GetOriginator(request?.Originator);
             
             var correlationId = request?.CorrelationId ?? _identityGenerator.GenerateGuid();
             
-            foreach (var orderId in orders.Select(o => o.Id).ToList())
+            foreach (var orderId in positions.Select(o => o.Id).ToList())
             {
                 var closedOrder =
                     await _tradingEngine.ClosePositionAsync(orderId, originator, request?.AdditionalInfo, 
@@ -361,6 +365,23 @@ namespace MarginTrading.Backend.Controllers
             }
 
             return originator.ToType<OriginatorType>();
+        }
+
+        private void ValidateDayOff(params string[] assetPairIds)
+        {
+            var lockedInstrument = string.Empty;
+            foreach (var instrument in assetPairIds)
+            {
+                if (_assetDayOffService.IsDayOff(instrument))
+                {
+                    lockedInstrument = instrument;
+                    break;
+                }
+            }
+            if (!string.IsNullOrEmpty(lockedInstrument))
+            {
+                throw new InvalidOperationException($"Trades for {lockedInstrument} are not available");
+            }
         }
     }
 }
