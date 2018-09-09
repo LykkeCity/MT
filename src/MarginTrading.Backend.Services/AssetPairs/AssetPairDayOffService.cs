@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 using MarginTrading.Backend.Core.DayOffSettings;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Common.Services;
+// ReSharper disable PossibleInvalidOperationException
 
 namespace MarginTrading.Backend.Services.AssetPairs
 {
@@ -42,51 +43,21 @@ namespace MarginTrading.Backend.Services.AssetPairs
         private bool IsNowNotInSchedule(string assetPairId, TimeSpan scheduleCutOff)
         {
             var currentDateTime = _dateService.Now();
-            
-            var scheduleSettings = _scheduleSettingsCacheService.GetScheduleSettings(assetPairId);
-            
-            //get recurring closest intervals
-            var recurring = scheduleSettings
-                .Where(x => x.Start.Date == null)//validated in settings
-                .SelectMany(sch =>
-                {
-                    var currentStart = GetCurrentWeekday(currentDateTime, sch.Start.DayOfWeek.Value)
-                        .Add(sch.Start.Time.Subtract(scheduleCutOff));
-                    var currentEnd = GetCurrentWeekday(currentDateTime, sch.End.DayOfWeek.Value)
-                        .Add(sch.End.Time.Add(scheduleCutOff));
-                    if (currentEnd < currentStart)
-                    {
-                        currentEnd = currentEnd.AddDays(7);
-                    }
-                     
-                    return new []
-                    {
-                        (sch, currentStart, currentEnd),
-                        (sch, currentStart.AddDays(-7), currentEnd.AddDays(-7))
-                    };
-                });
-            //get separate intervals
-            var separate = scheduleSettings
-                .Where(x => x.Start.Date != null)
-                .Select(sch => (sch, sch.Start.Date.Value.Add(sch.Start.Time.Subtract(scheduleCutOff)),
-                    sch.End.Date.Value.Add(sch.End.Time.Add(scheduleCutOff))));
-            //TODO probably we can cache it for some time.. if needed.
 
-            var intersecting = recurring.Concat(separate).Where(x => IsBetween(currentDateTime, x.Item2, x.Item3));
+            var schedule = _scheduleSettingsCacheService.GetCompiledScheduleSettings(assetPairId, 
+                currentDateTime, scheduleCutOff);
 
-            return !(intersecting.OrderByDescending(x => x.sch.Rank)
-                         .Select(x => x.sch).FirstOrDefault()?.IsTradeEnabled ?? true);
+            var intersecting = schedule.Where(x => IsBetween(currentDateTime, x.Item2, x.Item3));
+            
+            //TODO unit tests
+
+            return !(intersecting.OrderByDescending(x => x.Schedule.Rank)
+                         .Select(x => x.Schedule).FirstOrDefault()?.IsTradeEnabled ?? true);
         }
 
         private static bool IsBetween(DateTime currentDateTime, DateTime start, DateTime end)
         {
             return start <= currentDateTime && currentDateTime <= end;
-        }
-
-        private static DateTime GetCurrentWeekday(DateTime start, DayOfWeek day)
-        {
-            var daysToAdd = ((int) day - (int) start.DayOfWeek) % 7;
-            return start.Date.AddDays(daysToAdd);
         }
     }
 }

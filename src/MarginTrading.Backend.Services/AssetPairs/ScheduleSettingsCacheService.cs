@@ -2,48 +2,163 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
+using Common;
+using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.DayOffSettings;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Common.Extensions;
+using MarginTrading.Common.Services;
 using MarginTrading.SettingsService.Contracts;
 using MarginTrading.SettingsService.Contracts.Scheduling;
 
 namespace MarginTrading.Backend.Services.AssetPairs
 {
-    internal class ScheduleSettingsCacheService : IScheduleSettingsCacheService
+    internal class ScheduleSettingsCacheService : IScheduleSettingsCacheService, IStartable
     {
         private readonly IScheduleSettingsApi _scheduleSettingsApi;
         private readonly IAssetPairsCache _assetPairsCache;
-        private Dictionary<string, List<ScheduleSettings>> _cache;
+        private readonly IDateService _dateService;
+        private readonly ILog _log;
+        private Dictionary<string, List<ScheduleSettings>> _rawScheduleSettingsCache;
+        private Dictionary<string, List<(ScheduleSettings Schedule, DateTime Start, DateTime End)>>
+            _compiledScheduleTimelineCache;
+        private DateTime _lastCacheRecalculationTime = DateTime.MinValue;
 
         private readonly ReaderWriterLockSlim _readerWriterLockSlim = new ReaderWriterLockSlim();
 
         public ScheduleSettingsCacheService(
             IScheduleSettingsApi scheduleSettingsApi,
-            IAssetPairsCache assetPairsCache)
+            IAssetPairsCache assetPairsCache,
+            IDateService dateService,
+            ILog log)
         {
             _scheduleSettingsApi = scheduleSettingsApi;
             _assetPairsCache = assetPairsCache;
+            _dateService = dateService;
+            _log = log;
+        }
 
-            UpdateSettingsAsync().GetAwaiter().GetResult();//called by IoC on init
+        public void Start()
+        {
+            UpdateSettingsAsync().GetAwaiter().GetResult();
         }
 
         public async Task UpdateSettingsAsync()
         {
-            var newScheduleContract = await _scheduleSettingsApi.StateList(_assetPairsCache.GetAllIds().ToArray());
-
+            var newScheduleContracts = await _scheduleSettingsApi.StateList(_assetPairsCache.GetAllIds().ToArray());
+            var invalidSchedules = newScheduleContracts.ToDictionary(key => key.AssetPairId,
+                value => value.ScheduleSettings.Where(x =>
+                {
+                    try
+                    {
+                        ScheduleConstraintContract.Validate(x);
+                        return true;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                }));
+            
             _readerWriterLockSlim.EnterWriteLock();
 
             try
             {
-                _cache = newScheduleContract.ToDictionary(x => x.AssetPairId,
-                    x => x.ScheduleSettings.Select(ScheduleSettings.Create).ToList());
+                _rawScheduleSettingsCache = newScheduleContracts.ToDictionary(x => x.AssetPairId,
+                    x => x.ScheduleSettings.Except(invalidSchedules[x.AssetPairId])
+                        .Select(ScheduleSettings.Create).ToList());
+            }
+            finally
+            {
+                _readerWriterLockSlim.ExitWriteLock();
+                CacheWarmUp();
+            }
+
+            if (invalidSchedules.Any())
+            {
+                await _log.WriteWarningAsync(nameof(ScheduleSettingsCacheService), nameof(UpdateSettingsAsync),
+                    $"Some of CompiledScheduleSettingsContracts were invalid, so they were skipped. The first one: {invalidSchedules.First().ToJson()}");
+            }
+        }
+
+        public List<(ScheduleSettings Schedule, DateTime Start, DateTime End)> GetCompiledScheduleSettings(
+            string assetPairId, DateTime currentDateTime, TimeSpan scheduleCutOff)
+        {
+            _readerWriterLockSlim.EnterUpgradeableReadLock();
+            
+            EnsureCacheValidUnsafe(currentDateTime);
+
+            try
+            {   
+                if (string.IsNullOrEmpty(assetPairId))
+                {
+                    return new List<(ScheduleSettings Schedule, DateTime Start, DateTime End)>();
+                }
+
+                if (!_compiledScheduleTimelineCache.ContainsKey(assetPairId))
+                {
+                    RecompileScheduleTimelineCacheUnsafe(assetPairId, currentDateTime, scheduleCutOff);
+                }
+
+                return _compiledScheduleTimelineCache.TryGetValue(assetPairId, out var timeline)
+                    ? timeline
+                    : new List<(ScheduleSettings Schedule, DateTime Start, DateTime End)>();
+            }
+            finally
+            {
+                _readerWriterLockSlim.ExitUpgradeableReadLock();
+            }
+        }
+
+        public void CacheWarmUp()
+        {
+            var currentDateTime = _dateService.Now();
+            var assetPairIds = _assetPairsCache.GetAllIds();
+            
+            _readerWriterLockSlim.EnterUpgradeableReadLock();
+
+            try
+            {
+                foreach (var assetPairId in assetPairIds)
+                {
+                    if (!_compiledScheduleTimelineCache.ContainsKey(assetPairId))
+                    {
+                        RecompileScheduleTimelineCacheUnsafe(assetPairId, currentDateTime, TimeSpan.Zero);//todo is zero timespan ok?
+                    }
+                }
+            }
+            finally
+            {
+                _readerWriterLockSlim.ExitUpgradeableReadLock();
+            }
+        }
+
+        /// <summary>
+        /// It invalidates the cache after 00:00:00.000 each day on request
+        /// </summary>
+        /// <param name="currentDateTime"></param>
+        private void EnsureCacheValidUnsafe(DateTime currentDateTime)
+        {
+            //it must be safe to take _lastCacheRecalculationTime without a lock, because of upper UpgradeableReadLock
+            if (_lastCacheRecalculationTime.Date.Subtract(currentDateTime.Date) < TimeSpan.FromDays(1))
+            {
+                return;
+            }
+            
+            _readerWriterLockSlim.EnterWriteLock();
+
+            try
+            {
+                _compiledScheduleTimelineCache =
+                    new Dictionary<string, List<(ScheduleSettings Schedule, DateTime Start, DateTime End)>>();
+                _lastCacheRecalculationTime = currentDateTime;
             }
             finally
             {
@@ -51,20 +166,67 @@ namespace MarginTrading.Backend.Services.AssetPairs
             }
         }
 
-        public List<ScheduleSettings> GetScheduleSettings(string assetPairId)
+        private void RecompileScheduleTimelineCacheUnsafe(string assetPairId, DateTime currentDateTime, 
+            TimeSpan scheduleCutOff)
         {
-            _readerWriterLockSlim.EnterReadLock();
+            var scheduleSettings = _rawScheduleSettingsCache.TryGetValue(assetPairId, out var settings)
+                ? settings
+                : new List<ScheduleSettings>();
+            var scheduleSettingsByType = scheduleSettings
+                .GroupBy(x => x.Start.GetConstraintType())
+                .ToDictionary(x => x.Key, value => value);
+            
+            //handle weekly
+            var weekly = scheduleSettingsByType[ScheduleConstraintType.Weekly]
+                .SelectMany(sch =>
+                {
+                    var currentStart = GetCurrentWeekday(currentDateTime, sch.Start.DayOfWeek.Value)
+                        .Add(sch.Start.Time.Subtract(scheduleCutOff));
+                    var currentEnd = GetCurrentWeekday(currentDateTime, sch.End.DayOfWeek.Value)
+                        .Add(sch.End.Time.Add(scheduleCutOff));
+                    if (currentEnd < currentStart)
+                    {
+                        currentEnd = currentEnd.AddDays(7);
+                    }
+                     
+                    return new []
+                    {
+                        (sch, currentStart, currentEnd),
+                        (sch, currentStart.AddDays(-7), currentEnd.AddDays(-7))
+                    };
+                });
+            //handle single
+            var single = scheduleSettingsByType[ScheduleConstraintType.Single]
+                .Select(sch => (sch, sch.Start.Date.Value.Add(sch.Start.Time.Subtract(scheduleCutOff)),
+                    sch.End.Date.Value.Add(sch.End.Time.Add(scheduleCutOff))));
+            //handle daily
+            var daily = scheduleSettingsByType[ScheduleConstraintType.Daily]
+                .Select(sch =>
+                {
+                    var start = currentDateTime.Date.Add(sch.Start.Time);
+                    var end = currentDateTime.Date.Add(sch.End.Time);
+                    if (end < start)
+                    {
+                        end = end.AddDays(1);
+                    }
+                    
+                    return (sch, start, end);
+                });
 
+            _readerWriterLockSlim.EnterWriteLock();
             try
             {
-                return !string.IsNullOrEmpty(assetPairId) && _cache.TryGetValue(assetPairId, out var settings) 
-                    ? settings 
-                    : new List<ScheduleSettings>();
+                _compiledScheduleTimelineCache[assetPairId] = weekly.Concat(single).Concat(daily).ToList();
             }
             finally
             {
-                _readerWriterLockSlim.ExitReadLock();
+                _readerWriterLockSlim.ExitWriteLock();
             }
+        }
+
+        private static DateTime GetCurrentWeekday(DateTime start, DayOfWeek day)
+        {
+            return start.Date.AddDays((int) day - (int) start.DayOfWeek);
         }
     }
 }

@@ -110,11 +110,6 @@ namespace MarginTrading.Backend.Controllers
         {
             if (!_ordersCache.TryGetOrderById(orderId, out var order))
                 throw new InvalidOperationException("Order not found");
-            
-            if (_assetDayOffService.IsDayOff(order.AssetPairId))
-            {
-                throw new InvalidOperationException($"Trades for {order.AssetPairId} are not available");
-            }
 
             var originator = GetOriginator(request?.Originator);
 
@@ -146,11 +141,6 @@ namespace MarginTrading.Backend.Controllers
         {
             if (!_ordersCache.TryGetOrderById(orderId, out var order))
                 throw new InvalidOperationException("Order not found");
-            
-            if (_assetDayOffService.IsDayOff(order.AssetPairId))
-            {
-                throw new InvalidOperationException($"Trades for {order.AssetPairId} are not available");
-            }
 
             try
             {

@@ -369,18 +369,12 @@ namespace MarginTrading.Backend.Controllers
 
         private void ValidateDayOff(params string[] assetPairIds)
         {
-            var lockedInstrument = string.Empty;
             foreach (var instrument in assetPairIds)
             {
                 if (_assetDayOffService.IsDayOff(instrument))
                 {
-                    lockedInstrument = instrument;
-                    break;
+                    throw new InvalidOperationException($"Trades for {instrument} are not available");
                 }
-            }
-            if (!string.IsNullOrEmpty(lockedInstrument))
-            {
-                throw new InvalidOperationException($"Trades for {lockedInstrument} are not available");
             }
         }
     }

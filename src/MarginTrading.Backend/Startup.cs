@@ -2,6 +2,7 @@ using System;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
+using FluentScheduler;
 using Lykke.AzureQueueIntegration;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
@@ -20,6 +21,7 @@ using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Modules;
 using MarginTrading.Backend.Services.Quotes;
+using MarginTrading.Backend.Services.Scheduling;
 using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Backend.Services.Stubs;
 using MarginTrading.Backend.Services.TradingConditions;
@@ -113,6 +115,11 @@ namespace MarginTrading.Backend
             MtServiceLocator.AccountUpdateService = ApplicationContainer.Resolve<IAccountUpdateService>();
             MtServiceLocator.AccountsCacheService = ApplicationContainer.Resolve<IAccountsCacheService>();
             MtServiceLocator.SwapCommissionService = ApplicationContainer.Resolve<ICommissionService>();
+            
+            //the job will start approx <=100ms after 00:00:00
+            var registry = new Registry();
+            registry.Schedule<ScheduleSettingsCacheWarmUpJob>().ToRunEvery(1).Days().At(0, 0);
+            JobManager.Initialize(registry);
 
             return new AutofacServiceProvider(ApplicationContainer);
         }
@@ -169,7 +176,6 @@ namespace MarginTrading.Backend
             builder.RegisterBuildCallback(c => c.Resolve<OrderBookSaveService>());
             builder.RegisterBuildCallback(c => c.Resolve<QuoteCacheService>());
             builder.RegisterBuildCallback(c => c.Resolve<AccountManager>()); // note the order here is important!
-            builder.RegisterBuildCallback(c => c.Resolve<IScheduleSettingsCacheService>());
             builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
             builder.RegisterBuildCallback(c => c.Resolve<PendingOrdersCleaningService>());
         }

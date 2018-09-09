@@ -1,5 +1,7 @@
 using System;
+using JetBrains.Annotations;
 using MarginTrading.SettingsService.Contracts.Scheduling;
+// ReSharper disable NotNullMemberIsNotInitialized
 
 namespace MarginTrading.Backend.Core.DayOffSettings
 {
@@ -10,7 +12,15 @@ namespace MarginTrading.Backend.Core.DayOffSettings
         public bool? IsTradeEnabled { get; set; } = false;
         public TimeSpan? PendingOrdersCutOff { get; set; }
 
+        /// <summary>
+        /// Can't be null. Must be validated before conversion from contracts.
+        /// </summary>
+        [NotNull]
         public ScheduleConstraint Start { get; set; }
+        /// <summary>
+        /// Can't be null. Must be validated before conversion from contracts.
+        /// </summary>
+        [NotNull]
         public ScheduleConstraint End { get; set; }
 
         public static ScheduleSettings Create(CompiledScheduleSettingsContract scheduleSettingsContract)
@@ -23,13 +33,13 @@ namespace MarginTrading.Backend.Core.DayOffSettings
                 PendingOrdersCutOff = scheduleSettingsContract.PendingOrdersCutOff,
                 Start = new ScheduleConstraint
                 {
-                    Date = DateTime.TryParse(scheduleSettingsContract.Start.Date, out var start) ? start : (DateTime?)null,
+                    Date = scheduleSettingsContract.Start.Date,
                     DayOfWeek = scheduleSettingsContract.Start.DayOfWeek,
                     Time = scheduleSettingsContract.Start.Time
                 },
                 End = new ScheduleConstraint
                 {
-                    Date = DateTime.TryParse(scheduleSettingsContract.End.Date, out var end) ? end : (DateTime?)null,
+                    Date = scheduleSettingsContract.End.Date,
                     DayOfWeek = scheduleSettingsContract.End.DayOfWeek,
                     Time = scheduleSettingsContract.End.Time,
                 }

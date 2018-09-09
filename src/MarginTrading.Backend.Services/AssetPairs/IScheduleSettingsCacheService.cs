@@ -9,7 +9,14 @@ namespace MarginTrading.Backend.Services.AssetPairs
 {
     public interface IScheduleSettingsCacheService
     {
-        List<ScheduleSettings> GetScheduleSettings(string assetPairId);
+        /// <summary>
+        /// Get a compiled schedule timeline from cache, recalculate it if needed.
+        /// </summary>
+        List<(ScheduleSettings Schedule, DateTime Start, DateTime End)> GetCompiledScheduleSettings(string assetPairId,
+            DateTime currentDateTime, TimeSpan scheduleCutOff);
+
+        void CacheWarmUp();
+        
         Task UpdateSettingsAsync();
     }
 }
