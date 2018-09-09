@@ -133,7 +133,7 @@ namespace MarginTrading.Backend.Services
             await _accountMarginFreezingRepository.DeleteAsync(operationId);
         }
 
-        public void UpdateAccountChanges(string accountId, string updatedTradingConditionId, decimal updatedBalance,
+        public void UpdateAccountChanges(string accountId, string updatedTradingConditionId,
             decimal updatedWithdrawTransferLimit, bool isDisabled)
         {
             _lockSlim.EnterWriteLock();
@@ -141,7 +141,6 @@ namespace MarginTrading.Backend.Services
             {
                 var account = _accounts[accountId];
                 account.TradingConditionId = updatedTradingConditionId;
-                account.Balance = updatedBalance;
                 account.WithdrawTransferLimit = updatedWithdrawTransferLimit;
                 account.IsDisabled = isDisabled;
             }
@@ -162,6 +161,11 @@ namespace MarginTrading.Backend.Services
             {
                 _lockSlim.ExitWriteLock();
             }
+        }
+
+        public void UpdateAccountBalance(string updatedAccountId, decimal updatedAccountBalance)
+        {
+            account.Balance = updatedBalance;
         }
     }
 }

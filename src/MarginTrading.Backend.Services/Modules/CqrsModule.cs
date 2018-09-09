@@ -91,10 +91,8 @@ namespace MarginTrading.Backend.Services.Modules
             };
 
             var fakeGavel = RegisterGavelContextIfNeeded();
-
             if (fakeGavel != null)
                 registrations.Add(fakeGavel);
-
 
             return new CqrsEngine(_log, ctx.Resolve<IDependencyResolver>(), messagingEngine,
                 new DefaultEndpointProvider(), true, registrations.ToArray());
