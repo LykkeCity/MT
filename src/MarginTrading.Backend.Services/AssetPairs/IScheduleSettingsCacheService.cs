@@ -12,7 +12,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
         /// <summary>
         /// Get a compiled schedule timeline from cache, recalculate it if needed.
         /// </summary>
-        List<(ScheduleSettings Schedule, DateTime Start, DateTime End)> GetCompiledScheduleSettings(string assetPairId,
+        List<CompiledScheduleTimeInterval> GetCompiledScheduleSettings(string assetPairId,
             DateTime currentDateTime, TimeSpan scheduleCutOff);
 
         void CacheWarmUp();

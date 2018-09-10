@@ -20,15 +20,17 @@ using MarginTrading.SettingsService.Contracts.Scheduling;
 
 namespace MarginTrading.Backend.Services.AssetPairs
 {
-    internal class ScheduleSettingsCacheService : IScheduleSettingsCacheService, IStartable
+    public class ScheduleSettingsCacheService : IScheduleSettingsCacheService, IStartable
     {
         private readonly IScheduleSettingsApi _scheduleSettingsApi;
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly IDateService _dateService;
         private readonly ILog _log;
-        private Dictionary<string, List<ScheduleSettings>> _rawScheduleSettingsCache;
-        private Dictionary<string, List<(ScheduleSettings Schedule, DateTime Start, DateTime End)>>
-            _compiledScheduleTimelineCache;
+
+        private Dictionary<string, List<ScheduleSettings>> _rawScheduleSettingsCache =
+            new Dictionary<string, List<ScheduleSettings>>();
+        private Dictionary<string, List<CompiledScheduleTimeInterval>> _compiledScheduleTimelineCache = 
+            new Dictionary<string, List<CompiledScheduleTimeInterval>>();
         private DateTime _lastCacheRecalculationTime = DateTime.MinValue;
 
         private readonly ReaderWriterLockSlim _readerWriterLockSlim = new ReaderWriterLockSlim();
@@ -59,11 +61,11 @@ namespace MarginTrading.Backend.Services.AssetPairs
                     try
                     {
                         ScheduleConstraintContract.Validate(x);
-                        return true;
+                        return false;
                     }
                     catch
                     {
-                        return false;
+                        return true;
                     }
                 }));
             
@@ -88,8 +90,8 @@ namespace MarginTrading.Backend.Services.AssetPairs
             }
         }
 
-        public List<(ScheduleSettings Schedule, DateTime Start, DateTime End)> GetCompiledScheduleSettings(
-            string assetPairId, DateTime currentDateTime, TimeSpan scheduleCutOff)
+        public List<CompiledScheduleTimeInterval> GetCompiledScheduleSettings(string assetPairId,
+            DateTime currentDateTime, TimeSpan scheduleCutOff)
         {
             _readerWriterLockSlim.EnterUpgradeableReadLock();
             
@@ -99,7 +101,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             {   
                 if (string.IsNullOrEmpty(assetPairId))
                 {
-                    return new List<(ScheduleSettings Schedule, DateTime Start, DateTime End)>();
+                    return new List<CompiledScheduleTimeInterval>();
                 }
 
                 if (!_compiledScheduleTimelineCache.ContainsKey(assetPairId))
@@ -109,7 +111,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
                 return _compiledScheduleTimelineCache.TryGetValue(assetPairId, out var timeline)
                     ? timeline
-                    : new List<(ScheduleSettings Schedule, DateTime Start, DateTime End)>();
+                    : new List<CompiledScheduleTimeInterval>();
             }
             finally
             {
@@ -157,7 +159,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             try
             {
                 _compiledScheduleTimelineCache =
-                    new Dictionary<string, List<(ScheduleSettings Schedule, DateTime Start, DateTime End)>>();
+                    new Dictionary<string, List<CompiledScheduleTimeInterval>>();
                 _lastCacheRecalculationTime = currentDateTime;
             }
             finally
@@ -177,8 +179,8 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 .ToDictionary(x => x.Key, value => value);
             
             //handle weekly
-            var weekly = scheduleSettingsByType[ScheduleConstraintType.Weekly]
-                .SelectMany(sch =>
+            var weekly = scheduleSettingsByType.TryGetValue(ScheduleConstraintType.Weekly, out var weeklySchedule)
+                ? weeklySchedule.SelectMany(sch =>
                 {
                     var currentStart = GetCurrentWeekday(currentDateTime, sch.Start.DayOfWeek.Value)
                         .Add(sch.Start.Time.Subtract(scheduleCutOff));
@@ -188,20 +190,23 @@ namespace MarginTrading.Backend.Services.AssetPairs
                     {
                         currentEnd = currentEnd.AddDays(7);
                     }
-                     
-                    return new []
+
+                    return new[]
                     {
-                        (sch, currentStart, currentEnd),
-                        (sch, currentStart.AddDays(-7), currentEnd.AddDays(-7))
+                        new CompiledScheduleTimeInterval(sch, currentStart, currentEnd),
+                        new CompiledScheduleTimeInterval(sch, currentStart.AddDays(-7), currentEnd.AddDays(-7))
                     };
-                });
+                })
+                : new List<CompiledScheduleTimeInterval>();
             //handle single
-            var single = scheduleSettingsByType[ScheduleConstraintType.Single]
-                .Select(sch => (sch, sch.Start.Date.Value.Add(sch.Start.Time.Subtract(scheduleCutOff)),
-                    sch.End.Date.Value.Add(sch.End.Time.Add(scheduleCutOff))));
+            var single = scheduleSettingsByType.TryGetValue(ScheduleConstraintType.Single, out var singleSchedule)
+                ? singleSchedule.Select(sch => new CompiledScheduleTimeInterval(sch,
+                    sch.Start.Date.Value.Add(sch.Start.Time.Subtract(scheduleCutOff)),
+                    sch.End.Date.Value.Add(sch.End.Time.Add(scheduleCutOff))))
+                : new List<CompiledScheduleTimeInterval>();
             //handle daily
-            var daily = scheduleSettingsByType[ScheduleConstraintType.Daily]
-                .Select(sch =>
+            var daily = scheduleSettingsByType.TryGetValue(ScheduleConstraintType.Daily, out var dailySchedule)
+                ? dailySchedule.Select(sch =>
                 {
                     var start = currentDateTime.Date.Add(sch.Start.Time);
                     var end = currentDateTime.Date.Add(sch.End.Time);
@@ -209,9 +214,10 @@ namespace MarginTrading.Backend.Services.AssetPairs
                     {
                         end = end.AddDays(1);
                     }
-                    
-                    return (sch, start, end);
-                });
+
+                    return new CompiledScheduleTimeInterval(sch, start, end);
+                })
+                : new List<CompiledScheduleTimeInterval>();
 
             _readerWriterLockSlim.EnterWriteLock();
             try

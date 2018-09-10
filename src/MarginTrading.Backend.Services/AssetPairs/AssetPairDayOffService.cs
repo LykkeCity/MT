@@ -47,7 +47,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             var schedule = _scheduleSettingsCacheService.GetCompiledScheduleSettings(assetPairId, 
                 currentDateTime, scheduleCutOff);
 
-            var intersecting = schedule.Where(x => IsBetween(currentDateTime, x.Item2, x.Item3));
+            var intersecting = schedule.Where(x => IsBetween(currentDateTime, x.Start, x.End));
             
             //TODO unit tests
 
@@ -57,7 +57,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         private static bool IsBetween(DateTime currentDateTime, DateTime start, DateTime end)
         {
-            return start <= currentDateTime && currentDateTime <= end;
+            return start <= currentDateTime && currentDateTime < end;
         }
     }
 }
