@@ -48,8 +48,6 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 currentDateTime, scheduleCutOff);
 
             var intersecting = schedule.Where(x => IsBetween(currentDateTime, x.Start, x.End));
-            
-            //TODO unit tests
 
             return !(intersecting.OrderByDescending(x => x.Schedule.Rank)
                          .Select(x => x.Schedule).FirstOrDefault()?.IsTradeEnabled ?? true);
