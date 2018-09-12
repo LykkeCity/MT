@@ -52,7 +52,7 @@ namespace MarginTradingTests
 
             var dayOrder = new Order
             {
-                AccountAssetId = "USD",
+                AccountAssetId = "EUR",
                 Instrument = "EURUSD",
                 Volume = 20,
                 OpenDate = new DateTime(2017, 01, 01, 20, 50, 0),
@@ -66,7 +66,7 @@ namespace MarginTradingTests
 
             var twoDayOrder = new Order
             {
-                AccountAssetId = "USD",
+                AccountAssetId = "EUR",
                 Instrument = "EURUSD",
                 Volume = 20,
                 OpenDate = new DateTime(2017, 01, 01, 20, 50, 0),
@@ -78,8 +78,8 @@ namespace MarginTradingTests
 
             var swapsFor2Days = _swapService.GetSwaps(twoDayOrder);
 
-            Assert.AreEqual(5.69863014m, swapsForDay);
-            Assert.AreEqual(11.39726027m, swapsFor2Days);
+            Assert.AreEqual(5.37201182m, swapsForDay);
+            Assert.AreEqual(10.74402364m, swapsFor2Days);
         }
     }
 }
