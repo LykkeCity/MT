@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using AspNet.Security.OpenIdConnect.Extensions;
 using MarginTrading.Common.Middleware;
+using MarginTrading.Frontend.Infrastructure;
 using MarginTrading.Frontend.Models;
 using MarginTrading.Frontend.Repositories;
 using MarginTrading.Frontend.Repositories.Contract;
@@ -28,7 +29,7 @@ namespace MarginTrading.Frontend.Controllers
         [Route("")]
         public async Task<ResponseModel<List<MarginTradingWatchList>>> GetWatchLists()
         {
-            var clientId = User.GetClaim(ClaimTypes.NameIdentifier);
+            var clientId = User.GetClaim(AuthConsts.SubjectClaim);
 
             if (clientId == null)
             {
@@ -47,7 +48,7 @@ namespace MarginTrading.Frontend.Controllers
         [Route("")]
         public async Task<ResponseModel<IMarginTradingWatchList>> AddWatchList([FromBody]WatchList model)
         {
-            var clientId = User.GetClaim(ClaimTypes.NameIdentifier);
+            var clientId = User.GetClaim(AuthConsts.SubjectClaim);
 
             if (clientId == null)
             {
@@ -80,7 +81,7 @@ namespace MarginTrading.Frontend.Controllers
         [Route("{id}")]
         public async Task<ResponseModel> DeleteWatchList(string id)
         {
-            var clientId = User.GetClaim(ClaimTypes.NameIdentifier);
+            var clientId = User.GetClaim(AuthConsts.SubjectClaim);
 
             if (clientId == null)
             {
