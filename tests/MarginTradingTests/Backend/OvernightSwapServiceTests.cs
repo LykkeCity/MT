@@ -78,9 +78,6 @@ namespace MarginTradingTests.Backend
 		[Test]
 		public async Task OvernightSwapCalculation_Success()
 		{
-			_bestPriceConsumer.SendEvent(this,
-				new BestPriceChangeEventArgs(new InstrumentBidAskPair {Instrument = "BTCUSD", Bid = 9000M, Ask = 9010M}));
-
 			await _accountAssetsRepository.AddOrReplaceAsync(new AccountAssetPair
 			{
 				TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
@@ -118,9 +115,9 @@ namespace MarginTradingTests.Backend
 			_overnightSwapService.CalculateAndChargeSwaps();
 
 			var calc = _overnightSwapCache.GetAll().First();
-			Assert.AreEqual(24.68493151M, calc.Value);
+			Assert.AreEqual(0.00821918M, calc.Value);
 			Assert.True(calc.IsSuccess);
-			Assert.AreEqual(accountBalance - 24.68493151M, (await _fakeMarginTradingAccountsRepository.GetAsync(accountId)).Balance);
+			Assert.AreEqual(accountBalance - 0.00821918M, (await _fakeMarginTradingAccountsRepository.GetAsync(accountId)).Balance);
 		}
 
 		[Test]
@@ -163,7 +160,7 @@ namespace MarginTradingTests.Backend
 			var history = (await _overnightSwapHistoryRepository.GetAsync()).First(x => x.AccountId == accountId && x.Exception != null);
 			
 			Assert.False(history.IsSuccess);
-			Assert.AreEqual("There is no quote for instrument BTCCHF", ((IOvernightSwapHistory)history).Exception.Message);
+			Assert.AreEqual("There is no quote for instrument USDCHF", ((IOvernightSwapHistory)history).Exception.Message);
 		}
 		
 		[Test]
