@@ -338,37 +338,36 @@ namespace MarginTrading.Backend.Services
             
         }
 
-//        private void ValidateTakeProfitOrderPrice(OrderDirection orderDirection, decimal? orderPrice, decimal basePrice)
-//        {
-//            if (orderDirection == OrderDirection.Buy && orderPrice >= basePrice ||
-//                orderDirection == OrderDirection.Sell && orderPrice <= quote.Bid)
-//            {
-//                var reasonText = orderDirection == OrderDirection.Buy
-//                    ? string.Format(MtMessages.Validation_PriceAboveAsk, orderPrice, quote.Ask)
-//                    : string.Format(MtMessages.Validation_PriceBelowBid, orderPrice, quote.Bid);
-//
-//                throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice, reasonText,
-//                    $"{assetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
-//            }
-//        }
-//        
-//        private void ValidateStopLossOrderPrice(OrderDirection orderDirection, decimal? orderPrice, decimal basePrice)
-//        {
-//            if (orderDirection == OrderDirection.Buy && orderPrice >= quote.Ask ||
-//                orderDirection == OrderDirection.Sell && orderPrice <= quote.Bid)
-//            {
-//                var reasonText = orderDirection == OrderDirection.Buy
-//                    ? string.Format(MtMessages.Validation_PriceAboveAsk, orderPrice, quote.Ask)
-//                    : string.Format(MtMessages.Validation_PriceBelowBid, orderPrice, quote.Bid);
-//
-//                throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice, reasonText,
-//                    $"{assetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
-//            }
-//        }
+        private void ValidateTakeProfitOrderPrice(OrderDirection orderDirection, decimal? orderPrice, decimal basePrice)
+        {
+            if (orderDirection == OrderDirection.Buy && basePrice <= orderPrice)
+            {
+                throw new ValidateOrderException(OrderRejectReason.InvalidTakeProfit,
+                    string.Format(MtMessages.Validation_TakeProfitMustBeLess, orderPrice, basePrice));
+            }
+            
+            if (orderDirection == OrderDirection.Sell && basePrice >= orderPrice)
+            {
+                throw new ValidateOrderException(OrderRejectReason.InvalidTakeProfit,
+                    string.Format(MtMessages.Validation_TakeProfitMustBeMore, orderPrice, basePrice));
+            }
+        }
         
-        
-        
-        
+        private void ValidateStopLossOrderPrice(OrderDirection orderDirection, decimal? orderPrice, decimal basePrice)
+        {
+            if (orderDirection == OrderDirection.Buy && basePrice >= orderPrice)
+            {
+                throw new ValidateOrderException(OrderRejectReason.InvalidTakeProfit,
+                    string.Format(MtMessages.Validation_StopLossMustBeMore, orderPrice, basePrice));
+            }
+            
+            if (orderDirection == OrderDirection.Sell && basePrice <= orderPrice)
+            {
+                throw new ValidateOrderException(OrderRejectReason.InvalidTakeProfit,
+                    string.Format(MtMessages.Validation_StopLossMustBeLess, orderPrice, basePrice));
+            }
+        }
+      
         public void ValidateRelatedOrders(OrderDirection type, BidAskPair quote, decimal deltaBid, decimal deltaAsk, decimal? takeProfit,
             decimal? stopLoss, decimal? expectedOpenPrice, int assetAccuracy)
         {
