@@ -8,6 +8,7 @@ using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services
 {
@@ -17,10 +18,14 @@ namespace MarginTrading.Backend.Services
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
 
         private readonly IAccountMarginFreezingRepository _accountMarginFreezingRepository;
+        private readonly IDateService _dateService;
 
-        public AccountsCacheService(IAccountMarginFreezingRepository accountMarginFreezingRepository)
+        public AccountsCacheService(
+            IAccountMarginFreezingRepository accountMarginFreezingRepository,
+            IDateService dateService)
         {
             _accountMarginFreezingRepository = accountMarginFreezingRepository;
+            _dateService = dateService;
         }
         
         public IReadOnlyList<MarginTradingAccount> GetAll()
@@ -52,6 +57,7 @@ namespace MarginTrading.Backend.Services
             _lockSlim.EnterWriteLock();
             try
             {
+                newValue.LastUpdateTime = _dateService.Now();
                 _accounts[newValue.Id] = newValue;
             }
             finally
@@ -143,6 +149,22 @@ namespace MarginTrading.Backend.Services
                 account.TradingConditionId = updatedTradingConditionId;
                 account.WithdrawTransferLimit = updatedWithdrawTransferLimit;
                 account.IsDisabled = isDisabled;
+                account.LastUpdateTime = _dateService.Now();
+            }
+            finally
+            {
+                _lockSlim.ExitWriteLock();
+            }
+        }
+
+        public void UpdateAccountBalance(string accountId, decimal accountBalance)
+        {
+            _lockSlim.EnterWriteLock();
+            try
+            {
+                var account = _accounts[accountId];
+                account.Balance = accountBalance;
+                account.LastUpdateTime = _dateService.Now();
             }
             finally
             {
@@ -155,6 +177,7 @@ namespace MarginTrading.Backend.Services
             _lockSlim.EnterWriteLock();
             try
             {
+                account.LastUpdateTime = _dateService.Now();
                 _accounts.TryAdd(account.Id, account);
             }
             finally
@@ -163,9 +186,18 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public void UpdateAccountBalance(string updatedAccountId, decimal updatedAccountBalance)
+        public bool CheckEventTimeNewer(string accountId, DateTime eventTime)
         {
-            account.Balance = updatedBalance;
+            _lockSlim.EnterReadLock();
+            try
+            {
+                var account = _accounts[accountId];
+                return account.LastUpdateTime < eventTime;
+            }
+            finally
+            {
+                _lockSlim.ExitReadLock();
+            }
         }
     }
 }

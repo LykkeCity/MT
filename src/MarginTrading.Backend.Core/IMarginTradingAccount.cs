@@ -14,6 +14,7 @@ namespace MarginTrading.Backend.Core
         string LegalEntity { get; }
         [NotNull] AccountFpl AccountFpl { get; }
         bool IsDisabled { get; set; }
+        DateTime LastUpdateTime { get; }
     }
 
     public class MarginTradingAccount : IMarginTradingAccount, IComparable<MarginTradingAccount>
@@ -26,6 +27,7 @@ namespace MarginTrading.Backend.Core
         public decimal WithdrawTransferLimit { get; set; }
         public string LegalEntity { get; set; }
         public bool IsDisabled { get; set; } // todo: use it everywhere
+        public DateTime LastUpdateTime { get; set; }
 
         public AccountFpl AccountFpl { get; private set; } = new AccountFpl();
 
@@ -41,6 +43,7 @@ namespace MarginTrading.Backend.Core
                 WithdrawTransferLimit = src.WithdrawTransferLimit,
                 AccountFpl = accountFpl ?? new AccountFpl {ActualHash = 1},
                 LegalEntity = src.LegalEntity,
+                LastUpdateTime = src.LastUpdateTime,
             };
         }
 
