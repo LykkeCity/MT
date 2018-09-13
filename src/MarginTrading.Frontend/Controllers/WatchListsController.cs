@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using AspNet.Security.OpenIdConnect.Extensions;
@@ -26,18 +27,18 @@ namespace MarginTrading.Frontend.Controllers
 
         [HttpGet]
         [Route("")]
-        public async Task<ResponseModel<List<MarginTradingWatchList>>> GetWatchLists()
+        public async Task<ResponseModel<List<WatchListContract>>> GetWatchLists()
         {
             var clientId = User.GetClaim(ClaimTypes.NameIdentifier);
 
             if (clientId == null)
             {
-                return ResponseModel<List<MarginTradingWatchList>>.CreateFail(ResponseModel.ErrorCodeType.NoAccess, "Wrong token");
+                return ResponseModel<List<WatchListContract>>.CreateFail(ResponseModel.ErrorCodeType.NoAccess, "Wrong token");
             }
 
-            var result = new ResponseModel<List<MarginTradingWatchList>>
+            var result = new ResponseModel<List<WatchListContract>>
             {
-                Result = await _watchListService.GetAllAsync(clientId)
+                Result = Convert(await _watchListService.GetAllAsync(clientId))
             };
 
             return result;
@@ -45,20 +46,20 @@ namespace MarginTrading.Frontend.Controllers
 
         [HttpPost]
         [Route("")]
-        public async Task<ResponseModel<IMarginTradingWatchList>> AddWatchList([FromBody]WatchList model)
+        public async Task<ResponseModel<WatchListContract>> AddWatchList([FromBody]AddWatchListRequest model)
         {
             var clientId = User.GetClaim(ClaimTypes.NameIdentifier);
 
             if (clientId == null)
             {
-                return ResponseModel<IMarginTradingWatchList>.CreateFail(ResponseModel.ErrorCodeType.NoAccess, "Wrong token");
+                return ResponseModel<WatchListContract>.CreateFail(ResponseModel.ErrorCodeType.NoAccess, "Wrong token");
             }
 
-            var result = new ResponseModel<IMarginTradingWatchList>();
+            var result = new ResponseModel<WatchListContract>();
 
             if (model.AssetIds == null || model.AssetIds.Count == 0)
             {
-                return ResponseModel<IMarginTradingWatchList>.CreateInvalidFieldError("AssetIds", "AssetIds should not be empty");
+                return ResponseModel<WatchListContract>.CreateInvalidFieldError("AssetIds", "AssetIds should not be empty");
             }
 
             var addResult = await _watchListService.AddAsync(model.Id, clientId, model.Name, model.AssetIds);
@@ -66,12 +67,12 @@ namespace MarginTrading.Frontend.Controllers
             switch (addResult.Status)
             {
                 case WatchListStatus.AssetNotFound:
-                    return ResponseModel<IMarginTradingWatchList>.CreateFail(ResponseModel.ErrorCodeType.AssetNotFound, $"Asset '{addResult.Message}' is not found or not allowed");
+                    return ResponseModel<WatchListContract>.CreateFail(ResponseModel.ErrorCodeType.AssetNotFound, $"Asset '{addResult.Message}' is not found or not allowed");
                 case WatchListStatus.ReadOnly:
-                    return ResponseModel<IMarginTradingWatchList>.CreateFail(ResponseModel.ErrorCodeType.InconsistentData, "This watch list is readonly");
+                    return ResponseModel<WatchListContract>.CreateFail(ResponseModel.ErrorCodeType.InconsistentData, "This watch list is readonly");
             }
 
-            result.Result = addResult.Result;
+            result.Result = Convert(addResult.Result);
 
             return result;
         }
@@ -84,7 +85,7 @@ namespace MarginTrading.Frontend.Controllers
 
             if (clientId == null)
             {
-                return ResponseModel<List<MarginTradingWatchList>>.CreateFail(ResponseModel.ErrorCodeType.NoAccess, "Wrong token");
+                return ResponseModel<List<WatchListContract>>.CreateFail(ResponseModel.ErrorCodeType.NoAccess, "Wrong token");
             }
 
             var result = await _watchListService.DeleteAsync(clientId, id);
@@ -99,5 +100,23 @@ namespace MarginTrading.Frontend.Controllers
 
             return ResponseModel.CreateOk();
         }
+
+        private WatchListContract Convert(IMarginTradingWatchList wl)
+        {
+            return new WatchListContract
+            {
+                Id = wl.Id,
+                Name = wl.Name,
+                Order = wl.Order,
+                ReadOnly = wl.ReadOnly,
+                AssetIds = wl.AssetIds
+            };
+        }
+
+        private List<WatchListContract> Convert(IEnumerable<IMarginTradingWatchList> wls)
+        {
+            return wls.Select(Convert).ToList();
+        }
+        
     }
 }
