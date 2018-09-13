@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
+using IdentityModel.AspNetCore.OAuth2Introspection;
+using IdentityServer4.AccessTokenValidation;
 using Lykke.AzureQueueIntegration;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
@@ -60,10 +62,22 @@ namespace MarginTrading.Frontend
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
+            var appSettings = Configuration.LoadSettings<ApplicationSettings>()
+                .Nested(s =>
+                {
+                    if (!string.IsNullOrEmpty(Configuration["Env"]))
+                    {
+                        s.MtFrontend.MarginTradingFront.Env = Configuration["Env"];
+                    }
+
+                    return s;
+                });
+
             var loggerFactory = new LoggerFactory()
                 .AddConsole(LogLevel.Error)
                 .AddDebug(LogLevel.Error);
 
+            services.AddDistributedMemoryCache();
             services.AddSingleton(loggerFactory);
             services.AddLogging();
             services.AddSingleton(Configuration);
@@ -80,26 +94,41 @@ namespace MarginTrading.Frontend
                 options.OperationFilter<AddAuthorizationHeaderParameter>();
             });
 
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(options =>
+            services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = AuthConsts.LykkeBearerScheme;
+                    options.DefaultChallengeScheme = AuthConsts.LykkeBearerScheme;
+                })
+                .AddOAuth2Introspection(AuthConsts.OAuthBearerScheme, options =>
+                {
+                    var oauthSettings = appSettings.Nested(s => s.MtFrontend.MarginTradingFront.OAuthSettings).CurrentValue;
+                    options.Authority = oauthSettings.Authority;
+                    options.ClientId = oauthSettings.ClientId;
+                    options.ClientSecret = oauthSettings.ClientSecret;
+                    options.CacheDuration = TimeSpan.FromMinutes(1);
+                    options.EnableCaching = true;
+                })
+                .AddJwtBearer(AuthConsts.LykkeBearerScheme, options =>
                 {
                     options.SecurityTokenValidators.Clear();
                     options.SecurityTokenValidators.Add(ApplicationContainer.Resolve<ISecurityTokenValidator>());
+                    options.ForwardDefaultSelector = ctx =>
+                    {
+                        var token = TokenRetrieval.FromAuthorizationHeader()(ctx.Request);
+                        if (string.IsNullOrWhiteSpace(token) || token.Length == AuthConsts.LykkeTokenLength)
+                        {
+                            return AuthConsts.LykkeBearerScheme;
+                        }
+
+                        return AuthConsts.OAuthBearerScheme;
+                    };
                 });
+
 
             var builder = new ContainerBuilder();
 
 
-            var appSettings = Configuration.LoadSettings<ApplicationSettings>()
-                .Nested(s =>
-                {
-                    if (!string.IsNullOrEmpty(Configuration["Env"]))
-                    {
-                        s.MtFrontend.MarginTradingFront.Env = Configuration["Env"];
-                    }
 
-                    return s;
-                });
 
             var settings = appSettings.Nested(s => s.MtFrontend);
 
@@ -138,7 +167,7 @@ namespace MarginTrading.Frontend
                         builder.AllowCredentials();
                 });
             }
-            
+
 
             var host = ApplicationContainer.Resolve<IWampHost>();
             var realm = ApplicationContainer.Resolve<IWampHostedRealm>();
@@ -157,10 +186,10 @@ namespace MarginTrading.Frontend
 
             app.Map("/ws", builder =>
             {
-                builder.UseWebSockets(new WebSocketOptions {KeepAliveInterval = TimeSpan.FromMinutes(1)});
+                builder.UseWebSockets(new WebSocketOptions { KeepAliveInterval = TimeSpan.FromMinutes(1) });
 
                 var jsonSettings =
-                    new JsonSerializerSettings() {Converters = SerializerSettings.GetDefaultConverters()};
+                    new JsonSerializerSettings() { Converters = SerializerSettings.GetDefaultConverters() };
                 var jsonSerializer = JsonSerializer.Create(jsonSettings);
 
                 host.RegisterTransport(new AspNetCoreWebSocketTransport(builder),
@@ -181,7 +210,7 @@ namespace MarginTrading.Frontend
                 }
 
                 application.StartAsync().Wait();
-                
+
                 LogLocator.CommonLog?.WriteMonitorAsync("", "", settings.Env + " Started");
             });
 
@@ -199,7 +228,7 @@ namespace MarginTrading.Frontend
         private static void RegisterModules(ContainerBuilder builder, IReloadingManager<ApplicationSettings> appSettings)
         {
             var settings = appSettings.Nested(s => s.MtFrontend);
-            
+
             builder.RegisterModule(new FrontendModule(settings));
             builder.RegisterModule(new MarginTradingCommonModule());
             builder.RegisterModule(new FrontendExternalServicesModule(appSettings, LogLocator.CommonLog));
