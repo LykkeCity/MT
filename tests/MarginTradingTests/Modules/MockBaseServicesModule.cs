@@ -54,6 +54,9 @@ namespace MarginTradingTests.Modules
             personalDataServiceMock
                 .Setup(item => item.GetEmailAsync(It.IsAny<string>()))
                 .Returns(() => Task.FromResult("test@test.com"));
+            
+            var dateService = new Mock<IDateService>();
+            dateService.Setup(s => s.Now()).Returns(new DateTime(2017, 01, 02));
 
             builder.RegisterInstance(emailService.Object).As<IEmailService>();
             builder.RegisterInstance(appNotifications.Object).As<IAppNotifications>();
@@ -67,10 +70,7 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(slackNotificationsMock.Object).As<ISlackNotificationsSender>();
             builder.RegisterInstance(volumeEquivalentService.Object).As<IEquivalentPricesService>();
             builder.RegisterInstance(personalDataServiceMock.Object).As<IPersonalDataService>();
-
-            builder.RegisterType<DateService>()
-                .As<IDateService>()
-                .SingleInstance();
+            builder.RegisterInstance(dateService.Object).As<IDateService>();
         }
     }
 
