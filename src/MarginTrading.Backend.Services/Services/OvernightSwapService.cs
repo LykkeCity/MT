@@ -325,7 +325,7 @@ namespace MarginTrading.Backend.Services.Services
 
 		private async Task ClearOldState()
 		{
-			var oldEntries = _overnightSwapCache.GetAll().Where(x => x.Time < DateTime.UtcNow.AddDays(-2));
+			var oldEntries = _overnightSwapCache.GetAll().Where(x => x.Time < _currentStartTimestamp.AddDays(-2));
 			
 			foreach(var obj in oldEntries)
 			{
