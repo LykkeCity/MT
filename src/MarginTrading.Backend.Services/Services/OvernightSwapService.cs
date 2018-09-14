@@ -92,7 +92,7 @@ namespace MarginTrading.Backend.Services.Services
 		/// Filter orders that are already calculated
 		/// </summary>
 		/// <returns></returns>
-		private IEnumerable<Order> GetOrdersForCalculation()
+		private List<Order> GetOrdersForCalculation()
 		{
 			//read orders synchronously
 			var openOrders = _orderReader.GetActive();
@@ -102,7 +102,8 @@ namespace MarginTrading.Backend.Services.Services
 			var calculatedIds = _overnightSwapCache.GetAll().Where(x => x.IsSuccess && x.Time >= lastInvocationTime)
 				.Select(x => x.OpenOrderId).ToHashSet();
 			//select only non-calculated orders, changed before current invocation time
-			var filteredOrders = openOrders.Where(x => !calculatedIds.Contains(x.Id));
+			var filteredOrders =
+				openOrders.Where(x => !calculatedIds.Contains(x.Id) && x.OpenDate <= lastInvocationTime).ToList();
 
 			//detect orders for which last calculation failed and it was closed
 			var failedClosedOrders = _overnightSwapHistoryRepository.GetAsync(lastInvocationTime, _currentStartTimestamp)
@@ -123,7 +124,7 @@ namespace MarginTrading.Backend.Services.Services
 		{
 			_currentStartTimestamp = _dateService.Now();
 
-			var filteredOrders = GetOrdersForCalculation().ToList();
+			var filteredOrders = GetOrdersForCalculation();
 			
 			//start calculation in a separate thread
 			_threadSwitcher.SwitchThread(async () =>
