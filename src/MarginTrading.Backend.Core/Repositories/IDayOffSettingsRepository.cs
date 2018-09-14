@@ -1,7 +1,7 @@
 ﻿using JetBrains.Annotations;
 using MarginTrading.Backend.Core.DayOffSettings;
 
-namespace MarginTrading.Backend.Core
+namespace MarginTrading.Backend.Core.Repositories
 {
     public interface IDayOffSettingsRepository
     {

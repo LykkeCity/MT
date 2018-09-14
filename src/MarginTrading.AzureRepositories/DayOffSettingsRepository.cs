@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.DayOffSettings;
+using MarginTrading.Backend.Core.Repositories;
 
 namespace MarginTrading.AzureRepositories
 {
