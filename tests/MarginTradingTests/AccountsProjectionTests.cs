@@ -47,7 +47,8 @@ namespace MarginTradingTests
                 withdrawTransferLimit: 0,
                 legalEntity: "Default",
                 isDisabled: false,
-                modificationTimestamp: new DateTime(2018, 09, 13)
+                modificationTimestamp: new DateTime(2018, 09, 13),
+                isWithdrawalDisabled: false
             ),
             new AccountContract(
                 id: "testAccount2",
@@ -58,7 +59,8 @@ namespace MarginTradingTests
                 withdrawTransferLimit: 0,
                 legalEntity: "Default",
                 isDisabled: true,
-                modificationTimestamp: new DateTime(2018, 09, 13)
+                modificationTimestamp: new DateTime(2018, 09, 13),
+                isWithdrawalDisabled: false
             )
         };
 
@@ -81,10 +83,10 @@ namespace MarginTradingTests
         }
 
         [Test]
-        [TestCase("testAccount1", "default", 0, false)]
-        [TestCase("testAccount1", "test", 1, true)]
+        [TestCase("testAccount1", "default", 0, false, false)]
+        [TestCase("testAccount1", "test", 1, true, false)]
         public async Task TestAccountUpdate_Success(string accountId, string updatedTradingConditionId,
-            decimal updatedWithdrawTransferLimit, bool isDisabled)
+            decimal updatedWithdrawTransferLimit, bool isDisabled, bool isWithdrawalDisabled)
         {
             var account = Accounts.Single(x => x.Id == accountId);
             var time = DateService.Now().AddMinutes(1);
@@ -93,7 +95,7 @@ namespace MarginTradingTests
 
             var updatedContract = new AccountContract(accountId, account.ClientId, updatedTradingConditionId,
                 account.BaseAssetId, account.Balance, updatedWithdrawTransferLimit, account.LegalEntity,
-                isDisabled, account.ModificationTimestamp);
+                isDisabled, account.ModificationTimestamp, account.IsWithdrawalDisabled);
             
             await accountsProjection.Handle(new AccountChangedEvent(time, "test",
                 updatedContract, AccountChangedEventTypeContract.Updated));
@@ -102,15 +104,16 @@ namespace MarginTradingTests
             Assert.AreEqual(updatedTradingConditionId, resultedAccount.TradingConditionId);
             Assert.AreEqual(updatedWithdrawTransferLimit, resultedAccount.WithdrawTransferLimit);
             Assert.AreEqual(isDisabled, resultedAccount.IsDisabled);
+            Assert.AreEqual(isWithdrawalDisabled, resultedAccount.IsWithdrawalDisabled);
             
             _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.IsAny<IMarginTradingAccount>()), Times.Once);
         }
 
         [Test]
-        [TestCase("testAccount2", "default", 0, false)]
-        [TestCase("testAccount1", "test", 1, true)]
+        [TestCase("testAccount2", "default", 0, false, false)]
+        [TestCase("testAccount1", "test", 1, true, false)]
         public async Task TestAccountUpdate_Fail(string accountId, string updatedTradingConditionId,
-            decimal updatedWithdrawTransferLimit, bool isDisabled)
+            decimal updatedWithdrawTransferLimit, bool isDisabled, bool isWithdrawalDisabled)
         {
             var account = Accounts.Single(x => x.Id == accountId);
             var time = DateService.Now();
@@ -119,7 +122,7 @@ namespace MarginTradingTests
 
             var updatedContract = new AccountContract(accountId, account.ClientId, updatedTradingConditionId,
                 account.BaseAssetId, account.Balance, updatedWithdrawTransferLimit, account.LegalEntity,
-                isDisabled, account.ModificationTimestamp);
+                isDisabled, account.ModificationTimestamp, account.IsWithdrawalDisabled);
             
             await accountsProjection.Handle(new AccountChangedEvent(time, "test",
                 updatedContract, AccountChangedEventTypeContract.Updated));
@@ -140,7 +143,7 @@ namespace MarginTradingTests
 
             var updatedContract = new AccountContract(accountId, account.ClientId, account.TradingConditionId,
                 account.BaseAssetId, balance, account.WithdrawTransferLimit, account.LegalEntity,
-                account.IsDisabled, account.ModificationTimestamp);
+                account.IsDisabled, account.ModificationTimestamp, account.IsWithdrawalDisabled);
             
             await accountsProjection.Handle(new AccountChangedEvent(time, "test",
                 updatedContract, AccountChangedEventTypeContract.BalanceUpdated,
@@ -185,7 +188,7 @@ namespace MarginTradingTests
             return new AccountsProjection(_accountsCacheService, _clientNotifyServiceMock.Object,
                 _accountBalanceChangedEventChannelMock.Object, ConvertService, _updateAccountServiceMock.Object, 
                 DateService, _operationExecutionInfoRepositoryMock.Object, Mock.Of<IChaosKitty>(), 
-                new SimpleIdentityGenerator(), _ordersCache, _logMock.Object);
+                _ordersCache, _logMock.Object);
         }
         
         private static MarginTradingAccount Convert(AccountContract accountContract)

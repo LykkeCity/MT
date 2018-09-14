@@ -86,7 +86,7 @@ namespace MarginTradingTests
             var convertService = Container.Resolve<IConvertService>();
             Mock.Get(Container.Resolve<ICqrsEngine>()).Setup(s =>
                 s.PublishEvent(It.IsNotNull<PositionClosedEvent>(), contextsNames.TradingEngine))
-                .Callback<object, string>((ev, s1) =>
+                .Callback<object, string>(async (ev, s1) =>
                 {
                     // simulate the behaviour of account management service 
                     var typedEvent = ev as PositionClosedEvent;
@@ -97,7 +97,7 @@ namespace MarginTradingTests
                             o => o.ConfigureMap(MemberList.Destination)
                                 .ForCtorParam("modificationTimestamp",
                                     p => p.MapFrom(tradingAccount => DateTime.UtcNow)));
-                    accountsProjection.Handle(new AccountChangedEvent(DateTime.UtcNow, "Source", accountContract,
+                    await accountsProjection.Handle(new AccountChangedEvent(DateTime.UtcNow, "Source", accountContract,
                         AccountChangedEventTypeContract.BalanceUpdated));
                 });
             

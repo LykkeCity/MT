@@ -18,8 +18,9 @@ namespace MarginTrading.Backend.Core
         void TryAddNew(MarginTradingAccount account);
         
         void Update(MarginTradingAccount newValue);
+
         void UpdateAccountChanges(string accountId, string updatedTradingConditionId,
-            decimal updatedWithdrawTransferLimit, bool isDisabled);
+            decimal updatedWithdrawTransferLimit, bool isDisabled, bool isWithdrawalDisabled);
         void UpdateAccountBalance(string accountId, decimal accountBalance);
 
         Task FreezeWithdrawalMargin(string operationId, string clientId, string accountId, decimal amount);

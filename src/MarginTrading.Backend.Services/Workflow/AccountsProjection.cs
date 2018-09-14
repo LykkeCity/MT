@@ -30,7 +30,6 @@ namespace MarginTrading.Backend.Services.Workflow
         private readonly IDateService _dateService;
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
         private readonly IChaosKitty _chaosKitty;
-        private readonly IIdentityGenerator _identityGenerator;
         private readonly OrdersCache _ordersCache;
         private readonly ILog _log;
 
@@ -45,7 +44,6 @@ namespace MarginTrading.Backend.Services.Workflow
             IDateService dateService,
             IOperationExecutionInfoRepository operationExecutionInfoRepository,
             IChaosKitty chaosKitty,
-            IIdentityGenerator identityGenerator,
             OrdersCache ordersCache, 
             ILog log)
         {
@@ -56,7 +54,6 @@ namespace MarginTrading.Backend.Services.Workflow
             _accountUpdateService = accountUpdateService;
             _dateService = dateService;
             _operationExecutionInfoRepository = operationExecutionInfoRepository;
-            _identityGenerator = identityGenerator;
             _chaosKitty = chaosKitty;
             _ordersCache = ordersCache;
             _log = log;
@@ -68,18 +65,13 @@ namespace MarginTrading.Backend.Services.Workflow
         [UsedImplicitly]
         public async Task Handle(AccountChangedEvent e)
         {
-            //todo introduce operationId in AccountChangeEvent instead of that
-            var operationId = e.BalanceChange?.Id ?? (e.EventType == AccountChangedEventTypeContract.Created
-                                  ? e.Account.Id
-                                  : $"{e.Account.Id}-update-{_identityGenerator.GenerateGuid()}");
-            
             //ensure idempotency
             var executionInfo = await _operationExecutionInfoRepository.GetOrAddAsync(
                 operationName: OperationName,
-                operationId: operationId,
+                operationId: e.OperationId,
                 factory: () => new OperationExecutionInfo<OperationData>(
                     operationName: OperationName,
-                    id: operationId,
+                    id: e.OperationId,
                     lastModified: _dateService.Now(),
                     data: new OperationData { State = OperationState.Initiated }
                 ));
@@ -101,8 +93,8 @@ namespace MarginTrading.Backend.Services.Workflow
                         if (ValidateAccount(account, e))
                         {
                             _accountsCacheService.UpdateAccountChanges(updatedAccount.Id,
-                                updatedAccount.TradingConditionId,
-                                updatedAccount.WithdrawTransferLimit, updatedAccount.IsDisabled);
+                                updatedAccount.TradingConditionId, updatedAccount.WithdrawTransferLimit, 
+                                updatedAccount.IsDisabled, updatedAccount.IsWithdrawalDisabled);
 
                             _clientNotifyService.NotifyAccountUpdated(updatedAccount);
                         }
@@ -152,7 +144,7 @@ namespace MarginTrading.Backend.Services.Workflow
                     }
                 }
                 
-                _chaosKitty.Meow(operationId);
+                _chaosKitty.Meow(e.OperationId);
 
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }
