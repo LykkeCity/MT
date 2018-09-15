@@ -13,6 +13,7 @@ using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Backend.Services.TradingConditions;
+using MarginTrading.Common.Services;
 using Moq;
 using MoreLinq;
 using NUnit.Framework;
@@ -33,7 +34,7 @@ namespace MarginTradingTests.Backend
 		private IRabbitMqNotifyService _rabbitMqNotifyService;
 		private AccountAssetsManager _accountAssetsManager;
 		private IEventChannel<BestPriceChangeEventArgs> _bestPriceConsumer;
-		
+
 		[OneTimeSetUp]
 		public void OneTimeSetUp()
 		{
@@ -78,6 +79,9 @@ namespace MarginTradingTests.Backend
 		[Test]
 		public async Task OvernightSwapCalculation_Success()
 		{
+			var dsMock = Mock.Get(Container.Resolve<IDateService>());
+			dsMock.Setup(d => d.Now()).Returns(new DateTime(2017, 1, 2));
+			
 			await _accountAssetsRepository.AddOrReplaceAsync(new AccountAssetPair
 			{
 				TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
@@ -95,6 +99,7 @@ namespace MarginTradingTests.Backend
 
 			var accountId = (await _fakeMarginTradingAccountsRepository.GetAllAsync("1"))
 				.First(x => x.ClientId == "1" && x.BaseAssetId == "USD").Id;
+			
 			_ordersCache.ActiveOrders.Add(new Order
 			{
 				Id = "1",
@@ -105,19 +110,56 @@ namespace MarginTradingTests.Backend
 				AccountAssetId = "USD",
 				Volume = 1,
 				OpenDate = new DateTime(2017, 01, 01, 20, 50, 0),
-				CloseDate = new DateTime(2017, 01, 02, 20, 50, 0),
+				MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder() { Volume = 1} }),
+				LegalEntity = "LYKKETEST",
+			});
+			
+			_ordersCache.ActiveOrders.Add(new Order
+			{
+				Id = "2",
+				AccountId = accountId,
+				Instrument = "BTCUSD",
+				ClientId = "1",
+				TradingConditionId = "1",
+				AccountAssetId = "USD",
+				Volume = 1,
+				OpenDate = new DateTime(2017, 01, 02, 20, 50, 0),
 				MatchedOrders = new MatchedOrderCollection(new List<MatchedOrder> { new MatchedOrder() { Volume = 1} }),
 				LegalEntity = "LYKKETEST",
 			});
 
-			var accountBalance = (await _fakeMarginTradingAccountsRepository.GetAsync(accountId)).Balance;
+			const decimal swapValue = 0.00273973M;
+			
+			var initialAccountBalance = (await _fakeMarginTradingAccountsRepository.GetAsync(accountId)).Balance;
 			
 			_overnightSwapService.CalculateAndChargeSwaps();
 
-			var calc = _overnightSwapCache.GetAll().First();
-			Assert.AreEqual(0.00273973M, calc.Value);
-			Assert.True(calc.IsSuccess);
-			Assert.AreEqual(accountBalance - 0.00273973M, (await _fakeMarginTradingAccountsRepository.GetAsync(accountId)).Balance);
+			var calculations = _overnightSwapCache.GetAll();
+			Assert.AreEqual(1, calculations.Count); //only order 1 should be calculated
+			var singleCalc = calculations.First();
+			Assert.AreEqual(swapValue, singleCalc.Value);
+			Assert.True(singleCalc.IsSuccess);
+			Assert.AreEqual(initialAccountBalance - swapValue, (await _fakeMarginTradingAccountsRepository.GetAsync(accountId)).Balance);
+			
+			//move few hours later and calculate again
+			dsMock.Setup(d => d.Now()).Returns(new DateTime(2017, 1, 2, 2, 0, 0));
+			
+			//nothing should change
+			calculations = _overnightSwapCache.GetAll();
+			Assert.AreEqual(1, calculations.Count);
+			Assert.AreEqual(initialAccountBalance - swapValue, (await _fakeMarginTradingAccountsRepository.GetAsync(accountId)).Balance);
+			
+			_overnightSwapService.CalculateAndChargeSwaps();
+			
+			//move to next day and calculate again
+			dsMock.Setup(d => d.Now()).Returns(new DateTime(2017, 1, 3));
+			
+			_overnightSwapService.CalculateAndChargeSwaps();
+			
+			calculations = _overnightSwapCache.GetAll();
+			Assert.AreEqual(2, calculations.Count); // both order 1 and order 2 should be calculated
+			Assert.AreEqual(initialAccountBalance - swapValue * 3,
+				(await _fakeMarginTradingAccountsRepository.GetAsync(accountId)).Balance);
 		}
 
 		[Test]
