@@ -227,12 +227,15 @@ namespace MarginTrading.Backend.Services
             if (!matchedOrders.Any())
             {
                 RejectOrder(order, OrderRejectReason.NoLiquidity, "No orders to match", "");
+                return order;
             } 
-            else if (matchedOrders.SummaryVolume < Math.Abs(order.Volume))
+            
+            if (matchedOrders.SummaryVolume < Math.Abs(order.Volume))
             {
                 if (order.FillType == OrderFillType.FillOrKill)
                 {
                     RejectOrder(order, OrderRejectReason.NoLiquidity, "Not fully matched", "");
+                    return order;
                 }
                 else
                 {
@@ -242,7 +245,7 @@ namespace MarginTrading.Backend.Services
                 }
             }
 
-            if (order.Status != OrderStatus.Rejected)
+            if (order.Status == OrderStatus.ExecutionStarted)
             {
                 var accuracy = _assetPairsCache.GetAssetPairByIdOrDefault(order.AssetPairId)?.Accuracy ??
                                AssetPairsCache.DefaultAssetPairAccuracy;
@@ -286,31 +289,36 @@ namespace MarginTrading.Backend.Services
 
         private void RejectOrder(Order order, OrderRejectReason reason, string message, string comment = null)
         {
-            order.Reject(reason, message, comment, _dateService.Now());
+            if (order.OrderType == OrderType.Market)
+            {
+                order.Reject(reason, message, comment, _dateService.Now());
             
-            _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
+                _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
+            }
+            else if (!_ordersCache.TryGetOrderById(order.Id, out _)) // all pending orders should be returned to active state
+            {
+                order.CancelExecution(_dateService.Now());
+                _ordersCache.Active.Add(order);   
+                _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order));
+            }
         }
 
         #region Orders waiting for execution
 
         private void ProcessOrdersWaitingForExecution(string instrument)
         {
+            //TODO: MTC-155
             //ProcessPendingOrdersMarginRecalc(instrument);
 
-            var orders = GetPendingOrdersToBeExecuted(instrument).ToArray();
-
-            if (orders.Length == 0)
+            var orders = GetPendingOrdersToBeExecuted(instrument).GetSortedForExecution();
+            
+            if (!orders.Any())
                 return;
-
-
-            //TODO: think how to make sure that we don't loose orders
-            // + change logic according validation and execution rules
 
             foreach (var order in orders)
             {
                 _threadSwitcher.SwitchThread(async () =>
                 {
-                    _ordersCache.Active.Remove(order);
                     await PlaceOrderByMarketPrice(order);
                 });
             }
@@ -318,8 +326,7 @@ namespace MarginTrading.Backend.Services
 
         private IEnumerable<Order> GetPendingOrdersToBeExecuted(string instrument)
         {
-            var pendingOrders = _ordersCache.Active.GetOrdersByInstrument(instrument)
-                .OrderBy(item => item.Created);
+            var pendingOrders = _ordersCache.Active.GetOrdersByInstrument(instrument);
 
             var now = _dateService.Now();
             
@@ -339,7 +346,14 @@ namespace MarginTrading.Backend.Services
 
                     if (order.IsSuitablePriceForPendingOrder(price) /*&&
                         !_assetPairDayOffService.ArePendingOrdersDisabled(order.AssetPairId)*/)
+                    {
+                        //TODO: inspect one more time in MTC-248
+                        // if order is removed from Active, execution should be started immediately
+                        // and/or placed to InProgress
+                        
+                        _ordersCache.Active.Remove(order);
                         yield return order;
+                    }
                 }
             }
         }

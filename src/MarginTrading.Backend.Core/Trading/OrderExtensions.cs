@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;
 
@@ -130,6 +133,45 @@ namespace MarginTrading.Backend.Core
                 default:
                     return PositionCloseReason.Close;
             }
+        }
+
+        public static byte GetExecutionRank(this OrderType orderType)
+        {
+            switch (orderType)
+            {
+                case OrderType.Market:
+                    return 0;
+                case OrderType.Stop:
+                case OrderType.StopLoss:
+                case OrderType.TrailingStop:
+                    return 2;
+                case OrderType.Limit:
+                case OrderType.TakeProfit:
+                    return 4;
+                default:
+                    return 8;
+            }
+        }
+
+        public static byte GetExecutionRank(this OrderDirection orderDirection)
+        {
+            switch (orderDirection)
+            {
+                case OrderDirection.Sell:
+                    return 0;
+                case OrderDirection.Buy:
+                    return 1;
+                default:
+                    return 0;
+            }
+        }
+        
+        public static ICollection<Order> GetSortedForExecution(this IEnumerable<Order> orders)
+        {
+            return orders.OrderBy(o => o.ExecutionRank)
+                .ThenBy(o => o.ExecutionPriceRank)
+                .ThenBy(o => o.Created)
+                .ToList();
         }
     }
 }
