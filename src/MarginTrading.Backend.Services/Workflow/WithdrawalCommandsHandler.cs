@@ -60,7 +60,7 @@ namespace MarginTrading.Backend.Services.Workflow
             {
                 publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId, _dateService.Now(), 
                     command.ClientId, command.AccountId, command.Amount, $"Failed to get account {command.AccountId}"));
-                return;
+                return;//todo wtf the clientId is still here?
             }
 
             if (executionInfo.Data.SwitchState(OperationState.Initiated, OperationState.Started))
