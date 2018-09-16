@@ -209,8 +209,6 @@ namespace MarginTrading.Backend.Services
                     relatedOrders.Add(tp);    
             }
             
-            //ValidateOrderStops();
-
             return (baseOrder, relatedOrders);
         }
         
@@ -336,14 +334,17 @@ namespace MarginTrading.Backend.Services
             if (order.OrderType != OrderType.Stop)
                 return;
 
-            if (order.Direction == OrderDirection.Buy && quote.Ask >= orderPrice ||
-                order.Direction == OrderDirection.Sell && quote.Bid <= orderPrice )
+            if (order.Direction == OrderDirection.Buy && quote.Ask >= orderPrice)
             {
-                var reasonText = order.Direction == OrderDirection.Buy
-                    ? string.Format(MtMessages.Validation_PriceAboveAsk, orderPrice, quote.Ask)
-                    : string.Format(MtMessages.Validation_PriceBelowBid, orderPrice, quote.Bid);
-
-                throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice, reasonText,
+                throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
+                    string.Format(MtMessages.Validation_PriceAboveAsk, orderPrice, quote.Ask),
+                    $"{order.AssetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
+            } 
+            
+            if (order.Direction == OrderDirection.Sell && quote.Bid <= orderPrice )
+            {
+                throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice, 
+                    string.Format(MtMessages.Validation_PriceBelowBid, orderPrice, quote.Bid),
                     $"{order.AssetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
             }
         }
