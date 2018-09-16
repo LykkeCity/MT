@@ -6,6 +6,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
 using MarginTradingTests.Helpers;
@@ -430,7 +431,7 @@ namespace MarginTradingTests
                 AccountId = Accounts[0].Id,
                 CorrelationId = Guid.NewGuid().ToString(),
                 Direction = direction,
-                InstrumentId = "EURUSD",
+                InstrumentId = instrument,
                 Type = orderType,
                 Price = price,
                 Volume = 1
@@ -451,116 +452,197 @@ namespace MarginTradingTests
             }
         }
 
-//
-//        [Test]
-//        public void Is_MarketOrder_Buy_TakeProfit_Invalid()
-//        {
-//            const string instrument = "BTCCHF";
-//            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 963.633M, Ask = 964.228M };
-//            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
-//
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = Accounts[0].Id,
-//                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
-//                AccountAssetId = Accounts[0].BaseAssetId,
-//                AssetPairId = instrument,
-//                Volume = 10,
-//                TakeProfit = 964.2551256546M,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            var ex = Assert.Throws<ValidateOrderException>(() => _validateOrderService.Validate(order));
-//
-//            Assert.That(ex.RejectReason == OrderRejectReason.InvalidTakeProfit);
-//            StringAssert.Contains($"{quote.Bid}/{quote.Ask}", ex.Comment);
-//            StringAssert.Contains("more", ex.Message);
-//        }
-//
-//        [Test]
-//        public void Is_MarketOrder_Sell_TakeProfit_Invalid()
-//        {
-//            const string instrument = "BTCCHF";
-//            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 963.633M, Ask = 964.228M };
-//            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
-//
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = Accounts[0].Id,
-//                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
-//                AccountAssetId = Accounts[0].BaseAssetId,
-//                AssetPairId = instrument,
-//                Volume = -10,
-//                TakeProfit = 963.6051356785M,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            var ex = Assert.Throws<ValidateOrderException>(() => _validateOrderService.Validate(order));
-//
-//            Assert.That(ex.RejectReason == OrderRejectReason.InvalidTakeProfit);
-//            StringAssert.Contains($"{quote.Bid}/{quote.Ask}", ex.Comment);
-//            StringAssert.Contains("less", ex.Message);
-//        }
-//
-//
-//        [Test]
-//        public void Is_MarketOrder_Buy_StopLoss_Invalid()
-//        {
-//            const string instrument = "BTCCHF";
-//            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 963.633M, Ask = 964.228M };
-//            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
-//
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = Accounts[0].Id,
-//                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
-//                AccountAssetId = Accounts[0].BaseAssetId,
-//                AssetPairId = instrument,
-//                Volume = 10,
-//                StopLoss = 963.6051245765M,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            var ex = Assert.Throws<ValidateOrderException>(() => _validateOrderService.Validate(order));
-//
-//            Assert.That(ex.RejectReason == OrderRejectReason.InvalidStoploss);
-//            StringAssert.Contains($"{quote.Bid}/{quote.Ask}", ex.Comment);
-//            StringAssert.Contains("less", ex.Message);
-//        }
-//
-//        [Test]
-//        public void Is_MarketOrder_Sell_StopLoss_Invalid()
-//        {
-//            const string instrument = "BTCCHF";
-//            var quote = new InstrumentBidAskPair { Instrument = instrument, Bid = 963.633M, Ask = 964.228M };
-//            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
-//
-//            var order = new Position
-//            {
-//                CreateDate = DateTime.UtcNow,
-//                Id = Guid.NewGuid().ToString("N"),
-//                AccountId = Accounts[0].Id,
-//                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
-//                AccountAssetId = Accounts[0].BaseAssetId,
-//                AssetPairId = instrument,
-//                Volume = -10,
-//                StopLoss = 964.2553256564M,
-//                FillType = OrderFillType.FillOrKill
-//            };
-//
-//            var ex = Assert.Throws<ValidateOrderException>(() => _validateOrderService.Validate(order));
-//
-//            Assert.That(ex.RejectReason == OrderRejectReason.InvalidStoploss);
-//            StringAssert.Contains($"{quote.Bid}/{quote.Ask}", ex.Comment);
-//            StringAssert.Contains("more", ex.Message);
-//        }
+        [Test]
+        [TestCase(OrderDirectionContract.Buy, null, null, null)]
+        [TestCase(OrderDirectionContract.Sell, null, null, null)]
+        [TestCase(OrderDirectionContract.Buy, 0.1, null, null)]
+        [TestCase(OrderDirectionContract.Buy, null, 3, null)]
+        [TestCase(OrderDirectionContract.Buy, 0.1, 3, null)]
+        [TestCase(OrderDirectionContract.Buy, 3, null, OrderRejectReason.InvalidStoploss)]
+        [TestCase(OrderDirectionContract.Buy, null, 0.1, OrderRejectReason.InvalidTakeProfit)]
+        [TestCase(OrderDirectionContract.Sell, 3, null, null)]
+        [TestCase(OrderDirectionContract.Sell, null, 0.1, null)]
+        [TestCase(OrderDirectionContract.Sell, 3, 0.1, null)]
+        [TestCase(OrderDirectionContract.Sell, 0.1, null, OrderRejectReason.InvalidStoploss)]
+        [TestCase(OrderDirectionContract.Sell, null, 3, OrderRejectReason.InvalidTakeProfit)]
+        
+        public void Is_RelatedOrder_Validated_Correctly_Against_Base_PendingOrder_On_Create(
+            OrderDirectionContract baseDirection,decimal? slPrice, decimal? tpPrice, OrderRejectReason? rejectReason)
+        {
+            const string instrument = "EURUSD";
+            var quote = new InstrumentBidAskPair {Instrument = instrument, Bid = 1.55M, Ask = 1.57M};
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
 
+            var limitOrderRequest = new OrderPlaceRequest
+            {
+                AccountId = Accounts[0].Id,
+                CorrelationId = Guid.NewGuid().ToString(),
+                Direction = baseDirection,
+                InstrumentId = instrument,
+                Type = OrderTypeContract.Limit,
+                Price = 2,
+                StopLoss = slPrice,
+                TakeProfit = tpPrice,
+                Volume = 1
+            };
+            
+            var stopOrderRequest = new OrderPlaceRequest
+            {
+                AccountId = Accounts[0].Id,
+                CorrelationId = Guid.NewGuid().ToString(),
+                Direction = baseDirection,
+                InstrumentId = instrument,
+                Type = OrderTypeContract.Stop,
+                Price = baseDirection == OrderDirectionContract.Buy ? 2 : 1,
+                StopLoss = slPrice,
+                TakeProfit = tpPrice,
+                Volume = 1
+            };
+
+            if (!rejectReason.HasValue)
+            {
+                Assert.DoesNotThrowAsync(async () =>
+                    await _validateOrderService.ValidateRequestAndCreateOrders(limitOrderRequest));
+                
+                Assert.DoesNotThrowAsync(async () =>
+                    await _validateOrderService.ValidateRequestAndCreateOrders(stopOrderRequest));
+            }
+            else
+            {
+                var ex1 = Assert.ThrowsAsync<ValidateOrderException>(() =>
+                    _validateOrderService.ValidateRequestAndCreateOrders(limitOrderRequest));
+
+                Assert.That(ex1.RejectReason == rejectReason);
+                
+                var ex2 = Assert.ThrowsAsync<ValidateOrderException>(() =>
+                    _validateOrderService.ValidateRequestAndCreateOrders(stopOrderRequest));
+
+                Assert.That(ex2.RejectReason == rejectReason);
+            }
+        }
+        
+        [Test]
+        [TestCase(OrderDirectionContract.Buy, null, null, null)]
+        [TestCase(OrderDirectionContract.Sell, null, null, null)]
+        [TestCase(OrderDirectionContract.Buy, 0.1, null, null)]
+        [TestCase(OrderDirectionContract.Buy, null, 3, null)]
+        [TestCase(OrderDirectionContract.Buy, null, 1.56, null)]
+        [TestCase(OrderDirectionContract.Buy, 0.1, 3, null)]
+        [TestCase(OrderDirectionContract.Buy, 3, null, OrderRejectReason.InvalidStoploss)]
+        [TestCase(OrderDirectionContract.Buy, null, 0.1, OrderRejectReason.InvalidTakeProfit)]
+        [TestCase(OrderDirectionContract.Sell, 3, null, null)]
+        [TestCase(OrderDirectionContract.Sell, null, 0.1, null)]
+        [TestCase(OrderDirectionContract.Sell, null, 1.56, null)]
+        [TestCase(OrderDirectionContract.Sell, 3, 0.1, null)]
+        [TestCase(OrderDirectionContract.Sell, 0.1, null, OrderRejectReason.InvalidStoploss)]
+        [TestCase(OrderDirectionContract.Sell, null, 3, OrderRejectReason.InvalidTakeProfit)]
+        
+        public void Is_RelatedOrder_Validated_Correctly_Against_Base_MarketOrder_On_Create(
+            OrderDirectionContract baseDirection,decimal? slPrice, decimal? tpPrice, OrderRejectReason? rejectReason)
+        {
+            const string instrument = "EURUSD";
+            var quote = new InstrumentBidAskPair {Instrument = instrument, Bid = 1.55M, Ask = 1.57M};
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
+
+            var orderRequest = new OrderPlaceRequest
+            {
+                AccountId = Accounts[0].Id,
+                CorrelationId = Guid.NewGuid().ToString(),
+                Direction = baseDirection,
+                InstrumentId = instrument,
+                Type = OrderTypeContract.Market,
+                StopLoss = slPrice,
+                TakeProfit = tpPrice,
+                Volume = 1
+            };
+            
+            if (!rejectReason.HasValue)
+            {
+                Assert.DoesNotThrowAsync(async () =>
+                    await _validateOrderService.ValidateRequestAndCreateOrders(orderRequest));
+            }
+            else
+            {
+                var ex1 = Assert.ThrowsAsync<ValidateOrderException>(() =>
+                    _validateOrderService.ValidateRequestAndCreateOrders(orderRequest));
+
+                Assert.That(ex1.RejectReason == rejectReason);
+            }
+        }
+
+        [Test]
+        [TestCase(OrderDirection.Buy, 2.5, true)]
+        [TestCase(OrderDirection.Sell, 0.7, true)]
+        [TestCase(OrderDirection.Buy, 0.1, false)]
+        [TestCase(OrderDirection.Sell, 0.1, false)]
+        [TestCase(OrderDirection.Buy, 4, false)]
+        [TestCase(OrderDirection.Sell, 4, false)]
+        
+        public void Is_BaseOrder_Validated_Correctly_Against_Related_On_Change(
+            OrderDirection baseDirection, decimal newPrice, bool isValid)
+        {
+            const string instrument = "EURUSD";
+            var quote = new InstrumentBidAskPair {Instrument = instrument, Bid = 1.55M, Ask = 1.57M};
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
+
+            Order CreateOrder(OrderType type)
+            {
+                var order = TestObjectsFactory.CreateNewOrder(type, instrument, Accounts[0],
+                    MarginTradingTestsUtils.TradingConditionId,
+                    volume: baseDirection == OrderDirection.Buy ? 1 : -1,
+                    price: baseDirection == OrderDirection.Buy ? 2 : 1);
+                
+                _ordersCache.Active.Add(order);
+                
+                var sl = TestObjectsFactory.CreateNewOrder(OrderType.StopLoss, instrument, 
+                    Accounts[0], MarginTradingTestsUtils.TradingConditionId,
+                    volume: baseDirection == OrderDirection.Buy ? -1 : 1,
+                    price: baseDirection == OrderDirection.Buy ? 0.5M : 3,
+                    parentOrderId: order.Id);
+                
+                var tp = TestObjectsFactory.CreateNewOrder(OrderType.TakeProfit, instrument, 
+                    Accounts[0], MarginTradingTestsUtils.TradingConditionId,
+                    volume: baseDirection == OrderDirection.Buy ? -1 : 1,
+                    price: baseDirection == OrderDirection.Buy ? 3 : 0.5M,
+                    parentOrderId: order.Id);
+                
+                order.AddRelatedOrder(sl);
+                order.AddRelatedOrder(tp);
+                
+                _ordersCache.Inactive.Add(sl);
+                _ordersCache.Inactive.Add(tp);
+
+                return order;
+            }
+
+            var limitOrder = CreateOrder(OrderType.Limit);
+
+            var stopOrder = CreateOrder(OrderType.Stop);
+
+            if (isValid)
+            {
+                Assert.DoesNotThrow(() =>
+                    _validateOrderService.ValidateOrderPriceChange(limitOrder, newPrice));
+                
+                Assert.DoesNotThrow(() =>
+                    _validateOrderService.ValidateOrderPriceChange(stopOrder, newPrice));
+            }
+            else
+            {
+                var ex1 = Assert.Throws<ValidateOrderException>(() =>
+                    _validateOrderService.ValidateOrderPriceChange(limitOrder, newPrice));
+
+                Assert.That(ex1.RejectReason == OrderRejectReason.InvalidExpectedOpenPrice);
+                StringAssert.Contains("against related", ex1.Message);
+                
+                var ex2 = Assert.Throws<ValidateOrderException>(() =>
+                    _validateOrderService.ValidateOrderPriceChange(stopOrder, newPrice));
+
+                Assert.That(ex2.RejectReason == OrderRejectReason.InvalidExpectedOpenPrice);
+                StringAssert.Contains("against related", ex1.Message);
+            }
+        }
+        
         private void SetupAssetPair(string id, bool isDiscontinued = false, bool isFrozen = false,
             bool isSuspended = false)
         {

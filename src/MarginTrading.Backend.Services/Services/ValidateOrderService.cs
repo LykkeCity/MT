@@ -93,6 +93,11 @@ namespace MarginTrading.Backend.Services
                     }
                 }
             }
+            else
+            {
+                //always ignore price for market orders
+                request.Price = null;
+            }
 
             var account = _accountsCacheService.TryGet(request.AccountId);
 
@@ -425,13 +430,13 @@ namespace MarginTrading.Backend.Services
         {
             if (orderDirection == OrderDirection.Buy && basePrice >= orderPrice)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidTakeProfit,
+                throw new ValidateOrderException(OrderRejectReason.InvalidStoploss,
                     string.Format(MtMessages.Validation_StopLossMustBeMore, orderPrice, basePrice));
             }
             
             if (orderDirection == OrderDirection.Sell && basePrice <= orderPrice)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidTakeProfit,
+                throw new ValidateOrderException(OrderRejectReason.InvalidStoploss,
                     string.Format(MtMessages.Validation_StopLossMustBeLess, orderPrice, basePrice));
             }
         }
