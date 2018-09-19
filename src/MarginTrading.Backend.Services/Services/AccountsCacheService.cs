@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Helpers;
@@ -17,15 +18,15 @@ namespace MarginTrading.Backend.Services
         private Dictionary<string, MarginTradingAccount> _accounts = new Dictionary<string, MarginTradingAccount>();
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
 
-        private readonly IAccountMarginFreezingRepository _accountMarginFreezingRepository;
         private readonly IDateService _dateService;
+        private readonly ILog _log;
 
         public AccountsCacheService(
-            IAccountMarginFreezingRepository accountMarginFreezingRepository,
-            IDateService dateService)
+            IDateService dateService,
+            ILog log)
         {
-            _accountMarginFreezingRepository = accountMarginFreezingRepository;
             _dateService = dateService;
+            _log = log;
         }
         
         public IReadOnlyList<MarginTradingAccount> GetAll()
@@ -52,41 +53,9 @@ namespace MarginTrading.Backend.Services
                 throw new AccountNotFoundException(accountId, string.Format(MtMessages.AccountByIdNotFound, accountId));
         }
 
-        public void Update(MarginTradingAccount newValue)
-        {
-            _lockSlim.EnterWriteLock();
-            try
-            {
-                newValue.LastUpdateTime = _dateService.Now();
-                _accounts[newValue.Id] = newValue;
-            }
-            finally
-            {
-                _lockSlim.ExitWriteLock();
-            }
-        }
-
         public MarginTradingAccount TryGet(string accountId)
         {
             return TryGetAccount(accountId);
-        }
-
-        public IEnumerable<string> GetClientIdsByTradingConditionId(string tradingConditionId, string accountId = null)
-        {
-            _lockSlim.EnterReadLock();
-            try
-            {
-                foreach (var account in _accounts.Values)
-                {
-                    if (account.TradingConditionId == tradingConditionId &&
-                        (string.IsNullOrEmpty(accountId) || account.Id == accountId))
-                        yield return account.ClientId;
-                }
-            }
-            finally
-            {
-                _lockSlim.ExitReadLock();
-            }
         }
 
         private MarginTradingAccount TryGetAccount(string accountId)
@@ -110,17 +79,6 @@ namespace MarginTrading.Backend.Services
             try
             {
                 _accounts = accounts;
-
-                var marginFreezings = _accountMarginFreezingRepository.GetAllAsync().GetAwaiter().GetResult()
-                    .GroupBy(x => x.AccountId)
-                    .ToDictionary(x => x.Key, x => x.ToDictionary(z => z.OperationId, z => z.Amount));
-                foreach (var account in accounts.Select(x => x.Value))
-                {
-                    account.AccountFpl.WithdrawalFrozenMarginData = marginFreezings.TryGetValue(account.Id, out var freezings)
-                        ? freezings
-                        : new Dictionary<string, decimal>();
-                    account.AccountFpl.WithdrawalFrozenMargin = account.AccountFpl.WithdrawalFrozenMarginData.Sum(x => x.Value);
-                }
             }
             finally
             {
@@ -128,44 +86,42 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public async Task FreezeWithdrawalMargin(string operationId, string clientId, string accountId, decimal amount)
-        {
-            await _accountMarginFreezingRepository.TryInsertAsync(new AccountMarginFreezing(operationId,
-                clientId, accountId, amount));
-        }
-
-        public async Task UnfreezeWithdrawalMargin(string operationId)
-        {
-            await _accountMarginFreezingRepository.DeleteAsync(operationId);
-        }
-
-        public void UpdateAccountChanges(string accountId, string updatedTradingConditionId,
-            decimal updatedWithdrawTransferLimit, bool isDisabled, bool isWithdrawalDisabled)
+        public bool UpdateAccountChanges(string accountId, string updatedTradingConditionId,
+            decimal updatedWithdrawTransferLimit, bool isDisabled, bool isWithdrawalDisabled, DateTime eventTime)
         {
             _lockSlim.EnterWriteLock();
             try
             {
                 var account = _accounts[accountId];
+
+                if (account.LastUpdateTime > eventTime)
+                {
+                    _log.WriteInfo(nameof(AccountsCacheService), nameof(UpdateAccountChanges), 
+                        $"Account with id {account.Id} is in newer state that the event");
+                    return false;
+                } 
+                
                 account.TradingConditionId = updatedTradingConditionId;
                 account.WithdrawTransferLimit = updatedWithdrawTransferLimit;
                 account.IsDisabled = isDisabled;
                 account.IsWithdrawalDisabled = isWithdrawalDisabled;
-                account.LastUpdateTime = _dateService.Now();
+                account.LastUpdateTime = eventTime;
             }
             finally
             {
                 _lockSlim.ExitWriteLock();
             }
+            return true;
         }
 
-        public void UpdateAccountBalance(string accountId, decimal accountBalance)
+        public void UpdateAccountBalance(string accountId, decimal changeAmount)
         {
             _lockSlim.EnterWriteLock();
             try
             {
                 var account = _accounts[accountId];
-                account.Balance = accountBalance;
-                account.LastUpdateTime = _dateService.Now();
+                
+                account.Balance += changeAmount;
             }
             finally
             {
@@ -184,20 +140,6 @@ namespace MarginTrading.Backend.Services
             finally
             {
                 _lockSlim.ExitWriteLock();
-            }
-        }
-
-        public bool CheckEventTimeNewer(string accountId, DateTime eventTime)
-        {
-            _lockSlim.EnterReadLock();
-            try
-            {
-                var account = _accounts[accountId];
-                return account.LastUpdateTime < eventTime;
-            }
-            finally
-            {
-                _lockSlim.ExitReadLock();
             }
         }
     }

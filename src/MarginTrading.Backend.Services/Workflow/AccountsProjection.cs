@@ -75,8 +75,6 @@ namespace MarginTrading.Backend.Services.Workflow
                     lastModified: _dateService.Now(),
                     data: new OperationData { State = OperationState.Initiated }
                 ));
-            
-            // todo: what happens if events get reordered??
 
             if (executionInfo.Data.SwitchState(OperationState.Initiated, OperationState.Finished))
             {
@@ -90,12 +88,11 @@ namespace MarginTrading.Backend.Services.Workflow
                     case AccountChangedEventTypeContract.Updated:
                     {
                         var account = _accountsCacheService.TryGet(e.Account.Id);
-                        if (ValidateAccount(account, e))
+                        if (ValidateAccount(account, e)
+                            && _accountsCacheService.UpdateAccountChanges(updatedAccount.Id,
+                                updatedAccount.TradingConditionId, updatedAccount.WithdrawTransferLimit,
+                                updatedAccount.IsDisabled, updatedAccount.IsWithdrawalDisabled, e.ChangeTimestamp))
                         {
-                            _accountsCacheService.UpdateAccountChanges(updatedAccount.Id,
-                                updatedAccount.TradingConditionId, updatedAccount.WithdrawTransferLimit, 
-                                updatedAccount.IsDisabled, updatedAccount.IsWithdrawalDisabled);
-
                             _clientNotifyService.NotifyAccountUpdated(updatedAccount);
                         }
 
@@ -108,8 +105,9 @@ namespace MarginTrading.Backend.Services.Workflow
                             var account = _accountsCacheService.TryGet(e.Account.Id);
                             if (ValidateAccount(account, e))
                             {
-                                _accountsCacheService.UpdateAccountBalance(updatedAccount.Id, updatedAccount.Balance);
-
+                                _accountsCacheService.UpdateAccountBalance(updatedAccount.Id,
+                                    e.BalanceChange.ChangeAmount);
+                                    
                                 switch (e.BalanceChange.ReasonType)
                                 {
                                     case AccountBalanceChangeReasonTypeContract.Withdraw:
@@ -155,12 +153,6 @@ namespace MarginTrading.Backend.Services.Workflow
             if (account == null)
             {
                 _log.WriteWarning(nameof(AccountsProjection), e, $"Account with id {e.Account.Id} was not found");
-                return false;
-            }
-
-            if (!_accountsCacheService.CheckEventTimeNewer(account.Id, e.ChangeTimestamp))
-            {
-                _log.WriteInfo(nameof(AccountsProjection), e, $"Account with id {e.Account.Id} is in newer state that the event");
                 return false;
             }
 

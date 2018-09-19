@@ -165,8 +165,7 @@ namespace MarginTradingTests
 
         private AccountsProjection AssertEnv()
         {
-            var accountMarginFreezingRepository = new Mock<AccountMarginFreezingRepository>();
-            _accountsCacheService = new AccountsCacheService(accountMarginFreezingRepository.Object, DateService);
+            _accountsCacheService = new AccountsCacheService(DateService, new EmptyLog());
             
             _accountsCacheService.TryAddNew(Convert(Accounts[0]));
 
@@ -182,7 +181,7 @@ namespace MarginTradingTests
                     lastModified: DateService.Now(),
                     data: new OperationData {State = OperationState.Initiated}
                 ));
-            _ordersCache = new OrdersCache(null);
+            _ordersCache = new OrdersCache();
             _logMock = new Mock<ILog>();
             
             return new AccountsProjection(_accountsCacheService, _clientNotifyServiceMock.Object,
