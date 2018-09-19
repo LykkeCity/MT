@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Threading;
 using AzureStorage.Tables;
-using Lykke.Service.Assets.Client;
 using MarginTrading.AzureRepositories;
 using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.AzureRepositories.Entities;
@@ -9,9 +7,6 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Common.Services;
-using Microsoft.Rest;
-using Moq;
-using Asset = Lykke.Service.Assets.Client.Models.Asset;
 using AssetPairEntity = MarginTrading.AzureRepositories.AssetPairsRepository.AssetPairEntity;
 
 namespace MarginTradingTests
@@ -19,30 +14,7 @@ namespace MarginTradingTests
     public class MarginTradingTestsUtils
     {
         public const string TradingConditionId = "1";
-
-        public static IAssetsService GetPopulatedAssetsService()
-        {
-            var assetsService = new Mock<IAssetsService>();
-           
-            var assets = new List<Asset>
-            {
-                new Asset
-                {
-                    Id = "BTC",
-                    Name = "BTC",
-                    Accuracy = 8
-                }
-            };
-            
-            var assetsResult = new HttpOperationResponse<IList<Asset>> {Body = assets};
-
-            assetsService
-                .Setup(s => s.AssetGetAllWithHttpMessagesAsync(false, It.IsAny<Dictionary<string, List<string>>>(),
-                    It.IsAny<CancellationToken>())).ReturnsAsync(assetsResult);
-
-            return assetsService.Object;
-        }
-
+        
         public static MarginTradingAccountsRepository GetPopulatedAccountsRepository(List<MarginTradingAccount> accounts)
         {
             var accountRepository = new MarginTradingAccountsRepository(new NoSqlTableInMemory<MarginTradingAccountEntity>());

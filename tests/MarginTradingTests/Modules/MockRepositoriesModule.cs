@@ -2,7 +2,6 @@
 using Autofac;
 using AzureStorage.Tables;
 using Common.Log;
-using Lykke.Service.Assets.Client;
 using MarginTrading.AzureRepositories;
 using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.AzureRepositories.Logs;
@@ -25,7 +24,6 @@ namespace MarginTradingTests.Modules
 
         protected override void Load(ContainerBuilder builder)
         {
-            var assetsService = MarginTradingTestsUtils.GetPopulatedAssetsService();
             var accountRepository = MarginTradingTestsUtils.GetPopulatedAccountsRepository(_accounts);
             var conditionsRepository = MarginTradingTestsUtils.GetPopulatedMarginTradingConditionsRepository();
             var accountGroupRepository = MarginTradingTestsUtils.GetPopulatedAccountGroupRepository();
@@ -39,7 +37,6 @@ namespace MarginTradingTests.Modules
             var riskSystemCommandsLogRepository = new Mock<IRiskSystemCommandsLogRepository>();
 
             builder.RegisterInstance(new LogToMemory()).As<ILog>();
-            builder.RegisterInstance(assetsService).As<IAssetsService>().SingleInstance();
             builder.RegisterInstance(accountRepository).As<IMarginTradingAccountsRepository>().SingleInstance();
             builder.RegisterInstance(
                     new MarginTradingAccountStatsRepository(new NoSqlTableInMemory<MarginTradingAccountStatsEntity>()))
