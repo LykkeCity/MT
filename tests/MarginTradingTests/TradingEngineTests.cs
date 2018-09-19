@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
- using Lykke.Service.Assets.Client.Models;
  using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
