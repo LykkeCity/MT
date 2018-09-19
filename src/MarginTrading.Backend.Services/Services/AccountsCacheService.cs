@@ -86,7 +86,7 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public bool UpdateAccountChanges(string accountId, string updatedTradingConditionId,
+        public async Task<bool> UpdateAccountChanges(string accountId, string updatedTradingConditionId,
             decimal updatedWithdrawTransferLimit, bool isDisabled, bool isWithdrawalDisabled, DateTime eventTime)
         {
             _lockSlim.EnterWriteLock();
@@ -96,8 +96,8 @@ namespace MarginTrading.Backend.Services
 
                 if (account.LastUpdateTime > eventTime)
                 {
-                    _log.WriteInfo(nameof(AccountsCacheService), nameof(UpdateAccountChanges), 
-                        $"Account with id {account.Id} is in newer state that the event");
+                    await _log.WriteInfoAsync(nameof(AccountsCacheService), nameof(UpdateAccountChanges), 
+                        $"Account with id {account.Id} is in newer state then the event");
                     return false;
                 } 
                 

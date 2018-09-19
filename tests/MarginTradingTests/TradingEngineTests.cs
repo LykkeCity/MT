@@ -725,8 +725,7 @@ namespace MarginTradingTests
         public void Is_Big_Spread_Leads_To_Stopout()
         {
             var account = Accounts[1];
-            account.Balance = 24;
-            _accountsCacheService.UpdateAccountBalance(account.Id, account.Balance);
+            _accountsCacheService.UpdateAccountBalance(account.Id, 24 - account.Balance);
             
             var ordersSet = new[]
             {

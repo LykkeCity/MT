@@ -88,14 +88,13 @@ namespace MarginTrading.Backend.Services.Workflow
                     case AccountChangedEventTypeContract.Updated:
                     {
                         var account = _accountsCacheService.TryGet(e.Account.Id);
-                        if (ValidateAccount(account, e)
-                            && _accountsCacheService.UpdateAccountChanges(updatedAccount.Id,
+                        if (await ValidateAccount(account, e)
+                            && await _accountsCacheService.UpdateAccountChanges(updatedAccount.Id,
                                 updatedAccount.TradingConditionId, updatedAccount.WithdrawTransferLimit,
                                 updatedAccount.IsDisabled, updatedAccount.IsWithdrawalDisabled, e.ChangeTimestamp))
                         {
                             _clientNotifyService.NotifyAccountUpdated(updatedAccount);
                         }
-
                         break;
                     }
                     case AccountChangedEventTypeContract.BalanceUpdated:
@@ -103,11 +102,11 @@ namespace MarginTrading.Backend.Services.Workflow
                         if (e.BalanceChange != null)
                         {
                             var account = _accountsCacheService.TryGet(e.Account.Id);
-                            if (ValidateAccount(account, e))
+                            if (await ValidateAccount(account, e))
                             {
                                 _accountsCacheService.UpdateAccountBalance(updatedAccount.Id,
                                     e.BalanceChange.ChangeAmount);
-                                    
+                                
                                 switch (e.BalanceChange.ReasonType)
                                 {
                                     case AccountBalanceChangeReasonTypeContract.Withdraw:
@@ -125,7 +124,6 @@ namespace MarginTrading.Backend.Services.Workflow
                                             _log.WriteWarning("AccountChangedEvent Handler", e.ToJson(),
                                                 $"Position [{e.BalanceChange.EventSourceId} was not found]");
                                         }
-
                                         break;
                                 }
 
@@ -148,11 +146,12 @@ namespace MarginTrading.Backend.Services.Workflow
             }
         }
 
-        private bool ValidateAccount(IMarginTradingAccount account, AccountChangedEvent e)
+        private async Task<bool> ValidateAccount(IMarginTradingAccount account, AccountChangedEvent e)
         {
             if (account == null)
             {
-                _log.WriteWarning(nameof(AccountsProjection), e, $"Account with id {e.Account.Id} was not found");
+                await _log.WriteWarningAsync(nameof(AccountsProjection), e.ToJson(),
+                    $"Account with id {e.Account.Id} was not found");
                 return false;
             }
 
