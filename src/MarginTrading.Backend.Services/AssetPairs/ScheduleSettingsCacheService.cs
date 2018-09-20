@@ -79,6 +79,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             }
             finally
             {
+                _lastCacheRecalculationTime = _dateService.Now();
                 _readerWriterLockSlim.ExitWriteLock();
                 CacheWarmUp();
             }
@@ -132,7 +133,8 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 {
                     if (!_compiledScheduleTimelineCache.ContainsKey(assetPairId))
                     {
-                        RecompileScheduleTimelineCacheUnsafe(assetPairId, currentDateTime, TimeSpan.Zero);//todo is zero timespan ok?
+//todo Zero timespan is ok for market orders, but if pending cut off should be applied, we will need one more cache for them..
+                        RecompileScheduleTimelineCacheUnsafe(assetPairId, currentDateTime, TimeSpan.Zero);
                     }
                 }
             }
@@ -206,7 +208,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 : new List<CompiledScheduleTimeInterval>();
             //handle daily
             var daily = scheduleSettingsByType.TryGetValue(ScheduleConstraintType.Daily, out var dailySchedule)
-                ? dailySchedule.Select(sch =>
+                ? dailySchedule.SelectMany(sch =>
                 {
                     var start = currentDateTime.Date.Add(sch.Start.Time);
                     var end = currentDateTime.Date.Add(sch.End.Time);
@@ -215,7 +217,11 @@ namespace MarginTrading.Backend.Services.AssetPairs
                         end = end.AddDays(1);
                     }
 
-                    return new CompiledScheduleTimeInterval(sch, start, end);
+                    return new[]
+                    {
+                        new CompiledScheduleTimeInterval(sch, start, end),
+                        new CompiledScheduleTimeInterval(sch, start.AddDays(-1), end.AddDays(-1))
+                    };
                 })
                 : new List<CompiledScheduleTimeInterval>();
 

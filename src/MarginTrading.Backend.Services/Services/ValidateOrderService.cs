@@ -443,14 +443,25 @@ namespace MarginTrading.Backend.Services
 
         }
         
-        //TODO: validate schedule settings https://lykke-snow.atlassian.net/browse/MTC-274
-        private IAssetPair GetAssetPairIfAvailableForTrading(string assetPairId, OrderType orderType, bool shouldOpenNewPosition, bool isPreTradeValidation)
+        private IAssetPair GetAssetPairIfAvailableForTrading(string assetPairId, OrderType orderType, 
+            bool shouldOpenNewPosition, bool isPreTradeValidation)
         {
-            if (_assetDayOffService.IsDayOff(assetPairId))
+            if (isPreTradeValidation)
             {
-                throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Trades for instrument are not available");
+                if (orderType == OrderType.Market && _assetDayOffService.IsDayOff(assetPairId))
+                {
+                    throw new ValidateOrderException(OrderRejectReason.NoLiquidity,
+                        "Trades for instrument are not available");
+                }
+
+                if (new[] {OrderType.Limit, OrderType.Stop, OrderType.StopLoss, OrderType.TakeProfit}.Contains(
+                    orderType) && _assetDayOffService.ArePendingOrdersDisabled(assetPairId))
+                {
+                    throw new ValidateOrderException(OrderRejectReason.NoLiquidity,
+                        "Pending orders for instrument are not available");
+                }
             }
-            
+
             var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(assetPairId); 
             
             if (assetPair == null)
