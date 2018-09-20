@@ -55,11 +55,6 @@ namespace MarginTrading.AzureRepositories
                 return new RiskSystemCommandsLogRepository(AzureTableStorage<RiskSystemCommandsLogEntity>.Create(connString,
                     "RiskSystemCommandsLog", log));
             }
-
-            public static IDayOffSettingsRepository CreateDayOffSettingsRepository(IReloadingManager<string> connString)
-            {
-                return new DayOffSettingsRepository(new MarginTradingBlobRepository(connString));
-            }
         }
     }
 }
