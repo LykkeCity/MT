@@ -178,6 +178,7 @@ namespace MarginTrading.Backend
             builder.RegisterBuildCallback(c => c.Resolve<AccountManager>()); // note the order here is important!
             builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
             builder.RegisterBuildCallback(c => c.Resolve<PendingOrdersCleaningService>());
+            builder.RegisterBuildCallback(async c => await c.Resolve<IScheduleSettingsCacheService>().UpdateSettingsAsync());
         }
 
         private static void SetupLoggers(IServiceCollection services, IReloadingManager<MtBackendSettings> mtSettings,

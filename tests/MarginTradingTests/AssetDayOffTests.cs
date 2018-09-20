@@ -237,7 +237,7 @@ namespace MarginTradingTests
                 });
             var scheduleSettingsCacheService = new ScheduleSettingsCacheService(scheduleSettingsApiMock.Object,
                 assetPairsCacheMock.Object, dateService.Object, new EmptyLog());
-            scheduleSettingsCacheService.Start();
+            scheduleSettingsCacheService.UpdateSettingsAsync().GetAwaiter().GetResult();
             return new AssetPairDayOffService(dateService.Object, scheduleSettingsCacheService);
         }
         

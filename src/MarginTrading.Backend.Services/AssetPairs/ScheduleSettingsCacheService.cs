@@ -20,7 +20,7 @@ using MarginTrading.SettingsService.Contracts.Scheduling;
 
 namespace MarginTrading.Backend.Services.AssetPairs
 {
-    public class ScheduleSettingsCacheService : IScheduleSettingsCacheService, IStartable
+    public class ScheduleSettingsCacheService : IScheduleSettingsCacheService
     {
         private readonly IScheduleSettingsApi _scheduleSettingsApi;
         private readonly IAssetPairsCache _assetPairsCache;
@@ -45,11 +45,6 @@ namespace MarginTrading.Backend.Services.AssetPairs
             _assetPairsCache = assetPairsCache;
             _dateService = dateService;
             _log = log;
-        }
-
-        public void Start()
-        {
-            UpdateSettingsAsync().GetAwaiter().GetResult();
         }
 
         public async Task UpdateSettingsAsync()

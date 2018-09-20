@@ -163,7 +163,6 @@ namespace MarginTrading.Backend.Services.Modules
 
 			builder.RegisterType<ScheduleSettingsCacheService>()
 				.As<IScheduleSettingsCacheService>()
-				.As<IStartable>()
 				.SingleInstance();
 
 			builder.RegisterType<AlertSeverityLevelService>()
