@@ -41,34 +41,34 @@ namespace MarginTrading.Backend.Services
 
         #region Setters
 
-        public void Add(Position order)
+        public void Add(Position position)
         {
             _lockSlim.EnterWriteLock();
 
             try
             {
-                _positionsById.Add(order.Id, order);
+                _positionsById.Add(position.Id, position);
 
-                if (!_positionIdsByAccountId.ContainsKey(order.AccountId))
-                    _positionIdsByAccountId.Add(order.AccountId, new HashSet<string>());
-                _positionIdsByAccountId[order.AccountId].Add(order.Id);
+                if (!_positionIdsByAccountId.ContainsKey(position.AccountId))
+                    _positionIdsByAccountId.Add(position.AccountId, new HashSet<string>());
+                _positionIdsByAccountId[position.AccountId].Add(position.Id);
 
-                if (!_positionIdsByInstrumentId.ContainsKey(order.AssetPairId))
-                    _positionIdsByInstrumentId.Add(order.AssetPairId, new HashSet<string>());
-                _positionIdsByInstrumentId[order.AssetPairId].Add(order.Id);
+                if (!_positionIdsByInstrumentId.ContainsKey(position.AssetPairId))
+                    _positionIdsByInstrumentId.Add(position.AssetPairId, new HashSet<string>());
+                _positionIdsByInstrumentId[position.AssetPairId].Add(position.Id);
 
-                var accountInstrumentCacheKey = GetAccountInstrumentCacheKey(order.AccountId, order.AssetPairId);
+                var accountInstrumentCacheKey = GetAccountInstrumentCacheKey(position.AccountId, position.AssetPairId);
 
                 if (!_positionIdsByAccountIdAndInstrumentId.ContainsKey(accountInstrumentCacheKey))
                     _positionIdsByAccountIdAndInstrumentId.Add(accountInstrumentCacheKey, new HashSet<string>());
-                _positionIdsByAccountIdAndInstrumentId[accountInstrumentCacheKey].Add(order.Id);
+                _positionIdsByAccountIdAndInstrumentId[accountInstrumentCacheKey].Add(position.Id);
             }
             finally
             {
                 _lockSlim.ExitWriteLock();
             }
 
-            var account = MtServiceLocator.AccountsCacheService.Get(order.AccountId);
+            var account = MtServiceLocator.AccountsCacheService.Get(position.AccountId);
             account.CacheNeedsToBeUpdated();
         }
 

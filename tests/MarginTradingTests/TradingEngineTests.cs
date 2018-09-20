@@ -47,6 +47,7 @@ namespace MarginTradingTests
         //private Mock<IEventChannel<OrderExecutedEventArgs>> _orderExecutedChannelMock;
         private OrdersCache _ordersCache;
         private IFxRateCacheService _fxRateCacheService;
+        private IDateService _dateService;
         
         [SetUp]
         public void SetUp()
@@ -86,7 +87,7 @@ namespace MarginTradingTests
             var convertService = Container.Resolve<IConvertService>();
             Mock.Get(Container.Resolve<ICqrsEngine>()).Setup(s =>
                 s.PublishEvent(It.IsNotNull<PositionClosedEvent>(), contextsNames.TradingEngine))
-                .Callback<object, string>((ev, s1) =>
+                .Callback<object, string>(async (ev, s1) =>
                 {
                     // simulate the behaviour of account management service 
                     var typedEvent = ev as PositionClosedEvent;
@@ -97,7 +98,7 @@ namespace MarginTradingTests
                             o => o.ConfigureMap(MemberList.Destination)
                                 .ForCtorParam("modificationTimestamp",
                                     p => p.MapFrom(tradingAccount => DateTime.UtcNow)));
-                    accountsProjection.Handle(new AccountChangedEvent(DateTime.UtcNow, "Source", accountContract,
+                    await accountsProjection.Handle(new AccountChangedEvent(DateTime.UtcNow, "Source", accountContract,
                         AccountChangedEventTypeContract.BalanceUpdated));
                 });
             
@@ -106,6 +107,8 @@ namespace MarginTradingTests
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "EURCHF", Ask = 1, Bid = 1 });
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 1, Bid = 1 });
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "EURUSD", Ask = 1, Bid = 1 });
+
+            _dateService = Container.Resolve<IDateService>();
         }
 
         #region Market orders
@@ -659,11 +662,11 @@ namespace MarginTradingTests
         }
 
         [Test]
-        public void Is_Balance_LessThanZero_On_StopOut_Thru_Big_Spread()
+        public void Is_Balance_LessThanZero_On_StopOut_Through_Big_Spread()
         {
             var account = Accounts[1];
             account.Balance = 240000;
-            _accountsCacheService.Update(account);
+            _accountsCacheService.UpdateAccountBalance(account.Id, account.Balance);
 
             var ordersSet = new[]
             {
@@ -722,8 +725,7 @@ namespace MarginTradingTests
         public void Is_Big_Spread_Leads_To_Stopout()
         {
             var account = Accounts[1];
-            account.Balance = 24;
-            _accountsCacheService.Update(account);
+            _accountsCacheService.UpdateAccountBalance(account.Id, 24 - account.Balance);
             
             var ordersSet = new[]
             {
