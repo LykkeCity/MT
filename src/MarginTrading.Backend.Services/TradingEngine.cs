@@ -480,6 +480,7 @@ namespace MarginTrading.Backend.Services
                 StartClosingPosition(position, PositionCloseReason.StopOut);
         }
 
+        //todo: use ClosePositionAsync
         private void StartClosingPosition(Position position, PositionCloseReason reason)
         {
             //position.StartClosing(_dateService.Now(), reason, OriginatorType.Investor, "");
