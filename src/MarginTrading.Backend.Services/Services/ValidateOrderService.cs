@@ -60,8 +60,8 @@ namespace MarginTrading.Backend.Services
         }
         
         #region Base validations
-        
-        public async Task<(Order order, List<Order> relatedOrders)> ValidateRequestAndGetOrders(
+
+        public async Task<(Order order, List<Order> relatedOrders)> ValidateRequestAndCreateOrders(
             OrderPlaceRequest request)
         {
             
@@ -75,23 +75,30 @@ namespace MarginTrading.Backend.Services
             var assetPair = GetAssetPairIfAvailableForTrading(request.InstrumentId, request.Type.ToType<OrderType>(),
                 request.ForceOpen, false);
 
-            if (!request.Price.HasValue)
+            if (request.Type != OrderTypeContract.Market)
             {
-                if (request.Type != OrderTypeContract.Market)
+                if (!request.Price.HasValue)
+                {
                     throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
                         $"Price is required for {request.Type} order");
+                }
+                else
+                {
+                    request.Price = Math.Round(request.Price.Value, assetPair.Accuracy);
+
+                    if (request.Price <= 0)
+                    {
+                        throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
+                            $"Price should be more then 0");
+                    }
+                }
             }
             else
             {
-                request.Price = Math.Round(request.Price.Value, assetPair.Accuracy);
-
-                if (request.Price == 0)
-                {
-                    throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
-                        $"Price can not be 0");
-                }
+                //always ignore price for market orders
+                request.Price = null;
             }
-            
+
             var account = _accountsCacheService.TryGet(request.AccountId);
 
             if (account == null)
@@ -114,11 +121,6 @@ namespace MarginTrading.Backend.Services
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
                     "Instrument is not available for trading on selected account");
-            }
-            
-            if (!_quoteCashService.TryGetQuoteById(request.InstrumentId, out var quote))
-            {
-                throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Quote not found");
             }
             
             var equivalentSettings =
@@ -150,10 +152,6 @@ namespace MarginTrading.Backend.Services
                 return (order, new List<Order>());
             }
 
-            //TODO: add setting for every type of validation (needed or not)
-            //ValidateLimitPrice(request, assetPair, quote);
-            //ValidateOrderStops();
-			
             var initialParameters = await GetOrderInitialParameters(request.InstrumentId, account.LegalEntity,
                 equivalentSettings, account.BaseAssetId);
 
@@ -170,17 +168,19 @@ namespace MarginTrading.Backend.Services
                 request.Type.ToType<OrderType>(), request.ParentOrderId, request.PositionId, originator,
                 initialParameters.equivalentPrice, initialParameters.fxPrice, OrderStatus.Placed,
                 request.AdditionalInfo, request.CorrelationId);
-            
+
+            ValidateBaseOrderPrice(baseOrder, baseOrder.Price);
+
             var relatedOrders = new List<Order>();
 
             if (request.StopLoss.HasValue)
             {
                 request.StopLoss = Math.Round(request.StopLoss.Value, assetPair.Accuracy);
 
-                if (request.StopLoss == 0)
+                if (request.StopLoss <= 0)
                 {
                     throw new ValidateOrderException(OrderRejectReason.InvalidStoploss,
-                        $"StopLoss can not be 0");
+                        $"StopLoss should be more then 0");
                 }
 
                 var orderType = request.UseTrailingStop ? OrderTypeContract.TrailingStop : OrderTypeContract.StopLoss;
@@ -196,10 +196,10 @@ namespace MarginTrading.Backend.Services
             {
                 request.TakeProfit = Math.Round(request.TakeProfit.Value, assetPair.Accuracy);
 
-                if (request.TakeProfit == 0)
+                if (request.TakeProfit <= 0)
                 {
                     throw new ValidateOrderException(OrderRejectReason.InvalidTakeProfit,
-                        $"TakeProfit can not be 0");
+                        $"TakeProfit should be more then 0");
                 }
 
                 var tp = await ValidateAndGetSlOrTpOrder(request, OrderTypeContract.TakeProfit, request.TakeProfit,
@@ -208,15 +208,32 @@ namespace MarginTrading.Backend.Services
                 if (tp != null)
                     relatedOrders.Add(tp);    
             }
-
+            
             return (baseOrder, relatedOrders);
         }
         
-        //TODO: check, if we need to validate SL and TP prices
+        public void ValidateOrderPriceChange(Order order, decimal newPrice)
+        {
+            if (order.IsBasicOrder())
+            {
+                ValidateBaseOrderPrice(order, newPrice);
+                
+                var relatedOrders = GetRelatedOrders(order);
+
+                ValidateBaseOrderPriceAgainstRelated(order, relatedOrders, newPrice);
+            }
+            else
+            {
+                ValidateRelatedOrderPriceAgainstBase(order, newPrice: newPrice);
+            }
+        }
+        
         private async Task<Order> ValidateAndGetSlOrTpOrder(OrderPlaceRequest request, OrderTypeContract type,
             decimal? price, ReportingEquivalentPricesSettings equivalentSettings, Order parentOrder)
         {
             var orderType = type.ToType<OrderType>();
+
+            Order order = null;
             
             if (parentOrder == null)
             {
@@ -235,27 +252,26 @@ namespace MarginTrading.Backend.Services
 
                 var originator = GetOriginator(request.Originator);
                 
-                return new Order(initialParameters.id, initialParameters.code, parentOrder.AssetPairId,
+                order = new Order(initialParameters.id, initialParameters.code, parentOrder.AssetPairId,
                     -parentOrder.Volume, initialParameters.now, initialParameters.now,
                     request.Validity, parentOrder.AccountId, parentOrder.TradingConditionId, parentOrder.AccountAssetId,
                     price, parentOrder.EquivalentAsset, OrderFillType.FillOrKill, string.Empty,
                     parentOrder.LegalEntity, false, orderType, parentOrder.Id, null,
                     originator, initialParameters.equivalentPrice,
                     initialParameters.fxPrice, OrderStatus.Placed, request.AdditionalInfo, request.CorrelationId);
-            }
-
-            if (!string.IsNullOrEmpty(request.PositionId))
+            } 
+            else if (!string.IsNullOrEmpty(request.PositionId))
             {
                 var position = _ordersCache.Positions.GetPositionById(request.PositionId);
-                
+
                 ValidateRelatedOrderAlreadyExists(position.RelatedOrders, orderType);
 
                 var initialParameters = await GetOrderInitialParameters(position.AssetPairId,
                     position.LegalEntity, equivalentSettings, position.AccountAssetId);
-                
+
                 var originator = GetOriginator(request.Originator);
 
-                return new Order(initialParameters.id, initialParameters.code, position.AssetPairId,
+                order = new Order(initialParameters.id, initialParameters.code, position.AssetPairId,
                     -position.Volume, initialParameters.now, initialParameters.now,
                     request.Validity, position.AccountId, position.TradingConditionId, position.AccountAssetId,
                     price, position.EquivalentAsset, OrderFillType.FillOrKill, string.Empty,
@@ -264,8 +280,15 @@ namespace MarginTrading.Backend.Services
                     initialParameters.fxPrice, OrderStatus.Placed, request.AdditionalInfo, request.CorrelationId);
             }
 
-            throw new ValidateOrderException(OrderRejectReason.InvalidParent,
-                "Related order must have parent order or position");
+            if (order == null)
+            {
+                throw new ValidateOrderException(OrderRejectReason.InvalidParent,
+                    "Related order must have parent order or position");
+            }
+
+            ValidateRelatedOrderPriceAgainstBase(order, parentOrder, order.Price);
+
+            return order;
         }
 
         private static void ValidateRelatedOrderAlreadyExists(List<RelatedOrderInfo> relatedOrders, OrderType orderType)
@@ -293,131 +316,132 @@ namespace MarginTrading.Backend.Services
                 assetPairId, legalEntity);
             return (id, code, now, equivalentPrice, fxPrice);
         }
-        
-        private void ValidateLimitPrice(OrderPlaceRequest request, IAssetPair assetPair, InstrumentBidAskPair quote)
+
+        private void ValidateBaseOrderPrice(Order order, decimal? orderPrice)
         {
-            if (request.Type != OrderTypeContract.Limit && request.Type != OrderTypeContract.Stop)
+            if (!_quoteCashService.TryGetQuoteById(order.AssetPairId, out var quote))
+            {
+                throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Quote not found");
+            }
+
+            //TODO: implement in MTC-155            
+//            if (_assetDayOffService.ArePendingOrdersDisabled(order.AssetPairId))
+//            {
+//                throw new ValidateOrderException(OrderRejectReason.NoLiquidity,
+//                    "Trades for instrument are not available");
+//            }
+
+            if (order.OrderType != OrderType.Stop)
                 return;
 
-            if (_assetDayOffService.ArePendingOrdersDisabled(request.InstrumentId))
-            {
-                throw new ValidateOrderException(OrderRejectReason.NoLiquidity,
-                    "Trades for instrument are not available");
-            }
-
-            if (request.Price <= 0)
+            if (order.Direction == OrderDirection.Buy && quote.Ask >= orderPrice)
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
-                    "Incorrect expected open price");
-            }
-
-            request.Price = Math.Round(request.Price ?? 0, assetPair.Accuracy);
-
-            if (request.Direction == OrderDirectionContract.Buy && request.Price > quote.Ask ||
-                request.Direction == OrderDirectionContract.Sell && request.Price < quote.Bid)
+                    string.Format(MtMessages.Validation_PriceAboveAsk, orderPrice, quote.Ask),
+                    $"{order.AssetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
+            } 
+            
+            if (order.Direction == OrderDirection.Sell && quote.Bid <= orderPrice )
             {
-                var reasonText = request.Direction == OrderDirectionContract.Buy
-                    ? string.Format(MtMessages.Validation_PriceAboveAsk, request.Price, quote.Ask)
-                    : string.Format(MtMessages.Validation_PriceBelowBid, request.Price, quote.Bid);
-
-                throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice, reasonText,
-                    $"{request.InstrumentId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
+                throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice, 
+                    string.Format(MtMessages.Validation_PriceBelowBid, orderPrice, quote.Bid),
+                    $"{order.AssetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
             }
         }
-        
-        public void ValidateOrderStops(OrderDirection type, BidAskPair quote, decimal deltaBid, decimal deltaAsk, decimal? takeProfit,
-            decimal? stopLoss, decimal? expectedOpenPrice, int assetAccuracy)
+
+        private void ValidateBaseOrderPriceAgainstRelated(Order baseOrder, List<Order> relatedOrders, decimal newPrice)
         {
-            var deltaBidValue = MarginTradingCalculations.GetVolumeFromPoints(deltaBid, assetAccuracy);
-            var deltaAskValue = MarginTradingCalculations.GetVolumeFromPoints(deltaAsk, assetAccuracy);
+            //even if price is defined for market - ignore it
+            if (baseOrder.OrderType == OrderType.Market)
+                return;
 
-            if (expectedOpenPrice.HasValue)
+            var slPrice = relatedOrders
+                .FirstOrDefault(o => o.OrderType == OrderType.StopLoss || o.OrderType == OrderType.TrailingStop)?.Price;
+
+            var tpPrice = relatedOrders
+                .FirstOrDefault(o => o.OrderType == OrderType.TakeProfit)?.Price;
+
+            if (baseOrder.Direction == OrderDirection.Buy &&
+                (slPrice.HasValue && slPrice > newPrice
+                 || tpPrice.HasValue && tpPrice < newPrice)
+                ||
+                baseOrder.Direction == OrderDirection.Sell &&
+                (slPrice.HasValue && slPrice < newPrice
+                 || tpPrice.HasValue && tpPrice > newPrice))
             {
-                decimal minGray;
-                decimal maxGray;
+                throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
+                    "Price is not valid against related orders prices.");
+            }
+        }
 
-                //check TP/SL for pending order
-                if (type == OrderDirection.Buy)
-                {
-                    minGray = Math.Round(expectedOpenPrice.Value - 2 * deltaBidValue, assetAccuracy);
-                    maxGray = Math.Round(expectedOpenPrice.Value + deltaAskValue, assetAccuracy);
+        private void ValidateRelatedOrderPriceAgainstBase(Order relatedOrder, Order baseOrder = null, decimal? newPrice = null)
+        {
+            if (newPrice == null)
+                newPrice = relatedOrder.Price;
 
-                    if (takeProfit.HasValue && takeProfit > 0 && takeProfit < maxGray)
-                    {
-                        throw new ValidateOrderException(OrderRejectReason.InvalidTakeProfit,
-                            string.Format(MtMessages.Validation_TakeProfitMustBeMore, Math.Round((decimal) takeProfit, assetAccuracy), maxGray),
-                            $"quote (bid/ask): {quote.Bid}/{quote.Ask}");
-                    }
+            decimal basePrice;
 
-                    if (stopLoss.HasValue && stopLoss > 0 && stopLoss > minGray)
-                    {
-                        throw new ValidateOrderException(OrderRejectReason.InvalidStoploss,
-                            string.Format(MtMessages.Validation_StopLossMustBeLess, Math.Round((decimal) stopLoss, assetAccuracy), minGray),
-                            $"quote (bid/ask): {quote.Bid}/{quote.Ask}");
-                    }
-                }
-                else
-                {
-                    minGray = Math.Round(expectedOpenPrice.Value - deltaBidValue, assetAccuracy);
-                    maxGray = Math.Round(expectedOpenPrice.Value + 2 * deltaAskValue, assetAccuracy);
-
-                    if (takeProfit.HasValue && takeProfit > 0 && takeProfit > minGray)
-                    {
-                        throw new ValidateOrderException(OrderRejectReason.InvalidTakeProfit,
-                            string.Format(MtMessages.Validation_TakeProfitMustBeLess, Math.Round((decimal) takeProfit, assetAccuracy), minGray),
-                            $"quote (bid/ask): {quote.Bid}/{quote.Ask}");
-                    }
-
-                    if (stopLoss.HasValue && stopLoss > 0 && stopLoss < maxGray)
-                    {
-                        throw new ValidateOrderException(OrderRejectReason.InvalidStoploss,
-                            string.Format(MtMessages.Validation_StopLossMustBeMore, Math.Round((decimal) stopLoss, assetAccuracy), maxGray),
-                            $"quote (bid/ask): {quote.Bid}/{quote.Ask}");
-                    }
-                }
+            if ((baseOrder != null ||
+                string.IsNullOrEmpty(relatedOrder.ParentPositionId) && 
+                !string.IsNullOrEmpty(relatedOrder.ParentOrderId) && 
+                _ordersCache.TryGetOrderById(relatedOrder.ParentOrderId, out baseOrder)) &&
+                baseOrder.Price.HasValue)
+            {
+                basePrice = baseOrder.Price.Value;
             }
             else
             {
-                //check TP/SL for market order
-                var minGray = Math.Round(quote.Bid - deltaBidValue, assetAccuracy);
-                var maxGray = Math.Round(quote.Ask + deltaAskValue, assetAccuracy);
-
-                if (type == OrderDirection.Buy)
+                if (!_quoteCashService.TryGetQuoteById(relatedOrder.AssetPairId, out var quote))
                 {
-                    if (takeProfit.HasValue && takeProfit > 0 && takeProfit < maxGray)
-                    {
-                        throw new ValidateOrderException(OrderRejectReason.InvalidTakeProfit,
-                            string.Format(MtMessages.Validation_TakeProfitMustBeMore, Math.Round((decimal) takeProfit, assetAccuracy), maxGray),
-                            $"quote (bid/ask): {quote.Bid}/{quote.Ask}");
-                    }
-
-                    if (stopLoss.HasValue && stopLoss > 0 && stopLoss > minGray)
-                    {
-                        throw new ValidateOrderException(OrderRejectReason.InvalidStoploss,
-                            string.Format(MtMessages.Validation_StopLossMustBeLess, Math.Round((decimal) stopLoss, assetAccuracy), minGray),
-                            $"quote (bid/ask): {quote.Bid}/{quote.Ask}");
-                    }
+                    throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Quote not found");
                 }
-                else
-                {
-                    if (takeProfit.HasValue && takeProfit > 0 && takeProfit > minGray)
-                    {
-                        throw new ValidateOrderException(OrderRejectReason.InvalidTakeProfit,
-                            string.Format(MtMessages.Validation_TakeProfitMustBeLess, Math.Round((decimal) takeProfit, assetAccuracy), minGray),
-                            $"quote (bid/ask): {quote.Bid}/{quote.Ask}");
-                    }
 
-                    if (stopLoss.HasValue && stopLoss > 0 && stopLoss < maxGray)
-                    {
-                        throw new ValidateOrderException(OrderRejectReason.InvalidStoploss,
-                            string.Format(MtMessages.Validation_StopLossMustBeMore,
-                                Math.Round((decimal) stopLoss, assetAccuracy), maxGray),
-                            $"quote (bid/ask): {quote.Bid}/{quote.Ask}");
-                    }
-                }
+                basePrice = quote.GetPriceForOrderDirection(relatedOrder.Direction);
+            }
+
+            switch (relatedOrder.OrderType)
+            {
+                case OrderType.StopLoss:
+                case OrderType.TrailingStop:
+                    ValidateStopLossOrderPrice(relatedOrder.Direction, newPrice, basePrice);
+                    break;
+                
+                case OrderType.TakeProfit:
+                    ValidateTakeProfitOrderPrice(relatedOrder.Direction, newPrice, basePrice);
+                    break;
             }
         }
         
+        private void ValidateTakeProfitOrderPrice(OrderDirection orderDirection, decimal? orderPrice, decimal basePrice)
+        {
+            if (orderDirection == OrderDirection.Buy && basePrice <= orderPrice)
+            {
+                throw new ValidateOrderException(OrderRejectReason.InvalidTakeProfit,
+                    string.Format(MtMessages.Validation_TakeProfitMustBeLess, orderPrice, basePrice));
+            }
+            
+            if (orderDirection == OrderDirection.Sell && basePrice >= orderPrice)
+            {
+                throw new ValidateOrderException(OrderRejectReason.InvalidTakeProfit,
+                    string.Format(MtMessages.Validation_TakeProfitMustBeMore, orderPrice, basePrice));
+            }
+        }
+        
+        private void ValidateStopLossOrderPrice(OrderDirection orderDirection, decimal? orderPrice, decimal basePrice)
+        {
+            if (orderDirection == OrderDirection.Buy && basePrice >= orderPrice)
+            {
+                throw new ValidateOrderException(OrderRejectReason.InvalidStoploss,
+                    string.Format(MtMessages.Validation_StopLossMustBeMore, orderPrice, basePrice));
+            }
+            
+            if (orderDirection == OrderDirection.Sell && basePrice <= orderPrice)
+            {
+                throw new ValidateOrderException(OrderRejectReason.InvalidStoploss,
+                    string.Format(MtMessages.Validation_StopLossMustBeLess, orderPrice, basePrice));
+            }
+        }
+      
         private OriginatorType GetOriginator(OriginatorTypeContract? originator)
         {
             if (originator == null || originator.Value == default(OriginatorTypeContract))
@@ -443,7 +467,7 @@ namespace MarginTrading.Backend.Services
                 ValidateMargin(order);
 
         }
-        
+
         //TODO: validate schedule settings https://lykke-snow.atlassian.net/browse/MTC-274
         private IAssetPair GetAssetPairIfAvailableForTrading(string assetPairId, OrderType orderType, bool shouldOpenNewPosition, bool isPreTradeValidation)
         {
@@ -520,12 +544,23 @@ namespace MarginTrading.Backend.Services
                 throw new ValidateOrderException(OrderRejectReason.NotEnoughBalance, MtMessages.Validation_NotEnoughBalance, $"Account available balance is {account.GetTotalCapital()}");
             }
         }
+
+        private List<Order> GetRelatedOrders(Order baseOrder)
+        {
+            var result = new List<Order>();
+            
+            foreach (var relatedOrderInfo in baseOrder.RelatedOrders)
+            {
+                if (_ordersCache.TryGetOrderById(relatedOrderInfo.Id, out var relatedOrder))
+                {
+                    result.Add(relatedOrder);
+                }
+            }
+
+            return result;
+        }
         
         #endregion
-
-
-        
-
         
     }
 }
