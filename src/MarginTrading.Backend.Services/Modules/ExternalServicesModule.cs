@@ -2,7 +2,6 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
-using Lykke.Service.Assets.Client;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.ExchangeConnector.Client;
 using Lykke.Service.PersonalData.Client;
@@ -27,10 +26,6 @@ namespace MarginTrading.Backend.Services.Modules
         protected override void Load(ContainerBuilder builder)
         {
             var services = new ServiceCollection();
-            
-            services.RegisterAssetsClient(AssetServiceSettings.Create(
-                new Uri(_settings.CurrentValue.Assets.ServiceUrl),
-                _settings.CurrentValue.Assets.CacheExpirationPeriod));
 
             builder.RegisterType<ExchangeConnectorService>()
                 .As<IExchangeConnectorService>()
