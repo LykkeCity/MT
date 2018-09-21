@@ -13,7 +13,6 @@ namespace MarginTrading.Backend.Services.Settings
         public SlackNotificationSettings SlackNotifications { get; set; }
         public RiskInformingSettings RiskInformingSettings { get; set; }
         public RiskInformingSettings RiskInformingSettingsDemo { get; set; }
-        public AssetClientSettings Assets { get; set; }
         public ClientAccountServiceSettings ClientAccountServiceClient { get; set; }
         public ExchangeConnectorServiceSettings MtStpExchangeConnectorClient { get; set; }
         public PersonalDataServiceClientSettings PersonalDataServiceSettings { get; set; }
