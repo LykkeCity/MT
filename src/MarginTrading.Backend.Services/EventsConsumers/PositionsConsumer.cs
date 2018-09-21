@@ -3,6 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
+using Common;
+using Common.Log;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
@@ -33,6 +35,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         private readonly IEventChannel<OrderChangedEventArgs> _orderChangedEventChannel;
         private readonly IEventChannel<OrderActivatedEventArgs> _orderActivatedEventChannel;
         private readonly IMatchingEngineRouter _meRouter;
+        private readonly ILog _log;
 
         private static readonly ConcurrentDictionary<string, object> LockObjects =
             new ConcurrentDictionary<string, object>();
@@ -49,7 +52,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             IEventChannel<OrderCancelledEventArgs> orderCancelledEventChannel,
             IEventChannel<OrderChangedEventArgs> orderChangedEventChannel,
             IEventChannel<OrderActivatedEventArgs> orderActivatedEventChannel,
-            IMatchingEngineRouter meRouter)
+            IMatchingEngineRouter meRouter,
+            ILog log)
         {
             _ordersCache = ordersCache;
             _rabbitMqNotifyService = rabbitMqNotifyService;
@@ -62,6 +66,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             _orderChangedEventChannel = orderChangedEventChannel;
             _orderActivatedEventChannel = orderActivatedEventChannel;
             _meRouter = meRouter;
+            _log = log;
         }
         
         public void ConsumeEvent(object sender, OrderExecutedEventArgs ea)
@@ -106,6 +111,13 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
         private void OpenNewPosition(Order order, decimal volume)
         {
+            if (order.ExecutionPrice == null)
+            {
+                _log.WriteWarning(nameof(OpenNewPosition), order.ToJson(),
+                    "Execution price is null. Position was not opened");
+                return;
+            }
+            
             var position = new Position(order.Id, order.Code, order.AssetPairId, volume, order.AccountId,
                 order.TradingConditionId, order.AccountAssetId, order.Price, order.MatchingEngineId,
                 order.Executed.Value, order.Id, order.ExecutionPrice.Value, order.FxRate, order.EquivalentAsset,
@@ -116,8 +128,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
             var closePrice = defaultMatchingEngine.GetPriceForClose(position);
 
-            if (closePrice.HasValue)
-                position.UpdateClosePrice(closePrice.Value);
+            position.UpdateClosePrice(closePrice ?? order.ExecutionPrice.Value);
 
             _ordersCache.Positions.Add(position);
 
