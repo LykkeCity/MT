@@ -7,7 +7,7 @@ namespace MarginTrading.Frontend.Settings
 {
     public class ApplicationSettings
     {
-        public MtFrontendSettings MtFrontend {get; set;}
+        public MtFrontendSettings MtFrontend { get; set; }
         public SlackNotificationSettings SlackNotifications { get; set; }
         public ClientAccountServiceSettings ClientAccountServiceClient { get; set; }
         public MtDataReaderClientSettings MtDataReaderLiveServiceClient { get; set; }
@@ -19,6 +19,13 @@ namespace MarginTrading.Frontend.Settings
         public MtSettings MarginTradingLive { get; set; }
         public MtSettings MarginTradingDemo { get; set; }
         public MtFrontSettings MarginTradingFront { get; set; }
+    }
+
+    public class OAuthSettings
+    {
+        public string ClientId { get; set; }
+        public string ClientSecret { get; set; }
+        public string Authority { get; set; }
     }
 
     public class MtSettings
@@ -48,17 +55,18 @@ namespace MarginTrading.Frontend.Settings
 
     public class MtFrontSettings
     {
+        public OAuthSettings OAuthSettings { get; set; }
         public string SessionServiceApiUrl { get; set; }
         public string DemoAccountIdPrefix { get; set; }
-        public CorsSettings CorsSettings { get; set; } 
+        public CorsSettings CorsSettings { get; set; }
         public DbSettings Db { get; set; }
         public MtQueues RabbitMqQueues { get; set; }
         public RequestLoggerSettings RequestLoggerSettings { get; set; }
         public TerminalsSettings TerminalsSettings { get; set; }
-        
+
         [Optional]
         public string ApplicationInsightsKey { get; set; }
-        
+
         #region From env variables
 
         [Optional]

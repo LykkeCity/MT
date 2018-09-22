@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Security.Claims;
+using MarginTrading.Frontend.Infrastructure;
 using Microsoft.IdentityModel.Tokens;
 
 namespace MarginTrading.Frontend.Services
@@ -21,8 +22,8 @@ namespace MarginTrading.Frontend.Services
 
             var ls = new List<Claim>();
             var clientId = _clientTokenService.GetClientId(securityToken).Result;
-            ls.Add(new Claim(ClaimTypes.NameIdentifier, clientId, ClaimValueTypes.String));
-            var id = new ClaimsIdentity(ls, "magic");
+            ls.Add(new Claim(AuthConsts.SubjectClaim, clientId, ClaimValueTypes.String));
+            var id = new ClaimsIdentity(ls, AuthConsts.LykkeBearerScheme);
             var principal = new ClaimsPrincipal(id);
             return principal;
         }
