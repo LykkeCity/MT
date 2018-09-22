@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Common.Log;
+using Lykke.Common;
 using Lykke.Logs;
 using MarginTrading.Backend.Core;
 using MarginTrading.SqlRepositories.Entities;
@@ -12,30 +13,38 @@ namespace MarginTrading.Backend.Infrastructure
     {
         private readonly ILogRepository _logRepository;
 
-        public LogToSql(ILogRepository logRepository)
+        public LogToSql(
+            ILogRepository logRepository)
         {
             _logRepository = logRepository;
         }
 
-        private async Task WriteLog(LogLevel level, string component, string process, string context, string info, 
+        private Task WriteLog(LogLevel level, string component, string process, string context, string info, 
             Exception ex = null, DateTime? dateTime = null)
         {
-            var log = new LogEntity
+#pragma warning disable 4014
+            Task.Run(async () =>
+#pragma warning restore 4014
             {
-                DateTime = dateTime ?? DateTime.UtcNow,
-                Level = level.ToString(),
-                Env = Environment.GetEnvironmentVariable("ENV_INFO"),
-                AppName = PlatformServices.Default.Application.ApplicationName,
-                Version = PlatformServices.Default.Application.ApplicationVersion,
-                Component = component,
-                Process = process,
-                Context = context,
-                Type = "Message",
-                Stack = Truncate(ex?.StackTrace),
-                Msg = string.Join(" *** ", info, Truncate(ex?.Message)),
-            };
-            
-            await _logRepository.Insert(log);
+                var log = new LogEntity
+                {
+                    DateTime = dateTime ?? DateTime.UtcNow,
+                    Level = level.ToString(),
+                    Env = Environment.GetEnvironmentVariable("ENV_INFO"),
+                    AppName = PlatformServices.Default.Application.ApplicationName,
+                    Version = PlatformServices.Default.Application.ApplicationVersion,
+                    Component = component,
+                    Process = process,
+                    Context = context,
+                    Type = "Message",
+                    Stack = Truncate(ex?.StackTrace),
+                    Msg = string.Join(" *** ", info, Truncate(ex?.Message)),
+                };
+
+                await _logRepository.Insert(log);
+            });
+
+            return Task.CompletedTask;
         }
         
         public async Task WriteInfoAsync(string component, string process, string context, string info, DateTime? dateTime = null)
