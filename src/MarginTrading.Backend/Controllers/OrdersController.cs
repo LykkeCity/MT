@@ -69,7 +69,7 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         public async Task PlaceAsync([FromBody] OrderPlaceRequest request)
         {
-            var orders = await _validateOrderService.ValidateRequestAndGetOrders(request); 
+            var orders = await _validateOrderService.ValidateRequestAndCreateOrders(request); 
             
             var placedOrder = await _tradingEngine.PlaceOrderAsync(orders.order);
 

@@ -142,7 +142,7 @@ namespace MarginTrading.Backend.Services
 
         private void PlacePendingOrder(Order order)
         {
-            if (order.IsBasicPending() || !string.IsNullOrEmpty(order.ParentPositionId))
+            if (order.IsBasicPendingOrder() || !string.IsNullOrEmpty(order.ParentPositionId))
             {
                 order.Activate(_dateService.Now(), false);
                 _ordersCache.Active.Add(order);
@@ -335,7 +335,7 @@ namespace MarginTrading.Backend.Services
                 
                 if (_quoteCashService.TryGetQuoteById(order.AssetPairId, out var pair))
                 {
-                    var price = pair.GetPriceForOrderType(order.Direction);
+                    var price = pair.GetPriceForOrderDirection(order.Direction);
 
                     if (order.IsSuitablePriceForPendingOrder(price) &&
                         !_assetPairDayOffService.ArePendingOrdersDisabled(order.AssetPairId))
@@ -577,6 +577,8 @@ namespace MarginTrading.Backend.Services
             string correlationId)
         {
             var order = _ordersCache.GetOrderById(orderId);
+
+            _validateOrderService.ValidateOrderPriceChange(order, price);
 
             order.ChangePrice(price, _dateService.Now(), originator, additionalInfo, correlationId);
 
