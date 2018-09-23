@@ -117,6 +117,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         Volume = currentVolume,
                         RequestNumber = e.RequestNumber++,
                     }, _cqrsContextNamesSettings.Gavel);
+
+                    _chaosKitty.Meow(e.OperationId);
                     
                     return;//wait for the new price
                 }

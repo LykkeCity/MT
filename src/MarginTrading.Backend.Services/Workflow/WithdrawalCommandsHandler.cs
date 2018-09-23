@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Lykke.Common.Chaos;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
@@ -16,6 +17,7 @@ namespace MarginTrading.Backend.Services.Workflow
         private readonly IDateService _dateService;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly IAccountUpdateService _accountUpdateService;
+        private readonly IChaosKitty _chaosKitty;
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
         private const string OperationName = "FreezeAmountForWithdrawal";
 
@@ -23,11 +25,13 @@ namespace MarginTrading.Backend.Services.Workflow
             IDateService dateService,
             IAccountsCacheService accountsCacheService,
             IAccountUpdateService accountUpdateService,
+            IChaosKitty chaosKitty,
             IOperationExecutionInfoRepository operationExecutionInfoRepository)
         {
             _dateService = dateService;
             _accountsCacheService = accountsCacheService;
             _accountUpdateService = accountUpdateService;
+            _chaosKitty = chaosKitty;
             _operationExecutionInfoRepository = operationExecutionInfoRepository;
         }
 
@@ -79,6 +83,8 @@ namespace MarginTrading.Backend.Services.Workflow
                         _dateService.Now(),
                         command.ClientId, command.AccountId, command.Amount, "Not enough free margin"));
                 }
+                
+                _chaosKitty.Meow(command.OperationId);
 
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }
@@ -105,6 +111,8 @@ namespace MarginTrading.Backend.Services.Workflow
                 publisher.PublishEvent(new UnfreezeMarginOnFailSucceededWithdrawalEvent(command.OperationId,
                     _dateService.Now(),
                     command.ClientId, command.AccountId, command.Amount));
+                
+                _chaosKitty.Meow(command.OperationId);
                 
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }

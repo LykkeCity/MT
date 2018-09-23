@@ -23,7 +23,6 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
     [UsedImplicitly]
     public class SpecialLiquidationCommandsHandler
     {
-        private readonly IAssetPairsCache _assetPairsCache;
         private readonly ITradingEngine _tradingEngine;
         private readonly IDateService _dateService;
         private readonly IOrderReader _orderReader;
@@ -34,7 +33,6 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private readonly IAssetPairDayOffService _assetPairDayOffService;
 
         public SpecialLiquidationCommandsHandler(
-            IAssetPairsCache assetPairsCache,
             ITradingEngine tradingEngine,
             IDateService dateService,
             IOrderReader orderReader,
@@ -44,7 +42,6 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             MarginTradingSettings marginTradingSettings,
             IAssetPairDayOffService assetPairDayOffService)
         {
-            _assetPairsCache = assetPairsCache;
             _tradingEngine = tradingEngine;
             _dateService = dateService;
             _orderReader = orderReader;
@@ -66,6 +63,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     CreationTime = _dateService.Now(),
                     Reason = "Special liquidation is disabled in settings",
                 });
+                
+                _chaosKitty.Meow(command.OperationId);
+                
                 return;
             }
             
@@ -79,6 +79,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     CreationTime = _dateService.Now(),
                     Reason = "The list of positions is of different instruments",
                 });
+                
+                _chaosKitty.Meow(command.OperationId);
+                
                 return;
             }
 
@@ -90,6 +93,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     CreationTime = _dateService.Now(),
                     Reason = "No positions to liquidate",
                 });
+                
+                _chaosKitty.Meow(command.OperationId);
+                
                 return;
             }
             
@@ -135,6 +141,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     CreationTime = _dateService.Now(),
                     Reason = "Special liquidation is disabled in settings",
                 });
+                
+                _chaosKitty.Meow(command.OperationId);
+                
                 return;
             }
             
@@ -148,6 +157,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     CreationTime = _dateService.Now(),
                     Reason = $"Asset pair {command.Instrument} market must be disabled to start Special Liquidation",
                 });
+                
+                _chaosKitty.Meow(command.OperationId);
+                
                 return;
             }
 
@@ -209,6 +221,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                             CreationTime = _dateService.Now(),
                             Reason = $"Timeout of {command.TimeoutSeconds} seconds from {command.CreationTime:s}",
                         });
+                
+                        _chaosKitty.Meow(command.OperationId);
 
                         await _operationExecutionInfoRepository.Save(executionInfo);
                     }
