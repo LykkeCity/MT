@@ -71,10 +71,14 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 _rawScheduleSettingsCache = newScheduleContracts.ToDictionary(x => x.AssetPairId,
                     x => x.ScheduleSettings.Except(invalidSchedules[x.AssetPairId])
                         .Select(ScheduleSettings.Create).ToList());
+                _lastCacheRecalculationTime = _dateService.Now();
+            }
+            catch (Exception exception)
+            {
+                await _log.WriteErrorAsync(nameof(ScheduleSettingsCacheService), nameof(UpdateSettingsAsync), exception);
             }
             finally
             {
-                _lastCacheRecalculationTime = _dateService.Now();
                 _readerWriterLockSlim.ExitWriteLock();
                 CacheWarmUp();
             }

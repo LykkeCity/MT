@@ -446,20 +446,18 @@ namespace MarginTrading.Backend.Services
         private IAssetPair GetAssetPairIfAvailableForTrading(string assetPairId, OrderType orderType, 
             bool shouldOpenNewPosition, bool isPreTradeValidation)
         {
-            if (isPreTradeValidation)
+            if (isPreTradeValidation || orderType == OrderType.Market)
             {
-                if (orderType == OrderType.Market && _assetDayOffService.IsDayOff(assetPairId))
+                if (_assetDayOffService.IsDayOff(assetPairId))
                 {
                     throw new ValidateOrderException(OrderRejectReason.NoLiquidity,
                         "Trades for instrument are not available");
                 }
-
-                if (new[] {OrderType.Limit, OrderType.Stop, OrderType.StopLoss, OrderType.TakeProfit}.Contains(
-                    orderType) && _assetDayOffService.ArePendingOrdersDisabled(assetPairId))
-                {
-                    throw new ValidateOrderException(OrderRejectReason.NoLiquidity,
-                        "Pending orders for instrument are not available");
-                }
+            }
+            else if (_assetDayOffService.ArePendingOrdersDisabled(assetPairId))
+            {
+                throw new ValidateOrderException(OrderRejectReason.NoLiquidity,
+                    "Pending orders for instrument are not available");
             }
 
             var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(assetPairId); 
