@@ -115,7 +115,7 @@ namespace MarginTradingTests
         }
 
         [Test]
-        public async Task TestAccountUpdateConcurrently_Success()
+        public void TestAccountUpdateConcurrently_Success()
         {
             //arrange
             var account = Accounts[0];
