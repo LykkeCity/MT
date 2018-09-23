@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
 using Common.Log;
@@ -116,28 +117,59 @@ namespace MarginTradingTests
         [Test]
         public async Task TestAccountUpdateConcurrently_Success()
         {
+            //arrange
             var account = Accounts[0];
             var time = DateService.Now().AddMinutes(1);
             
             var accountsProjection = AssertEnv();
-            
-            var updateTask1 = accountsProjection.Handle(new AccountChangedEvent(time, "test", 
-                new AccountContract(account.Id, account.ClientId, "test", "test", 0, 0, "test", false, time.AddMilliseconds(1), true), 
-                AccountChangedEventTypeContract.Updated, null, "operation1"));
-            var updateTask2 = accountsProjection.Handle(new AccountChangedEvent(time, "test", 
-                new AccountContract(account.Id, account.ClientId, "new", "test", 0, 1, "test", true, time.AddMilliseconds(2), false), 
-                AccountChangedEventTypeContract.Updated, null, "operation2"));
 
-            await Task.WhenAll(updateTask1, updateTask2);
+            var manualResetEvent = new ManualResetEvent(false);
+
+            //act
+            var t1 = new Thread(async () =>
+            {
+                await accountsProjection.Handle(new AccountChangedEvent(time.AddMilliseconds(1), "test",
+                    new AccountContract(account.Id, account.ClientId, "test", "test", 0, 0, "test", false,
+                        time.AddMilliseconds(1), true),
+                    AccountChangedEventTypeContract.Updated, null, "operation1"));
+                manualResetEvent.WaitOne();
+            });
+            t1.Start();
+
+            var t2 = new Thread(async () =>
+            {
+                await accountsProjection.Handle(new AccountChangedEvent(time.AddMilliseconds(2), "test",
+                    new AccountContract(account.Id, account.ClientId, "new", "test", 0, 1, "test", true,
+                        time.AddMilliseconds(2), false),
+                    AccountChangedEventTypeContract.Updated, null, "operation2"));
+                manualResetEvent.WaitOne();
+            });
+            t2.Start();
+
+            // Make sure both threads are blocked
+            while (t1.ThreadState != ThreadState.WaitSleepJoin)
+                Thread.Yield();
+
+            while (t2.ThreadState != ThreadState.WaitSleepJoin)
+                Thread.Yield();
+
+            // Let them continue
+            manualResetEvent.Set();
+
+            // Wait for completion
+            t1.Join();
+            t2.Join();
 
             var updatedAccount = _accountsCacheService.Get(account.Id);
             
+            //assert
             Assert.AreEqual("new", updatedAccount.TradingConditionId);
             Assert.AreEqual(1, updatedAccount.WithdrawTransferLimit);
             Assert.AreEqual(true, updatedAccount.IsDisabled);
             Assert.AreEqual(false, updatedAccount.IsWithdrawalDisabled);
-            
-            _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.IsAny<IMarginTradingAccount>()), Times.Exactly(2));
+
+            _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.IsAny<IMarginTradingAccount>()), 
+                Times.Between(1, 2, Range.Inclusive));
         }
 
         [Test]
