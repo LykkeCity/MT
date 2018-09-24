@@ -73,6 +73,8 @@ namespace MarginTrading.Backend.Services.Workflow
                 {
                     await _accountUpdateService.FreezeWithdrawalMargin(command.AccountId, command.OperationId,
                         command.Amount);
+                    
+                    _chaosKitty.Meow(command.OperationId);
 
                     publisher.PublishEvent(new AmountForWithdrawalFrozenEvent(command.OperationId, _dateService.Now(),
                         command.ClientId, command.AccountId, command.Amount, command.Reason));
@@ -80,8 +82,8 @@ namespace MarginTrading.Backend.Services.Workflow
                 else
                 {
                     publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId,
-                        _dateService.Now(),
-                        command.ClientId, command.AccountId, command.Amount, "Not enough free margin"));
+                        _dateService.Now(), command.ClientId, command.AccountId, command.Amount,
+                        "Not enough free margin"));
                 }
                 
                 _chaosKitty.Meow(command.OperationId);
@@ -108,6 +110,8 @@ namespace MarginTrading.Backend.Services.Workflow
             {
                 await _accountUpdateService.UnfreezeWithdrawalMargin(command.AccountId, command.OperationId);
 
+                _chaosKitty.Meow(command.OperationId);
+                
                 publisher.PublishEvent(new UnfreezeMarginOnFailSucceededWithdrawalEvent(command.OperationId,
                     _dateService.Now(),
                     command.ClientId, command.AccountId, command.Amount));
