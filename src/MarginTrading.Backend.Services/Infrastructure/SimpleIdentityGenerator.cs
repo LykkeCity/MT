@@ -14,7 +14,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
         private long _currentId;
         private readonly Random _random = new Random();
         private const string Pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+        private readonly object _lockObject = new object();
         
         public SimpleIdentityGenerator()
         {
@@ -29,15 +29,10 @@ namespace MarginTrading.Backend.Services.Infrastructure
 
         public string GenerateAlphanumericId()
         {
-            _semaphore.Wait();
-            try
+            lock(_lockObject)
             {
                 var chars = Enumerable.Range(0, 10).Select(x => Pool[_random.Next(0, Pool.Length)]);
                 return new string(chars.ToArray());
-            }
-            finally
-            {
-                _semaphore.Release();
             }
         }
 
