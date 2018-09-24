@@ -13,7 +13,7 @@ using MarginTrading.SqlRepositories.Entities;
 
 namespace MarginTrading.SqlRepositories.Repositories
 {
-    public class AccountMarginFreezingRepository : IAccountMarginFreezingRepository
+    public class AccountMarginUnconfirmedRepository : IAccountMarginUnconfirmedRepository
     {
         private const string TableName = "AccountMarginFreezing";
         private const string CreateTableScript = "CREATE TABLE [{0}](" +
@@ -25,14 +25,12 @@ namespace MarginTrading.SqlRepositories.Repositories
         private static Type DataType => typeof(IAccountMarginFreezing);
         private static readonly string GetColumns = string.Join(",", DataType.GetProperties().Select(x => x.Name));
         private static readonly string GetFields = string.Join(",", DataType.GetProperties().Select(x => "@" + x.Name));
-        private static readonly string GetUpdateClause = string.Join(",",
-            DataType.GetProperties().Select(x => "[" + x.Name + "]=@" + x.Name));
 
         private readonly IConvertService _convertService;
         private readonly MarginTradingSettings _settings;
         private readonly ILog _log;
 
-        public AccountMarginFreezingRepository(IConvertService convertService, MarginTradingSettings settings, ILog log)
+        public AccountMarginUnconfirmedRepository(IConvertService convertService, MarginTradingSettings settings, ILog log)
         {
             _convertService = convertService;
             _log = log;

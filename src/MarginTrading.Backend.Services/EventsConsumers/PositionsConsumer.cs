@@ -29,6 +29,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         private readonly IConvertService _convertService;
         private readonly IDateService _dateService;
         private readonly IAccountsCacheService _accountsCacheService;
+        private readonly IAccountUpdateService _accountUpdateService;
         private readonly IIdentityGenerator _identityGenerator;
         private readonly ICqrsSender _cqrsSender;
         private readonly IEventChannel<OrderCancelledEventArgs> _orderCancelledEventChannel;
@@ -47,6 +48,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             IConvertService convertService,
             IDateService dateService,
             IAccountsCacheService accountsCacheService,
+            IAccountUpdateService accountUpdateService,
             IIdentityGenerator identityGenerator,
             ICqrsSender cqrsSender,
             IEventChannel<OrderCancelledEventArgs> orderCancelledEventChannel,
@@ -60,6 +62,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             _convertService = convertService;
             _dateService = dateService;
             _accountsCacheService = accountsCacheService;
+            _accountUpdateService = accountUpdateService;
             _identityGenerator = identityGenerator;
             _cqrsSender = cqrsSender;
             _orderCancelledEventChannel = orderCancelledEventChannel;
@@ -218,6 +221,9 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 var account = _accountsCacheService.Get(position.AccountId);
                 _cqrsSender.PublishEvent(new PositionClosedEvent(account.Id, account.ClientId,
                     deal.DealId, position.AssetPairId, fpl - chargedPnl));
+            
+                _accountUpdateService.FreezeUnconfirmedMargin(position.AccountId, deal.DealId, fpl)
+                    .GetAwaiter().GetResult();
             }
 
             var positionContract = _convertService.Convert<Position, PositionContract>(position,

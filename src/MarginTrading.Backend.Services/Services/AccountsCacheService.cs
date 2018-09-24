@@ -16,11 +16,8 @@ namespace MarginTrading.Backend.Services
         private Dictionary<string, MarginTradingAccount> _accounts = new Dictionary<string, MarginTradingAccount>();
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
 
-        private readonly IAccountMarginFreezingRepository _accountMarginFreezingRepository;
-
-        public AccountsCacheService(IAccountMarginFreezingRepository accountMarginFreezingRepository)
+        public AccountsCacheService()
         {
-            _accountMarginFreezingRepository = accountMarginFreezingRepository;
         }
         
         public IReadOnlyList<MarginTradingAccount> GetAll()
@@ -104,33 +101,11 @@ namespace MarginTrading.Backend.Services
             try
             {
                 _accounts = accounts;
-
-                var marginFreezings = _accountMarginFreezingRepository.GetAllAsync().GetAwaiter().GetResult()
-                    .GroupBy(x => x.AccountId)
-                    .ToDictionary(x => x.Key, x => x.ToDictionary(z => z.OperationId, z => z.Amount));
-                foreach (var account in accounts.Select(x => x.Value))
-                {
-                    account.AccountFpl.WithdrawalFrozenMarginData = marginFreezings.TryGetValue(account.Id, out var freezings)
-                        ? freezings
-                        : new Dictionary<string, decimal>();
-                    account.AccountFpl.WithdrawalFrozenMargin = account.AccountFpl.WithdrawalFrozenMarginData.Sum(x => x.Value);
-                }
             }
             finally
             {
                 _lockSlim.ExitWriteLock();
             }
-        }
-
-        public async Task FreezeWithdrawalMargin(string operationId, string clientId, string accountId, decimal amount)
-        {
-            await _accountMarginFreezingRepository.TryInsertAsync(new AccountMarginFreezing(operationId,
-                clientId, accountId, amount));
-        }
-
-        public async Task UnfreezeWithdrawalMargin(string operationId)
-        {
-            await _accountMarginFreezingRepository.DeleteAsync(operationId);
         }
 
         public void UpdateAccountChanges(string accountId, string updatedTradingConditionId, decimal updatedBalance,

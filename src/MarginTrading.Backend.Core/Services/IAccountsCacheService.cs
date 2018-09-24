@@ -16,8 +16,5 @@ namespace MarginTrading.Backend.Core
         PaginatedResponse<MarginTradingAccount> GetAllByPages(int? skip = null, int? take = null);
         IEnumerable<string> GetClientIdsByTradingConditionId(string tradingConditionId, string accountId = null);
         void Update(MarginTradingAccount newValue);
-
-        Task FreezeWithdrawalMargin(string operationId, string clientId, string accountId, decimal amount);
-        Task UnfreezeWithdrawalMargin(string operationId);
     }
 }
