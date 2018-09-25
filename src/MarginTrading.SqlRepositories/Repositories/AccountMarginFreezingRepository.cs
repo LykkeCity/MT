@@ -25,8 +25,6 @@ namespace MarginTrading.SqlRepositories.Repositories
         private static Type DataType => typeof(IAccountMarginFreezing);
         private static readonly string GetColumns = string.Join(",", DataType.GetProperties().Select(x => x.Name));
         private static readonly string GetFields = string.Join(",", DataType.GetProperties().Select(x => "@" + x.Name));
-        private static readonly string GetUpdateClause = string.Join(",",
-            DataType.GetProperties().Select(x => "[" + x.Name + "]=@" + x.Name));
 
         private readonly IConvertService _convertService;
         private readonly MarginTradingSettings _settings;
