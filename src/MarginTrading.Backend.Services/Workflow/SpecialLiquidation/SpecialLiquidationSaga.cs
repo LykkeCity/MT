@@ -24,7 +24,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private readonly IChaosKitty _chaosKitty;
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
         private readonly IOrderReader _orderReader;
-        private readonly IFakeSpecialLiquidationService _fakeGavel;
+        private readonly ISpecialLiquidationService _specialLiquidationService;
 
         private readonly MarginTradingSettings _marginTradingSettings;
         private readonly CqrsContextNamesSettings _cqrsContextNamesSettings;
@@ -36,7 +36,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             IChaosKitty chaosKitty,
             IOperationExecutionInfoRepository operationExecutionInfoRepository,
             IOrderReader orderReader,
-            IFakeSpecialLiquidationService fakeGavel,
+            ISpecialLiquidationService specialLiquidationService,
             MarginTradingSettings marginTradingSettings,
             CqrsContextNamesSettings cqrsContextNamesSettings)
         {
@@ -44,7 +44,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             _chaosKitty = chaosKitty;
             _operationExecutionInfoRepository = operationExecutionInfoRepository;
             _orderReader = orderReader;
-            _fakeGavel = fakeGavel;
+            _specialLiquidationService = specialLiquidationService;
             _marginTradingSettings = marginTradingSettings;
             _cqrsContextNamesSettings = cqrsContextNamesSettings;
         }
@@ -83,7 +83,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 }
                 else
                 {
-                    _fakeGavel.GetPriceForSpecialLiquidation(e.OperationId, e.Instrument, positionsVolume);
+                    _specialLiquidationService.FakeGetPriceForSpecialLiquidation(e.OperationId, e.Instrument,
+                        positionsVolume);
                 }
 
                 _chaosKitty.Meow(e.OperationId);
@@ -125,22 +126,14 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 executionInfo.Data.Volume = e.Volume;
                 executionInfo.Data.Price = e.Price;
 
-                if (_marginTradingSettings.ExchangeConnector == ExchangeConnectorType.RealExchangeConnector)
-                {
-                    //send command to execute order in Gavel
-                    sender.SendCommand(new ExecuteSpecialLiquidationOrderCommand
-                    {
-                        OperationId = e.OperationId,
-                        CreationTime = _dateService.Now(),
-                        Instrument = e.Instrument,
-                        Volume = e.Volume,
-                        Price = e.Price,
-                    }, _cqrsContextNamesSettings.Gavel);
-                }
-                else
-                {
-                    _fakeGavel.ExecuteSpecialLiquidationOrder(e.OperationId, e.Instrument, e.Volume, e.Price);
-                }
+                //execute order in Gavel by API or use fake
+                _specialLiquidationService.ExecuteSpecialLiquidationOrder(
+                    operationId: e.OperationId, 
+                    instrument: e.Instrument,
+                    volume: e.Volume, 
+                    price: e.Price, 
+                    externalProviderId: executionInfo.Data.ExternalProviderId, 
+                    executeByApi: _marginTradingSettings.ExchangeConnector == ExchangeConnectorType.RealExchangeConnector);
 
                 _chaosKitty.Meow(e.OperationId);
 

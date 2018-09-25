@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
@@ -10,6 +11,7 @@ using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Events;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Extensions;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
@@ -92,6 +94,17 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 });
                 return;
             }
+
+            if (!TryGetExchangeNameFromPositions(positions, out var externalProviderId))
+            {
+                publisher.PublishEvent(new SpecialLiquidationFailedEvent
+                {
+                    OperationId = command.OperationId,
+                    CreationTime = _dateService.Now(),
+                    Reason = "All requested positions must be open on the same external exchange",
+                });
+                return;
+            }
             
             //ensure idempotency
             var executionInfo = await _operationExecutionInfoRepository.GetOrAddAsync(
@@ -106,6 +119,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         State = SpecialLiquidationOperationState.Initiated,
                         Instrument = positions.FirstOrDefault()?.AssetPairId,
                         PositionIds = command.PositionIds.ToList(),
+                        ExternalProviderId = externalProviderId
                     }
                 ));
 
@@ -151,8 +165,29 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 return;
             }
 
-            var openedPositions = _orderReader.GetPositions().Where(x => x.AssetPairId == command.Instrument)
-                .Select(x => x.Id).ToList();
+            var openedPositions = _orderReader.GetPositions().Where(x => x.AssetPairId == command.Instrument).ToList();
+
+            if (!openedPositions.Any())
+            {
+                publisher.PublishEvent(new SpecialLiquidationFailedEvent
+                {
+                    OperationId = command.OperationId,
+                    CreationTime = _dateService.Now(),
+                    Reason = "No positions to liquidate",
+                });
+                return;
+            }
+
+            if (!TryGetExchangeNameFromPositions(openedPositions, out var externalProviderId))
+            {
+                publisher.PublishEvent(new SpecialLiquidationFailedEvent
+                {
+                    OperationId = command.OperationId,
+                    CreationTime = _dateService.Now(),
+                    Reason = "All requested positions must be open on the same external exchange",
+                });
+                return;
+            }
             
             //ensure idempotency
             var executionInfo = await _operationExecutionInfoRepository.GetOrAddAsync(
@@ -165,7 +200,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     data: new SpecialLiquidationOperationData
                     {
                         State = SpecialLiquidationOperationState.Initiated,
-                        PositionIds = openedPositions
+                        Instrument = command.Instrument,
+                        PositionIds = openedPositions.Select(x => x.Id).ToList(),
+                        ExternalProviderId = externalProviderId,
                     }
                 ));
 
@@ -293,6 +330,19 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
 
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }
+        }
+
+        private bool TryGetExchangeNameFromPositions(IEnumerable<Position> positions, out string externalProviderId)
+        {
+            var externalProviderIds = positions.Select(x => x.ExternalProviderId).ToList();
+            if (externalProviderIds.Count != 1)
+            {
+                externalProviderId = null;
+                return false;
+            }
+
+            externalProviderId = externalProviderIds.Single();
+            return true;
         }
     }
 }
