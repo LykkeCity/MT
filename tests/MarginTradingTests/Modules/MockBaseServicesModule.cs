@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Autofac;
 using Common.Log;
 using Lykke.Common;
+using Lykke.Common.Chaos;
 using Lykke.Cqrs;
 using Lykke.Service.ClientAccount.Client.Models;
 using Lykke.Service.Session.AutorestClient;
@@ -83,6 +84,8 @@ namespace MarginTradingTests.Modules
             builder.RegisterType<CqrsSender>().As<ICqrsSender>()
                 .PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies)
                 .SingleInstance();
+
+            builder.RegisterInstance(Mock.Of<IChaosKitty>()).As<IChaosKitty>().SingleInstance();
         }
     }
 

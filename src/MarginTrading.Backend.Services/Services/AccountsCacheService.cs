@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services
 {
@@ -16,8 +18,15 @@ namespace MarginTrading.Backend.Services
         private Dictionary<string, MarginTradingAccount> _accounts = new Dictionary<string, MarginTradingAccount>();
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
 
-        public AccountsCacheService()
+        private readonly IDateService _dateService;
+        private readonly ILog _log;
+
+        public AccountsCacheService(
+            IDateService dateService,
+            ILog log)
         {
+            _dateService = dateService;
+            _log = log;
         }
         
         public IReadOnlyList<MarginTradingAccount> GetAll()
@@ -44,40 +53,9 @@ namespace MarginTrading.Backend.Services
                 throw new AccountNotFoundException(accountId, string.Format(MtMessages.AccountByIdNotFound, accountId));
         }
 
-        public void Update(MarginTradingAccount newValue)
-        {
-            _lockSlim.EnterWriteLock();
-            try
-            {
-                _accounts[newValue.Id] = newValue;
-            }
-            finally
-            {
-                _lockSlim.ExitWriteLock();
-            }
-        }
-
         public MarginTradingAccount TryGet(string accountId)
         {
             return TryGetAccount(accountId);
-        }
-
-        public IEnumerable<string> GetClientIdsByTradingConditionId(string tradingConditionId, string accountId = null)
-        {
-            _lockSlim.EnterReadLock();
-            try
-            {
-                foreach (var account in _accounts.Values)
-                {
-                    if (account.TradingConditionId == tradingConditionId &&
-                        (string.IsNullOrEmpty(accountId) || account.Id == accountId))
-                        yield return account.ClientId;
-                }
-            }
-            finally
-            {
-                _lockSlim.ExitReadLock();
-            }
         }
 
         private MarginTradingAccount TryGetAccount(string accountId)
@@ -108,17 +86,42 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public void UpdateAccountChanges(string accountId, string updatedTradingConditionId, decimal updatedBalance,
-            decimal updatedWithdrawTransferLimit, bool isDisabled)
+        public async Task<bool> UpdateAccountChanges(string accountId, string updatedTradingConditionId,
+            decimal updatedWithdrawTransferLimit, bool isDisabled, bool isWithdrawalDisabled, DateTime eventTime)
         {
             _lockSlim.EnterWriteLock();
             try
             {
                 var account = _accounts[accountId];
+
+                if (account.LastUpdateTime > eventTime)
+                {
+                    await _log.WriteInfoAsync(nameof(AccountsCacheService), nameof(UpdateAccountChanges), 
+                        $"Account with id {account.Id} is in newer state then the event");
+                    return false;
+                } 
+                
                 account.TradingConditionId = updatedTradingConditionId;
-                account.Balance = updatedBalance;
                 account.WithdrawTransferLimit = updatedWithdrawTransferLimit;
                 account.IsDisabled = isDisabled;
+                account.IsWithdrawalDisabled = isWithdrawalDisabled;
+                account.LastUpdateTime = eventTime;
+            }
+            finally
+            {
+                _lockSlim.ExitWriteLock();
+            }
+            return true;
+        }
+
+        public void UpdateAccountBalance(string accountId, decimal changeAmount)
+        {
+            _lockSlim.EnterWriteLock();
+            try
+            {
+                var account = _accounts[accountId];
+                
+                account.Balance += changeAmount;
             }
             finally
             {
@@ -131,6 +134,7 @@ namespace MarginTrading.Backend.Services
             _lockSlim.EnterWriteLock();
             try
             {
+                account.LastUpdateTime = _dateService.Now();
                 _accounts.TryAdd(account.Id, account);
             }
             finally

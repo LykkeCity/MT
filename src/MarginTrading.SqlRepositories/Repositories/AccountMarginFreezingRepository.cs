@@ -32,6 +32,11 @@ namespace MarginTrading.SqlRepositories.Repositories
         private readonly MarginTradingSettings _settings;
         private readonly ILog _log;
 
+        /// <summary>
+        /// For testing purposes
+        /// </summary>
+        public AccountMarginFreezingRepository(){}
+        
         public AccountMarginFreezingRepository(IConvertService convertService, MarginTradingSettings settings, ILog log)
         {
             _convertService = convertService;

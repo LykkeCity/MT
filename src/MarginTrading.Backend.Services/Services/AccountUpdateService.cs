@@ -20,6 +20,8 @@ namespace MarginTrading.Backend.Services
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly OrdersCache _ordersCache;
         private readonly IAssetsCache _assetsCache;
+        
+        private readonly IAccountMarginFreezingRepository _accountMarginFreezingRepository;
         private readonly IAccountMarginUnconfirmedRepository _accountMarginUnconfirmedRepository;
 
         public AccountUpdateService(
@@ -28,6 +30,7 @@ namespace MarginTrading.Backend.Services
             IAccountsCacheService accountsCacheService,
             OrdersCache ordersCache,
             IAssetsCache assetsCache,
+            IAccountMarginFreezingRepository accountMarginFreezingRepository,
             IAccountMarginUnconfirmedRepository accountMarginUnconfirmedRepository)
         {
             _fplService = fplService;
@@ -35,6 +38,7 @@ namespace MarginTrading.Backend.Services
             _accountsCacheService = accountsCacheService;
             _ordersCache = ordersCache;
             _assetsCache = assetsCache;
+            _accountMarginFreezingRepository = accountMarginFreezingRepository;
             _accountMarginUnconfirmedRepository = accountMarginUnconfirmedRepository;
         }
 
@@ -50,7 +54,8 @@ namespace MarginTrading.Backend.Services
             if (account.AccountFpl.WithdrawalFrozenMarginData.TryAdd(operationId, amount))
             {
                 account.AccountFpl.WithdrawalFrozenMargin = account.AccountFpl.WithdrawalFrozenMarginData.Values.Sum();
-                //await _accountsCacheService.FreezeWithdrawalMargin(operationId, account.ClientId, accountId, amount);
+                await _accountMarginFreezingRepository.TryInsertAsync(new AccountMarginFreezing(operationId,
+                    accountId, amount));
             }
         }
 
@@ -61,7 +66,7 @@ namespace MarginTrading.Backend.Services
             if (account.AccountFpl.WithdrawalFrozenMarginData.Remove(operationId))
             {
                 account.AccountFpl.WithdrawalFrozenMargin = account.AccountFpl.WithdrawalFrozenMarginData.Values.Sum();
-                //await _accountsCacheService.UnfreezeWithdrawalMargin(operationId);
+                await _accountMarginFreezingRepository.DeleteAsync(operationId);
             }
         }
 

@@ -6,6 +6,7 @@ using MarginTrading.AzureRepositories.Snow.OrdersById;
 using MarginTrading.AzureRepositories.Snow.OrdersHistory;
 using MarginTrading.AzureRepositories.Snow.Trades;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.AzureRepositories
@@ -53,11 +54,6 @@ namespace MarginTrading.AzureRepositories
             {
                 return new RiskSystemCommandsLogRepository(AzureTableStorage<RiskSystemCommandsLogEntity>.Create(connString,
                     "RiskSystemCommandsLog", log));
-            }
-
-            public static IDayOffSettingsRepository CreateDayOffSettingsRepository(IReloadingManager<string> connString)
-            {
-                return new DayOffSettingsRepository(new MarginTradingBlobRepository(connString));
             }
         }
     }

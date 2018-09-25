@@ -32,18 +32,20 @@ namespace MarginTrading.Backend.Services
         private readonly IAccountsApi _accountsApi;
         private readonly IConvertService _convertService;
         
+        private readonly IAccountMarginFreezingRepository _accountMarginFreezingRepository;
         private readonly IAccountMarginUnconfirmedRepository _accountMarginUnconfirmedRepository;
 
         public AccountManager(
-            AccountsCacheService accountsCacheService, 
+            AccountsCacheService accountsCacheService,
             IConsole console,
-            MarginTradingSettings marginSettings, 
-            IRabbitMqNotifyService rabbitMqNotifyService, 
+            MarginTradingSettings marginSettings,
+            IRabbitMqNotifyService rabbitMqNotifyService,
             ILog log,
-            OrdersCache ordersCache, 
-            ITradingEngine tradingEngine, 
+            OrdersCache ordersCache,
+            ITradingEngine tradingEngine,
             IAccountsApi accountsApi,
             IConvertService convertService,
+            IAccountMarginFreezingRepository accountMarginFreezingRepository,
             IAccountMarginUnconfirmedRepository accountMarginUnconfirmedRepository) 
             : base(nameof(AccountManager), 60000, log)
         {
@@ -56,6 +58,7 @@ namespace MarginTrading.Backend.Services
             _tradingEngine = tradingEngine;
             _accountsApi = accountsApi;
             _convertService = convertService;
+            _accountMarginFreezingRepository = accountMarginFreezingRepository;
             _accountMarginUnconfirmedRepository = accountMarginUnconfirmedRepository;
         }
 
@@ -74,6 +77,8 @@ namespace MarginTrading.Backend.Services
 
             var accounts = _accountsApi.List().GetAwaiter().GetResult()
                 .Select(Convert).ToDictionary(x => x.Id);
+
+            ApplyMarginFreezing(accounts);
             
             _accountsCacheService.InitAccountsCache(accounts);
             _console.WriteLine($"Finished InitAccountsCache. Count: {accounts.Count}");
@@ -100,6 +105,20 @@ namespace MarginTrading.Backend.Services
                     account.AccountFpl.UnconfirmedMargin = account.AccountFpl.UnconfirmedMarginData.Sum(x => x.Value);
                 }
          */
+
+        private void ApplyMarginFreezing(Dictionary<string, MarginTradingAccount> accounts)
+        {
+            var marginFreezing = _accountMarginFreezingRepository.GetAllAsync().GetAwaiter().GetResult()
+                .GroupBy(x => x.AccountId)
+                .ToDictionary(x => x.Key, x => x.ToDictionary(z => z.OperationId, z => z.Amount));
+            foreach (var account in accounts.Select(x => x.Value))
+            {
+                account.AccountFpl.WithdrawalFrozenMarginData = marginFreezing.TryGetValue(account.Id, out var freezing)
+                    ? freezing
+                    : new Dictionary<string, decimal>();
+                account.AccountFpl.WithdrawalFrozenMargin = account.AccountFpl.WithdrawalFrozenMarginData.Sum(x => x.Value);
+            }
+        }
 
         private IReadOnlyList<IMarginTradingAccount> GetAccountsToWriteStats()
         {
