@@ -85,38 +85,25 @@ namespace MarginTrading.Backend.Services
 
             base.Start();
         }
-        
-        /*
-         var marginFreezings = _accountMarginFreezingRepository.GetAllAsync().GetAwaiter().GetResult()
-                    .GroupBy(x => x.AccountId)
-                    .ToDictionary(x => x.Key, x => x.ToDictionary(z => z.OperationId, z => z.Amount));
-                var unconfirmedMargin = _accountMarginUnconfirmedRepository.GetAllAsync().GetAwaiter().GetResult()
-                    .GroupBy(x => x.AccountId)
-                    .ToDictionary(x => x.Key, x => x.ToDictionary(z => z.OperationId, z => z.Amount));
-                foreach (var account in accounts.Select(x => x.Value))
-                {
-                    account.AccountFpl.WithdrawalFrozenMarginData = marginFreezings.TryGetValue(account.Id, out var withdrawalFrozenMargin)
-                        ? withdrawalFrozenMargin
-                        : new Dictionary<string, decimal>();
-                    account.AccountFpl.WithdrawalFrozenMargin = account.AccountFpl.WithdrawalFrozenMarginData.Sum(x => x.Value);
-                    account.AccountFpl.UnconfirmedMarginData = unconfirmedMargin.TryGetValue(account.Id, out var unconfirmedFrozenMargin)
-                        ? unconfirmedFrozenMargin
-                        : new Dictionary<string, decimal>();
-                    account.AccountFpl.UnconfirmedMargin = account.AccountFpl.UnconfirmedMarginData.Sum(x => x.Value);
-                }
-         */
 
         private void ApplyMarginFreezing(Dictionary<string, MarginTradingAccount> accounts)
         {
-            var marginFreezing = _accountMarginFreezingRepository.GetAllAsync().GetAwaiter().GetResult()
+            var marginFreezings = _accountMarginFreezingRepository.GetAllAsync().GetAwaiter().GetResult()
+                .GroupBy(x => x.AccountId)
+                .ToDictionary(x => x.Key, x => x.ToDictionary(z => z.OperationId, z => z.Amount));
+            var unconfirmedMargin = _accountMarginUnconfirmedRepository.GetAllAsync().GetAwaiter().GetResult()
                 .GroupBy(x => x.AccountId)
                 .ToDictionary(x => x.Key, x => x.ToDictionary(z => z.OperationId, z => z.Amount));
             foreach (var account in accounts.Select(x => x.Value))
             {
-                account.AccountFpl.WithdrawalFrozenMarginData = marginFreezing.TryGetValue(account.Id, out var freezing)
-                    ? freezing
+                account.AccountFpl.WithdrawalFrozenMarginData = marginFreezings.TryGetValue(account.Id, out var withdrawalFrozenMargin)
+                    ? withdrawalFrozenMargin
                     : new Dictionary<string, decimal>();
                 account.AccountFpl.WithdrawalFrozenMargin = account.AccountFpl.WithdrawalFrozenMarginData.Sum(x => x.Value);
+                account.AccountFpl.UnconfirmedMarginData = unconfirmedMargin.TryGetValue(account.Id, out var unconfirmedFrozenMargin)
+                    ? unconfirmedFrozenMargin
+                    : new Dictionary<string, decimal>();
+                account.AccountFpl.UnconfirmedMargin = account.AccountFpl.UnconfirmedMarginData.Sum(x => x.Value);
             }
         }
 

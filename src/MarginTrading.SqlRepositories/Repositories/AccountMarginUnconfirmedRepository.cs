@@ -15,7 +15,7 @@ namespace MarginTrading.SqlRepositories.Repositories
 {
     public class AccountMarginUnconfirmedRepository : IAccountMarginUnconfirmedRepository
     {
-        private const string TableName = "AccountMarginFreezing";
+        private const string TableName = "AccountMarginUnconfirmed";
         private const string CreateTableScript = "CREATE TABLE [{0}](" +
                                                  "[OperationId] [nvarchar] (128) NOT NULL PRIMARY KEY," +
                                                  "[AccountId] [nvarchar] (64) NOT NULL, " +

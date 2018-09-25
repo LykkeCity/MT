@@ -21,6 +21,7 @@ namespace MarginTradingTests.Modules
             var orderHistoryRepository = new Mock<IOrdersHistoryRepository>();
             var riskSystemCommandsLogRepository = new Mock<IRiskSystemCommandsLogRepository>();
             var accountMarginFreezingRepository = new Mock<IAccountMarginFreezingRepository>();
+            var accountMarginUnconfirmedRepository = new Mock<IAccountMarginUnconfirmedRepository>();
             var operationExecutionInfoRepositoryMock = new Mock<IOperationExecutionInfoRepository>();
             operationExecutionInfoRepositoryMock.Setup(s => s.GetOrAddAsync(It.IsIn("AccountsProjection"),
                     It.IsAny<string>(), It.IsAny<Func<IOperationExecutionInfo<OperationData>>>()))
@@ -32,6 +33,8 @@ namespace MarginTradingTests.Modules
                 ));
 
             accountMarginFreezingRepository.Setup(x => x.GetAllAsync())
+                .ReturnsAsync(new List<IAccountMarginFreezing>().AsReadOnly());
+            accountMarginUnconfirmedRepository.Setup(x => x.GetAllAsync())
                 .ReturnsAsync(new List<IAccountMarginFreezing>().AsReadOnly());
 
             builder.RegisterInstance(new LogToMemory()).As<ILog>();
@@ -47,6 +50,8 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(riskSystemCommandsLogRepository.Object).As<IRiskSystemCommandsLogRepository>()
                 .SingleInstance();
             builder.RegisterInstance(accountMarginFreezingRepository.Object).As<IAccountMarginFreezingRepository>()
+                .SingleInstance();
+            builder.RegisterInstance(accountMarginUnconfirmedRepository.Object).As<IAccountMarginUnconfirmedRepository>()
                 .SingleInstance();
             builder.RegisterInstance(operationExecutionInfoRepositoryMock.Object)
                 .As<IOperationExecutionInfoRepository>().SingleInstance();
