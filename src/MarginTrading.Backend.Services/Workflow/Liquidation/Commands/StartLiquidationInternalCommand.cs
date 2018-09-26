@@ -1,4 +1,6 @@
 using System;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Orders;
 using MessagePack;
 
 namespace MarginTrading.Backend.Services.Workflow.Liquidation.Commands
@@ -13,6 +15,15 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation.Commands
         public DateTime CreationTime { get; set; }
         
         [Key(3)]
-        public string[] PositionIds { get; set; }
+        public string AccountId { get; set; }
+        
+        [Key(4)]
+        public string AssetPairId { get; set; }
+        
+        [Key(5)]
+        public PositionDirection? Direction { get; set; }
+        
+        [Key(6)]
+        public InstrumentBidAskPair Quote { get; set; }
     }
 }

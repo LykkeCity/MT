@@ -86,6 +86,41 @@ namespace MarginTrading.Backend.Services
             }
         }
 
+        public bool TryStartLiquidation(string accountId)
+        {
+            _lockSlim.EnterWriteLock();
+            try
+            {
+                var account = _accounts[accountId];
+
+                if (account.IsLiquidationStarted)
+                {
+                    return false;
+                }
+
+                account.IsLiquidationStarted = true;
+                return true;
+            }
+            finally
+            {
+                _lockSlim.ExitWriteLock();
+            }
+        }
+
+        public void FinishLiquidation(string accountId)
+        {
+            _lockSlim.EnterWriteLock();
+            try
+            {
+                var account = _accounts[accountId];
+                account.IsLiquidationStarted = false;
+            }
+            finally
+            {
+                _lockSlim.ExitWriteLock();
+            }
+        }
+
         public async Task<bool> UpdateAccountChanges(string accountId, string updatedTradingConditionId,
             decimal updatedWithdrawTransferLimit, bool isDisabled, bool isWithdrawalDisabled, DateTime eventTime)
         {
