@@ -10,6 +10,7 @@ using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Notifications;
@@ -30,12 +31,20 @@ namespace MarginTrading.Backend.Services
         private readonly ITradingEngine _tradingEngine;
         private readonly IAccountsApi _accountsApi;
         private readonly IConvertService _convertService;
+        private readonly IAccountMarginFreezingRepository _accountMarginFreezingRepository;
 
-        public AccountManager(AccountsCacheService accountsCacheService, IConsole console,
-            MarginTradingSettings marginSettings, IRabbitMqNotifyService rabbitMqNotifyService, ILog log,
-            OrdersCache ordersCache, ITradingEngine tradingEngine, IAccountsApi accountsApi,
-            IConvertService convertService) :
-            base(nameof(AccountManager), 60000, log)
+        public AccountManager(
+            AccountsCacheService accountsCacheService,
+            IConsole console,
+            MarginTradingSettings marginSettings,
+            IRabbitMqNotifyService rabbitMqNotifyService,
+            ILog log,
+            OrdersCache ordersCache,
+            ITradingEngine tradingEngine,
+            IAccountsApi accountsApi,
+            IConvertService convertService,
+            IAccountMarginFreezingRepository accountMarginFreezingRepository)
+            : base(nameof(AccountManager), 60000, log)
         {
             _accountsCacheService = accountsCacheService;
             _console = console;
@@ -46,6 +55,7 @@ namespace MarginTrading.Backend.Services
             _tradingEngine = tradingEngine;
             _accountsApi = accountsApi;
             _convertService = convertService;
+            _accountMarginFreezingRepository = accountMarginFreezingRepository;
         }
 
         public override Task Execute()
@@ -63,11 +73,27 @@ namespace MarginTrading.Backend.Services
 
             var accounts = _accountsApi.List().GetAwaiter().GetResult()
                 .Select(Convert).ToDictionary(x => x.Id);
+
+            ApplyMarginFreezing(accounts);
             
             _accountsCacheService.InitAccountsCache(accounts);
             _console.WriteLine($"Finished InitAccountsCache. Count: {accounts.Count}");
 
             base.Start();
+        }
+
+        private void ApplyMarginFreezing(Dictionary<string, MarginTradingAccount> accounts)
+        {
+            var marginFreezing = _accountMarginFreezingRepository.GetAllAsync().GetAwaiter().GetResult()
+                .GroupBy(x => x.AccountId)
+                .ToDictionary(x => x.Key, x => x.ToDictionary(z => z.OperationId, z => z.Amount));
+            foreach (var account in accounts.Select(x => x.Value))
+            {
+                account.AccountFpl.WithdrawalFrozenMarginData = marginFreezing.TryGetValue(account.Id, out var freezing)
+                    ? freezing
+                    : new Dictionary<string, decimal>();
+                account.AccountFpl.WithdrawalFrozenMargin = account.AccountFpl.WithdrawalFrozenMarginData.Sum(x => x.Value);
+            }
         }
 
         private IReadOnlyList<IMarginTradingAccount> GetAccountsToWriteStats()

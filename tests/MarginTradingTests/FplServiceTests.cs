@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using Autofac;
+using Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
+using MarginTrading.Common.Services;
 using MarginTradingTests.Helpers;
 using NUnit.Framework;
 
@@ -19,6 +21,7 @@ namespace MarginTradingTests
         private IAccountsCacheService _accountsCacheService;
         private OrdersCache _ordersCache;
         private IFplService _fplService;
+        private IDateService _dateService;
 
         [OneTimeSetUp]
         public void SetUp()
@@ -29,6 +32,7 @@ namespace MarginTradingTests
             _accountsCacheService = Container.Resolve<IAccountsCacheService>();
             _ordersCache = Container.Resolve<OrdersCache>();
             _fplService = Container.Resolve<IFplService>();
+            _dateService = Container.Resolve<IDateService>();
         }
 
         [Test]
@@ -121,7 +125,7 @@ namespace MarginTradingTests
         public void Check_Calculations_As_In_Excel_Document()
         {
             Accounts[0].Balance = 50000;
-            _accountsCacheService.Update(Accounts[0]);
+            _accountsCacheService.UpdateAccountBalance(Accounts[0].Id, Accounts[0].Balance);
 
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "EURUSD", Ask = 1.061M, Bid = 1.06M }));
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCEUR", Ask = 1092M, Bid = 1091M }));
@@ -164,7 +168,6 @@ namespace MarginTradingTests
             Assert.AreEqual(-6324.000, Math.Round(account.GetPnl(), 5));
             Assert.AreEqual(10191.7M, Math.Round(account.GetUsedMargin(), 1));
             Assert.AreEqual(15287.5M, Math.Round(account.GetMarginInit(), 1));
-
         }
 
         [Test]

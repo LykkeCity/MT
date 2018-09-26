@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.TradingConditions;
@@ -19,19 +20,22 @@ namespace MarginTrading.Backend.Services
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly OrdersCache _ordersCache;
         private readonly IAssetsCache _assetsCache;
+        private readonly IAccountMarginFreezingRepository _accountMarginFreezingRepository;
 
         public AccountUpdateService(
             IFplService fplService,
             ITradingConditionsCacheService tradingConditionsCache,
             IAccountsCacheService accountsCacheService,
             OrdersCache ordersCache,
-            IAssetsCache assetsCache)
+            IAssetsCache assetsCache,
+            IAccountMarginFreezingRepository accountMarginFreezingRepository)
         {
             _fplService = fplService;
             _tradingConditionsCache = tradingConditionsCache;
             _accountsCacheService = accountsCacheService;
             _ordersCache = ordersCache;
             _assetsCache = assetsCache;
+            _accountMarginFreezingRepository = accountMarginFreezingRepository;
         }
 
         public void UpdateAccount(IMarginTradingAccount account)
@@ -46,7 +50,8 @@ namespace MarginTrading.Backend.Services
             if (account.AccountFpl.WithdrawalFrozenMarginData.TryAdd(operationId, amount))
             {
                 account.AccountFpl.WithdrawalFrozenMargin = account.AccountFpl.WithdrawalFrozenMarginData.Values.Sum();
-                await _accountsCacheService.FreezeWithdrawalMargin(operationId, account.ClientId, accountId, amount);
+                await _accountMarginFreezingRepository.TryInsertAsync(new AccountMarginFreezing(operationId,
+                    account.ClientId, accountId, amount));
             }
         }
 
@@ -57,7 +62,7 @@ namespace MarginTrading.Backend.Services
             if (account.AccountFpl.WithdrawalFrozenMarginData.Remove(operationId))
             {
                 account.AccountFpl.WithdrawalFrozenMargin = account.AccountFpl.WithdrawalFrozenMarginData.Values.Sum();
-                await _accountsCacheService.UnfreezeWithdrawalMargin(operationId);
+                await _accountMarginFreezingRepository.DeleteAsync(operationId);
             }
         }
 
