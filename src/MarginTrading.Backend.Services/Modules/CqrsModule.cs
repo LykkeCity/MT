@@ -196,17 +196,14 @@ namespace MarginTrading.Backend.Services.Modules
             sagaRegistration
 
                 .PublishingCommands(
-                    typeof(GetPriceForSpecialLiquidationCommand),
-                    typeof(ExecuteSpecialLiquidationOrderCommand)
+                    typeof(GetPriceForSpecialLiquidationCommand)
                 )
                 .To(_settings.ContextNames.Gavel)
                 .With(CommandsRoute)
 
                 .ListeningEvents(
                     typeof(PriceForSpecialLiquidationCalculatedEvent),
-                    typeof(PriceForSpecialLiquidationCalculationFailedEvent),
-                    typeof(SpecialLiquidationOrderExecutedEvent),
-                    typeof(SpecialLiquidationOrderExecutionFailedEvent)
+                    typeof(PriceForSpecialLiquidationCalculationFailedEvent)
                 )
                 .From(_settings.ContextNames.Gavel)
                 .On(EventsRoute)
@@ -238,6 +235,7 @@ namespace MarginTrading.Backend.Services.Modules
                     typeof(StartSpecialLiquidationCommand),
                     typeof(StartSpecialLiquidationInternalCommand),
                     typeof(GetPriceForSpecialLiquidationTimeoutInternalCommand),
+                    typeof(ExecuteSpecialLiquidationOrderCommand),
                     typeof(FailSpecialLiquidationInternalCommand),
                     typeof(ExecuteSpecialLiquidationOrdersInternalCommand)
                 )
@@ -245,6 +243,8 @@ namespace MarginTrading.Backend.Services.Modules
                 .WithCommandsHandler<SpecialLiquidationCommandsHandler>()
                 .PublishingEvents(
                     typeof(SpecialLiquidationStartedInternalEvent),
+                    typeof(SpecialLiquidationOrderExecutedEvent),
+                    typeof(SpecialLiquidationOrderExecutionFailedEvent),
                     typeof(SpecialLiquidationFinishedEvent),
                     typeof(SpecialLiquidationFailedEvent)
                 )

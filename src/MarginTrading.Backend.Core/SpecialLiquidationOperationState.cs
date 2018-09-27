@@ -11,9 +11,10 @@ namespace MarginTrading.Backend.Core
         PriceRequested = 2,
         PriceReceived = 3,
         ExternalOrderExecuted = 4,
-        InternalOrdersExecuted = 5,
-        Finished = 6,
-        OnTheWayToFail = 7,
-        Failed = 8,
+        InternalOrderExecutionStarted = 5,
+        InternalOrdersExecuted = 6,
+        Finished = 7,
+        OnTheWayToFail = 8,
+        Failed = 9,
     }
 }

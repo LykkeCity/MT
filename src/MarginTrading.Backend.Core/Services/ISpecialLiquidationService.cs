@@ -6,7 +6,6 @@ namespace MarginTrading.Backend.Core.Services
     {
         void FakeGetPriceForSpecialLiquidation(string operationId, string instrument, decimal volume);
         
-        void ExecuteSpecialLiquidationOrder(string operationId, string instrument, decimal volume, decimal price,
-            string externalProviderId, bool executeByApi);
+        void FakeExecuteSpecialLiquidationOrder(string operationId, string instrument, decimal volume, decimal price);
     }
 }
