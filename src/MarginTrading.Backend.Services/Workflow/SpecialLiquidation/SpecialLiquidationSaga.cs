@@ -126,22 +126,15 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 executionInfo.Data.Volume = e.Volume;
                 executionInfo.Data.Price = e.Price;
 
-                //execute order in Gavel by API or use fake
-                if (_marginTradingSettings.ExchangeConnector == ExchangeConnectorType.RealExchangeConnector)
+                //execute order in Gavel by API
+                sender.SendCommand(new ExecuteSpecialLiquidationOrderCommand
                 {
-                    sender.SendCommand(new ExecuteSpecialLiquidationOrderCommand
-                    {
-                        OperationId = e.OperationId,
-                        CreationTime = _dateService.Now(),
-                        Instrument = e.Instrument,
-                        Volume = e.Volume,
-                        Price = e.Price,
-                    }, _cqrsContextNamesSettings.Gavel);
-                }
-                else
-                {
-                    _specialLiquidationService.FakeExecuteSpecialLiquidationOrder(e.OperationId, e.Instrument, e.Volume, e.Price);
-                }
+                    OperationId = e.OperationId,
+                    CreationTime = _dateService.Now(),
+                    Instrument = e.Instrument,
+                    Volume = e.Volume,
+                    Price = e.Price,
+                }, _cqrsContextNamesSettings.TradingEngine);
 
                 _chaosKitty.Meow(e.OperationId);
 

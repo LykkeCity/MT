@@ -317,7 +317,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     });
                 }
                 
-                //nothing to save
+                //todo think what if meow happens here
+
+                await _operationExecutionInfoRepository.Save(executionInfo);
             }
         }
 

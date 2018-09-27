@@ -110,8 +110,7 @@ namespace MarginTrading.Backend.Services.Modules
                 
                 contextRegistration
                     .PublishingEvents(
-                        typeof(PriceForSpecialLiquidationCalculatedEvent),
-                        typeof(SpecialLiquidationOrderExecutedEvent)
+                        typeof(PriceForSpecialLiquidationCalculatedEvent)
                     ).With(EventsRoute);
                 
                 return contextRegistration;
@@ -210,6 +209,7 @@ namespace MarginTrading.Backend.Services.Modules
 
                 .PublishingCommands(
                     typeof(FailSpecialLiquidationInternalCommand),
+                    typeof(ExecuteSpecialLiquidationOrderCommand),
                     typeof(ExecuteSpecialLiquidationOrdersInternalCommand),
                     typeof(GetPriceForSpecialLiquidationTimeoutInternalCommand)
                 )

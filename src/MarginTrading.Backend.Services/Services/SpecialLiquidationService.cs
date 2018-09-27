@@ -51,19 +51,5 @@ namespace MarginTrading.Backend.Services.Services
                 }, _cqrsContextNamesSettings.Gavel);
             });
         }
-
-        public void FakeExecuteSpecialLiquidationOrder(string operationId, string instrument, decimal volume, decimal price)
-        {
-            _threadSwitcher.SwitchThread(async () =>
-            {
-                await Task.Delay(1000);//waiting for the state to be saved into the repo
-
-                _cqrsSender.PublishEvent(new SpecialLiquidationOrderExecutedEvent
-                {
-                    OperationId = operationId,
-                    CreationTime = _dateService.Now(),
-                }, _cqrsContextNamesSettings.Gavel);
-            });
-        }
     }
 }
