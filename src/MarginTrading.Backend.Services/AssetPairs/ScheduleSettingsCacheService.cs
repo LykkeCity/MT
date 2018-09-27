@@ -51,19 +51,27 @@ namespace MarginTrading.Backend.Services.AssetPairs
         {
             var newScheduleContracts = (await _scheduleSettingsApi.StateList(_assetPairsCache.GetAllIds().ToArray()))
                 .Where(x => x.ScheduleSettings.Any()).ToList();
-            var invalidSchedules = newScheduleContracts.ToDictionary(key => key.AssetPairId,
-                value => value.ScheduleSettings.Where(x =>
+            var invalidSchedules = new Dictionary<string, List<CompiledScheduleSettingsContract>>();
+            foreach (var newScheduleContract in newScheduleContracts)
+            {
+                var scheduleSettings = new List<CompiledScheduleSettingsContract>();
+                foreach (var scheduleSetting in newScheduleContract.ScheduleSettings)
                 {
                     try
                     {
-                        ScheduleConstraintContract.Validate(x);
-                        return false;
+                        ScheduleConstraintContract.Validate(scheduleSetting);
                     }
                     catch
                     {
-                        return true;
+                        scheduleSettings.Add(scheduleSetting);
                     }
-                }));
+                }
+
+                if (scheduleSettings.Any())
+                {
+                    invalidSchedules.Add(newScheduleContract.AssetPairId, scheduleSettings);
+                }
+            }
             
             _readerWriterLockSlim.EnterWriteLock();
 

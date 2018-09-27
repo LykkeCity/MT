@@ -1034,6 +1034,26 @@ namespace MarginTradingTests
             Assert.AreEqual(OrderStatus.Expired, order.Status); 
         }    
         
+        [Test]
+        public void Is_PriceValidated_ForStopOrders_OnChange()
+        {
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Stop, "EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, -1, price: 1.07M);
+            
+            order = _tradingEngine.PlaceOrderAsync(order).Result;
+            var account = _accountsCacheService.Get(order.AccountId);
+
+            Assert.AreEqual(OrderStatus.Active, order.Status); //is not executed
+            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
+
+            var ex = Assert.Throws<ValidateOrderException>(() =>
+                _tradingEngine.ChangeOrderLimits(order.Id, 1.2M, OriginatorType.Investor, "",
+                    Guid.NewGuid().ToString()));
+
+            Assert.That(ex.RejectReason == OrderRejectReason.InvalidExpectedOpenPrice);
+            StringAssert.Contains("1.05/1.1", ex.Comment);
+        }    
+        
         #endregion
         
         

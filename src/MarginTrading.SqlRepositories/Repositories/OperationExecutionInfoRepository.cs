@@ -20,7 +20,7 @@ namespace MarginTrading.SqlRepositories.Repositories
         private const string TableName = "MarginTradingExecutionInfo";
         private const string CreateTableScript = "CREATE TABLE [{0}](" +
                                                  "[Oid] [bigint] NOT NULL IDENTITY(1,1) PRIMARY KEY," +
-                                                 "[Id] [nvarchar] (64) NOT NULL," +
+                                                 "[Id] [nvarchar] (128) NOT NULL," +
                                                  "[LastModified] [datetime] NOT NULL, " +
                                                  "[OperationName] [nvarchar] (64) NULL, " +
                                                  "[Version] [nvarchar] (64) NULL, " +
