@@ -51,34 +51,16 @@ namespace MarginTrading.Backend.Services.AssetPairs
         {
             var newScheduleContracts = (await _scheduleSettingsApi.StateList(_assetPairsCache.GetAllIds().ToArray()))
                 .Where(x => x.ScheduleSettings.Any()).ToList();
-            var invalidSchedules = new Dictionary<string, List<CompiledScheduleSettingsContract>>();
-            foreach (var newScheduleContract in newScheduleContracts)
-            {
-                var scheduleSettings = new List<CompiledScheduleSettingsContract>();
-                foreach (var scheduleSetting in newScheduleContract.ScheduleSettings)
-                {
-                    try
-                    {
-                        ScheduleConstraintContract.Validate(scheduleSetting);
-                    }
-                    catch
-                    {
-                        scheduleSettings.Add(scheduleSetting);
-                    }
-                }
-
-                if (scheduleSettings.Any())
-                {
-                    invalidSchedules.Add(newScheduleContract.AssetPairId, scheduleSettings);
-                }
-            }
+            var invalidSchedules = GetInvalidSchedules(newScheduleContracts);
             
             _readerWriterLockSlim.EnterWriteLock();
 
             try
             {
                 _rawScheduleSettingsCache = newScheduleContracts.ToDictionary(x => x.AssetPairId,
-                    x => x.ScheduleSettings.Except(invalidSchedules[x.AssetPairId])
+                    x => x.ScheduleSettings.Except(invalidSchedules.TryGetValue(x.AssetPairId, out var invalid)
+                            ? invalid
+                            : new List<CompiledScheduleSettingsContract>())
                         .Select(ScheduleSettings.Create).ToList());
                 _compiledScheduleTimelineCache =
                     new Dictionary<string, List<CompiledScheduleTimeInterval>>();
@@ -255,6 +237,34 @@ namespace MarginTrading.Backend.Services.AssetPairs
         private static DateTime GetCurrentWeekday(DateTime start, DayOfWeek day)
         {
             return start.Date.AddDays((int) day - (int) start.DayOfWeek);
+        }
+        
+        private static Dictionary<string, List<CompiledScheduleSettingsContract>> GetInvalidSchedules(
+            IEnumerable<CompiledScheduleContract> scheduleContracts)
+        {
+            var invalidSchedules = new Dictionary<string, List<CompiledScheduleSettingsContract>>();
+            foreach (var scheduleContract in scheduleContracts)
+            {
+                var scheduleSettings = new List<CompiledScheduleSettingsContract>();
+                foreach (var scheduleSetting in scheduleContract.ScheduleSettings)
+                {
+                    try
+                    {
+                        ScheduleConstraintContract.Validate(scheduleSetting);
+                    }
+                    catch
+                    {
+                        scheduleSettings.Add(scheduleSetting);
+                    }
+                }
+
+                if (scheduleSettings.Any())
+                {
+                    invalidSchedules.Add(scheduleContract.AssetPairId, scheduleSettings);
+                }
+            }
+
+            return invalidSchedules;
         }
     }
 }
