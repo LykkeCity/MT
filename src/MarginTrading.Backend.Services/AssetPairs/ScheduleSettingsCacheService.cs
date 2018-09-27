@@ -49,7 +49,8 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         public async Task UpdateSettingsAsync()
         {
-            var newScheduleContracts = await _scheduleSettingsApi.StateList(_assetPairsCache.GetAllIds().ToArray());
+            var newScheduleContracts = (await _scheduleSettingsApi.StateList(_assetPairsCache.GetAllIds().ToArray()))
+                .Where(x => x.ScheduleSettings.Any()).ToList();
             var invalidSchedules = newScheduleContracts.ToDictionary(key => key.AssetPairId,
                 value => value.ScheduleSettings.Where(x =>
                 {
@@ -71,6 +72,8 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 _rawScheduleSettingsCache = newScheduleContracts.ToDictionary(x => x.AssetPairId,
                     x => x.ScheduleSettings.Except(invalidSchedules[x.AssetPairId])
                         .Select(ScheduleSettings.Create).ToList());
+                _compiledScheduleTimelineCache =
+                    new Dictionary<string, List<CompiledScheduleTimeInterval>>();
                 _lastCacheRecalculationTime = _dateService.Now();
             }
             catch (Exception exception)
@@ -175,6 +178,12 @@ namespace MarginTrading.Backend.Services.AssetPairs
             var scheduleSettings = _rawScheduleSettingsCache.TryGetValue(assetPairId, out var settings)
                 ? settings
                 : new List<ScheduleSettings>();
+
+            if (!scheduleSettings.Any())
+            {
+                return;
+            }
+            
             var scheduleSettingsByType = scheduleSettings
                 .GroupBy(x => x.Start.GetConstraintType())
                 .ToDictionary(x => x.Key, value => value);
