@@ -281,7 +281,6 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 return;
             }
 
-            //don't need to switch state, just validating the current state
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceReceived,
                 SpecialLiquidationOperationState.ExternalOrderExecuted))
             {
