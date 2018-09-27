@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Common;
 using MarginTrading.Backend.Core.Repositories;
@@ -13,6 +14,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
         private long _currentId;
         private readonly Random _random = new Random();
         private const string Pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        private readonly object _lockObject = new object();
         
         public SimpleIdentityGenerator()
         {
@@ -27,8 +29,11 @@ namespace MarginTrading.Backend.Services.Infrastructure
 
         public string GenerateAlphanumericId()
         {
-            var chars = Enumerable.Range(0, 10).Select(x => Pool[_random.Next(0, Pool.Length)]);
-            return new string(chars.ToArray());
+            lock(_lockObject)
+            {
+                var chars = Enumerable.Range(0, 10).Select(x => Pool[_random.Next(0, Pool.Length)]);
+                return new string(chars.ToArray());
+            }
         }
 
         public string GenerateGuid()
