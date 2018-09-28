@@ -1,4 +1,5 @@
 using System;
+using JetBrains.Annotations;
 using MessagePack;
 
 namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands
@@ -14,5 +15,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands
         
         [Key(2)]
         public string[] PositionIds { get; set; }
+        
+        [CanBeNull]
+        [Key(3)]
+        public string AccountId { get; set; }
     }
 }

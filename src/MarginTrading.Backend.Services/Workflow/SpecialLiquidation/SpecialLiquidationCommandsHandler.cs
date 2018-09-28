@@ -40,6 +40,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private readonly IAssetPairDayOffService _assetPairDayOffService;
         private readonly IExchangeConnectorService _exchangeConnectorService;
         private readonly IIdentityGenerator _identityGenerator;
+        private readonly IAccountsCacheService _accountsCacheService;
 
         public SpecialLiquidationCommandsHandler(
             ITradingEngine tradingEngine,
@@ -51,7 +52,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             MarginTradingSettings marginTradingSettings,
             IAssetPairDayOffService assetPairDayOffService,
             IExchangeConnectorService exchangeConnectorService,
-            IIdentityGenerator identityGenerator)
+            IIdentityGenerator identityGenerator,
+            IAccountsCacheService accountsCacheService)
         {
             _tradingEngine = tradingEngine;
             _dateService = dateService;
@@ -63,6 +65,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             _assetPairDayOffService = assetPairDayOffService;
             _exchangeConnectorService = exchangeConnectorService;
             _identityGenerator = identityGenerator;
+            _accountsCacheService = accountsCacheService;
         }
         
         [UsedImplicitly]
@@ -81,6 +84,23 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             
             //validate the list of positions contain only the same instrument
             var positions = _orderReader.GetPositions().Where(x => command.PositionIds.Contains(x.Id)).ToList();
+
+            if (!string.IsNullOrEmpty(command.AccountId))
+            {
+                if (_accountsCacheService.TryGet(command.AccountId) == null)
+                {
+                    publisher.PublishEvent(new SpecialLiquidationFailedEvent
+                    {
+                        OperationId = command.OperationId,
+                        CreationTime = _dateService.Now(),
+                        Reason = $"Account {command.AccountId} does not exist",
+                    });
+                    return;
+                }
+
+                positions = positions.Where(x => x.AccountId == command.AccountId).ToList();
+            }
+            
             if (positions.Select(x => x.AssetPairId).Distinct().Count() > 1)
             {
                 publisher.PublishEvent(new SpecialLiquidationFailedEvent
@@ -88,6 +108,17 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     OperationId = command.OperationId,
                     CreationTime = _dateService.Now(),
                     Reason = "The list of positions is of different instruments",
+                });
+                return;
+            }
+
+            if (!TryGetExchangeNameFromPositions(positions, out var externalProviderId))
+            {
+                publisher.PublishEvent(new SpecialLiquidationFailedEvent
+                {
+                    OperationId = command.OperationId,
+                    CreationTime = _dateService.Now(),
+                    Reason = "All requested positions must be open on the same external exchange",
                 });
                 return;
             }
@@ -103,17 +134,6 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 return;
             }
 
-            if (!TryGetExchangeNameFromPositions(positions, out var externalProviderId))
-            {
-                publisher.PublishEvent(new SpecialLiquidationFailedEvent
-                {
-                    OperationId = command.OperationId,
-                    CreationTime = _dateService.Now(),
-                    Reason = "All requested positions must be open on the same external exchange",
-                });
-                return;
-            }
-            
             //ensure idempotency
             var executionInfo = await _operationExecutionInfoRepository.GetOrAddAsync(
                 operationName: SpecialLiquidationSaga.OperationName,
@@ -126,8 +146,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     {
                         State = SpecialLiquidationOperationState.Initiated,
                         Instrument = positions.FirstOrDefault()?.AssetPairId,
-                        PositionIds = command.PositionIds.ToList(),
-                        ExternalProviderId = externalProviderId
+                        PositionIds = positions.Select(x => x.Id).ToList(),
+                        ExternalProviderId = externalProviderId,
+                        AccountId = command.AccountId,
                     }
                 ));
 

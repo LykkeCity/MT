@@ -1,4 +1,5 @@
 using System;
+using JetBrains.Annotations;
 using MessagePack;
 
 namespace MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Commands
@@ -38,5 +39,12 @@ namespace MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Commands
         /// </summary>
         [Key(5)]
         public int RequestNumber { get; set; }
+        
+        /// <summary>
+        /// Optional. Account Id for the case then we liquidating only positions of a single account.
+        /// </summary>
+        [CanBeNull]
+        [Key(6)]
+        public string AccountId { get; set; }
     }
 }
