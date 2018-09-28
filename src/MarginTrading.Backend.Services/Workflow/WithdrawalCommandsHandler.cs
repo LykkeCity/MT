@@ -49,9 +49,12 @@ namespace MarginTrading.Backend.Services.Workflow
                     operationName: OperationName,
                     id: command.OperationId,
                     lastModified: _dateService.Now(),
-                    data: new OperationData
+                    data: new WithdrawalOperationData
                     {
                         State = OperationState.Initiated,
+                        ClientId = command.ClientId,
+                        AccountId = command.AccountId,
+                        Amount = command.Amount,
                     }
                 ));
             
@@ -100,7 +103,7 @@ namespace MarginTrading.Backend.Services.Workflow
         private async Task Handle(UnfreezeMarginOnFailWithdrawalCommand command, IEventPublisher publisher)
         {
             //ensure operation idempotency
-            var executionInfo = await _operationExecutionInfoRepository.GetAsync<OperationData>(
+            var executionInfo = await _operationExecutionInfoRepository.GetAsync<WithdrawalOperationData>(
                 operationName: OperationName,
                 id: command.OperationId
             );
@@ -108,13 +111,13 @@ namespace MarginTrading.Backend.Services.Workflow
             // ReSharper disable once PossibleNullReferenceException
             if (executionInfo.Data.SwitchState(OperationState.Started, OperationState.Finished))
             {
-                await _accountUpdateService.UnfreezeWithdrawalMargin(command.AccountId, command.OperationId);
+                await _accountUpdateService.UnfreezeWithdrawalMargin(executionInfo.Data.AccountId, command.OperationId);
 
                 _chaosKitty.Meow(command.OperationId);
                 
                 publisher.PublishEvent(new UnfreezeMarginOnFailSucceededWithdrawalEvent(command.OperationId,
                     _dateService.Now(),
-                    command.ClientId, command.AccountId, command.Amount));
+                    executionInfo.Data.ClientId, executionInfo.Data.AccountId, executionInfo.Data.Amount));
                 
                 _chaosKitty.Meow(command.OperationId);
                 

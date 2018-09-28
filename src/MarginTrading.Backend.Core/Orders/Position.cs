@@ -7,12 +7,12 @@ namespace MarginTrading.Backend.Core.Orders
 {
     public class Position
     {
-        public string Id { get; private set; }
+        public virtual string Id { get; protected set; }
         public long Code { get; private set; }
-        public string AssetPairId { get; private set; }
+        public virtual string AssetPairId { get; protected set; }
         public PositionDirection Direction { get; private set; }
         public decimal Volume { get; private set; }
-        public string AccountId { get; private set; }
+        public virtual string AccountId { get; protected set; }
         public string TradingConditionId { get; private set; }
         public string AccountAssetId { get; private set; }
         public decimal? ExpectedOpenPrice { get; private set; }
@@ -50,9 +50,14 @@ namespace MarginTrading.Backend.Core.Orders
 
         public decimal ChargedPnL { get; private set; }
         
-        public HashSet<string> ChargePnlOperations { get; private set; }
+        public virtual HashSet<string> ChargePnlOperations { get; protected set; }
         
         public FplData FplData { get; private set; } = new FplData();
+        
+        /// <summary>
+        /// For testing only
+        /// </summary>
+        protected Position() {}
 
         public Position(string id, long code, string assetPairId, decimal volume, string accountId,
             string tradingConditionId, string accountAssetId, decimal? expectedOpenPrice,
@@ -162,7 +167,7 @@ namespace MarginTrading.Backend.Core.Orders
                 RelatedOrders.Remove(relatedOrder);
         }
 
-        public void ChargePnL(string operationId, decimal value)
+        public virtual void ChargePnL(string operationId, decimal value)
         {
             //if operation was already processed - it is duplicated event
             if (ChargePnlOperations.Contains(operationId))
