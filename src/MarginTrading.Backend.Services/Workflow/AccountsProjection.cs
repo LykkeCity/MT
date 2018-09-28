@@ -102,11 +102,10 @@ namespace MarginTrading.Backend.Services.Workflow
                         if (e.BalanceChange != null)
                         {
                             var account = _accountsCacheService.TryGet(e.Account.Id);
-                            if (await ValidateAccount(account, e))
+                            if (await ValidateAccount(account, e)
+                                && await _accountsCacheService.UpdateAccountBalance(updatedAccount.Id,
+                                    e.BalanceChange.Balance, e.ChangeTimestamp))
                             {
-                                _accountsCacheService.UpdateAccountBalance(updatedAccount.Id,
-                                    e.BalanceChange.ChangeAmount);
-                                
                                 switch (e.BalanceChange.ReasonType)
                                 {
                                     case AccountBalanceChangeReasonTypeContract.Withdraw:

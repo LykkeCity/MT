@@ -114,19 +114,28 @@ namespace MarginTrading.Backend.Services
             return true;
         }
 
-        public void UpdateAccountBalance(string accountId, decimal changeAmount)
+        public async Task<bool> UpdateAccountBalance(string accountId, decimal accountBalance, DateTime eventTime)
         {
             _lockSlim.EnterWriteLock();
             try
             {
                 var account = _accounts[accountId];
+
+                if (account.LastBalanceChangeTime > eventTime)
+                {
+                    await _log.WriteInfoAsync(nameof(AccountsCacheService), nameof(UpdateAccountChanges), 
+                        $"Account with id {account.Id} has balance in newer state then the event");
+                    return false;
+                } 
                 
-                account.Balance += changeAmount;
+                account.Balance = accountBalance;
+                account.LastBalanceChangeTime = eventTime;
             }
             finally
             {
                 _lockSlim.ExitWriteLock();
             }
+            return true;
         }
 
         public void TryAddNew(MarginTradingAccount account)
