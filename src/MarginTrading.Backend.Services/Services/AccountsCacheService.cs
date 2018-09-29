@@ -86,19 +86,21 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public bool TryStartLiquidation(string accountId)
+        public bool TryStartLiquidation(string accountId, string operationId, out string currentOperationId)
         {
             _lockSlim.EnterWriteLock();
             try
             {
                 var account = _accounts[accountId];
 
-                if (account.IsLiquidationStarted)
+                if (!string.IsNullOrEmpty(account.LiquidationOperationId))
                 {
+                    currentOperationId = account.LiquidationOperationId;
                     return false;
                 }
 
-                account.IsLiquidationStarted = true;
+                account.LiquidationOperationId = operationId;
+                currentOperationId = operationId;
                 return true;
             }
             finally
@@ -113,7 +115,7 @@ namespace MarginTrading.Backend.Services
             try
             {
                 var account = _accounts[accountId];
-                account.IsLiquidationStarted = false;
+                account.LiquidationOperationId = string.Empty;
             }
             finally
             {

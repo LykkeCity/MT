@@ -9,6 +9,7 @@ using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.TradingConditions;
+#pragma warning disable 1998
 
 namespace MarginTrading.Backend.Services
 {

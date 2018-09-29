@@ -20,7 +20,7 @@ namespace MarginTrading.Backend.Core
             decimal updatedWithdrawTransferLimit, bool isDisabled, bool isWithdrawalDisabled, DateTime eventTime);
         Task<bool> UpdateAccountBalance(string accountId, decimal accountBalance, DateTime eventTime);
         
-        bool TryStartLiquidation(string accountId);
+        bool TryStartLiquidation(string accountId, string operationId, out string currentOperationId);
         
         void FinishLiquidation(string accountId);
     }
