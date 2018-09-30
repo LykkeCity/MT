@@ -11,8 +11,9 @@ namespace MarginTrading.Backend.Core
         void UpdateAccount(IMarginTradingAccount account);
         Task FreezeWithdrawalMargin(string accountId, string operationId, decimal amount);
         Task UnfreezeWithdrawalMargin(string accountId, string operationId);
+        Task FreezeUnconfirmedMargin(string accountId, string operationId, decimal amount);
+        Task UnfreezeUnconfirmedMargin(string accountId, string operationId);
         bool IsEnoughBalance(Order order);
-        MarginTradingAccount GuessAccountWithNewActiveOrder(Position order);
     }
 
     public class AccountFpl
@@ -32,7 +33,9 @@ namespace MarginTrading.Backend.Core
         public decimal StopoutLevel { get; set; }
 
         public decimal WithdrawalFrozenMargin { get; set; }
-        public Dictionary<string, decimal> WithdrawalFrozenMarginData { get; set; } = new Dictionary<string, decimal>(); 
+        public Dictionary<string, decimal> WithdrawalFrozenMarginData { get; set; } = new Dictionary<string, decimal>();
+        public decimal UnconfirmedMargin { get; set; }
+        public Dictionary<string, decimal> UnconfirmedMarginData { get; set; } = new Dictionary<string, decimal>();
 
         public int CalculatedHash { get; set; }
         public int ActualHash { get; set; }

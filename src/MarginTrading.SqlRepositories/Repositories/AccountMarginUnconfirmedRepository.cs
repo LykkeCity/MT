@@ -13,9 +13,9 @@ using MarginTrading.SqlRepositories.Entities;
 
 namespace MarginTrading.SqlRepositories.Repositories
 {
-    public class AccountMarginFreezingRepository : IAccountMarginFreezingRepository
+    public class AccountMarginUnconfirmedRepository : IAccountMarginUnconfirmedRepository
     {
-        private const string TableName = "AccountMarginFreezing";
+        private const string TableName = "AccountMarginUnconfirmed";
         private const string CreateTableScript = "CREATE TABLE [{0}](" +
                                                  "[OperationId] [nvarchar] (128) NOT NULL PRIMARY KEY," +
                                                  "[AccountId] [nvarchar] (64) NOT NULL, " +
@@ -30,12 +30,7 @@ namespace MarginTrading.SqlRepositories.Repositories
         private readonly MarginTradingSettings _settings;
         private readonly ILog _log;
 
-        /// <summary>
-        /// For testing purposes
-        /// </summary>
-        public AccountMarginFreezingRepository(){}
-        
-        public AccountMarginFreezingRepository(IConvertService convertService, MarginTradingSettings settings, ILog log)
+        public AccountMarginUnconfirmedRepository(IConvertService convertService, MarginTradingSettings settings, ILog log)
         {
             _convertService = convertService;
             _log = log;

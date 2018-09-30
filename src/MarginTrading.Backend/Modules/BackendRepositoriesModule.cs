@@ -110,6 +110,12 @@ namespace MarginTrading.Backend.Modules
             builder.RegisterType<AccountMarginFreezingRepository>()
                 .As<IAccountMarginFreezingRepository>()
                 .SingleInstance();
+            
+            builder.RegisterType<AccountMarginUnconfirmedRepository>()
+                .As<IAccountMarginUnconfirmedRepository>()
+                .SingleInstance();
+            
+            
             //            builder.Register(ctx =>
 //                AzureRepoFactories.MarginTrading.CreateDayOffSettingsRepository(
 //                    _settings.Nested(s => s.Db.MarginTradingConnString))).SingleInstance();

@@ -20,7 +20,9 @@ namespace MarginTrading.Backend.Services
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly OrdersCache _ordersCache;
         private readonly IAssetsCache _assetsCache;
+        
         private readonly IAccountMarginFreezingRepository _accountMarginFreezingRepository;
+        private readonly IAccountMarginUnconfirmedRepository _accountMarginUnconfirmedRepository;
 
         public AccountUpdateService(
             IFplService fplService,
@@ -28,7 +30,8 @@ namespace MarginTrading.Backend.Services
             IAccountsCacheService accountsCacheService,
             OrdersCache ordersCache,
             IAssetsCache assetsCache,
-            IAccountMarginFreezingRepository accountMarginFreezingRepository)
+            IAccountMarginFreezingRepository accountMarginFreezingRepository,
+            IAccountMarginUnconfirmedRepository accountMarginUnconfirmedRepository)
         {
             _fplService = fplService;
             _tradingConditionsCache = tradingConditionsCache;
@@ -36,6 +39,7 @@ namespace MarginTrading.Backend.Services
             _ordersCache = ordersCache;
             _assetsCache = assetsCache;
             _accountMarginFreezingRepository = accountMarginFreezingRepository;
+            _accountMarginUnconfirmedRepository = accountMarginUnconfirmedRepository;
         }
 
         public void UpdateAccount(IMarginTradingAccount account)
@@ -50,8 +54,9 @@ namespace MarginTrading.Backend.Services
             if (account.AccountFpl.WithdrawalFrozenMarginData.TryAdd(operationId, amount))
             {
                 account.AccountFpl.WithdrawalFrozenMargin = account.AccountFpl.WithdrawalFrozenMarginData.Values.Sum();
-                await _accountMarginFreezingRepository.TryInsertAsync(new AccountMarginFreezing(operationId,
-                    account.ClientId, accountId, amount));
+                //TODO: think about approach
+                //await _accountMarginFreezingRepository.TryInsertAsync(new AccountMarginFreezing(operationId,
+                //    accountId, amount));
             }
         }
 
@@ -62,7 +67,33 @@ namespace MarginTrading.Backend.Services
             if (account.AccountFpl.WithdrawalFrozenMarginData.Remove(operationId))
             {
                 account.AccountFpl.WithdrawalFrozenMargin = account.AccountFpl.WithdrawalFrozenMarginData.Values.Sum();
-                await _accountMarginFreezingRepository.DeleteAsync(operationId);
+                //TODO: think about approach
+                //await _accountMarginFreezingRepository.DeleteAsync(operationId);
+            }
+        }
+
+        public async Task FreezeUnconfirmedMargin(string accountId, string operationId, decimal amount)
+        {
+            var account = _accountsCacheService.Get(accountId);
+            
+            if (account.AccountFpl.UnconfirmedMarginData.TryAdd(operationId, amount))
+            {
+                account.AccountFpl.UnconfirmedMargin = account.AccountFpl.UnconfirmedMarginData.Values.Sum();
+                //TODO: think about approach
+                //await _accountMarginUnconfirmedRepository.TryInsertAsync(new AccountMarginFreezing(operationId,
+                //    accountId, amount));
+            }
+        }
+
+        public async Task UnfreezeUnconfirmedMargin(string accountId, string operationId)
+        {
+            var account = _accountsCacheService.Get(accountId);
+            
+            if (account.AccountFpl.UnconfirmedMarginData.Remove(operationId))
+            {
+                account.AccountFpl.UnconfirmedMargin = account.AccountFpl.UnconfirmedMarginData.Values.Sum();
+                //TODO: think about approach
+                //await _accountMarginUnconfirmedRepository.DeleteAsync(operationId);
             }
         }
 
@@ -72,20 +103,6 @@ namespace MarginTrading.Backend.Services
             var accountMarginAvailable = _accountsCacheService.Get(order.AccountId).GetMarginAvailable(); 
             
             return accountMarginAvailable >= orderMargin;
-        }
-
-        public MarginTradingAccount GuessAccountWithNewActiveOrder(Position order)
-        {
-            var newInstance = MarginTradingAccount.Create(_accountsCacheService.Get(order.AccountId));
-
-            var activeOrders = GetPositions(newInstance.Id);
-            activeOrders.Add(order);
-            
-            var pendingOrders = GetActiveOrders(newInstance.Id);
-
-            UpdateAccount(newInstance, activeOrders, pendingOrders);
-
-            return newInstance;
         }
         
         private void UpdateAccount(IMarginTradingAccount account,

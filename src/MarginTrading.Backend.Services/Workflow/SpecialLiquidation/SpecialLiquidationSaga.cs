@@ -24,7 +24,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private readonly IChaosKitty _chaosKitty;
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
         private readonly IOrderReader _orderReader;
-        private readonly IFakeSpecialLiquidationService _fakeGavel;
+        private readonly ISpecialLiquidationService _specialLiquidationService;
 
         private readonly MarginTradingSettings _marginTradingSettings;
         private readonly CqrsContextNamesSettings _cqrsContextNamesSettings;
@@ -36,7 +36,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             IChaosKitty chaosKitty,
             IOperationExecutionInfoRepository operationExecutionInfoRepository,
             IOrderReader orderReader,
-            IFakeSpecialLiquidationService fakeGavel,
+            ISpecialLiquidationService specialLiquidationService,
             MarginTradingSettings marginTradingSettings,
             CqrsContextNamesSettings cqrsContextNamesSettings)
         {
@@ -44,7 +44,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             _chaosKitty = chaosKitty;
             _operationExecutionInfoRepository = operationExecutionInfoRepository;
             _orderReader = orderReader;
-            _fakeGavel = fakeGavel;
+            _specialLiquidationService = specialLiquidationService;
             _marginTradingSettings = marginTradingSettings;
             _cqrsContextNamesSettings = cqrsContextNamesSettings;
         }
@@ -59,7 +59,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.Started, 
                 SpecialLiquidationOperationState.PriceRequested))
             {
-                var positionsVolume = GetCurrentVolume(executionInfo.Data.PositionIds);
+                var positionsVolume = GetCurrentVolume(executionInfo.Data.PositionIds, executionInfo.Data.AccountId);
                 
                 //special command is sent instantly for timeout control.. it is retried until timeout occurs
                 sender.SendCommand(new GetPriceForSpecialLiquidationTimeoutInternalCommand
@@ -83,7 +83,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 }
                 else
                 {
-                    _fakeGavel.GetPriceForSpecialLiquidation(e.OperationId, e.Instrument, positionsVolume);
+                    _specialLiquidationService.FakeGetPriceForSpecialLiquidation(e.OperationId, e.Instrument,
+                        positionsVolume);
                 }
 
                 _chaosKitty.Meow(e.OperationId);
@@ -106,7 +107,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 SpecialLiquidationOperationState.PriceReceived))
             {
                 //validate that volume didn't changed to peek either to execute order or request the price again
-                var currentVolume = GetCurrentVolume(executionInfo.Data.PositionIds);
+                var currentVolume = GetCurrentVolume(executionInfo.Data.PositionIds, executionInfo.Data.AccountId);
                 if (currentVolume != e.Volume)
                 {
                     sender.SendCommand(new GetPriceForSpecialLiquidationCommand
@@ -116,6 +117,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         Instrument = e.Instrument,
                         Volume = currentVolume,
                         RequestNumber = e.RequestNumber++,
+                        AccountId = executionInfo.Data.AccountId,
                     }, _cqrsContextNamesSettings.Gavel);
                     
                     return;//wait for the new price
@@ -125,22 +127,15 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 executionInfo.Data.Volume = e.Volume;
                 executionInfo.Data.Price = e.Price;
 
-                if (_marginTradingSettings.ExchangeConnector == ExchangeConnectorType.RealExchangeConnector)
+                //execute order in Gavel by API
+                sender.SendCommand(new ExecuteSpecialLiquidationOrderCommand
                 {
-                    //send command to execute order in Gavel
-                    sender.SendCommand(new ExecuteSpecialLiquidationOrderCommand
-                    {
-                        OperationId = e.OperationId,
-                        CreationTime = _dateService.Now(),
-                        Instrument = e.Instrument,
-                        Volume = e.Volume,
-                        Price = e.Price,
-                    }, _cqrsContextNamesSettings.Gavel);
-                }
-                else
-                {
-                    _fakeGavel.ExecuteSpecialLiquidationOrder(e.OperationId, e.Instrument, e.Volume, e.Price);
-                }
+                    OperationId = e.OperationId,
+                    CreationTime = _dateService.Now(),
+                    Instrument = e.Instrument,
+                    Volume = e.Volume,
+                    Price = e.Price,
+                }, _cqrsContextNamesSettings.TradingEngine);
 
                 _chaosKitty.Meow(e.OperationId);
 
@@ -184,8 +179,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             if (executionInfo == null)
                 return;
             
-            if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceReceived,
-                SpecialLiquidationOperationState.ExternalOrderExecuted))
+            if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.ExternalOrderExecuted,
+                SpecialLiquidationOperationState.InternalOrderExecutionStarted))
             {
                 sender.SendCommand(new ExecuteSpecialLiquidationOrdersInternalCommand
                 {
@@ -273,9 +268,12 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             }
         }
 
-        private decimal GetCurrentVolume(List<string> positionIds)
+        private decimal GetCurrentVolume(ICollection<string> positionIds, string accountId)
         {
-            return _orderReader.GetPositions().Where(x => positionIds.Contains(x.Id)).Sum(x => x.Volume);
+            return _orderReader.GetPositions()
+                .Where(x => positionIds.Contains(x.Id)
+                            && (string.IsNullOrEmpty(accountId) || x.AccountId == accountId))
+                .Sum(x => x.Volume);
         }
     }
 }

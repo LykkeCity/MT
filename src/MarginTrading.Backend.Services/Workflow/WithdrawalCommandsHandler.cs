@@ -52,7 +52,6 @@ namespace MarginTrading.Backend.Services.Workflow
                     data: new WithdrawalOperationData
                     {
                         State = OperationState.Initiated,
-                        ClientId = command.ClientId,
                         AccountId = command.AccountId,
                         Amount = command.Amount,
                     }
@@ -66,7 +65,7 @@ namespace MarginTrading.Backend.Services.Workflow
             catch
             {
                 publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId, _dateService.Now(), 
-                    command.ClientId, command.AccountId, command.Amount, $"Failed to get account {command.AccountId}"));
+                    command.AccountId, command.Amount, $"Failed to get account {command.AccountId}"));
                 return;
             }
 
@@ -80,13 +79,13 @@ namespace MarginTrading.Backend.Services.Workflow
                     _chaosKitty.Meow(command.OperationId);
 
                     publisher.PublishEvent(new AmountForWithdrawalFrozenEvent(command.OperationId, _dateService.Now(),
-                        command.ClientId, command.AccountId, command.Amount, command.Reason));
+                        command.AccountId, command.Amount, command.Reason));
                 }
                 else
                 {
                     publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId,
-                        _dateService.Now(), command.ClientId, command.AccountId, command.Amount,
-                        "Not enough free margin"));
+                        _dateService.Now(),
+                        command.AccountId, command.Amount, "Not enough free margin"));
                 }
                 
                 _chaosKitty.Meow(command.OperationId);
@@ -116,21 +115,12 @@ namespace MarginTrading.Backend.Services.Workflow
                 _chaosKitty.Meow(command.OperationId);
                 
                 publisher.PublishEvent(new UnfreezeMarginOnFailSucceededWithdrawalEvent(command.OperationId,
-                    _dateService.Now(),
-                    executionInfo.Data.ClientId, executionInfo.Data.AccountId, executionInfo.Data.Amount));
+                    _dateService.Now(), executionInfo.Data.AccountId, executionInfo.Data.Amount));
                 
                 _chaosKitty.Meow(command.OperationId);
                 
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }
-        }
-        
-        /// <summary>
-        /// Withdrawal succeeded => no action required, margin is already unfrozen.
-        /// </summary>
-        [UsedImplicitly]
-        private void Handle(UnfreezeMarginWithdrawalCommand command, IEventPublisher publisher)
-        {
         }
     }
 }
