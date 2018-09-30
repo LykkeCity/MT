@@ -125,6 +125,10 @@ namespace MarginTrading.Backend.Services.Workflow
                                                 $"Position [{e.BalanceChange.EventSourceId} was not found]");
                                         }
                                         break;
+                                    case AccountBalanceChangeReasonTypeContract.RealizedPnL:
+                                        await _accountUpdateService.UnfreezeUnconfirmedMargin(e.Account.Id, 
+                                            e.BalanceChange.EventSourceId);
+                                        break;
                                 }
 
                                 _accountBalanceChangedEventChannel.SendEvent(this,
