@@ -123,7 +123,7 @@ namespace MarginTrading.Backend.Services
 
                 if (account.LastBalanceChangeTime > eventTime)
                 {
-                    await _log.WriteInfoAsync(nameof(AccountsCacheService), nameof(UpdateAccountChanges), 
+                    await _log.WriteInfoAsync(nameof(AccountsCacheService), nameof(UpdateAccountBalance), 
                         $"Account with id {account.Id} has balance in newer state then the event");
                     return false;
                 } 

@@ -102,10 +102,15 @@ namespace MarginTrading.Backend.Services.Workflow
                         if (e.BalanceChange != null)
                         {
                             var account = _accountsCacheService.TryGet(e.Account.Id);
-                            if (await ValidateAccount(account, e)
-                                && await _accountsCacheService.UpdateAccountBalance(updatedAccount.Id,
-                                    e.BalanceChange.Balance, e.ChangeTimestamp))
+                            if (await ValidateAccount(account, e))
                             {
+                                if (await _accountsCacheService.UpdateAccountBalance(updatedAccount.Id,
+                                    e.BalanceChange.Balance, e.ChangeTimestamp))
+                                {
+                                    _accountBalanceChangedEventChannel.SendEvent(this,
+                                        new AccountBalanceChangedEventArgs(updatedAccount));
+                                }
+                                
                                 switch (e.BalanceChange.ReasonType)
                                 {
                                     case AccountBalanceChangeReasonTypeContract.Withdraw:
@@ -125,9 +130,6 @@ namespace MarginTrading.Backend.Services.Workflow
                                         }
                                         break;
                                 }
-
-                                _accountBalanceChangedEventChannel.SendEvent(this,
-                                    new AccountBalanceChangedEventArgs(updatedAccount));
                             }
                         }
                         else
