@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
@@ -6,24 +7,29 @@ using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
+using Lykke.Service.ExchangeConnector.Client;
+using Lykke.Service.ExchangeConnector.Client.Models;
 using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Events;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Extensions;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Events;
+using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
+using OrderType = MarginTrading.Backend.Core.Orders.OrderType;
 
 namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
 {
     [UsedImplicitly]
     public class SpecialLiquidationCommandsHandler
     {
-        private readonly IAssetPairsCache _assetPairsCache;
         private readonly ITradingEngine _tradingEngine;
         private readonly IDateService _dateService;
         private readonly IOrderReader _orderReader;
@@ -32,9 +38,11 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private readonly ILog _log;
         private readonly MarginTradingSettings _marginTradingSettings;
         private readonly IAssetPairDayOffService _assetPairDayOffService;
+        private readonly IExchangeConnectorService _exchangeConnectorService;
+        private readonly IIdentityGenerator _identityGenerator;
+        private readonly IAccountsCacheService _accountsCacheService;
 
         public SpecialLiquidationCommandsHandler(
-            IAssetPairsCache assetPairsCache,
             ITradingEngine tradingEngine,
             IDateService dateService,
             IOrderReader orderReader,
@@ -42,9 +50,11 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             IOperationExecutionInfoRepository operationExecutionInfoRepository,
             ILog log,
             MarginTradingSettings marginTradingSettings,
-            IAssetPairDayOffService assetPairDayOffService)
+            IAssetPairDayOffService assetPairDayOffService,
+            IExchangeConnectorService exchangeConnectorService,
+            IIdentityGenerator identityGenerator,
+            IAccountsCacheService accountsCacheService)
         {
-            _assetPairsCache = assetPairsCache;
             _tradingEngine = tradingEngine;
             _dateService = dateService;
             _orderReader = orderReader;
@@ -53,6 +63,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             _log = log;
             _marginTradingSettings = marginTradingSettings;
             _assetPairDayOffService = assetPairDayOffService;
+            _exchangeConnectorService = exchangeConnectorService;
+            _identityGenerator = identityGenerator;
+            _accountsCacheService = accountsCacheService;
         }
         
         [UsedImplicitly]
@@ -71,6 +84,23 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             
             //validate the list of positions contain only the same instrument
             var positions = _orderReader.GetPositions().Where(x => command.PositionIds.Contains(x.Id)).ToList();
+
+            if (!string.IsNullOrEmpty(command.AccountId))
+            {
+                if (_accountsCacheService.TryGet(command.AccountId) == null)
+                {
+                    publisher.PublishEvent(new SpecialLiquidationFailedEvent
+                    {
+                        OperationId = command.OperationId,
+                        CreationTime = _dateService.Now(),
+                        Reason = $"Account {command.AccountId} does not exist",
+                    });
+                    return;
+                }
+
+                positions = positions.Where(x => x.AccountId == command.AccountId).ToList();
+            }
+            
             if (positions.Select(x => x.AssetPairId).Distinct().Count() > 1)
             {
                 publisher.PublishEvent(new SpecialLiquidationFailedEvent
@@ -78,6 +108,17 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     OperationId = command.OperationId,
                     CreationTime = _dateService.Now(),
                     Reason = "The list of positions is of different instruments",
+                });
+                return;
+            }
+
+            if (!TryGetExchangeNameFromPositions(positions, out var externalProviderId))
+            {
+                publisher.PublishEvent(new SpecialLiquidationFailedEvent
+                {
+                    OperationId = command.OperationId,
+                    CreationTime = _dateService.Now(),
+                    Reason = "All requested positions must be open on the same external exchange",
                 });
                 return;
             }
@@ -92,7 +133,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 });
                 return;
             }
-            
+
             //ensure idempotency
             var executionInfo = await _operationExecutionInfoRepository.GetOrAddAsync(
                 operationName: SpecialLiquidationSaga.OperationName,
@@ -105,7 +146,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     {
                         State = SpecialLiquidationOperationState.Initiated,
                         Instrument = positions.FirstOrDefault()?.AssetPairId,
-                        PositionIds = command.PositionIds.ToList(),
+                        PositionIds = positions.Select(x => x.Id).ToList(),
+                        ExternalProviderId = externalProviderId,
+                        AccountId = command.AccountId,
                     }
                 ));
 
@@ -151,8 +194,29 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 return;
             }
 
-            var openedPositions = _orderReader.GetPositions().Where(x => x.AssetPairId == command.Instrument)
-                .Select(x => x.Id).ToList();
+            var openedPositions = _orderReader.GetPositions().Where(x => x.AssetPairId == command.Instrument).ToList();
+
+            if (!openedPositions.Any())
+            {
+                publisher.PublishEvent(new SpecialLiquidationFailedEvent
+                {
+                    OperationId = command.OperationId,
+                    CreationTime = _dateService.Now(),
+                    Reason = "No positions to liquidate",
+                });
+                return;
+            }
+
+            if (!TryGetExchangeNameFromPositions(openedPositions, out var externalProviderId))
+            {
+                publisher.PublishEvent(new SpecialLiquidationFailedEvent
+                {
+                    OperationId = command.OperationId,
+                    CreationTime = _dateService.Now(),
+                    Reason = "All requested positions must be open on the same external exchange",
+                });
+                return;
+            }
             
             //ensure idempotency
             var executionInfo = await _operationExecutionInfoRepository.GetOrAddAsync(
@@ -165,7 +229,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     data: new SpecialLiquidationOperationData
                     {
                         State = SpecialLiquidationOperationState.Initiated,
-                        PositionIds = openedPositions
+                        Instrument = command.Instrument,
+                        PositionIds = openedPositions.Select(x => x.Id).ToList(),
+                        ExternalProviderId = externalProviderId,
                     }
                 ));
 
@@ -184,6 +250,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             }
         }
 
+        [UsedImplicitly]
         private async Task<CommandHandlingResult> Handle(GetPriceForSpecialLiquidationTimeoutInternalCommand command,
             IEventPublisher publisher)
         {
@@ -220,6 +287,62 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             return CommandHandlingResult.Fail(_marginTradingSettings.SpecialLiquidation.RetryTimeout);
         }
 
+        /// <summary>
+        /// Special handler sends API request to close positions 
+        /// </summary>
+        [UsedImplicitly]
+        private async Task Handle(ExecuteSpecialLiquidationOrderCommand command, IEventPublisher publisher)
+        {
+            var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
+                operationName: SpecialLiquidationSaga.OperationName,
+                id: command.OperationId);
+
+            if (executionInfo == null)
+            {
+                return;
+            }
+
+            if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceReceived,
+                SpecialLiquidationOperationState.ExternalOrderExecuted))
+            {
+                try
+                {
+                    var executionResult = await _exchangeConnectorService.CreateOrderAsync(new OrderModel(
+                        tradeType: command.Volume > 0 ? TradeType.Buy : TradeType.Sell,
+                        orderType: OrderType.Market.ToType<Lykke.Service.ExchangeConnector.Client.Models.OrderType>(),
+                        timeInForce: TimeInForce.FillOrKill,
+                        volume: (double) Math.Abs(command.Volume),
+                        dateTime: _dateService.Now(),
+                        exchangeName: executionInfo.Data.ExternalProviderId,
+                        instrument: command.Instrument,
+                        price: (double?) command.Price,
+                        orderId: _identityGenerator.GenerateAlphanumericId()));
+
+                    publisher.PublishEvent(new SpecialLiquidationOrderExecutedEvent
+                    {
+                        OperationId = command.OperationId,
+                        CreationTime = _dateService.Now(),
+                        MarketMakerId = executionInfo.Data.ExternalProviderId,
+                        ExecutionTime = executionResult.Time,
+                        OrderId = executionResult.ExchangeOrderId,
+                    });
+                }
+                catch (Exception exception)
+                {
+                    publisher.PublishEvent(new SpecialLiquidationOrderExecutionFailedEvent
+                    {
+                        OperationId = command.OperationId,
+                        CreationTime = _dateService.Now(),
+                        Reason = exception.Message
+                    });
+                }
+                
+                //todo think what if meow happens here
+
+                await _operationExecutionInfoRepository.Save(executionInfo);
+            }
+        }
+
         [UsedImplicitly]
         private async Task Handle(ExecuteSpecialLiquidationOrdersInternalCommand command, IEventPublisher publisher)
         {
@@ -232,7 +355,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 return;
             }
 
-            if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.ExternalOrderExecuted,
+            if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.InternalOrderExecutionStarted,
                 SpecialLiquidationOperationState.InternalOrdersExecuted))
             {
                 try
@@ -293,6 +416,19 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
 
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }
+        }
+
+        private bool TryGetExchangeNameFromPositions(IEnumerable<Position> positions, out string externalProviderId)
+        {
+            var externalProviderIds = positions.Select(x => x.ExternalProviderId).Distinct().ToList();
+            if (externalProviderIds.Count != 1)
+            {
+                externalProviderId = null;
+                return false;
+            }
+
+            externalProviderId = externalProviderIds.Single();
+            return true;
         }
     }
 }

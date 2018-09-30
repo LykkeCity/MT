@@ -318,13 +318,14 @@ namespace MarginTrading.Backend.Controllers
         /// FOR TEST PURPOSES ONLY!
         /// </summary>
         [HttpPost, Route("special-liquidation")]
-        public void StartSpecialLiquidation(string[] positionIds)
+        public void StartSpecialLiquidation(string[] positionIds, [CanBeNull] string accountId)
         {
             _cqrsSender.SendCommandToSelf(new StartSpecialLiquidationInternalCommand
             {
                 OperationId = _identityGenerator.GenerateGuid(),
                 CreationTime = DateTime.UtcNow,
                 PositionIds = positionIds,
+                AccountId = accountId,
             });
         }
 
