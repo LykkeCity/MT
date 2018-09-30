@@ -975,7 +975,7 @@ namespace MarginTradingTests
         }
 
         [Test]
-        public void Is_PendingOrder_Rejected_On_Trigger()
+        public void Is_PendingOrder_NotRejected_On_Trigger()
         {
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Limit, "EURUSD", _account,
                 MarginTradingTestsUtils.TradingConditionId, -10000, price: 1.07M);
@@ -999,8 +999,7 @@ namespace MarginTradingTests
                 new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.08M, Volume = 10 }
             });
 
-            Assert.AreEqual(OrderStatus.Rejected, order.Status); //should be rejected 
-            Assert.AreEqual(OrderRejectReason.NoLiquidity, order.RejectReason);
+            Assert.AreEqual(OrderStatus.Active, order.Status);
         }
 
         [Test]

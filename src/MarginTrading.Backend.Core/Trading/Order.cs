@@ -215,6 +215,16 @@ namespace MarginTrading.Backend.Core.Trading
         /// </summary>
         public string CorrelationId { get; private set; }
         
+        /// <summary>
+        /// Order execution rank, calculated based on type and direction
+        /// </summary>
+        public byte ExecutionRank { get; }
+        
+        /// <summary>
+        /// Order execution price rank, calculated based on type, direction and price
+        /// </summary>
+        public decimal? ExecutionPriceRank { get; private set; }
+        
         #endregion
 
 
@@ -251,6 +261,8 @@ namespace MarginTrading.Backend.Core.Trading
             Status = status;
             AdditionalInfo = additionalInfo;
             CorrelationId = correlationId;
+            ExecutionRank = (byte) (OrderType.GetExecutionRank() | Direction.GetExecutionRank());
+            SetExecutionSortRank();
         }
 
 
@@ -269,6 +281,7 @@ namespace MarginTrading.Backend.Core.Trading
             Originator = originator;
             AdditionalInfo = additionalInfo ?? AdditionalInfo;
             CorrelationId = correlationId;
+            SetExecutionSortRank();
         }
         
         public void ChangeVolume(decimal newVolume, DateTime dateTime, OriginatorType originator)
@@ -310,6 +323,14 @@ namespace MarginTrading.Backend.Core.Trading
             ExecutionStarted = dateTime;
             LastModified = dateTime;
             MatchingEngineId = matchingEngineId;
+        }
+        
+        public void CancelExecution(DateTime dateTime)
+        {
+            Status = OrderStatus.Active;
+            ExecutionStarted = null;
+            LastModified = dateTime;
+            MatchingEngineId = null;
         }
         
         public void Execute(DateTime dateTime, MatchedOrderCollection matchedOrders, int assetPairAccuracy)
@@ -393,6 +414,24 @@ namespace MarginTrading.Backend.Core.Trading
 
             if (relatedOrder != null)
                 RelatedOrders.Remove(relatedOrder);
+        }
+
+        private void SetExecutionSortRank()
+        {
+            if (Price == null)
+                return;
+
+            //for Buy Limit and Sell Stop order should be Desc, to have Asc always, inverse price
+            if (OrderType == OrderType.Limit && Direction == OrderDirection.Buy
+                ||
+                OrderType == OrderType.Stop && Direction == OrderDirection.Sell)
+            {
+                ExecutionPriceRank = -Price;
+            }
+            else
+            {
+                ExecutionPriceRank = Price;    
+            }
         }
 
         #endregion
