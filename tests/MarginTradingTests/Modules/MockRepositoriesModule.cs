@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Autofac;
 using AzureStorage.Tables;
@@ -20,6 +21,15 @@ namespace MarginTradingTests.Modules
             var orderHistoryRepository = new Mock<IOrdersHistoryRepository>();
             var riskSystemCommandsLogRepository = new Mock<IRiskSystemCommandsLogRepository>();
             var accountMarginFreezingRepository = new Mock<IAccountMarginFreezingRepository>();
+            var operationExecutionInfoRepositoryMock = new Mock<IOperationExecutionInfoRepository>();
+            operationExecutionInfoRepositoryMock.Setup(s => s.GetOrAddAsync(It.IsIn("AccountsProjection"),
+                    It.IsAny<string>(), It.IsAny<Func<IOperationExecutionInfo<OperationData>>>()))
+                .ReturnsAsync(new OperationExecutionInfo<OperationData>(
+                    operationName: "AccountsProjection",
+                    id: Guid.NewGuid().ToString(),
+                    lastModified: DateTime.UtcNow,
+                    data: new OperationData {State = OperationState.Initiated}
+                ));
 
             accountMarginFreezingRepository.Setup(x => x.GetAllAsync())
                 .ReturnsAsync(new List<IAccountMarginFreezing>().AsReadOnly());
@@ -36,11 +46,11 @@ namespace MarginTradingTests.Modules
                 .SingleInstance();
             builder.RegisterInstance(riskSystemCommandsLogRepository.Object).As<IRiskSystemCommandsLogRepository>()
                 .SingleInstance();
-            builder.Register<IDayOffSettingsRepository>(c => new DayOffSettingsRepository(blobRepository.Object))
-                .SingleInstance();
 
             builder.RegisterInstance(accountMarginFreezingRepository.Object).As<IAccountMarginFreezingRepository>()
                 .SingleInstance();
+            builder.RegisterInstance(operationExecutionInfoRepositoryMock.Object)
+                .As<IOperationExecutionInfoRepository>().SingleInstance();
         }
     }
 }

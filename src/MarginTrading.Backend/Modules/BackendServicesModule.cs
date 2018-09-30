@@ -98,8 +98,8 @@ namespace MarginTrading.Backend.Modules
                 .As<IEquivalentPricesService>()
                 .SingleInstance();
 
-            builder.RegisterType<FakeSpecialLiquidationService>()
-                .As<IFakeSpecialLiquidationService>()
+            builder.RegisterType<SpecialLiquidationService>()
+                .As<ISpecialLiquidationService>()
                 .PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies)
                 .SingleInstance();
             

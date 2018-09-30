@@ -20,12 +20,8 @@ namespace MarginTrading.Backend.Services
 
     public class OrdersCache : IOrderReader
     {
-        private readonly IContextFactory _contextFactory;
-
-        public OrdersCache(IContextFactory contextFactory)
-        {
-            _contextFactory = contextFactory;
-            
+        public OrdersCache()
+        {       
             Active = new OrderCacheGroup(new Order[0], OrderStatus.Active);
             Inactive = new OrderCacheGroup(new Order[0], OrderStatus.Inactive);
             InProgress = new OrderCacheGroup(new Order[0], OrderStatus.ExecutionStarted);

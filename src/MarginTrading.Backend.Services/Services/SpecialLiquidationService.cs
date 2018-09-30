@@ -1,6 +1,11 @@
+using System;
 using System.Threading.Tasks;
+using Castle.Core.Logging;
 using Lykke.Common;
+using Lykke.Service.ExchangeConnector.Client;
+using Lykke.Service.ExchangeConnector.Client.Models;
 using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Events;
+using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Infrastructure;
@@ -8,7 +13,7 @@ using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services.Services
 {
-    public class FakeSpecialLiquidationService : IFakeSpecialLiquidationService
+    public class SpecialLiquidationService : ISpecialLiquidationService
     {
         private readonly ICqrsSender _cqrsSender;
         private readonly IDateService _dateService;
@@ -16,7 +21,7 @@ namespace MarginTrading.Backend.Services.Services
         private readonly SpecialLiquidationSettings _specialLiquidationSettings;
         private readonly CqrsContextNamesSettings _cqrsContextNamesSettings;
 
-        public FakeSpecialLiquidationService(
+        public SpecialLiquidationService(
             ICqrsSender cqrsSender,
             IDateService dateService,
             IThreadSwitcher threadSwitcher,
@@ -30,11 +35,12 @@ namespace MarginTrading.Backend.Services.Services
             _cqrsContextNamesSettings = cqrsContextNamesSettings;
         }
         
-        public void GetPriceForSpecialLiquidation(string operationId, string instrument, decimal volume)
+        public void FakeGetPriceForSpecialLiquidation(string operationId, string instrument, decimal volume)
         {
             _threadSwitcher.SwitchThread(async () =>
             {
                 await Task.Delay(1000);//waiting for the state to be saved into the repo
+                
                 _cqrsSender.PublishEvent(new PriceForSpecialLiquidationCalculatedEvent
                 {
                     OperationId = operationId,
@@ -42,20 +48,6 @@ namespace MarginTrading.Backend.Services.Services
                     Instrument = instrument,
                     Volume = volume,
                     Price = _specialLiquidationSettings.FakePrice,
-                }, _cqrsContextNamesSettings.Gavel);
-            });
-        }
-
-        public void ExecuteSpecialLiquidationOrder(string operationId, string instrument, decimal volume,
-            decimal price)
-        {
-            _threadSwitcher.SwitchThread(async () =>
-            {
-                await Task.Delay(1000);//waiting for the state to be saved into the repo
-                _cqrsSender.PublishEvent(new SpecialLiquidationOrderExecutedEvent
-                {
-                    OperationId = operationId,
-                    CreationTime = _dateService.Now(),
                 }, _cqrsContextNamesSettings.Gavel);
             });
         }

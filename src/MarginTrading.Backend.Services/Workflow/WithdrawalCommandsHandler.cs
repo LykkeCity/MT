@@ -45,9 +45,11 @@ namespace MarginTrading.Backend.Services.Workflow
                     operationName: OperationName,
                     id: command.OperationId,
                     lastModified: _dateService.Now(),
-                    data: new OperationData
+                    data: new WithdrawalOperationData
                     {
                         State = OperationState.Initiated,
+                        AccountId = command.AccountId,
+                        Amount = command.Amount,
                     }
                 ));
             
@@ -59,7 +61,7 @@ namespace MarginTrading.Backend.Services.Workflow
             catch
             {
                 publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId, _dateService.Now(), 
-                    command.ClientId, command.AccountId, command.Amount, $"Failed to get account {command.AccountId}"));
+                    command.AccountId, command.Amount, $"Failed to get account {command.AccountId}"));
                 return;
             }
 
@@ -71,13 +73,13 @@ namespace MarginTrading.Backend.Services.Workflow
                         command.Amount);
 
                     publisher.PublishEvent(new AmountForWithdrawalFrozenEvent(command.OperationId, _dateService.Now(),
-                        command.ClientId, command.AccountId, command.Amount, command.Reason));
+                        command.AccountId, command.Amount, command.Reason));
                 }
                 else
                 {
                     publisher.PublishEvent(new AmountForWithdrawalFreezeFailedEvent(command.OperationId,
                         _dateService.Now(),
-                        command.ClientId, command.AccountId, command.Amount, "Not enough free margin"));
+                        command.AccountId, command.Amount, "Not enough free margin"));
                 }
 
                 await _operationExecutionInfoRepository.Save(executionInfo);
@@ -92,7 +94,7 @@ namespace MarginTrading.Backend.Services.Workflow
         private async Task Handle(UnfreezeMarginOnFailWithdrawalCommand command, IEventPublisher publisher)
         {
             //ensure operation idempotency
-            var executionInfo = await _operationExecutionInfoRepository.GetAsync<OperationData>(
+            var executionInfo = await _operationExecutionInfoRepository.GetAsync<WithdrawalOperationData>(
                 operationName: OperationName,
                 id: command.OperationId
             );
@@ -100,22 +102,13 @@ namespace MarginTrading.Backend.Services.Workflow
             // ReSharper disable once PossibleNullReferenceException
             if (executionInfo.Data.SwitchState(OperationState.Started, OperationState.Finished))
             {
-                await _accountUpdateService.UnfreezeWithdrawalMargin(command.AccountId, command.OperationId);
+                await _accountUpdateService.UnfreezeWithdrawalMargin(executionInfo.Data.AccountId, command.OperationId);
 
                 publisher.PublishEvent(new UnfreezeMarginOnFailSucceededWithdrawalEvent(command.OperationId,
-                    _dateService.Now(),
-                    command.ClientId, command.AccountId, command.Amount));
+                    _dateService.Now(), executionInfo.Data.AccountId, executionInfo.Data.Amount));
                 
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }
-        }
-        
-        /// <summary>
-        /// Withdrawal succeeded => no action required, margin is already unfrozen.
-        /// </summary>
-        [UsedImplicitly]
-        private void Handle(UnfreezeMarginWithdrawalCommand command, IEventPublisher publisher)
-        {
         }
     }
 }

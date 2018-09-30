@@ -27,10 +27,10 @@ namespace MarginTrading.Backend.Services.Assets
 
         public void Start()
         {
-            UpdateCache().Wait();
+            UpdateCacheAsync().Wait();
         }
 
-        public async Task UpdateCache()
+        public async Task UpdateCacheAsync()
         {
             var assets = (await _assets.List())
                 .ToDictionary(

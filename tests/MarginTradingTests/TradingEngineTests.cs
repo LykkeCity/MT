@@ -47,6 +47,7 @@ namespace MarginTradingTests
         //private Mock<IEventChannel<OrderExecutedEventArgs>> _orderExecutedChannelMock;
         private OrdersCache _ordersCache;
         private IFxRateCacheService _fxRateCacheService;
+        private IDateService _dateService;
         
         [SetUp]
         public void SetUp()
@@ -86,7 +87,7 @@ namespace MarginTradingTests
             var convertService = Container.Resolve<IConvertService>();
             Mock.Get(Container.Resolve<ICqrsEngine>()).Setup(s =>
                 s.PublishEvent(It.IsNotNull<PositionClosedEvent>(), contextsNames.TradingEngine))
-                .Callback<object, string>((ev, s1) =>
+                .Callback<object, string>(async (ev, s1) =>
                 {
                     // simulate the behaviour of account management service 
                     var typedEvent = ev as PositionClosedEvent;
@@ -97,7 +98,7 @@ namespace MarginTradingTests
                             o => o.ConfigureMap(MemberList.Destination)
                                 .ForCtorParam("modificationTimestamp",
                                     p => p.MapFrom(tradingAccount => DateTime.UtcNow)));
-                    accountsProjection.Handle(new AccountChangedEvent(DateTime.UtcNow, "Source", accountContract,
+                    await accountsProjection.Handle(new AccountChangedEvent(DateTime.UtcNow, "Source", accountContract,
                         AccountChangedEventTypeContract.BalanceUpdated));
                 });
             
@@ -106,6 +107,8 @@ namespace MarginTradingTests
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "EURCHF", Ask = 1, Bid = 1 });
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 1, Bid = 1 });
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "EURUSD", Ask = 1, Bid = 1 });
+
+            _dateService = Container.Resolve<IDateService>();
         }
 
         #region Market orders
@@ -474,7 +477,7 @@ namespace MarginTradingTests
             Mock.Get(_tradingInstruments).Setup(s => s.List(It.IsAny<string>()))
                 .ReturnsAsync(new List<TradingInstrumentContract> {instrumentContract});
             
-            await _accountAssetsManager.UpdateTradingInstrumentsCache();
+            await _accountAssetsManager.UpdateTradingInstrumentsCacheAsync();
            
             position.UpdateClosePrice(1.04875M);
 
@@ -659,11 +662,11 @@ namespace MarginTradingTests
         }
 
         [Test]
-        public void Is_Balance_LessThanZero_On_StopOut_Thru_Big_Spread()
+        public void Is_Balance_LessThanZero_On_StopOut_Through_Big_Spread()
         {
             var account = Accounts[1];
             account.Balance = 240000;
-            _accountsCacheService.Update(account);
+            _accountsCacheService.UpdateAccountBalance(account.Id, account.Balance);
 
             var ordersSet = new[]
             {
@@ -722,8 +725,7 @@ namespace MarginTradingTests
         public void Is_Big_Spread_Leads_To_Stopout()
         {
             var account = Accounts[1];
-            account.Balance = 24;
-            _accountsCacheService.Update(account);
+            _accountsCacheService.UpdateAccountBalance(account.Id, 24 - account.Balance);
             
             var ordersSet = new[]
             {
@@ -1031,6 +1033,26 @@ namespace MarginTradingTests
             });
 
             Assert.AreEqual(OrderStatus.Expired, order.Status); 
+        }    
+        
+        [Test]
+        public void Is_PriceValidated_ForStopOrders_OnChange()
+        {
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Stop, "EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, -1, price: 1.07M);
+            
+            order = _tradingEngine.PlaceOrderAsync(order).Result;
+            var account = _accountsCacheService.Get(order.AccountId);
+
+            Assert.AreEqual(OrderStatus.Active, order.Status); //is not executed
+            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
+
+            var ex = Assert.Throws<ValidateOrderException>(() =>
+                _tradingEngine.ChangeOrderLimits(order.Id, 1.2M, OriginatorType.Investor, "",
+                    Guid.NewGuid().ToString()));
+
+            Assert.That(ex.RejectReason == OrderRejectReason.InvalidExpectedOpenPrice);
+            StringAssert.Contains("1.05/1.1", ex.Comment);
         }    
         
         #endregion

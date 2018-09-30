@@ -2,9 +2,12 @@ using System;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
+using FluentScheduler;
 using Lykke.AzureQueueIntegration;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
+using Lykke.Logs.MsSql;
+using Lykke.Logs.MsSql.Repositories;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
 using Lykke.SlackNotifications;
@@ -16,9 +19,11 @@ using MarginTrading.Backend.Infrastructure;
 using MarginTrading.Backend.Middleware;
 using MarginTrading.Backend.Modules;
 using MarginTrading.Backend.Services;
+using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Modules;
 using MarginTrading.Backend.Services.Quotes;
+using MarginTrading.Backend.Services.Scheduling;
 using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Backend.Services.Stubs;
 using MarginTrading.Backend.Services.TradingConditions;
@@ -112,6 +117,11 @@ namespace MarginTrading.Backend
             MtServiceLocator.AccountUpdateService = ApplicationContainer.Resolve<IAccountUpdateService>();
             MtServiceLocator.AccountsCacheService = ApplicationContainer.Resolve<IAccountsCacheService>();
             MtServiceLocator.SwapCommissionService = ApplicationContainer.Resolve<ICommissionService>();
+            
+            //the job will start approx <=100ms after 00:00:00
+            var registry = new Registry();
+            registry.Schedule<ScheduleSettingsCacheWarmUpJob>().ToRunEvery(1).Days().At(0, 0);
+            JobManager.Initialize(registry);
 
             return new AutofacServiceProvider(ApplicationContainer);
         }
@@ -170,6 +180,7 @@ namespace MarginTrading.Backend
             builder.RegisterBuildCallback(c => c.Resolve<AccountManager>()); // note the order here is important!
             builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
             builder.RegisterBuildCallback(c => c.Resolve<PendingOrdersCleaningService>());
+            builder.RegisterBuildCallback(async c => await c.Resolve<IScheduleSettingsCacheService>().UpdateSettingsAsync());
         }
 
         private static void SetupLoggers(IServiceCollection services, IReloadingManager<MtBackendSettings> mtSettings,

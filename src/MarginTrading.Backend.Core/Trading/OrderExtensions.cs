@@ -115,12 +115,18 @@ namespace MarginTrading.Backend.Core
         {
             return orderType.GetOpositeDirection();
         }
-
-        public static bool IsBasicPending(this Order order)
+        
+        public static bool IsBasicPendingOrder(this Order order)
         {
             return order.OrderType == OrderType.Limit || order.OrderType == OrderType.Stop;
         }
 
+        public static bool IsBasicOrder(this Order order)
+        {
+            return order.OrderType == OrderType.Market ||
+                   order.IsBasicPendingOrder();
+        }
+        
         public static PositionCloseReason GetCloseReason(this OrderType orderType)
         {
             switch (orderType)
