@@ -44,6 +44,7 @@ namespace MarginTrading.Backend
         private readonly IAssetPairsManager _assetPairsManager;
         private readonly ITradingInstrumentsManager _tradingInstrumentsManager;
         private readonly ITradingConditionsManager _tradingConditionsManager;
+        private readonly IScheduleSettingsCacheService _scheduleSettingsCacheService;
         private const string ServiceName = "MarginTrading.Backend";
 
         public Application(
@@ -62,7 +63,8 @@ namespace MarginTrading.Backend
             IAssetsManager assetsManager,
             IAssetPairsManager assetPairsManager,
             ITradingInstrumentsManager tradingInstrumentsManager,
-            ITradingConditionsManager tradingConditionsManager)
+            ITradingConditionsManager tradingConditionsManager,
+            IScheduleSettingsCacheService scheduleSettingsCacheService)
         {
             _rabbitMqNotifyService = rabbitMqNotifyService;
             _consoleWriter = consoleWriter;
@@ -80,6 +82,7 @@ namespace MarginTrading.Backend
             _assetPairsManager = assetPairsManager;
             _tradingInstrumentsManager = tradingInstrumentsManager;
             _tradingConditionsManager = tradingConditionsManager;
+            _scheduleSettingsCacheService = scheduleSettingsCacheService;
         }
 
         public async Task StartApplicationAsync()
@@ -179,12 +182,12 @@ namespace MarginTrading.Backend
             return Task.CompletedTask;
         }
 
-        private Task HandleChangeSettingsMessage(SettingsChangedEvent message)
+        private async Task HandleChangeSettingsMessage(SettingsChangedEvent message)
         {
             switch (message.SettingsType)
             {
                 case SettingsTypeContract.Asset:
-                    _assetsManager.UpdateCache();
+                    await _assetsManager.UpdateCacheAsync();
                     break;
                 
                 case SettingsTypeContract.AssetPair:
@@ -192,22 +195,26 @@ namespace MarginTrading.Backend
                     break;
                 
                 case SettingsTypeContract.TradingCondition:
-                    _tradingConditionsManager.InitTradingConditions();
+                    await _tradingConditionsManager.InitTradingConditionsAsync();
                     break;
                 
                 case SettingsTypeContract.TradingInstrument:
-                    _tradingInstrumentsManager.UpdateTradingInstrumentsCache();
+                    await _tradingInstrumentsManager.UpdateTradingInstrumentsCacheAsync();
                     break;
                 
                 case SettingsTypeContract.TradingRoute:
-                    _matchingEngineRoutesManager.UpdateRoutesCacheAsync();
+                    await _matchingEngineRoutesManager.UpdateRoutesCacheAsync();
                     break;
-                
+                case SettingsTypeContract.ScheduleSettings:
+                    await _scheduleSettingsCacheService.UpdateSettingsAsync();
+                    break;
+                case SettingsTypeContract.Market:
+                    break;
+                case SettingsTypeContract.ServiceMaintenance:
+                    break;
                 default:
                     throw new NotImplementedException($"Type {message.SettingsType} is not supported");
             }
-            
-            return Task.CompletedTask;
         }
     }
 }

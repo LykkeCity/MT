@@ -25,6 +25,8 @@ using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Services.Settings;
+using MarginTrading.SettingsService.Contracts;
+using MarginTrading.SettingsService.Contracts.Scheduling;
 using MarginTradingTests.Modules;
 using Moq;
 
@@ -153,18 +155,10 @@ namespace MarginTradingTests
             
             builder.RegisterType<ConvertService>().As<IConvertService>().SingleInstance();
 
-            var settings = new ScheduleSettings(
-                DayOfWeek.Sunday,
-                new TimeSpan(21, 0, 0),
-                DayOfWeek.Sunday,
-                new TimeSpan(21, 0, 0),
-                new[] {"BTCCHF"}.ToHashSet(),
-                TimeSpan.Zero);
-            var dayOffSettingsService = new Mock<IDayOffSettingsService>(MockBehavior.Strict);
-            dayOffSettingsService.Setup(s => s.GetScheduleSettings()).Returns(settings);
-            dayOffSettingsService.Setup(s => s.GetExclusions(It.IsNotNull<string>()))
-                .Returns(ImmutableArray<DayOffExclusion>.Empty);
-            builder.RegisterInstance(dayOffSettingsService.Object).SingleInstance();
+            var scheduleSettingsApiMock = new Mock<IScheduleSettingsApi>();
+            scheduleSettingsApiMock.Setup(m => m.StateList(It.IsAny<string[]>()))
+                .ReturnsAsync(new List<CompiledScheduleContract>());
+            builder.RegisterInstance(scheduleSettingsApiMock.Object).As<IScheduleSettingsApi>();
 
             var exchangeConnector = Mock.Of<IExchangeConnectorService>();
             builder.RegisterInstance(exchangeConnector).As<IExchangeConnectorService>();

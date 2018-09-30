@@ -337,8 +337,8 @@ namespace MarginTrading.Backend.Services
                 {
                     var price = pair.GetPriceForOrderDirection(order.Direction);
 
-                    if (order.IsSuitablePriceForPendingOrder(price) /*&&
-                        !_assetPairDayOffService.ArePendingOrdersDisabled(order.AssetPairId)*/)
+                    if (order.IsSuitablePriceForPendingOrder(price) &&
+                        !_assetPairDayOffService.ArePendingOrdersDisabled(order.AssetPairId))
                         yield return order;
                 }
             }

@@ -46,6 +46,7 @@ namespace MarginTradingTests.Modules
                 .SingleInstance();
             builder.RegisterInstance(riskSystemCommandsLogRepository.Object).As<IRiskSystemCommandsLogRepository>()
                 .SingleInstance();
+
             builder.RegisterInstance(accountMarginFreezingRepository.Object).As<IAccountMarginFreezingRepository>()
                 .SingleInstance();
             builder.RegisterInstance(operationExecutionInfoRepositoryMock.Object)

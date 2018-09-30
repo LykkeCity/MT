@@ -64,7 +64,6 @@ namespace MarginTrading.Backend.Services
         public async Task<(Order order, List<Order> relatedOrders)> ValidateRequestAndCreateOrders(
             OrderPlaceRequest request)
         {
-            
             #region Validate properties
             
             if (request.Volume == 0)
@@ -467,10 +466,24 @@ namespace MarginTrading.Backend.Services
                 ValidateMargin(order);
 
         }
-
-        //TODO: validate schedule settings https://lykke-snow.atlassian.net/browse/MTC-274
-        private IAssetPair GetAssetPairIfAvailableForTrading(string assetPairId, OrderType orderType, bool shouldOpenNewPosition, bool isPreTradeValidation)
+        
+        private IAssetPair GetAssetPairIfAvailableForTrading(string assetPairId, OrderType orderType, 
+            bool shouldOpenNewPosition, bool isPreTradeValidation)
         {
+            if (isPreTradeValidation || orderType == OrderType.Market)
+            {
+                if (_assetDayOffService.IsDayOff(assetPairId))
+                {
+                    throw new ValidateOrderException(OrderRejectReason.NoLiquidity,
+                        "Trades for instrument are not available");
+                }
+            }
+            else if (_assetDayOffService.ArePendingOrdersDisabled(assetPairId))
+            {
+                throw new ValidateOrderException(OrderRejectReason.NoLiquidity,
+                    "Pending orders for instrument are not available");
+            }
+
             var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(assetPairId); 
             
             if (assetPair == null)
@@ -506,11 +519,6 @@ namespace MarginTrading.Backend.Services
             }
 
             return assetPair;
-
-//            if (_assetDayOffService.IsDayOff(request.InstrumentId))
-//            {
-//                throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Trades for instrument are not available");
-//            }
         }
 
         private void ValidateTradeLimits(string assetPairId, string tradingConditionId, string accountId, decimal volume)

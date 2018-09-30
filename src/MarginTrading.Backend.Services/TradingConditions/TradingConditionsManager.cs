@@ -32,12 +32,12 @@ namespace MarginTrading.Backend.Services.TradingConditions
 
         public void Start()
         {
-            InitTradingConditions().Wait();
+            InitTradingConditionsAsync().Wait();
         }
 
-        public async Task InitTradingConditions()
+        public async Task InitTradingConditionsAsync()
         {
-            _console.WriteLine($"Started {nameof(InitTradingConditions)}");
+            _console.WriteLine($"Started {nameof(InitTradingConditionsAsync)}");
 
             var tradingConditions = await _tradingConditions.List();
 
@@ -49,7 +49,7 @@ namespace MarginTrading.Backend.Services.TradingConditions
             }
 
             _console.WriteLine(
-                $"Finished {nameof(InitTradingConditions)}. Count:{tradingConditions?.Count ?? 0})");
+                $"Finished {nameof(InitTradingConditionsAsync)}. Count:{tradingConditions?.Count ?? 0})");
         }
     }
 }

@@ -31,12 +31,12 @@ namespace MarginTrading.Backend.Services.TradingConditions
 
         public void Start()
         {
-            UpdateTradingInstrumentsCache().Wait();
+            UpdateTradingInstrumentsCacheAsync().Wait();
         }
 
-        public async Task UpdateTradingInstrumentsCache()
+        public async Task UpdateTradingInstrumentsCacheAsync()
         {
-            _console.WriteLine($"Started {nameof(UpdateTradingInstrumentsCache)}");
+            _console.WriteLine($"Started {nameof(UpdateTradingInstrumentsCacheAsync)}");
             
             var instruments = await _tradingInstruments.List(string.Empty);
 
@@ -47,7 +47,7 @@ namespace MarginTrading.Backend.Services.TradingConditions
                     .ToList());
             }
 
-            _console.WriteLine($"Finished {nameof(UpdateTradingInstrumentsCache)}. Count: {instruments?.Count ?? 0}");
+            _console.WriteLine($"Finished {nameof(UpdateTradingInstrumentsCacheAsync)}. Count: {instruments?.Count ?? 0}");
         }
     }
 }
