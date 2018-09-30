@@ -29,7 +29,6 @@ namespace MarginTrading.Backend.Services
         private readonly IEventChannel<OrderActivatedEventArgs> _orderActivatedEventChannel;
         private readonly IEventChannel<OrderRejectedEventArgs> _orderRejectedEventChannel;
 
-        private readonly IQuoteCacheService _quoteCashService;
         private readonly IValidateOrderService _validateOrderService;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly OrdersCache _ordersCache;
@@ -54,7 +53,6 @@ namespace MarginTrading.Backend.Services
             IEventChannel<OrderActivatedEventArgs> orderActivatedEventChannel, 
             IEventChannel<OrderRejectedEventArgs> orderRejectedEventChannel,
             IValidateOrderService validateOrderService,
-            IQuoteCacheService quoteCashService,
             IAccountsCacheService accountsCacheService,
             OrdersCache ordersCache,
             IMatchingEngineRouter meRouter,
@@ -77,7 +75,6 @@ namespace MarginTrading.Backend.Services
             _orderChangedEventChannel = orderChangedEventChannel;
             _orderRejectedEventChannel = orderRejectedEventChannel;
 
-            _quoteCashService = quoteCashService;
             _validateOrderService = validateOrderService;
             _accountsCacheService = accountsCacheService;
             _ordersCache = ordersCache;
@@ -306,12 +303,12 @@ namespace MarginTrading.Backend.Services
 
         #region Orders waiting for execution
 
-        private void ProcessOrdersWaitingForExecution(string instrument)
+        private void ProcessOrdersWaitingForExecution(InstrumentBidAskPair quote)
         {
             //TODO: MTC-155
             //ProcessPendingOrdersMarginRecalc(instrument);
 
-            var orders = GetPendingOrdersToBeExecuted(instrument).GetSortedForExecution();
+            var orders = GetPendingOrdersToBeExecuted(quote).GetSortedForExecution();
             
             if (!orders.Any())
                 return;
@@ -325,12 +322,12 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        private IEnumerable<Order> GetPendingOrdersToBeExecuted(string instrument)
+        private IEnumerable<Order> GetPendingOrdersToBeExecuted(InstrumentBidAskPair quote)
         {
-            var pendingOrders = _ordersCache.Active.GetOrdersByInstrument(instrument);
+            var pendingOrders = _ordersCache.Active.GetOrdersByInstrument(quote.Instrument);
 
             var now = _dateService.Now();
-            
+
             foreach (var order in pendingOrders)
             {
                 if (order.Validity.HasValue && now >= order.Validity.Value)
@@ -340,22 +337,20 @@ namespace MarginTrading.Backend.Services
                     _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order));
                     continue;
                 }
-                
-                if (_quoteCashService.TryGetQuoteById(order.AssetPairId, out var pair))
-                {
-                    var price = pair.GetPriceForOrderType(order.Direction);
 
-                    if (order.IsSuitablePriceForPendingOrder(price) /*&&
+                var price = quote.GetPriceForOrderType(order.Direction);
+
+                if (order.IsSuitablePriceForPendingOrder(price) /*&&
                         !_assetPairDayOffService.ArePendingOrdersDisabled(order.AssetPairId)*/)
-                    {
-                        //TODO: inspect one more time in MTC-248
-                        // if order is removed from Active, execution should be started immediately
-                        // and/or placed to InProgress
-                        
-                        _ordersCache.Active.Remove(order);
-                        yield return order;
-                    }
+                {
+                    //TODO: inspect one more time in MTC-248
+                    // if order is removed from Active, execution should be started immediately
+                    // and/or placed to InProgress
+
+                    _ordersCache.Active.Remove(order);
+                    yield return order;
                 }
+
             }
         }
 
@@ -606,12 +601,12 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        int IEventConsumer.ConsumerRank => 100;
+        int IEventConsumer.ConsumerRank => 101;
 
         void IEventConsumer<BestPriceChangeEventArgs>.ConsumeEvent(object sender, BestPriceChangeEventArgs ea)
         {
             ProcessPositions(ea.BidAskPair.Instrument);
-            ProcessOrdersWaitingForExecution(ea.BidAskPair.Instrument);
+            ProcessOrdersWaitingForExecution(ea.BidAskPair);
         }
     }
 }
