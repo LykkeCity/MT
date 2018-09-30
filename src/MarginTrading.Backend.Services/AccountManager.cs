@@ -78,7 +78,8 @@ namespace MarginTrading.Backend.Services
             var accounts = _accountsApi.List().GetAwaiter().GetResult()
                 .Select(Convert).ToDictionary(x => x.Id);
 
-            ApplyMarginFreezing(accounts);
+            //TODO: think about approach
+            //ApplyMarginFreezing(accounts);
             
             _accountsCacheService.InitAccountsCache(accounts);
             _console.WriteLine($"Finished InitAccountsCache. Count: {accounts.Count}");

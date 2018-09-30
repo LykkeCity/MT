@@ -54,8 +54,9 @@ namespace MarginTrading.Backend.Services
             if (account.AccountFpl.WithdrawalFrozenMarginData.TryAdd(operationId, amount))
             {
                 account.AccountFpl.WithdrawalFrozenMargin = account.AccountFpl.WithdrawalFrozenMarginData.Values.Sum();
-                await _accountMarginFreezingRepository.TryInsertAsync(new AccountMarginFreezing(operationId,
-                    accountId, amount));
+                //TODO: think about approach
+                //await _accountMarginFreezingRepository.TryInsertAsync(new AccountMarginFreezing(operationId,
+                //    accountId, amount));
             }
         }
 
@@ -66,7 +67,8 @@ namespace MarginTrading.Backend.Services
             if (account.AccountFpl.WithdrawalFrozenMarginData.Remove(operationId))
             {
                 account.AccountFpl.WithdrawalFrozenMargin = account.AccountFpl.WithdrawalFrozenMarginData.Values.Sum();
-                await _accountMarginFreezingRepository.DeleteAsync(operationId);
+                //TODO: think about approach
+                //await _accountMarginFreezingRepository.DeleteAsync(operationId);
             }
         }
 
@@ -77,8 +79,9 @@ namespace MarginTrading.Backend.Services
             if (account.AccountFpl.UnconfirmedMarginData.TryAdd(operationId, amount))
             {
                 account.AccountFpl.UnconfirmedMargin = account.AccountFpl.UnconfirmedMarginData.Values.Sum();
-                await _accountMarginUnconfirmedRepository.TryInsertAsync(new AccountMarginFreezing(operationId,
-                    accountId, amount));
+                //TODO: think about approach
+                //await _accountMarginUnconfirmedRepository.TryInsertAsync(new AccountMarginFreezing(operationId,
+                //    accountId, amount));
             }
         }
 
@@ -89,7 +92,8 @@ namespace MarginTrading.Backend.Services
             if (account.AccountFpl.UnconfirmedMarginData.Remove(operationId))
             {
                 account.AccountFpl.UnconfirmedMargin = account.AccountFpl.UnconfirmedMarginData.Values.Sum();
-                await _accountMarginUnconfirmedRepository.DeleteAsync(operationId);
+                //TODO: think about approach
+                //await _accountMarginUnconfirmedRepository.DeleteAsync(operationId);
             }
         }
 
