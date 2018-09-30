@@ -76,8 +76,6 @@ namespace MarginTrading.Backend.Services.Modules
 
         private CqrsEngine CreateEngine(IComponentContext ctx, IMessagingEngine messagingEngine)
         {
-            
-            
             var rabbitMqConventionEndpointResolver =
                 new RabbitMqConventionEndpointResolver("RabbitMq", "messagepack",
                     environment: _settings.EnvironmentName);

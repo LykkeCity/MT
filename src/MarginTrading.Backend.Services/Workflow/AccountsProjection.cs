@@ -104,8 +104,12 @@ namespace MarginTrading.Backend.Services.Workflow
                             var account = _accountsCacheService.TryGet(e.Account.Id);
                             if (await ValidateAccount(account, e))
                             {
-                                _accountsCacheService.UpdateAccountBalance(updatedAccount.Id,
-                                    e.BalanceChange.ChangeAmount);
+                                if (await _accountsCacheService.UpdateAccountBalance(updatedAccount.Id,
+                                    e.BalanceChange.Balance, e.ChangeTimestamp))
+                                {
+                                    _accountBalanceChangedEventChannel.SendEvent(this,
+                                        new AccountBalanceChangedEventArgs(updatedAccount));
+                                }
                                 
                                 switch (e.BalanceChange.ReasonType)
                                 {
@@ -130,9 +134,6 @@ namespace MarginTrading.Backend.Services.Workflow
                                             e.BalanceChange.EventSourceId);
                                         break;
                                 }
-
-                                _accountBalanceChangedEventChannel.SendEvent(this,
-                                    new AccountBalanceChangedEventArgs(updatedAccount));
                             }
                         }
                         else

@@ -79,6 +79,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     CreationTime = _dateService.Now(),
                     Reason = "Special liquidation is disabled in settings",
                 });
+                
                 return;
             }
             
@@ -109,6 +110,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     CreationTime = _dateService.Now(),
                     Reason = "The list of positions is of different instruments",
                 });
+                
                 return;
             }
 
@@ -131,6 +133,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     CreationTime = _dateService.Now(),
                     Reason = "No positions to liquidate",
                 });
+                
                 return;
             }
 
@@ -178,6 +181,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     CreationTime = _dateService.Now(),
                     Reason = "Special liquidation is disabled in settings",
                 });
+                
                 return;
             }
             
@@ -191,6 +195,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     CreationTime = _dateService.Now(),
                     Reason = $"Asset pair {command.Instrument} market must be disabled to start Special Liquidation",
                 });
+                
                 return;
             }
 
@@ -276,6 +281,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                             CreationTime = _dateService.Now(),
                             Reason = $"Timeout of {command.TimeoutSeconds} seconds from {command.CreationTime:s}",
                         });
+                
+                        _chaosKitty.Meow(command.OperationId);
 
                         await _operationExecutionInfoRepository.Save(executionInfo);
                     }
@@ -367,6 +374,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                             command.ExternalOrderId, command.ExternalExecutionTime), 
                         positionIds: executionInfo.Data.PositionIds.ToArray(), 
                         correlationId: command.OperationId);
+                
+                    _chaosKitty.Meow(command.OperationId);
                     
                     publisher.PublishEvent(new SpecialLiquidationFinishedEvent
                     {

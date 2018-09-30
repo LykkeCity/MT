@@ -666,7 +666,7 @@ namespace MarginTradingTests
         {
             var account = Accounts[1];
             account.Balance = 240000;
-            _accountsCacheService.UpdateAccountBalance(account.Id, account.Balance);
+            _accountsCacheService.UpdateAccountBalance(account.Id, account.Balance, DateTime.UtcNow);
 
             var ordersSet = new[]
             {
@@ -725,7 +725,7 @@ namespace MarginTradingTests
         public void Is_Big_Spread_Leads_To_Stopout()
         {
             var account = Accounts[1];
-            _accountsCacheService.UpdateAccountBalance(account.Id, 24 - account.Balance);
+            _accountsCacheService.UpdateAccountBalance(account.Id, 24, DateTime.UtcNow);
             
             var ordersSet = new[]
             {
