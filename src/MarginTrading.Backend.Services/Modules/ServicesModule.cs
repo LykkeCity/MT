@@ -174,6 +174,10 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<IMarginTradingEnablingService>()
 				.As<IStartable>()
 				.SingleInstance();
+
+			builder.RegisterType<ReportService>()
+				.As<IReportService>()
+				.SingleInstance();
 		}
 	}
 }

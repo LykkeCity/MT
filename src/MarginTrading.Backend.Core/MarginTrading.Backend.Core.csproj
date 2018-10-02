@@ -15,6 +15,7 @@
     <PackageReference Include="Lykke.SettingsReader" Version="2.4.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MarginTrading.Backend.Contracts\MarginTrading.Backend.Contracts.csproj" />
     <ProjectReference Include="..\MarginTrading.Common\MarginTrading.Common.csproj" />
   </ItemGroup>
 </Project>
