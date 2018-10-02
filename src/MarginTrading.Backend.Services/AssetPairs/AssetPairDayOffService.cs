@@ -1,19 +1,24 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.Linq;
+using System.Text.RegularExpressions;
 using JetBrains.Annotations;
+using MarginTrading.Backend.Core.DayOffSettings;
+using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Common.Services;
+// ReSharper disable PossibleInvalidOperationException
 
 namespace MarginTrading.Backend.Services.AssetPairs
 {
     public class AssetPairDayOffService : IAssetPairDayOffService
     {
         private readonly IDateService _dateService;
-        private readonly IDayOffSettingsService _dayOffSettingsService;
+        private readonly IScheduleSettingsCacheService _scheduleSettingsCacheService;
 
-        public AssetPairDayOffService(IDateService dateService, IDayOffSettingsService dayOffSettingsService)
+        public AssetPairDayOffService(IDateService dateService, IScheduleSettingsCacheService scheduleSettingsCacheService)
         {
             _dateService = dateService;
-            _dayOffSettingsService = dayOffSettingsService;
+            _scheduleSettingsCacheService = scheduleSettingsCacheService;
         }
 
         public bool IsDayOff(string assetPairId)
@@ -23,7 +28,8 @@ namespace MarginTrading.Backend.Services.AssetPairs
         
         public bool ArePendingOrdersDisabled(string assetPairId)
         {
-            return IsNowNotInSchedule(assetPairId, _dayOffSettingsService.GetScheduleSettings().PendingOrdersCutOff);
+            //TODO TBD in https://lykke-snow.atlassian.net/browse/MTC-155
+            return false; //IsNowNotInSchedule(assetPairId, _dayOffSettingsService.GetScheduleSettings().PendingOrdersCutOff);
         }
 
         /// <summary>
@@ -37,53 +43,19 @@ namespace MarginTrading.Backend.Services.AssetPairs
         private bool IsNowNotInSchedule(string assetPairId, TimeSpan scheduleCutOff)
         {
             var currentDateTime = _dateService.Now();
-            var isDayOffByExclusion = IsDayOffByExclusion(assetPairId, scheduleCutOff, currentDateTime);
-            if (isDayOffByExclusion != null)
-                return isDayOffByExclusion.Value; 
-            
-            var scheduleSettings = _dayOffSettingsService.GetScheduleSettings();
-            if (scheduleSettings.AssetPairsWithoutDayOff.Contains(assetPairId))
-                return false;
-            
-            var closestDayOffStart = GetNextWeekday(currentDateTime, scheduleSettings.DayOffStartDay)
-                                    .Add(scheduleSettings.DayOffStartTime.Subtract(scheduleCutOff));
 
-            var closestDayOffEnd = GetNextWeekday(currentDateTime, scheduleSettings.DayOffEndDay)
-                                    .Add(scheduleSettings.DayOffEndTime.Add(scheduleCutOff));
+            var schedule = _scheduleSettingsCacheService.GetCompiledScheduleSettings(assetPairId, 
+                currentDateTime, scheduleCutOff);
 
-            if (closestDayOffStart > closestDayOffEnd)
-            {
-                closestDayOffStart = closestDayOffEnd.AddDays(-7);
-            }
+            var intersecting = schedule.Where(x => IsBetween(currentDateTime, x.Start, x.End));
 
-            return (currentDateTime >= closestDayOffStart && currentDateTime < closestDayOffEnd)
-                   //don't even try to understand
-                   || currentDateTime < closestDayOffEnd.AddDays(-7);
-        }
-
-        [CanBeNull]
-        private bool? IsDayOffByExclusion(string assetPairId, TimeSpan scheduleCutOff, DateTime currentDateTime)
-        {
-            var dayOffExclusions = _dayOffSettingsService.GetExclusions(assetPairId);
-            return dayOffExclusions
-                .Where(e =>
-                {
-                    var start = e.IsTradeEnabled ? e.Start.Add(scheduleCutOff) : e.Start.Subtract(scheduleCutOff);
-                    var end = e.IsTradeEnabled ? e.End.Subtract(scheduleCutOff) : e.End.Add(scheduleCutOff);
-                    return IsBetween(currentDateTime, start, end);
-                }).DefaultIfEmpty()
-                .Select(e => e == null ? (bool?) null : !e.IsTradeEnabled).Max();
+            return !(intersecting.OrderByDescending(x => x.Schedule.Rank)
+                         .Select(x => x.Schedule).FirstOrDefault()?.IsTradeEnabled ?? true);
         }
 
         private static bool IsBetween(DateTime currentDateTime, DateTime start, DateTime end)
         {
-            return start <= currentDateTime && currentDateTime <= end;
-        }
-
-        private static DateTime GetNextWeekday(DateTime start, DayOfWeek day)
-        {
-            var daysToAdd = ((int) day - (int) start.DayOfWeek + 7) % 7;
-            return start.Date.AddDays(daysToAdd);
+            return start <= currentDateTime && currentDateTime < end;
         }
     }
 }

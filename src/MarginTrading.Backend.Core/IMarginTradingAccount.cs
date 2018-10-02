@@ -15,6 +15,7 @@ namespace MarginTrading.Backend.Core
         [NotNull] AccountFpl AccountFpl { get; }
         bool IsDisabled { get; set; }
         DateTime LastUpdateTime { get; }
+        DateTime LastBalanceChangeTime { get; }
         bool IsWithdrawalDisabled { get; }
     }
 
@@ -29,6 +30,7 @@ namespace MarginTrading.Backend.Core
         public string LegalEntity { get; set; }
         public bool IsDisabled { get; set; } // todo: use it everywhere
         public DateTime LastUpdateTime { get; set; }
+        public DateTime LastBalanceChangeTime { get; set; }
         public bool IsWithdrawalDisabled { get; set; }
 
         public AccountFpl AccountFpl { get; private set; } = new AccountFpl();
@@ -47,6 +49,7 @@ namespace MarginTrading.Backend.Core
                 LegalEntity = src.LegalEntity,
                 IsDisabled = src.IsDisabled,
                 LastUpdateTime = src.LastUpdateTime,
+                LastBalanceChangeTime = src.LastBalanceChangeTime,
                 IsWithdrawalDisabled = src.IsWithdrawalDisabled
             };
         }
@@ -119,7 +122,7 @@ namespace MarginTrading.Backend.Core
 
         public static decimal GetTotalCapital(this IMarginTradingAccount account)
         {
-            return account.Balance + account.GetPnl() - account.GetFrozenMargin();
+            return account.Balance + account.GetPnl() - account.GetFrozenMargin() + account.GetUnconfirmedMargin();
         }
 
         public static decimal GetPnl(this IMarginTradingAccount account)
@@ -155,6 +158,11 @@ namespace MarginTrading.Backend.Core
         public static decimal GetFrozenMargin(this IMarginTradingAccount account)
         {
             return account.GetAccountFpl().WithdrawalFrozenMargin;
+        }
+
+        public static decimal GetUnconfirmedMargin(this IMarginTradingAccount account)
+        {
+            return account.GetAccountFpl().UnconfirmedMargin;
         }
 
         public static decimal GetMarginCall1Level(this IMarginTradingAccount account)

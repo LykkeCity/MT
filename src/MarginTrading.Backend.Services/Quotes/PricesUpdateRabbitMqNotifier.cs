@@ -14,7 +14,7 @@ namespace MarginTrading.Backend.Services.Quotes
             _rabbitMqNotifyService = rabbitMqNotifyService;
         }
 
-        int IEventConsumer.ConsumerRank => 100;
+        int IEventConsumer.ConsumerRank => 110;
         void IEventConsumer<BestPriceChangeEventArgs>.ConsumeEvent(object sender, BestPriceChangeEventArgs ea)
         {
             _rabbitMqNotifyService.OrderBookPrice(ea.BidAskPair);

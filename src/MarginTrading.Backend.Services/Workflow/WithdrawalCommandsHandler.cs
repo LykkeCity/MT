@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Lykke.Common.Chaos;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
@@ -16,6 +17,7 @@ namespace MarginTrading.Backend.Services.Workflow
         private readonly IDateService _dateService;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly IAccountUpdateService _accountUpdateService;
+        private readonly IChaosKitty _chaosKitty;
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
         private const string OperationName = "FreezeAmountForWithdrawal";
 
@@ -23,11 +25,13 @@ namespace MarginTrading.Backend.Services.Workflow
             IDateService dateService,
             IAccountsCacheService accountsCacheService,
             IAccountUpdateService accountUpdateService,
+            IChaosKitty chaosKitty,
             IOperationExecutionInfoRepository operationExecutionInfoRepository)
         {
             _dateService = dateService;
             _accountsCacheService = accountsCacheService;
             _accountUpdateService = accountUpdateService;
+            _chaosKitty = chaosKitty;
             _operationExecutionInfoRepository = operationExecutionInfoRepository;
         }
 
@@ -71,6 +75,8 @@ namespace MarginTrading.Backend.Services.Workflow
                 {
                     await _accountUpdateService.FreezeWithdrawalMargin(command.AccountId, command.OperationId,
                         command.Amount);
+                    
+                    _chaosKitty.Meow(command.OperationId);
 
                     publisher.PublishEvent(new AmountForWithdrawalFrozenEvent(command.OperationId, _dateService.Now(),
                         command.AccountId, command.Amount, command.Reason));
@@ -81,6 +87,8 @@ namespace MarginTrading.Backend.Services.Workflow
                         _dateService.Now(),
                         command.AccountId, command.Amount, "Not enough free margin"));
                 }
+                
+                _chaosKitty.Meow(command.OperationId);
 
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }
@@ -104,8 +112,12 @@ namespace MarginTrading.Backend.Services.Workflow
             {
                 await _accountUpdateService.UnfreezeWithdrawalMargin(executionInfo.Data.AccountId, command.OperationId);
 
+                _chaosKitty.Meow(command.OperationId);
+                
                 publisher.PublishEvent(new UnfreezeMarginOnFailSucceededWithdrawalEvent(command.OperationId,
                     _dateService.Now(), executionInfo.Data.AccountId, executionInfo.Data.Amount));
+                
+                _chaosKitty.Meow(command.OperationId);
                 
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }

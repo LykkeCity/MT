@@ -477,7 +477,7 @@ namespace MarginTradingTests
             Mock.Get(_tradingInstruments).Setup(s => s.List(It.IsAny<string>()))
                 .ReturnsAsync(new List<TradingInstrumentContract> {instrumentContract});
             
-            await _accountAssetsManager.UpdateTradingInstrumentsCache();
+            await _accountAssetsManager.UpdateTradingInstrumentsCacheAsync();
            
             position.UpdateClosePrice(1.04875M);
 
@@ -666,7 +666,7 @@ namespace MarginTradingTests
         {
             var account = Accounts[1];
             account.Balance = 240000;
-            _accountsCacheService.UpdateAccountBalance(account.Id, account.Balance);
+            _accountsCacheService.UpdateAccountBalance(account.Id, account.Balance, DateTime.UtcNow);
 
             var ordersSet = new[]
             {
@@ -725,7 +725,7 @@ namespace MarginTradingTests
         public void Is_Big_Spread_Leads_To_Stopout()
         {
             var account = Accounts[1];
-            _accountsCacheService.UpdateAccountBalance(account.Id, 24 - account.Balance);
+            _accountsCacheService.UpdateAccountBalance(account.Id, 24, DateTime.UtcNow);
             
             var ordersSet = new[]
             {
@@ -975,7 +975,7 @@ namespace MarginTradingTests
         }
 
         [Test]
-        public void Is_PendingOrder_Rejected_On_Trigger()
+        public void Is_PendingOrder_NotRejected_On_Trigger()
         {
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Limit, "EURUSD", _account,
                 MarginTradingTestsUtils.TradingConditionId, -10000, price: 1.07M);
@@ -999,8 +999,7 @@ namespace MarginTradingTests
                 new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.08M, Volume = 10 }
             });
 
-            Assert.AreEqual(OrderStatus.Rejected, order.Status); //should be rejected 
-            Assert.AreEqual(OrderRejectReason.NoLiquidity, order.RejectReason);
+            Assert.AreEqual(OrderStatus.Active, order.Status);
         }
 
         [Test]

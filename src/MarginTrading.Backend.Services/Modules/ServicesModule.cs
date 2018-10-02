@@ -161,9 +161,8 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<IRabbitMqService>()
 				.SingleInstance();
 
-			builder.RegisterType<DayOffSettingsService>()
-				.As<IDayOffSettingsService>()
-				.As<IStartable>()
+			builder.RegisterType<ScheduleSettingsCacheService>()
+				.As<IScheduleSettingsCacheService>()
 				.SingleInstance();
 
 			builder.RegisterType<AlertSeverityLevelService>()

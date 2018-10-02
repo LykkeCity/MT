@@ -29,7 +29,6 @@ namespace MarginTrading.Backend.Services
         private readonly IEventChannel<OrderActivatedEventArgs> _orderActivatedEventChannel;
         private readonly IEventChannel<OrderRejectedEventArgs> _orderRejectedEventChannel;
 
-        private readonly IQuoteCacheService _quoteCashService;
         private readonly IValidateOrderService _validateOrderService;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly OrdersCache _ordersCache;
@@ -54,7 +53,6 @@ namespace MarginTrading.Backend.Services
             IEventChannel<OrderActivatedEventArgs> orderActivatedEventChannel, 
             IEventChannel<OrderRejectedEventArgs> orderRejectedEventChannel,
             IValidateOrderService validateOrderService,
-            IQuoteCacheService quoteCashService,
             IAccountsCacheService accountsCacheService,
             OrdersCache ordersCache,
             IMatchingEngineRouter meRouter,
@@ -77,7 +75,6 @@ namespace MarginTrading.Backend.Services
             _orderChangedEventChannel = orderChangedEventChannel;
             _orderRejectedEventChannel = orderRejectedEventChannel;
 
-            _quoteCashService = quoteCashService;
             _validateOrderService = validateOrderService;
             _accountsCacheService = accountsCacheService;
             _ordersCache = ordersCache;
@@ -227,12 +224,15 @@ namespace MarginTrading.Backend.Services
             if (!matchedOrders.Any())
             {
                 RejectOrder(order, OrderRejectReason.NoLiquidity, "No orders to match", "");
+                return order;
             } 
-            else if (matchedOrders.SummaryVolume < Math.Abs(order.Volume))
+            
+            if (matchedOrders.SummaryVolume < Math.Abs(order.Volume))
             {
                 if (order.FillType == OrderFillType.FillOrKill)
                 {
                     RejectOrder(order, OrderRejectReason.NoLiquidity, "Not fully matched", "");
+                    return order;
                 }
                 else
                 {
@@ -242,7 +242,7 @@ namespace MarginTrading.Backend.Services
                 }
             }
 
-            if (order.Status != OrderStatus.Rejected)
+            if (order.Status == OrderStatus.ExecutionStarted)
             {
                 var accuracy = _assetPairsCache.GetAssetPairByIdOrDefault(order.AssetPairId)?.Accuracy ??
                                AssetPairsCache.DefaultAssetPairAccuracy;
@@ -286,43 +286,48 @@ namespace MarginTrading.Backend.Services
 
         private void RejectOrder(Order order, OrderRejectReason reason, string message, string comment = null)
         {
-            order.Reject(reason, message, comment, _dateService.Now());
+            if (order.OrderType == OrderType.Market || reason != OrderRejectReason.NoLiquidity)
+            {
+                order.Reject(reason, message, comment, _dateService.Now());
             
-            _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
+                _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
+            }
+            //TODO: think how to avoid infinite loop
+            else if (!_ordersCache.TryGetOrderById(order.Id, out _)) // all pending orders should be returned to active state if there is no liquidity
+            {
+                order.CancelExecution(_dateService.Now());
+                _ordersCache.Active.Add(order);   
+                _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order));
+            }
         }
 
         #region Orders waiting for execution
 
-        private void ProcessOrdersWaitingForExecution(string instrument)
+        private void ProcessOrdersWaitingForExecution(InstrumentBidAskPair quote)
         {
+            //TODO: MTC-155
             //ProcessPendingOrdersMarginRecalc(instrument);
 
-            var orders = GetPendingOrdersToBeExecuted(instrument).ToArray();
-
-            if (orders.Length == 0)
+            var orders = GetPendingOrdersToBeExecuted(quote).GetSortedForExecution();
+            
+            if (!orders.Any())
                 return;
-
-
-            //TODO: think how to make sure that we don't loose orders
-            // + change logic according validation and execution rules
 
             foreach (var order in orders)
             {
                 _threadSwitcher.SwitchThread(async () =>
                 {
-                    _ordersCache.Active.Remove(order);
                     await PlaceOrderByMarketPrice(order);
                 });
             }
         }
 
-        private IEnumerable<Order> GetPendingOrdersToBeExecuted(string instrument)
+        private IEnumerable<Order> GetPendingOrdersToBeExecuted(InstrumentBidAskPair quote)
         {
-            var pendingOrders = _ordersCache.Active.GetOrdersByInstrument(instrument)
-                .OrderBy(item => item.Created);
+            var pendingOrders = _ordersCache.Active.GetOrdersByInstrument(quote.Instrument);
 
             var now = _dateService.Now();
-            
+
             foreach (var order in pendingOrders)
             {
                 if (order.Validity.HasValue && now >= order.Validity.Value)
@@ -332,15 +337,20 @@ namespace MarginTrading.Backend.Services
                     _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order));
                     continue;
                 }
-                
-                if (_quoteCashService.TryGetQuoteById(order.AssetPairId, out var pair))
-                {
-                    var price = pair.GetPriceForOrderDirection(order.Direction);
 
-                    if (order.IsSuitablePriceForPendingOrder(price) /*&&
-                        !_assetPairDayOffService.ArePendingOrdersDisabled(order.AssetPairId)*/)
-                        yield return order;
+                var price = quote.GetPriceForOrderDirection(order.Direction);
+
+                if (order.IsSuitablePriceForPendingOrder(price) &&
+                        !_assetPairDayOffService.ArePendingOrdersDisabled(order.AssetPairId))
+                {
+                    //TODO: inspect one more time in MTC-248
+                    // if order is removed from Active, execution should be started immediately
+                    // and/or placed to InProgress
+
+                    _ordersCache.Active.Remove(order);
+                    yield return order;
                 }
+
             }
         }
 
@@ -593,12 +603,12 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        int IEventConsumer.ConsumerRank => 100;
+        int IEventConsumer.ConsumerRank => 101;
 
         void IEventConsumer<BestPriceChangeEventArgs>.ConsumeEvent(object sender, BestPriceChangeEventArgs ea)
         {
             ProcessPositions(ea.BidAskPair.Instrument);
-            ProcessOrdersWaitingForExecution(ea.BidAskPair.Instrument);
+            ProcessOrdersWaitingForExecution(ea.BidAskPair);
         }
     }
 }

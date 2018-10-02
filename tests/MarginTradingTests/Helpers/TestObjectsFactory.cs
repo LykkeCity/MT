@@ -17,10 +17,12 @@ namespace MarginTradingTests.Helpers
         }
         
         public static Order CreateNewOrder(OrderType orderType, string assetPairId, IMarginTradingAccount account,
-            string tradingConditionId, decimal volume, OrderFillType fillType = OrderFillType.FillOrKill, DateTime? validity = null, decimal? price = null,
-            bool forceOpen = false, string parentOrderId = null, string parentPositionId = null)
+            string tradingConditionId, decimal volume, OrderFillType fillType = OrderFillType.FillOrKill, 
+            DateTime? validity = null, decimal? price = null, bool forceOpen = false, string parentOrderId = null, 
+            string parentPositionId = null, DateTime? created = null)
         {
-            return new Order(Guid.NewGuid().ToString("N"), 0, assetPairId, volume, DateTime.UtcNow, DateTime.UtcNow,
+            created = created ?? DateTime.UtcNow;
+            return new Order(Guid.NewGuid().ToString("N"), 0, assetPairId, volume, created.Value, created.Value,
                 validity, account.Id, tradingConditionId, account.BaseAssetId, price, "EUR", fillType,
                 null, "LYKKETEST", forceOpen, orderType, parentOrderId, parentPositionId, OriginatorType.Investor, 1,
                 1, OrderStatus.Placed, null, Guid.NewGuid().ToString());

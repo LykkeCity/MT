@@ -1,27 +1,49 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
+using JetBrains.Annotations;
+using MarginTrading.SettingsService.Contracts.Scheduling;
+// ReSharper disable NotNullMemberIsNotInitialized
 
 namespace MarginTrading.Backend.Core.DayOffSettings
 {
     public class ScheduleSettings
     {
-        public DayOfWeek DayOffStartDay { get; }
-        public TimeSpan DayOffStartTime { get; }
-        public DayOfWeek DayOffEndDay { get; }
-        public TimeSpan DayOffEndTime { get; }
-        public HashSet<string> AssetPairsWithoutDayOff { get; }
-        public TimeSpan PendingOrdersCutOff { get; }
+        public string Id { get; set; }
+        public int Rank { get; set; }
+        public bool? IsTradeEnabled { get; set; } = false;
+        public TimeSpan? PendingOrdersCutOff { get; set; }
 
-        public ScheduleSettings(DayOfWeek dayOffStartDay, TimeSpan dayOffStartTime, DayOfWeek dayOffEndDay,
-            TimeSpan dayOffEndTime, HashSet<string> assetPairsWithoutDayOff, TimeSpan pendingOrdersCutOff)
+        /// <summary>
+        /// Can't be null. Must be validated before conversion from contracts.
+        /// </summary>
+        [NotNull]
+        public ScheduleConstraint Start { get; set; }
+        /// <summary>
+        /// Can't be null. Must be validated before conversion from contracts.
+        /// </summary>
+        [NotNull]
+        public ScheduleConstraint End { get; set; }
+
+        public static ScheduleSettings Create(CompiledScheduleSettingsContract scheduleSettingsContract)
         {
-            DayOffStartDay = dayOffStartDay;
-            DayOffStartTime = dayOffStartTime;
-            DayOffEndDay = dayOffEndDay;
-            DayOffEndTime = dayOffEndTime;
-            AssetPairsWithoutDayOff = assetPairsWithoutDayOff ??
-                                      throw new ArgumentNullException(nameof(assetPairsWithoutDayOff));
-            PendingOrdersCutOff = pendingOrdersCutOff;
+            return new ScheduleSettings
+            {
+                Id = scheduleSettingsContract.Id,
+                Rank = scheduleSettingsContract.Rank,
+                IsTradeEnabled = scheduleSettingsContract.IsTradeEnabled,
+                PendingOrdersCutOff = scheduleSettingsContract.PendingOrdersCutOff,
+                Start = new ScheduleConstraint
+                {
+                    Date = scheduleSettingsContract.Start.Date,
+                    DayOfWeek = scheduleSettingsContract.Start.DayOfWeek,
+                    Time = scheduleSettingsContract.Start.Time
+                },
+                End = new ScheduleConstraint
+                {
+                    Date = scheduleSettingsContract.End.Date,
+                    DayOfWeek = scheduleSettingsContract.End.DayOfWeek,
+                    Time = scheduleSettingsContract.End.Time,
+                }
+            };
         }
     }
 }
