@@ -215,6 +215,7 @@ namespace MarginTrading.Backend.Services.Modules
                 .ListeningEvents(
                     typeof(SpecialLiquidationOrderExecutedEvent),
                     typeof(SpecialLiquidationStartedInternalEvent),
+                    typeof(SpecialLiquidationOrderExecutionFailedEvent),
                     typeof(SpecialLiquidationFinishedEvent),
                     typeof(SpecialLiquidationFailedEvent)
                 )
