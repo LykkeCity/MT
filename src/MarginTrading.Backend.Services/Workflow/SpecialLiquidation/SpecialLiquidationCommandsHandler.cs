@@ -312,18 +312,20 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceReceived,
                 SpecialLiquidationOperationState.ExternalOrderExecuted))
             {
+                var order = new OrderModel(
+                    tradeType: command.Volume > 0 ? TradeType.Buy : TradeType.Sell,
+                    orderType: OrderType.Market.ToType<Lykke.Service.ExchangeConnector.Client.Models.OrderType>(),
+                    timeInForce: TimeInForce.FillOrKill,
+                    volume: (double) Math.Abs(command.Volume),
+                    dateTime: _dateService.Now(),
+                    exchangeName: executionInfo.Data.ExternalProviderId,
+                    instrument: command.Instrument,
+                    price: (double?) command.Price,
+                    orderId: _identityGenerator.GenerateAlphanumericId());
+                
                 try
                 {
-                    var executionResult = await _exchangeConnectorService.CreateOrderAsync(new OrderModel(
-                        tradeType: command.Volume > 0 ? TradeType.Buy : TradeType.Sell,
-                        orderType: OrderType.Market.ToType<Lykke.Service.ExchangeConnector.Client.Models.OrderType>(),
-                        timeInForce: TimeInForce.FillOrKill,
-                        volume: (double) Math.Abs(command.Volume),
-                        dateTime: _dateService.Now(),
-                        exchangeName: executionInfo.Data.ExternalProviderId,
-                        instrument: command.Instrument,
-                        price: (double?) command.Price,
-                        orderId: _identityGenerator.GenerateAlphanumericId()));
+                    var executionResult = await _exchangeConnectorService.CreateOrderAsync(order);
 
                     publisher.PublishEvent(new SpecialLiquidationOrderExecutedEvent
                     {
@@ -342,6 +344,10 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         CreationTime = _dateService.Now(),
                         Reason = exception.Message
                     });
+                    await _log.WriteWarningAsync(nameof(SpecialLiquidationCommandsHandler),
+                        nameof(ExecuteSpecialLiquidationOrderCommand),
+                        $"Failed to execute the order: {order.ToJson()}",
+                        exception);
                 }
                 
                 //todo think what if meow happens here
