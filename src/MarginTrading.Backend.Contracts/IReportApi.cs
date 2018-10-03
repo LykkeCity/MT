@@ -11,7 +11,7 @@ namespace MarginTrading.Backend.Contracts
     public interface IReportApi
     {
         /// <summary>
-        /// Populates the data needed for report building to SQL tables
+        /// Populates the data needed for report building to the storage: open positions and account fpl
         /// </summary>
         /// <returns>Returns 200 on success, exception otherwise</returns>
         [Post("/api/reports/dump-data")]

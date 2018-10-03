@@ -1,0 +1,107 @@
+using System;
+using System.Collections.Generic;
+using AzureStorage.Tables;
+using Common;
+using Lykke.AzureStorage.Tables;
+using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Orders;
+
+namespace MarginTrading.AzureRepositories.Entities
+{
+    public class OpenPositionEntity : AzureTableEntity, IPosition
+    {
+        public string Id => RowKey;
+        public long Code { get; set; }
+        public string AssetPairId { get; set; }
+        PositionDirection IPosition.Direction => Enum.Parse<PositionDirection>(Direction);
+        public string Direction { get; set; }
+        public decimal Volume { get; set; }
+        public string AccountId { get; set; }
+        public string TradingConditionId { get; set; }
+        public string AccountAssetId { get; set; }
+        public decimal? ExpectedOpenPrice { get; set; }
+        public string OpenMatchingEngineId { get; set; }
+        public DateTime OpenDate { get; set; }
+        public string OpenTradeId { get; set; }
+        public decimal OpenPrice { get; set; }
+        public decimal OpenFxPrice { get; set; }
+        public string EquivalentAsset { get; set; }
+        public decimal OpenPriceEquivalent { get; set; }
+        public string LegalEntity { get; set; }
+        OriginatorType IPosition.OpenOriginator => Enum.Parse<OriginatorType>(OpenOriginator);
+        public string OpenOriginator { get; set; }
+        public string ExternalProviderId { get; set; }
+        public decimal SwapCommissionRate { get; set; }
+        public decimal OpenCommissionRate { get; set; }
+        public decimal CloseCommissionRate { get; set; }
+        public decimal CommissionLot { get; set; }
+        public string CloseMatchingEngineId { get; set; }
+        public decimal ClosePrice { get; set; }
+        public decimal CloseFxPrice { get; set; }
+        public decimal ClosePriceEquivalent { get; set; }
+        public DateTime? StartClosingDate { get; set; }
+        public DateTime? CloseDate { get; set; }
+        OriginatorType? IPosition.CloseOriginator => Enum.TryParse<OriginatorType>(CloseOriginator, out var clOr)
+            ? clOr : (OriginatorType?)null;
+        public string CloseOriginator { get; set; }
+        PositionCloseReason IPosition.CloseReason => Enum.Parse<PositionCloseReason>(CloseReason);
+        public string CloseReason { get; set; }
+        public string CloseComment { get; set; }
+        List<string> IPosition.CloseTrades => CloseTrades.DeserializeJson<List<string>>();
+        public string CloseTrades { get; set; }
+        public DateTime? LastModified { get; set; }
+        public decimal TotalPnL { get; set; }
+        public decimal ChargedPnL { get; set; }
+
+        List<RelatedOrderInfo> IPosition.RelatedOrders => RelatedOrders.DeserializeJson<List<RelatedOrderInfo>>();
+        public string RelatedOrders { get; set; }
+        
+        public DateTime HistoryTimestamp { get; set; }
+        
+        public static OpenPositionEntity Create(Position position, DateTime now)
+        {
+            return new OpenPositionEntity
+            {
+                PartitionKey = "OpenPositions",
+                RowKey = position.Id,
+                AccountAssetId = position.AccountAssetId,
+                AccountId = position.AccountId,
+                AssetPairId = position.AssetPairId,
+                CloseComment = position.CloseComment,
+                CloseCommissionRate = position.CloseCommissionRate,
+                CloseDate = position.CloseDate,
+                CloseFxPrice = position.CloseFxPrice,
+                CloseMatchingEngineId = position.CloseMatchingEngineId,
+                CloseOriginator = position.CloseOriginator?.ToString(),
+                ClosePrice = position.ClosePrice,
+                ClosePriceEquivalent = position.ClosePriceEquivalent,
+                CloseReason = position.CloseReason.ToString(),
+                CloseTrades = position.CloseTrades.ToJson(),
+                Code = position.Code,
+                CommissionLot = position.CommissionLot,
+                Direction = position.Direction.ToString(),
+                EquivalentAsset = position.EquivalentAsset,
+                ExpectedOpenPrice = position.ExpectedOpenPrice,
+                ExternalProviderId = position.ExternalProviderId,
+                LastModified = position.LastModified,
+                LegalEntity = position.LegalEntity,
+                OpenCommissionRate = position.OpenCommissionRate,
+                OpenDate = position.OpenDate,
+                OpenFxPrice = position.OpenFxPrice,
+                OpenMatchingEngineId = position.OpenMatchingEngineId,
+                OpenOriginator = position.OpenOriginator.ToString(),
+                OpenPrice = position.OpenPrice,
+                OpenPriceEquivalent = position.OpenPriceEquivalent,
+                OpenTradeId = position.OpenTradeId,
+                RelatedOrders = position.RelatedOrders.ToJson(),
+                StartClosingDate = position.CloseDate,
+                SwapCommissionRate = position.SwapCommissionRate,
+                TotalPnL = position.GetFpl(),
+                ChargedPnL = position.ChargedPnL,
+                TradingConditionId = position.TradingConditionId,
+                Volume = position.Volume,
+                HistoryTimestamp = now,
+            };
+        }
+    }
+}

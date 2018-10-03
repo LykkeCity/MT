@@ -62,6 +62,18 @@ namespace MarginTrading.Backend.Modules
                     .WithParameter(new NamedParameter("connectionStringManager",
                         _settings.Nested(x => x.Db.MarginTradingConnString)))
                     .SingleInstance();
+                
+                builder.RegisterType<AzureRepositories.OpenPositionsRepository>()
+                    .As<IOpenPositionsRepository>()
+                    .WithParameter(new NamedParameter("connectionStringManager",
+                        _settings.Nested(x => x.Db.MarginTradingConnString)))
+                    .SingleInstance();
+                
+                builder.RegisterType<AzureRepositories.AccountStatRepository>()
+                    .As<IAccountStatRepository>()
+                    .WithParameter(new NamedParameter("connectionStringManager",
+                        _settings.Nested(x => x.Db.MarginTradingConnString)))
+                    .SingleInstance();
             }
             else if (_settings.CurrentValue.Db.StorageMode == StorageMode.SqlServer)
             {
@@ -83,6 +95,18 @@ namespace MarginTrading.Backend.Modules
                 
                 builder.RegisterType<SqlRepositories.Repositories.OperationExecutionInfoRepository>()
                     .As<IOperationExecutionInfoRepository>()
+                    .WithParameter(new NamedParameter("connectionString", 
+                        _settings.CurrentValue.Db.SqlConnectionString))
+                    .SingleInstance();
+
+                builder.RegisterType<SqlRepositories.Repositories.OpenPositionsRepository>()
+                    .As<IOpenPositionsRepository>()
+                    .WithParameter(new NamedParameter("connectionString", 
+                        _settings.CurrentValue.Db.SqlConnectionString))
+                    .SingleInstance();
+
+                builder.RegisterType<SqlRepositories.Repositories.AccountStatRepository>()
+                    .As<IAccountStatRepository>()
                     .WithParameter(new NamedParameter("connectionString", 
                         _settings.CurrentValue.Db.SqlConnectionString))
                     .SingleInstance();

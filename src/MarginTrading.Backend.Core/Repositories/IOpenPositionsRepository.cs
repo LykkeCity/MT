@@ -7,6 +7,6 @@ namespace MarginTrading.Backend.Core.Repositories
 {
     public interface IOpenPositionsRepository
     {
-        Task Dump(IEnumerable<PositionContract> openPositions);
+        Task Dump(IEnumerable<Position> openPositions);
     }
 }

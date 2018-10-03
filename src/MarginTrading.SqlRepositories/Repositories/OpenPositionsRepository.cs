@@ -1,14 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 using Common.Log;
+using Dapper;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Common.Services;
+using MarginTrading.SqlRepositories.Entities;
 
 namespace MarginTrading.SqlRepositories.Repositories
 {
@@ -18,7 +21,6 @@ namespace MarginTrading.SqlRepositories.Repositories
         private const string CreateTableScript = "CREATE TABLE [{0}](" +
                                                  @"[OID] [bigint] NOT NULL IDENTITY (1,1) PRIMARY KEY,
 [Id] [nvarchar](64) NOT NULL,
-[DealId] [nvarchar](128) NULL,
 [Code] [bigint] NULL,
 [AssetPairId] [nvarchar] (64) NULL,
 [Direction] [nvarchar] (64) NULL,
@@ -51,48 +53,77 @@ namespace MarginTrading.SqlRepositories.Repositories
 [CloseOriginator] [nvarchar] (64) NULL,
 [CloseReason] [nvarchar] (256) NULL,
 [CloseComment] [nvarchar] (256) NULL,
-[CloseTrades] [nvarchar] (1024) NULL,
+[CloseTrades] [nvarchar] (MAX) NULL,
 [LastModified] [datetime] NULL,
 [TotalPnL] [float] NULL,
 [ChargedPnl] [float] NULL,
-[HistoryType] [nvarchar] (64) NULL,
-[DealInfo] [nvarchar] (1024) NULL,
-[HistoryTimestamp] [datetime] NULL
+[HistoryTimestamp] [datetime] NOT NULL
 );";
         
-        private static Type DataType => typeof(PositionContract);//todo use entity/interface
+        private static Type DataType => typeof(OpenPositionEntity);
         private static readonly string GetColumns = string.Join(",", DataType.GetProperties().Select(x => x.Name));
         private static readonly string GetFields = string.Join(",", DataType.GetProperties().Select(x => "@" + x.Name));
 
-        private readonly IConvertService _convertService;
-        private readonly MarginTradingSettings _settings;
+        private readonly string _connectionString;
         private readonly ILog _log;
+        private readonly IDateService _dateService;
 
         /// <summary>
         /// For testing purposes
         /// </summary>
         public OpenPositionsRepository(){}
         
-        public OpenPositionsRepository(IConvertService convertService, MarginTradingSettings settings, ILog log)
+        public OpenPositionsRepository(IDateService dateService, string connectionString, ILog log)
         {
-            _convertService = convertService;
+            _dateService = dateService;
             _log = log;
-            _settings = settings;
+            _connectionString = connectionString;
             
-            using (var conn = new SqlConnection(_settings.Db.SqlConnectionString))
+            using (var conn = new SqlConnection(_connectionString))
             {
                 try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
                 catch (Exception ex)
                 {
-                    _log?.WriteErrorAsync(nameof(AccountMarginFreezingRepository), "CreateTableIfDoesntExists", null, ex);
+                    _log?.WriteErrorAsync(nameof(OpenPositionsRepository), "CreateTableIfDoesntExists", null, ex);
                     throw;
                 }
             }
         }
         
-        public async Task Dump(IEnumerable<PositionContract> openPositions)
+        public async Task Dump(IEnumerable<Position> openPositions)
         {
+            var reportTime = _dateService.Now();
+            var entities = openPositions.Select(x => OpenPositionEntity.Create(x, reportTime));
             
+            using (var conn = new SqlConnection(_connectionString))
+            {
+                if (conn.State == ConnectionState.Closed)
+                    await conn.OpenAsync();
+                
+                var transaction = conn.BeginTransaction();
+                
+                try
+                {
+                    await conn.ExecuteAsync(
+                        $"TRUNCATE TABLE {TableName}",
+                        new {},
+                        transaction);
+                    
+                    await conn.ExecuteAsync(
+                        $"INSERT INTO {TableName} ({GetColumns}) VALUES ({GetFields})",
+                        entities,
+                        transaction);
+                    
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    await _log.WriteWarningAsync(nameof(AccountMarginFreezingRepository), nameof(Dump),
+                        $"Failed to dump open positions data at {_dateService.Now():s}", ex);
+                    transaction.Rollback();
+                    throw;
+                }
+            }
         }
     }
 }

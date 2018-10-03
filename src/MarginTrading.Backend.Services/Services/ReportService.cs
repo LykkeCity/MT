@@ -15,35 +15,28 @@ namespace MarginTrading.Backend.Services.Services
     {
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly OrdersCache _ordersCache;
-        private readonly IConvertService _convertService;
         private readonly IOpenPositionsRepository _openPositionsRepository;
+        private readonly IAccountStatRepository _accountStatRepository;
 
         public ReportService(
             IAccountsCacheService accountsCacheService,
             OrdersCache ordersCache,
-            IConvertService convertService,
-            IOpenPositionsRepository openPositionsRepository)
+            IOpenPositionsRepository openPositionsRepository,
+            IAccountStatRepository accountStatRepository)
         {
             _accountsCacheService = accountsCacheService;
             _ordersCache = ordersCache;
-            _convertService = convertService;
             _openPositionsRepository = openPositionsRepository;
+            _accountStatRepository = accountStatRepository;
         }
         
         public async Task DumpReportData()
         {
             var positions = _ordersCache.GetPositions();
-            
-            await _openPositionsRepository.Dump(positions.Select(position =>
-            {
-                var positionContract = _convertService.Convert<Position, PositionContract>(position,
-                    o => o.ConfigureMap(MemberList.Destination).ForMember(x => x.TotalPnL, c => c.Ignore()));
-                positionContract.TotalPnL = position.GetFpl();
-                return positionContract;
-            }));
+            await _openPositionsRepository.Dump(positions);
             
             var accountStat = _accountsCacheService.GetAll();
-
+            await _accountStatRepository.Dump(accountStat);
         }
     }
 }

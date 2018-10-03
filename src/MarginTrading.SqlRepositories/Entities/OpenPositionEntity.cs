@@ -1,15 +1,17 @@
 using System;
+using System.Collections.Generic;
 using Common;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
 
 namespace MarginTrading.SqlRepositories.Entities
 {
-    public class OpenPositionEntity
+    public class OpenPositionEntity : IPosition
     {
         public string Id { get; set; }
         public long Code { get; set; }
         public string AssetPairId { get; set; }
+        PositionDirection IPosition.Direction => Enum.Parse<PositionDirection>(Direction);
         public string Direction { get; set; }
         public decimal Volume { get; set; }
         public string AccountId { get; set; }
@@ -24,6 +26,7 @@ namespace MarginTrading.SqlRepositories.Entities
         public string EquivalentAsset { get; set; }
         public decimal OpenPriceEquivalent { get; set; }
         public string LegalEntity { get; set; }
+        OriginatorType IPosition.OpenOriginator => Enum.Parse<OriginatorType>(OpenOriginator);
         public string OpenOriginator { get; set; }
         public string ExternalProviderId { get; set; }
         public decimal SwapCommissionRate { get; set; }
@@ -36,17 +39,24 @@ namespace MarginTrading.SqlRepositories.Entities
         public decimal ClosePriceEquivalent { get; set; }
         public DateTime? StartClosingDate { get; set; }
         public DateTime? CloseDate { get; set; }
+        OriginatorType? IPosition.CloseOriginator => Enum.TryParse<OriginatorType>(CloseOriginator, out var clOr)
+            ? clOr : (OriginatorType?)null;
         public string CloseOriginator { get; set; }
+        PositionCloseReason IPosition.CloseReason => Enum.Parse<PositionCloseReason>(CloseReason);
         public string CloseReason { get; set; }
         public string CloseComment { get; set; }
+        List<string> IPosition.CloseTrades => CloseTrades.DeserializeJson<List<string>>();
+        public string CloseTrades { get; set; }
         public DateTime? LastModified { get; set; }
         public decimal TotalPnL { get; set; }
-        public decimal ChargedPnl { get; set; }
-        
-        public string RelatedOrders { get; set; }
-        public string CloseTrades { get; set; }
+        public decimal ChargedPnL { get; set; }
 
-        public static OpenPositionEntity Create(Position position)
+        List<RelatedOrderInfo> IPosition.RelatedOrders => RelatedOrders.DeserializeJson<List<RelatedOrderInfo>>();
+        public string RelatedOrders { get; set; }
+        
+        public DateTime HistoryTimestamp { get; set; }
+        
+        public static OpenPositionEntity Create(Position position, DateTime now)
         {
             return new OpenPositionEntity
             {
@@ -83,9 +93,11 @@ namespace MarginTrading.SqlRepositories.Entities
                 RelatedOrders = position.RelatedOrders.ToJson(),
                 StartClosingDate = position.CloseDate,
                 SwapCommissionRate = position.SwapCommissionRate,
-                TotalPnL = position.GetTotalFpl(),//todo no accuracy applied
+                TotalPnL = position.GetFpl(),
+                ChargedPnL = position.ChargedPnL,
                 TradingConditionId = position.TradingConditionId,
                 Volume = position.Volume,
+                HistoryTimestamp = now,
             };
         }
     }

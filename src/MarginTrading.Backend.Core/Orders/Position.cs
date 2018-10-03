@@ -5,7 +5,7 @@ using MarginTrading.Backend.Core.Trading;
 
 namespace MarginTrading.Backend.Core.Orders
 {
-    public class Position
+    public class Position : IPosition
     {
         public virtual string Id { get; protected set; }
         public long Code { get; private set; }
