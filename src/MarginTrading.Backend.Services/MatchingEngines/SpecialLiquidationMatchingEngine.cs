@@ -36,7 +36,8 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             _externalExecutionTime = externalExecutionTime;
         }
         
-        public Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition)
+        public Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition,
+            OrderModality modality = OrderModality.Regular)
         {
             var col = new MatchedOrderCollection(new [] {new MatchedOrder
             {

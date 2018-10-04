@@ -52,7 +52,8 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             Id = id;
         }
         
-        public async Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition)
+        public async Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition,
+            OrderModality modality = OrderModality.Regular)
         {
             var prices = _externalOrderbookService.GetPricesForExecution(order.AssetPairId, order.Volume, shouldOpenNewPosition);
 
@@ -83,7 +84,8 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                         exchangeName: sourcePrice.source,
                         instrument: externalAssetPair,
                         price: (double?)sourcePrice.price,
-                        orderId: order.Id);
+                        orderId: order.Id,
+                        modality: modality.ToType<TradeRequestModality>());
 
                     var executionResult = await _exchangeConnectorService.CreateOrderAsync(externalOrderModel);
 

@@ -13,7 +13,8 @@ namespace MarginTrading.Backend.Core.MatchingEngines
         
         MatchingEngineMode Mode { get; }
 
-        Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition);
+        Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition, 
+            OrderModality modality = OrderModality.Regular);
         
         //Task MatchMarketOrderForCloseAsync(Position order, Func<MatchedOrderCollection, bool> orderProcessed);
         

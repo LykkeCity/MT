@@ -15,7 +15,8 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
         public MatchingEngineMode Mode => MatchingEngineMode.MarketMaker;
 
-        public Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition)
+        public Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition,
+            OrderModality modality = OrderModality.Regular)
         {
             return Task.FromResult(new MatchedOrderCollection());
         }
