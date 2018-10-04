@@ -50,6 +50,7 @@ namespace MarginTrading.SqlRepositories.Entities
         public DateTime? LastModified { get; set; }
         public decimal TotalPnL { get; set; }
         public decimal ChargedPnL { get; set; }
+        public decimal Margin { get; set; }
 
         List<RelatedOrderInfo> IPosition.RelatedOrders => RelatedOrders.DeserializeJson<List<RelatedOrderInfo>>();
         public string RelatedOrders { get; set; }
@@ -95,6 +96,7 @@ namespace MarginTrading.SqlRepositories.Entities
                 SwapCommissionRate = position.SwapCommissionRate,
                 TotalPnL = position.GetFpl(),
                 ChargedPnL = position.ChargedPnL,
+                Margin = position.GetMarginMaintenance(),
                 TradingConditionId = position.TradingConditionId,
                 Volume = position.Volume,
                 HistoryTimestamp = now,

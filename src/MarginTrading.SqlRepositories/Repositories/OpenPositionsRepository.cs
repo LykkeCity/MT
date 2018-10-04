@@ -57,6 +57,7 @@ namespace MarginTrading.SqlRepositories.Repositories
 [LastModified] [datetime] NULL,
 [TotalPnL] [float] NULL,
 [ChargedPnl] [float] NULL,
+[Margin] [float] NULL,
 [HistoryTimestamp] [datetime] NOT NULL
 );";
         
