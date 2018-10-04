@@ -60,7 +60,8 @@ namespace MarginTrading.Backend.Services.Stp
             return _orderbooks.TryReadValue(assetPairId, (dataExist, assetPair, orderbooks)
                 => dataExist
                     ? orderbooks.Select(p => (p.Key,
-                        MatchBestPriceForOrderExecution(p.Value, volume, validateOppositeDirectionVolume))).ToList()
+                            MatchBestPriceForOrderExecution(p.Value, volume, validateOppositeDirectionVolume)))
+                        .Where(p => p.Item2 != null).ToList()
                     : null);
         }
 
