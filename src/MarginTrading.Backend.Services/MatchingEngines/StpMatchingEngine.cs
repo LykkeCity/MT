@@ -56,7 +56,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         {
             var prices = _externalOrderbookService.GetPricesForExecution(order.AssetPairId, order.Volume, shouldOpenNewPosition);
 
-            if (prices == null)
+            if (prices == null || !prices.Any())
             {
                 return new MatchedOrderCollection();
             }
