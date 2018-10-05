@@ -2,62 +2,106 @@
 using System.Collections.Generic;
 using System.Linq;
 using MarginTrading.Backend.Core.Trading;
+using Newtonsoft.Json;
 
 namespace MarginTrading.Backend.Core.Orders
 {
     public class Position
     {
+        [JsonProperty]
         public virtual string Id { get; protected set; }
+        [JsonProperty]
         public long Code { get; private set; }
+        [JsonProperty]
         public virtual string AssetPairId { get; protected set; }
+        [JsonProperty]
         public PositionDirection Direction { get; private set; }
+        [JsonProperty]
         public decimal Volume { get; private set; }
+        [JsonProperty]
         public virtual string AccountId { get; protected set; }
+        [JsonProperty]
         public string TradingConditionId { get; private set; }
+        [JsonProperty]
         public string AccountAssetId { get; private set; }
+        [JsonProperty]
         public decimal? ExpectedOpenPrice { get; private set; }
+        [JsonProperty]
         public string OpenMatchingEngineId { get; private set; }
+        [JsonProperty]
         public DateTime OpenDate { get; private set; }
+        [JsonProperty]
         public string OpenTradeId { get; private set; }
+        [JsonProperty]
         public decimal OpenPrice { get; private set; }
+        [JsonProperty]
         public decimal OpenFxPrice { get; private set; }
+        [JsonProperty]
         public string EquivalentAsset { get; private set; }
+        [JsonProperty]
         public decimal OpenPriceEquivalent { get; private set; }
+        [JsonProperty]
         public List<RelatedOrderInfo> RelatedOrders { get; private set; }
+        [JsonProperty]
         public string LegalEntity { get; private set; }  
+        [JsonProperty]
         public OriginatorType OpenOriginator { get; private set; }
+        [JsonProperty]
         public string ExternalProviderId { get; private set; }
 
+        [JsonProperty]
         public decimal SwapCommissionRate { get; private set; }
+        [JsonProperty]
         public decimal OpenCommissionRate { get; private set; }
+        [JsonProperty]
         public decimal CloseCommissionRate { get; private set; }
+        [JsonProperty]
         public decimal CommissionLot { get; private set; }
         
+        [JsonProperty]
         public string CloseMatchingEngineId { get; private set; }
+        [JsonProperty]
         public decimal ClosePrice { get; private set; }
+        [JsonProperty]
         public decimal CloseFxPrice { get; private set; }
+        [JsonProperty]
         public decimal ClosePriceEquivalent { get; private set; }
+        [JsonProperty]
         public DateTime? StartClosingDate { get; private set; }
+        [JsonProperty]
         public DateTime? CloseDate { get; private set; }
+        [JsonProperty]
         public OriginatorType? CloseOriginator { get; private set; }
+        [JsonProperty]
         public PositionCloseReason CloseReason { get; private set; }
+        [JsonProperty]
         public string CloseComment { get; private set; }
+        [JsonProperty]
         public List<string> CloseTrades { get; private set; }
         
+        [JsonProperty]
         public PositionStatus Status { get; private set; }
         
+        [JsonProperty]
         public DateTime? LastModified { get; private set; }
 
+        [JsonProperty]
         public decimal ChargedPnL { get; private set; }
         
+        [JsonProperty]
         public virtual HashSet<string> ChargePnlOperations { get; protected set; }
-        
-        public FplData FplData { get; private set; } = new FplData();
-        
+
+        [JsonProperty]
+        public FplData FplData { get; private set; }
+
         /// <summary>
-        /// For testing only
+        /// For testing and deserialization
         /// </summary>
-        protected Position() {}
+        [JsonConstructor]
+        public Position()
+        {
+            FplData = new FplData {ActualHash = 1};
+        }
 
         public Position(string id, long code, string assetPairId, decimal volume, string accountId,
             string tradingConditionId, string accountAssetId, decimal? expectedOpenPrice,
@@ -87,6 +131,7 @@ namespace MarginTrading.Backend.Core.Orders
             ExternalProviderId = externalProviderId;
             CloseTrades = new List<string>();
             ChargePnlOperations = new HashSet<string>();
+            FplData = new FplData {ActualHash = 1};
         }
 
         public void StartClosing(DateTime date, PositionCloseReason reason, OriginatorType originator, string comment)
