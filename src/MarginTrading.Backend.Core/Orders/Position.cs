@@ -93,12 +93,15 @@ namespace MarginTrading.Backend.Core.Orders
 
         [JsonProperty]
         public FplData FplData { get; private set; }
-        
+
         /// <summary>
         /// For testing and deserialization
         /// </summary>
         [JsonConstructor]
-        public Position() {}
+        public Position()
+        {
+            FplData = new FplData {ActualHash = 1};
+        }
 
         public Position(string id, long code, string assetPairId, decimal volume, string accountId,
             string tradingConditionId, string accountAssetId, decimal? expectedOpenPrice,

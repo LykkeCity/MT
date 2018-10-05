@@ -70,7 +70,9 @@ namespace MarginTrading.Backend.Services
 
             fplData.Fpl = Math.Round(fpl, fplData.AccountBaseAssetAccuracy);
 
-            position.UpdateClosePrice(position.OpenPrice);
+            if (position.ClosePrice == 0)
+                position.UpdateClosePrice(position.OpenPrice);
+            
             fplData.OpenPrice = position.OpenPrice;
             fplData.ClosePrice = position.ClosePrice;
             

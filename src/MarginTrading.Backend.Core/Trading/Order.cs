@@ -275,7 +275,11 @@ namespace MarginTrading.Backend.Core.Trading
         /// For testing and deserialization
         /// </summary>
         [JsonConstructor]
-        protected Order(){}
+        protected Order()
+        {
+            MatchedOrders = new MatchedOrderCollection();
+            RelatedOrders = new List<RelatedOrderInfo>();
+        }
 
         public Order(string id, long code, string assetPairId, decimal volume,
             DateTime created, DateTime lastModified,
