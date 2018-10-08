@@ -11,6 +11,7 @@ using MarginTrading.Backend.Middleware.Validator;
 using MarginTrading.Common.RabbitMq;
 using Microsoft.AspNetCore.Hosting;
 using Lykke.Service.EmailSender;
+using Lykke.Service.TemplateFormatter;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;
@@ -103,6 +104,8 @@ namespace MarginTrading.Backend.Modules
             builder.RegisterType<EquivalentPricesService>()
                 .As<IEquivalentPricesService>()
                 .SingleInstance();
+            
+            builder.RegisterTemplateFormatter(_mtSettings.TemplateFormatterServiceClient.ServiceUrl);
             
             RegisterPublishers(builder, consoleWriter);
         }

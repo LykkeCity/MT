@@ -1,17 +1,14 @@
 using System;
-using System.Collections.Generic;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
 using Lykke.AzureQueueIntegration;
-using Lykke.Common.ApiLibrary.Middleware;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
 using Lykke.SlackNotifications;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Filters;
 using MarginTrading.Backend.Infrastructure;
@@ -19,7 +16,6 @@ using MarginTrading.Backend.Middleware;
 using MarginTrading.Backend.Modules;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Infrastructure;
-using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Modules;
 using MarginTrading.Backend.Services.Quotes;
 using MarginTrading.Backend.Services.Settings;
@@ -168,6 +164,7 @@ namespace MarginTrading.Backend
             builder.RegisterModule(new MarginTradingCommonModule());
             builder.RegisterModule(new ExternalServicesModule(mtSettings, LogLocator.CommonLog));
             builder.RegisterModule(new BackendMigrationsModule());
+            builder.RegisterModule(new BackendCqrsModule(settings, LogLocator.CommonLog));
 
             builder.RegisterBuildCallback(c => c.Resolve<AccountAssetsManager>());
             builder.RegisterBuildCallback(c => c.Resolve<OrderBookSaveService>());

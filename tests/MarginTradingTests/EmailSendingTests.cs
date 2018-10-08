@@ -7,10 +7,9 @@ using Microsoft.AspNetCore.Hosting;
 using Moq;
 using NUnit.Framework;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
+using Lykke.Service.ClientAccount.Client.Models;
 
 namespace MarginTradingTests
 {
@@ -109,6 +108,11 @@ namespace MarginTradingTests
             }
 
             public Task<bool> IsPushEnabled(string clientId)
+            {
+                throw new NotImplementedException();
+            }
+
+            public async Task<ClientModel> GetClientAsync(string clientId)
             {
                 throw new NotImplementedException();
             }

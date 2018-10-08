@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Lykke.Service.ClientAccount.Client;
+using Lykke.Service.EmailSender;
+using Lykke.Service.PushNotifications.Contract.Enums;
+using Lykke.Service.TemplateFormatter.Client;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
-using MarginTrading.Backend.Core.Messages;
-using MarginTrading.Backend.Core.Notifications;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services.Client;
-using MarginTrading.Common.Settings;
 using MarginTrading.Contract.BackendContracts;
 
 namespace MarginTrading.Backend.Services
@@ -17,17 +16,20 @@ namespace MarginTrading.Backend.Services
     {
         private readonly IAppNotifications _appNotifications;
         private readonly IClientAccountService _clientAccountService;
+        private readonly ITemplateFormatter _templateFormatter;
         private readonly IAssetsCache _assetsCache;
         private readonly IAssetPairsCache _assetPairsCache;
 
         public NotificationSenderBase(
             IAppNotifications appNotifications,
             IClientAccountService clientAccountService,
+            ITemplateFormatter templateFormatter,
             IAssetsCache assetsCache,
             IAssetPairsCache assetPairsCache)
         {
             _appNotifications = appNotifications;
             _clientAccountService = clientAccountService;
+            _templateFormatter = templateFormatter;
             _assetsCache = assetsCache;
             _assetPairsCache = assetPairsCache;
         }
@@ -38,69 +40,141 @@ namespace MarginTrading.Backend.Services
                 ? NotificationType.PositionClosed
                 : NotificationType.PositionOpened;
 
-            await SendNotification(clientId, notificationType, GetPushMessage(order),
-                order.ToBackendHistoryContract());
+            var clientAcc = await _clientAccountService.GetClientAsync(clientId);
+
+            if (clientAcc != null && !string.IsNullOrEmpty(clientAcc.NotificationsId))
+            {
+                string message = await GetOrderChangedPushMessageAsync(order, clientAcc.PartnerId);
+
+                if (!string.IsNullOrEmpty(message))
+                    await SendNotification(clientId, clientAcc.NotificationsId, notificationType, message, order.ToBackendHistoryContract());
+            }
         }
         
-        protected async Task SendMarginEventNotification(string clientId, string message)
+        protected async Task SendStopOutNotification(string clientId, int count, decimal totalPnl, string baseAssetId)
         {
-            await SendNotification(clientId, NotificationType.MarginCall, message, null);
+            var clientAcc = await _clientAccountService.GetClientAsync(clientId);
+
+            if (clientAcc != null && !string.IsNullOrEmpty(clientAcc.NotificationsId))
+            {
+                var message = await _templateFormatter.FormatAsync("PushMtStopOutTemplate", clientAcc.PartnerId,
+                    "EN", new
+                    {
+                        Count = count,
+                        TotalPnl = totalPnl,
+                        AssetId = baseAssetId
+                    });
+
+                if (message != null)
+                    await SendNotification(clientId, clientAcc.NotificationsId, NotificationType.MarginCall, message.Subject, null);
+            }
+        }
+        
+        protected async Task SendMarginCallNotification(string clientId, decimal marginUsed, string baseAssetId)
+        {
+            var clientAcc = await _clientAccountService.GetClientAsync(clientId);
+
+            if (clientAcc != null && !string.IsNullOrEmpty(clientAcc.NotificationsId))
+            {
+                var message = await _templateFormatter.FormatAsync("PushMtMarginUsedTemplate", clientAcc.PartnerId,
+                    "EN", new
+                    {
+                        MarginUsed = $"{marginUsed:P}",
+                        AssetId = baseAssetId
+                    });
+
+                if (message != null)
+                    await SendNotification(clientId, clientAcc.NotificationsId, NotificationType.MarginCall, message.Subject, null);
+            }
         }
 
-        private async Task SendNotification(string clientId, NotificationType notificationType, string message,
+        private async Task SendNotification(string clientId, string notificationId, NotificationType notificationType, string message,
             OrderHistoryBackendContract order)
         {
             if (await _clientAccountService.IsPushEnabled(clientId))
             {
-                var notificationId = await _clientAccountService.GetNotificationId(clientId);
-
                 await _appNotifications.SendNotification(notificationId, notificationType, message, order);
             }
         }
         
-        private string GetPushMessage(IOrder order)
+        private async Task<string> GetOrderChangedPushMessageAsync(IOrder order, string partnetId)
         {
-            var message = string.Empty;
+            EmailMessage message = null;
             var volume = Math.Abs(order.Volume);
             var type = order.GetOrderType() == OrderDirection.Buy ? "Long" : "Short";
             var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(order.Instrument);
             var instrumentName = assetPair?.Name ?? order.Instrument;
+
+            string templateName = null;
+            object model = null;
             
             switch (order.Status)
             {
                 case OrderStatus.WaitingForExecution:
-                    message = string.Format(MtMessages.Notifications_PendingOrderPlaced, type, instrumentName, volume, Math.Round(order.ExpectedOpenPrice ?? 0, order.AssetAccuracy));
+                    templateName = "PushMtPendingOrderPlacedTemplate";
+                    model = new
+                    {
+                        OrderType = type,
+                        AssetPairId = instrumentName,
+                        Volume = volume,
+                        Price = Math.Round(order.ExpectedOpenPrice ?? 0, order.AssetAccuracy)
+                    };
                     break;
                 case OrderStatus.Active:
-                    message = order.ExpectedOpenPrice.HasValue
-                        ? string.Format(MtMessages.Notifications_PendingOrderTriggered, type, instrumentName, volume,
-                            Math.Round(order.OpenPrice, order.AssetAccuracy))
-                        : string.Format(MtMessages.Notifications_OrderPlaced, type, instrumentName, volume,
-                            Math.Round(order.OpenPrice, order.AssetAccuracy));
+                    templateName = order.ExpectedOpenPrice.HasValue
+                        ? "PushMtPendingOrderTriggeredTemplate"
+                        : "PushMtPendingOrderPlacedTemplate";
+                    
+                    model = new
+                    {
+                        OrderType = type,
+                        AssetPairId = instrumentName,
+                        Volume = volume,
+                        Price = Math.Round(order.ExpectedOpenPrice ?? 0, order.AssetAccuracy)
+                    };
                     break;
                 case OrderStatus.Closed:
-                    var reason = string.Empty;
+                    templateName = "PushMtOrderClosedTemplate";
 
                     switch (order.CloseReason)
                     {
                         case OrderCloseReason.StopLoss:
-                            reason = MtMessages.Notifications_WithStopLossPhrase;
+                            templateName = "PushMtOrderClosedStopLossTemplate";
                             break;
                         case OrderCloseReason.TakeProfit:
-                            reason = MtMessages.Notifications_WithTakeProfitPhrase;
+                            templateName = "PushMtOrderClosedTakeProfitTemplate";
                             break;
                     }
 
                     var accuracy = _assetsCache.GetAssetAccuracy(order.AccountAssetId);
 
-                    message = order.ExpectedOpenPrice.HasValue &&
-                              (order.CloseReason == OrderCloseReason.Canceled ||
-                               order.CloseReason == OrderCloseReason.CanceledBySystem ||
-                               order.CloseReason == OrderCloseReason.CanceledByBroker)
-                        ? string.Format(MtMessages.Notifications_PendingOrderCanceled, type, instrumentName, volume)
-                        : string.Format(MtMessages.Notifications_OrderClosed, type, instrumentName, volume, reason,
-                            order.GetTotalFpl().ToString($"F{accuracy}"),
-                            order.AccountAssetId);
+                    if (order.ExpectedOpenPrice.HasValue &&
+                        (order.CloseReason == OrderCloseReason.Canceled ||
+                         order.CloseReason == OrderCloseReason.CanceledBySystem ||
+                         order.CloseReason == OrderCloseReason.CanceledByBroker))
+                    {
+                        templateName = "PushMtOrderCanceledTemplate";
+                        
+                        model = new
+                        {
+                            OrderType = type,
+                            AssetPairId = instrumentName,
+                            Volume = volume,
+                            TotalPnl = string.Empty,
+                            AssetId = string.Empty
+                        };
+                    }
+                    else
+                    {
+                        model = new
+                        {
+                            OrderType = type,
+                            AssetPairId = instrumentName,
+                            Volume = volume,
+                            TotalPnl = order.GetTotalFpl().ToString($"F{accuracy}"),
+                            AssetId = order.AccountAssetId
+                        };
+                    }
                     break;
                 case OrderStatus.Rejected:
                     break;
@@ -109,8 +183,11 @@ namespace MarginTrading.Backend.Services
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+            
+            if (!string.IsNullOrEmpty(templateName) && model != null)
+                message = await _templateFormatter.FormatAsync(templateName, partnetId, "EN", model);
 
-            return message;
+            return message?.Subject;
         }
     }
 }

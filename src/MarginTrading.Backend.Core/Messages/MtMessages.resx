@@ -150,9 +150,6 @@
   <data name="InstrumentWithAssetsNotFound" xml:space="preserve">
     <value>There is no instrument with assets {0} and {1} in legal entity {2}</value>
   </data>
-  <data name="Notifications_MarginCall" xml:space="preserve">
-    <value>Margin used {0:P} ({1} Account)</value>
-  </data>
   <data name="OrderNotFound" xml:space="preserve">
     <value>Cannot get order with id = {0}</value>
   </data>
@@ -164,9 +161,6 @@
   </data>
   <data name="QuoteNotFound" xml:space="preserve">
     <value>There is no quote for instrument {0}</value>
-  </data>
-  <data name="Notifications_StopOutNotification" xml:space="preserve">
-    <value>Stop out, {0} position(s) closed, PnL {1} {2}</value>
   </data>
   <data name="Validation_PriceAboveAsk" xml:space="preserve">
     <value>The specified price {0} is above current ask price {1}</value>
@@ -188,26 +182,5 @@
   </data>
   <data name="Validation_StopLossMustBeMore" xml:space="preserve">
     <value>The specified stop loss {0} must be more than {1}</value>
-  </data>
-  <data name="Notifications_PendingOrderPlaced" xml:space="preserve">
-    <value>Pending order for {0} {1} {2} placed, price {3}</value>
-  </data>
-  <data name="Notifications_PendingOrderTriggered" xml:space="preserve">
-    <value>Pending order triggered. {0} {1} {2} opened, price {3}</value>
-  </data>
-  <data name="Notifications_OrderPlaced" xml:space="preserve">
-    <value>{0} {1} {2} opened, price {3}</value>
-  </data>
-  <data name="Notifications_PendingOrderCanceled" xml:space="preserve">
-    <value>Pending order for {0} {1} {2} canceled</value>
-  </data>
-  <data name="Notifications_WithStopLossPhrase" xml:space="preserve">
-    <value> with stop loss</value>
-  </data>
-  <data name="Notifications_WithTakeProfitPhrase" xml:space="preserve">
-    <value> with take profit</value>
-  </data>
-  <data name="Notifications_OrderClosed" xml:space="preserve">
-    <value>{0} {1} {2} closed{3}, PnL {4} {5}</value>
   </data>
 </root>

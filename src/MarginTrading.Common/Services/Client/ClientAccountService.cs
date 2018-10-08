@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Lykke.Service.ClientAccount.Client;
+using Lykke.Service.ClientAccount.Client.Models;
 using Lykke.Service.PersonalData.Contract;
 
 namespace MarginTrading.Common.Services.Client
@@ -40,6 +41,11 @@ namespace MarginTrading.Common.Services.Client
             var pushSettings = await _clientAccountsClient.GetPushNotificationAsync(clientId);
 
             return pushSettings != null && pushSettings.Enabled;
+        }
+
+        public async Task<ClientModel> GetClientAsync(string clientId)
+        {
+            return await _clientAccountsClient.GetByIdAsync(clientId);
         }
     }
 }

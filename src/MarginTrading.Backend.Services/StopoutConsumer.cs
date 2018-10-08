@@ -3,14 +3,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Lykke.Common;
+using Lykke.Service.TemplateFormatter.Client;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Services.Client;
-using MarginTrading.Common.Settings;
 
 namespace MarginTrading.Backend.Services
 {
@@ -18,7 +17,6 @@ namespace MarginTrading.Backend.Services
     public class StopOutConsumer : NotificationSenderBase, IEventConsumer<StopOutEventArgs>
     {
         private readonly IThreadSwitcher _threadSwitcher;
-        private readonly IClientAccountService _clientAccountService;
         private readonly IClientNotifyService _notifyService;
         private readonly IEmailService _emailService;
         private readonly IMarginTradingOperationsLogService _operationsLogService;
@@ -29,6 +27,7 @@ namespace MarginTrading.Backend.Services
         public StopOutConsumer(IThreadSwitcher threadSwitcher,
             IAppNotifications appNotifications,
             IClientAccountService clientAccountService,
+            ITemplateFormatter templateFormatter,
             IClientNotifyService notifyService,
             IEmailService emailService,
             IMarginTradingOperationsLogService operationsLogService,
@@ -37,11 +36,11 @@ namespace MarginTrading.Backend.Services
             IAssetsCache assetsCache,
             IAssetPairsCache assetPairsCache) : base(appNotifications,
             clientAccountService,
+            templateFormatter,
             assetsCache, 
             assetPairsCache)
         {
             _threadSwitcher = threadSwitcher;
-            _clientAccountService = clientAccountService;
             _notifyService = notifyService;
             _emailService = emailService;
             _operationsLogService = operationsLogService;
@@ -69,9 +68,7 @@ namespace MarginTrading.Backend.Services
 
                 _notifyService.NotifyAccountStopout(account.ClientId, account.Id, orders.Length, totalPnl);
 
-                var notificationTask = SendMarginEventNotification(account.ClientId,
-                    string.Format(MtMessages.Notifications_StopOutNotification, orders.Length, totalPnl,
-                        account.BaseAssetId));
+                var notificationTask = SendStopOutNotification(account.ClientId, orders.Length, totalPnl, account.BaseAssetId);
 
                 var emailTask = _emailService.SendStopOutEmailAsync(account);
 

@@ -25,10 +25,9 @@ namespace MarginTrading.Backend.Services.Modules
                 .As<IThreadSwitcher>()
                 .SingleInstance();
 
-            builder.Register<IAppNotifications>(ctx =>
-                new SrvAppNotifications(_mtSettings.Jobs.NotificationsHubConnectionString,
-                    _mtSettings.Jobs.NotificationsHubName, _log)
-            ).SingleInstance();
+            builder.RegisterType<SrvAppNotifications>()
+                .As<IAppNotifications>()
+                .SingleInstance();
 
             builder.RegisterType<ClientNotifyService>()
                 .As<IClientNotifyService>()

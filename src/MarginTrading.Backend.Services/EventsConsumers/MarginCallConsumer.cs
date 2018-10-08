@@ -3,14 +3,13 @@ using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Common;
 using Lykke.Common;
+using Lykke.Service.TemplateFormatter.Client;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Services.Client;
-using MarginTrading.Common.Settings;
 
 namespace MarginTrading.Backend.Services.EventsConsumers
 {
@@ -23,7 +22,6 @@ namespace MarginTrading.Backend.Services.EventsConsumers
     {
         private readonly IThreadSwitcher _threadSwitcher;
         private readonly IEmailService _emailService;
-        private readonly IClientAccountService _clientAccountService;
         private readonly IMarginTradingOperationsLogService _operationsLogService;
         private static readonly ConcurrentDictionary<string, DateTime> LastNotifications = new ConcurrentDictionary<string, DateTime>();
         private const int NotificationsTimeout = 30;
@@ -34,16 +32,16 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             IAppNotifications appNotifications,
             IEmailService emailService,
             IClientAccountService clientAccountService,
+            ITemplateFormatter templateFomatter,
             IMarginTradingOperationsLogService operationsLogService,
             IRabbitMqNotifyService rabbitMqNotifyService,
             IDateService dateService,
             IAssetsCache assetsCache,
             IAssetPairsCache assetPairsCache)
-            : base(appNotifications, clientAccountService, assetsCache, assetPairsCache)
+            : base(appNotifications, clientAccountService, templateFomatter, assetsCache, assetPairsCache)
         {
             _threadSwitcher = threadSwitcher;
             _emailService = emailService;
-            _clientAccountService = clientAccountService;
             _operationsLogService = operationsLogService;
             _rabbitMqNotifyService = rabbitMqNotifyService;
             _dateService = dateService;
@@ -71,9 +69,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 var marginUsageLevel = account.GetMarginUsageLevel();
                 var marginUsedPerc = marginUsageLevel == 0 ? 0 : 1 / marginUsageLevel;
 
-                var notificationTask = SendMarginEventNotification(account.ClientId, string.Format(
-                    MtMessages.Notifications_MarginCall, marginUsedPerc,
-                    account.BaseAssetId));
+                var notificationTask = SendMarginCallNotification(account.ClientId, marginUsedPerc, account.BaseAssetId);
 
                 var emailTask = _emailService.SendMarginCallEmailAsync(account);
 
@@ -85,17 +81,17 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
         public void ConsumeEvent(object sender, OrderPlacedEventArgs ea)
         {
-            LastNotifications.TryRemove(ea.Order.AccountId, out var tmp);
+            LastNotifications.TryRemove(ea.Order.AccountId, out _);
         }
 
         public void ConsumeEvent(object sender, OrderClosedEventArgs ea)
         {
-            LastNotifications.TryRemove(ea.Order.AccountId, out var tmp);
+            LastNotifications.TryRemove(ea.Order.AccountId, out _);
         }
 
         public void ConsumeEvent(object sender, OrderCancelledEventArgs ea)
         {
-            LastNotifications.TryRemove(ea.Order.AccountId, out var tmp);
+            LastNotifications.TryRemove(ea.Order.AccountId, out _);
         }
     }
 }

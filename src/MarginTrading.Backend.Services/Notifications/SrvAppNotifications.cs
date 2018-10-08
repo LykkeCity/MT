@@ -1,23 +1,22 @@
-﻿using System;
-using System.Threading.Tasks;
-using Common;
+﻿using System.Threading.Tasks;
 using Common.Log;
-using MarginTrading.Backend.Core.Notifications;
+using Lykke.Cqrs;
+using Lykke.Service.PushNotifications.Contract;
+using Lykke.Service.PushNotifications.Contract.Commands;
+using Lykke.Service.PushNotifications.Contract.Enums;
 using MarginTrading.Contract.BackendContracts;
 
 namespace MarginTrading.Backend.Services.Notifications
 {
     public class SrvAppNotifications : IAppNotifications
     {
-        private readonly string _connectionString;
-        private readonly string _hubName;
         private readonly ILog _log;
+        private readonly ICqrsEngine _cqrsEngine;
 
-        public SrvAppNotifications(string connectionString, string hubName, ILog log)
+        public SrvAppNotifications(ICqrsEngine cqrsEngine, ILog log)
         {
-            _connectionString = connectionString;
-            _hubName = hubName;
             _log = log;
+            _cqrsEngine = cqrsEngine;
         }
 
         public async Task SendNotification(string notificationsId, NotificationType notificationType, string message, OrderHistoryBackendContract order = null)
@@ -27,66 +26,18 @@ namespace MarginTrading.Backend.Services.Notifications
                 _log.WriteWarning(nameof(SendNotification), notificationType, "Notification id is empty");
                 return;
             }
-            
-            await SendIosNotificationAsync(notificationsId, notificationType, message, order);
-            await SendAndroidNotificationAsync(notificationsId, notificationType, message, order);
-        }
 
-        private async Task SendIosNotificationAsync(string notificationsId, NotificationType notificationType,
-            string message, OrderHistoryBackendContract order = null)
-        {
-            var apnsMessage = new IosNotification
+            var command = new MtOrderChangedNotificationCommand
             {
-                Aps = new IosPositionFields
-                {
-                    Alert = message,
-                    Type = notificationType,
-                    Order = order
-                }
+                NotificationIds = new[] {notificationsId},
+                Type = notificationType.ToString(),
+                Message = message,
+                OrderId = order?.Id
             };
 
-            var payload = apnsMessage.ToJson(ignoreNulls: true);
+            _cqrsEngine.SendCommand(command, "mt-backend", PushNotificationsBoundedContext.Name);
 
-            try
-            {
-                var hub = CustomNotificationHubClient.CreateClientFromConnectionString(_connectionString, _hubName);
-
-                await hub.SendAppleNativeNotificationAsync(payload, new[] {notificationsId});
-            }
-            catch (Exception e)
-            {
-                _log.WriteError(nameof(SendIosNotificationAsync), payload, e);
-            }
-            
-            
-        }
-
-        private async Task SendAndroidNotificationAsync(string notificationsId, NotificationType notificationType, string message, OrderHistoryBackendContract order = null)
-        {
-            var gcmMessage = new AndroidNotification
-            {
-                Data = new AndroidPositionFields
-                {
-                    Entity = EventsAndEntities.GetEntity(notificationType),
-                    Event = EventsAndEntities.GetEvent(notificationType),
-                    Order = order,
-                    Message = message
-                }
-            };
-            
-            var payload = gcmMessage.ToJson(ignoreNulls: true);
-            
-            try
-            {
-                var hub = CustomNotificationHubClient.CreateClientFromConnectionString(_connectionString, _hubName);
-
-                await hub.SendGcmNativeNotificationAsync(payload, new[] {notificationsId});
-            }
-            catch (Exception e)
-            {
-                _log.WriteError(nameof(SendAndroidNotificationAsync), payload, e);
-            }
-            
+            await Task.CompletedTask;
         }
     }
 }

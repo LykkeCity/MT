@@ -1,13 +1,12 @@
-﻿﻿using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
- using MarginTrading.AzureRepositories.Contract;
+using Lykke.Service.PushNotifications.Contract.Enums;
+using MarginTrading.AzureRepositories.Contract;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
-using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.MatchingEngines;
-using MarginTrading.Backend.Core.Notifications;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;

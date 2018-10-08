@@ -1,5 +1,5 @@
 ﻿using System.Threading.Tasks;
-using MarginTrading.Backend.Core.Notifications;
+using Lykke.Service.PushNotifications.Contract.Enums;
 using MarginTrading.Contract.BackendContracts;
 
 namespace MarginTrading.Backend.Services.Notifications

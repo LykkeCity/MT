@@ -61,5 +61,7 @@ namespace MarginTrading.Backend.Core.Settings
         
         [Optional]
         public string[] LegalEntitiesWithoutPendings { get; set; }
+        
+        public CqrsSettings Cqrs { get; set; }
     }
 }

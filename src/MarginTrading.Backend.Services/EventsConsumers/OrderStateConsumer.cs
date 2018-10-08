@@ -1,12 +1,12 @@
 using System;
 using System.Threading.Tasks;
 using Lykke.Common;
+using Lykke.Service.TemplateFormatter.Client;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services.Client;
-using MarginTrading.Common.Settings;
 
 namespace MarginTrading.Backend.Services.EventsConsumers
 {
@@ -24,12 +24,14 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 			IAccountsCacheService accountsCacheService,
 			IAppNotifications appNotifications,
 			IClientAccountService clientAccountService,
+			ITemplateFormatter templateFormatter,
 			AccountManager accountManager,
 			IRabbitMqNotifyService rabbitMqNotifyService,
 			IAssetsCache assetsCache,
 			IAssetPairsCache assetPairsCache)
 			: base(appNotifications,
 				clientAccountService,
+				templateFormatter,
 				assetsCache,
 				assetPairsCache)
 		{
