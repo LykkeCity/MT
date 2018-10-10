@@ -8,8 +8,8 @@ namespace MarginTrading.Backend.Core
     {
         Initiated = 0,
         Started = 1,
-        Finished = 2,
-        OnTheWayToFail = 3,
+        SpecialLiquidationStarted = 2,
+        Finished = 3,
         Failed = 4,
     }
 }

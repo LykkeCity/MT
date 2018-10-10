@@ -129,7 +129,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             
             var defaultMatchingEngine = _meRouter.GetMatchingEngineForClose(position);
 
-            var closePrice = defaultMatchingEngine.GetPriceForClose(position);
+            var closePrice = defaultMatchingEngine.GetPriceForClose(position.AssetPairId, position.Volume,
+                position.ExternalProviderId);
 
             position.UpdateClosePrice(closePrice ?? order.ExecutionPrice.Value);
 

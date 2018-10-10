@@ -152,6 +152,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         PositionIds = positions.Select(x => x.Id).ToList(),
                         ExternalProviderId = externalProviderId,
                         AccountId = command.AccountId,
+                        CausationOperationId = command.CausationOperationId
                     }
                 ));
 

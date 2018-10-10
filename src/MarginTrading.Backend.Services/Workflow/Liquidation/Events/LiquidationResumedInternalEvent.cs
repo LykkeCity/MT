@@ -1,10 +1,10 @@
 using System;
 using MessagePack;
 
-namespace MarginTrading.Backend.Services.Workflow.Liquidation.Commands
+namespace MarginTrading.Backend.Services.Workflow.Liquidation.Events
 {
     [MessagePackObject]
-    public class LiquidatePositionsInternalCommand
+    public class LiquidationResumedInternalEvent
     {
         [Key(0)]
         public string OperationId { get; set; }
@@ -13,9 +13,9 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation.Commands
         public DateTime CreationTime { get; set; }
         
         [Key(2)]
-        public string AssetPairId { get; set; }
+        public bool IsCausedBySpecialLiquidation { get; set; }
         
         [Key(3)]
-        public string[] PositionIds { get; set; }
+        public string Comment { get; set; }
     }
 }

@@ -24,6 +24,6 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation.Commands
         public PositionDirection? Direction { get; set; }
         
         [Key(6)]
-        public InstrumentBidAskPair Quote { get; set; }
+        public string QuoteInfo { get; set; }
     }
 }

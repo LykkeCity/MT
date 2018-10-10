@@ -194,6 +194,11 @@ namespace MarginTrading.Backend.Core
                 accountInstance.AccountFpl.ActualHash++;
             }
         }
+        
+        public static bool IsInLiquidation(this IMarginTradingAccount account)
+        {
+            return !string.IsNullOrEmpty(account.LiquidationOperationId);
+        }
     }
 }
 

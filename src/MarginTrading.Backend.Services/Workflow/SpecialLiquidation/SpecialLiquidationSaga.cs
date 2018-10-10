@@ -11,6 +11,7 @@ using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Events;
 using MarginTrading.Common.Services;
@@ -59,7 +60,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.Started, 
                 SpecialLiquidationOperationState.PriceRequested))
             {
-                var positionsVolume = GetCurrentVolume(executionInfo.Data.PositionIds, executionInfo.Data.AccountId);
+                var positionsVolume = GetNetPositionCloseVolume(executionInfo.Data.PositionIds, executionInfo.Data.AccountId);
                 
                 //special command is sent instantly for timeout control.. it is retried until timeout occurs
                 sender.SendCommand(new GetPriceForSpecialLiquidationTimeoutInternalCommand
@@ -107,7 +108,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 SpecialLiquidationOperationState.PriceReceived))
             {
                 //validate that volume didn't changed to peek either to execute order or request the price again
-                var currentVolume = GetCurrentVolume(executionInfo.Data.PositionIds, executionInfo.Data.AccountId);
+                var currentVolume = GetNetPositionCloseVolume(executionInfo.Data.PositionIds, executionInfo.Data.AccountId);
                 if (currentVolume != e.Volume)
                 {
                     sender.SendCommand(new GetPriceForSpecialLiquidationCommand
@@ -239,7 +240,17 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.InternalOrdersExecuted,
                 SpecialLiquidationOperationState.Finished))
             {
-                //do nothing
+                if (!string.IsNullOrEmpty(executionInfo.Data.CausationOperationId))
+                {
+                    sender.SendCommand(new ResumeLiquidationInternalCommand
+                    {
+                        OperationId = executionInfo.Data.CausationOperationId,
+                        CreationTime = _dateService.Now(),
+                        Comment = $"Resume after special liquidation {executionInfo.Id} finished",
+                        IsCausedBySpecialLiquidation = true,
+                        CausationOperationId = executionInfo.Id
+                    }, _cqrsContextNamesSettings.TradingEngine);
+                }
                 
                 _chaosKitty.Meow(e.OperationId);
 
@@ -254,13 +265,23 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 operationName: OperationName,
                 id: e.OperationId);
             
-            if (executionInfo == null)
+            if (executionInfo?.Data == null)
                 return;
 
             if (executionInfo.Data.SwitchState(executionInfo.Data.State,//from any state
                 SpecialLiquidationOperationState.Failed))
             {
-                //do nothing
+                if (!string.IsNullOrEmpty(executionInfo.Data.CausationOperationId))
+                {
+                    sender.SendCommand(new ResumeLiquidationInternalCommand
+                    {
+                        OperationId = executionInfo.Data.CausationOperationId,
+                        CreationTime = _dateService.Now(),
+                        Comment = $"Resume after special liquidation {executionInfo.Id} failed. Reason: {e.Reason}",
+                        IsCausedBySpecialLiquidation = true,
+                        CausationOperationId = executionInfo.Id
+                    }, _cqrsContextNamesSettings.TradingEngine);
+                }
                 
                 _chaosKitty.Meow(e.OperationId);
 
@@ -268,12 +289,14 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             }
         }
 
-        private decimal GetCurrentVolume(ICollection<string> positionIds, string accountId)
+        private decimal GetNetPositionCloseVolume(ICollection<string> positionIds, string accountId)
         {
-            return _orderReader.GetPositions()
+            var netPositionVolume = _orderReader.GetPositions()
                 .Where(x => positionIds.Contains(x.Id)
                             && (string.IsNullOrEmpty(accountId) || x.AccountId == accountId))
                 .Sum(x => x.Volume);
+
+            return -netPositionVolume;
         }
     }
 }

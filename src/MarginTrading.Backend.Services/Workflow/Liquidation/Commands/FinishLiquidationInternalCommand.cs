@@ -4,7 +4,7 @@ using MessagePack;
 namespace MarginTrading.Backend.Services.Workflow.Liquidation.Commands
 {
     [MessagePackObject]
-    public class LiquidatePositionsInternalCommand
+    public class FinishLiquidationInternalCommand
     {
         [Key(0)]
         public string OperationId { get; set; }
@@ -13,9 +13,6 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation.Commands
         public DateTime CreationTime { get; set; }
         
         [Key(2)]
-        public string AssetPairId { get; set; }
-        
-        [Key(3)]
-        public string[] PositionIds { get; set; }
+        public string Reason { get; set; }
     }
 }

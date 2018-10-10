@@ -12,5 +12,7 @@ namespace MarginTrading.Backend.Core
         public string ExternalProviderId { get; set; }
         [CanBeNull]
         public string AccountId { get; set; }
+        [CanBeNull]
+        public string CausationOperationId { get; set; }
     }
 }

@@ -22,6 +22,6 @@ namespace MarginTrading.Backend.Core
         
         bool TryStartLiquidation(string accountId, string operationId, out string currentOperationId);
         
-        void FinishLiquidation(string accountId);
+        bool TryFinishLiquidation(string accountId, string reason, string liquidationOperationId = null);
     }
 }
