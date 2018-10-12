@@ -15,7 +15,6 @@ namespace MarginTrading.AzureRepositories
     public class AccountStatRepository : IAccountStatRepository
     {
         private readonly INoSQLTableStorage<AccountStatEntity> _tableStorage;
-        private readonly ILog _log;
         private readonly IDateService _dateService;
         
         public AccountStatRepository(IReloadingManager<string> connectionStringManager, 
@@ -26,7 +25,6 @@ namespace MarginTrading.AzureRepositories
                 connectionStringManager,
                 "AccountStatDump",
                 log);
-            _log = log;
             _dateService = dateService;
         }
         
@@ -35,8 +33,8 @@ namespace MarginTrading.AzureRepositories
             var reportTime = _dateService.Now();
             var entities = accounts.Select(x => AccountStatEntity.Create(x, reportTime));
 
-            var current = await _tableStorage.GetDataAsync();
-            await _tableStorage.DeleteAsync(current);
+            await _tableStorage.DeleteAsync();
+            await _tableStorage.CreateTableIfNotExistsAsync();
             await _tableStorage.InsertAsync(entities);
         }
     }

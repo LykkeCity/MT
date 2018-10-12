@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common.Log;
 using Dapper;
-using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;

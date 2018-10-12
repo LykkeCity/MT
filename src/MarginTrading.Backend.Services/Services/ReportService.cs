@@ -33,10 +33,11 @@ namespace MarginTrading.Backend.Services.Services
         public async Task DumpReportData()
         {
             var positions = _ordersCache.GetPositions();
-            await _openPositionsRepository.Dump(positions);
-            
             var accountStat = _accountsCacheService.GetAll();
-            await _accountStatRepository.Dump(accountStat);
+            
+            await Task.WhenAll(
+                _openPositionsRepository.Dump(positions), 
+                _accountStatRepository.Dump(accountStat));
         }
     }
 }
