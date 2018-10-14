@@ -1,4 +1,4 @@
-﻿using MarginTrading.BrokerBase.Settings;
+﻿using Lykke.MarginTrading.BrokerBase.Settings;
 using MarginTrading.Common.RabbitMq;
 
 namespace MarginTrading.AccountMarginEventsBroker

@@ -9,7 +9,6 @@ namespace MarginTrading.Backend.Contracts.Events
         public MarginEventTypeContract EventType { get; set; }
 
         public string AccountId { get; set; }
-        public string ClientId { get; set; }
         public string TradingConditionId { get; set; }
         public string BaseAssetId { get; set; }
         public decimal Balance { get; set; }
