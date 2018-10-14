@@ -37,6 +37,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
         private readonly ILog _log;
         private readonly MarginTradingSettings _marginTradingSettings;
+        private readonly IAssetPairsCache _assetPairsCache;
         private readonly IAssetPairDayOffService _assetPairDayOffService;
         private readonly IExchangeConnectorService _exchangeConnectorService;
         private readonly IIdentityGenerator _identityGenerator;
@@ -50,6 +51,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             IOperationExecutionInfoRepository operationExecutionInfoRepository,
             ILog log,
             MarginTradingSettings marginTradingSettings,
+            IAssetPairsCache assetPairsCache,
             IAssetPairDayOffService assetPairDayOffService,
             IExchangeConnectorService exchangeConnectorService,
             IIdentityGenerator identityGenerator,
@@ -62,6 +64,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             _operationExecutionInfoRepository = operationExecutionInfoRepository;
             _log = log;
             _marginTradingSettings = marginTradingSettings;
+            _assetPairsCache = assetPairsCache;
             _assetPairDayOffService = assetPairDayOffService;
             _exchangeConnectorService = exchangeConnectorService;
             _identityGenerator = identityGenerator;
@@ -114,6 +117,19 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 return;
             }
 
+            var assetPairId = positions.FirstOrDefault()?.AssetPairId;
+            if (_assetPairsCache.GetAssetPairById(assetPairId).IsDiscontinued)
+            {
+                publisher.PublishEvent(new SpecialLiquidationFailedEvent
+                {
+                    OperationId = command.OperationId,
+                    CreationTime = _dateService.Now(),
+                    Reason = $"Asset pair {assetPairId} is discontinued",
+                });
+                
+                return;
+            }
+
             if (!TryGetExchangeNameFromPositions(positions, out var externalProviderId))
             {
                 publisher.PublishEvent(new SpecialLiquidationFailedEvent
@@ -148,7 +164,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     data: new SpecialLiquidationOperationData
                     {
                         State = SpecialLiquidationOperationState.Initiated,
-                        Instrument = positions.FirstOrDefault()?.AssetPairId,
+                        Instrument = assetPairId,
                         PositionIds = positions.Select(x => x.Id).ToList(),
                         ExternalProviderId = externalProviderId,
                         AccountId = command.AccountId,
@@ -195,6 +211,18 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     OperationId = command.OperationId,
                     CreationTime = _dateService.Now(),
                     Reason = $"Asset pair {command.Instrument} market must be disabled to start Special Liquidation",
+                });
+                
+                return;
+            }
+
+            if (_assetPairsCache.GetAssetPairById(command.Instrument).IsDiscontinued)
+            {
+                publisher.PublishEvent(new SpecialLiquidationFailedEvent
+                {
+                    OperationId = command.OperationId,
+                    CreationTime = _dateService.Now(),
+                    Reason = $"Asset pair {command.Instrument} is discontinued",
                 });
                 
                 return;

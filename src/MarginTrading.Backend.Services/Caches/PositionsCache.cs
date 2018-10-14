@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Core.Orders;
 
@@ -106,7 +107,7 @@ namespace MarginTrading.Backend.Services
             if (TryGetPositionById(orderId, out var result))
                 return result;
 
-            throw new Exception(string.Format(MtMessages.CantGetPosition, orderId));
+            throw new PositionNotFoundException(string.Format(MtMessages.CantGetPosition, orderId));
         }
 
         public bool TryGetPositionById(string orderId, out Position result)

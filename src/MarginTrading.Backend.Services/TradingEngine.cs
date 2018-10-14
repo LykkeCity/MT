@@ -526,24 +526,35 @@ namespace MarginTrading.Backend.Services
         public async Task<Order[]> LiquidatePositionsAsync(IMatchingEngineBase me, string[] positionIds,
             string correlationId)
         {
-            //any position may be already closed
-            return await Task.WhenAll(_ordersCache.Positions.GetAllPositions().Where(x => positionIds.Contains(x.Id))
+            var positionsToClose = _ordersCache.Positions.GetAllPositions()
+                .Where(x => positionIds.Contains(x.Id)).ToList();
+            var failedPositionIds = new List<string>();
+            
+            var closeOrderList = await Task.WhenAll(positionsToClose
                 .Select(async x =>
                 {
                     try
                     {
-                        return await ClosePositionAsync(x.Id, OriginatorType.System, string.Empty, correlationId, 
+                        return await ClosePositionAsync(x.Id, OriginatorType.System, string.Empty, correlationId,
                             "Special Liquidation", me, OrderModality.Liquidation);
                     }
+                    catch (PositionNotFoundException)
+                    {
+                        return null; //swallow exception if position was already closed
+                    }
                     catch (Exception ex)
-                    {//todo match exception by type or msg and swallow / throw
-                        //todo positionNotFound typed exception => swallow
-                        //todo on other.. try all the list .. if any failed => fail event with "these positions were not closed"
-                        await _log.WriteWarningAsync(nameof(TradingEngine), nameof(LiquidatePositionsAsync),
-                            $"Failed to close position {x.Id} on special liquidation operation #{correlationId}", ex);
-                        return null;//todo throw here..
+                    {
+                        failedPositionIds.Add(x.Id);
+                        return null;
                     }
                 }).Where(x => x != null));
+            
+            if (failedPositionIds.Any())
+            {
+                throw new Exception($"Liquidation #{correlationId} failed to close these positions: {string.Join(", ", failedPositionIds)}");
+            }
+
+            return closeOrderList;
         }
 
         public Order CancelPendingOrder(string orderId, OriginatorType originator, string additionalInfo, 
