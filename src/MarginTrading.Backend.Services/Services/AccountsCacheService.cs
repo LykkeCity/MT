@@ -114,9 +114,7 @@ namespace MarginTrading.Backend.Services
             
             try
             {
-                var account = TryGetAccount(accountId);
-
-                if (account == null)
+                if (!_accounts.TryGetValue(accountId, out var account))
                     return false;
 
                 if (string.IsNullOrEmpty(liquidationOperationId) ||
