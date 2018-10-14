@@ -13,7 +13,7 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.AzureRepositories
 
         public AccountMarginEventsRepository(IReloadingManager<Settings> settings, ILog log)
         {
-            _tableStorage = AzureTableStorage<AccountMarginEventEntity>.Create(settings.Nested(s => s.Db.ReportsConnString),
+            _tableStorage = AzureTableStorage<AccountMarginEventEntity>.Create(settings.Nested(s => s.Db.ConnString),
                 "AccountMarginEvents", log);
         }
 

@@ -6,6 +6,7 @@ using MarginTrading.AccountMarginEventsBroker.Repositories;
 using MarginTrading.AccountMarginEventsBroker.Repositories.AzureRepositories;
 using MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories;
 using Lykke.MarginTrading.BrokerBase;
+using Lykke.MarginTrading.BrokerBase.Models;
 using Lykke.MarginTrading.BrokerBase.Settings;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,8 +27,16 @@ namespace MarginTrading.AccountMarginEventsBroker
         {
             builder.RegisterType<Application>().As<IBrokerApplication>().SingleInstance();
 
-            builder.RegisterInstance(new AccountMarginEventsSqlRepository(settings.CurrentValue, log))
+            if (settings.CurrentValue.Db.StorageMode == StorageMode.Azure)
+            {
+                builder.RegisterInstance(new AccountMarginEventsRepository(settings, log))
+                    .As<IAccountMarginEventsRepository>();
+            }
+            else if (settings.CurrentValue.Db.StorageMode == StorageMode.SqlServer)
+            {
+                builder.RegisterInstance(new AccountMarginEventsSqlRepository(settings.CurrentValue, log))
                 .As<IAccountMarginEventsRepository>();
+            }
         }
     }
 }

@@ -49,7 +49,7 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
         {
             _log = log;
             _settings = settings;
-            using (var conn = new SqlConnection(_settings.Db.ReportsSqlConnString))
+            using (var conn = new SqlConnection(_settings.Db.ConnString))
             {
                 try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
                 catch (Exception ex)
@@ -63,7 +63,7 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
         public async Task InsertOrReplaceAsync(IAccountMarginEvent report)
         {   
 
-            using (var conn = new SqlConnection(_settings.Db.ReportsSqlConnString))
+            using (var conn = new SqlConnection(_settings.Db.ConnString))
             {
                 try
                 {
