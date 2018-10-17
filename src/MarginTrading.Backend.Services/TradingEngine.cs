@@ -445,13 +445,13 @@ namespace MarginTrading.Backend.Services
                 }
 
                 var newAccountLevel = account.GetAccountLevel();
+                
+                if (newAccountLevel == AccountLevel.StopOUt)
+                    yield return account;
 
                 if (oldAccountLevel != newAccountLevel)
                 {
-                    NotifyAccountLevelChanged(account, newAccountLevel);
-
-                    if (newAccountLevel == AccountLevel.StopOUt)
-                        yield return account;
+                    NotifyMarginCall(account, newAccountLevel);
                 }
             }
         }
@@ -474,7 +474,7 @@ namespace MarginTrading.Backend.Services
             _stopoutEventChannel.SendEvent(this, new StopOutEventArgs(account));
         }
 
-        private void NotifyAccountLevelChanged(MarginTradingAccount account, AccountLevel newAccountLevel)
+        private void NotifyMarginCall(MarginTradingAccount account, AccountLevel newAccountLevel)
         {
             switch (newAccountLevel)
             {
