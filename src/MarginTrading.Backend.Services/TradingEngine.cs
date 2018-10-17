@@ -488,7 +488,7 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public Task<Order> ClosePositionAsync(string positionId, OriginatorType originator, string additionalInfo,
+        public async Task<Order> ClosePositionAsync(string positionId, OriginatorType originator, string additionalInfo,
             string correlationId, string comment = null, IMatchingEngineBase me = null)
         {
             var position = _ordersCache.Positions.GetPositionById(positionId);
@@ -507,7 +507,15 @@ namespace MarginTrading.Backend.Services
             
             _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
                 
-            return ExecuteOrderByMatchingEngineAsync(order, me, true);
+            order = await ExecuteOrderByMatchingEngineAsync(order, me, true);
+            
+            if (order.Status != OrderStatus.Executed && order.Status != OrderStatus.ExecutionStarted)
+            {
+                position.CancelClosing(_dateService.Now());
+                _log.WriteWarning(nameof(ClosePositionAsync), order, $"Order was not executed. Closing canceled");
+            }
+
+            return order;
         }
 
         public async Task<Order[]> LiquidatePositionsAsync(IMatchingEngineBase me, string[] positionIds,
