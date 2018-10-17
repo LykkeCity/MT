@@ -203,6 +203,12 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             
             if (executionInfo.Data.SwitchState(validState, LiquidationOperationState.Started))
             {
+                //if we are trying to resume liquidation, let's clean up processed positions to retry
+                if (!e.IsCausedBySpecialLiquidation)
+                {
+                    executionInfo.Data.ProcessedPositionIds = executionInfo.Data.LiquidatedPositionIds;
+                }
+                
                 ContinueOrFinishLiquidation(e.OperationId, executionInfo.Data, sender);
                 
                 _chaosKitty.Meow(
