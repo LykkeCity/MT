@@ -376,16 +376,16 @@ namespace MarginTrading.Backend.Services
 
         private void ProcessPositions(InstrumentBidAskPair quote)
         {
-            var stopoutAccounts = UpdateClosePriceAndDetectStopout(quote.Instrument).ToArray();
+            var stopoutAccounts = UpdateClosePriceAndDetectStopout(quote).ToArray();
             
             foreach (var account in stopoutAccounts)
                 CommitStopout(account, quote);
         }
 
         //TODO: in MTC-192 split method and change conditions
-        private IEnumerable<MarginTradingAccount> UpdateClosePriceAndDetectStopout(string instrument)
+        private IEnumerable<MarginTradingAccount> UpdateClosePriceAndDetectStopout(InstrumentBidAskPair quote)
         {
-            var openPositions = _ordersCache.Positions.GetPositionsByInstrument(instrument)
+            var openPositions = _ordersCache.Positions.GetPositionsByInstrument(quote.Instrument)
                 .GroupBy(x => x.AccountId).ToDictionary(x => x.Key, x => x.ToArray());
 
             foreach (var accountPositions in openPositions)
@@ -404,7 +404,13 @@ namespace MarginTrading.Backend.Services
                     var closePrice = defaultMatchingEngine.GetPriceForClose(position.AssetPairId, position.Volume,
                         position.ExternalProviderId);
 
-                    if (closePrice.HasValue)
+                    if (!closePrice.HasValue)
+                    {
+                        var closeOrderDirection = position.Volume.GetClosePositionOrderDirection();
+                        closePrice = quote.GetPriceForOrderDirection(closeOrderDirection);
+                    }
+                    
+                    if (closePrice != 0)
                     {
                         position.UpdateClosePrice(closePrice.Value);
 
