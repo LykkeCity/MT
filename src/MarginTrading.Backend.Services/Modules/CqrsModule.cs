@@ -160,6 +160,7 @@ namespace MarginTrading.Backend.Services.Modules
                 .With(CommandsRoute)
                 .PublishingCommands(
                     typeof(StartLiquidationInternalCommand),
+                    typeof(ResumeLiquidationInternalCommand),
                     typeof(StartSpecialLiquidationInternalCommand)
                 )
                 .To(_settings.ContextNames.TradingEngine)
