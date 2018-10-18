@@ -3,6 +3,9 @@ using MarginTrading.AccountHistoryBroker.Repositories.SqlRepositories;
 using NUnit.Framework;
 using System;
 using System.Threading.Tasks;
+using MarginTrading.Backend.Core;
+using MarginTrading.Common.Services;
+using MarginTrading.SqlRepositories.Repositories;
 
 namespace MarginTradingTests.Unit.SqlConnection
 {
@@ -13,6 +16,7 @@ namespace MarginTradingTests.Unit.SqlConnection
         string _dbName;
         MarginTrading.AccountHistoryBroker.Settings _accountHistoryBrokerSettings;
         ILog _log;
+        
         [OneTimeSetUp]
         public void OneTimeSetUp()
         {
@@ -81,8 +85,38 @@ namespace MarginTradingTests.Unit.SqlConnection
             };
             // Arithmetic Exception
             Assert.ThrowsAsync<System.Exception>(async () => await repo.InsertOrReplaceAsync(domainObject));
+        }
+
+        [Test]
+        [Category("Error")]
+        public async Task ExecutionInfoOptimisticConcurrency()
+        {
+            var connectionString = "";
+            var operationName = "UnitTestOperation";
+            var operationId = DateTime.UtcNow.Ticks.ToString();
             
+            var repo = new OperationExecutionInfoRepository(connectionString, _log, new DateService());
+
+            var executionInfo = await repo.GetOrAddAsync(
+                operationName: operationName,
+                operationId: operationId,
+                factory: () => new OperationExecutionInfo<OperationData>(
+                    operationName: operationName,
+                    id: operationId,
+                    lastModified: DateTime.UtcNow,
+                    data: new OperationData {State = OperationState.Initiated}
+                ));
             
+            //first call should save entity
+            Assert.DoesNotThrowAsync(async () => { await repo.Save(executionInfo); });
+            
+            //second call should throw concurrent exception
+            Assert.ThrowsAsync<InvalidOperationException>(async () => { await repo.Save(executionInfo); });
+
+            var newExecutionInfo = await repo.GetAsync<OperationData>(operationName, operationId);
+            
+            //after get, should not throw again
+            Assert.DoesNotThrowAsync(async () => { await repo.Save(newExecutionInfo); });
         }
     }
 }

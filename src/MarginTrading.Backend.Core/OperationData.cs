@@ -1,7 +1,6 @@
 namespace MarginTrading.Backend.Core
 {
-    public class OperationData
+    public class OperationData : OperationDataBase<OperationState>
     {
-        public OperationState State { get; set; }
     }
 }

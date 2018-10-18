@@ -7,7 +7,6 @@ namespace MarginTrading.Backend.Core.Settings
         public RabbitMqQueueInfo OrderHistory { get; set; }
         public RabbitMqQueueInfo OrderbookPrices { get; set; }
         public RabbitMqQueueInfo AccountChanged { get; set; }
-        public RabbitMqQueueInfo AccountStopout { get; set; }
         public RabbitMqQueueInfo AccountMarginEvents { get; set; }
         public RabbitMqQueueInfo AccountStats { get; set; }
         public RabbitMqQueueInfo Trades { get; set; }

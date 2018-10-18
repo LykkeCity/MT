@@ -27,11 +27,6 @@ namespace MarginTrading.Backend.Core
             }
         }
         
-        public static OrderDirection GetCloseType(this Position order)
-        {
-            return order.Volume >= 0 ? OrderDirection.Sell : OrderDirection.Buy;
-        }
-
         public static decimal GetTotalFpl(this Position position, decimal swaps)
         {
             return position.GetFpl() - position.GetOpenCommission() - position.GetCloseCommission() - swaps -

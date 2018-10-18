@@ -63,9 +63,7 @@ namespace MarginTrading.Backend.Services
             _lockSlim.EnterReadLock();
             try
             {
-                _accounts.TryGetValue(accountId, out var result);
-
-                return result;
+                return _accounts.TryGetValue(accountId, out var result) ? result : null;
             }
             finally
             {
@@ -79,6 +77,66 @@ namespace MarginTrading.Backend.Services
             try
             {
                 _accounts = accounts;
+            }
+            finally
+            {
+                _lockSlim.ExitWriteLock();
+            }
+        }
+
+        public bool TryStartLiquidation(string accountId, string operationId, out string currentOperationId)
+        {
+            _lockSlim.EnterWriteLock();
+            try
+            {
+                if (!_accounts.TryGetValue(accountId, out var account))
+                {
+                    currentOperationId = string.Empty;
+                    return false;
+                }
+
+                if (!string.IsNullOrEmpty(account.LiquidationOperationId))
+                {
+                    currentOperationId = account.LiquidationOperationId;
+                    return false;
+                }
+
+                account.LiquidationOperationId = operationId;
+                currentOperationId = operationId;
+                return true;
+            }
+            finally
+            {
+                _lockSlim.ExitWriteLock();
+            }
+        }
+
+        public bool TryFinishLiquidation(string accountId, string reason, 
+            string liquidationOperationId = null)
+        {
+            _lockSlim.EnterWriteLock();
+            
+            try
+            {
+                if (!_accounts.TryGetValue(accountId, out var account))
+                    return false;
+
+                if (string.IsNullOrEmpty(liquidationOperationId) ||
+                     liquidationOperationId == account.LiquidationOperationId)
+                {
+                    account.LiquidationOperationId = string.Empty;
+                    _log.WriteInfo(nameof(TryFinishLiquidation), account,
+                        $"Liquidation state was removed for account {accountId}. Reason: {reason}");
+                    return true;
+                }
+                else
+                {
+                    _log.WriteInfo(nameof(TryFinishLiquidation), account,
+                        $"Liquidation state was not removed for account {accountId} " +
+                        $"by liquidationOperationId {liquidationOperationId} " +
+                        $"Current LiquidationOperationId: {account.LiquidationOperationId}.");
+                    return false;
+                }
             }
             finally
             {

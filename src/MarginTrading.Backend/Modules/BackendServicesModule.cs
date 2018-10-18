@@ -115,7 +115,6 @@ namespace MarginTrading.Backend.Modules
                 _settings.RabbitMqQueues.OrderHistory.ExchangeName,
                 _settings.RabbitMqQueues.OrderbookPrices.ExchangeName,
                 _settings.RabbitMqQueues.AccountChanged.ExchangeName,
-                _settings.RabbitMqQueues.AccountStopout.ExchangeName,
                 _settings.RabbitMqQueues.AccountMarginEvents.ExchangeName,
                 _settings.RabbitMqQueues.AccountStats.ExchangeName,
                 _settings.RabbitMqQueues.Trades.ExchangeName,

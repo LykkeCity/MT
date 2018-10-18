@@ -15,13 +15,6 @@ namespace MarginTrading.Backend.Core
         public decimal Ask { get; set; }
     }
 
-    public class GraphBidAskPair : IBidAskPair
-    {
-        public decimal Bid { get; set; }
-        public decimal Ask { get; set; }
-        public DateTime Date { get; set; }
-    }
-
     public class InstrumentBidAskPair : BidAskPair
     {
         public string Instrument { get; set; }

@@ -129,10 +129,9 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             return new MatchedOrderCollection();
         }
 
-        public decimal? GetPriceForClose(Position position)
+        public decimal? GetPriceForClose(string assetPairId, decimal volume, string externalProviderId)
         {
-            return _externalOrderbookService.GetPriceForPositionClose(position.AssetPairId, position.Volume,
-                position.ExternalProviderId);
+            return _externalOrderbookService.GetPriceForPositionClose(assetPairId, volume, externalProviderId);
         }
 
         //TODO: implement orderbook        

@@ -1,11 +1,10 @@
 using System;
-using JetBrains.Annotations;
 using MessagePack;
 
-namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands
+namespace MarginTrading.Backend.Services.Workflow.Liquidation.Commands
 {
     [MessagePackObject]
-    public class StartSpecialLiquidationInternalCommand
+    public class ResumeLiquidationInternalCommand
     {
         [Key(0)]
         public string OperationId { get; set; }
@@ -14,13 +13,11 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands
         public DateTime CreationTime { get; set; }
         
         [Key(2)]
-        public string[] PositionIds { get; set; }
+        public string Comment { get; set; }
         
-        [CanBeNull]
         [Key(3)]
-        public string AccountId { get; set; }
+        public bool IsCausedBySpecialLiquidation { get; set; }
         
-        [CanBeNull]
         [Key(4)]
         public string CausationOperationId { get; set; }
     }

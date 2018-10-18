@@ -3,10 +3,8 @@ using JetBrains.Annotations;
 
 namespace MarginTrading.Backend.Core
 {
-    public class SpecialLiquidationOperationData
+    public class SpecialLiquidationOperationData : OperationDataBase<SpecialLiquidationOperationState>
     {
-        public SpecialLiquidationOperationState State { get; set; }
-        
         public string Instrument { get; set; }
         public List<string> PositionIds { get; set; }
         public decimal Volume { get; set; }
@@ -14,5 +12,7 @@ namespace MarginTrading.Backend.Core
         public string ExternalProviderId { get; set; }
         [CanBeNull]
         public string AccountId { get; set; }
+        [CanBeNull]
+        public string CausationOperationId { get; set; }
     }
 }

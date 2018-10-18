@@ -18,6 +18,9 @@ using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Events;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Workflow;
+using MarginTrading.Backend.Services.Workflow.Liquidation;
+using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
+using MarginTrading.Backend.Services.Workflow.Liquidation.Events;
 using MarginTrading.SettingsService.Contracts.AssetPair;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
@@ -85,6 +88,7 @@ namespace MarginTrading.Backend.Services.Modules
                 Register.DefaultEndpointResolver(rabbitMqConventionEndpointResolver),
                 RegisterDefaultRouting(),
                 RegisterSpecialLiquidationSaga(),
+                RegisterLiquidationSaga(),
                 RegisterContext(),
             };
 
@@ -125,6 +129,7 @@ namespace MarginTrading.Backend.Services.Modules
 
             RegisterWithdrawalCommandsHandler(contextRegistration);
             RegisterSpecialLiquidationCommandsHandler(contextRegistration);
+            RegisterLiquidationCommandsHandler(contextRegistration);
             RegisterAccountsProjection(contextRegistration);
             RegisterAssetPairsProjection(contextRegistration);
             
@@ -154,6 +159,8 @@ namespace MarginTrading.Backend.Services.Modules
                 .To(_settings.ContextNames.SettingsService)
                 .With(CommandsRoute)
                 .PublishingCommands(
+                    typeof(StartLiquidationInternalCommand),
+                    typeof(ResumeLiquidationInternalCommand),
                     typeof(StartSpecialLiquidationInternalCommand)
                 )
                 .To(_settings.ContextNames.TradingEngine)
@@ -207,7 +214,8 @@ namespace MarginTrading.Backend.Services.Modules
                     typeof(FailSpecialLiquidationInternalCommand),
                     typeof(ExecuteSpecialLiquidationOrderCommand),
                     typeof(ExecuteSpecialLiquidationOrdersInternalCommand),
-                    typeof(GetPriceForSpecialLiquidationTimeoutInternalCommand)
+                    typeof(GetPriceForSpecialLiquidationTimeoutInternalCommand),
+                    typeof(ResumeLiquidationInternalCommand)
                 )
                 .To(_settings.ContextNames.TradingEngine)
                 .With(CommandsRoute)
@@ -244,6 +252,58 @@ namespace MarginTrading.Backend.Services.Modules
                     typeof(SpecialLiquidationOrderExecutionFailedEvent),
                     typeof(SpecialLiquidationFinishedEvent),
                     typeof(SpecialLiquidationFailedEvent)
+                )
+                .With(EventsRoute);
+        }
+        
+        private IRegistration RegisterLiquidationSaga()
+        {
+            var sagaRegistration = RegisterSaga<LiquidationSaga>();
+
+            sagaRegistration
+
+                .PublishingCommands(
+                    typeof(FailLiquidationInternalCommand),
+                    typeof(FinishLiquidationInternalCommand),
+                    typeof(LiquidatePositionsInternalCommand),
+                    typeof(StartSpecialLiquidationInternalCommand)
+                )
+                .To(_settings.ContextNames.TradingEngine)
+                .With(CommandsRoute)
+
+                .ListeningEvents(
+                    typeof(LiquidationFailedInternalEvent),
+                    typeof(LiquidationFinishedInternalEvent),
+                    typeof(LiquidationResumedInternalEvent),
+                    typeof(LiquidationStartedInternalEvent),
+                    typeof(NotEnoughLiquidityInternalEvent),
+                    typeof(PositionsLiquidationFinishedInternalEvent)
+                )
+                .From(_settings.ContextNames.TradingEngine)
+                .On(EventsRoute);
+            
+            return sagaRegistration;
+        }
+
+        private void RegisterLiquidationCommandsHandler(
+            ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
+        {
+            contextRegistration.ListeningCommands(
+                    typeof(StartLiquidationInternalCommand),
+                    typeof(FailLiquidationInternalCommand),
+                    typeof(FinishLiquidationInternalCommand),
+                    typeof(LiquidatePositionsInternalCommand),
+                    typeof(ResumeLiquidationInternalCommand)
+                )
+                .On(CommandsRoute)
+                .WithCommandsHandler<LiquidationCommandsHandler>()
+                .PublishingEvents(
+                    typeof(LiquidationFailedInternalEvent),
+                    typeof(LiquidationFinishedInternalEvent),
+                    typeof(LiquidationResumedInternalEvent),
+                    typeof(LiquidationStartedInternalEvent),
+                    typeof(NotEnoughLiquidityInternalEvent),
+                    typeof(PositionsLiquidationFinishedInternalEvent)
                 )
                 .With(EventsRoute);
         }
