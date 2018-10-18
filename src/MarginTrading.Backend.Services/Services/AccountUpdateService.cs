@@ -110,21 +110,19 @@ namespace MarginTrading.Backend.Services
             return accountMarginAvailable >= orderMargin;
         }
         
-        public bool RemoveLiquidationStateIfNeeded(string accountId, string reason, 
+        public void RemoveLiquidationStateIfNeeded(string accountId, string reason,
             string liquidationOperationId = null)
         {
             var account = _accountsCacheService.TryGet(accountId);
 
             if (account == null)
-                return false;
+                return;
 
             if (!string.IsNullOrEmpty(account.LiquidationOperationId) &&
                 account.GetAccountLevel() != AccountLevel.StopOUt)
             {
-                return _accountsCacheService.TryFinishLiquidation(accountId, reason, liquidationOperationId);
+                _accountsCacheService.TryFinishLiquidation(accountId, reason, liquidationOperationId);
             }
-
-            return false;
         }
         
         private void UpdateAccount(IMarginTradingAccount account,

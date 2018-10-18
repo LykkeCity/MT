@@ -132,9 +132,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                     {
                         PublishFailedEvent(
                             $"Liquidation is already in progress. Initiated by operation : {currentOperationId}");
+                        return;
                     }
-
-                    return;
                 }
 
                 _chaosKitty.Meow(

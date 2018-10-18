@@ -1,4 +1,5 @@
 using System;
+using MarginTrading.Backend.Core.Orders;
 using MessagePack;
 
 namespace MarginTrading.Backend.Services.Workflow.Liquidation.Commands
@@ -17,5 +18,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation.Commands
         
         [Key(3)]
         public string[] PositionIds { get; set; }
+        
+        [Key(4)]
+        public PositionDirection Direction { get; set; }
     }
 }

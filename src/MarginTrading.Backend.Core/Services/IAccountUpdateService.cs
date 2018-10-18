@@ -14,7 +14,7 @@ namespace MarginTrading.Backend.Core
         Task FreezeUnconfirmedMargin(string accountId, string operationId, decimal amount);
         Task UnfreezeUnconfirmedMargin(string accountId, string operationId);
         bool IsEnoughBalance(Order order);
-        bool RemoveLiquidationStateIfNeeded(string accountId, string reason,
+        void RemoveLiquidationStateIfNeeded(string accountId, string reason,
             string liquidationOperationId = null);
     }
 

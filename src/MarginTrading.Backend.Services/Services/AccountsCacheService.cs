@@ -89,7 +89,11 @@ namespace MarginTrading.Backend.Services
             _lockSlim.EnterWriteLock();
             try
             {
-                var account = _accounts[accountId];
+                if (!_accounts.TryGetValue(accountId, out var account))
+                {
+                    currentOperationId = string.Empty;
+                    return false;
+                }
 
                 if (!string.IsNullOrEmpty(account.LiquidationOperationId))
                 {

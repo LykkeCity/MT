@@ -8,6 +8,7 @@ using Lykke.Common.Chaos;
 using Lykke.Cqrs;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Extensions;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
@@ -222,7 +223,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         
         #region Private methods
 
-        private (string AssetPairId, string[] Positions) GetLiquidationData(LiquidationOperationData data)
+        private (string AssetPairId, PositionDirection Direction, string[] Positions) GetLiquidationData(LiquidationOperationData data)
         {
             var positionsOnAccount = _ordersCache.Positions.GetPositionsByAccountIds(data.AccountId);
 
@@ -246,8 +247,9 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 .ToArray();
 
             var assetPairId = targetPositions.Key.AssetPairId;
+            var direction = targetPositions.Key.Direction;
 
-            return (assetPairId, positions);
+            return (assetPairId, direction, positions);
         }
 
         private void LiquidatePositionsIfAnyAvailable(string operationId,
@@ -271,7 +273,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                     OperationId = operationId,
                     CreationTime = _dateService.Now(),
                     PositionIds = liquidationData.Positions,
-                    AssetPairId = liquidationData.AssetPairId
+                    AssetPairId = liquidationData.AssetPairId,
+                    Direction = liquidationData.Direction
                 }, _cqrsContextNamesSettings.TradingEngine);
             }
         }
