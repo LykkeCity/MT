@@ -117,19 +117,6 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 return;
             }
 
-            var assetPairId = positions.FirstOrDefault()?.AssetPairId;
-            if (_assetPairsCache.GetAssetPairById(assetPairId).IsDiscontinued)
-            {
-                publisher.PublishEvent(new SpecialLiquidationFailedEvent
-                {
-                    OperationId = command.OperationId,
-                    CreationTime = _dateService.Now(),
-                    Reason = $"Asset pair {assetPairId} is discontinued",
-                });
-                
-                return;
-            }
-
             if (!TryGetExchangeNameFromPositions(positions, out var externalProviderId))
             {
                 publisher.PublishEvent(new SpecialLiquidationFailedEvent
@@ -148,6 +135,19 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     OperationId = command.OperationId,
                     CreationTime = _dateService.Now(),
                     Reason = "No positions to liquidate",
+                });
+                
+                return;
+            }
+
+            var assetPairId = positions.First().AssetPairId;
+            if (_assetPairsCache.GetAssetPairById(assetPairId).IsDiscontinued)
+            {
+                publisher.PublishEvent(new SpecialLiquidationFailedEvent
+                {
+                    OperationId = command.OperationId,
+                    CreationTime = _dateService.Now(),
+                    Reason = $"Asset pair {assetPairId} is discontinued",
                 });
                 
                 return;
