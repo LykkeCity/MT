@@ -8,7 +8,9 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services;
+using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.TradingConditions;
+using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Middleware;
 using MarginTrading.Common.Services;
@@ -29,16 +31,19 @@ namespace MarginTrading.Backend.Controllers
         private readonly IDateService _dateService;
         private readonly AccountManager _accountManager;
         private readonly TradingConditionsCacheService _tradingConditionsCache;
+        private readonly ICqrsSender _cqrsSender;
 
         public AccountsController(IAccountsCacheService accountsCacheService,
             IDateService dateService,
             AccountManager accountManager,
-            TradingConditionsCacheService tradingConditionsCache)
+            TradingConditionsCacheService tradingConditionsCache,
+            ICqrsSender cqrsSender)
         {
             _accountsCacheService = accountsCacheService;
             _dateService = dateService;
             _accountManager = accountManager;
             _tradingConditionsCache = tradingConditionsCache;
+            _cqrsSender = cqrsSender;
         }
 
         /// <summary>
@@ -89,6 +94,29 @@ namespace MarginTrading.Backend.Controllers
             return Task.FromResult(Convert(stats));
         }
         
+        [HttpPost, Route("resume-liquidation/{accountId}")]
+        public Task ResumeLiquidation(string accountId, string comment)
+        {
+            var account = _accountsCacheService.Get(accountId);
+
+            var liquidation = account.LiquidationOperationId;
+            
+            if (string.IsNullOrEmpty(liquidation))
+            {
+                throw new InvalidOperationException("Account is not in liquidation state");
+            }
+            
+            _cqrsSender.SendCommandToSelf(new ResumeLiquidationInternalCommand
+            {
+                OperationId = liquidation,
+                CreationTime = DateTime.UtcNow,
+                IsCausedBySpecialLiquidation = false,
+                Comment = comment
+            });
+            
+            return Task.CompletedTask;
+        }
+        
         private static AccountStatContract Convert(IMarginTradingAccount item)
         {
             return new AccountStatContract
@@ -107,7 +135,8 @@ namespace MarginTrading.Backend.Controllers
                 UnrealizedDailyPnl = item.GetUnrealizedDailyPnl(),
                 OpenPositionsCount = item.GetOpenPositionsCount(),
                 MarginUsageLevel = item.GetMarginUsageLevel(),
-                LegalEntity = item.LegalEntity
+                LegalEntity = item.LegalEntity,
+                IsInLiquidation = item.IsInLiquidation()
             };
         }
 

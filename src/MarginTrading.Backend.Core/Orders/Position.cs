@@ -144,7 +144,7 @@ namespace MarginTrading.Backend.Core.Orders
             CloseComment = comment;
         }
         
-        public void CancelClosing(DateTime date, PositionCloseReason reason, OriginatorType originator, string comment)
+        public void CancelClosing(DateTime date)
         {
             Status = PositionStatus.Active;
             LastModified = date;

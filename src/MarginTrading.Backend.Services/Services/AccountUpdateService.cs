@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
@@ -9,6 +10,7 @@ using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.TradingConditions;
+#pragma warning disable 1998
 
 namespace MarginTrading.Backend.Services
 {
@@ -23,6 +25,7 @@ namespace MarginTrading.Backend.Services
         
         private readonly IAccountMarginFreezingRepository _accountMarginFreezingRepository;
         private readonly IAccountMarginUnconfirmedRepository _accountMarginUnconfirmedRepository;
+        private readonly ILog _log;
 
         public AccountUpdateService(
             IFplService fplService,
@@ -31,7 +34,8 @@ namespace MarginTrading.Backend.Services
             OrdersCache ordersCache,
             IAssetsCache assetsCache,
             IAccountMarginFreezingRepository accountMarginFreezingRepository,
-            IAccountMarginUnconfirmedRepository accountMarginUnconfirmedRepository)
+            IAccountMarginUnconfirmedRepository accountMarginUnconfirmedRepository,
+            ILog log)
         {
             _fplService = fplService;
             _tradingConditionsCache = tradingConditionsCache;
@@ -40,6 +44,7 @@ namespace MarginTrading.Backend.Services
             _assetsCache = assetsCache;
             _accountMarginFreezingRepository = accountMarginFreezingRepository;
             _accountMarginUnconfirmedRepository = accountMarginUnconfirmedRepository;
+            _log = log;
         }
 
         public void UpdateAccount(IMarginTradingAccount account)
@@ -103,6 +108,21 @@ namespace MarginTrading.Backend.Services
             var accountMarginAvailable = _accountsCacheService.Get(order.AccountId).GetMarginAvailable(); 
             
             return accountMarginAvailable >= orderMargin;
+        }
+        
+        public void RemoveLiquidationStateIfNeeded(string accountId, string reason,
+            string liquidationOperationId = null)
+        {
+            var account = _accountsCacheService.TryGet(accountId);
+
+            if (account == null)
+                return;
+
+            if (!string.IsNullOrEmpty(account.LiquidationOperationId) &&
+                account.GetAccountLevel() != AccountLevel.StopOUt)
+            {
+                _accountsCacheService.TryFinishLiquidation(accountId, reason, liquidationOperationId);
+            }
         }
         
         private void UpdateAccount(IMarginTradingAccount account,

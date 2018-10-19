@@ -15,7 +15,8 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
         public MatchingEngineMode Mode => MatchingEngineMode.MarketMaker;
 
-        public Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition)
+        public Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition,
+            OrderModality modality = OrderModality.Regular)
         {
             return Task.FromResult(new MatchedOrderCollection());
         }
@@ -27,7 +28,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             return Task.CompletedTask;
         }
 
-        public decimal? GetPriceForClose(Position order)
+        public decimal? GetPriceForClose(string assetPairId, decimal volume, string externalProviderId)
         {
             return null;
         }

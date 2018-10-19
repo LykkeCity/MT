@@ -36,7 +36,8 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             _externalExecutionTime = externalExecutionTime;
         }
         
-        public Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition)
+        public Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition,
+            OrderModality modality = OrderModality.Regular)
         {
             var col = new MatchedOrderCollection(new [] {new MatchedOrder
             {
@@ -50,7 +51,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             return Task.FromResult(col);
         }
 
-        public decimal? GetPriceForClose(Position order)
+        public decimal? GetPriceForClose(string assetPairId, decimal volume, string externalProviderId)
         {
             return _price;
         }

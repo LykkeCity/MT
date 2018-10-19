@@ -59,6 +59,7 @@ namespace MarginTrading.Backend.Services
             _cfdCalculatorService = cfdCalculatorService;
         }
         
+        
         #region Base validations
 
         public async Task<(Order order, List<Order> relatedOrders)> ValidateRequestAndCreateOrders(

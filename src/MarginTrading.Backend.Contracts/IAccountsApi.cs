@@ -28,5 +28,11 @@ namespace MarginTrading.Backend.Contracts
         /// </summary>
         [Get("/api/accounts/stats/{accountId}")]
         Task<AccountStatContract> GetAccountStats([NotNull] string accountId);
+
+        /// <summary>
+        /// Resumes liquidation of selected account
+        /// </summary>
+        [Post("/api/accounts/resume-liquidation/{accountId}")]
+        Task ResumeLiquidation(string accountId, string comment);
     }
 }

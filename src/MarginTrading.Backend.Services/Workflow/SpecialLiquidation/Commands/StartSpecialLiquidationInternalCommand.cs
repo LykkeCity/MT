@@ -19,5 +19,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands
         [CanBeNull]
         [Key(3)]
         public string AccountId { get; set; }
+        
+        [CanBeNull]
+        [Key(4)]
+        public string CausationOperationId { get; set; }
     }
 }

@@ -131,7 +131,8 @@ namespace MarginTrading.Backend.Services
             {
                 try
                 {
-                    var closedOrder = await _tradingEngine.ClosePositionAsync(position.Id, OriginatorType.OnBehalf, "", "Close orders for account");
+                    var closedOrder = await _tradingEngine.ClosePositionAsync(position.Id, OriginatorType.OnBehalf, "", 
+                        "Close orders for account");
 
                     closedOrders.Add(closedOrder);
                 }
