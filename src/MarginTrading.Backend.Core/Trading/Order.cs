@@ -275,7 +275,7 @@ namespace MarginTrading.Backend.Core.Trading
         protected override Dictionary<StateTransition<OrderStatus, OrderCommand>, OrderStatus> Transitions => 
             new Dictionary<StateTransition<OrderStatus, OrderCommand>, OrderStatus>
         {
-            {new StateTransition<OrderStatus, OrderCommand>(OrderStatus.Placed, OrderCommand.Denactivate), OrderStatus.Inactive},
+            {new StateTransition<OrderStatus, OrderCommand>(OrderStatus.Placed, OrderCommand.Deactivate), OrderStatus.Inactive},
             {new StateTransition<OrderStatus, OrderCommand>(OrderStatus.Placed, OrderCommand.Activate), OrderStatus.Active},
             {new StateTransition<OrderStatus, OrderCommand>(OrderStatus.Inactive, OrderCommand.Activate), OrderStatus.Active},
             {new StateTransition<OrderStatus, OrderCommand>(OrderStatus.Placed, OrderCommand.StartExecution), OrderStatus.ExecutionStarted},
@@ -425,7 +425,7 @@ namespace MarginTrading.Backend.Core.Trading
 
         public void MakeInactive(DateTime dateTime)
         {
-            ChangeState(OrderCommand.Denactivate, () =>
+            ChangeState(OrderCommand.Deactivate, () =>
             {
                 LastModified = dateTime;
             });
