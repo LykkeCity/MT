@@ -10,6 +10,7 @@ namespace MarginTrading.SqlRepositories.Entities
         
         public string Id { get; set; }
         public DateTime LastModified { get; set; }
+        public DateTime PrevLastModified { get; set; }
 
         object IOperationExecutionInfo<object>.Data => JsonConvert.DeserializeObject<object>(Data);
         public string Data { get; set; }

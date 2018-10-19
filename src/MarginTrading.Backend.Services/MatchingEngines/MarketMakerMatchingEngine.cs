@@ -79,14 +79,14 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             }
         }
 
-        public decimal? GetPriceForClose(Position order)
+        public decimal? GetPriceForClose(string assetPairId, decimal volume, string externalProviderId)
         {
             using (_contextFactory.GetWriteSyncContext($"{nameof(MarketMakerMatchingEngine)}.{nameof(GetPriceForClose)}"))
             {
-                var orderBookTypeToMatch = order.GetCloseType().GetOrderDirectionToMatchInOrderBook();
+                var orderBookTypeToMatch =
+                    volume.GetClosePositionOrderDirection().GetOrderDirectionToMatchInOrderBook();
 
-                var matchedOrders = _orderBooks.Match(order.AssetPairId, orderBookTypeToMatch,
-                    Math.Abs(order.Volume));
+                var matchedOrders = _orderBooks.Match(assetPairId, orderBookTypeToMatch, Math.Abs(volume));
 
                 return matchedOrders.Any() ? matchedOrders.WeightedAveragePrice : (decimal?) null;
             } // lock

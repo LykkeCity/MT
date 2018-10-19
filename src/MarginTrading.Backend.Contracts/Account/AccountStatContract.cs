@@ -76,5 +76,10 @@
         /// Legal Entity of account
         /// </summary>
         public string LegalEntity { get; set; }
+        
+        /// <summary>
+        /// If account is in liquidation state
+        /// </summary>
+        public bool IsInLiquidation { get; set; }
     }
 }

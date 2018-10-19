@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Common;
 using Common.Log;
 using Lykke.Common;
 using MarginTrading.Backend.Core;
@@ -13,6 +14,7 @@ using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
+using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services
@@ -20,7 +22,6 @@ namespace MarginTrading.Backend.Services
     public sealed class TradingEngine : ITradingEngine, IEventConsumer<BestPriceChangeEventArgs>
     {
         private readonly IEventChannel<MarginCallEventArgs> _marginCallEventChannel;
-        private readonly IEventChannel<StopOutEventArgs> _stopoutEventChannel;
         private readonly IEventChannel<OrderPlacedEventArgs> _orderPlacedEventChannel;
         private readonly IEventChannel<OrderExecutedEventArgs> _orderExecutedEventChannel;
         private readonly IEventChannel<OrderCancelledEventArgs> _orderCancelledEventChannel;
@@ -41,10 +42,11 @@ namespace MarginTrading.Backend.Services
         private readonly ICfdCalculatorService _cfdCalculatorService;
         private readonly IIdentityGenerator _identityGenerator;
         private readonly IAssetPairsCache _assetPairsCache;
+        private readonly ICqrsSender _cqrsSender;
+        private readonly IEventChannel<StopOutEventArgs> _stopoutEventChannel;
 
         public TradingEngine(
             IEventChannel<MarginCallEventArgs> marginCallEventChannel,
-            IEventChannel<StopOutEventArgs> stopoutEventChannel,
             IEventChannel<OrderPlacedEventArgs> orderPlacedEventChannel,
             IEventChannel<OrderExecutedEventArgs> orderClosedEventChannel,
             IEventChannel<OrderCancelledEventArgs> orderCancelledEventChannel, 
@@ -63,10 +65,11 @@ namespace MarginTrading.Backend.Services
             IDateService dateService,
             ICfdCalculatorService cfdCalculatorService,
             IIdentityGenerator identityGenerator,
-            IAssetPairsCache assetPairsCache)
+            IAssetPairsCache assetPairsCache,
+            ICqrsSender cqrsSender,
+            IEventChannel<StopOutEventArgs> stopoutEventChannel)
         {
             _marginCallEventChannel = marginCallEventChannel;
-            _stopoutEventChannel = stopoutEventChannel;
             _orderPlacedEventChannel = orderPlacedEventChannel;
             _orderExecutedEventChannel = orderClosedEventChannel;
             _orderCancelledEventChannel = orderCancelledEventChannel;
@@ -87,6 +90,8 @@ namespace MarginTrading.Backend.Services
             _cfdCalculatorService = cfdCalculatorService;
             _identityGenerator = identityGenerator;
             _assetPairsCache = assetPairsCache;
+            _cqrsSender = cqrsSender;
+            _stopoutEventChannel = stopoutEventChannel;
         }
 
         public async Task<Order> PlaceOrderAsync(Order order)
@@ -262,7 +267,7 @@ namespace MarginTrading.Backend.Services
 
                     if (accountLevel == AccountLevel.StopOUt)
                     {
-                        CommitStopout(account);
+                        CommitStopout(account, null);
                     }
                 }
             }
@@ -373,16 +378,18 @@ namespace MarginTrading.Backend.Services
         
         #region Positions
 
-        private void ProcessPositions(string instrument)
+        private void ProcessPositions(InstrumentBidAskPair quote)
         {
-            var stopoutAccounts = UpdateClosePriceAndDetectStopout(instrument).ToArray();
+            var stopoutAccounts = UpdateClosePriceAndDetectStopout(quote).ToArray();
+            
             foreach (var account in stopoutAccounts)
-                CommitStopout(account);
+                CommitStopout(account, quote);
         }
 
-        private IEnumerable<MarginTradingAccount> UpdateClosePriceAndDetectStopout(string instrument)
+        //TODO: in MTC-192 split method and change conditions
+        private IEnumerable<MarginTradingAccount> UpdateClosePriceAndDetectStopout(InstrumentBidAskPair quote)
         {
-            var openPositions = _ordersCache.Positions.GetPositionsByInstrument(instrument)
+            var openPositions = _ordersCache.Positions.GetPositionsByInstrument(quote.Instrument)
                 .GroupBy(x => x.AccountId).ToDictionary(x => x.Key, x => x.ToArray());
 
             foreach (var accountPositions in openPositions)
@@ -398,9 +405,16 @@ namespace MarginTrading.Backend.Services
                 {
                     var defaultMatchingEngine = _meRouter.GetMatchingEngineForClose(position);
 
-                    var closePrice = defaultMatchingEngine.GetPriceForClose(position);
+                    var closePrice = defaultMatchingEngine.GetPriceForClose(position.AssetPairId, position.Volume,
+                        position.ExternalProviderId);
 
-                    if (closePrice.HasValue)
+                    if (!closePrice.HasValue)
+                    {
+                        var closeOrderDirection = position.Volume.GetClosePositionOrderDirection();
+                        closePrice = quote.GetPriceForOrderDirection(closeOrderDirection);
+                    }
+                    
+                    if (closePrice != 0)
                     {
                         position.UpdateClosePrice(closePrice.Value);
 
@@ -435,74 +449,36 @@ namespace MarginTrading.Backend.Services
                 }
 
                 var newAccountLevel = account.GetAccountLevel();
+                
+                if (newAccountLevel == AccountLevel.StopOUt)
+                    yield return account;
 
                 if (oldAccountLevel != newAccountLevel)
                 {
-                    NotifyAccountLevelChanged(account, newAccountLevel);
-
-                    if (newAccountLevel == AccountLevel.StopOUt)
-                        yield return account;
+                    NotifyMarginCall(account, newAccountLevel);
                 }
             }
         }
 
-        //TODO: change liquidation flow in MTC-98 (use Saga)
-        private void CommitStopout(MarginTradingAccount account)
+        private void CommitStopout(MarginTradingAccount account, InstrumentBidAskPair quote)
         {
-            //var pendingOrders = _ordersCache.Active.GetOrdersByAccountIds(account.Id);
-
-            //var cancelledPendingOrders = new List<Order>();
-            
-            //foreach (var pendingOrder in pendingOrders)
-            //{
-            //    cancelledPendingOrders.Add(pendingOrder);
-            //    CancelPendingOrder(pendingOrder.Id, PositionCloseReason.CanceledBySystem, "Stop out");
-            //}
-            
-            var positions = _ordersCache.Positions.GetPositionsByAccountIds(account.Id);
-            
-            var positionsToClose = new List<Position>();
-            var newAccountUsedMargin = account.GetUsedMargin();
-
-            foreach (var order in positions.OrderBy(o => o.GetTotalFpl()))
+            if (account.IsInLiquidation())
             {
-                if (newAccountUsedMargin <= 0 ||
-                    account.GetTotalCapital() / newAccountUsedMargin > account.GetMarginCall1Level())
-                    break;
-                
-                positionsToClose.Add(order);
-                newAccountUsedMargin -= order.GetMarginMaintenance();
-            }
-
-            if (!positionsToClose.Any())
                 return;
+            }
+            
+            _cqrsSender.SendCommandToSelf(new StartLiquidationInternalCommand
+            {
+                OperationId = Guid.NewGuid().ToString(),//TODO: use quote correlationId
+                AccountId = account.Id,
+                CreationTime = _dateService.Now(),
+                QuoteInfo = quote?.ToJson()
+            });
 
-            _stopoutEventChannel.SendEvent(this,
-                new StopOutEventArgs(account, positionsToClose/*.Concat(cancelledPendingOrders)*/.ToArray()));
-
-            foreach (var position in positionsToClose)
-                StartClosingPosition(position, PositionCloseReason.StopOut);
+            _stopoutEventChannel.SendEvent(this, new StopOutEventArgs(account));
         }
 
-        private void StartClosingPosition(Position position, PositionCloseReason reason)
-        {
-            //position.StartClosing(_dateService.Now(), reason, OriginatorType.Investor, "");
-            
-            var id = _identityGenerator.GenerateAlphanumericId();
-            var code = _identityGenerator.GenerateIdAsync(nameof(Order)).GetAwaiter().GetResult();
-            var now = _dateService.Now();
-
-            var order = new Order(id, code, position.AssetPairId, -position.Volume, now, now, null, position.AccountId,
-                position.TradingConditionId, position.AccountAssetId, null, position.EquivalentAsset,
-                OrderFillType.FillOrKill, "Stop out", position.LegalEntity, false, OrderType.Market, null, position.Id,
-                OriginatorType.System, 0, 0, OrderStatus.Placed, "", _identityGenerator.GenerateGuid());//todo in fact price change correlationId must be used
-            
-            var me = _meRouter.GetMatchingEngineForExecution(order);
-
-            ExecuteOrderByMatchingEngineAsync(order, me, false).GetAwaiter().GetResult();
-        }
-
-        private void NotifyAccountLevelChanged(MarginTradingAccount account, AccountLevel newAccountLevel)
+        private void NotifyMarginCall(MarginTradingAccount account, AccountLevel newAccountLevel)
         {
             switch (newAccountLevel)
             {
@@ -516,7 +492,7 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public Task<Order> ClosePositionAsync(string positionId, OriginatorType originator, string additionalInfo,
+        public async Task<Order> ClosePositionAsync(string positionId, OriginatorType originator, string additionalInfo,
             string correlationId, string comment = null, IMatchingEngineBase me = null, 
             OrderModality modality = OrderModality.Regular)
         {
@@ -535,8 +511,16 @@ namespace MarginTrading.Backend.Services
                 originator, 0, 0, OrderStatus.Placed, additionalInfo, correlationId);
             
             _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
-                
-            return ExecuteOrderByMatchingEngineAsync(order, me, true, modality);
+              
+            order = await ExecuteOrderByMatchingEngineAsync(order, me, true, modality);
+            
+            if (order.Status != OrderStatus.Executed && order.Status != OrderStatus.ExecutionStarted)
+            {
+                position.CancelClosing(_dateService.Now());
+                _log.WriteWarning(nameof(ClosePositionAsync), order, $"Order was not executed. Closing canceled");
+            }
+
+            return order;
         }
 
         public async Task<Order[]> LiquidatePositionsAsync(IMatchingEngineBase me, string[] positionIds,
@@ -612,7 +596,7 @@ namespace MarginTrading.Backend.Services
 
         void IEventConsumer<BestPriceChangeEventArgs>.ConsumeEvent(object sender, BestPriceChangeEventArgs ea)
         {
-            ProcessPositions(ea.BidAskPair.Instrument);
+            ProcessPositions(ea.BidAskPair);
             ProcessOrdersWaitingForExecution(ea.BidAskPair);
         }
     }

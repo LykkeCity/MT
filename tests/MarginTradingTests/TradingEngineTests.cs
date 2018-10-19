@@ -571,47 +571,48 @@ namespace MarginTradingTests
             ValidateOrderIsExecuted(order, new[] {"5"}, 834.370M);
         }
 
-        [Test]
-        public void Is_Positions_Closed_On_Stopout()
-        {
-            var ordersSet = new []
-            {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.370M, Volume = -15000 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286M, Volume = 10000 }
-            };
-
-            _matchingEngine.SetOrders(MarketMaker1Id, ordersSet);
-            
-             _bestPriceChannel.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Bid = 905.57M, Ask = 905.67M }));
-            _bestPriceChannel.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0092M, Ask = 1.0095M }));
-     
-            void CreatePosition(decimal volume)
-            {
-                var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "BTCCHF", _account,
-                    MarginTradingTestsUtils.TradingConditionId, volume);
-
-                _tradingEngine.PlaceOrderAsync(order).GetAwaiter().GetResult();           
-            }
-
-            CreatePosition(1.95M);
-            CreatePosition(1.9M);
-            CreatePosition(1.85M);
-            CreatePosition(1.8M);
-            CreatePosition(1.79M);
-            CreatePosition(1.78M);
-
-            var account = _accountsCacheService.Get(_account.Id);
-
-            Assert.AreEqual(1.62265m, Math.Round(account.GetMarginUsageLevel(), 5));
-            
-            //add new order which will set account to stop out
-            _matchingEngine.SetOrders(MarketMaker1Id,
-                new []{new LimitOrder { CreateDate = DateTime.UtcNow, Id = "7", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 790.286M, Volume = 15000 }
-            }, new[] { "6" });
-
-            Assert.AreEqual(4, account.GetOpenPositionsCount());
-            Assert.AreEqual(380.39099467m, account.GetUsedMargin());
-        }
+        //TODO: implement similar test via commands/events
+//        [Test]
+//        public void Is_Positions_Closed_On_Stopout()
+//        {
+//            var ordersSet = new []
+//            {
+//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.370M, Volume = -15000 },
+//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286M, Volume = 10000 }
+//            };
+//
+//            _matchingEngine.SetOrders(MarketMaker1Id, ordersSet);
+//            
+//             _bestPriceChannel.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Bid = 905.57M, Ask = 905.67M }));
+//            _bestPriceChannel.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0092M, Ask = 1.0095M }));
+//     
+//            void CreatePosition(decimal volume)
+//            {
+//                var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "BTCCHF", _account,
+//                    MarginTradingTestsUtils.TradingConditionId, volume);
+//
+//                _tradingEngine.PlaceOrderAsync(order).GetAwaiter().GetResult();           
+//            }
+//
+//            CreatePosition(1.95M);
+//            CreatePosition(1.9M);
+//            CreatePosition(1.85M);
+//            CreatePosition(1.8M);
+//            CreatePosition(1.79M);
+//            CreatePosition(1.78M);
+//
+//            var account = _accountsCacheService.Get(_account.Id);
+//
+//            Assert.AreEqual(1.62265m, Math.Round(account.GetMarginUsageLevel(), 5));
+//            
+//            //add new order which will set account to stop out
+//            _matchingEngine.SetOrders(MarketMaker1Id,
+//                new []{new LimitOrder { CreateDate = DateTime.UtcNow, Id = "7", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 790.286M, Volume = 15000 }
+//            }, new[] { "6" });
+//
+//            Assert.AreEqual(4, account.GetOpenPositionsCount());
+//            Assert.AreEqual(380.39099467m, account.GetUsedMargin());
+//        }
 
         [Test]
         public void Is_MarginCall_Reached()
@@ -661,94 +662,96 @@ namespace MarginTradingTests
             Assert.AreEqual(OrderStatus.Rejected, order.Status);
         }
 
-        [Test]
-        public void Is_Balance_LessThanZero_On_StopOut_Through_Big_Spread()
-        {
-            var account = Accounts[1];
-            account.Balance = 240000;
-            _accountsCacheService.UpdateAccountBalance(account.Id, account.Balance, DateTime.UtcNow);
-
-            var ordersSet = new[]
-            {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 1097.315M, Volume = 100000 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "2", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 1125.945M, Volume = -100000 },
-            };
-
-            _matchingEngine.SetOrders(MarketMaker1Id, ordersSet, deleteAll: true);
-
-            var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "BTCEUR", Accounts[1],
-                MarginTradingTestsUtils.TradingConditionId, 1000);
-            
-            var resultingAccount = _accountsCacheService.Get(order.AccountId);
-            
-            order = _tradingEngine.PlaceOrderAsync(order).Result;
-            
-            ValidateOrderIsExecuted(order, new []{"2"}, 1125.945M);
-            
-            ValidatePositionIsOpened(order.Id, 1097.315M, -28630);
-            
-            Assert.AreEqual(-28630, Math.Round(resultingAccount.GetPnl()));
-
-            ordersSet = new[]
-            {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 1125.039M, Volume = 100000 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "2", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 1126.039M, Volume = -100000 }
-            };
-
-            _matchingEngine.SetOrders(MarketMaker1Id, ordersSet, deleteAll: true);
-
-            var order1 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "BTCEUR", Accounts[1],
-                MarginTradingTestsUtils.TradingConditionId, 1000);
-            
-            order1 = _tradingEngine.PlaceOrderAsync(order1).Result;
-            
-            ValidateOrderIsExecuted(order1, new []{"2"}, 1126.039M);
-            
-            ValidatePositionIsOpened(order1.Id, 1125.039M, -1000);
-            
-            Assert.AreEqual(-1906, Math.Round(resultingAccount.GetPnl()));
-
-            //add orders to create big spread
-            ordersSet = new[]
-            {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 197.315M, Volume = 100000 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "2", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 2126.039M, Volume = -100000 }
-            };
-
-            _matchingEngine.SetOrders(MarketMaker1Id, ordersSet, deleteAll: true);
-
-            resultingAccount = _accountsCacheService.Get(order.AccountId);
-            Assert.IsTrue(resultingAccount.Balance < 0);
-        }
+        //TODO: implement similar test via commands/events
+//        [Test]
+//        public void Is_Balance_LessThanZero_On_StopOut_Through_Big_Spread()
+//        {
+//            var account = Accounts[1];
+//            account.Balance = 240000;
+//            _accountsCacheService.UpdateAccountBalance(account.Id, account.Balance, DateTime.UtcNow);
+//
+//            var ordersSet = new[]
+//            {
+//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 1097.315M, Volume = 100000 },
+//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "2", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 1125.945M, Volume = -100000 },
+//            };
+//
+//            _matchingEngine.SetOrders(MarketMaker1Id, ordersSet, deleteAll: true);
+//
+//            var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "BTCEUR", Accounts[1],
+//                MarginTradingTestsUtils.TradingConditionId, 1000);
+//            
+//            var resultingAccount = _accountsCacheService.Get(order.AccountId);
+//            
+//            order = _tradingEngine.PlaceOrderAsync(order).Result;
+//            
+//            ValidateOrderIsExecuted(order, new []{"2"}, 1125.945M);
+//            
+//            ValidatePositionIsOpened(order.Id, 1097.315M, -28630);
+//            
+//            Assert.AreEqual(-28630, Math.Round(resultingAccount.GetPnl()));
+//
+//            ordersSet = new[]
+//            {
+//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 1125.039M, Volume = 100000 },
+//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "2", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 1126.039M, Volume = -100000 }
+//            };
+//
+//            _matchingEngine.SetOrders(MarketMaker1Id, ordersSet, deleteAll: true);
+//
+//            var order1 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "BTCEUR", Accounts[1],
+//                MarginTradingTestsUtils.TradingConditionId, 1000);
+//            
+//            order1 = _tradingEngine.PlaceOrderAsync(order1).Result;
+//            
+//            ValidateOrderIsExecuted(order1, new []{"2"}, 1126.039M);
+//            
+//            ValidatePositionIsOpened(order1.Id, 1125.039M, -1000);
+//            
+//            Assert.AreEqual(-1906, Math.Round(resultingAccount.GetPnl()));
+//
+//            //add orders to create big spread
+//            ordersSet = new[]
+//            {
+//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 197.315M, Volume = 100000 },
+//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "2", Instrument = "BTCEUR", MarketMakerId = MarketMaker1Id, Price = 2126.039M, Volume = -100000 }
+//            };
+//
+//            _matchingEngine.SetOrders(MarketMaker1Id, ordersSet, deleteAll: true);
+//
+//            resultingAccount = _accountsCacheService.Get(order.AccountId);
+//            Assert.IsTrue(resultingAccount.Balance < 0);
+//        }
         
-        [Test]
-        public void Is_Big_Spread_Leads_To_Stopout()
-        {
-            var account = Accounts[1];
-            _accountsCacheService.UpdateAccountBalance(account.Id, 24, DateTime.UtcNow);
-            
-            var ordersSet = new[]
-            {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "GBPUSD", MarketMakerId = MarketMaker1Id, Price = 2, Volume = 100000 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "2", Instrument = "GBPUSD", MarketMakerId = MarketMaker1Id, Price = 6, Volume = -100000 },
-            };
-
-            _matchingEngine.SetOrders(MarketMaker1Id, ordersSet, deleteAll: true);
-
-            _fxRateCacheService.SetQuote(new InstrumentBidAskPair {Instrument = "EURUSD", Ask = 1.5748M, Bid = 1.5748M});
-
-            var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "GBPUSD", Accounts[1],
-                MarginTradingTestsUtils.TradingConditionId, 100);
-            
-            var resultingAccount = _accountsCacheService.Get(order.AccountId);
-            
-            order = _tradingEngine.PlaceOrderAsync(order).Result;
-            
-            ValidateOrderIsExecuted(order, new []{"2"}, 6);
-            
-            resultingAccount = _accountsCacheService.Get(order.AccountId);
-            Assert.IsTrue(resultingAccount.Balance < 0);
-        }
+        //TODO: implement similar test via commands/events
+//        [Test]
+//        public void Is_Big_Spread_Leads_To_Stopout()
+//        {
+//            var account = Accounts[1];
+//            _accountsCacheService.UpdateAccountBalance(account.Id, 24, DateTime.UtcNow);
+//            
+//            var ordersSet = new[]
+//            {
+//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "GBPUSD", MarketMakerId = MarketMaker1Id, Price = 2, Volume = 100000 },
+//                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "2", Instrument = "GBPUSD", MarketMakerId = MarketMaker1Id, Price = 6, Volume = -100000 },
+//            };
+//
+//            _matchingEngine.SetOrders(MarketMaker1Id, ordersSet, deleteAll: true);
+//
+//            _fxRateCacheService.SetQuote(new InstrumentBidAskPair {Instrument = "EURUSD", Ask = 1.5748M, Bid = 1.5748M});
+//
+//            var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "GBPUSD", Accounts[1],
+//                MarginTradingTestsUtils.TradingConditionId, 100);
+//            
+//            var resultingAccount = _accountsCacheService.Get(order.AccountId);
+//            
+//            order = _tradingEngine.PlaceOrderAsync(order).Result;
+//            
+//            ValidateOrderIsExecuted(order, new []{"2"}, 6);
+//            
+//            resultingAccount = _accountsCacheService.Get(order.AccountId);
+//            Assert.IsTrue(resultingAccount.Balance < 0);
+//        }
 
         [Test]
         public void Is_Fpl_Margin_Calculated_For_Straight_Pair_Correct()

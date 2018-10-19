@@ -19,5 +19,9 @@ namespace MarginTrading.Backend.Core
         Task<bool> UpdateAccountChanges(string accountId, string updatedTradingConditionId,
             decimal updatedWithdrawTransferLimit, bool isDisabled, bool isWithdrawalDisabled, DateTime eventTime);
         Task<bool> UpdateAccountBalance(string accountId, decimal accountBalance, DateTime eventTime);
+        
+        bool TryStartLiquidation(string accountId, string operationId, out string currentOperationId);
+        
+        bool TryFinishLiquidation(string accountId, string reason, string liquidationOperationId = null);
     }
 }

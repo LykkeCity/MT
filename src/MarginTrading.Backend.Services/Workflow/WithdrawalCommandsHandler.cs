@@ -45,11 +45,11 @@ namespace MarginTrading.Backend.Services.Workflow
             var executionInfo = await _operationExecutionInfoRepository.GetOrAddAsync(
                 operationName: OperationName,
                 operationId: command.OperationId,
-                factory: () => new OperationExecutionInfo<OperationData>(
+                factory: () => new OperationExecutionInfo<WithdrawalFreezeOperationData>(
                     operationName: OperationName,
                     id: command.OperationId,
                     lastModified: _dateService.Now(),
-                    data: new WithdrawalOperationData
+                    data: new WithdrawalFreezeOperationData
                     {
                         State = OperationState.Initiated,
                         AccountId = command.AccountId,
@@ -102,7 +102,7 @@ namespace MarginTrading.Backend.Services.Workflow
         private async Task Handle(UnfreezeMarginOnFailWithdrawalCommand command, IEventPublisher publisher)
         {
             //ensure operation idempotency
-            var executionInfo = await _operationExecutionInfoRepository.GetAsync<WithdrawalOperationData>(
+            var executionInfo = await _operationExecutionInfoRepository.GetAsync<WithdrawalFreezeOperationData>(
                 operationName: OperationName,
                 id: command.OperationId
             );

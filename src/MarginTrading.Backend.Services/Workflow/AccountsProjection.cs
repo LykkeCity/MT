@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using AutoMapper;
 using Common;
 using Common.Log;
@@ -65,7 +63,6 @@ namespace MarginTrading.Backend.Services.Workflow
         [UsedImplicitly]
         public async Task Handle(AccountChangedEvent e)
         {
-            //ensure idempotency
             var executionInfo = await _operationExecutionInfoRepository.GetOrAddAsync(
                 operationName: OperationName,
                 operationId: e.OperationId,
@@ -93,6 +90,8 @@ namespace MarginTrading.Backend.Services.Workflow
                                 updatedAccount.TradingConditionId, updatedAccount.WithdrawTransferLimit,
                                 updatedAccount.IsDisabled, updatedAccount.IsWithdrawalDisabled, e.ChangeTimestamp))
                         {
+                            _accountUpdateService.RemoveLiquidationStateIfNeeded(e.Account.Id,
+                                "Trading conditions changed");
                             _clientNotifyService.NotifyAccountUpdated(updatedAccount);
                         }
                         break;
@@ -107,6 +106,8 @@ namespace MarginTrading.Backend.Services.Workflow
                                 if (await _accountsCacheService.UpdateAccountBalance(updatedAccount.Id,
                                     e.BalanceChange.Balance, e.ChangeTimestamp))
                                 {
+                                    _accountUpdateService.RemoveLiquidationStateIfNeeded(e.Account.Id,
+                                        "Balance updated");
                                     _accountBalanceChangedEventChannel.SendEvent(this,
                                         new AccountBalanceChangedEventArgs(updatedAccount));
                                 }

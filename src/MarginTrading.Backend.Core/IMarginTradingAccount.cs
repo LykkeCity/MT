@@ -17,6 +17,7 @@ namespace MarginTrading.Backend.Core
         DateTime LastUpdateTime { get; }
         DateTime LastBalanceChangeTime { get; }
         bool IsWithdrawalDisabled { get; }
+        string LiquidationOperationId { get; }
     }
 
     public class MarginTradingAccount : IMarginTradingAccount, IComparable<MarginTradingAccount>
@@ -32,6 +33,7 @@ namespace MarginTrading.Backend.Core
         public DateTime LastUpdateTime { get; set; }
         public DateTime LastBalanceChangeTime { get; set; }
         public bool IsWithdrawalDisabled { get; set; }
+        public string LiquidationOperationId { get; set; }
 
         public AccountFpl AccountFpl { get; private set; } = new AccountFpl();
 
@@ -191,6 +193,11 @@ namespace MarginTrading.Backend.Core
             {
                 accountInstance.AccountFpl.ActualHash++;
             }
+        }
+        
+        public static bool IsInLiquidation(this IMarginTradingAccount account)
+        {
+            return !string.IsNullOrEmpty(account.LiquidationOperationId);
         }
     }
 }

@@ -70,13 +70,20 @@ namespace MarginTrading.Backend.Services
 
             fplData.Fpl = Math.Round(fpl, fplData.AccountBaseAssetAccuracy);
 
+            if (position.ClosePrice == 0)
+                position.UpdateClosePrice(position.OpenPrice);
+            
             fplData.OpenPrice = position.OpenPrice;
             fplData.ClosePrice = position.ClosePrice;
             
             CalculateMargin(position, fplData);
             
             fplData.SwapsSnapshot = position.GetSwaps();
-            
+
+            if (fplData.ActualHash == 0)
+            {
+                fplData.ActualHash = 1;
+            }
             fplData.CalculatedHash = fplData.ActualHash;
             
             fplData.TotalFplSnapshot = position.GetTotalFpl(fplData.SwapsSnapshot);

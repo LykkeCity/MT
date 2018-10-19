@@ -28,7 +28,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             return Task.CompletedTask;
         }
 
-        public decimal? GetPriceForClose(Position order)
+        public decimal? GetPriceForClose(string assetPairId, decimal volume, string externalProviderId)
         {
             return null;
         }
