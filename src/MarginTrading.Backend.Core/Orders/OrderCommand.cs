@@ -2,7 +2,7 @@ namespace MarginTrading.Backend.Core.Orders
 {
     public enum OrderCommand
     {
-        Deactivate = 0,
+        MakeInactive = 0,
         Activate = 1,
         StartExecution = 2,
         FinishExecution = 3,

@@ -275,18 +275,16 @@ namespace MarginTrading.Backend.Core.Trading
         protected override Dictionary<StateTransition<OrderStatus, OrderCommand>, OrderStatus> Transitions => 
             new Dictionary<StateTransition<OrderStatus, OrderCommand>, OrderStatus>
         {
-            {new StateTransition<OrderStatus, OrderCommand>(OrderStatus.Placed, OrderCommand.Deactivate), OrderStatus.Inactive},
+            {new StateTransition<OrderStatus, OrderCommand>(OrderStatus.Placed, OrderCommand.MakeInactive), OrderStatus.Inactive},
             {new StateTransition<OrderStatus, OrderCommand>(OrderStatus.Placed, OrderCommand.Activate), OrderStatus.Active},
             {new StateTransition<OrderStatus, OrderCommand>(OrderStatus.Inactive, OrderCommand.Activate), OrderStatus.Active},
             {new StateTransition<OrderStatus, OrderCommand>(OrderStatus.Placed, OrderCommand.StartExecution), OrderStatus.ExecutionStarted},
             {new StateTransition<OrderStatus, OrderCommand>(OrderStatus.Active, OrderCommand.StartExecution), OrderStatus.ExecutionStarted},
             {new StateTransition<OrderStatus, OrderCommand>(OrderStatus.ExecutionStarted, OrderCommand.CancelExecution), OrderStatus.Active},
             {new StateTransition<OrderStatus, OrderCommand>(OrderStatus.ExecutionStarted, OrderCommand.FinishExecution), OrderStatus.Executed},
-            {new StateTransition<OrderStatus, OrderCommand>(OrderStatus.Placed, OrderCommand.Reject), OrderStatus.Rejected},
             {new StateTransition<OrderStatus, OrderCommand>(OrderStatus.ExecutionStarted, OrderCommand.Reject), OrderStatus.Rejected},
             {new StateTransition<OrderStatus, OrderCommand>(OrderStatus.Inactive, OrderCommand.Cancel), OrderStatus.Canceled},
             {new StateTransition<OrderStatus, OrderCommand>(OrderStatus.Active, OrderCommand.Cancel), OrderStatus.Canceled},
-            {new StateTransition<OrderStatus, OrderCommand>(OrderStatus.ExecutionStarted, OrderCommand.Cancel), OrderStatus.Canceled},
             {new StateTransition<OrderStatus, OrderCommand>(OrderStatus.Active, OrderCommand.Expire), OrderStatus.Expired},
         };
 
@@ -425,7 +423,7 @@ namespace MarginTrading.Backend.Core.Trading
 
         public void MakeInactive(DateTime dateTime)
         {
-            ChangeState(OrderCommand.Deactivate, () =>
+            ChangeState(OrderCommand.MakeInactive, () =>
             {
                 LastModified = dateTime;
             });

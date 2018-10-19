@@ -194,11 +194,16 @@ namespace MarginTrading.Backend.Services
 
             if (!string.IsNullOrEmpty(order.ParentPositionId))
             {
-                if (!_ordersCache.Positions.TryGetPositionById(order.ParentPositionId, out var position) ||
-                    position.Status != PositionStatus.Active)
+                if (!_ordersCache.Positions.TryGetPositionById(order.ParentPositionId, out var position))
                 {
-                    order.Cancel(_dateService.Now(), OriginatorType.System, null, order.CorrelationId);
-                    _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order));
+                    order.Reject(OrderRejectReason.ParentPositionDoesNotExist, "Parent position does not exist", "", _dateService.Now());
+                    _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
+                    return order;
+                }
+                if (position.Status != PositionStatus.Active)
+                {
+                    order.Reject(OrderRejectReason.ParentPositionIsNotActive, "Parent position is not active", "", _dateService.Now());
+                    _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
                     return order;
                 }
 

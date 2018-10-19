@@ -15,6 +15,8 @@
         InvalidAccount,
         InvalidParent,
         TradingConditionError,
-        TechnicalError
+        TechnicalError,
+        ParentPositionDoesNotExist,
+        ParentPositionIsNotActive
     }
 }
