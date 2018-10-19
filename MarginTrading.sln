@@ -29,19 +29,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.AzureReposito
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "6. Brokers", "6. Brokers", "{E74A349A-3D48-4345-80E7-FD4C462864F0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.AccountHistoryBroker", "src\MarginTrading.Brokers\MarginTrading.AccountHistoryBroker\MarginTrading.AccountHistoryBroker.csproj", "{08FFD2CD-50C4-4B84-BA9E-27667677E20C}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.OrderHistoryBroker", "src\MarginTrading.Brokers\MarginTrading.OrderHistoryBroker\MarginTrading.OrderHistoryBroker.csproj", "{02819188-B172-400E-9DBA-9A7E5C4F6266}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.BrokerBase", "src\MarginTrading.Brokers\MarginTrading.BrokerBase\MarginTrading.BrokerBase.csproj", "{6B4B176C-58E3-4C66-96E2-91330192F238}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.AccountMarginEventsBroker", "src\MarginTrading.Brokers\MarginTrading.AccountMarginEventsBroker\MarginTrading.AccountMarginEventsBroker.csproj", "{2228A223-02B8-472C-98BC-8F71E8F0F604}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.Contract", "src\MarginTrading.Contract\MarginTrading.Contract.csproj", "{08346EF4-8525-4CE0-93C4-CCE510D27D88}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.Backend.Core.Mappers", "src\MarginTrading.Backend.Core.Mappers\MarginTrading.Backend.Core.Mappers.csproj", "{41948BD6-0CD9-4A2B-BAA3-02AD065AD52B}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.AccountReportsBroker", "src\MarginTrading.Brokers\MarginTrading.AccountReportsBroker\MarginTrading.AccountReportsBroker.csproj", "{9595DED9-58C9-4732-87B1-891AFC2282B1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.Backend.Contracts", "src\MarginTrading.Backend.Contracts\MarginTrading.Backend.Contracts.csproj", "{5EC22A63-BA3F-41A2-A70F-216B7E809390}"
 EndProject
@@ -53,9 +45,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.ExternalOrder
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.OrderbookBestPricesBroker", "src\MarginTrading.Brokers\MarginTrading.OrderbookBestPricesBroker\MarginTrading.OrderbookBestPricesBroker.csproj", "{B9DD492A-58CC-4716-879F-725AE2218AB7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.MigrateApp", "src\MarginTrading.Brokers\MarginTrading.MigrateApp\MarginTrading.MigrateApp.csproj", "{921B4212-E0C8-4422-A689-A19095BD5CDC}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.SqlRepositories", "src\MarginTrading.SqlRepositories\MarginTrading.SqlRepositories.csproj", "{115EFE4D-B269-4D62-944D-12C9FC1AE56A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.BrokerBase", "src\MarginTrading.Brokers\MarginTrading.BrokerBase\MarginTrading.BrokerBase.csproj", "{970E8EC9-C56E-44A1-AD1D-8DEB653C404E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -87,18 +79,6 @@ Global
 		{C78B5B26-4078-47FE-BCD1-CF6F9886A4FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C78B5B26-4078-47FE-BCD1-CF6F9886A4FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C78B5B26-4078-47FE-BCD1-CF6F9886A4FC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{08FFD2CD-50C4-4B84-BA9E-27667677E20C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{08FFD2CD-50C4-4B84-BA9E-27667677E20C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{08FFD2CD-50C4-4B84-BA9E-27667677E20C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{08FFD2CD-50C4-4B84-BA9E-27667677E20C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{02819188-B172-400E-9DBA-9A7E5C4F6266}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{02819188-B172-400E-9DBA-9A7E5C4F6266}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{02819188-B172-400E-9DBA-9A7E5C4F6266}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{02819188-B172-400E-9DBA-9A7E5C4F6266}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6B4B176C-58E3-4C66-96E2-91330192F238}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6B4B176C-58E3-4C66-96E2-91330192F238}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6B4B176C-58E3-4C66-96E2-91330192F238}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6B4B176C-58E3-4C66-96E2-91330192F238}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2228A223-02B8-472C-98BC-8F71E8F0F604}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2228A223-02B8-472C-98BC-8F71E8F0F604}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2228A223-02B8-472C-98BC-8F71E8F0F604}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -111,10 +91,6 @@ Global
 		{41948BD6-0CD9-4A2B-BAA3-02AD065AD52B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{41948BD6-0CD9-4A2B-BAA3-02AD065AD52B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{41948BD6-0CD9-4A2B-BAA3-02AD065AD52B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9595DED9-58C9-4732-87B1-891AFC2282B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9595DED9-58C9-4732-87B1-891AFC2282B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9595DED9-58C9-4732-87B1-891AFC2282B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9595DED9-58C9-4732-87B1-891AFC2282B1}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5EC22A63-BA3F-41A2-A70F-216B7E809390}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5EC22A63-BA3F-41A2-A70F-216B7E809390}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5EC22A63-BA3F-41A2-A70F-216B7E809390}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -131,14 +107,14 @@ Global
 		{B9DD492A-58CC-4716-879F-725AE2218AB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B9DD492A-58CC-4716-879F-725AE2218AB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B9DD492A-58CC-4716-879F-725AE2218AB7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{921B4212-E0C8-4422-A689-A19095BD5CDC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{921B4212-E0C8-4422-A689-A19095BD5CDC}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{921B4212-E0C8-4422-A689-A19095BD5CDC}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{921B4212-E0C8-4422-A689-A19095BD5CDC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{115EFE4D-B269-4D62-944D-12C9FC1AE56A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{115EFE4D-B269-4D62-944D-12C9FC1AE56A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{115EFE4D-B269-4D62-944D-12C9FC1AE56A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{115EFE4D-B269-4D62-944D-12C9FC1AE56A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{970E8EC9-C56E-44A1-AD1D-8DEB653C404E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{970E8EC9-C56E-44A1-AD1D-8DEB653C404E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{970E8EC9-C56E-44A1-AD1D-8DEB653C404E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{970E8EC9-C56E-44A1-AD1D-8DEB653C404E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -147,12 +123,8 @@ Global
 		{28D8D798-8EF9-48BC-9F10-6E7823343CC9} = {84F3857F-CE2C-4A87-ACB2-809570092CF6}
 		{AFC440C0-68F0-447F-9C04-7614E6323B22} = {F9EA3679-8D3F-4DC2-B0A9-08801E02EE70}
 		{C78B5B26-4078-47FE-BCD1-CF6F9886A4FC} = {5AD188EF-3F19-4527-816C-A361746EE9C2}
-		{08FFD2CD-50C4-4B84-BA9E-27667677E20C} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
-		{02819188-B172-400E-9DBA-9A7E5C4F6266} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
-		{6B4B176C-58E3-4C66-96E2-91330192F238} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
 		{2228A223-02B8-472C-98BC-8F71E8F0F604} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
 		{08346EF4-8525-4CE0-93C4-CCE510D27D88} = {84F3857F-CE2C-4A87-ACB2-809570092CF6}
-		{9595DED9-58C9-4732-87B1-891AFC2282B1} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
 		{5EC22A63-BA3F-41A2-A70F-216B7E809390} = {1EA2FA6D-0FEA-47D9-B8CE-EF31A1C54DCD}
 		{A3E8A724-1ACD-4C92-AC1E-91D4AFFD17FE} = {1EA2FA6D-0FEA-47D9-B8CE-EF31A1C54DCD}
 		{41948BD6-0CD9-4A2B-BAA3-02AD065AD52B} = {1EA2FA6D-0FEA-47D9-B8CE-EF31A1C54DCD}
@@ -161,8 +133,8 @@ Global
 		{E6A712C9-78F1-4573-B3A4-318FA4A6BA0D} = {A1366CA2-DF4A-4E38-BD6C-895A399118B4}
 		{AE4DA150-F395-4E80-B1A2-2D0D4FDB89D8} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
 		{B9DD492A-58CC-4716-879F-725AE2218AB7} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
-		{921B4212-E0C8-4422-A689-A19095BD5CDC} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
 		{115EFE4D-B269-4D62-944D-12C9FC1AE56A} = {5AD188EF-3F19-4527-816C-A361746EE9C2}
+		{970E8EC9-C56E-44A1-AD1D-8DEB653C404E} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {16BCEC97-771D-46F8-BD02-379A8FC34CDD}

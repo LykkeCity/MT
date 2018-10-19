@@ -15,7 +15,6 @@ namespace MarginTrading.Backend.Services
                 EventTime = eventTime,
                 EventType = eventType,
 
-                ClientId = account.ClientId,
                 AccountId = account.Id,
                 TradingConditionId = account.TradingConditionId,
                 BaseAssetId = account.BaseAssetId,

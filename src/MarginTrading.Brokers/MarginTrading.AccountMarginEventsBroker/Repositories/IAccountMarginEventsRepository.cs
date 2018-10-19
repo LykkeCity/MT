@@ -3,8 +3,8 @@ using System.Threading.Tasks;
 
 namespace MarginTrading.AccountMarginEventsBroker.Repositories
 {
-    internal interface IAccountMarginEventsReportsRepository
+    internal interface IAccountMarginEventsRepository
     {
-        Task InsertOrReplaceAsync(IAccountMarginEventReport report);
+        Task InsertOrReplaceAsync(IAccountMarginEvent report);
     }
 }

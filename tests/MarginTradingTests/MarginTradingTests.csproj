@@ -17,7 +17,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\MarginTrading.Backend\MarginTrading.Backend.csproj" />
-    <ProjectReference Include="..\..\src\MarginTrading.Brokers\MarginTrading.AccountHistoryBroker\MarginTrading.AccountHistoryBroker.csproj" />
     <ProjectReference Include="..\..\src\MarginTrading.Common\MarginTrading.Common.csproj" />
     <ProjectReference Include="..\..\src\MarginTrading.Backend.Services\MarginTrading.Backend.Services.csproj" />
     <ProjectReference Include="..\..\src\MarginTrading.AzureRepositories\MarginTrading.AzureRepositories.csproj" />

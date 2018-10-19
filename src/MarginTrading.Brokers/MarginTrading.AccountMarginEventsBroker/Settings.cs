@@ -1,4 +1,5 @@
-﻿using MarginTrading.BrokerBase.Settings;
+﻿using Lykke.MarginTrading.BrokerBase.Models;
+using Lykke.MarginTrading.BrokerBase.Settings;
 using MarginTrading.Common.RabbitMq;
 
 namespace MarginTrading.AccountMarginEventsBroker
@@ -11,8 +12,8 @@ namespace MarginTrading.AccountMarginEventsBroker
     
     public class Db
     {
-        public string ReportsConnString { get; set; }
-        public string ReportsSqlConnString { get; set; }
+        public StorageMode StorageMode { get; set; }
+        public string ConnString { get; set; }
     }
     
     public class RabbitMqQueues

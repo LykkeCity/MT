@@ -1,8 +1,8 @@
 ﻿using System.Threading.Tasks;
 using Common.Log;
+using Lykke.MarginTrading.BrokerBase.Settings;
 using Lykke.SlackNotifications;
-using MarginTrading.BrokerBase;
-using MarginTrading.BrokerBase.Settings;
+using Lykke.MarginTrading.BrokerBase;
 using MarginTrading.AccountMarginEventsBroker.Repositories;
 using MarginTrading.AccountMarginEventsBroker.Repositories.Models;
 using MarginTrading.Backend.Contracts.Events;
@@ -11,47 +11,47 @@ namespace MarginTrading.AccountMarginEventsBroker
 {
     internal class Application : BrokerApplicationBase<MarginEventMessage>
     {
-        private readonly IAccountMarginEventsReportsRepository _accountMarginEventsReportsRepository;
+        private readonly IAccountMarginEventsRepository _accountMarginEventsRepository;
         private readonly Settings _settings;
 
         public Application(ILog logger, Settings settings,
             CurrentApplicationInfo applicationInfo,
-            IAccountMarginEventsReportsRepository accountMarginEventsReportsRepository,
+            IAccountMarginEventsRepository accountMarginEventsRepository,
             ISlackNotificationsSender slackNotificationsSender)
             : base(logger, slackNotificationsSender, applicationInfo)
         {
             _settings = settings;
-            _accountMarginEventsReportsRepository = accountMarginEventsReportsRepository;
+            _accountMarginEventsRepository = accountMarginEventsRepository;
         }
 
         protected override BrokerSettingsBase Settings => _settings;
         protected override string ExchangeName => _settings.RabbitMqQueues.AccountMarginEvents.ExchangeName;
+        protected override string RoutingKey => null;
 
         protected override Task HandleMessage(MarginEventMessage message)
         {
-            return _accountMarginEventsReportsRepository.InsertOrReplaceAsync(new AccountMarginEventReport
+            return _accountMarginEventsRepository.InsertOrReplaceAsync(new AccountMarginEvent
             {
                 EventId = message.EventId,
                 EventTime = message.EventTime,
                 IsEventStopout = message.EventType == MarginEventTypeContract.Stopout,
 
-                ClientId = message.ClientId,
                 AccountId = message.AccountId,
                 TradingConditionId = message.TradingConditionId,
                 BaseAssetId = message.BaseAssetId,
-                Balance = (double) message.Balance,
-                WithdrawTransferLimit = (double) message.WithdrawTransferLimit,
+                Balance = message.Balance,
+                WithdrawTransferLimit = message.WithdrawTransferLimit,
 
-                MarginCall = (double) message.MarginCall1Level,
-                StopOut = (double) message.StopOutLevel,
-                TotalCapital = (double) message.TotalCapital,
-                FreeMargin = (double) message.FreeMargin,
-                MarginAvailable = (double) message.MarginAvailable,
-                UsedMargin = (double) message.UsedMargin,
-                MarginInit = (double) message.MarginInit,
-                PnL = (double) message.PnL,
-                OpenPositionsCount = (double) message.OpenPositionsCount,
-                MarginUsageLevel = (double) message.MarginUsageLevel
+                MarginCall = message.MarginCall1Level,
+                StopOut = message.StopOutLevel,
+                TotalCapital = message.TotalCapital,
+                FreeMargin = message.FreeMargin,
+                MarginAvailable = message.MarginAvailable,
+                UsedMargin = message.UsedMargin,
+                MarginInit = message.MarginInit,
+                PnL = message.PnL,
+                OpenPositionsCount = message.OpenPositionsCount,
+                MarginUsageLevel = message.MarginUsageLevel,
             });
         }
     }
