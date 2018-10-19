@@ -100,7 +100,8 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             }
         }
 
-        public Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition)
+        public Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition,
+            OrderModality modality = OrderModality.Regular)
         {
             using (_contextFactory.GetWriteSyncContext(
                 $"{nameof(MarketMakerMatchingEngine)}.{nameof(MatchOrderAsync)}"))

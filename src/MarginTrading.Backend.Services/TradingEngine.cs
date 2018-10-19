@@ -184,7 +184,8 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        private async Task<Order> ExecuteOrderByMatchingEngineAsync(Order order, IMatchingEngineBase matchingEngine, bool checkStopout)
+        private async Task<Order> ExecuteOrderByMatchingEngineAsync(Order order, IMatchingEngineBase matchingEngine,
+            bool checkStopout, OrderModality modality = OrderModality.Regular)
         {
             //TODO: think how not to execute one order twice!!!
             
@@ -214,17 +215,20 @@ namespace MarginTrading.Backend.Services
 
             var shouldOpenNewPosition = ShouldOpenNewPosition(order);
 
-            try
+            if (modality == OrderModality.Regular)
             {
-                _validateOrderService.MakePreTradeValidation(order, shouldOpenNewPosition);
-            }
-            catch (ValidateOrderException ex)
-            {
-                RejectOrder(order, ex.RejectReason, ex.Message, ex.Comment);
-                return order;
+                try
+                {
+                    _validateOrderService.MakePreTradeValidation(order, shouldOpenNewPosition);
+                }
+                catch (ValidateOrderException ex)
+                {
+                    RejectOrder(order, ex.RejectReason, ex.Message, ex.Comment);
+                    return order;
+                }
             }
 
-            var matchedOrders = await matchingEngine.MatchOrderAsync(order, shouldOpenNewPosition);
+            var matchedOrders = await matchingEngine.MatchOrderAsync(order, shouldOpenNewPosition, modality);
 
             if (!matchedOrders.Any())
             {
@@ -489,7 +493,8 @@ namespace MarginTrading.Backend.Services
         }
 
         public async Task<Order> ClosePositionAsync(string positionId, OriginatorType originator, string additionalInfo,
-            string correlationId, string comment = null, IMatchingEngineBase me = null)
+            string correlationId, string comment = null, IMatchingEngineBase me = null, 
+            OrderModality modality = OrderModality.Regular)
         {
             var position = _ordersCache.Positions.GetPositionById(positionId);
 
@@ -506,8 +511,8 @@ namespace MarginTrading.Backend.Services
                 originator, 0, 0, OrderStatus.Placed, additionalInfo, correlationId);
             
             _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
-                
-            order = await ExecuteOrderByMatchingEngineAsync(order, me, true);
+              
+            order = await ExecuteOrderByMatchingEngineAsync(order, me, true, modality);
             
             if (order.Status != OrderStatus.Executed && order.Status != OrderStatus.ExecutionStarted)
             {
@@ -528,7 +533,7 @@ namespace MarginTrading.Backend.Services
                     try
                     {
                         return await ClosePositionAsync(x.Id, OriginatorType.System, string.Empty, correlationId, 
-                            "Special Liquidation", me);
+                            "Special Liquidation", me, OrderModality.Liquidation);
                     }
                     catch (Exception ex)
                     {
