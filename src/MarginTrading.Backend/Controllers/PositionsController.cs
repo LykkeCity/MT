@@ -333,7 +333,7 @@ namespace MarginTrading.Backend.Controllers
             });
         }
 
-        private OpenPositionContract Convert(Position position)
+        internal static OpenPositionContract Convert(Position position)
         {
             return new OpenPositionContract
             {
