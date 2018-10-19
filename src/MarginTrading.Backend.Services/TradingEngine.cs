@@ -512,7 +512,7 @@ namespace MarginTrading.Backend.Services
             if (order.Status != OrderStatus.Executed && order.Status != OrderStatus.ExecutionStarted)
             {
                 position.CancelClosing(_dateService.Now());
-                _log.WriteWarning(nameof(ClosePositionAsync), order, $"Order was not executed. Closing canceled");
+                _log.WriteWarning(nameof(ClosePositionAsync), order, "Order was not executed. Closing canceled");
             }
 
             return order;
