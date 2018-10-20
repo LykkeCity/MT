@@ -9,16 +9,16 @@ using MoreLinq;
 
 namespace MarginTrading.Backend.Core.StateMachines
 {
-    internal static class TransitionConfig
+    internal static class TransitionConfigs
     {
         private static Dictionary<Type, Dictionary<(Enum, Enum), Enum>> Config { get; }
 
-        static TransitionConfig()
+        static TransitionConfigs()
         {
             Config = new Dictionary<Type, Dictionary<(Enum, Enum), Enum>>
             {
                 {
-                    typeof(Order), new Dictionary<(Enum, Enum), Enum>
+                    typeof(OrderStatus), new Dictionary<(Enum, Enum), Enum>
                     {
                         {(OrderStatus.Placed, OrderCommand.MakeInactive), OrderStatus.Inactive},
                         {(OrderStatus.Placed, OrderCommand.Activate), OrderStatus.Active},
@@ -34,7 +34,7 @@ namespace MarginTrading.Backend.Core.StateMachines
                     }
                 },
                 {
-                    typeof(Position), new Dictionary<(Enum, Enum), Enum>
+                    typeof(PositionStatus), new Dictionary<(Enum, Enum), Enum>
                     {
                         {(PositionStatus.Active, PositionCommand.StartClosing), PositionStatus.Closing},
                         {(PositionStatus.Closing, PositionCommand.CancelClosing), PositionStatus.Active},

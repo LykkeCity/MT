@@ -21,13 +21,18 @@ namespace MarginTrading.Backend.Core.StateMachines
 
         private object LockObj { get; } = new object();
 
-        protected abstract Dictionary<StateTransition<TState, TCommand>, TState> GetTransitionConfig();
+        private static Dictionary<StateTransition<TState, TCommand>, TState> TransitionConfig { get; }
 
+        static StatefulObject()
+        {
+            TransitionConfig = TransitionConfigs.GetConfig<TState, TCommand>(typeof(TState));
+        }
+        
         private TState GetTransition(TCommand command)
         {
             var transition = new StateTransition<TState, TCommand>(Status, command);
 
-            if (!GetTransitionConfig().TryGetValue(transition, out var transitionConfig))
+            if (!TransitionConfig.TryGetValue(transition, out var transitionConfig))
             {
                 throw new StateTransitionNotFoundException($"Invalid {GetType().Name} transition: {Status} -> {command}");
             }

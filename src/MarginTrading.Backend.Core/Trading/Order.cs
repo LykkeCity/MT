@@ -272,8 +272,6 @@ namespace MarginTrading.Backend.Core.Trading
         
         #endregion
         
-        private static Dictionary<StateTransition<OrderStatus, OrderCommand>, OrderStatus> TransitionConfig { get; }
-
         /// <summary>
         /// For testing and deserialization
         /// </summary>
@@ -322,14 +320,6 @@ namespace MarginTrading.Backend.Core.Trading
             MatchedOrders = new MatchedOrderCollection();
             RelatedOrders = new List<RelatedOrderInfo>();
         }
-
-        static Order()
-        {
-            TransitionConfig = StateMachines.TransitionConfig.GetConfig<OrderStatus, OrderCommand>(typeof(Order));
-        }
-
-        protected override Dictionary<StateTransition<OrderStatus, OrderCommand>, OrderStatus> GetTransitionConfig()
-            => TransitionConfig;
 
         #region Actions
 

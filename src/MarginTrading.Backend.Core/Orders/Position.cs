@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using MarginTrading.Backend.Core.StateMachines;
 using MarginTrading.Backend.Core.Trading;
 using Newtonsoft.Json;
@@ -101,8 +100,6 @@ namespace MarginTrading.Backend.Core.Orders
         
         #endregion Properties
         
-        private static Dictionary<StateTransition<PositionStatus, PositionCommand>, PositionStatus> TransitionConfig { get; }
-
         /// <summary>
         /// For testing and deserialization
         /// </summary>
@@ -146,13 +143,6 @@ namespace MarginTrading.Backend.Core.Orders
             FplData = new FplData {ActualHash = 1};
         }
 
-        static Position()
-        {
-            TransitionConfig = StateMachines.TransitionConfig.GetConfig<PositionStatus, PositionCommand>(typeof(Position));
-        }
-
-        protected override Dictionary<StateTransition<PositionStatus, PositionCommand>, PositionStatus> GetTransitionConfig()
-            => TransitionConfig;
 
         #region Actions
 
