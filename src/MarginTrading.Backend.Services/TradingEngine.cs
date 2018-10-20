@@ -536,10 +536,12 @@ namespace MarginTrading.Backend.Services
                             "Special Liquidation", me, OrderModality.Liquidation);
                     }
                     catch (Exception ex)
-                    {
+                    {//todo match exception by type or msg and swallow / throw
+                        //todo positionNotFound typed exception => swallow
+                        //todo on other.. try all the list .. if any failed => fail event with "these positions were not closed"
                         await _log.WriteWarningAsync(nameof(TradingEngine), nameof(LiquidatePositionsAsync),
                             $"Failed to close position {x.Id} on special liquidation operation #{correlationId}", ex);
-                        return null;
+                        return null;//todo throw here..
                     }
                 }).Where(x => x != null));
         }
