@@ -154,6 +154,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             {
                 if (Math.Abs(openedPosition.Volume) <= leftVolumeToMatch)
                 {
+                    //todo start closing here & close right away + consider reusing CloseExistingPoisitions
                     openedPosition.Close(order.Executed.Value, order.MatchingEngineId, order.ExecutionPrice.Value,
                         order.EquivalentRate, order.FxRate, order.Originator, order.OrderType.GetCloseReason(),
                         order.Comment, order.Id);

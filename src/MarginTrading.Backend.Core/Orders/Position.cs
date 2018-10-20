@@ -100,17 +100,9 @@ namespace MarginTrading.Backend.Core.Orders
         public FplData FplData { get; private set; }
         
         #endregion Properties
-
-        protected override Dictionary<StateTransition<PositionStatus, PositionCommand>, PositionStatus> Transitions 
-            => new Dictionary<StateTransition<PositionStatus, PositionCommand>, PositionStatus>
-        {
-            {new StateTransition<PositionStatus, PositionCommand>(PositionStatus.Active, PositionCommand.StartClosing), PositionStatus.Closing},
-            {new StateTransition<PositionStatus, PositionCommand>(PositionStatus.Closing, PositionCommand.CancelClosing), PositionStatus.Active},
-            {new StateTransition<PositionStatus, PositionCommand>(PositionStatus.Active, PositionCommand.CancelClosing), PositionStatus.Active},
-            {new StateTransition<PositionStatus, PositionCommand>(PositionStatus.Active, PositionCommand.Close), PositionStatus.Closed},
-            {new StateTransition<PositionStatus, PositionCommand>(PositionStatus.Closing, PositionCommand.Close), PositionStatus.Closed},
-        };
         
+        private static Dictionary<StateTransition<PositionStatus, PositionCommand>, PositionStatus> TransitionConfig { get; }
+
         /// <summary>
         /// For testing and deserialization
         /// </summary>
@@ -153,6 +145,14 @@ namespace MarginTrading.Backend.Core.Orders
             // ReSharper restore VirtualMemberCallInConstructor
             FplData = new FplData {ActualHash = 1};
         }
+
+        static Position()
+        {
+            TransitionConfig = StateMachines.TransitionConfig.GetConfig<PositionStatus, PositionCommand>(typeof(Position));
+        }
+
+        protected override Dictionary<StateTransition<PositionStatus, PositionCommand>, PositionStatus> GetTransitionConfig()
+            => TransitionConfig;
 
         #region Actions
 

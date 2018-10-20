@@ -6,7 +6,10 @@ namespace MarginTrading.Backend.Core.StateMachines
 {
     /// <summary>
     /// Stateful object abstraction. Represents a simple state machine.
-    /// In derived type ctor initialization must be performed: Status set to initial state and Transitions configured.
+    /// Status change and handler are executed under an object-level lock.
+    /// Status must set to initial state in derived type ctor.
+    /// Transitions config must be initialized in derived type's static constructor from TransitionConfig.GetConfig.
+    /// GetTransitionConfig method must return it's value.
     /// </summary>
     /// <typeparam name="TState"></typeparam>
     /// <typeparam name="TCommand"></typeparam>
@@ -15,16 +18,16 @@ namespace MarginTrading.Backend.Core.StateMachines
         where TCommand : struct, IConvertible
     {
         public abstract TState Status { get; protected set; }
-        
-        protected abstract Dictionary<StateTransition<TState, TCommand>, TState> Transitions { get; }
 
         private object LockObj { get; } = new object();
+
+        protected abstract Dictionary<StateTransition<TState, TCommand>, TState> GetTransitionConfig();
 
         private TState GetTransition(TCommand command)
         {
             var transition = new StateTransition<TState, TCommand>(Status, command);
-            
-            if (!Transitions.TryGetValue(transition, out var transitionConfig))
+
+            if (!GetTransitionConfig().TryGetValue(transition, out var transitionConfig))
             {
                 throw new StateTransitionNotFoundException($"Invalid {GetType().Name} transition: {Status} -> {command}");
             }
