@@ -20,25 +20,25 @@ namespace MarginTrading.Backend.Core.StateMachines
                 {
                     typeof(Order), new Dictionary<(Enum, Enum), Enum>
                     {
-                        {(OrderStatus.Placed, OrderStatus.Inactive), OrderCommand.MakeInactive},
-                        {(OrderStatus.Placed, OrderStatus.Active), OrderCommand.Activate},
-                        {(OrderStatus.Inactive, OrderStatus.Active), OrderCommand.Activate},
-                        {(OrderStatus.Placed, OrderStatus.ExecutionStarted), OrderCommand.StartExecution},
-                        {(OrderStatus.Active, OrderStatus.ExecutionStarted), OrderCommand.StartExecution},
-                        {(OrderStatus.ExecutionStarted, OrderStatus.Active), OrderCommand.CancelExecution},
-                        {(OrderStatus.ExecutionStarted, OrderStatus.Executed), OrderCommand.FinishExecution},
-                        {(OrderStatus.ExecutionStarted, OrderStatus.Rejected), OrderCommand.Reject},
-                        {(OrderStatus.Inactive, OrderStatus.Canceled), OrderCommand.Cancel},
-                        {(OrderStatus.Active, OrderStatus.Canceled), OrderCommand.Cancel},
-                        {(OrderStatus.Active, OrderStatus.Expired), OrderCommand.Expire},
+                        {(OrderStatus.Placed, OrderCommand.MakeInactive), OrderStatus.Inactive},
+                        {(OrderStatus.Placed, OrderCommand.Activate), OrderStatus.Active},
+                        {(OrderStatus.Inactive, OrderCommand.Activate), OrderStatus.Active},
+                        {(OrderStatus.Placed, OrderCommand.StartExecution), OrderStatus.ExecutionStarted},
+                        {(OrderStatus.Active, OrderCommand.StartExecution), OrderStatus.ExecutionStarted},
+                        {(OrderStatus.ExecutionStarted, OrderCommand.CancelExecution), OrderStatus.Active},
+                        {(OrderStatus.ExecutionStarted, OrderCommand.FinishExecution), OrderStatus.Executed},
+                        {(OrderStatus.ExecutionStarted, OrderCommand.Reject), OrderStatus.Rejected},
+                        {(OrderStatus.Inactive, OrderCommand.Cancel), OrderStatus.Canceled},
+                        {(OrderStatus.Active, OrderCommand.Cancel), OrderStatus.Canceled},
+                        {(OrderStatus.Active, OrderCommand.Expire), OrderStatus.Expired},
                     }
                 },
                 {
                     typeof(Position), new Dictionary<(Enum, Enum), Enum>
                     {
-                        {(PositionStatus.Active, PositionStatus.Closing), PositionCommand.StartClosing},
-                        {(PositionStatus.Closing, PositionStatus.Active), PositionCommand.CancelClosing},
-                        {(PositionStatus.Closing, PositionStatus.Closed), PositionCommand.Close},
+                        {(PositionStatus.Active, PositionCommand.StartClosing), PositionStatus.Closing},
+                        {(PositionStatus.Closing, PositionCommand.CancelClosing), PositionStatus.Active},
+                        {(PositionStatus.Closing, PositionCommand.Close), PositionStatus.Closed},
                     }
                 },
             };
