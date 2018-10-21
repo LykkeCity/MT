@@ -542,7 +542,7 @@ namespace MarginTrading.Backend.Services
                     {
                         return null; //swallow exception if position was already closed
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
                         failedPositionIds.Add(x.Id);
                         return null;
