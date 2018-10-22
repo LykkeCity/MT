@@ -87,7 +87,9 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
                 if (!string.IsNullOrEmpty(order.ParentPositionId))
                 {
-                    CloseExistingPosition(order);
+                    var position = _ordersCache.Positions.GetPositionById(order.ParentPositionId);
+                    
+                    CloseExistingPosition(order, position);
 
                     return;
                 }
@@ -96,10 +98,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             }
         }
 
-        private void CloseExistingPosition(Order order)
+        private void CloseExistingPosition(Order order, Position position)
         {
-            var position = _ordersCache.Positions.GetPositionById(order.ParentPositionId);
-
             position.Close(order.Executed.Value, order.MatchingEngineId, order.ExecutionPrice.Value,
                 order.EquivalentRate, order.FxRate, order.Originator, order.OrderType.GetCloseReason(), order.Comment,
                 order.Id);
@@ -154,15 +154,9 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             {
                 if (Math.Abs(openedPosition.Volume) <= leftVolumeToMatch)
                 {
-                    openedPosition.Close(order.Executed.Value, order.MatchingEngineId, order.ExecutionPrice.Value,
-                        order.EquivalentRate, order.FxRate, order.Originator, order.OrderType.GetCloseReason(),
-                        order.Comment, order.Id);
+                    openedPosition.StartClosing(_dateService.Now(), order.OrderType.GetCloseReason(), order.Originator, "");
                     
-                    _ordersCache.Positions.Remove(openedPosition);
-
-                    SendPositionHistoryEvent(openedPosition, PositionHistoryTypeContract.Close, openedPosition.ChargedPnL, order, Math.Abs(openedPosition.Volume));
-                    
-                    CancelRelatedOrders(openedPosition.RelatedOrders, order.CorrelationId);
+                    CloseExistingPosition(order, openedPosition);
                 
                     leftVolumeToMatch = leftVolumeToMatch - Math.Abs(openedPosition.Volume);
                 }

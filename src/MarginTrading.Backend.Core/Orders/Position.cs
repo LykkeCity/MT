@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using MarginTrading.Backend.Core.StateMachines;
 using MarginTrading.Backend.Core.Trading;
 using Newtonsoft.Json;
 
 namespace MarginTrading.Backend.Core.Orders
 {
-    public class Position
+    // ReSharper disable once ClassWithVirtualMembersNeverInherited.Global - it is inherited via Mock
+    public class Position : StatefulObject<PositionStatus, PositionCommand>
     {
+        #region Properties
+        
         [JsonProperty]
         public virtual string Id { get; protected set; }
         [JsonProperty]
@@ -80,8 +84,8 @@ namespace MarginTrading.Backend.Core.Orders
         public List<string> CloseTrades { get; private set; }
         
         [JsonProperty]
-        public PositionStatus Status { get; private set; }
-        
+        public override PositionStatus Status { get; protected set; }
+
         [JsonProperty]
         public DateTime? LastModified { get; private set; }
 
@@ -93,7 +97,9 @@ namespace MarginTrading.Backend.Core.Orders
 
         [JsonProperty]
         public FplData FplData { get; private set; }
-
+        
+        #endregion Properties
+        
         /// <summary>
         /// For testing and deserialization
         /// </summary>
@@ -109,6 +115,8 @@ namespace MarginTrading.Backend.Core.Orders
             string equivalentAsset, decimal openPriceEquivalent, List<RelatedOrderInfo> relatedOrders,
             string legalEntity, OriginatorType openOriginator, string externalProviderId)
         {
+            // ReSharper disable VirtualMemberCallInConstructor
+            // ^^^ props are virtual for tests, derived constructor call is overriden by this one, but it's ok
             Id = id;
             Code = code;
             AssetPairId = assetPairId;
@@ -131,53 +139,12 @@ namespace MarginTrading.Backend.Core.Orders
             ExternalProviderId = externalProviderId;
             CloseTrades = new List<string>();
             ChargePnlOperations = new HashSet<string>();
+            // ReSharper restore VirtualMemberCallInConstructor
             FplData = new FplData {ActualHash = 1};
         }
 
-        public void StartClosing(DateTime date, PositionCloseReason reason, OriginatorType originator, string comment)
-        {
-            Status = PositionStatus.Closing;
-            LastModified = date;
-            StartClosingDate = date;
-            CloseReason = reason;
-            CloseOriginator = originator;
-            CloseComment = comment;
-        }
-        
-        public void CancelClosing(DateTime date)
-        {
-            Status = PositionStatus.Active;
-            LastModified = date;
-            StartClosingDate = null;
-            CloseReason = PositionCloseReason.None;
-            CloseOriginator = null;
-            CloseComment = null;
-        }
 
-        public void Close(DateTime date, string closeMatchingEngineId, decimal closePrice, decimal closeFxPrice,
-            decimal closePriceEquivalent, OriginatorType originator, PositionCloseReason closeReason, string comment,
-            string tradeId)
-        {
-            Status = PositionStatus.Closed;
-            CloseDate = date;
-            LastModified = date;
-            CloseMatchingEngineId = closeMatchingEngineId;
-            CloseFxPrice = closeFxPrice;
-            ClosePriceEquivalent = closePriceEquivalent;
-            CloseOriginator = CloseOriginator ?? originator;
-            CloseReason = closeReason;
-            CloseComment = comment;
-            CloseTrades.Add(tradeId);
-            UpdateClosePrice(closePrice);
-        }
-
-        public void PartiallyClose(DateTime date, decimal closedVolume, string tradeId, decimal chargedPnl)
-        {
-            LastModified = date;
-            Volume = Volume > 0 ? Volume - closedVolume : Volume + closedVolume;
-            CloseTrades.Add(tradeId);
-            ChargedPnL -= chargedPnl;
-        }
+        #region Actions
 
         public void UpdateClosePrice(decimal closePrice)
         {
@@ -187,13 +154,13 @@ namespace MarginTrading.Backend.Core.Orders
             account.CacheNeedsToBeUpdated();
         }
 
-        public void SetCommissionRates(decimal swapComissionRate, decimal openComissionRate, decimal closeComissionRate,
-            decimal comissionLot)
+        public void SetCommissionRates(decimal swapCommissionRate, decimal openCommissionRate, decimal closeCommissionRate,
+            decimal commissionLot)
         {
-            SwapCommissionRate = swapComissionRate;
-            OpenCommissionRate = openComissionRate;
-            CloseCommissionRate = closeComissionRate;
-            CommissionLot = comissionLot;
+            SwapCommissionRate = swapCommissionRate;
+            OpenCommissionRate = openCommissionRate;
+            CloseCommissionRate = closeCommissionRate;
+            CommissionLot = commissionLot;
         }
         
         public void AddRelatedOrder(Order order)
@@ -221,5 +188,62 @@ namespace MarginTrading.Backend.Core.Orders
             ChargePnlOperations.Add(operationId);
             ChargedPnL += value;
         }
+
+        public void PartiallyClose(DateTime date, decimal closedVolume, string tradeId, decimal chargedPnl)
+        {
+            LastModified = date;
+            Volume = Volume > 0 ? Volume - closedVolume : Volume + closedVolume;
+            CloseTrades.Add(tradeId);
+            ChargedPnL -= chargedPnl;
+        }
+
+        #endregion Actions
+
+        #region State changes
+
+        public void StartClosing(DateTime date, PositionCloseReason reason, OriginatorType originator, string comment)
+        {
+            ChangeState(PositionCommand.StartClosing, () =>
+            {
+                LastModified = date;
+                StartClosingDate = date;
+                CloseReason = reason;
+                CloseOriginator = originator;
+                CloseComment = comment;
+            });
+        }
+        
+        public void CancelClosing(DateTime date)
+        {
+            ChangeState(PositionCommand.CancelClosing, () =>
+            {
+                LastModified = date;
+                StartClosingDate = null;
+                CloseReason = PositionCloseReason.None;
+                CloseOriginator = null;
+                CloseComment = null;
+            });
+        }
+
+        public void Close(DateTime date, string closeMatchingEngineId, decimal closePrice, decimal closeFxPrice,
+            decimal closePriceEquivalent, OriginatorType originator, PositionCloseReason closeReason, string comment,
+            string tradeId)
+        {
+            ChangeState(PositionCommand.Close, () =>
+            {
+                CloseDate = date;
+                LastModified = date;
+                CloseMatchingEngineId = closeMatchingEngineId;
+                CloseFxPrice = closeFxPrice;
+                ClosePriceEquivalent = closePriceEquivalent;
+                CloseOriginator = CloseOriginator ?? originator;
+                CloseReason = closeReason;
+                CloseComment = comment;
+                CloseTrades.Add(tradeId);
+                UpdateClosePrice(closePrice);
+            });
+        }
+
+        #endregion State changes
     }
 }

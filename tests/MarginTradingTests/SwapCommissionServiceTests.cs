@@ -60,7 +60,9 @@ namespace MarginTradingTests
                 new List<RelatedOrderInfo>(), "LYKKETEST", OriginatorType.Investor, "");
 
             dayPosition.SetCommissionRates(100, 0, 0, 1);
-            
+
+            dayPosition.StartClosing(new DateTime(2017, 01, 02, 20, 50, 0), PositionCloseReason.Close, 
+                OriginatorType.Investor, "");
             dayPosition.Close(new DateTime(2017, 01, 02, 20, 50, 0), MatchingEngineConstants.DefaultMm, 2, 1, 1, OriginatorType.Investor,
                 PositionCloseReason.Close, "", "CloseTrade");
             
@@ -72,7 +74,9 @@ namespace MarginTradingTests
                 new List<RelatedOrderInfo>(), "LYKKETEST", OriginatorType.Investor, "");
 
             twoDayPosition.SetCommissionRates(100, 0, 0, 1);
-            
+
+            twoDayPosition.StartClosing(new DateTime(2017, 01, 03, 20, 50, 0), PositionCloseReason.Close,
+                OriginatorType.Investor, "");
             twoDayPosition.Close(new DateTime(2017, 01, 03, 20, 50, 0), MatchingEngineConstants.DefaultMm, 2, 1, 1, OriginatorType.Investor,
                 PositionCloseReason.Close, "", "CloseTrade");
             

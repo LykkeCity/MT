@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.StateMachines;
 using Newtonsoft.Json;
 
 namespace MarginTrading.Backend.Core.Trading
 {
     //TODO: add validations
-    public class Order
+    public class Order : StatefulObject<OrderStatus, OrderCommand>
     {
 
         #region Properties
@@ -144,8 +145,8 @@ namespace MarginTrading.Backend.Core.Trading
         /// Current order status
         /// </summary>
         [JsonProperty]
-        public OrderStatus Status { get; private set; }
-        
+        public sealed override OrderStatus Status { get; protected set; }
+
         /// <summary>
         /// Order fill type
         /// </summary>
@@ -270,7 +271,7 @@ namespace MarginTrading.Backend.Core.Trading
         public decimal? ExecutionPriceRank { get; private set; }
         
         #endregion
-
+        
         /// <summary>
         /// For testing and deserialization
         /// </summary>
@@ -320,7 +321,6 @@ namespace MarginTrading.Backend.Core.Trading
             RelatedOrders = new List<RelatedOrderInfo>();
         }
 
-
         #region Actions
 
         public void ChangePrice(decimal newPrice, DateTime dateTime, OriginatorType originator, string additionalInfo,
@@ -346,24 +346,6 @@ namespace MarginTrading.Backend.Core.Trading
             Originator = originator;
         }
 
-        public void MakeInactive(DateTime dateTime)
-        {
-            Status = OrderStatus.Inactive;
-            LastModified = dateTime;
-        }
-        
-        public void Activate(DateTime dateTime, bool relinkFromOrderToPosition)
-        {
-            Status = OrderStatus.Active;
-            Activated = dateTime;
-            LastModified = dateTime;
-
-            if (relinkFromOrderToPosition)
-            {
-                ParentPositionId = ParentOrderId;
-            }
-        }
-
         public void SetTrailingDistance(decimal parentOrderPrice)
         {
             if (OrderType == OrderType.TrailingStop && Price.HasValue)
@@ -372,87 +354,10 @@ namespace MarginTrading.Backend.Core.Trading
             }
         }
 
-        public void StartExecution(DateTime dateTime, string matchingEngineId)
-        {
-            Status = OrderStatus.ExecutionStarted;
-            ExecutionStarted = dateTime;
-            LastModified = dateTime;
-            MatchingEngineId = matchingEngineId;
-        }
-        
-        public void CancelExecution(DateTime dateTime)
-        {
-            Status = OrderStatus.Active;
-            ExecutionStarted = null;
-            LastModified = dateTime;
-            MatchingEngineId = null;
-        }
-        
-        public void Execute(DateTime dateTime, MatchedOrderCollection matchedOrders, int assetPairAccuracy)
-        {
-            Status = OrderStatus.Executed;
-            
-            var externalOrderId = string.Empty;
-            var externalProviderId = string.Empty;
-                
-            if (matchedOrders.Count == 1)
-            {
-                var matched = matchedOrders.First();
-
-                if (matched.IsExternal)
-                {
-                    externalOrderId = matched.OrderId;
-                    externalProviderId = matched.MarketMakerId;
-                }
-            }
-            
-            Executed = dateTime;
-            LastModified = dateTime;
-            ExecutionPrice = Math.Round(matchedOrders.WeightedAveragePrice, assetPairAccuracy);
-            ExternalOrderId = externalOrderId;
-            ExternalProviderId = externalProviderId;
-            MatchedOrders.AddRange(matchedOrders);
-        }
-        
-        public void PartiallyExecute(DateTime dateTime, MatchedOrderCollection matchedOrders)
-        {
-            LastModified = dateTime;
-            MatchedOrders.AddRange(matchedOrders);
-        }
-
         public void SetRates(decimal equivalentRate, decimal fxRate)
         {
             EquivalentRate = equivalentRate;
             FxRate = fxRate;
-        }
-
-        public void Reject(OrderRejectReason reason, string reasonText, string comment, DateTime dateTime)
-        {
-            Status = OrderStatus.Rejected;
-            Originator = OriginatorType.System;
-            RejectReason = reason;
-            RejectReasonText = reasonText;
-            Comment = comment;
-            Rejected = dateTime;
-            LastModified = dateTime;
-        }
-
-        public void Cancel(DateTime dateTime, OriginatorType originator, string additionalInfo, string correlationId)
-        {
-            Status = OrderStatus.Canceled;
-            Canceled = dateTime;
-            LastModified = dateTime;
-            AdditionalInfo = additionalInfo ?? AdditionalInfo;
-            Originator = originator;
-            CorrelationId = correlationId;
-        }
-
-        public void Expire(DateTime dateTime)
-        {
-            Status = OrderStatus.Expired;
-            Canceled = dateTime;
-            LastModified = dateTime;
-            Originator = OriginatorType.System;
         }
 
         public void AddRelatedOrder(Order order)
@@ -488,8 +393,121 @@ namespace MarginTrading.Backend.Core.Trading
                 ExecutionPriceRank = Price;    
             }
         }
-
-        #endregion
         
+        public void PartiallyExecute(DateTime dateTime, MatchedOrderCollection matchedOrders)
+        {
+            LastModified = dateTime;
+            MatchedOrders.AddRange(matchedOrders);
+        }
+
+        #endregion Actions
+
+        #region State changes
+
+        public void MakeInactive(DateTime dateTime)
+        {
+            ChangeState(OrderCommand.MakeInactive, () =>
+            {
+                LastModified = dateTime;
+            });
+        }
+                
+        public void Activate(DateTime dateTime, bool relinkFromOrderToPosition)
+        {
+            ChangeState(OrderCommand.Activate, () =>
+            {
+                Activated = dateTime;
+                LastModified = dateTime;
+
+                if (relinkFromOrderToPosition)
+                {
+                    ParentPositionId = ParentOrderId;
+                }
+            });
+        }
+
+        public void StartExecution(DateTime dateTime, string matchingEngineId)
+        {
+            ChangeState(OrderCommand.StartExecution, () =>
+            {
+                ExecutionStarted = dateTime;
+                LastModified = dateTime;
+                MatchingEngineId = matchingEngineId;
+            });
+        }
+        
+        public void CancelExecution(DateTime dateTime)
+        {
+            ChangeState(OrderCommand.CancelExecution, () =>
+            {
+                ExecutionStarted = null;
+                LastModified = dateTime;
+                MatchingEngineId = null;
+            });
+        }
+        
+        public void Execute(DateTime dateTime, MatchedOrderCollection matchedOrders, int assetPairAccuracy)
+        {
+            ChangeState(OrderCommand.FinishExecution, () =>
+            {
+                var externalOrderId = string.Empty;
+                var externalProviderId = string.Empty;
+
+                if (matchedOrders.Count == 1)
+                {
+                    var matched = matchedOrders.First();
+
+                    if (matched.IsExternal)
+                    {
+                        externalOrderId = matched.OrderId;
+                        externalProviderId = matched.MarketMakerId;
+                    }
+                }
+
+                Executed = dateTime;
+                LastModified = dateTime;
+                ExecutionPrice = Math.Round(matchedOrders.WeightedAveragePrice, assetPairAccuracy);
+                ExternalOrderId = externalOrderId;
+                ExternalProviderId = externalProviderId;
+                MatchedOrders.AddRange(matchedOrders);
+            });
+        }
+        
+        public void Reject(OrderRejectReason reason, string reasonText, string comment, DateTime dateTime)
+        {
+            ChangeState(OrderCommand.Reject, () =>
+            {
+                Originator = OriginatorType.System;
+                RejectReason = reason;
+                RejectReasonText = reasonText;
+                Comment = comment;
+                Rejected = dateTime;
+                LastModified = dateTime;
+            });
+        }
+
+        public void Cancel(DateTime dateTime, OriginatorType originator, string additionalInfo, string correlationId)
+        {
+            ChangeState(OrderCommand.Cancel, () =>
+            {
+                Canceled = dateTime;
+                LastModified = dateTime;
+                AdditionalInfo = additionalInfo ?? AdditionalInfo;
+                Originator = originator;
+                CorrelationId = correlationId;
+            });
+        }
+
+        public void Expire(DateTime dateTime)
+        {
+            ChangeState(OrderCommand.Expire, () =>
+            {
+                Canceled = dateTime;
+                LastModified = dateTime;
+                Originator = OriginatorType.System;
+            });
+        }
+
+        #endregion State changes
     }
 }
