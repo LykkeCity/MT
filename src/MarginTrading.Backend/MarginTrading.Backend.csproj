@@ -79,6 +79,12 @@
     </None>
     <None Include="..\Dockerfile" Link="Dockerfile" />
   </ItemGroup>
+  <Target Name="CopySerilogConfig" AfterTargets="AfterBuild">
+    <Copy SourceFiles="appsettings.Serilog.json" DestinationFolder="$(OutDir)" />
+  </Target>
+  <Target Name="CopySerilogConfigOnPublish" AfterTargets="Publish">
+    <Copy SourceFiles="appsettings.Serilog.json" DestinationFolder="$(PublishDir)" />
+  </Target>
   <ItemGroup>
     <Content Update="appsettings.Serilog.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
