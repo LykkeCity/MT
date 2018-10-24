@@ -10,12 +10,15 @@ namespace MarginTrading.AccountMarginEventsBroker
     public class Settings : BrokerSettingsBase
     {
         public Db Db { get; set; }
+        
         public RabbitMqQueues RabbitMqQueues { get; set; }
     }
     
     [UsedImplicitly]
-    public class Db : BrokersLogsSettings
+    public class Db
     {
+        public StorageMode StorageMode { get; set; }
+        
         public string ConnString { get; set; }
     }
     

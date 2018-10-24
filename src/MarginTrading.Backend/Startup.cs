@@ -221,7 +221,7 @@ namespace MarginTrading.Backend
 
             if (settings.CurrentValue.WriteToFile)
             {
-                LogLocator.RequestsLog = LogLocator.CommonLog = new LogToFile(typeof(Startup).Assembly, configuration);
+                LogLocator.RequestsLog = LogLocator.CommonLog = new SerilogLogger(typeof(Startup).Assembly, configuration);
             }
             else if (settings.CurrentValue.Db.StorageMode == StorageMode.SqlServer)
             {
