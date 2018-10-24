@@ -67,6 +67,6 @@ namespace MarginTrading.Backend.Core.Settings
         public ChaosSettings ChaosKitty { get; set; }
 
         [Optional]
-        public bool WriteToFile { get; set; }
+        public bool UseSerilog { get; set; }
     }
 }

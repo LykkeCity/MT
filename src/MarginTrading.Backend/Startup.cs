@@ -219,7 +219,7 @@ namespace MarginTrading.Backend
             services.AddSingleton<ISlackNotificationsSender>(slackService);
             services.AddSingleton<IMtSlackNotificationsSender>(slackService);
 
-            if (settings.CurrentValue.WriteToFile)
+            if (settings.CurrentValue.UseSerilog)
             {
                 LogLocator.RequestsLog = LogLocator.CommonLog = new SerilogLogger(typeof(Startup).Assembly, configuration);
             }
