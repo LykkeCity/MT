@@ -64,6 +64,9 @@ namespace MarginTrading.Backend.Core.Settings
         public SpecialLiquidationSettings SpecialLiquidation { get; set; }
         
         [Optional, CanBeNull]
+        public McoRulesSettings McoRules { get; set; }
+        
+        [Optional, CanBeNull]
         public ChaosSettings ChaosKitty { get; set; }
     }
 }
