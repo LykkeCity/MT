@@ -33,7 +33,17 @@ namespace MarginTrading.Backend.Core
         public decimal MarginCall1Level { get; set; }
         public decimal MarginCall2Level { get; set; }
         public decimal StopoutLevel { get; set; }
-
+        
+        /// <summary>
+        /// Margin usage level for short positions according ESMA MCO rule
+        /// </summary>
+        public decimal McoMarginUsageLevelShort { get; set; }
+        
+        /// <summary>
+        /// Margin usage level for long positions according ESMA MCO rule
+        /// </summary>
+        public decimal McoMarginUsageLevelLong { get; set; }
+        
         public decimal WithdrawalFrozenMargin { get; set; }
         public Dictionary<string, decimal> WithdrawalFrozenMarginData { get; set; } = new Dictionary<string, decimal>();
         public decimal UnconfirmedMargin { get; set; }

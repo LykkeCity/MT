@@ -227,24 +227,35 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         {
             var positionsOnAccount = _ordersCache.Positions.GetPositionsByAccountIds(data.AccountId);
 
+            //group positions and take only not processed, filtered and with open market
             var positionGroups = positionsOnAccount
+                .Where(p => !data.ProcessedPositionIds.Contains(p.Id) && 
+                            (string.IsNullOrEmpty(data.AssetPairId) || p.AssetPairId == data.AssetPairId) &&
+                            (data.Direction == null || p.Direction == data.Direction))    
                 .GroupBy(p => (p.AssetPairId, p.Direction))
                 .Where(gr => !_assetPairDayOffService.IsDayOff(gr.Key.AssetPairId));
 
-            // if liquidation is started by ESMA MCO rule, filter only target positions group
-            if (!string.IsNullOrEmpty(data.AssetPairId) && data.Direction.HasValue)
+            IGrouping<(string AssetPairId, PositionDirection Direction), Position> targetPositions = null;
+
+            if (data.IsMcoLiquidation && data.Direction.HasValue)
             {
-                positionGroups = positionGroups.Where(gr => gr.Key == (data.AssetPairId, data.Direction));
+                //order groups by MCO level
+                var orderedGroups = positionGroups.OrderBy(gr =>
+                    gr.Sum(p => p.GetMcoCurrentMargin()) / gr.Sum(p => p.GetMcoInitialMargin()));
+
+                //get worst group depending on direction
+                targetPositions = data.Direction == PositionDirection.Long
+                    ? orderedGroups.First()
+                    : orderedGroups.Last();
+            }
+            else
+            {
+                //take positions from group with max margin used
+                targetPositions = positionGroups.OrderByDescending(gr => gr.Sum(p => p.GetMarginMaintenance())).First();
             }
             
-            //take positions from group with max margin used
-            var targetPositions = positionGroups.OrderByDescending(gr => gr.Sum(p => p.GetMarginMaintenance())).First();
-            
             //and filter out already processed ones
-            var positions = targetPositions
-                .Where(p => !data.ProcessedPositionIds.Contains(p.Id))
-                .Select(p => p.Id)
-                .ToArray();
+            var positions = targetPositions.Select(p => p.Id).ToArray();
 
             var assetPairId = targetPositions.Key.AssetPairId;
             var direction = targetPositions.Key.Direction;
@@ -297,7 +308,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             var accountLevel = account.GetAccountLevel();
 
             if (accountLevel == AccountLevel.None ||
-                accountLevel < AccountLevel.StopOUt && data.IsPartialLiquidation)
+                accountLevel < AccountLevel.StopOut && data.IsMcoLiquidation)
             {
                 sender.SendCommand(new FinishLiquidationInternalCommand
                 {

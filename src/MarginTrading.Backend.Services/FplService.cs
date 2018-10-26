@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.TradingConditions;
@@ -15,23 +13,24 @@ namespace MarginTrading.Backend.Services
     public class FplService : IFplService
     {
         private readonly ICfdCalculatorService _cfdCalculatorService;
-        private readonly IAssetPairsCache _assetPairsCache;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly ITradingInstrumentsCacheService _tradingInstrumentsCache;
         private readonly IAssetsCache _assetsCache;
+        private readonly MarginTradingSettings _marginTradingSettings;
 
         public FplService(
             ICfdCalculatorService cfdCalculatorService,
             IAssetPairsCache assetPairsCache,
             IAccountsCacheService accountsCacheService,
             ITradingInstrumentsCacheService tradingInstrumentsCache,
-            IAssetsCache assetsCache)
+            IAssetsCache assetsCache,
+            MarginTradingSettings marginTradingSettings)
         {
             _cfdCalculatorService = cfdCalculatorService;
-            _assetPairsCache = assetPairsCache;
             _accountsCacheService = accountsCacheService;
             _tradingInstrumentsCache = tradingInstrumentsCache;
             _assetsCache = assetsCache;
+            _marginTradingSettings = marginTradingSettings;
         }
 
         public void UpdatePositionFpl(Position position)
@@ -105,15 +104,23 @@ namespace MarginTrading.Backend.Services
         {
             var tradingInstrument =
                 _tradingInstrumentsCache.GetTradingInstrument(position.TradingConditionId, position.AssetPairId);
+            var volumeForCalculation = Math.Abs(position.Volume);
 
             fplData.MarginRate = _cfdCalculatorService.GetQuoteRateForBaseAsset(position.AccountAssetId, position.AssetPairId, 
                 position.LegalEntity, position.Direction == PositionDirection.Short); // to use close price
             fplData.MarginInit =
-                Math.Round(Math.Abs(position.Volume) * fplData.MarginRate / tradingInstrument.LeverageInit,
+                Math.Round(volumeForCalculation * fplData.MarginRate / tradingInstrument.LeverageInit,
                     fplData.AccountBaseAssetAccuracy);
             fplData.MarginMaintenance =
-                Math.Round(Math.Abs(position.Volume) * fplData.MarginRate / tradingInstrument.LeverageMaintenance,
+                Math.Round(volumeForCalculation * fplData.MarginRate / tradingInstrument.LeverageMaintenance,
                     fplData.AccountBaseAssetAccuracy);
+
+            if (_marginTradingSettings.McoRules != null)
+            {
+                fplData.McoInitialMargin = Math.Round(position.OpenPrice * position.OpenFxPrice * volumeForCalculation /
+                                                      tradingInstrument.LeverageInit, fplData.AccountBaseAssetAccuracy);
+                fplData.McoCurrentMargin = fplData.MarginInit;
+            }
         }
     }
 }

@@ -267,7 +267,7 @@ namespace MarginTrading.Backend.Services
                     var account = _accountsCacheService.Get(order.AccountId);
                     var accountLevel = account.GetAccountLevel();
 
-                    if (accountLevel == AccountLevel.StopOUt)
+                    if (accountLevel == AccountLevel.StopOut)
                     {
                         CommitStopout(account, null);
                     }
@@ -422,7 +422,7 @@ namespace MarginTrading.Backend.Services
 
                 var newAccountLevel = account.GetAccountLevel();
                 
-                if (newAccountLevel == AccountLevel.StopOUt)
+                if (newAccountLevel == AccountLevel.StopOut)
                     yield return account;
 
                 if (oldAccountLevel != newAccountLevel)
@@ -469,13 +469,29 @@ namespace MarginTrading.Backend.Services
             {
                 return;
             }
+
+            PositionDirection? direction = null;
+            bool isMcoLiquidation = false;
+
+            if (account.GetMcoMarginUsageLevelLong() <= MtServiceLocator.McoRules?.LongMcoLevels.StopOut)
+            {
+                direction = PositionDirection.Long;
+                isMcoLiquidation = true;
+            }
+            else if (account.GetMcoMarginUsageLevelShort() >= MtServiceLocator.McoRules?.ShortMcoLevels.StopOut)
+            {
+                direction = PositionDirection.Short;
+                isMcoLiquidation = true;
+            }
             
             _cqrsSender.SendCommandToSelf(new StartLiquidationInternalCommand
             {
                 OperationId = Guid.NewGuid().ToString(),//TODO: use quote correlationId
                 AccountId = account.Id,
                 CreationTime = _dateService.Now(),
-                QuoteInfo = quote?.ToJson()
+                QuoteInfo = quote?.ToJson(),
+                Direction = direction,
+                IsMcoLiquidation = isMcoLiquidation
             });
 
             _stopoutEventChannel.SendEvent(this, new StopOutEventArgs(account));

@@ -13,6 +13,16 @@
         public decimal SwapsSnapshot { get; set; }
         public int AccountBaseAssetAccuracy { get; set; }
         
+        /// <summary>
+        /// Initial margin for ESMA MCO rule
+        /// </summary>
+        public decimal? McoInitialMargin { get; set; }
+        
+        /// <summary>
+        /// Current margin for ESMA MCO rule
+        /// </summary>
+        public decimal? McoCurrentMargin { get; set; }
+
         public int CalculatedHash { get; set; }
         public int ActualHash { get; set; }
     }
