@@ -81,5 +81,20 @@
         /// If account is in liquidation state
         /// </summary>
         public bool IsInLiquidation { get; set; }
+
+        /// <summary>
+        /// Current long positions margin / initial long positions margin
+        /// </summary>
+        public decimal McoMarginUsageLevelLong { get; set; }
+        
+        /// <summary>
+        /// Current short positions margin / initial short positions margin
+        /// </summary>
+        public decimal McoMarginUsageLevelShort { get; set; }
+
+        /// <summary>
+        /// Margin warning notification level
+        /// </summary>
+        public string MarginNotificationLevel { get; set; }
     }
 }

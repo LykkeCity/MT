@@ -112,36 +112,40 @@ namespace MarginTrading.Backend.Core
             
             #endregion
 
-            if (MtServiceLocator.McoRules == null ||
-                accountFplData.McoMarginUsageLevelLong == 0 ||
-                accountFplData.McoMarginUsageLevelShort == 0)
+            if (MtServiceLocator.McoRules == null)
             {
                 return AccountLevel.None;
             }
             
             #region MCO long level
+
+            if (accountFplData.McoMarginUsageLevelLong != 0)
+            {
+                if (accountFplData.McoMarginUsageLevelLong <= MtServiceLocator.McoRules.LongMcoLevels.StopOut)
+                    return AccountLevel.StopOut;
             
-            if (accountFplData.McoMarginUsageLevelLong <= MtServiceLocator.McoRules.LongMcoLevels.StopOut)
-                return AccountLevel.StopOut;
+                if (accountFplData.McoMarginUsageLevelLong <= MtServiceLocator.McoRules.LongMcoLevels.MarginCall2)
+                    return AccountLevel.MarginCall2;
             
-            if (accountFplData.McoMarginUsageLevelLong <= MtServiceLocator.McoRules.LongMcoLevels.MarginCall2)
-                return AccountLevel.MarginCall2;
-            
-            if (accountFplData.McoMarginUsageLevelLong <= MtServiceLocator.McoRules.LongMcoLevels.MarginCall1)
-                return AccountLevel.MarginCall1;
+                if (accountFplData.McoMarginUsageLevelLong <= MtServiceLocator.McoRules.LongMcoLevels.MarginCall1)
+                    return AccountLevel.MarginCall1;
+            }
             
             #endregion
             
             #region MCO short level
+
+            if (accountFplData.McoMarginUsageLevelShort != 0)
+            {
+                if (accountFplData.McoMarginUsageLevelShort >= MtServiceLocator.McoRules.ShortMcoLevels.StopOut)
+                    return AccountLevel.StopOut;
             
-            if (accountFplData.McoMarginUsageLevelShort >= MtServiceLocator.McoRules.ShortMcoLevels.StopOut)
-                return AccountLevel.StopOut;
+                if (accountFplData.McoMarginUsageLevelShort >= MtServiceLocator.McoRules.ShortMcoLevels.MarginCall2)
+                    return AccountLevel.MarginCall2;
             
-            if (accountFplData.McoMarginUsageLevelShort >= MtServiceLocator.McoRules.ShortMcoLevels.MarginCall2)
-                return AccountLevel.MarginCall2;
-            
-            if (accountFplData.McoMarginUsageLevelShort >= MtServiceLocator.McoRules.ShortMcoLevels.MarginCall1)
-                return AccountLevel.MarginCall1;
+                if (accountFplData.McoMarginUsageLevelShort >= MtServiceLocator.McoRules.ShortMcoLevels.MarginCall1)
+                    return AccountLevel.MarginCall1;
+            }
             
             #endregion
             

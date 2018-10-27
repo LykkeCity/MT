@@ -26,7 +26,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation.Commands
         [Key(6)]
         public string QuoteInfo { get; set; }
         
-        [Key(6)]
+        [Key(7)]
         public bool IsMcoLiquidation { get; set; }
     }
 }

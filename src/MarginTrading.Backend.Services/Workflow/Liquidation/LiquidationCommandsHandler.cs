@@ -113,7 +113,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                         Direction = command.Direction,
                         LiquidatedPositionIds = new List<string>(),
                         ProcessedPositionIds = new List<string>(),
-                        
+                        IsMcoLiquidation = command.IsMcoLiquidation
                     }
                 ));
             
