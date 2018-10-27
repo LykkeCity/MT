@@ -1,44 +1,63 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
+using JetBrains.Annotations;
 using MarginTrading.Common.Services;
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.PlatformAbstractions;
 
 #pragma warning disable 1591
 
 namespace MarginTrading.Backend
 {
+    [UsedImplicitly]
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            var restartAttempsLeft = 5;
+            Console.WriteLine($@"{PlatformServices.Default.Application.ApplicationName} version {PlatformServices.Default.Application.ApplicationVersion}");
+            
+            var restartAttemptsLeft = int.TryParse(Environment.GetEnvironmentVariable("RESTART_ATTEMPTS_NUMBER"),
+                out var restartAttemptsFromEnv) 
+                ? restartAttemptsFromEnv
+                : int.MaxValue;
+            var restartAttemptsInterval = int.TryParse(Environment.GetEnvironmentVariable("RESTART_ATTEMPTS_INTERVAL_MS"),
+                out var restartAttemptsIntervalFromEnv) 
+                ? restartAttemptsIntervalFromEnv
+                : 10000;
 
-            while (restartAttempsLeft > 0)
+            while (restartAttemptsLeft > 0)
             {
                 try
                 {
-                    var host = new WebHostBuilder()
-                        .UseKestrel()
-                        .UseContentRoot(Directory.GetCurrentDirectory())
-                        .UseUrls("http://*:5030")
+                    var configuration = new ConfigurationBuilder()
+                        .AddJsonFile("appsettings.json", optional: true)
+                        .AddUserSecrets<Startup>()
+                        .AddEnvironmentVariables()
+                        .Build();
+                    
+                    var host = WebHost.CreateDefaultBuilder()
+                        .UseConfiguration(configuration)
                         .UseStartup<Startup>()
                         .UseApplicationInsights()
                         .Build();
 
-                    host.Run();
-
-                    restartAttempsLeft = 0;
+                    await host.RunAsync();
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"Error: {e.Message}{Environment.NewLine}{e.StackTrace}{Environment.NewLine}Restarting...");
+                    Console.WriteLine($@"Error: {e.Message}{Environment.NewLine}{e.StackTrace}{Environment.NewLine}Restarting...");
                     LogLocator.CommonLog?.WriteFatalErrorAsync(
-                        "MT Backend", "Restart host", $"Attempts left: {restartAttempsLeft}", e);
-                    restartAttempsLeft--;
-                    Thread.Sleep(10000);
+                        "MT Backend", "Restart host", $"Attempts left: {restartAttemptsLeft}", e);
+                    restartAttemptsLeft--;
+                    Thread.Sleep(restartAttemptsInterval);
                 }
             }
+
+            Console.WriteLine(@"Terminated");
         }
     }
 }

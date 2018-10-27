@@ -13,6 +13,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution items", "Solution items", "{805BE832-6AA9-4026-8131-309A1C5B570C}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MarginTrading.Common", "src\MarginTrading.Common\MarginTrading.Common.csproj", "{28D8D798-8EF9-48BC-9F10-6E7823343CC9}"
