@@ -8,7 +8,7 @@
   <ItemGroup>
     <PackageReference Include="Dapper" Version="1.50.5" />
     <PackageReference Include="Lykke.Logs" Version="4.3.4" />
-    <PackageReference Include="Lykke.MarginTrading.BrokerBase" Version="1.1.7" />
+    <PackageReference Include="Lykke.MarginTrading.BrokerBase" Version="1.1.9" />
     <PackageReference Include="Lykke.RabbitMqBroker" Version="7.0.1" />
     <PackageReference Include="Lykke.SettingsReader" Version="2.4.0" />
     <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="2.0.4" />
@@ -36,5 +36,17 @@
     <None Update="Dockerfile">
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
+  </ItemGroup>
+  <Target Name="CopySerilogConfig" AfterTargets="AfterBuild">
+  <Copy SourceFiles="appsettings.Serilog.json" DestinationFolder="$(OutDir)" />
+  </Target>
+  <Target Name="CopySerilogConfigOnPublish" AfterTargets="Publish">
+    <Copy SourceFiles="appsettings.Serilog.json" DestinationFolder="$(PublishDir)" />
+  </Target>
+  <ItemGroup>
+    <Content Include="appsettings.Serilog.json">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>
