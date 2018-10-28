@@ -152,7 +152,7 @@ namespace MarginTrading.Backend.Services
 
             account.AccountFpl.MarginCall1Level = tradingCondition.MarginCall1;
             account.AccountFpl.MarginCall2Level = tradingCondition.MarginCall2;
-            account.AccountFpl.StopoutLevel = tradingCondition.StopOut;
+            account.AccountFpl.StopOutLevel = tradingCondition.StopOut;
 
             UpdateMcoLevel(account, positions);
         }

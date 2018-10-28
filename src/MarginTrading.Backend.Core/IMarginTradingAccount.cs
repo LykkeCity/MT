@@ -101,7 +101,7 @@ namespace MarginTrading.Backend.Core
 
             #region Account Level
             
-            if (marginUsageLevel <= accountFplData.StopoutLevel)
+            if (marginUsageLevel <= accountFplData.StopOutLevel)
                 return AccountLevel.StopOut;
 
             if (marginUsageLevel <= accountFplData.MarginCall2Level)
@@ -222,7 +222,7 @@ namespace MarginTrading.Backend.Core
 
         public static decimal GetStopOutLevel(this IMarginTradingAccount account)
         {
-            return account.GetAccountFpl().StopoutLevel;
+            return account.GetAccountFpl().StopOutLevel;
         }
         
         public static decimal GetMcoMarginUsageLevelLong(this IMarginTradingAccount account)

@@ -233,15 +233,26 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                             (string.IsNullOrEmpty(data.AssetPairId) || p.AssetPairId == data.AssetPairId) &&
                             (data.Direction == null || p.Direction == data.Direction))    
                 .GroupBy(p => (p.AssetPairId, p.Direction))
-                .Where(gr => !_assetPairDayOffService.IsDayOff(gr.Key.AssetPairId));
+                .Where(gr => !_assetPairDayOffService.IsDayOff(gr.Key.AssetPairId))
+                .ToArray();
 
             IGrouping<(string AssetPairId, PositionDirection Direction), Position> targetPositions = null;
 
             if (data.IsMcoLiquidation && data.Direction.HasValue)
             {
+                var groupsWithZeroInitialMargin = positionGroups.Where(gr => gr.Sum(p => p.GetMcoInitialMargin()) == 0)
+                    .Select(gr => gr.Key).ToHashSet();
+
+                if (groupsWithZeroInitialMargin.Any())
+                {
+                    _log.WriteWarningAsync(nameof(LiquidationSaga), nameof(GetLiquidationData),
+                        groupsWithZeroInitialMargin.ToJson(), $"Position groups with 0 initial margin were found");
+                }
+                
                 //order groups by MCO level
-                var orderedGroups = positionGroups.OrderBy(gr =>
-                    gr.Sum(p => p.GetMcoCurrentMargin()) / gr.Sum(p => p.GetMcoInitialMargin()));
+                var orderedGroups = positionGroups
+                    .Where(gr => !groupsWithZeroInitialMargin.Contains(gr.Key))
+                    .OrderBy(gr => gr.Sum(p => p.GetMcoCurrentMargin()) / gr.Sum(p => p.GetMcoInitialMargin()));
 
                 //get worst group depending on direction
                 targetPositions = data.Direction == PositionDirection.Long
@@ -254,7 +265,6 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 targetPositions = positionGroups.OrderByDescending(gr => gr.Sum(p => p.GetMarginMaintenance())).First();
             }
             
-            //and filter out already processed ones
             var positions = targetPositions.Select(p => p.Id).ToArray();
 
             var assetPairId = targetPositions.Key.AssetPairId;
