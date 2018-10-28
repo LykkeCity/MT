@@ -473,17 +473,19 @@ namespace MarginTrading.Backend.Services
             PositionDirection? direction = null;
             bool isMcoLiquidation = false;
 
-            if (account.GetMcoMarginUsageLevelLong() <= MtServiceLocator.McoRules?.LongMcoLevels.StopOut)
+            if (account.GetMcoMarginUsageLevelLong() != 0 &&
+                account.GetMcoMarginUsageLevelLong() <= MtServiceLocator.McoRules?.LongMcoLevels.StopOut)
             {
                 direction = PositionDirection.Long;
                 isMcoLiquidation = true;
             }
-            else if (account.GetMcoMarginUsageLevelShort() >= MtServiceLocator.McoRules?.ShortMcoLevels.StopOut)
+            else if (account.GetMcoMarginUsageLevelShort() != 0 &&
+                     account.GetMcoMarginUsageLevelShort() >= MtServiceLocator.McoRules?.ShortMcoLevels.StopOut)
             {
                 direction = PositionDirection.Short;
                 isMcoLiquidation = true;
             }
-            
+
             _cqrsSender.SendCommandToSelf(new StartLiquidationInternalCommand
             {
                 OperationId = Guid.NewGuid().ToString(),//TODO: use quote correlationId

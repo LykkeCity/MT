@@ -223,7 +223,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         
         #region Private methods
 
-        private (string AssetPairId, PositionDirection Direction, string[] Positions) GetLiquidationData(LiquidationOperationData data)
+        private (string AssetPairId, PositionDirection Direction, string[] Positions)? GetLiquidationData(LiquidationOperationData data)
         {
             var positionsOnAccount = _ordersCache.Positions.GetPositionsByAccountIds(data.AccountId);
 
@@ -256,14 +256,17 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
 
                 //get worst group depending on direction
                 targetPositions = data.Direction == PositionDirection.Long
-                    ? orderedGroups.First()
-                    : orderedGroups.Last();
+                    ? orderedGroups.FirstOrDefault()
+                    : orderedGroups.LastOrDefault();
             }
             else
             {
                 //take positions from group with max margin used
-                targetPositions = positionGroups.OrderByDescending(gr => gr.Sum(p => p.GetMarginMaintenance())).First();
+                targetPositions = positionGroups.OrderByDescending(gr => gr.Sum(p => p.GetMarginMaintenance())).FirstOrDefault();
             }
+
+            if (targetPositions == null)
+                return null;
             
             var positions = targetPositions.Select(p => p.Id).ToArray();
 
@@ -278,7 +281,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         {
             var liquidationData = GetLiquidationData(data);
 
-            if (!liquidationData.Positions.Any())
+            if (!liquidationData.HasValue || !liquidationData.Value.Positions.Any())
             {
                 sender.SendCommand(new FailLiquidationInternalCommand
                 {
@@ -293,9 +296,9 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 {
                     OperationId = operationId,
                     CreationTime = _dateService.Now(),
-                    PositionIds = liquidationData.Positions,
-                    AssetPairId = liquidationData.AssetPairId,
-                    Direction = liquidationData.Direction
+                    PositionIds = liquidationData.Value.Positions,
+                    AssetPairId = liquidationData.Value.AssetPairId,
+                    Direction = liquidationData.Value.Direction
                 }, _cqrsContextNamesSettings.TradingEngine);
             }
         }
@@ -317,8 +320,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
 
             var accountLevel = account.GetAccountLevel();
 
-            if (accountLevel == AccountLevel.None ||
-                accountLevel < AccountLevel.StopOut && data.IsMcoLiquidation)
+            if (accountLevel < AccountLevel.StopOut ||
+                (data.IsMcoLiquidation && data.ProcessedPositionIds.All(p => data.LiquidatedPositionIds.Contains(p))))
             {
                 sender.SendCommand(new FinishLiquidationInternalCommand
                 {
