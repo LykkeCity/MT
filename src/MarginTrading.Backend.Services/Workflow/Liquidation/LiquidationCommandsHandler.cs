@@ -89,13 +89,6 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(command.AssetPairId) && command.Direction.HasValue ||
-                !string.IsNullOrWhiteSpace(command.AssetPairId) && !command.Direction.HasValue)
-            {
-                PublishFailedEvent("Both AssetPairId and Direction must be specified or empty");
-                return;
-            }
-            
             if (_accountsCache.TryGet(command.AccountId) == null)
             {
                 PublishFailedEvent( "Account does not exist");
@@ -119,7 +112,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                         QuoteInfo = command.QuoteInfo,
                         Direction = command.Direction,
                         LiquidatedPositionIds = new List<string>(),
-                        ProcessedPositionIds = new List<string>()
+                        ProcessedPositionIds = new List<string>(),
+                        IsMcoLiquidation = command.IsMcoLiquidation
                     }
                 ));
             

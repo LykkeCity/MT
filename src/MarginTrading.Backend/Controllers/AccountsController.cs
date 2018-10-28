@@ -136,7 +136,10 @@ namespace MarginTrading.Backend.Controllers
                 OpenPositionsCount = item.GetOpenPositionsCount(),
                 MarginUsageLevel = item.GetMarginUsageLevel(),
                 LegalEntity = item.LegalEntity,
-                IsInLiquidation = item.IsInLiquidation()
+                IsInLiquidation = item.IsInLiquidation(),
+                McoMarginUsageLevelLong = item.GetMcoMarginUsageLevelLong(),
+                McoMarginUsageLevelShort = item.GetMcoMarginUsageLevelShort(),
+                MarginNotificationLevel = item.GetAccountLevel().ToString()
             };
         }
 

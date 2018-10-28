@@ -118,6 +118,7 @@ namespace MarginTrading.Backend
             MtServiceLocator.AccountUpdateService = ApplicationContainer.Resolve<IAccountUpdateService>();
             MtServiceLocator.AccountsCacheService = ApplicationContainer.Resolve<IAccountsCacheService>();
             MtServiceLocator.SwapCommissionService = ApplicationContainer.Resolve<ICommissionService>();
+            MtServiceLocator.McoRules = mtSettings.CurrentValue.MtBackend.McoRules;
             
             //the job will start approx <=100ms after 00:00:00
             var registry = new Registry();

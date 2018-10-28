@@ -1,5 +1,6 @@
 ﻿using System;
 using JetBrains.Annotations;
+using MarginTrading.Backend.Core.Settings;
 
 namespace MarginTrading.Backend.Core
 {
@@ -73,7 +74,7 @@ namespace MarginTrading.Backend.Core
         None = 0,
         MarginCall1 = 1,
         MarginCall2 = 2,
-        StopOUt = 3
+        StopOut = 3
     }
 
     public static class MarginTradingAccountExtensions
@@ -96,16 +97,58 @@ namespace MarginTrading.Backend.Core
         public static AccountLevel GetAccountLevel(this IMarginTradingAccount account)
         {
             var marginUsageLevel = account.GetMarginUsageLevel();
+            var accountFplData = account.GetAccountFpl();
 
-            if (marginUsageLevel <= account.GetStopOutLevel())
-                return AccountLevel.StopOUt;
+            #region Account Level
+            
+            if (marginUsageLevel <= accountFplData.StopOutLevel)
+                return AccountLevel.StopOut;
 
-            if (marginUsageLevel <= account.GetMarginCall2Level())
+            if (marginUsageLevel <= accountFplData.MarginCall2Level)
                 return AccountLevel.MarginCall2;
             
-            if (marginUsageLevel <= account.GetMarginCall1Level())
+            if (marginUsageLevel <= accountFplData.MarginCall1Level)
                 return AccountLevel.MarginCall1;
+            
+            #endregion
 
+            if (MtServiceLocator.McoRules == null)
+            {
+                return AccountLevel.None;
+            }
+            
+            #region MCO long level
+
+            if (accountFplData.McoMarginUsageLevelLong != 0)
+            {
+                if (accountFplData.McoMarginUsageLevelLong <= MtServiceLocator.McoRules.LongMcoLevels.StopOut)
+                    return AccountLevel.StopOut;
+            
+                if (accountFplData.McoMarginUsageLevelLong <= MtServiceLocator.McoRules.LongMcoLevels.MarginCall2)
+                    return AccountLevel.MarginCall2;
+            
+                if (accountFplData.McoMarginUsageLevelLong <= MtServiceLocator.McoRules.LongMcoLevels.MarginCall1)
+                    return AccountLevel.MarginCall1;
+            }
+            
+            #endregion
+            
+            #region MCO short level
+
+            if (accountFplData.McoMarginUsageLevelShort != 0)
+            {
+                if (accountFplData.McoMarginUsageLevelShort >= MtServiceLocator.McoRules.ShortMcoLevels.StopOut)
+                    return AccountLevel.StopOut;
+            
+                if (accountFplData.McoMarginUsageLevelShort >= MtServiceLocator.McoRules.ShortMcoLevels.MarginCall2)
+                    return AccountLevel.MarginCall2;
+            
+                if (accountFplData.McoMarginUsageLevelShort >= MtServiceLocator.McoRules.ShortMcoLevels.MarginCall1)
+                    return AccountLevel.MarginCall1;
+            }
+            
+            #endregion
+            
             return AccountLevel.None;
         }
 
@@ -179,14 +222,24 @@ namespace MarginTrading.Backend.Core
 
         public static decimal GetStopOutLevel(this IMarginTradingAccount account)
         {
-            return account.GetAccountFpl().StopoutLevel;
+            return account.GetAccountFpl().StopOutLevel;
+        }
+        
+        public static decimal GetMcoMarginUsageLevelLong(this IMarginTradingAccount account)
+        {
+            return account.GetAccountFpl().McoMarginUsageLevelLong;
+        }
+        
+        public static decimal GetMcoMarginUsageLevelShort(this IMarginTradingAccount account)
+        {
+            return account.GetAccountFpl().McoMarginUsageLevelShort;
         }
 
         public static int GetOpenPositionsCount(this IMarginTradingAccount account)
         {
             return account.GetAccountFpl().OpenPositionsCount;
         }
-
+        
         public static void CacheNeedsToBeUpdated(this IMarginTradingAccount account)
         {
             if (account is MarginTradingAccount accountInstance)

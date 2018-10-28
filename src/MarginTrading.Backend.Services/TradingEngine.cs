@@ -35,7 +35,6 @@ namespace MarginTrading.Backend.Services
         private readonly OrdersCache _ordersCache;
         private readonly IMatchingEngineRouter _meRouter;
         private readonly IThreadSwitcher _threadSwitcher;
-        private readonly IContextFactory _contextFactory;
         private readonly IAssetPairDayOffService _assetPairDayOffService;
         private readonly ILog _log;
         private readonly IDateService _dateService;
@@ -59,7 +58,6 @@ namespace MarginTrading.Backend.Services
             OrdersCache ordersCache,
             IMatchingEngineRouter meRouter,
             IThreadSwitcher threadSwitcher,
-            IContextFactory contextFactory,
             IAssetPairDayOffService assetPairDayOffService,
             ILog log,
             IDateService dateService,
@@ -83,7 +81,6 @@ namespace MarginTrading.Backend.Services
             _ordersCache = ordersCache;
             _meRouter = meRouter;
             _threadSwitcher = threadSwitcher;
-            _contextFactory = contextFactory;
             _assetPairDayOffService = assetPairDayOffService;
             _log = log;
             _dateService = dateService;
@@ -270,7 +267,7 @@ namespace MarginTrading.Backend.Services
                     var account = _accountsCacheService.Get(order.AccountId);
                     var accountLevel = account.GetAccountLevel();
 
-                    if (accountLevel == AccountLevel.StopOUt)
+                    if (accountLevel == AccountLevel.StopOut)
                     {
                         CommitStopout(account, null);
                     }
@@ -394,16 +391,12 @@ namespace MarginTrading.Backend.Services
         //TODO: in MTC-192 split method and change conditions
         private IEnumerable<MarginTradingAccount> UpdateClosePriceAndDetectStopout(InstrumentBidAskPair quote)
         {
-            var openPositions = _ordersCache.Positions.GetPositionsByInstrument(quote.Instrument)
+            var positionsByAccounts = _ordersCache.Positions.GetPositionsByInstrument(quote.Instrument)
                 .GroupBy(x => x.AccountId).ToDictionary(x => x.Key, x => x.ToArray());
 
-            foreach (var accountPositions in openPositions)
+            foreach (var accountPositions in positionsByAccounts)
             {
-                var anyPosition = accountPositions.Value.FirstOrDefault();
-                if (null == anyPosition)
-                    continue;
-
-                var account = _accountsCacheService.Get(anyPosition.AccountId);
+                var account = _accountsCacheService.Get(accountPositions.Key);
                 var oldAccountLevel = account.GetAccountLevel();
 
                 foreach (var position in accountPositions.Value)
@@ -423,44 +416,49 @@ namespace MarginTrading.Backend.Services
                     {
                         position.UpdateClosePrice(closePrice.Value);
 
-                        var trailingOrderIds = position.RelatedOrders.Where(o => o.Type == OrderType.TrailingStop)
-                            .Select(o => o.Id);
-
-                        foreach (var trailingOrderId in trailingOrderIds)
-                        {
-                            if (_ordersCache.TryGetOrderById(trailingOrderId, out var trailingOrder)
-                                && trailingOrder.Price.HasValue)
-                            {
-                                if (trailingOrder.TrailingDistance.HasValue)
-                                {
-                                    if (Math.Abs(trailingOrder.Price.Value - closePrice.Value) >
-                                        Math.Abs(trailingOrder.TrailingDistance.Value))
-                                    {
-                                        var newPrice = closePrice.Value + trailingOrder.TrailingDistance.Value;
-                                        trailingOrder.ChangePrice(newPrice,
-                                            _dateService.Now(),
-                                            trailingOrder.Originator,
-                                            null,
-                                            _identityGenerator.GenerateGuid());//todo in fact price change correlationId must be used
-                                    }
-                                }
-                                else
-                                {
-                                    trailingOrder.SetTrailingDistance(closePrice.Value);
-                                }
-                            }
-                        }
+                        UpdateTrailingStops(position);
                     }
                 }
 
                 var newAccountLevel = account.GetAccountLevel();
                 
-                if (newAccountLevel == AccountLevel.StopOUt)
+                if (newAccountLevel == AccountLevel.StopOut)
                     yield return account;
 
                 if (oldAccountLevel != newAccountLevel)
                 {
                     NotifyMarginCall(account, newAccountLevel);
+                }
+            }
+        }
+
+        private void UpdateTrailingStops(Position position)
+        {
+            var trailingOrderIds = position.RelatedOrders.Where(o => o.Type == OrderType.TrailingStop)
+                .Select(o => o.Id);
+
+            foreach (var trailingOrderId in trailingOrderIds)
+            {
+                if (_ordersCache.TryGetOrderById(trailingOrderId, out var trailingOrder)
+                    && trailingOrder.Price.HasValue)
+                {
+                    if (trailingOrder.TrailingDistance.HasValue)
+                    {
+                        if (Math.Abs(trailingOrder.Price.Value - position.ClosePrice) >
+                            Math.Abs(trailingOrder.TrailingDistance.Value))
+                        {
+                            var newPrice = position.ClosePrice + trailingOrder.TrailingDistance.Value;
+                            trailingOrder.ChangePrice(newPrice,
+                                _dateService.Now(),
+                                trailingOrder.Originator,
+                                null,
+                                _identityGenerator.GenerateGuid()); //todo in fact price change correlationId must be used
+                        }
+                    }
+                    else
+                    {
+                        trailingOrder.SetTrailingDistance(position.ClosePrice);
+                    }
                 }
             }
         }
@@ -471,13 +469,31 @@ namespace MarginTrading.Backend.Services
             {
                 return;
             }
-            
+
+            PositionDirection? direction = null;
+            bool isMcoLiquidation = false;
+
+            if (account.GetMcoMarginUsageLevelLong() != 0 &&
+                account.GetMcoMarginUsageLevelLong() <= MtServiceLocator.McoRules?.LongMcoLevels.StopOut)
+            {
+                direction = PositionDirection.Long;
+                isMcoLiquidation = true;
+            }
+            else if (account.GetMcoMarginUsageLevelShort() != 0 &&
+                     account.GetMcoMarginUsageLevelShort() >= MtServiceLocator.McoRules?.ShortMcoLevels.StopOut)
+            {
+                direction = PositionDirection.Short;
+                isMcoLiquidation = true;
+            }
+
             _cqrsSender.SendCommandToSelf(new StartLiquidationInternalCommand
             {
                 OperationId = Guid.NewGuid().ToString(),//TODO: use quote correlationId
                 AccountId = account.Id,
                 CreationTime = _dateService.Now(),
-                QuoteInfo = quote?.ToJson()
+                QuoteInfo = quote?.ToJson(),
+                Direction = direction,
+                IsMcoLiquidation = isMcoLiquidation
             });
 
             _stopoutEventChannel.SendEvent(this, new StopOutEventArgs(account));
@@ -600,14 +616,6 @@ namespace MarginTrading.Backend.Services
             order.ChangePrice(price, _dateService.Now(), originator, additionalInfo, correlationId);
 
             _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order));
-        }
-
-        public bool PingLock()
-        {
-            using (_contextFactory.GetReadSyncContext($"{nameof(TradingEngine)}.{nameof(PingLock)}"))
-            {
-                return true;
-            }
         }
 
         int IEventConsumer.ConsumerRank => 101;

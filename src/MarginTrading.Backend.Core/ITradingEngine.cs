@@ -22,8 +22,6 @@ namespace MarginTrading.Backend.Core
         void ChangeOrderLimits(string orderId, decimal price, OriginatorType originator, string additionalInfo,
             string correlationId);
             
-        bool PingLock();
-        
         bool ShouldOpenNewPosition(Order order);
     }
 }
