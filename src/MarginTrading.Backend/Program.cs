@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
+using JetBrains.Annotations;
 using MarginTrading.Common.Services;
 using Microsoft.AspNetCore.Hosting;
 
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Hosting;
 
 namespace MarginTrading.Backend
 {
+    [UsedImplicitly]
     public class Program
     {
         public static void Main(string[] args)
