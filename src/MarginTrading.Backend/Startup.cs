@@ -4,6 +4,7 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
 using FluentScheduler;
+using JetBrains.Annotations;
 using Lykke.AzureQueueIntegration;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
@@ -58,7 +59,6 @@ namespace MarginTrading.Backend
         {
             Configuration = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
-                .AddDevJson(env)
                 .AddSerilogJson(env)
                 .AddEnvironmentVariables()
                 .Build();
@@ -127,9 +127,19 @@ namespace MarginTrading.Backend
             return new AutofacServiceProvider(ApplicationContainer);
         }
 
+        [UsedImplicitly]
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory,
             IApplicationLifetime appLifetime)
         {
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+            else
+            {
+                app.UseHsts();
+            }
+            
             app.UseMiddleware<GlobalErrorHandlerMiddleware>();
             app.UseMiddleware<MaintenanceModeMiddleware>();
             app.UseAuthentication();
