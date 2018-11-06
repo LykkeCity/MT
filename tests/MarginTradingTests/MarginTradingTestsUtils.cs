@@ -270,7 +270,7 @@ namespace MarginTradingTests
             }
 
             var mock = new Mock<IAssetPairsApi>();
-            mock.Setup(m => m.List(It.IsAny<string>(), It.IsAny<MatchingEngineModeContract?>()))
+            mock.Setup(m => m.List(It.IsAny<string>(), It.IsAny<MatchingEngineModeContract?>(), It.IsAny<string>()))
                 .ReturnsAsync(assetPairs);
 
             return mock.Object;
