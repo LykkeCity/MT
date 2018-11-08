@@ -113,7 +113,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                         Direction = command.Direction,
                         LiquidatedPositionIds = new List<string>(),
                         ProcessedPositionIds = new List<string>(),
-                        IsMcoLiquidation = command.IsMcoLiquidation
+                        LiquidationType = command.LiquidationType,
                     }
                 ));
             
@@ -169,7 +169,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             {
                 OperationId = command.OperationId,
                 CreationTime = _dateService.Now(),
-                Reason = command.Reason
+                Reason = command.Reason,
+                LiquidationType = command.LiquidationType,
             });
         }
         
@@ -198,13 +199,13 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             publisher.PublishEvent(new LiquidationFinishedInternalEvent
             {
                 OperationId = command.OperationId,
-                CreationTime = _dateService.Now()
+                CreationTime = _dateService.Now(),
+                LiquidationType = command.LiquidationType,
             });
         }
         
         [UsedImplicitly]
-        public async Task Handle(LiquidatePositionsInternalCommand command,
-            IEventPublisher publisher)
+        public async Task Handle(LiquidatePositionsInternalCommand command, IEventPublisher publisher)
         {
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<LiquidationOperationData>(
                 operationName: LiquidationSaga.OperationName,

@@ -1,4 +1,5 @@
 using System;
+using MarginTrading.Backend.Core;
 using MessagePack;
 
 namespace MarginTrading.Backend.Services.Workflow.Liquidation.Events
@@ -11,5 +12,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation.Events
         
         [Key(1)]
         public DateTime CreationTime { get; set; }
+        
+        [Key(3)]
+        public LiquidationType LiquidationType { get; set; }
     }
 }

@@ -19,6 +19,7 @@ using MarginTrading.Backend.Filters;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Infrastructure;
+using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Middleware;
@@ -40,6 +41,7 @@ namespace MarginTrading.Backend.Controllers
         private readonly IAssetPairDayOffService _assetDayOffService;
         private readonly IIdentityGenerator _identityGenerator;
         private readonly ICqrsSender _cqrsSender;
+        private readonly IDateService _dateService;
 
         public PositionsController(
             ITradingEngine tradingEngine,
@@ -48,7 +50,8 @@ namespace MarginTrading.Backend.Controllers
             OrdersCache ordersCache,
             IAssetPairDayOffService assetDayOffService,
             IIdentityGenerator identityGenerator,
-            ICqrsSender cqrsSender)
+            ICqrsSender cqrsSender,
+            IDateService dateService)
         {
             _tradingEngine = tradingEngine;
             _operationsLogService = operationsLogService;
@@ -57,6 +60,7 @@ namespace MarginTrading.Backend.Controllers
             _assetDayOffService = assetDayOffService;
             _identityGenerator = identityGenerator;
             _cqrsSender = cqrsSender;
+            _dateService = dateService;
         }
 
         /// <summary>
@@ -97,13 +101,13 @@ namespace MarginTrading.Backend.Controllers
         }
 
         /// <summary>
-        /// Close group of opened positions optionally by assetPairId, accountId and direction.
-        /// AssetPairId or AccountId must be passed.
+        /// Close group of opened positions by accountId, assetPairId and direction.
+        /// AccountId must be passed. Method signature allow nulls for backward compatibility.
         /// </summary>
-        /// <param name="assetPairId"></param>
-        /// <param name="accountId"></param>
-        /// <param name="direction"></param>
-        /// <param name="request"></param>
+        /// <param name="assetPairId">Optional</param>
+        /// <param name="accountId">Mandatory</param>
+        /// <param name="direction">Optional</param>
+        /// <param name="request">Optional</param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="InvalidOperationException"></exception>
@@ -111,144 +115,29 @@ namespace MarginTrading.Backend.Controllers
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpDelete]
-        public async Task CloseGroupAsync([FromQuery] string assetPairId = null, [FromQuery] string accountId = null, 
+        public Task CloseGroupAsync([FromQuery] string assetPairId = null, [FromQuery] string accountId = null, 
             [FromQuery] PositionDirectionContract? direction = null, [FromBody] PositionCloseRequest request = null)
         {
-            if (string.IsNullOrWhiteSpace(assetPairId) && string.IsNullOrWhiteSpace(accountId))
-            {
-                throw new ArgumentNullException(nameof(assetPairId), "AssetPairId or accountId must be set.");
-            }
-
-            var positions = _ordersCache.Positions.GetAllPositions()
-                .Where(x => (string.IsNullOrWhiteSpace(assetPairId) || x.AssetPairId == assetPairId)
-                            && (string.IsNullOrWhiteSpace(accountId) || x.AccountId == accountId)
-                            && (direction == null || x.Direction == direction.ToType<PositionDirection>()))
-                .ToList();
-
-            ValidateDayOff(positions.Select(x => x.AssetPairId).Distinct().ToArray());
-            
-            var originator = GetOriginator(request?.Originator);
-            
-            var correlationId = request?.CorrelationId ?? _identityGenerator.GenerateGuid();
-            
-            foreach (var orderId in positions.Select(o => o.Id).ToList())
-            {
-                var closedOrder =
-                    await _tradingEngine.ClosePositionAsync(orderId, originator, request?.AdditionalInfo, 
-                        correlationId, request?.Comment);
-
-                if (closedOrder.Status != OrderStatus.Executed && closedOrder.Status != OrderStatus.ExecutionStarted)
-                {
-                    throw new InvalidOperationException(closedOrder.RejectReasonText);
-                }
-
-                _operationsLogService.AddLog("action close positions group", closedOrder.AccountId, request?.ToJson(),
-                    orderId);
-            }
-
-            _consoleWriter.WriteLine(
-                $"action close positions group. instrument = [{assetPairId}], account = [{accountId}], direction = [{direction}]");
-        }
-
-        /// <summary>
-        /// Close group of opened positions by instrument and direction (optional)
-        /// </summary>
-        /// <param name="instrument">Positions instrument</param>
-        /// <param name="request">Additional info for close</param>
-        /// <param name="direction">Positions direction (Long or Short), optional</param>
-        [Route("instrument-group/{instrument}")]
-        [MiddlewareFilter(typeof(RequestLoggingPipeline))]
-        [ServiceFilter(typeof(MarginTradingEnabledFilter))]
-        [HttpDelete]
-        [Obsolete("Will be removed soon. Use close-group with instrument, account and direction.")]
-        public async Task CloseGroupAsync([FromRoute] string instrument,
-            [FromQuery] PositionDirectionContract? direction = null,
-            [FromBody] PositionCloseRequest request = null)
-        {
-            var positions = _ordersCache.Positions.GetAllPositions();
-            
-            if (!string.IsNullOrWhiteSpace(instrument))
-                positions = positions.Where(o => o.AssetPairId == instrument).ToList();
-
-            if (direction != null)
-            {
-                var positionDirection = direction.ToType<PositionDirection>();
-
-                positions = positions.Where(o => o.Direction == positionDirection).ToList();
-            }
-            
-            ValidateDayOff(positions.Select(x => x.AssetPairId).Distinct().ToArray());
-
-            var originator = GetOriginator(request?.Originator);
-            
-            var correlationId = request?.CorrelationId ?? _identityGenerator.GenerateGuid();
-            
-            foreach (var orderId in positions.Select(o => o.Id).ToList())
-            {
-                var closedOrder =
-                    await _tradingEngine.ClosePositionAsync(orderId, originator, request?.AdditionalInfo, 
-                        correlationId, request?.Comment);
-
-                if (closedOrder.Status != OrderStatus.Executed && closedOrder.Status != OrderStatus.ExecutionStarted)
-                {
-                    throw new InvalidOperationException(closedOrder.RejectReasonText);
-                }
-
-                _operationsLogService.AddLog("action close positions group", closedOrder.AccountId, request?.ToJson(),
-                    orderId);
-            }
-            
-            _consoleWriter.WriteLine(
-                $"action close positions group. instrument = [{instrument}], direction = [{direction}]");
-        }
-
-        /// <summary>
-        /// Close group of opened positions by account and instrument (optional)
-        /// </summary>
-        /// <param name="accountId">Account id</param>
-        /// <param name="assetPairId">Instrument id, optional</param>
-        /// <param name="request">Additional info for close</param>
-        [Route("account-group/{accountId}")]
-        [MiddlewareFilter(typeof(RequestLoggingPipeline))]
-        [ServiceFilter(typeof(MarginTradingEnabledFilter))]
-        [HttpDelete]
-        [Obsolete("Will be removed soon. Use close-group with instrument, account and direction.")]
-        public async Task CloseGroupAsync([FromRoute] string accountId, [FromQuery] string assetPairId = null, 
-            [FromBody] PositionCloseRequest request = null)
-        {
-            var positions = _ordersCache.Positions.GetAllPositions();
-
             if (string.IsNullOrWhiteSpace(accountId))
             {
-                throw new ArgumentNullException(nameof(accountId));
+                throw new ArgumentNullException(nameof(accountId), "AccountId must be set.");
             }
 
-            positions = positions.Where(o => o.AccountId == accountId && 
-                                       (string.IsNullOrWhiteSpace(assetPairId) || o.AssetPairId == assetPairId)).ToList();
-            
-            ValidateDayOff(positions.Select(x => x.AssetPairId).Distinct().ToArray());
-
-            var originator = GetOriginator(request?.Originator);
-            
-            var correlationId = request?.CorrelationId ?? _identityGenerator.GenerateGuid();
-            
-            foreach (var orderId in positions.Select(o => o.Id).ToList())
+            _cqrsSender.SendCommandToSelf(new StartLiquidationInternalCommand
             {
-                var closedOrder =
-                    await _tradingEngine.ClosePositionAsync(orderId, originator, request?.AdditionalInfo, 
-                        correlationId, request?.Comment);
-
-                if (closedOrder.Status != OrderStatus.Executed && closedOrder.Status != OrderStatus.ExecutionStarted)
-                {
-                    throw new InvalidOperationException(closedOrder.RejectReasonText);
-                }
-
-                _operationsLogService.AddLog("action close positions group", closedOrder.AccountId, request?.ToJson(),
-                    orderId);
-            }
-            
+                OperationId = request?.CorrelationId ?? Guid.NewGuid().ToString(),
+                CreationTime = _dateService.Now(),
+                AccountId = accountId,
+                AssetPairId = assetPairId,
+                Direction = direction?.ToType<PositionDirection>(),
+                QuoteInfo = null,
+                LiquidationType = LiquidationType.Forced,
+            });
+                
             _consoleWriter.WriteLine(
-                $"action close positions group. account = [{accountId}], assetPair = [{assetPairId}]");
+                $"Position liquidation started. instrument = [{assetPairId}], account = [{accountId}], direction = [{direction}], request = [{request.ToJson()}]");
+
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -327,7 +216,7 @@ namespace MarginTrading.Backend.Controllers
             _cqrsSender.SendCommandToSelf(new StartSpecialLiquidationInternalCommand
             {
                 OperationId = _identityGenerator.GenerateGuid(),
-                CreationTime = DateTime.UtcNow,
+                CreationTime = _dateService.Now(),
                 PositionIds = positionIds,
                 AccountId = accountId,
             });

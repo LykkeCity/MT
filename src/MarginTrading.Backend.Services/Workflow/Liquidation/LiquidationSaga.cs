@@ -223,7 +223,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         
         #region Private methods
 
-        private (string AssetPairId, PositionDirection Direction, string[] Positions)? GetLiquidationData(LiquidationOperationData data)
+        private (string AssetPairId, PositionDirection? Direction, string[] Positions)? GetLiquidationData(LiquidationOperationData data)
         {
             var positionsOnAccount = _ordersCache.Positions.GetPositionsByAccountIds(data.AccountId);
 
@@ -238,7 +238,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
 
             IGrouping<(string AssetPairId, PositionDirection Direction), Position> targetPositions = null;
 
-            if (data.IsMcoLiquidation && data.Direction.HasValue)
+            if (data.LiquidationType == LiquidationType.Mco && data.Direction.HasValue)
             {
                 var groupsWithZeroInitialMargin = positionGroups.Where(gr => gr.Sum(p => p.GetMcoInitialMargin()) == 0)
                     .Select(gr => gr.Key).ToHashSet();
@@ -258,22 +258,23 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 targetPositions = data.Direction == PositionDirection.Long
                     ? orderedGroups.FirstOrDefault()
                     : orderedGroups.LastOrDefault();
+
+                return (targetPositions?.Key.AssetPairId, targetPositions?.Key.Direction, 
+                    targetPositions?.Select(p => p.Id).ToArray() ?? new string[0]);
+            }
+            else if (data.LiquidationType == LiquidationType.Forced)
+            {
+                return (data.AssetPairId, data.Direction, 
+                    positionGroups.SelectMany(x => x.Select(p => p.Id)).ToArray());
             }
             else
             {
                 //take positions from group with max margin used
                 targetPositions = positionGroups.OrderByDescending(gr => gr.Sum(p => p.GetMarginMaintenance())).FirstOrDefault();
+                
+                return (targetPositions?.Key.AssetPairId, targetPositions?.Key.Direction, 
+                    targetPositions?.Select(p => p.Id).ToArray() ?? new string[0]);
             }
-
-            if (targetPositions == null)
-                return null;
-            
-            var positions = targetPositions.Select(p => p.Id).ToArray();
-
-            var assetPairId = targetPositions.Key.AssetPairId;
-            var direction = targetPositions.Key.Direction;
-
-            return (assetPairId, direction, positions);
         }
 
         private void LiquidatePositionsIfAnyAvailable(string operationId,
@@ -287,7 +288,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 {
                     OperationId = operationId,
                     CreationTime = _dateService.Now(),
-                    Reason = "Nothing to liquidate"
+                    Reason = "Nothing to liquidate",
+                    LiquidationType = data.LiquidationType,
                 }, _cqrsContextNamesSettings.TradingEngine);
             }
             else
@@ -298,37 +300,49 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                     CreationTime = _dateService.Now(),
                     PositionIds = liquidationData.Value.Positions,
                     AssetPairId = liquidationData.Value.AssetPairId,
-                    Direction = liquidationData.Value.Direction
+                    Direction = liquidationData.Value.Direction,
                 }, _cqrsContextNamesSettings.TradingEngine);
             }
         }
         
         private void ContinueOrFinishLiquidation(string operationId, LiquidationOperationData data, ICommandSender sender)
         {
+            void FinishWithReason(string reason) => sender.SendCommand(new FinishLiquidationInternalCommand
+                {
+                    OperationId = operationId, 
+                    CreationTime = _dateService.Now(), 
+                    Reason = reason,
+                    LiquidationType = data.LiquidationType
+                }, _cqrsContextNamesSettings.TradingEngine);
+            
             var account = _accountsCacheService.TryGet(data.AccountId);
-
+            
             if (account == null)
             {
                 sender.SendCommand(new FailLiquidationInternalCommand
                 {
                     OperationId = operationId,
                     CreationTime = _dateService.Now(),
-                    Reason = "Account does not exist"
+                    Reason = "Account does not exist",
+                    LiquidationType = data.LiquidationType,
                 }, _cqrsContextNamesSettings.TradingEngine);
                 return;
             }
-
+            
             var accountLevel = account.GetAccountLevel();
 
-            if (accountLevel < AccountLevel.StopOut ||
-                (data.IsMcoLiquidation && data.ProcessedPositionIds.All(p => data.LiquidatedPositionIds.Contains(p))))
+            if (data.LiquidationType == LiquidationType.Forced)
             {
-                sender.SendCommand(new FinishLiquidationInternalCommand
-                {
-                    OperationId = operationId,
-                    CreationTime = _dateService.Now(),
-                    Reason = $"Account margin level is {accountLevel}"
-                }, _cqrsContextNamesSettings.TradingEngine);
+                FinishWithReason("All positions are closed");
+
+                return;
+            }
+
+            if (accountLevel < AccountLevel.StopOut
+                || (data.LiquidationType == LiquidationType.Mco
+                    && data.ProcessedPositionIds.All(p => data.LiquidatedPositionIds.Contains(p))))
+            {
+                FinishWithReason($"Account margin level is {accountLevel}");
             }
             else
             {

@@ -11,6 +11,6 @@ namespace MarginTrading.Backend.Core
         public string QuoteInfo { get; set; }
         public List<string> ProcessedPositionIds { get; set; }
         public List<string> LiquidatedPositionIds { get; set; }
-        public bool IsMcoLiquidation { get; set; }
+        public LiquidationType LiquidationType { get; set; }
     }
 }
