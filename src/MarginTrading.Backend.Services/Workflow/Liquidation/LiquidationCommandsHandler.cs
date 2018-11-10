@@ -345,15 +345,12 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             var account = _accountsCache.Get(accountId);
             var tradingInstrument = _tradingInstrumentsCacheService.GetTradingInstrument(account.TradingConditionId, 
                 assetPairId);
-            var volumeInThresholdCurrency = GetVolumeInThresholdCurrency(netPositionVolume, assetPairId);
 
             if (tradingInstrument.LiquidationThreshold > 0 &&
-                volumeInThresholdCurrency.HasValue &&
-                Math.Abs(volumeInThresholdCurrency.Value) > tradingInstrument.LiquidationThreshold)
+                Math.Abs(netPositionVolume) > tradingInstrument.LiquidationThreshold)
             {
                 additionalInfo = $"Threshold exceeded. Net volume : {netPositionVolume}. " +
-                                 $"Net volume in threshold currency : {volumeInThresholdCurrency}. " +
-                                 $"Threshold : {tradingInstrument.LiquidationThreshold}. ";
+                                 $"Threshold : {tradingInstrument.LiquidationThreshold}.";
                 return false;
             }
 
@@ -373,32 +370,6 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
 
             additionalInfo = string.Empty;
             return true;
-        }
-
-        private decimal? GetVolumeInThresholdCurrency(decimal netVolumeToExecute, string assetPairId)
-        {
-            var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(assetPairId);
-
-            if (assetPair == null)
-            {
-                return null;
-            }
-
-            try
-            {
-                var quote = _cfdCalculatorService.GetQuoteRateForQuoteAsset(assetPair.BaseAssetId, assetPairId, 
-                    assetPair.LegalEntity);
-
-                return quote * netVolumeToExecute;
-            }
-            catch (Exception e)
-            {
-                _log.WriteError("Get net position volume in special liquidation threshold",
-                    (netVolumeToExecute, assetPair, assetPair.BaseAssetId),
-                    e);
-            }
-
-            return null;
         }
         
         #endregion
