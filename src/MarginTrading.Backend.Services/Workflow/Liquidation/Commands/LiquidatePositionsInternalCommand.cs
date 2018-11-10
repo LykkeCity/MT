@@ -20,6 +20,6 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation.Commands
         public string[] PositionIds { get; set; }
         
         [Key(4)]
-        public PositionDirection? Direction { get; set; }
+        public PositionDirection Direction { get; set; }
     }
 }

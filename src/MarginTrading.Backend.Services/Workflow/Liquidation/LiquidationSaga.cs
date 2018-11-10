@@ -224,7 +224,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         
         #region Private methods
 
-        private (string AssetPairId, PositionDirection? Direction, string[] Positions)? GetLiquidationData(LiquidationOperationData data)
+        private (string AssetPairId, PositionDirection Direction, string[] Positions)? GetLiquidationData(LiquidationOperationData data)
         {
             var positionsOnAccount = _ordersCache.Positions.GetPositionsByAccountIds(data.AccountId);
 
@@ -259,18 +259,18 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 targetPositions = data.Direction == PositionDirection.Long
                     ? orderedGroups.FirstOrDefault()
                     : orderedGroups.LastOrDefault();
-
-                return (targetPositions?.Key.AssetPairId, targetPositions?.Key.Direction, 
-                    targetPositions?.Select(p => p.Id).ToArray() ?? new string[0]);
             }
-            else //Normal or Forced
+            else
             {
                 //take positions from group with max margin used
                 targetPositions = positionGroups.OrderByDescending(gr => gr.Sum(p => p.GetMarginMaintenance())).FirstOrDefault();
-                
-                return (targetPositions?.Key.AssetPairId, targetPositions?.Key.Direction, 
-                    targetPositions?.Select(p => p.Id).ToArray() ?? new string[0]);
             }
+            
+            if (targetPositions == null)
+                return null;
+                
+            return (targetPositions.Key.AssetPairId, targetPositions.Key.Direction, 
+                targetPositions.Select(p => p.Id).ToArray());
         }
 
         private void LiquidatePositionsIfAnyAvailable(string operationId,
