@@ -263,12 +263,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 return (targetPositions?.Key.AssetPairId, targetPositions?.Key.Direction, 
                     targetPositions?.Select(p => p.Id).ToArray() ?? new string[0]);
             }
-            else if (data.LiquidationType == LiquidationType.Forced)
-            {
-                return (data.AssetPairId, data.Direction, 
-                    positionGroups.SelectMany(x => x.Select(p => p.Id)).ToArray());
-            }
-            else
+            else //Normal or Forced
             {
                 //take positions from group with max margin used
                 targetPositions = positionGroups.OrderByDescending(gr => gr.Sum(p => p.GetMarginMaintenance())).FirstOrDefault();
@@ -334,7 +329,16 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
 
             if (data.LiquidationType == LiquidationType.Forced)
             {
-                FinishWithReason("All positions are closed");
+                if (!_ordersCache.Positions.GetPositionsByAccountIds(data.AccountId)
+                    .Any(x => (string.IsNullOrWhiteSpace(data.AssetPairId) || x.AssetPairId == data.AssetPairId)
+                              && (data.Direction == null || x.Direction == data.Direction)))
+                {
+                    FinishWithReason("All positions are closed");
+                }
+                else
+                {
+                    LiquidatePositionsIfAnyAvailable(operationId, data, sender);
+                }
 
                 return;
             }

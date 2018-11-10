@@ -339,7 +339,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         private bool CheckIfNetVolumeCanBeLiquidated(string assetPairId, Position[] positions, out string additionalInfo)
         {
             var netPositionVolume = positions.Sum(p => p.Volume);
-
+            
             var volumeInThresholdCurrency = GetVolumeInThresholdCurrency(netPositionVolume, assetPairId);
 
             if (_marginTradingSettings.SpecialLiquidation.VolumeThreshold > 0 &&
