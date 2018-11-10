@@ -488,7 +488,7 @@ namespace MarginTrading.Backend.Services
 
             _cqrsSender.SendCommandToSelf(new StartLiquidationInternalCommand
             {
-                OperationId = Guid.NewGuid().ToString(),//TODO: use quote correlationId
+                OperationId = _identityGenerator.GenerateGuid(),//TODO: use quote correlationId
                 AccountId = account.Id,
                 CreationTime = _dateService.Now(),
                 QuoteInfo = quote?.ToJson(),

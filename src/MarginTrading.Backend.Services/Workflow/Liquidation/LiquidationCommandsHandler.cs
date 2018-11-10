@@ -7,6 +7,8 @@ using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
+using MarginTrading.Backend.Contracts.Workflow.Liquidation;
+using MarginTrading.Backend.Contracts.Workflow.Liquidation.Events;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
@@ -15,6 +17,7 @@ using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.Liquidation.Events;
+using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services.Workflow.Liquidation
@@ -71,11 +74,12 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             
             void PublishFailedEvent(string reason)
             {
-                publisher.PublishEvent(new LiquidationFailedInternalEvent
+                publisher.PublishEvent(new LiquidationFailedEvent
                 {
                     OperationId = command.OperationId, 
                     CreationTime = _dateService.Now(),
-                    Reason = reason
+                    Reason = reason,
+                    LiquidationType = command.LiquidationType.ToType<LiquidationTypeContract>(),
                 });
             }
             
@@ -165,12 +169,12 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 $"Publish_LiquidationFailedInternalEvent:" +
                 $"{command.OperationId}");
             
-            publisher.PublishEvent(new LiquidationFailedInternalEvent
+            publisher.PublishEvent(new LiquidationFailedEvent
             {
                 OperationId = command.OperationId,
                 CreationTime = _dateService.Now(),
                 Reason = command.Reason,
-                LiquidationType = command.LiquidationType,
+                LiquidationType = command.LiquidationType.ToType<LiquidationTypeContract>(),
             });
         }
         
@@ -196,11 +200,11 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 $"Publish_LiquidationFinishedInternalEvent:" +
                 $"{command.OperationId}");
             
-            publisher.PublishEvent(new LiquidationFinishedInternalEvent
+            publisher.PublishEvent(new LiquidationFinishedEvent
             {
                 OperationId = command.OperationId,
                 CreationTime = _dateService.Now(),
-                LiquidationType = command.LiquidationType,
+                LiquidationType = command.LiquidationType.ToType<LiquidationTypeContract>(),
             });
         }
         

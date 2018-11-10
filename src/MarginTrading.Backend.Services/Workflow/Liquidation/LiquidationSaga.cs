@@ -6,6 +6,7 @@ using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
+using MarginTrading.Backend.Contracts.Workflow.Liquidation.Events;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Orders;
@@ -80,7 +81,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         }
 
         [UsedImplicitly]
-        public async Task Handle(LiquidationFailedInternalEvent e, ICommandSender sender)
+        public async Task Handle(LiquidationFailedEvent e, ICommandSender sender)
         {
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<LiquidationOperationData>(
                 operationName: OperationName,
@@ -93,7 +94,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
 
             if (executionInfo.Data.State == LiquidationOperationState.Finished)
             {
-                await _log.WriteWarningAsync(nameof(LiquidationSaga), nameof(LiquidationFailedInternalEvent),
+                await _log.WriteWarningAsync(nameof(LiquidationSaga), nameof(LiquidationFailedEvent),
                     e.ToJson(), $"Unable to set Failed state. Liquidation {e.OperationId} is already finished");
                 return;
             }
@@ -105,7 +106,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         }
         
         [UsedImplicitly]
-        public async Task Handle(LiquidationFinishedInternalEvent e, ICommandSender sender)
+        public async Task Handle(LiquidationFinishedEvent e, ICommandSender sender)
         {
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<LiquidationOperationData>(
                 operationName: OperationName,

@@ -125,7 +125,9 @@ namespace MarginTrading.Backend.Controllers
 
             _cqrsSender.SendCommandToSelf(new StartLiquidationInternalCommand
             {
-                OperationId = request?.CorrelationId ?? Guid.NewGuid().ToString(),
+                OperationId = string.IsNullOrWhiteSpace(request?.CorrelationId) 
+                    ? _identityGenerator.GenerateGuid()
+                    : request.CorrelationId,
                 CreationTime = _dateService.Now(),
                 AccountId = accountId,
                 AssetPairId = assetPairId,
