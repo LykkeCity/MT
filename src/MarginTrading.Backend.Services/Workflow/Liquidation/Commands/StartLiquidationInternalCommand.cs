@@ -14,19 +14,19 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation.Commands
         [Key(1)]
         public DateTime CreationTime { get; set; }
         
-        [Key(3)]
+        [Key(2)]
         public string AccountId { get; set; }
         
-        [Key(4)]
+        [Key(3)]
         public string AssetPairId { get; set; }
         
-        [Key(5)]
+        [Key(4)]
         public PositionDirection? Direction { get; set; }
         
-        [Key(6)]
+        [Key(5)]
         public string QuoteInfo { get; set; }
         
-        [Key(7)]
-        public bool IsMcoLiquidation { get; set; }
+        [Key(6)]
+        public LiquidationType LiquidationType { get; set; }
     }
 }

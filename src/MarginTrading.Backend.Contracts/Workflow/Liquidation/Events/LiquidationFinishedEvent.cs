@@ -1,15 +1,18 @@
 using System;
 using MessagePack;
 
-namespace MarginTrading.Backend.Services.Workflow.Liquidation.Events
+namespace MarginTrading.Backend.Contracts.Workflow.Liquidation.Events
 {
     [MessagePackObject]
-    public class LiquidationFinishedInternalEvent
+    public class LiquidationFinishedEvent
     {
         [Key(0)]
         public string OperationId { get; set; }
         
         [Key(1)]
         public DateTime CreationTime { get; set; }
+        
+        [Key(2)]
+        public LiquidationTypeContract LiquidationType { get; set; }
     }
 }

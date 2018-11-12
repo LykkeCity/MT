@@ -1,10 +1,10 @@
 using System;
 using MessagePack;
 
-namespace MarginTrading.Backend.Services.Workflow.Liquidation.Events
+namespace MarginTrading.Backend.Contracts.Workflow.Liquidation.Events
 {
     [MessagePackObject]
-    public class LiquidationFailedInternalEvent
+    public class LiquidationFailedEvent
     {
         [Key(0)]
         public string OperationId { get; set; }
@@ -14,5 +14,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation.Events
         
         [Key(2)]
         public string Reason { get; set; }
+        
+        [Key(3)]
+        public LiquidationTypeContract LiquidationType { get; set; }
     }
 }
