@@ -97,6 +97,12 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
                     var executionResult = await _exchangeConnectorService.CreateOrderAsync(externalOrderModel);
 
+                    if (!executionResult.Success)
+                    {
+                        throw new Exception(
+                            $"External order was not executed. Status: {executionResult.ExecutionStatus}. Failure: {executionResult.FailureType}");
+                    }
+
                     var executedPrice = Math.Abs(executionResult.Price) > 0
                         ? (decimal) executionResult.Price
                         : sourcePrice.price.Value;
