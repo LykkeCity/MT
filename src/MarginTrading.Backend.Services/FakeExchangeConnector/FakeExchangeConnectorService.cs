@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Lykke.Common.Chaos;
 using Lykke.Service.ExchangeConnector.Client;
 using Lykke.Service.ExchangeConnector.Client.Models;
 using MarginTrading.Backend.Core;
@@ -16,11 +17,14 @@ namespace MarginTrading.Backend.Services.FakeExchangeConnector
     public class FakeExchangeConnectorService : IExchangeConnectorService
     {
         private readonly IQuoteCacheService _quoteService;
+        private readonly IChaosKitty _chaosKitty;
 
         public FakeExchangeConnectorService(
-            IQuoteCacheService quoteService)
+            IQuoteCacheService quoteService, 
+            IChaosKitty chaosKitty)
         {
             _quoteService = quoteService;
+            _chaosKitty = chaosKitty;
         }
         
         public void Dispose()
@@ -80,26 +84,48 @@ namespace MarginTrading.Backend.Services.FakeExchangeConnector
                 return Task.FromResult(report);
             }
                 
-            var quote = _quoteService.GetQuote(orderModel.Instrument);
+            var quote = _quoteService.GetQuote(orderModel.Instrument);  
             
-            var result = new HttpOperationResponse<ExecutionReport>
+            var result = new HttpOperationResponse<ExecutionReport>();
+            
+            try
             {
-                Body = new ExecutionReport(
-                    type: orderModel.TradeType.ToType<TradeType>(), 
-                    time: DateTime.UtcNow, 
-                    price: orderModel.Price ?? (double?)(orderModel.TradeType == TradeType.Buy ? quote?.Ask : quote?.Bid)
-                        ?? throw new Exception("No price"), 
-                    volume: orderModel.Volume, 
-                    fee: 0, 
-                    success: true, 
-                    executionStatus: OrderExecutionStatus.Fill, 
-                    failureType: OrderStatusUpdateFailureType.None, 
-                    orderType: orderModel.OrderType, 
+                _chaosKitty.Meow(nameof(FakeExchangeConnectorService));
+
+                result.Body = new ExecutionReport(
+                    type: orderModel.TradeType.ToType<TradeType>(),
+                    time: DateTime.UtcNow,
+                    price: orderModel.Price ??
+                           (double?) (orderModel.TradeType == TradeType.Buy ? quote?.Ask : quote?.Bid)
+                           ?? throw new Exception("No price"),
+                    volume: orderModel.Volume,
+                    fee: 0,
+                    success: true,
+                    executionStatus: OrderExecutionStatus.Fill,
+                    failureType: OrderStatusUpdateFailureType.None,
+                    orderType: orderModel.OrderType,
                     execType: ExecType.Trade,
-                    clientOrderId: Guid.NewGuid().ToString(), 
-                    exchangeOrderId: Guid.NewGuid().ToString(), 
-                    instrument: new Instrument(orderModel.Instrument, orderModel.ExchangeName))
-            };
+                    clientOrderId: Guid.NewGuid().ToString(),
+                    exchangeOrderId: Guid.NewGuid().ToString(),
+                    instrument: new Instrument(orderModel.Instrument, orderModel.ExchangeName));
+            }
+            catch
+            {
+                result.Body = new ExecutionReport(
+                    type: orderModel.TradeType.ToType<TradeType>(),
+                    time: DateTime.UtcNow,
+                    price: 0,
+                    volume: 0,
+                    fee: 0,
+                    success: false,
+                    executionStatus: OrderExecutionStatus.Rejected,
+                    failureType: OrderStatusUpdateFailureType.ExchangeError,
+                    orderType: orderModel.OrderType,
+                    execType: ExecType.Trade,
+                    clientOrderId: null,
+                    exchangeOrderId: null,
+                    instrument: new Instrument(orderModel.Instrument, orderModel.ExchangeName));
+            }
 
             return Task.FromResult(result);
         }
