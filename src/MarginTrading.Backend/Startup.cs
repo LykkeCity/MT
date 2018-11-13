@@ -204,7 +204,18 @@ namespace MarginTrading.Backend
             const string requestsLogName = "MarginTradingBackendRequestsLog";
             const string logName = "MarginTradingBackendLog";
             var consoleLogger = new LogToConsole();
+
+            #region Logs settings validation
+
+            if (!settings.CurrentValue.UseSerilog && string.IsNullOrWhiteSpace(settings.CurrentValue.Db.LogsConnString))
+            {
+                throw new Exception("Either UseSerilog must be true or LogsConnString must be set");
+            }
+
+            #endregion Logs settings validation
             
+            #region Slack registration
+
             IMtSlackNotificationsSender slackService = null;
 
             if (mtSettings.CurrentValue.SlackNotifications != null)
@@ -229,6 +240,8 @@ namespace MarginTrading.Backend
 
             services.AddSingleton<ISlackNotificationsSender>(slackService);
             services.AddSingleton<IMtSlackNotificationsSender>(slackService);
+
+            #endregion Slack registration
 
             if (settings.CurrentValue.UseSerilog)
             {

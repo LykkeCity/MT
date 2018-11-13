@@ -23,6 +23,7 @@ namespace MarginTrading.Backend.Modules
     {
         private readonly IReloadingManager<MarginTradingSettings> _settings;
         private readonly ILog _log;
+        private const string OperationsLogName = "MarginTradingBackendOperationsLog";
 
         public BackendRepositoriesModule(IReloadingManager<MarginTradingSettings> settings, ILog log)
         {
@@ -36,10 +37,13 @@ namespace MarginTrading.Backend.Modules
 
             if (_settings.CurrentValue.Db.StorageMode == StorageMode.Azure)
             {
-                builder.Register<IOperationsLogRepository>(ctx =>
-                        new OperationsLogRepository(AzureTableStorage<OperationLogEntity>.Create(
-                            _settings.Nested(s => s.Db.LogsConnString), "MarginTradingBackendOperationsLog", _log)))
-                    .SingleInstance();
+                if (!_settings.CurrentValue.UseSerilog)
+                {
+                    builder.Register<IOperationsLogRepository>(ctx =>
+                            new OperationsLogRepository(AzureTableStorage<OperationLogEntity>.Create(
+                                _settings.Nested(s => s.Db.LogsConnString), OperationsLogName, _log)))
+                        .SingleInstance();
+                }
 
                 builder.Register<IMarginTradingBlobRepository>(ctx =>
                         AzureRepoFactories.MarginTrading.CreateBlobRepository(
@@ -77,10 +81,13 @@ namespace MarginTrading.Backend.Modules
             }
             else if (_settings.CurrentValue.Db.StorageMode == StorageMode.SqlServer)
             {
-                builder.Register<IOperationsLogRepository>(ctx =>
-                        new SqlOperationsLogRepository(ctx.Resolve<IDateService>(), 
-                            "MarginTradingBackendOperationsLog", _settings.CurrentValue.Db.LogsConnString))
-                    .SingleInstance();
+                if (!_settings.CurrentValue.UseSerilog)
+                {
+                    builder.Register<IOperationsLogRepository>(ctx =>
+                            new SqlOperationsLogRepository(ctx.Resolve<IDateService>(),
+                                OperationsLogName, _settings.CurrentValue.Db.LogsConnString))
+                        .SingleInstance();
+                }
 
                 builder.Register<IMarginTradingBlobRepository>(ctx =>
                         new SqlBlobRepository(_settings.CurrentValue.Db.StateConnString))
