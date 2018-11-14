@@ -1,10 +1,12 @@
 ﻿using System;
+using Lykke.AzureStorage.Tables;
 using MarginTrading.AccountMarginEventsBroker.Repositories.Models;
+using MarginTrading.Backend.Contracts.Events;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace MarginTrading.AccountMarginEventsBroker.Repositories.AzureRepositories
 {
-    internal class AccountMarginEventEntity : TableEntity, IAccountMarginEvent
+    internal class AccountMarginEventEntity : AzureTableEntity, IAccountMarginEvent
     {
         public string EventId
         {
@@ -20,6 +22,7 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.AzureRepositories
 
         public DateTime EventTime { get; set; }
         public bool IsEventStopout { get; set; }
+        public MarginEventTypeContract EventType { get; set; }
 
         public string TradingConditionId { get; set; }
         public string BaseAssetId { get; set; }
@@ -50,6 +53,7 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.AzureRepositories
                 EventTime = src.EventTime,
                 FreeMargin = src.FreeMargin,
                 IsEventStopout = src.IsEventStopout,
+                EventType = src.EventType,
                 MarginAvailable = src.MarginAvailable,
                 MarginCall = src.MarginCall,
                 MarginInit = src.MarginInit,

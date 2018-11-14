@@ -1,5 +1,9 @@
-﻿namespace MarginTrading.Backend.Contracts.Events
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
+namespace MarginTrading.Backend.Contracts.Events
 {
+    [JsonConverter(typeof(StringEnumConverter))]
     public enum MarginEventTypeContract
     {
         MarginCall1,

@@ -1,4 +1,5 @@
 ﻿using System;
+using MarginTrading.Backend.Contracts.Events;
 
 namespace MarginTrading.AccountMarginEventsBroker.Repositories.Models
 {
@@ -12,6 +13,7 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.Models
         public DateTime EventTime { get; set; }
         public decimal FreeMargin { get; set; }
         public bool IsEventStopout { get; set; }
+        public MarginEventTypeContract EventType { get; set; }
         public decimal MarginAvailable { get; set; }
         public decimal MarginCall { get; set; }
         public decimal MarginInit { get; set; }

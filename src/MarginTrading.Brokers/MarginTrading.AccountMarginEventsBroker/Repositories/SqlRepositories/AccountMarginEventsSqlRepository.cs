@@ -23,6 +23,7 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
             "[EventTime] [datetime] NOT NULL, " +
             "[FreeMargin] float NOT NULL, " +
             "[IsEventStopout] [bit] NOT NULL, " +
+            "[EventType] [nvarchar] (64) NULL, " +
             "[MarginAvailable] float NOT NULL, " +
             "[MarginCall] float NOT NULL, " +
             "[MarginInit] float NOT NULL, " +

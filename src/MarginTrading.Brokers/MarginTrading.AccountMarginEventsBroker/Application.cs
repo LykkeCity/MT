@@ -35,6 +35,7 @@ namespace MarginTrading.AccountMarginEventsBroker
                 EventId = message.EventId,
                 EventTime = message.EventTime,
                 IsEventStopout = message.EventType == MarginEventTypeContract.Stopout,
+                EventType = message.EventType,
 
                 AccountId = message.AccountId,
                 TradingConditionId = message.TradingConditionId,
