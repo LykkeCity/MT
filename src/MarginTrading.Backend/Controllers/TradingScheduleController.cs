@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using MarginTrading.Backend.Contracts;
 using MarginTrading.Backend.Contracts.TradingSchedule;
 using MarginTrading.Backend.Core.Mappers;
@@ -29,10 +30,11 @@ namespace MarginTrading.Backend.Controllers
 
         /// <inheritdoc />
         [HttpGet("compiled")]
-        public Dictionary<string, List<CompiledScheduleTimeIntervalContract>> GetCompiledTradingSchedule()
+        public Task<Dictionary<string, List<CompiledScheduleTimeIntervalContract>>> GetCompiledTradingSchedule()
         {
-            return _scheduleSettingsCacheService.GetCompiledScheduleSettings(_dateService.Now(), TimeSpan.Zero)
-                .ToDictionary(x => x.Key, x => x.Value.Select(ti => ti.ToRabbitMqContract()).ToList());
+            return Task.FromResult(
+                _scheduleSettingsCacheService.GetCompiledScheduleSettings(_dateService.Now(), TimeSpan.Zero)
+                    .ToDictionary(x => x.Key, x => x.Value.Select(ti => ti.ToRabbitMqContract()).ToList()));
         }
     }
 }

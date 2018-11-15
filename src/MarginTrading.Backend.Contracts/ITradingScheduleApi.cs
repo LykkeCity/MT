@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Contracts.TradingSchedule;
 using Refit;
@@ -16,6 +17,6 @@ namespace MarginTrading.Backend.Contracts
         /// Cache is invalidated and recalculated after 00:00:00.000 each day on request. 
         /// </summary>
         [Get("/api/trading-schedule/compiled")]
-        Dictionary<string, List<CompiledScheduleTimeIntervalContract>> GetCompiledTradingSchedule();
+        Task<Dictionary<string, List<CompiledScheduleTimeIntervalContract>>> GetCompiledTradingSchedule();
     }
 }
