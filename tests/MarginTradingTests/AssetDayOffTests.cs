@@ -3,14 +3,21 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading.Tasks;
+using Common;
 using Common.Log;
 using JetBrains.Annotations;
+using MarginTrading.Backend.Contracts.TradingSchedule;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.DayOffSettings;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
+using MarginTrading.Backend.Services.Infrastructure;
+using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
 using MarginTrading.SettingsService.Contracts;
 using MarginTrading.SettingsService.Contracts.Scheduling;
+using MarginTradingTests.Helpers;
 using Moq;
 using NUnit.Framework;
 
@@ -21,6 +28,7 @@ namespace MarginTradingTests
     {
         private const string AssetWithDayOff = "EURUSD";
         private const string AssetWithoutDayOff = "BTCUSD";
+        private CompiledScheduleChangedEvent _sentMessage = null;
         
         private static readonly CompiledScheduleSettingsContract[] ScheduleSettings = {
             new CompiledScheduleSettingsContract
@@ -235,8 +243,11 @@ namespace MarginTradingTests
                         ScheduleSettings = new List<CompiledScheduleSettingsContract>()
                     }
                 });
-            var scheduleSettingsCacheService = new ScheduleSettingsCacheService(scheduleSettingsApiMock.Object,
-                assetPairsCacheMock.Object, dateService.Object, new EmptyLog());
+            
+            var scheduleSettingsCacheService = new ScheduleSettingsCacheService(
+                Mock.Of<ICqrsSender>(), scheduleSettingsApiMock.Object,
+                assetPairsCacheMock.Object, dateService.Object, new EmptyLog(), new CqrsContextNamesSettings());
+            
             scheduleSettingsCacheService.UpdateSettingsAsync().GetAwaiter().GetResult();
             return new AssetPairDayOffService(dateService.Object, scheduleSettingsCacheService);
         }

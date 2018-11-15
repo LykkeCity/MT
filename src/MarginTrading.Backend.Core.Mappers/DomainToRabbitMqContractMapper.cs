@@ -1,4 +1,6 @@
-﻿using MarginTrading.Contract.RabbitMqMessageModels;
+﻿using MarginTrading.Backend.Contracts.TradingSchedule;
+using MarginTrading.Backend.Core.DayOffSettings;
+using MarginTrading.Contract.RabbitMqMessageModels;
 
 namespace MarginTrading.Backend.Core.Mappers
 {
@@ -37,6 +39,22 @@ namespace MarginTrading.Backend.Core.Mappers
                 MarginUsageLevel = account.GetMarginUsageLevel(),
                 IsLive = isLive,
                 LegalEntity = account.LegalEntity,
+            };
+        }
+
+        public static CompiledScheduleTimeIntervalContract ToRabbitMqContract(this CompiledScheduleTimeInterval schedule)
+        {
+            return new CompiledScheduleTimeIntervalContract
+            {
+                Schedule = new ScheduleSettingsContract
+                {
+                    Id = schedule.Schedule.Id,
+                    Rank = schedule.Schedule.Rank,
+                    IsTradeEnabled = schedule.Schedule.IsTradeEnabled,
+                    PendingOrdersCutOff = schedule.Schedule.PendingOrdersCutOff,
+                },
+                Start = schedule.Start,
+                End = schedule.End,
             };
         }
     }

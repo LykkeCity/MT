@@ -36,9 +36,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
         /// Check if current time is not in schedule
         /// </summary>
         /// <param name="assetPairId"></param>
-        /// <param name="scheduleCutOff">
-        ///     Timespan to reduce schedule from both sides
-        /// </param>
+        /// <param name="scheduleCutOff">Timespan to reduce schedule from both sides</param>
         /// <returns></returns>
         private bool IsNowNotInSchedule(string assetPairId, TimeSpan scheduleCutOff)
         {
@@ -46,7 +44,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
             var schedule = _scheduleSettingsCacheService.GetCompiledScheduleSettings(assetPairId, 
                 currentDateTime, scheduleCutOff);
-
+            
             var intersecting = schedule.Where(x => IsBetween(currentDateTime, x.Start, x.End));
 
             return !(intersecting.OrderByDescending(x => x.Schedule.Rank)
