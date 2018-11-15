@@ -427,7 +427,7 @@ namespace MarginTrading.Backend.Services
 
                 if (oldAccountLevel != newAccountLevel)
                 {
-                    NotifyMarginCall(account, newAccountLevel);
+                    _marginCallEventChannel.SendEvent(this, new MarginCallEventArgs(account, newAccountLevel));
                 }
             }
         }
@@ -497,20 +497,6 @@ namespace MarginTrading.Backend.Services
             });
 
             _stopoutEventChannel.SendEvent(this, new StopOutEventArgs(account));
-        }
-
-        private void NotifyMarginCall(MarginTradingAccount account, AccountLevel newAccountLevel)
-        {
-            switch (newAccountLevel)
-            {
-                case AccountLevel.MarginCall1:
-                    _marginCallEventChannel.SendEvent(this, new MarginCallEventArgs(account, newAccountLevel));
-                    break;
-                
-                case AccountLevel.MarginCall2:
-                    _marginCallEventChannel.SendEvent(this, new MarginCallEventArgs(account, newAccountLevel));
-                    break;
-            }
         }
 
         public async Task<Order> ClosePositionAsync(string positionId, OriginatorType originator, string additionalInfo,

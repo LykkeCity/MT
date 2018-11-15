@@ -69,12 +69,13 @@ namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
                 try
                 {
                     await conn.ExecuteAsync(
-                        $"insert into {TableName} ({GetColumns}) values ({GetFields})", report);
+                        $"insert into {TableName} ({GetColumns}) values ({GetFields})", 
+                        AccountMarginEventEntity.Create(report));
                 }
                 catch (Exception ex)
                 {
                     var msg = $"Error {ex.Message} \n" +
-                           "Entity <IAccountMarginEvent>: \n" +
+                           $"Entity <{nameof(IAccountMarginEvent)}>: \n" +
                            report.ToJson();
                     await _log?.WriteWarningAsync(nameof(AccountMarginEventsSqlRepository), "InsertOrReplaceAsync",
                         null, msg);
