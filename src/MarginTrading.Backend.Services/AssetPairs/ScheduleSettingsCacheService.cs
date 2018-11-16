@@ -21,6 +21,7 @@ using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
 using MarginTrading.SettingsService.Contracts;
 using MarginTrading.SettingsService.Contracts.Scheduling;
+using MoreLinq;
 
 namespace MarginTrading.Backend.Services.AssetPairs
 {
@@ -67,13 +68,19 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
             try
             {
-                _rawScheduleSettingsCache = newScheduleContracts.ToDictionary(x => x.AssetPairId,
+                var newRawScheduleSettings = newScheduleContracts.ToDictionary(x => x.AssetPairId,
                     x => x.ScheduleSettings.Except(invalidSchedules.TryGetValue(x.AssetPairId, out var invalid)
                             ? invalid
                             : new List<CompiledScheduleSettingsContract>())
                         .Select(ScheduleSettings.Create).ToList());
-                _compiledScheduleTimelineCache =
-                    new Dictionary<string, List<CompiledScheduleTimeInterval>>();
+
+                _rawScheduleSettingsCache
+                    .Where(x => TradingScheduleChanged(x.Key, _rawScheduleSettingsCache, newRawScheduleSettings))
+                    .Select(x => x.Key)
+                    .ForEach(key => _compiledScheduleTimelineCache.Remove(key));
+
+                _rawScheduleSettingsCache = newRawScheduleSettings;
+                
                 _lastCacheRecalculationTime = _dateService.Now();
             }
             catch (Exception exception)
@@ -91,6 +98,35 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 await _log.WriteWarningAsync(nameof(ScheduleSettingsCacheService), nameof(UpdateSettingsAsync),
                     $"Some of CompiledScheduleSettingsContracts were invalid, so they were skipped. The first one: {invalidSchedules.First().ToJson()}");
             }
+        }
+
+        private static bool TradingScheduleChanged(string key, 
+            Dictionary<string, List<ScheduleSettings>> oldRawScheduleSettingsCache, 
+            Dictionary<string, List<ScheduleSettings>> newRawScheduleSettingsCache)
+        {
+            if (!oldRawScheduleSettingsCache.TryGetValue(key, out var oldScheduleSettings)
+                || !newRawScheduleSettingsCache.TryGetValue(key, out var newRawScheduleSettings)
+                || oldScheduleSettings.Count != newRawScheduleSettings.Count)
+            {
+                return true;
+            }
+
+            foreach (var oldScheduleSetting in oldScheduleSettings)
+            {
+                var newScheduleSetting = newRawScheduleSettings.FirstOrDefault(x => x.Id == oldScheduleSetting.Id);
+
+                if (newScheduleSetting == null
+                    || newScheduleSetting.Rank != oldScheduleSetting.Rank
+                    || newScheduleSetting.IsTradeEnabled != oldScheduleSetting.IsTradeEnabled
+                    || newScheduleSetting.PendingOrdersCutOff != oldScheduleSetting.PendingOrdersCutOff
+                    || newScheduleSetting.Start != oldScheduleSetting.Start
+                    || newScheduleSetting.End != oldScheduleSetting.End)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public Dictionary<string, List<CompiledScheduleTimeInterval>> GetCompiledScheduleSettings(
