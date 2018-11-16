@@ -308,7 +308,9 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                     OperationId = operationId, 
                     CreationTime = _dateService.Now(), 
                     Reason = reason,
-                    LiquidationType = data.LiquidationType
+                    LiquidationType = data.LiquidationType,
+                    ProcessedPositionIds = data.ProcessedPositionIds,
+                    LiquidatedPositionIds = data.LiquidatedPositionIds,
                 }, _cqrsContextNamesSettings.TradingEngine);
             
             var account = _accountsCacheService.TryGet(data.AccountId);

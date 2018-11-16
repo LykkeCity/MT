@@ -219,8 +219,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 AssetPairId = executionInfo.Data.AssetPairId,
                 Direction = executionInfo.Data.Direction?.ToType<PositionDirectionContract>(),
                 QuoteInfo = executionInfo.Data.QuoteInfo,
-                ProcessedPositionIds = executionInfo.Data.ProcessedPositionIds,
-                LiquidatedPositionIds = executionInfo.Data.LiquidatedPositionIds,
+                ProcessedPositionIds = command.ProcessedPositionIds,
+                LiquidatedPositionIds = command.LiquidatedPositionIds,
                 OpenPositionsRemainingOnAccount = _ordersCache.Positions.GetPositionsByAccountIds(executionInfo.Data.AccountId).Count,
                 CurrentTotalCapital = _accountsCache.Get(executionInfo.Data.AccountId).GetTotalCapital(),
             });
