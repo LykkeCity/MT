@@ -2,7 +2,7 @@ using System;
 
 namespace MarginTrading.Backend.Core.DayOffSettings
 {
-    public class ScheduleConstraint : IComparable
+    public class ScheduleConstraint : IEquatable<ScheduleConstraint>
     {
         public DateTime? Date { get; set; }
         public DayOfWeek? DayOfWeek { get; set; } 
@@ -27,15 +27,12 @@ namespace MarginTrading.Backend.Core.DayOffSettings
             return ScheduleConstraintType.Invalid;
         }
 
-        public int CompareTo(object obj)
+        public bool Equals(ScheduleConstraint other)
         {
-            return obj is ScheduleConstraint second
-                ? (Date == second.Date
-                   && DayOfWeek == second.DayOfWeek
-                   && Time == second.Time
-                    ? 0
-                    : 1)
-                : -1;
+            return other != null
+                    && Date == other.Date
+                    && DayOfWeek == other.DayOfWeek
+                    && Time == other.Time;
         }
     }
 }

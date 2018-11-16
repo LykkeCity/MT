@@ -119,8 +119,8 @@ namespace MarginTrading.Backend.Services.AssetPairs
                     || newScheduleSetting.Rank != oldScheduleSetting.Rank
                     || newScheduleSetting.IsTradeEnabled != oldScheduleSetting.IsTradeEnabled
                     || newScheduleSetting.PendingOrdersCutOff != oldScheduleSetting.PendingOrdersCutOff
-                    || newScheduleSetting.Start != oldScheduleSetting.Start
-                    || newScheduleSetting.End != oldScheduleSetting.End)
+                    || !newScheduleSetting.Start.Equals(oldScheduleSetting.Start)
+                    || !newScheduleSetting.End.Equals(oldScheduleSetting.End))
                 {
                     return true;
                 }
