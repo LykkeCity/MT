@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using MarginTrading.Backend.Core;
 using MessagePack;
 
@@ -18,5 +19,11 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation.Commands
         
         [Key(3)]
         public LiquidationType LiquidationType { get; set; }
+        
+        [Key(4)]
+        public List<string> ProcessedPositionIds { get; set; }
+        
+        [Key(5)]
+        public List<string> LiquidatedPositionIds { get; set; }
     }
 }

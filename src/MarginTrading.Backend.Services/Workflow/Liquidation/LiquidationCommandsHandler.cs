@@ -7,6 +7,7 @@ using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
+using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Contracts.Workflow.Liquidation;
 using MarginTrading.Backend.Contracts.Workflow.Liquidation.Events;
 using MarginTrading.Backend.Core;
@@ -74,7 +75,6 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         public async Task Handle(StartLiquidationInternalCommand command, 
             IEventPublisher publisher)
         {
-            
             #region Private Methods
             
             void PublishFailedEvent(string reason)
@@ -85,6 +85,9 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                     CreationTime = _dateService.Now(),
                     Reason = reason,
                     LiquidationType = command.LiquidationType.ToType<LiquidationTypeContract>(),
+                    AccountId = command.AccountId,
+                    AssetPairId = command.AssetPairId,
+                    Direction = command.Direction?.ToType<PositionDirectionContract>(),
                 });
             }
             
@@ -180,14 +183,21 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 CreationTime = _dateService.Now(),
                 Reason = command.Reason,
                 LiquidationType = command.LiquidationType.ToType<LiquidationTypeContract>(),
+                AccountId = executionInfo.Data.AccountId,
+                AssetPairId = executionInfo.Data.AssetPairId,
+                Direction = executionInfo.Data.Direction?.ToType<PositionDirectionContract>(),
+                QuoteInfo = executionInfo.Data.QuoteInfo,
+                ProcessedPositionIds = executionInfo.Data.ProcessedPositionIds,
+                LiquidatedPositionIds = executionInfo.Data.LiquidatedPositionIds,
+                OpenPositionsRemainingOnAccount = _ordersCache.Positions.GetPositionsByAccountIds(executionInfo.Data.AccountId).Count,
+                CurrentTotalCapital = _accountsCache.Get(executionInfo.Data.AccountId).GetTotalCapital(),
             });
         }
         
         [UsedImplicitly]
         public async Task Handle(FinishLiquidationInternalCommand command,
             IEventPublisher publisher)
-        {
-            
+        { 
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<LiquidationOperationData>(
                 operationName: LiquidationSaga.OperationName,
                 id: command.OperationId);
@@ -210,6 +220,14 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 OperationId = command.OperationId,
                 CreationTime = _dateService.Now(),
                 LiquidationType = command.LiquidationType.ToType<LiquidationTypeContract>(),
+                AccountId = executionInfo.Data.AccountId,
+                AssetPairId = executionInfo.Data.AssetPairId,
+                Direction = executionInfo.Data.Direction?.ToType<PositionDirectionContract>(),
+                QuoteInfo = executionInfo.Data.QuoteInfo,
+                ProcessedPositionIds = command.ProcessedPositionIds,
+                LiquidatedPositionIds = command.LiquidatedPositionIds,
+                OpenPositionsRemainingOnAccount = _ordersCache.Positions.GetPositionsByAccountIds(executionInfo.Data.AccountId).Count,
+                CurrentTotalCapital = _accountsCache.Get(executionInfo.Data.AccountId).GetTotalCapital(),
             });
         }
         
