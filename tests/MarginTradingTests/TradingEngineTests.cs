@@ -850,7 +850,7 @@ namespace MarginTradingTests
         public void Is_Buy_LimitOrder_Opened()
         {
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Limit, "EURUSD", _account,
-                MarginTradingTestsUtils.TradingConditionId, 8, price: 1.1M);
+                MarginTradingTestsUtils.TradingConditionId, 8, price: 1.09M);
             
             order = _tradingEngine.PlaceOrderAsync(order).Result;
             //TODO: make pending order margin optional
@@ -862,12 +862,12 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(MarketMaker1Id, new[]
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2M, Volume = 6 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.055M, Volume = -7 }
             });
 
             var account = _accountsCacheService.Get(order.AccountId);
 
-            ValidateOrderIsExecuted(order, new []{"3","4"}, 1.1125M);
+            ValidateOrderIsExecuted(order, new []{"3","5"}, 1.06062M);
             
             Assert.AreEqual(1, account.GetOpenPositionsCount());
         }
@@ -910,7 +910,7 @@ namespace MarginTradingTests
         public void Is_Sell_LimitOrder_Opened()
         {
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Limit, "EURUSD", _account,
-                MarginTradingTestsUtils.TradingConditionId, -1, price: 1.05M);
+                MarginTradingTestsUtils.TradingConditionId, -1, price: 1.051M);
             
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
@@ -1042,7 +1042,7 @@ namespace MarginTradingTests
         public void Is_PriceValidated_ForStopOrders_OnChange()
         {
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Stop, "EURUSD", _account,
-                MarginTradingTestsUtils.TradingConditionId, -1, price: 1.07M);
+                MarginTradingTestsUtils.TradingConditionId, -1, price: 1.04M);
             
             order = _tradingEngine.PlaceOrderAsync(order).Result;
             var account = _accountsCacheService.Get(order.AccountId);
