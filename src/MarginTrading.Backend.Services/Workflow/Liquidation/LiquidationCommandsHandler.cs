@@ -15,6 +15,7 @@ using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Events;
+using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.Liquidation.Events;
 using MarginTrading.Common.Extensions;
@@ -25,6 +26,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
     [UsedImplicitly]
     public class LiquidationCommandsHandler
     {
+        private readonly ITradingInstrumentsCacheService _tradingInstrumentsCacheService;
         private readonly IAccountsCacheService _accountsCache;
         private readonly IDateService _dateService;
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
@@ -38,7 +40,9 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         private readonly ILog _log;
         private readonly IAccountUpdateService _accountUpdateService;
 
-        public LiquidationCommandsHandler(IAccountsCacheService accountsCache,
+        public LiquidationCommandsHandler(
+            ITradingInstrumentsCacheService tradingInstrumentsCacheService,
+            IAccountsCacheService accountsCache,
             IDateService dateService,
             IOperationExecutionInfoRepository operationExecutionInfoRepository,
             IChaosKitty chaosKitty, 
@@ -51,6 +55,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             ILog log,
             IAccountUpdateService accountUpdateService)
         {
+            _tradingInstrumentsCacheService = tradingInstrumentsCacheService;
             _accountsCache = accountsCache;
             _dateService = dateService;
             _operationExecutionInfoRepository = operationExecutionInfoRepository;
@@ -242,7 +247,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 return;
             }
 
-            if (!CheckIfNetVolumeCanBeLiquidated(command.AssetPairId, positions, out var additionalInfo))
+            if (!CheckIfNetVolumeCanBeLiquidated(executionInfo.Data.AccountId, command.AssetPairId, positions, 
+                out var additionalInfo))
             {
                 publisher.PublishEvent(new NotEnoughLiquidityInternalEvent
                 {
@@ -336,20 +342,20 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         
         #region Private methods
         
-        private bool CheckIfNetVolumeCanBeLiquidated(string assetPairId, Position[] positions, out string additionalInfo)
+        private bool CheckIfNetVolumeCanBeLiquidated(string accountId, string assetPairId, Position[] positions,
+            out string additionalInfo)
         {
             var netPositionVolume = positions.Sum(p => p.Volume);
-            
-            var volumeInThresholdCurrency = GetVolumeInThresholdCurrency(netPositionVolume, assetPairId);
 
-            if (_marginTradingSettings.SpecialLiquidation.VolumeThreshold > 0 &&
-                volumeInThresholdCurrency.HasValue &&
-                Math.Abs(volumeInThresholdCurrency.Value) > _marginTradingSettings.SpecialLiquidation.VolumeThreshold)
+            var account = _accountsCache.Get(accountId);
+            var tradingInstrument = _tradingInstrumentsCacheService.GetTradingInstrument(account.TradingConditionId, 
+                assetPairId);
+
+            if (tradingInstrument.LiquidationThreshold > 0 &&
+                Math.Abs(netPositionVolume) > tradingInstrument.LiquidationThreshold)
             {
                 additionalInfo = $"Threshold exceeded. Net volume : {netPositionVolume}. " +
-                                 $"Net volume in threshold currency : {volumeInThresholdCurrency}. " +
-                                 $"Threshold : {_marginTradingSettings.SpecialLiquidation.VolumeThreshold}. " +
-                                 $"Threshold currency : {_marginTradingSettings.SpecialLiquidation.VolumeThresholdCurrency}.";
+                                 $"Threshold : {tradingInstrument.LiquidationThreshold}.";
                 return false;
             }
 
@@ -369,34 +375,6 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
 
             additionalInfo = string.Empty;
             return true;
-        }
-
-        private decimal? GetVolumeInThresholdCurrency(decimal netVolumeToExecute, string assetPairId)
-        {
-            var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(assetPairId);
-
-            if (assetPair == null)
-            {
-                return null;
-            }
-
-            try
-            {
-                var quote = _cfdCalculatorService.GetQuoteRateForQuoteAsset(
-                    _marginTradingSettings.SpecialLiquidation.VolumeThresholdCurrency,
-                    assetPairId, assetPair.LegalEntity);
-
-                return quote * netVolumeToExecute;
-            }
-            catch (Exception e)
-            {
-                _log.WriteError("Get net position volume in special liquidation threshold",
-                    (netVolumeToExecute, assetPair,
-                        _marginTradingSettings?.SpecialLiquidation?.VolumeThresholdCurrency),
-                    e);
-            }
-
-            return null;
         }
         
         #endregion
