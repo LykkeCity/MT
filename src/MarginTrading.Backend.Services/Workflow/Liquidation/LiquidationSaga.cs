@@ -6,6 +6,7 @@ using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
+using MarginTrading.Backend.Contracts.Workflow.Liquidation.Events;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Orders;
@@ -80,7 +81,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         }
 
         [UsedImplicitly]
-        public async Task Handle(LiquidationFailedInternalEvent e, ICommandSender sender)
+        public async Task Handle(LiquidationFailedEvent e, ICommandSender sender)
         {
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<LiquidationOperationData>(
                 operationName: OperationName,
@@ -93,7 +94,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
 
             if (executionInfo.Data.State == LiquidationOperationState.Finished)
             {
-                await _log.WriteWarningAsync(nameof(LiquidationSaga), nameof(LiquidationFailedInternalEvent),
+                await _log.WriteWarningAsync(nameof(LiquidationSaga), nameof(LiquidationFailedEvent),
                     e.ToJson(), $"Unable to set Failed state. Liquidation {e.OperationId} is already finished");
                 return;
             }
@@ -105,7 +106,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         }
         
         [UsedImplicitly]
-        public async Task Handle(LiquidationFinishedInternalEvent e, ICommandSender sender)
+        public async Task Handle(LiquidationFinishedEvent e, ICommandSender sender)
         {
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<LiquidationOperationData>(
                 operationName: OperationName,
@@ -238,7 +239,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
 
             IGrouping<(string AssetPairId, PositionDirection Direction), Position> targetPositions = null;
 
-            if (data.IsMcoLiquidation && data.Direction.HasValue)
+            if (data.LiquidationType == LiquidationType.Mco && data.Direction.HasValue)
             {
                 var groupsWithZeroInitialMargin = positionGroups.Where(gr => gr.Sum(p => p.GetMcoInitialMargin()) == 0)
                     .Select(gr => gr.Key).ToHashSet();
@@ -264,16 +265,12 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 //take positions from group with max margin used
                 targetPositions = positionGroups.OrderByDescending(gr => gr.Sum(p => p.GetMarginMaintenance())).FirstOrDefault();
             }
-
+            
             if (targetPositions == null)
                 return null;
-            
-            var positions = targetPositions.Select(p => p.Id).ToArray();
-
-            var assetPairId = targetPositions.Key.AssetPairId;
-            var direction = targetPositions.Key.Direction;
-
-            return (assetPairId, direction, positions);
+                
+            return (targetPositions.Key.AssetPairId, targetPositions.Key.Direction, 
+                targetPositions.Select(p => p.Id).ToArray());
         }
 
         private void LiquidatePositionsIfAnyAvailable(string operationId,
@@ -287,7 +284,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 {
                     OperationId = operationId,
                     CreationTime = _dateService.Now(),
-                    Reason = "Nothing to liquidate"
+                    Reason = "Nothing to liquidate",
+                    LiquidationType = data.LiquidationType,
                 }, _cqrsContextNamesSettings.TradingEngine);
             }
             else
@@ -298,37 +296,58 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                     CreationTime = _dateService.Now(),
                     PositionIds = liquidationData.Value.Positions,
                     AssetPairId = liquidationData.Value.AssetPairId,
-                    Direction = liquidationData.Value.Direction
+                    Direction = liquidationData.Value.Direction,
                 }, _cqrsContextNamesSettings.TradingEngine);
             }
         }
         
         private void ContinueOrFinishLiquidation(string operationId, LiquidationOperationData data, ICommandSender sender)
         {
+            void FinishWithReason(string reason) => sender.SendCommand(new FinishLiquidationInternalCommand
+                {
+                    OperationId = operationId, 
+                    CreationTime = _dateService.Now(), 
+                    Reason = reason,
+                    LiquidationType = data.LiquidationType
+                }, _cqrsContextNamesSettings.TradingEngine);
+            
             var account = _accountsCacheService.TryGet(data.AccountId);
-
+            
             if (account == null)
             {
                 sender.SendCommand(new FailLiquidationInternalCommand
                 {
                     OperationId = operationId,
                     CreationTime = _dateService.Now(),
-                    Reason = "Account does not exist"
+                    Reason = "Account does not exist",
+                    LiquidationType = data.LiquidationType,
                 }, _cqrsContextNamesSettings.TradingEngine);
                 return;
             }
-
+            
             var accountLevel = account.GetAccountLevel();
 
-            if (accountLevel < AccountLevel.StopOut ||
-                (data.IsMcoLiquidation && data.ProcessedPositionIds.All(p => data.LiquidatedPositionIds.Contains(p))))
+            if (data.LiquidationType == LiquidationType.Forced)
             {
-                sender.SendCommand(new FinishLiquidationInternalCommand
+                if (!_ordersCache.Positions.GetPositionsByAccountIds(data.AccountId)
+                    .Any(x => (string.IsNullOrWhiteSpace(data.AssetPairId) || x.AssetPairId == data.AssetPairId)
+                              && (data.Direction == null || x.Direction == data.Direction)))
                 {
-                    OperationId = operationId,
-                    CreationTime = _dateService.Now(),
-                    Reason = $"Account margin level is {accountLevel}"
-                }, _cqrsContextNamesSettings.TradingEngine);
+                    FinishWithReason("All positions are closed");
+                }
+                else
+                {
+                    LiquidatePositionsIfAnyAvailable(operationId, data, sender);
+                }
+
+                return;
+            }
+
+            if (accountLevel < AccountLevel.StopOut
+                || (data.LiquidationType == LiquidationType.Mco
+                    && data.ProcessedPositionIds.All(p => data.LiquidatedPositionIds.Contains(p))))
+            {
+                FinishWithReason($"Account margin level is {accountLevel}");
             }
             else
             {

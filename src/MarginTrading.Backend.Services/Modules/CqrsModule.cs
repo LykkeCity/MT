@@ -13,6 +13,7 @@ using Lykke.Messaging.RabbitMq;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.Backend.Contracts.Events;
+using MarginTrading.Backend.Contracts.Workflow.Liquidation.Events;
 using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Events;
 using MarginTrading.Backend.Core.Settings;
@@ -272,8 +273,8 @@ namespace MarginTrading.Backend.Services.Modules
                 .With(CommandsRoute)
 
                 .ListeningEvents(
-                    typeof(LiquidationFailedInternalEvent),
-                    typeof(LiquidationFinishedInternalEvent),
+                    typeof(LiquidationFailedEvent),
+                    typeof(LiquidationFinishedEvent),
                     typeof(LiquidationResumedInternalEvent),
                     typeof(LiquidationStartedInternalEvent),
                     typeof(NotEnoughLiquidityInternalEvent),
@@ -298,8 +299,8 @@ namespace MarginTrading.Backend.Services.Modules
                 .On(CommandsRoute)
                 .WithCommandsHandler<LiquidationCommandsHandler>()
                 .PublishingEvents(
-                    typeof(LiquidationFailedInternalEvent),
-                    typeof(LiquidationFinishedInternalEvent),
+                    typeof(LiquidationFailedEvent),
+                    typeof(LiquidationFinishedEvent),
                     typeof(LiquidationResumedInternalEvent),
                     typeof(LiquidationStartedInternalEvent),
                     typeof(NotEnoughLiquidityInternalEvent),

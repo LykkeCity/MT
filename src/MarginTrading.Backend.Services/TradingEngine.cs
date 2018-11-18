@@ -269,7 +269,7 @@ namespace MarginTrading.Backend.Services
 
                     if (accountLevel == AccountLevel.StopOut)
                     {
-                        CommitStopout(account, null);
+                        CommitStopOut(account, null);
                     }
                 }
             }
@@ -385,7 +385,7 @@ namespace MarginTrading.Backend.Services
             var stopoutAccounts = UpdateClosePriceAndDetectStopout(quote).ToArray();
             
             foreach (var account in stopoutAccounts)
-                CommitStopout(account, quote);
+                CommitStopOut(account, quote);
         }
 
         //TODO: in MTC-192 split method and change conditions
@@ -463,7 +463,7 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        private void CommitStopout(MarginTradingAccount account, InstrumentBidAskPair quote)
+        private void CommitStopOut(MarginTradingAccount account, InstrumentBidAskPair quote)
         {
             if (account.IsInLiquidation())
             {
@@ -471,29 +471,29 @@ namespace MarginTrading.Backend.Services
             }
 
             PositionDirection? direction = null;
-            bool isMcoLiquidation = false;
+            var liquidationType = LiquidationType.Normal;
 
             if (account.GetMcoMarginUsageLevelLong() != 0 &&
                 account.GetMcoMarginUsageLevelLong() <= MtServiceLocator.McoRules?.LongMcoLevels.StopOut)
             {
                 direction = PositionDirection.Long;
-                isMcoLiquidation = true;
+                liquidationType = LiquidationType.Mco;
             }
             else if (account.GetMcoMarginUsageLevelShort() != 0 &&
                      account.GetMcoMarginUsageLevelShort() >= MtServiceLocator.McoRules?.ShortMcoLevels.StopOut)
             {
                 direction = PositionDirection.Short;
-                isMcoLiquidation = true;
+                liquidationType = LiquidationType.Mco;
             }
 
             _cqrsSender.SendCommandToSelf(new StartLiquidationInternalCommand
             {
-                OperationId = Guid.NewGuid().ToString(),//TODO: use quote correlationId
+                OperationId = _identityGenerator.GenerateGuid(),//TODO: use quote correlationId
                 AccountId = account.Id,
                 CreationTime = _dateService.Now(),
                 QuoteInfo = quote?.ToJson(),
                 Direction = direction,
-                IsMcoLiquidation = isMcoLiquidation
+                LiquidationType = liquidationType
             });
 
             _stopoutEventChannel.SendEvent(this, new StopOutEventArgs(account));
