@@ -38,7 +38,7 @@ namespace MarginTrading.Backend.Modules
             if (_settings.CurrentValue.Db.StorageMode == StorageMode.Azure)
             {
                 builder.Register(ctx => _settings.CurrentValue.UseSerilog
-                        ? (IOperationsLogRepository) new FakeOperationsLogRepository()
+                        ? (IOperationsLogRepository) new SerilogOperationsLogRepository(_log)
                         : new OperationsLogRepository(AzureTableStorage<OperationLogEntity>.Create(
                             _settings.Nested(s => s.Db.LogsConnString), OperationsLogName, _log)))
                     .SingleInstance();
@@ -80,7 +80,7 @@ namespace MarginTrading.Backend.Modules
             else if (_settings.CurrentValue.Db.StorageMode == StorageMode.SqlServer)
             {
                 builder.Register(ctx => _settings.CurrentValue.UseSerilog
-                        ? (IOperationsLogRepository) new FakeOperationsLogRepository()
+                        ? (IOperationsLogRepository) new SerilogOperationsLogRepository(_log)
                         : new SqlOperationsLogRepository(ctx.Resolve<IDateService>(),
                             OperationsLogName, _settings.CurrentValue.Db.LogsConnString))
                     .SingleInstance();
