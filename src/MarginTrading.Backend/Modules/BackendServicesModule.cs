@@ -65,9 +65,15 @@ namespace MarginTrading.Backend.Modules
                 .As<IConsole>()
                 .SingleInstance();
 
+            if (_settings.WriteOperationLog && _settings.UseSerilog)
+            {
+                _log.WriteWarning(nameof(BackendServicesModule), nameof(Load), 
+                    $"Operations log will not be written, because {nameof(_settings.UseSerilog)} is enabled.");
+            }
+            
             builder.RegisterType<OperationsLogService>()
                 .As<IOperationsLogService>()
-                .WithParameter(new TypedParameter(typeof(bool), _settings.WriteOperationLog))
+                .WithParameter(new TypedParameter(typeof(bool), _settings.WriteOperationLog && !_settings.UseSerilog))
                 .SingleInstance();
 
             builder.RegisterType<PricesUpdateRabbitMqNotifier>()
