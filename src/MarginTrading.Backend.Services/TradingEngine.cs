@@ -102,7 +102,7 @@ namespace MarginTrading.Backend.Services
             {
                 if (order.OrderType != OrderType.Market)
                 {
-                    PlacePendingOrder(order);
+                    await PlacePendingOrder(order);
                     return order;
                 }
 
