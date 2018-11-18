@@ -22,7 +22,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         private readonly IEmailService _emailService;
         private readonly IClientAccountService _clientAccountService;
         private readonly IOperationsLogService _operationsLogService;
-        private static readonly ConcurrentDictionary<string, DateTime> LastNotifications = new ConcurrentDictionary<string, DateTime>();
+        private static readonly ConcurrentDictionary<string, (DateTime, DateTime)> LastNotifications = 
+            new ConcurrentDictionary<string, (DateTime, DateTime)>();
         private const int NotificationsTimeout = 30;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly IDateService _dateService;
@@ -52,10 +53,12 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 ? MarginEventTypeContract.MarginCall2
                 : MarginEventTypeContract.MarginCall1;
             var accountMarginEventMessage = AccountMarginEventMessageConverter.Create(account, level, eventTime);
+            
             _threadSwitcher.SwitchThread(async () =>
             {
                 if (LastNotifications.TryGetValue(account.Id, out var lastNotification)
-                    && lastNotification.AddMinutes(NotificationsTimeout) > eventTime)
+                    && (level == MarginEventTypeContract.MarginCall1 ? lastNotification.Item1 : lastNotification.Item2)
+                        .AddMinutes(NotificationsTimeout) > eventTime)
                 {
                     return;
                 }
@@ -72,7 +75,9 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
                 await Task.WhenAll(marginEventTask, emailTask);
 
-                LastNotifications.AddOrUpdate(account.Id, eventTime, (s, time) => eventTime);
+                var newTimes = level == MarginEventTypeContract.MarginCall1 
+                    ? (eventTime, lastNotification.Item2) : (lastNotification.Item1, eventTime);
+                LastNotifications.AddOrUpdate(account.Id, newTimes, (s, times) => newTimes);
             });
         }
 
