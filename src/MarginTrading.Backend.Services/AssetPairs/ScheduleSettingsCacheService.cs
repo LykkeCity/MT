@@ -10,22 +10,29 @@ using Autofac;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
+using MarginTrading.Backend.Contracts.TradingSchedule;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.DayOffSettings;
+using MarginTrading.Backend.Core.Mappers;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Common.Extensions;
+using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
 using MarginTrading.SettingsService.Contracts;
 using MarginTrading.SettingsService.Contracts.Scheduling;
+using MoreLinq;
 
 namespace MarginTrading.Backend.Services.AssetPairs
 {
     public class ScheduleSettingsCacheService : IScheduleSettingsCacheService
     {
+        private readonly ICqrsSender _cqrsSender;
         private readonly IScheduleSettingsApi _scheduleSettingsApi;
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly IDateService _dateService;
         private readonly ILog _log;
+        private readonly CqrsContextNamesSettings _cqrsContextNamesSettings;
 
         private Dictionary<string, List<ScheduleSettings>> _rawScheduleSettingsCache =
             new Dictionary<string, List<ScheduleSettings>>();
@@ -36,15 +43,19 @@ namespace MarginTrading.Backend.Services.AssetPairs
         private readonly ReaderWriterLockSlim _readerWriterLockSlim = new ReaderWriterLockSlim();
 
         public ScheduleSettingsCacheService(
+            ICqrsSender cqrsSender,
             IScheduleSettingsApi scheduleSettingsApi,
             IAssetPairsCache assetPairsCache,
             IDateService dateService,
-            ILog log)
+            ILog log,
+            CqrsContextNamesSettings cqrsContextNamesSettings)
         {
+            _cqrsSender = cqrsSender;
             _scheduleSettingsApi = scheduleSettingsApi;
             _assetPairsCache = assetPairsCache;
             _dateService = dateService;
             _log = log;
+            _cqrsContextNamesSettings = cqrsContextNamesSettings;
         }
 
         public async Task UpdateSettingsAsync()
@@ -57,13 +68,19 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
             try
             {
-                _rawScheduleSettingsCache = newScheduleContracts.ToDictionary(x => x.AssetPairId,
+                var newRawScheduleSettings = newScheduleContracts.ToDictionary(x => x.AssetPairId,
                     x => x.ScheduleSettings.Except(invalidSchedules.TryGetValue(x.AssetPairId, out var invalid)
                             ? invalid
                             : new List<CompiledScheduleSettingsContract>())
                         .Select(ScheduleSettings.Create).ToList());
-                _compiledScheduleTimelineCache =
-                    new Dictionary<string, List<CompiledScheduleTimeInterval>>();
+
+                _rawScheduleSettingsCache
+                    .Where(x => TradingScheduleChanged(x.Key, _rawScheduleSettingsCache, newRawScheduleSettings))
+                    .Select(x => x.Key)
+                    .ForEach(key => _compiledScheduleTimelineCache.Remove(key));
+
+                _rawScheduleSettingsCache = newRawScheduleSettings;
+                
                 _lastCacheRecalculationTime = _dateService.Now();
             }
             catch (Exception exception)
@@ -80,6 +97,57 @@ namespace MarginTrading.Backend.Services.AssetPairs
             {
                 await _log.WriteWarningAsync(nameof(ScheduleSettingsCacheService), nameof(UpdateSettingsAsync),
                     $"Some of CompiledScheduleSettingsContracts were invalid, so they were skipped. The first one: {invalidSchedules.First().ToJson()}");
+            }
+        }
+
+        private static bool TradingScheduleChanged(string key, 
+            Dictionary<string, List<ScheduleSettings>> oldRawScheduleSettingsCache, 
+            Dictionary<string, List<ScheduleSettings>> newRawScheduleSettingsCache)
+        {
+            if (!oldRawScheduleSettingsCache.TryGetValue(key, out var oldScheduleSettings)
+                || !newRawScheduleSettingsCache.TryGetValue(key, out var newRawScheduleSettings)
+                || oldScheduleSettings.Count != newRawScheduleSettings.Count)
+            {
+                return true;
+            }
+
+            foreach (var oldScheduleSetting in oldScheduleSettings)
+            {
+                var newScheduleSetting = newRawScheduleSettings.FirstOrDefault(x => x.Id == oldScheduleSetting.Id);
+
+                if (newScheduleSetting == null
+                    || newScheduleSetting.Rank != oldScheduleSetting.Rank
+                    || newScheduleSetting.IsTradeEnabled != oldScheduleSetting.IsTradeEnabled
+                    || newScheduleSetting.PendingOrdersCutOff != oldScheduleSetting.PendingOrdersCutOff
+                    || !newScheduleSetting.Start.Equals(oldScheduleSetting.Start)
+                    || !newScheduleSetting.End.Equals(oldScheduleSetting.End))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public Dictionary<string, List<CompiledScheduleTimeInterval>> GetCompiledScheduleSettings(
+            DateTime currentDateTime, TimeSpan scheduleCutOff)
+        {
+            _readerWriterLockSlim.EnterReadLock();
+            
+            EnsureCacheValidUnsafe(currentDateTime);
+
+            if (!_compiledScheduleTimelineCache.Any())
+            {
+                CacheWarmUp();
+            }
+
+            try
+            {
+                return _compiledScheduleTimelineCache;
+            }
+            finally
+            {
+                _readerWriterLockSlim.ExitReadLock();
             }
         }
 
@@ -226,7 +294,16 @@ namespace MarginTrading.Backend.Services.AssetPairs
             _readerWriterLockSlim.EnterWriteLock();
             try
             {
-                _compiledScheduleTimelineCache[assetPairId] = weekly.Concat(single).Concat(daily).ToList();
+                var resultingTimeIntervals = weekly.Concat(single).Concat(daily).ToList();
+                
+                _compiledScheduleTimelineCache[assetPairId] = resultingTimeIntervals;
+
+                _cqrsSender.PublishEvent(new CompiledScheduleChangedEvent
+                {
+                    AssetPairId = assetPairId,
+                    EventTimestamp = _dateService.Now(),
+                    TimeIntervals = resultingTimeIntervals.Select(x => x.ToRabbitMqContract()).ToList(),
+                });
             }
             finally
             {

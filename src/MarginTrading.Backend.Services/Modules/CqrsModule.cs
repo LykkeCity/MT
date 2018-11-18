@@ -13,6 +13,7 @@ using Lykke.Messaging.RabbitMq;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.Backend.Contracts.Events;
+using MarginTrading.Backend.Contracts.TradingSchedule;
 using MarginTrading.Backend.Contracts.Workflow.Liquidation.Events;
 using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Events;
@@ -135,6 +136,7 @@ namespace MarginTrading.Backend.Services.Modules
             RegisterAssetPairsProjection(contextRegistration);
             
             contextRegistration.PublishingEvents(typeof(PositionClosedEvent)).With(EventsRoute);
+            contextRegistration.PublishingEvents(typeof(CompiledScheduleChangedEvent)).With(EventsRoute);
 
             return contextRegistration;
         }

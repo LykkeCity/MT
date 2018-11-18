@@ -9,6 +9,9 @@ namespace MarginTrading.Backend.Services.AssetPairs
 {
     public interface IScheduleSettingsCacheService
     {
+        Dictionary<string, List<CompiledScheduleTimeInterval>> GetCompiledScheduleSettings(DateTime currentDateTime,
+            TimeSpan scheduleCutOff);
+        
         /// <summary>
         /// Get a compiled schedule timeline from cache, recalculate it if needed.
         /// </summary>

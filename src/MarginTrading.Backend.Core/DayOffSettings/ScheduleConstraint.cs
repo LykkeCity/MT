@@ -2,7 +2,7 @@ using System;
 
 namespace MarginTrading.Backend.Core.DayOffSettings
 {
-    public class ScheduleConstraint
+    public class ScheduleConstraint : IEquatable<ScheduleConstraint>
     {
         public DateTime? Date { get; set; }
         public DayOfWeek? DayOfWeek { get; set; } 
@@ -25,6 +25,14 @@ namespace MarginTrading.Backend.Core.DayOffSettings
             //todo what about yearly?
 
             return ScheduleConstraintType.Invalid;
+        }
+
+        public bool Equals(ScheduleConstraint other)
+        {
+            return other != null
+                    && Date == other.Date
+                    && DayOfWeek == other.DayOfWeek
+                    && Time == other.Time;
         }
     }
 }
