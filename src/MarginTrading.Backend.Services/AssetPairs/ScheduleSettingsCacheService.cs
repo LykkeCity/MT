@@ -134,21 +134,21 @@ namespace MarginTrading.Backend.Services.AssetPairs
         {
             _readerWriterLockSlim.EnterReadLock();
             
-            EnsureCacheValidUnsafe(currentDateTime);
+            try
+            {
+                EnsureCacheValidUnsafe(currentDateTime);
+            }
+            finally
+            {
+                _readerWriterLockSlim.ExitReadLock();
+            }
 
             if (!_compiledScheduleTimelineCache.Any())
             {
                 CacheWarmUp();
             }
 
-            try
-            {
-                return _compiledScheduleTimelineCache;
-            }
-            finally
-            {
-                _readerWriterLockSlim.ExitReadLock();
-            }
+            return _compiledScheduleTimelineCache;
         }
 
         public List<CompiledScheduleTimeInterval> GetCompiledScheduleSettings(string assetPairId,
