@@ -43,6 +43,7 @@ namespace MarginTrading.Backend.Services
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly ICqrsSender _cqrsSender;
         private readonly IEventChannel<StopOutEventArgs> _stopoutEventChannel;
+        private readonly IQuoteCacheService _quoteCacheService;
 
         public TradingEngine(
             IEventChannel<MarginCallEventArgs> marginCallEventChannel,
@@ -65,7 +66,8 @@ namespace MarginTrading.Backend.Services
             IIdentityGenerator identityGenerator,
             IAssetPairsCache assetPairsCache,
             ICqrsSender cqrsSender,
-            IEventChannel<StopOutEventArgs> stopoutEventChannel)
+            IEventChannel<StopOutEventArgs> stopoutEventChannel,
+            IQuoteCacheService quoteCacheService)
         {
             _marginCallEventChannel = marginCallEventChannel;
             _orderPlacedEventChannel = orderPlacedEventChannel;
@@ -89,6 +91,7 @@ namespace MarginTrading.Backend.Services
             _assetPairsCache = assetPairsCache;
             _cqrsSender = cqrsSender;
             _stopoutEventChannel = stopoutEventChannel;
+            _quoteCacheService = quoteCacheService;
         }
 
         public async Task<Order> PlaceOrderAsync(Order order)
@@ -99,7 +102,7 @@ namespace MarginTrading.Backend.Services
             {
                 if (order.OrderType != OrderType.Market)
                 {
-                    PlacePendingOrder(order);
+                    await PlacePendingOrder(order);
                     return order;
                 }
 
@@ -139,7 +142,7 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        private void PlacePendingOrder(Order order)
+        private async Task PlacePendingOrder(Order order)
         {
             if (order.IsBasicPendingOrder() || !string.IsNullOrEmpty(order.ParentPositionId))
             {
@@ -161,7 +164,7 @@ namespace MarginTrading.Backend.Services
                     order.MakeInactive(_dateService.Now());
                     _ordersCache.Inactive.Add(order);
                 }
-                
+
                 //may be it was market and now it is position
                 else if (_ordersCache.Positions.TryGetPositionById(order.ParentOrderId, out var parentPosition))
                 {
@@ -170,6 +173,7 @@ namespace MarginTrading.Backend.Services
                     {
                         order.ChangeVolume(-parentPosition.Volume, _dateService.Now(), OriginatorType.System);
                     }
+
                     order.Activate(_dateService.Now(), true);
                     _ordersCache.Active.Add(order);
                     _orderActivatedEventChannel.SendEvent(this, new OrderActivatedEventArgs(order));
@@ -178,6 +182,18 @@ namespace MarginTrading.Backend.Services
             else
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidParent, "Order parent is not valid");
+            }
+
+            if (_quoteCacheService.TryGetQuoteById(order.AssetPairId, out var pair))
+            {
+                var price = pair.GetPriceForOrderDirection(order.Direction);
+
+                if (order.IsSuitablePriceForPendingOrder(price) &&
+                    !_assetPairDayOffService.ArePendingOrdersDisabled(order.AssetPairId))
+                {
+                    _ordersCache.Active.Remove(order);
+                    await PlaceOrderByMarketPrice(order);
+                }
             }
         }
 
