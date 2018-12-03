@@ -320,7 +320,7 @@ namespace MarginTrading.Backend.Services
                 _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
             }
             //TODO: think how to avoid infinite loop
-            else if (!_ordersCache.TryGetOrderById(order.Id, out _)) // all pending orders should be returned to active state if there is no liquidity
+            else if (reason == OrderRejectReason.NoLiquidity && !_ordersCache.TryGetOrderById(order.Id, out _)) // all pending orders should be returned to active state if there is no liquidity
             {
                 order.CancelExecution(_dateService.Now());
                 _ordersCache.Active.Add(order);   
@@ -368,7 +368,8 @@ namespace MarginTrading.Backend.Services
                 var price = quote.GetPriceForOrderDirection(order.Direction);
 
                 if (order.IsSuitablePriceForPendingOrder(price) &&
-                        !_assetPairDayOffService.ArePendingOrdersDisabled(order.AssetPairId))
+                    _validateOrderService.ShouldTryExecutePendingOrder(order.AssetPairId, order.OrderType,
+                        ShouldOpenNewPosition(order)))
                 {
                     //TODO: inspect one more time in MTC-248
                     // if order is removed from Active, execution should be started immediately
