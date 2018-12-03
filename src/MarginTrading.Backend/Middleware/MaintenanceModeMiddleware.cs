@@ -45,7 +45,7 @@ namespace MarginTrading.Backend.Middleware
                 {
                     context.Response.ContentType = "application/json";
                     context.Response.StatusCode = 503;
-                    var response = new MtBackendResponse<string> { Message = "Maintenance Mode" };
+                    var response = new MtBackendResponse<string> { ErrorMessage = "Maintenance Mode" };
                     await context.Response.WriteAsync(response.ToJson());
                 }
             }

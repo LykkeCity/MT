@@ -3,7 +3,7 @@
     public class MtBackendResponse<T>
     {
         public T Result { get; set; }
-        public string Message { get; set; }
+        public string ErrorMessage { get; set; }
 
         public static MtBackendResponse<T> Ok(T result)
         {
@@ -17,7 +17,7 @@
         {
             return new MtBackendResponse<T>
             {
-                Message = message
+                ErrorMessage = message
             };
         }
     }
