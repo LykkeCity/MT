@@ -368,7 +368,7 @@ namespace MarginTrading.Backend.Services
                 var price = quote.GetPriceForOrderDirection(order.Direction);
 
                 if (order.IsSuitablePriceForPendingOrder(price) &&
-                    _validateOrderService.ShouldTryExecutePendingOrder(order.AssetPairId, order.OrderType,
+                    _validateOrderService.CheckIfPendingOrderExecutionPossible(order.AssetPairId, order.OrderType,
                         ShouldOpenNewPosition(order)))
                 {
                     //TODO: inspect one more time in MTC-248

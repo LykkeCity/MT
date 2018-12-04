@@ -15,6 +15,6 @@ namespace MarginTrading.Backend.Services
 
         void ValidateOrderPriceChange(Order order, decimal newPrice);
         
-        bool ShouldTryExecutePendingOrder(string assetPairId, OrderType orderType, bool shouldOpenNewPosition);
+        bool CheckIfPendingOrderExecutionPossible(string assetPairId, OrderType orderType, bool shouldOpenNewPosition);
     }
 }

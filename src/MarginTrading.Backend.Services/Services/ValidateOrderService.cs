@@ -467,7 +467,7 @@ namespace MarginTrading.Backend.Services
                 ValidateMargin(order);
         }
 
-        public bool ShouldTryExecutePendingOrder(string assetPairId, OrderType orderType, bool shouldOpenNewPosition)
+        public bool CheckIfPendingOrderExecutionPossible(string assetPairId, OrderType orderType, bool shouldOpenNewPosition)
         {
             try
             {
