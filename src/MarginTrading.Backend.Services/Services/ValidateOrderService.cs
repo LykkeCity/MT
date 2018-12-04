@@ -122,12 +122,8 @@ namespace MarginTrading.Backend.Services
                 throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
                     "Instrument is not available for trading on selected account");
             }
-            
-            var equivalentSettings =
-                _marginSettings.ReportingEquivalentPricesSettings.FirstOrDefault(x => x.LegalEntity == account.LegalEntity);
-			
-            if(string.IsNullOrEmpty(equivalentSettings?.EquivalentAsset))
-                throw new Exception($"No reporting equivalent prices asset found for legalEntity: {account.LegalEntity}");
+
+            var equivalentSettings = GetReportingEquivalentPricesSettings(account.LegalEntity);
 
             //set special account-quote instrument
 //            if (_assetPairsCache.TryGetAssetPairQuoteSubst(order.AccountAssetId, order.Instrument,
@@ -227,7 +223,31 @@ namespace MarginTrading.Backend.Services
                 ValidateRelatedOrderPriceAgainstBase(order, newPrice: newPrice);
             }
         }
-        
+
+        public async Task<(string id, long code, DateTime now, decimal equivalentPrice, decimal fxPrice)> 
+            GetOrderInitialParameters(string assetPairId, string accountId)
+        {
+            var account = _accountsCacheService.Get(accountId);
+
+            var equivalentPricesSettings = GetReportingEquivalentPricesSettings(account.LegalEntity);
+
+            return await GetOrderInitialParameters(assetPairId, account.LegalEntity, equivalentPricesSettings,
+                account.BaseAssetId);
+        }
+
+        private ReportingEquivalentPricesSettings GetReportingEquivalentPricesSettings(string legalEntity)
+        {
+            var equivalentPricesSettings =
+                _marginSettings.ReportingEquivalentPricesSettings.FirstOrDefault(x => x.LegalEntity == legalEntity);
+
+            if (string.IsNullOrEmpty(equivalentPricesSettings?.EquivalentAsset))
+            {
+                throw new Exception($"No reporting equivalent prices asset found for legalEntity: {legalEntity}");
+            }
+
+            return equivalentPricesSettings;
+        }
+
         private async Task<Order> ValidateAndGetSlOrTpOrder(OrderPlaceRequest request, OrderTypeContract type,
             decimal? price, ReportingEquivalentPricesSettings equivalentSettings, Order parentOrder)
         {
