@@ -465,7 +465,20 @@ namespace MarginTrading.Backend.Services
 
             if (shouldOpenNewPosition)
                 ValidateMargin(order);
+        }
 
+        public bool CheckIfPendingOrderExecutionPossible(string assetPairId, OrderType orderType, bool shouldOpenNewPosition)
+        {
+            try
+            {
+                GetAssetPairIfAvailableForTrading(assetPairId, orderType, shouldOpenNewPosition, true);
+            }
+            catch
+            {
+                return false;
+            }
+
+            return true;
         }
         
         private IAssetPair GetAssetPairIfAvailableForTrading(string assetPairId, OrderType orderType, 
