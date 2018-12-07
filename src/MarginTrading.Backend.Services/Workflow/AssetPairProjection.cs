@@ -3,6 +3,7 @@ using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Common.Extensions;
 using MarginTrading.SettingsService.Contracts.AssetPair;
 
@@ -16,13 +17,16 @@ namespace MarginTrading.Backend.Services.Workflow
     public class AssetPairProjection
     {
         private readonly IAssetPairsCache _assetPairsCache;
+        private readonly IScheduleSettingsCacheService _scheduleSettingsCacheService;
         private readonly ILog _log;
 
         public AssetPairProjection(
             IAssetPairsCache assetPairsCache,
+            IScheduleSettingsCacheService scheduleSettingsCacheService,
             ILog log)
         {
             _assetPairsCache = assetPairsCache;
+            _scheduleSettingsCacheService = scheduleSettingsCacheService;
             _log = log;
         }
 
@@ -59,9 +63,11 @@ namespace MarginTrading.Backend.Services.Workflow
                     isDiscontinued: @event.AssetPair.IsDiscontinued
                 ));
             }
+
+            await _scheduleSettingsCacheService.UpdateSettingsAsync();
         }
 
-        private bool IsDelete(AssetPairChangedEvent @event)
+        private static bool IsDelete(AssetPairChangedEvent @event)
         {
             return @event.AssetPair.BaseAssetId == null || @event.AssetPair.QuoteAssetId == null;
         }
