@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Contracts.Orders;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;
@@ -14,6 +16,9 @@ namespace MarginTrading.Backend.Services
         void MakePreTradeValidation(Order order, bool shouldOpenNewPosition);
 
         void ValidateOrderPriceChange(Order order, decimal newPrice);
+
+        Task<(string id, long code, DateTime now, decimal equivalentPrice, decimal fxPrice)>
+            GetOrderInitialParameters(string assetPairId, string accountId);
         
         bool CheckIfPendingOrderExecutionPossible(string assetPairId, OrderType orderType, bool shouldOpenNewPosition);
     }

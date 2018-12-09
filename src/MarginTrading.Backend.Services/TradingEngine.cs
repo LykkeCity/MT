@@ -524,15 +524,15 @@ namespace MarginTrading.Backend.Services
 
             me = me ?? _meRouter.GetMatchingEngineForClose(position);
 
-            var id = _identityGenerator.GenerateAlphanumericId();
-            var code = _identityGenerator.GenerateIdAsync(nameof(Order)).GetAwaiter().GetResult();
-            var now = _dateService.Now();
+            var initialParameters = await _validateOrderService.GetOrderInitialParameters(position.AssetPairId, 
+                position.AccountId);
 
-            var order = new Order(id, code, position.AssetPairId, -position.Volume, now, now, null, position.AccountId,
+            var order = new Order(initialParameters.id, initialParameters.code, position.AssetPairId, -position.Volume, 
+                initialParameters.now, initialParameters.now, null, position.AccountId,
                 position.TradingConditionId, position.AccountAssetId, null, position.EquivalentAsset,
-                OrderFillType.FillOrKill, $"Close position. {comment}", position.LegalEntity, false, OrderType.Market, null,
-                position.Id,
-                originator, 0, 0, OrderStatus.Placed, additionalInfo, correlationId);
+                OrderFillType.FillOrKill, $"Close position. {comment}", position.LegalEntity, false, OrderType.Market, 
+                null, position.Id, originator, initialParameters.equivalentPrice, initialParameters.fxPrice, 
+                OrderStatus.Placed, additionalInfo, correlationId);
             
             _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
               
