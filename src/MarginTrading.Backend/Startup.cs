@@ -28,6 +28,7 @@ using MarginTrading.Backend.Services.Modules;
 using MarginTrading.Backend.Services.Quotes;
 using MarginTrading.Backend.Services.Scheduling;
 using MarginTrading.Backend.Services.Settings;
+using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Backend.Services.Stubs;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Extensions;
@@ -190,6 +191,7 @@ namespace MarginTrading.Backend
 
             builder.RegisterBuildCallback(c => c.Resolve<TradingInstrumentsManager>());
             builder.RegisterBuildCallback(c => c.Resolve<OrderBookSaveService>());
+            builder.RegisterBuildCallback(async c => await c.Resolve<ExternalOrderbookService>().InitializeAsync());
             builder.RegisterBuildCallback(c => c.Resolve<QuoteCacheService>());
             builder.RegisterBuildCallback(c => c.Resolve<AccountManager>()); // note the order here is important!
             builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());

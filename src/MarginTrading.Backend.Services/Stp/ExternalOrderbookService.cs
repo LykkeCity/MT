@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using Lykke.MarginTrading.OrderBookService.Contracts;
+using Lykke.MarginTrading.OrderBookService.Contracts.Models;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
@@ -21,27 +24,13 @@ namespace MarginTrading.Backend.Services.Stp
     public class ExternalOrderbookService : IExternalOrderbookService
     {
         private readonly IEventChannel<BestPriceChangeEventArgs> _bestPriceChangeEventChannel;
+        private readonly IOrderBookProviderApi _orderBookProviderApi;
         private readonly IDateService _dateService;
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly ICqrsSender _cqrsSender;
         private readonly IIdentityGenerator _identityGenerator;
+        private readonly IConvertService _convertService;
         private readonly ILog _log;
-
-        public ExternalOrderbookService(
-            IEventChannel<BestPriceChangeEventArgs> bestPriceChangeEventChannel,
-            IDateService dateService,
-            IAssetPairsCache assetPairsCache,
-            ICqrsSender cqrsSender,
-            IIdentityGenerator identityGenerator,
-            ILog log)
-        {
-            _bestPriceChangeEventChannel = bestPriceChangeEventChannel;
-            _dateService = dateService;
-            _assetPairsCache = assetPairsCache;
-            _cqrsSender = cqrsSender;
-            _identityGenerator = identityGenerator;
-            _log = log;
-        }
 
         /// <summary>
         /// External orderbooks cache (AssetPairId, (Source, Orderbook))
@@ -53,6 +42,49 @@ namespace MarginTrading.Backend.Services.Stp
         /// </remarks>
         private readonly ReadWriteLockedDictionary<string, Dictionary<string, ExternalOrderBook>> _orderbooks =
             new ReadWriteLockedDictionary<string, Dictionary<string, ExternalOrderBook>>();
+
+        public ExternalOrderbookService(
+            IEventChannel<BestPriceChangeEventArgs> bestPriceChangeEventChannel,
+            IOrderBookProviderApi orderBookProviderApi,
+            IDateService dateService,
+            IAssetPairsCache assetPairsCache,
+            ICqrsSender cqrsSender,
+            IIdentityGenerator identityGenerator,
+            IConvertService convertService,
+            ILog log)
+        {
+            _bestPriceChangeEventChannel = bestPriceChangeEventChannel;
+            _orderBookProviderApi = orderBookProviderApi;
+            _dateService = dateService;
+            _assetPairsCache = assetPairsCache;
+            _cqrsSender = cqrsSender;
+            _identityGenerator = identityGenerator;
+            _convertService = convertService;
+            _log = log;
+        }
+
+        public async Task InitializeAsync()
+        {
+            try
+            {
+                var orderBookContracts = await _orderBookProviderApi.GetOrderBooks();
+                var orderBooks = orderBookContracts.Select(x =>
+                    _convertService.Convert<ExternalOrderBookContract, ExternalOrderBook>(x)).ToList();
+
+                foreach (var externalOrderBook in orderBooks)
+                {
+                    SetOrderbook(externalOrderBook);
+                }
+                
+                await _log.WriteInfoAsync(nameof(ExternalOrderbookService), nameof(InitializeAsync),
+                    $"External order books cache initialized with {orderBooks.Count} items from OrderBooks Service");
+            }
+            catch (Exception exception)
+            {
+                await _log.WriteWarningAsync(nameof(ExternalOrderbookService), nameof(InitializeAsync),
+                    "Failed to initialize cache from OrderBook Service", exception);
+            }
+        }
 
         public List<(string source, decimal? price)> GetPricesForExecution(string assetPairId, decimal volume,
             bool validateOppositeDirectionVolume)

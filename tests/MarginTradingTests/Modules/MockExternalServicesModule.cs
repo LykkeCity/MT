@@ -1,9 +1,13 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Autofac;
 using Common.Log;
+using Lykke.MarginTrading.OrderBookService.Contracts;
+using Lykke.MarginTrading.OrderBookService.Contracts.Models;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.Backend.Core;
 using MarginTrading.SettingsService.Contracts;
+using Moq;
 
 namespace MarginTradingTests.Modules
 {
@@ -32,6 +36,8 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(tradingInstruments).As<ITradingInstrumentsApi>().SingleInstance();
             builder.RegisterInstance(meRoutes).As<ITradingRoutesApi>().SingleInstance();
             builder.RegisterInstance(accountApi).As<IAccountsApi>().SingleInstance();
+            builder.RegisterInstance(Mock.Of<IOrderBookProviderApi>(x =>
+                x.GetOrderBooks() == Task.FromResult(new List<ExternalOrderBookContract>())));
         }
     }
 }
