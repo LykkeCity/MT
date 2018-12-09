@@ -16,6 +16,7 @@ using Lykke.SlackNotification.AzureQueue;
 using Lykke.SlackNotifications;
 using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Filters;
 using MarginTrading.Backend.Infrastructure;
@@ -191,7 +192,7 @@ namespace MarginTrading.Backend
 
             builder.RegisterBuildCallback(c => c.Resolve<TradingInstrumentsManager>());
             builder.RegisterBuildCallback(c => c.Resolve<OrderBookSaveService>());
-            builder.RegisterBuildCallback(async c => await c.Resolve<ExternalOrderbookService>().InitializeAsync());
+            builder.RegisterBuildCallback(async c => await c.Resolve<IExternalOrderbookService>().InitializeAsync());
             builder.RegisterBuildCallback(c => c.Resolve<QuoteCacheService>());
             builder.RegisterBuildCallback(c => c.Resolve<AccountManager>()); // note the order here is important!
             builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
