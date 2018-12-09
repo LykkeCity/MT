@@ -131,7 +131,9 @@ namespace MarginTrading.Backend.Services.Stp
             Dictionary<string, ExternalOrderBook> UpdateOrderbooksDictionary(string assetPairId,
                 Dictionary<string, ExternalOrderBook> dict)
             {
-                dict[orderbook.ExchangeName] = orderbook;
+                //TODO: add validation for processing EOD orderbooks
+                var exchangeName = orderbook.ExchangeName == "EOD" ? "StarWarrant" : orderbook.ExchangeName;
+                dict[exchangeName] = orderbook;
                 foreach (var pair in dict.Values.RequiredNotNullOrEmptyCollection(nameof(dict)))
                 {
                     // guaranteed to be sorted best first
