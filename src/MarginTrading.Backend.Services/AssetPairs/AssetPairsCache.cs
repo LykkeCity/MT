@@ -118,6 +118,25 @@ namespace MarginTrading.Backend.Services.AssetPairs
             }
         }
 
+        public void Remove(string assetPairId)
+        {
+            _readerWriterLockSlim.EnterWriteLock();
+
+            try
+            {
+                if (_assetPairs.ContainsKey(assetPairId))
+                {
+                    _assetPairs.Remove(assetPairId);
+                    _assetPairsByAssets = GetAssetPairsByAssetsCache();
+                    _assetPairsIds = Calculate.Cached(() => _assetPairs, CacheChangedCondition, p => p.Keys.ToImmutableHashSet());
+                }
+            }
+            finally
+            {
+                _readerWriterLockSlim.ExitWriteLock();
+            }
+        }
+
         public bool TryGetAssetPairQuoteSubst(string substAsset, string instrument, string legalEntity, 
             out IAssetPair assetPair)
         {

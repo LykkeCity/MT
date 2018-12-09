@@ -368,7 +368,8 @@ namespace MarginTrading.Backend.Services
                 var price = quote.GetPriceForOrderDirection(order.Direction);
 
                 if (order.IsSuitablePriceForPendingOrder(price) &&
-                        !_assetPairDayOffService.ArePendingOrdersDisabled(order.AssetPairId))
+                    _validateOrderService.CheckIfPendingOrderExecutionPossible(order.AssetPairId, order.OrderType,
+                        ShouldOpenNewPosition(order)))
                 {
                     //TODO: inspect one more time in MTC-248
                     // if order is removed from Active, execution should be started immediately

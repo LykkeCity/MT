@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using JetBrains.Annotations;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Helpers;
 using MarginTrading.Contract.BackendContracts;
@@ -21,6 +22,7 @@ namespace MarginTrading.Backend.Middleware
             _next = next;
         }
 
+        [UsedImplicitly]
         public async Task Invoke(HttpContext context)
         {
             try
@@ -54,7 +56,7 @@ namespace MarginTrading.Backend.Middleware
         {
             ctx.Response.ContentType = "application/json";
             ctx.Response.StatusCode = 500;
-            var response = new MtBackendResponse<string>() {Result = "Technical problems", Message = errorMessage};
+            var response = new MtBackendResponse<string> {Result = "Technical problems", ErrorMessage = errorMessage};
             await ctx.Response.WriteAsync(response.ToJson());
         }
     }

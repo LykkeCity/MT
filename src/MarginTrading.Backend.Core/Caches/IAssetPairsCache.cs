@@ -29,5 +29,6 @@ namespace MarginTrading.Backend.Core
         ImmutableHashSet<string> GetAllIds();
 
         void AddOrUpdate(IAssetPair assetPair);
+        void Remove(string assetPairId);
     }
 }
