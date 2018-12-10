@@ -563,7 +563,7 @@ namespace MarginTrading.Backend.Services
             if (tradingInstrument.DealMaxLimit > 0 && Math.Abs(volume) > tradingInstrument.DealMaxLimit)
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidVolume,
-                    $"Margin Trading is in beta testing. The volume of a single order is temporarily limited to {tradingInstrument.DealMaxLimit} {tradingInstrument.Instrument}. Thank you for using Lykke Margin Trading, the limit will be cancelled soon!");
+                    $"The volume of a single order is temporarily limited to {tradingInstrument.DealMaxLimit} {tradingInstrument.Instrument}.");
             }
 
             var existingPositionsVolume = _ordersCache.Positions.GetPositionsByInstrumentAndAccount(assetPairId, accountId)
@@ -573,7 +573,7 @@ namespace MarginTrading.Backend.Services
                 Math.Abs(existingPositionsVolume + volume) > tradingInstrument.PositionLimit)
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidVolume,
-                    $"Margin Trading is in beta testing. The volume of the net open position is temporarily limited to {tradingInstrument.PositionLimit} {tradingInstrument.Instrument}. Thank you for using Lykke Margin Trading, the limit will be cancelled soon!");
+                    $"The volume of the net open position is temporarily limited to {tradingInstrument.PositionLimit} {tradingInstrument.Instrument}.");
             }
         }
         
