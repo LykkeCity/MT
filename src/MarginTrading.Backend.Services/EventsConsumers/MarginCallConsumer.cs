@@ -5,6 +5,7 @@ using Common;
 using Lykke.Common;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services;
@@ -24,7 +25,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         private readonly IOperationsLogService _operationsLogService;
         private static readonly ConcurrentDictionary<string, (DateTime, DateTime)> LastNotifications = 
             new ConcurrentDictionary<string, (DateTime, DateTime)>();
-        private const int NotificationsTimeout = 30;
+        private readonly MarginTradingSettings _settings;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly IDateService _dateService;
 
@@ -32,6 +33,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             IEmailService emailService,
             IClientAccountService clientAccountService,
             IOperationsLogService operationsLogService,
+            MarginTradingSettings settings,
             IRabbitMqNotifyService rabbitMqNotifyService,
             IDateService dateService)
         {
@@ -39,6 +41,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             _emailService = emailService;
             _clientAccountService = clientAccountService;
             _operationsLogService = operationsLogService;
+            _settings = settings;
             _rabbitMqNotifyService = rabbitMqNotifyService;
             _dateService = dateService;
         }
@@ -58,7 +61,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             {
                 if (LastNotifications.TryGetValue(account.Id, out var lastNotification)
                     && (level == MarginEventTypeContract.MarginCall1 ? lastNotification.Item1 : lastNotification.Item2)
-                        .AddMinutes(NotificationsTimeout) > eventTime)
+                        .AddMinutes(_settings.Throttling.MarginCallThrottlingPeriodMin) > eventTime)
                 {
                     return;
                 }

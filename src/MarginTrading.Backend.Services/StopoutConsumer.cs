@@ -1,6 +1,9 @@
-﻿using Common;
+﻿using System;
+using System.Collections.Concurrent;
+using Common;
 using Lykke.Common;
 using MarginTrading.Backend.Contracts.Events;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services;
@@ -14,16 +17,23 @@ namespace MarginTrading.Backend.Services
         private readonly IOperationsLogService _operationsLogService;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly IDateService _dateService;
+        private readonly MarginTradingSettings _settings;
+        
+        private readonly ConcurrentDictionary<string, DateTime> _lastNotifications = 
+            new ConcurrentDictionary<string, DateTime>();
 
         public StopOutConsumer(IThreadSwitcher threadSwitcher,
             IOperationsLogService operationsLogService,
             IRabbitMqNotifyService rabbitMqNotifyService,
-            IDateService dateService)
+            IDateService dateService,
+            MarginTradingSettings settings)
         {
             _threadSwitcher = threadSwitcher;
             _operationsLogService = operationsLogService;
             _rabbitMqNotifyService = rabbitMqNotifyService;
             _dateService = dateService;
+
+            _settings = settings;
         }
 
         int IEventConsumer.ConsumerRank => 100;
@@ -37,9 +47,17 @@ namespace MarginTrading.Backend.Services
 
             _threadSwitcher.SwitchThread(async () =>
             {
+                if (_lastNotifications.TryGetValue(account.Id, out var lastNotification)
+                    && lastNotification.AddMinutes(_settings.Throttling.StopOutThrottlingPeriodMin) > eventTime)
+                {
+                    return;
+                }
+                
                 _operationsLogService.AddLog("stopout", account.Id, "", ea.ToJson());
 
                 await _rabbitMqNotifyService.AccountMarginEvent(accountMarginEventMessage);
+                
+                _lastNotifications.AddOrUpdate(account.Id, eventTime, (s, times) => eventTime);
             });
         }
     }
