@@ -163,10 +163,11 @@ namespace MarginTrading.Backend.Services
                     parentOrder.AddRelatedOrder(order);
                     order.MakeInactive(_dateService.Now());
                     _ordersCache.Inactive.Add(order);
+                    return;
                 }
 
                 //may be it was market and now it is position
-                else if (_ordersCache.Positions.TryGetPositionById(order.ParentOrderId, out var parentPosition))
+                if (_ordersCache.Positions.TryGetPositionById(order.ParentOrderId, out var parentPosition))
                 {
                     parentPosition.AddRelatedOrder(order);
                     if (parentPosition.Volume != -order.Volume)
@@ -184,7 +185,8 @@ namespace MarginTrading.Backend.Services
                 throw new ValidateOrderException(OrderRejectReason.InvalidParent, "Order parent is not valid");
             }
 
-            if (_quoteCacheService.TryGetQuoteById(order.AssetPairId, out var pair))
+            if (order.Status == OrderStatus.Active &&
+                _quoteCacheService.TryGetQuoteById(order.AssetPairId, out var pair))
             {
                 var price = pair.GetPriceForOrderDirection(order.Direction);
 
