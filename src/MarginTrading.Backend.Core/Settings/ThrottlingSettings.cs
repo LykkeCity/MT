@@ -8,6 +8,6 @@ namespace MarginTrading.Backend.Core.Settings
     {
         [Optional] public int MarginCallThrottlingPeriodMin { get; set; } = 30;
         
-        [Optional] public int StopOutThrottlingPeriodMin { get; set; } = 30;
+        [Optional] public int StopOutThrottlingPeriodMin { get; set; } = 1;
     }
 }
