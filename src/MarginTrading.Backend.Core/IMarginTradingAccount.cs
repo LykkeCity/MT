@@ -167,7 +167,8 @@ namespace MarginTrading.Backend.Core
 
         public static decimal GetTotalCapital(this IMarginTradingAccount account)
         {
-            return account.Balance + account.GetPnl() - account.GetFrozenMargin() + account.GetUnconfirmedMargin();
+            return account.Balance + account.GetUnrealizedDailyPnl() - account.GetFrozenMargin() +
+                   account.GetUnconfirmedMargin();
         }
 
         public static decimal GetPnl(this IMarginTradingAccount account)
