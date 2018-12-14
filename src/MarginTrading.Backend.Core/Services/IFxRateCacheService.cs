@@ -8,7 +8,7 @@ namespace MarginTrading.Backend.Core.Services
     {
         InstrumentBidAskPair GetQuote(string instrument);
         Dictionary<string, InstrumentBidAskPair> GetAllQuotes();
-        Task SetQuote(ExternalExchangeOrderbookMessage quote);
+        Task SetQuote(ExternalExchangeOrderbookMessage orderBookMessage);
         void SetQuote(InstrumentBidAskPair bidAskPair);
     }
 }

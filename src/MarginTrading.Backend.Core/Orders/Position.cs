@@ -143,8 +143,15 @@ namespace MarginTrading.Backend.Core.Orders
             FplData = new FplData {ActualHash = 1};
         }
 
-
         #region Actions
+
+        public void UpdateCloseFxPrice(decimal closeFxPrice)
+        {
+            CloseFxPrice = closeFxPrice;
+            FplData.ActualHash++;
+            var account = MtServiceLocator.AccountsCacheService.Get(AccountId);
+            account.CacheNeedsToBeUpdated();
+        }
 
         public void UpdateClosePrice(decimal closePrice)
         {

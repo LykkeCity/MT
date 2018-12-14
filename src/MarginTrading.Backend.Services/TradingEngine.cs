@@ -19,7 +19,9 @@ using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services
 {
-    public sealed class TradingEngine : ITradingEngine, IEventConsumer<BestPriceChangeEventArgs>
+    public sealed class TradingEngine : ITradingEngine, 
+        IEventConsumer<BestPriceChangeEventArgs>,
+        IEventConsumer<FxBestPriceChangeEventArgs>
     {
         private readonly IEventChannel<MarginCallEventArgs> _marginCallEventChannel;
         private readonly IEventChannel<OrderPlacedEventArgs> _orderPlacedEventChannel;
@@ -399,6 +401,19 @@ namespace MarginTrading.Backend.Services
         
         #region Positions
 
+        private void UpdatePositionsFxRates(InstrumentBidAskPair quote)
+        {
+            foreach (var position in _ordersCache.GetPositions(quote.Instrument))
+            {
+                var closeOrderDirection = position.Volume.GetClosePositionOrderDirection();
+                var closePrice = quote.GetPriceForOrderDirection(closeOrderDirection);
+                if (closePrice != 0)
+                {
+                    position.UpdateCloseFxPrice(closePrice);
+                }
+            }
+        }
+
         private void ProcessPositions(InstrumentBidAskPair quote)
         {
             var stopoutAccounts = UpdateClosePriceAndDetectStopout(quote).ToArray();
@@ -629,6 +644,11 @@ namespace MarginTrading.Backend.Services
         {
             ProcessPositions(ea.BidAskPair);
             ProcessOrdersWaitingForExecution(ea.BidAskPair);
+        }
+
+        void IEventConsumer<FxBestPriceChangeEventArgs>.ConsumeEvent(object sender, FxBestPriceChangeEventArgs ea)
+        {
+            UpdatePositionsFxRates(ea.BidAskPair);
         }
     }
 }
