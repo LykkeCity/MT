@@ -26,11 +26,10 @@ namespace MarginTrading.Backend.Core
                     return false;
             }
         }
-        
+
         public static decimal GetTotalFpl(this Position position, decimal swaps)
         {
-            return position.GetFpl() - position.GetOpenCommission() - position.GetCloseCommission() - swaps -
-                   position.ChargedPnL;
+            return position.GetFpl() - position.GetOpenCommission() - position.GetCloseCommission() - swaps;
         }
 
         public static decimal GetTotalFpl(this Position order)
