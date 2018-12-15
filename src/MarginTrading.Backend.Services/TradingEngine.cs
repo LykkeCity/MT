@@ -403,14 +403,13 @@ namespace MarginTrading.Backend.Services
 
         private void UpdatePositionsFxRates(InstrumentBidAskPair quote)
         {
-            foreach (var position in _ordersCache.GetPositions(quote.Instrument))
+            foreach (var position in _ordersCache.GetPositionsByFxAssetPairId(quote.Instrument))
             {
-                var closeOrderDirection = position.Volume.GetClosePositionOrderDirection();
-                var closePrice = quote.GetPriceForOrderDirection(closeOrderDirection);
-                if (closePrice != 0)
-                {
-                    position.UpdateCloseFxPrice(closePrice);
-                }
+                var fxPrice = _cfdCalculatorService.GetQuoteRateForQuoteAsset(position.AccountAssetId,
+                    position.AssetPairId, position.LegalEntity,
+                    position.Volume * (position.ClosePrice - position.OpenPrice) > 0);
+                
+                position.UpdateCloseFxPrice(fxPrice);
             }
         }
 
@@ -549,7 +548,7 @@ namespace MarginTrading.Backend.Services
                 position.TradingConditionId, position.AccountAssetId, null, position.EquivalentAsset,
                 OrderFillType.FillOrKill, $"Close position. {comment}", position.LegalEntity, false, OrderType.Market, 
                 null, position.Id, originator, initialParameters.equivalentPrice, initialParameters.fxPrice, 
-                OrderStatus.Placed, additionalInfo, correlationId);
+                initialParameters.fxAssetPairId, OrderStatus.Placed, additionalInfo, correlationId);
             
             _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
               

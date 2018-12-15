@@ -5,7 +5,10 @@
     {
         decimal GetQuoteRateForBaseAsset(string accountAssetId, string instrument, string legalEntity, 
             bool useAsk);
+        
         decimal GetQuoteRateForQuoteAsset(string accountAssetId, string instrument, string legalEntity, 
             bool metricIsPositive = true);
+
+        string GetFxAssetPairId(string accountAssetId, string assetPairId, string legalEntity);
     }
 }

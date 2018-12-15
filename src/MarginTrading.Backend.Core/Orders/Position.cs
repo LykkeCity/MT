@@ -84,6 +84,9 @@ namespace MarginTrading.Backend.Core.Orders
         public List<string> CloseTrades { get; private set; }
         
         [JsonProperty]
+        public virtual string FxAssetPairId { get; protected set; }
+        
+        [JsonProperty]
         public override PositionStatus Status { get; protected set; }
 
         [JsonProperty]
@@ -113,7 +116,7 @@ namespace MarginTrading.Backend.Core.Orders
             string tradingConditionId, string accountAssetId, decimal? expectedOpenPrice,
             string openMatchingEngineId, DateTime openDate, string openTradeId, decimal openPrice, decimal openFxPrice,
             string equivalentAsset, decimal openPriceEquivalent, List<RelatedOrderInfo> relatedOrders,
-            string legalEntity, OriginatorType openOriginator, string externalProviderId)
+            string legalEntity, OriginatorType openOriginator, string externalProviderId, string fxAssetPairId)
         {
             // ReSharper disable VirtualMemberCallInConstructor
             // ^^^ props are virtual for tests, derived constructor call is overriden by this one, but it's ok
@@ -139,6 +142,7 @@ namespace MarginTrading.Backend.Core.Orders
             ExternalProviderId = externalProviderId;
             CloseTrades = new List<string>();
             ChargePnlOperations = new HashSet<string>();
+            FxAssetPairId = fxAssetPairId;
             // ReSharper restore VirtualMemberCallInConstructor
             FplData = new FplData {ActualHash = 1};
         }

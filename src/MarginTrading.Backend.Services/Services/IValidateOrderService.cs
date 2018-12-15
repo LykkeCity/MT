@@ -17,7 +17,7 @@ namespace MarginTrading.Backend.Services
 
         void ValidateOrderPriceChange(Order order, decimal newPrice);
 
-        Task<(string id, long code, DateTime now, decimal equivalentPrice, decimal fxPrice)>
+        Task<(string id, long code, DateTime now, decimal equivalentPrice, decimal fxPrice, string fxAssetPairId)> 
             GetOrderInitialParameters(string assetPairId, string accountId);
         
         bool CheckIfPendingOrderExecutionPossible(string assetPairId, OrderType orderType, bool shouldOpenNewPosition);

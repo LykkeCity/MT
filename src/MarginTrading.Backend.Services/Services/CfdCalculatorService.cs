@@ -67,5 +67,15 @@ namespace MarginTrading.Backend.Services
             
             return rate;
         }
+
+        public string GetFxAssetPairId(string accountAssetId, string assetPairId, string legalEntity)
+        {
+            var assetPair = _assetPairsCache.GetAssetPairById(assetPairId);
+            
+            if (accountAssetId == assetPair.QuoteAssetId)
+                return assetPair.Id;
+
+            return _assetPairsCache.FindAssetPair(assetPair.QuoteAssetId, accountAssetId, legalEntity).Id;
+        }
     }
 }

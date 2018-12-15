@@ -270,6 +270,7 @@ namespace MarginTradingTests
             _fakePosition.SetupProperty(s => s.Id, "test");
             _fakePosition.SetupProperty(s => s.AccountId, Accounts[0].Id);
             _fakePosition.SetupProperty(s => s.AssetPairId, "test");
+            _fakePosition.SetupProperty(s => s.FxAssetPairId, "test");
             _fakePosition.SetupProperty(s => s.ChargePnlOperations, new HashSet<string>());
             _fakePosition.Setup(s => s.ChargePnL(It.Is<string>(x => x == "test"), It.IsAny<decimal>()));
             _ordersCache.Positions.Add(_fakePosition.Object);

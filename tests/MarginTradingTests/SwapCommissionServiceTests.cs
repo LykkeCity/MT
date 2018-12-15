@@ -57,7 +57,7 @@ namespace MarginTradingTests
             var dayPosition = new Position(Guid.NewGuid().ToString("N"), 0, "EURUSD", 20, Accounts[0].Id,
                 MarginTradingTestsUtils.TradingConditionId, Accounts[0].BaseAssetId, null, MatchingEngineConstants.DefaultMm,
                 new DateTime(2017, 01, 01, 20, 50, 0), "OpenTrade", 1, 1, "USD", 1,
-                new List<RelatedOrderInfo>(), "LYKKETEST", OriginatorType.Investor, "");
+                new List<RelatedOrderInfo>(), "LYKKETEST", OriginatorType.Investor, "", "EURUSD");
 
             dayPosition.SetCommissionRates(100, 0, 0, 1);
 
@@ -71,7 +71,7 @@ namespace MarginTradingTests
             var twoDayPosition = new Position(Guid.NewGuid().ToString("N"), 0, "EURUSD", 20, Accounts[0].Id,
                 MarginTradingTestsUtils.TradingConditionId, Accounts[0].BaseAssetId, null, MatchingEngineConstants.DefaultMm,
                 new DateTime(2017, 01, 01, 20, 50, 0), "OpenTrade", 1, 1, "USD", 1,
-                new List<RelatedOrderInfo>(), "LYKKETEST", OriginatorType.Investor, "");
+                new List<RelatedOrderInfo>(), "LYKKETEST", OriginatorType.Investor, "", "EURUSD");
 
             twoDayPosition.SetCommissionRates(100, 0, 0, 1);
 

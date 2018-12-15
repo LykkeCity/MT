@@ -142,6 +142,12 @@ namespace MarginTrading.Backend.Core.Trading
         public decimal FxRate { get; private set; }
         
         /// <summary>
+        /// FX asset pair id
+        /// </summary>
+        [JsonProperty]
+        public string FxAssetPairId { get; set; }
+        
+        /// <summary>
         /// Current order status
         /// </summary>
         [JsonProperty]
@@ -283,11 +289,11 @@ namespace MarginTrading.Backend.Core.Trading
         }
 
         public Order(string id, long code, string assetPairId, decimal volume,
-            DateTime created, DateTime lastModified,
-            DateTime? validity, string accountId, string tradingConditionId, string accountAssetId, decimal? price,
-            string equivalentAsset, OrderFillType fillType, string comment, string legalEntity, bool forceOpen,
-            OrderType orderType, string parentOrderId, string parentPositionId, OriginatorType originator,
-            decimal equivalentRate, decimal fxRate, OrderStatus status, string additionalInfo, string correlationId)
+            DateTime created, DateTime lastModified, DateTime? validity, string accountId, string tradingConditionId, 
+            string accountAssetId, decimal? price, string equivalentAsset, OrderFillType fillType, string comment, 
+            string legalEntity, bool forceOpen, OrderType orderType, string parentOrderId, string parentPositionId, 
+            OriginatorType originator, decimal equivalentRate, decimal fxRate, string fxAssetPairId, OrderStatus status, 
+            string additionalInfo, string correlationId)
         {
             Id = id;
             Code = code;
@@ -311,6 +317,7 @@ namespace MarginTrading.Backend.Core.Trading
             Originator = originator;
             EquivalentRate = equivalentRate;
             FxRate = fxRate;
+            FxAssetPairId = fxAssetPairId;
             Direction = volume.GetOrderDirection();
             Status = status;
             AdditionalInfo = additionalInfo;

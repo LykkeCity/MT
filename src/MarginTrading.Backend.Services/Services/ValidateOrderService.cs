@@ -162,8 +162,8 @@ namespace MarginTrading.Backend.Services
                 account.TradingConditionId, account.BaseAssetId, request.Price, equivalentSettings.EquivalentAsset,
                 OrderFillType.FillOrKill, string.Empty, account.LegalEntity, request.ForceOpen,
                 request.Type.ToType<OrderType>(), request.ParentOrderId, request.PositionId, originator,
-                initialParameters.equivalentPrice, initialParameters.fxPrice, OrderStatus.Placed,
-                request.AdditionalInfo, request.CorrelationId);
+                initialParameters.equivalentPrice, initialParameters.fxPrice, initialParameters.fxAssetPairId, 
+                OrderStatus.Placed, request.AdditionalInfo, request.CorrelationId);
 
             ValidateBaseOrderPrice(baseOrder, baseOrder.Price);
 
@@ -224,7 +224,7 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public async Task<(string id, long code, DateTime now, decimal equivalentPrice, decimal fxPrice)> 
+        public async Task<(string id, long code, DateTime now, decimal equivalentPrice, decimal fxPrice, string fxAssetPairId)> 
             GetOrderInitialParameters(string assetPairId, string accountId)
         {
             var account = _accountsCacheService.Get(accountId);
@@ -277,8 +277,8 @@ namespace MarginTrading.Backend.Services
                     request.Validity, parentOrder.AccountId, parentOrder.TradingConditionId, parentOrder.AccountAssetId,
                     price, parentOrder.EquivalentAsset, OrderFillType.FillOrKill, string.Empty,
                     parentOrder.LegalEntity, false, orderType, parentOrder.Id, null,
-                    originator, initialParameters.equivalentPrice,
-                    initialParameters.fxPrice, OrderStatus.Placed, request.AdditionalInfo, request.CorrelationId);
+                    originator, initialParameters.equivalentPrice, initialParameters.fxPrice, 
+                    initialParameters.fxAssetPairId, OrderStatus.Placed, request.AdditionalInfo, request.CorrelationId);
             } 
             else if (!string.IsNullOrEmpty(request.PositionId))
             {
@@ -296,8 +296,8 @@ namespace MarginTrading.Backend.Services
                     request.Validity, position.AccountId, position.TradingConditionId, position.AccountAssetId,
                     price, position.EquivalentAsset, OrderFillType.FillOrKill, string.Empty,
                     position.LegalEntity, false, orderType, null, position.Id,
-                    originator, initialParameters.equivalentPrice,
-                    initialParameters.fxPrice, OrderStatus.Placed, request.AdditionalInfo, request.CorrelationId);
+                    originator, initialParameters.equivalentPrice, initialParameters.fxPrice, 
+                    initialParameters.fxAssetPairId, OrderStatus.Placed, request.AdditionalInfo, request.CorrelationId);
             }
 
             if (order == null)
@@ -323,7 +323,7 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        private async Task<(string id, long code, DateTime now, decimal equivalentPrice, decimal fxPrice)>
+        private async Task<(string id, long code, DateTime now, decimal equivalentPrice, decimal fxPrice, string fxAssetPairId)>
             GetOrderInitialParameters(string assetPairId, string legalEntity,
                 ReportingEquivalentPricesSettings equivalentSettings, string accountAssetId)
         {
@@ -334,7 +334,9 @@ namespace MarginTrading.Backend.Services
                 assetPairId, legalEntity);
             var fxPrice = _cfdCalculatorService.GetQuoteRateForQuoteAsset(accountAssetId,
                 assetPairId, legalEntity);
-            return (id, code, now, equivalentPrice, fxPrice);
+            var fxAssetPairId = _cfdCalculatorService.GetFxAssetPairId(accountAssetId, assetPairId, 
+                legalEntity);
+            return (id, code, now, equivalentPrice, fxPrice, fxAssetPairId);
         }
 
         private void ValidateBaseOrderPrice(Order order, decimal? orderPrice)
