@@ -1,4 +1,5 @@
 ﻿using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Services;
 
 namespace MarginTrading.Backend.Services
@@ -68,14 +69,32 @@ namespace MarginTrading.Backend.Services
             return rate;
         }
 
-        public string GetFxAssetPairId(string accountAssetId, string assetPairId, string legalEntity)
+        public decimal GetQuoteRateForQuoteAsset(InstrumentBidAskPair quote, FxToAssetPairDirection direction, 
+            bool metricIsPositive = true)
+        {
+            return metricIsPositive
+                ? direction == FxToAssetPairDirection.Straight
+                    ? quote.Ask
+                    : 1 / quote.Bid
+                : direction == FxToAssetPairDirection.Straight
+                    ? quote.Bid
+                    : 1 / quote.Ask;
+        }
+
+        public (string id, FxToAssetPairDirection direction) GetFxAssetPairIdAndDirection(string accountAssetId,
+            string assetPairId, string legalEntity)
         {
             var assetPair = _assetPairsCache.GetAssetPairById(assetPairId);
             
             if (accountAssetId == assetPair.QuoteAssetId)
-                return assetPair.Id;
+                return (assetPair.Id, FxToAssetPairDirection.Straight);
 
-            return _assetPairsCache.FindAssetPair(assetPair.QuoteAssetId, accountAssetId, legalEntity).Id;
+            var fxAssetPair = _assetPairsCache.FindAssetPair(assetPair.QuoteAssetId, accountAssetId, legalEntity);
+            var direction = assetPair.QuoteAssetId == fxAssetPair.BaseAssetId
+                ? FxToAssetPairDirection.Straight
+                : FxToAssetPairDirection.Reverse;
+
+            return (fxAssetPair.Id, direction);
         }
     }
 }

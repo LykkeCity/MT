@@ -85,6 +85,8 @@ namespace MarginTrading.Backend.Core.Orders
         
         [JsonProperty]
         public virtual string FxAssetPairId { get; protected set; }
+        [JsonProperty]
+        public virtual FxToAssetPairDirection FxToAssetPairDirection { get; protected set; }
         
         [JsonProperty]
         public override PositionStatus Status { get; protected set; }
@@ -112,11 +114,12 @@ namespace MarginTrading.Backend.Core.Orders
             FplData = new FplData {ActualHash = 1};
         }
 
-        public Position(string id, long code, string assetPairId, decimal volume, string accountId,
-            string tradingConditionId, string accountAssetId, decimal? expectedOpenPrice,
-            string openMatchingEngineId, DateTime openDate, string openTradeId, decimal openPrice, decimal openFxPrice,
-            string equivalentAsset, decimal openPriceEquivalent, List<RelatedOrderInfo> relatedOrders,
-            string legalEntity, OriginatorType openOriginator, string externalProviderId, string fxAssetPairId)
+        public Position(string id, long code, string assetPairId, decimal volume, string accountId, 
+            string tradingConditionId, string accountAssetId, decimal? expectedOpenPrice, string openMatchingEngineId, 
+            DateTime openDate, string openTradeId, decimal openPrice, decimal openFxPrice, string equivalentAsset, 
+            decimal openPriceEquivalent, List<RelatedOrderInfo> relatedOrders, string legalEntity, 
+            OriginatorType openOriginator, string externalProviderId, string fxAssetPairId, 
+            FxToAssetPairDirection fxToAssetPairDirection)
         {
             // ReSharper disable VirtualMemberCallInConstructor
             // ^^^ props are virtual for tests, derived constructor call is overriden by this one, but it's ok
@@ -143,6 +146,7 @@ namespace MarginTrading.Backend.Core.Orders
             CloseTrades = new List<string>();
             ChargePnlOperations = new HashSet<string>();
             FxAssetPairId = fxAssetPairId;
+            FxToAssetPairDirection = fxToAssetPairDirection;
             // ReSharper restore VirtualMemberCallInConstructor
             FplData = new FplData {ActualHash = 1};
         }

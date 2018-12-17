@@ -148,6 +148,14 @@ namespace MarginTrading.Backend.Core.Trading
         public string FxAssetPairId { get; set; }
         
         /// <summary>
+        /// Shows if account asset id is directly related on asset pair quote asset.
+        /// I.e. AssetPair is {BaseId, QuoteId} and FxAssetPair is {QuoteId, AccountAssetId} => Straight
+        /// If AssetPair is {BaseId, QuoteId} and FxAssetPair is {AccountAssetId, QuoteId} => Reverse
+        /// </summary>
+        [JsonProperty]
+        public FxToAssetPairDirection FxToAssetPairDirection { get; set; }
+        
+        /// <summary>
         /// Current order status
         /// </summary>
         [JsonProperty]
@@ -292,7 +300,8 @@ namespace MarginTrading.Backend.Core.Trading
             DateTime created, DateTime lastModified, DateTime? validity, string accountId, string tradingConditionId, 
             string accountAssetId, decimal? price, string equivalentAsset, OrderFillType fillType, string comment, 
             string legalEntity, bool forceOpen, OrderType orderType, string parentOrderId, string parentPositionId, 
-            OriginatorType originator, decimal equivalentRate, decimal fxRate, string fxAssetPairId, OrderStatus status, 
+            OriginatorType originator, decimal equivalentRate, decimal fxRate, 
+            string fxAssetPairId, FxToAssetPairDirection fxToAssetPairDirection, OrderStatus status, 
             string additionalInfo, string correlationId)
         {
             Id = id;
@@ -318,6 +327,7 @@ namespace MarginTrading.Backend.Core.Trading
             EquivalentRate = equivalentRate;
             FxRate = fxRate;
             FxAssetPairId = fxAssetPairId;
+            FxToAssetPairDirection = fxToAssetPairDirection;
             Direction = volume.GetOrderDirection();
             Status = status;
             AdditionalInfo = additionalInfo;

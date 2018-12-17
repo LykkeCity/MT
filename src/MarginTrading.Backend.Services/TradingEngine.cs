@@ -405,10 +405,9 @@ namespace MarginTrading.Backend.Services
         {
             foreach (var position in _ordersCache.GetPositionsByFxAssetPairId(quote.Instrument))
             {
-                var fxPrice = _cfdCalculatorService.GetQuoteRateForQuoteAsset(position.AccountAssetId,
-                    position.AssetPairId, position.LegalEntity,
+                var fxPrice = _cfdCalculatorService.GetQuoteRateForQuoteAsset(quote, position.FxToAssetPairDirection,
                     position.Volume * (position.ClosePrice - position.OpenPrice) > 0);
-                
+
                 position.UpdateCloseFxPrice(fxPrice);
             }
         }
@@ -543,12 +542,13 @@ namespace MarginTrading.Backend.Services
             var initialParameters = await _validateOrderService.GetOrderInitialParameters(position.AssetPairId, 
                 position.AccountId);
 
-            var order = new Order(initialParameters.id, initialParameters.code, position.AssetPairId, -position.Volume, 
-                initialParameters.now, initialParameters.now, null, position.AccountId,
-                position.TradingConditionId, position.AccountAssetId, null, position.EquivalentAsset,
-                OrderFillType.FillOrKill, $"Close position. {comment}", position.LegalEntity, false, OrderType.Market, 
-                null, position.Id, originator, initialParameters.equivalentPrice, initialParameters.fxPrice, 
-                initialParameters.fxAssetPairId, OrderStatus.Placed, additionalInfo, correlationId);
+            var order = new Order(initialParameters.Id, initialParameters.Code, position.AssetPairId, -position.Volume,
+                initialParameters.Now, initialParameters.Now, null, position.AccountId, position.TradingConditionId,
+                position.AccountAssetId, null, position.EquivalentAsset, OrderFillType.FillOrKill,
+                $"Close position. {comment}", position.LegalEntity, false, OrderType.Market, null, position.Id,
+                originator, initialParameters.EquivalentPrice, initialParameters.FxPrice,
+                initialParameters.FxAssetPairId, initialParameters.FxToAssetPairDirection, OrderStatus.Placed,
+                additionalInfo, correlationId);
             
             _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
               

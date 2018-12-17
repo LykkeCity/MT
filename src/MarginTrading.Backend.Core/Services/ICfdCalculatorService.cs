@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Backend.Core
+﻿using MarginTrading.Backend.Core.Orders;
+
+namespace MarginTrading.Backend.Core
 {
     //TODO: think about removal of legalEntity from methods (take from instrument)
     public interface ICfdCalculatorService
@@ -8,7 +10,12 @@
         
         decimal GetQuoteRateForQuoteAsset(string accountAssetId, string instrument, string legalEntity, 
             bool metricIsPositive = true);
+        
+        decimal GetQuoteRateForQuoteAsset(InstrumentBidAskPair quote, FxToAssetPairDirection direction, 
+            bool metricIsPositive = true);
 
-        string GetFxAssetPairId(string accountAssetId, string assetPairId, string legalEntity);
+        (string id, FxToAssetPairDirection direction) GetFxAssetPairIdAndDirection(string accountAssetId,
+            string assetPairId,
+            string legalEntity);
     }
 }

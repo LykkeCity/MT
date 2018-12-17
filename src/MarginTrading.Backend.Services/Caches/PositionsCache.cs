@@ -28,8 +28,7 @@ namespace MarginTrading.Backend.Services
 
                 _positionIdsByInstrumentId = positions.GroupBy(x => x.AssetPairId)
                     .ToDictionary(x => x.Key, x => x.Select(o => o.Id).ToHashSet());
-                //todo in PositionsConsumer calc FxAssetPairId and place in inside Position itself
-                //todo then use it in PositionsCache ctr + getters/setters, crete separate method in OrdersCache, use it in TradingEngine
+                
                 _positionIdsByFxInstrumentId = positions.GroupBy(x => x.FxAssetPairId)
                     .ToDictionary(x => x.Key, x => x.Select(o => o.Id).ToHashSet());
 

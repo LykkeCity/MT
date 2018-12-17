@@ -241,6 +241,8 @@ namespace MarginTrading.Backend.Controllers
                 ChargedPnl = position.ChargedPnL,
                 Margin = position.GetMarginMaintenance(),
                 FxRate = position.GetFplRate(),
+                FxAssetPairId = position.FxAssetPairId,
+                FxToAssetPairDirection = position.FxToAssetPairDirection.ToType<FxToAssetPairDirectionContract>(),
                 RelatedOrders = position.RelatedOrders.Select(o => o.Id).ToList(),
                 RelatedOrderInfos = position.RelatedOrders.Select(o =>
                     new RelatedOrderInfoContract {Id = o.Id, Type = o.Type.ToType<OrderTypeContract>()}).ToList(),
