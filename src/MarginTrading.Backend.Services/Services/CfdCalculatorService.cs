@@ -87,7 +87,7 @@ namespace MarginTrading.Backend.Services
             var assetPair = _assetPairsCache.GetAssetPairById(assetPairId);
             
             if (accountAssetId == assetPair.QuoteAssetId)
-                return (assetPair.Id, FxToAssetPairDirection.Straight);
+                return (LykkeConstants.SymmetricAssetPair, FxToAssetPairDirection.Straight);
 
             var fxAssetPair = _assetPairsCache.FindAssetPair(assetPair.QuoteAssetId, accountAssetId, legalEntity);
             var direction = assetPair.QuoteAssetId == fxAssetPair.BaseAssetId
