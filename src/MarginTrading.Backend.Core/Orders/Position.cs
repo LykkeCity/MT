@@ -84,9 +84,9 @@ namespace MarginTrading.Backend.Core.Orders
         public List<string> CloseTrades { get; private set; }
         
         [JsonProperty]
-        public virtual string FxAssetPairId { get; protected set; }
+        public virtual string FxAssetPairId { get; set; }//temporarily public
         [JsonProperty]
-        public virtual FxToAssetPairDirection FxToAssetPairDirection { get; protected set; }
+        public virtual FxToAssetPairDirection FxToAssetPairDirection { get; set; }//temporarily public
         
         [JsonProperty]
         public override PositionStatus Status { get; protected set; }
