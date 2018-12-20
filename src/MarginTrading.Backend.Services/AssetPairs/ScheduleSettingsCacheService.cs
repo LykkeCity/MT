@@ -32,7 +32,6 @@ namespace MarginTrading.Backend.Services.AssetPairs
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly IDateService _dateService;
         private readonly ILog _log;
-        private readonly CqrsContextNamesSettings _cqrsContextNamesSettings;
 
         private Dictionary<string, List<ScheduleSettings>> _rawScheduleSettingsCache =
             new Dictionary<string, List<ScheduleSettings>>();
@@ -47,15 +46,13 @@ namespace MarginTrading.Backend.Services.AssetPairs
             IScheduleSettingsApi scheduleSettingsApi,
             IAssetPairsCache assetPairsCache,
             IDateService dateService,
-            ILog log,
-            CqrsContextNamesSettings cqrsContextNamesSettings)
+            ILog log)
         {
             _cqrsSender = cqrsSender;
             _scheduleSettingsApi = scheduleSettingsApi;
             _assetPairsCache = assetPairsCache;
             _dateService = dateService;
             _log = log;
-            _cqrsContextNamesSettings = cqrsContextNamesSettings;
         }
 
         public async Task UpdateSettingsAsync()

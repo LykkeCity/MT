@@ -17,6 +17,19 @@ namespace MarginTrading.Backend.Contracts
         /// Cache is invalidated and recalculated after 00:00:00.000 each day on request. 
         /// </summary>
         [Get("/api/trading-schedule/compiled")]
-        Task<Dictionary<string, List<CompiledScheduleTimeIntervalContract>>> GetCompiledTradingSchedule();
+        Task<Dictionary<string, List<CompiledScheduleTimeIntervalContract>>> CompiledTradingSchedule();
+
+        /// <summary>
+        /// Get current instrument's trading status
+        /// </summary>
+        /// <param name="assetPairId"></param>
+        [Get("/api/trading-schedule/is-enabled/{assetPairId}")]
+        Task<bool> IsInstrumentEnabled(string assetPairId);
+
+        /// <summary>
+        /// Get current trading status of all instruments
+        /// </summary>
+        [Get("/api/trading-schedule/is-enabled")]
+        Task<Dictionary<string, bool>> AreInstrumentsEnabled();
     }
 }
