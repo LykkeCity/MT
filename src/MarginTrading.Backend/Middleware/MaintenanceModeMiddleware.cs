@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using JetBrains.Annotations;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Contract.BackendContracts;
@@ -24,6 +25,7 @@ namespace MarginTrading.Backend.Middleware
             _log = log;
         }
 
+        [UsedImplicitly]
         public async Task Invoke(HttpContext context)
         {
             var isMaintenanceMode = false;

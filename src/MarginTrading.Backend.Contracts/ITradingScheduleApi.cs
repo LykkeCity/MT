@@ -20,16 +20,18 @@ namespace MarginTrading.Backend.Contracts
         Task<Dictionary<string, List<CompiledScheduleTimeIntervalContract>>> CompiledTradingSchedule();
 
         /// <summary>
-        /// Get current instrument's trading status
+        /// Get current instrument's trading status.
+        /// Do not use this endpoint from FrontEnd!
         /// </summary>
         /// <param name="assetPairId"></param>
         [Get("/api/trading-schedule/is-enabled/{assetPairId}")]
         Task<bool> IsInstrumentEnabled(string assetPairId);
 
         /// <summary>
-        /// Get current trading status of all instruments
+        /// Get current trading status of all instruments.
+        /// Do not use this endpoint from FrontEnd!
         /// </summary>
-        [Get("/api/trading-schedule/is-enabled")]
+        [Get("/api/trading-schedule/are-enabled")]
         Task<Dictionary<string, bool>> AreInstrumentsEnabled();
     }
 }
