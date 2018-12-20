@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using Common;
 using Lykke.Common;
 using MarginTrading.Backend.Contracts.Events;
@@ -11,7 +12,8 @@ using MarginTrading.Common.Services;
 namespace MarginTrading.Backend.Services
 {
     // TODO: Rename by role
-    public class StopOutConsumer : IEventConsumer<StopOutEventArgs>
+    public class StopOutConsumer : IEventConsumer<StopOutEventArgs>,
+        IEventConsumer<LiquidationEndEventArgs>
     {
         private readonly IThreadSwitcher _threadSwitcher;
         private readonly IOperationsLogService _operationsLogService;
@@ -60,7 +62,13 @@ namespace MarginTrading.Backend.Services
                 _lastNotifications.AddOrUpdate(account.Id, eventTime, (s, times) => eventTime);
             });
         }
-        
-        //todo after liquidation is over, produce a message to remove MarginCall & StopOut notification throttling
+
+        public void ConsumeEvent(object sender, LiquidationEndEventArgs ea)
+        {
+            if (ea.LiquidatedPositionIds.Any())
+            {
+                _lastNotifications.TryRemove(ea.AccountId, out _);
+            }
+        }
     }
 }

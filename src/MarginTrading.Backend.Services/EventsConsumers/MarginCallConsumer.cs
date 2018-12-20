@@ -13,11 +13,9 @@ using MarginTrading.Common.Services.Client;
 
 namespace MarginTrading.Backend.Services.EventsConsumers
 {
-    // TODO: Rename by role
     public class MarginCallConsumer : IEventConsumer<MarginCallEventArgs>,
-        IEventConsumer<OrderPlacedEventArgs>,
-        IEventConsumer<OrderExecutedEventArgs>,
-        IEventConsumer<OrderCancelledEventArgs>
+        //IEventConsumer<OrderPlacedEventArgs>,
+        IEventConsumer<OrderExecutedEventArgs>
     {
         private readonly IThreadSwitcher _threadSwitcher;
         private readonly IEmailService _emailService;
@@ -83,20 +81,19 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 LastNotifications.AddOrUpdate(account.Id, newTimes, (s, times) => newTimes);
             });
         }
-
-        public void ConsumeEvent(object sender, OrderPlacedEventArgs ea)
-        {
+        
+//todo uncomment when MTC-155 task is done 
+        /// <summary>
+        /// That's for limit orders margin
+        /// </summary>
+//        public void ConsumeEvent(object sender, OrderPlacedEventArgs ea)
+//        {
 //            LastNotifications.TryRemove(ea.Order.AccountId, out var tmp);
-        }
+//        }
 
         public void ConsumeEvent(object sender, OrderExecutedEventArgs ea)
         {
-//            LastNotifications.TryRemove(ea.Order.AccountId, out var tmp);
-        }
-
-        public void ConsumeEvent(object sender, OrderCancelledEventArgs ea)
-        {
-//            LastNotifications.TryRemove(ea.Order.AccountId, out var tmp);
+            LastNotifications.TryRemove(ea.Order.AccountId, out _);
         }
     }
 }

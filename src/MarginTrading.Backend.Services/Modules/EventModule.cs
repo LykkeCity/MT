@@ -54,6 +54,10 @@ namespace MarginTrading.Backend.Services.Modules
             builder.RegisterType<EventChannel<OrderRejectedEventArgs>>()
                 .As<IEventChannel<OrderRejectedEventArgs>>()
                 .SingleInstance();
+            
+            builder.RegisterType<EventChannel<LiquidationEndEventArgs>>()
+                .As<IEventChannel<LiquidationEndEventArgs>>()
+                .SingleInstance();
         }
     }
 }
