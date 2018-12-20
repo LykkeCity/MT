@@ -560,6 +560,12 @@ namespace MarginTrading.Backend.Services
             var tradingInstrument =
                 _tradingInstrumentsCache.GetTradingInstrument(tradingConditionId, assetPairId);
 
+            if (tradingInstrument.DealMinLimit > 0 && Math.Abs(volume) < tradingInstrument.DealMinLimit)
+            {
+                throw new ValidateOrderException(OrderRejectReason.InvalidVolume,
+                    $"The minimum volume of a single order is limited to {tradingInstrument.DealMinLimit} {tradingInstrument.Instrument}.");
+            }
+
             if (tradingInstrument.DealMaxLimit > 0 && Math.Abs(volume) > tradingInstrument.DealMaxLimit)
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidVolume,
