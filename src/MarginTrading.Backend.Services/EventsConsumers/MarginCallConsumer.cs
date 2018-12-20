@@ -82,7 +82,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             });
         }
         
-//todo uncomment when MTC-155 task is done 
+//todo uncomment here, at class registration and in module when MTC-155 task is done 
         /// <summary>
         /// That's for limit orders margin
         /// </summary>
