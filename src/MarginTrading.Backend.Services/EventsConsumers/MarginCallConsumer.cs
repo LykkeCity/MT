@@ -86,17 +86,17 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
         public void ConsumeEvent(object sender, OrderPlacedEventArgs ea)
         {
-            LastNotifications.TryRemove(ea.Order.AccountId, out var tmp);
+//            LastNotifications.TryRemove(ea.Order.AccountId, out var tmp);
         }
 
         public void ConsumeEvent(object sender, OrderExecutedEventArgs ea)
         {
-            LastNotifications.TryRemove(ea.Order.AccountId, out var tmp);
+//            LastNotifications.TryRemove(ea.Order.AccountId, out var tmp);
         }
 
         public void ConsumeEvent(object sender, OrderCancelledEventArgs ea)
         {
-            LastNotifications.TryRemove(ea.Order.AccountId, out var tmp);
+//            LastNotifications.TryRemove(ea.Order.AccountId, out var tmp);
         }
     }
 }

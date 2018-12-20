@@ -60,5 +60,7 @@ namespace MarginTrading.Backend.Services
                 _lastNotifications.AddOrUpdate(account.Id, eventTime, (s, times) => eventTime);
             });
         }
+        
+        //todo after liquidation is over, produce a message to remove MarginCall & StopOut notification throttling
     }
 }
