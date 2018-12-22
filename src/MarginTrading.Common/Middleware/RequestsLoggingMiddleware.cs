@@ -62,7 +62,8 @@ namespace MarginTrading.Common.Middleware
                             info = info.Substring(0, MaxStorageFieldLength);
                         }
 
-                        await _requestsLog.WriteInfoAsync("MIDDLEWARE", "RequestsLoggingMiddleware", requestContext, info);
+                        await _requestsLog.WriteInfoAsync("MIDDLEWARE", "RequestsLoggingMiddleware", requestContext,
+                            info);
                     }
                 }
             }

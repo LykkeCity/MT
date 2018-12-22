@@ -17,6 +17,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Lykke.AzureStorage" Version="8.4.1" />
+    <PackageReference Include="Lykke.AzureStorage" Version="8.13.4" />
   </ItemGroup>
 </Project>
