@@ -8,8 +8,10 @@ using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.EmailSender;
 using Lykke.Service.ExchangeConnector.Client;
 using Lykke.SettingsReader;
+using Lykke.Snow.Common.Startup;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Infrastructure;
 using MarginTrading.Backend.Services.FakeExchangeConnector;
 using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Backend.Services.Stubs;
@@ -84,6 +86,8 @@ namespace MarginTrading.Backend.Modules
 
             var settingsClientGenerator = HttpClientGenerator
                 .BuildForUrl(_settings.CurrentValue.SettingsServiceClient.ServiceUrl)
+                .WithServiceName<LykkeErrorResponse>(
+                    $"MT Settings [{_settings.CurrentValue.SettingsServiceClient.ServiceUrl}]")
                 .WithRetriesStrategy(new LinearRetryStrategy(TimeSpan.FromMilliseconds(300), 3))
                 .Create();
 
@@ -115,6 +119,8 @@ namespace MarginTrading.Backend.Modules
 
             var accountsClientGenerator = HttpClientGenerator
                 .BuildForUrl(_settings.CurrentValue.AccountsManagementServiceClient.ServiceUrl)
+                .WithServiceName<LykkeErrorResponse>(
+                    $"MT Account Management [{_settings.CurrentValue.AccountsManagementServiceClient.ServiceUrl}]")
                 .Create();
 
             builder.RegisterInstance(accountsClientGenerator.Generate<IAccountsApi>())

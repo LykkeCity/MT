@@ -129,7 +129,8 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 }
                 catch (Exception e)
                 {
-                    _log.WriteError($"{nameof(StpMatchingEngine)}:{nameof(MatchOrderAsync)}",
+                    _log.WriteError(
+                        $"{nameof(StpMatchingEngine)}:{nameof(MatchOrderAsync)}:{_exchangeConnectorService.BaseUri}",
                         $"Internal order: {order.ToJson()}, External order model: {externalOrderModel.ToJson()}", e);
                 }
             }
