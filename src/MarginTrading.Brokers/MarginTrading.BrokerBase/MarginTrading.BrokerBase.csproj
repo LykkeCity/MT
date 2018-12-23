@@ -4,6 +4,9 @@
     <Version>1.0.1</Version>
     <LangVersion>7.3</LangVersion>
   </PropertyGroup>
+  <PropertyGroup>
+    <NoWarn>1701;1702;1705;CA2007;0612;0618;1591</NoWarn>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Dapper" Version="1.50.5" />
     <PackageReference Include="flurl.http" Version="2.3.1" />
