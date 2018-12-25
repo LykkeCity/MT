@@ -134,6 +134,7 @@ namespace MarginTrading.Backend.Controllers
                 PnL = item.GetPnl(),
                 UnrealizedDailyPnl = item.GetUnrealizedDailyPnl(),
                 OpenPositionsCount = item.GetOpenPositionsCount(),
+                ActiveOrdersCount = item.GetActiveOrdersCount(),
                 MarginUsageLevel = item.GetMarginUsageLevel(),
                 LegalEntity = item.LegalEntity,
                 IsInLiquidation = item.IsInLiquidation(),

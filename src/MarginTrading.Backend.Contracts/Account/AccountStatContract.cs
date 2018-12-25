@@ -65,7 +65,12 @@
         /// <summary>
         /// Number of opened positions
         /// </summary>
-        public decimal OpenPositionsCount { get; set; }
+        public int OpenPositionsCount { get; set; }
+        
+        /// <summary>
+        /// Number of active orders
+        /// </summary>
+        public int ActiveOrdersCount { get; set; }
         
         /// <summary>
         /// TotalCapital / UsedMargin

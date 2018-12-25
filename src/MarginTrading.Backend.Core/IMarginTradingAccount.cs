@@ -240,6 +240,11 @@ namespace MarginTrading.Backend.Core
         {
             return account.GetAccountFpl().OpenPositionsCount;
         }
+
+        public static int GetActiveOrdersCount(this IMarginTradingAccount account)
+        {
+            return account.GetAccountFpl().ActiveOrdersCount;
+        }
         
         public static void CacheNeedsToBeUpdated(this IMarginTradingAccount account)
         {
