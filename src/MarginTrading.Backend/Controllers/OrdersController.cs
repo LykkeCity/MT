@@ -138,9 +138,14 @@ namespace MarginTrading.Backend.Controllers
         /// <returns>Dictionary of failed to close orderIds with exception message</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="InvalidOperationException"></exception>
-        public async Task<Dictionary<string, string>> CloseGroupAsync(string accountId, string assetPairId = null,
-            OrderDirectionContract? direction = null,
-            OrderCancelRequest request = null)
+        [Route("close-group")]
+        [MiddlewareFilter(typeof(RequestLoggingPipeline))]
+        [ServiceFilter(typeof(MarginTradingEnabledFilter))]
+        [HttpDelete]
+        public async Task<Dictionary<string, string>> CloseGroupAsync([FromQuery] string accountId, 
+            [FromQuery] string assetPairId = null,
+            [FromQuery] OrderDirectionContract? direction = null,
+            [FromBody] OrderCancelRequest request = null)
         {
             accountId.RequiredNotNullOrWhiteSpace(nameof(accountId));
             
@@ -149,7 +154,7 @@ namespace MarginTrading.Backend.Controllers
             foreach (var order in _ordersCache.GetPending()
                 .Where(x => x.AccountId == accountId
                             && (string.IsNullOrEmpty(assetPairId) || x.AssetPairId == assetPairId)
-                            && direction == null || x.Direction == direction.ToType<OrderDirection>()))
+                            && (direction == null || x.Direction == direction.ToType<OrderDirection>())))
             {
                 try
                 {
