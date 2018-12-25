@@ -35,6 +35,22 @@ namespace MarginTrading.Backend.Contracts
         Task CancelAsync([NotNull] string orderId, [Body] OrderCancelRequest request = null);
 
         /// <summary>
+        /// Close group of orders by accountId, assetPairId and direction.
+        /// </summary>
+        /// <param name="accountId">Mandatory</param>
+        /// <param name="assetPairId">Optional</param>
+        /// <param name="direction">Optional</param>
+        /// <param name="request">Optional</param>
+        /// <returns>Dictionary of failed to close orderIds with exception message</returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
+        [Delete("/api/orders/close-group")]
+        Task<Dictionary<string, string>> CloseGroupAsync([Query] [NotNull] string accountId,
+            [Query] [CanBeNull] string assetPairId = null,
+            [Query] [CanBeNull] OrderDirectionContract? direction = null,
+            [Body] [CanBeNull] OrderCancelRequest request = null);
+
+        /// <summary>
         /// Get order by id 
         /// </summary>
         [Get("/api/orders/{orderId}"), ItemCanBeNull]

@@ -36,7 +36,7 @@ namespace MarginTrading.Backend.Controllers
     {
         private readonly ITradingEngine _tradingEngine;
         private readonly IOperationsLogService _operationsLogService;
-        private readonly IConsole _consoleWriter;
+        private readonly ILog _log;
         private readonly OrdersCache _ordersCache;
         private readonly IAssetPairDayOffService _assetDayOffService;
         private readonly IIdentityGenerator _identityGenerator;
@@ -46,7 +46,7 @@ namespace MarginTrading.Backend.Controllers
         public PositionsController(
             ITradingEngine tradingEngine,
             IOperationsLogService operationsLogService,
-            IConsole consoleWriter,
+            ILog log,
             OrdersCache ordersCache,
             IAssetPairDayOffService assetDayOffService,
             IIdentityGenerator identityGenerator,
@@ -55,7 +55,7 @@ namespace MarginTrading.Backend.Controllers
         {
             _tradingEngine = tradingEngine;
             _operationsLogService = operationsLogService;
-            _consoleWriter = consoleWriter;
+            _log = log;
             _ordersCache = ordersCache;
             _assetDayOffService = assetDayOffService;
             _identityGenerator = identityGenerator;
@@ -94,8 +94,6 @@ namespace MarginTrading.Backend.Controllers
                 throw new InvalidOperationException(order.RejectReasonText);
             }
 
-            _consoleWriter.WriteLine(
-                $"action position.close, orderId = {positionId}");
             _operationsLogService.AddLog("action order.close", order.AccountId, request?.ToJson(),
                 order.ToJson());
         }
@@ -135,10 +133,11 @@ namespace MarginTrading.Backend.Controllers
                 QuoteInfo = null,
                 LiquidationType = LiquidationType.Forced,
             });
-                
-            _consoleWriter.WriteLine(
-                $"Position liquidation started. instrument = [{assetPairId}], account = [{accountId}], direction = [{direction}], request = [{request.ToJson()}]");
-
+            
+            _operationsLogService.AddLog("Position liquidation started", string.Empty, 
+                "instrument = [{assetPairId}], account = [{accountId}], direction = [{direction}], request = [{request.ToJson()}]",
+                Request.ToJson());
+            
             return Task.CompletedTask;
         }
 

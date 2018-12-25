@@ -35,23 +35,29 @@ namespace MarginTrading.Backend.Controllers
         private readonly ITradingEngine _tradingEngine;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly IOperationsLogService _operationsLogService;
-        private readonly IConsole _consoleWriter;
+        private readonly ILog _log;
         private readonly OrdersCache _ordersCache;
         private readonly IAssetPairDayOffService _assetDayOffService;
         private readonly IDateService _dateService;
         private readonly IValidateOrderService _validateOrderService;
         private readonly IIdentityGenerator _identityGenerator;
 
-        public OrdersController(IAssetPairsCache assetPairsCache, ITradingEngine tradingEngine,
-            IAccountsCacheService accountsCacheService, IOperationsLogService operationsLogService,
-            IConsole consoleWriter, OrdersCache ordersCache, IAssetPairDayOffService assetDayOffService,
-            IDateService dateService, IValidateOrderService validateOrderService, IIdentityGenerator identityGenerator)
+        public OrdersController(IAssetPairsCache assetPairsCache, 
+            ITradingEngine tradingEngine,
+            IAccountsCacheService accountsCacheService, 
+            IOperationsLogService operationsLogService,
+            ILog log, 
+            OrdersCache ordersCache, 
+            IAssetPairDayOffService assetDayOffService,
+            IDateService dateService, 
+            IValidateOrderService validateOrderService, 
+            IIdentityGenerator identityGenerator)
         {
             _assetPairsCache = assetPairsCache;
             _tradingEngine = tradingEngine;
             _accountsCacheService = accountsCacheService;
             _operationsLogService = operationsLogService;
-            _consoleWriter = consoleWriter;
+            _log = log;
             _ordersCache = ordersCache;
             _assetDayOffService = assetDayOffService;
             _dateService = dateService;
@@ -73,8 +79,6 @@ namespace MarginTrading.Backend.Controllers
             var (baseOrder, relatedOrders) = await _validateOrderService.ValidateRequestAndCreateOrders(request); 
             
             var placedOrder = await _tradingEngine.PlaceOrderAsync(baseOrder);
-
-            _consoleWriter.WriteLine($"Order place. Account: [{request.AccountId}], Order: [{placedOrder.Id}]");
             
             _operationsLogService.AddLog("action order.place", request.AccountId, request.ToJson(),
                 placedOrder.ToJson());
@@ -87,10 +91,7 @@ namespace MarginTrading.Backend.Controllers
             foreach (var order in relatedOrders)
             {
                 var placedRelatedOrder = await _tradingEngine.PlaceOrderAsync(order);
-                    
-                _consoleWriter.WriteLine(
-                    $"Related order place. Account: [{request.AccountId}], Order: [{placedRelatedOrder.Id}]");
-            
+
                 _operationsLogService.AddLog("action related.order.place", request.AccountId, request.ToJson(),
                     placedRelatedOrder.ToJson());
             }
@@ -121,11 +122,48 @@ namespace MarginTrading.Backend.Controllers
             var canceledOrder = _tradingEngine.CancelPendingOrder(order.Id, originator, request?.AdditionalInfo, 
                 correlationId, request?.Comment);
 
-            _consoleWriter.WriteLine($"action order.cancel for accountId = {order.AccountId}, orderId = {orderId}");
             _operationsLogService.AddLog("action order.cancel", order.AccountId, request?.ToJson(),
                 canceledOrder.ToJson());
 
             return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Close group of orders by accountId, assetPairId and direction.
+        /// </summary>
+        /// <param name="accountId">Mandatory</param>
+        /// <param name="assetPairId">Optional</param>
+        /// <param name="direction">Optional</param>
+        /// <param name="request">Optional</param>
+        /// <returns>Dictionary of failed to close orderIds with exception message</returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
+        public async Task<Dictionary<string, string>> CloseGroupAsync(string accountId, string assetPairId = null,
+            OrderDirectionContract? direction = null,
+            OrderCancelRequest request = null)
+        {
+            accountId.RequiredNotNullOrWhiteSpace(nameof(accountId));
+            
+            var failedOrderIds = new Dictionary<string, string>();
+
+            foreach (var order in _ordersCache.GetPending()
+                .Where(x => x.AccountId == accountId
+                            && (string.IsNullOrEmpty(assetPairId) || x.AssetPairId == assetPairId)
+                            && direction == null || x.Direction == direction.ToType<OrderDirection>()))
+            {
+                try
+                {
+                    await CancelAsync(order.Id, request);
+                }
+                catch (Exception exception)
+                {
+                    await _log.WriteWarningAsync(nameof(OrdersController), nameof(CloseGroupAsync),
+                        "Failed to cancel order [{order.Id}]", exception);
+                    failedOrderIds.Add(order.Id, exception.Message);
+                }
+            }
+
+            return failedOrderIds;
         }
 
         /// <summary>
@@ -147,7 +185,7 @@ namespace MarginTrading.Backend.Controllers
             {
                 var originator = GetOriginator(request.Originator);
 
-                var correlationId = string.IsNullOrWhiteSpace(request?.CorrelationId)
+                var correlationId = string.IsNullOrWhiteSpace(request.CorrelationId)
                     ? _identityGenerator.GenerateGuid()
                     : request.CorrelationId;
 
@@ -159,8 +197,8 @@ namespace MarginTrading.Backend.Controllers
                 throw new InvalidOperationException(ex.Message);
             }
 
-            _consoleWriter.WriteLine($"action order.changeLimits for orderId = {orderId}");
-            _operationsLogService.AddLog("action order.changeLimits", order.AccountId, request.ToJson(), "");
+            _operationsLogService.AddLog("action order.changeLimits", order.AccountId, 
+                new { orderId = orderId, request = request.ToJson() }.ToJson(), "");
 
             return Task.CompletedTask;
         }
