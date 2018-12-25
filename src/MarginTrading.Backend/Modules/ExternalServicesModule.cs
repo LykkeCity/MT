@@ -33,9 +33,15 @@ namespace MarginTrading.Backend.Modules
         {
             if (_settings.CurrentValue.MtBackend.ExchangeConnector == ExchangeConnectorType.RealExchangeConnector)
             {
+                var settings = new ExchangeConnectorServiceSettings
+                {
+                    ServiceUrl = _settings.CurrentValue.MtStpExchangeConnectorClient.ServiceUrl,
+                    ApiKey = _settings.CurrentValue.MtStpExchangeConnectorClient.ApiKey
+                };
+                
                 builder.RegisterType<ExchangeConnectorService>()
                 .As<IExchangeConnectorService>()
-                .WithParameter("settings", _settings.CurrentValue.MtStpExchangeConnectorClient)
+                .WithParameter("settings", settings)
                 .SingleInstance();
             }
             if (_settings.CurrentValue.MtBackend.ExchangeConnector == ExchangeConnectorType.FakeExchangeConnector)
