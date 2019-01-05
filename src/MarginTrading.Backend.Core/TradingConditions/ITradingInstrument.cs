@@ -13,6 +13,7 @@
         decimal DealMinLimit { get; }
         decimal DealMaxLimit { get; }
         decimal PositionLimit { get; }
+        bool ShortPosition { get; }
         decimal LiquidationThreshold { get; }
         
         decimal CommissionRate { get; }

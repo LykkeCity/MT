@@ -481,7 +481,7 @@ namespace MarginTrading.Backend.Services
         {
             GetAssetPairIfAvailableForTrading(order.AssetPairId, order.OrderType, shouldOpenNewPosition, true);
 
-            ValidateTradeLimits(order.AssetPairId, order.TradingConditionId, order.AccountId, order.Volume);
+            ValidateTradeLimits(order.AssetPairId, order.TradingConditionId, order.AccountId, order.Volume, shouldOpenNewPosition);
 
             if (shouldOpenNewPosition)
                 ValidateMargin(order);
@@ -555,7 +555,8 @@ namespace MarginTrading.Backend.Services
             return assetPair;
         }
 
-        private void ValidateTradeLimits(string assetPairId, string tradingConditionId, string accountId, decimal volume)
+        private void ValidateTradeLimits(string assetPairId, string tradingConditionId, string accountId,
+            decimal volume, bool shouldOpenNewPosition)
         {
             var tradingInstrument =
                 _tradingInstrumentsCache.GetTradingInstrument(tradingConditionId, assetPairId);
@@ -574,6 +575,12 @@ namespace MarginTrading.Backend.Services
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidVolume,
                     $"Margin Trading is in beta testing. The volume of the net open position is temporarily limited to {tradingInstrument.PositionLimit} {tradingInstrument.Instrument}. Thank you for using Lykke Margin Trading, the limit will be cancelled soon!");
+            }
+
+            if (shouldOpenNewPosition && volume < 0 && !tradingInstrument.ShortPosition)
+            {
+                throw new ValidateOrderException(OrderRejectReason.ShortPositionsDisabled,
+                    $"Short positions are disabled for {tradingInstrument.Instrument}.");
             }
         }
         
