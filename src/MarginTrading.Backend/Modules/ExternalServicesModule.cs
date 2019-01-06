@@ -3,6 +3,7 @@ using Autofac;
 using Common.Log;
 using Lykke.HttpClientGenerator;
 using Lykke.HttpClientGenerator.Retries;
+using Lykke.MarginTrading.OrderBookService.Contracts;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.EmailSender;
 using Lykke.Service.ExchangeConnector.Client;
@@ -120,6 +121,18 @@ namespace MarginTrading.Backend.Modules
                 .As<IAccountsApi>().SingleInstance();
 
             #endregion
+
+            #region OrderBook Service
+
+            var orderBookServiceClientGenerator = HttpClientGenerator
+                .BuildForUrl(_settings.CurrentValue.OrderBookServiceClient.ServiceUrl)
+                .Create();
+
+            builder.RegisterInstance(orderBookServiceClientGenerator.Generate<IOrderBookProviderApi>())
+                .As<IOrderBookProviderApi>()
+                .SingleInstance();
+
+            #endregion OrderBook Service
         }
     }
 }

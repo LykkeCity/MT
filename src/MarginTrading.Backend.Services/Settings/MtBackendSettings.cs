@@ -31,5 +31,7 @@ namespace MarginTrading.Backend.Services.Settings
         public SettingsServiceClient SettingsServiceClient { get; set; }
         
         public AccountsManagementServiceClient AccountsManagementServiceClient { get; set; }
+        
+        public ServiceClientSettings OrderBookServiceClient { get; set; }
     }
 }

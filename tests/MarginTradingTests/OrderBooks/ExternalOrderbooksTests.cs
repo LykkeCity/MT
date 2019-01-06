@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Common.Log;
+using Lykke.MarginTrading.OrderBookService.Contracts;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
@@ -84,8 +85,9 @@ namespace MarginTradingTests.OrderBooks
 
         private ExternalOrderbookService GetNewOrderbooksList()
         {
-            return new ExternalOrderbookService(_bestPricesChannelMock.Object, _dateServiceMock.Object,
-                _assetPairsCacheMock.Object, _cqrsSenderMock.Object, _identityGeneratorMock.Object, _logMock.Object);
+            return new ExternalOrderbookService(_bestPricesChannelMock.Object, Mock.Of<IOrderBookProviderApi>(), 
+                _dateServiceMock.Object, _assetPairsCacheMock.Object, _cqrsSenderMock.Object, 
+                _identityGeneratorMock.Object, new ConvertService(), _logMock.Object);
         }
 
         private void AssertErrorLogged(string expectedErrorMessage)
