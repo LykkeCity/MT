@@ -79,6 +79,7 @@ namespace MarginTrading.Backend.Services.Modules
 			builder.RegisterType<TradingEngine>()
 				.As<ITradingEngine>()
 				.As<IEventConsumer<BestPriceChangeEventArgs>>()
+				.As<IEventConsumer<FxBestPriceChangeEventArgs>>()
 				.SingleInstance();
 
 			builder.RegisterType<MarginCallConsumer>()

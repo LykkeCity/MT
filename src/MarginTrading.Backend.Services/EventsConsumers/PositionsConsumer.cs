@@ -12,6 +12,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
@@ -125,7 +126,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 order.TradingConditionId, order.AccountAssetId, order.Price, order.MatchingEngineId,
                 order.Executed.Value, order.Id, order.ExecutionPrice.Value, order.FxRate, order.EquivalentAsset,
                 order.EquivalentRate, order.RelatedOrders, order.LegalEntity, order.Originator,
-                order.ExternalProviderId);
+                order.ExternalProviderId, order.FxAssetPairId, order.FxToAssetPairDirection);
             
             var defaultMatchingEngine = _meRouter.GetMatchingEngineForClose(position);
 

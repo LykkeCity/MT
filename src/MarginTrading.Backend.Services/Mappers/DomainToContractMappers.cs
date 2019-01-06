@@ -22,6 +22,8 @@ namespace MarginTrading.Backend.Services.Mappers
                 Direction = order.Direction.ToType<OrderDirectionContract>(),
                 ExecutionPrice = order.ExecutionPrice,
                 FxRate = order.FxRate,
+                FxAssetPairId = order.FxAssetPairId,
+                FxToAssetPairDirection = order.FxToAssetPairDirection.ToType<FxToAssetPairDirectionContract>(),
                 ExpectedOpenPrice = order.Price,
                 ForceOpen = order.ForceOpen,
                 ModifiedTimestamp = order.LastModified,

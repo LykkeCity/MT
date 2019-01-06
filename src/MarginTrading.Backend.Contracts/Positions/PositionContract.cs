@@ -41,6 +41,8 @@ namespace MarginTrading.Backend.Contracts.Positions
         public PositionCloseReasonContract CloseReason { get; set; }
         public string CloseComment { get; set; }
         public List<string> CloseTrades { get; set; }
+        public string FxAssetPairId { get; set; }
+        public FxToAssetPairDirectionContract FxToAssetPairDirection { get; set; }
         public DateTime? LastModified { get; set; }
         public decimal TotalPnL { get; set; }
         public decimal ChargedPnl { get; set; }
