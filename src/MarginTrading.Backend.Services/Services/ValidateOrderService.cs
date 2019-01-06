@@ -112,15 +112,23 @@ namespace MarginTrading.Backend.Services
             {
                 throw new ValidateOrderException(OrderRejectReason.TechnicalError, "Invalid validity date");
             }
-             
+
+            ITradingInstrument tradingInstrument;
             try
             {
-                _tradingInstrumentsCache.GetTradingInstrument(account.TradingConditionId, assetPair.Id);
+                tradingInstrument =
+                    _tradingInstrumentsCache.GetTradingInstrument(account.TradingConditionId, assetPair.Id);
             }
             catch
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
                     "Instrument is not available for trading on selected account");
+            }
+
+            if (tradingInstrument.DealMinLimit > 0 && Math.Abs(request.Volume) < tradingInstrument.DealMinLimit)
+            {
+                throw new ValidateOrderException(OrderRejectReason.InvalidVolume,
+                    $"The minimum volume of a single order is limited to {tradingInstrument.DealMinLimit} {tradingInstrument.Instrument}.");
             }
 
             var equivalentSettings = GetReportingEquivalentPricesSettings(account.LegalEntity);
