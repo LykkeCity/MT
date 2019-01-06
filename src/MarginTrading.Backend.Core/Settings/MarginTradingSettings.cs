@@ -69,6 +69,9 @@ namespace MarginTrading.Backend.Core.Settings
         [Optional, CanBeNull]
         public ChaosSettings ChaosKitty { get; set; }
 
+        [Optional] 
+        public ThrottlingSettings Throttling { get; set; } = new ThrottlingSettings();
+
         [Optional]
         public bool UseSerilog { get; set; }
     }
