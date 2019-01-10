@@ -62,6 +62,11 @@ namespace MarginTrading.Backend.Core
             return order.CalculateFplData().MarginRate;
         }
 
+        public static decimal GetOvernightMarginMaintenance(this Position position)
+        {
+            return MtServiceLocator.FplService.CalculateOvernightMaintenanceMargin(position);
+        }
+
         public static decimal GetMarginMaintenance(this Position order)
         {
             return order.CalculateFplData().MarginMaintenance;

@@ -128,6 +128,16 @@ namespace MarginTrading.Backend.Services
                 _accountsCacheService.TryFinishLiquidation(accountId, reason, liquidationOperationId);
             }
         }
+
+        public decimal CalculateOvernightUsedMargin(IMarginTradingAccount account)
+        {
+            var positions = GetPositions(account.Id);
+            var accuracy = _assetsCache.GetAssetAccuracy(account.BaseAssetId);
+            var activeOrdersMaintenanceMargin = positions.Sum(item => item.GetOvernightMarginMaintenance());
+            var pendingOrdersMargin = 0;// pendingOrders.Sum(item => item.GetMarginInit());
+
+            return Math.Round(activeOrdersMaintenanceMargin + pendingOrdersMargin, accuracy);
+        }
         
         private void UpdateAccount(IMarginTradingAccount account,
             ICollection<Position> positions,

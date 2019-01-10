@@ -4,16 +4,26 @@ using System.Linq;
 using System.Threading;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core.Messages;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.TradingConditions;
 
 namespace MarginTrading.Backend.Services.TradingConditions
 {
-    [UsedImplicitly]
-    public class  TradingInstrumentsCacheService : ITradingInstrumentsCacheService
+    public class TradingInstrumentsCacheService : ITradingInstrumentsCacheService, IOvernightMarginParameterContainer
     {
+        private readonly OvernightMarginSettings _overnightMarginSettings;
+        
         private Dictionary<(string, string), ITradingInstrument> _instrumentsCache =
             new Dictionary<(string, string), ITradingInstrument>();
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
+
+        public decimal OvernightMarginParameter { get; set; } = 1;
+
+        public TradingInstrumentsCacheService(
+            OvernightMarginSettings overnightMarginSettings)
+        {
+            _overnightMarginSettings = overnightMarginSettings;
+        }
 
         public ITradingInstrument GetTradingInstrument(string tradingConditionId, string instrument)
         {
@@ -51,6 +61,15 @@ namespace MarginTrading.Backend.Services.TradingConditions
             }
 
             return accountAssetPair;
+        }
+
+        public (decimal MarginInit, decimal MarginMaintenance) GetMargins(ITradingInstrument tradingInstrument,
+            decimal volumeForCalculation, decimal marginRate, bool isWarnCheck = false)
+        {
+            var parameter = isWarnCheck ? _overnightMarginSettings.OvernightMarginParameter : OvernightMarginParameter;
+            
+            return (volumeForCalculation * marginRate / (tradingInstrument.LeverageInit * parameter),
+                volumeForCalculation * marginRate / (tradingInstrument.LeverageMaintenance * parameter));
         }
 
         internal void InitAccountAssetsCache(List<ITradingInstrument> accountAssets)

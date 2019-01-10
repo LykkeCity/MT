@@ -74,7 +74,8 @@ namespace MarginTrading.Backend.Core
         None = 0,
         MarginCall1 = 1,
         MarginCall2 = 2,
-        StopOut = 3
+        OvernightMarginCall = 3,
+        StopOut = 4,
     }
 
     public static class MarginTradingAccountExtensions
@@ -94,9 +95,10 @@ namespace MarginTrading.Backend.Core
             return new AccountFpl();
         }
 
-        public static AccountLevel GetAccountLevel(this IMarginTradingAccount account)
+        public static AccountLevel GetAccountLevel(this IMarginTradingAccount account,
+            decimal? overnightUsedMargin = null)
         {
-            var marginUsageLevel = account.GetMarginUsageLevel();
+            var marginUsageLevel = account.GetMarginUsageLevel(overnightUsedMargin);
             var accountFplData = account.GetAccountFpl();
 
             #region Account Level
@@ -152,11 +154,12 @@ namespace MarginTrading.Backend.Core
             return AccountLevel.None;
         }
 
-        public static decimal GetMarginUsageLevel(this IMarginTradingAccount account)
+        public static decimal GetMarginUsageLevel(this IMarginTradingAccount account,
+            decimal? overnightUsedMargin = null)
         {
             var totalCapital = account.GetTotalCapital();
             
-            var usedMargin = account.GetUsedMargin();
+            var usedMargin = overnightUsedMargin ?? account.GetUsedMargin();
 
             //Anton Belkin said 100 is ok )
             if (usedMargin <= 0)

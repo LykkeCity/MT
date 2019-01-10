@@ -245,7 +245,7 @@ namespace MarginTradingTests
             
             var scheduleSettingsCacheService = new ScheduleSettingsCacheService(
                 Mock.Of<ICqrsSender>(), scheduleSettingsApiMock.Object,
-                assetPairsCacheMock.Object, dateService.Object, new EmptyLog());
+                assetPairsCacheMock.Object, dateService.Object, new EmptyLog(), new OvernightMarginSettings());
             
             scheduleSettingsCacheService.UpdateSettingsAsync().GetAwaiter().GetResult();
             return new AssetPairDayOffService(dateService.Object, scheduleSettingsCacheService);

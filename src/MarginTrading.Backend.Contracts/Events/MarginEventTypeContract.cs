@@ -8,6 +8,7 @@ namespace MarginTrading.Backend.Contracts.Events
     {
         MarginCall1,
         MarginCall2,
-        Stopout
+        OvernightMarginCall,
+        Stopout,
     }
 }

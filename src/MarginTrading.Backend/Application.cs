@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Common.Log;
+using Lykke.Common;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MarketMakerFeed;
 using MarginTrading.Backend.Core.MatchingEngines;
@@ -45,6 +46,8 @@ namespace MarginTrading.Backend
         private readonly ITradingInstrumentsManager _tradingInstrumentsManager;
         private readonly ITradingConditionsManager _tradingConditionsManager;
         private readonly IScheduleSettingsCacheService _scheduleSettingsCacheService;
+        private readonly IOvernightMarginService _overnightMarginService;
+        private readonly IThreadSwitcher _threadSwitcher;
         private const string ServiceName = "MarginTrading.Backend";
 
         public Application(
@@ -64,7 +67,9 @@ namespace MarginTrading.Backend
             IAssetPairsManager assetPairsManager,
             ITradingInstrumentsManager tradingInstrumentsManager,
             ITradingConditionsManager tradingConditionsManager,
-            IScheduleSettingsCacheService scheduleSettingsCacheService)
+            IScheduleSettingsCacheService scheduleSettingsCacheService,
+            IOvernightMarginService overnightMarginService,
+            IThreadSwitcher threadSwitcher)
         {
             _rabbitMqNotifyService = rabbitMqNotifyService;
             _consoleWriter = consoleWriter;
@@ -83,6 +88,8 @@ namespace MarginTrading.Backend
             _tradingInstrumentsManager = tradingInstrumentsManager;
             _tradingConditionsManager = tradingConditionsManager;
             _scheduleSettingsCacheService = scheduleSettingsCacheService;
+            _overnightMarginService = overnightMarginService;
+            _threadSwitcher = threadSwitcher;
         }
 
         public async Task StartApplicationAsync()
@@ -206,7 +213,12 @@ namespace MarginTrading.Backend
                     await _matchingEngineRoutesManager.UpdateRoutesCacheAsync();
                     break;
                 case SettingsTypeContract.ScheduleSettings:
-                    await _scheduleSettingsCacheService.UpdateSettingsAsync();
+                    await _scheduleSettingsCacheService.UpdateAllSettingsAsync();
+                    _threadSwitcher.SwitchThread(() =>
+                    {
+                        _overnightMarginService.ScheduleNext();
+                        return Task.CompletedTask;
+                    });
                     break;
                 case SettingsTypeContract.Market:
                     break;

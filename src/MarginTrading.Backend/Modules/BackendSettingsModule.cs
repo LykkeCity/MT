@@ -22,6 +22,7 @@ namespace MarginTrading.Backend.Modules
             builder.RegisterInstance(_settings.CurrentValue.MtBackend.SpecialLiquidation).SingleInstance();
             builder.RegisterInstance(_settings.CurrentValue.RiskInformingSettings ??
                                      new RiskInformingSettings {Data = new RiskInformingParams[0]}).SingleInstance();
+            builder.RegisterInstance(_settings.CurrentValue.MtBackend.OvernightMargin).SingleInstance();
         }
     }
 }

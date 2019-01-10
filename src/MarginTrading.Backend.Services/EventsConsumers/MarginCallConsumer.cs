@@ -21,11 +21,16 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         private readonly IEmailService _emailService;
         private readonly IClientAccountService _clientAccountService;
         private readonly IOperationsLogService _operationsLogService;
-        private static readonly ConcurrentDictionary<string, (DateTime, DateTime)> LastNotifications = 
-            new ConcurrentDictionary<string, (DateTime, DateTime)>();
         private readonly MarginTradingSettings _settings;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly IDateService _dateService;
+        
+        private readonly ConcurrentDictionary<string, DateTime> _mc1LastNotifications = 
+            new ConcurrentDictionary<string, DateTime>();
+        private readonly ConcurrentDictionary<string, DateTime> _mc2LastNotifications = 
+            new ConcurrentDictionary<string, DateTime>();
+        private readonly ConcurrentDictionary<string, DateTime> _overnightMcLastNotifications = 
+            new ConcurrentDictionary<string, DateTime>();
 
         public MarginCallConsumer(IThreadSwitcher threadSwitcher,
             IEmailService emailService,
@@ -50,16 +55,14 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         {
             var account = ea.Account;
             var eventTime = _dateService.Now();
-            var level = ea.MarginCallLevel == AccountLevel.MarginCall2
-                ? MarginEventTypeContract.MarginCall2
-                : MarginEventTypeContract.MarginCall1;
+            var level = Map(ea.MarginCallLevel);
+            var lastNotifications = NotificationsCache(ea.MarginCallLevel);
             var accountMarginEventMessage = AccountMarginEventMessageConverter.Create(account, level, eventTime);
             
             _threadSwitcher.SwitchThread(async () =>
             {
-                if (LastNotifications.TryGetValue(account.Id, out var lastNotification)
-                    && (level == MarginEventTypeContract.MarginCall1 ? lastNotification.Item1 : lastNotification.Item2)
-                        .AddMinutes(_settings.Throttling.MarginCallThrottlingPeriodMin) > eventTime)
+                if (lastNotifications.TryGetValue(account.Id, out var lastNotification)
+                    && lastNotification.AddMinutes(_settings.Throttling.MarginCallThrottlingPeriodMin) > eventTime)
                 {
                     return;
                 }
@@ -76,12 +79,10 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
                 await Task.WhenAll(marginEventTask, emailTask);
 
-                var newTimes = level == MarginEventTypeContract.MarginCall1 
-                    ? (eventTime, lastNotification.Item2) : (lastNotification.Item1, eventTime);
-                LastNotifications.AddOrUpdate(account.Id, newTimes, (s, times) => newTimes);
+                lastNotifications.AddOrUpdate(account.Id, eventTime, (s, times) => eventTime);
             });
         }
-        
+
 //todo uncomment here, at class registration and in module when MTC-155 task is done 
         /// <summary>
         /// That's for limit orders margin
@@ -93,7 +94,31 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
         public void ConsumeEvent(object sender, OrderExecutedEventArgs ea)
         {
-            LastNotifications.TryRemove(ea.Order.AccountId, out _);
+            _mc1LastNotifications.TryRemove(ea.Order.AccountId, out _);
+            _mc2LastNotifications.TryRemove(ea.Order.AccountId, out _);
+            _overnightMcLastNotifications.TryRemove(ea.Order.AccountId, out _);
+        }
+
+        private ConcurrentDictionary<string, DateTime> NotificationsCache(AccountLevel level)
+        {
+            switch (level)
+            {
+                case AccountLevel.MarginCall1: return _mc1LastNotifications;
+                case AccountLevel.MarginCall2: return _mc2LastNotifications;
+                case AccountLevel.OvernightMarginCall: return _overnightMcLastNotifications;
+                default: throw new Exception($"Account level was {level.ToString()}, but MC1/MC2/Overnight were expected.");
+            }
+        }
+
+        private static MarginEventTypeContract Map(AccountLevel level)
+        {
+            switch (level)
+            {
+                case AccountLevel.MarginCall1: return MarginEventTypeContract.MarginCall1;
+                case AccountLevel.MarginCall2: return MarginEventTypeContract.MarginCall2;
+                case AccountLevel.OvernightMarginCall: return MarginEventTypeContract.OvernightMarginCall;
+                default: throw new Exception($"Account level was {level.ToString()}, but MC1/MC2/Overnight were expected.");
+            }
         }
     }
 }
