@@ -14,6 +14,7 @@ namespace MarginTrading.Backend.Services
         private readonly Dictionary<string, Position> _positionsById;
         private readonly Dictionary<string, HashSet<string>> _positionIdsByAccountId;
         private readonly Dictionary<string, HashSet<string>> _positionIdsByInstrumentId;
+        private readonly Dictionary<string, HashSet<string>> _positionIdsByFxInstrumentId;
         private readonly Dictionary<(string, string), HashSet<string>> _positionIdsByAccountIdAndInstrumentId;
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
 
@@ -26,6 +27,9 @@ namespace MarginTrading.Backend.Services
                 _positionsById = positions.ToDictionary(x => x.Id);
 
                 _positionIdsByInstrumentId = positions.GroupBy(x => x.AssetPairId)
+                    .ToDictionary(x => x.Key, x => x.Select(o => o.Id).ToHashSet());
+                
+                _positionIdsByFxInstrumentId = positions.GroupBy(x => x.FxAssetPairId)
                     .ToDictionary(x => x.Key, x => x.Select(o => o.Id).ToHashSet());
 
                 _positionIdsByAccountId = positions.GroupBy(x => x.AccountId)
@@ -58,6 +62,10 @@ namespace MarginTrading.Backend.Services
                     _positionIdsByInstrumentId.Add(position.AssetPairId, new HashSet<string>());
                 _positionIdsByInstrumentId[position.AssetPairId].Add(position.Id);
 
+                if (!_positionIdsByFxInstrumentId.ContainsKey(position.FxAssetPairId))
+                    _positionIdsByFxInstrumentId.Add(position.FxAssetPairId, new HashSet<string>());
+                _positionIdsByFxInstrumentId[position.FxAssetPairId].Add(position.Id);
+
                 var accountInstrumentCacheKey = GetAccountInstrumentCacheKey(position.AccountId, position.AssetPairId);
 
                 if (!_positionIdsByAccountIdAndInstrumentId.ContainsKey(accountInstrumentCacheKey))
@@ -82,6 +90,7 @@ namespace MarginTrading.Backend.Services
                 if (_positionsById.Remove(order.Id))
                 {
                     _positionIdsByInstrumentId[order.AssetPairId].Remove(order.Id);
+                    _positionIdsByFxInstrumentId[order.FxAssetPairId].Remove(order.Id);
                     _positionIdsByAccountId[order.AccountId].Remove(order.Id);
                     _positionIdsByAccountIdAndInstrumentId[GetAccountInstrumentCacheKey(order.AccountId, order.AssetPairId)].Remove(order.Id);
                 }
@@ -139,10 +148,28 @@ namespace MarginTrading.Backend.Services
 
             try
             {
-                if (!_positionIdsByInstrumentId.ContainsKey(instrument))
-                    return new List<Position>();
+                return _positionIdsByInstrumentId.ContainsKey(instrument)
+                    ? _positionIdsByInstrumentId[instrument].Select(id => _positionsById[id]).ToList()
+                    : new List<Position>();
+            }
+            finally
+            {
+                _lockSlim.ExitReadLock();
+            }
+        }
 
-                return _positionIdsByInstrumentId[instrument].Select(id => _positionsById[id]).ToList();
+        public IReadOnlyCollection<Position> GetPositionsByFxInstrument(string fxInstrument)
+        {
+            if (string.IsNullOrWhiteSpace(fxInstrument))
+                throw new ArgumentException(nameof(fxInstrument));
+
+            _lockSlim.EnterReadLock();
+
+            try
+            {
+                return _positionIdsByFxInstrumentId.ContainsKey(fxInstrument)
+                    ? _positionIdsByFxInstrumentId[fxInstrument].Select(id => _positionsById[id]).ToList()
+                    : new List<Position>();
             }
             finally
             {

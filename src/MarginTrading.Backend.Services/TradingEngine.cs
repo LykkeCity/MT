@@ -19,7 +19,9 @@ using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services
 {
-    public sealed class TradingEngine : ITradingEngine, IEventConsumer<BestPriceChangeEventArgs>
+    public sealed class TradingEngine : ITradingEngine, 
+        IEventConsumer<BestPriceChangeEventArgs>,
+        IEventConsumer<FxBestPriceChangeEventArgs>
     {
         private readonly IEventChannel<MarginCallEventArgs> _marginCallEventChannel;
         private readonly IEventChannel<OrderPlacedEventArgs> _orderPlacedEventChannel;
@@ -399,6 +401,17 @@ namespace MarginTrading.Backend.Services
         
         #region Positions
 
+        private void UpdatePositionsFxRates(InstrumentBidAskPair quote)
+        {
+            foreach (var position in _ordersCache.GetPositionsByFxAssetPairId(quote.Instrument))
+            {
+                var fxPrice = _cfdCalculatorService.GetQuoteRateForQuoteAsset(quote, position.FxToAssetPairDirection,
+                    position.Volume * (position.ClosePrice - position.OpenPrice) > 0);
+
+                position.UpdateCloseFxPrice(fxPrice);
+            }
+        }
+
         private void ProcessPositions(InstrumentBidAskPair quote)
         {
             var stopoutAccounts = UpdateClosePriceAndDetectStopout(quote).ToArray();
@@ -529,12 +542,13 @@ namespace MarginTrading.Backend.Services
             var initialParameters = await _validateOrderService.GetOrderInitialParameters(position.AssetPairId, 
                 position.AccountId);
 
-            var order = new Order(initialParameters.id, initialParameters.code, position.AssetPairId, -position.Volume, 
-                initialParameters.now, initialParameters.now, null, position.AccountId,
-                position.TradingConditionId, position.AccountAssetId, null, position.EquivalentAsset,
-                OrderFillType.FillOrKill, $"Close position. {comment}", position.LegalEntity, false, OrderType.Market, 
-                null, position.Id, originator, initialParameters.equivalentPrice, initialParameters.fxPrice, 
-                OrderStatus.Placed, additionalInfo, correlationId);
+            var order = new Order(initialParameters.Id, initialParameters.Code, position.AssetPairId, -position.Volume,
+                initialParameters.Now, initialParameters.Now, null, position.AccountId, position.TradingConditionId,
+                position.AccountAssetId, null, position.EquivalentAsset, OrderFillType.FillOrKill,
+                $"Close position. {comment}", position.LegalEntity, false, OrderType.Market, null, position.Id,
+                originator, initialParameters.EquivalentPrice, initialParameters.FxPrice,
+                initialParameters.FxAssetPairId, initialParameters.FxToAssetPairDirection, OrderStatus.Placed,
+                additionalInfo, correlationId);
             
             _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
               
@@ -629,6 +643,11 @@ namespace MarginTrading.Backend.Services
         {
             ProcessPositions(ea.BidAskPair);
             ProcessOrdersWaitingForExecution(ea.BidAskPair);
+        }
+
+        void IEventConsumer<FxBestPriceChangeEventArgs>.ConsumeEvent(object sender, FxBestPriceChangeEventArgs ea)
+        {
+            UpdatePositionsFxRates(ea.BidAskPair);
         }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
@@ -14,18 +15,21 @@ namespace MarginTrading.Backend.Services
     {
         private readonly OrdersCache _orderCache;
         private readonly IMarginTradingBlobRepository _marginTradingBlobRepository;
+        private readonly ICfdCalculatorService _cfdCalculatorService;
         private readonly ILog _log;
-        private const string OrdersBlobName= "orders";
-        private const string PositionsBlobName= "positions";
+        public const string OrdersBlobName= "orders";
+        public const string PositionsBlobName= "positions";
 
         public OrderCacheManager(OrdersCache orderCache,
             IMarginTradingBlobRepository marginTradingBlobRepository,
+            ICfdCalculatorService cfdCalculatorService,
             MarginTradingSettings marginTradingSettings,
             ILog log) 
             : base(nameof(OrderCacheManager), marginTradingSettings.BlobPersistence.OrdersDumpPeriodMilliseconds, log)
         {
             _orderCache = orderCache;
             _marginTradingBlobRepository = marginTradingBlobRepository;
+            _cfdCalculatorService = cfdCalculatorService;
             _log = log;
         }
 
@@ -37,6 +41,8 @@ namespace MarginTrading.Backend.Services
             var positions =
                 _marginTradingBlobRepository.Read<List<Position>>(LykkeConstants.StateBlobContainer, PositionsBlobName) ??
                 new List<Position>();
+
+            MigrateFx(orders, positions);//todo remove after deployment
             
             _orderCache.InitOrders(orders, positions);
 
@@ -83,6 +89,27 @@ namespace MarginTrading.Backend.Services
             catch (Exception ex)
             {
                 await _log.WriteErrorAsync(nameof(OrdersCache), "Save positions", "", ex);
+            }
+        }
+
+        private void MigrateFx(List<Order> orders, List<Position> positions)
+        {
+            foreach (var order in orders.Where(x => string.IsNullOrEmpty(x.FxAssetPairId)))
+            {
+                var fx = _cfdCalculatorService.GetFxAssetPairIdAndDirection(order.AccountAssetId, order.AssetPairId,
+                    order.LegalEntity);
+
+                order.FxAssetPairId = fx.id;
+                order.FxToAssetPairDirection = fx.direction;
+            }
+
+            foreach (var position in positions.Where(x => string.IsNullOrEmpty(x.FxAssetPairId)))
+            {
+                var fx = _cfdCalculatorService.GetFxAssetPairIdAndDirection(position.AccountAssetId, position.AssetPairId,
+                    position.LegalEntity);
+
+                position.FxAssetPairId = fx.id;
+                position.FxToAssetPairDirection = fx.direction;
             }
         }
     }

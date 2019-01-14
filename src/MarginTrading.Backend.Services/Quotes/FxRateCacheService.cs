@@ -10,6 +10,7 @@ using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Services.Events;
 using MarginTrading.Common.Extensions;
 using MarginTrading.OrderbookAggregator.Contracts.Messages;
 
@@ -19,16 +20,20 @@ namespace MarginTrading.Backend.Services.Quotes
     {
         private readonly ILog _log;
         private readonly IMarginTradingBlobRepository _blobRepository;
+        private readonly IEventChannel<FxBestPriceChangeEventArgs> _fxBestPriceChangeEventChannel;
         private Dictionary<string, InstrumentBidAskPair> _quotes;
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
         private const string BlobName = "FxRates";
 
-        public FxRateCacheService(ILog log, IMarginTradingBlobRepository blobRepository, 
+        public FxRateCacheService(ILog log, 
+            IMarginTradingBlobRepository blobRepository,
+            IEventChannel<FxBestPriceChangeEventArgs> fxBestPriceChangeEventChannel,
             MarginTradingSettings marginTradingSettings)
             : base(nameof(FxRateCacheService), marginTradingSettings.BlobPersistence.FxRatesDumpPeriodMilliseconds, log)
         {
             _log = log;
             _blobRepository = blobRepository;
+            _fxBestPriceChangeEventChannel = fxBestPriceChangeEventChannel;
             _quotes = new Dictionary<string, InstrumentBidAskPair>();
         }
 
@@ -61,10 +66,18 @@ namespace MarginTrading.Backend.Services.Quotes
             }
         }
 
-        public Task SetQuote(ExternalExchangeOrderbookMessage quote)
+        public Task SetQuote(ExternalExchangeOrderbookMessage orderBookMessage)
         {
-            var bidAskPair = CreatePair(quote);
+            var bidAskPair = CreatePair(orderBookMessage);
+
+            if (bidAskPair == null)
+            {
+                return Task.CompletedTask;
+            }
+            
             SetQuote(bidAskPair);
+            
+            _fxBestPriceChangeEventChannel.SendEvent(this, new FxBestPriceChangeEventArgs(bidAskPair));
             
             return Task.CompletedTask;
         }

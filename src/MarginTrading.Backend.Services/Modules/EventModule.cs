@@ -10,6 +10,10 @@ namespace MarginTrading.Backend.Services.Modules
             builder.RegisterType<EventChannel<BestPriceChangeEventArgs>>()
                 .As<IEventChannel<BestPriceChangeEventArgs>>()
                 .SingleInstance();
+            
+            builder.RegisterType<EventChannel<FxBestPriceChangeEventArgs>>()
+                .As<IEventChannel<FxBestPriceChangeEventArgs>>()
+                .SingleInstance();
 
             builder.RegisterType<EventChannel<MarginCallEventArgs>>()
                 .As<IEventChannel<MarginCallEventArgs>>()
@@ -53,6 +57,10 @@ namespace MarginTrading.Backend.Services.Modules
             
             builder.RegisterType<EventChannel<OrderRejectedEventArgs>>()
                 .As<IEventChannel<OrderRejectedEventArgs>>()
+                .SingleInstance();
+            
+            builder.RegisterType<EventChannel<LiquidationEndEventArgs>>()
+                .As<IEventChannel<LiquidationEndEventArgs>>()
                 .SingleInstance();
         }
     }

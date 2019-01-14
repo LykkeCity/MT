@@ -35,11 +35,9 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         private readonly IMatchingEngineRouter _matchingEngineRouter;
         private readonly ITradingEngine _tradingEngine;
         private readonly OrdersCache _ordersCache;
-        private readonly MarginTradingSettings _marginTradingSettings;
-        private readonly IAssetPairsCache _assetPairsCache;
-        private readonly ICfdCalculatorService _cfdCalculatorService;
         private readonly ILog _log;
         private readonly IAccountUpdateService _accountUpdateService;
+        private readonly IEventChannel<LiquidationEndEventArgs> _liquidationEndEventChannel;
 
         public LiquidationCommandsHandler(
             ITradingInstrumentsCacheService tradingInstrumentsCacheService,
@@ -50,11 +48,9 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             IMatchingEngineRouter matchingEngineRouter,
             ITradingEngine tradingEngine,
             OrdersCache ordersCache,
-            MarginTradingSettings marginTradingSettings,
-            IAssetPairsCache assetPairsCache,
-            ICfdCalculatorService cfdCalculatorService,
             ILog log,
-            IAccountUpdateService accountUpdateService)
+            IAccountUpdateService accountUpdateService,
+            IEventChannel<LiquidationEndEventArgs> liquidationEndEventChannel)
         {
             _tradingInstrumentsCacheService = tradingInstrumentsCacheService;
             _accountsCache = accountsCache;
@@ -64,11 +60,9 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             _matchingEngineRouter = matchingEngineRouter;
             _tradingEngine = tradingEngine;
             _ordersCache = ordersCache;
-            _marginTradingSettings = marginTradingSettings;
-            _assetPairsCache = assetPairsCache;
-            _cfdCalculatorService = cfdCalculatorService;
             _log = log;
             _accountUpdateService = accountUpdateService;
+            _liquidationEndEventChannel = liquidationEndEventChannel;
         }
 
         [UsedImplicitly]
@@ -88,6 +82,15 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                     AccountId = command.AccountId,
                     AssetPairId = command.AssetPairId,
                     Direction = command.Direction?.ToType<PositionDirectionContract>(),
+                });
+            
+                _liquidationEndEventChannel.SendEvent(this, new LiquidationEndEventArgs
+                {
+                    OperationId = command.OperationId,
+                    CreationTime = _dateService.Now(),
+                    AccountId = command.AccountId,
+                    LiquidatedPositionIds = new List<string>(),
+                    FailReason = reason,
                 });
             }
             
@@ -192,6 +195,15 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 OpenPositionsRemainingOnAccount = _ordersCache.Positions.GetPositionsByAccountIds(executionInfo.Data.AccountId).Count,
                 CurrentTotalCapital = _accountsCache.Get(executionInfo.Data.AccountId).GetTotalCapital(),
             });
+            
+            _liquidationEndEventChannel.SendEvent(this, new LiquidationEndEventArgs
+            {
+                OperationId = command.OperationId,
+                CreationTime = _dateService.Now(),
+                AccountId = executionInfo.Data.AccountId,
+                LiquidatedPositionIds = executionInfo.Data.LiquidatedPositionIds,
+                FailReason = command.Reason,
+            });
         }
         
         [UsedImplicitly]
@@ -228,6 +240,14 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 LiquidatedPositionIds = command.LiquidatedPositionIds,
                 OpenPositionsRemainingOnAccount = _ordersCache.Positions.GetPositionsByAccountIds(executionInfo.Data.AccountId).Count,
                 CurrentTotalCapital = _accountsCache.Get(executionInfo.Data.AccountId).GetTotalCapital(),
+            });
+            
+            _liquidationEndEventChannel.SendEvent(this, new LiquidationEndEventArgs
+            {
+                OperationId = command.OperationId,
+                CreationTime = _dateService.Now(),
+                AccountId = executionInfo.Data.AccountId,
+                LiquidatedPositionIds = command.LiquidatedPositionIds,
             });
         }
         

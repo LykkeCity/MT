@@ -5,6 +5,7 @@ using Common;
 using Lykke.Common;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services;
@@ -12,11 +13,9 @@ using MarginTrading.Common.Services.Client;
 
 namespace MarginTrading.Backend.Services.EventsConsumers
 {
-    // TODO: Rename by role
     public class MarginCallConsumer : IEventConsumer<MarginCallEventArgs>,
-        IEventConsumer<OrderPlacedEventArgs>,
-        IEventConsumer<OrderExecutedEventArgs>,
-        IEventConsumer<OrderCancelledEventArgs>
+        //IEventConsumer<OrderPlacedEventArgs>,
+        IEventConsumer<OrderExecutedEventArgs>
     {
         private readonly IThreadSwitcher _threadSwitcher;
         private readonly IEmailService _emailService;
@@ -24,7 +23,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         private readonly IOperationsLogService _operationsLogService;
         private static readonly ConcurrentDictionary<string, (DateTime, DateTime)> LastNotifications = 
             new ConcurrentDictionary<string, (DateTime, DateTime)>();
-        private const int NotificationsTimeout = 30;
+        private readonly MarginTradingSettings _settings;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly IDateService _dateService;
 
@@ -32,6 +31,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             IEmailService emailService,
             IClientAccountService clientAccountService,
             IOperationsLogService operationsLogService,
+            MarginTradingSettings settings,
             IRabbitMqNotifyService rabbitMqNotifyService,
             IDateService dateService)
         {
@@ -39,6 +39,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             _emailService = emailService;
             _clientAccountService = clientAccountService;
             _operationsLogService = operationsLogService;
+            _settings = settings;
             _rabbitMqNotifyService = rabbitMqNotifyService;
             _dateService = dateService;
         }
@@ -58,7 +59,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             {
                 if (LastNotifications.TryGetValue(account.Id, out var lastNotification)
                     && (level == MarginEventTypeContract.MarginCall1 ? lastNotification.Item1 : lastNotification.Item2)
-                        .AddMinutes(NotificationsTimeout) > eventTime)
+                        .AddMinutes(_settings.Throttling.MarginCallThrottlingPeriodMin) > eventTime)
                 {
                     return;
                 }
@@ -80,20 +81,19 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 LastNotifications.AddOrUpdate(account.Id, newTimes, (s, times) => newTimes);
             });
         }
-
-        public void ConsumeEvent(object sender, OrderPlacedEventArgs ea)
-        {
-            LastNotifications.TryRemove(ea.Order.AccountId, out var tmp);
-        }
+        
+//todo uncomment here, at class registration and in module when MTC-155 task is done 
+        /// <summary>
+        /// That's for limit orders margin
+        /// </summary>
+//        public void ConsumeEvent(object sender, OrderPlacedEventArgs ea)
+//        {
+//            LastNotifications.TryRemove(ea.Order.AccountId, out var tmp);
+//        }
 
         public void ConsumeEvent(object sender, OrderExecutedEventArgs ea)
         {
-            LastNotifications.TryRemove(ea.Order.AccountId, out var tmp);
-        }
-
-        public void ConsumeEvent(object sender, OrderCancelledEventArgs ea)
-        {
-            LastNotifications.TryRemove(ea.Order.AccountId, out var tmp);
+            LastNotifications.TryRemove(ea.Order.AccountId, out _);
         }
     }
 }
