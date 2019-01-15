@@ -5,6 +5,7 @@ using System.Linq;
 using AutoMapper;
 using Common;
 using Common.Log;
+using MarginTrading.Backend.Contracts.Activities;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
@@ -270,8 +271,16 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 if (_ordersCache.TryGetOrderById(relatedOrderInfo.Id, out var relatedOrder)
                     && relatedOrder.Volume != newVolume)
                 {
+                    var oldVolume = relatedOrder.Volume;
+                    
                     relatedOrder.ChangeVolume(newVolume, _dateService.Now(), OriginatorType.System);
-                    _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(relatedOrder));
+                    var metadata = new OrderUpdateMetadata
+                    {
+                        UpdatedProperty = OrderUpdatedProperty.Volume,
+                        OldValue = oldVolume.ToString("F2")
+                    };
+
+                    _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(relatedOrder, metadata));
                 }
             }
         }

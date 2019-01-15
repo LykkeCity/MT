@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Security.Cryptography;
+using MarginTrading.Backend.Contracts.Activities;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Events;
@@ -47,7 +48,10 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
         private void SendOrderHistory(OrderUpdateBaseEventArgs ea)
         {
-            _rabbitMqNotifyService.OrderHistory(ea.Order, ea.UpdateType);
+            _rabbitMqNotifyService.OrderHistory(
+                ea.Order,
+                ea.UpdateType,
+                ea.ActivitiesMetadata);
         }
         
         private void CancelRelatedOrders(List<RelatedOrderInfo> relatedOrderInfos, string correlationId)
@@ -72,8 +76,14 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             if (!string.IsNullOrEmpty(order.ParentOrderId)
                 && _ordersCache.TryGetOrderById(order.ParentOrderId, out var parentOrder))
             {
+                var metadata = new OrderUpdateMetadata
+                {
+                    UpdatedProperty = OrderUpdatedProperty.RelatedOrderRemoved,
+                    OldValue = order.Id
+                };
+                
                 parentOrder.RemoveRelatedOrder(order.Id);
-                _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(parentOrder));
+                _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(parentOrder, metadata));
             }
             
             if (!string.IsNullOrEmpty(order.ParentPositionId)

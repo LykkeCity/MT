@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using Lykke.Common;
+using MarginTrading.Backend.Contracts.Activities;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.MatchingEngines;
@@ -327,8 +328,10 @@ namespace MarginTrading.Backend.Services
             else if (!_ordersCache.TryGetOrderById(order.Id, out _)) // all pending orders should be returned to active state if there is no liquidity
             {
                 order.CancelExecution(_dateService.Now());
-                _ordersCache.Active.Add(order);   
-                _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order));
+                _ordersCache.Active.Add(order);
+                _orderChangedEventChannel.SendEvent(this,
+                    new OrderChangedEventArgs(order,
+                        new OrderUpdateMetadata {UpdatedProperty = OrderUpdatedProperty.None}));
             }
         }
 
@@ -632,9 +635,17 @@ namespace MarginTrading.Backend.Services
 
             _validateOrderService.ValidateOrderPriceChange(order, price);
 
+            var oldPrice = order.Price;
+            
             order.ChangePrice(price, _dateService.Now(), originator, additionalInfo, correlationId);
 
-            _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order));
+            var metadata = new OrderUpdateMetadata
+            {
+                UpdatedProperty = OrderUpdatedProperty.Price,
+                OldValue = oldPrice.HasValue ? oldPrice.Value.ToString("F5") : string.Empty
+            };
+            
+            _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata));
         }
 
         int IEventConsumer.ConsumerRank => 101;
