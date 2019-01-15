@@ -38,7 +38,10 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             {
                 case OrderUpdateType.Cancel:
                 case OrderUpdateType.Reject:
-                    CancelRelatedOrders(ea.Order.RelatedOrders, ea.Order.CorrelationId);
+                    CancelRelatedOrders(
+                        ea.Order.RelatedOrders,
+                        ea.Order.CorrelationId,
+                        OrderCancellationReason.BaseOrderCancelled);
                     RemoveRelatedOrderFromParent(ea.Order);
                     break;
             }
@@ -54,19 +57,25 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 ea.ActivitiesMetadata);
         }
         
-        private void CancelRelatedOrders(List<RelatedOrderInfo> relatedOrderInfos, string correlationId)
+        private void CancelRelatedOrders(List<RelatedOrderInfo> relatedOrderInfos, string correlationId,
+            OrderCancellationReason reason)
         {
+            var metadata = new OrderCancelledMetadata
+            {
+                Reason = reason
+            };
+            
             foreach (var relatedOrderInfo in relatedOrderInfos)
             {
                 if (_ordersCache.Inactive.TryPopById(relatedOrderInfo.Id, out var inactiveRelatedOrder))
                 {
                     inactiveRelatedOrder.Cancel(_dateService.Now(), OriginatorType.System, null, correlationId);
-                    _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(inactiveRelatedOrder));
+                    _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(inactiveRelatedOrder, metadata));
                 } 
                 else if (_ordersCache.Active.TryPopById(relatedOrderInfo.Id, out var activeRelatedOrder))
                 {
                     activeRelatedOrder.Cancel(_dateService.Now(), OriginatorType.System, null, correlationId);
-                    _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(activeRelatedOrder));
+                    _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(activeRelatedOrder, metadata));
                 }
             }
         }
@@ -76,9 +85,9 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             if (!string.IsNullOrEmpty(order.ParentOrderId)
                 && _ordersCache.TryGetOrderById(order.ParentOrderId, out var parentOrder))
             {
-                var metadata = new OrderUpdateMetadata
+                var metadata = new OrderChangedMetadata
                 {
-                    UpdatedProperty = OrderUpdatedProperty.RelatedOrderRemoved,
+                    UpdatedProperty = OrderChangedProperty.RelatedOrderRemoved,
                     OldValue = order.Id
                 };
                 

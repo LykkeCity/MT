@@ -331,7 +331,7 @@ namespace MarginTrading.Backend.Services
                 _ordersCache.Active.Add(order);
                 _orderChangedEventChannel.SendEvent(this,
                     new OrderChangedEventArgs(order,
-                        new OrderUpdateMetadata {UpdatedProperty = OrderUpdatedProperty.None}));
+                        new OrderChangedMetadata {UpdatedProperty = OrderChangedProperty.None}));
             }
         }
 
@@ -368,7 +368,8 @@ namespace MarginTrading.Backend.Services
                 {
                     _ordersCache.Active.Remove(order);
                     order.Expire(now);
-                    _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order));
+                    var metadata = new OrderCancelledMetadata {Reason = OrderCancellationReason.Expired};
+                    _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order, metadata));
                     continue;
                 }
 
@@ -619,8 +620,9 @@ namespace MarginTrading.Backend.Services
             }
             
             order.Cancel(_dateService.Now(), originator, additionalInfo, correlationId);
-            
-            _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order));
+
+            var metadata = new OrderCancelledMetadata {Reason = OrderCancellationReason.None};
+            _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order, metadata));
             
             return order;
         }
@@ -639,9 +641,9 @@ namespace MarginTrading.Backend.Services
             
             order.ChangePrice(price, _dateService.Now(), originator, additionalInfo, correlationId);
 
-            var metadata = new OrderUpdateMetadata
+            var metadata = new OrderChangedMetadata
             {
-                UpdatedProperty = OrderUpdatedProperty.Price,
+                UpdatedProperty = OrderChangedProperty.Price,
                 OldValue = oldPrice.HasValue ? oldPrice.Value.ToString("F5") : string.Empty
             };
             

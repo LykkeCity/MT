@@ -1,8 +1,8 @@
 namespace MarginTrading.Backend.Contracts.Activities
 {
-    public class OrderUpdateMetadata
+    public class OrderChangedMetadata
     {
-        public OrderUpdatedProperty UpdatedProperty { get; set; }
+        public OrderChangedProperty UpdatedProperty { get; set; }
         
         public string OldValue { get; set; }
     }

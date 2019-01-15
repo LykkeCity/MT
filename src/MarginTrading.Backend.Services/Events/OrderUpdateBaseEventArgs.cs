@@ -16,11 +16,6 @@ namespace MarginTrading.Backend.Services.Events
         
         [NotNull] public Order Order { get; }
 
-        public string ActivitiesMetadata { get; private set; }
-
-        public void SetActivitiesMetadata(string value)
-        {
-            ActivitiesMetadata = value;
-        }
+        public string ActivitiesMetadata { get; protected set; }
     }
 }

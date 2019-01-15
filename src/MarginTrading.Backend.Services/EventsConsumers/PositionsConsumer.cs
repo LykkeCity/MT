@@ -111,7 +111,11 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             SendPositionHistoryEvent(position, PositionHistoryTypeContract.Close,
                 position.ChargedPnL, order, Math.Abs(position.Volume));
 
-            CancelRelatedOrders(position.RelatedOrders, order.CorrelationId);
+            var reason = order.IsBasicOrder()
+                ? OrderCancellationReason.ParentPositionClosed
+                : OrderCancellationReason.ConnectedOrderExecuted;
+            
+            CancelRelatedOrdersForClosedPosition(position, order.CorrelationId, reason);
         }
 
         private void OpenNewPosition(Order order, decimal volume)
@@ -252,14 +256,17 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             }
         }
         
-        private void CancelRelatedOrders(List<RelatedOrderInfo> relatedOrderInfos, string correlationId)
+        private void CancelRelatedOrdersForClosedPosition(Position position, string correlationId,
+            OrderCancellationReason reason)
         {
-            foreach (var relatedOrderInfo in relatedOrderInfos)
+            var metadata = new OrderCancelledMetadata {Reason = reason};
+            
+            foreach (var relatedOrderInfo in position.RelatedOrders)
             {
                 if (_ordersCache.Active.TryPopById(relatedOrderInfo.Id, out var relatedOrder))
                 {
                     relatedOrder.Cancel(_dateService.Now(), OriginatorType.System, null, correlationId);
-                    _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(relatedOrder));
+                    _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(relatedOrder, metadata));
                 }
             }
         }
@@ -274,9 +281,9 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     var oldVolume = relatedOrder.Volume;
                     
                     relatedOrder.ChangeVolume(newVolume, _dateService.Now(), OriginatorType.System);
-                    var metadata = new OrderUpdateMetadata
+                    var metadata = new OrderChangedMetadata
                     {
-                        UpdatedProperty = OrderUpdatedProperty.Volume,
+                        UpdatedProperty = OrderChangedProperty.Volume,
                         OldValue = oldVolume.ToString("F2")
                     };
 
