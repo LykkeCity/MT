@@ -140,9 +140,15 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
             position.UpdateClosePrice(closePrice ?? order.ExecutionPrice.Value);
 
+            var isPositionAlreadyExist = _ordersCache.Positions.GetPositionsByInstrumentAndAccount(
+                position.AssetPairId,
+                position.AccountId).Any(p => p.Direction == position.Direction);
+
             _ordersCache.Positions.Add(position);
 
-            SendPositionHistoryEvent(position, PositionHistoryTypeContract.Open, 0);
+            var metadata = new PositionOpenMetadata {ExistingPositionIncreased = isPositionAlreadyExist};
+
+            SendPositionHistoryEvent(position, PositionHistoryTypeContract.Open, 0, metadata: metadata);
             
             ActivateRelatedOrders(position.RelatedOrders);
             
@@ -191,7 +197,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             }
         }
 
-        private void SendPositionHistoryEvent(Position position, PositionHistoryTypeContract historyType, decimal chargedPnl, Order dealOrder = null, decimal? dealVolume = null)
+        private void SendPositionHistoryEvent(Position position, PositionHistoryTypeContract historyType, decimal 
+        chargedPnl, Order dealOrder = null, decimal? dealVolume = null, PositionOpenMetadata metadata = null)
         {
             DealContract deal = null;
 
@@ -237,7 +244,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 PositionSnapshot = positionContract,
                 Deal = deal,
                 EventType = historyType,
-                Timestamp = _dateService.Now()
+                Timestamp = _dateService.Now(),
+                ActivitiesMetadata = metadata?.ToJson()
             };
 
             _rabbitMqNotifyService.PositionHistory(historyEvent);
