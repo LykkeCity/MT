@@ -68,7 +68,7 @@ namespace MarginTrading.Backend.Controllers
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpPost]
-        public async Task<string> PlaceAndGetIdAsync([FromBody] OrderPlaceRequest request)
+        public async Task<string> PlaceAsync([FromBody] OrderPlaceRequest request)
         {
             var (baseOrder, relatedOrders) = await _validateOrderService.ValidateRequestAndCreateOrders(request); 
             
@@ -97,17 +97,6 @@ namespace MarginTrading.Backend.Controllers
 
             return placedOrder.Id;
         }
-
-        /// <summary>
-        /// Place new order
-        /// </summary>
-        /// <param name="request">Order model</param>
-        [Route("")]
-        [MiddlewareFilter(typeof(RequestLoggingPipeline))]
-        [ServiceFilter(typeof(MarginTradingEnabledFilter))]
-        [HttpPost]
-        [Obsolete("Use PlaceAndGetIdAsync method.")]
-        public async Task PlaceAsync([FromBody] OrderPlaceRequest request) => await PlaceAndGetIdAsync(request);
 
         /// <summary>
         /// Cancel existing order
