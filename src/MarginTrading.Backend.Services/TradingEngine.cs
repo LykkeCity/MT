@@ -182,6 +182,11 @@ namespace MarginTrading.Backend.Services
                     _ordersCache.Active.Add(order);
                     _orderActivatedEventChannel.SendEvent(this, new OrderActivatedEventArgs(order));
                 }
+                else
+                {
+                    throw new ValidateOrderException(OrderRejectReason.InvalidParent,
+                        "Parent order is not active and have not opened position");
+                }
             }
             else
             {
