@@ -57,6 +57,12 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             var eventTime = _dateService.Now();
             var level = Map(ea.MarginCallLevel);
             var lastNotifications = NotificationsCache(ea.MarginCallLevel);
+
+            if (lastNotifications == null)
+            {
+                return; //todo to be fixed
+            }
+            
             var accountMarginEventMessage = AccountMarginEventMessageConverter.Create(account, level, eventTime);
             
             _threadSwitcher.SwitchThread(async () =>
@@ -106,7 +112,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 case AccountLevel.MarginCall1: return _mc1LastNotifications;
                 case AccountLevel.MarginCall2: return _mc2LastNotifications;
                 case AccountLevel.OvernightMarginCall: return _overnightMcLastNotifications;
-                default: throw new Exception($"Account level was {level.ToString()}, but MC1/MC2/Overnight were expected.");
+                default: return null;//throw new Exception($"Account level was {level.ToString()}, but MC1/MC2/Overnight were expected.");
             }
         }
 
@@ -117,7 +123,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 case AccountLevel.MarginCall1: return MarginEventTypeContract.MarginCall1;
                 case AccountLevel.MarginCall2: return MarginEventTypeContract.MarginCall2;
                 case AccountLevel.OvernightMarginCall: return MarginEventTypeContract.OvernightMarginCall;
-                default: throw new Exception($"Account level was {level.ToString()}, but MC1/MC2/Overnight were expected.");
+                default: return MarginEventTypeContract.Stopout;//throw new Exception($"Account level was {level.ToString()}, but MC1/MC2/Overnight were expected.");
             }
         }
     }
