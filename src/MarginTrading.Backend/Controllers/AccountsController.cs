@@ -30,18 +30,21 @@ namespace MarginTrading.Backend.Controllers
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly IDateService _dateService;
         private readonly AccountManager _accountManager;
+        private readonly IOrderReader _orderReader;
         private readonly TradingConditionsCacheService _tradingConditionsCache;
         private readonly ICqrsSender _cqrsSender;
 
         public AccountsController(IAccountsCacheService accountsCacheService,
             IDateService dateService,
             AccountManager accountManager,
+            IOrderReader orderReader,
             TradingConditionsCacheService tradingConditionsCache,
             ICqrsSender cqrsSender)
         {
             _accountsCacheService = accountsCacheService;
             _dateService = dateService;
             _accountManager = accountManager;
+            _orderReader = orderReader;
             _tradingConditionsCache = tradingConditionsCache;
             _cqrsSender = cqrsSender;
         }
@@ -79,6 +82,44 @@ namespace MarginTrading.Backend.Controllers
             var stats = _accountsCacheService.GetAllByPages(skip, take);
 
             return Task.FromResult(Convert(stats));
+        }
+
+        /// <summary>
+        /// Get accounts depending on active/open orders and positions for particular assets.
+        /// </summary>
+        /// <returns>List of account ids</returns>
+        [HttpPost("/api/accounts")]
+        public Task<List<string>> GetAllAccountIdsFiltered([FromQuery] HashSet<string> activeOrderAssetPairIds,
+            [FromQuery] HashSet<string> activePositionAssetPairIds, [FromQuery] bool? isAndClauseApplied)
+        {
+            if (isAndClauseApplied != null 
+                && (activeOrderAssetPairIds?.Count == 0 || activePositionAssetPairIds?.Count == 0))
+            {
+                throw new ArgumentException("isAndClauseApplied might be set only if both filters are set", 
+                    nameof(isAndClauseApplied));
+            }
+
+            var orderAccounts = _orderReader.GetPending()
+                .Where(x => activeOrderAssetPairIds?.Contains(x.AssetPairId) ?? true)
+                .Select(x => x.AccountId)
+                .Distinct();
+            var positionAccounts = _orderReader.GetPositions()
+                .Where(x => activePositionAssetPairIds?.Contains(x.AssetPairId) ?? true)
+                .Select(x => x.AccountId)
+                .Distinct();
+
+            var result = new List<string>();
+
+            if (isAndClauseApplied ?? false)
+            {
+                result.AddRange(orderAccounts.Intersect(positionAccounts));
+            }
+            else
+            {
+                result.AddRange(orderAccounts.Concat(positionAccounts));
+            }
+
+            return Task.FromResult(result.OrderBy(x => x).ToList());
         }
 
         /// <summary>
