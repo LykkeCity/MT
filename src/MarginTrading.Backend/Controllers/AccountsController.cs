@@ -100,11 +100,13 @@ namespace MarginTrading.Backend.Controllers
             }
 
             var orderAccounts = _orderReader.GetPending()
-                .Where(x => activeOrderAssetPairIds?.Contains(x.AssetPairId) ?? true)
+                .Where(x => activeOrderAssetPairIds == null || activeOrderAssetPairIds.Count == 0
+                                                            || activeOrderAssetPairIds.Contains(x.AssetPairId))
                 .Select(x => x.AccountId)
                 .Distinct();
             var positionAccounts = _orderReader.GetPositions()
-                .Where(x => activePositionAssetPairIds?.Contains(x.AssetPairId) ?? true)
+                .Where(x => activePositionAssetPairIds == null || activePositionAssetPairIds.Count == 0
+                                                               || activePositionAssetPairIds.Contains(x.AssetPairId))
                 .Select(x => x.AccountId)
                 .Distinct();
 
