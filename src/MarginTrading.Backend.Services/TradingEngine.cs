@@ -635,26 +635,45 @@ namespace MarginTrading.Backend.Services
         #endregion
 
 
-        public void ChangeOrderLimits(string orderId, decimal price, OriginatorType originator, string additionalInfo,
-            string correlationId)
+        public void ChangeOrder(string orderId, decimal price, DateTime? validity, OriginatorType originator,
+            string additionalInfo, string correlationId)
         {
             var order = _ordersCache.GetOrderById(orderId);
-
+          
             _validateOrderService.ValidateOrderPriceChange(order, price);
+            _validateOrderService.ValidateValidity(validity, order.OrderType);
 
-            var oldPrice = order.Price;
-            
-            order.ChangePrice(price, _dateService.Now(), originator, additionalInfo, correlationId);
-
-            var metadata = new OrderChangedMetadata
+            if (order.Price != price)
             {
-                UpdatedProperty = OrderChangedProperty.Price,
-                OldValue = oldPrice.HasValue ? oldPrice.Value.ToString("F5") : string.Empty
-            };
+                var oldPrice = order.Price;
             
-            _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata));
-        }
+                order.ChangePrice(price, _dateService.Now(), originator, additionalInfo, correlationId);
 
+                var metadata = new OrderChangedMetadata
+                {
+                    UpdatedProperty = OrderChangedProperty.Price,
+                    OldValue = oldPrice.HasValue ? oldPrice.Value.ToString("F5") : string.Empty
+                };
+            
+                _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata));    
+            }
+            
+            if (order.Validity != validity)
+            {
+                var oldValidity = order.Validity;
+            
+                order.ChangeValidity(validity, _dateService.Now(), originator, additionalInfo, correlationId);
+
+                var metadata = new OrderChangedMetadata
+                {
+                    UpdatedProperty = OrderChangedProperty.Validity,
+                    OldValue = oldValidity.HasValue ? oldValidity.Value.ToString("g") : "GTC"
+                };
+            
+                _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata));    
+            }
+        }
+        
         int IEventConsumer.ConsumerRank => 101;
 
         void IEventConsumer<BestPriceChangeEventArgs>.ConsumeEvent(object sender, BestPriceChangeEventArgs ea)

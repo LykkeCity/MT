@@ -15,6 +15,7 @@
         InvalidAccount,
         InvalidParent,
         TradingConditionError,
+        InvalidValidity,
         TechnicalError,
         ParentPositionDoesNotExist,
         ParentPositionIsNotActive,

@@ -1,8 +1,12 @@
-﻿namespace MarginTrading.Backend.Contracts.Orders
+﻿using System;
+
+namespace MarginTrading.Backend.Contracts.Orders
 {
     public class OrderChangeRequest
     {
         public decimal Price { get; set; }
+        
+        public DateTime? Validity { get; set; }
         
         public OriginatorTypeContract Originator { get; set; }
         

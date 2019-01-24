@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;
@@ -19,7 +20,8 @@ namespace MarginTrading.Backend.Core
         Order CancelPendingOrder(string orderId, OriginatorType originator, string additionalInfo, string correlationId,
             string comment = null);
             
-        void ChangeOrderLimits(string orderId, decimal price, OriginatorType originator, string additionalInfo,
+        void ChangeOrder(string orderId, decimal price, DateTime? validity, OriginatorType originator,
+            string additionalInfo,
             string correlationId);
             
         bool ShouldOpenNewPosition(Order order);

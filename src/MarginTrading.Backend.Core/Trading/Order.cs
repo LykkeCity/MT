@@ -356,6 +356,16 @@ namespace MarginTrading.Backend.Core.Trading
             SetExecutionSortRank();
         }
         
+        public void ChangeValidity(DateTime? newValidity, DateTime dateTime, OriginatorType originator, string additionalInfo,
+            string correlationId)
+        {
+            LastModified = dateTime;
+            Validity = newValidity;
+            Originator = originator;
+            AdditionalInfo = additionalInfo ?? AdditionalInfo;
+            CorrelationId = correlationId;
+        }
+        
         public void ChangeVolume(decimal newVolume, DateTime dateTime, OriginatorType originator)
         {
             LastModified = dateTime;

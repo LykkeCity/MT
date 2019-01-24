@@ -13,8 +13,12 @@
         InvalidStoploss,
         InvalidInstrument,
         InvalidAccount,
+        InvalidParent,
         TradingConditionError,
+        InvalidValidity,
         TechnicalError,
         ShortPositionsDisabled,
+        ParentPositionDoesNotExist,
+        ParentPositionIsNotActive
     }
 }
