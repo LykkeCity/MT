@@ -46,12 +46,13 @@ namespace MarginTrading.Backend.Contracts
             [Query, CanBeNull] string parentOrderId = null);
 
         /// <summary>
-        /// Get open orders with optional filtering and pagination
+        /// Get open orders with optional filtering and pagination. Sorted descending by default.
         /// </summary>
         [Get("/api/orders/by-pages")]
         Task<PaginatedResponseContract<OrderContract>> ListAsyncByPages([Query] [CanBeNull] string accountId = null,
             [Query] [CanBeNull] string assetPairId = null, [Query] [CanBeNull] string parentPositionId = null,
             [Query] [CanBeNull] string parentOrderId = null,
-            [Query] [CanBeNull] int? skip = null, [Query] [CanBeNull] int? take = null);
+            [Query] [CanBeNull] int? skip = null, [Query] [CanBeNull] int? take = null,
+            [Query] string order = "DESC");
     }
 }

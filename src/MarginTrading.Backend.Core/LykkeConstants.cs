@@ -17,5 +17,8 @@
         public const string MigrationsBlobContainer = "migrations";
 
         public const string MaintenanceModeRoute = "maintenance";
+        
+        public const string AscendingOrder = "ASC";
+        public const string DescendingOrder = "DESC";
     }
 }

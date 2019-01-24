@@ -202,14 +202,15 @@ namespace MarginTrading.Backend.Controllers
         }
 
         /// <summary>
-        /// Get open orders with optional filtering and pagination
+        /// Get open orders with optional filtering and pagination. Sorted descending by default.
         /// </summary>
         [HttpGet, Route("by-pages")]
         public Task<PaginatedResponseContract<OrderContract>> ListAsyncByPages(
             [FromQuery] string accountId = null,
             [FromQuery] string assetPairId = null, [FromQuery] string parentPositionId = null,
             [FromQuery] string parentOrderId = null,
-            [FromQuery] int? skip = null, [FromQuery] int? take = null)
+            [FromQuery] int? skip = null, [FromQuery] int? take = null,
+            [FromQuery] string order = LykkeConstants.DescendingOrder)
         {
             if ((skip.HasValue && !take.HasValue) || (!skip.HasValue && take.HasValue))
             {
@@ -235,7 +236,10 @@ namespace MarginTrading.Backend.Controllers
             if (!string.IsNullOrWhiteSpace(parentOrderId))
                 orders = orders.Where(o => o.ParentOrderId == parentOrderId);
 
-            var orderList = orders.OrderByDescending(x => x.Created).ToList();
+            var orderList = (order == LykkeConstants.AscendingOrder
+                    ? orders.OrderBy(x => x.Created)
+                    : orders.OrderByDescending(x => x.Created))
+                .ToList();
             var filtered = (take == null ? orderList : orderList.Skip(skip.Value))
                 .Take(PaginationHelper.GetTake(take)).ToList();
 
