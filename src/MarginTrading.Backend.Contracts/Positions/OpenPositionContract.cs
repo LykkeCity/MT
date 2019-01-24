@@ -25,9 +25,29 @@ namespace MarginTrading.Backend.Contracts.Positions
         public string AssetPairId { get; set; }
         
         /// <summary>
+        /// Id of the opening trade
+        /// </summary>
+        public string OpenTradeId { get; set; }
+        
+        /// <summary>
+        /// Type of the opening order
+        /// </summary>
+        public OrderTypeContract OpenOrderType { get; set; }
+        
+        /// <summary>
+        /// Volume of the opening order 
+        /// </summary>
+        public decimal OpenOrderVolume { get; set; }
+        
+        /// <summary>
         /// When the position was opened
         /// </summary>
         public DateTime OpenTimestamp { get; set; }
+        
+        /// <summary>
+        /// When the position was modified (partially closed)
+        /// </summary>
+        public DateTime? ModifiedTimestamp { get; set; }
 
         /// <summary>
         /// The direction of the position (Long or Short)

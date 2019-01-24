@@ -237,6 +237,9 @@ namespace MarginTrading.Backend.Controllers
                 OpenFxPrice = position.OpenFxPrice,
                 ClosePrice = position.ClosePrice,
                 ExpectedOpenPrice = position.ExpectedOpenPrice,
+                OpenTradeId = position.OpenTradeId,
+                OpenOrderType = position.OpenOrderType.ToType<OrderTypeContract>(),
+                OpenOrderVolume = position.OpenOrderVolume,
                 PnL = position.GetFpl(),
                 ChargedPnl = position.ChargedPnL,
                 Margin = position.GetMarginMaintenance(),
@@ -247,6 +250,7 @@ namespace MarginTrading.Backend.Controllers
                 RelatedOrderInfos = position.RelatedOrders.Select(o =>
                     new RelatedOrderInfoContract {Id = o.Id, Type = o.Type.ToType<OrderTypeContract>()}).ToList(),
                 OpenTimestamp = position.OpenDate,
+                ModifiedTimestamp = position.LastModified,
                 TradeId = position.Id
             };
         }
