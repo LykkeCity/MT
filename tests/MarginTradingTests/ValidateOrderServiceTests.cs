@@ -377,7 +377,7 @@ namespace MarginTradingTests
             var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
                 await _validateOrderService.ValidateRequestAndCreateOrders(request));
 
-            Assert.That(ex.RejectReason == OrderRejectReason.TechnicalError);
+            Assert.That(ex.RejectReason == OrderRejectReason.InvalidValidity);
         }
 
         [Test]
