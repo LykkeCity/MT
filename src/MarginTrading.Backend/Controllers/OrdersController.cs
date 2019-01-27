@@ -63,15 +63,16 @@ namespace MarginTrading.Backend.Controllers
         /// Place new order
         /// </summary>
         /// <param name="request">Order model</param>
+        /// <returns>Order Id</returns>
         [Route("")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpPost]
-        public async Task PlaceAsync([FromBody] OrderPlaceRequest request)
+        public async Task<string> PlaceAsync([FromBody] OrderPlaceRequest request)
         {
-            var orders = await _validateOrderService.ValidateRequestAndCreateOrders(request); 
+            var (baseOrder, relatedOrders) = await _validateOrderService.ValidateRequestAndCreateOrders(request); 
             
-            var placedOrder = await _tradingEngine.PlaceOrderAsync(orders.order);
+            var placedOrder = await _tradingEngine.PlaceOrderAsync(baseOrder);
 
             _consoleWriter.WriteLine($"Order place. Account: [{request.AccountId}], Order: [{placedOrder.Id}]");
             
@@ -82,19 +83,19 @@ namespace MarginTrading.Backend.Controllers
             {
                 throw new Exception($"Order is rejected: {placedOrder.RejectReason} ({placedOrder.RejectReasonText})");
             }
-            else
+
+            foreach (var order in relatedOrders)
             {
-                foreach (var order in orders.relatedOrders)
-                {
-                    var placedRelatedOrder = await _tradingEngine.PlaceOrderAsync(order);
+                var placedRelatedOrder = await _tradingEngine.PlaceOrderAsync(order);
                     
-                    _consoleWriter.WriteLine(
-                        $"Related order place. Account: [{request.AccountId}], Order: [{placedRelatedOrder.Id}]");
+                _consoleWriter.WriteLine(
+                    $"Related order place. Account: [{request.AccountId}], Order: [{placedRelatedOrder.Id}]");
             
-                    _operationsLogService.AddLog("action related.order.place", request.AccountId, request.ToJson(),
-                        placedRelatedOrder.ToJson());
-                }
+                _operationsLogService.AddLog("action related.order.place", request.AccountId, request.ToJson(),
+                    placedRelatedOrder.ToJson());
             }
+
+            return placedOrder.Id;
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Contracts.Common;
@@ -16,9 +17,11 @@ namespace MarginTrading.Backend.Contracts
         /// <summary>
         /// Place new order
         /// </summary>
+        /// <param name="request">Order model</param>
+        /// <returns>Order Id</returns>
         [Post("/api/orders")]
-        Task PlaceAsync([Body][NotNull] OrderPlaceRequest request);
-
+        Task<string> PlaceAsync([Body] [NotNull] OrderPlaceRequest request);
+        
         /// <summary>
         /// Change existing order
         /// </summary>
