@@ -41,8 +41,6 @@ namespace MarginTrading.Backend.Services
             var positions =
                 _marginTradingBlobRepository.Read<List<Position>>(LykkeConstants.StateBlobContainer, PositionsBlobName) ??
                 new List<Position>();
-
-            MigrateFx(orders, positions);//todo remove after deployment
             
             _orderCache.InitOrders(orders, positions);
 
@@ -89,27 +87,6 @@ namespace MarginTrading.Backend.Services
             catch (Exception ex)
             {
                 await _log.WriteErrorAsync(nameof(OrdersCache), "Save positions", "", ex);
-            }
-        }
-
-        private void MigrateFx(List<Order> orders, List<Position> positions)
-        {
-            foreach (var order in orders.Where(x => string.IsNullOrEmpty(x.FxAssetPairId)))
-            {
-                var fx = _cfdCalculatorService.GetFxAssetPairIdAndDirection(order.AccountAssetId, order.AssetPairId,
-                    order.LegalEntity);
-
-                order.FxAssetPairId = fx.id;
-                order.FxToAssetPairDirection = fx.direction;
-            }
-
-            foreach (var position in positions.Where(x => string.IsNullOrEmpty(x.FxAssetPairId)))
-            {
-                var fx = _cfdCalculatorService.GetFxAssetPairIdAndDirection(position.AccountAssetId, position.AssetPairId,
-                    position.LegalEntity);
-
-                position.FxAssetPairId = fx.id;
-                position.FxToAssetPairDirection = fx.direction;
             }
         }
     }

@@ -145,7 +145,7 @@ namespace MarginTrading.Backend.Core.Trading
         /// FX asset pair id
         /// </summary>
         [JsonProperty]
-        public string FxAssetPairId { get; set; }
+        public string FxAssetPairId { get; protected set; }
         
         /// <summary>
         /// Shows if account asset id is directly related on asset pair quote asset.
@@ -153,7 +153,7 @@ namespace MarginTrading.Backend.Core.Trading
         /// If AssetPair is {BaseId, QuoteId} and FxAssetPair is {AccountAssetId, QuoteId} => Reverse
         /// </summary>
         [JsonProperty]
-        public FxToAssetPairDirection FxToAssetPairDirection { get; set; }
+        public FxToAssetPairDirection FxToAssetPairDirection { get; protected set; }
         
         /// <summary>
         /// Current order status
