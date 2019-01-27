@@ -17,6 +17,7 @@
         TradingConditionError,
         TechnicalError,
         ParentPositionDoesNotExist,
-        ParentPositionIsNotActive
+        ParentPositionIsNotActive,
+        ShortPositionsDisabled,
     }
 }

@@ -57,7 +57,8 @@ namespace MarginTradingTests
                     Instrument = "BTCCHF",
                     LeverageInit = 10,
                     LeverageMaintenance = 15,
-                    Delta = 30
+                    Delta = 30,
+                    ShortPosition = true,
                 },
                 new TradingInstrumentContract
                 {
@@ -66,6 +67,7 @@ namespace MarginTradingTests
                     LeverageInit = 100,
                     LeverageMaintenance = 150,
                     Delta = 30,
+                    ShortPosition = true,
                     DealMaxLimit = 1000000,
                     PositionLimit = 10000000
                 },
@@ -75,7 +77,8 @@ namespace MarginTradingTests
                     Instrument = "BTCEUR",
                     LeverageInit = 10,
                     LeverageMaintenance = 15,
-                    Delta = 30
+                    Delta = 30,
+                    ShortPosition = true,
                 },
                 new TradingInstrumentContract
                 {
@@ -84,6 +87,7 @@ namespace MarginTradingTests
                     LeverageInit = 10,
                     LeverageMaintenance = 15,
                     Delta = 30,
+                    ShortPosition = true,
                     DealMaxLimit = 10,
                     PositionLimit = 100
                 },
@@ -93,7 +97,8 @@ namespace MarginTradingTests
                     Instrument = "CHFJPY",
                     LeverageInit = 10,
                     LeverageMaintenance = 15,
-                    Delta = 30
+                    Delta = 30,
+                    ShortPosition = true,
                 },
                 new TradingInstrumentContract
                 {
@@ -101,7 +106,8 @@ namespace MarginTradingTests
                     Instrument = "JPYUSD",
                     LeverageInit = 100,
                     LeverageMaintenance = 150,
-                    Delta = 30
+                    Delta = 30,
+                    ShortPosition = true,
                 },
                 new TradingInstrumentContract
                 {
@@ -109,7 +115,8 @@ namespace MarginTradingTests
                     Instrument = "EURGBP",
                     LeverageInit = 100,
                     LeverageMaintenance = 150,
-                    Delta = 30
+                    Delta = 30,
+                    ShortPosition = true,
                 },
                 new TradingInstrumentContract
                 {
@@ -117,7 +124,8 @@ namespace MarginTradingTests
                     Instrument = "GBPUSD",
                     LeverageInit = 100,
                     LeverageMaintenance = 150,
-                    Delta = 30
+                    Delta = 30,
+                    ShortPosition = true,
                 },
                 new TradingInstrumentContract
                 {
@@ -125,7 +133,8 @@ namespace MarginTradingTests
                     Instrument = "BTCJPY",
                     LeverageInit = 100,
                     LeverageMaintenance = 150,
-                    Delta = 30
+                    Delta = 30,
+                    ShortPosition = true,
                 }
             };
 

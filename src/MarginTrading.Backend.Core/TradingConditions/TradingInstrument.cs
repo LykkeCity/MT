@@ -1,5 +1,8 @@
-﻿namespace MarginTrading.Backend.Core.TradingConditions
+﻿using JetBrains.Annotations;
+
+namespace MarginTrading.Backend.Core.TradingConditions
 {
+    [UsedImplicitly]
     public class TradingInstrument : ITradingInstrument
     {
         public string TradingConditionId { get; set; }
@@ -12,6 +15,7 @@
         public decimal DealMinLimit { get; set; }
         public decimal DealMaxLimit { get; set; }
         public decimal PositionLimit { get; set; }
+        public bool ShortPosition { get; set; }
         public decimal LiquidationThreshold { get; set; }
         public decimal CommissionRate { get; set; }
         public decimal CommissionMin { get; set; }

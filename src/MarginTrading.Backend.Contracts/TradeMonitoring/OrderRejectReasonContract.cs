@@ -14,6 +14,7 @@
         InvalidInstrument,
         InvalidAccount,
         TradingConditionError,
-        TechnicalError
+        TechnicalError,
+        ShortPositionsDisabled,
     }
 }
