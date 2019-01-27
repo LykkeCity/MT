@@ -28,7 +28,6 @@ namespace MarginTradingTests
     {
         private const string AssetWithDayOff = "EURUSD";
         private const string AssetWithoutDayOff = "BTCUSD";
-        private CompiledScheduleChangedEvent _sentMessage = null;
         
         private static readonly CompiledScheduleSettingsContract[] ScheduleSettings = {
             new CompiledScheduleSettingsContract

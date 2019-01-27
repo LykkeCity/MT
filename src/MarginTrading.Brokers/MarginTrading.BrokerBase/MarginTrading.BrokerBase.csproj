@@ -4,14 +4,17 @@
     <Version>1.0.1</Version>
     <LangVersion>7.3</LangVersion>
   </PropertyGroup>
+  <PropertyGroup>
+    <NoWarn>1701;1702;1705;CA2007;0612;0618;1591</NoWarn>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Dapper" Version="1.50.5" />
     <PackageReference Include="flurl.http" Version="2.3.1" />
     <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
-    <PackageReference Include="Lykke.Logs" Version="4.3.4" />
+    <PackageReference Include="Lykke.Logs" Version="7.2.1" />
     <PackageReference Include="Lykke.RabbitMqBroker" Version="7.0.1" />
-    <PackageReference Include="Lykke.SettingsReader" Version="2.4.0" />
-    <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="2.0.4" />
+    <PackageReference Include="Lykke.SettingsReader" Version="4.2.0" />
+    <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="2.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.ApplicationInsights.HostingStartup" Version="2.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.1.1" />
     <PackageReference Include="microsoft.aspnetcore.Mvc" Version="2.1.1" />

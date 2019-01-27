@@ -11,6 +11,7 @@ using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Services;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Backend.Services.Stp;
@@ -29,6 +30,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         private readonly IDateService _dateService;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly IAssetPairsCache _assetPairsCache;
+        private readonly MarginTradingSettings _marginTradingSettings;
         public string Id { get; }
 
         public MatchingEngineMode Mode => MatchingEngineMode.Stp;
@@ -40,7 +42,8 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             IOperationsLogService operationsLogService,
             IDateService dateService,
             IRabbitMqNotifyService rabbitMqNotifyService,
-            IAssetPairsCache assetPairsCache)
+            IAssetPairsCache assetPairsCache,
+            MarginTradingSettings marginTradingSettings)
         {
             _externalOrderbookService = externalOrderbookService;
             _exchangeConnectorService = exchangeConnectorService;
@@ -49,6 +52,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             _dateService = dateService;
             _rabbitMqNotifyService = rabbitMqNotifyService;
             _assetPairsCache = assetPairsCache;
+            _marginTradingSettings = marginTradingSettings;
             Id = id;
         }
         
@@ -129,7 +133,12 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 }
                 catch (Exception e)
                 {
-                    _log.WriteError($"{nameof(StpMatchingEngine)}:{nameof(MatchOrderAsync)}",
+                    var connector =
+                        _marginTradingSettings.ExchangeConnector == ExchangeConnectorType.FakeExchangeConnector
+                            ? "Fake"
+                            : _exchangeConnectorService.BaseUri.OriginalString;
+                    _log.WriteError(
+                        $"{nameof(StpMatchingEngine)}:{nameof(MatchOrderAsync)}:{connector}",
                         $"Internal order: {order.ToJson()}, External order model: {externalOrderModel.ToJson()}", e);
                 }
             }

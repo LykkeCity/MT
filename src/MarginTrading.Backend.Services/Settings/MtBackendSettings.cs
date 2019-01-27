@@ -26,7 +26,7 @@ namespace MarginTrading.Backend.Services.Settings
         [Optional, CanBeNull]
         public ClientAccountServiceSettings ClientAccountServiceClient { get; set; }
         
-        public ExchangeConnectorServiceSettings MtStpExchangeConnectorClient { get; set; }
+        public ExchangeConnectorServiceClient MtStpExchangeConnectorClient { get; set; }
         
         public SettingsServiceClient SettingsServiceClient { get; set; }
         
