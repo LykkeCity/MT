@@ -89,30 +89,29 @@ namespace MarginTrading.Backend.Controllers
         /// </summary>
         /// <returns>List of account ids</returns>
         [HttpPost("/api/accounts")]
-        public Task<List<string>> GetAllAccountIdsFiltered([FromQuery] HashSet<string> activeOrderAssetPairIds,
-            [FromQuery] HashSet<string> activePositionAssetPairIds, [FromQuery] bool? isAndClauseApplied)
+        public Task<List<string>> GetAllAccountIdsFiltered([FromBody] ActiveAccountsRequest request)
         {
-            if (isAndClauseApplied != null 
-                && (activeOrderAssetPairIds?.Count == 0 || activePositionAssetPairIds?.Count == 0))
+            if (request.IsAndClauseApplied != null 
+                && (request.ActiveOrderAssetPairIds?.Count == 0 || request.ActivePositionAssetPairIds?.Count == 0))
             {
                 throw new ArgumentException("isAndClauseApplied might be set only if both filters are set", 
-                    nameof(isAndClauseApplied));
+                    nameof(request.IsAndClauseApplied));
             }
 
             var orderAccounts = _orderReader.GetPending()
-                .Where(x => activeOrderAssetPairIds == null || activeOrderAssetPairIds.Count == 0
-                                                            || activeOrderAssetPairIds.Contains(x.AssetPairId))
+                .Where(x => request.ActiveOrderAssetPairIds == null || request.ActiveOrderAssetPairIds.Count == 0
+                                                            || request.ActiveOrderAssetPairIds.Contains(x.AssetPairId))
                 .Select(x => x.AccountId)
                 .Distinct();
             var positionAccounts = _orderReader.GetPositions()
-                .Where(x => activePositionAssetPairIds == null || activePositionAssetPairIds.Count == 0
-                                                               || activePositionAssetPairIds.Contains(x.AssetPairId))
+                .Where(x => request.ActivePositionAssetPairIds == null || request.ActivePositionAssetPairIds.Count == 0
+                                                               || request.ActivePositionAssetPairIds.Contains(x.AssetPairId))
                 .Select(x => x.AccountId)
                 .Distinct();
 
             var result = new List<string>();
 
-            if (isAndClauseApplied ?? false)
+            if (request.IsAndClauseApplied ?? false)
             {
                 result.AddRange(orderAccounts.Intersect(positionAccounts));
             }

@@ -28,8 +28,7 @@ namespace MarginTrading.Backend.Contracts
         /// </summary>
         /// <returns>List of account ids</returns>
         [Post("/api/accounts")]
-        Task<List<string>> GetAllAccountIdsFiltered([Query, CanBeNull] HashSet<string> activeOrderAssetPairIds,
-            [Query, CanBeNull] HashSet<string> activePositionAssetPairIds, [Query, CanBeNull] bool? isAndClauseApplied);
+        Task<List<string>> GetAllAccountIdsFiltered([Body] ActiveAccountsRequest request);
         
         /// <summary>
         /// Returns stats of selected account
