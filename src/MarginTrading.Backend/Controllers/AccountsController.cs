@@ -92,35 +92,61 @@ namespace MarginTrading.Backend.Controllers
         public Task<List<string>> GetAllAccountIdsFiltered([FromBody] ActiveAccountsRequest request)
         {
             if (request.IsAndClauseApplied != null 
-                && (request.ActiveOrderAssetPairIds?.Count == 0 || request.ActivePositionAssetPairIds?.Count == 0))
+                && (request.ActiveOrderAssetPairIds == null || request.ActivePositionAssetPairIds == null))
             {
                 throw new ArgumentException("isAndClauseApplied might be set only if both filters are set", 
                     nameof(request.IsAndClauseApplied));
             }
 
-            var orderAccounts = _orderReader.GetPending()
-                .Where(x => request.ActiveOrderAssetPairIds == null || request.ActiveOrderAssetPairIds.Count == 0
-                                                            || request.ActiveOrderAssetPairIds.Contains(x.AssetPairId))
-                .Select(x => x.AccountId)
-                .Distinct();
-            var positionAccounts = _orderReader.GetPositions()
-                .Where(x => request.ActivePositionAssetPairIds == null || request.ActivePositionAssetPairIds.Count == 0
-                                                               || request.ActivePositionAssetPairIds.Contains(x.AssetPairId))
-                .Select(x => x.AccountId)
-                .Distinct();
+            var accountIds = _accountsCacheService.GetAll().Select(x => x.Id).ToList();
 
-            var result = new List<string>();
+            List<string> accountIdsByOrders = null;
+            if (request.ActiveOrderAssetPairIds != null)
+            {
+                var orderAccounts = _orderReader.GetPending()
+                    .Where(x => request.ActiveOrderAssetPairIds.Count == 0
+                                || request.ActiveOrderAssetPairIds.Contains(x.AssetPairId))
+                    .Select(x => x.AccountId)
+                    .Distinct();
+
+                accountIdsByOrders = accountIds.Where(x => orderAccounts.Any(oap => oap == x)).ToList();
+            }
+
+            List<string> accountIdsByPositions = null;
+            if (request.ActivePositionAssetPairIds != null)
+            {
+                var positionAccounts = _orderReader.GetPositions()
+                    .Where(x => request.ActivePositionAssetPairIds.Count == 0
+                                || request.ActivePositionAssetPairIds.Contains(x.AssetPairId))
+                    .Select(x => x.AccountId)
+                    .Distinct();
+
+                accountIdsByPositions = accountIds.Where(x => positionAccounts.Any(pap => pap == x)).ToList();
+            }
+
+            if (accountIdsByOrders == null && accountIdsByPositions != null)
+            {
+                return Task.FromResult(accountIdsByPositions.OrderBy(x => x).ToList());
+            }
+
+            if (accountIdsByOrders != null && accountIdsByPositions == null)
+            {
+                return Task.FromResult(accountIdsByOrders.OrderBy(x => x).ToList());
+            }
+
+            if (accountIdsByOrders == null && accountIdsByPositions == null)
+            {
+                return Task.FromResult(accountIds.OrderBy(x => x).ToList());
+            }
 
             if (request.IsAndClauseApplied ?? false)
             {
-                result.AddRange(orderAccounts.Intersect(positionAccounts));
-            }
-            else
-            {
-                result.AddRange(orderAccounts.Concat(positionAccounts));
+                return Task.FromResult(accountIdsByOrders.Intersect(accountIdsByPositions)
+                    .OrderBy(x => x).ToList());
             }
 
-            return Task.FromResult(result.OrderBy(x => x).ToList());
+            return Task.FromResult(accountIdsByOrders.Concat(accountIdsByPositions)
+                .Distinct().OrderBy(x => x).ToList());
         }
 
         /// <summary>
