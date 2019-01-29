@@ -10,7 +10,7 @@ namespace MarginTrading.Backend.Services.Notifications
 {
 	public interface IRabbitMqNotifyService
 	{
-		Task OrderHistory(Order order, OrderUpdateType orderUpdateType);
+		Task OrderHistory(Order order, OrderUpdateType orderUpdateType, string activitiesMetadata = null);
 		Task OrderBookPrice(InstrumentBidAskPair quote);
 		Task AccountUpdated(IMarginTradingAccount account);
 		void Stop();

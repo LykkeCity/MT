@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using Lykke.Common;
+using MarginTrading.Backend.Contracts.Activities;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.MatchingEngines;
@@ -181,6 +182,11 @@ namespace MarginTrading.Backend.Services
                     _ordersCache.Active.Add(order);
                     _orderActivatedEventChannel.SendEvent(this, new OrderActivatedEventArgs(order));
                 }
+                else
+                {
+                    throw new ValidateOrderException(OrderRejectReason.InvalidParent,
+                        "Parent order is not active and have not opened position");
+                }
             }
             else
             {
@@ -327,8 +333,10 @@ namespace MarginTrading.Backend.Services
             else if (!_ordersCache.TryGetOrderById(order.Id, out _)) // all pending orders should be returned to active state if there is no liquidity
             {
                 order.CancelExecution(_dateService.Now());
-                _ordersCache.Active.Add(order);   
-                _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order));
+                _ordersCache.Active.Add(order);
+                _orderChangedEventChannel.SendEvent(this,
+                    new OrderChangedEventArgs(order,
+                        new OrderChangedMetadata {UpdatedProperty = OrderChangedProperty.None}));
             }
         }
 
@@ -365,7 +373,8 @@ namespace MarginTrading.Backend.Services
                 {
                     _ordersCache.Active.Remove(order);
                     order.Expire(now);
-                    _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order));
+                    var metadata = new OrderCancelledMetadata {Reason = OrderCancellationReason.Expired};
+                    _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order, metadata));
                     continue;
                 }
 
@@ -616,8 +625,9 @@ namespace MarginTrading.Backend.Services
             }
             
             order.Cancel(_dateService.Now(), originator, additionalInfo, correlationId);
-            
-            _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order));
+
+            var metadata = new OrderCancelledMetadata {Reason = OrderCancellationReason.None};
+            _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order, metadata));
             
             return order;
         }
@@ -632,9 +642,17 @@ namespace MarginTrading.Backend.Services
 
             _validateOrderService.ValidateOrderPriceChange(order, price);
 
+            var oldPrice = order.Price;
+            
             order.ChangePrice(price, _dateService.Now(), originator, additionalInfo, correlationId);
 
-            _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order));
+            var metadata = new OrderChangedMetadata
+            {
+                UpdatedProperty = OrderChangedProperty.Price,
+                OldValue = oldPrice.HasValue ? oldPrice.Value.ToString("F5") : string.Empty
+            };
+            
+            _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata));
         }
 
         int IEventConsumer.ConsumerRank => 101;

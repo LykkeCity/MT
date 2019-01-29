@@ -5,6 +5,7 @@ using System.Linq;
 using AutoMapper;
 using Common;
 using Common.Log;
+using MarginTrading.Backend.Contracts.Activities;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
@@ -110,7 +111,11 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             SendPositionHistoryEvent(position, PositionHistoryTypeContract.Close,
                 position.ChargedPnL, order, Math.Abs(position.Volume));
 
-            CancelRelatedOrders(position.RelatedOrders, order.CorrelationId);
+            var reason = order.IsBasicOrder()
+                ? OrderCancellationReason.ParentPositionClosed
+                : OrderCancellationReason.ConnectedOrderExecuted;
+            
+            CancelRelatedOrdersForClosedPosition(position, order.CorrelationId, reason);
         }
 
         private void OpenNewPosition(Order order, decimal volume)
@@ -135,9 +140,15 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
             position.UpdateClosePrice(closePrice ?? order.ExecutionPrice.Value);
 
+            var isPositionAlreadyExist = _ordersCache.Positions.GetPositionsByInstrumentAndAccount(
+                position.AssetPairId,
+                position.AccountId).Any(p => p.Direction == position.Direction);
+
             _ordersCache.Positions.Add(position);
 
-            SendPositionHistoryEvent(position, PositionHistoryTypeContract.Open, 0);
+            var metadata = new PositionOpenMetadata {ExistingPositionIncreased = isPositionAlreadyExist};
+
+            SendPositionHistoryEvent(position, PositionHistoryTypeContract.Open, 0, metadata: metadata);
             
             ActivateRelatedOrders(position.RelatedOrders);
             
@@ -186,7 +197,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             }
         }
 
-        private void SendPositionHistoryEvent(Position position, PositionHistoryTypeContract historyType, decimal chargedPnl, Order dealOrder = null, decimal? dealVolume = null)
+        private void SendPositionHistoryEvent(Position position, PositionHistoryTypeContract historyType, decimal 
+        chargedPnl, Order dealOrder = null, decimal? dealVolume = null, PositionOpenMetadata metadata = null)
         {
             DealContract deal = null;
 
@@ -232,7 +244,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 PositionSnapshot = positionContract,
                 Deal = deal,
                 EventType = historyType,
-                Timestamp = _dateService.Now()
+                Timestamp = _dateService.Now(),
+                ActivitiesMetadata = metadata?.ToJson()
             };
 
             _rabbitMqNotifyService.PositionHistory(historyEvent);
@@ -251,14 +264,17 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             }
         }
         
-        private void CancelRelatedOrders(List<RelatedOrderInfo> relatedOrderInfos, string correlationId)
+        private void CancelRelatedOrdersForClosedPosition(Position position, string correlationId,
+            OrderCancellationReason reason)
         {
-            foreach (var relatedOrderInfo in relatedOrderInfos)
+            var metadata = new OrderCancelledMetadata {Reason = reason};
+            
+            foreach (var relatedOrderInfo in position.RelatedOrders)
             {
                 if (_ordersCache.Active.TryPopById(relatedOrderInfo.Id, out var relatedOrder))
                 {
                     relatedOrder.Cancel(_dateService.Now(), OriginatorType.System, null, correlationId);
-                    _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(relatedOrder));
+                    _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(relatedOrder, metadata));
                 }
             }
         }
@@ -270,8 +286,16 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 if (_ordersCache.TryGetOrderById(relatedOrderInfo.Id, out var relatedOrder)
                     && relatedOrder.Volume != newVolume)
                 {
+                    var oldVolume = relatedOrder.Volume;
+                    
                     relatedOrder.ChangeVolume(newVolume, _dateService.Now(), OriginatorType.System);
-                    _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(relatedOrder));
+                    var metadata = new OrderChangedMetadata
+                    {
+                        UpdatedProperty = OrderChangedProperty.Volume,
+                        OldValue = oldVolume.ToString("F2")
+                    };
+
+                    _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(relatedOrder, metadata));
                 }
             }
         }

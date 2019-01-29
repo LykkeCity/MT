@@ -15,5 +15,7 @@ namespace MarginTrading.Backend.Services.Events
         public abstract OrderUpdateType UpdateType { get; }
         
         [NotNull] public Order Order { get; }
+
+        public string ActivitiesMetadata { get; protected set; }
     }
 }

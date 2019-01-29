@@ -10,5 +10,10 @@ namespace MarginTrading.Backend.Contracts.Events
         public OrderHistoryTypeContract Type { get; set; }
         
         public DateTime Timestamp { get; set; }
+        
+        /// <summary>
+        /// Serialised object with additional information for activities in any format
+        /// </summary>
+        public string ActivitiesMetadata { get; set; }
     }
 }
