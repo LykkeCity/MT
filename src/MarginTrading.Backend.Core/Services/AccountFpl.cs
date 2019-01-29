@@ -14,6 +14,7 @@ namespace MarginTrading.Backend.Core
         public decimal UsedMargin { get; set; }
         public decimal MarginInit { get; set; }
         public int OpenPositionsCount { get; set; }
+        public int ActiveOrdersCount { get; set; }
         public decimal MarginCall1Level { get; set; }
         public decimal MarginCall2Level { get; set; }
         public decimal StopOutLevel { get; set; }

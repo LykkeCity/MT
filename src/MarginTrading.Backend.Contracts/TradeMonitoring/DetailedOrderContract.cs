@@ -1,6 +1,7 @@
 ﻿using MarginTrading.Backend.Contracts.AssetPairSettings;
 using System;
 using System.Collections.Generic;
+using MarginTrading.Backend.Contracts.Orders;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 

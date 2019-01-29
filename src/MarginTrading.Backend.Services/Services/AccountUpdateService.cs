@@ -147,6 +147,7 @@ namespace MarginTrading.Backend.Services
             account.AccountFpl.UsedMargin = Math.Round(activeOrdersMaintenanceMargin + pendingOrdersMargin, accuracy);
             account.AccountFpl.MarginInit = Math.Round(activeOrdersInitMargin + pendingOrdersMargin, accuracy);
             account.AccountFpl.OpenPositionsCount = positions.Count;
+            account.AccountFpl.ActiveOrdersCount = pendingOrders.Count;
 
             var tradingCondition = _tradingConditionsCache.GetTradingCondition(account.TradingConditionId);
 
