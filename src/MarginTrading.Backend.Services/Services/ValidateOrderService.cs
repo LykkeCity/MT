@@ -89,7 +89,7 @@ namespace MarginTrading.Backend.Services
                     if (request.Price <= 0)
                     {
                         throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
-                            $"Price should be more then 0");
+                            $"Price should be more than 0");
                     }
                 }
             }
@@ -229,7 +229,7 @@ namespace MarginTrading.Backend.Services
             if (newPrice <= 0)
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
-                    $"Price should be more then 0");
+                    $"Price should be more than 0");
             }
             
             if (order.IsBasicOrder())
