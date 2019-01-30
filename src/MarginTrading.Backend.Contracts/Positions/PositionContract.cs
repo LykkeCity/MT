@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.TradeMonitoring;
 
 namespace MarginTrading.Backend.Contracts.Positions
 {
+    [UsedImplicitly]
     public class PositionContract
     {
         public string Id { get; set; }
@@ -19,6 +21,8 @@ namespace MarginTrading.Backend.Contracts.Positions
         public string OpenMatchingEngineId { get; set; }
         public DateTime OpenDate { get; set; }
         public string OpenTradeId { get; set; }
+        public OrderTypeContract OpenOrderType { get; set; }
+        public decimal OpenOrderVolume { get; set; }
         public decimal OpenPrice { get; set; }
         public decimal OpenFxPrice { get; set; }
         public string EquivalentAsset { get; set; }

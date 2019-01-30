@@ -37,6 +37,10 @@ namespace MarginTrading.Backend.Core.Orders
         [JsonProperty]
         public string OpenTradeId { get; private set; }
         [JsonProperty]
+        public OrderType OpenOrderType { get; private set; }
+        [JsonProperty]
+        public decimal OpenOrderVolume { get; private set; }
+        [JsonProperty]
         public decimal OpenPrice { get; private set; }
         [JsonProperty]
         public decimal OpenFxPrice { get; private set; }
@@ -116,8 +120,8 @@ namespace MarginTrading.Backend.Core.Orders
 
         public Position(string id, long code, string assetPairId, decimal volume, string accountId, 
             string tradingConditionId, string accountAssetId, decimal? expectedOpenPrice, string openMatchingEngineId, 
-            DateTime openDate, string openTradeId, decimal openPrice, decimal openFxPrice, string equivalentAsset, 
-            decimal openPriceEquivalent, List<RelatedOrderInfo> relatedOrders, string legalEntity, 
+            DateTime openDate, string openTradeId, OrderType openOrderType, decimal openOrderVolume, decimal openPrice, decimal 
+            openFxPrice, string equivalentAsset, decimal openPriceEquivalent, List<RelatedOrderInfo> relatedOrders, string legalEntity, 
             OriginatorType openOriginator, string externalProviderId, string fxAssetPairId, 
             FxToAssetPairDirection fxToAssetPairDirection)
         {
@@ -135,6 +139,8 @@ namespace MarginTrading.Backend.Core.Orders
             OpenMatchingEngineId = openMatchingEngineId;
             OpenDate = openDate;
             OpenTradeId = openTradeId;
+            OpenOrderType = openOrderType;
+            OpenOrderVolume = openOrderVolume;
             OpenPrice = openPrice;
             OpenFxPrice = openFxPrice;
             EquivalentAsset = equivalentAsset;

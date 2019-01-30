@@ -126,11 +126,11 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     "Execution price is null. Position was not opened");
                 return;
             }
-            
+
             var position = new Position(order.Id, order.Code, order.AssetPairId, volume, order.AccountId,
                 order.TradingConditionId, order.AccountAssetId, order.Price, order.MatchingEngineId,
-                order.Executed.Value, order.Id, order.ExecutionPrice.Value, order.FxRate, order.EquivalentAsset,
-                order.EquivalentRate, order.RelatedOrders, order.LegalEntity, order.Originator,
+                order.Executed.Value, order.Id, order.OrderType, order.Volume, order.ExecutionPrice.Value, order.FxRate,
+                order.EquivalentAsset, order.EquivalentRate, order.RelatedOrders, order.LegalEntity, order.Originator,
                 order.ExternalProviderId, order.FxAssetPairId, order.FxToAssetPairDirection);
             
             var defaultMatchingEngine = _meRouter.GetMatchingEngineForClose(position);
@@ -216,7 +216,13 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     Volume = dealVolume.Value,
                     Created = dealOrder.Executed.Value,
                     OpenTradeId = position.OpenTradeId,
+                    OpenOrderType = position.OpenOrderType.ToType<OrderTypeContract>(),
+                    OpenOrderVolume = position.OpenOrderVolume,
+                    OpenOrderExpectedPrice = position.ExpectedOpenPrice,
                     CloseTradeId = dealOrder.Id,
+                    CloseOrderType = dealOrder.OrderType.ToType<OrderTypeContract>(),
+                    CloseOrderVolume = dealOrder.Volume,
+                    CloseOrderExpectedPrice = dealOrder.Price,
                     OpenPrice = position.OpenPrice,
                     OpenFxPrice = position.OpenFxPrice,
                     ClosePrice = dealOrder.ExecutionPrice.Value,
