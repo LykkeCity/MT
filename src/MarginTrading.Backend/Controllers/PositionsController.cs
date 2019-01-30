@@ -121,11 +121,13 @@ namespace MarginTrading.Backend.Controllers
                 throw new ArgumentNullException(nameof(accountId), "AccountId must be set.");
             }
 
+            var operationId = string.IsNullOrWhiteSpace(request?.CorrelationId) 
+                ? _identityGenerator.GenerateGuid()
+                : request.CorrelationId;
+
             _cqrsSender.SendCommandToSelf(new StartLiquidationInternalCommand
             {
-                OperationId = string.IsNullOrWhiteSpace(request?.CorrelationId) 
-                    ? _identityGenerator.GenerateGuid()
-                    : request.CorrelationId,
+                OperationId = operationId,
                 CreationTime = _dateService.Now(),
                 AccountId = accountId,
                 AssetPairId = assetPairId,
@@ -135,8 +137,8 @@ namespace MarginTrading.Backend.Controllers
             });
             
             _operationsLogService.AddLog("Position liquidation started", string.Empty, 
-                "instrument = [{assetPairId}], account = [{accountId}], direction = [{direction}], request = [{request.ToJson()}]",
-                Request.ToJson());
+                $"instrument = [{assetPairId}], account = [{accountId}], direction = [{direction}], request = [{request.ToJson()}]",
+                $"Started operation {operationId}");
             
             return Task.CompletedTask;
         }
