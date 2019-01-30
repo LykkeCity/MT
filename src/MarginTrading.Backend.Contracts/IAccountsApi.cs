@@ -22,6 +22,13 @@ namespace MarginTrading.Backend.Contracts
         [Get("/api/accounts/stats/by-pages")]
         Task<PaginatedResponseContract<AccountStatContract>> GetAllAccountStatsByPages(
             [Query, CanBeNull] int? skip = null, [Query, CanBeNull] int? take = null);
+
+        /// <summary>
+        /// Get accounts depending on active/open orders and positions for particular assets.
+        /// </summary>
+        /// <returns>List of account ids</returns>
+        [Post("/api/accounts")]
+        Task<List<string>> GetAllAccountIdsFiltered([Body] ActiveAccountsRequest request);
         
         /// <summary>
         /// Returns stats of selected account
