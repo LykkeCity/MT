@@ -98,30 +98,26 @@ namespace MarginTrading.Backend.Controllers
                     nameof(request.IsAndClauseApplied));
             }
 
-            var accountIds = _accountsCacheService.GetAll().Select(x => x.Id).ToList();
-
             List<string> accountIdsByOrders = null;
             if (request.ActiveOrderAssetPairIds != null)
             {
-                var orderAccounts = _orderReader.GetPending()
+                accountIdsByOrders = _orderReader.GetPending()
                     .Where(x => request.ActiveOrderAssetPairIds.Count == 0
                                 || request.ActiveOrderAssetPairIds.Contains(x.AssetPairId))
                     .Select(x => x.AccountId)
-                    .Distinct();
-
-                accountIdsByOrders = accountIds.Where(x => orderAccounts.Any(oap => oap == x)).ToList();
+                    .Distinct()
+                    .ToList();
             }
 
             List<string> accountIdsByPositions = null;
             if (request.ActivePositionAssetPairIds != null)
             {
-                var positionAccounts = _orderReader.GetPositions()
+                accountIdsByPositions = _orderReader.GetPositions()
                     .Where(x => request.ActivePositionAssetPairIds.Count == 0
                                 || request.ActivePositionAssetPairIds.Contains(x.AssetPairId))
                     .Select(x => x.AccountId)
-                    .Distinct();
-
-                accountIdsByPositions = accountIds.Where(x => positionAccounts.Any(pap => pap == x)).ToList();
+                    .Distinct()
+                    .ToList();
             }
 
             if (accountIdsByOrders == null && accountIdsByPositions != null)
@@ -136,7 +132,7 @@ namespace MarginTrading.Backend.Controllers
 
             if (accountIdsByOrders == null && accountIdsByPositions == null)
             {
-                return Task.FromResult(accountIds.OrderBy(x => x).ToList());
+                return Task.FromResult(_accountsCacheService.GetAll().Select(x => x.Id).OrderBy(x => x).ToList());
             }
 
             if (request.IsAndClauseApplied ?? false)
