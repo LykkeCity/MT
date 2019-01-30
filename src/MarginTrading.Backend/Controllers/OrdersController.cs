@@ -194,8 +194,8 @@ namespace MarginTrading.Backend.Controllers
                     ? _identityGenerator.GenerateGuid()
                     : request.CorrelationId;
 
-                _tradingEngine.ChangeOrderLimits(order.Id, request.Price, originator, request.AdditionalInfo, 
-                    correlationId);
+                _tradingEngine.ChangeOrder(order.Id, request.Price, request.Validity, originator,
+                    request.AdditionalInfo, correlationId);
             }
             catch (ValidateOrderException ex)
             {

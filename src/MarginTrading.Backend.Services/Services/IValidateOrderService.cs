@@ -20,5 +20,6 @@ namespace MarginTrading.Backend.Services
         Task<OrderInitialParameters> GetOrderInitialParameters(string assetPairId, string accountId);
         
         bool CheckIfPendingOrderExecutionPossible(string assetPairId, OrderType orderType, bool shouldOpenNewPosition);
+        void ValidateValidity(DateTime? validity, OrderType orderType);
     }
 }

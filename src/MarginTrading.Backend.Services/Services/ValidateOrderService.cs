@@ -89,7 +89,7 @@ namespace MarginTrading.Backend.Services
                     if (request.Price <= 0)
                     {
                         throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
-                            $"Price should be more then 0");
+                            $"Price should be more than 0");
                     }
                 }
             }
@@ -106,12 +106,7 @@ namespace MarginTrading.Backend.Services
                 throw new ValidateOrderException(OrderRejectReason.InvalidAccount, "Account not found");
             }
 
-            if (request.Validity.HasValue &&
-                request.Type != OrderTypeContract.Market &&
-                request.Validity.Value <= _dateService.Now())
-            {
-                throw new ValidateOrderException(OrderRejectReason.TechnicalError, "Invalid validity date");
-            }
+            ValidateValidity(request.Validity, request.Type.ToType<OrderType>());
 
             ITradingInstrument tradingInstrument;
             try
@@ -215,9 +210,28 @@ namespace MarginTrading.Backend.Services
             
             return (baseOrder, relatedOrders);
         }
-        
+
+        public void ValidateValidity(DateTime? validity, OrderType orderType)
+        {
+            if (validity.HasValue &&
+                orderType != OrderType.Market &&
+                validity.Value <= _dateService.Now())
+            {
+                throw new ValidateOrderException(OrderRejectReason.InvalidValidity, "Invalid validity date");
+            }
+        }
+
         public void ValidateOrderPriceChange(Order order, decimal newPrice)
         {
+            if (order.Price == newPrice)
+                return;
+
+            if (newPrice <= 0)
+            {
+                throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
+                    $"Price should be more than 0");
+            }
+            
             if (order.IsBasicOrder())
             {
                 ValidateBaseOrderPrice(order, newPrice);
