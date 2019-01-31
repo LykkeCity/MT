@@ -149,7 +149,7 @@ namespace MarginTrading.Backend.Services
             {
                 try
                 {
-                    var closedOrder = _tradingEngine.CancelPendingOrder(order.Id, OriginatorType.OnBehalf,
+                    var closedOrder = _tradingEngine.CancelPendingOrder(order.Id,
                         "Close orders for account", correlationId);
                     closedOrders.Add(closedOrder);
                 }

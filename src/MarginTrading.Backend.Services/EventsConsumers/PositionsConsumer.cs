@@ -279,7 +279,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             {
                 if (_ordersCache.Active.TryPopById(relatedOrderInfo.Id, out var relatedOrder))
                 {
-                    relatedOrder.Cancel(_dateService.Now(), OriginatorType.System, null, correlationId);
+                    relatedOrder.Cancel(_dateService.Now(), null, correlationId);
                     _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(relatedOrder, metadata));
                 }
             }

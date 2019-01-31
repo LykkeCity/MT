@@ -504,7 +504,6 @@ namespace MarginTrading.Backend.Core.Trading
         {
             ChangeState(OrderCommand.Reject, () =>
             {
-                Originator = OriginatorType.System;
                 RejectReason = reason;
                 RejectReasonText = reasonText;
                 Comment = comment;
@@ -513,14 +512,13 @@ namespace MarginTrading.Backend.Core.Trading
             });
         }
 
-        public void Cancel(DateTime dateTime, OriginatorType originator, string additionalInfo, string correlationId)
+        public void Cancel(DateTime dateTime, string additionalInfo, string correlationId)
         {
             ChangeState(OrderCommand.Cancel, () =>
             {
                 Canceled = dateTime;
                 LastModified = dateTime;
                 AdditionalInfo = additionalInfo ?? AdditionalInfo;
-                Originator = originator;
                 CorrelationId = correlationId;
             });
         }
@@ -531,7 +529,6 @@ namespace MarginTrading.Backend.Core.Trading
             {
                 Canceled = dateTime;
                 LastModified = dateTime;
-                Originator = OriginatorType.System;
             });
         }
 
