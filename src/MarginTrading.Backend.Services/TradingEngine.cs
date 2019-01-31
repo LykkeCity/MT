@@ -212,6 +212,20 @@ namespace MarginTrading.Backend.Services
         {
             //TODO: think how not to execute one order twice!!!
             
+            var now = _dateService.Now();
+                
+            //just in case )
+            if (order.OrderType != OrderType.Market &&
+                order.Validity.HasValue && 
+                now.Date > order.Validity.Value.Date)
+            {
+                order.Expire(now);
+                _orderCancelledEventChannel.SendEvent(this,
+                    new OrderCancelledEventArgs(order,
+                        new OrderCancelledMetadata {Reason = OrderCancellationReason.Expired}));
+                return order;
+            }
+            
             order.StartExecution(_dateService.Now(), matchingEngine.Id);
 
             _orderExecutionStartedEvenChannel.SendEvent(this, new OrderExecutionStartedEventArgs(order));
@@ -365,19 +379,8 @@ namespace MarginTrading.Backend.Services
         {
             var pendingOrders = _ordersCache.Active.GetOrdersByInstrument(quote.Instrument);
 
-            var now = _dateService.Now();
-
             foreach (var order in pendingOrders)
             {
-                if (order.Validity.HasValue && now >= order.Validity.Value)
-                {
-                    _ordersCache.Active.Remove(order);
-                    order.Expire(now);
-                    var metadata = new OrderCancelledMetadata {Reason = OrderCancellationReason.Expired};
-                    _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order, metadata));
-                    continue;
-                }
-
                 var price = quote.GetPriceForOrderDirection(order.Direction);
 
                 if (order.IsSuitablePriceForPendingOrder(price) &&
@@ -392,6 +395,27 @@ namespace MarginTrading.Backend.Services
                     yield return order;
                 }
 
+            }
+        }
+
+        public void ProcessExpiredOrders()
+        {
+            var pendingOrders = _ordersCache.Active.GetAllOrders();
+
+            var now = _dateService.Now();
+
+            foreach (var order in pendingOrders)
+            {
+                if (order.Validity.HasValue && now.Date >= order.Validity.Value.Date)
+                {
+                    _ordersCache.Active.Remove(order);
+                    order.Expire(now);
+                    _orderCancelledEventChannel.SendEvent(
+                        this,
+                        new OrderCancelledEventArgs(
+                            order,
+                            new OrderCancelledMetadata {Reason = OrderCancellationReason.Expired}));
+                }
             }
         }
 

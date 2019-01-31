@@ -89,6 +89,8 @@ namespace MarginTrading.Backend.Services.Services
                 _overnightMarginParameterContainer.OvernightMarginParameter =
                     _overnightMarginSettings.OvernightMarginParameter;
                 nextStart = operatingInterval.End;
+
+                PlanEodJob(operatingInterval.Start, currentDateTime);
             }
             else
             {
@@ -98,6 +100,24 @@ namespace MarginTrading.Backend.Services.Services
             
             JobManager.AddJob<OvernightMarginJob>(schedule => schedule.WithName(nameof(OvernightMarginJob))
                 .NonReentrant().ToRunOnceAt(nextStart));
+        }
+
+        private void PlanEodJob(DateTime operatingIntervalStart, DateTime currentDateTime)
+        {
+            JobManager.RemoveJob(nameof(EodJob));
+
+            var eodTime = operatingIntervalStart.AddMinutes(_overnightMarginSettings.ActivationPeriodMinutes);
+
+            if (currentDateTime < eodTime)
+            {
+                JobManager.AddJob<EodJob>(schedule => schedule.WithName(nameof(EodJob))
+                    .NonReentrant().ToRunOnceAt(eodTime));
+            }
+            else
+            {
+                JobManager.AddJob<EodJob>(schedule => schedule.WithName(nameof(EodJob))
+                    .NonReentrant().Execute());
+            }
         }
 
         private void HandleOvernightMarginWarnings()
