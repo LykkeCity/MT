@@ -15,6 +15,7 @@ using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Trading;
+using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Notifications;
@@ -39,6 +40,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         private readonly IEventChannel<OrderActivatedEventArgs> _orderActivatedEventChannel;
         private readonly IMatchingEngineRouter _meRouter;
         private readonly ILog _log;
+        private readonly IAssetsCache _assetsCache;
 
         private static readonly ConcurrentDictionary<string, object> LockObjects =
             new ConcurrentDictionary<string, object>();
@@ -57,7 +59,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             IEventChannel<OrderChangedEventArgs> orderChangedEventChannel,
             IEventChannel<OrderActivatedEventArgs> orderActivatedEventChannel,
             IMatchingEngineRouter meRouter,
-            ILog log)
+            ILog log,
+            IAssetsCache assetsCache)
         {
             _ordersCache = ordersCache;
             _rabbitMqNotifyService = rabbitMqNotifyService;
@@ -72,6 +75,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             _orderActivatedEventChannel = orderActivatedEventChannel;
             _meRouter = meRouter;
             _log = log;
+            _assetsCache = assetsCache;
         }
         
         public void ConsumeEvent(object sender, OrderExecutedEventArgs ea)
@@ -206,8 +210,10 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             {
                 var sign = position.Volume > 0 ? 1 : -1;
 
-                var fpl = (dealOrder.ExecutionPrice.Value - position.OpenPrice) *
-                          dealOrder.FxRate * dealVolume.Value * sign;
+                var accountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(position.AccountAssetId);
+
+                var fpl = Math.Round((dealOrder.ExecutionPrice.Value - position.OpenPrice) *
+                                     dealOrder.FxRate * dealVolume.Value * sign, accountBaseAssetAccuracy);
                 
                 deal = new DealContract
                 {
@@ -233,7 +239,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 };
                 
                 var account = _accountsCacheService.Get(position.AccountId);
-                var balanceDelta = fpl - chargedPnl;
+                var balanceDelta = Math.Round(fpl - chargedPnl, accountBaseAssetAccuracy);
                 _cqrsSender.PublishEvent(new PositionClosedEvent(account.Id, account.ClientId,
                     deal.DealId, position.AssetPairId, balanceDelta));
             
