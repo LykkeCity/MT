@@ -4,6 +4,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
+using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.TradingConditions;
 
@@ -54,7 +55,7 @@ namespace MarginTrading.Backend.Services
             var accountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(order.AccountAssetId);
 
             return Math.Round(
-                _tradingInstrumentsCache.GetMargins(accountAsset, Math.Abs(order.Volume), marginRate).MarginInit,
+                GetMargins(accountAsset, Math.Abs(order.Volume), marginRate).MarginInit,
                 accountBaseAssetAccuracy);
         }
 
@@ -118,8 +119,8 @@ namespace MarginTrading.Backend.Services
             fplData.MarginRate = _cfdCalculatorService.GetQuoteRateForBaseAsset(position.AccountAssetId, position.AssetPairId, 
                 position.LegalEntity, position.Direction == PositionDirection.Short); // to use close price
             
-            var (marginInit, marginMaintenance) = _tradingInstrumentsCache.GetMargins(tradingInstrument, 
-                volumeForCalculation, fplData.MarginRate, isWarnCheck);
+            var (marginInit, marginMaintenance) = GetMargins(tradingInstrument, volumeForCalculation, 
+                fplData.MarginRate, isWarnCheck);
             fplData.MarginInit = Math.Round(marginInit, fplData.AccountBaseAssetAccuracy);
             fplData.MarginMaintenance = Math.Round(marginMaintenance, fplData.AccountBaseAssetAccuracy);
 
@@ -129,6 +130,15 @@ namespace MarginTrading.Backend.Services
                                                       tradingInstrument.LeverageInit, fplData.AccountBaseAssetAccuracy);
                 fplData.McoCurrentMargin = fplData.MarginInit;
             }
+        }
+
+        private (decimal MarginInit, decimal MarginMaintenance) GetMargins(ITradingInstrument tradingInstrument,
+            decimal volumeForCalculation, decimal marginRate, bool isWarnCheck = false)
+        {
+            var (marginInit, marginMaintenance) = _tradingInstrumentsCache.GetMarginRates(tradingInstrument, isWarnCheck);
+
+            return (volumeForCalculation * marginRate * marginInit, 
+                volumeForCalculation * marginRate * marginMaintenance);
         }
     }
 }

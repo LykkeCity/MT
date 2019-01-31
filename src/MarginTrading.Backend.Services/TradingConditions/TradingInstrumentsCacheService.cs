@@ -63,13 +63,13 @@ namespace MarginTrading.Backend.Services.TradingConditions
             return accountAssetPair;
         }
 
-        public (decimal MarginInit, decimal MarginMaintenance) GetMargins(ITradingInstrument tradingInstrument,
-            decimal volumeForCalculation, decimal marginRate, bool isWarnCheck = false)
+        public (decimal MarginInit, decimal MarginMaintenance) GetMarginRates(ITradingInstrument tradingInstrument,
+            bool isWarnCheck = false)
         {
             var parameter = isWarnCheck ? _overnightMarginSettings.OvernightMarginParameter : OvernightMarginParameter;
             
-            return (volumeForCalculation * marginRate / (tradingInstrument.LeverageInit * parameter),
-                volumeForCalculation * marginRate / (tradingInstrument.LeverageMaintenance * parameter));
+            return (1 / (tradingInstrument.LeverageInit * parameter), 
+                1 / (tradingInstrument.LeverageMaintenance * parameter));
         }
 
         internal void InitAccountAssetsCache(List<ITradingInstrument> accountAssets)

@@ -135,13 +135,13 @@ namespace MarginTrading.Backend.Services.AssetPairs
         }
 
         /// <inheritdoc cref="IScheduleSettingsCacheService"/>
-        public List<CompiledScheduleTimeInterval> PlatformTradingSchedule()
+        public List<CompiledScheduleTimeInterval> GetPlatformTradingSchedule()
         {
             _readerWriterLockSlim.EnterReadLock();
 
             try
             {
-                return _compiledPlatformSchedule;
+                return _compiledPlatformSchedule.ToList();
             }
             finally
             {
@@ -178,7 +178,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             return false;
         }
 
-        public Dictionary<string, List<CompiledScheduleTimeInterval>> CompiledScheduleSettings(
+        public Dictionary<string, List<CompiledScheduleTimeInterval>> GetCompiledScheduleSettings(
             DateTime currentDateTime, TimeSpan scheduleCutOff)
         {
             _readerWriterLockSlim.EnterReadLock();
@@ -200,7 +200,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             return _compiledScheduleTimelineCache;
         }
 
-        public List<CompiledScheduleTimeInterval> CompiledScheduleSettings(string assetPairId,
+        public List<CompiledScheduleTimeInterval> GetCompiledScheduleSettings(string assetPairId,
             DateTime currentDateTime, TimeSpan scheduleCutOff)
         {
             _readerWriterLockSlim.EnterUpgradeableReadLock();

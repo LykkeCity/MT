@@ -133,10 +133,10 @@ namespace MarginTrading.Backend.Services
         {
             var positions = GetPositions(account.Id);
             var accuracy = _assetsCache.GetAssetAccuracy(account.BaseAssetId);
-            var activeOrdersMaintenanceMargin = positions.Sum(item => item.GetOvernightMarginMaintenance());
+            var positionsMargin = positions.Sum(item => item.GetOvernightMarginMaintenance());
             var pendingOrdersMargin = 0;// pendingOrders.Sum(item => item.GetMarginInit());
 
-            return Math.Round(activeOrdersMaintenanceMargin + pendingOrdersMargin, accuracy);
+            return Math.Round(positionsMargin + pendingOrdersMargin, accuracy);
         }
         
         private void UpdateAccount(IMarginTradingAccount account,

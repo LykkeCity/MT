@@ -2,23 +2,28 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Autofac;
+using Common.Log;
 using JetBrains.Annotations;
+using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.DayOffSettings;
 using MarginTrading.Backend.Core.Services;
+using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Services.AssetPairs;
+using MarginTrading.Backend.Services.Events;
+using MarginTrading.Backend.Services.Services;
+using MarginTrading.Backend.Services.TradingConditions;
+using MarginTrading.Common.Services;
+using Moq;
 using NUnit.Framework;
 
 namespace MarginTradingTests
 {
     [TestFixture]
-    public class OvernightMarginServiceTests : BaseTests
+    public class OvernightMarginServiceTests
     {
-        private IOvernightMarginService _overnightMarginService;
-        
         [OneTimeSetUp]
         public void SetUp()
         {
-            RegisterDependencies();
-            _overnightMarginService = Container.Resolve<IOvernightMarginService>();
         }
 
         [TestCaseSource(nameof(OvernightMarginTestData))]
@@ -26,7 +31,11 @@ namespace MarginTradingTests
         public (DateTime Warn, DateTime Start, DateTime End) TryGetOperatingInterval_Success(
             List<CompiledScheduleTimeInterval> platformTrading, DateTime currentDateTime, bool expectedResult)
         {
-            var actualResult = _overnightMarginService.TryGetOperatingInterval(platformTrading, currentDateTime, 
+            var overnightMarginService = new OvernightMarginService(Mock.Of<IDateService>(),
+                Mock.Of<IAccountsCacheService>(), Mock.Of<IAccountUpdateService>(),
+                Mock.Of<IScheduleSettingsCacheService>(), Mock.Of<IOvernightMarginParameterContainer>(),
+                Mock.Of<ILog>(), Mock.Of<IEventChannel<MarginCallEventArgs>>(), new OvernightMarginSettings());
+            var actualResult = overnightMarginService.TryGetOperatingInterval(platformTrading, currentDateTime, 
                 out var resultingInterval);
             
             Assert.AreEqual(expectedResult, actualResult);

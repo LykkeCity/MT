@@ -6,7 +6,7 @@ namespace MarginTrading.Backend.Services.TradingConditions
     {
         ITradingInstrument GetTradingInstrument(string tradingConditionId, string instrument);
 
-        (decimal MarginInit, decimal MarginMaintenance) GetMargins(ITradingInstrument tradingInstrument,
-            decimal volumeForCalculation, decimal marginRate, bool isWarnCheck = false);
+        (decimal MarginInit, decimal MarginMaintenance) GetMarginRates(ITradingInstrument tradingInstrument,
+            bool isWarnCheck = false);
     }
 }

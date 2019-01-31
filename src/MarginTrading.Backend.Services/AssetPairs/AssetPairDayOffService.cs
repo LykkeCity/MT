@@ -42,7 +42,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
         {
             var currentDateTime = _dateService.Now();
 
-            var schedule = _scheduleSettingsCacheService.CompiledScheduleSettings(assetPairId, 
+            var schedule = _scheduleSettingsCacheService.GetCompiledScheduleSettings(assetPairId, 
                 currentDateTime, scheduleCutOff);
             
             var intersecting = schedule.Where(x => IsBetween(currentDateTime, x.Start, x.End));

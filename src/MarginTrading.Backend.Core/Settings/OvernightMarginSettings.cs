@@ -6,7 +6,7 @@ namespace MarginTrading.Backend.Core.Settings
     public class OvernightMarginSettings
     {
         /// <summary>
-        /// Name of market which determines platform trading schedule.
+        /// Id of market which determines platform trading schedule.
         /// </summary>
         [Optional]
         public string ScheduleMarketId { get; set; } = "PlatformScheduleMarketId";

@@ -14,15 +14,5 @@ namespace MarginTrading.Backend.Core.Services
         /// Act and schedule the next job: warning, start or end. Job type depends on the next state.
         /// </summary>
         void ScheduleNext();
-
-        /// <summary>
-        /// For tests
-        /// </summary>
-        /// <param name="platformTrading"></param>
-        /// <param name="currentDateTime"></param>
-        /// <param name="resultingInterval"></param>
-        /// <returns></returns>
-        bool TryGetOperatingInterval(List<CompiledScheduleTimeInterval> platformTrading,
-            DateTime currentDateTime, out (DateTime Warn, DateTime Start, DateTime End) resultingInterval);
     }
 }

@@ -57,34 +57,30 @@ namespace MarginTrading.Backend.Services.Services
             JobManager.RemoveJob(nameof(OvernightMarginJob));
             
             //need to know in which OvernightMarginJobType we are now and the moment of next change
-            var platformTradingSchedule = _scheduleSettingsCacheService.PlatformTradingSchedule();
+            var platformTradingSchedule = _scheduleSettingsCacheService.GetPlatformTradingSchedule();
             
             _overnightMarginParameterContainer.OvernightMarginParameter = 1;
             
-            //no disabled trading schedule items.. doing nothing
-            if (platformTradingSchedule.All(x => x.Enabled()))
-            {
-                return;
-            }
             
             var currentDateTime = _dateService.Now();
             DateTime nextStart;
             
-            //no disabled intervals in current compilation, schedule recheck
-            if (!TryGetOperatingInterval(platformTradingSchedule, currentDateTime, out var operatingInterval))
+            //no disabled trading schedule items.. doing nothing
+            if (platformTradingSchedule.All(x => x.Enabled())
+                //OR no disabled intervals in current compilation, schedule recheck
+                || !TryGetOperatingInterval(platformTradingSchedule, currentDateTime, out var operatingInterval))
             {
                 nextStart = currentDateTime.Date.AddDays(1);
             }
             //schedule warning
             else if (currentDateTime < operatingInterval.Warn)
-            {
-                HandleOvernightMarginWarnings();
-                
+            {   
                 nextStart = operatingInterval.Warn;
             }
             //schedule overnight margin parameter start
             else if (currentDateTime < operatingInterval.Start)
             {
+                HandleOvernightMarginWarnings();
                 nextStart = operatingInterval.Start;
             }
             //schedule overnight margin parameter drop
