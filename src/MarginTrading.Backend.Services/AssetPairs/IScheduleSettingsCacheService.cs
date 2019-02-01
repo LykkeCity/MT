@@ -13,13 +13,24 @@ namespace MarginTrading.Backend.Services.AssetPairs
             TimeSpan scheduleCutOff);
         
         /// <summary>
-        /// Get a compiled schedule timeline from cache, recalculate it if needed.
+        /// Get compiled schedule timeline from cache, recalculate it if needed.
         /// </summary>
         List<CompiledScheduleTimeInterval> GetCompiledScheduleSettings(string assetPairId,
             DateTime currentDateTime, TimeSpan scheduleCutOff);
 
         void CacheWarmUp();
+
+        void PlatformCacheWarmUp();
+
+        Task UpdateAllSettingsAsync();
         
         Task UpdateSettingsAsync();
+
+        Task UpdatePlatformSettingsAsync();
+
+        /// <summary>
+        /// Get current and next day time intervals of the platform disablement hours.
+        /// </summary>
+        List<CompiledScheduleTimeInterval> GetPlatformTradingSchedule();
     }
 }

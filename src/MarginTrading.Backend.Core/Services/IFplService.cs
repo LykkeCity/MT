@@ -8,5 +8,7 @@ namespace MarginTrading.Backend.Core
         void UpdatePositionFpl(Position order);
         
         decimal GetInitMarginForOrder(Order order);
+
+        decimal CalculateOvernightMaintenanceMargin(Position position);
     }
 }

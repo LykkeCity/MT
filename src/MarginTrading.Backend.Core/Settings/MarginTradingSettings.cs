@@ -74,5 +74,8 @@ namespace MarginTrading.Backend.Core.Settings
 
         [Optional]
         public bool UseSerilog { get; set; }
+
+        [Optional] 
+        public OvernightMarginSettings OvernightMargin { get; set; } = new OvernightMarginSettings();
     }
 }

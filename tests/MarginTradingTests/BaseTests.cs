@@ -57,6 +57,7 @@ namespace MarginTradingTests
         {
             var builder = new ContainerBuilder();
 
+            var overnightMarginSettings = new OvernightMarginSettings();
             var marginSettings = new MarginTradingSettings
             {
                 RabbitMqQueues =
@@ -72,10 +73,12 @@ namespace MarginTradingTests
                     OrdersDumpPeriodMilliseconds = 5000
                 },
                 ReportingEquivalentPricesSettings = new[]
-                    {new ReportingEquivalentPricesSettings {EquivalentAsset = "USD", LegalEntity = "LYKKETEST"}}
+                    {new ReportingEquivalentPricesSettings {EquivalentAsset = "USD", LegalEntity = "LYKKETEST"}},
+                OvernightMargin = overnightMarginSettings,
             };
 
             builder.RegisterInstance(marginSettings).SingleInstance();
+            builder.RegisterInstance(overnightMarginSettings).SingleInstance();
             builder.RegisterInstance(new RiskInformingSettings
             {
                 Data = new[]

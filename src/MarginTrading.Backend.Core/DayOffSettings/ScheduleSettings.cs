@@ -45,5 +45,28 @@ namespace MarginTrading.Backend.Core.DayOffSettings
                 }
             };
         }
+
+        public static ScheduleSettings Create(ScheduleSettingsContract scheduleSettingsContract)
+        {
+            return new ScheduleSettings
+            {
+                Id = scheduleSettingsContract.Id,
+                Rank = scheduleSettingsContract.Rank,
+                IsTradeEnabled = scheduleSettingsContract.IsTradeEnabled,
+                PendingOrdersCutOff = scheduleSettingsContract.PendingOrdersCutOff,
+                Start = new ScheduleConstraint
+                {
+                    Date = scheduleSettingsContract.Start.Date,
+                    DayOfWeek = scheduleSettingsContract.Start.DayOfWeek,
+                    Time = scheduleSettingsContract.Start.Time
+                },
+                End = new ScheduleConstraint
+                {
+                    Date = scheduleSettingsContract.End.Date,
+                    DayOfWeek = scheduleSettingsContract.End.DayOfWeek,
+                    Time = scheduleSettingsContract.End.Time,
+                }
+            };
+        }
     }
 }

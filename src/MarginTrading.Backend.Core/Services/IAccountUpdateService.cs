@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;
 
 namespace MarginTrading.Backend.Core
@@ -13,5 +15,7 @@ namespace MarginTrading.Backend.Core
         bool IsEnoughBalance(Order order);
         void RemoveLiquidationStateIfNeeded(string accountId, string reason,
             string liquidationOperationId = null);
+
+        decimal CalculateOvernightUsedMargin(IMarginTradingAccount account);
     }
 }

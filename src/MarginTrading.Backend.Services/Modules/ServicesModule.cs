@@ -51,6 +51,7 @@ namespace MarginTrading.Backend.Services.Modules
 			builder.RegisterType<TradingInstrumentsCacheService>()
 				.AsSelf()
 				.As<ITradingInstrumentsCacheService>()
+				.As<IOvernightMarginParameterContainer>()
 				.SingleInstance();
 
 			builder.RegisterType<AccountUpdateService>()
@@ -176,6 +177,10 @@ namespace MarginTrading.Backend.Services.Modules
 
 			builder.RegisterType<ReportService>()
 				.As<IReportService>()
+				.SingleInstance();
+
+			builder.RegisterType<OvernightMarginService>()
+				.As<IOvernightMarginService>()
 				.SingleInstance();
 		}
 	}
