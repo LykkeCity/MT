@@ -23,6 +23,7 @@ namespace MarginTrading.Backend.Services.Services
     public class OvernightMarginService : IOvernightMarginService
     {
         private readonly IDateService _dateService;
+        private readonly ITradingEngine _tradingEngine;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly IAccountUpdateService _accountUpdateService;
         private readonly IScheduleSettingsCacheService _scheduleSettingsCacheService;
@@ -33,6 +34,7 @@ namespace MarginTrading.Backend.Services.Services
 
         public OvernightMarginService(
             IDateService dateService,
+            ITradingEngine tradingEngine,
             IAccountsCacheService accountsCacheService,
             IAccountUpdateService accountUpdateService,
             IScheduleSettingsCacheService scheduleSettingsCacheService,
@@ -42,6 +44,7 @@ namespace MarginTrading.Backend.Services.Services
             OvernightMarginSettings overnightMarginSettings)
         {
             _dateService = dateService;
+            _tradingEngine = tradingEngine;
             _accountsCacheService = accountsCacheService;
             _accountUpdateService = accountUpdateService;
             _scheduleSettingsCacheService = scheduleSettingsCacheService;
@@ -54,8 +57,6 @@ namespace MarginTrading.Backend.Services.Services
         /// <inheritdoc />
         public void ScheduleNext()
         {
-            JobManager.RemoveJob(nameof(OvernightMarginJob));
-            
             //need to know in which OvernightMarginJobType we are now and the moment of next change
             var platformTradingSchedule = _scheduleSettingsCacheService.GetPlatformTradingSchedule();
             
@@ -98,25 +99,22 @@ namespace MarginTrading.Backend.Services.Services
                     $"Incorrect platform trading schedule! Need to fix it and restart the service. CurrentDateTime: {currentDateTime:s}, detected operation interval: {operatingInterval.ToJson()}");
             }
             
-            JobManager.AddJob<OvernightMarginJob>(schedule => schedule.WithName(nameof(OvernightMarginJob))
-                .NonReentrant().ToRunOnceAt(nextStart));
+            JobManager.AddJob(ScheduleNext, (s) => s.NonReentrant().ToRunOnceAt(nextStart));
         }
 
         private void PlanEodJob(DateTime operatingIntervalStart, DateTime currentDateTime)
         {
-            JobManager.RemoveJob(nameof(EodJob));
-
             var eodTime = operatingIntervalStart.AddMinutes(_overnightMarginSettings.ActivationPeriodMinutes);
 
             if (currentDateTime < eodTime)
             {
-                JobManager.AddJob<EodJob>(schedule => schedule.WithName(nameof(EodJob))
-                    .NonReentrant().ToRunOnceAt(eodTime));
+                JobManager.AddJob(() => _tradingEngine.ProcessExpiredOrders(),
+                    (s) => s.NonReentrant().ToRunOnceAt(eodTime));
             }
             else
             {
-                JobManager.AddJob<EodJob>(schedule => schedule.WithName(nameof(EodJob))
-                    .NonReentrant().Execute());
+                JobManager.AddJob(() => _tradingEngine.ProcessExpiredOrders(), 
+                    (s) => s.ToRunNow());
             }
         }
 

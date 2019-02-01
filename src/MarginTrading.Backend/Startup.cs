@@ -280,8 +280,6 @@ namespace MarginTrading.Backend
             
             registry.Schedule<ScheduleSettingsCacheWarmUpJob>()
                 .WithName(nameof(ScheduleSettingsCacheWarmUpJob)).ToRunEvery(1).Days().At(0, 0);
-
-            registry.Schedule<EodJob>().WithName(nameof(EodJob));
             
             JobManager.Initialize(registry);
             
