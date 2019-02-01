@@ -70,6 +70,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     TimeoutSeconds = _marginTradingSettings.SpecialLiquidation.PriceRequestTimeoutSec,
                 }, _cqrsContextNamesSettings.TradingEngine);
 
+                executionInfo.Data.Instrument = e.Instrument;
+                executionInfo.Data.Volume = positionsVolume;
+
                 if (_marginTradingSettings.ExchangeConnector == ExchangeConnectorType.RealExchangeConnector)
                 {
                     //send it to the Gavel
@@ -115,17 +118,19 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     {
                         OperationId = e.OperationId,
                         CreationTime = _dateService.Now(),
-                        Instrument = e.Instrument,
+                        Instrument = executionInfo.Data.Instrument,
                         Volume = currentVolume,
                         RequestNumber = e.RequestNumber++,
                         AccountId = executionInfo.Data.AccountId,
                     }, _cqrsContextNamesSettings.Gavel);
                     
+                    executionInfo.Data.Volume = currentVolume;
+                    
+                    await _operationExecutionInfoRepository.Save(executionInfo);
+                    
                     return;//wait for the new price
                 }
 
-                executionInfo.Data.Instrument = e.Instrument;
-                executionInfo.Data.Volume = e.Volume;
                 executionInfo.Data.Price = e.Price;
 
                 //execute order in Gavel by API
@@ -133,8 +138,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 {
                     OperationId = e.OperationId,
                     CreationTime = _dateService.Now(),
-                    Instrument = e.Instrument,
-                    Volume = e.Volume,
+                    Instrument = executionInfo.Data.Instrument,
+                    Volume = executionInfo.Data.Volume,
                     Price = e.Price,
                 }, _cqrsContextNamesSettings.TradingEngine);
 
