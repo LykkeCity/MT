@@ -113,13 +113,11 @@ namespace MarginTrading.Backend.Controllers
             if (!_ordersCache.TryGetOrderById(orderId, out var order))
                 throw new InvalidOperationException("Order not found");
 
-            var originator = GetOriginator(request?.Originator);
-
             var correlationId = string.IsNullOrWhiteSpace(request?.CorrelationId)
                 ? _identityGenerator.GenerateGuid()
                 : request.CorrelationId;
 
-            var canceledOrder = _tradingEngine.CancelPendingOrder(order.Id, originator, request?.AdditionalInfo, 
+            var canceledOrder = _tradingEngine.CancelPendingOrder(order.Id, request?.AdditionalInfo, 
                 correlationId, request?.Comment);
 
             _operationsLogService.AddLog("action order.cancel", order.AccountId, request?.ToJson(),

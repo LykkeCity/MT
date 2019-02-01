@@ -606,7 +606,7 @@ namespace MarginTrading.Backend.Services
             return closeOrderList;
         }
 
-        public Order CancelPendingOrder(string orderId, OriginatorType originator, string additionalInfo, 
+        public Order CancelPendingOrder(string orderId, string additionalInfo,
             string correlationId, string comment = null)
         {
             var order = _ordersCache.GetOrderById(orderId);
@@ -624,7 +624,7 @@ namespace MarginTrading.Backend.Services
                 throw new InvalidOperationException($"Order in state {order.Status} can not be cancelled");
             }
             
-            order.Cancel(_dateService.Now(), originator, additionalInfo, correlationId);
+            order.Cancel(_dateService.Now(), additionalInfo, correlationId);
 
             var metadata = new OrderCancelledMetadata {Reason = OrderCancellationReason.None};
             _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order, metadata));

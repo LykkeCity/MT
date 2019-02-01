@@ -972,7 +972,7 @@ namespace MarginTradingTests
             Assert.AreEqual(OrderStatus.Active, order.Status); //is not executed
             Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
 
-            _tradingEngine.CancelPendingOrder(order.Id, OriginatorType.Investor, "", Guid.NewGuid().ToString());
+            _tradingEngine.CancelPendingOrder(order.Id, "", Guid.NewGuid().ToString());
 
             Assert.AreEqual(OrderStatus.Canceled, order.Status);
         }

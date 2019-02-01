@@ -17,7 +17,7 @@ namespace MarginTrading.Backend.Core
         Task<Order[]> LiquidatePositionsAsync(IMatchingEngineBase me, string[] positionIds,
             string correlationId);
             
-        Order CancelPendingOrder(string orderId, OriginatorType originator, string additionalInfo, string correlationId,
+        Order CancelPendingOrder(string orderId, string additionalInfo, string correlationId,
             string comment = null);
             
         void ChangeOrder(string orderId, decimal price, DateTime? validity, OriginatorType originator,
