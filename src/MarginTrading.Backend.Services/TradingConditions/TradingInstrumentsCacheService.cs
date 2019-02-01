@@ -68,8 +68,7 @@ namespace MarginTrading.Backend.Services.TradingConditions
         {
             var parameter = isWarnCheck ? _overnightMarginSettings.OvernightMarginParameter : OvernightMarginParameter;
             
-            return (1 / (tradingInstrument.LeverageInit * parameter), 
-                1 / (tradingInstrument.LeverageMaintenance * parameter));
+            return (parameter / tradingInstrument.LeverageInit, parameter / tradingInstrument.LeverageMaintenance);
         }
 
         internal void InitAccountAssetsCache(List<ITradingInstrument> accountAssets)
