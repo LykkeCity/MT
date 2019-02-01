@@ -121,6 +121,9 @@ namespace MarginTrading.Backend
             MtServiceLocator.AccountsCacheService = ApplicationContainer.Resolve<IAccountsCacheService>();
             MtServiceLocator.SwapCommissionService = ApplicationContainer.Resolve<ICommissionService>();
             MtServiceLocator.McoRules = mtSettings.CurrentValue.MtBackend.McoRules;
+            
+            ApplicationContainer.Resolve<IScheduleSettingsCacheService>()
+                .UpdateAllSettingsAsync().GetAwaiter().GetResult();
 
             InitializeJobs();
 
@@ -194,7 +197,6 @@ namespace MarginTrading.Backend
             builder.RegisterBuildCallback(c => c.Resolve<AccountManager>()); // note the order here is important!
             builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
             builder.RegisterBuildCallback(c => c.Resolve<PendingOrdersCleaningService>());
-            builder.RegisterBuildCallback(async c => await c.Resolve<IScheduleSettingsCacheService>().UpdateAllSettingsAsync());
         }
 
         private static void SetupLoggers(IConfiguration configuration, IServiceCollection services,
@@ -278,10 +280,10 @@ namespace MarginTrading.Backend
             
             registry.Schedule<ScheduleSettingsCacheWarmUpJob>()
                 .WithName(nameof(ScheduleSettingsCacheWarmUpJob)).ToRunEvery(1).Days().At(0, 0);
-
-            ApplicationContainer.Resolve<IOvernightMarginService>().ScheduleNext();
-
+            
             JobManager.Initialize(registry);
+            
+            ApplicationContainer.Resolve<IOvernightMarginService>().ScheduleNext();
         }
     }
 }

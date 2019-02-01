@@ -25,5 +25,7 @@ namespace MarginTrading.Backend.Core
             string correlationId);
             
         bool ShouldOpenNewPosition(Order order);
+        
+        void ProcessExpiredOrders();
     }
 }

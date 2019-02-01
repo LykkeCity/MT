@@ -1028,7 +1028,7 @@ namespace MarginTradingTests
             Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
             
             var ds = Container.Resolve<IDateService>();
-            Mock.Get(ds).Setup(s => s.Now()).Returns(targetValidity.AddSeconds(1));
+            Mock.Get(ds).Setup(s => s.Now()).Returns(targetValidity.Date.AddDays(1));
 
             _matchingEngine.SetOrders(MarketMaker1Id, new[]
             {

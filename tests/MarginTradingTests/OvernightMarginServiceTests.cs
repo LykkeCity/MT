@@ -31,7 +31,7 @@ namespace MarginTradingTests
         public (DateTime Warn, DateTime Start, DateTime End) TryGetOperatingInterval_Success(
             List<CompiledScheduleTimeInterval> platformTrading, DateTime currentDateTime, bool expectedResult)
         {
-            var overnightMarginService = new OvernightMarginService(Mock.Of<IDateService>(),
+            var overnightMarginService = new OvernightMarginService(Mock.Of<IDateService>(), Mock.Of<ITradingEngine>(),
                 Mock.Of<IAccountsCacheService>(), Mock.Of<IAccountUpdateService>(),
                 Mock.Of<IScheduleSettingsCacheService>(), Mock.Of<IOvernightMarginParameterContainer>(),
                 Mock.Of<ILog>(), Mock.Of<IEventChannel<MarginCallEventArgs>>(), new OvernightMarginSettings());
