@@ -98,7 +98,8 @@ namespace MarginTrading.Backend
             var builder = new ContainerBuilder();
 
             var envSuffix = !string.IsNullOrEmpty(Configuration["Env"]) ? "." + Configuration["Env"] : "";
-            var mtSettings = Configuration.LoadSettings<MtBackendSettings>()
+            var mtSettings = Configuration.LoadSettings<MtBackendSettings>(
+                    throwExceptionOnCheckError: !Configuration.NotTrowExceptionsOnServiceValidation())
                 .Nested(s =>
                 {
                     s.MtBackend.IsLive = isLive;
