@@ -11,7 +11,7 @@
   <ItemGroup>
     <PackageReference Include="Dapper" Version="1.50.5" />
     <PackageReference Include="Lykke.Logs" Version="7.2.1" />
-    <PackageReference Include="Lykke.MarginTrading.BrokerBase" Version="2.0.0" />
+    <PackageReference Include="Lykke.MarginTrading.BrokerBase" Version="2.1.1" />
     <PackageReference Include="Lykke.RabbitMqBroker" Version="7.0.1" />
     <PackageReference Include="Lykke.SettingsReader" Version="5.0.0" />
     <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="2.0.5" />

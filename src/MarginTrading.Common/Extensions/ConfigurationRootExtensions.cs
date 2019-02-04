@@ -10,10 +10,10 @@ namespace MarginTrading.Common.Extensions
                    bool.TryParse(configuration["IsLive"], out var isLive) && isLive;
         }
         
-        public static bool NotTrowExceptionsOnServiceValidation(this IConfigurationRoot configuration)
+        public static bool NotThrowExceptionsOnServiceValidation(this IConfigurationRoot configuration)
         {
-            return !string.IsNullOrEmpty(configuration["NOT_TROW_EXCEPTIONS_ON_SERVICES_VALIDATION"]) &&
-                   bool.TryParse(configuration["NOT_TROW_EXCEPTIONS_ON_SERVICES_VALIDATION"],
+            return !string.IsNullOrEmpty(configuration["NOT_THROW_EXCEPTIONS_ON_SERVICES_VALIDATION"]) &&
+                   bool.TryParse(configuration["NOT_THROW_EXCEPTIONS_ON_SERVICES_VALIDATION"],
                        out var trowExceptionsOnInvalidService) && trowExceptionsOnInvalidService;
         }
         

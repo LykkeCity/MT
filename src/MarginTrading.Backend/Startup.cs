@@ -99,7 +99,7 @@ namespace MarginTrading.Backend
 
             var envSuffix = !string.IsNullOrEmpty(Configuration["Env"]) ? "." + Configuration["Env"] : "";
             var mtSettings = Configuration.LoadSettings<MtBackendSettings>(
-                    throwExceptionOnCheckError: !Configuration.NotTrowExceptionsOnServiceValidation())
+                    throwExceptionOnCheckError: !Configuration.NotThrowExceptionsOnServiceValidation())
                 .Nested(s =>
                 {
                     s.MtBackend.IsLive = isLive;
