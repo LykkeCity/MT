@@ -581,7 +581,7 @@ namespace MarginTrading.Backend.Services
                 $"Close position. {comment}", position.LegalEntity, false, OrderType.Market, null, position.Id,
                 originator, initialParameters.EquivalentPrice, initialParameters.FxPrice,
                 initialParameters.FxAssetPairId, initialParameters.FxToAssetPairDirection, OrderStatus.Placed,
-                additionalInfo, correlationId);
+                additionalInfo, correlationId, position.ExternalProviderId);
             
             _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
               
