@@ -8,6 +8,7 @@ using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services.Workflow

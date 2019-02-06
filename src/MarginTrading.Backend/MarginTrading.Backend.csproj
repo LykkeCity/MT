@@ -48,7 +48,7 @@
     <PackageReference Include="Lykke.SettingsReader" Version="5.0.0" />
     <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="2.0.5" />
     <PackageReference Include="Lykke.SlackNotifications" Version="2.0.0" />
-    <PackageReference Include="Lykke.MarginTrading.AccountsManagement.Contracts" Version="1.6.0" />
+    <PackageReference Include="Lykke.MarginTrading.AccountsManagement.Contracts" Version="1.10.0" />
     <PackageReference Include="Lykke.Snow.Common.Startup" Version="1.2.0" />
     <PackageReference Include="Microsoft.AspNetCore" Version="2.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication" Version="2.1.0" />

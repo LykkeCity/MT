@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Common;
 using Common.Log;
 using JetBrains.Annotations;
+using Lykke.Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Assets;
@@ -138,7 +141,39 @@ namespace MarginTrading.Backend.Services
 
             return Math.Round(positionsMargin + pendingOrdersMargin, accuracy);
         }
-        
+
+        public void RemoveDeleted(string accountId)
+        {
+            var account = _accountsCacheService.TryGet(accountId);
+            if (account == null)
+            {
+                return;
+            }
+
+            if (account.AccountFpl.WithdrawalFrozenMarginData.Any())
+            {
+                _log.Error(nameof(RemoveDeleted), 
+                    new Exception("While deleting an account it contained some frozen withdrawal data. Account is deleted."), 
+                    account.ToJson());
+            }
+            
+            if (account.AccountFpl.UnconfirmedMarginData.Any())
+            {
+                _log.Error(nameof(RemoveDeleted), 
+                    new Exception("While deleting an account it contained some unconfirmed margin data. Account is deleted."), 
+                    account.ToJson());
+            }
+
+            if (account.Balance != 0)
+            {
+                _log.Error(nameof(RemoveDeleted), 
+                    new Exception("While deleting an account it's balance on side of TradingCore was non zero. Account is deleted."), 
+                    account.ToJson());
+            }
+
+            _accountsCacheService.Remove(accountId);
+        }
+
         private void UpdateAccount(IMarginTradingAccount account,
             ICollection<Position> positions,
             ICollection<Order> pendingOrders)

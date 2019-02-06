@@ -1,15 +1,19 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using AutoMapper;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
+using Lykke.Common.Log;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Services.Events;
+using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services.Workflow
@@ -144,6 +148,14 @@ namespace MarginTrading.Backend.Services.Workflow
 
                         break;
                     }
+                    case AccountChangedEventTypeContract.Deleted:
+                        _accountUpdateService.RemoveDeleted(e.Account.Id);
+                        break;
+                    default:
+                        _log.Error(nameof(AccountsProjection), 
+                            new Exception("AccountChangedEventTypeContract was in incorrect state"), 
+                            e.ToJson());
+                        break;
                 }
                 
                 _chaosKitty.Meow(e.OperationId);
