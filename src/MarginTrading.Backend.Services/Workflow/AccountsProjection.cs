@@ -179,7 +179,8 @@ namespace MarginTrading.Backend.Services.Workflow
         private MarginTradingAccount Convert(AccountContract accountContract)
         {
             return _convertService.Convert<AccountContract, MarginTradingAccount>(accountContract,
-                o => o.ConfigureMap(MemberList.Source).ForSourceMember(x => x.ModificationTimestamp, c => c.Ignore()));
+                o => o.ConfigureMap(MemberList.Source)
+                    .ForSourceMember(x => x.ModificationTimestamp, c => c.Ignore()));
         }
     }
 }
