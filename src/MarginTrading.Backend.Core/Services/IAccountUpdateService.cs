@@ -15,6 +15,5 @@ namespace MarginTrading.Backend.Core.Services
             string liquidationOperationId = null);
 
         decimal CalculateOvernightUsedMargin(IMarginTradingAccount account);
-        void RemoveDeleted(string accountId);
     }
 }

@@ -149,7 +149,7 @@ namespace MarginTrading.Backend.Services.Workflow
                         break;
                     }
                     case AccountChangedEventTypeContract.Deleted:
-                        _accountUpdateService.RemoveDeleted(e.Account.Id);
+                        //handled by CQRS flow
                         break;
                     default:
                         _log.Error(nameof(AccountsProjection), 
