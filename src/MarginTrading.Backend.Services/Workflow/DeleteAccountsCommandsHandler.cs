@@ -12,6 +12,7 @@ using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Extensions;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Common.Services;
@@ -20,6 +21,7 @@ namespace MarginTrading.Backend.Services.Workflow
 {
     public class DeleteAccountsCommandsHandler
     {
+        private readonly IOrderReader _orderReader;
         private readonly IDateService _dateService;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly IChaosKitty _chaosKitty;
@@ -29,12 +31,14 @@ namespace MarginTrading.Backend.Services.Workflow
         private const string OperationName = "DeleteAccounts";
         
         public DeleteAccountsCommandsHandler(
+            IOrderReader orderReader,
             IDateService dateService,
             IAccountsCacheService accountsCacheService,
             IChaosKitty chaosKitty,
             IOperationExecutionInfoRepository operationExecutionInfoRepository,
             ILog log)
         {
+            _orderReader = orderReader;
             _dateService = dateService;
             _accountsCacheService = accountsCacheService;
             _chaosKitty = chaosKitty;
@@ -75,6 +79,14 @@ namespace MarginTrading.Backend.Services.Workflow
                     catch (Exception exception)
                     {
                         failedAccounts.Add(accountId, exception.Message);
+                        continue;
+                    }
+
+                    var positionsCount = _orderReader.GetPositions().Count(x => x.AccountId == accountId);
+                    var ordersCount = _orderReader.GetAllOrders().Count(x => x.AccountId == accountId);
+                    if (positionsCount != 0 || ordersCount != 0)
+                    {
+                        failedAccounts.Add(accountId, $"Account contain {positionsCount} open positions and {ordersCount} orders which must be closed before account deletion.");
                         continue;
                     }
                     
