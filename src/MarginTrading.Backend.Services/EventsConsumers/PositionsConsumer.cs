@@ -194,6 +194,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     SendPositionHistoryEvent(openedPosition, PositionHistoryTypeContract.PartiallyClose, chargedPnl, order, Math.Abs(leftVolumeToMatch));
 
                     ChangeRelatedOrderVolume(openedPosition.RelatedOrders, -openedPosition.Volume);
+                    
+                    CancelRelatedOrdersForOrder(order, order.CorrelationId, OrderCancellationReason.ParentPositionClosed);
                 
                     leftVolumeToMatch = 0;
                 }
