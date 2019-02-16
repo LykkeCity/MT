@@ -86,15 +86,23 @@ namespace MarginTrading.Backend.Services.Stp
             }
         }
 
-        public List<(string source, decimal? price)> GetPricesForExecution(string assetPairId, decimal volume,
+        public List<(string source, decimal? price)> GetOrderedPricesForExecution(string assetPairId, decimal volume,
             bool validateOppositeDirectionVolume)
         {
             return _orderbooks.TryReadValue(assetPairId, (dataExist, assetPair, orderbooks)
-                => dataExist
-                    ? orderbooks.Select(p => (p.Key,
-                            MatchBestPriceForOrderExecution(p.Value, volume, validateOppositeDirectionVolume)))
-                        .Where(p => p.Item2 != null).ToList()
-                    : null);
+                =>
+            {
+                if (!dataExist) 
+                    return null;
+                
+                var result = orderbooks.Select(p => (p.Key,
+                        MatchBestPriceForOrderExecution(p.Value, volume, validateOppositeDirectionVolume)))
+                    .Where(p => p.Item2 != null);
+
+                return volume.GetOrderDirection() == OrderDirection.Buy
+                    ? result.OrderBy(tuple => tuple.Item2).ToList()
+                    : result.OrderByDescending(tuple => tuple.Item2).ToList();
+             });
         }
 
         public decimal? GetPriceForPositionClose(string assetPairId, decimal volume, string externalProviderId)

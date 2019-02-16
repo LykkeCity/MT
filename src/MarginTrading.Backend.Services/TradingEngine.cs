@@ -261,7 +261,10 @@ namespace MarginTrading.Backend.Services
             {
                 try
                 {
-                    _validateOrderService.MakePreTradeValidation(order, shouldOpenNewPosition);
+                    _validateOrderService.MakePreTradeValidation(
+                        order,
+                        shouldOpenNewPosition,
+                        matchingEngine);
                 }
                 catch (ValidateOrderException ex)
                 {

@@ -284,7 +284,7 @@ namespace MarginTradingTests.OrderBooks
             orderbooks.SetOrderbook(_orderBook2);
             
             //Act
-            var prices = orderbooks.GetPricesForExecution(AssetPairId, 1, false);
+            var prices = orderbooks.GetOrderedPricesForExecution(AssetPairId, 1, false);
             
             //Assert
             Assert.AreEqual(2, prices.Count);
@@ -303,14 +303,14 @@ namespace MarginTradingTests.OrderBooks
             orderbooks.SetOrderbook(_orderBook2);
 
             //Act
-            var prices = orderbooks.GetPricesForExecution(AssetPairId, -1, false);
+            var prices = orderbooks.GetOrderedPricesForExecution(AssetPairId, -1, false);
             
             //Assert
             Assert.AreEqual(2, prices.Count);
-            Assert.AreEqual(_orderBook1.ExchangeName, prices[0].source);
-            Assert.AreEqual(9M, prices[0].price);
-            Assert.AreEqual(_orderBook2.ExchangeName, prices[1].source);
-            Assert.AreEqual(90M, prices[1].price);
+            Assert.AreEqual(_orderBook1.ExchangeName, prices[1].source);
+            Assert.AreEqual(9M, prices[1].price);
+            Assert.AreEqual(_orderBook2.ExchangeName, prices[0].source);
+            Assert.AreEqual(90M, prices[0].price);
         }
         
         [Test]

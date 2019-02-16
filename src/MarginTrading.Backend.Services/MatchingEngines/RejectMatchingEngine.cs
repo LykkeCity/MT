@@ -21,6 +21,11 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             return Task.FromResult(new MatchedOrderCollection());
         }
 
+        public (string externalProviderId, decimal? price) GetBestPriceForOpen(string assetPairId, decimal volume)
+        {
+            return (null, null);
+        }
+
         public Task MatchMarketOrderForCloseAsync(Position order, Func<MatchedOrderCollection, bool> orderProcessed)
         {
             orderProcessed(new MatchedOrderCollection());
