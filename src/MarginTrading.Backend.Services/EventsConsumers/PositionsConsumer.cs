@@ -119,7 +119,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 ? OrderCancellationReason.ParentPositionClosed
                 : OrderCancellationReason.ConnectedOrderExecuted;
             
-            CancelRelatedOrdersForClosedPosition(position, order.CorrelationId, reason);
+            CancelRelatedOrders(position.RelatedOrders, order.CorrelationId, reason);
+            CancelRelatedOrders(order.RelatedOrders, order.CorrelationId, reason);
         }
 
         private void OpenNewPosition(Order order, decimal volume)
@@ -276,12 +277,12 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             }
         }
         
-        private void CancelRelatedOrdersForClosedPosition(Position position, string correlationId,
+        private void CancelRelatedOrders(List<RelatedOrderInfo> relatedOrders, string correlationId,
             OrderCancellationReason reason)
         {
             var metadata = new OrderCancelledMetadata {Reason = reason};
             
-            foreach (var relatedOrderInfo in position.RelatedOrders)
+            foreach (var relatedOrderInfo in relatedOrders)
             {
                 if (_ordersCache.Active.TryPopById(relatedOrderInfo.Id, out var relatedOrder))
                 {
