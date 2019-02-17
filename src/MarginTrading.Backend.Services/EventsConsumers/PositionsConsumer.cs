@@ -214,6 +214,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
                 var fpl = Math.Round((dealOrder.ExecutionPrice.Value - position.OpenPrice) *
                                      dealOrder.FxRate * dealVolume.Value * sign, accountBaseAssetAccuracy);
+                var balanceDelta = Math.Round(fpl - chargedPnl, accountBaseAssetAccuracy);
                 
                 deal = new DealContract
                 {
@@ -234,12 +235,13 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     ClosePrice = dealOrder.ExecutionPrice.Value,
                     CloseFxPrice = dealOrder.FxRate,    
                     Fpl = fpl,
+                    PnlOfTheLastDay = balanceDelta,
                     AdditionalInfo = dealOrder.AdditionalInfo,
                     Originator = dealOrder.Originator.ToType<OriginatorTypeContract>()
                 };
                 
                 var account = _accountsCacheService.Get(position.AccountId);
-                var balanceDelta = Math.Round(fpl - chargedPnl, accountBaseAssetAccuracy);
+                
                 _cqrsSender.PublishEvent(new PositionClosedEvent(account.Id, account.ClientId,
                     deal.DealId, position.AssetPairId, balanceDelta));
             
