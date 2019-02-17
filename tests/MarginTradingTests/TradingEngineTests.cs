@@ -897,11 +897,18 @@ namespace MarginTradingTests
             {
                 new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.055M, Volume = -6 }
             });
+            
+            Assert.AreEqual(OrderStatus.Active, order.Status); //still not active
+            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
 
+            _matchingEngine.SetOrders(MarketMaker1Id, new []
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.055M, Volume = -10 }
+            });
 
-            ValidateOrderIsExecuted(order, new[] {"5", "6"}, 1.05625M);
+            ValidateOrderIsExecuted(order, new[] {"6"}, 1.055M);
 
-            ValidatePositionIsOpened(order.Id, 1.04875M, -0.06M);
+            ValidatePositionIsOpened(order.Id, 1.04875M, -0.05M);
            
             Assert.AreEqual(1, account.GetOpenPositionsCount()); //position is opened
         }
