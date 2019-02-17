@@ -15,6 +15,9 @@ using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
+using MarginTrading.Backend.Services.Infrastructure;
+using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
+using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services.Workflow
@@ -24,6 +27,8 @@ namespace MarginTrading.Backend.Services.Workflow
         private readonly IOrderReader _orderReader;
         private readonly IDateService _dateService;
         private readonly IAccountsCacheService _accountsCacheService;
+        private readonly ITradingEngine _tradingEngine;
+        private readonly ICqrsSender _cqrsSender;
         private readonly IChaosKitty _chaosKitty;
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
         private readonly ILog _log;
@@ -34,6 +39,8 @@ namespace MarginTrading.Backend.Services.Workflow
             IOrderReader orderReader,
             IDateService dateService,
             IAccountsCacheService accountsCacheService,
+            ITradingEngine tradingEngine,
+            ICqrsSender cqrsSender,
             IChaosKitty chaosKitty,
             IOperationExecutionInfoRepository operationExecutionInfoRepository,
             ILog log)
@@ -41,6 +48,8 @@ namespace MarginTrading.Backend.Services.Workflow
             _orderReader = orderReader;
             _dateService = dateService;
             _accountsCacheService = accountsCacheService;
+            _tradingEngine = tradingEngine;
+            _cqrsSender = cqrsSender;
             _chaosKitty = chaosKitty;
             _operationExecutionInfoRepository = operationExecutionInfoRepository;
             _log = log;
@@ -69,6 +78,7 @@ namespace MarginTrading.Backend.Services.Workflow
             if (executionInfo.Data.SwitchState(OperationState.Initiated, OperationState.Started))
             {
                 var failedAccounts = new Dictionary<string, string>();
+                
                 foreach (var accountId in command.AccountIds)
                 {
                     MarginTradingAccount account = null;
@@ -82,11 +92,48 @@ namespace MarginTrading.Backend.Services.Workflow
                         continue;
                     }
 
-                    var positionsCount = _orderReader.GetPositions().Count(x => x.AccountId == accountId);
-                    var ordersCount = _orderReader.GetAllOrders().Count(x => x.AccountId == accountId);
-                    if (positionsCount != 0 || ordersCount != 0)
+                    var orders = _orderReader.GetPending().Where(x => x.AccountId == accountId).ToList();
+                    if (orders.Any())
                     {
-                        failedAccounts.Add(accountId, $"Account contain {positionsCount} open positions and {ordersCount} orders which must be closed before account deletion.");
+                        var (failedToCloseOrderId, failReason) = ((string)null, (string)null);
+                        foreach (var order in orders)
+                        {
+                            try
+                            {
+                                _tradingEngine.CancelPendingOrder(order.Id, order.AdditionalInfo,command.OperationId, 
+                                $"{nameof(DeleteAccountsCommandsHandler)}: force close all orders."); 
+                            }
+                            catch (Exception exception)
+                            {
+                                failedToCloseOrderId = order.Id;
+                                failReason = exception.Message;
+                            }
+                        }
+
+                        if (failedToCloseOrderId != null)
+                        {
+                            executionInfo.Data.DontUnblockAccounts.Add(accountId);
+                            failedAccounts.Add(accountId, $"Account contain some orders which failed to be closed. First one [{failedToCloseOrderId}]: {failReason}. Account is blocked.");
+                            await UpdateAccount(account, true, r => { });
+                            continue;
+                        }
+                    }
+                    
+                    var positionsCount = _orderReader.GetPositions().Count(x => x.AccountId == accountId);                    
+                    if (positionsCount != 0)
+                    {
+                        _cqrsSender.SendCommandToSelf(new StartLiquidationInternalCommand
+                        {
+                            OperationId = $"{command.OperationId}_{accountId}",
+                            AccountId = account.Id,
+                            CreationTime = _dateService.Now(),
+                            QuoteInfo = null,
+                            Direction = null,
+                            LiquidationType = LiquidationType.Forced,
+                        });
+                        executionInfo.Data.DontUnblockAccounts.Add(accountId);
+                        failedAccounts.Add(accountId, $"Account contain {positionsCount} open positions which must be closed before account deletion. Liquidation started, account is blocked. Try deleting an account tomorrow.");
+                        await UpdateAccount(account, true, r => { });
                         continue;
                     }
                     
@@ -111,14 +158,8 @@ namespace MarginTrading.Backend.Services.Workflow
                             account.ToJson());
                     }
 
-                    try
+                    if (!await UpdateAccount(account, true, r => failedAccounts.Add(accountId, r)))
                     {
-                        await _accountsCacheService.UpdateAccountChanges(accountId, account.TradingConditionId,
-                            account.WithdrawTransferLimit, true, true, _dateService.Now());
-                    }
-                    catch (Exception exception)
-                    {
-                        failedAccounts.Add(accountId, exception.Message);
                         continue;
                     }
                 }
@@ -128,7 +169,8 @@ namespace MarginTrading.Backend.Services.Workflow
                     eventTimestamp: _dateService.Now(),
                     blockedAccountIds: command.AccountIds.Except(failedAccounts.Keys).ToList(),
                     failedAccountIds: failedAccounts
-                )); 
+                ));
+                //todo send dontUnblockAccounts here
                 
                 _chaosKitty.Meow($"{nameof(BlockAccountsForDeletionCommand)}: " +
                                  "Save_OperationExecutionInfo: " +
@@ -156,19 +198,11 @@ namespace MarginTrading.Backend.Services.Workflow
 
             if (executionInfo.Data.SwitchState(OperationState.Started, OperationState.Finished))
             {
-                foreach (var failedAccountId in command.FailedAccountIds)
+                foreach (var failedAccountId in command.FailedAccountIds.Except(executionInfo.Data.DontUnblockAccounts))
                 {
-                    try
-                    {
-                        var account = _accountsCacheService.Get(failedAccountId);
-
-                        await _accountsCacheService.UpdateAccountChanges(failedAccountId, account.TradingConditionId,
-                            account.WithdrawTransferLimit, false, false, _dateService.Now());
-                    }
-                    catch (Exception exception)
-                    {
-                        _log.Error(nameof(MtCoreFinishAccountsDeletionCommand), exception, exception.Message);
-                    }
+                    var account = _accountsCacheService.Get(failedAccountId);
+                    
+                    await UpdateAccount(account, false, r => { });
                 }
 
                 foreach (var accountId in command.AccountIds)
@@ -184,6 +218,25 @@ namespace MarginTrading.Backend.Services.Workflow
                 
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }
+        }
+
+        private async Task<bool> UpdateAccount(IMarginTradingAccount account, bool toDisablementState,
+            Action<string> failHandler)
+        {
+            try
+            {
+                await _accountsCacheService.UpdateAccountChanges(account.Id, account.TradingConditionId,
+                    account.WithdrawTransferLimit, toDisablementState, 
+                    toDisablementState, _dateService.Now());
+            }
+            catch (Exception exception)
+            {
+                _log.Error(nameof(DeleteAccountsCommandsHandler), exception, exception.Message);
+                failHandler(exception.Message);
+                return false;
+            }
+
+            return true;
         }
     }
 }
