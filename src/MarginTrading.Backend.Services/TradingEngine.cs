@@ -631,7 +631,7 @@ namespace MarginTrading.Backend.Services
         }
 
         public Order CancelPendingOrder(string orderId, string additionalInfo,
-            string correlationId, string comment = null)
+            string correlationId, string comment = null, OrderCancellationReason reason = OrderCancellationReason.None)
         {
             var order = _ordersCache.GetOrderById(orderId);
 
@@ -650,7 +650,7 @@ namespace MarginTrading.Backend.Services
             
             order.Cancel(_dateService.Now(), additionalInfo, correlationId);
 
-            var metadata = new OrderCancelledMetadata {Reason = OrderCancellationReason.None};
+            var metadata = new OrderCancelledMetadata {Reason = reason};
             _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order, metadata));
             
             return order;
