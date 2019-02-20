@@ -37,7 +37,7 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(meRoutes).As<ITradingRoutesApi>().SingleInstance();
             builder.RegisterInstance(accountApi).As<IAccountsApi>().SingleInstance();
             builder.RegisterInstance(Mock.Of<IOrderBookProviderApi>(x =>
-                x.GetOrderBooks() == Task.FromResult(new List<ExternalOrderBookContract>())));
+                x.GetOrderBooks(null) == Task.FromResult(new List<ExternalOrderBookContract>())));
         }
     }
 }

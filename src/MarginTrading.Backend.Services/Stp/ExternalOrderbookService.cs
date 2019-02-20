@@ -18,6 +18,7 @@ using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Helpers;
 using MarginTrading.Common.Services;
 using MarginTrading.SettingsService.Contracts.AssetPair;
+using MoreLinq;
 
 namespace MarginTrading.Backend.Services.Stp
 {
@@ -67,9 +68,11 @@ namespace MarginTrading.Backend.Services.Stp
         {
             try
             {
-                var orderBookContracts = await _orderBookProviderApi.GetOrderBooks();
-                var orderBooks = orderBookContracts.Select(x =>
-                    _convertService.Convert<ExternalOrderBookContract, ExternalOrderBook>(x)).ToList();
+                var orderBooks = (await _orderBookProviderApi.GetOrderBooks())
+                    .GroupBy(x => x.AssetPairId)
+                    .Select(x => _convertService.Convert<ExternalOrderBookContract, ExternalOrderBook>(
+                        x.MaxBy(o => o.ReceiveTimestamp)))
+                    .ToList();
 
                 foreach (var externalOrderBook in orderBooks)
                 {
