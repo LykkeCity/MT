@@ -1,6 +1,10 @@
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Common.Log;
 using JetBrains.Annotations;
+using Lykke.Common.Log;
+using MarginTrading.Backend.Contracts.Activities;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Services.AssetPairs;
@@ -16,16 +20,22 @@ namespace MarginTrading.Backend.Services.Workflow
     [UsedImplicitly]
     public class AssetPairProjection
     {
+        private readonly ITradingEngine _tradingEngine;
         private readonly IAssetPairsCache _assetPairsCache;
+        private readonly IOrderReader _orderReader;
         private readonly IScheduleSettingsCacheService _scheduleSettingsCacheService;
         private readonly ILog _log;
 
         public AssetPairProjection(
+            ITradingEngine tradingEngine,
             IAssetPairsCache assetPairsCache,
+            IOrderReader orderReader,
             IScheduleSettingsCacheService scheduleSettingsCacheService,
             ILog log)
         {
+            _tradingEngine = tradingEngine;
             _assetPairsCache = assetPairsCache;
+            _orderReader = orderReader;
             _scheduleSettingsCacheService = scheduleSettingsCacheService;
             _log = log;
         }
@@ -43,10 +53,17 @@ namespace MarginTrading.Backend.Services.Workflow
 
             if (IsDelete(@event))
             {
+                CloseAllOrders();
+                
                 _assetPairsCache.Remove(@event.AssetPair.Id);
             }
             else
             {
+                if (@event.AssetPair.IsDiscontinued)
+                {
+                    CloseAllOrders();
+                }
+                
                 _assetPairsCache.AddOrUpdate(new AssetPair(
                     id: @event.AssetPair.Id,
                     name: @event.AssetPair.Name,
@@ -65,6 +82,23 @@ namespace MarginTrading.Backend.Services.Workflow
             }
 
             await _scheduleSettingsCacheService.UpdateSettingsAsync();
+
+            void CloseAllOrders()
+            {
+                try
+                {
+                    foreach (var order in _orderReader.GetPending().Where(x => x.AssetPairId == @event.AssetPair.Id))
+                    {
+                        _tradingEngine.CancelPendingOrder(order.Id, null,@event.OperationId, 
+                            null, OrderCancellationReason.InstrumentInvalidated);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    _log.Error(nameof(AssetPairProjection), exception);
+                    throw;
+                }
+            }
         }
 
         private static bool IsDelete(AssetPairChangedEvent @event)
