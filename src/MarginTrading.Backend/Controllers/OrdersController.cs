@@ -213,7 +213,7 @@ namespace MarginTrading.Backend.Controllers
         public Task<OrderContract> GetAsync(string orderId)
         {
             return _ordersCache.TryGetOrderById(orderId, out var order)
-                ? Task.FromResult(order.ConvertToContract(GetRalatedOrders(order)))
+                ? Task.FromResult(order.ConvertToContract(GetRelatedOrders(order)))
                 : Task.FromResult<OrderContract>(null);
         }
 
@@ -240,7 +240,7 @@ namespace MarginTrading.Backend.Controllers
             if (!string.IsNullOrWhiteSpace(parentOrderId))
                 orders = orders.Where(o => o.ParentOrderId == parentOrderId);
 
-            return Task.FromResult(orders.Select(o => o.ConvertToContract(GetRalatedOrders(o))).ToList());
+            return Task.FromResult(orders.Select(o => o.ConvertToContract(GetRelatedOrders(o))).ToList());
         }
 
         /// <summary>
@@ -286,7 +286,7 @@ namespace MarginTrading.Backend.Controllers
                 .Take(PaginationHelper.GetTake(take)).ToList();
 
             return Task.FromResult(new PaginatedResponseContract<OrderContract>(
-                contents: filtered.Select(o => o.ConvertToContract(GetRalatedOrders(o))).ToList(),
+                contents: filtered.Select(o => o.ConvertToContract(GetRelatedOrders(o))).ToList(),
                 start: skip ?? 0,
                 size: filtered.Count,
                 totalSize: orderList.Count
@@ -303,7 +303,7 @@ namespace MarginTrading.Backend.Controllers
             return originator.ToType<OriginatorType>();
         }
 
-        private List<Order> GetRalatedOrders(Order order)
+        private List<Order> GetRelatedOrders(Order order)
         {
             var relatedOrders = new List<Order>();
 
