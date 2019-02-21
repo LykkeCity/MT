@@ -17,6 +17,7 @@ namespace MarginTrading.Backend.Services
         ImmutableArray<Position> GetPositions(string instrument);
         ImmutableArray<Position> GetPositionsByFxAssetPairId(string fxAssetPairId);
         ImmutableArray<Order> GetPending();
+        bool TryGetOrderById(string orderId, out Order order);
     }
 
     public class OrdersCache : IOrderReader

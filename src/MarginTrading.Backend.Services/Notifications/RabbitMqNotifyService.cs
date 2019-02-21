@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Autofac.Features.Indexed;
 using Common;
@@ -23,21 +24,33 @@ namespace MarginTrading.Backend.Services.Notifications
         private readonly MarginTradingSettings _settings;
         private readonly IIndex<string, IMessageProducer<string>> _publishers;
         private readonly ILog _log;
+        private readonly IOrderReader _orderReader;
 
         public RabbitMqNotifyService(IDateService dateService, MarginTradingSettings settings,
-            IIndex<string, IMessageProducer<string>> publishers, ILog log)
+            IIndex<string, IMessageProducer<string>> publishers, ILog log, IOrderReader orderReader)
         {
             _dateService = dateService;
             _settings = settings;
             _publishers = publishers;
             _log = log;
+            _orderReader = orderReader;
         }
 
         public Task OrderHistory(Order order, OrderUpdateType orderUpdateType, string activitiesMetadata = null)
         {
+            var relatedOrders = new List<Order>();
+
+            foreach (var relatedOrderInfo in order.RelatedOrders)
+            {
+                if (_orderReader.TryGetOrderById(relatedOrderInfo.Id, out var relatedOrder))
+                {
+                    relatedOrders.Add(relatedOrder);
+                }
+            }
+            
             var historyEvent = new OrderHistoryEvent
             {
-                OrderSnapshot = order.ConvertToContract(),
+                OrderSnapshot = order.ConvertToContract(relatedOrders),
                 Timestamp = _dateService.Now(),
                 Type = orderUpdateType.ToType<OrderHistoryTypeContract>(),
                 ActivitiesMetadata = activitiesMetadata

@@ -1,6 +1,8 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.TradeMonitoring;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Common.Extensions;
 using MatchedOrderContract = MarginTrading.Backend.Contracts.Orders.MatchedOrderContract;
@@ -11,8 +13,27 @@ namespace MarginTrading.Backend.Services.Mappers
 {
     public static class DomainToContractMappers
     {
-        public static OrderContract ConvertToContract(this Order order)
+        public static OrderContract ConvertToContract(this Order order, List<Order> relatedOrders)
         {
+            RelatedOrderInfoContract Map(RelatedOrderInfo relatedOrderInfo)
+            {
+                var relateOrder = relatedOrders.FirstOrDefault(o => o.Id == relatedOrderInfo.Id);
+
+                if (relateOrder == null)
+                {
+                    return null;
+                }
+
+                return new RelatedOrderInfoContract
+                {
+                    Id = relateOrder.Id,
+                    Price = relateOrder.Price ?? 0,
+                    Type = relateOrder.OrderType.ToType<OrderTypeContract>(),
+                    Status = relateOrder.Status.ToType<OrderStatusContract>(),
+                    ModifiedTimestamp = relateOrder.LastModified
+                };
+            }
+            
             return new OrderContract
             {
                 Id = order.Id,
@@ -62,8 +83,7 @@ namespace MarginTrading.Backend.Services.Mappers
                 Rejected = order.Rejected,
                 RejectReason = order.RejectReason.ToType<OrderRejectReasonContract>(),
                 RejectReasonText = order.RejectReasonText,
-                RelatedOrderInfos = order.RelatedOrders.Select(o =>
-                    new RelatedOrderInfoContract {Id = o.Id, Type = o.Type.ToType<OrderTypeContract>()}).ToList(),
+                RelatedOrderInfos = order.RelatedOrders.Select(Map).Where(o => o != null).ToList(),
                 TradingConditionId = order.TradingConditionId,
                 AdditionalInfo = order.AdditionalInfo,
                 CorrelationId = order.CorrelationId,

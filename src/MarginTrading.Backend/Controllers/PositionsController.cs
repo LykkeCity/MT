@@ -15,6 +15,7 @@ using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Filters;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
@@ -225,8 +226,25 @@ namespace MarginTrading.Backend.Controllers
             });
         }
 
-        internal static OpenPositionContract Convert(Position position)
+        private OpenPositionContract Convert(Position position)
         {
+            var relatedOrders = new List<RelatedOrderInfoContract>();
+
+            foreach (var relatedOrderInfo in position.RelatedOrders)
+            {
+                if (_ordersCache.TryGetOrderById(relatedOrderInfo.Id, out var relatedOrder))
+                {
+                    relatedOrders.Add(new RelatedOrderInfoContract
+                    {
+                        Id = relatedOrder.Id,
+                        Price = relatedOrder.Price ?? 0,
+                        Type = relatedOrder.OrderType.ToType<OrderTypeContract>(),
+                        Status = relatedOrder.Status.ToType<OrderStatusContract>(),
+                        ModifiedTimestamp = relatedOrder.LastModified
+                    });
+                }
+            }
+
             return new OpenPositionContract
             {
                 AccountId = position.AccountId,
@@ -248,14 +266,13 @@ namespace MarginTrading.Backend.Controllers
                 FxAssetPairId = position.FxAssetPairId,
                 FxToAssetPairDirection = position.FxToAssetPairDirection.ToType<FxToAssetPairDirectionContract>(),
                 RelatedOrders = position.RelatedOrders.Select(o => o.Id).ToList(),
-                RelatedOrderInfos = position.RelatedOrders.Select(o =>
-                    new RelatedOrderInfoContract {Id = o.Id, Type = o.Type.ToType<OrderTypeContract>()}).ToList(),
+                RelatedOrderInfos = relatedOrders,
                 OpenTimestamp = position.OpenDate,
                 ModifiedTimestamp = position.LastModified,
                 TradeId = position.Id
             };
         }
-        
+
         private OriginatorType GetOriginator(OriginatorTypeContract? originator)
         {
             if (originator == null || originator.Value == default(OriginatorTypeContract))
