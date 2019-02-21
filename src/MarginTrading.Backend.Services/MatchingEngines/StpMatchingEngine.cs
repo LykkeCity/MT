@@ -73,7 +73,8 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(order.AssetPairId);
             var externalAssetPair = assetPair?.BasePairId ?? order.AssetPairId;
 
-            foreach (var sourcePrice in prices)
+            foreach (var (source, price) in prices
+                .Where(x => string.IsNullOrEmpty(order.ExternalProviderId) || x.source == order.ExternalProviderId))
             {
                 var externalOrderModel = new OrderModel();
 
@@ -82,7 +83,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                     : OrderType.Limit;
 
                 var targetPrice = order.OrderType == Core.Orders.OrderType.Market
-                    ? (double?) sourcePrice.price
+                    ? (double?) price
                     : (double?) order.Price;
                 
                 try
@@ -93,7 +94,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                         timeInForce: TimeInForce.FillOrKill,
                         volume: (double) Math.Abs(order.Volume),
                         dateTime: _dateService.Now(),
-                        exchangeName: sourcePrice.source,
+                        exchangeName: source,
                         instrument: externalAssetPair,
                         price: targetPrice,
                         orderId: order.Id,
@@ -109,13 +110,13 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
                     var executedPrice = Math.Abs(executionResult.Price) > 0
                         ? (decimal) executionResult.Price
-                        : sourcePrice.price.Value;
+                        : price.Value;
 
                     var matchedOrders = new MatchedOrderCollection
                     {
                         new MatchedOrder
                         {
-                            MarketMakerId = sourcePrice.source,
+                            MarketMakerId = source,
                             MatchedDate = _dateService.Now(),
                             OrderId = executionResult.ExchangeOrderId,
                             Price = CalculatePriceWithMarkups(assetPair, order.Direction, executedPrice),
