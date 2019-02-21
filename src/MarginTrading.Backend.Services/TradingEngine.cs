@@ -184,8 +184,11 @@ namespace MarginTrading.Backend.Services
                 }
                 else
                 {
-                    throw new ValidateOrderException(OrderRejectReason.InvalidParent,
-                        "Parent order is not active and have not opened position");
+                    order.MakeInactive(_dateService.Now());
+                    _ordersCache.Inactive.Add(order);
+                    CancelPendingOrder(order.Id, order.AdditionalInfo,
+                        _identityGenerator.GenerateAlphanumericId(),
+                        $"Parent order closed the position, so {order.OrderType.ToString()} order is cancelled");
                 }
             }
             else
