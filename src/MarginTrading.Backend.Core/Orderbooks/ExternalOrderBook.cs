@@ -16,7 +16,7 @@ namespace MarginTrading.Backend.Core.Orderbooks
             Bids = bids;
         }
 
-        public string ExchangeName { get; }
+        public string ExchangeName { get; private set; }
 
         public string AssetPairId { get; }
 
@@ -25,6 +25,14 @@ namespace MarginTrading.Backend.Core.Orderbooks
         public List<VolumePrice> Asks { get; }
 
         public List<VolumePrice> Bids { get; }
+
+        public void ApplyExchangeIdFromSettings(string exchangeIdFromSettings)
+        {
+            if (!string.IsNullOrWhiteSpace(exchangeIdFromSettings))
+            {
+                ExchangeName = exchangeIdFromSettings;
+            }
+        }
 
         public decimal? GetMatchedPrice(decimal volumeToMatch, OrderDirection orderTypeToMatch)
         {

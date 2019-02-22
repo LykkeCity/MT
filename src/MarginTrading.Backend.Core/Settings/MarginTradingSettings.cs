@@ -77,5 +77,8 @@ namespace MarginTrading.Backend.Core.Settings
 
         [Optional] 
         public OvernightMarginSettings OvernightMargin { get; set; } = new OvernightMarginSettings();
+        
+        [Optional]
+        public string DefaultExternalExchangeId { get; set; }
     }
 }

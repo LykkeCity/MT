@@ -11,6 +11,7 @@ using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
@@ -32,6 +33,7 @@ namespace MarginTrading.Backend.Services.Stp
         private readonly IIdentityGenerator _identityGenerator;
         private readonly IConvertService _convertService;
         private readonly ILog _log;
+        private readonly MarginTradingSettings _marginTradingSettings;
 
         /// <summary>
         /// External orderbooks cache (AssetPairId, (Source, Orderbook))
@@ -52,7 +54,8 @@ namespace MarginTrading.Backend.Services.Stp
             ICqrsSender cqrsSender,
             IIdentityGenerator identityGenerator,
             IConvertService convertService,
-            ILog log)
+            ILog log,
+            MarginTradingSettings marginTradingSettings)
         {
             _bestPriceChangeEventChannel = bestPriceChangeEventChannel;
             _orderBookProviderApi = orderBookProviderApi;
@@ -62,6 +65,7 @@ namespace MarginTrading.Backend.Services.Stp
             _identityGenerator = identityGenerator;
             _convertService = convertService;
             _log = log;
+            _marginTradingSettings = marginTradingSettings;
         }
 
         public async Task InitializeAsync()
@@ -154,6 +158,8 @@ namespace MarginTrading.Backend.Services.Stp
             if (!ValidateOrderbook(orderbook) 
                 || !CheckZeroQuote(orderbook))
                 return;
+
+            orderbook.ApplyExchangeIdFromSettings(_marginTradingSettings.DefaultExternalExchangeId);
 
             var bba = new InstrumentBidAskPair
             {
