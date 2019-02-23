@@ -177,11 +177,11 @@
   <data name="Notifications_StopOutNotification" xml:space="preserve">
     <value>Stop out, {0} position(s) closed, PnL {1} {2}</value>
   </data>
-  <data name="Validation_PriceAboveAsk" xml:space="preserve">
-    <value>The specified price {0} is above current ask price {1}</value>
+  <data name="Validation_PriceBelowAsk" xml:space="preserve">
+    <value>The specified price {0} is below current ask price {1}</value>
   </data>
-  <data name="Validation_PriceBelowBid" xml:space="preserve">
-    <value>The specified price {0} is below current bid price {1}</value>
+  <data name="Validation_PriceAboveBid" xml:space="preserve">
+    <value>The specified price {0} is above current bid price {1}</value>
   </data>
   <data name="Validation_NotEnoughBalance" xml:space="preserve">
     <value>Not enough balance to open position</value>
