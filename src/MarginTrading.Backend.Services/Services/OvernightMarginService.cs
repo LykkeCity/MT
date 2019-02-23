@@ -8,6 +8,7 @@ using FluentScheduler;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.DayOffSettings;
 using MarginTrading.Backend.Core.Extensions;
+using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
@@ -28,10 +29,11 @@ namespace MarginTrading.Backend.Services.Services
         private readonly IAccountUpdateService _accountUpdateService;
         private readonly IScheduleSettingsCacheService _scheduleSettingsCacheService;
         private readonly IOvernightMarginParameterContainer _overnightMarginParameterContainer;
+        private readonly IOvernightMarginRepository _overnightMarginRepository;
         private readonly ILog _log;
         private readonly IEventChannel<MarginCallEventArgs> _marginCallEventChannel;
         private readonly OvernightMarginSettings _overnightMarginSettings;
-
+        
         public OvernightMarginService(
             IDateService dateService,
             ITradingEngine tradingEngine,
@@ -39,6 +41,7 @@ namespace MarginTrading.Backend.Services.Services
             IAccountUpdateService accountUpdateService,
             IScheduleSettingsCacheService scheduleSettingsCacheService,
             IOvernightMarginParameterContainer overnightMarginParameterContainer,
+            IOvernightMarginRepository overnightMarginRepository,
             ILog log,
             IEventChannel<MarginCallEventArgs> marginCallEventChannel,
             OvernightMarginSettings overnightMarginSettings)
@@ -49,6 +52,7 @@ namespace MarginTrading.Backend.Services.Services
             _accountUpdateService = accountUpdateService;
             _scheduleSettingsCacheService = scheduleSettingsCacheService;
             _overnightMarginParameterContainer = overnightMarginParameterContainer;
+            _overnightMarginRepository = overnightMarginRepository;
             _log = log;
             _marginCallEventChannel = marginCallEventChannel;
             _overnightMarginSettings = overnightMarginSettings;
@@ -61,7 +65,6 @@ namespace MarginTrading.Backend.Services.Services
             var platformTradingSchedule = _scheduleSettingsCacheService.GetPlatformTradingSchedule();
             
             _overnightMarginParameterContainer.OvernightMarginParameter = 1;
-            
             
             var currentDateTime = _dateService.Now();
             DateTime nextStart;
@@ -87,8 +90,8 @@ namespace MarginTrading.Backend.Services.Services
             //schedule overnight margin parameter drop
             else if (currentDateTime < operatingInterval.End)
             {
-                _overnightMarginParameterContainer.OvernightMarginParameter =
-                    _overnightMarginSettings.OvernightMarginParameter;
+                _overnightMarginParameterContainer.OvernightMarginParameter = 
+                    _overnightMarginRepository.ReadOvernightMarginParameter();
                 nextStart = operatingInterval.End;
 
                 PlanEodJob(operatingInterval.Start, currentDateTime);

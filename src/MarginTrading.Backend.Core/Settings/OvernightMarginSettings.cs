@@ -12,12 +12,6 @@ namespace MarginTrading.Backend.Core.Settings
         public string ScheduleMarketId { get; set; } = "PlatformScheduleMarketId";
 
         /// <summary>
-        /// Multiplier for the intraday margin parameter to be active at night. 
-        /// </summary>
-        [Optional]
-        public decimal OvernightMarginParameter { get; set; } = 3;
-
-        /// <summary>
         /// Stop out warnings will be done this minutes before activating OvernightMarginParameter.
         /// </summary>
         [Optional]
