@@ -54,6 +54,8 @@ namespace MarginTrading.Backend.Services.Workflow
             if (IsDelete(@event))
             {
                 CloseAllOrders();
+
+                ValidatePositions(@event.AssetPair.Id);
                 
                 _assetPairsCache.Remove(@event.AssetPair.Id);
             }
@@ -95,8 +97,18 @@ namespace MarginTrading.Backend.Services.Workflow
                 }
                 catch (Exception exception)
                 {
-                    _log.Error(nameof(AssetPairProjection), exception);
+                    _log.WriteError(nameof(AssetPairProjection), nameof(CloseAllOrders), exception);
                     throw;
+                }
+            }
+            
+            void ValidatePositions(string assetPairId)
+            {
+                var positions = _orderReader.GetPositions(assetPairId);
+                if (positions.Any())
+                {
+                    _log.WriteFatalError(nameof(AssetPairProjection), nameof(ValidatePositions), 
+                        new Exception($"{positions.Length} positions are opened for [{assetPairId}], first: [{positions.First().Id}]. Cannot delete AssetPair from cache, close positions first."));
                 }
             }
         }
