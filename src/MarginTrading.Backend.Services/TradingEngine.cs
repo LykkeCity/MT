@@ -16,6 +16,7 @@ using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
+using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services
@@ -222,7 +223,7 @@ namespace MarginTrading.Backend.Services
                 order.Expire(now);
                 _orderCancelledEventChannel.SendEvent(this,
                     new OrderCancelledEventArgs(order,
-                        new OrderCancelledMetadata {Reason = OrderCancellationReason.Expired}));
+                        new OrderCancelledMetadata {Reason = OrderCancellationReasonContract.Expired}));
                 return order;
             }
             
@@ -414,7 +415,7 @@ namespace MarginTrading.Backend.Services
                         this,
                         new OrderCancelledEventArgs(
                             order,
-                            new OrderCancelledMetadata {Reason = OrderCancellationReason.Expired}));
+                            new OrderCancelledMetadata {Reason = OrderCancellationReasonContract.Expired}));
                 }
             }
         }
@@ -650,7 +651,7 @@ namespace MarginTrading.Backend.Services
             
             order.Cancel(_dateService.Now(), additionalInfo, correlationId);
 
-            var metadata = new OrderCancelledMetadata {Reason = reason};
+            var metadata = new OrderCancelledMetadata {Reason = reason.ToType<OrderCancellationReasonContract>()};
             _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order, metadata));
             
             return order;

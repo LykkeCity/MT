@@ -125,23 +125,23 @@ namespace MarginTrading.Backend.Services.Workflow
                     
                     if (account.AccountFpl.WithdrawalFrozenMarginData.Any())
                     {
-                        _log.Error(nameof(BlockAccountsForDeletionCommand), 
-                            new Exception("While deleting an account it contained some frozen withdrawal data. Account is deleted."), 
-                            account.ToJson());
+                        await _log.WriteErrorAsync(nameof(DeleteAccountsCommandsHandler), 
+                            nameof(BlockAccountsForDeletionCommand), account.ToJson(), 
+                            new Exception("While deleting an account it contained some frozen withdrawal data. Account is deleted."));
                     }
             
                     if (account.AccountFpl.UnconfirmedMarginData.Any())
                     {
-                        _log.Error(nameof(BlockAccountsForDeletionCommand), 
-                            new Exception("While deleting an account it contained some unconfirmed margin data. Account is deleted."), 
-                            account.ToJson());
+                        await _log.WriteErrorAsync(nameof(DeleteAccountsCommandsHandler), 
+                            nameof(BlockAccountsForDeletionCommand), account.ToJson(), 
+                            new Exception("While deleting an account it contained some unconfirmed margin data. Account is deleted."));
                     }
 
                     if (account.Balance != 0)
                     {
-                        _log.Error(nameof(BlockAccountsForDeletionCommand), 
-                            new Exception("While deleting an account it's balance on side of TradingCore was non zero. Account is deleted."), 
-                            account.ToJson());
+                        await _log.WriteErrorAsync(nameof(DeleteAccountsCommandsHandler),
+                            nameof(BlockAccountsForDeletionCommand), account.ToJson(),
+                            new Exception("While deleting an account it's balance on side of TradingCore was non zero. Account is deleted."));
                     }
 
                     if (!await UpdateAccount(account, true, 
@@ -216,7 +216,8 @@ namespace MarginTrading.Backend.Services.Workflow
             }
             catch (Exception exception)
             {
-                _log.Error(nameof(DeleteAccountsCommandsHandler), exception, exception.Message);
+                await _log.WriteErrorAsync(nameof(DeleteAccountsCommandsHandler),
+                    nameof(DeleteAccountsCommandsHandler), exception.Message, exception);
                 failHandler(exception.Message);
                 return false;
             }

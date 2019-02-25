@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using MarginTrading.Backend.Contracts.Activities;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;

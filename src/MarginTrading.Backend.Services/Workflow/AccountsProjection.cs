@@ -152,9 +152,8 @@ namespace MarginTrading.Backend.Services.Workflow
                         //handled by CQRS flow
                         break;
                     default:
-                        _log.Error(nameof(AccountsProjection), 
-                            new Exception("AccountChangedEventTypeContract was in incorrect state"), 
-                            e.ToJson());
+                        await _log.WriteErrorAsync(nameof(AccountsProjection), nameof(AccountChangedEvent),
+                            e.ToJson(), new Exception("AccountChangedEventTypeContract was in incorrect state"));
                         break;
                 }
                 
