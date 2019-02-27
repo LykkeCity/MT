@@ -56,6 +56,11 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
                 operationName: OperationName,
                 id: e.OperationId);
+            
+            if (executionInfo?.Data == null)
+            {
+                return;
+            }
 
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.Started, 
                 SpecialLiquidationOperationState.PriceRequested))
@@ -104,7 +109,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 operationName: OperationName,
                 id: e.OperationId);
             
-            if (executionInfo == null)
+            if (executionInfo?.Data == null)
                 return;
 
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceRequested,
@@ -156,7 +161,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 operationName: OperationName,
                 id: e.OperationId);
             
-            if (executionInfo == null)
+            if (executionInfo?.Data == null)
                 return;
 
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceRequested,
@@ -182,7 +187,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 operationName: OperationName,
                 id: e.OperationId);
 
-            if (executionInfo == null)
+            if (executionInfo?.Data == null)
                 return;
             
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.ExternalOrderExecuted,
@@ -213,7 +218,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 operationName: OperationName,
                 id: e.OperationId);
             
-            if (executionInfo == null)
+            if (executionInfo?.Data == null)
                 return;
 
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceReceived,
@@ -239,7 +244,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 operationName: OperationName,
                 id: e.OperationId);
 
-            if (executionInfo == null)
+            if (executionInfo?.Data == null)
                 return;
             
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.InternalOrdersExecuted,
