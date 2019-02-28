@@ -144,7 +144,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 order.TradingConditionId, order.AccountAssetId, order.Price, order.MatchingEngineId,
                 order.Executed.Value, order.Id, order.OrderType, order.Volume, order.ExecutionPrice.Value, order.FxRate,
                 order.EquivalentAsset, order.EquivalentRate, order.RelatedOrders, order.LegalEntity, order.Originator,
-                order.ExternalProviderId, order.FxAssetPairId, order.FxToAssetPairDirection);
+                order.ExternalProviderId, order.FxAssetPairId, order.FxToAssetPairDirection, order.AdditionalInfo);
             
             var defaultMatchingEngine = _meRouter.GetMatchingEngineForClose(position);
 

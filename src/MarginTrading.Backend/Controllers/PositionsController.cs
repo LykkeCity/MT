@@ -252,7 +252,8 @@ namespace MarginTrading.Backend.Controllers
                     new RelatedOrderInfoContract {Id = o.Id, Type = o.Type.ToType<OrderTypeContract>()}).ToList(),
                 OpenTimestamp = position.OpenDate,
                 ModifiedTimestamp = position.LastModified,
-                TradeId = position.Id
+                TradeId = position.Id,
+                AdditionalInfo = position.AdditionalInfo
             };
         }
         

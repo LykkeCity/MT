@@ -13,7 +13,7 @@ namespace MarginTradingTests.Helpers
         {
             return new Position(Guid.NewGuid().ToString("N"), 0, assetPairId, volume, account.Id, tradingConditionId,
                 account.BaseAssetId, null, MatchingEngineConstants.DefaultMm, DateTime.UtcNow, "OpenTrade", OrderType.Market, volume, openPrice, 1, "USD", openPrice,
-                new List<RelatedOrderInfo>(), "LYKKETEST", OriginatorType.Investor, "", assetPairId, FxToAssetPairDirection.Straight);
+                new List<RelatedOrderInfo>(), "LYKKETEST", OriginatorType.Investor, "", assetPairId, FxToAssetPairDirection.Straight, "");
         }//todo assetPairId is used as FxAssetPairId which is not very correct
         
         public static Order CreateNewOrder(OrderType orderType, string assetPairId, IMarginTradingAccount account,
