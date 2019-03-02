@@ -22,7 +22,6 @@ namespace MarginTrading.Backend.Core.DayOffSettings
             {
                 return ScheduleConstraintType.Weekly;
             }
-            //todo what about yearly?
 
             return ScheduleConstraintType.Invalid;
         }

@@ -11,7 +11,6 @@ using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services
 {
-    // TODO: Rename by role
     public class StopOutConsumer : IEventConsumer<StopOutEventArgs>,
         IEventConsumer<LiquidationEndEventArgs>
     {

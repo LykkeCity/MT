@@ -23,22 +23,19 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             _assetPairsCache = assetPairsCache;
         }
 
-        //TODO: implement routes logic
+        //TODO: implement routes logic, to consider account LE and take only ME with same LE as account, find ME with correct mode that owns the same Entity as asset pair
         public IMatchingEngineBase GetMatchingEngineForExecution(Order order)
         {
             var route = _routesManager.FindRoute(null, order.TradingConditionId, order.AssetPairId,
                 order.Direction);
 
             if (route != null)
-            {
-                //TODO: to consider account LE and take only ME with same LE as account
-                
+            {                
                 return _matchingEngineRepository.GetMatchingEngineById(route.MatchingEngineId);
             }
 
             var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(order.AssetPairId);
 
-            //TODO: find ME with correct mode that owns the same Entity as asset pair
             return _matchingEngineRepository.GetMatchingEngineById(
                 (assetPair?.MatchingEngineMode ?? MatchingEngineMode.MarketMaker) == MatchingEngineMode.MarketMaker
                     ? MatchingEngineConstants.DefaultMm

@@ -12,13 +12,11 @@ namespace MarginTrading.AzureRepositories.Snow.Trades
             _tableStorage = tableStorage;
         }
 
-        // todo: use internal models instead of entity in the repo api
         public async Task<ITrade> GetAsync(string id)
         {
             return await _tableStorage.GetDataAsync(TradeEntity.GetPartitionKey(id), TradeEntity.GetRowKey());
         }
 
-        // todo: use internal models instead of entity in the repo api
         public Task UpsertAsync(ITrade trade)
         {
             var entity = TradeEntity.Create(trade);

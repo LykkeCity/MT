@@ -8,7 +8,6 @@ using Newtonsoft.Json;
 
 namespace MarginTrading.Backend.Core.Trading
 {
-    //TODO: add validations
     public class Order : StatefulObject<OrderStatus, OrderCommand>
     {
 

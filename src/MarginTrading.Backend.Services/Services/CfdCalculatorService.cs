@@ -57,7 +57,6 @@ namespace MarginTrading.Backend.Services
                 _assetPairsCache.FindAssetPair(assetPair.QuoteAssetId, accountAssetId, legalEntity);
             var fxQuote = _fxRateCacheService.GetQuote(fxPair.Id);
            
-            //TODO: SNOW fx rate is always mid, thus there is no any difference
             var rate = metricIsPositive
                 ? fxPair.BaseAssetId == assetPair.QuoteAssetId
                     ? fxQuote.Ask

@@ -77,7 +77,7 @@ namespace MarginTrading.Backend.Contracts.Positions
         /// <summary>
         /// Current position volume in base asset units
         /// </summary>
-        public decimal CurrentVolume { get; set; } // TODO: RENAME TO 'Volume'
+        public decimal CurrentVolume { get; set; }
 
         /// <summary>
         /// Profit and loss of the position in account asset units (without commissions)
