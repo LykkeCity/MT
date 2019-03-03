@@ -186,9 +186,17 @@ namespace MarginTrading.Backend.Services.Workflow
             {
                 foreach (var failedAccountId in command.FailedAccountIds)
                 {
-                    var account = _accountsCacheService.Get(failedAccountId);
-                    
-                    await UpdateAccount(account, false, r => { }, command.Timestamp);
+                    try
+                    {
+                        var account = _accountsCacheService.Get(failedAccountId);
+
+                        await UpdateAccount(account, false, r => { }, command.Timestamp);
+                    }
+                    catch (Exception exception)
+                    {
+                        await _log.WriteErrorAsync(nameof(DeleteAccountsCommandsHandler), 
+                            nameof(MtCoreFinishAccountsDeletionCommand), exception);
+                    }
                 }
 
                 foreach (var accountId in command.AccountIds)

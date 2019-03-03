@@ -149,7 +149,8 @@ namespace MarginTrading.Backend.Services.Workflow
                         break;
                     }
                     case AccountChangedEventTypeContract.Deleted:
-                        //handled by CQRS flow
+                        //account deletion from cache is double-handled by CQRS flow
+                        _accountsCacheService.Remove(e.Account.Id);
                         break;
                     default:
                         await _log.WriteErrorAsync(nameof(AccountsProjection), nameof(AccountChangedEvent),
