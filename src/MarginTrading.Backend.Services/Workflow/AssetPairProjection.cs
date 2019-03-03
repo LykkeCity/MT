@@ -108,7 +108,7 @@ namespace MarginTrading.Backend.Services.Workflow
                 if (positions.Any())
                 {
                     _log.WriteFatalError(nameof(AssetPairProjection), nameof(ValidatePositions), 
-                        new Exception($"{positions.Length} positions are opened for [{assetPairId}], first: [{positions.First().Id}]. Cannot delete AssetPair from cache, close positions first."));
+                        new Exception($"{positions.Length} positions are opened for [{assetPairId}], first: [{positions.First().Id}]."));
                 }
             }
         }
