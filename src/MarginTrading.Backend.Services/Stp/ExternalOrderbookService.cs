@@ -11,6 +11,7 @@ using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
@@ -18,6 +19,7 @@ using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Helpers;
 using MarginTrading.Common.Services;
 using MarginTrading.SettingsService.Contracts.AssetPair;
+using MoreLinq;
 
 namespace MarginTrading.Backend.Services.Stp
 {
@@ -31,6 +33,7 @@ namespace MarginTrading.Backend.Services.Stp
         private readonly IIdentityGenerator _identityGenerator;
         private readonly IConvertService _convertService;
         private readonly ILog _log;
+        private readonly MarginTradingSettings _marginTradingSettings;
 
         /// <summary>
         /// External orderbooks cache (AssetPairId, (Source, Orderbook))
@@ -51,7 +54,8 @@ namespace MarginTrading.Backend.Services.Stp
             ICqrsSender cqrsSender,
             IIdentityGenerator identityGenerator,
             IConvertService convertService,
-            ILog log)
+            ILog log,
+            MarginTradingSettings marginTradingSettings)
         {
             _bestPriceChangeEventChannel = bestPriceChangeEventChannel;
             _orderBookProviderApi = orderBookProviderApi;
@@ -61,15 +65,18 @@ namespace MarginTrading.Backend.Services.Stp
             _identityGenerator = identityGenerator;
             _convertService = convertService;
             _log = log;
+            _marginTradingSettings = marginTradingSettings;
         }
 
         public async Task InitializeAsync()
         {
             try
             {
-                var orderBookContracts = await _orderBookProviderApi.GetOrderBooks();
-                var orderBooks = orderBookContracts.Select(x =>
-                    _convertService.Convert<ExternalOrderBookContract, ExternalOrderBook>(x)).ToList();
+                var orderBooks = (await _orderBookProviderApi.GetOrderBooks())
+                    .GroupBy(x => x.AssetPairId)
+                    .Select(x => _convertService.Convert<ExternalOrderBookContract, ExternalOrderBook>(
+                        x.MaxBy(o => o.ReceiveTimestamp)))
+                    .ToList();
 
                 foreach (var externalOrderBook in orderBooks)
                 {
@@ -151,6 +158,8 @@ namespace MarginTrading.Backend.Services.Stp
             if (!ValidateOrderbook(orderbook) 
                 || !CheckZeroQuote(orderbook))
                 return;
+
+            orderbook.ApplyExchangeIdFromSettings(_marginTradingSettings.DefaultExternalExchangeId);
 
             var bba = new InstrumentBidAskPair
             {
