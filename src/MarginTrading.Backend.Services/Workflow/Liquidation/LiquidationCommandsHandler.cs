@@ -130,6 +130,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                         LiquidatedPositionIds = new List<string>(),
                         ProcessedPositionIds = new List<string>(),
                         LiquidationType = command.LiquidationType,
+                        OriginatorType = command.OriginatorType,
                     }
                 ));
             
@@ -305,8 +306,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             {
                 try
                 {
-                    var order = await _tradingEngine.ClosePositionAsync(position.Id, OriginatorType.System, string.Empty,
-                        command.OperationId, "Liquidation");
+                    var order = await _tradingEngine.ClosePositionAsync(position.Id, executionInfo.Data.OriginatorType, 
+                        string.Empty, command.OperationId, "Liquidation");
 
                     if (order.Status != OrderStatus.Executed && order.Status != OrderStatus.ExecutionStarted)
                     {

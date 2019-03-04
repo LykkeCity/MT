@@ -562,7 +562,8 @@ namespace MarginTrading.Backend.Services
                 CreationTime = _dateService.Now(),
                 QuoteInfo = quote?.ToJson(),
                 Direction = direction,
-                LiquidationType = liquidationType
+                LiquidationType = liquidationType,
+                OriginatorType = OriginatorType.System,
             });
 
             _stopoutEventChannel.SendEvent(this, new StopOutEventArgs(account));

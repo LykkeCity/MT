@@ -28,5 +28,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation.Commands
         
         [Key(6)]
         public LiquidationType LiquidationType { get; set; }
+        
+        [Key(7)]
+        public OriginatorType OriginatorType { get; set; }
     }
 }
