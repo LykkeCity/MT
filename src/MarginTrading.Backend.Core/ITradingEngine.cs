@@ -18,7 +18,7 @@ namespace MarginTrading.Backend.Core
             string correlationId);
             
         Order CancelPendingOrder(string orderId, string additionalInfo, string correlationId,
-            string comment = null);
+            string comment = null, OrderCancellationReason reason = OrderCancellationReason.None);
             
         void ChangeOrder(string orderId, decimal price, DateTime? validity, OriginatorType originator,
             string additionalInfo,

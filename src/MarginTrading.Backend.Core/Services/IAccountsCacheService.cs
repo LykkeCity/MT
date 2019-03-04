@@ -15,6 +15,7 @@ namespace MarginTrading.Backend.Core
         PaginatedResponse<MarginTradingAccount> GetAllByPages(int? skip = null, int? take = null);
 
         void TryAddNew(MarginTradingAccount account);
+        void Remove(string accountId);
 
         Task<bool> UpdateAccountChanges(string accountId, string updatedTradingConditionId,
             decimal updatedWithdrawTransferLimit, bool isDisabled, bool isWithdrawalDisabled, DateTime eventTime);

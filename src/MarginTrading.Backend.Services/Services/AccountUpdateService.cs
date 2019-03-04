@@ -2,11 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Common;
 using Common.Log;
 using JetBrains.Annotations;
+using Lykke.Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Assets;
@@ -138,7 +141,7 @@ namespace MarginTrading.Backend.Services
 
             return Math.Round(positionsMargin + pendingOrdersMargin, accuracy);
         }
-        
+
         private void UpdateAccount(IMarginTradingAccount account,
             ICollection<Position> positions,
             ICollection<Order> pendingOrders)

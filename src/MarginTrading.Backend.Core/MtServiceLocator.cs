@@ -1,4 +1,5 @@
-﻿using MarginTrading.Backend.Core.Settings;
+﻿using MarginTrading.Backend.Core.Services;
+using MarginTrading.Backend.Core.Settings;
 
 namespace MarginTrading.Backend.Core
 {

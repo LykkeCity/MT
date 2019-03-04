@@ -8,6 +8,7 @@ using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services.Workflow
@@ -41,7 +42,6 @@ namespace MarginTrading.Backend.Services.Workflow
         [UsedImplicitly]
         private async Task Handle(FreezeAmountForWithdrawalCommand command, IEventPublisher publisher)
         {
-            //ensure idempotency
             var executionInfo = await _operationExecutionInfoRepository.GetOrAddAsync(
                 operationName: OperationName,
                 operationId: command.OperationId,
@@ -101,18 +101,17 @@ namespace MarginTrading.Backend.Services.Workflow
         [UsedImplicitly]
         private async Task Handle(UnfreezeMarginOnFailWithdrawalCommand command, IEventPublisher publisher)
         {
-            //ensure operation idempotency
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<WithdrawalFreezeOperationData>(
                 operationName: OperationName,
                 id: command.OperationId
             );
 
-            // ReSharper disable once PossibleNullReferenceException
+            if (executionInfo == null)
+                return;
+            
             if (executionInfo.Data.SwitchState(OperationState.Started, OperationState.Finished))
             {
                 await _accountUpdateService.UnfreezeWithdrawalMargin(executionInfo.Data.AccountId, command.OperationId);
-
-                _chaosKitty.Meow(command.OperationId);
                 
                 publisher.PublishEvent(new UnfreezeMarginOnFailSucceededWithdrawalEvent(command.OperationId,
                     _dateService.Now(), executionInfo.Data.AccountId, executionInfo.Data.Amount));
