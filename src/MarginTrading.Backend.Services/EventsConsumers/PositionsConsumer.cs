@@ -115,11 +115,20 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             SendPositionHistoryEvent(position, PositionHistoryTypeContract.Close,
                 position.ChargedPnL, order, Math.Abs(position.Volume));
 
-            var reason = order.IsBasicOrder()
-                ? OrderCancellationReason.ParentPositionClosed
-                : OrderCancellationReason.ConnectedOrderExecuted;
+            var reason = OrderCancellationReason.None;
+
+            if (order.IsBasicOrder())
+            {
+                reason = OrderCancellationReason.ParentPositionClosed;
+                CancelRelatedOrdersForOrder(order, order.CorrelationId, reason);
+            }
+            else
+            {
+                reason = OrderCancellationReason.ConnectedOrderExecuted;
+            }
             
-            CancelRelatedOrdersForClosedPosition(position, order.CorrelationId, reason);
+            CancelRelatedOrdersForPosition(position, order.CorrelationId, reason);
+           
         }
 
         private void OpenNewPosition(Order order, decimal volume)
@@ -185,6 +194,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     SendPositionHistoryEvent(openedPosition, PositionHistoryTypeContract.PartiallyClose, chargedPnl, order, Math.Abs(leftVolumeToMatch));
 
                     ChangeRelatedOrderVolume(openedPosition.RelatedOrders, -openedPosition.Volume);
+                    
+                    CancelRelatedOrdersForOrder(order, order.CorrelationId, OrderCancellationReason.ParentPositionClosed);
                 
                     leftVolumeToMatch = 0;
                 }
@@ -214,6 +225,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
                 var fpl = Math.Round((dealOrder.ExecutionPrice.Value - position.OpenPrice) *
                                      dealOrder.FxRate * dealVolume.Value * sign, accountBaseAssetAccuracy);
+                var balanceDelta = Math.Round(fpl - chargedPnl, accountBaseAssetAccuracy);
                 
                 deal = new DealContract
                 {
@@ -234,12 +246,13 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     ClosePrice = dealOrder.ExecutionPrice.Value,
                     CloseFxPrice = dealOrder.FxRate,    
                     Fpl = fpl,
+                    PnlOfTheLastDay = balanceDelta,
                     AdditionalInfo = dealOrder.AdditionalInfo,
                     Originator = dealOrder.Originator.ToType<OriginatorTypeContract>()
                 };
                 
                 var account = _accountsCacheService.Get(position.AccountId);
-                var balanceDelta = Math.Round(fpl - chargedPnl, accountBaseAssetAccuracy);
+                
                 _cqrsSender.PublishEvent(new PositionClosedEvent(account.Id, account.ClientId,
                     deal.DealId, position.AssetPairId, balanceDelta));
             
@@ -276,14 +289,29 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             }
         }
         
-        private void CancelRelatedOrdersForClosedPosition(Position position, string correlationId,
+        private void CancelRelatedOrdersForPosition(Position position, string correlationId,
             OrderCancellationReason reason)
         {
-            var metadata = new OrderCancelledMetadata {Reason = reason};
+            var metadata = new OrderCancelledMetadata {Reason = reason.ToType<OrderCancellationReasonContract>()};
             
             foreach (var relatedOrderInfo in position.RelatedOrders)
             {
                 if (_ordersCache.Active.TryPopById(relatedOrderInfo.Id, out var relatedOrder))
+                {
+                    relatedOrder.Cancel(_dateService.Now(), null, correlationId);
+                    _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(relatedOrder, metadata));
+                }
+            }
+        }
+        
+        private void CancelRelatedOrdersForOrder(Order order, string correlationId,
+            OrderCancellationReason reason)
+        {
+            var metadata = new OrderCancelledMetadata {Reason = reason};
+            
+            foreach (var relatedOrderInfo in order.RelatedOrders)
+            {
+                if (_ordersCache.Inactive.TryPopById(relatedOrderInfo.Id, out var relatedOrder))
                 {
                     relatedOrder.Cancel(_dateService.Now(), null, correlationId);
                     _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(relatedOrder, metadata));

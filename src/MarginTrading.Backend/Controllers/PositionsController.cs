@@ -125,6 +125,8 @@ namespace MarginTrading.Backend.Controllers
                 ? _identityGenerator.GenerateGuid()
                 : request.CorrelationId;
 
+            var originator = GetOriginator(request?.Originator);
+
             _cqrsSender.SendCommandToSelf(new StartLiquidationInternalCommand
             {
                 OperationId = operationId,
@@ -134,6 +136,7 @@ namespace MarginTrading.Backend.Controllers
                 Direction = direction?.ToType<PositionDirection>(),
                 QuoteInfo = null,
                 LiquidationType = LiquidationType.Forced,
+                OriginatorType = originator,
             });
             
             _operationsLogService.AddLog("Position liquidation started", string.Empty, 
@@ -258,7 +261,7 @@ namespace MarginTrading.Backend.Controllers
         
         private OriginatorType GetOriginator(OriginatorTypeContract? originator)
         {
-            if (originator == null || originator.Value == default(OriginatorTypeContract))
+            if (originator == null || originator.Value == default)
             {
                 return OriginatorType.Investor;
             }

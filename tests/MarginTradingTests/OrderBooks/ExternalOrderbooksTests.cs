@@ -8,6 +8,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Stp;
@@ -87,7 +88,7 @@ namespace MarginTradingTests.OrderBooks
         {
             return new ExternalOrderbookService(_bestPricesChannelMock.Object, Mock.Of<IOrderBookProviderApi>(), 
                 _dateServiceMock.Object, _assetPairsCacheMock.Object, _cqrsSenderMock.Object, 
-                _identityGeneratorMock.Object, new ConvertService(), _logMock.Object);
+                _identityGeneratorMock.Object, new ConvertService(), _logMock.Object, new MarginTradingSettings());
         }
 
         private void AssertErrorLogged(string expectedErrorMessage)

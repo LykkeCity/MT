@@ -12,6 +12,7 @@ using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
@@ -53,7 +54,8 @@ namespace MarginTradingTests
                 legalEntity: "Default",
                 isDisabled: false,
                 modificationTimestamp: new DateTime(2018, 09, 13),
-                isWithdrawalDisabled: false
+                isWithdrawalDisabled: false,
+                isDeleted: false
             ),
             new AccountContract(
                 id: "testAccount2",
@@ -65,7 +67,8 @@ namespace MarginTradingTests
                 legalEntity: "Default",
                 isDisabled: true,
                 modificationTimestamp: new DateTime(2018, 09, 13),
-                isWithdrawalDisabled: false
+                isWithdrawalDisabled: false,
+                isDeleted: false
             )
         };
 
@@ -100,7 +103,7 @@ namespace MarginTradingTests
 
             var updatedContract = new AccountContract(accountId, account.ClientId, updatedTradingConditionId,
                 account.BaseAssetId, account.Balance, updatedWithdrawTransferLimit, account.LegalEntity,
-                isDisabled, account.ModificationTimestamp, account.IsWithdrawalDisabled);
+                isDisabled, account.ModificationTimestamp, account.IsWithdrawalDisabled, false);
             
             await accountsProjection.Handle(new AccountChangedEvent(time, "test",
                 updatedContract, AccountChangedEventTypeContract.Updated));
@@ -130,7 +133,7 @@ namespace MarginTradingTests
             {
                 await accountsProjection.Handle(new AccountChangedEvent(time.AddMilliseconds(1), "test",
                     new AccountContract(account.Id, account.ClientId, "test", "test", 0, 0, "test", false,
-                        time.AddMilliseconds(1), true),
+                        time.AddMilliseconds(1), true, false),
                     AccountChangedEventTypeContract.Updated, null, "operation1"));
                 manualResetEvent.WaitOne();
             });
@@ -140,7 +143,7 @@ namespace MarginTradingTests
             {
                 await accountsProjection.Handle(new AccountChangedEvent(time.AddMilliseconds(2), "test",
                     new AccountContract(account.Id, account.ClientId, "new", "test", 0, 1, "test", true,
-                        time.AddMilliseconds(2), false),
+                        time.AddMilliseconds(2), false, false),
                     AccountChangedEventTypeContract.Updated, null, "operation2"));
                 manualResetEvent.WaitOne();
             });
@@ -185,7 +188,7 @@ namespace MarginTradingTests
 
             var updatedContract = new AccountContract(accountId, account.ClientId, updatedTradingConditionId,
                 account.BaseAssetId, account.Balance, updatedWithdrawTransferLimit, account.LegalEntity,
-                isDisabled, account.ModificationTimestamp, account.IsWithdrawalDisabled);
+                isDisabled, account.ModificationTimestamp, account.IsWithdrawalDisabled, false);
             
             await accountsProjection.Handle(new AccountChangedEvent(time, "test",
                 updatedContract, AccountChangedEventTypeContract.Updated));
@@ -207,7 +210,7 @@ namespace MarginTradingTests
 
             var updatedContract = new AccountContract(accountId, account.ClientId, account.TradingConditionId,
                 account.BaseAssetId, changeAmount, account.WithdrawTransferLimit, account.LegalEntity,
-                account.IsDisabled, account.ModificationTimestamp, account.IsWithdrawalDisabled);
+                account.IsDisabled, account.ModificationTimestamp, account.IsWithdrawalDisabled, false);
             
             await accountsProjection.Handle(new AccountChangedEvent(time, "test",
                 updatedContract, AccountChangedEventTypeContract.BalanceUpdated,

@@ -209,5 +209,18 @@ namespace MarginTrading.Backend.Services
                 _lockSlim.ExitWriteLock();
             }
         }
+
+        public void Remove(string accountId)
+        {
+            _lockSlim.EnterWriteLock();
+            try
+            {
+                _accounts.Remove(accountId);
+            }
+            finally
+            {
+                _lockSlim.ExitWriteLock();
+            } 
+        }
     }
 }

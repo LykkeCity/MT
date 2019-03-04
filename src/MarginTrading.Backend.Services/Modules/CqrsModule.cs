@@ -130,6 +130,7 @@ namespace MarginTrading.Backend.Services.Modules
                 .QueueCapacity(1024);
 
             RegisterWithdrawalCommandsHandler(contextRegistration);
+            RegisterDeleteAccountsCommandsHandler(contextRegistration);
             RegisterSpecialLiquidationCommandsHandler(contextRegistration);
             RegisterLiquidationCommandsHandler(contextRegistration);
             RegisterAccountsProjection(contextRegistration);
@@ -191,6 +192,20 @@ namespace MarginTrading.Backend.Services.Modules
                 .PublishingEvents(
                     typeof(AmountForWithdrawalFrozenEvent),
                     typeof(AmountForWithdrawalFreezeFailedEvent))
+                .With(EventsRoute);
+        }
+
+        private void RegisterDeleteAccountsCommandsHandler(
+            ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
+        {
+            contextRegistration.ListeningCommands(
+                    typeof(BlockAccountsForDeletionCommand),
+                    typeof(MtCoreFinishAccountsDeletionCommand))
+                .On(CommandsRoute)
+                .WithCommandsHandler<DeleteAccountsCommandsHandler>()
+                .PublishingEvents(
+                    typeof(AccountsBlockedForDeletionEvent),
+                    typeof(MtCoreDeleteAccountsFinishedEvent))
                 .With(EventsRoute);
         }
 

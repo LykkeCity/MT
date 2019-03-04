@@ -16,6 +16,7 @@ using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
+using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services
@@ -184,8 +185,11 @@ namespace MarginTrading.Backend.Services
                 }
                 else
                 {
-                    throw new ValidateOrderException(OrderRejectReason.InvalidParent,
-                        "Parent order is not active and have not opened position");
+                    order.MakeInactive(_dateService.Now());
+                    _ordersCache.Inactive.Add(order);
+                    CancelPendingOrder(order.Id, order.AdditionalInfo,
+                        _identityGenerator.GenerateAlphanumericId(),
+                        $"Parent order closed the position, so {order.OrderType.ToString()} order is cancelled");
                 }
             }
             else
@@ -222,7 +226,7 @@ namespace MarginTrading.Backend.Services
                 order.Expire(now);
                 _orderCancelledEventChannel.SendEvent(this,
                     new OrderCancelledEventArgs(order,
-                        new OrderCancelledMetadata {Reason = OrderCancellationReason.Expired}));
+                        new OrderCancelledMetadata {Reason = OrderCancellationReasonContract.Expired}));
                 return order;
             }
             
@@ -257,7 +261,7 @@ namespace MarginTrading.Backend.Services
 
             var shouldOpenNewPosition = ShouldOpenNewPosition(order);
 
-            if (modality == OrderModality.Regular)
+            if (modality == OrderModality.Regular && order.Originator != OriginatorType.System)
             {
                 try
                 {
@@ -424,7 +428,7 @@ namespace MarginTrading.Backend.Services
                         this,
                         new OrderCancelledEventArgs(
                             order,
-                            new OrderCancelledMetadata {Reason = OrderCancellationReason.Expired}));
+                            new OrderCancelledMetadata {Reason = OrderCancellationReasonContract.Expired}));
                 }
             }
         }
@@ -568,7 +572,8 @@ namespace MarginTrading.Backend.Services
                 CreationTime = _dateService.Now(),
                 QuoteInfo = quote?.ToJson(),
                 Direction = direction,
-                LiquidationType = liquidationType
+                LiquidationType = liquidationType,
+                OriginatorType = OriginatorType.System,
             });
 
             _stopoutEventChannel.SendEvent(this, new StopOutEventArgs(account));
@@ -591,7 +596,7 @@ namespace MarginTrading.Backend.Services
                 $"Close position. {comment}", position.LegalEntity, false, OrderType.Market, null, position.Id,
                 originator, initialParameters.EquivalentPrice, initialParameters.FxPrice,
                 initialParameters.FxAssetPairId, initialParameters.FxToAssetPairDirection, OrderStatus.Placed,
-                additionalInfo, correlationId);
+                additionalInfo, correlationId, position.ExternalProviderId);
             
             _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
               
@@ -641,7 +646,7 @@ namespace MarginTrading.Backend.Services
         }
 
         public Order CancelPendingOrder(string orderId, string additionalInfo,
-            string correlationId, string comment = null)
+            string correlationId, string comment = null, OrderCancellationReason reason = OrderCancellationReason.None)
         {
             var order = _ordersCache.GetOrderById(orderId);
 
@@ -660,7 +665,7 @@ namespace MarginTrading.Backend.Services
             
             order.Cancel(_dateService.Now(), additionalInfo, correlationId);
 
-            var metadata = new OrderCancelledMetadata {Reason = OrderCancellationReason.None};
+            var metadata = new OrderCancelledMetadata {Reason = reason.ToType<OrderCancellationReasonContract>()};
             _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order, metadata));
             
             return order;

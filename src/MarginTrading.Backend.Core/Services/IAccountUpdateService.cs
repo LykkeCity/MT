@@ -1,10 +1,11 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
+using System.Threading.Tasks;
 using MarginTrading.Backend.Core.Trading;
 
-namespace MarginTrading.Backend.Core
+namespace MarginTrading.Backend.Core.Services
 {
     public interface IAccountUpdateService
     {

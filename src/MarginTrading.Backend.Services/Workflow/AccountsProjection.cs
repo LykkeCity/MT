@@ -1,15 +1,19 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using AutoMapper;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
+using Lykke.Common.Log;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Services.Events;
+using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services.Workflow
@@ -144,6 +148,14 @@ namespace MarginTrading.Backend.Services.Workflow
 
                         break;
                     }
+                    case AccountChangedEventTypeContract.Deleted:
+                        //account deletion from cache is double-handled by CQRS flow
+                        _accountsCacheService.Remove(e.Account.Id);
+                        break;
+                    default:
+                        await _log.WriteErrorAsync(nameof(AccountsProjection), nameof(AccountChangedEvent),
+                            e.ToJson(), new Exception("AccountChangedEventTypeContract was in incorrect state"));
+                        break;
                 }
                 
                 _chaosKitty.Meow(e.OperationId);
@@ -167,7 +179,8 @@ namespace MarginTrading.Backend.Services.Workflow
         private MarginTradingAccount Convert(AccountContract accountContract)
         {
             return _convertService.Convert<AccountContract, MarginTradingAccount>(accountContract,
-                o => o.ConfigureMap(MemberList.Source).ForSourceMember(x => x.ModificationTimestamp, c => c.Ignore()));
+                o => o.ConfigureMap(MemberList.Source)
+                    .ForSourceMember(x => x.ModificationTimestamp, c => c.Ignore()));
         }
     }
 }
