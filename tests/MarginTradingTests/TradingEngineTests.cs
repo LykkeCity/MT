@@ -555,7 +555,7 @@ namespace MarginTradingTests
             var ordersSet = new []
             {
                 new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.370M, Volume = -15000 },
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.286M, Volume = 10000 }
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "BTCCHF", MarketMakerId = MarketMaker1Id, Price = 834.370M, Volume = 10000 }
             };
 
             _matchingEngine.SetOrders(MarketMaker1Id, ordersSet);
@@ -625,7 +625,7 @@ namespace MarginTradingTests
 
             _matchingEngine.SetOrders(MarketMaker1Id, ordersSet);
 
-            _bestPriceChannel.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Bid = 905.57M, Ask = 905.67M }));
+            _bestPriceChannel.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCCHF", Bid = 904.07M, Ask = 904.17M }));
             _bestPriceChannel.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "USDCHF", Bid = 1.0092M, Ask = 1.0095M }));
             _bestPriceChannel.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCUSD", Bid = 829.69M, Ask = 829.8M }));
 
@@ -783,7 +783,7 @@ namespace MarginTradingTests
         {
             var ordersSet = new[]
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "CHFJPY", MarketMakerId = MarketMaker1Id, Price = 100.1M, Volume = 100000 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "CHFJPY", MarketMakerId = MarketMaker1Id, Price = 99.978M, Volume = 100000 },
                 new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "CHFJPY", MarketMakerId = MarketMaker1Id, Price = 100.039M, Volume = -100000 },
             };
 
@@ -798,10 +798,10 @@ namespace MarginTradingTests
             
             order = _tradingEngine.PlaceOrderAsync(order).Result;
             
-            var position = ValidatePositionIsOpened(order.Id, 100.1M, 0.001M);
+            var position = ValidatePositionIsOpened(order.Id, 99.978M, -0.001M);
 
-            Assert.AreEqual(0.07340667M, position.GetMarginMaintenance());
-            Assert.AreEqual(0.11011M, position.GetMarginInit());
+            Assert.AreEqual(0.0733172M, position.GetMarginMaintenance());
+            Assert.AreEqual(0.1099758M, position.GetMarginInit());
         }
 
         [Test]
@@ -897,11 +897,18 @@ namespace MarginTradingTests
             {
                 new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.055M, Volume = -6 }
             });
+            
+            Assert.AreEqual(OrderStatus.Active, order.Status); //still not active
+            Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
 
+            _matchingEngine.SetOrders(MarketMaker1Id, new []
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.055M, Volume = -10 }
+            });
 
-            ValidateOrderIsExecuted(order, new[] {"5", "6"}, 1.05625M);
+            ValidateOrderIsExecuted(order, new[] {"6"}, 1.055M);
 
-            ValidatePositionIsOpened(order.Id, 1.04875M, -0.06M);
+            ValidatePositionIsOpened(order.Id, 1.04875M, -0.05M);
            
             Assert.AreEqual(1, account.GetOpenPositionsCount()); //position is opened
         }

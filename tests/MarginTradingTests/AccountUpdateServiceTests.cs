@@ -8,7 +8,9 @@ using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Events;
+using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTradingTests.Helpers;
+using MarginTradingTests.Services;
 using NUnit.Framework;
 
 namespace MarginTradingTests
@@ -94,17 +96,27 @@ namespace MarginTradingTests
         [Test]
         public void Check_IsEnoughBalance()
         {
+            var me = new FakeMatchingEngine(10);
+            
             var order1 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 96000);
             
-            var result1 = _accountUpdateService.IsEnoughBalance(order1);//account have 1000
+            var result1 = _accountUpdateService.IsEnoughBalance(order1, me);//account have 1000
             Assert.IsTrue(result1);
             
             var order2 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 97000);
             
-            var result2 = _accountUpdateService.IsEnoughBalance(order2);//account have 1000
+            var result2 = _accountUpdateService.IsEnoughBalance(order2, me);//account have 1000
             Assert.IsFalse(result2);
+
+            var meWithSpread = new FakeMatchingEngine(10, closePrice: 1);
+            
+            var order3 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
+                MarginTradingTestsUtils.TradingConditionId, 96000);
+            
+            var result3 = _accountUpdateService.IsEnoughBalance(order3, meWithSpread);//account have 1000
+            Assert.IsFalse(result3);
         }
     }
 }

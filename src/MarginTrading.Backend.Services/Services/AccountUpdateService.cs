@@ -7,6 +7,7 @@ using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Log;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
@@ -31,6 +32,7 @@ namespace MarginTrading.Backend.Services
         private readonly IAccountMarginUnconfirmedRepository _accountMarginUnconfirmedRepository;
         private readonly ILog _log;
         private readonly MarginTradingSettings _marginTradingSettings;
+        private readonly ICfdCalculatorService _cfdCalculatorService;
 
         public AccountUpdateService(
             IFplService fplService,
@@ -41,7 +43,8 @@ namespace MarginTrading.Backend.Services
             IAccountMarginFreezingRepository accountMarginFreezingRepository,
             IAccountMarginUnconfirmedRepository accountMarginUnconfirmedRepository,
             ILog log,
-            MarginTradingSettings marginTradingSettings)
+            MarginTradingSettings marginTradingSettings,
+            ICfdCalculatorService cfdCalculatorService)
         {
             _fplService = fplService;
             _tradingConditionsCache = tradingConditionsCache;
@@ -52,6 +55,7 @@ namespace MarginTrading.Backend.Services
             _accountMarginUnconfirmedRepository = accountMarginUnconfirmedRepository;
             _log = log;
             _marginTradingSettings = marginTradingSettings;
+            _cfdCalculatorService = cfdCalculatorService;
         }
 
         public void UpdateAccount(IMarginTradingAccount account)
@@ -109,12 +113,30 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public bool IsEnoughBalance(Order order)
+        public bool IsEnoughBalance(Order order, IMatchingEngineBase matchingEngine)
         {
             var orderMargin = _fplService.GetInitMarginForOrder(order);
-            var accountMarginAvailable = _accountsCacheService.Get(order.AccountId).GetMarginAvailable(); 
-            
-            return accountMarginAvailable >= orderMargin;
+            var accountMarginAvailable = _accountsCacheService.Get(order.AccountId).GetMarginAvailable();
+
+            var openPriceInfo = matchingEngine.GetBestPriceForOpen(order.AssetPairId, order.Volume);
+            var openPrice = order.Price ?? openPriceInfo.price;
+            var closePrice =
+                matchingEngine.GetPriceForClose(order.AssetPairId, order.Volume, openPriceInfo.externalProviderId);
+            var pnlInTradingCurrency = (closePrice - openPrice) * order.Volume;
+            var fxRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.AccountAssetId,
+                order.AssetPairId, order.LegalEntity,
+                pnlInTradingCurrency > 0);
+            var pnl = pnlInTradingCurrency * fxRate;
+
+            // just in case... is should be always negative
+            if (pnl > 0)
+            {
+                _log.WriteWarning(nameof(IsEnoughBalance), order.ToJson(),
+                    $"Theoretical PnL at the moment of order execution is positive");
+                pnl = 0;
+            }
+                
+            return accountMarginAvailable + pnl >= orderMargin;
         }
         
         public void RemoveLiquidationStateIfNeeded(string accountId, string reason,

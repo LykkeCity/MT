@@ -265,7 +265,10 @@ namespace MarginTrading.Backend.Services
             {
                 try
                 {
-                    _validateOrderService.MakePreTradeValidation(order, shouldOpenNewPosition);
+                    _validateOrderService.MakePreTradeValidation(
+                        order,
+                        shouldOpenNewPosition,
+                        matchingEngine);
                 }
                 catch (ValidateOrderException ex)
                 {
@@ -395,8 +398,15 @@ namespace MarginTrading.Backend.Services
                     // if order is removed from Active, execution should be started immediately
                     // and/or placed to InProgress
 
-                    _ordersCache.Active.Remove(order);
-                    yield return order;
+                    //let's validate one more time, considering orderbook depth
+                    var me = _meRouter.GetMatchingEngineForExecution(order);
+                    var executionPriceInfo = me.GetBestPriceForOpen(order.AssetPairId, order.Volume);
+
+                    if (executionPriceInfo.price.HasValue && order.IsSuitablePriceForPendingOrder(executionPriceInfo.price.Value))
+                    {
+                        _ordersCache.Active.Remove(order);
+                        yield return order;
+                    }
                 }
 
             }

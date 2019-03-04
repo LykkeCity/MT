@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
@@ -506,14 +507,14 @@ namespace MarginTrading.Backend.Services
         
         #region Pre-trade validations
         
-        public void MakePreTradeValidation(Order order, bool shouldOpenNewPosition)
+        public void MakePreTradeValidation(Order order, bool shouldOpenNewPosition, IMatchingEngineBase matchingEngine)
         {
             GetAssetPairIfAvailableForTrading(order.AssetPairId, order.OrderType, shouldOpenNewPosition, true);
 
             ValidateTradeLimits(order.AssetPairId, order.TradingConditionId, order.AccountId, order.Volume, shouldOpenNewPosition);
 
             if (shouldOpenNewPosition)
-                ValidateMargin(order);
+                ValidateMargin(order, matchingEngine);
         }
 
         public bool CheckIfPendingOrderExecutionPossible(string assetPairId, OrderType orderType, bool shouldOpenNewPosition)
@@ -613,9 +614,9 @@ namespace MarginTrading.Backend.Services
             }
         }
         
-        private void ValidateMargin(Order order)
+        private void ValidateMargin(Order order, IMatchingEngineBase matchingEngine)
         {
-            if (!_accountUpdateService.IsEnoughBalance(order))
+            if (!_accountUpdateService.IsEnoughBalance(order, matchingEngine))
             {
                 var account = _accountsCacheService.Get(order.AccountId);
                 
