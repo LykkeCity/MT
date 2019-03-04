@@ -261,7 +261,7 @@ namespace MarginTrading.Backend.Services
 
             var shouldOpenNewPosition = ShouldOpenNewPosition(order);
 
-            if (modality == OrderModality.Regular)
+            if (modality == OrderModality.Regular && order.Originator != OriginatorType.System)
             {
                 try
                 {
