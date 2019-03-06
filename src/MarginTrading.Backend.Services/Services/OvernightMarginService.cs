@@ -187,14 +187,6 @@ namespace MarginTrading.Backend.Services.Services
                 }
 
                 var resultingStart = endOfInterval ?? nextWithHigherRank.Start;
-                
-                //validate warn + start < interval
-                if (resultingStart.Subtract(currentDateTime) < TimeSpan.FromMinutes(
-                        _overnightMarginSettings.WarnPeriodMinutes + _overnightMarginSettings.ActivationPeriodMinutes))
-                {
-                    _log.WriteError(nameof(OvernightMarginService), nameof(TryGetOperatingInterval),
-                        new Exception($"Next schedule interval is too short. Warnings may be not delivered. [{nameof(_overnightMarginSettings.WarnPeriodMinutes)}: {_overnightMarginSettings.WarnPeriodMinutes}], [{nameof(_overnightMarginSettings.ActivationPeriodMinutes)}: {_overnightMarginSettings.ActivationPeriodMinutes}], [nextWithHigherRank: {nextWithHigherRank.ToJson()}]"));
-                }
 
                 resultingInterval = (resultingStart.Subtract(TimeSpan.FromMinutes(
                         _overnightMarginSettings.WarnPeriodMinutes + _overnightMarginSettings.ActivationPeriodMinutes)),
