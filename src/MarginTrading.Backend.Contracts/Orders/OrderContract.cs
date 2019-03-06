@@ -92,6 +92,7 @@ namespace MarginTrading.Backend.Contracts.Orders
         /// <summary>
         /// The related orders
         /// </summary>
+        [Obsolete]
         public List<string> RelatedOrders { get; set; }
         
         /// <summary>
