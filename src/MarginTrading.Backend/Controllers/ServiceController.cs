@@ -9,6 +9,7 @@ using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Middleware;
+using MarginTrading.Common.Services;
 using MarginTrading.Contract.BackendContracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -26,7 +27,7 @@ namespace MarginTrading.Backend.Controllers
         private readonly IOvernightMarginRepository _overnightMarginRepository;
         private readonly ICqrsSender _cqrsSender;
         private readonly IIdentityGenerator _identityGenerator;
-        private readonly ISystemClock _systemClock;
+        private readonly IDateService _dateService;
         private readonly OrdersCache _ordersCache;
 
         public ServiceController(
@@ -35,7 +36,7 @@ namespace MarginTrading.Backend.Controllers
             IOvernightMarginRepository overnightMarginRepository,
             ICqrsSender cqrsSender,
             IIdentityGenerator identityGenerator,
-            ISystemClock systemClock,
+            IDateService dateService,
             OrdersCache ordersCache)
         {
             _quoteCacheService = quoteCacheService;
@@ -43,7 +44,7 @@ namespace MarginTrading.Backend.Controllers
             _overnightMarginRepository = overnightMarginRepository;
             _cqrsSender = cqrsSender;
             _identityGenerator = identityGenerator;
-            _systemClock = systemClock;
+            _dateService = dateService;
             _ordersCache = ordersCache;
         }
 
@@ -117,7 +118,7 @@ namespace MarginTrading.Backend.Controllers
             _cqrsSender.PublishEvent(new OvernightMarginParameterChangedEvent
             {
                 CorrelationId = correlationId,
-                EventTimestamp = _systemClock.UtcNow.UtcDateTime,
+                EventTimestamp = _dateService.Now(),
                 OldValue = oldValue,
                 NewValue = newValue,
                 ChangedActualValue = changedActualValue,
