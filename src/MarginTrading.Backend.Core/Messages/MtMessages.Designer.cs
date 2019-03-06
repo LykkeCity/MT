@@ -166,15 +166,15 @@ namespace MarginTrading.Backend.Core.Messages {
             }
         }
         
-        public static string Validation_PriceAboveAsk {
+        public static string Validation_PriceBelowAsk {
             get {
-                return ResourceManager.GetString("Validation_PriceAboveAsk", resourceCulture);
+                return ResourceManager.GetString("Validation_PriceBelowAsk", resourceCulture);
             }
         }
         
-        public static string Validation_PriceBelowBid {
+        public static string Validation_PriceAboveBid {
             get {
-                return ResourceManager.GetString("Validation_PriceBelowBid", resourceCulture);
+                return ResourceManager.GetString("Validation_PriceAboveBid", resourceCulture);
             }
         }
         

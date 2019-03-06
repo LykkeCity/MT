@@ -387,14 +387,14 @@ namespace MarginTrading.Backend.Services
             if (order.Direction == OrderDirection.Buy && quote.Ask >= orderPrice)
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
-                    string.Format(MtMessages.Validation_PriceAboveAsk, orderPrice, quote.Ask),
+                    string.Format(MtMessages.Validation_PriceBelowAsk, orderPrice, quote.Ask),
                     $"{order.AssetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
             } 
             
             if (order.Direction == OrderDirection.Sell && quote.Bid <= orderPrice )
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice, 
-                    string.Format(MtMessages.Validation_PriceBelowBid, orderPrice, quote.Bid),
+                    string.Format(MtMessages.Validation_PriceAboveBid, orderPrice, quote.Bid),
                     $"{order.AssetPairId} quote (bid/ask): {quote.Bid}/{quote.Ask}");
             }
         }
