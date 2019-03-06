@@ -13,9 +13,8 @@ using MarginTrading.Common.Services.Client;
 
 namespace MarginTrading.Backend.Services.EventsConsumers
 {
-    public class MarginCallConsumer : IEventConsumer<MarginCallEventArgs>,
-        //IEventConsumer<OrderPlacedEventArgs>,
-        IEventConsumer<OrderExecutedEventArgs>
+    public class MarginCallConsumer : IEventConsumer<MarginCallEventArgs>
+        //IEventConsumer<OrderPlacedEventArgs>
     {
         private readonly IThreadSwitcher _threadSwitcher;
         private readonly IEmailService _emailService;
@@ -96,13 +95,6 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 //        {
 //            LastNotifications.TryRemove(ea.Order.AccountId, out var tmp);
 //        }
-
-        public void ConsumeEvent(object sender, OrderExecutedEventArgs ea)
-        {
-            _mc1LastNotifications.TryRemove(ea.Order.AccountId, out _);
-            _mc2LastNotifications.TryRemove(ea.Order.AccountId, out _);
-            _overnightMcLastNotifications.TryRemove(ea.Order.AccountId, out _);
-        }
 
         private (MarginEventTypeContract, ConcurrentDictionary<string, DateTime>) LevelAndNotificationsCache(AccountLevel level)
         {
