@@ -394,10 +394,6 @@ namespace MarginTrading.Backend.Services
                     _validateOrderService.CheckIfPendingOrderExecutionPossible(order.AssetPairId, order.OrderType,
                         ShouldOpenNewPosition(order)))
                 {
-                    //TODO: inspect one more time in MTC-248
-                    // if order is removed from Active, execution should be started immediately
-                    // and/or placed to InProgress
-
                     //let's validate one more time, considering orderbook depth
                     var me = _meRouter.GetMatchingEngineForExecution(order);
                     var executionPriceInfo = me.GetBestPriceForOpen(order.AssetPairId, order.Volume);
@@ -467,7 +463,6 @@ namespace MarginTrading.Backend.Services
                 CommitStopOut(account, quote);
         }
 
-        //TODO: in MTC-192 split method and change conditions
         private IEnumerable<MarginTradingAccount> UpdateClosePriceAndDetectStopout(InstrumentBidAskPair quote)
         {
             var positionsByAccounts = _ordersCache.Positions.GetPositionsByInstrument(quote.Instrument)

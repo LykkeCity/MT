@@ -123,7 +123,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             {
                 var orderBookTypeToMatch = order.Direction.GetOrderDirectionToMatchInOrderBook();
                 
-                //TODO: validate oposite direction if will open new porition
+                //TODO: validate opposite direction if will open new position
 
                 var matchedOrders =
                     _orderBooks.Match(order.AssetPairId, orderBookTypeToMatch, Math.Abs(order.Volume));

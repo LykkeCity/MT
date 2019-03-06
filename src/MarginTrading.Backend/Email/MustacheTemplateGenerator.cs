@@ -25,7 +25,6 @@ namespace MarginTrading.Backend.Email
 
             try
             {
-                //TODO: get template from blob
                 return Nustache.Core.Render.FileToString(path, model);
             }
             catch (InvalidCastException)

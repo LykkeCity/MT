@@ -377,8 +377,6 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         exception);
                 }
                 
-                //todo think what if meow happens here
-
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }
         }
@@ -400,8 +398,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             {
                 try
                 {
-                    //close positions with the quote from gavel
-                    //TODO think what if positions are liquidated partially, when exception is thrown
+                    //close positions with the quotes from gavel
                     await _tradingEngine.LiquidatePositionsAsync(
                         me: new SpecialLiquidationMatchingEngine(command.Price, command.MarketMakerId,
                             command.ExternalOrderId, command.ExternalExecutionTime), 

@@ -6,7 +6,7 @@ namespace MarginTrading.Backend.Core.Orders
     public interface IBaseOrder
     {
         string Id { get; }
-        string Instrument { get; } //todo: rename to AssetPairId
+        string Instrument { get; }
         decimal Volume { get; }
         DateTime CreateDate { get; }
         MatchedOrderCollection MatchedOrders { get; set; }

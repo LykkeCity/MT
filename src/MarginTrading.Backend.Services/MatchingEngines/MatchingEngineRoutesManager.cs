@@ -126,7 +126,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             return null;
         }
 
-       //TODO: remove 
+       //TODO: Risk manager related stuff may be removed one time..
         
        public Task AddOrReplaceRouteInCacheAsync(IMatchingEngineRoute route)
         {            
