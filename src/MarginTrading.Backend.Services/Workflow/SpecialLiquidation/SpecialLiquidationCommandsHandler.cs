@@ -117,17 +117,6 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 return;
             }
 
-            if (!TryGetExchangeNameFromPositions(positions, out var externalProviderId))
-            {
-                publisher.PublishEvent(new SpecialLiquidationFailedEvent
-                {
-                    OperationId = command.OperationId,
-                    CreationTime = _dateService.Now(),
-                    Reason = "All requested positions must be open on the same external exchange",
-                });
-                return;
-            }
-
             if (!positions.Any())
             {
                 publisher.PublishEvent(new SpecialLiquidationFailedEvent
@@ -137,6 +126,17 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     Reason = "No positions to liquidate",
                 });
                 
+                return;
+            }
+
+            if (!TryGetExchangeNameFromPositions(positions, out var externalProviderId))
+            {
+                publisher.PublishEvent(new SpecialLiquidationFailedEvent
+                {
+                    OperationId = command.OperationId,
+                    CreationTime = _dateService.Now(),
+                    Reason = "All requested positions must be open on the same external exchange",
+                });
                 return;
             }
 
@@ -153,7 +153,6 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 return;
             }
 
-            //ensure idempotency
             var executionInfo = await _operationExecutionInfoRepository.GetOrAddAsync(
                 operationName: SpecialLiquidationSaga.OperationName,
                 operationId: command.OperationId,
@@ -252,7 +251,6 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 return;
             }
             
-            //ensure idempotency
             var executionInfo = await _operationExecutionInfoRepository.GetOrAddAsync(
                 operationName: SpecialLiquidationSaga.OperationName,
                 operationId: command.OperationId,
@@ -292,7 +290,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 operationName: SpecialLiquidationSaga.OperationName,
                 id: command.OperationId);
 
-            if (executionInfo != null)
+            if (executionInfo?.Data != null)
             {
                 if (executionInfo.Data.State > SpecialLiquidationOperationState.PriceRequested)
                 {
@@ -333,7 +331,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 operationName: SpecialLiquidationSaga.OperationName,
                 id: command.OperationId);
 
-            if (executionInfo == null)
+            if (executionInfo?.Data == null)
             {
                 return;
             }
@@ -390,7 +388,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 operationName: SpecialLiquidationSaga.OperationName,
                 id: command.OperationId);
 
-            if (executionInfo == null)
+            if (executionInfo?.Data == null)
             {
                 return;
             }
@@ -438,7 +436,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 operationName: SpecialLiquidationSaga.OperationName,
                 id: command.OperationId);
 
-            if (executionInfo == null)
+            if (executionInfo?.Data == null)
             {
                 return;
             }

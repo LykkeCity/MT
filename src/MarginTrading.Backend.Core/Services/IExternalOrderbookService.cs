@@ -10,7 +10,7 @@ namespace MarginTrading.Backend.Core.Services
 
         void SetOrderbook(ExternalOrderBook orderbook);
 
-        List<(string source, decimal? price)> GetPricesForExecution(string assetPairId, decimal volume,
+        List<(string source, decimal? price)> GetOrderedPricesForExecution(string assetPairId, decimal volume,
             bool validateOppositeDirectionVolume);
 
         decimal? GetPriceForPositionClose(string assetPairId, decimal volume, string externalProviderId);

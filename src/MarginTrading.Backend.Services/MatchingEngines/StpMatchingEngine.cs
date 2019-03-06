@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
@@ -59,17 +60,13 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         public async Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition,
             OrderModality modality = OrderModality.Regular)
         {
-            var prices = _externalOrderbookService.GetPricesForExecution(order.AssetPairId, order.Volume, shouldOpenNewPosition);
+            var prices = _externalOrderbookService.GetOrderedPricesForExecution(order.AssetPairId, order.Volume, shouldOpenNewPosition);
 
             if (prices == null || !prices.Any())
             {
                 return new MatchedOrderCollection();
             }
-            
-            prices = order.Direction == OrderDirection.Buy
-                ? prices.OrderBy(tuple => tuple.price).ToList()
-                : prices.OrderByDescending(tuple => tuple.price).ToList();
-            
+
             var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(order.AssetPairId);
             var externalAssetPair = assetPair?.BasePairId ?? order.AssetPairId;
 
@@ -145,6 +142,13 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             }
 
             return new MatchedOrderCollection();
+        }
+
+        public (string externalProviderId, decimal? price) GetBestPriceForOpen(string assetPairId, decimal volume)
+        {
+            var prices = _externalOrderbookService.GetOrderedPricesForExecution(assetPairId, volume, true);
+
+            return prices.FirstOrDefault();
         }
 
         public decimal? GetPriceForClose(string assetPairId, decimal volume, string externalProviderId)

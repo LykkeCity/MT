@@ -5,6 +5,7 @@ using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Notifications;
+using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services.EventsConsumers
@@ -62,7 +63,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         {
             var metadata = new OrderCancelledMetadata
             {
-                Reason = reason
+                Reason = reason.ToType<OrderCancellationReasonContract>()
             };
             
             foreach (var relatedOrderInfo in relatedOrderInfos)

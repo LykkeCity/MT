@@ -292,7 +292,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         private void CancelRelatedOrdersForPosition(Position position, string correlationId,
             OrderCancellationReason reason)
         {
-            var metadata = new OrderCancelledMetadata {Reason = reason};
+            var metadata = new OrderCancelledMetadata {Reason = reason.ToType<OrderCancellationReasonContract>()};
             
             foreach (var relatedOrderInfo in position.RelatedOrders)
             {
@@ -307,7 +307,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         private void CancelRelatedOrdersForOrder(Order order, string correlationId,
             OrderCancellationReason reason)
         {
-            var metadata = new OrderCancelledMetadata {Reason = reason};
+            var metadata = new OrderCancelledMetadata {Reason = reason.ToType<OrderCancellationReasonContract>()};
             
             foreach (var relatedOrderInfo in order.RelatedOrders)
             {

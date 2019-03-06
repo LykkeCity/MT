@@ -79,6 +79,21 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             }
         }
 
+        public (string externalProviderId, decimal? price) GetBestPriceForOpen(string assetPairId, decimal volume)
+        {
+            using (_contextFactory.GetWriteSyncContext($"{nameof(MarketMakerMatchingEngine)}.{nameof(GetBestPriceForOpen)}"))
+            {
+                var orderBookTypeToMatch =
+                    volume.GetOrderDirection().GetOrderDirectionToMatchInOrderBook();
+
+                var matchedOrders = _orderBooks.Match(assetPairId, orderBookTypeToMatch, Math.Abs(volume));
+
+                var price = matchedOrders.Any() ? matchedOrders.WeightedAveragePrice : (decimal?) null;
+
+                return (null, price);
+            } // lock
+        }
+
         public decimal? GetPriceForClose(string assetPairId, decimal volume, string externalProviderId)
         {
             using (_contextFactory.GetWriteSyncContext($"{nameof(MarketMakerMatchingEngine)}.{nameof(GetPriceForClose)}"))

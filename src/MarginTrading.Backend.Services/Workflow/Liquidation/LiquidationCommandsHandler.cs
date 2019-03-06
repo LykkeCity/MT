@@ -14,6 +14,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.TradingConditions;
@@ -129,6 +130,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                         LiquidatedPositionIds = new List<string>(),
                         ProcessedPositionIds = new List<string>(),
                         LiquidationType = command.LiquidationType,
+                        OriginatorType = command.OriginatorType,
                     }
                 ));
             
@@ -304,8 +306,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             {
                 try
                 {
-                    var order = await _tradingEngine.ClosePositionAsync(position.Id, OriginatorType.System, string.Empty,
-                        command.OperationId, "Liquidation");
+                    var order = await _tradingEngine.ClosePositionAsync(position.Id, executionInfo.Data.OriginatorType, 
+                        string.Empty, command.OperationId, "Liquidation");
 
                     if (order.Status != OrderStatus.Executed && order.Status != OrderStatus.ExecutionStarted)
                     {
