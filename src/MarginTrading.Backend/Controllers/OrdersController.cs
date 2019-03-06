@@ -6,6 +6,7 @@ using Common;
 using Common.Log;
 using MarginTrading.AzureRepositories.Snow.OrdersById;
 using MarginTrading.Backend.Contracts;
+using MarginTrading.Backend.Contracts.Activities;
 using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Core;
@@ -117,8 +118,12 @@ namespace MarginTrading.Backend.Controllers
                 ? _identityGenerator.GenerateGuid()
                 : request.CorrelationId;
 
+            var reason = request?.Originator == OriginatorTypeContract.System
+                ? OrderCancellationReason.CorporateAction
+                : OrderCancellationReason.None;
+            
             var canceledOrder = _tradingEngine.CancelPendingOrder(order.Id, request?.AdditionalInfo, 
-                correlationId, request?.Comment);
+                correlationId, request?.Comment, reason);
 
             _operationsLogService.AddLog("action order.cancel", order.AccountId, request?.ToJson(),
                 canceledOrder.ToJson());
