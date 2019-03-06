@@ -175,7 +175,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             }
             
             _accountUpdateService.RemoveLiquidationStateIfNeeded(executionInfo.Data.AccountId,
-                $"Liquidation [{command.OperationId}] failed ({command.Reason})", command.OperationId);
+                $"Liquidation [{command.OperationId}] failed ({command.Reason})", command.OperationId,
+                executionInfo.Data.LiquidationType);
             
             _chaosKitty.Meow(
                 $"{nameof(FailLiquidationInternalCommand)}:" +
@@ -222,7 +223,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             }
             
             _accountUpdateService.RemoveLiquidationStateIfNeeded(executionInfo.Data.AccountId,
-                $"Liquidation [{command.OperationId}] finished ({command.Reason})", command.OperationId);
+                $"Liquidation [{command.OperationId}] finished ({command.Reason})", command.OperationId,
+                executionInfo.Data.LiquidationType);
             
             _chaosKitty.Meow(
                 $"{nameof(FinishLiquidationInternalCommand)}:" +
