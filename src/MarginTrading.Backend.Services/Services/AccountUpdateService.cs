@@ -140,15 +140,16 @@ namespace MarginTrading.Backend.Services
         }
         
         public void RemoveLiquidationStateIfNeeded(string accountId, string reason,
-            string liquidationOperationId = null)
+            string liquidationOperationId = null, LiquidationType liquidationType = LiquidationType.Normal)
         {
             var account = _accountsCacheService.TryGet(accountId);
 
             if (account == null)
                 return;
 
-            if (!string.IsNullOrEmpty(account.LiquidationOperationId) &&
-                account.GetAccountLevel() != AccountLevel.StopOut)
+            if (!string.IsNullOrEmpty(account.LiquidationOperationId)
+                && (liquidationType == LiquidationType.Forced 
+                    || account.GetAccountLevel() != AccountLevel.StopOut))//MCO checks are done in the same method
             {
                 _accountsCacheService.TryFinishLiquidation(accountId, reason, liquidationOperationId);
             }
