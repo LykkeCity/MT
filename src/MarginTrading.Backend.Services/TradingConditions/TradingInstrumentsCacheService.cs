@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core.Messages;
+using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.TradingConditions;
 
@@ -11,7 +12,7 @@ namespace MarginTrading.Backend.Services.TradingConditions
 {
     public class TradingInstrumentsCacheService : ITradingInstrumentsCacheService, IOvernightMarginParameterContainer
     {
-        private readonly OvernightMarginSettings _overnightMarginSettings;
+        private readonly IOvernightMarginRepository _overnightMarginRepository;
         
         private Dictionary<(string, string), ITradingInstrument> _instrumentsCache =
             new Dictionary<(string, string), ITradingInstrument>();
@@ -20,9 +21,9 @@ namespace MarginTrading.Backend.Services.TradingConditions
         public decimal OvernightMarginParameter { get; set; } = 1;
 
         public TradingInstrumentsCacheService(
-            OvernightMarginSettings overnightMarginSettings)
+            IOvernightMarginRepository overnightMarginRepository)
         {
-            _overnightMarginSettings = overnightMarginSettings;
+            _overnightMarginRepository = overnightMarginRepository;
         }
 
         public ITradingInstrument GetTradingInstrument(string tradingConditionId, string instrument)
@@ -66,7 +67,9 @@ namespace MarginTrading.Backend.Services.TradingConditions
         public (decimal MarginInit, decimal MarginMaintenance) GetMarginRates(ITradingInstrument tradingInstrument,
             bool isWarnCheck = false)
         {
-            var parameter = isWarnCheck ? _overnightMarginSettings.OvernightMarginParameter : OvernightMarginParameter;
+            var parameter = isWarnCheck ? 
+                _overnightMarginRepository.ReadOvernightMarginParameter() 
+                : OvernightMarginParameter;
             
             return (parameter / tradingInstrument.LeverageInit, parameter / tradingInstrument.LeverageMaintenance);
         }

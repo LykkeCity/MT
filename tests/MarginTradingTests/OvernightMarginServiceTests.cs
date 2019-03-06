@@ -6,6 +6,7 @@ using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.DayOffSettings;
+using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
@@ -34,6 +35,7 @@ namespace MarginTradingTests
             var overnightMarginService = new OvernightMarginService(Mock.Of<IDateService>(), Mock.Of<ITradingEngine>(),
                 Mock.Of<IAccountsCacheService>(), Mock.Of<IAccountUpdateService>(),
                 Mock.Of<IScheduleSettingsCacheService>(), Mock.Of<IOvernightMarginParameterContainer>(),
+                Mock.Of<IOvernightMarginRepository>(),
                 Mock.Of<ILog>(), Mock.Of<IEventChannel<MarginCallEventArgs>>(), new OvernightMarginSettings());
             var actualResult = overnightMarginService.TryGetOperatingInterval(platformTrading, currentDateTime, 
                 out var resultingInterval);
