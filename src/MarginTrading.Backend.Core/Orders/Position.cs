@@ -107,6 +107,12 @@ namespace MarginTrading.Backend.Core.Orders
         [JsonProperty]
         public FplData FplData { get; private set; }
         
+        /// <summary>
+        /// Additional information about the order, that opened position
+        /// </summary>
+        [JsonProperty]
+        public string AdditionalInfo { get; private set; }
+        
         #endregion Properties
         
         /// <summary>
@@ -123,7 +129,7 @@ namespace MarginTrading.Backend.Core.Orders
             DateTime openDate, string openTradeId, OrderType openOrderType, decimal openOrderVolume, decimal openPrice, decimal 
             openFxPrice, string equivalentAsset, decimal openPriceEquivalent, List<RelatedOrderInfo> relatedOrders, string legalEntity, 
             OriginatorType openOriginator, string externalProviderId, string fxAssetPairId, 
-            FxToAssetPairDirection fxToAssetPairDirection)
+            FxToAssetPairDirection fxToAssetPairDirection, string additionalInfo)
         {
             // ReSharper disable VirtualMemberCallInConstructor
             // ^^^ props are virtual for tests, derived constructor call is overriden by this one, but it's ok
@@ -153,6 +159,7 @@ namespace MarginTrading.Backend.Core.Orders
             ChargePnlOperations = new HashSet<string>();
             FxAssetPairId = fxAssetPairId;
             FxToAssetPairDirection = fxToAssetPairDirection;
+            AdditionalInfo = additionalInfo;
             // ReSharper restore VirtualMemberCallInConstructor
             FplData = new FplData {ActualHash = 1};
         }

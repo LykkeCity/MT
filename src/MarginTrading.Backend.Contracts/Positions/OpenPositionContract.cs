@@ -125,5 +125,10 @@ namespace MarginTrading.Backend.Contracts.Positions
         /// The related orders (sl, tp orders) 
         /// </summary>
         public List<RelatedOrderInfoContract> RelatedOrderInfos { get; set; }
+
+        /// <summary>
+        /// Additional information about the order, that opened position
+        /// </summary>
+        public string AdditionalInfo { get; set; }
     }
 }

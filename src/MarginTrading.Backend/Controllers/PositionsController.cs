@@ -272,7 +272,8 @@ namespace MarginTrading.Backend.Controllers
                 RelatedOrderInfos = relatedOrders,
                 OpenTimestamp = position.OpenDate,
                 ModifiedTimestamp = position.LastModified,
-                TradeId = position.Id
+                TradeId = position.Id,
+                AdditionalInfo = position.AdditionalInfo
             };
         }
 
