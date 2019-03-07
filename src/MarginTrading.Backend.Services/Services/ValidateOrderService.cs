@@ -275,8 +275,8 @@ namespace MarginTrading.Backend.Services
             decimal? price, ReportingEquivalentPricesSettings equivalentSettings, Order parentOrder)
         {
             var orderType = type.ToType<OrderType>();
-
             Order order = null;
+            var placedAltogether = parentOrder != null;
             
             if (parentOrder == null)
             {
@@ -296,7 +296,8 @@ namespace MarginTrading.Backend.Services
                 var originator = GetOriginator(request.Originator);
 
                 order = new Order(initialParameters.Id, initialParameters.Code, parentOrder.AssetPairId,
-                    -parentOrder.Volume, initialParameters.Now, initialParameters.Now, request.Validity,
+                    -parentOrder.Volume, initialParameters.Now, initialParameters.Now, 
+                    placedAltogether ? null : request.Validity,
                     parentOrder.AccountId, parentOrder.TradingConditionId, parentOrder.AccountAssetId, price,
                     parentOrder.EquivalentAsset, OrderFillType.FillOrKill, string.Empty, parentOrder.LegalEntity, false,
                     orderType, parentOrder.Id, null, originator, initialParameters.EquivalentPrice,
