@@ -20,5 +20,8 @@
         ParentPositionDoesNotExist,
         ParentPositionIsNotActive,
         ShortPositionsDisabled,
+        MaxPositionLimit,
+        MinOrderSizeLimit,
+        MaxOrderSizeLimit,
     }
 }

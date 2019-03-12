@@ -17,8 +17,11 @@
         TradingConditionError,
         InvalidValidity,
         TechnicalError,
-        ShortPositionsDisabled,
         ParentPositionDoesNotExist,
-        ParentPositionIsNotActive
+        ParentPositionIsNotActive,
+        ShortPositionsDisabled,
+        MaxPositionLimit,
+        MinOrderSizeLimit,
+        MaxOrderSizeLimit,
     }
 }
