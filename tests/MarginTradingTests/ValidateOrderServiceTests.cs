@@ -82,7 +82,8 @@ namespace MarginTradingTests
 
                     });
 
-                Assert.That(ex.RejectReason == OrderRejectReason.InvalidVolume);
+                Assert.That(ex.RejectReason ==
+                            (volume == 0 ? OrderRejectReason.InvalidVolume : OrderRejectReason.MaxOrderSizeLimit));
             }
         }
 
@@ -125,7 +126,7 @@ namespace MarginTradingTests
                 var ex = Assert.Throws<ValidateOrderException>(() =>
                     _validateOrderService.MakePreTradeValidation(order, true, _me));
 
-                Assert.That(ex.RejectReason == OrderRejectReason.InvalidVolume);
+                Assert.That(ex.RejectReason == OrderRejectReason.MaxPositionLimit);
             }
         }
 
