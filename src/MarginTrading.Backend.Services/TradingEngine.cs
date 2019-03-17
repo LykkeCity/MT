@@ -250,6 +250,17 @@ namespace MarginTrading.Backend.Services
                 }
 
                 position.StartClosing(_dateService.Now(), order.OrderType.GetCloseReason(), order.Originator, "");
+
+                if (order.Volume != position.Volume)
+                {
+                    var metadata = new OrderChangedMetadata
+                    {
+                        OldValue = order.Volume.ToString("F2"),
+                        UpdatedProperty = OrderChangedProperty.Volume
+                    };
+                    order.ChangeVolume(position.Volume, _dateService.Now(), order.Originator);
+                    _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata));
+                }
             }
             
             var equivalentRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.EquivalentAsset,

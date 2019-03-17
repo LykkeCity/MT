@@ -170,10 +170,11 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         private void MatchOrderOnExistingPositions(Order order)
         {
             var leftVolumeToMatch = Math.Abs(order.Volume);
-            
+
             var openedPositions =
                 _ordersCache.Positions.GetPositionsByInstrumentAndAccount(order.AssetPairId, order.AccountId)
-                    .Where(p => p.Direction == order.Direction.GetClosePositionDirection());
+                    .Where(p => p.Status != PositionStatus.Closing &&
+                                p.Direction == order.Direction.GetClosePositionDirection());
             
             foreach (var openedPosition in openedPositions)
             {
