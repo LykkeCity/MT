@@ -111,32 +111,64 @@ namespace MarginTrading.Backend.Services
 
         #region Getters
 
-        public Position GetPositionById(string orderId)
+        public Position GetPositionById(string positionId)
         {
-            if (TryGetPositionById(orderId, out var result))
+            if (TryGetPositionById(positionId, out var result))
                 return result;
 
-            throw new PositionNotFoundException(string.Format(MtMessages.CantGetPosition, orderId));
+            throw new PositionNotFoundException(string.Format(MtMessages.CantGetPosition, positionId));
         }
-
-        public bool TryGetPositionById(string orderId, out Position result)
+        
+        public List<Position> GetPositionsByIds(List<string> positionIds)
         {
+            var result = new List<Position>();
+            
             _lockSlim.EnterReadLock();
-
+            
             try
             {
-                if (!_positionsById.ContainsKey(orderId))
+                foreach (var positionId in positionIds)
                 {
-                    result = null;
-                    return false;
+                    if (TryGetPositionById(positionId, out var position))
+                        result.Add(position);
                 }
-                result = _positionsById[orderId];
-                return true;
             }
             finally
             {
                 _lockSlim.ExitReadLock();
             }
+
+            if (result.Count == 0)
+            {
+                throw new PositionNotFoundException($"Cannot get positions with ids [{string.Join(",", positionIds)}]");
+            }
+
+            return result;
+        }
+
+        public bool TryGetPositionById(string positionId, out Position result)
+        {
+            _lockSlim.EnterReadLock();
+
+            try
+            {
+                return TryGetPositionByIdUnsafe(positionId, out result);
+            }
+            finally
+            {
+                _lockSlim.ExitReadLock();
+            }
+        }
+
+        private bool TryGetPositionByIdUnsafe(string orderId, out Position result)
+        {
+            if (!_positionsById.ContainsKey(orderId))
+            {
+                result = null;
+                return false;
+            }
+            result = _positionsById[orderId];
+            return true;
         }
 
         public IReadOnlyCollection<Position> GetPositionsByInstrument(string instrument)

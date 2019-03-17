@@ -42,9 +42,9 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                     : MatchingEngineConstants.DefaultStp);
         }
 
-        public IMatchingEngineBase GetMatchingEngineForClose(Position position)
+        public IMatchingEngineBase GetMatchingEngineForClose(string openMatchingEngineId)
         {
-            return _matchingEngineRepository.GetMatchingEngineById(position.OpenMatchingEngineId);
+            return _matchingEngineRepository.GetMatchingEngineById(openMatchingEngineId);
         }
     }
 }

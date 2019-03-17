@@ -270,7 +270,10 @@ namespace MarginTrading.Backend.Core.Trading
         /// </summary>
         [JsonProperty]
         public string CorrelationId { get; private set; }
-        
+
+        [JsonProperty]
+        public List<string> PositionsToBeClosed { get; private set; }
+
         /// <summary>
         /// Order execution rank, calculated based on type and direction
         /// </summary>
@@ -301,7 +304,8 @@ namespace MarginTrading.Backend.Core.Trading
             string legalEntity, bool forceOpen, OrderType orderType, string parentOrderId, string parentPositionId, 
             OriginatorType originator, decimal equivalentRate, decimal fxRate, 
             string fxAssetPairId, FxToAssetPairDirection fxToAssetPairDirection, OrderStatus status, 
-            string additionalInfo, string correlationId, string externalProviderId = null)
+            string additionalInfo, string correlationId, List<string> positionsToBeClosed = null, 
+            string externalProviderId = null)
         {
             Id = id;
             Code = code;
@@ -331,6 +335,9 @@ namespace MarginTrading.Backend.Core.Trading
             Status = status;
             AdditionalInfo = additionalInfo;
             CorrelationId = correlationId;
+            PositionsToBeClosed = positionsToBeClosed ?? (string.IsNullOrEmpty(parentPositionId)
+                                      ? new List<string>()
+                                      : new List<string> {parentPositionId});
             ExternalProviderId = externalProviderId;
             ExecutionRank = (byte) (OrderType.GetExecutionRank() | Direction.GetExecutionRank());
             SetExecutionSortRank();
@@ -449,6 +456,11 @@ namespace MarginTrading.Backend.Core.Trading
                 if (relinkFromOrderToPosition)
                 {
                     ParentPositionId = ParentOrderId;
+
+                    if (!PositionsToBeClosed.Contains(ParentOrderId))
+                    {
+                        PositionsToBeClosed.Add(ParentOrderId);
+                    }
                 }
             });
         }

@@ -87,8 +87,18 @@ namespace MarginTrading.Backend.Controllers
 
             var correlationId = request?.CorrelationId ?? _identityGenerator.GenerateGuid();
 
-            var order = await _tradingEngine.ClosePositionAsync(positionId, originator, request?.AdditionalInfo,
-                correlationId, request?.Comment);
+            var order = await _tradingEngine.ClosePositionsAsync(
+                new PositionsCloseData(
+                    new List<Position> {position},
+                    position.AccountId,
+                    position.AssetPairId,
+                    position.Volume,
+                    position.OpenMatchingEngineId,
+                    position.ExternalProviderId,
+                    originator,
+                    request?.AdditionalInfo,
+                    correlationId,
+                    position.EquivalentAsset));
 
             if (order.Status != OrderStatus.Executed && order.Status != OrderStatus.ExecutionStarted)
             {
@@ -138,6 +148,7 @@ namespace MarginTrading.Backend.Controllers
                 QuoteInfo = null,
                 LiquidationType = LiquidationType.Forced,
                 OriginatorType = originator,
+                AdditionalInfo = request?.AdditionalInfo,
             });
             
             _operationsLogService.AddLog("Position liquidation started", string.Empty, 
