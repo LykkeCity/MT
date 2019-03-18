@@ -16,6 +16,6 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation.Events
         public string[] PositionIds { get; set; }
         
         [Key(3)]
-        public string AdditionalInfo { get; set; }
+        public string Details { get; set; }
     }
 }

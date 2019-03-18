@@ -291,14 +291,14 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             }
 
             if (!CheckIfNetVolumeCanBeLiquidated(executionInfo.Data.AccountId, command.AssetPairId, positions, 
-                out var additionalInfo))
+                out var details))
             {
                 publisher.PublishEvent(new NotEnoughLiquidityInternalEvent
                 {
                     OperationId = command.OperationId,
                     CreationTime = _dateService.Now(),
                     PositionIds = command.PositionIds,
-                    AdditionalInfo = additionalInfo
+                    Details = details
                 });
                 return;
             }
@@ -427,7 +427,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         #region Private methods
         
         private bool CheckIfNetVolumeCanBeLiquidated(string accountId, string assetPairId, Position[] positions,
-            out string additionalInfo)
+            out string details)
         {
             var netPositionVolume = positions.Sum(p => p.Volume);
 
@@ -438,7 +438,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             if (tradingInstrument.LiquidationThreshold > 0 &&
                 Math.Abs(netPositionVolume) > tradingInstrument.LiquidationThreshold)
             {
-                additionalInfo = $"Threshold exceeded. Net volume : {netPositionVolume}. " +
+                details = $"Threshold exceeded. Net volume : {netPositionVolume}. " +
                                  $"Threshold : {tradingInstrument.LiquidationThreshold}.";
                 return false;
             }
@@ -453,11 +453,11 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
 
             if (me.GetPriceForClose(assetPairId, netPositionVolume, externalProvider) == null)
             {
-                additionalInfo = $"Not enough depth of orderbook. Net volume : {netPositionVolume}.";
+                details = $"Not enough depth of orderbook. Net volume : {netPositionVolume}.";
                 return false;
             }
 
-            additionalInfo = string.Empty;
+            details = string.Empty;
             return true;
         }
         

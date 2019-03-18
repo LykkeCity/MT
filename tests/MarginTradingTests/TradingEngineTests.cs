@@ -856,7 +856,7 @@ namespace MarginTradingTests
             ValidatePositionIsOpened(order2.Id, 1.05M, -0.02M);
             
             var orders = _tradingEngine.LiquidatePositionsAsync(new SpecialLiquidationMatchingEngine(2.5M, "Test",
-                "test", DateTime.UtcNow), new [] {order1.Id, order2.Id}, "Test").Result;
+                "test", DateTime.UtcNow), new [] {order1.Id, order2.Id}, "Test", "TestAdditionalInfo").Result;
             
             orders.ForEach(o => ValidateOrderIsExecuted(o, new[] {"test"}, 2.5M));
             Assert.AreEqual(2, orders.Max(x => x.Volume));
