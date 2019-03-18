@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using MessagePack;
 
 namespace MarginTrading.Backend.Services.Workflow.Liquidation.Events
@@ -17,5 +18,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation.Events
         
         [Key(3)]
         public string Comment { get; set; }
+        
+        [Key(4)]
+        public List<string> PositionsLiquidatedBySpecialLiquidation { get; set; }
     }
 }

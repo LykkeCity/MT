@@ -412,7 +412,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                     OperationId = command.OperationId,
                     CreationTime = _dateService.Now(),
                     Comment = command.Comment,
-                    IsCausedBySpecialLiquidation = command.IsCausedBySpecialLiquidation
+                    IsCausedBySpecialLiquidation = command.IsCausedBySpecialLiquidation,
+                    PositionsLiquidatedBySpecialLiquidation = command.PositionsLiquidatedBySpecialLiquidation
                 });
             }
             else
