@@ -96,7 +96,7 @@ namespace MarginTrading.Backend.Controllers
                     EventTimestamp = _dateService.Now(),
                     OrderPlaceRequest = request,
                     RejectReason = exception.RejectReason.ToType<OrderRejectReasonContract>(),
-                    RejectReasonText = exception.Comment,
+                    RejectReasonText = exception.Message,
                 });
                 throw;
             }
