@@ -8,7 +8,9 @@ using MarginTrading.AzureRepositories.Snow.OrdersById;
 using MarginTrading.Backend.Contracts;
 using MarginTrading.Backend.Contracts.Activities;
 using MarginTrading.Backend.Contracts.Common;
+using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Contracts.Orders;
+using MarginTrading.Backend.Contracts.TradeMonitoring;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Helpers;
@@ -19,6 +21,7 @@ using MarginTrading.Backend.Filters;
 using MarginTrading.Backend.Middleware;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
+using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Mappers;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Middleware;
@@ -42,6 +45,7 @@ namespace MarginTrading.Backend.Controllers
         private readonly IDateService _dateService;
         private readonly IValidateOrderService _validateOrderService;
         private readonly IIdentityGenerator _identityGenerator;
+        private readonly ICqrsSender _cqrsSender;
 
         public OrdersController(IAssetPairsCache assetPairsCache, 
             ITradingEngine tradingEngine,
@@ -52,7 +56,8 @@ namespace MarginTrading.Backend.Controllers
             IAssetPairDayOffService assetDayOffService,
             IDateService dateService, 
             IValidateOrderService validateOrderService, 
-            IIdentityGenerator identityGenerator)
+            IIdentityGenerator identityGenerator,
+            ICqrsSender cqrsSender)
         {
             _assetPairsCache = assetPairsCache;
             _tradingEngine = tradingEngine;
@@ -64,6 +69,7 @@ namespace MarginTrading.Backend.Controllers
             _dateService = dateService;
             _validateOrderService = validateOrderService;
             _identityGenerator = identityGenerator;
+            _cqrsSender = cqrsSender;
         }
 
         /// <summary>
@@ -77,8 +83,24 @@ namespace MarginTrading.Backend.Controllers
         [HttpPost]
         public async Task<string> PlaceAsync([FromBody] OrderPlaceRequest request)
         {
-            var (baseOrder, relatedOrders) = await _validateOrderService.ValidateRequestAndCreateOrders(request); 
-            
+            var (baseOrder, relatedOrders) = (default(Order), default(List<Order>));
+            try
+            {
+                (baseOrder, relatedOrders) = await _validateOrderService.ValidateRequestAndCreateOrders(request);
+            }
+            catch (ValidateOrderException exception)
+            {
+                _cqrsSender.PublishEvent(new OrderPlacementRejectedEvent
+                {
+                    CorrelationId = request.CorrelationId,
+                    EventTimestamp = _dateService.Now(),
+                    OrderPlaceRequest = request,
+                    RejectReason = exception.RejectReason.ToType<OrderRejectReasonContract>(),
+                    RejectReasonText = exception.Comment,
+                });
+                throw;
+            }
+
             var placedOrder = await _tradingEngine.PlaceOrderAsync(baseOrder);
             
             _operationsLogService.AddLog("action order.place", request.AccountId, request.ToJson(),
