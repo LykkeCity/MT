@@ -14,7 +14,9 @@ namespace MarginTrading.Backend.Core.Orders
             string externalProviderId,
             OriginatorType originator, 
             string additionalInfo, 
-            string correlationId, string equivalentAsset, string comment = null, 
+            string correlationId, 
+            string equivalentAsset, 
+            string comment = null, 
             IMatchingEngineBase matchingEngine = null, 
             OrderModality modality = OrderModality.Regular)
         {

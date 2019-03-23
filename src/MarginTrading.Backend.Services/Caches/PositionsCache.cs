@@ -119,56 +119,18 @@ namespace MarginTrading.Backend.Services
             throw new PositionNotFoundException(string.Format(MtMessages.CantGetPosition, positionId));
         }
         
-        public List<Position> GetPositionsByIds(List<string> positionIds)
-        {
-            var result = new List<Position>();
-            
-            _lockSlim.EnterReadLock();
-            
-            try
-            {
-                foreach (var positionId in positionIds)
-                {
-                    if (TryGetPositionById(positionId, out var position))
-                        result.Add(position);
-                }
-            }
-            finally
-            {
-                _lockSlim.ExitReadLock();
-            }
-
-            if (result.Count == 0)
-            {
-                throw new PositionNotFoundException($"Cannot get positions with ids [{string.Join(",", positionIds)}]");
-            }
-
-            return result;
-        }
-
         public bool TryGetPositionById(string positionId, out Position result)
         {
             _lockSlim.EnterReadLock();
 
             try
             {
-                return TryGetPositionByIdUnsafe(positionId, out result);
+                return _positionsById.TryGetValue(positionId, out result);
             }
             finally
             {
                 _lockSlim.ExitReadLock();
             }
-        }
-
-        private bool TryGetPositionByIdUnsafe(string orderId, out Position result)
-        {
-            if (!_positionsById.ContainsKey(orderId))
-            {
-                result = null;
-                return false;
-            }
-            result = _positionsById[orderId];
-            return true;
         }
 
         public IReadOnlyCollection<Position> GetPositionsByInstrument(string instrument)

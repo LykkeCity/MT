@@ -258,6 +258,10 @@ namespace MarginTrading.Backend.Services
                     position.StartClosing(_dateService.Now(), order.OrderType.GetCloseReason(), order.Originator, "");
                 }
                 
+                // there is no any global lock of positions / orders, that's why it is possible to have concurrency 
+                // in position close process
+                // since orders, that have not empty PositionsToBeClosed should close positions and not open new ones
+                // volume of executed order should be equal to position volume, but should have opposite sign
                 if (order.Volume != -netVolume)
                 {
                     var metadata = new OrderChangedMetadata
@@ -652,7 +656,7 @@ namespace MarginTrading.Backend.Services
             return order;
         }
 
-        public async Task<Order[]> LiquidatePositionsAsync(IMatchingEngineBase me, string[] positionIds,
+        public async Task<Order[]> LiquidatePositionsUsingSpecialWorkflowAsync(IMatchingEngineBase me, string[] positionIds,
             string correlationId, string additionalInfo)
         {
             var positionsToClose = _ordersCache.Positions.GetAllPositions()
@@ -666,7 +670,7 @@ namespace MarginTrading.Backend.Services
                     gr.ToList(),
                     gr.Key.AccountId,
                     gr.Key.AssetPairId,
-                    gr.Sum(_ => _.Volume),
+                    gr.Sum(x => x.Volume),
                     gr.Key.OpenMatchingEngineId,
                     gr.Key.ExternalProviderId,
                     OriginatorType.System,
@@ -695,7 +699,7 @@ namespace MarginTrading.Backend.Services
             
             if (failedPositionIds.Any())
             {
-                throw new Exception($"Liquidation #{correlationId} failed to close these positions: {string.Join(", ", failedPositionIds)}");
+                throw new Exception($"Special liquidation #{correlationId} failed to close these positions: {string.Join(", ", failedPositionIds)}");
             }
 
             return closeOrderList;

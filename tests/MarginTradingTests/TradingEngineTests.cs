@@ -855,7 +855,7 @@ namespace MarginTradingTests
             ValidateOrderIsExecuted(order2, new[] {"7"}, 1.04M);
             ValidatePositionIsOpened(order2.Id, 1.05M, -0.02M);
             
-            var orders = _tradingEngine.LiquidatePositionsAsync(new SpecialLiquidationMatchingEngine(2.5M, "Test",
+            var orders = _tradingEngine.LiquidatePositionsUsingSpecialWorkflowAsync(new SpecialLiquidationMatchingEngine(2.5M, "Test",
                 "test", DateTime.UtcNow), new [] {order1.Id, order2.Id}, "Test", "TestAdditionalInfo").Result;
             
             orders.ForEach(o => ValidateOrderIsExecuted(o, new[] {"test"}, 2.5M));
