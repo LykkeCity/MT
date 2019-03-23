@@ -92,7 +92,7 @@ namespace MarginTrading.Backend.Controllers
             {
                 _cqrsSender.PublishEvent(new OrderPlacementRejectedEvent
                 {
-                    CorrelationId = request.CorrelationId,
+                    CorrelationId = request.CorrelationId ?? _identityGenerator.GenerateGuid(),
                     EventTimestamp = _dateService.Now(),
                     OrderPlaceRequest = request,
                     RejectReason = exception.RejectReason.ToType<OrderRejectReasonContract>(),
