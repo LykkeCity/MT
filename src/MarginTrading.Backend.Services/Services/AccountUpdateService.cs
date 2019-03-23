@@ -7,7 +7,9 @@ using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Log;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
@@ -119,6 +121,12 @@ namespace MarginTrading.Backend.Services
             var accountMarginAvailable = _accountsCacheService.Get(order.AccountId).GetMarginAvailable();
 
             var openPriceInfo = matchingEngine.GetBestPriceForOpen(order.AssetPairId, order.Volume);
+
+            if (openPriceInfo.price == null)
+            {
+                throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Price for open can not be calculated");
+            }
+            
             var openPrice = order.Price ?? openPriceInfo.price;
             var closePrice =
                 matchingEngine.GetPriceForClose(order.AssetPairId, order.Volume, openPriceInfo.externalProviderId);
