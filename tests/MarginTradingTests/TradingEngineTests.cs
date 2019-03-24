@@ -304,7 +304,19 @@ namespace MarginTradingTests
 
             Assert.AreEqual(1.2, position.ClosePrice);
 
-            var order = _tradingEngine.ClosePositionAsync(position.Id, OriginatorType.Investor, "", Guid.NewGuid().ToString()).Result;
+            var data = new PositionsCloseData(
+                new List<Position> {position},
+                position.AccountId,
+                position.AssetPairId,
+                position.Volume,
+                position.OpenMatchingEngineId,
+                position.ExternalProviderId,
+                OriginatorType.Investor,
+                string.Empty,
+                Guid.NewGuid().ToString(),
+                position.EquivalentAsset);
+            
+            var order = _tradingEngine.ClosePositionsAsync(data).Result;
 
             ValidateOrderIsExecuted(order, new[] {"5"}, 1.2M);
             
@@ -322,7 +334,19 @@ namespace MarginTradingTests
             
             _ordersCache.Positions.Add(position);
             
-            var order = _tradingEngine.ClosePositionAsync(position.Id, OriginatorType.Investor, "", Guid.NewGuid().ToString()).Result;
+            var data = new PositionsCloseData(
+                new List<Position> {position},
+                position.AccountId,
+                position.AssetPairId,
+                position.Volume,
+                position.OpenMatchingEngineId,
+                position.ExternalProviderId,
+                OriginatorType.Investor,
+                string.Empty,
+                Guid.NewGuid().ToString(),
+                position.EquivalentAsset);
+            
+            var order = _tradingEngine.ClosePositionsAsync(data).Result;
 
             ValidateOrderIsExecuted(order, new[] {"3", "4"}, 1.1125M);
             
@@ -831,8 +855,8 @@ namespace MarginTradingTests
             ValidateOrderIsExecuted(order2, new[] {"7"}, 1.04M);
             ValidatePositionIsOpened(order2.Id, 1.05M, -0.02M);
             
-            var orders = _tradingEngine.LiquidatePositionsAsync(new SpecialLiquidationMatchingEngine(2.5M, "Test",
-                "test", DateTime.UtcNow), new [] {order1.Id, order2.Id}, "Test").Result;
+            var orders = _tradingEngine.LiquidatePositionsUsingSpecialWorkflowAsync(new SpecialLiquidationMatchingEngine(2.5M, "Test",
+                "test", DateTime.UtcNow), new [] {order1.Id, order2.Id}, "Test", "TestAdditionalInfo").Result;
             
             orders.ForEach(o => ValidateOrderIsExecuted(o, new[] {"test"}, 2.5M));
             Assert.AreEqual(2, orders.Max(x => x.Volume));

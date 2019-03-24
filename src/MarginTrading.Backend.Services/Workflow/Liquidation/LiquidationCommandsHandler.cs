@@ -131,6 +131,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                         ProcessedPositionIds = new List<string>(),
                         LiquidationType = command.LiquidationType,
                         OriginatorType = command.OriginatorType,
+                        AdditionalInfo = command.AdditionalInfo,
                     }
                 ));
             
@@ -290,50 +291,91 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             }
 
             if (!CheckIfNetVolumeCanBeLiquidated(executionInfo.Data.AccountId, command.AssetPairId, positions, 
-                out var additionalInfo))
+                out var details))
             {
                 publisher.PublishEvent(new NotEnoughLiquidityInternalEvent
                 {
                     OperationId = command.OperationId,
                     CreationTime = _dateService.Now(),
                     PositionIds = command.PositionIds,
-                    AdditionalInfo = additionalInfo
+                    Details = details
                 });
                 return;
             }
             
             var liquidationInfos = new List<LiquidationInfo>();
 
-            foreach (var position in positions)
+            var comment = string.Empty;
+
+            switch (executionInfo.Data.LiquidationType)
+            {
+                case LiquidationType.Mco:
+                    comment = "MCO liquidation";
+                    break;
+                
+                case LiquidationType.Normal:
+                    comment = "Liquidation";
+                    break;
+                
+                case LiquidationType.Forced:
+                    comment = "Close positions group";
+                    break;
+            }
+            
+            var positionGroups = positions
+                .GroupBy(p => (p.AssetPairId, p.AccountId, p.Direction, p
+                    .OpenMatchingEngineId, p.ExternalProviderId, p.EquivalentAsset))
+                .Where(gr => gr.Any())
+                .Select(gr => new PositionsCloseData(
+                    gr.ToList(),
+                    gr.Key.AccountId,
+                    gr.Key.AssetPairId,
+                    gr.Sum(x => x.Volume),
+                    gr.Key.OpenMatchingEngineId,
+                    gr.Key.ExternalProviderId,
+                    executionInfo.Data.OriginatorType,
+                    executionInfo.Data.AdditionalInfo,
+                    command.OperationId,
+                    gr.Key.EquivalentAsset,
+                    comment));
+
+            foreach (var positionGroup in positionGroups)
             {
                 try
                 {
-                    var order = await _tradingEngine.ClosePositionAsync(position.Id, executionInfo.Data.OriginatorType, 
-                        string.Empty, command.OperationId, "Liquidation");
+                    var order = await _tradingEngine.ClosePositionsAsync(positionGroup);
 
                     if (order.Status != OrderStatus.Executed && order.Status != OrderStatus.ExecutionStarted)
                     {
                         throw new Exception(order.RejectReasonText);
                     }
 
-                    liquidationInfos.Add(new LiquidationInfo
+                    foreach (var position in positionGroup.Positions)
                     {
-                        PositionId = position.Id,
-                        IsLiquidated = true,
-                        Comment = $"Order: {order.Id}"
-                    });
+                        liquidationInfos.Add(new LiquidationInfo
+                        {
+                            PositionId = position.Id,
+                            IsLiquidated = true,
+                            Comment = $"Order: {order.Id}"
+                        });
+                    }
                 }
                 catch (Exception ex)
                 {
-                    await _log.WriteWarningAsync(nameof(LiquidationCommandsHandler), nameof(LiquidatePositionsInternalCommand),
-                        $"Failed to close position {position.Id} on liquidation operation #{command.OperationId}", ex);
-                    
-                    liquidationInfos.Add(new LiquidationInfo
+                    await _log.WriteWarningAsync(nameof(LiquidationCommandsHandler),
+                        nameof(LiquidatePositionsInternalCommand),
+                        $"Failed to close positions {string.Join(",", positionGroup.Positions.Select(p => p.Id))} on liquidation operation #{command.OperationId}",
+                        ex);
+
+                    foreach (var position in positionGroup.Positions)
                     {
-                        PositionId = position.Id,
-                        IsLiquidated = false,
-                        Comment = $"Close position failed: {ex.Message}"
-                    });
+                        liquidationInfos.Add(new LiquidationInfo
+                        {
+                            PositionId = position.Id,
+                            IsLiquidated = false,
+                            Comment = $"Close position failed: {ex.Message}"
+                        });
+                    }
                 }
             }
 
@@ -370,7 +412,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                     OperationId = command.OperationId,
                     CreationTime = _dateService.Now(),
                     Comment = command.Comment,
-                    IsCausedBySpecialLiquidation = command.IsCausedBySpecialLiquidation
+                    IsCausedBySpecialLiquidation = command.IsCausedBySpecialLiquidation,
+                    PositionsLiquidatedBySpecialLiquidation = command.PositionsLiquidatedBySpecialLiquidation
                 });
             }
             else
@@ -385,7 +428,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         #region Private methods
         
         private bool CheckIfNetVolumeCanBeLiquidated(string accountId, string assetPairId, Position[] positions,
-            out string additionalInfo)
+            out string details)
         {
             var netPositionVolume = positions.Sum(p => p.Volume);
 
@@ -396,7 +439,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             if (tradingInstrument.LiquidationThreshold > 0 &&
                 Math.Abs(netPositionVolume) > tradingInstrument.LiquidationThreshold)
             {
-                additionalInfo = $"Threshold exceeded. Net volume : {netPositionVolume}. " +
+                details = $"Threshold exceeded. Net volume : {netPositionVolume}. " +
                                  $"Threshold : {tradingInstrument.LiquidationThreshold}.";
                 return false;
             }
@@ -405,17 +448,17 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             //at the current moment all positions has the same asset pair
             //and every asset pair can be processed only by one ME
             var anyPosition = positions.First();
-            var me = _matchingEngineRouter.GetMatchingEngineForClose(anyPosition);
+            var me = _matchingEngineRouter.GetMatchingEngineForClose(anyPosition.OpenMatchingEngineId);
             //the same for externalProvider.. 
             var externalProvider = anyPosition.ExternalProviderId;
 
             if (me.GetPriceForClose(assetPairId, netPositionVolume, externalProvider) == null)
             {
-                additionalInfo = $"Not enough depth of orderbook. Net volume : {netPositionVolume}.";
+                details = $"Not enough depth of orderbook. Net volume : {netPositionVolume}.";
                 return false;
             }
 
-            additionalInfo = string.Empty;
+            details = string.Empty;
             return true;
         }
         

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using MessagePack;
 
 namespace MarginTrading.Backend.Services.Workflow.Liquidation.Commands
@@ -20,5 +21,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation.Commands
         
         [Key(4)]
         public string CausationOperationId { get; set; }
+        
+        [Key(5)]
+        public List<string> PositionsLiquidatedBySpecialLiquidation { get; set; }
     }
 }

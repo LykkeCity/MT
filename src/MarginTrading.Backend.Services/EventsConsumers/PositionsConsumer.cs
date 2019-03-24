@@ -91,12 +91,15 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     return;
                 }
 
-                if (!string.IsNullOrEmpty(order.ParentPositionId))
+                if (order.PositionsToBeClosed.Any())
                 {
-                    var position = _ordersCache.Positions.GetPositionById(order.ParentPositionId);
+                    foreach (var positionId in order.PositionsToBeClosed)
+                    {
+                        var position = _ordersCache.Positions.GetPositionById(positionId);
                     
-                    CloseExistingPosition(order, position);
-
+                        CloseExistingPosition(order, position);
+                    }
+                    
                     return;
                 }
 
@@ -146,7 +149,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 order.EquivalentAsset, order.EquivalentRate, order.RelatedOrders, order.LegalEntity, order.Originator,
                 order.ExternalProviderId, order.FxAssetPairId, order.FxToAssetPairDirection, order.AdditionalInfo);
             
-            var defaultMatchingEngine = _meRouter.GetMatchingEngineForClose(position);
+            var defaultMatchingEngine = _meRouter.GetMatchingEngineForClose(position.OpenMatchingEngineId);
 
             var closePrice = defaultMatchingEngine.GetPriceForClose(position.AssetPairId, position.Volume,
                 position.ExternalProviderId);
@@ -170,10 +173,11 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         private void MatchOrderOnExistingPositions(Order order)
         {
             var leftVolumeToMatch = Math.Abs(order.Volume);
-            
+
             var openedPositions =
                 _ordersCache.Positions.GetPositionsByInstrumentAndAccount(order.AssetPairId, order.AccountId)
-                    .Where(p => p.Direction == order.Direction.GetClosePositionDirection());
+                    .Where(p => p.Status != PositionStatus.Closing &&
+                                p.Direction == order.Direction.GetClosePositionDirection());
             
             foreach (var openedPosition in openedPositions)
             {

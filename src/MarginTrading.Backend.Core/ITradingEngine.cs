@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
@@ -10,12 +11,10 @@ namespace MarginTrading.Backend.Core
     {
         Task<Order> PlaceOrderAsync(Order order);
 
-        Task<Order> ClosePositionAsync(string positionId, OriginatorType originator, string additionalInfo,
-            string correlationId, string comment = null, IMatchingEngineBase me = null, 
-            OrderModality modality = OrderModality.Regular);
+        Task<Order> ClosePositionsAsync(PositionsCloseData data);
 
-        Task<Order[]> LiquidatePositionsAsync(IMatchingEngineBase me, string[] positionIds,
-            string correlationId);
+        Task<Order[]> LiquidatePositionsUsingSpecialWorkflowAsync(IMatchingEngineBase me, string[] positionIds,
+            string correlationId, string additionalInfo);
             
         Order CancelPendingOrder(string orderId, string additionalInfo, string correlationId,
             string comment = null, OrderCancellationReason reason = OrderCancellationReason.None);

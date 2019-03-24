@@ -166,7 +166,7 @@ namespace MarginTrading.Backend.Services
                 initialParameters.Now, initialParameters.Now, request.Validity, account.Id, account.TradingConditionId,
                 account.BaseAssetId, request.Price, equivalentSettings.EquivalentAsset, OrderFillType.FillOrKill,
                 string.Empty, account.LegalEntity, request.ForceOpen, request.Type.ToType<OrderType>(),
-                request.ParentOrderId, request.PositionId, originator, initialParameters.EquivalentPrice,
+                request.ParentOrderId, null, originator, initialParameters.EquivalentPrice,
                 initialParameters.FxPrice, initialParameters.FxAssetPairId, initialParameters.FxToAssetPairDirection,
                 OrderStatus.Placed, request.AdditionalInfo, request.CorrelationId);
 

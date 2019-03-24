@@ -234,22 +234,44 @@ namespace MarginTrading.Backend.Services
 
             _orderExecutionStartedEvenChannel.SendEvent(this, new OrderExecutionStartedEventArgs(order));
 
-            if (!string.IsNullOrEmpty(order.ParentPositionId))
+            if (order.PositionsToBeClosed.Any())
             {
-                if (!_ordersCache.Positions.TryGetPositionById(order.ParentPositionId, out var position))
+                var netVolume = 0M;
+                
+                foreach (var positionId in order.PositionsToBeClosed)
                 {
-                    order.Reject(OrderRejectReason.ParentPositionDoesNotExist, "Parent position does not exist", "", _dateService.Now());
-                    _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
-                    return order;
-                }
-                if (position.Status != PositionStatus.Active)
-                {
-                    order.Reject(OrderRejectReason.ParentPositionIsNotActive, "Parent position is not active", "", _dateService.Now());
-                    _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
-                    return order;
-                }
+                    if (!_ordersCache.Positions.TryGetPositionById(positionId, out var position))
+                    {
+                        order.Reject(OrderRejectReason.ParentPositionDoesNotExist, "Related position does not exist", "", _dateService.Now());
+                        _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
+                        return order;
+                    }
+                    if (position.Status != PositionStatus.Active)
+                    {
+                        order.Reject(OrderRejectReason.ParentPositionIsNotActive, "Related position is not active", "", _dateService.Now());
+                        _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
+                        return order;
+                    }
 
-                position.StartClosing(_dateService.Now(), order.OrderType.GetCloseReason(), order.Originator, "");
+                    netVolume += position.Volume;
+                    
+                    position.StartClosing(_dateService.Now(), order.OrderType.GetCloseReason(), order.Originator, "");
+                }
+                
+                // there is no any global lock of positions / orders, that's why it is possible to have concurrency 
+                // in position close process
+                // since orders, that have not empty PositionsToBeClosed should close positions and not open new ones
+                // volume of executed order should be equal to position volume, but should have opposite sign
+                if (order.Volume != -netVolume)
+                {
+                    var metadata = new OrderChangedMetadata
+                    {
+                        OldValue = order.Volume.ToString("F2"),
+                        UpdatedProperty = OrderChangedProperty.Volume
+                    };
+                    order.ChangeVolume(-netVolume, _dateService.Now(), order.Originator);
+                    _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata));
+                }
             }
             
             var equivalentRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.EquivalentAsset,
@@ -328,7 +350,7 @@ namespace MarginTrading.Backend.Services
         {
             var shouldOpenNewPosition = order.ForceOpen;
 
-            if (string.IsNullOrEmpty(order.ParentPositionId) && !shouldOpenNewPosition)
+            if (!order.PositionsToBeClosed.Any() && !shouldOpenNewPosition)
             {
                 var existingPositions =
                     _ordersCache.Positions.GetPositionsByInstrumentAndAccount(order.AssetPairId, order.AccountId);
@@ -475,7 +497,7 @@ namespace MarginTrading.Backend.Services
 
                 foreach (var position in accountPositions.Value)
                 {
-                    var defaultMatchingEngine = _meRouter.GetMatchingEngineForClose(position);
+                    var defaultMatchingEngine = _meRouter.GetMatchingEngineForClose(position.OpenMatchingEngineId);
 
                     var closePrice = defaultMatchingEngine.GetPriceForClose(position.AssetPairId, position.Volume,
                         position.ExternalProviderId);
@@ -574,67 +596,110 @@ namespace MarginTrading.Backend.Services
             _stopoutEventChannel.SendEvent(this, new StopOutEventArgs(account));
         }
 
-        public async Task<Order> ClosePositionAsync(string positionId, OriginatorType originator, string additionalInfo,
-            string correlationId, string comment = null, IMatchingEngineBase me = null, 
-            OrderModality modality = OrderModality.Regular)
+        public async Task<Order> ClosePositionsAsync(PositionsCloseData closeData)
         {
-            var position = _ordersCache.Positions.GetPositionById(positionId);
+            var me = closeData.MatchingEngine ??
+                     _meRouter.GetMatchingEngineForClose(closeData.OpenMatchingEngineId);
 
-            me = me ?? _meRouter.GetMatchingEngineForClose(position);
+            var initialParameters = await _validateOrderService.GetOrderInitialParameters(closeData.AssetPairId, 
+                closeData.AccountId);
 
-            var initialParameters = await _validateOrderService.GetOrderInitialParameters(position.AssetPairId, 
-                position.AccountId);
+            var account = _accountsCacheService.Get(closeData.AccountId);
 
-            var order = new Order(initialParameters.Id, initialParameters.Code, position.AssetPairId, -position.Volume,
-                initialParameters.Now, initialParameters.Now, null, position.AccountId, position.TradingConditionId,
-                position.AccountAssetId, null, position.EquivalentAsset, OrderFillType.FillOrKill,
-                $"Close position. {comment}", position.LegalEntity, false, OrderType.Market, null, position.Id,
-                originator, initialParameters.EquivalentPrice, initialParameters.FxPrice,
-                initialParameters.FxAssetPairId, initialParameters.FxToAssetPairDirection, OrderStatus.Placed,
-                additionalInfo, correlationId, position.ExternalProviderId);
+            var positionIds = closeData.Positions.Select(p => p.Id).ToList();
+
+            var order = new Order(initialParameters.Id,
+                initialParameters.Code,
+                closeData.AssetPairId,
+                -closeData.Volume,
+                initialParameters.Now,
+                initialParameters.Now,
+                null,
+                account.Id,
+                account.TradingConditionId,
+                account.BaseAssetId,
+                null,
+                closeData.EquivalentAsset,
+                OrderFillType.FillOrKill,
+                $"Close positions: {string.Join(",", positionIds)}. {closeData.Comment}",
+                account.LegalEntity,
+                false,
+                OrderType.Market,
+                null,
+                null,
+                closeData.Originator,
+                initialParameters.EquivalentPrice,
+                initialParameters.FxPrice,
+                initialParameters.FxAssetPairId,
+                initialParameters.FxToAssetPairDirection,
+                OrderStatus.Placed,
+                closeData.AdditionalInfo,
+                closeData.CorrelationId,
+                positionIds,
+                closeData.ExternalProviderId);
             
             _orderPlacedEventChannel.SendEvent(this, new OrderPlacedEventArgs(order));
-              
-            order = await ExecuteOrderByMatchingEngineAsync(order, me, true, modality);
+
+            order = await ExecuteOrderByMatchingEngineAsync(order, me, true, closeData.Modality);
             
             if (order.Status != OrderStatus.Executed && order.Status != OrderStatus.ExecutionStarted)
             {
-                position.CancelClosing(_dateService.Now());
-                _log.WriteWarning(nameof(ClosePositionAsync), order, "Order was not executed. Closing canceled");
+                foreach (var position in closeData.Positions)
+                {
+                    position.CancelClosing(_dateService.Now());    
+                }
+
+                _log.WriteWarning(nameof(ClosePositionsAsync), order,
+                    $"Order {order.Id} was not executed. Closing of positions canceled");
             }
 
             return order;
         }
 
-        public async Task<Order[]> LiquidatePositionsAsync(IMatchingEngineBase me, string[] positionIds,
-            string correlationId)
+        public async Task<Order[]> LiquidatePositionsUsingSpecialWorkflowAsync(IMatchingEngineBase me, string[] positionIds,
+            string correlationId, string additionalInfo)
         {
             var positionsToClose = _ordersCache.Positions.GetAllPositions()
                 .Where(x => positionIds.Contains(x.Id)).ToList();
+
+            var positionGroups = positionsToClose
+                .GroupBy(p => (p.AssetPairId, p.AccountId, p.Direction, p
+                    .OpenMatchingEngineId, p.ExternalProviderId, p.EquivalentAsset))
+                .Where(gr => gr.Any())
+                .Select(gr => new PositionsCloseData(
+                    gr.ToList(),
+                    gr.Key.AccountId,
+                    gr.Key.AssetPairId,
+                    gr.Sum(x => x.Volume),
+                    gr.Key.OpenMatchingEngineId,
+                    gr.Key.ExternalProviderId,
+                    OriginatorType.System,
+                    additionalInfo,
+                    correlationId,
+                    gr.Key.EquivalentAsset,
+                    "Special Liquidation",
+                    me,
+                    OrderModality.Liquidation));
+            
             var failedPositionIds = new List<string>();
             
-            var closeOrderList = await Task.WhenAll(positionsToClose
-                .Select(async x =>
+            var closeOrderList = await Task.WhenAll(positionGroups
+                .Select(async group =>
                 {
                     try
                     {
-                        return await ClosePositionAsync(x.Id, OriginatorType.System, string.Empty, correlationId,
-                            "Special Liquidation", me, OrderModality.Liquidation);
-                    }
-                    catch (PositionNotFoundException)
-                    {
-                        return null; //swallow exception if position was already closed
+                        return await ClosePositionsAsync(group);
                     }
                     catch (Exception)
                     {
-                        failedPositionIds.Add(x.Id);
+                        failedPositionIds.AddRange(group.Positions.Select(p => p.Id));
                         return null;
                     }
                 }).Where(x => x != null));
             
             if (failedPositionIds.Any())
             {
-                throw new Exception($"Liquidation #{correlationId} failed to close these positions: {string.Join(", ", failedPositionIds)}");
+                throw new Exception($"Special liquidation #{correlationId} failed to close these positions: {string.Join(", ", failedPositionIds)}");
             }
 
             return closeOrderList;

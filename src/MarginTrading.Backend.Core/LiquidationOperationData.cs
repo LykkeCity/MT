@@ -13,5 +13,6 @@ namespace MarginTrading.Backend.Core
         public List<string> LiquidatedPositionIds { get; set; }
         public LiquidationType LiquidationType { get; set; }
         public OriginatorType OriginatorType { get; set; }
+        public string AdditionalInfo { get; set; }
     }
 }

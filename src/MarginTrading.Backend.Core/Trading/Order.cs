@@ -10,6 +10,8 @@ namespace MarginTrading.Backend.Core.Trading
 {
     public class Order : StatefulObject<OrderStatus, OrderCommand>
     {
+        private List<string> _positionsToBeClosed;
+        private string _parentPositionId;
 
         #region Properties
         
@@ -224,13 +226,35 @@ namespace MarginTrading.Backend.Core.Trading
         /// ID of parent order (for related orders)
         /// </summary>
         [JsonProperty]
-        public string ParentOrderId { get; private set; } 
-        
+        public string ParentOrderId { get; private set; }
+
         /// <summary>
         /// ID of parent position (for related orders)
         /// </summary>
         [JsonProperty]
-        public string ParentPositionId { get; private set; }
+        public string ParentPositionId
+        {
+            get => _parentPositionId;
+
+            //TODO: remove after version is applied and data is migrated
+            private set
+            {
+                _parentPositionId = value;
+
+                if (string.IsNullOrEmpty(value))
+                {
+                    return;
+                }
+                
+                if (_positionsToBeClosed == null)
+                    _positionsToBeClosed = new List<string>();
+
+                if (!_positionsToBeClosed.Contains(value))
+                {
+                    _positionsToBeClosed.Add(value);
+                }
+            }
+        }
 
         /// <summary>
         /// Order initiator
@@ -270,7 +294,15 @@ namespace MarginTrading.Backend.Core.Trading
         /// </summary>
         [JsonProperty]
         public string CorrelationId { get; private set; }
-        
+
+        [JsonProperty]
+        public List<string> PositionsToBeClosed
+        {
+            get => _positionsToBeClosed;
+
+            private set => _positionsToBeClosed = value ?? new List<string>();
+        }
+
         /// <summary>
         /// Order execution rank, calculated based on type and direction
         /// </summary>
@@ -293,6 +325,7 @@ namespace MarginTrading.Backend.Core.Trading
         {
             MatchedOrders = new MatchedOrderCollection();
             RelatedOrders = new List<RelatedOrderInfo>();
+            _positionsToBeClosed = new List<string>();
         }
 
         public Order(string id, long code, string assetPairId, decimal volume,
@@ -301,7 +334,8 @@ namespace MarginTrading.Backend.Core.Trading
             string legalEntity, bool forceOpen, OrderType orderType, string parentOrderId, string parentPositionId, 
             OriginatorType originator, decimal equivalentRate, decimal fxRate, 
             string fxAssetPairId, FxToAssetPairDirection fxToAssetPairDirection, OrderStatus status, 
-            string additionalInfo, string correlationId, string externalProviderId = null)
+            string additionalInfo, string correlationId, List<string> positionsToBeClosed = null, 
+            string externalProviderId = null)
         {
             Id = id;
             Code = code;
@@ -331,6 +365,9 @@ namespace MarginTrading.Backend.Core.Trading
             Status = status;
             AdditionalInfo = additionalInfo;
             CorrelationId = correlationId;
+            _positionsToBeClosed = positionsToBeClosed ?? (string.IsNullOrEmpty(parentPositionId)
+                                      ? new List<string>()
+                                      : new List<string> {parentPositionId});
             ExternalProviderId = externalProviderId;
             ExecutionRank = (byte) (OrderType.GetExecutionRank() | Direction.GetExecutionRank());
             SetExecutionSortRank();
@@ -449,6 +486,11 @@ namespace MarginTrading.Backend.Core.Trading
                 if (relinkFromOrderToPosition)
                 {
                     ParentPositionId = ParentOrderId;
+
+                    if (!PositionsToBeClosed.Contains(ParentOrderId))
+                    {
+                        PositionsToBeClosed.Add(ParentOrderId);
+                    }
                 }
             });
         }

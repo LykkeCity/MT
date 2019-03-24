@@ -258,7 +258,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         CreationTime = _dateService.Now(),
                         Comment = $"Resume after special liquidation {executionInfo.Id} finished",
                         IsCausedBySpecialLiquidation = true,
-                        CausationOperationId = executionInfo.Id
+                        CausationOperationId = executionInfo.Id,
+                        PositionsLiquidatedBySpecialLiquidation = executionInfo.Data.PositionIds
                     }, _cqrsContextNamesSettings.TradingEngine);
                 }
                 

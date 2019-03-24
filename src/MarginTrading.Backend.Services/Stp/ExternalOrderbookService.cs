@@ -104,7 +104,7 @@ namespace MarginTrading.Backend.Services.Stp
                 
                 var result = orderbooks.Select(p => (p.Key,
                         MatchBestPriceForOrderExecution(p.Value, volume, validateOppositeDirectionVolume)))
-                    .Where(p => p.Item2 != null);
+                    .Where(p => p.Item2 != null).ToArray();
 
                 return volume.GetOrderDirection() == OrderDirection.Buy
                     ? result.OrderBy(tuple => tuple.Item2).ToList()

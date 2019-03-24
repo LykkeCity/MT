@@ -122,47 +122,6 @@ namespace MarginTrading.Backend.Services
                 .Select(ch => new AccountStatsUpdateMessage {Accounts = ch.ToArray()});
         }
 
-        public async Task<List<Order>> CloseAccountOrders(string accountId, string correlationId)
-        {
-            var positions = _ordersCache.Positions.GetPositionsByAccountIds(accountId).ToArray();
-            var closedOrders = new List<Order>();
-
-            foreach (var position in positions)
-            {
-                try
-                {
-                    var closedOrder = await _tradingEngine.ClosePositionAsync(position.Id, OriginatorType.OnBehalf, "", 
-                        "Close orders for account");
-
-                    closedOrders.Add(closedOrder);
-                }
-                catch (Exception e)
-                {
-                    await _log.WriteWarningAsync(nameof(AccountManager), "CloseAccountActiveOrders",
-                        $"AccountId: {accountId}, OrderId: {position.Id}", $"Error closing order: {e.Message}");
-                }
-            }
-
-            var activeOrders = _ordersCache.Active.GetOrdersByAccountIds(accountId);
-            
-            foreach (var order in activeOrders)
-            {
-                try
-                {
-                    var closedOrder = _tradingEngine.CancelPendingOrder(order.Id,
-                        "Close orders for account", correlationId);
-                    closedOrders.Add(closedOrder);
-                }
-                catch (Exception e)
-                {
-                    await _log.WriteWarningAsync(nameof(AccountManager), "CloseAccountOrders",
-                        $"AccountId: {accountId}, OrderId: {order.Id}", $"Error cancelling order: {e.Message}");
-                }
-            }
-
-            return closedOrders;
-        }
-
         private MarginTradingAccount Convert(AccountContract accountContract)
         {
             return _convertService.Convert<AccountContract, MarginTradingAccount>(accountContract,

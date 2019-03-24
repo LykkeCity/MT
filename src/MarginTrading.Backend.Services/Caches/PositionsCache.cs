@@ -111,27 +111,21 @@ namespace MarginTrading.Backend.Services
 
         #region Getters
 
-        public Position GetPositionById(string orderId)
+        public Position GetPositionById(string positionId)
         {
-            if (TryGetPositionById(orderId, out var result))
+            if (TryGetPositionById(positionId, out var result))
                 return result;
 
-            throw new PositionNotFoundException(string.Format(MtMessages.CantGetPosition, orderId));
+            throw new PositionNotFoundException(string.Format(MtMessages.CantGetPosition, positionId));
         }
-
-        public bool TryGetPositionById(string orderId, out Position result)
+        
+        public bool TryGetPositionById(string positionId, out Position result)
         {
             _lockSlim.EnterReadLock();
 
             try
             {
-                if (!_positionsById.ContainsKey(orderId))
-                {
-                    result = null;
-                    return false;
-                }
-                result = _positionsById[orderId];
-                return true;
+                return _positionsById.TryGetValue(positionId, out result);
             }
             finally
             {

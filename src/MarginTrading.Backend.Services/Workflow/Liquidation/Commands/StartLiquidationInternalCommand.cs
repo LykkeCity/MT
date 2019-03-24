@@ -31,5 +31,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation.Commands
         
         [Key(7)]
         public OriginatorType OriginatorType { get; set; }
+        
+        [Key(8)]
+        public string AdditionalInfo { get; set; }
     }
 }

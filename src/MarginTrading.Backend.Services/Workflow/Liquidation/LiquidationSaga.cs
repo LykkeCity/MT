@@ -175,7 +175,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                     CreationTime = _dateService.Now(),
                     AccountId = executionInfo.Data.AccountId,
                     PositionIds = e.PositionIds,
-                    CausationOperationId = e.OperationId
+                    CausationOperationId = e.OperationId,
+                    AdditionalInfo = executionInfo.Data.AdditionalInfo
                 }, _cqrsContextNamesSettings.TradingEngine);
                 
                 _chaosKitty.Meow(
@@ -209,6 +210,10 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 if (!e.IsCausedBySpecialLiquidation)
                 {
                     executionInfo.Data.ProcessedPositionIds = executionInfo.Data.LiquidatedPositionIds;
+                }
+                else
+                {
+                    executionInfo.Data.LiquidatedPositionIds.AddRange(e.PositionsLiquidatedBySpecialLiquidation);
                 }
                 
                 ContinueOrFinishLiquidation(e.OperationId, executionInfo.Data, sender);
