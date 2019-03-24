@@ -124,7 +124,7 @@ namespace MarginTrading.Backend.Services
 
             if (tradingInstrument.DealMinLimit > 0 && Math.Abs(request.Volume) < tradingInstrument.DealMinLimit)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidVolume,
+                throw new ValidateOrderException(OrderRejectReason.MinOrderSizeLimit,
                     $"The minimum volume of a single order is limited to {tradingInstrument.DealMinLimit} {tradingInstrument.Instrument}.");
             }
 
@@ -594,8 +594,8 @@ namespace MarginTrading.Backend.Services
 
             if (tradingInstrument.DealMaxLimit > 0 && Math.Abs(volume) > tradingInstrument.DealMaxLimit)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidVolume,
-                    $"The volume of a single order is temporarily limited to {tradingInstrument.DealMaxLimit} {tradingInstrument.Instrument}.");
+                throw new ValidateOrderException(OrderRejectReason.MaxOrderSizeLimit,
+                    $"The volume of a single order is limited to {tradingInstrument.DealMaxLimit} {tradingInstrument.Instrument}.");
             }
 
             var existingPositionsVolume = _ordersCache.Positions.GetPositionsByInstrumentAndAccount(assetPairId, accountId)
@@ -604,8 +604,8 @@ namespace MarginTrading.Backend.Services
             if (tradingInstrument.PositionLimit > 0 &&
                 Math.Abs(existingPositionsVolume + volume) > tradingInstrument.PositionLimit)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidVolume,
-                    $"The volume of the net open position is temporarily limited to {tradingInstrument.PositionLimit} {tradingInstrument.Instrument}.");
+                throw new ValidateOrderException(OrderRejectReason.MaxPositionLimit,
+                    $"The volume of the net open position is limited to {tradingInstrument.PositionLimit} {tradingInstrument.Instrument}.");
             }
 
             if (shouldOpenNewPosition && volume < 0 && !tradingInstrument.ShortPosition)

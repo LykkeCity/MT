@@ -1,4 +1,7 @@
-﻿namespace MarginTrading.Backend.Contracts.Orders
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
+namespace MarginTrading.Backend.Contracts.Orders
 {
     /// <summary>
     /// The type of order

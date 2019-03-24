@@ -18,6 +18,10 @@
         InvalidValidity,
         TechnicalError,
         ParentPositionDoesNotExist,
-        ParentPositionIsNotActive
+        ParentPositionIsNotActive,
+        ShortPositionsDisabled,
+        MaxPositionLimit,
+        MinOrderSizeLimit,
+        MaxOrderSizeLimit,
     }
 }
