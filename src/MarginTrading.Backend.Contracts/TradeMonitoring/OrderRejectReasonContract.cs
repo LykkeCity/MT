@@ -23,5 +23,6 @@
         MaxPositionLimit,
         MinOrderSizeLimit,
         MaxOrderSizeLimit,
+        PendingRetriesThresholdExceeded,
     }
 }

@@ -135,9 +135,15 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                         _marginTradingSettings.ExchangeConnector == ExchangeConnectorType.FakeExchangeConnector
                             ? "Fake"
                             : _exchangeConnectorService.BaseUri.OriginalString;
+                    
                     _log.WriteError(
                         $"{nameof(StpMatchingEngine)}:{nameof(MatchOrderAsync)}:{connector}",
                         $"Internal order: {order.ToJson()}, External order model: {externalOrderModel.ToJson()}", e);
+
+                    if (orderType == OrderType.Limit)
+                    {
+                        return null;
+                    }
                 }
             }
 

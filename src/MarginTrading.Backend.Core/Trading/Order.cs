@@ -315,6 +315,12 @@ namespace MarginTrading.Backend.Core.Trading
         [JsonProperty]
         public decimal? ExecutionPriceRank { get; private set; }
         
+        /// <summary>
+        /// Number of pending order retries passed
+        /// </summary>
+        [JsonProperty]
+        public int PendingOrderRetriesCount { get; private set; }
+        
         #endregion
         
         /// <summary>
@@ -505,13 +511,18 @@ namespace MarginTrading.Backend.Core.Trading
             });
         }
         
-        public void CancelExecution(DateTime dateTime)
+        public void CancelExecution(DateTime dateTime, bool incrementPendingRetries = false)
         {
             ChangeState(OrderCommand.CancelExecution, () =>
             {
                 ExecutionStarted = null;
                 LastModified = dateTime;
                 MatchingEngineId = null;
+                
+                if (incrementPendingRetries)
+                {
+                    PendingOrderRetriesCount++;
+                }
             });
         }
         

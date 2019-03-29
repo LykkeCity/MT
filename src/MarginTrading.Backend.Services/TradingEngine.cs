@@ -11,6 +11,7 @@ using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
@@ -46,8 +47,9 @@ namespace MarginTrading.Backend.Services
         private readonly IIdentityGenerator _identityGenerator;
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly ICqrsSender _cqrsSender;
-        private readonly IEventChannel<StopOutEventArgs> _stopoutEventChannel;
+        private readonly IEventChannel<StopOutEventArgs> _stopOutEventChannel;
         private readonly IQuoteCacheService _quoteCacheService;
+        private readonly MarginTradingSettings _marginTradingSettings;
 
         public TradingEngine(
             IEventChannel<MarginCallEventArgs> marginCallEventChannel,
@@ -70,8 +72,9 @@ namespace MarginTrading.Backend.Services
             IIdentityGenerator identityGenerator,
             IAssetPairsCache assetPairsCache,
             ICqrsSender cqrsSender,
-            IEventChannel<StopOutEventArgs> stopoutEventChannel,
-            IQuoteCacheService quoteCacheService)
+            IEventChannel<StopOutEventArgs> stopOutEventChannel,
+            IQuoteCacheService quoteCacheService,
+            MarginTradingSettings marginTradingSettings)
         {
             _marginCallEventChannel = marginCallEventChannel;
             _orderPlacedEventChannel = orderPlacedEventChannel;
@@ -94,8 +97,9 @@ namespace MarginTrading.Backend.Services
             _identityGenerator = identityGenerator;
             _assetPairsCache = assetPairsCache;
             _cqrsSender = cqrsSender;
-            _stopoutEventChannel = stopoutEventChannel;
+            _stopOutEventChannel = stopOutEventChannel;
             _quoteCacheService = quoteCacheService;
+            _marginTradingSettings = marginTradingSettings;
         }
 
         public async Task<Order> PlaceOrderAsync(Order order)
@@ -301,6 +305,13 @@ namespace MarginTrading.Backend.Services
 
             var matchedOrders = await matchingEngine.MatchOrderAsync(order, shouldOpenNewPosition, modality);
 
+            if (matchedOrders == null)
+            {
+                RejectOrder(order, OrderRejectReason.PendingRetriesThresholdExceeded, 
+                    "Pending order execution retries threshold exceeded", "");
+                return order;
+            }
+            
             if (!matchedOrders.Any())
             {
                 RejectOrder(order, OrderRejectReason.NoLiquidity, "No orders to match", "");
@@ -366,7 +377,10 @@ namespace MarginTrading.Backend.Services
 
         private void RejectOrder(Order order, OrderRejectReason reason, string message, string comment = null)
         {
-            if (order.OrderType == OrderType.Market || reason != OrderRejectReason.NoLiquidity)
+            if (order.OrderType == OrderType.Market 
+                || !new [] {OrderRejectReason.NoLiquidity, OrderRejectReason.PendingRetriesThresholdExceeded}.Contains(reason)
+                || (reason == OrderRejectReason.PendingRetriesThresholdExceeded 
+                    && order.PendingOrderRetriesCount > _marginTradingSettings.PendingOrderRetriesThreshold))
             {
                 order.Reject(reason, message, comment, _dateService.Now());
             
@@ -375,7 +389,8 @@ namespace MarginTrading.Backend.Services
             //TODO: think how to avoid infinite loop
             else if (!_ordersCache.TryGetOrderById(order.Id, out _)) // all pending orders should be returned to active state if there is no liquidity
             {
-                order.CancelExecution(_dateService.Now());
+                order.CancelExecution(_dateService.Now(), true);
+                
                 _ordersCache.Active.Add(order);
                 _orderChangedEventChannel.SendEvent(this,
                     new OrderChangedEventArgs(order,
@@ -593,7 +608,7 @@ namespace MarginTrading.Backend.Services
                 OriginatorType = OriginatorType.System,
             });
 
-            _stopoutEventChannel.SendEvent(this, new StopOutEventArgs(account));
+            _stopOutEventChannel.SendEvent(this, new StopOutEventArgs(account));
         }
 
         public async Task<Order> ClosePositionsAsync(PositionsCloseData closeData)
