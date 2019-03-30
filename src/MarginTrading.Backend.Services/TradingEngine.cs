@@ -380,7 +380,7 @@ namespace MarginTrading.Backend.Services
             if (order.OrderType == OrderType.Market 
                 || !new [] {OrderRejectReason.NoLiquidity, OrderRejectReason.PendingRetriesThresholdExceeded}.Contains(reason)
                 || (reason == OrderRejectReason.PendingRetriesThresholdExceeded 
-                    && order.PendingOrderRetriesCount > _marginTradingSettings.PendingOrderRetriesThreshold))
+                    && order.PendingOrderRetriesCount >= _marginTradingSettings.PendingOrderRetriesThreshold))
             {
                 order.Reject(reason, message, comment, _dateService.Now());
             
