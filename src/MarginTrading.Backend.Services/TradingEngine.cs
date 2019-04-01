@@ -305,13 +305,6 @@ namespace MarginTrading.Backend.Services
 
             var matchedOrders = await matchingEngine.MatchOrderAsync(order, shouldOpenNewPosition, modality);
 
-            if (matchedOrders == null)
-            {
-                RejectOrder(order, OrderRejectReason.PendingRetriesThresholdExceeded, 
-                    "Pending order execution retries threshold exceeded", "");
-                return order;
-            }
-            
             if (!matchedOrders.Any())
             {
                 RejectOrder(order, OrderRejectReason.NoLiquidity, "No orders to match", "");
@@ -378,9 +371,8 @@ namespace MarginTrading.Backend.Services
         private void RejectOrder(Order order, OrderRejectReason reason, string message, string comment = null)
         {
             if (order.OrderType == OrderType.Market 
-                || !new [] {OrderRejectReason.NoLiquidity, OrderRejectReason.PendingRetriesThresholdExceeded}.Contains(reason)
-                || (reason == OrderRejectReason.PendingRetriesThresholdExceeded 
-                    && order.PendingOrderRetriesCount >= _marginTradingSettings.PendingOrderRetriesThreshold))
+                || reason != OrderRejectReason.NoLiquidity
+                || order.PendingOrderRetriesCount >= _marginTradingSettings.PendingOrderRetriesThreshold)
             {
                 order.Reject(reason, message, comment, _dateService.Now());
             
@@ -389,7 +381,7 @@ namespace MarginTrading.Backend.Services
             //TODO: think how to avoid infinite loop
             else if (!_ordersCache.TryGetOrderById(order.Id, out _)) // all pending orders should be returned to active state if there is no liquidity
             {
-                order.CancelExecution(_dateService.Now(), true);
+                order.CancelExecution(_dateService.Now());
                 
                 _ordersCache.Active.Add(order);
                 _orderChangedEventChannel.SendEvent(this,

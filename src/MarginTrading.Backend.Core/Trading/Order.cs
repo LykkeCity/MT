@@ -511,7 +511,7 @@ namespace MarginTrading.Backend.Core.Trading
             });
         }
         
-        public void CancelExecution(DateTime dateTime, bool incrementPendingRetries = false)
+        public void CancelExecution(DateTime dateTime)
         {
             ChangeState(OrderCommand.CancelExecution, () =>
             {
@@ -519,10 +519,7 @@ namespace MarginTrading.Backend.Core.Trading
                 LastModified = dateTime;
                 MatchingEngineId = null;
                 
-                if (incrementPendingRetries)
-                {
-                    PendingOrderRetriesCount++;
-                }
+                PendingOrderRetriesCount++;
             });
         }
         
