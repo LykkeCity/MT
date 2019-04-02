@@ -381,6 +381,15 @@ namespace MarginTrading.Backend.Services
             //TODO: think how to avoid infinite loop
             else if (!_ordersCache.TryGetOrderById(order.Id, out _)) // all pending orders should be returned to active state if there is no liquidity
             {
+                foreach (var positionId in order.PositionsToBeClosed)
+                {
+                    if (_ordersCache.Positions.TryGetPositionById(positionId, out var position)
+                        && position.Status == PositionStatus.Closing)
+                    {
+                        position.CancelClosing(_dateService.Now());
+                    }
+                }
+                
                 order.CancelExecution(_dateService.Now());
                 
                 _ordersCache.Active.Add(order);
