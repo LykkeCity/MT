@@ -211,11 +211,12 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 {
                     executionInfo.Data.ProcessedPositionIds = executionInfo.Data.LiquidatedPositionIds;
                 }
-                else
+                else if (e.PositionsLiquidatedBySpecialLiquidation != null && e
+                             .PositionsLiquidatedBySpecialLiquidation.Any())
                 {
                     executionInfo.Data.LiquidatedPositionIds.AddRange(e.PositionsLiquidatedBySpecialLiquidation);
                 }
-                
+
                 ContinueOrFinishLiquidation(e.OperationId, executionInfo.Data, sender);
                 
                 _chaosKitty.Meow(
