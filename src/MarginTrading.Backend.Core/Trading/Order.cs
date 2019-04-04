@@ -298,9 +298,9 @@ namespace MarginTrading.Backend.Core.Trading
         [JsonProperty]
         public List<string> PositionsToBeClosed
         {
-            get => _positionsToBeClosed;
+            get => _positionsToBeClosed.Distinct().ToList();
 
-            private set => _positionsToBeClosed = value ?? new List<string>();
+            private set => _positionsToBeClosed = value?.Distinct().ToList() ?? new List<string>();
         }
 
         /// <summary>
@@ -371,9 +371,9 @@ namespace MarginTrading.Backend.Core.Trading
             Status = status;
             AdditionalInfo = additionalInfo;
             CorrelationId = correlationId;
-            _positionsToBeClosed = positionsToBeClosed ?? (string.IsNullOrEmpty(parentPositionId)
-                                      ? new List<string>()
-                                      : new List<string> {parentPositionId});
+            _positionsToBeClosed = positionsToBeClosed?.Distinct().ToList() ?? (string.IsNullOrEmpty(parentPositionId)
+                                       ? new List<string>()
+                                       : new List<string> {parentPositionId});
             ExternalProviderId = externalProviderId;
             ExecutionRank = (byte) (OrderType.GetExecutionRank() | Direction.GetExecutionRank());
             SetExecutionSortRank();
