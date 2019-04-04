@@ -370,6 +370,18 @@ namespace MarginTrading.Backend.Services
 
         private void RejectOrder(Order order, OrderRejectReason reason, string message, string comment = null)
         {
+            if (reason != OrderRejectReason.ParentPositionIsNotActive)
+            {
+                foreach (var positionId in order.PositionsToBeClosed)
+                {
+                    if (_ordersCache.Positions.TryGetPositionById(positionId, out var position)
+                        && position.Status == PositionStatus.Closing)
+                    {
+                        position.CancelClosing(_dateService.Now());
+                    }
+                }
+            }
+
             if (order.OrderType == OrderType.Market 
                 || reason != OrderRejectReason.NoLiquidity
                 || order.PendingOrderRetriesCount >= _marginTradingSettings.PendingOrderRetriesThreshold)
@@ -381,15 +393,6 @@ namespace MarginTrading.Backend.Services
             //TODO: think how to avoid infinite loop
             else if (!_ordersCache.TryGetOrderById(order.Id, out _)) // all pending orders should be returned to active state if there is no liquidity
             {
-                foreach (var positionId in order.PositionsToBeClosed)
-                {
-                    if (_ordersCache.Positions.TryGetPositionById(positionId, out var position)
-                        && position.Status == PositionStatus.Closing)
-                    {
-                        position.CancelClosing(_dateService.Now());
-                    }
-                }
-                
                 order.CancelExecution(_dateService.Now());
                 
                 _ordersCache.Active.Add(order);
