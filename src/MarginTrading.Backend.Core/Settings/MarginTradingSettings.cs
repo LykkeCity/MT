@@ -14,9 +14,6 @@ namespace MarginTrading.Backend.Core.Settings
         [Optional]
         public string Env { get; set; }
 
-        [Optional]
-        public bool IsLive { get; set; }
-
         #endregion
         
         public string ApiKey { get; set; }

@@ -120,7 +120,7 @@ namespace MarginTrading.Backend.Services
         private IEnumerable<AccountStatsUpdateMessage> GenerateAccountsStatsUpdateMessages(
             IEnumerable<IMarginTradingAccount> accounts)
         {
-            return accounts.Select(a => a.ToRabbitMqContract(_marginSettings.IsLive)).Batch(100)
+            return accounts.Select(a => a.ToRabbitMqContract()).Batch(100)
                 .Select(ch => new AccountStatsUpdateMessage {Accounts = ch.ToArray()});
         }
 
