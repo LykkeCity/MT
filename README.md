@@ -85,9 +85,6 @@ Settings schema is:
       "OrderbookPrices": {
         "ExchangeName": "lykke.mt.pricefeed"
       },
-      "AccountChanged": {
-        "ExchangeName": "lykke.mt.account.changed"
-      },
       "AccountStopout": {
         "ExchangeName": "lykke.mt.account.stopout"
       },
