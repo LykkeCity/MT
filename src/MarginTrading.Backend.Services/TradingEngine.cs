@@ -241,25 +241,33 @@ namespace MarginTrading.Backend.Services
             if (order.PositionsToBeClosed.Any())
             {
                 var netVolume = 0M;
-                
+                var rejectReason = default(OrderRejectReason?); 
                 foreach (var positionId in order.PositionsToBeClosed)
                 {
                     if (!_ordersCache.Positions.TryGetPositionById(positionId, out var position))
                     {
-                        order.Reject(OrderRejectReason.ParentPositionDoesNotExist, "Related position does not exist", "", _dateService.Now());
-                        _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
-                        return order;
+                        rejectReason = OrderRejectReason.ParentPositionDoesNotExist;
+                        continue;
                     }
                     if (position.Status != PositionStatus.Active)
                     {
-                        order.Reject(OrderRejectReason.ParentPositionIsNotActive, "Related position is not active", "", _dateService.Now());
-                        _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
-                        return order;
+                        rejectReason = OrderRejectReason.ParentPositionIsNotActive;
+                        continue;
                     }
 
                     netVolume += position.Volume;
                     
                     position.StartClosing(_dateService.Now(), order.OrderType.GetCloseReason(), order.Originator, "");
+                }
+
+                if (netVolume == 0M && rejectReason.HasValue)
+                {
+                    order.Reject(rejectReason.Value, 
+                        rejectReason.Value == OrderRejectReason.ParentPositionDoesNotExist
+                        ? "Related position does not exist"
+                        : "Related position is not active", "", _dateService.Now());
+                    _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
+                    return order;
                 }
                 
                 // there is no any global lock of positions / orders, that's why it is possible to have concurrency 
