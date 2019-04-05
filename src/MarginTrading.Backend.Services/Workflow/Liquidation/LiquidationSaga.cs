@@ -230,52 +230,31 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         
         #region Private methods
 
-        private (string AssetPairId, PositionDirection Direction, string[] Positions)? GetLiquidationData(LiquidationOperationData data)
+        private (string AssetPairId, PositionDirection Direction, string[] Positions)? GetLiquidationData(
+            LiquidationOperationData data)
         {
             var positionsOnAccount = _ordersCache.Positions.GetPositionsByAccountIds(data.AccountId);
 
             //group positions and take only not processed, filtered and with open market
             var positionGroups = positionsOnAccount
-                .Where(p => !data.ProcessedPositionIds.Contains(p.Id) && 
+                .Where(p => !data.ProcessedPositionIds.Contains(p.Id) &&
                             (string.IsNullOrEmpty(data.AssetPairId) || p.AssetPairId == data.AssetPairId) &&
-                            (data.Direction == null || p.Direction == data.Direction))    
+                            (data.Direction == null || p.Direction == data.Direction))
                 .GroupBy(p => (p.AssetPairId, p.Direction))
                 .Where(gr => !_assetPairDayOffService.IsDayOff(gr.Key.AssetPairId))
                 .ToArray();
 
             IGrouping<(string AssetPairId, PositionDirection Direction), Position> targetPositions = null;
 
-            if (data.LiquidationType == LiquidationType.Mco && data.Direction.HasValue)
-            {
-                var groupsWithZeroInitialMargin = positionGroups.Where(gr => gr.Sum(p => p.GetMcoInitialMargin()) == 0)
-                    .Select(gr => gr.Key).ToHashSet();
+            //take positions from group with max margin used or max initially used margin
+            targetPositions = positionGroups
+                .OrderByDescending(gr => gr.Sum(p => Math.Max(p.GetMarginMaintenance(), p.GetInitialMargin())))
+                .FirstOrDefault();
 
-                if (groupsWithZeroInitialMargin.Any())
-                {
-                    _log.WriteWarningAsync(nameof(LiquidationSaga), nameof(GetLiquidationData),
-                        groupsWithZeroInitialMargin.ToJson(), $"Position groups with 0 initial margin were found");
-                }
-                
-                //order groups by MCO level
-                var orderedGroups = positionGroups
-                    .Where(gr => !groupsWithZeroInitialMargin.Contains(gr.Key))
-                    .OrderBy(gr => gr.Sum(p => p.GetMcoCurrentMargin()) / gr.Sum(p => p.GetMcoInitialMargin()));
-
-                //get worst group depending on direction
-                targetPositions = data.Direction == PositionDirection.Long
-                    ? orderedGroups.FirstOrDefault()
-                    : orderedGroups.LastOrDefault();
-            }
-            else
-            {
-                //take positions from group with max margin used
-                targetPositions = positionGroups.OrderByDescending(gr => gr.Sum(p => p.GetMarginMaintenance())).FirstOrDefault();
-            }
-            
             if (targetPositions == null)
                 return null;
-                
-            return (targetPositions.Key.AssetPairId, targetPositions.Key.Direction, 
+
+            return (targetPositions.Key.AssetPairId, targetPositions.Key.Direction,
                 targetPositions.Select(p => p.Id).ToArray());
         }
 
@@ -351,9 +330,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 return;
             }
 
-            if (accountLevel < AccountLevel.StopOut
-                || (data.LiquidationType == LiquidationType.Mco
-                    && data.ProcessedPositionIds.All(p => data.LiquidatedPositionIds.Contains(p))))
+            if (accountLevel < AccountLevel.StopOut)
             {
                 FinishWithReason($"Account margin level is {accountLevel}");
             }

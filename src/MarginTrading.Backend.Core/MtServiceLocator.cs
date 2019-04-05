@@ -10,6 +10,5 @@ namespace MarginTrading.Backend.Core
         public static IAccountUpdateService AccountUpdateService { get; set; }
         public static IAccountsCacheService AccountsCacheService { get; set; }
         public static ICommissionService SwapCommissionService { get; set; }
-        public static McoRulesSettings McoRules { get; set; }
     }
 }

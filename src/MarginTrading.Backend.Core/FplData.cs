@@ -14,15 +14,10 @@
         public int AccountBaseAssetAccuracy { get; set; }
         
         /// <summary>
-        /// Initial margin for ESMA MCO rule
+        /// Margin used for open of position
         /// </summary>
-        public decimal? McoInitialMargin { get; set; }
+        public decimal InitialMargin { get; set; }
         
-        /// <summary>
-        /// Current margin for ESMA MCO rule
-        /// </summary>
-        public decimal? McoCurrentMargin { get; set; }
-
         public int CalculatedHash { get; set; }
         public int ActualHash { get; set; }
     }

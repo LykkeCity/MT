@@ -157,7 +157,7 @@ namespace MarginTrading.Backend.Services
 
             if (!string.IsNullOrEmpty(account.LiquidationOperationId)
                 && (liquidationType == LiquidationType.Forced 
-                    || account.GetAccountLevel() != AccountLevel.StopOut))//MCO checks are done in the same method
+                    || account.GetAccountLevel() != AccountLevel.StopOut))
             {
                 _accountsCacheService.TryFinishLiquidation(accountId, reason, liquidationOperationId);
             }
@@ -190,6 +190,7 @@ namespace MarginTrading.Backend.Services
 
             account.AccountFpl.UsedMargin = Math.Round(activeOrdersMaintenanceMargin + pendingOrdersMargin, accuracy);
             account.AccountFpl.MarginInit = Math.Round(activeOrdersInitMargin + pendingOrdersMargin, accuracy);
+            account.AccountFpl.InitiallyUsedMargin = positions.Sum(p => p.GetInitialMargin());
             account.AccountFpl.OpenPositionsCount = positions.Count;
             account.AccountFpl.ActiveOrdersCount = pendingOrders.Count;
 
@@ -198,42 +199,7 @@ namespace MarginTrading.Backend.Services
             account.AccountFpl.MarginCall1Level = tradingCondition.MarginCall1;
             account.AccountFpl.MarginCall2Level = tradingCondition.MarginCall2;
             account.AccountFpl.StopOutLevel = tradingCondition.StopOut;
-
-            UpdateMcoLevel(account, positions);
-        }
-
-        private void UpdateMcoLevel(IMarginTradingAccount account, ICollection<Position> positions)
-        {
-            if (_marginTradingSettings.McoRules == null)
-                return;
-            
-            var initialMarginLong = 0m;
-            var initialMarginShort = 0m;
-            var currentMarginLong = 0m;
-            var currentMarginShort = 0m;
-
-            foreach (var position in positions)
-            {
-                if (position.Direction == PositionDirection.Long)
-                {
-                    initialMarginLong += position.GetMcoInitialMargin();
-                    currentMarginLong += position.GetMcoCurrentMargin();
-                }
-
-                if (position.Direction == PositionDirection.Short)
-                {
-                    initialMarginShort += position.GetMcoInitialMargin();
-                    currentMarginShort += position.GetMcoCurrentMargin();
-                }
-            }
-
-            account.AccountFpl.McoMarginUsageLevelLong = initialMarginLong > 0
-                ? currentMarginLong / initialMarginLong
-                : 0;
-
-            account.AccountFpl.McoMarginUsageLevelShort = initialMarginShort > 0
-                ? currentMarginShort / initialMarginShort
-                : 0;
+           
         }
 
         private ICollection<Position> GetPositions(string accountId)

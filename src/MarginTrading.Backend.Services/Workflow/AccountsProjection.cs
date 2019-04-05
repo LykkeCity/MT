@@ -25,7 +25,6 @@ namespace MarginTrading.Backend.Services.Workflow
     public class AccountsProjection
     {
         private readonly IAccountsCacheService _accountsCacheService;
-        private readonly IClientNotifyService _clientNotifyService;
         private readonly IEventChannel<AccountBalanceChangedEventArgs> _accountBalanceChangedEventChannel;
         private readonly IConvertService _convertService;
         private readonly IAccountUpdateService _accountUpdateService;
@@ -39,7 +38,6 @@ namespace MarginTrading.Backend.Services.Workflow
         
         public AccountsProjection(
             IAccountsCacheService accountsCacheService, 
-            IClientNotifyService clientNotifyService,
             IEventChannel<AccountBalanceChangedEventArgs> accountBalanceChangedEventChannel,
             IConvertService convertService, 
             IAccountUpdateService accountUpdateService,
@@ -50,7 +48,6 @@ namespace MarginTrading.Backend.Services.Workflow
             ILog log)
         {
             _accountsCacheService = accountsCacheService;
-            _clientNotifyService = clientNotifyService;
             _accountBalanceChangedEventChannel = accountBalanceChangedEventChannel;
             _convertService = convertService;
             _accountUpdateService = accountUpdateService;
@@ -96,7 +93,6 @@ namespace MarginTrading.Backend.Services.Workflow
                         {
                             _accountUpdateService.RemoveLiquidationStateIfNeeded(e.Account.Id,
                                 "Trading conditions changed");
-                            _clientNotifyService.NotifyAccountUpdated(updatedAccount);
                         }
                         break;
                     }

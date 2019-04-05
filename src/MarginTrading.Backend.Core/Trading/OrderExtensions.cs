@@ -77,16 +77,11 @@ namespace MarginTrading.Backend.Core
             return order.CalculateFplData().MarginInit;
         }
         
-        public static decimal GetMcoInitialMargin(this Position order)
+        public static decimal GetInitialMargin(this Position order)
         {
-            return order.CalculateFplData().McoInitialMargin ?? 0;
+            return order.CalculateFplData().InitialMargin;
         }
         
-        public static decimal GetMcoCurrentMargin(this Position order)
-        {
-            return order.CalculateFplData().McoCurrentMargin ?? 0;
-        }
-
         public static void UpdatePendingOrderMargin(this Position order)
         {
             if (order is Position orderInstance)

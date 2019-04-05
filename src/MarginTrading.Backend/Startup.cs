@@ -121,7 +121,6 @@ namespace MarginTrading.Backend
             MtServiceLocator.AccountUpdateService = ApplicationContainer.Resolve<IAccountUpdateService>();
             MtServiceLocator.AccountsCacheService = ApplicationContainer.Resolve<IAccountsCacheService>();
             MtServiceLocator.SwapCommissionService = ApplicationContainer.Resolve<ICommissionService>();
-            MtServiceLocator.McoRules = mtSettings.CurrentValue.MtBackend.McoRules;
             
             ApplicationContainer.Resolve<IScheduleSettingsCacheService>()
                 .UpdateAllSettingsAsync().GetAwaiter().GetResult();
