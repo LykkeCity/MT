@@ -176,7 +176,7 @@ namespace MarginTrading.Backend.Core
 
         public static decimal GetMarginAvailable(this IMarginTradingAccount account)
         {
-            return account.GetTotalCapital() - account.GetMarginInit();
+            return account.GetTotalCapital() - Math.Max(account.GetMarginInit(), account.GetUsedMargin());
         }
 
         public static decimal GetFrozenMargin(this IMarginTradingAccount account)
