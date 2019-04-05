@@ -340,42 +340,56 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceReceived,
                 SpecialLiquidationOperationState.ExternalOrderExecuted))
             {
-                var order = new OrderModel(
-                    tradeType: command.Volume > 0 ? TradeType.Buy : TradeType.Sell,
-                    orderType: OrderType.Market.ToType<Lykke.Service.ExchangeConnector.Client.Models.OrderType>(),
-                    timeInForce: TimeInForce.FillOrKill,
-                    volume: (double) Math.Abs(command.Volume),
-                    dateTime: _dateService.Now(),
-                    exchangeName: executionInfo.Data.ExternalProviderId,
-                    instrument: command.Instrument,
-                    price: (double?) command.Price,
-                    orderId: _identityGenerator.GenerateAlphanumericId());
-                
-                try
+                if (command.Volume == 0)
                 {
-                    var executionResult = await _exchangeConnectorService.CreateOrderAsync(order);
-
                     publisher.PublishEvent(new SpecialLiquidationOrderExecutedEvent
                     {
                         OperationId = command.OperationId,
                         CreationTime = _dateService.Now(),
-                        MarketMakerId = executionInfo.Data.ExternalProviderId,
-                        ExecutionTime = executionResult.Time,
-                        OrderId = executionResult.ExchangeOrderId,
+                        MarketMakerId = "ZeroNetVolume",
+                        ExecutionTime = _dateService.Now(),
+                        OrderId = _identityGenerator.GenerateGuid(),
                     });
                 }
-                catch (Exception exception)
+                else
                 {
-                    publisher.PublishEvent(new SpecialLiquidationOrderExecutionFailedEvent
+                    var order = new OrderModel(
+                        tradeType: command.Volume > 0 ? TradeType.Buy : TradeType.Sell,
+                        orderType: OrderType.Market.ToType<Lykke.Service.ExchangeConnector.Client.Models.OrderType>(),
+                        timeInForce: TimeInForce.FillOrKill,
+                        volume: (double) Math.Abs(command.Volume),
+                        dateTime: _dateService.Now(),
+                        exchangeName: executionInfo.Data.ExternalProviderId,
+                        instrument: command.Instrument,
+                        price: (double?) command.Price,
+                        orderId: _identityGenerator.GenerateAlphanumericId());
+                
+                    try
                     {
-                        OperationId = command.OperationId,
-                        CreationTime = _dateService.Now(),
-                        Reason = exception.Message
-                    });
-                    await _log.WriteWarningAsync(nameof(SpecialLiquidationCommandsHandler),
-                        nameof(ExecuteSpecialLiquidationOrderCommand),
-                        $"Failed to execute the order: {order.ToJson()}",
-                        exception);
+                        var executionResult = await _exchangeConnectorService.CreateOrderAsync(order);
+
+                        publisher.PublishEvent(new SpecialLiquidationOrderExecutedEvent
+                        {
+                            OperationId = command.OperationId,
+                            CreationTime = _dateService.Now(),
+                            MarketMakerId = executionInfo.Data.ExternalProviderId,
+                            ExecutionTime = executionResult.Time,
+                            OrderId = executionResult.ExchangeOrderId,
+                        });
+                    }
+                    catch (Exception exception)
+                    {
+                        publisher.PublishEvent(new SpecialLiquidationOrderExecutionFailedEvent
+                        {
+                            OperationId = command.OperationId,
+                            CreationTime = _dateService.Now(),
+                            Reason = exception.Message
+                        });
+                        await _log.WriteWarningAsync(nameof(SpecialLiquidationCommandsHandler),
+                            nameof(ExecuteSpecialLiquidationOrderCommand),
+                            $"Failed to execute the order: {order.ToJson()}",
+                            exception);
+                    }
                 }
                 
                 await _operationExecutionInfoRepository.Save(executionInfo);
