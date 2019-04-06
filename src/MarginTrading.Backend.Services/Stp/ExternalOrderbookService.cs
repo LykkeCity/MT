@@ -13,6 +13,7 @@ using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
+using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Common.Extensions;
@@ -34,7 +35,10 @@ namespace MarginTrading.Backend.Services.Stp
         private readonly IConvertService _convertService;
         private readonly ILog _log;
         private readonly MarginTradingSettings _marginTradingSettings;
+        private readonly IAssetPairDayOffService _assetPairDayOffService;
 
+        private const string EodExternalExchange = "EOD";
+        
         /// <summary>
         /// External orderbooks cache (AssetPairId, (Source, Orderbook))
         /// </summary>
@@ -55,7 +59,8 @@ namespace MarginTrading.Backend.Services.Stp
             IIdentityGenerator identityGenerator,
             IConvertService convertService,
             ILog log,
-            MarginTradingSettings marginTradingSettings)
+            MarginTradingSettings marginTradingSettings,
+            IAssetPairDayOffService assetPairDayOffService)
         {
             _bestPriceChangeEventChannel = bestPriceChangeEventChannel;
             _orderBookProviderApi = orderBookProviderApi;
@@ -66,6 +71,7 @@ namespace MarginTrading.Backend.Services.Stp
             _convertService = convertService;
             _log = log;
             _marginTradingSettings = marginTradingSettings;
+            _assetPairDayOffService = assetPairDayOffService;
         }
 
         public async Task InitializeAsync()
@@ -167,6 +173,16 @@ namespace MarginTrading.Backend.Services.Stp
                 || !CheckZeroQuote(orderbook))
                 return;
 
+            var isDayOff = _assetPairDayOffService.IsDayOff(orderbook.AssetPairId);
+            var isEodOrderbook = orderbook.ExchangeName == EodExternalExchange;
+
+            // we should process normal orderbook only if asset is currently tradable
+            // and process EOD orderbook only if asset is currently not tradable
+            if (isDayOff && !isEodOrderbook || !isDayOff && isEodOrderbook)
+            {
+                return;
+            }
+            
             orderbook.ApplyExchangeIdFromSettings(_marginTradingSettings.DefaultExternalExchangeId);
 
             var bba = new InstrumentBidAskPair
@@ -180,9 +196,7 @@ namespace MarginTrading.Backend.Services.Stp
             Dictionary<string, ExternalOrderBook> UpdateOrderbooksDictionary(string assetPairId,
                 Dictionary<string, ExternalOrderBook> dict)
             {
-                //TODO: add validation for processing EOD orderbooks
-                var exchangeName = orderbook.ExchangeName == "EOD" ? "StarWarrant" : orderbook.ExchangeName;
-                dict[exchangeName] = orderbook;
+                dict[orderbook.ExchangeName] = orderbook;
                 foreach (var pair in dict.Values.RequiredNotNullOrEmptyCollection(nameof(dict)))
                 {
                     // guaranteed to be sorted best first
