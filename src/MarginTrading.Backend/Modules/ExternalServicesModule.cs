@@ -17,7 +17,6 @@ using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Backend.Services.Stubs;
 using MarginTrading.Common.Services.Client;
 using MarginTrading.SettingsService.Contracts;
-using StackExchange.Redis;
 
 namespace MarginTrading.Backend.Modules
 {
@@ -135,6 +134,8 @@ namespace MarginTrading.Backend.Modules
 
             var orderBookServiceClientGenerator = HttpClientGenerator
                 .BuildForUrl(_settings.CurrentValue.OrderBookServiceClient.ServiceUrl)
+                .WithServiceName<LykkeErrorResponse>(
+                    $"MT OrderBook Service [{_settings.CurrentValue.OrderBookServiceClient.ServiceUrl}]")
                 .Create();
 
             builder.RegisterInstance(orderBookServiceClientGenerator.Generate<IOrderBookProviderApi>())

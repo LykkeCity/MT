@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 namespace MarginTrading.Backend.Core
@@ -7,8 +8,12 @@ namespace MarginTrading.Backend.Core
     {
         [CanBeNull]
         T Read<T>(string blobContainer, string key);
-        Task Write<T>(string blobContainer, string key, T obj);
         [ItemCanBeNull]
         Task<T> ReadAsync<T>(string blobContainer, string key);
+        
+        (T, DateTime) ReadWithTimestamp<T>(string blobContainer, string key);
+        Task<(T, DateTime)> ReadWithTimestampAsync<T>(string blobContainer, string key);
+        
+        Task Write<T>(string blobContainer, string key, T obj);
     }
 }

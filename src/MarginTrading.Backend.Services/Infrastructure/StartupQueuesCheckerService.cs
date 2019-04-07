@@ -20,7 +20,11 @@ namespace MarginTrading.Backend.Services.Infrastructure
         /// </summary>
         public void Check()
         {
-            foreach (var queueName in _marginTradingSettings.StartupQueuesChecker.QueueNames)
+            foreach (var queueName in new[]
+            {
+                _marginTradingSettings.StartupQueuesChecker.OrderHistoryQueueName,
+                _marginTradingSettings.StartupQueuesChecker.PositionHistoryQueueName
+            })
             {
                 var messageCount = RabbitMqService.GetMessageCount(
                     _marginTradingSettings.StartupQueuesChecker.ConnectionString,
@@ -30,7 +34,8 @@ namespace MarginTrading.Backend.Services.Infrastructure
                     continue;
                 }
 
-                throw new Exception($"All RabbitMQ queues from StartupQueuesChecker setting must be empty. Currently [{queueName}] contains [{messageCount}] messages.");
+                throw new Exception(
+                    $"All Order/Position broker queues from StartupQueuesChecker setting must be empty. Currently [{queueName}] contains [{messageCount}] messages.");
             }
         }
     }

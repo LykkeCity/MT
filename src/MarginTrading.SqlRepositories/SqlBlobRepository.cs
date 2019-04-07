@@ -11,11 +11,11 @@ namespace MarginTrading.SqlRepositories
     public class SqlBlobRepository : IMarginTradingBlobRepository
     {
         private const string TableName = "BlobData";
-        private const string CreateTableScript = "CREATE TABLE [{0}](" +
-                                                 "[BlobKey] [nvarchar] (64) NOT NULL PRIMARY KEY, " +
-                                                 "[Data] [nvarchar] (MAX) NULL, " +
-                                                 "[Timestamp] [DateTime] NULL " +
-                                                 ");";
+        private const string CreateTableScript = @"CREATE TABLE [{0}](
+[BlobKey] [nvarchar] (64) NOT NULL PRIMARY KEY, 
+[Data] [nvarchar] (MAX) NULL, 
+[Timestamp] [DateTime] NULL 
+);";
         
         private readonly string _connectionString;
         
@@ -46,6 +46,25 @@ namespace MarginTrading.SqlRepositories
                     return default(T);
                 
                 return JsonConvert.DeserializeObject<T>(data); 
+            }
+        }
+
+        public (T, DateTime) ReadWithTimestamp<T>(string blobContainer, string key)
+        {
+            return ReadWithTimestampAsync<T>(blobContainer, key).GetAwaiter().GetResult();
+        }
+
+        public async Task<(T, DateTime)> ReadWithTimestampAsync<T>(string blobContainer, string key)
+        {
+            using (var conn = new SqlConnection(_connectionString))
+            {
+                var (value, timestamp) = (await conn.QueryAsync<(string value, DateTime timestamp)>(
+                    $"SELECT Data, Timestamp FROM {TableName} WHERE BlobKey=@blobKey",
+                    new {blobKey = $"{blobContainer}_{key}"})).SingleOrDefault();
+
+                return string.IsNullOrEmpty(value)
+                    ? (default, default)
+                    : (JsonConvert.DeserializeObject<T>(value), timestamp);
             }
         }
 

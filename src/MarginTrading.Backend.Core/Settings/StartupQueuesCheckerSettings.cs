@@ -8,6 +8,8 @@ namespace MarginTrading.Backend.Core.Settings
     {
         public string ConnectionString { get; set; }
         
-        public List<string> QueueNames { get; set; }
+        public string OrderHistoryQueueName { get; set; }
+        
+        public string PositionHistoryQueueName { get; set; }
     }
 }

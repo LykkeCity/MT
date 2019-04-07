@@ -16,5 +16,13 @@ namespace MarginTrading.Backend.Core.Settings
         public string StateConnString { get; set; }
         
         public string SqlConnectionString { get; set; }
+        
+        public string OrdersHistorySqlConnectionString { get; set; }
+        
+        public string OrdersHistoryTableName { get; set; }
+        
+        public string PositionsHistorySqlConnectionString { get; set; }
+        
+        public string PositionsHistoryTableName { get; set; }
     }
 }
