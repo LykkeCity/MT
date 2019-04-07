@@ -180,16 +180,16 @@ namespace MarginTrading.Backend.Services
             account.AccountFpl.CalculatedHash = account.AccountFpl.ActualHash;
             
             var accuracy = _assetsCache.GetAssetAccuracy(account.BaseAssetId);
-            var activeOrdersMaintenanceMargin = positions.Sum(item => item.GetMarginMaintenance());
-            var activeOrdersInitMargin = positions.Sum(item => item.GetMarginInit());
+            var positionsMaintenanceMargin = positions.Sum(item => item.GetMarginMaintenance());
+            var positionsInitMargin = positions.Sum(item => item.GetMarginInit());
             var pendingOrdersMargin = 0;// pendingOrders.Sum(item => item.GetMarginInit());
 
             account.AccountFpl.PnL = Math.Round(positions.Sum(x => x.GetTotalFpl()), accuracy);
             account.AccountFpl.UnrealizedDailyPnl =
                 Math.Round(positions.Sum(x => x.GetTotalFpl() - x.ChargedPnL), accuracy);
 
-            account.AccountFpl.UsedMargin = Math.Round(activeOrdersMaintenanceMargin + pendingOrdersMargin, accuracy);
-            account.AccountFpl.MarginInit = Math.Round(activeOrdersInitMargin + pendingOrdersMargin, accuracy);
+            account.AccountFpl.UsedMargin = Math.Round(positionsMaintenanceMargin + pendingOrdersMargin, accuracy);
+            account.AccountFpl.MarginInit = Math.Round(positionsInitMargin + pendingOrdersMargin, accuracy);
             account.AccountFpl.InitiallyUsedMargin = positions.Sum(p => p.GetInitialMargin());
             account.AccountFpl.OpenPositionsCount = positions.Count;
             account.AccountFpl.ActiveOrdersCount = pendingOrders.Count;
