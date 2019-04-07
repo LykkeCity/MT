@@ -194,7 +194,6 @@ namespace MarginTrading.Backend
             builder.RegisterModule(new BackendMigrationsModule());
             builder.RegisterModule(new CqrsModule(settings.CurrentValue.Cqrs, LogLocator.CommonLog, settings.CurrentValue));
 
-            builder.RegisterBuildCallback(c => c.Resolve<DeduplicationManager>());
             builder.RegisterBuildCallback(c => c.Resolve<TradingInstrumentsManager>());
             builder.RegisterBuildCallback(c => c.Resolve<OrderBookSaveService>());
             builder.RegisterBuildCallback(async c => await c.Resolve<IExternalOrderbookService>().InitializeAsync());
@@ -293,11 +292,13 @@ namespace MarginTrading.Backend
 
         private void RunHealthChecks(MarginTradingSettings marginTradingSettings)
         {
-            var deduplicationManager = new DeduplicationManager(new DateService(), 
-                LogLocator.CommonLog,
-                marginTradingSettings);
-            deduplicationManager.Start();
-         
+            //todo return DeduplicationService reference to container and register it
+            var deduplicationService =
+                new StartupDeduplicationService(new DateService(), LogLocator.CommonLog, marginTradingSettings);
+            deduplicationService.Start();
+            
+            new StartupQueuesCheckerService(marginTradingSettings)
+                .Check();
             
         }
     }

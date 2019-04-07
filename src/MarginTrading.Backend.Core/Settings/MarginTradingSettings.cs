@@ -1,6 +1,7 @@
 ﻿using System;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
+using Lykke.RabbitMqBroker.Subscriber;
 using Lykke.SettingsReader.Attributes;
 using MarginTrading.Common.Settings;
 using RabbitMqSettings = MarginTrading.Common.RabbitMq.RabbitMqSettings;
@@ -87,5 +88,7 @@ namespace MarginTrading.Backend.Core.Settings
 
         [Optional]
         public TimeSpan DeduplicationTimestampPeriod { get; set; } = TimeSpan.FromSeconds(1);
+        
+        public StartupQueuesCheckerSettings StartupQueuesChecker { get; set; }
     }
 }

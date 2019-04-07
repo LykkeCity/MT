@@ -1,15 +1,18 @@
 using System;
 using System.Threading.Tasks;
-using Autofac;
 using Common;
 using Common.Log;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Common.Services;
 using StackExchange.Redis;
 
-namespace MarginTrading.Backend.Services
+namespace MarginTrading.Backend.Services.Infrastructure
 {
-    public class DeduplicationManager : TimerPeriod
+    /// <inheritdoc />
+    /// <summary>
+    /// Check that no instance is currently running. Save current timestamp to Redis.
+    /// </summary>
+    public class StartupDeduplicationService : TimerPeriod
     {
         private const string ValueKey = "TradingEngine:DeduplicationTimestamp";
         
@@ -17,10 +20,10 @@ namespace MarginTrading.Backend.Services
         private readonly IDatabase _redisDatabase;
         private readonly MarginTradingSettings _marginTradingSettings;
 
-        public DeduplicationManager(IDateService dateService,
+        public StartupDeduplicationService(IDateService dateService,
             ILog log,
             MarginTradingSettings marginTradingSettings)
-            : base(nameof(DeduplicationManager),
+            : base(nameof(StartupDeduplicationService),
                 (int) marginTradingSettings.DeduplicationTimestampPeriod.TotalMilliseconds,
                 log)
         {
