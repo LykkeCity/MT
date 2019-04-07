@@ -1,4 +1,5 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.SettingsReader.Attributes;
 using MarginTrading.Common.Settings;
@@ -80,5 +81,11 @@ namespace MarginTrading.Backend.Core.Settings
         
         [Optional]
         public string DefaultExternalExchangeId { get; set; }
+
+        [UsedImplicitly(ImplicitUseKindFlags.Assign)]
+        public RedisSettings RedisSettings { get; set; }
+
+        [Optional]
+        public TimeSpan DeduplicationTimestampPeriod { get; set; } = TimeSpan.FromSeconds(1);
     }
 }

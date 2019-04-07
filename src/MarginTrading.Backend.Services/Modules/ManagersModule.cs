@@ -61,6 +61,11 @@ namespace MarginTrading.Backend.Services.Modules
                 .AsSelf()
                 .As<IStartable>()
                 .SingleInstance();
+
+//            builder.RegisterType<DeduplicationManager>()
+//                .AsSelf()
+//                .SingleInstance();
+//            .OnActivated(args => args.Instance.Start());
         }
     }
 }

@@ -44,6 +44,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using StackExchange.Redis;
 using GlobalErrorHandlerMiddleware = MarginTrading.Backend.Middleware.GlobalErrorHandlerMiddleware;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
@@ -110,6 +111,8 @@ namespace MarginTrading.Backend
             Console.WriteLine($"IsLive: {mtSettings.Nested(s => s.MtBackend).CurrentValue.IsLive}");
 
             SetupLoggers(Configuration, services, mtSettings);
+
+            RunHealthChecks(mtSettings.CurrentValue.MtBackend);
 
             RegisterModules(builder, mtSettings, Environment);
 
@@ -191,6 +194,7 @@ namespace MarginTrading.Backend
             builder.RegisterModule(new BackendMigrationsModule());
             builder.RegisterModule(new CqrsModule(settings.CurrentValue.Cqrs, LogLocator.CommonLog, settings.CurrentValue));
 
+            builder.RegisterBuildCallback(c => c.Resolve<DeduplicationManager>());
             builder.RegisterBuildCallback(c => c.Resolve<TradingInstrumentsManager>());
             builder.RegisterBuildCallback(c => c.Resolve<OrderBookSaveService>());
             builder.RegisterBuildCallback(async c => await c.Resolve<IExternalOrderbookService>().InitializeAsync());
@@ -285,6 +289,16 @@ namespace MarginTrading.Backend
             JobManager.Initialize(registry);
             
             ApplicationContainer.Resolve<IOvernightMarginService>().ScheduleNext();
+        }
+
+        private void RunHealthChecks(MarginTradingSettings marginTradingSettings)
+        {
+            var deduplicationManager = new DeduplicationManager(new DateService(), 
+                LogLocator.CommonLog,
+                marginTradingSettings);
+            deduplicationManager.Start();
+         
+            
         }
     }
 }

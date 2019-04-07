@@ -17,6 +17,7 @@ using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Backend.Services.Stubs;
 using MarginTrading.Common.Services.Client;
 using MarginTrading.SettingsService.Contracts;
+using StackExchange.Redis;
 
 namespace MarginTrading.Backend.Modules
 {
@@ -51,7 +52,6 @@ namespace MarginTrading.Backend.Modules
                     .SingleInstance();
             }
             
-
             #region Client Account Service
             
             if (_settings.CurrentValue.ClientAccountServiceClient != null)
@@ -71,7 +71,6 @@ namespace MarginTrading.Backend.Modules
             
             #endregion
             
-            
             #region Email Sender
 
             if (_settings.CurrentValue.EmailSender != null)
@@ -86,7 +85,6 @@ namespace MarginTrading.Backend.Modules
             }
             
             #endregion
-            
             
             #region MT Settings
 
@@ -119,7 +117,6 @@ namespace MarginTrading.Backend.Modules
                 .As<IServiceMaintenanceApi>().SingleInstance();
 
             #endregion
-
 
             #region MT Accounts Management
 
