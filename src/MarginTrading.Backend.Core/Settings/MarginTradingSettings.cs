@@ -83,6 +83,9 @@ namespace MarginTrading.Backend.Core.Settings
         [Optional]
         public string DefaultExternalExchangeId { get; set; }
 
+        [Optional]
+        public int PendingOrderRetriesThreshold { get; set; } = 100;
+
         [UsedImplicitly(ImplicitUseKindFlags.Assign)]
         public RedisSettings RedisSettings { get; set; }
 

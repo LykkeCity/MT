@@ -11,6 +11,7 @@ using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
@@ -46,8 +47,9 @@ namespace MarginTrading.Backend.Services
         private readonly IIdentityGenerator _identityGenerator;
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly ICqrsSender _cqrsSender;
-        private readonly IEventChannel<StopOutEventArgs> _stopoutEventChannel;
+        private readonly IEventChannel<StopOutEventArgs> _stopOutEventChannel;
         private readonly IQuoteCacheService _quoteCacheService;
+        private readonly MarginTradingSettings _marginTradingSettings;
 
         public TradingEngine(
             IEventChannel<MarginCallEventArgs> marginCallEventChannel,
@@ -70,8 +72,9 @@ namespace MarginTrading.Backend.Services
             IIdentityGenerator identityGenerator,
             IAssetPairsCache assetPairsCache,
             ICqrsSender cqrsSender,
-            IEventChannel<StopOutEventArgs> stopoutEventChannel,
-            IQuoteCacheService quoteCacheService)
+            IEventChannel<StopOutEventArgs> stopOutEventChannel,
+            IQuoteCacheService quoteCacheService,
+            MarginTradingSettings marginTradingSettings)
         {
             _marginCallEventChannel = marginCallEventChannel;
             _orderPlacedEventChannel = orderPlacedEventChannel;
@@ -94,8 +97,9 @@ namespace MarginTrading.Backend.Services
             _identityGenerator = identityGenerator;
             _assetPairsCache = assetPairsCache;
             _cqrsSender = cqrsSender;
-            _stopoutEventChannel = stopoutEventChannel;
+            _stopOutEventChannel = stopOutEventChannel;
             _quoteCacheService = quoteCacheService;
+            _marginTradingSettings = marginTradingSettings;
         }
 
         public async Task<Order> PlaceOrderAsync(Order order)
@@ -237,25 +241,33 @@ namespace MarginTrading.Backend.Services
             if (order.PositionsToBeClosed.Any())
             {
                 var netVolume = 0M;
-                
+                var rejectReason = default(OrderRejectReason?); 
                 foreach (var positionId in order.PositionsToBeClosed)
                 {
                     if (!_ordersCache.Positions.TryGetPositionById(positionId, out var position))
                     {
-                        order.Reject(OrderRejectReason.ParentPositionDoesNotExist, "Related position does not exist", "", _dateService.Now());
-                        _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
-                        return order;
+                        rejectReason = OrderRejectReason.ParentPositionDoesNotExist;
+                        continue;
                     }
                     if (position.Status != PositionStatus.Active)
                     {
-                        order.Reject(OrderRejectReason.ParentPositionIsNotActive, "Related position is not active", "", _dateService.Now());
-                        _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
-                        return order;
+                        rejectReason = OrderRejectReason.ParentPositionIsNotActive;
+                        continue;
                     }
 
                     netVolume += position.Volume;
                     
                     position.StartClosing(_dateService.Now(), order.OrderType.GetCloseReason(), order.Originator, "");
+                }
+
+                if (netVolume == 0M && rejectReason.HasValue)
+                {
+                    order.Reject(rejectReason.Value, 
+                        rejectReason.Value == OrderRejectReason.ParentPositionDoesNotExist
+                        ? "Related position does not exist"
+                        : "Related position is not active", "", _dateService.Now());
+                    _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
+                    return order;
                 }
                 
                 // there is no any global lock of positions / orders, that's why it is possible to have concurrency 
@@ -366,7 +378,21 @@ namespace MarginTrading.Backend.Services
 
         private void RejectOrder(Order order, OrderRejectReason reason, string message, string comment = null)
         {
-            if (order.OrderType == OrderType.Market || reason != OrderRejectReason.NoLiquidity)
+            if (reason != OrderRejectReason.ParentPositionIsNotActive)
+            {
+                foreach (var positionId in order.PositionsToBeClosed)
+                {
+                    if (_ordersCache.Positions.TryGetPositionById(positionId, out var position)
+                        && position.Status == PositionStatus.Closing)
+                    {
+                        position.CancelClosing(_dateService.Now());
+                    }
+                }
+            }
+
+            if (order.OrderType == OrderType.Market 
+                || reason != OrderRejectReason.NoLiquidity
+                || order.PendingOrderRetriesCount >= _marginTradingSettings.PendingOrderRetriesThreshold)
             {
                 order.Reject(reason, message, comment, _dateService.Now());
             
@@ -376,6 +402,7 @@ namespace MarginTrading.Backend.Services
             else if (!_ordersCache.TryGetOrderById(order.Id, out _)) // all pending orders should be returned to active state if there is no liquidity
             {
                 order.CancelExecution(_dateService.Now());
+                
                 _ordersCache.Active.Add(order);
                 _orderChangedEventChannel.SendEvent(this,
                     new OrderChangedEventArgs(order,
@@ -593,7 +620,7 @@ namespace MarginTrading.Backend.Services
                 OriginatorType = OriginatorType.System,
             });
 
-            _stopoutEventChannel.SendEvent(this, new StopOutEventArgs(account));
+            _stopOutEventChannel.SendEvent(this, new StopOutEventArgs(account));
         }
 
         public async Task<Order> ClosePositionsAsync(PositionsCloseData closeData)
