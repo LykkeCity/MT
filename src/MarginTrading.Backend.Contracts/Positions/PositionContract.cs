@@ -50,5 +50,6 @@ namespace MarginTrading.Backend.Contracts.Positions
         public DateTime? LastModified { get; set; }
         public decimal TotalPnL { get; set; }
         public decimal ChargedPnl { get; set; }
+        public string AdditionalInfo { get; set; }
     }
 }
