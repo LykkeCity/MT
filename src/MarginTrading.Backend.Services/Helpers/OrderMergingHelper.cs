@@ -53,9 +53,9 @@ namespace MarginTrading.Backend.Services.Helpers
                 accountId: orderHistory.AccountId,
                 tradingConditionId: orderHistory.TradingConditionId,
                 accountAssetId: orderHistory.AccountAssetId,
-                price: orderHistory.ExecutionPrice,
+                price: orderHistory.ExpectedOpenPrice,
                 equivalentAsset: orderHistory.EquivalentAsset,
-                fillType: OrderFillType.FillOrKill, //todo ??
+                fillType: OrderFillType.FillOrKill, //todo we've got only FOK now
                 comment: orderHistory.Comment,
                 legalEntity: orderHistory.LegalEntity,
                 forceOpen: orderHistory.ForceOpen,
@@ -65,8 +65,8 @@ namespace MarginTrading.Backend.Services.Helpers
                 originator: orderHistory.Originator,
                 equivalentRate: orderHistory.EquivalentRate,
                 fxRate: orderHistory.FxRate,
-                fxAssetPairId: "SymmetricAssetPair", //todo ??
-                fxToAssetPairDirection: 0, //todo ??
+                fxAssetPairId: string.Empty, //todo will be recalculated outside
+                fxToAssetPairDirection: FxToAssetPairDirection.Straight, //todo this too
                 status: orderHistory.Status,
                 additionalInfo: orderHistory.AdditionalInfo,
                 correlationId: orderHistory.CorrelationId,
@@ -80,17 +80,71 @@ namespace MarginTrading.Backend.Services.Helpers
         /// <summary>
         /// Return true if there was difference, false if items were the same.
         /// </summary>
-        public static bool Merge(this Position position, IPositionHistory positionHistory, out Position result)
+        public static bool Merge(this Position position, IPositionHistory positionHistory)
         {
-            result = null;
-            return false;
+            return position.SetIfDiffer(new Dictionary<string, object>
+            {
+                //todo
+            });
         }
 
         public static Position FromHistory(this IPositionHistory positionHistory)
         {
             return new Position(
-
+                id: positionHistory.Id,
+                code: positionHistory.Code,
+                assetPairId: positionHistory.AssetPairId,
+                volume: positionHistory.Volume,
+                accountId: positionHistory.AccountId,
+                tradingConditionId: positionHistory.TradingConditionId,
+                accountAssetId: positionHistory.AccountAssetId,
+                expectedOpenPrice: positionHistory.ExpectedOpenPrice,
+                openMatchingEngineId: positionHistory.OpenMatchingEngineId,
+                openDate: positionHistory.OpenDate,
+                openTradeId: positionHistory.OpenTradeId,
+                openOrderType: OrderType.Market, //todo ???
+                openOrderVolume: 0, //todo ??
+                openPrice: positionHistory.OpenPrice,
+                openFxPrice: positionHistory.OpenFxPrice,
+                equivalentAsset: positionHistory.EquivalentAsset,
+                openPriceEquivalent: positionHistory.OpenPriceEquivalent,
+                relatedOrders: positionHistory.RelatedOrders,
+                legalEntity: positionHistory.LegalEntity,
+                openOriginator: positionHistory.OpenOriginator,
+                externalProviderId: positionHistory.ExternalProviderId,
+                fxAssetPairId: string.Empty, // todo will be recalculated outside
+                fxToAssetPairDirection: FxToAssetPairDirection.Straight, // todo this too
+                additionalInfo: "" //todo ??
             );
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

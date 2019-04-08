@@ -15,6 +15,7 @@ namespace MarginTrading.Backend.Core.Orders
         public OrderDirection Direction { get; set; }
         public OrderType Type { get; set; }
         public OrderStatus Status { get; set; }
+        public OrderFillType FillType { get; set; }
         public OriginatorType Originator { get; set; }
         public OriginatorType? CancellationOriginator { get; set; }
         public decimal Volume { get; set; }

@@ -20,6 +20,7 @@ namespace MarginTrading.Backend.Services
         private readonly IMarginTradingBlobRepository _blobRepository;
         private readonly IOrdersHistoryRepository _ordersHistoryRepository;
         private readonly IPositionsHistoryRepository _positionsHistoryRepository;
+        private readonly ICfdCalculatorService _cfdCalculatorService;
         private readonly ILog _log;
         public const string OrdersBlobName= "orders";
         public const string PositionsBlobName= "positions";
@@ -28,6 +29,7 @@ namespace MarginTrading.Backend.Services
             IMarginTradingBlobRepository blobRepository,
             IOrdersHistoryRepository ordersHistoryRepository,
             IPositionsHistoryRepository positionsHistoryRepository,
+            ICfdCalculatorService cfdCalculatorService,
             MarginTradingSettings marginTradingSettings,
             ILog log) 
             : base(nameof(OrderCacheManager), marginTradingSettings.BlobPersistence.OrdersDumpPeriodMilliseconds, log)
@@ -36,6 +38,7 @@ namespace MarginTrading.Backend.Services
             _blobRepository = blobRepository;
             _ordersHistoryRepository = ordersHistoryRepository;
             _positionsHistoryRepository = positionsHistoryRepository;
+            _cfdCalculatorService = cfdCalculatorService;
             _log = log;
         }
 
@@ -121,7 +124,7 @@ namespace MarginTrading.Backend.Services
 
             _log.WriteInfo(nameof(OrderCacheManager), nameof(InferInitDataFromBlobAndHistory),
                 $"Initializing cache with [{ordersResult.Count}] orders and [{positionsResult.Count}] positions.");
-            
+
             _orderCache.InitOrders(ordersResult, positionsResult);
             
             if (orderIdsChangedFromHistory.Any() || positionIdsChangedFromHistory.Any())
@@ -154,8 +157,6 @@ namespace MarginTrading.Backend.Services
                     && order.Merge(orderHistory))
                 {
                     changedIds.Add(id);
-                    result.Add(order);
-                    continue;
                 }
                 result.Add(order);
             }
@@ -178,11 +179,9 @@ namespace MarginTrading.Backend.Services
             foreach (var (id, position) in blobPositions)
             {
                 if (positionSnapshots.TryGetValue(id, out var positionHistory)
-                    && position.Merge(positionHistory, out var mergeResult))
+                    && position.Merge(positionHistory))
                 {
                     changedIds.Add(id);
-                    result.Add(mergeResult);
-                    continue;
                 }
                 result.Add(position);
             }

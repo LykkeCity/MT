@@ -49,6 +49,11 @@ namespace MarginTrading.Backend.Core.Orders
         /// The order status (Active, Inactive, Executed, Canceled, Rejected or Expired)
         /// </summary>
         OrderStatus Status { get; }
+        
+        /// <summary>
+        /// Order fill type
+        /// </summary>
+        OrderFillType FillType { get; }
 
         /// <summary>
         /// Who created the order (Investor, System or OnBehalf)

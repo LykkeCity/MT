@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using Common;
+using JetBrains.Annotations;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.Orders;
 
 namespace MarginTrading.SqlRepositories.Entities
 {
+    [UsedImplicitly]
     public class OrderHistoryEntity : IOrderHistory
     {
         public string Id { get; set; }
@@ -18,6 +20,8 @@ namespace MarginTrading.SqlRepositories.Entities
         OrderType IOrderHistory.Type => Type.ParseEnum<OrderType>();
         public string Type { get; set; }
         OrderStatus IOrderHistory.Status => Status.ParseEnum<OrderStatus>();
+        public string FillType { get; set; }
+        OrderFillType IOrderHistory.FillType => FillType.ParseEnum<OrderFillType>();
         public string Status { get; set; }
         OriginatorType IOrderHistory.Originator => Originator.ParseEnum<OriginatorType>();
         public string Originator { get; set; }
