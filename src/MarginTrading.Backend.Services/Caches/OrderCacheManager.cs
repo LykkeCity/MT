@@ -5,14 +5,13 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Helpers;
 
-namespace MarginTrading.Backend.Services
+namespace MarginTrading.Backend.Services.Caches
 {
     public class OrderCacheManager : TimerPeriod
     {
@@ -20,7 +19,6 @@ namespace MarginTrading.Backend.Services
         private readonly IMarginTradingBlobRepository _blobRepository;
         private readonly IOrdersHistoryRepository _ordersHistoryRepository;
         private readonly IPositionsHistoryRepository _positionsHistoryRepository;
-        private readonly ICfdCalculatorService _cfdCalculatorService;
         private readonly ILog _log;
         public const string OrdersBlobName= "orders";
         public const string PositionsBlobName= "positions";
@@ -29,7 +27,6 @@ namespace MarginTrading.Backend.Services
             IMarginTradingBlobRepository blobRepository,
             IOrdersHistoryRepository ordersHistoryRepository,
             IPositionsHistoryRepository positionsHistoryRepository,
-            ICfdCalculatorService cfdCalculatorService,
             MarginTradingSettings marginTradingSettings,
             ILog log) 
             : base(nameof(OrderCacheManager), marginTradingSettings.BlobPersistence.OrdersDumpPeriodMilliseconds, log)
@@ -38,7 +35,6 @@ namespace MarginTrading.Backend.Services
             _blobRepository = blobRepository;
             _ordersHistoryRepository = ordersHistoryRepository;
             _positionsHistoryRepository = positionsHistoryRepository;
-            _cfdCalculatorService = cfdCalculatorService;
             _log = log;
         }
 
