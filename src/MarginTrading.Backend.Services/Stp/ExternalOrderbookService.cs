@@ -37,7 +37,7 @@ namespace MarginTrading.Backend.Services.Stp
         private readonly MarginTradingSettings _marginTradingSettings;
         private readonly IAssetPairDayOffService _assetPairDayOffService;
 
-        private const string EodExternalExchange = "EOD";
+        public const string EodExternalExchange = "EOD";
         
         /// <summary>
         /// External orderbooks cache (AssetPairId, (Source, Orderbook))
