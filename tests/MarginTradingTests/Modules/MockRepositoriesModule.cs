@@ -7,7 +7,9 @@ using MarginTrading.AzureRepositories;
 using MarginTrading.AzureRepositories.Logs;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
+using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.MatchingEngines;
 using Moq;
 
@@ -18,7 +20,16 @@ namespace MarginTradingTests.Modules
         protected override void Load(ContainerBuilder builder)
         {
             var blobRepository = new Mock<IMarginTradingBlobRepository>();
+            blobRepository.Setup(s => s.ReadWithTimestampAsync<List<Order>>(It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync((new List<Order>(), DateTime.UtcNow));
+            blobRepository.Setup(s => s.ReadWithTimestampAsync<List<Position>>(It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync((new List<Position>(), DateTime.UtcNow));
             var orderHistoryRepository = new Mock<IOrdersHistoryRepository>();
+            orderHistoryRepository.Setup(s => s.GetLastSnapshot(It.IsAny<DateTime>()))
+                .ReturnsAsync(new List<IOrderHistory>());
+            var positionHistoryRepository = new Mock<IPositionsHistoryRepository>();
+            positionHistoryRepository.Setup(s => s.GetLastSnapshot(It.IsAny<DateTime>()))
+                .ReturnsAsync(new List<IPositionHistory>());
             var riskSystemCommandsLogRepository = new Mock<IRiskSystemCommandsLogRepository>();
             var accountMarginFreezingRepository = new Mock<IAccountMarginFreezingRepository>();
             var accountMarginUnconfirmedRepository = new Mock<IAccountMarginUnconfirmedRepository>();
@@ -47,6 +58,8 @@ namespace MarginTradingTests.Modules
             //mocks
             builder.RegisterInstance(blobRepository.Object).As<IMarginTradingBlobRepository>().SingleInstance();
             builder.RegisterInstance(orderHistoryRepository.Object).As<IOrdersHistoryRepository>()
+                .SingleInstance();
+            builder.RegisterInstance(positionHistoryRepository.Object).As<IPositionsHistoryRepository>()
                 .SingleInstance();
             builder.RegisterInstance(riskSystemCommandsLogRepository.Object).As<IRiskSystemCommandsLogRepository>()
                 .SingleInstance();
