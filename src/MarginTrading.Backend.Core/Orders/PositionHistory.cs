@@ -18,6 +18,8 @@ namespace MarginTrading.Backend.Core.Orders
         public string OpenMatchingEngineId { get; set; }
         public DateTime OpenDate { get; set; }
         public string OpenTradeId { get; set; }
+        public OrderType OpenOrderType { get; set; }
+        public decimal OpenOrderVolume { get; set; }
         public decimal OpenPrice { get; set; }
         public decimal OpenFxPrice { get; set; }
         public string EquivalentAsset { get; set; }
@@ -40,9 +42,12 @@ namespace MarginTrading.Backend.Core.Orders
         public OrderCloseReason CloseReason { get; set; }
         public string CloseComment { get; set; }
         public List<string> CloseTrades { get; set; }
+        public string FxAssetPairId { get; set; }
+        public FxToAssetPairDirection FxToAssetPairDirection { get; set; }
         public DateTime? LastModified { get; set; }
         public decimal TotalPnL { get; set; }
         public decimal ChargedPnl { get; set; }
+        public string AdditionalInfo { get; set; }
         public PositionHistoryType HistoryType { get; set; }
         public DateTime HistoryTimestamp { get; set; }
     }

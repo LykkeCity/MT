@@ -41,7 +41,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
                 : (DateTime?)null;
 
             if (lastTimestamp != null && lastTimestamp > now.Subtract(
-                    _marginTradingSettings.DeduplicationTimestampPeriod))
+                    _marginTradingSettings.DeduplicationCheckPeriod))
             {
                 throw new Exception("Trading Engine failed to start due to deduplication validation failure");
             }

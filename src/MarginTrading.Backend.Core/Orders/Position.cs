@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Common;
 using MarginTrading.Backend.Core.StateMachines;
 using MarginTrading.Backend.Core.Trading;
 using Newtonsoft.Json;
@@ -239,7 +240,9 @@ namespace MarginTrading.Backend.Core.Orders
             var result = false;
             foreach (var data in propertyData)
             {
-                if (!properties.TryGetValue(data.Key, out var property) || property.GetValue(this) == data.Value)
+                if (!properties.TryGetValue(data.Key, out var property) 
+                    || (property.PropertyType.IsValueType && property.GetValue(this) == data.Value)
+                    || (!property.PropertyType.IsValueType && property.GetValue(this).ToJson() == data.Value.ToJson()))// kind of a hack
                 {
                     continue;
                 }

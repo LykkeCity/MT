@@ -22,6 +22,8 @@ namespace MarginTrading.Backend.Core.Orders
         public decimal? ExpectedOpenPrice { get; set; }
         public decimal? ExecutionPrice { get; set; }
         public decimal FxRate { get; set; }
+        public string FxAssetPairId { get; set; }
+        public FxToAssetPairDirection FxToAssetPairDirection { get; set; }
         public bool ForceOpen { get; set; }
         public DateTime? ValidityTime { get; set; }
         public DateTime CreatedTimestamp { get; set; }

@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using Common;
+using JetBrains.Annotations;
 using MarginTrading.Backend.Core.Orders;
 
 namespace MarginTrading.SqlRepositories.Entities
 {
+    [UsedImplicitly]
     public class PositionHistoryEntity : IPositionHistory
     {
         public string Id { get; set; }
@@ -21,6 +23,9 @@ namespace MarginTrading.SqlRepositories.Entities
         public string OpenMatchingEngineId { get; set; }
         public DateTime OpenDate { get; set; }
         public string OpenTradeId { get; set; }
+        public string OpenOrderType { get; set; }
+        OrderType IPositionHistory.OpenOrderType => OpenOrderType.ParseEnum<OrderType>();
+        public decimal OpenOrderVolume { get; set; }
         public decimal OpenPrice { get; set; }
         public decimal OpenFxPrice { get; set; }
         public string EquivalentAsset { get; set; }
@@ -49,6 +54,7 @@ namespace MarginTrading.SqlRepositories.Entities
         public DateTime? LastModified { get; set; }
         public decimal TotalPnL { get; set; }
         public decimal ChargedPnl { get; set; }
+        public string AdditionalInfo { get; set; }
         PositionHistoryType IPositionHistory.HistoryType => HistoryType.ParseEnum<PositionHistoryType>();
         public string HistoryType { get; set; }
 
@@ -61,7 +67,11 @@ namespace MarginTrading.SqlRepositories.Entities
         List<string> IPositionHistory.CloseTrades => string.IsNullOrEmpty(CloseTrades)
             ? new List<string>()
             : CloseTrades.DeserializeJson<List<string>>();
-        
+
+        public string FxAssetPairId { get; set; }
+        public string FxToAssetPairDirection { get; set; }
+        FxToAssetPairDirection IPositionHistory.FxToAssetPairDirection => FxToAssetPairDirection.ParseEnum<FxToAssetPairDirection>();
+
         public string RelatedOrders { get; set; }
         public string CloseTrades { get; set; }
     }

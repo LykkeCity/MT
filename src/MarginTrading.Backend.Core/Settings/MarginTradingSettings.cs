@@ -91,6 +91,9 @@ namespace MarginTrading.Backend.Core.Settings
 
         [Optional]
         public TimeSpan DeduplicationTimestampPeriod { get; set; } = TimeSpan.FromSeconds(1);
+
+        [Optional]
+        public TimeSpan DeduplicationCheckPeriod { get; set; } = TimeSpan.FromSeconds(2);
         
         public StartupQueuesCheckerSettings StartupQueuesChecker { get; set; }
     }

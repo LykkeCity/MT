@@ -41,7 +41,7 @@ WHERE rn = 1
         {
             using (var conn = new SqlConnection(_connectionString))
             {
-                var data = await conn.QueryAsync<OrderHistoryEntity>(_select);
+                var data = await conn.QueryAsync<OrderHistoryEntity>(_select, new {Timestamp = @from});
 
                 return data.Cast<IOrderHistory>().ToList();
             }

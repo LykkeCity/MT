@@ -55,7 +55,7 @@ namespace MarginTrading.Backend.Services.Helpers
                 accountAssetId: orderHistory.AccountAssetId,
                 price: orderHistory.ExpectedOpenPrice,
                 equivalentAsset: orderHistory.EquivalentAsset,
-                fillType: OrderFillType.FillOrKill, //todo we've got only FOK now
+                fillType: orderHistory.FillType,
                 comment: orderHistory.Comment,
                 legalEntity: orderHistory.LegalEntity,
                 forceOpen: orderHistory.ForceOpen,
@@ -65,8 +65,8 @@ namespace MarginTrading.Backend.Services.Helpers
                 originator: orderHistory.Originator,
                 equivalentRate: orderHistory.EquivalentRate,
                 fxRate: orderHistory.FxRate,
-                fxAssetPairId: string.Empty, //todo will be recalculated outside
-                fxToAssetPairDirection: FxToAssetPairDirection.Straight, //todo this too
+                fxAssetPairId: orderHistory.FxAssetPairId,
+                fxToAssetPairDirection: orderHistory.FxToAssetPairDirection,
                 status: orderHistory.Status,
                 additionalInfo: orderHistory.AdditionalInfo,
                 correlationId: orderHistory.CorrelationId,
@@ -84,7 +84,24 @@ namespace MarginTrading.Backend.Services.Helpers
         {
             return position.SetIfDiffer(new Dictionary<string, object>
             {
-                //todo
+                {nameof(Position.Volume), positionHistory.Volume},
+                {nameof(Position.RelatedOrders), positionHistory.RelatedOrders},
+                {nameof(Position.SwapCommissionRate), positionHistory.SwapCommissionRate},
+                {nameof(Position.CloseCommissionRate), positionHistory.CloseCommissionRate},
+                {nameof(Position.CommissionLot), positionHistory.CommissionLot},
+                {nameof(Position.CloseMatchingEngineId), positionHistory.CloseMatchingEngineId},
+                {nameof(Position.ClosePrice), positionHistory.ClosePrice},
+                {nameof(Position.CloseFxPrice), positionHistory.CloseFxPrice},
+                {nameof(Position.ClosePriceEquivalent), positionHistory.ClosePriceEquivalent},
+                {nameof(Position.StartClosingDate), positionHistory.StartClosingDate},
+                {nameof(Position.CloseDate), positionHistory.CloseDate},
+                {nameof(Position.CloseOriginator), positionHistory.CloseOriginator},
+                {nameof(Position.CloseReason), positionHistory.CloseReason},
+                {nameof(Position.CloseComment), positionHistory.CloseComment},
+                {nameof(Position.CloseTrades), positionHistory.CloseTrades},
+                {nameof(Position.LastModified), positionHistory.LastModified},
+                {nameof(Position.ChargedPnL), positionHistory.ChargedPnl},
+                {nameof(Position.AdditionalInfo), positionHistory.AdditionalInfo},
             });
         }
 
@@ -102,8 +119,8 @@ namespace MarginTrading.Backend.Services.Helpers
                 openMatchingEngineId: positionHistory.OpenMatchingEngineId,
                 openDate: positionHistory.OpenDate,
                 openTradeId: positionHistory.OpenTradeId,
-                openOrderType: OrderType.Market, //todo ???
-                openOrderVolume: 0, //todo ??
+                openOrderType: positionHistory.OpenOrderType,
+                openOrderVolume: positionHistory.OpenOrderVolume,
                 openPrice: positionHistory.OpenPrice,
                 openFxPrice: positionHistory.OpenFxPrice,
                 equivalentAsset: positionHistory.EquivalentAsset,
@@ -112,9 +129,9 @@ namespace MarginTrading.Backend.Services.Helpers
                 legalEntity: positionHistory.LegalEntity,
                 openOriginator: positionHistory.OpenOriginator,
                 externalProviderId: positionHistory.ExternalProviderId,
-                fxAssetPairId: string.Empty, // todo will be recalculated outside
-                fxToAssetPairDirection: FxToAssetPairDirection.Straight, // todo this too
-                additionalInfo: "" //todo ??
+                fxAssetPairId: positionHistory.FxAssetPairId,
+                fxToAssetPairDirection: positionHistory.FxToAssetPairDirection,
+                additionalInfo: positionHistory.AdditionalInfo
             );
         }
     }

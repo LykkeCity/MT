@@ -51,16 +51,17 @@ namespace MarginTrading.Backend.Services
 
         public override async Task Execute()
         {
-            await DumpToRepository();
+            await Task.WhenAll(DumpOrdersToRepository(), DumpPositionsToRepository());
         }
 
         public override void Stop()
         {
-            DumpToRepository().Wait();
+            DumpOrdersToRepository().Wait();
+            DumpPositionsToRepository().Wait();
             base.Stop();
         }
 
-        private async Task DumpToRepository()
+        private async Task DumpOrdersToRepository()
         {
             try
             {
@@ -75,7 +76,10 @@ namespace MarginTrading.Backend.Services
             {
                 await _log.WriteErrorAsync(nameof(OrdersCache), "Save orders", "", ex);
             }
-            
+        }
+
+        private async Task DumpPositionsToRepository()
+        {
             try
             {
                 var positions = _orderCache.GetPositions();
@@ -133,9 +137,17 @@ namespace MarginTrading.Backend.Services
                     (orderIdsChangedFromHistory.Any() ? $"Some orders state was different from history: [{string.Join(",", orderIdsChangedFromHistory)}]. " : string.Empty)
                     + (positionIdsChangedFromHistory.Any() ? $"Some positions state was different from history: [{string.Join(",", positionIdsChangedFromHistory)}]. " : string.Empty)
                     + "Dumping merged order and position data to the blob."
-                );    
-                
-                DumpToRepository().GetAwaiter().GetResult();
+                );
+
+                if (orderIdsChangedFromHistory.Any())
+                {
+                    DumpOrdersToRepository().Wait();
+                }
+
+                if (positionIdsChangedFromHistory.Any())
+                {
+                    DumpPositionsToRepository().Wait();
+                }
                 
                 _log.WriteInfo(nameof(OrderCacheManager), nameof(InferInitDataFromBlobAndHistory),
                      "Finished dumping merged order and position data to the blob."

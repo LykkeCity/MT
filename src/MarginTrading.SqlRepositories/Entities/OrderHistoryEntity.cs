@@ -31,6 +31,10 @@ namespace MarginTrading.SqlRepositories.Entities
         public decimal? ExpectedOpenPrice { get; set; }
         public decimal? ExecutionPrice { get; set; }
         public decimal FxRate { get; set; }
+        public string FxAssetPairId { get; set; }
+        public string FxToAssetPairDirection { get; set; }
+
+        FxToAssetPairDirection IOrderHistory.FxToAssetPairDirection => FxToAssetPairDirection.ParseEnum<FxToAssetPairDirection>();
         public bool ForceOpen { get; set; }
         public DateTime? ValidityTime { get; set; }
         public DateTime CreatedTimestamp { get; set; }

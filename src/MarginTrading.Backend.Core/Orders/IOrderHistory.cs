@@ -84,6 +84,18 @@ namespace MarginTrading.Backend.Core.Orders
         /// Current FxRate
         /// </summary>
         decimal FxRate { get; }
+        
+        /// <summary>
+        /// FX asset pair id
+        /// </summary>
+        string FxAssetPairId { get; }
+        
+        /// <summary>
+        /// Shows if account asset id is directly related on asset pair quote asset.
+        /// I.e. AssetPair is {BaseId, QuoteId} and FxAssetPair is {QuoteId, AccountAssetId} => Straight
+        /// If AssetPair is {BaseId, QuoteId} and FxAssetPair is {AccountAssetId, QuoteId} => Reverse
+        /// </summary>
+        FxToAssetPairDirection FxToAssetPairDirection { get; }
 
         /// <summary>
         /// Force open separate position for the order, ignoring existing ones

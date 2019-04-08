@@ -34,7 +34,7 @@ WHERE rn = 1
         {
             using (var conn = new SqlConnection(_connectionString))
             {
-                var data = await conn.QueryAsync<PositionHistoryEntity>(_select);
+                var data = await conn.QueryAsync<PositionHistoryEntity>(_select, new {Timestamp = @from});
 
                 return data.Cast<IPositionHistory>().ToList();
             }
