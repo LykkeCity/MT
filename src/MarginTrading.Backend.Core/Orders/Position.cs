@@ -234,7 +234,7 @@ namespace MarginTrading.Backend.Core.Orders
         public bool SetIfDiffer(Dictionary<string, object> propertyData)
         {
             var properties = GetType().GetProperties()
-                .Where(x => Attribute.IsDefined(x, typeof(JsonProperty)))
+                .Where(x => Attribute.IsDefined(x, typeof(JsonPropertyAttribute)))
                 .ToDictionary(x => x.Name, x => x);
 
             var result = false;
