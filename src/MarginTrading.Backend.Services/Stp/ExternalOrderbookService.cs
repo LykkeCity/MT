@@ -121,15 +121,10 @@ namespace MarginTrading.Backend.Services.Stp
         public decimal? GetPriceForPositionClose(string assetPairId, decimal volume, string externalProviderId)
         {
             decimal? CalculatePriceForClose(Dictionary<string, ExternalOrderBook> orderbooks)
-            {
-                if (!orderbooks.TryGetValue(externalProviderId, out var orderBook))
-                {
-                    return null;
-                }
-
-                return MatchBestPriceForPositionClose(orderBook, volume);
-            }
-
+                => !orderbooks.TryGetValue(externalProviderId, out var orderBook)
+                    ? null
+                    : MatchBestPriceForPositionClose(orderBook, volume);
+            
             return _orderbooks.TryReadValue(assetPairId, (dataExist, assetPair, orderbooks)
                 => dataExist ? CalculatePriceForClose(orderbooks) : null);
         }
@@ -142,13 +137,13 @@ namespace MarginTrading.Backend.Services.Stp
         }
 
         private static decimal? MatchBestPriceForOrderExecution(ExternalOrderBook externalOrderBook, decimal volume,
-            bool validateOpositeDirectionVolume)
+            bool validateOppositeDirectionVolume)
         {
             var direction = volume.GetOrderDirection();
 
             var price = externalOrderBook.GetMatchedPrice(Math.Abs(volume), direction);
 
-            if (price != null && validateOpositeDirectionVolume)
+            if (price != null && validateOppositeDirectionVolume)
             {
                 var closePrice = externalOrderBook.GetMatchedPrice(Math.Abs(volume), direction.GetOpositeDirection());
 
@@ -176,8 +171,8 @@ namespace MarginTrading.Backend.Services.Stp
             var isDayOff = _assetPairDayOffService.IsDayOff(orderbook.AssetPairId);
             var isEodOrderbook = orderbook.ExchangeName == EodExternalExchange;
 
-            // we should process normal orderbook only if asset is currently tradable
-            // and process EOD orderbook only if asset is currently not tradable
+            // we should process normal orderbook only if asset is currently tradeable
+            // and process EOD orderbook only if asset is currently not tradeable
             if (isDayOff && !isEodOrderbook || !isDayOff && isEodOrderbook)
             {
                 return;
