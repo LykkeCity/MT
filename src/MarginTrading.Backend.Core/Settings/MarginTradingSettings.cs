@@ -80,8 +80,8 @@ namespace MarginTrading.Backend.Core.Settings
         [Optional]
         public int PendingOrderRetriesThreshold { get; set; } = 100;
 
-        [UsedImplicitly(ImplicitUseKindFlags.Assign)]
-        public RedisSettings RedisSettings { get; set; }
+//        [UsedImplicitly(ImplicitUseKindFlags.Assign)]
+//        public RedisSettings RedisSettings { get; set; }
 
         [Optional]
         public TimeSpan DeduplicationTimestampPeriod { get; set; } = TimeSpan.FromSeconds(1);

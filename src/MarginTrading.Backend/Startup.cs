@@ -108,7 +108,7 @@ namespace MarginTrading.Backend
             SetupLoggers(Configuration, services, mtSettings);
 
             var deduplicationService = RunHealthChecks(mtSettings.CurrentValue.MtBackend);
-            builder.RegisterInstance(deduplicationService).AsSelf().SingleInstance();
+//            builder.RegisterInstance(deduplicationService).AsSelf().SingleInstance();
 
             RegisterModules(builder, mtSettings, Environment);
 
@@ -291,7 +291,7 @@ namespace MarginTrading.Backend
             //todo return DeduplicationService reference to container and register it
             var deduplicationService = new StartupDeduplicationService(Environment, new DateService(),
                 LogLocator.CommonLog, marginTradingSettings);
-            deduplicationService.Start();
+//            deduplicationService.Start();
             
             new StartupQueuesCheckerService(marginTradingSettings)
                 .Check();
