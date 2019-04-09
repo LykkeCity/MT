@@ -31,6 +31,19 @@ Below is the API description.
 4. VPN to a corresponding env must be connected and all dependencies must be initialized.
 5. Run.
 
+## Startup process ##
+
+1. Standard ASP.NET middlewares are initialised.
+2. Settings are loaded.
+3. Health checks are ran:
+- StartupDeduplicationService checks a "TradingEngine:DeduplicationTimestamp" in Redis and 
+if DeduplicationTimestamp > (now - DeduplicationCheckPeriod) exception is thrown saying:
+"Trading Engine failed to start due to deduplication validation failure".
+- StartupQueuesCheckerService checks that OrderHistory and PositionHistory broker related queues are empty.
+Queue names are set in settings StartupQueuesChecker section with OrderHistoryQueueName and PositionHistoryQueueName. 
+4. IoC container is built, all caches are warmed up.
+5. Scheduled jobs are initialised.
+
 ### Dependencies ###
 
 TBD
@@ -71,9 +84,12 @@ Settings schema is:
       "StorageMode": "SqlServer",
       "LogsConnString": "logs connection string",
       "MarginTradingConnString": "date connection string",
-      "HistoryConnString": "history connection string",
       "StateConnString": "state connection string",
-      "SqlConnectionString": "sql connection string"
+      "SqlConnectionString": "sql connection string",
+      "OrdersHistorySqlConnectionString": "sql connection string",
+      "OrdersHistoryTableName": "OrdersHistory",
+      "PositionsHistorySqlConnectionString": "sql connection string",
+      "PositionsHistoryTableName": "PositionsHistory"
     },
     "RabbitMqQueues": {
       "OrderHistory": {
@@ -148,7 +164,7 @@ Settings schema is:
     "ExchangeConnector": "FakeExchangeConnector",
     "MaxMarketMakerLimitOrderAge": 3000000,
     "Cqrs": {
-      "ConnectionString": "amqp://login:pws@rabbit-mt.mt.svc.cluster.local:5672",
+      "ConnectionString": "amqp://login:pwd@rabbit-mt.mt.svc.cluster.local:5672",
       "RetryDelay": "00:00:02",
       "EnvironmentName": "env name"
     },
@@ -169,13 +185,28 @@ Settings schema is:
     },
     "OvernightMargin": {
       "ScheduleMarketId": "PlatformScheduleMarketId",
+      "OvernightMarginParameter": 100,
       "WarnPeriodMinutes": 10,
       "ActivationPeriodMinutes": 10
-    }
+    },
+     "PendingOrderRetriesThreshold": 100,
+     "RedisSettings": {
+       "Configuration": "redis conn str"
+     },
+     "DeduplicationTimestampPeriod": "00:00:01",
+     "DeduplicationCheckPeriod": "00:00:02",
+     "StartupQueuesChecker": {
+       "ConnectionString": "amqp://login:pwd@rabbit-mt.mt.svc.cluster.local:5672",
+       "OrderHistoryQueueName": "lykke.mt.orderhistory.MarginTrading.TradingHistory.OrderHistoryBroker.DefaultEnv",
+       "PositionHistoryQueueName": "lykke.mt.position.history.MarginTrading.TradingHistory.PositionHistoryBroker.DefaultEnv.PositionsHistory"
+     }
   },
   "MtStpExchangeConnectorClient": {
     "ServiceUrl": "http://gavel.mt.svc.cluster.local:5019",
     "ApiKey": "key"
+  },
+  "OrderBookServiceClient": {
+    "ServiceUrl": "http://mt-orderbook-service.mt.svc.cluster.local"
   },
   "SettingsServiceClient": {
     "ServiceUrl": "http://mt-settings-service.mt.svc.cluster.local"

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data.SqlClient;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
@@ -63,7 +64,7 @@ namespace MarginTrading.SqlRepositories
                     new {blobKey = $"{blobContainer}_{key}"})).SingleOrDefault();
 
                 return string.IsNullOrEmpty(value)
-                    ? (default, default)
+                    ? (Activator.CreateInstance<T>(), SqlDateTime.MinValue.Value)
                     : (JsonConvert.DeserializeObject<T>(value), timestamp);
             }
         }

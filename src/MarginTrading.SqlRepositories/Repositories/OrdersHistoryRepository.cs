@@ -16,20 +16,13 @@ namespace MarginTrading.SqlRepositories.Repositories
         private readonly string _select = @";WITH cte AS
        (
          SELECT *,
-                ROW_NUMBER() OVER (PARTITION BY Id ORDER BY MaxDate DESC) AS rn
+                ROW_NUMBER() OVER (PARTITION BY Id ORDER BY ModifiedTimestamp DESC) AS rn
          FROM [{0}] oh
-                CROSS APPLY (SELECT MAX(CombinedDate)
-                             FROM (VALUES (oh.CreatedTimestamp),
-                                          (oh.ModifiedTimestamp),
-                                          (oh.ActivatedTimestamp),
-                                          (oh.ExecutionStartedTimestamp),
-                                          (oh.ExecutedTimestamp),
-                                          (oh.CanceledTimestamp)) AS x (CombinedDate)) AS x (MaxDate)
        )
 SELECT *
 FROM cte
 WHERE rn = 1
-  AND cte.MaxDate > @Timestamp";
+  AND cte.ModifiedTimestamp > @Timestamp";
 
         public OrdersHistoryRepository(string connectionString, string tableName)
         {

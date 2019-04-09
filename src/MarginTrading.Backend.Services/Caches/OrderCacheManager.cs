@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
@@ -111,7 +112,8 @@ namespace MarginTrading.Backend.Services.Caches
             
             var orderSnapshotsTask = _ordersHistoryRepository.GetLastSnapshot(blobOrdersTimestamp);
             var positionSnapshotsTask = _positionsHistoryRepository.GetLastSnapshot(blobPositionsTimestamp);
-            var orderSnapshots = orderSnapshotsTask.GetAwaiter().GetResult();
+            var orderSnapshots = orderSnapshotsTask.GetAwaiter().GetResult().Select(OrderHistory.Create).ToList();
+            PreProcess(orderSnapshots);
             var positionSnapshots = positionSnapshotsTask.GetAwaiter().GetResult();
             
             _log.WriteInfo(nameof(OrderCacheManager), nameof(InferInitDataFromBlobAndHistory),
@@ -121,6 +123,9 @@ namespace MarginTrading.Backend.Services.Caches
                 orderSnapshots.ToDictionary(x => x.Id, x => x));
             var (positionsResult, positionIdsChangedFromHistory) = MapPositions(
                 blobPositions.ToDictionary(x => x.Id, x => x), positionSnapshots.ToDictionary(x => x.Id, x => x));
+            
+            RefreshRelated(ordersResult.ToDictionary(x => x.Id), positionsResult.ToDictionary(x => x.Id),
+                orderIdsChangedFromHistory, positionIdsChangedFromHistory);
 
             _log.WriteInfo(nameof(OrderCacheManager), nameof(InferInitDataFromBlobAndHistory),
                 $"Initializing cache with [{ordersResult.Count}] orders and [{positionsResult.Count}] positions.");
@@ -153,23 +158,47 @@ namespace MarginTrading.Backend.Services.Caches
             return (ordersResult, positionsResult);
         }
 
-        private static (List<Order> orders, List<string> orderIdsChangedFromHistory) MapOrders(
-            Dictionary<string, Order> blobOrders, IReadOnlyDictionary<string, IOrderHistory> orderSnapshots)
+        private void PreProcess(List<OrderHistory> orderHistories)
         {
+            foreach (var orderHistory in orderHistories)
+            {
+                if (orderHistory.Status == OrderStatus.Placed)
+                {
+                    orderHistory.Status = OrderStatus.Inactive;
+                }
+            }
+        }
+
+        private static (List<Order> orders, List<string> orderIdsChangedFromHistory) MapOrders(
+            Dictionary<string, Order> blobOrders, IReadOnlyDictionary<string, OrderHistory> orderSnapshots)
+        {
+            if (!orderSnapshots.Any())
+            {
+                return (blobOrders.Values.ToList(), new List<string>());
+            }
+        
             var changedIds = new List<string>();
             var result = new List<Order>();
+            var terminalStatuses = new[] {OrderStatus.Canceled, OrderStatus.Rejected, OrderStatus.Executed};
 
             foreach (var (id, order) in blobOrders)
             {
                 if (orderSnapshots.TryGetValue(id, out var orderHistory)
                     && order.Merge(orderHistory))
                 {
+                    if (terminalStatuses.Contains(orderHistory.Status))
+                    {
+                        continue;
+                    }
+                    
                     changedIds.Add(id);
                 }
+
                 result.Add(order);
             }
 
-            foreach (var (id, orderHistory) in orderSnapshots.Where(x => !blobOrders.Keys.Contains(x.Key)))
+            foreach (var (id, orderHistory) in orderSnapshots
+                .Where(x => !blobOrders.Keys.Contains(x.Key) && terminalStatuses.All(ts => ts != x.Value.Status)))
             {
                 changedIds.Add(id);
                 result.Add(orderHistory.FromHistory());
@@ -181,6 +210,11 @@ namespace MarginTrading.Backend.Services.Caches
         private static (List<Position> positions, List<string> positionIdsChangedFromHistory) MapPositions(
             Dictionary<string, Position> blobPositions, IReadOnlyDictionary<string, IPositionHistory> positionSnapshots)
         {
+            if (!positionSnapshots.Any())
+            {
+                return (blobPositions.Values.ToList(), new List<string>());
+            }
+
             var changedIds = new List<string>();
             var result = new List<Position>();
 
@@ -189,18 +223,66 @@ namespace MarginTrading.Backend.Services.Caches
                 if (positionSnapshots.TryGetValue(id, out var positionHistory)
                     && position.Merge(positionHistory))
                 {
+                    if (positionHistory.HistoryType == PositionHistoryType.Close)
+                    {
+                        continue;
+                    }
+
                     changedIds.Add(id);
                 }
                 result.Add(position);
             }
 
-            foreach (var (id, positionHistory) in positionSnapshots.Where(x => !blobPositions.Keys.Contains(x.Key)))
+            foreach (var (id, positionHistory) in positionSnapshots
+                .Where(x => !blobPositions.Keys.Contains(x.Key) && x.Value.HistoryType != PositionHistoryType.Close))
             {
                 changedIds.Add(id);
                 result.Add(positionHistory.FromHistory());
             }
 
             return (result, changedIds);
+        }
+
+        private static void RefreshRelated(Dictionary<string, Order> orders, Dictionary<string, Position> positions,
+            IEnumerable<string> newOrderIds, IEnumerable<string> newPositionIds)
+        {
+            var ordersRelations = orders.Values
+                .Where(x => !string.IsNullOrEmpty(x.ParentOrderId))
+                .GroupBy(x => x.ParentOrderId)
+                .ToDictionary(x => x.Key, x => x.ToList());
+            
+            foreach (var newId in newOrderIds)
+            {
+                orders[newId].SetIfDiffer(new Dictionary<string, object>
+                {
+                    {
+                        "RelatedOrders", ordersRelations[newId].Select(x => new RelatedOrderInfo
+                        {
+                            Id = x.Id,
+                            Type = x.OrderType,
+                        }).ToList()
+                    }
+                });
+            }
+            
+            var positionsRelations = orders.Values
+                .Where(x => !string.IsNullOrEmpty(x.ParentPositionId))
+                .GroupBy(x => x.ParentPositionId)
+                .ToDictionary(x => x.Key, x => x.ToList());
+            
+            foreach (var newId in newPositionIds)
+            {
+                positions[newId].SetIfDiffer(new Dictionary<string, object>
+                {
+                    {
+                        "RelatedOrders", positionsRelations[newId].Select(x => new RelatedOrderInfo
+                        {
+                            Id = x.Id,
+                            Type = x.OrderType,
+                        }).ToList()
+                    }
+                });
+            }
         }
     }
 }

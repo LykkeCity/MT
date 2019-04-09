@@ -59,6 +59,11 @@ namespace MarginTrading.Backend.Services.Infrastructure
 
         public override async Task Execute()
         {
+            if (_environment.IsDevelopment())
+            {
+                return;
+            }
+            
             await _redisDatabase.StringSetAsync(ValueKey, $"{_dateService.Now():s}");
         }
     }

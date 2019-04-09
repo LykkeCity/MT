@@ -22,7 +22,7 @@ namespace MarginTrading.SqlRepositories.Repositories
 SELECT *
 FROM cte
 WHERE rn = 1
-  and cte.HistoryTimestamp > @Timestamp";
+  AND cte.HistoryTimestamp > @Timestamp";
 
         public PositionsHistoryRepository(string connectionString, string tableName)
         {

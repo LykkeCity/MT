@@ -51,5 +51,56 @@ namespace MarginTrading.Backend.Core.Orders
         public string AdditionalInfo { get; set; }
         public string CorrelationId { get; set; }
         public int PendingOrderRetriesCount { get; set; }
+
+        public static OrderHistory Create(IOrderHistory orderHistory)
+        {
+            return new OrderHistory
+            {
+                Id = orderHistory.Id,
+                AccountId = orderHistory.AccountId,
+                AssetPairId = orderHistory.AssetPairId,
+                ParentOrderId = orderHistory.ParentOrderId,
+                PositionId = orderHistory.PositionId,
+                Direction = orderHistory.Direction,
+                Type = orderHistory.Type,
+                Status = orderHistory.Status,
+                FillType = orderHistory.FillType,
+                Originator = orderHistory.Originator,
+                CancellationOriginator = orderHistory.CancellationOriginator,
+                Volume =orderHistory.Volume,
+                ExpectedOpenPrice = orderHistory.ExpectedOpenPrice,
+                ExecutionPrice = orderHistory.ExecutionPrice,
+                FxRate = orderHistory.FxRate,
+                FxAssetPairId = orderHistory.FxAssetPairId,
+                FxToAssetPairDirection = orderHistory.FxToAssetPairDirection,
+                ForceOpen = orderHistory.ForceOpen,
+                ValidityTime = orderHistory.ValidityTime,
+                CreatedTimestamp = orderHistory.CreatedTimestamp,
+                ModifiedTimestamp = orderHistory.ModifiedTimestamp,
+                Code = orderHistory.Code,
+                ActivatedTimestamp = orderHistory.ActivatedTimestamp,
+                ExecutionStartedTimestamp = orderHistory.ExecutionStartedTimestamp,
+                ExecutedTimestamp = orderHistory.ExecutedTimestamp,
+                CanceledTimestamp = orderHistory.CanceledTimestamp,
+                Rejected = orderHistory.Rejected,
+                TradingConditionId = orderHistory.TradingConditionId,
+                AccountAssetId = orderHistory.AccountAssetId,
+                EquivalentAsset = orderHistory.EquivalentAsset,
+                EquivalentRate = orderHistory.EquivalentRate,
+                RejectReason = orderHistory.RejectReason,
+                RejectReasonText = orderHistory.RejectReasonText,
+                Comment = orderHistory.Comment,
+                ExternalOrderId = orderHistory.ExternalOrderId,
+                ExternalProviderId = orderHistory.ExternalProviderId,
+                MatchingEngineId = orderHistory.MatchingEngineId,
+                LegalEntity = orderHistory.LegalEntity,
+                MatchedOrders = orderHistory.MatchedOrders,
+                RelatedOrderInfos = orderHistory.RelatedOrderInfos,
+                UpdateType = orderHistory.UpdateType,
+                AdditionalInfo = orderHistory.AdditionalInfo,
+                CorrelationId = orderHistory.CorrelationId,
+                PendingOrderRetriesCount = orderHistory.PendingOrderRetriesCount,
+            };
+        }
     }
 }

@@ -473,32 +473,6 @@ namespace MarginTrading.Backend.Core.Trading
             MatchedOrders.AddRange(matchedOrders);
         }
 
-        /// <summary>
-        /// For order merging on initialization only!
-        /// Return true if there was difference, false if items were the same.
-        /// </summary>
-        public bool SetIfDiffer(Dictionary<string, object> propertyData)
-        {
-            var properties = GetType().GetProperties()
-                .Where(x => Attribute.IsDefined(x, typeof(JsonPropertyAttribute)))
-                .ToDictionary(x => x.Name, x => x);
-
-            var result = false;
-            foreach (var data in propertyData)
-            {
-                if (!properties.TryGetValue(data.Key, out var property) 
-                    || (property.PropertyType.IsValueType && property.GetValue(this) == data.Value)
-                    || (!property.PropertyType.IsValueType && property.GetValue(this).ToJson() == data.Value.ToJson()))// kind of a hack
-                {
-                    continue;
-                }
-
-                result = true;
-            }
-            
-            return result;
-        }
-
         #endregion Actions
 
         #region State changes
