@@ -50,5 +50,10 @@ namespace MarginTrading.Contract.BackendContracts
 
         [JsonConverter(typeof(StringEnumConverter))]
         public MatchingEngineModeContract MatchingEngineMode { get; set; }
+        
+        /// <summary>
+        /// Number of pending order retries passed
+        /// </summary>
+        public int PendingOrderRetriesCount { get; set; }
     }
 }
