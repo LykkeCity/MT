@@ -37,7 +37,6 @@ namespace MarginTradingTests.Modules
             var realm = new Mock<IWampHostedRealm>();
             realm.Setup(x => x.Services.GetSubject<OrderBookLevel>(It.IsAny<string>()))
                 .Returns(new Subject<OrderBookLevel>());
-            var notifyService = new Mock<IClientNotifyService>();
             var rabbitMqNotifyService = new Mock<IRabbitMqNotifyService>();
             var consoleWriterMock = new Mock<IConsole>();
             var sessionServiceMock = new Mock<ISessionService>();
@@ -66,7 +65,6 @@ namespace MarginTradingTests.Modules
 
             builder.RegisterInstance(emailService.Object).As<IEmailService>();
             builder.RegisterInstance(realm.Object).As<IWampHostedRealm>();
-            builder.RegisterInstance(notifyService.Object).As<IClientNotifyService>();
             builder.RegisterInstance(rabbitMqNotifyService.Object).As<IRabbitMqNotifyService>();
             builder.RegisterInstance(consoleWriterMock.Object).As<IConsole>();
             builder.RegisterInstance(clientsRepositoryMock.Object).As<IClientsSessionsRepository>();

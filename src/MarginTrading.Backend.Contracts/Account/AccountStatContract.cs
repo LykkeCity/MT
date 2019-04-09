@@ -43,12 +43,23 @@
         public decimal MarginAvailable { get; set; }
         
         /// <summary>
-        /// Margin used for maintenance of positions
+        /// Margin used for maintenance of positions (considering MCO rule)
+        /// = Max (CurrentlyUsedMargin, InitiallyUsedMargin/2)
         /// </summary>
         public decimal UsedMargin { get; set; }
         
         /// <summary>
-        /// Margin used for open of positions
+        /// Margin used by open positions
+        /// </summary>
+        public decimal CurrentlyUsedMargin { get; set; }
+        
+        /// <summary>
+        /// Margin used for initial open of existing positions
+        /// </summary>
+        public decimal InitiallyUsedMargin { get; set; }
+        
+        /// <summary>
+        /// Margin used for calculations, when open new positions
         /// </summary>
         public decimal MarginInit { get; set; }
         
@@ -86,16 +97,6 @@
         /// If account is in liquidation state
         /// </summary>
         public bool IsInLiquidation { get; set; }
-
-        /// <summary>
-        /// Current long positions margin / initial long positions margin
-        /// </summary>
-        public decimal McoMarginUsageLevelLong { get; set; }
-        
-        /// <summary>
-        /// Current short positions margin / initial short positions margin
-        /// </summary>
-        public decimal McoMarginUsageLevelShort { get; set; }
 
         /// <summary>
         /// Margin warning notification level

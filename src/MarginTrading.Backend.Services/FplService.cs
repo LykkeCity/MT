@@ -116,20 +116,16 @@ namespace MarginTrading.Backend.Services
                 _tradingInstrumentsCache.GetTradingInstrument(position.TradingConditionId, position.AssetPairId);
             var volumeForCalculation = Math.Abs(position.Volume);
 
-            fplData.MarginRate = _cfdCalculatorService.GetQuoteRateForBaseAsset(position.AccountAssetId, position.AssetPairId, 
+            fplData.MarginRate = _cfdCalculatorService.GetQuoteRateForBaseAsset(position.AccountAssetId,
+                position.AssetPairId,
                 position.LegalEntity, position.Direction == PositionDirection.Short); // to use close price
-            
-            var (marginInit, marginMaintenance) = GetMargins(tradingInstrument, volumeForCalculation, 
+
+            var (marginInit, marginMaintenance) = GetMargins(tradingInstrument, volumeForCalculation,
                 fplData.MarginRate, isWarnCheck);
             fplData.MarginInit = Math.Round(marginInit, fplData.AccountBaseAssetAccuracy);
             fplData.MarginMaintenance = Math.Round(marginMaintenance, fplData.AccountBaseAssetAccuracy);
-
-            if (_marginTradingSettings.McoRules != null)
-            {
-                fplData.McoInitialMargin = Math.Round(position.OpenPrice * position.OpenFxPrice * volumeForCalculation /
-                                                      tradingInstrument.LeverageInit, fplData.AccountBaseAssetAccuracy);
-                fplData.McoCurrentMargin = fplData.MarginInit;
-            }
+            fplData.InitialMargin = Math.Round(position.OpenPrice * position.OpenFxPrice * volumeForCalculation /
+                                                  tradingInstrument.LeverageInit, fplData.AccountBaseAssetAccuracy);
         }
 
         private (decimal MarginInit, decimal MarginMaintenance) GetMargins(ITradingInstrument tradingInstrument,

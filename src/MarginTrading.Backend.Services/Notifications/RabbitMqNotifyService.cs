@@ -65,22 +65,6 @@ namespace MarginTrading.Backend.Services.Notifications
                 quote.ToRabbitMqContract());
         }
 
-        public Task AccountUpdated(IMarginTradingAccount account)
-        {
-            return AccountChanged(account, AccountEventTypeEnum.Updated);
-        }
-
-        private Task AccountChanged(IMarginTradingAccount account, AccountEventTypeEnum eventType)
-        {
-            var message = new AccountChangedMessage
-            {
-                Account = account.ToFullBackendContract(_settings.IsLive),
-                EventType = eventType,
-            };
-
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountChanged.ExchangeName, message);
-        }
-
         public Task AccountMarginEvent(MarginEventMessage eventMessage)
         {
             return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountMarginEvents.ExchangeName, eventMessage);
@@ -126,7 +110,6 @@ namespace MarginTrading.Backend.Services.Notifications
         {
             ((IStopable) _publishers[_settings.RabbitMqQueues.OrderHistory.ExchangeName]).Stop();
             ((IStopable) _publishers[_settings.RabbitMqQueues.OrderbookPrices.ExchangeName]).Stop();
-            ((IStopable) _publishers[_settings.RabbitMqQueues.AccountChanged.ExchangeName]).Stop();
             ((IStopable) _publishers[_settings.RabbitMqQueues.AccountMarginEvents.ExchangeName]).Stop();
             ((IStopable) _publishers[_settings.RabbitMqQueues.AccountStats.ExchangeName]).Stop();
             ((IStopable) _publishers[_settings.RabbitMqQueues.Trades.ExchangeName]).Stop();

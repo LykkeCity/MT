@@ -15,6 +15,7 @@ using NUnit.Framework;
 namespace MarginTradingTests.Services
 {
     [TestFixture]
+    [Ignore("Not used")]
     class MarginTradingEnablingServiceTests
     {
         private MarginTradingEnablingService _sut;
@@ -60,7 +61,7 @@ namespace MarginTradingTests.Services
         public async Task Always_ShouldCorrectlyEnableDemo()
         {
             // arrange
-            _marginSettings.IsLive = false;
+            //_marginSettings.IsLive = false;
 
             //act
             await _sut.SetMarginTradingEnabled("id of client", enabled: true);
@@ -82,7 +83,7 @@ namespace MarginTradingTests.Services
         public async Task Always_ShouldCorrectlyEnableLive()
         {
             // arrange
-            _marginSettings.IsLive = true;
+            //_marginSettings.IsLive = true;
 
             //act
             await _sut.SetMarginTradingEnabled("id of client", enabled: true);

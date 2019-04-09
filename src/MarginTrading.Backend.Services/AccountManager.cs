@@ -64,11 +64,13 @@ namespace MarginTrading.Backend.Services
 
         public override Task Execute()
         {
-            var accounts = GetAccountsToWriteStats();
-            var accountsStatsMessages = GenerateAccountsStatsUpdateMessages(accounts);
-            var tasks = accountsStatsMessages.Select(m => _rabbitMqNotifyService.UpdateAccountStats(m));
-
-            return Task.WhenAll(tasks);
+            //TODO: to think if we need this process, at the current moment it is not used and only increases load on RabbitMq
+//            var accounts = GetAccountsToWriteStats();
+//            var accountsStatsMessages = GenerateAccountsStatsUpdateMessages(accounts);
+//            var tasks = accountsStatsMessages.Select(m => _rabbitMqNotifyService.UpdateAccountStats(m));
+//
+//            return Task.WhenAll(tasks);
+              return Task.CompletedTask;
         }
 
         public override void Start()
@@ -118,7 +120,7 @@ namespace MarginTrading.Backend.Services
         private IEnumerable<AccountStatsUpdateMessage> GenerateAccountsStatsUpdateMessages(
             IEnumerable<IMarginTradingAccount> accounts)
         {
-            return accounts.Select(a => a.ToRabbitMqContract(_marginSettings.IsLive)).Batch(100)
+            return accounts.Select(a => a.ToRabbitMqContract()).Batch(100)
                 .Select(ch => new AccountStatsUpdateMessage {Accounts = ch.ToArray()});
         }
 

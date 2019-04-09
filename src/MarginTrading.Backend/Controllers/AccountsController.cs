@@ -194,6 +194,8 @@ namespace MarginTrading.Backend.Controllers
                 FreeMargin = item.GetFreeMargin(),
                 MarginAvailable = item.GetMarginAvailable(),
                 UsedMargin = item.GetUsedMargin(),
+                CurrentlyUsedMargin = item.GetCurrentlyUsedMargin(),
+                InitiallyUsedMargin = item.GetInitiallyUsedMargin(),
                 MarginInit = item.GetMarginInit(),
                 PnL = item.GetPnl(),
                 UnrealizedDailyPnl = item.GetUnrealizedDailyPnl(),
@@ -202,8 +204,6 @@ namespace MarginTrading.Backend.Controllers
                 MarginUsageLevel = item.GetMarginUsageLevel(),
                 LegalEntity = item.LegalEntity,
                 IsInLiquidation = item.IsInLiquidation(),
-                McoMarginUsageLevelLong = item.GetMcoMarginUsageLevelLong(),
-                McoMarginUsageLevelShort = item.GetMcoMarginUsageLevelShort(),
                 MarginNotificationLevel = item.GetAccountLevel().ToString()
             };
         }

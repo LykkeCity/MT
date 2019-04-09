@@ -13,6 +13,7 @@ namespace MarginTrading.Backend.Services.Events
         private readonly ILog _log;
         private IEventConsumer<TEventArgs>[] _consumers;
         private readonly object _sync = new object();
+        private bool _isDisposed;
 
         public EventChannel(IComponentContext container, ILog log)
         {
@@ -22,6 +23,9 @@ namespace MarginTrading.Backend.Services.Events
 
         public void SendEvent(object sender, TEventArgs ea)
         {
+            if (_isDisposed)
+                return;
+            
             AssertInitialized();
             foreach (var consumer in _consumers)
             {
@@ -38,27 +42,25 @@ namespace MarginTrading.Backend.Services.Events
 
         public void Dispose()
         {
+            _isDisposed = true;
             _consumers = null;
             _container = null;
         }
 
-        public int AssertInitialized()
+        public void AssertInitialized()
         {
             if (null != _consumers)
-                return _consumers.Length;
+                return;
+            
             lock (_sync)
             {
                 if (null != _consumers)
-                    return _consumers.Length;
-
-                if (null == _container)
-                    throw new ObjectDisposedException(GetType().Name);
+                    return;
 
                 _consumers =
                     Enumerable.OrderBy(_container.Resolve<IEnumerable<IEventConsumer<TEventArgs>>>(), x => x.ConsumerRank).ToArray();
                 _container = null;
             }
-            return _consumers.Length;
         }
     }
 }

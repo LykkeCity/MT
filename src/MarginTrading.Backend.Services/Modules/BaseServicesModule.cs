@@ -25,10 +25,6 @@ namespace MarginTrading.Backend.Services.Modules
                 .As<IThreadSwitcher>()
                 .SingleInstance();
 
-            builder.RegisterType<ClientNotifyService>()
-                .As<IClientNotifyService>()
-                .SingleInstance();
-
             builder.RegisterType<RabbitMqNotifyService>()
                 .As<IRabbitMqNotifyService>()
                 .SingleInstance();

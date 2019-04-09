@@ -104,8 +104,6 @@ namespace MarginTrading.Backend.Core
             var marginUsageLevel = account.GetMarginUsageLevel(overnightUsedMargin);
             var accountFplData = account.GetAccountFpl();
 
-            #region Account Level
-            
             if (marginUsageLevel <= accountFplData.StopOutLevel)
                 return AccountLevel.StopOut;
 
@@ -114,45 +112,6 @@ namespace MarginTrading.Backend.Core
             
             if (marginUsageLevel <= accountFplData.MarginCall1Level)
                 return AccountLevel.MarginCall1;
-            
-            #endregion
-
-            if (MtServiceLocator.McoRules == null)
-            {
-                return AccountLevel.None;
-            }
-            
-            #region MCO long level
-
-            if (accountFplData.McoMarginUsageLevelLong != 0)
-            {
-                if (accountFplData.McoMarginUsageLevelLong <= MtServiceLocator.McoRules.LongMcoLevels.StopOut)
-                    return AccountLevel.StopOut;
-            
-                if (accountFplData.McoMarginUsageLevelLong <= MtServiceLocator.McoRules.LongMcoLevels.MarginCall2)
-                    return AccountLevel.MarginCall2;
-            
-                if (accountFplData.McoMarginUsageLevelLong <= MtServiceLocator.McoRules.LongMcoLevels.MarginCall1)
-                    return AccountLevel.MarginCall1;
-            }
-            
-            #endregion
-            
-            #region MCO short level
-
-            if (accountFplData.McoMarginUsageLevelShort != 0)
-            {
-                if (accountFplData.McoMarginUsageLevelShort >= MtServiceLocator.McoRules.ShortMcoLevels.StopOut)
-                    return AccountLevel.StopOut;
-            
-                if (accountFplData.McoMarginUsageLevelShort >= MtServiceLocator.McoRules.ShortMcoLevels.MarginCall2)
-                    return AccountLevel.MarginCall2;
-            
-                if (accountFplData.McoMarginUsageLevelShort >= MtServiceLocator.McoRules.ShortMcoLevels.MarginCall1)
-                    return AccountLevel.MarginCall1;
-            }
-            
-            #endregion
             
             return AccountLevel.None;
         }
@@ -189,7 +148,20 @@ namespace MarginTrading.Backend.Core
 
         public static decimal GetUsedMargin(this IMarginTradingAccount account)
         {
+            var fplData = account.GetAccountFpl();
+            //According to ESMA MCO rule a stop-out added at 50% of the initially invested margin
+            //So if the 50% of the initially invested margin (accumulated per the account), is bigger than the recalculated 100%, than this margin requirement is the reference for the free capital determination and the liquidation level.
+            return Math.Max(fplData.UsedMargin, fplData.InitiallyUsedMargin/2);
+        }
+        
+        public static decimal GetCurrentlyUsedMargin(this IMarginTradingAccount account)
+        {
             return account.GetAccountFpl().UsedMargin;
+        }
+        
+        public static decimal GetInitiallyUsedMargin(this IMarginTradingAccount account)
+        {
+            return account.GetAccountFpl().InitiallyUsedMargin;
         }
 
         public static decimal GetFreeMargin(this IMarginTradingAccount account)
@@ -204,7 +176,7 @@ namespace MarginTrading.Backend.Core
 
         public static decimal GetMarginAvailable(this IMarginTradingAccount account)
         {
-            return account.GetTotalCapital() - account.GetMarginInit();
+            return account.GetTotalCapital() - Math.Max(account.GetMarginInit(), account.GetUsedMargin());
         }
 
         public static decimal GetFrozenMargin(this IMarginTradingAccount account)
@@ -232,16 +204,6 @@ namespace MarginTrading.Backend.Core
             return account.GetAccountFpl().StopOutLevel;
         }
         
-        public static decimal GetMcoMarginUsageLevelLong(this IMarginTradingAccount account)
-        {
-            return account.GetAccountFpl().McoMarginUsageLevelLong;
-        }
-        
-        public static decimal GetMcoMarginUsageLevelShort(this IMarginTradingAccount account)
-        {
-            return account.GetAccountFpl().McoMarginUsageLevelShort;
-        }
-
         public static int GetOpenPositionsCount(this IMarginTradingAccount account)
         {
             return account.GetAccountFpl().OpenPositionsCount;
