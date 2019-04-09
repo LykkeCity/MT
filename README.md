@@ -85,9 +85,6 @@ Settings schema is:
       "OrderbookPrices": {
         "ExchangeName": "lykke.mt.pricefeed"
       },
-      "AccountChanged": {
-        "ExchangeName": "lykke.mt.account.changed"
-      },
       "AccountStopout": {
         "ExchangeName": "lykke.mt.account.stopout"
       },
@@ -169,18 +166,6 @@ Settings schema is:
     "Throttling": {
       "MarginCallThrottlingPeriodMin": 30,
       "StopOutThrottlingPeriodMin": 1
-    },
-    "McoRules": {
-      "LongMcoLevels": {
-      "MarginCall1": 0.6,
-      "MarginCall2": 0.55,
-      "StopOut": 0.5
-      },
-      "ShortMcoLevels": {
-        "MarginCall1": 1.4,
-        "MarginCall2": 1.45,
-        "StopOut": 1.5
-      }
     },
     "OvernightMargin": {
       "ScheduleMarketId": "PlatformScheduleMarketId",

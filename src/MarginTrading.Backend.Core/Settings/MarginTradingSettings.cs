@@ -16,9 +16,6 @@ namespace MarginTrading.Backend.Core.Settings
         [Optional]
         public string Env { get; set; }
 
-        [Optional]
-        public bool IsLive { get; set; }
-
         #endregion
         
         public string ApiKey { get; set; }
@@ -64,9 +61,6 @@ namespace MarginTrading.Backend.Core.Settings
         public bool WriteOperationLog { get; set; }
         
         public SpecialLiquidationSettings SpecialLiquidation { get; set; }
-        
-        [Optional, CanBeNull]
-        public McoRulesSettings McoRules { get; set; }
         
         [Optional, CanBeNull]
         public ChaosSettings ChaosKitty { get; set; }

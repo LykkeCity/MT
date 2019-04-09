@@ -31,14 +31,8 @@ namespace MarginTrading.Backend.Services
         {
             var settings = await _clientAccountService.GetMarginEnabledAsync(clientId);
 
-            if (_marginSettings.IsLive)
-            {
-                settings.EnabledLive = enabled;
-            }
-            else
-            {
-                settings.Enabled = enabled;
-            }
+            settings.EnabledLive = enabled;
+            settings.Enabled = enabled;
 
             await _clientAccountService.SetMarginEnabledAsync(clientId, settings.Enabled, settings.EnabledLive,
                 settings.TermsOfUseAgreed);

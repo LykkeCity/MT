@@ -53,7 +53,7 @@ namespace MarginTrading.BrokerBase
             services.AddSingleton(Configuration);
             services.AddMvc();
 
-            var isLive = Configuration.IsLive();
+            var isLive = true;
             var applicationSettings = Configuration.LoadSettings<TApplicationSettings>()
                 .Nested(s =>
                 {

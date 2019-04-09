@@ -30,7 +30,6 @@ namespace MarginTradingTests
     {
         private IAccountsCacheService _accountsCacheService;
         //private Mock<IAccountsCacheService> _accountCacheServiceMock;
-        private Mock<IClientNotifyService> _clientNotifyServiceMock;
         private Mock<IEventChannel<AccountBalanceChangedEventArgs>> _accountBalanceChangedEventChannelMock;
         private Mock<IAccountUpdateService> _accountUpdateServiceMock;
         private static readonly IDateService DateService = new DateService();
@@ -113,8 +112,6 @@ namespace MarginTradingTests
             Assert.AreEqual(updatedWithdrawTransferLimit, resultedAccount.WithdrawTransferLimit);
             Assert.AreEqual(isDisabled, resultedAccount.IsDisabled);
             Assert.AreEqual(isWithdrawalDisabled, resultedAccount.IsWithdrawalDisabled);
-            
-            _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.IsAny<IMarginTradingAccount>()), Times.Once);
         }
 
         [Test]
@@ -170,9 +167,6 @@ namespace MarginTradingTests
             Assert.AreEqual(1, updatedAccount.WithdrawTransferLimit);
             Assert.AreEqual(true, updatedAccount.IsDisabled);
             Assert.AreEqual(false, updatedAccount.IsWithdrawalDisabled);
-
-            _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.IsAny<IMarginTradingAccount>()), 
-                Times.Between(1, 2, Range.Inclusive));
         }
 
         [Test]
@@ -193,7 +187,6 @@ namespace MarginTradingTests
             await accountsProjection.Handle(new AccountChangedEvent(time, "test",
                 updatedContract, AccountChangedEventTypeContract.Updated));
 
-            _clientNotifyServiceMock.Verify(x => x.NotifyAccountUpdated(It.IsAny<IMarginTradingAccount>()), Times.Never);
             Assert.AreEqual(1, _logCounter);
         }
         
@@ -237,7 +230,6 @@ namespace MarginTradingTests
 
         private AccountsProjection AssertEnv(string accountId = null, string failMessage = null)
         {
-            _clientNotifyServiceMock = new Mock<IClientNotifyService>();
             _accountBalanceChangedEventChannelMock = new Mock<IEventChannel<AccountBalanceChangedEventArgs>>();
             _accountUpdateServiceMock = new Mock<IAccountUpdateService>();
             _accountUpdateServiceMock.Setup(s => s.UnfreezeWithdrawalMargin(It.Is<string>(x => x == accountId), "test"))
@@ -278,7 +270,7 @@ namespace MarginTradingTests
             _fakePosition.Setup(s => s.ChargePnL(It.Is<string>(x => x == "test"), It.IsAny<decimal>()));
             _ordersCache.Positions.Add(_fakePosition.Object);
 
-            return new AccountsProjection(_accountsCacheService, _clientNotifyServiceMock.Object,
+            return new AccountsProjection(_accountsCacheService,
                 _accountBalanceChangedEventChannelMock.Object, ConvertService, _accountUpdateServiceMock.Object, 
                 DateService, _operationExecutionInfoRepositoryMock.Object, Mock.Of<IChaosKitty>(), 
                 _ordersCache, _logMock.Object);

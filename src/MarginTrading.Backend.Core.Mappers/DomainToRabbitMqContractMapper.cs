@@ -17,7 +17,7 @@ namespace MarginTrading.Backend.Core.Mappers
             };
         }
 
-        public static AccountStatsContract ToRabbitMqContract(this IMarginTradingAccount account, bool isLive)
+        public static AccountStatsContract ToRabbitMqContract(this IMarginTradingAccount account)
         {
             return new AccountStatsContract
             {
@@ -37,7 +37,6 @@ namespace MarginTrading.Backend.Core.Mappers
                 PnL = account.GetPnl(),
                 OpenPositionsCount = account.GetOpenPositionsCount(),
                 MarginUsageLevel = account.GetMarginUsageLevel(),
-                IsLive = isLive,
                 LegalEntity = account.LegalEntity,
             };
         }

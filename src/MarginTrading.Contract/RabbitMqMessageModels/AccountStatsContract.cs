@@ -18,7 +18,6 @@
         public decimal PnL { get; set; }
         public decimal OpenPositionsCount { get; set; }
         public decimal MarginUsageLevel { get; set; }
-        public bool IsLive { get; set; }
         public string LegalEntity { get; set; }
     }
 }

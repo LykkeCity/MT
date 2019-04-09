@@ -89,8 +89,6 @@ namespace MarginTrading.Backend
             services.AddAuthentication(KeyAuthOptions.AuthenticationScheme)
                 .AddScheme<KeyAuthOptions, KeyAuthHandler>(KeyAuthOptions.AuthenticationScheme, "", options => { });
 
-            var isLive = Configuration.IsLive();
-
             services.AddSwaggerGen(options =>
             {
                 options.DefaultLykkeConfiguration("v1", $"MarginTradingEngine_Api_{Configuration.ServerType()}");
@@ -99,17 +97,13 @@ namespace MarginTrading.Backend
 
             var builder = new ContainerBuilder();
 
-            var envSuffix = !string.IsNullOrEmpty(Configuration["Env"]) ? "." + Configuration["Env"] : "";
             var mtSettings = Configuration.LoadSettings<MtBackendSettings>(
                     throwExceptionOnCheckError: !Configuration.NotThrowExceptionsOnServiceValidation())
                 .Nested(s =>
                 {
-                    s.MtBackend.IsLive = isLive;
-                    s.MtBackend.Env = Configuration.ServerType() + envSuffix;
+                    s.MtBackend.Env = Configuration.ServerType();
                     return s;
                 });
-
-            Console.WriteLine($"IsLive: {mtSettings.Nested(s => s.MtBackend).CurrentValue.IsLive}");
 
             SetupLoggers(Configuration, services, mtSettings);
 
@@ -126,7 +120,6 @@ namespace MarginTrading.Backend
             MtServiceLocator.AccountUpdateService = ApplicationContainer.Resolve<IAccountUpdateService>();
             MtServiceLocator.AccountsCacheService = ApplicationContainer.Resolve<IAccountsCacheService>();
             MtServiceLocator.SwapCommissionService = ApplicationContainer.Resolve<ICommissionService>();
-            MtServiceLocator.McoRules = mtSettings.CurrentValue.MtBackend.McoRules;
             
             ApplicationContainer.Resolve<IScheduleSettingsCacheService>()
                 .UpdateAllSettingsAsync().GetAwaiter().GetResult();

@@ -593,21 +593,9 @@ namespace MarginTrading.Backend.Services
                 return;
             }
 
-            PositionDirection? direction = null;
-            var liquidationType = LiquidationType.Normal;
-
-            if (account.GetMcoMarginUsageLevelLong() != 0 &&
-                account.GetMcoMarginUsageLevelLong() <= MtServiceLocator.McoRules?.LongMcoLevels.StopOut)
-            {
-                direction = PositionDirection.Long;
-                liquidationType = LiquidationType.Mco;
-            }
-            else if (account.GetMcoMarginUsageLevelShort() != 0 &&
-                     account.GetMcoMarginUsageLevelShort() >= MtServiceLocator.McoRules?.ShortMcoLevels.StopOut)
-            {
-                direction = PositionDirection.Short;
-                liquidationType = LiquidationType.Mco;
-            }
+            var liquidationType = account.GetUsedMargin() == account.GetCurrentlyUsedMargin()
+                ? LiquidationType.Normal
+                : LiquidationType.Mco;
 
             _cqrsSender.SendCommandToSelf(new StartLiquidationInternalCommand
             {
@@ -615,7 +603,6 @@ namespace MarginTrading.Backend.Services
                 AccountId = account.Id,
                 CreationTime = _dateService.Now(),
                 QuoteInfo = quote?.ToJson(),
-                Direction = direction,
                 LiquidationType = liquidationType,
                 OriginatorType = OriginatorType.System,
             });

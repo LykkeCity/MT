@@ -14,15 +14,12 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         IEventConsumer<OrderCancelledEventArgs>
     {
         private readonly IAccountsCacheService _accountsCacheService;
-        private readonly MarginTradingSettings _marginSettings;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
 
         public UpdatedAccountsStatsConsumer(IAccountsCacheService accountsCacheService,
-            MarginTradingSettings marginSettings,
             IRabbitMqNotifyService rabbitMqNotifyService)
         {
             _accountsCacheService = accountsCacheService;
-            _marginSettings = marginSettings;
             _rabbitMqNotifyService = rabbitMqNotifyService;
         }
         
@@ -52,7 +49,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         {
             account.CacheNeedsToBeUpdated();
             
-            var stats = account.ToRabbitMqContract(_marginSettings.IsLive);
+            var stats = account.ToRabbitMqContract();
 
             _rabbitMqNotifyService.UpdateAccountStats(new AccountStatsUpdateMessage {Accounts = new[] {stats}});
         }
