@@ -10,7 +10,9 @@ using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
+using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Common.Extensions;
 using MarginTrading.OrderbookAggregator.Contracts.Messages;
 
@@ -21,6 +23,7 @@ namespace MarginTrading.Backend.Services.Quotes
         private readonly ILog _log;
         private readonly IMarginTradingBlobRepository _blobRepository;
         private readonly IEventChannel<FxBestPriceChangeEventArgs> _fxBestPriceChangeEventChannel;
+        private readonly IAssetPairDayOffService _assetPairDayOffService;
         private Dictionary<string, InstrumentBidAskPair> _quotes;
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
         private const string BlobName = "FxRates";
@@ -28,12 +31,14 @@ namespace MarginTrading.Backend.Services.Quotes
         public FxRateCacheService(ILog log, 
             IMarginTradingBlobRepository blobRepository,
             IEventChannel<FxBestPriceChangeEventArgs> fxBestPriceChangeEventChannel,
-            MarginTradingSettings marginTradingSettings)
+            MarginTradingSettings marginTradingSettings,
+            IAssetPairDayOffService assetPairDayOffService)
             : base(nameof(FxRateCacheService), marginTradingSettings.BlobPersistence.FxRatesDumpPeriodMilliseconds, log)
         {
             _log = log;
             _blobRepository = blobRepository;
             _fxBestPriceChangeEventChannel = fxBestPriceChangeEventChannel;
+            _assetPairDayOffService = assetPairDayOffService;
             _quotes = new Dictionary<string, InstrumentBidAskPair>();
         }
 
@@ -68,6 +73,16 @@ namespace MarginTrading.Backend.Services.Quotes
 
         public Task SetQuote(ExternalExchangeOrderbookMessage orderBookMessage)
         {
+            var isDayOff = _assetPairDayOffService.IsDayOff(orderBookMessage.AssetPairId);
+            var isEodOrderbook = orderBookMessage.ExchangeName == ExternalOrderbookService.EodExternalExchange;
+
+            // we should process normal orderbook only if asset is currently tradable
+            // and process EOD orderbook only if asset is currently not tradable
+            if (isDayOff && !isEodOrderbook || !isDayOff && isEodOrderbook)
+            {
+                return Task.CompletedTask;
+            }
+            
             var bidAskPair = CreatePair(orderBookMessage);
 
             if (bidAskPair == null)
