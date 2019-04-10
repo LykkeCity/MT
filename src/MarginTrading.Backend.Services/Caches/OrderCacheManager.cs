@@ -21,8 +21,12 @@ namespace MarginTrading.Backend.Services.Caches
         private readonly IOrdersHistoryRepository _ordersHistoryRepository;
         private readonly IPositionsHistoryRepository _positionsHistoryRepository;
         private readonly ILog _log;
+        
         public const string OrdersBlobName= "orders";
         public const string PositionsBlobName= "positions";
+        
+        private static readonly OrderStatus[] OrderTerminalStatuses = {OrderStatus.Canceled, OrderStatus.Rejected, OrderStatus.Executed};
+        private static readonly PositionHistoryType PositionTerminalStatus = PositionHistoryType.Close;
 
         public OrderCacheManager(OrdersCache orderCache,
             IMarginTradingBlobRepository blobRepository,
@@ -125,7 +129,7 @@ namespace MarginTrading.Backend.Services.Caches
                 blobPositions.ToDictionary(x => x.Id, x => x), positionSnapshots.ToDictionary(x => x.Id, x => x));
             
             RefreshRelated(ordersResult.ToDictionary(x => x.Id), positionsResult.ToDictionary(x => x.Id),
-                orderIdsChangedFromHistory, positionIdsChangedFromHistory);
+                orderSnapshots);
 
             _log.WriteInfo(nameof(OrderCacheManager), nameof(InferInitDataFromBlobAndHistory),
                 $"Initializing cache with [{ordersResult.Count}] orders and [{positionsResult.Count}] positions.");
@@ -179,14 +183,13 @@ namespace MarginTrading.Backend.Services.Caches
         
             var changedIds = new List<string>();
             var result = new List<Order>();
-            var terminalStatuses = new[] {OrderStatus.Canceled, OrderStatus.Rejected, OrderStatus.Executed};
 
             foreach (var (id, order) in blobOrders)
             {
                 if (orderSnapshots.TryGetValue(id, out var orderHistory)
                     && order.Merge(orderHistory))
                 {
-                    if (terminalStatuses.Contains(orderHistory.Status))
+                    if (OrderTerminalStatuses.Contains(orderHistory.Status))
                     {
                         continue;
                     }
@@ -198,7 +201,7 @@ namespace MarginTrading.Backend.Services.Caches
             }
 
             foreach (var (id, orderHistory) in orderSnapshots
-                .Where(x => !blobOrders.Keys.Contains(x.Key) && terminalStatuses.All(ts => ts != x.Value.Status)))
+                .Where(x => !blobOrders.Keys.Contains(x.Key) && OrderTerminalStatuses.All(ts => ts != x.Value.Status)))
             {
                 changedIds.Add(id);
                 result.Add(orderHistory.FromHistory());
@@ -223,7 +226,7 @@ namespace MarginTrading.Backend.Services.Caches
                 if (positionSnapshots.TryGetValue(id, out var positionHistory)
                     && position.Merge(positionHistory))
                 {
-                    if (positionHistory.HistoryType == PositionHistoryType.Close)
+                    if (positionHistory.HistoryType == PositionTerminalStatus)
                     {
                         continue;
                     }
@@ -234,7 +237,7 @@ namespace MarginTrading.Backend.Services.Caches
             }
 
             foreach (var (id, positionHistory) in positionSnapshots
-                .Where(x => !blobPositions.Keys.Contains(x.Key) && x.Value.HistoryType != PositionHistoryType.Close))
+                .Where(x => !blobPositions.Keys.Contains(x.Key) && x.Value.HistoryType != PositionTerminalStatus))
             {
                 changedIds.Add(id);
                 result.Add(positionHistory.FromHistory());
@@ -244,44 +247,35 @@ namespace MarginTrading.Backend.Services.Caches
         }
 
         private static void RefreshRelated(Dictionary<string, Order> orders, Dictionary<string, Position> positions,
-            IEnumerable<string> newOrderIds, IEnumerable<string> newPositionIds)
+            IEnumerable<OrderHistory> ordersFromHistory)
         {
-            var ordersRelations = orders.Values
-                .Where(x => !string.IsNullOrEmpty(x.ParentOrderId))
-                .GroupBy(x => x.ParentOrderId)
-                .ToDictionary(x => x.Key, x => x.ToList());
-            
-            foreach (var newId in newOrderIds)
+            foreach (var orderHistory in ordersFromHistory)
             {
-                orders[newId].SetIfDiffer(new Dictionary<string, object>
+                if (!string.IsNullOrEmpty(orderHistory.ParentOrderId)
+                    && orders.TryGetValue(orderHistory.ParentOrderId, out var order))
                 {
+                    if (OrderTerminalStatuses.Contains(orderHistory.Status))
                     {
-                        "RelatedOrders", ordersRelations[newId].Select(x => new RelatedOrderInfo
-                        {
-                            Id = x.Id,
-                            Type = x.OrderType,
-                        }).ToList()
+                        order.RemoveRelatedOrder(orderHistory.Id);
                     }
-                });
-            }
-            
-            var positionsRelations = orders.Values
-                .Where(x => !string.IsNullOrEmpty(x.ParentPositionId))
-                .GroupBy(x => x.ParentPositionId)
-                .ToDictionary(x => x.Key, x => x.ToList());
-            
-            foreach (var newId in newPositionIds)
-            {
-                positions[newId].SetIfDiffer(new Dictionary<string, object>
+                    else
+                    {
+                        order.AddRelatedOrder(orderHistory.FromHistory());
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(orderHistory.PositionId)
+                    && positions.TryGetValue(orderHistory.PositionId, out var position))
                 {
+                    if (OrderTerminalStatuses.Contains(orderHistory.Status))
                     {
-                        "RelatedOrders", positionsRelations[newId].Select(x => new RelatedOrderInfo
-                        {
-                            Id = x.Id,
-                            Type = x.OrderType,
-                        }).ToList()
+                        position.RemoveRelatedOrder(orderHistory.Id);
                     }
-                });
+                    else
+                    {
+                        position.AddRelatedOrder(orderHistory.FromHistory());
+                    }
+                }
             }
         }
     }
