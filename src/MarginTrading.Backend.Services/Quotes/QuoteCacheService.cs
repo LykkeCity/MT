@@ -79,15 +79,15 @@ namespace MarginTrading.Backend.Services.Quotes
             }
         }
 
-        public void RemoveQuote(string assetPair)
+        public void RemoveQuote(string assetPairId)
         {
             _lockSlim.EnterWriteLock();
             try
             {
-                if (_quotes.ContainsKey(assetPair))
-                    _quotes.Remove(assetPair);
+                if (_quotes.ContainsKey(assetPairId))
+                    _quotes.Remove(assetPairId);
                 else
-                    throw new QuoteNotFoundException(assetPair, string.Format(MtMessages.QuoteNotFound, assetPair));
+                    throw new QuoteNotFoundException(assetPairId, string.Format(MtMessages.QuoteNotFound, assetPairId));
             }
             finally
             {

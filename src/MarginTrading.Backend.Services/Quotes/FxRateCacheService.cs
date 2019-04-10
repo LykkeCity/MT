@@ -122,7 +122,23 @@ namespace MarginTrading.Backend.Services.Quotes
                 _lockSlim.ExitWriteLock();
             }
         }
-        
+
+        public void RemoveQuote(string assetPairId)
+        {
+            _lockSlim.EnterWriteLock();
+            try
+            {
+                if (_quotes.ContainsKey(assetPairId))
+                    _quotes.Remove(assetPairId);
+                else
+                    throw new QuoteNotFoundException(assetPairId, string.Format(MtMessages.QuoteNotFound, assetPairId));
+            }
+            finally
+            {
+                _lockSlim.ExitWriteLock();
+            }
+        }
+
         private InstrumentBidAskPair CreatePair(ExternalExchangeOrderbookMessage message)
         {
             if (!ValidateOrderbook(message))
