@@ -10,7 +10,7 @@
   <ItemGroup>
     <PackageReference Include="Dapper" Version="1.50.5" />
     <PackageReference Include="flurl.http" Version="2.3.1" />
-    <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
+    <PackageReference Include="JetBrains.Annotations" Version="2018.2.1" />
     <PackageReference Include="Lykke.Logs" Version="7.2.1" />
     <PackageReference Include="Lykke.RabbitMqBroker" Version="7.5.1" />
     <PackageReference Include="Lykke.SettingsReader" Version="5.2.0" />

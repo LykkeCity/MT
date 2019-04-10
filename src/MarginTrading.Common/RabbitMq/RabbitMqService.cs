@@ -12,6 +12,7 @@ using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Publisher;
 using Lykke.RabbitMqBroker.Subscriber;
 using Lykke.SettingsReader;
+using RabbitMQ.Client;
 
 namespace MarginTrading.Common.RabbitMq
 {
@@ -48,6 +49,21 @@ namespace MarginTrading.Common.RabbitMq
                 //var blob = AzureBlobStorage.Create(queueRepositoryConnectionString);
                 //return new MessagePackBlobPublishingQueueRepository(blob);
             //});
+        }
+
+        /// <summary>
+        /// Returns the number of messages in <paramref name="queueName"/> ready to be delivered to consumers.
+        /// This method assumes the queue exists. If it doesn't, an exception is thrown.
+        /// </summary>
+        public static uint GetMessageCount(string connectionString, string queueName)
+        {
+            var factory = new ConnectionFactory { Uri = connectionString };
+            
+            using (var connection = factory.CreateConnection())
+            using (var channel = connection.CreateModel())
+            {
+                return channel.MessageCount(queueName);
+            }
         }
 
         public void Dispose()

@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using System.Threading.Tasks;
 using AzureStorage;
 using AzureStorage.Blob;
@@ -43,6 +44,16 @@ namespace MarginTrading.AzureRepositories
             }
 
             return default(T);
+        }
+
+        public (T, DateTime) ReadWithTimestamp<T>(string blobContainer, string key)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<(T, DateTime)> ReadWithTimestampAsync<T>(string blobContainer, string key)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task Write<T>(string blobContainer, string key, T obj)

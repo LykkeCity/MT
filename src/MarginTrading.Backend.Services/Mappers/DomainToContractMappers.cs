@@ -53,6 +53,7 @@ namespace MarginTrading.Backend.Services.Mappers
                 PositionId = order.ParentPositionId,
                 RelatedOrders = order.RelatedOrders.Select(o => o.Id).ToList(),
                 Status = order.Status.ToType<OrderStatusContract>(),
+                FillType = order.FillType.ToType<OrderFillTypeContract>(),
                 Type = order.OrderType.ToType<OrderTypeContract>(),
                 ValidityTime = order.Validity,
                 Volume = order.Volume,

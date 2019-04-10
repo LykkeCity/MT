@@ -8,8 +8,9 @@ namespace MarginTrading.Common.RabbitMq
         [AmqpCheck]
         public string ConnectionString { get; set; }
         public string ExchangeName { get; set; }
+        
+        /// By default = 1
         [Optional]
-        //By default = 1
-        public int ConsumerCount { get; set; }
+        public int ConsumerCount { get; set; } = 1;
     }
 }

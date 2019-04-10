@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Assets;
+using MarginTrading.Backend.Services.Caches;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Quotes;

@@ -51,7 +51,6 @@ namespace MarginTrading.Backend.Modules
                     .SingleInstance();
             }
             
-
             #region Client Account Service
             
             if (_settings.CurrentValue.ClientAccountServiceClient != null)
@@ -71,7 +70,6 @@ namespace MarginTrading.Backend.Modules
             
             #endregion
             
-            
             #region Email Sender
 
             if (_settings.CurrentValue.EmailSender != null)
@@ -86,7 +84,6 @@ namespace MarginTrading.Backend.Modules
             }
             
             #endregion
-            
             
             #region MT Settings
 
@@ -120,7 +117,6 @@ namespace MarginTrading.Backend.Modules
 
             #endregion
 
-
             #region MT Accounts Management
 
             var accountsClientGenerator = HttpClientGenerator
@@ -138,6 +134,8 @@ namespace MarginTrading.Backend.Modules
 
             var orderBookServiceClientGenerator = HttpClientGenerator
                 .BuildForUrl(_settings.CurrentValue.OrderBookServiceClient.ServiceUrl)
+                .WithServiceName<LykkeErrorResponse>(
+                    $"MT OrderBook Service [{_settings.CurrentValue.OrderBookServiceClient.ServiceUrl}]")
                 .Create();
 
             builder.RegisterInstance(orderBookServiceClientGenerator.Generate<IOrderBookProviderApi>())

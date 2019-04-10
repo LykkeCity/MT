@@ -13,7 +13,7 @@
     <NoWarn>1701;1702;1705;CA2007;0612;0618;1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
+    <PackageReference Include="JetBrains.Annotations" Version="2018.2.1" />
     <PackageReference Include="Lykke.MarginTrading.OrderbookAggregator.Contracts" Version="1.0.1" />
     <PackageReference Include="Lykke.MarginTrading.SettingsService.Contracts" Version="1.1.15" />
     <PackageReference Include="Lykke.SettingsReader" Version="5.2.0" />

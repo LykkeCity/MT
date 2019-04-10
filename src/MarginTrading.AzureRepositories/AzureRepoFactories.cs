@@ -2,11 +2,6 @@
 using Common.Log;
 using Lykke.SettingsReader;
 using MarginTrading.AzureRepositories.Logs;
-using MarginTrading.AzureRepositories.Snow.OrdersById;
-using MarginTrading.AzureRepositories.Snow.OrdersHistory;
-using MarginTrading.AzureRepositories.Snow.Trades;
-using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.AzureRepositories
@@ -15,23 +10,6 @@ namespace MarginTrading.AzureRepositories
     {
         public static class MarginTrading
         {
-            public static OrdersHistoryRepository CreateOrdersHistoryRepository(IReloadingManager<string> connString, ILog log)
-            {
-                return new OrdersHistoryRepository(AzureTableStorage<OrderHistoryEntity>.Create(connString,
-                    "MarginTradingOrdersHistory", log));
-            }
-
-            public static ITradesRepository CreateTradesRepository(IReloadingManager<string> connString, ILog log,
-                IConvertService resolve)
-            {
-                return new TradesRepository(AzureTableStorage<TradeEntity>.Create(connString, "Trades", log));
-            }
-
-            public static IOrdersByIdRepository CreateOrdersByIdRepository(IReloadingManager<string> connString, ILog log,
-                IConvertService resolve)
-            {
-                return new OrdersByIdRepository(AzureTableStorage<OrderByIdEntity>.Create(connString, "OrdersById", log));
-            }
 
             public static MarginTradingAccountHistoryRepository CreateAccountHistoryRepository(IReloadingManager<string> connString, ILog log)
             {

@@ -36,7 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FluentScheduler" Version="5.3.0" />
-    <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
+    <PackageReference Include="JetBrains.Annotations" Version="2018.2.1" />
     <PackageReference Include="Lykke.Common.ApiLibrary" Version="1.10.1" />
     <PackageReference Include="Lykke.HttpClientGenerator" Version="2.3.0" />
     <PackageReference Include="Lykke.Logs" Version="7.2.1" />
@@ -67,6 +67,7 @@
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="4.2.2" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="Nustache.Core" Version="1.0.0-alfa2" />
+    <PackageReference Include="StackExchange.Redis" Version="1.2.6" />
     <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="1.1.0" />
     <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
   </ItemGroup>
