@@ -63,9 +63,13 @@ namespace MarginTrading.Backend.Services.Quotes
                     || orderBook.Timestamp > quote.Date)
                 {
                     result.Add(orderBook.AssetPairId, orderBook.GetBestPrice());
-                    continue;
                 }
-                result.Add(orderBook.AssetPairId, blobQuotes[orderBook.AssetPairId]);
+            }
+
+            foreach (var remainsToAdd in blobQuotes.Keys.Except(result.Keys))
+            {
+                var item = blobQuotes[remainsToAdd];
+                result.Add(item.Instrument, item);
             }
 
             _cache = result;

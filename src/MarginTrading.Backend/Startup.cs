@@ -191,8 +191,11 @@ namespace MarginTrading.Backend
 
             builder.RegisterBuildCallback(c => c.Resolve<TradingInstrumentsManager>());
             builder.RegisterBuildCallback(c => c.Resolve<OrderBookSaveService>());
-            builder.RegisterBuildCallback(async c => await c.Resolve<IExternalOrderbookService>().InitializeAsync());
-            builder.RegisterBuildCallback(c => c.Resolve<QuoteCacheService>());
+            builder.RegisterBuildCallback(async c =>
+            {
+                await c.Resolve<IExternalOrderbookService>().InitializeAsync();
+                c.Resolve<QuoteCacheService>().Start();
+            });
             builder.RegisterBuildCallback(c => c.Resolve<FxRateCacheService>());
             builder.RegisterBuildCallback(c => c.Resolve<AccountManager>()); // note the order here is important!
             builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
