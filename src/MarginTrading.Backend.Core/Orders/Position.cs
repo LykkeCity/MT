@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Common;
 using MarginTrading.Backend.Core.StateMachines;
 using MarginTrading.Backend.Core.Trading;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace MarginTrading.Backend.Core.Orders
 {

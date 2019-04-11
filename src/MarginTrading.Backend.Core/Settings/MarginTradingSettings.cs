@@ -1,5 +1,7 @@
-﻿using JetBrains.Annotations;
+﻿using System;
+using JetBrains.Annotations;
 using Lykke.Common.Chaos;
+using Lykke.RabbitMqBroker.Subscriber;
 using Lykke.SettingsReader.Attributes;
 using MarginTrading.Common.Settings;
 using RabbitMqSettings = MarginTrading.Common.RabbitMq.RabbitMqSettings;
@@ -77,5 +79,16 @@ namespace MarginTrading.Backend.Core.Settings
 
         [Optional]
         public int PendingOrderRetriesThreshold { get; set; } = 100;
+
+//        [UsedImplicitly(ImplicitUseKindFlags.Assign)]
+//        public RedisSettings RedisSettings { get; set; }
+
+        [Optional]
+        public TimeSpan DeduplicationTimestampPeriod { get; set; } = TimeSpan.FromSeconds(1);
+
+        [Optional]
+        public TimeSpan DeduplicationCheckPeriod { get; set; } = TimeSpan.FromSeconds(2);
+        
+        public StartupQueuesCheckerSettings StartupQueuesChecker { get; set; }
     }
 }

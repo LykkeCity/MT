@@ -118,6 +118,22 @@ namespace MarginTrading.Backend.Modules
                         _settings.CurrentValue.Db.SqlConnectionString))
                     .SingleInstance();
 
+                builder.RegisterType<SqlRepositories.Repositories.OrdersHistoryRepository>()
+                    .As<IOrdersHistoryRepository>()
+                    .WithParameter(new NamedParameter("connectionString", 
+                        _settings.CurrentValue.Db.OrdersHistorySqlConnectionString))
+                    .WithParameter(new NamedParameter("tableName", 
+                        _settings.CurrentValue.Db.OrdersHistoryTableName))
+                    .SingleInstance();
+
+                builder.RegisterType<SqlRepositories.Repositories.PositionsHistoryRepository>()
+                    .As<IPositionsHistoryRepository>()
+                    .WithParameter(new NamedParameter("connectionString", 
+                        _settings.CurrentValue.Db.PositionsHistorySqlConnectionString))
+                    .WithParameter(new NamedParameter("tableName", 
+                        _settings.CurrentValue.Db.PositionsHistoryTableName))
+                    .SingleInstance();
+
                 builder.RegisterType<SqlRepositories.Repositories.OvernightMarginRepository>()
                     .As<IOvernightMarginRepository>()
                     .SingleInstance();
@@ -135,11 +151,6 @@ namespace MarginTrading.Backend.Modules
                             "Identity", _log))
                     : (IIdentityGenerator) new SimpleIdentityGenerator();
             }).As<IIdentityGenerator>().SingleInstance();
-
-            builder.Register(ctx =>
-                    AzureRepoFactories.MarginTrading.CreateOrdersByIdRepository(
-                        _settings.Nested(s => s.Db.MarginTradingConnString), _log, ctx.Resolve<IConvertService>()))
-                .SingleInstance();
             
             //SQL PLACE
             builder.RegisterType<AccountMarginFreezingRepository>()

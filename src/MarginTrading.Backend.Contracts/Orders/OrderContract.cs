@@ -53,6 +53,11 @@ namespace MarginTrading.Backend.Contracts.Orders
         public OrderStatusContract Status { get; set; }
 
         /// <summary>
+        /// Order fill type
+        /// </summary>
+        public OrderFillTypeContract FillType { get; set; }
+
+        /// <summary>
         /// Who changed the order (Investor, System or OnBehalf)
         /// </summary>
         public OriginatorTypeContract Originator { get; set; }

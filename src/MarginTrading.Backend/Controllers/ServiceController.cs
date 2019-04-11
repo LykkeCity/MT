@@ -22,53 +22,24 @@ namespace MarginTrading.Backend.Controllers
     [MiddlewareFilter(typeof(RequestLoggingPipeline))]
     public class ServiceController : Controller, IServiceApi
     {
-        private readonly IQuoteCacheService _quoteCacheService;
         private readonly IOvernightMarginParameterContainer _overnightMarginParameterContainer;
         private readonly IOvernightMarginRepository _overnightMarginRepository;
         private readonly ICqrsSender _cqrsSender;
         private readonly IIdentityGenerator _identityGenerator;
         private readonly IDateService _dateService;
-        private readonly OrdersCache _ordersCache;
 
         public ServiceController(
-            IQuoteCacheService quoteCacheService,
             IOvernightMarginParameterContainer overnightMarginParameterContainer,
             IOvernightMarginRepository overnightMarginRepository,
             ICqrsSender cqrsSender,
             IIdentityGenerator identityGenerator,
-            IDateService dateService,
-            OrdersCache ordersCache)
+            IDateService dateService)
         {
-            _quoteCacheService = quoteCacheService;
             _overnightMarginParameterContainer = overnightMarginParameterContainer;
             _overnightMarginRepository = overnightMarginRepository;
             _cqrsSender = cqrsSender;
             _identityGenerator = identityGenerator;
             _dateService = dateService;
-            _ordersCache = ordersCache;
-        }
-
-        [HttpDelete]
-        [Route("bestprice/{assetPair}")]
-        public MtBackendResponse<bool> ClearBestBriceCache(string assetPair)
-        {
-            var positions = _ordersCache.Positions.GetPositionsByInstrument(assetPair).ToList();
-            if (positions.Any())
-            {
-                return MtBackendResponse<bool>.Error(
-                    $"Cannot delete [{assetPair}] best price because there are {positions.Count} opened positions.");
-            }
-            
-            var orders = _ordersCache.Active.GetOrdersByInstrument(assetPair).ToList();
-            if (orders.Any())
-            {
-                return MtBackendResponse<bool>.Error(
-                    $"Cannot delete [{assetPair}] best price because there are {orders.Count} active orders.");
-            }
-            
-            _quoteCacheService.RemoveQuote(assetPair);
-            
-            return MtBackendResponse<bool>.Ok(true);
         }
 
         /// <summary>

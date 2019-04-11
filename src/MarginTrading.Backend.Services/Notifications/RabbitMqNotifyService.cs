@@ -11,10 +11,10 @@ using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
-using MarginTrading.Backend.Services.Mappers;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
 using MarginTrading.Contract.RabbitMqMessageModels;
+using MarginTrading.Backend.Services.Mappers;
 
 namespace MarginTrading.Backend.Services.Notifications
 {

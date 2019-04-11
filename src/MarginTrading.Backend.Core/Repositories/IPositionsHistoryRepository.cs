@@ -5,8 +5,8 @@ using MarginTrading.Backend.Core.Orders;
 
 namespace MarginTrading.Backend.Core.Repositories
 {
-    public interface IOrdersHistoryRepository
+    public interface IPositionsHistoryRepository
     {
-        Task<IReadOnlyList<IOrderHistory>> GetLastSnapshot(DateTime @from);
+        Task<IReadOnlyList<IPositionHistory>> GetLastSnapshot(DateTime @from);
     }
 }
