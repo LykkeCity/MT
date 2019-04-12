@@ -189,17 +189,18 @@ namespace MarginTrading.Backend
             builder.RegisterModule(new BackendMigrationsModule());
             builder.RegisterModule(new CqrsModule(settings.CurrentValue.Cqrs, LogLocator.CommonLog, settings.CurrentValue));
 
-            builder.RegisterBuildCallback(c => c.Resolve<TradingInstrumentsManager>());
-            builder.RegisterBuildCallback(c => c.Resolve<OrderBookSaveService>());
             builder.RegisterBuildCallback(async c =>
             {
+                // note the order here is important!
+                c.Resolve<TradingInstrumentsManager>();
+                c.Resolve<OrderBookSaveService>();
                 await c.Resolve<IExternalOrderbookService>().InitializeAsync();
                 c.Resolve<QuoteCacheService>().Start();
+                c.Resolve<FxRateCacheService>();
+                c.Resolve<AccountManager>();
+                c.Resolve<OrderCacheManager>();
+                c.Resolve<PendingOrdersCleaningService>();
             });
-            builder.RegisterBuildCallback(c => c.Resolve<FxRateCacheService>());
-            builder.RegisterBuildCallback(c => c.Resolve<AccountManager>()); // note the order here is important!
-            builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
-            builder.RegisterBuildCallback(c => c.Resolve<PendingOrdersCleaningService>());
         }
 
         private static void SetupLoggers(IConfiguration configuration, IServiceCollection services,
