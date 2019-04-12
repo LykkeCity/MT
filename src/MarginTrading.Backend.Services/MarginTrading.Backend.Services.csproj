@@ -45,7 +45,7 @@
     <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.11" />
     <PackageReference Include="morelinq" Version="2.10.0" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="StackExchange.Redis" Version="1.2.6" />
+    <PackageReference Include="StackExchange.Redis" Version="2.0.600" />
     <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
   </ItemGroup>
 </Project>
