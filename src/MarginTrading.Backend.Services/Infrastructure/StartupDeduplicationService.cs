@@ -76,14 +76,12 @@ namespace MarginTrading.Backend.Services.Infrastructure
                         // wait and extend lock
                         Thread.Sleep(_marginTradingSettings.DeduplicationLockExtensionPeriod);
 
-                        _database.LockExtend(LockKey, _lockValue, _marginTradingSettings.DeduplicationLockExpiryPeriod);
+                        await _database.LockExtendAsync(LockKey, _lockValue,
+                            _marginTradingSettings.DeduplicationLockExpiryPeriod);
                     }
                 }
                 catch (Exception exception)
                 {
-                    await _log.WriteFatalErrorAsync(nameof(StartupDeduplicationService), 
-                        nameof(HoldLock), exception);
-
                     workerException = exception;
                     _cancellationTokenSource.Cancel();
                 }
