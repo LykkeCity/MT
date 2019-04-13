@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Common.Log;
 using Lykke.Common;
 using MarginTrading.Backend.Core.Settings;
@@ -8,25 +9,29 @@ using StackExchange.Redis;
 
 namespace MarginTrading.Backend.Services.Infrastructure
 {
+    /// <inheritdoc />
     /// <summary>
     /// Ensure that only single instance of the app is running.
     /// </summary>
-    public class StartupDeduplicationService
+    public class StartupDeduplicationService : IDisposable
     {
         private const string LockKey = "TradingEngine:DeduplicationLock";
         private readonly string _lockValue = Environment.MachineName;
 
         private readonly IHostingEnvironment _hostingEnvironment; 
-        private readonly IThreadSwitcher _threadSwitcher;
+        private readonly ILog _log;
         private readonly MarginTradingSettings _marginTradingSettings;
+
+        private IDatabase _database = null;
+        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         public StartupDeduplicationService(
             IHostingEnvironment hostingEnvironment,
-            IThreadSwitcher threadSwitcher,
+            ILog log,
             MarginTradingSettings marginTradingSettings)
         {
             _hostingEnvironment = hostingEnvironment;
-            _threadSwitcher = threadSwitcher;
+            _log = log;
             _marginTradingSettings = marginTradingSettings;
         }
 
@@ -48,34 +53,47 @@ namespace MarginTrading.Backend.Services.Infrastructure
             {
                 return;
             }
+            
+            var multiplexer = ConnectionMultiplexer.Connect(_marginTradingSettings.RedisSettings.Configuration);
+            _database = multiplexer.GetDatabase();
 
-            _threadSwitcher.SwitchThread(() =>
+            if (!_database.LockTake(LockKey, _lockValue, _marginTradingSettings.DeduplicationLockExpiryPeriod))
             {
-                IDatabase db = null;
+                throw new Exception("Trading Engine failed to start due to deduplication validation failure.");
+                // exception is logged by the global handler
+            }
+
+            Exception workerException = null;
+            // ReSharper disable once PossibleNullReferenceException
+            _cancellationTokenSource.Token.Register(() => throw workerException);
+            
+            Task.Run(async () =>
+            {
                 try
                 {
-                    var multiplexer = ConnectionMultiplexer.Connect(_marginTradingSettings.RedisSettings.Configuration);
-                    db = multiplexer.GetDatabase();
-
-                    if (!db.LockTake(LockKey, _lockValue, _marginTradingSettings.DeduplicationLockExpiryPeriod))
-                    {
-                        throw new Exception("Trading Engine failed to start due to deduplication validation failure.");
-                    }
-                    
                     while (true)
                     {
                         // wait and extend lock
                         Thread.Sleep(_marginTradingSettings.DeduplicationLockExtensionPeriod);
 
-                        db.LockExtend(LockKey, _lockValue, _marginTradingSettings.DeduplicationLockExpiryPeriod);
+                        _database.LockExtend(LockKey, _lockValue, _marginTradingSettings.DeduplicationLockExpiryPeriod);
                     }
                 }
-                // exceptions are logged by thread switcher
-                finally
+                catch (Exception exception)
                 {
-                    db?.LockRelease(LockKey, _lockValue);
+                    await _log.WriteFatalErrorAsync(nameof(StartupDeduplicationService), 
+                        nameof(HoldLock), exception);
+
+                    workerException = exception;
+                    _cancellationTokenSource.Cancel();
                 }
             });
+        }
+
+        public void Dispose()
+        {
+            _database?.LockRelease(LockKey, _lockValue);
+            _cancellationTokenSource.Dispose();
         }
     }
 }
