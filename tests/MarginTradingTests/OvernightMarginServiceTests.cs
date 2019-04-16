@@ -35,8 +35,7 @@ namespace MarginTradingTests
             var overnightMarginService = new OvernightMarginService(Mock.Of<IDateService>(), Mock.Of<ITradingEngine>(),
                 Mock.Of<IAccountsCacheService>(), Mock.Of<IAccountUpdateService>(),
                 Mock.Of<IScheduleSettingsCacheService>(), Mock.Of<IOvernightMarginParameterContainer>(),
-                Mock.Of<IOvernightMarginRepository>(),
-                Mock.Of<ILog>(), Mock.Of<IEventChannel<MarginCallEventArgs>>(), new OvernightMarginSettings());
+                Mock.Of<IEventChannel<MarginCallEventArgs>>(), new OvernightMarginSettings());
             var actualResult = overnightMarginService.TryGetOperatingInterval(platformTrading, currentDateTime, 
                 out var resultingInterval);
             

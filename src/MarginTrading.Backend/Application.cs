@@ -206,7 +206,7 @@ namespace MarginTrading.Backend
                     break;
                 
                 case SettingsTypeContract.TradingInstrument:
-                    await _tradingInstrumentsManager.UpdateTradingInstrumentsCacheAsync();
+                    await _tradingInstrumentsManager.UpdateTradingInstrumentsCacheAsync(message.ChangedEntityId);
                     break;
                 
                 case SettingsTypeContract.TradingRoute:

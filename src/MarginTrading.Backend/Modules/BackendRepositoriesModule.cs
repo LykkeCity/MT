@@ -76,10 +76,6 @@ namespace MarginTrading.Backend.Modules
                     .WithParameter(new NamedParameter("connectionStringManager",
                         _settings.Nested(x => x.Db.MarginTradingConnString)))
                     .SingleInstance();
-
-                builder.RegisterType<AzureRepositories.OvernightMarginRepository>()
-                    .As<IOvernightMarginRepository>()
-                    .SingleInstance();
             }
             else if (_settings.CurrentValue.Db.StorageMode == StorageMode.SqlServer)
             {
@@ -132,10 +128,6 @@ namespace MarginTrading.Backend.Modules
                         _settings.CurrentValue.Db.PositionsHistorySqlConnectionString))
                     .WithParameter(new NamedParameter("tableName", 
                         _settings.CurrentValue.Db.PositionsHistoryTableName))
-                    .SingleInstance();
-
-                builder.RegisterType<SqlRepositories.Repositories.OvernightMarginRepository>()
-                    .As<IOvernightMarginRepository>()
                     .SingleInstance();
             }
             

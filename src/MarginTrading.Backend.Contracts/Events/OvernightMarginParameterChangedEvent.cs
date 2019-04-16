@@ -22,21 +22,15 @@ namespace MarginTrading.Backend.Contracts.Events
         public DateTime EventTimestamp { get; set; }
         
         /// <summary>
-        /// Old value of parameter.
+        /// Current state of parameter.
         /// </summary>
         [Key(2)]
-        public decimal OldValue { get; set; }
+        public bool CurrentState { get; set; }
         
         /// <summary>
-        /// New value of parameter.
+        /// Current value of all multipliers, serialized to JSON.
         /// </summary>
         [Key(3)]
-        public decimal NewValue { get; set; }
-        
-        /// <summary>
-        /// Indicated if currently applied parameter has been changed.
-        /// </summary>
-        [Key(4)]
-        public bool ChangedActualValue { get; set; }
+        public string MultipliersValue { get; set; }
     }
 }

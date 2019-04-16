@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
 namespace MarginTrading.Backend.Services.TradingConditions
 {
     /// <summary>
@@ -6,8 +9,18 @@ namespace MarginTrading.Backend.Services.TradingConditions
     public interface IOvernightMarginParameterContainer
     {
         /// <summary>
-        /// Multiplier for the intraday margin parameter to be active at night. 
+        /// Get state for the intraday margin parameter. 
         /// </summary>
-        decimal OvernightMarginParameter { get; set; }
+        bool GetOvernightMarginParameterState();
+
+        /// <summary>
+        /// Set multiplier for the intraday margin parameter to be active at night. 
+        /// </summary>
+        void SetOvernightMarginParameterState(bool isOn);
+        
+        /// <summary>
+        /// Get overnight margin parameter values, which depends on state and asset pair's multiplier.
+        /// </summary>
+        Dictionary<(string, string), decimal> GetOvernightMarginParameterValues();
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Contracts;
@@ -23,77 +24,36 @@ namespace MarginTrading.Backend.Controllers
     public class ServiceController : Controller, IServiceApi
     {
         private readonly IOvernightMarginParameterContainer _overnightMarginParameterContainer;
-        private readonly IOvernightMarginRepository _overnightMarginRepository;
-        private readonly ICqrsSender _cqrsSender;
-        private readonly IIdentityGenerator _identityGenerator;
-        private readonly IDateService _dateService;
 
         public ServiceController(
-            IOvernightMarginParameterContainer overnightMarginParameterContainer,
-            IOvernightMarginRepository overnightMarginRepository,
-            ICqrsSender cqrsSender,
-            IIdentityGenerator identityGenerator,
-            IDateService dateService)
+            IOvernightMarginParameterContainer overnightMarginParameterContainer)
         {
             _overnightMarginParameterContainer = overnightMarginParameterContainer;
-            _overnightMarginRepository = overnightMarginRepository;
-            _cqrsSender = cqrsSender;
-            _identityGenerator = identityGenerator;
-            _dateService = dateService;
         }
 
         /// <summary>
-        /// Get current value of overnight margin parameter.
+        /// Get current state of overnight margin parameter.
         /// </summary>
         [HttpGet("current-overnight-margin-parameter")]
-        public Task<decimal> GetCurrentOvernightMarginParameter()
+        public Task<bool> GetOvernightMarginParameterCurrentState()
         {
-            return Task.FromResult(_overnightMarginParameterContainer.OvernightMarginParameter);
+            return Task.FromResult(_overnightMarginParameterContainer.GetOvernightMarginParameterState());
         }
 
         /// <summary>
-        /// Get persisted value of overnight margin parameter.
-        /// This value is applied at corresponding time, which depends on settings.
+        /// Get current margin parameter values for instruments (all / filtered by IDs).
         /// </summary>
         [HttpGet("overnight-margin-parameter")]
-        public Task<decimal> GetOvernightMarginParameter()
+        public Task<Dictionary<(string, string), decimal>> GetOvernightMarginParameterValues(
+            [FromQuery] string[] instruments = null)
         {
-            return Task.FromResult(_overnightMarginRepository.ReadOvernightMarginParameter());
-        }
-        
-        /// <summary>
-        /// Set and persist new value of overnight margin parameter.
-        /// </summary>
-        [HttpPut("overnight-margin-parameter")]
-        public async Task SetOvernightMarginParameter(decimal newValue, string correlationId = null)
-        {
-            if (newValue <= 0 || newValue > 100)
-            {
-                throw new ArgumentOutOfRangeException(nameof(newValue),
-                    "Overnight margin parameter value must be > 0 and <= 100");
-            }
-
-            correlationId = correlationId ?? _identityGenerator.GenerateAlphanumericId();
-
-            var changedActualValue = false;
-            if (_overnightMarginParameterContainer.OvernightMarginParameter != 1)
-            {
-                _overnightMarginParameterContainer.OvernightMarginParameter = newValue;
-                changedActualValue = true;
-            }
-
-            var oldValue = _overnightMarginRepository.ReadOvernightMarginParameter();
-
-            await _overnightMarginRepository.WriteOvernightMarginParameterAsync(newValue);
+            var result = _overnightMarginParameterContainer.GetOvernightMarginParameterValues()
+                .Where(x => instruments == null || !instruments.Any() || instruments.Contains(x.Key.Item2))
+                .OrderBy(x => x.Key.Item1)
+                .ThenBy(x => x.Key.Item2)
+                .ToDictionary(x => x.Key, x => x.Value);
             
-            _cqrsSender.PublishEvent(new OvernightMarginParameterChangedEvent
-            {
-                CorrelationId = correlationId,
-                EventTimestamp = _dateService.Now(),
-                OldValue = oldValue,
-                NewValue = newValue,
-                ChangedActualValue = changedActualValue,
-            });
+            return Task.FromResult(result);
         }
     }
 }
