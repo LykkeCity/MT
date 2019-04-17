@@ -358,9 +358,9 @@ namespace MarginTrading.Backend.Services
             return order;
         }
 
-        public bool ShouldOpenNewPosition(Order order)
+        public bool ShouldOpenNewPosition(Order order, bool? forceOpen = null)
         {
-            var shouldOpenNewPosition = order.ForceOpen;
+            var shouldOpenNewPosition = forceOpen ?? order.ForceOpen;
 
             if (!order.PositionsToBeClosed.Any() && !shouldOpenNewPosition)
             {
@@ -749,12 +749,18 @@ namespace MarginTrading.Backend.Services
 
 
         public void ChangeOrder(string orderId, decimal price, DateTime? validity, OriginatorType originator,
-            string additionalInfo, string correlationId)
+            string additionalInfo, string correlationId, bool? forceOpen = null)
         {
             var order = _ordersCache.GetOrderById(orderId);
+            
+            var assetPair = _validateOrderService.GetAssetPairIfAvailableForTrading(order.AssetPairId, order.OrderType, 
+                order.ForceOpen, false);
+            price = Math.Round(price, assetPair.Accuracy);
           
             _validateOrderService.ValidateOrderPriceChange(order, price);
             _validateOrderService.ValidateValidity(validity, order.OrderType);
+            _validateOrderService.ValidateForceOpenChange(order, forceOpen, 
+                _meRouter.GetMatchingEngineForExecution(order), ShouldOpenNewPosition(order, forceOpen));
 
             if (order.Price != price)
             {
@@ -784,6 +790,11 @@ namespace MarginTrading.Backend.Services
                 };
             
                 _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata));    
+            }
+
+            if (forceOpen.HasValue && forceOpen.Value != order.ForceOpen)
+            {
+                order.ChangeForceOpen(forceOpen.Value, _dateService.Now(), originator, additionalInfo, correlationId);
             }
         }
         

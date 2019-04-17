@@ -206,7 +206,9 @@ namespace MarginTrading.Backend.Controllers
         public Task ChangeAsync(string orderId, [FromBody] OrderChangeRequest request)
         {
             if (!_ordersCache.TryGetOrderById(orderId, out var order))
+            {
                 throw new InvalidOperationException("Order not found");
+            }
 
             try
             {
@@ -217,7 +219,7 @@ namespace MarginTrading.Backend.Controllers
                     : request.CorrelationId;
 
                 _tradingEngine.ChangeOrder(order.Id, request.Price, request.Validity, originator,
-                    request.AdditionalInfo, correlationId);
+                    request.AdditionalInfo, correlationId, request.ForceOpen);
             }
             catch (ValidateOrderException ex)
             {

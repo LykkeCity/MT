@@ -20,10 +20,9 @@ namespace MarginTrading.Backend.Core
             string comment = null, OrderCancellationReason reason = OrderCancellationReason.None);
             
         void ChangeOrder(string orderId, decimal price, DateTime? validity, OriginatorType originator,
-            string additionalInfo,
-            string correlationId);
+            string additionalInfo, string correlationId, bool? forceOpen = null);
             
-        bool ShouldOpenNewPosition(Order order);
+        bool ShouldOpenNewPosition(Order order, bool? forceOpen = null);
         
         void ProcessExpiredOrders();
     }

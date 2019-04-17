@@ -370,7 +370,7 @@ namespace MarginTradingTests
             Assert.AreEqual(OriginatorType.Investor, order.Originator);
             Assert.AreEqual(null, order.AdditionalInfo);
             
-            _tradingEngine.ChangeOrder(order.Id, 0.9M, null, OriginatorType.OnBehalf, "info", Guid.NewGuid().ToString());
+            _tradingEngine.ChangeOrder(order.Id, 0.9M, null, OriginatorType.OnBehalf, "info", Guid.NewGuid().ToString(), null);
 
             Assert.AreEqual(OrderStatus.Active, order.Status);
             Assert.AreEqual(0.9M, order.Price);
@@ -1083,7 +1083,7 @@ namespace MarginTradingTests
 
             var ex = Assert.Throws<ValidateOrderException>(() =>
                 _tradingEngine.ChangeOrder(order.Id, 1.2M, null, OriginatorType.Investor, "",
-                    Guid.NewGuid().ToString()));
+                    Guid.NewGuid().ToString(), null));
 
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidExpectedOpenPrice);
             StringAssert.Contains("1.05/1.1", ex.Comment);

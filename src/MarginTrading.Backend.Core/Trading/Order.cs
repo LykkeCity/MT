@@ -411,6 +411,16 @@ namespace MarginTrading.Backend.Core.Trading
             AdditionalInfo = additionalInfo ?? AdditionalInfo;
             CorrelationId = correlationId;
         }
+
+        public void ChangeForceOpen(bool newForceOpen, DateTime dateTime, OriginatorType originator, string additionalInfo,
+            string correlationId)
+        {
+            LastModified = dateTime;
+            ForceOpen = newForceOpen;
+            Originator = originator;
+            AdditionalInfo = additionalInfo ?? AdditionalInfo;
+            CorrelationId = correlationId;
+        }
         
         public void ChangeVolume(decimal newVolume, DateTime dateTime, OriginatorType originator)
         {
