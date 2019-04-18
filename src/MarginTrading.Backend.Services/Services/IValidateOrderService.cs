@@ -26,6 +26,6 @@ namespace MarginTrading.Backend.Services
         bool CheckIfPendingOrderExecutionPossible(string assetPairId, OrderType orderType, bool shouldOpenNewPosition);
         void ValidateValidity(DateTime? validity, OrderType orderType);
         void ValidateForceOpenChange(Order order, bool? forceOpen, IMatchingEngineBase matchingEngine,
-            bool houldOpenNewPosition);
+            bool shouldOpenNewPosition);
     }
 }

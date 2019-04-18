@@ -794,7 +794,17 @@ namespace MarginTrading.Backend.Services
 
             if (forceOpen.HasValue && forceOpen.Value != order.ForceOpen)
             {
+                var oldForceOpen = order.ForceOpen;
+                
                 order.ChangeForceOpen(forceOpen.Value, _dateService.Now(), originator, additionalInfo, correlationId);
+
+                var metadata = new OrderChangedMetadata
+                {
+                    UpdatedProperty = OrderChangedProperty.ForceOpen,
+                    OldValue = oldForceOpen.ToString(),
+                };
+            
+                _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata)); 
             }
         }
         
