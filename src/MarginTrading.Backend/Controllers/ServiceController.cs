@@ -5,6 +5,7 @@ using MarginTrading.Backend.Contracts;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.TradingConditions;
@@ -27,19 +28,38 @@ namespace MarginTrading.Backend.Controllers
         private readonly ICqrsSender _cqrsSender;
         private readonly IIdentityGenerator _identityGenerator;
         private readonly IDateService _dateService;
+        private readonly ISnapshotService _snapshotService;
 
         public ServiceController(
             IOvernightMarginParameterContainer overnightMarginParameterContainer,
             IOvernightMarginRepository overnightMarginRepository,
             ICqrsSender cqrsSender,
             IIdentityGenerator identityGenerator,
-            IDateService dateService)
+            IDateService dateService,
+            ISnapshotService snapshotService)
         {
             _overnightMarginParameterContainer = overnightMarginParameterContainer;
             _overnightMarginRepository = overnightMarginRepository;
             _cqrsSender = cqrsSender;
             _identityGenerator = identityGenerator;
             _dateService = dateService;
+            _snapshotService = snapshotService;
+        }
+
+        /// <summary>
+        /// Save snapshot of orders, positions, account stats, best fx prices, best trading prices for current moment.
+        /// Throws an error in case if trading is not stopped.
+        /// </summary>
+        /// <returns>Snapshot statistics.</returns>
+        [HttpPost("make-trading-data-snapshot")]
+        public async Task<string> MakeTradingDataSnapshot([FromQuery] string correlationId = null)
+        {
+            if (string.IsNullOrWhiteSpace(correlationId))
+            {
+                correlationId = _identityGenerator.GenerateGuid();
+            }
+            
+            return await _snapshotService.MakeTradingDataSnapshot(correlationId);
         }
 
         /// <summary>

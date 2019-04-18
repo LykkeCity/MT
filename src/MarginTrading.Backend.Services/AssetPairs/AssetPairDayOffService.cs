@@ -44,16 +44,8 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
             var schedule = _scheduleSettingsCacheService.GetCompiledScheduleSettings(assetPairId, 
                 currentDateTime, scheduleCutOff);
-            
-            var intersecting = schedule.Where(x => IsBetween(currentDateTime, x.Start, x.End));
 
-            return !(intersecting.OrderByDescending(x => x.Schedule.Rank)
-                         .Select(x => x.Schedule).FirstOrDefault()?.IsTradeEnabled ?? true);
-        }
-
-        private static bool IsBetween(DateTime currentDateTime, DateTime start, DateTime end)
-        {
-            return start <= currentDateTime && currentDateTime < end;
+            return !_scheduleSettingsCacheService.GetTradingEnabled(schedule);
         }
     }
 }
