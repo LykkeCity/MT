@@ -35,6 +35,6 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         bool GetPlatformTradingEnabled();
 
-        bool GetTradingEnabled(IEnumerable<CompiledScheduleTimeInterval> timeIntervals);
+        bool AssetPairTradingEnabled(string assetPairId, TimeSpan scheduleCutOff);
     }
 }

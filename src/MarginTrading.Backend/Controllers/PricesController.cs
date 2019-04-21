@@ -7,6 +7,7 @@ using MarginTrading.Backend.Contracts.Snow.Prices;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Services;
+using MarginTrading.Backend.Services.Mappers;
 using MarginTrading.Contract.BackendContracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -51,7 +52,7 @@ namespace MarginTrading.Backend.Controllers
             if (request.AssetIds != null && request.AssetIds.Any())
                 allQuotes = allQuotes.Where(q => request.AssetIds.Contains(q.Key));
 
-            return Task.FromResult(allQuotes.ToDictionary(q => q.Key, q => Convert(q.Value)));
+            return Task.FromResult(allQuotes.ToDictionary(q => q.Key, q => q.Value.ConvertToContract()));
         }
 
         /// <summary>
@@ -70,7 +71,7 @@ namespace MarginTrading.Backend.Controllers
             if (request.AssetIds != null && request.AssetIds.Any())
                 allQuotes = allQuotes.Where(q => request.AssetIds.Contains(q.Key));
 
-            return Task.FromResult(allQuotes.ToDictionary(q => q.Key, q => Convert(q.Value)));
+            return Task.FromResult(allQuotes.ToDictionary(q => q.Key, q => q.Value.ConvertToContract()));
         }
 
         [HttpDelete]
@@ -117,17 +118,6 @@ namespace MarginTrading.Backend.Controllers
             _fxRateCacheService.RemoveQuote(assetPairId);
             
             return MtBackendResponse<bool>.Ok(true);
-        }
-        
-        private BestPriceContract Convert(InstrumentBidAskPair arg)
-        {
-            return new BestPriceContract
-            {
-                Ask = arg.Ask,
-                Bid = arg.Bid,
-                Id = arg.Instrument,
-                Timestamp = arg.Date,
-            };
         }
     }
 }

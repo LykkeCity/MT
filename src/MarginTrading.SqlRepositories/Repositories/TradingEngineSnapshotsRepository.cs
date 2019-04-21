@@ -1,14 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using Dapper;
-using MarginTrading.Backend.Contracts.Account;
-using MarginTrading.Backend.Contracts.Orders;
-using MarginTrading.Backend.Contracts.Positions;
-using MarginTrading.Backend.Contracts.Snow.Prices;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
 
@@ -49,10 +44,8 @@ INDEX IX_{0}_Base (CorrelationId, Timestamp)
             }
         }
 
-        public async Task Add(string correlationId, DateTime timestamp, IEnumerable<OrderContract> orders,
-            IEnumerable<OpenPositionContract> positions, IEnumerable<AccountStatContract> accounts,
-            Dictionary<string, BestPriceContract> bestFxPrices,
-            Dictionary<string, BestPriceContract> bestTradingPrices)
+        public async Task Add(string correlationId, DateTime timestamp, string orders, string positions, string accounts,
+            string bestFxPrices, string bestTradingPrices)
         {
             using (var conn = new SqlConnection(_connectionString))
             {
@@ -64,11 +57,11 @@ VALUES (@CorrelationId,@Timestamp,@Orders,@Positions,@AccountStats,@BestFxPrices
                     {
                         CorrelationId = correlationId,
                         Timestamp = timestamp,
-                        Orders = orders.ToJson(),
-                        Positions = positions.ToJson(),
-                        AccountStats = accounts.ToJson(),
-                        BestFxPrices = bestFxPrices.ToJson(),
-                        BestPrices = bestTradingPrices.ToJson(),
+                        Orders = orders,
+                        Positions = positions,
+                        AccountStats = accounts,
+                        BestFxPrices = bestFxPrices,
+                        BestPrices = bestTradingPrices,
                     });
             }
         }

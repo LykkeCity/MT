@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Common;
 using MarginTrading.Backend.Contracts.Account;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
@@ -71,11 +72,11 @@ namespace MarginTrading.Backend.Services.Infrastructure
                 await _tradingEngineSnapshotsRepository.Add(
                     correlationId, 
                     _dateService.Now(), 
-                    orders.Select(x => x.ConvertToContract(GetRelatedOrders(x))), 
-                    positions.Select(Convert), 
-                    accountStats.Select(Convert), 
-                    bestFxPrices.ToDictionary(q => q.Key, q => Convert(q.Value)),
-                    bestPrices.ToDictionary(q => q.Key, q => Convert(q.Value)));
+                    orders.Select(x => x.ConvertToContract(_orderReader)).ToJson(),
+                    positions.Select(x => x.ConvertToContract(_orderReader)).ToJson(),
+                    accountStats.Select(x => x.ConvertToContract()).ToJson(),
+                    bestFxPrices.ToDictionary(q => q.Key, q => q.Value.ConvertToContract()).ToJson(),
+                    bestPrices.ToDictionary(q => q.Key, q => q.Value.ConvertToContract()).ToJson());
 
                 return $@"Trading data snapshot was written to the storage. 
 Orders: {orders.Length}, positions: {positions.Length}, accounts: {accountStats.Count}, 
@@ -85,107 +86,6 @@ best FX prices: {bestFxPrices.Count}, best trading prices: {bestPrices.Count}.";
             {
                 _semaphoreSlim.Release();
             }
-        }
-
-        private List<Order> GetRelatedOrders(Order order)
-        {
-            var relatedOrders = new List<Order>();
-
-            foreach (var relatedOrderInfo in order.RelatedOrders)
-            {
-                if (_orderReader.TryGetOrderById(relatedOrderInfo.Id, out var relatedOrder))
-                {
-                    relatedOrders.Add(relatedOrder);
-                }
-            }
-
-            return relatedOrders;
-        }
-        
-        private OpenPositionContract Convert(Position position)
-        {
-            var relatedOrders = new List<RelatedOrderInfoContract>();
-
-            foreach (var relatedOrderInfo in position.RelatedOrders)
-            {
-                if (_orderReader.TryGetOrderById(relatedOrderInfo.Id, out var relatedOrder))
-                {
-                    relatedOrders.Add(new RelatedOrderInfoContract
-                    {
-                        Id = relatedOrder.Id,
-                        Price = relatedOrder.Price ?? 0,
-                        Type = relatedOrder.OrderType.ToType<OrderTypeContract>(),
-                        Status = relatedOrder.Status.ToType<OrderStatusContract>(),
-                        ModifiedTimestamp = relatedOrder.LastModified
-                    });
-                }
-            }
-
-            return new OpenPositionContract
-            {
-                AccountId = position.AccountId,
-                AssetPairId = position.AssetPairId,
-                CurrentVolume = position.Volume,
-                Direction = position.Direction.ToType<PositionDirectionContract>(),
-                Id = position.Id,
-                OpenPrice = position.OpenPrice,
-                OpenFxPrice = position.OpenFxPrice,
-                ClosePrice = position.ClosePrice,
-                ExpectedOpenPrice = position.ExpectedOpenPrice,
-                OpenTradeId = position.OpenTradeId,
-                OpenOrderType = position.OpenOrderType.ToType<OrderTypeContract>(),
-                OpenOrderVolume = position.OpenOrderVolume,
-                PnL = position.GetFpl(),
-                ChargedPnl = position.ChargedPnL,
-                Margin = position.GetMarginMaintenance(),
-                FxRate = position.GetFplRate(),
-                FxAssetPairId = position.FxAssetPairId,
-                FxToAssetPairDirection = position.FxToAssetPairDirection.ToType<FxToAssetPairDirectionContract>(),
-                RelatedOrders = position.RelatedOrders.Select(o => o.Id).ToList(),
-                RelatedOrderInfos = relatedOrders,
-                OpenTimestamp = position.OpenDate,
-                ModifiedTimestamp = position.LastModified,
-                TradeId = position.Id,
-                AdditionalInfo = position.AdditionalInfo
-            };
-        }
-        
-        private static AccountStatContract Convert(IMarginTradingAccount item)
-        {
-            return new AccountStatContract
-            {
-                AccountId = item.Id,
-                BaseAssetId = item.BaseAssetId,
-                Balance = item.Balance,
-                MarginCallLevel = item.GetMarginCall1Level(),
-                StopOutLevel = item.GetStopOutLevel(),
-                TotalCapital = item.GetTotalCapital(),
-                FreeMargin = item.GetFreeMargin(),
-                MarginAvailable = item.GetMarginAvailable(),
-                UsedMargin = item.GetUsedMargin(),
-                CurrentlyUsedMargin = item.GetCurrentlyUsedMargin(),
-                InitiallyUsedMargin = item.GetInitiallyUsedMargin(),
-                MarginInit = item.GetMarginInit(),
-                PnL = item.GetPnl(),
-                UnrealizedDailyPnl = item.GetUnrealizedDailyPnl(),
-                OpenPositionsCount = item.GetOpenPositionsCount(),
-                ActiveOrdersCount = item.GetActiveOrdersCount(),
-                MarginUsageLevel = item.GetMarginUsageLevel(),
-                LegalEntity = item.LegalEntity,
-                IsInLiquidation = item.IsInLiquidation(),
-                MarginNotificationLevel = item.GetAccountLevel().ToString()
-            };
-        }
-        
-        private static BestPriceContract Convert(InstrumentBidAskPair arg)
-        {
-            return new BestPriceContract
-            {
-                Ask = arg.Ask,
-                Bid = arg.Bid,
-                Id = arg.Instrument,
-                Timestamp = arg.Date,
-            };
         }
     }
 }

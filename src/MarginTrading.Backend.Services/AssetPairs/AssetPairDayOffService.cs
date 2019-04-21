@@ -40,12 +40,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
         /// <returns></returns>
         private bool IsNowNotInSchedule(string assetPairId, TimeSpan scheduleCutOff)
         {
-            var currentDateTime = _dateService.Now();
-
-            var schedule = _scheduleSettingsCacheService.GetCompiledScheduleSettings(assetPairId, 
-                currentDateTime, scheduleCutOff);
-
-            return !_scheduleSettingsCacheService.GetTradingEnabled(schedule);
+            return !_scheduleSettingsCacheService.AssetPairTradingEnabled(assetPairId, scheduleCutOff);
         }
     }
 }

@@ -13,7 +13,6 @@
     <NoWarn>1701;1702;1705;CA2007;0612;0618;1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MarginTrading.Backend.Contracts\MarginTrading.Backend.Contracts.csproj" />
     <ProjectReference Include="..\MarginTrading.Backend.Core\MarginTrading.Backend.Core.csproj" />
     <ProjectReference Include="..\MarginTrading.Contract\MarginTrading.Contract.csproj">
       <Project>{08346EF4-8525-4CE0-93C4-CCE510D27D88}</Project>

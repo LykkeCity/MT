@@ -156,7 +156,14 @@ namespace MarginTrading.Backend.Services.AssetPairs
             return GetTradingEnabled(platformSchedule);
         }
 
-        public bool GetTradingEnabled(IEnumerable<CompiledScheduleTimeInterval> timeIntervals)
+        public bool AssetPairTradingEnabled(string assetPairId, TimeSpan scheduleCutOff)
+        {
+            var schedule = GetCompiledScheduleSettings(assetPairId, _dateService.Now(), scheduleCutOff);
+
+            return GetTradingEnabled(schedule);
+        }
+
+        private bool GetTradingEnabled(IEnumerable<CompiledScheduleTimeInterval> timeIntervals)
         {
             var currentDateTime = _dateService.Now();
             
