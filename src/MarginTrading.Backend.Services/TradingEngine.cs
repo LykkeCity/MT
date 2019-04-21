@@ -358,9 +358,9 @@ namespace MarginTrading.Backend.Services
             return order;
         }
 
-        public bool ShouldOpenNewPosition(Order order, bool? forceOpen = null)
+        public bool ShouldOpenNewPosition(Order order)
         {
-            var shouldOpenNewPosition = forceOpen ?? order.ForceOpen;
+            var shouldOpenNewPosition = order.ForceOpen;
 
             if (!order.PositionsToBeClosed.Any() && !shouldOpenNewPosition)
             {
@@ -759,8 +759,7 @@ namespace MarginTrading.Backend.Services
           
             _validateOrderService.ValidateOrderPriceChange(order, price);
             _validateOrderService.ValidateValidity(validity, order.OrderType);
-            _validateOrderService.ValidateForceOpenChange(order, forceOpen, 
-                _meRouter.GetMatchingEngineForExecution(order), ShouldOpenNewPosition(order, forceOpen));
+            _validateOrderService.ValidateForceOpenChange(order, forceOpen);
 
             if (order.Price != price)
             {

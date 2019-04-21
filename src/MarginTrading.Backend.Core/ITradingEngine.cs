@@ -22,7 +22,7 @@ namespace MarginTrading.Backend.Core
         void ChangeOrder(string orderId, decimal price, DateTime? validity, OriginatorType originator,
             string additionalInfo, string correlationId, bool? forceOpen = null);
             
-        bool ShouldOpenNewPosition(Order order, bool? forceOpen = null);
+        bool ShouldOpenNewPosition(Order order);
         
         void ProcessExpiredOrders();
     }

@@ -214,49 +214,28 @@ namespace MarginTrading.Backend.Services
             return (baseOrder, relatedOrders);
         }
 
-        public void ValidateForceOpenChange(Order order, bool? forceOpen, IMatchingEngineBase matchingEngine,
-            bool shouldOpenNewPosition)
+        public void ValidateForceOpenChange(Order order, bool? forceOpen)
         {
             if (!forceOpen.HasValue || forceOpen.Value == order.ForceOpen)
             {
                 return;
             }
             
-            if (new [] {OrderType.StopLoss, OrderType.TakeProfit, OrderType.TrailingStop}.Contains(order.OrderType)
-                && forceOpen.Value)
+            if (!order.IsBasicPendingOrder() && forceOpen.Value)
             {
-                throw new ValidateOrderException(OrderRejectReason.None, "Force open cannot be set to true for related order");
+                throw new ValidateOrderException(OrderRejectReason.None,
+                    "Force open cannot be set to true for related order");
             }
 
-            GetAssetPairIfAvailableForTrading(order.AssetPairId, order.OrderType, forceOpen.Value, false);
-            
-            var account = _accountsCacheService.TryGet(order.AccountId);
-            if (account == null)
+            if (forceOpen.Value && order.Direction == OrderDirection.Sell)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidAccount, "Account not found");
-            }
-
-            ITradingInstrument tradingInstrument;
-            try
-            {
-                tradingInstrument =
-                    _tradingInstrumentsCache.GetTradingInstrument(account.TradingConditionId, order.AssetPairId);
-            }
-            catch
-            {
-                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
-                    "Instrument is not available for trading on selected account");
-            }
-            
-            if (shouldOpenNewPosition && order.Volume < 0 && !tradingInstrument.ShortPosition)
-            {
-                throw new ValidateOrderException(OrderRejectReason.ShortPositionsDisabled,
-                    $"Short positions are disabled for {tradingInstrument.Instrument}.");
-            }
-
-            if (shouldOpenNewPosition)
-            {
-                ValidateMargin(order, matchingEngine);
+                var tradingInstrument =
+                    _tradingInstrumentsCache.GetTradingInstrument(order.TradingConditionId, order.AssetPairId);
+                if (!tradingInstrument.ShortPosition)
+                {
+                    throw new ValidateOrderException(OrderRejectReason.ShortPositionsDisabled,
+                        $"Short positions are disabled for {tradingInstrument.Instrument}.");
+                }
             }
         }
 
