@@ -29,7 +29,7 @@ namespace MarginTrading.Backend.Contracts.Events
         public bool CurrentState { get; set; }
         
         /// <summary>
-        /// Current value of all parameters.
+        /// List all items with parameter value != 1. Format: [(TradingCondition, Instrument), Value].
         /// </summary>
         [Key(3)]
         public Dictionary<(string, string), decimal> ParameterValues { get; set; }

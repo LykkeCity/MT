@@ -151,7 +151,9 @@ namespace MarginTrading.Backend.Services.TradingConditions
                     CorrelationId = _identityGenerator.GenerateGuid(),
                     EventTimestamp = _dateService.Now(),
                     CurrentState = _overnightMarginParameterOn,
-                    ParameterValues = GetOvernightMarginParameterValues(),
+                    ParameterValues = GetOvernightMarginParameterValues()
+                        .Where(x => x.Value != 1)
+                        .ToDictionary(x => x.Key, x => x.Value),
                 });
             }
         }

@@ -40,7 +40,8 @@ namespace MarginTrading.Backend.Controllers
         {
             var result = _overnightMarginParameterContainer.GetOvernightMarginParameterValues()
                 .Where(x => instruments == null || !instruments.Any() || instruments.Contains(x.Key.Item2))
-                .OrderBy(x => x.Key.Item1)
+                .OrderBy(x => x.Value > 1 ? 0 : 1)
+                .ThenBy(x => x.Key.Item1)
                 .ThenBy(x => x.Key.Item2)
                 .ToDictionary(x => x.Key, x => x.Value);
             
