@@ -17,10 +17,11 @@ namespace MarginTrading.Backend.Services.TradingConditions
         /// Set multiplier for the intraday margin parameter to be active at night. 
         /// </summary>
         void SetOvernightMarginParameterState(bool isOn);
-        
+
         /// <summary>
         /// Get overnight margin parameter values, which depends on state and asset pair's multiplier.
         /// </summary>
-        Dictionary<(string, string), decimal> GetOvernightMarginParameterValues();
+        /// <param name="onlyNotEqualToOne"></param>
+        Dictionary<(string, string), decimal> GetOvernightMarginParameterValues(bool onlyNotEqualToOne = false);
     }
 }

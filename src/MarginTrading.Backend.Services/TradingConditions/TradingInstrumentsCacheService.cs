@@ -151,21 +151,21 @@ namespace MarginTrading.Backend.Services.TradingConditions
                     CorrelationId = _identityGenerator.GenerateGuid(),
                     EventTimestamp = _dateService.Now(),
                     CurrentState = _overnightMarginParameterOn,
-                    ParameterValues = GetOvernightMarginParameterValues()
-                        .Where(x => x.Value != 1)
-                        .ToDictionary(x => x.Key, x => x.Value),
+                    ParameterValues = GetOvernightMarginParameterValues(true),
                 });
             }
         }
 
-        public Dictionary<(string, string), decimal> GetOvernightMarginParameterValues()
+        public Dictionary<(string, string), decimal> GetOvernightMarginParameterValues(bool onlyNotEqualToOne = false)
         {
             _lockSlim.EnterReadLock();
             try
             {
-                return _instrumentsCache.ToDictionary(x => x.Key, x => _overnightMarginParameterOn
-                    ? x.Value.OvernightMarginMultiplier
-                    : 1);
+                return _instrumentsCache
+                    .Where(x => !onlyNotEqualToOne || x.Value.OvernightMarginMultiplier != 1)
+                    .ToDictionary(x => x.Key, x => _overnightMarginParameterOn
+                        ? x.Value.OvernightMarginMultiplier
+                        : 1);
             }
             finally
             {
