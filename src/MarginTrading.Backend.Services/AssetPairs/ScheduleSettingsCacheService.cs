@@ -149,6 +149,33 @@ namespace MarginTrading.Backend.Services.AssetPairs
             }
         }
 
+        public bool GetPlatformTradingEnabled()
+        {
+            var platformSchedule = GetPlatformTradingSchedule();
+
+            return GetTradingEnabled(platformSchedule);
+        }
+
+        public bool AssetPairTradingEnabled(string assetPairId, TimeSpan scheduleCutOff)
+        {
+            var schedule = GetCompiledScheduleSettings(assetPairId, _dateService.Now(), scheduleCutOff);
+
+            return GetTradingEnabled(schedule);
+        }
+
+        private bool GetTradingEnabled(IEnumerable<CompiledScheduleTimeInterval> timeIntervals)
+        {
+            var currentDateTime = _dateService.Now();
+            
+            var intersecting = timeIntervals.Where(x => x.Start <= currentDateTime && currentDateTime < x.End);
+
+            return intersecting
+                       .OrderByDescending(x => x.Schedule.Rank)
+                       .Select(x => x.Schedule)
+                       .FirstOrDefault()?
+                       .IsTradeEnabled ?? true;
+        }
+
         private static bool TradingScheduleChanged(string key,
             Dictionary<string, List<ScheduleSettings>> oldRawScheduleSettingsCache,
             Dictionary<string, List<ScheduleSettings>> newRawScheduleSettingsCache)

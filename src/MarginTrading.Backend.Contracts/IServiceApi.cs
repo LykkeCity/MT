@@ -12,6 +12,14 @@ namespace MarginTrading.Backend.Contracts
     public interface IServiceApi
     {
         /// <summary>
+        /// Save snapshot of orders, positions, account stats, best fx prices, best trading prices for current moment.
+        /// Throws an error in case if trading is not stopped.
+        /// </summary>
+        /// <returns>Snapshot statistics.</returns>
+        [Post("/api/service/make-trading-data-snapshot")]
+        Task<string> MakeTradingDataSnapshot([Query, CanBeNull] string correlationId = null);
+        
+        /// <summary>
         /// Get current state of overnight margin parameter.
         /// </summary>
         [Get("/api/service/current-overnight-margin-parameter")]

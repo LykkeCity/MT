@@ -2,6 +2,8 @@
 using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Contracts;
+using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Middleware;
 using Microsoft.AspNetCore.Authorization;
@@ -15,11 +17,33 @@ namespace MarginTrading.Backend.Controllers
     public class ServiceController : Controller, IServiceApi
     {
         private readonly IOvernightMarginParameterContainer _overnightMarginParameterContainer;
+        private readonly IIdentityGenerator _identityGenerator;
+        private readonly ISnapshotService _snapshotService;
 
         public ServiceController(
-            IOvernightMarginParameterContainer overnightMarginParameterContainer)
+            IOvernightMarginParameterContainer overnightMarginParameterContainer,
+            IIdentityGenerator identityGenerator,
+            ISnapshotService snapshotService)
         {
             _overnightMarginParameterContainer = overnightMarginParameterContainer;
+            _identityGenerator = identityGenerator;
+            _snapshotService = snapshotService;
+        }
+
+        /// <summary>
+        /// Save snapshot of orders, positions, account stats, best fx prices, best trading prices for current moment.
+        /// Throws an error in case if trading is not stopped.
+        /// </summary>
+        /// <returns>Snapshot statistics.</returns>
+        [HttpPost("make-trading-data-snapshot")]
+        public async Task<string> MakeTradingDataSnapshot([FromQuery] string correlationId = null)
+        {
+            if (string.IsNullOrWhiteSpace(correlationId))
+            {
+                correlationId = _identityGenerator.GenerateGuid();
+            }
+            
+            return await _snapshotService.MakeTradingDataSnapshot(correlationId);
         }
 
         /// <summary>

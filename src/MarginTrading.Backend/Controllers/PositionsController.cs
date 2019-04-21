@@ -20,6 +20,7 @@ using MarginTrading.Backend.Filters;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Infrastructure;
+using MarginTrading.Backend.Services.Mappers;
 using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Common.Extensions;
@@ -164,10 +165,10 @@ namespace MarginTrading.Backend.Controllers
         [HttpGet, Route("{positionId}")]
         public Task<OpenPositionContract> GetAsync(string positionId)
         {
-            if (!_ordersCache.Positions.TryGetPositionById(positionId, out var order))
+            if (!_ordersCache.Positions.TryGetPositionById(positionId, out var position))
                 return null;
 
-            return Task.FromResult(Convert(order));
+            return Task.FromResult(position.ConvertToContract(_ordersCache));
         }
 
         /// <summary>
@@ -185,7 +186,7 @@ namespace MarginTrading.Backend.Controllers
             if (!string.IsNullOrWhiteSpace(assetPairId))
                 positions = positions.Where(o => o.AssetPairId == assetPairId);
 
-            return Task.FromResult(positions.Select(Convert).ToList());
+            return Task.FromResult(positions.Select(x => x.ConvertToContract(_ordersCache)).ToList());
         }
 
         /// <summary>
@@ -218,7 +219,7 @@ namespace MarginTrading.Backend.Controllers
                 .Take(PaginationHelper.GetTake(take)).ToList();
 
             return Task.FromResult(new PaginatedResponseContract<OpenPositionContract>(
-                contents: filtered.Select(Convert).ToList(),
+                contents: filtered.Select(x => x.ConvertToContract(_ordersCache)).ToList(),
                 start: skip ?? 0,
                 size: filtered.Count,
                 totalSize: positionList.Count
@@ -238,54 +239,6 @@ namespace MarginTrading.Backend.Controllers
                 PositionIds = positionIds,
                 AccountId = accountId,
             });
-        }
-
-        private OpenPositionContract Convert(Position position)
-        {
-            var relatedOrders = new List<RelatedOrderInfoContract>();
-
-            foreach (var relatedOrderInfo in position.RelatedOrders)
-            {
-                if (_ordersCache.TryGetOrderById(relatedOrderInfo.Id, out var relatedOrder))
-                {
-                    relatedOrders.Add(new RelatedOrderInfoContract
-                    {
-                        Id = relatedOrder.Id,
-                        Price = relatedOrder.Price ?? 0,
-                        Type = relatedOrder.OrderType.ToType<OrderTypeContract>(),
-                        Status = relatedOrder.Status.ToType<OrderStatusContract>(),
-                        ModifiedTimestamp = relatedOrder.LastModified
-                    });
-                }
-            }
-
-            return new OpenPositionContract
-            {
-                AccountId = position.AccountId,
-                AssetPairId = position.AssetPairId,
-                CurrentVolume = position.Volume,
-                Direction = position.Direction.ToType<PositionDirectionContract>(),
-                Id = position.Id,
-                OpenPrice = position.OpenPrice,
-                OpenFxPrice = position.OpenFxPrice,
-                ClosePrice = position.ClosePrice,
-                ExpectedOpenPrice = position.ExpectedOpenPrice,
-                OpenTradeId = position.OpenTradeId,
-                OpenOrderType = position.OpenOrderType.ToType<OrderTypeContract>(),
-                OpenOrderVolume = position.OpenOrderVolume,
-                PnL = position.GetFpl(),
-                ChargedPnl = position.ChargedPnL,
-                Margin = position.GetMarginMaintenance(),
-                FxRate = position.GetFplRate(),
-                FxAssetPairId = position.FxAssetPairId,
-                FxToAssetPairDirection = position.FxToAssetPairDirection.ToType<FxToAssetPairDirectionContract>(),
-                RelatedOrders = position.RelatedOrders.Select(o => o.Id).ToList(),
-                RelatedOrderInfos = relatedOrders,
-                OpenTimestamp = position.OpenDate,
-                ModifiedTimestamp = position.LastModified,
-                TradeId = position.Id,
-                AdditionalInfo = position.AdditionalInfo
-            };
         }
 
         private OriginatorType GetOriginator(OriginatorTypeContract? originator)
