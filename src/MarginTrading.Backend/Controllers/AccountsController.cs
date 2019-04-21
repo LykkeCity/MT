@@ -9,6 +9,7 @@ using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Infrastructure;
+using MarginTrading.Backend.Services.Mappers;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
 using MarginTrading.Common.Extensions;
@@ -58,7 +59,7 @@ namespace MarginTrading.Backend.Controllers
         {
             var stats = _accountsCacheService.GetAll();
 
-            return Task.FromResult(stats.Select(Convert).ToList());
+            return Task.FromResult(stats.Select(x => x.ConvertToContract()).ToList());
         }
 
         /// <summary>
@@ -155,7 +156,7 @@ namespace MarginTrading.Backend.Controllers
         {
             var stats = _accountsCacheService.Get(accountId);
 
-            return Task.FromResult(Convert(stats));
+            return Task.FromResult(stats.ConvertToContract());
         }
         
         [HttpPost, Route("resume-liquidation/{accountId}")]
@@ -180,38 +181,11 @@ namespace MarginTrading.Backend.Controllers
             
             return Task.CompletedTask;
         }
-        
-        private static AccountStatContract Convert(IMarginTradingAccount item)
-        {
-            return new AccountStatContract
-            {
-                AccountId = item.Id,
-                BaseAssetId = item.BaseAssetId,
-                Balance = item.Balance,
-                MarginCallLevel = item.GetMarginCall1Level(),
-                StopOutLevel = item.GetStopOutLevel(),
-                TotalCapital = item.GetTotalCapital(),
-                FreeMargin = item.GetFreeMargin(),
-                MarginAvailable = item.GetMarginAvailable(),
-                UsedMargin = item.GetUsedMargin(),
-                CurrentlyUsedMargin = item.GetCurrentlyUsedMargin(),
-                InitiallyUsedMargin = item.GetInitiallyUsedMargin(),
-                MarginInit = item.GetMarginInit(),
-                PnL = item.GetPnl(),
-                UnrealizedDailyPnl = item.GetUnrealizedDailyPnl(),
-                OpenPositionsCount = item.GetOpenPositionsCount(),
-                ActiveOrdersCount = item.GetActiveOrdersCount(),
-                MarginUsageLevel = item.GetMarginUsageLevel(),
-                LegalEntity = item.LegalEntity,
-                IsInLiquidation = item.IsInLiquidation(),
-                MarginNotificationLevel = item.GetAccountLevel().ToString()
-            };
-        }
 
         private PaginatedResponseContract<AccountStatContract> Convert(PaginatedResponse<MarginTradingAccount> accounts)
         {
             return new PaginatedResponseContract<AccountStatContract>(
-                contents: accounts.Contents.Select(Convert).ToList(),
+                contents: accounts.Contents.Select(x => x.ConvertToContract()).ToList(),
                 start: accounts.Start,
                 size: accounts.Size,
                 totalSize: accounts.TotalSize

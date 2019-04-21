@@ -1,7 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using MarginTrading.Backend.Contracts.Account;
 using MarginTrading.Backend.Contracts.Orders;
+using MarginTrading.Backend.Contracts.Positions;
+using MarginTrading.Backend.Contracts.Snow.Prices;
 using MarginTrading.Backend.Contracts.TradeMonitoring;
+using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Common.Extensions;
@@ -13,6 +18,21 @@ namespace MarginTrading.Backend.Services.Mappers
 {
     public static class DomainToContractMappers
     {
+        public static OrderContract ConvertToContract(this Order order, IOrderReader orderReader)
+        {
+            var relatedOrders = new List<Order>();
+
+            foreach (var relatedOrderInfo in order.RelatedOrders)
+            {
+                if (orderReader.TryGetOrderById(relatedOrderInfo.Id, out var relatedOrder))
+                {
+                    relatedOrders.Add(relatedOrder);
+                }
+            }
+
+            return order.ConvertToContract(relatedOrders);
+        }
+        
         public static OrderContract ConvertToContract(this Order order, List<Order> relatedOrders)
         {
             RelatedOrderInfoContract Map(RelatedOrderInfo relatedOrderInfo)
@@ -89,6 +109,92 @@ namespace MarginTrading.Backend.Services.Mappers
                 AdditionalInfo = order.AdditionalInfo,
                 CorrelationId = order.CorrelationId,
                 PendingOrderRetriesCount = order.PendingOrderRetriesCount,
+            };
+        }
+        
+        public static OpenPositionContract ConvertToContract(this Position position, IOrderReader orderReader)
+        {
+            var relatedOrders = new List<RelatedOrderInfoContract>();
+
+            foreach (var relatedOrderInfo in position.RelatedOrders)
+            {
+                if (orderReader.TryGetOrderById(relatedOrderInfo.Id, out var relatedOrder))
+                {
+                    relatedOrders.Add(new RelatedOrderInfoContract
+                    {
+                        Id = relatedOrder.Id,
+                        Price = relatedOrder.Price ?? 0,
+                        Type = relatedOrder.OrderType.ToType<OrderTypeContract>(),
+                        Status = relatedOrder.Status.ToType<OrderStatusContract>(),
+                        ModifiedTimestamp = relatedOrder.LastModified
+                    });
+                }
+            }
+
+            return new OpenPositionContract
+            {
+                AccountId = position.AccountId,
+                AssetPairId = position.AssetPairId,
+                CurrentVolume = position.Volume,
+                Direction = position.Direction.ToType<PositionDirectionContract>(),
+                Id = position.Id,
+                OpenPrice = position.OpenPrice,
+                OpenFxPrice = position.OpenFxPrice,
+                ClosePrice = position.ClosePrice,
+                ExpectedOpenPrice = position.ExpectedOpenPrice,
+                OpenTradeId = position.OpenTradeId,
+                OpenOrderType = position.OpenOrderType.ToType<OrderTypeContract>(),
+                OpenOrderVolume = position.OpenOrderVolume,
+                PnL = position.GetFpl(),
+                ChargedPnl = position.ChargedPnL,
+                Margin = position.GetMarginMaintenance(),
+                FxRate = position.GetFplRate(),
+                FxAssetPairId = position.FxAssetPairId,
+                FxToAssetPairDirection = position.FxToAssetPairDirection.ToType<FxToAssetPairDirectionContract>(),
+                RelatedOrders = position.RelatedOrders.Select(o => o.Id).ToList(),
+                RelatedOrderInfos = relatedOrders,
+                OpenTimestamp = position.OpenDate,
+                ModifiedTimestamp = position.LastModified,
+                TradeId = position.Id,
+                AdditionalInfo = position.AdditionalInfo
+            };
+        }
+        
+        public static AccountStatContract ConvertToContract(this IMarginTradingAccount account)
+        {
+            return new AccountStatContract
+            {
+                AccountId = account.Id,
+                BaseAssetId = account.BaseAssetId,
+                Balance = account.Balance,
+                MarginCallLevel = account.GetMarginCall1Level(),
+                StopOutLevel = account.GetStopOutLevel(),
+                TotalCapital = account.GetTotalCapital(),
+                FreeMargin = account.GetFreeMargin(),
+                MarginAvailable = account.GetMarginAvailable(),
+                UsedMargin = account.GetUsedMargin(),
+                CurrentlyUsedMargin = account.GetCurrentlyUsedMargin(),
+                InitiallyUsedMargin = account.GetInitiallyUsedMargin(),
+                MarginInit = account.GetMarginInit(),
+                PnL = account.GetPnl(),
+                UnrealizedDailyPnl = account.GetUnrealizedDailyPnl(),
+                OpenPositionsCount = account.GetOpenPositionsCount(),
+                ActiveOrdersCount = account.GetActiveOrdersCount(),
+                MarginUsageLevel = account.GetMarginUsageLevel(),
+                LegalEntity = account.LegalEntity,
+                IsInLiquidation = account.IsInLiquidation(),
+                MarginNotificationLevel = account.GetAccountLevel().ToString()
+            };
+        }
+        
+        public static BestPriceContract ConvertToContract(this InstrumentBidAskPair arg)
+        {
+            return new BestPriceContract
+            {
+                Ask = arg.Ask,
+                Bid = arg.Bid,
+                Id = arg.Instrument,
+                Timestamp = arg.Date,
             };
         }
     }

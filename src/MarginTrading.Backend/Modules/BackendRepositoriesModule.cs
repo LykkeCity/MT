@@ -80,6 +80,10 @@ namespace MarginTrading.Backend.Modules
                 builder.RegisterType<AzureRepositories.OvernightMarginRepository>()
                     .As<IOvernightMarginRepository>()
                     .SingleInstance();
+
+                builder.RegisterType<AzureRepositories.TradingEngineSnapshotsRepository>()
+                    .As<ITradingEngineSnapshotsRepository>()
+                    .SingleInstance();
             }
             else if (_settings.CurrentValue.Db.StorageMode == StorageMode.SqlServer)
             {
@@ -136,6 +140,10 @@ namespace MarginTrading.Backend.Modules
 
                 builder.RegisterType<SqlRepositories.Repositories.OvernightMarginRepository>()
                     .As<IOvernightMarginRepository>()
+                    .SingleInstance();
+
+                builder.RegisterType<SqlRepositories.Repositories.TradingEngineSnapshotsRepository>()
+                    .As<ITradingEngineSnapshotsRepository>()
                     .SingleInstance();
             }
             
