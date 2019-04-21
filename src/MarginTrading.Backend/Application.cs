@@ -206,20 +206,18 @@ namespace MarginTrading.Backend
                     break;
                 
                 case SettingsTypeContract.TradingInstrument:
-                    await _tradingInstrumentsManager.UpdateTradingInstrumentsCacheAsync();
+                    await _tradingInstrumentsManager.UpdateTradingInstrumentsCacheAsync(message.ChangedEntityId);
                     break;
                 
                 case SettingsTypeContract.TradingRoute:
                     await _matchingEngineRoutesManager.UpdateRoutesCacheAsync();
                     break;
+                
                 case SettingsTypeContract.ScheduleSettings:
                     await _scheduleSettingsCacheService.UpdateAllSettingsAsync();
-                    _threadSwitcher.SwitchThread(() =>
-                    {
-                        _overnightMarginService.ScheduleNext();
-                        return Task.CompletedTask;
-                    });
+                    _overnightMarginService.ScheduleNext();
                     break;
+                
                 case SettingsTypeContract.Market:
                     break;
                 case SettingsTypeContract.ServiceMaintenance:

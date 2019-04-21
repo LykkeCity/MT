@@ -55,7 +55,7 @@ namespace MarginTrading.Backend.TestClient
             var generator = HttpClientGenerator.BuildForUrl("http://localhost:5000").WithApiKey("margintrading")
                 .WithRetriesStrategy(retryStrategy).Create();
 
-            await CheckPositionsAsync(generator);
+            await CheckMarginParametersAsync(generator);
             
             //await CheckAccountsAsync(generator);
             //await CheckOrdersAsync(generator);
@@ -98,6 +98,12 @@ namespace MarginTrading.Backend.TestClient
         {
             var api = generator.Generate<IAccountsApi>();
             await api.GetAllAccountStats().Dump();
+        }
+        
+        private static async Task CheckMarginParametersAsync(HttpClientGenerator generator)
+        {
+            var api = generator.Generate<IServiceApi>();
+            await api.GetOvernightMarginParameterValues(null).Dump();
         }
 
         public static T Dump<T>(this T o)

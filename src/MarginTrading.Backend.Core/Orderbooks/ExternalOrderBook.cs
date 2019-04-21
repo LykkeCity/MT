@@ -34,6 +34,17 @@ namespace MarginTrading.Backend.Core.Orderbooks
             }
         }
 
+        public InstrumentBidAskPair GetBestPrice()
+        {
+            return new InstrumentBidAskPair
+            {
+                Bid = Bids.First().Price,
+                Ask = Asks.First().Price,
+                Date = Timestamp,
+                Instrument = AssetPairId
+            };
+        }
+
         public decimal? GetMatchedPrice(decimal volumeToMatch, OrderDirection orderTypeToMatch)
         {
             if (volumeToMatch == 0)

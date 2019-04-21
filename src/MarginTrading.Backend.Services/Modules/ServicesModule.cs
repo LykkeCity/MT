@@ -31,8 +31,7 @@ namespace MarginTrading.Backend.Services.Modules
 				.AsSelf()
 				.As<IQuoteCacheService>()
 				.As<IEventConsumer<BestPriceChangeEventArgs>>()
-				.SingleInstance()
-				.OnActivated(args => args.Instance.Start());
+				.SingleInstance();
  
 			builder.RegisterType<FxRateCacheService>() 
 				.AsSelf()

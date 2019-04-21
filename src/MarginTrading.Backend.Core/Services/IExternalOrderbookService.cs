@@ -8,6 +8,8 @@ namespace MarginTrading.Backend.Core.Services
     {
         Task InitializeAsync();
 
+        List<ExternalOrderBook> GetOrderBooks();
+
         void SetOrderbook(ExternalOrderBook orderbook);
 
         List<(string source, decimal? price)> GetOrderedPricesForExecution(string assetPairId, decimal volume,

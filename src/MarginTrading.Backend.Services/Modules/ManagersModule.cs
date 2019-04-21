@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Caches;
@@ -61,6 +62,10 @@ namespace MarginTrading.Backend.Services.Modules
             builder.RegisterType<QuotesMonitor>()
                 .AsSelf()
                 .As<IStartable>()
+                .SingleInstance();
+            
+            builder.RegisterType<SnapshotService>()
+                .As<ISnapshotService>()
                 .SingleInstance();
         }
     }

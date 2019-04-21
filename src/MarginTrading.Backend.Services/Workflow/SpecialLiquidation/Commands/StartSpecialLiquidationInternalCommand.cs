@@ -1,5 +1,6 @@
 using System;
 using JetBrains.Annotations;
+using MarginTrading.Backend.Core.Orders;
 using MessagePack;
 
 namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands
@@ -26,5 +27,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands
         
         [Key(5)]
         public string AdditionalInfo { get; set; }
+        
+        [Key(6)]
+        public OriginatorType OriginatorType { get; set; }
     }
 }

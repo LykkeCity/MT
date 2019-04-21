@@ -32,5 +32,9 @@ namespace MarginTrading.Backend.Services.AssetPairs
         /// Get current and next day time intervals of the platform disablement hours.
         /// </summary>
         List<CompiledScheduleTimeInterval> GetPlatformTradingSchedule();
+
+        bool TryGetPlatformCurrentDisabledInterval(out CompiledScheduleTimeInterval disabledInterval);
+
+        bool AssetPairTradingEnabled(string assetPairId, TimeSpan scheduleCutOff);
     }
 }

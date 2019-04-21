@@ -6,6 +6,7 @@ using Common.Log;
 using FluentScheduler;
 using JetBrains.Annotations;
 using Lykke.AzureQueueIntegration;
+using Lykke.Common;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
 using Lykke.Logs.MsSql;
@@ -108,7 +109,7 @@ namespace MarginTrading.Backend
             SetupLoggers(Configuration, services, mtSettings);
 
             var deduplicationService = RunHealthChecks(mtSettings.CurrentValue.MtBackend);
-//            builder.RegisterInstance(deduplicationService).AsSelf().SingleInstance();
+            builder.RegisterInstance(deduplicationService).AsSelf().As<IDisposable>().SingleInstance();
 
             RegisterModules(builder, mtSettings, Environment);
 
@@ -170,7 +171,7 @@ namespace MarginTrading.Backend
             );
         }
 
-        private void RegisterModules(ContainerBuilder builder, IReloadingManager<MtBackendSettings> mtSettings,
+        private static void RegisterModules(ContainerBuilder builder, IReloadingManager<MtBackendSettings> mtSettings,
             IHostingEnvironment environment)
         {
             var settings = mtSettings.Nested(x => x.MtBackend);
@@ -189,14 +190,18 @@ namespace MarginTrading.Backend
             builder.RegisterModule(new BackendMigrationsModule());
             builder.RegisterModule(new CqrsModule(settings.CurrentValue.Cqrs, LogLocator.CommonLog, settings.CurrentValue));
 
-            builder.RegisterBuildCallback(c => c.Resolve<TradingInstrumentsManager>());
-            builder.RegisterBuildCallback(c => c.Resolve<OrderBookSaveService>());
-            builder.RegisterBuildCallback(async c => await c.Resolve<IExternalOrderbookService>().InitializeAsync());
-            builder.RegisterBuildCallback(c => c.Resolve<QuoteCacheService>());
-            builder.RegisterBuildCallback(c => c.Resolve<FxRateCacheService>());
-            builder.RegisterBuildCallback(c => c.Resolve<AccountManager>()); // note the order here is important!
-            builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
-            builder.RegisterBuildCallback(c => c.Resolve<PendingOrdersCleaningService>());
+            builder.RegisterBuildCallback(async c =>
+            {
+                // note the order here is important!
+                c.Resolve<TradingInstrumentsManager>();
+                c.Resolve<OrderBookSaveService>();
+                await c.Resolve<IExternalOrderbookService>().InitializeAsync();
+                c.Resolve<QuoteCacheService>().Start();
+                c.Resolve<FxRateCacheService>();
+                c.Resolve<AccountManager>();
+                c.Resolve<OrderCacheManager>();
+                c.Resolve<PendingOrdersCleaningService>();
+            });
         }
 
         private static void SetupLoggers(IConfiguration configuration, IServiceCollection services,
@@ -275,12 +280,13 @@ namespace MarginTrading.Backend
         /// Initialize scheduled jobs. Each job will start in time with dispersion of 100ms.
         /// </summary>
         private void InitializeJobs()
-        {
+        {   
             var registry = new Registry();
             
             registry.Schedule<ScheduleSettingsCacheWarmUpJob>()
                 .WithName(nameof(ScheduleSettingsCacheWarmUpJob)).ToRunEvery(1).Days().At(0, 0);
-            
+         
+            JobManager.UseUtcTime();   
             JobManager.Initialize(registry);
             
             ApplicationContainer.Resolve<IOvernightMarginService>().ScheduleNext();
@@ -288,10 +294,10 @@ namespace MarginTrading.Backend
 
         private StartupDeduplicationService RunHealthChecks(MarginTradingSettings marginTradingSettings)
         {
-            //todo return DeduplicationService reference to container and register it
-            var deduplicationService = new StartupDeduplicationService(Environment, new DateService(),
-                LogLocator.CommonLog, marginTradingSettings);
-//            deduplicationService.Start();
+            var deduplicationService = new StartupDeduplicationService(Environment, LogLocator.CommonLog, 
+                marginTradingSettings);
+            deduplicationService
+                .HoldLock();
             
             new StartupQueuesCheckerService(marginTradingSettings)
                 .Check();
