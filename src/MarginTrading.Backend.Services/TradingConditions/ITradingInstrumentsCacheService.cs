@@ -5,7 +5,7 @@ namespace MarginTrading.Backend.Services.TradingConditions
 {
     public interface ITradingInstrumentsCacheService
     {
-        void InitCache(IEnumerable<ITradingInstrument> accountAssets);
+        void InitCache(IEnumerable<ITradingInstrument> tradingInstruments);
 
         void UpdateCache(ITradingInstrument tradingInstrument);
         

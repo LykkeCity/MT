@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using MessagePack;
 
 namespace MarginTrading.Backend.Contracts.Events
@@ -28,9 +29,9 @@ namespace MarginTrading.Backend.Contracts.Events
         public bool CurrentState { get; set; }
         
         /// <summary>
-        /// Current value of all multipliers, serialized to JSON.
+        /// Current value of all parameters.
         /// </summary>
         [Key(3)]
-        public string MultipliersValue { get; set; }
+        public Dictionary<(string, string), decimal> ParameterValues { get; set; }
     }
 }

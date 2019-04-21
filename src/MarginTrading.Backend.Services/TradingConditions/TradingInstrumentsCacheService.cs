@@ -2,14 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
-using Common;
 using Common.Log;
-using JetBrains.Annotations;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Core.Repositories;
-using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Common.Services;
@@ -94,12 +90,12 @@ namespace MarginTrading.Backend.Services.TradingConditions
             return (parameter / tradingInstrument.LeverageInit, parameter / tradingInstrument.LeverageMaintenance);
         }
 
-        public void InitCache(IEnumerable<ITradingInstrument> accountAssets)
+        public void InitCache(IEnumerable<ITradingInstrument> tradingInstruments)
         {
             _lockSlim.EnterWriteLock();
             try
             {
-                _instrumentsCache = accountAssets
+                _instrumentsCache = tradingInstruments
                     .GroupBy(a => GetInstrumentCacheKey(a.TradingConditionId, a.Instrument))
                     .ToDictionary(g => g.Key, g => g.SingleOrDefault());
             }
@@ -116,9 +112,7 @@ namespace MarginTrading.Backend.Services.TradingConditions
             {
                 var key = GetInstrumentCacheKey(tradingInstrument.TradingConditionId, tradingInstrument.Instrument);
 
-                _instrumentsCache.Remove(key);
-
-                _instrumentsCache.Add(key, tradingInstrument);
+                _instrumentsCache[key] = tradingInstrument;
             }
             finally
             {
@@ -157,7 +151,7 @@ namespace MarginTrading.Backend.Services.TradingConditions
                     CorrelationId = _identityGenerator.GenerateGuid(),
                     EventTimestamp = _dateService.Now(),
                     CurrentState = _overnightMarginParameterOn,
-                    MultipliersValue = GetOvernightMarginMultipliers().ToJson(),
+                    ParameterValues = GetOvernightMarginParameterValues(),
                 });
             }
         }
@@ -170,19 +164,6 @@ namespace MarginTrading.Backend.Services.TradingConditions
                 return _instrumentsCache.ToDictionary(x => x.Key, x => _overnightMarginParameterOn
                     ? x.Value.OvernightMarginMultiplier
                     : 1);
-            }
-            finally
-            {
-                _lockSlim.ExitReadLock();
-            }
-        }
-
-        private Dictionary<(string, string), decimal> GetOvernightMarginMultipliers()
-        {
-            _lockSlim.EnterReadLock();
-            try
-            {
-                return _instrumentsCache.ToDictionary(x => x.Key, x => x.Value.OvernightMarginMultiplier);
             }
             finally
             {
