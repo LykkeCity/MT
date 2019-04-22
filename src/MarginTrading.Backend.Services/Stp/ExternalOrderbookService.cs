@@ -12,7 +12,6 @@ using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
-using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
@@ -249,11 +248,11 @@ namespace MarginTrading.Backend.Services.Stp
                 orderbook.RequiredNotNull(nameof(orderbook));
                 
                 orderbook.Bids.RequiredNotNullOrEmpty("orderbook.Bids");
-                orderbook.Bids.RemoveAll(e => e == null || e.Price <= 0 || e.Volume == 0);
+                orderbook.Bids = orderbook.Bids.Where(e => e != null && e.Price > 0 && e.Volume != 0).ToArray();
                 //ValidatePricesSorted(orderbook.Bids, false);
                 
                 orderbook.Asks.RequiredNotNullOrEmpty("orderbook.Asks");
-                orderbook.Asks.RemoveAll(e => e == null || e.Price <= 0 || e.Volume == 0);
+                orderbook.Asks = orderbook.Asks.Where(e => e != null && e.Price > 0 && e.Volume != 0).ToArray();
                 //ValidatePricesSorted(orderbook.Asks, true);
 
                 return true;
@@ -281,7 +280,7 @@ namespace MarginTrading.Backend.Services.Stp
         
         private bool CheckZeroQuote(ExternalOrderBook orderbook)
         {
-            var isOrderbookValid = orderbook.Asks.Count > 0 && orderbook.Bids.Count > 0;//after validations
+            var isOrderbookValid = orderbook.Asks.Length > 0 && orderbook.Bids.Length > 0;//after validations
             
             var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(orderbook.AssetPairId);
             if (assetPair == null)

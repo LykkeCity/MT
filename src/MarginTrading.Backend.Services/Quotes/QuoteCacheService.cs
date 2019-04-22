@@ -54,7 +54,7 @@ namespace MarginTrading.Backend.Services.Quotes
             
             var orderBooks = _externalOrderbookService.GetOrderBooks();
             _log.WriteInfo(nameof(QuoteCacheService), nameof(Start), 
-                $"{orderBooks.Count} order books read from {nameof(ExternalOrderbookService)}.");
+                $"{orderBooks.Count} order books read from {nameof(IExternalOrderbookService)}.");
 
             var result = new Dictionary<string, InstrumentBidAskPair>();
             foreach (var orderBook in orderBooks)

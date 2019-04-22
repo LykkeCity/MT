@@ -50,6 +50,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.SqlRepositori
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MarginTrading.BrokerBase", "src\MarginTrading.Brokers\MarginTrading.BrokerBase\MarginTrading.BrokerBase.csproj", "{970E8EC9-C56E-44A1-AD1D-8DEB653C404E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BenchmarkRunner", "BenchmarkRunner\BenchmarkRunner.csproj", "{08EC2443-941D-4DA8-A7AE-F92D4BB12E0A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BenchmarkScenarios", "BenchmarkScenarios\BenchmarkScenarios.csproj", "{A479EF23-D993-45A3-983D-948A4BC8067E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -116,6 +120,14 @@ Global
 		{970E8EC9-C56E-44A1-AD1D-8DEB653C404E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{970E8EC9-C56E-44A1-AD1D-8DEB653C404E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{970E8EC9-C56E-44A1-AD1D-8DEB653C404E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08EC2443-941D-4DA8-A7AE-F92D4BB12E0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08EC2443-941D-4DA8-A7AE-F92D4BB12E0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08EC2443-941D-4DA8-A7AE-F92D4BB12E0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08EC2443-941D-4DA8-A7AE-F92D4BB12E0A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A479EF23-D993-45A3-983D-948A4BC8067E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A479EF23-D993-45A3-983D-948A4BC8067E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A479EF23-D993-45A3-983D-948A4BC8067E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A479EF23-D993-45A3-983D-948A4BC8067E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -136,6 +148,8 @@ Global
 		{B9DD492A-58CC-4716-879F-725AE2218AB7} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
 		{115EFE4D-B269-4D62-944D-12C9FC1AE56A} = {5AD188EF-3F19-4527-816C-A361746EE9C2}
 		{970E8EC9-C56E-44A1-AD1D-8DEB653C404E} = {E74A349A-3D48-4345-80E7-FD4C462864F0}
+		{08EC2443-941D-4DA8-A7AE-F92D4BB12E0A} = {F9EA3679-8D3F-4DC2-B0A9-08801E02EE70}
+		{A479EF23-D993-45A3-983D-948A4BC8067E} = {F9EA3679-8D3F-4DC2-B0A9-08801E02EE70}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {16BCEC97-771D-46F8-BD02-379A8FC34CDD}

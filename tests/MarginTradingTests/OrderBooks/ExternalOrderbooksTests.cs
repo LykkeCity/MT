@@ -29,13 +29,13 @@ namespace MarginTradingTests.OrderBooks
         private const string AssetPairId = "assetPairId";
         
         private readonly ExternalOrderBook _orderBook1 = new ExternalOrderBook("exchange1", AssetPairId, DateTime.Now,
-            new List<VolumePrice>
+            new[]
             {
                 new VolumePrice {Price = 10, Volume = 10},
                 new VolumePrice {Price = 11, Volume = 10},
                 new VolumePrice {Price = 12, Volume = 10}
             },
-            new List<VolumePrice>
+            new[]
             {
                 new VolumePrice {Price = 9, Volume = 10},
                 new VolumePrice {Price = 8, Volume = 10},
@@ -43,13 +43,13 @@ namespace MarginTradingTests.OrderBooks
             });
         
         private readonly ExternalOrderBook _orderBook2 = new ExternalOrderBook("exchange2", AssetPairId, DateTime.Now,
-            new List<VolumePrice>
+            new[]
             {
                 new VolumePrice {Price = 100, Volume = 10},
                 new VolumePrice {Price = 110, Volume = 10},
                 new VolumePrice {Price = 120, Volume = 10}
             },
-            new List<VolumePrice>
+            new[]
             {
                 new VolumePrice {Price = 90, Volume = 10},
                 new VolumePrice {Price = 80, Volume = 10},
@@ -150,11 +150,11 @@ namespace MarginTradingTests.OrderBooks
             {
                 yield return new TestCaseData(
                     new ExternalOrderBook("exchange", "", DateTime.Now,
-                        new List<VolumePrice>
+                        new []
                         {
                             new VolumePrice {Price = 100, Volume = 10}
                         },
-                        new List<VolumePrice>
+                        new[]
                         {
                             new VolumePrice {Price = 90, Volume = 10}
                         }),
@@ -162,11 +162,11 @@ namespace MarginTradingTests.OrderBooks
                 
                 yield return new TestCaseData(
                     new ExternalOrderBook("", AssetPairId, DateTime.Now,
-                        new List<VolumePrice>
+                        new[]
                         {
                             new VolumePrice {Price = 100, Volume = 10}
                         },
-                        new List<VolumePrice>
+                        new[]
                         {
                             new VolumePrice {Price = 90, Volume = 10}
                         }),
@@ -174,17 +174,17 @@ namespace MarginTradingTests.OrderBooks
                 
                 yield return new TestCaseData(
                     new ExternalOrderBook("exchange", AssetPairId, DateTime.Now,
-                        new List<VolumePrice>
+                        new[]
                         {
                             new VolumePrice {Price = 100, Volume = 10}
                         },
-                        new List<VolumePrice>()),
+                        new VolumePrice[0]),
                     "Bids");
                 
                 yield return new TestCaseData(
                     new ExternalOrderBook("exchange", AssetPairId, DateTime.Now,
-                        new List<VolumePrice>(),
-                        new List<VolumePrice>
+                        new VolumePrice[0],
+                        new[]
                         {
                             new VolumePrice {Price = 90, Volume = 10}
                         }),
@@ -195,12 +195,12 @@ namespace MarginTradingTests.OrderBooks
 //                //not sorted bids
 //                yield return new TestCaseData(
 //                    new ExternalOrderBook("exchange", AssetPairId, DateTime.Now,
-//                        new List<VolumePrice>
+//                        new VolumePrice[]
 //                        {
 //                            new VolumePrice {Price = 100, Volume = 10},
 //                            new VolumePrice {Price = 110, Volume = 10}
 //                        },
-//                        new List<VolumePrice>
+//                        new VolumePrice[]
 //                        {
 //                            new VolumePrice {Price = 80, Volume = 10},
 //                            new VolumePrice {Price = 90, Volume = 10}
@@ -210,12 +210,12 @@ namespace MarginTradingTests.OrderBooks
 //                //not sorted asks
 //                yield return new TestCaseData(
 //                    new ExternalOrderBook("exchange", AssetPairId, DateTime.Now,
-//                        new List<VolumePrice>
+//                        new VolumePrice[]
 //                        {
 //                            new VolumePrice {Price = 110, Volume = 10},
 //                            new VolumePrice {Price = 100, Volume = 10}
 //                        },
-//                        new List<VolumePrice>
+//                        new VolumePrice[]
 //                        {
 //                            new VolumePrice {Price = 90, Volume = 10},
 //                            new VolumePrice {Price = 80, Volume = 10}

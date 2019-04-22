@@ -119,7 +119,7 @@ namespace MarginTrading.Backend.Services.Modules
 				.AsSelf()
 				.SingleInstance();
 
-			builder.RegisterType<ExternalOrderbookService>()
+			builder.RegisterType<LightweightExternalOrderbookService>()
 				.As<IExternalOrderbookService>()
 				.SingleInstance();
 
