@@ -38,6 +38,8 @@ namespace MarginTrading.Backend.Core.Orderbooks
             {
                 Bid = Bids[0].Price,
                 Ask = Asks[0].Price,
+                BidFirstLevelVolume = Bids[0].Volume,
+                AskFirstLevelVolume = Asks[0].Volume,
                 Date = Timestamp,
                 Instrument = AssetPairId
             };

@@ -528,20 +528,23 @@ namespace MarginTrading.Backend.Services
 
                 foreach (var position in accountPositions.Value)
                 {
-                    var defaultMatchingEngine = _meRouter.GetMatchingEngineForClose(position.OpenMatchingEngineId);
+                    var closeOrderDirection = position.Volume.GetClosePositionOrderDirection();
+                    var closePrice = quote.GetPriceForOrderDirection(closeOrderDirection);
 
-                    var closePrice = defaultMatchingEngine.GetPriceForClose(position.AssetPairId, position.Volume,
-                        position.ExternalProviderId);
-
-                    if (!closePrice.HasValue)
+                    if (quote.GetVolumeForOrderDirection(closeOrderDirection) < Math.Abs(position.Volume))
                     {
-                        var closeOrderDirection = position.Volume.GetClosePositionOrderDirection();
-                        closePrice = quote.GetPriceForOrderDirection(closeOrderDirection);
+                        var defaultMatchingEngine = _meRouter.GetMatchingEngineForClose(position.OpenMatchingEngineId);
+
+                        var orderbookPrice = defaultMatchingEngine.GetPriceForClose(position.AssetPairId, position.Volume,
+                            position.ExternalProviderId);
+
+                        if (orderbookPrice.HasValue)
+                            closePrice = orderbookPrice.Value;
                     }
                     
                     if (closePrice != 0)
                     {
-                        position.UpdateClosePrice(closePrice.Value);
+                        position.UpdateClosePrice(closePrice);
 
                         UpdateTrailingStops(position);
                     }
