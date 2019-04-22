@@ -15,6 +15,7 @@ using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
+using MarginTrading.Common.Helpers;
 using MarginTrading.Common.Services;
 using MarginTrading.SettingsService.Contracts.AssetPair;
 using MoreLinq;
@@ -39,9 +40,10 @@ namespace MarginTrading.Backend.Services.Stp
         /// </summary>
         /// <remarks>
         /// We assume that AssetPairId is unique in LegalEntity + STP mode. <br/>
+        /// Please use <see cref="ReadWriteLockedDictionary{TKey,TValue}.TryReadValue{TResult}"/> for this purpose.
         /// </remarks>
-        private readonly ConcurrentDictionary<string, ExternalOrderBook> _orderbooks =
-            new ConcurrentDictionary<string, ExternalOrderBook>();
+        private readonly ReadWriteLockedDictionary<string, ExternalOrderBook> _orderbooks =
+            new ReadWriteLockedDictionary<string, ExternalOrderBook>();
 
         public LightweightExternalOrderbookService(
             IEventChannel<BestPriceChangeEventArgs> bestPriceChangeEventChannel,

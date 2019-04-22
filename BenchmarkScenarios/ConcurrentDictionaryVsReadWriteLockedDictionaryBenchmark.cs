@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Common.Helpers;
@@ -90,15 +91,19 @@ namespace BenchmarkScenarios
         [Benchmark]
         public void RwlDictionaryTest()
         {
-            RwlActionAdd();
-            RwlActionGet();
+            foreach (var action in _rwlDictionaryActions)
+            {
+                Task.Factory.StartNew(action);
+            }
         }
         
         [Benchmark]
         public void ConcurDictionaryTest()
         {
-            ConcurActionAdd();
-            ConcurActionGet();
+            foreach (var action in _concurDictionaryActions)
+            {
+                Task.Factory.StartNew(action);
+            }
         }
     }
 }

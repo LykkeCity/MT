@@ -510,23 +510,25 @@ namespace MarginTrading.Backend.Services
 
         private void ProcessPositions(InstrumentBidAskPair quote)
         {
-            var stopoutAccounts = UpdateClosePriceAndDetectStopout(quote).ToArray();
+            var stopoutAccounts = UpdateClosePriceAndDetectStopout(quote);
             
             foreach (var account in stopoutAccounts)
                 CommitStopOut(account, quote);
         }
 
-        private IEnumerable<MarginTradingAccount> UpdateClosePriceAndDetectStopout(InstrumentBidAskPair quote)
+        private List<MarginTradingAccount> UpdateClosePriceAndDetectStopout(InstrumentBidAskPair quote)
         {
             var positionsByAccounts = _ordersCache.Positions.GetPositionsByInstrument(quote.Instrument)
                 .GroupBy(x => x.AccountId).ToDictionary(x => x.Key, x => x.ToArray());
 
-            foreach (var accountPositions in positionsByAccounts)
+            var accountsWithStopout = new List<MarginTradingAccount>();
+            
+            Parallel.ForEach(positionsByAccounts, accountPositions =>
             {
                 var account = _accountsCacheService.Get(accountPositions.Key);
                 var oldAccountLevel = account.GetAccountLevel();
 
-                foreach (var position in accountPositions.Value)
+                Parallel.ForEach(accountPositions.Value, position =>
                 {
                     var closeOrderDirection = position.Volume.GetClosePositionOrderDirection();
                     var closePrice = quote.GetPriceForOrderDirection(closeOrderDirection);
@@ -548,18 +550,20 @@ namespace MarginTrading.Backend.Services
 
                         UpdateTrailingStops(position);
                     }
-                }
+                });
 
                 var newAccountLevel = account.GetAccountLevel();
-                
+
                 if (newAccountLevel == AccountLevel.StopOut)
-                    yield return account;
+                    accountsWithStopout.Add(account);
 
                 if (oldAccountLevel != newAccountLevel)
                 {
                     _marginCallEventChannel.SendEvent(this, new MarginCallEventArgs(account, newAccountLevel));
                 }
-            }
+            });
+
+            return accountsWithStopout;
         }
 
         private void UpdateTrailingStops(Position position)
