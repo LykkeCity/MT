@@ -68,7 +68,7 @@ namespace MarginTrading.Backend.Services
             return rate;
         }
 
-        public decimal GetQuoteRateForQuoteAsset(InstrumentBidAskPair quote, FxToAssetPairDirection direction, 
+        public decimal GetPrice(InstrumentBidAskPair quote, FxToAssetPairDirection direction, 
             bool metricIsPositive = true)
         {
             return metricIsPositive

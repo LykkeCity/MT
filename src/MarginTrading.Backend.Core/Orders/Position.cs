@@ -151,6 +151,7 @@ namespace MarginTrading.Backend.Core.Orders
             OpenOrderVolume = openOrderVolume;
             OpenPrice = openPrice;
             OpenFxPrice = openFxPrice;
+            CloseFxPrice = openFxPrice;
             EquivalentAsset = equivalentAsset;
             OpenPriceEquivalent = openPriceEquivalent;
             RelatedOrders = relatedOrders;
@@ -176,6 +177,13 @@ namespace MarginTrading.Backend.Core.Orders
             account.CacheNeedsToBeUpdated();
         }
 
+        //TODO: temp solution in order not to have a lot of changes
+        public void UpdateClosePriceWithoutAccountUpdate(decimal closePrice)
+        {
+            ClosePrice = closePrice;
+            FplData.ActualHash++;
+        }
+        
         public void UpdateClosePrice(decimal closePrice)
         {
             ClosePrice = closePrice;

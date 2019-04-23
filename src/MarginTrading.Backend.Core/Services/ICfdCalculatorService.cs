@@ -11,7 +11,7 @@ namespace MarginTrading.Backend.Core
         decimal GetQuoteRateForQuoteAsset(string accountAssetId, string instrument, string legalEntity, 
             bool metricIsPositive = true);
         
-        decimal GetQuoteRateForQuoteAsset(InstrumentBidAskPair quote, FxToAssetPairDirection direction, 
+        decimal GetPrice(InstrumentBidAskPair quote, FxToAssetPairDirection direction, 
             bool metricIsPositive = true);
 
         (string id, FxToAssetPairDirection direction) GetFxAssetPairIdAndDirection(string accountAssetId,

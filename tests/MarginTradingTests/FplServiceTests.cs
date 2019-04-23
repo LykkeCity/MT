@@ -92,7 +92,7 @@ namespace MarginTradingTests
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "BTCCHF", Ask = 901M, Bid = 900M });
             
             var position = TestObjectsFactory.CreateOpenedPosition(instrument, Accounts[0],
-                MarginTradingTestsUtils.TradingConditionId, 1000, 935.461M);
+                MarginTradingTestsUtils.TradingConditionId, 1000, 935.461M, 0.932888034778M);
             
             position.UpdateClosePrice(935.61M);
 
@@ -112,12 +112,10 @@ namespace MarginTradingTests
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair {Instrument = "BTCCHF", Ask = 901M, Bid = 900M});
 
             var position = TestObjectsFactory.CreateOpenedPosition(instrument, Accounts[0],
-                MarginTradingTestsUtils.TradingConditionId, -1000, 935.461M);
+                MarginTradingTestsUtils.TradingConditionId, -1000, 935.461M, 0.932809716146M);
             
             position.UpdateClosePrice(935.61M);
-            var quoteRate = position.GetFplRate();
 
-            Assert.AreEqual(0.9328097161460033767711724485m, quoteRate);
             Assert.AreEqual(-138.989, Math.Round(position.GetFpl(), 3));
         }
 
@@ -146,7 +144,7 @@ namespace MarginTradingTests
                     MarginTradingTestsUtils.TradingConditionId, 50000, 1.061M),
                 
                 TestObjectsFactory.CreateOpenedPosition("BTCEUR", Accounts[0],
-                    MarginTradingTestsUtils.TradingConditionId, 100, 1120)
+                    MarginTradingTestsUtils.TradingConditionId, 100, 1120, 1.06m)
             };
 
             foreach (var position in positions)
@@ -238,11 +236,11 @@ namespace MarginTradingTests
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "EURJPY", Ask = 0.83M, Bid = 0.83M });
 
             var position1 = TestObjectsFactory.CreateOpenedPosition("EURUSD", Accounts[1],
-                MarginTradingTestsUtils.TradingConditionId, 15000, 1.3M);
+                MarginTradingTestsUtils.TradingConditionId, 15000, 1.3M, 0.0001111111111111M);
             position1.UpdateClosePrice(1.15M);
             
             var position2 = TestObjectsFactory.CreateOpenedPosition("CHFJPY", Accounts[1],
-                MarginTradingTestsUtils.TradingConditionId, -23, 1.96M);
+                MarginTradingTestsUtils.TradingConditionId, -23, 1.96M, 1.204819277108M);
             position2.UpdateClosePrice(6.036M);
             
 

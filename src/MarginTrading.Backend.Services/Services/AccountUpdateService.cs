@@ -35,6 +35,7 @@ namespace MarginTrading.Backend.Services
         private readonly ILog _log;
         private readonly MarginTradingSettings _marginTradingSettings;
         private readonly ICfdCalculatorService _cfdCalculatorService;
+        private readonly IQuoteCacheService _quoteCacheService;
 
         public AccountUpdateService(
             IFplService fplService,
@@ -46,7 +47,8 @@ namespace MarginTrading.Backend.Services
             IAccountMarginUnconfirmedRepository accountMarginUnconfirmedRepository,
             ILog log,
             MarginTradingSettings marginTradingSettings,
-            ICfdCalculatorService cfdCalculatorService)
+            ICfdCalculatorService cfdCalculatorService,
+            IQuoteCacheService quoteCacheService)
         {
             _fplService = fplService;
             _tradingConditionsCache = tradingConditionsCache;
@@ -58,6 +60,7 @@ namespace MarginTrading.Backend.Services
             _log = log;
             _marginTradingSettings = marginTradingSettings;
             _cfdCalculatorService = cfdCalculatorService;
+            _quoteCacheService = quoteCacheService;
         }
 
         public void UpdateAccount(IMarginTradingAccount account)
@@ -120,16 +123,36 @@ namespace MarginTrading.Backend.Services
             var orderMargin = _fplService.GetInitMarginForOrder(order);
             var accountMarginAvailable = _accountsCacheService.Get(order.AccountId).GetMarginAvailable();
 
-            var openPriceInfo = matchingEngine.GetBestPriceForOpen(order.AssetPairId, order.Volume);
+            var quote = _quoteCacheService.GetQuote(order.AssetPairId);
 
-            if (openPriceInfo.price == null)
-            {
-                throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Price for open can not be calculated");
-            }
+            var openPrice = order.Price ?? 0;
+            var closePrice = 0m;
+            var directionForClose = order.Volume.GetClosePositionOrderDirection();
             
-            var openPrice = order.Price ?? openPriceInfo.price;
-            var closePrice =
-                matchingEngine.GetPriceForClose(order.AssetPairId, order.Volume, openPriceInfo.externalProviderId);
+            if (openPrice == 0)
+            {
+                if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(order.Volume) &&
+                    quote.GetVolumeForOrderDirection(directionForClose) >= Math.Abs(order.Volume))
+                {
+                    openPrice = quote.GetPriceForOrderDirection(order.Direction);
+                    closePrice = quote.GetPriceForOrderDirection(directionForClose);
+                }
+                else
+                {
+                    var openPriceInfo = matchingEngine.GetBestPriceForOpen(order.AssetPairId, order.Volume);
+                    var closePriceInfo =
+                        matchingEngine.GetPriceForClose(order.AssetPairId, order.Volume, openPriceInfo.externalProviderId);
+
+                    if (openPriceInfo.price == null || closePriceInfo == null)
+                    {
+                        throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Price for open can not be calculated");
+                    }
+
+                    openPrice = openPriceInfo.price.Value;
+                    closePrice = closePriceInfo.Value;
+                }
+            }
+
             var pnlInTradingCurrency = (closePrice - openPrice) * order.Volume;
             var fxRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.AccountAssetId,
                 order.AssetPairId, order.LegalEntity,

@@ -447,14 +447,21 @@ namespace MarginTrading.Backend.Services
                     _validateOrderService.CheckIfPendingOrderExecutionPossible(order.AssetPairId, order.OrderType,
                         ShouldOpenNewPosition(order)))
                 {
-                    //let's validate one more time, considering orderbook depth
-                    var me = _meRouter.GetMatchingEngineForExecution(order);
-                    var executionPriceInfo = me.GetBestPriceForOpen(order.AssetPairId, order.Volume);
-
-                    if (executionPriceInfo.price.HasValue && order.IsSuitablePriceForPendingOrder(executionPriceInfo.price.Value))
+                    if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(order.Volume))
                     {
                         _ordersCache.Active.Remove(order);
                         yield return order;
+                    }
+                    else //let's validate one more time, considering orderbook depth
+                    {
+                        var me = _meRouter.GetMatchingEngineForExecution(order);
+                        var executionPriceInfo = me.GetBestPriceForOpen(order.AssetPairId, order.Volume);
+                        
+                        if (executionPriceInfo.price.HasValue && order.IsSuitablePriceForPendingOrder(executionPriceInfo.price.Value))
+                        {
+                            _ordersCache.Active.Remove(order);
+                            yield return order;
+                        }
                     }
                 }
 
@@ -501,7 +508,7 @@ namespace MarginTrading.Backend.Services
         {
             foreach (var position in _ordersCache.GetPositionsByFxAssetPairId(quote.Instrument))
             {
-                var fxPrice = _cfdCalculatorService.GetQuoteRateForQuoteAsset(quote, position.FxToAssetPairDirection,
+                var fxPrice = _cfdCalculatorService.GetPrice(quote, position.FxToAssetPairDirection,
                     position.Volume * (position.ClosePrice - position.OpenPrice) > 0);
 
                 position.UpdateCloseFxPrice(fxPrice);
@@ -528,7 +535,7 @@ namespace MarginTrading.Backend.Services
                 var account = _accountsCacheService.Get(accountPositions.Key);
                 var oldAccountLevel = account.GetAccountLevel();
 
-                Parallel.ForEach(accountPositions.Value, position =>
+                foreach (var position in accountPositions.Value)
                 {
                     var closeOrderDirection = position.Volume.GetClosePositionOrderDirection();
                     var closePrice = quote.GetPriceForOrderDirection(closeOrderDirection);
@@ -546,11 +553,13 @@ namespace MarginTrading.Backend.Services
                     
                     if (closePrice != 0)
                     {
-                        position.UpdateClosePrice(closePrice);
+                        position.UpdateClosePriceWithoutAccountUpdate(closePrice);
 
                         UpdateTrailingStops(position);
                     }
-                });
+                }
+                
+                account.CacheNeedsToBeUpdated();
 
                 var newAccountLevel = account.GetAccountLevel();
 
