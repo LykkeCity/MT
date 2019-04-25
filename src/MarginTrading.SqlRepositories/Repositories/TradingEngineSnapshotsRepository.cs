@@ -15,6 +15,7 @@ namespace MarginTrading.SqlRepositories.Repositories
 
         private const string CreateTableScript = @"CREATE TABLE [{0}](
 [OID] [bigint] NOT NULL IDENTITY (1,1),
+[TradingDay] [datetime] NOT NULL,
 [CorrelationId] [nvarchar](64) NOT NULL,
 [Timestamp] [datetime] NOT NULL,
 [Orders] [nvarchar] (MAX) NOT NULL,
@@ -22,7 +23,7 @@ namespace MarginTrading.SqlRepositories.Repositories
 [AccountStats] [nvarchar](MAX) NOT NULL,
 [BestFxPrices] [nvarchar](MAX) NOT NULL,
 [BestPrices] [nvarchar](MAX) NOT NULL,
-INDEX IX_{0}_Base (CorrelationId, Timestamp)
+INDEX IX_{0}_Base (TradingDay, CorrelationId, Timestamp)
 );";
         
         private readonly string _connectionString;
@@ -44,17 +45,19 @@ INDEX IX_{0}_Base (CorrelationId, Timestamp)
             }
         }
 
-        public async Task Add(string correlationId, DateTime timestamp, string orders, string positions, string accounts,
+        public async Task Add(DateTime tradingDay, string correlationId, DateTime timestamp, string orders,
+            string positions, string accounts,
             string bestFxPrices, string bestTradingPrices)
         {
             using (var conn = new SqlConnection(_connectionString))
             {
                 await conn.ExecuteAsync(
                     $@"INSERT INTO {TableName} 
-(CorrelationId,Timestamp,Orders,Positions,AccountStats,BestFxPrices,BestPrices) 
-VALUES (@CorrelationId,@Timestamp,@Orders,@Positions,@AccountStats,@BestFxPrices,@BestPrices)",
+(TradingDay,CorrelationId,Timestamp,Orders,Positions,AccountStats,BestFxPrices,BestPrices) 
+VALUES (@TradingDay,@CorrelationId,@Timestamp,@Orders,@Positions,@AccountStats,@BestFxPrices,@BestPrices)",
                     new
                     {
+                        TradingDay = tradingDay,
                         CorrelationId = correlationId,
                         Timestamp = timestamp,
                         Orders = orders,

@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Refit;
@@ -16,7 +17,8 @@ namespace MarginTrading.Backend.Contracts
         /// </summary>
         /// <returns>Snapshot statistics.</returns>
         [Post("/api/service/make-trading-data-snapshot")]
-        Task<string> MakeTradingDataSnapshot([Query, CanBeNull] string correlationId = null);
+        Task<string> MakeTradingDataSnapshot([Query] DateTime tradingDay, 
+            [Query, CanBeNull] string correlationId = null);
         
         /// <summary>
         /// Get current value of overnight margin parameter.

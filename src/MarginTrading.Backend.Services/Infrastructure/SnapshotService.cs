@@ -51,7 +51,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
             _tradingEngineSnapshotsRepository = tradingEngineSnapshotsRepository;
         }
 
-        public async Task<string> MakeTradingDataSnapshot(string correlationId)
+        public async Task<string> MakeTradingDataSnapshot(DateTime tradingDay, string correlationId)
         {
             if (_scheduleSettingsCacheService.GetPlatformTradingEnabled())
             {
@@ -69,7 +69,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
                 var bestFxPrices = _fxRateCacheService.GetAllQuotes();
                 var bestPrices = _quoteCacheService.GetAllQuotes();
 
-                await _tradingEngineSnapshotsRepository.Add(
+                await _tradingEngineSnapshotsRepository.Add(tradingDay, 
                     correlationId, 
                     _dateService.Now(), 
                     orders.Select(x => x.ConvertToContract(_orderReader)).ToJson(),

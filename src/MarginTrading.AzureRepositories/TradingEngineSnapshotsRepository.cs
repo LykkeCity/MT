@@ -6,7 +6,8 @@ namespace MarginTrading.AzureRepositories
 {
     public class TradingEngineSnapshotsRepository : ITradingEngineSnapshotsRepository
     {
-        public Task Add(string correlationId, DateTime timestamp, string orders, string positions, string accounts,
+        public Task Add(DateTime tradingDay, string correlationId, DateTime timestamp, string orders, string positions,
+            string accounts,
             string bestFxPrices, string bestTradingPrices)
         {
             throw new System.NotImplementedException();
