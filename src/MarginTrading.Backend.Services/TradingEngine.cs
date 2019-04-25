@@ -529,8 +529,8 @@ namespace MarginTrading.Backend.Services
                 .GroupBy(x => x.AccountId).ToDictionary(x => x.Key, x => x.ToArray());
 
             var accountsWithStopout = new List<MarginTradingAccount>();
-            
-            Parallel.ForEach(positionsByAccounts, accountPositions =>
+
+            foreach (var accountPositions in positionsByAccounts)
             {
                 var account = _accountsCacheService.Get(accountPositions.Key);
                 var oldAccountLevel = account.GetAccountLevel();
@@ -570,8 +570,8 @@ namespace MarginTrading.Backend.Services
                 {
                     _marginCallEventChannel.SendEvent(this, new MarginCallEventArgs(account, newAccountLevel));
                 }
-            });
-
+            }
+            
             return accountsWithStopout;
         }
 
