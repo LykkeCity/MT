@@ -53,10 +53,16 @@ namespace MarginTrading.Backend.Services.Infrastructure
 
         public async Task<string> MakeTradingDataSnapshot(DateTime tradingDay, string correlationId)
         {
-            if (_scheduleSettingsCacheService.GetPlatformTradingEnabled())
+            if (!_scheduleSettingsCacheService.TryGetPlatformCurrentDisabledInterval(out var disabledInterval))
             {
                 throw new Exception(
                     "Trading should be stopped for whole platform in order to make trading data snapshot.");
+            }
+
+            if (disabledInterval.Start.AddDays(-1) > tradingDay.Date || disabledInterval.End < tradingDay.Date)
+            {
+                throw new Exception(
+                    $"{nameof(tradingDay)}'s Date component must be from current disabled interval's Start -1d to End: [{disabledInterval.Start.AddDays(-1)}, {disabledInterval.End}].");
             }
 
             await _semaphoreSlim.WaitAsync();

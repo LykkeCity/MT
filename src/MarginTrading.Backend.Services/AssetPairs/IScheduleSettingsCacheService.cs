@@ -33,7 +33,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
         /// </summary>
         List<CompiledScheduleTimeInterval> GetPlatformTradingSchedule();
 
-        bool GetPlatformTradingEnabled();
+        bool TryGetPlatformCurrentDisabledInterval(out CompiledScheduleTimeInterval disabledInterval);
 
         bool AssetPairTradingEnabled(string assetPairId, TimeSpan scheduleCutOff);
     }
