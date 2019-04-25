@@ -34,8 +34,8 @@ namespace MarginTradingTests
         {
             var overnightMarginService = new OvernightMarginService(Mock.Of<IDateService>(), Mock.Of<ITradingEngine>(),
                 Mock.Of<IAccountsCacheService>(), Mock.Of<IAccountUpdateService>(),
-                Mock.Of<IScheduleSettingsCacheService>(), Mock.Of<IOvernightMarginParameterContainer>(),
-                Mock.Of<IEventChannel<MarginCallEventArgs>>(), new OvernightMarginSettings());
+                Mock.Of<IScheduleSettingsCacheService>(), Mock.Of<IOvernightMarginParameterContainer>(), 
+                Mock.Of<ILog>(), Mock.Of<IEventChannel<MarginCallEventArgs>>(), new OvernightMarginSettings());
             var actualResult = overnightMarginService.TryGetOperatingInterval(platformTrading, currentDateTime, 
                 out var resultingInterval);
             
@@ -63,7 +63,7 @@ namespace MarginTradingTests
                     }, new DateTime(2019, 1, 12, 6, 59, 0), true)
                     .Returns((new DateTime(2019, 1, 12, 7, 0, 0),
                         new DateTime(2019, 1, 12, 7, 30, 0),
-                        default(DateTime)));
+                        new DateTime(2019, 1, 12, 22, 0, 0)));
                 yield return new TestCaseData(new List<CompiledScheduleTimeInterval>
                     {
                         new CompiledScheduleTimeInterval(new ScheduleSettings { IsTradeEnabled = false, Rank = 1 }, 
@@ -75,7 +75,7 @@ namespace MarginTradingTests
                     }, new DateTime(2019, 1, 12, 6, 59, 0), true)
                     .Returns((new DateTime(2019, 1, 12, 7, 0, 0),
                         new DateTime(2019, 1, 12, 7, 30, 0),
-                        default(DateTime)));
+                        new DateTime(2019, 1, 12, 22, 0, 0)));
                 yield return new TestCaseData(new List<CompiledScheduleTimeInterval>
                     {
                         new CompiledScheduleTimeInterval(new ScheduleSettings { IsTradeEnabled = false, Rank = 1 }, 
@@ -87,7 +87,7 @@ namespace MarginTradingTests
                     }, new DateTime(2019, 1, 12, 6, 59, 0), true)
                     .Returns((new DateTime(2019, 1, 12, 7, 0, 0),
                         new DateTime(2019, 1, 12, 7, 30, 0),
-                        default(DateTime)));
+                        new DateTime(2019, 1, 12, 22, 0, 0)));
                 yield return new TestCaseData(new List<CompiledScheduleTimeInterval>
                     {
                         new CompiledScheduleTimeInterval(new ScheduleSettings { IsTradeEnabled = false, Rank = 1 }, 
@@ -99,7 +99,7 @@ namespace MarginTradingTests
                     }, new DateTime(2019, 1, 12, 6, 59, 0), true)
                     .Returns((new DateTime(2019, 1, 12, 7, 0, 0),
                         new DateTime(2019, 1, 12, 7, 30, 0),
-                        default(DateTime)));
+                        new DateTime(2019, 1, 12, 22, 0, 0)));
                 yield return new TestCaseData(new List<CompiledScheduleTimeInterval>
                     {
                         new CompiledScheduleTimeInterval(new ScheduleSettings { IsTradeEnabled = false, Rank = 1 }, 
@@ -111,7 +111,7 @@ namespace MarginTradingTests
                     }, new DateTime(2019, 1, 12, 6, 59, 0), true)
                     .Returns((new DateTime(2019, 1, 12, 8, 0, 0),
                         new DateTime(2019, 1, 12, 8, 30, 0),
-                        default(DateTime)));
+                        new DateTime(2019, 1, 12, 22, 0, 0)));
                 yield return new TestCaseData(new List<CompiledScheduleTimeInterval>
                     {
                         new CompiledScheduleTimeInterval(new ScheduleSettings { IsTradeEnabled = false, Rank = 1 }, 
@@ -123,7 +123,7 @@ namespace MarginTradingTests
                     }, new DateTime(2019, 1, 12, 6, 59, 0), true)
                     .Returns((new DateTime(2019, 1, 12, 7, 0, 0),
                         new DateTime(2019, 1, 12, 7, 30, 0),
-                        default(DateTime)));
+                        new DateTime(2019, 1, 12, 22, 0, 0)));
                 
                 // between Warn and Start cases:
                 yield return new TestCaseData(new List<CompiledScheduleTimeInterval>
@@ -134,7 +134,7 @@ namespace MarginTradingTests
                     }, new DateTime(2019, 1, 12, 7, 29, 0), true)
                     .Returns((new DateTime(2019, 1, 12, 7, 0, 0),
                         new DateTime(2019, 1, 12, 7, 30, 0),
-                        default(DateTime)));
+                        new DateTime(2019, 1, 12, 22, 0, 0)));
                 yield return new TestCaseData(new List<CompiledScheduleTimeInterval>
                     {
                         new CompiledScheduleTimeInterval(new ScheduleSettings { IsTradeEnabled = false, Rank = 1 }, 
@@ -146,7 +146,7 @@ namespace MarginTradingTests
                     }, new DateTime(2019, 1, 12, 7, 29, 0), true)
                     .Returns((new DateTime(2019, 1, 12, 8, 0, 0),
                         new DateTime(2019, 1, 12, 8, 30, 0),
-                        default(DateTime)));
+                        new DateTime(2019, 1, 12, 22, 0, 0)));
                 
                 // between Start and End cases:
                 yield return new TestCaseData(new List<CompiledScheduleTimeInterval>

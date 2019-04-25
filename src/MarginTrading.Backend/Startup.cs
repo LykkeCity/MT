@@ -275,12 +275,13 @@ namespace MarginTrading.Backend
         /// Initialize scheduled jobs. Each job will start in time with dispersion of 100ms.
         /// </summary>
         private void InitializeJobs()
-        {
+        {   
             var registry = new Registry();
             
             registry.Schedule<ScheduleSettingsCacheWarmUpJob>()
                 .WithName(nameof(ScheduleSettingsCacheWarmUpJob)).ToRunEvery(1).Days().At(0, 0);
-            
+         
+            JobManager.UseUtcTime();   
             JobManager.Initialize(registry);
             
             ApplicationContainer.Resolve<IOvernightMarginService>().ScheduleNext();
