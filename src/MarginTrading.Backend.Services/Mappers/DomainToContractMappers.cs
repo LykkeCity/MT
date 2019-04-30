@@ -109,6 +109,7 @@ namespace MarginTrading.Backend.Services.Mappers
                 AdditionalInfo = order.AdditionalInfo,
                 CorrelationId = order.CorrelationId,
                 PendingOrderRetriesCount = order.PendingOrderRetriesCount,
+                TrailingDistance = order.TrailingDistance,
             };
         }
         
