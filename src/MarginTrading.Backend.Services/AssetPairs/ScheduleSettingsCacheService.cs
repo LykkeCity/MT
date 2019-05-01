@@ -153,7 +153,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
         {
             var platformSchedule = GetPlatformTradingSchedule();
 
-            return GetTradingEnabled(platformSchedule, out disabledInterval);
+            return !GetTradingEnabled(platformSchedule, out disabledInterval);
         }
 
         public bool AssetPairTradingEnabled(string assetPairId, TimeSpan scheduleCutOff)
