@@ -107,7 +107,8 @@ namespace MarginTrading.Backend.Services.Services
                 + $" Current margin parameter state: [{_overnightMarginParameterContainer.GetOvernightMarginParameterState()}]."
                 + $" Check time: [{currentDateTime:s}]."
                 + (operatingInterval != default ? $" Detected operation interval: [{operatingInterval.ToJson()}]." : ""));
-            JobManager.AddJob(ScheduleNext, (s) => s.NonReentrant().ToRunOnceAt(nextStart));
+            JobManager.AddJob(ScheduleNext, s => s
+                .WithName(nameof(OvernightMarginService)).NonReentrant().ToRunOnceAt(nextStart));
         }
 
         private void PlanEodJob(DateTime operatingIntervalStart, DateTime currentDateTime)

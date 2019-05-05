@@ -212,14 +212,12 @@ namespace MarginTrading.Backend
                 case SettingsTypeContract.TradingRoute:
                     await _matchingEngineRoutesManager.UpdateRoutesCacheAsync();
                     break;
+                
                 case SettingsTypeContract.ScheduleSettings:
                     await _scheduleSettingsCacheService.UpdateAllSettingsAsync();
-                    _threadSwitcher.SwitchThread(() =>
-                    {
-                        _overnightMarginService.ScheduleNext();
-                        return Task.CompletedTask;
-                    });
+                    _overnightMarginService.ScheduleNext();
                     break;
+                
                 case SettingsTypeContract.Market:
                     break;
                 case SettingsTypeContract.ServiceMaintenance:
