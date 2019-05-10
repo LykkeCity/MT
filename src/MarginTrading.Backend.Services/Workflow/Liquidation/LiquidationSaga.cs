@@ -230,7 +230,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         
         #region Private methods
 
-        private (string AssetPairId, PositionDirection Direction, string[] Positions)? GetLiquidationData(
+        private (string AssetPairId, string[] Positions)? GetLiquidationData(
             LiquidationOperationData data)
         {
             var positionsOnAccount = _ordersCache.Positions.GetPositionsByAccountIds(data.AccountId);
@@ -240,11 +240,11 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 .Where(p => !data.ProcessedPositionIds.Contains(p.Id) &&
                             (string.IsNullOrEmpty(data.AssetPairId) || p.AssetPairId == data.AssetPairId) &&
                             (data.Direction == null || p.Direction == data.Direction))
-                .GroupBy(p => (p.AssetPairId, p.Direction))
-                .Where(gr => !_assetPairDayOffService.IsDayOff(gr.Key.AssetPairId))
+                .GroupBy(p => p.AssetPairId)
+                .Where(gr => !_assetPairDayOffService.IsDayOff(gr.Key))
                 .ToArray();
 
-            IGrouping<(string AssetPairId, PositionDirection Direction), Position> targetPositions = null;
+            IGrouping<string, Position> targetPositions = null;
 
             //take positions from group with max margin used or max initially used margin
             targetPositions = positionGroups
@@ -254,8 +254,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             if (targetPositions == null)
                 return null;
 
-            return (targetPositions.Key.AssetPairId, targetPositions.Key.Direction,
-                targetPositions.Select(p => p.Id).ToArray());
+            return (targetPositions.Key, targetPositions.Select(p => p.Id).ToArray());
         }
 
         private void LiquidatePositionsIfAnyAvailable(string operationId,
@@ -281,7 +280,6 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                     CreationTime = _dateService.Now(),
                     PositionIds = liquidationData.Value.Positions,
                     AssetPairId = liquidationData.Value.AssetPairId,
-                    Direction = liquidationData.Value.Direction,
                 }, _cqrsContextNamesSettings.TradingEngine);
             }
         }
