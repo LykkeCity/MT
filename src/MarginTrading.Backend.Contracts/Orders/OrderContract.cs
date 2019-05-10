@@ -234,5 +234,10 @@ namespace MarginTrading.Backend.Contracts.Orders
         /// Number of pending order retries passed
         /// </summary>
         public int PendingOrderRetriesCount { get; set; }
+
+        /// <summary>
+        /// Max distance between order price and parent order price (only for trailing order)
+        /// </summary>
+        public decimal? TrailingDistance { get; set; }
     }
 }
