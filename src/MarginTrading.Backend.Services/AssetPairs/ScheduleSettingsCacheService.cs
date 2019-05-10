@@ -306,7 +306,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
         private void EnsureCacheValidUnsafe(DateTime currentDateTime)
         {
             //it must be safe to take _lastCacheRecalculationTime without a lock, because of upper UpgradeableReadLock
-            if (_lastCacheRecalculationTime.Date.Subtract(currentDateTime.Date) < TimeSpan.FromDays(1))
+            if (currentDateTime.Date.Subtract(_lastCacheRecalculationTime.Date) < TimeSpan.FromDays(1))
             {
                 return;
             }
