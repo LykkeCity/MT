@@ -352,6 +352,10 @@ namespace MarginTrading.Backend.Services
                     {
                         CommitStopOut(account, null);
                     }
+                    else if (accountLevel > AccountLevel.None)
+                    {
+                        _marginCallEventChannel.SendEvent(this, new MarginCallEventArgs(account, accountLevel));
+                    }
                 }
             }
 
