@@ -36,6 +36,7 @@ namespace MarginTrading.Backend.Services.Stp
         private readonly ILog _log;
         private readonly MarginTradingSettings _marginTradingSettings;
         private readonly IAssetPairDayOffService _assetPairDayOffService;
+        private readonly IScheduleSettingsCacheService _scheduleSettingsCache;
 
         public const string EodExternalExchange = "EOD";
         
@@ -60,7 +61,8 @@ namespace MarginTrading.Backend.Services.Stp
             IConvertService convertService,
             ILog log,
             MarginTradingSettings marginTradingSettings,
-            IAssetPairDayOffService assetPairDayOffService)
+            IAssetPairDayOffService assetPairDayOffService,
+            IScheduleSettingsCacheService scheduleSettingsCache)
         {
             _bestPriceChangeEventChannel = bestPriceChangeEventChannel;
             _orderBookProviderApi = orderBookProviderApi;
@@ -72,6 +74,7 @@ namespace MarginTrading.Backend.Services.Stp
             _log = log;
             _marginTradingSettings = marginTradingSettings;
             _assetPairDayOffService = assetPairDayOffService;
+            _scheduleSettingsCache = scheduleSettingsCache;
         }
 
         public async Task InitializeAsync()
@@ -176,10 +179,24 @@ namespace MarginTrading.Backend.Services.Stp
             var isDayOff = _assetPairDayOffService.IsDayOff(orderbook.AssetPairId);
             var isEodOrderbook = orderbook.ExchangeName == EodExternalExchange;
 
-            // we should process normal orderbook only if asset is currently tradable
-            // and process EOD orderbook only if asset is currently not tradable
-            if (isDayOff && !isEodOrderbook || !isDayOff && isEodOrderbook)
+            // we should process normal orderbook only if instrument is currently tradable
+            if (isDayOff && !isEodOrderbook)    
             {
+                return;
+            }
+
+            // and process EOD orderbook only if instrument is currently not tradable
+            if (!isDayOff && isEodOrderbook)
+            {
+                //log current schedule for the instrument
+                var schedule = _scheduleSettingsCache.GetCompiledScheduleSettings(
+                    orderbook.AssetPairId,
+                    _dateService.Now(),
+                    TimeSpan.Zero);
+
+                _log.WriteWarning("EOD quotes processing", $"Current schedule: {schedule.ToJson()}",
+                    $"EOD quote for {orderbook.AssetPairId} is skipped, because instrument is within trading hours");
+
                 return;
             }
             
