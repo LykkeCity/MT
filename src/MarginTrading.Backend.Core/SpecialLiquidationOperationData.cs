@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using MarginTrading.Backend.Core.Orders;
 
 namespace MarginTrading.Backend.Core
 {
@@ -15,5 +16,6 @@ namespace MarginTrading.Backend.Core
         [CanBeNull]
         public string CausationOperationId { get; set; }
         public string AdditionalInfo { get; set; }
+        public OriginatorType OriginatorType { get; set; }
     }
 }

@@ -675,7 +675,7 @@ namespace MarginTrading.Backend.Services
         }
 
         public async Task<Order[]> LiquidatePositionsUsingSpecialWorkflowAsync(IMatchingEngineBase me, string[] positionIds,
-            string correlationId, string additionalInfo)
+            string correlationId, string additionalInfo, OriginatorType originator)
         {
             var positionsToClose = _ordersCache.Positions.GetAllPositions()
                 .Where(x => positionIds.Contains(x.Id)).ToList();
@@ -691,7 +691,7 @@ namespace MarginTrading.Backend.Services
                     gr.Sum(x => x.Volume),
                     gr.Key.OpenMatchingEngineId,
                     gr.Key.ExternalProviderId,
-                    OriginatorType.System,
+                    originator,
                     additionalInfo,
                     correlationId,
                     gr.Key.EquivalentAsset,

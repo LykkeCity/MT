@@ -176,7 +176,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                     AccountId = executionInfo.Data.AccountId,
                     PositionIds = e.PositionIds,
                     CausationOperationId = e.OperationId,
-                    AdditionalInfo = executionInfo.Data.AdditionalInfo
+                    AdditionalInfo = executionInfo.Data.AdditionalInfo,
+                    OriginatorType = executionInfo.Data.OriginatorType
                 }, _cqrsContextNamesSettings.TradingEngine);
                 
                 _chaosKitty.Meow(
