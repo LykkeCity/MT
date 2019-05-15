@@ -664,7 +664,8 @@ namespace MarginTrading.Backend.Services
             {
                 foreach (var position in closeData.Positions)
                 {
-                    position.CancelClosing(_dateService.Now());    
+                    if (position.Status == PositionStatus.Closing)
+                        position.CancelClosing(_dateService.Now());    
                 }
 
                 _log.WriteWarning(nameof(ClosePositionsAsync), order,
