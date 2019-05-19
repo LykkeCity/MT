@@ -25,6 +25,6 @@ namespace MarginTrading.Backend.Core
             
         bool ShouldOpenNewPosition(Order order);
         
-        void ProcessExpiredOrders();
+        void ProcessExpiredOrders(DateTime operationIntervalEnd);
     }
 }
