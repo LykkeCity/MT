@@ -58,16 +58,19 @@ namespace MarginTrading.Backend.Controllers
         /// <summary>
         /// Get current margin parameter values for instruments (all / filtered by IDs).
         /// </summary>
+        /// <returns>
+        /// Dictionary with key = asset pair ID and value = (Dictionary with key = trading condition ID and value = multiplier)
+        /// </returns>
         [HttpGet("overnight-margin-parameter")]
-        public Task<Dictionary<(string, string), decimal>> GetOvernightMarginParameterValues(
+        public Task<Dictionary<string, Dictionary<string, decimal>>> GetOvernightMarginParameterValues(
             [FromQuery] string[] instruments = null)
         {
             var result = _overnightMarginParameterContainer.GetOvernightMarginParameterValues()
                 .Where(x => instruments == null || !instruments.Any() || instruments.Contains(x.Key.Item2))
-                .OrderBy(x => x.Value > 1 ? 0 : 1)
-                .ThenBy(x => x.Key.Item1)
-                .ThenBy(x => x.Key.Item2)
-                .ToDictionary(x => x.Key, x => x.Value);
+                .GroupBy(x => x.Key.Item2)
+                .OrderBy(x => x.Any(p => p.Value > 1) ? 0 : 1)
+                .ThenBy(x => x.Key)
+                .ToDictionary(x => x.Key, x => x.ToDictionary(p => p.Key.Item1, p => p.Value));
             
             return Task.FromResult(result);
         }

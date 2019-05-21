@@ -28,8 +28,11 @@ namespace MarginTrading.Backend.Contracts
         /// <summary>
         /// Get current margin parameter values for instruments (all / filtered by IDs).
         /// </summary>
+        /// <returns>
+        /// Dictionary with key = asset pair ID and value = (Dictionary with key = trading condition ID and value = multiplier)
+        /// </returns>
         [Get("/api/service/overnight-margin-parameter")]
-        Task<Dictionary<(string, string), decimal>> GetOvernightMarginParameterValues(
+        Task<Dictionary<string, Dictionary<string, decimal>>> GetOvernightMarginParameterValues(
             [Query, CanBeNull] string[] instruments = null);
     }
 }
