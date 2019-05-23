@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,7 +16,6 @@ using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
-using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Helpers;
 using MarginTrading.Common.Services;
 using MarginTrading.SettingsService.Contracts.AssetPair;
@@ -23,40 +23,37 @@ using MoreLinq;
 
 namespace MarginTrading.Backend.Services.Stp
 {
-    public class ExternalOrderbookService : IExternalOrderbookService
+    public class LightweightExternalOrderbookService : IExternalOrderbookService
     {
         private readonly IEventChannel<BestPriceChangeEventArgs> _bestPriceChangeEventChannel;
         private readonly IOrderBookProviderApi _orderBookProviderApi;
         private readonly IDateService _dateService;
         private readonly IConvertService _convertService;
+        private readonly IScheduleSettingsCacheService _scheduleSettingsCache;
+        private readonly IAssetPairDayOffService _assetPairDayOffService;
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly ICqrsSender _cqrsSender;
         private readonly IIdentityGenerator _identityGenerator;
         private readonly ILog _log;
-        private readonly MarginTradingSettings _marginTradingSettings;
-        private readonly IAssetPairDayOffService _assetPairDayOffService;
-        private readonly IScheduleSettingsCacheService _scheduleSettingsCache;
+        private readonly string _defaultExternalExchangeId;
 
-        public const string EodExternalExchange = "EOD";
-        
         /// <summary>
-        /// External orderbooks cache (AssetPairId, (Source, Orderbook))
+        /// External orderbooks cache (AssetPairId, Orderbook)
         /// </summary>
         /// <remarks>
         /// We assume that AssetPairId is unique in LegalEntity + STP mode. <br/>
-        /// Note that it is unsafe to even read the inner dictionary without locking.
         /// Please use <see cref="ReadWriteLockedDictionary{TKey,TValue}.TryReadValue{TResult}"/> for this purpose.
         /// </remarks>
-        private readonly ReadWriteLockedDictionary<string, Dictionary<string, ExternalOrderBook>> _orderbooks =
-            new ReadWriteLockedDictionary<string, Dictionary<string, ExternalOrderBook>>();
+        private readonly ReadWriteLockedDictionary<string, ExternalOrderBook> _orderbooks =
+            new ReadWriteLockedDictionary<string, ExternalOrderBook>();
 
-        public ExternalOrderbookService(
+        public LightweightExternalOrderbookService(
             IEventChannel<BestPriceChangeEventArgs> bestPriceChangeEventChannel,
             IOrderBookProviderApi orderBookProviderApi,
             IDateService dateService,
             IConvertService convertService,
-            IAssetPairDayOffService assetPairDayOffService,
             IScheduleSettingsCacheService scheduleSettingsCache,
+            IAssetPairDayOffService assetPairDayOffService,
             IAssetPairsCache assetPairsCache,
             ICqrsSender cqrsSender,
             IIdentityGenerator identityGenerator,
@@ -67,13 +64,15 @@ namespace MarginTrading.Backend.Services.Stp
             _orderBookProviderApi = orderBookProviderApi;
             _dateService = dateService;
             _convertService = convertService;
-            _assetPairDayOffService = assetPairDayOffService;
             _scheduleSettingsCache = scheduleSettingsCache;
+            _assetPairDayOffService = assetPairDayOffService;
             _assetPairsCache = assetPairsCache;
             _cqrsSender = cqrsSender;
             _identityGenerator = identityGenerator;
             _log = log;
-            _marginTradingSettings = marginTradingSettings;
+            _defaultExternalExchangeId = string.IsNullOrEmpty(marginTradingSettings.DefaultExternalExchangeId)
+                ? "Default"
+                : marginTradingSettings.DefaultExternalExchangeId;
         }
 
         public async Task InitializeAsync()
@@ -91,12 +90,12 @@ namespace MarginTrading.Backend.Services.Stp
                     SetOrderbook(externalOrderBook);
                 }
                 
-                await _log.WriteInfoAsync(nameof(ExternalOrderbookService), nameof(InitializeAsync),
+                await _log.WriteInfoAsync(nameof(LightweightExternalOrderbookService), nameof(InitializeAsync),
                     $"External order books cache initialized with {orderBooks.Count} items from OrderBooks Service");
             }
             catch (Exception exception)
             {
-                await _log.WriteWarningAsync(nameof(ExternalOrderbookService), nameof(InitializeAsync),
+                await _log.WriteWarningAsync(nameof(LightweightExternalOrderbookService), nameof(InitializeAsync),
                     "Failed to initialize cache from OrderBook Service", exception);
             }
         }
@@ -104,38 +103,31 @@ namespace MarginTrading.Backend.Services.Stp
         public List<(string source, decimal? price)> GetOrderedPricesForExecution(string assetPairId, decimal volume,
             bool validateOppositeDirectionVolume)
         {
-            return _orderbooks.TryReadValue(assetPairId, (dataExist, assetPair, orderbooks)
-                =>
+            if (!_orderbooks.TryGetValue(assetPairId, out var orderBook))
             {
-                if (!dataExist) 
-                    return null;
-                
-                var result = orderbooks.Select(p => (p.Key,
-                        MatchBestPriceForOrderExecution(p.Value, volume, validateOppositeDirectionVolume)))
-                    .Where(p => p.Item2 != null).ToArray();
-
-                return volume.GetOrderDirection() == OrderDirection.Buy
-                    ? result.OrderBy(tuple => tuple.Item2).ToList()
-                    : result.OrderByDescending(tuple => tuple.Item2).ToList();
-             });
+                return null;
+            }
+            
+            return new List<(string source, decimal? price)>
+            {
+                (orderBook.ExchangeName, MatchBestPriceForOrderExecution(orderBook, volume, validateOppositeDirectionVolume))
+            };
         }
 
         public decimal? GetPriceForPositionClose(string assetPairId, decimal volume, string externalProviderId)
         {
-            decimal? CalculatePriceForClose(Dictionary<string, ExternalOrderBook> orderbooks)
-                => !orderbooks.TryGetValue(externalProviderId, out var orderBook)
-                    ? null
-                    : MatchBestPriceForPositionClose(orderBook, volume);
-            
-            return _orderbooks.TryReadValue(assetPairId, (dataExist, assetPair, orderbooks)
-                => dataExist ? CalculatePriceForClose(orderbooks) : null);
+            if (!_orderbooks.TryGetValue(assetPairId, out var orderBook))
+            {
+                return null;
+            }
+
+            return MatchBestPriceForPositionClose(orderBook, volume);
         }
 
         //TODO: understand which orderbook should be used (best price? aggregated?)
         public ExternalOrderBook GetOrderBook(string assetPairId)
         {
-            return _orderbooks.TryReadValue(assetPairId,
-                (exists, assetPair, orderbooks) => orderbooks.Values.FirstOrDefault());
+            return _orderbooks.TryGetValue(assetPairId, out var orderBook) ? orderBook : null;
         }
 
         private static decimal? MatchBestPriceForOrderExecution(ExternalOrderBook externalOrderBook, decimal volume,
@@ -143,11 +135,11 @@ namespace MarginTrading.Backend.Services.Stp
         {
             var direction = volume.GetOrderDirection();
 
-            var price = externalOrderBook.GetMatchedPrice(Math.Abs(volume), direction);
+            var price = externalOrderBook.GetMatchedPrice(volume, direction);
 
             if (price != null && validateOppositeDirectionVolume)
             {
-                var closePrice = externalOrderBook.GetMatchedPrice(Math.Abs(volume), direction.GetOpositeDirection());
+                var closePrice = externalOrderBook.GetMatchedPrice(volume, direction.GetOpositeDirection());
 
                 //if no liquidity for close, should not use price for open
                 if (closePrice == null)
@@ -167,22 +159,20 @@ namespace MarginTrading.Backend.Services.Stp
         public List<ExternalOrderBook> GetOrderBooks()
         {
             return _orderbooks
-                .Select(x => x.Value.Values.MaxBy(o => o.Timestamp))
+                .Select(x => x.Value)
                 .ToList();
         }
 
         public void SetOrderbook(ExternalOrderBook orderbook)
         {
-            if (!ValidateOrderbook(orderbook) 
-                || !CheckZeroQuote(orderbook))
+            if (!CheckZeroQuote(orderbook))
                 return;
 
             var isDayOff = _assetPairDayOffService.IsDayOff(orderbook.AssetPairId);
-            var isEodOrderbook = orderbook.ExchangeName == EodExternalExchange;
+            var isEodOrderbook = orderbook.ExchangeName == ExternalOrderbookService.EodExternalExchange;
 
-            // we should process normal orderbook only if asset is currently tradeable
-            // and process EOD orderbook only if asset is currently not tradeable
-            if (isDayOff && !isEodOrderbook || !isDayOff && isEodOrderbook)
+            // we should process normal orderbook only if instrument is currently tradable
+            if (isDayOff && !isEodOrderbook)    
             {
                 return;
             }
@@ -202,85 +192,18 @@ namespace MarginTrading.Backend.Services.Stp
                 return;
             }
             
-            orderbook.ApplyExchangeIdFromSettings(_marginTradingSettings.DefaultExternalExchangeId);
+            orderbook.ApplyExchangeIdFromSettings(_defaultExternalExchangeId);
 
-            var bba = new InstrumentBidAskPair
-            {
-                Bid = 0,
-                Ask = decimal.MaxValue,
-                Date = _dateService.Now(),
-                Instrument = orderbook.AssetPairId
-            };
+            var bba = orderbook.GetBestPrice();
 
-            Dictionary<string, ExternalOrderBook> UpdateOrderbooksDictionary(string assetPairId,
-                Dictionary<string, ExternalOrderBook> dict)
-            {
-                dict[orderbook.ExchangeName] = orderbook;
-                foreach (var pair in dict.Values.RequiredNotNullOrEmptyCollection(nameof(dict)))
-                {
-                    // guaranteed to be sorted best first
-                    var bestBid = pair.Bids.First().Price;
-                    var bestAsk = pair.Asks.First().Price;
-                    if (bestBid > bba.Bid)
-                        bba.Bid = bestBid;
-
-                    if (bestAsk < bba.Ask)
-                        bba.Ask = bestAsk;
-                }
-
-                return dict;
-            }
-
-            _orderbooks.AddOrUpdate(orderbook.AssetPairId,
-                k => UpdateOrderbooksDictionary(k, new Dictionary<string, ExternalOrderBook>()),
-                UpdateOrderbooksDictionary);
-
+            _orderbooks.AddOrUpdate(orderbook.AssetPairId,a => orderbook, (s, book) => orderbook);
+            
             _bestPriceChangeEventChannel.SendEvent(this, new BestPriceChangeEventArgs(bba));
         }
-        
-        //TODO: sort prices of uncomment validation
-        private bool ValidateOrderbook(ExternalOrderBook orderbook)
-        {
-            try
-            {
-                orderbook.AssetPairId.RequiredNotNullOrWhiteSpace("orderbook.AssetPairId");
-                orderbook.ExchangeName.RequiredNotNullOrWhiteSpace("orderbook.ExchangeName");
-                orderbook.RequiredNotNull(nameof(orderbook));
-                
-                orderbook.Bids.RequiredNotNullOrEmpty("orderbook.Bids");
-                orderbook.Bids = orderbook.Bids.Where(e => e != null && e.Price > 0 && e.Volume != 0).ToArray();
-                //ValidatePricesSorted(orderbook.Bids, false);
-                
-                orderbook.Asks.RequiredNotNullOrEmpty("orderbook.Asks");
-                orderbook.Asks = orderbook.Asks.Where(e => e != null && e.Price > 0 && e.Volume != 0).ToArray();
-                //ValidatePricesSorted(orderbook.Asks, true);
 
-                return true;
-            }
-            catch (Exception e)
-            {
-                _log.WriteError(nameof(ExternalOrderbookService), orderbook.ToJson(), e);
-                return false;
-            }
-        }
-
-        private void ValidatePricesSorted(IEnumerable<VolumePrice> volumePrices, bool ascending)
-        {
-            decimal? previous = null;
-            foreach (var current in volumePrices.Select(p => p.Price))
-            {
-                if (previous != null && ascending ? current < previous : current > previous)
-                {
-                    throw new Exception("Prices should be sorted best first");
-                }
-                
-                previous = current;
-            }
-        }
-        
         private bool CheckZeroQuote(ExternalOrderBook orderbook)
         {
-            var isOrderbookValid = orderbook.Asks.Length > 0 && orderbook.Bids.Length > 0;//after validations
+            var isOrderbookValid = orderbook.Asks[0].Volume != 0 && orderbook.Bids[0].Volume != 0;
             
             var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(orderbook.AssetPairId);
             if (assetPair == null)

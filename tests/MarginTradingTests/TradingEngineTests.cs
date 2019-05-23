@@ -524,7 +524,7 @@ namespace MarginTradingTests
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 1.0124M, Bid = 1.0122M });
             
             var position = TestObjectsFactory.CreateOpenedPosition("BTCCHF", _account,
-                MarginTradingTestsUtils.TradingConditionId, 1, 838.371M);
+                MarginTradingTestsUtils.TradingConditionId, 1, 838.371M, 0.98775187672856M);
             
             _ordersCache.Positions.Add(position);
             
@@ -555,7 +555,7 @@ namespace MarginTradingTests
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "USDCHF", Ask = 1.0124M, Bid = 1.0122M });
 
             var position = TestObjectsFactory.CreateOpenedPosition("BTCCHF", _account,
-                MarginTradingTestsUtils.TradingConditionId, -1, 834.286M);
+                MarginTradingTestsUtils.TradingConditionId, -1, 834.286M, 0.9877518767285M);
             
             _ordersCache.Positions.Add(position);
             
@@ -796,7 +796,7 @@ namespace MarginTradingTests
             
             order = _tradingEngine.PlaceOrderAsync(order).Result;
 
-            var position = ValidatePositionIsOpened(order.Id, 0.8M, -300);
+            var position = ValidatePositionIsOpened(order.Id, 0.8M, -400);
             
             Assert.AreEqual(10.66666667m, position.GetMarginMaintenance());
             Assert.AreEqual(16.0, position.GetMarginInit());

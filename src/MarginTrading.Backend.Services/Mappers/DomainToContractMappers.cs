@@ -149,7 +149,7 @@ namespace MarginTrading.Backend.Services.Mappers
                 PnL = position.GetFpl(),
                 ChargedPnl = position.ChargedPnL,
                 Margin = position.GetMarginMaintenance(),
-                FxRate = position.GetFplRate(),
+                FxRate = position.CloseFxPrice,
                 FxAssetPairId = position.FxAssetPairId,
                 FxToAssetPairDirection = position.FxToAssetPairDirection.ToType<FxToAssetPairDirectionContract>(),
                 RelatedOrders = position.RelatedOrders.Select(o => o.Id).ToList(),

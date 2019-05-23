@@ -45,13 +45,15 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
         public int ConsumerRank => 102;
 
-        private void NotifyAccountStatsChanged(IMarginTradingAccount account)
+        private void NotifyAccountStatsChanged(MarginTradingAccount account)
         {
             account.CacheNeedsToBeUpdated();
             
-            var stats = account.ToRabbitMqContract();
+            // not needed right now
+            
+            //var stats = account.ToRabbitMqContract();
 
-            _rabbitMqNotifyService.UpdateAccountStats(new AccountStatsUpdateMessage {Accounts = new[] {stats}});
+            //_rabbitMqNotifyService.UpdateAccountStats(new AccountStatsUpdateMessage {Accounts = new[] {stats}});
         }
         
         private void NotifyAccountStatsChanged(string accountId)

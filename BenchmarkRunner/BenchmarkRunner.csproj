@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>netcoreapp2.2</TargetFramework>
+        <RootNamespace>ExternalOrderbooksBenchmark</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\BenchmarkScenarios\BenchmarkScenarios.csproj" />
+      <ProjectReference Include="..\src\MarginTrading.Backend.Services\MarginTrading.Backend.Services.csproj" />
+      <ProjectReference Include="..\src\MarginTrading.Common\MarginTrading.Common.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="BenchmarkDotNet" Version="0.11.5" />
+    </ItemGroup>
+
+</Project>

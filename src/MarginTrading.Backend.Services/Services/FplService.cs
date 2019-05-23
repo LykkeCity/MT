@@ -71,33 +71,21 @@ namespace MarginTrading.Backend.Services
         private void UpdatePositionFplData(Position position, FplData fplData)
         {
             fplData.AccountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(position.AccountAssetId);
-            fplData.FplRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(position.AccountAssetId,
-                position.AssetPairId, position.LegalEntity,
-                position.Volume * (position.ClosePrice - position.OpenPrice) > 0);
-
-            var fpl = (position.ClosePrice - position.OpenPrice) * fplData.FplRate * position.Volume;
-
+            
+            var fpl = (position.ClosePrice - position.OpenPrice) * position.CloseFxPrice * position.Volume;
+            
             fplData.Fpl = Math.Round(fpl, fplData.AccountBaseAssetAccuracy);
 
             if (position.ClosePrice == 0)
                 position.UpdateClosePrice(position.OpenPrice);
             
-            fplData.OpenPrice = position.OpenPrice;
-            fplData.ClosePrice = position.ClosePrice;
-            
             CalculateMargin(position, fplData);
-            
-            fplData.SwapsSnapshot = position.GetSwaps();
 
             if (fplData.ActualHash == 0)
             {
                 fplData.ActualHash = 1;
             }
             fplData.CalculatedHash = fplData.ActualHash;
-            
-            fplData.TotalFplSnapshot = position.GetTotalFpl(fplData.SwapsSnapshot);
-
-            _accountsCacheService.Get(position.AccountId).CacheNeedsToBeUpdated();
         }
 
         private void UpdatePendingOrderMargin(Position order, FplData fplData)

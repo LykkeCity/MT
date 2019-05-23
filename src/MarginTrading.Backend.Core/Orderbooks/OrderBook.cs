@@ -175,11 +175,31 @@ namespace MarginTrading.Backend.Core.Orderbooks
             var newBestPrice = new InstrumentBidAskPair
             {
                 Instrument = Instrument,
-                Ask = Sell.Any() ? Sell.First().Key : BestPrice?.Ask ?? 0,
-                Bid = Buy.Any() ? Buy.First().Key : BestPrice?.Bid ?? 0,
                 Date = DateTime.UtcNow
             };
 
+            if (Sell.Any())
+            {
+                var fl = Sell.First();
+                newBestPrice.Ask = fl.Key;
+                newBestPrice.AskFirstLevelVolume = fl.Value.Sum(o => Math.Abs(o.Volume));
+            }
+            else
+            {
+                newBestPrice.Ask = BestPrice?.Ask ?? 0;
+            }
+            
+            if (Buy.Any())
+            {
+                var fl = Buy.First();
+                newBestPrice.Bid = fl.Key;
+                newBestPrice.BidFirstLevelVolume = fl.Value.Sum(o => Math.Abs(o.Volume));
+            }
+            else
+            {
+                newBestPrice.Bid = BestPrice?.Bid ?? 0;
+            }
+            
             if (newBestPrice.Ask > 0 && newBestPrice.Bid > 0)
                 BestPrice = newBestPrice;
         }

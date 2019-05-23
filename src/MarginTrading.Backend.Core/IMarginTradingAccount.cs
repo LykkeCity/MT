@@ -214,12 +214,9 @@ namespace MarginTrading.Backend.Core
             return account.GetAccountFpl().ActiveOrdersCount;
         }
         
-        public static void CacheNeedsToBeUpdated(this IMarginTradingAccount account)
+        public static void CacheNeedsToBeUpdated(this MarginTradingAccount account)
         {
-            if (account is MarginTradingAccount accountInstance)
-            {
-                accountInstance.AccountFpl.ActualHash++;
-            }
+            account.AccountFpl.ActualHash++;
         }
         
         public static bool IsInLiquidation(this IMarginTradingAccount account)

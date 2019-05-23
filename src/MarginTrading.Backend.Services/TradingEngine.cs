@@ -447,14 +447,21 @@ namespace MarginTrading.Backend.Services
                     _validateOrderService.CheckIfPendingOrderExecutionPossible(order.AssetPairId, order.OrderType,
                         ShouldOpenNewPosition(order)))
                 {
-                    //let's validate one more time, considering orderbook depth
-                    var me = _meRouter.GetMatchingEngineForExecution(order);
-                    var executionPriceInfo = me.GetBestPriceForOpen(order.AssetPairId, order.Volume);
-
-                    if (executionPriceInfo.price.HasValue && order.IsSuitablePriceForPendingOrder(executionPriceInfo.price.Value))
+                    if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(order.Volume))
                     {
                         _ordersCache.Active.Remove(order);
                         yield return order;
+                    }
+                    else //let's validate one more time, considering orderbook depth
+                    {
+                        var me = _meRouter.GetMatchingEngineForExecution(order);
+                        var executionPriceInfo = me.GetBestPriceForOpen(order.AssetPairId, order.Volume);
+                        
+                        if (executionPriceInfo.price.HasValue && order.IsSuitablePriceForPendingOrder(executionPriceInfo.price.Value))
+                        {
+                            _ordersCache.Active.Remove(order);
+                            yield return order;
+                        }
                     }
                 }
 
@@ -501,7 +508,7 @@ namespace MarginTrading.Backend.Services
         {
             foreach (var position in _ordersCache.GetPositionsByFxAssetPairId(quote.Instrument))
             {
-                var fxPrice = _cfdCalculatorService.GetQuoteRateForQuoteAsset(quote, position.FxToAssetPairDirection,
+                var fxPrice = _cfdCalculatorService.GetPrice(quote, position.FxToAssetPairDirection,
                     position.Volume * (position.ClosePrice - position.OpenPrice) > 0);
 
                 position.UpdateCloseFxPrice(fxPrice);
@@ -510,16 +517,18 @@ namespace MarginTrading.Backend.Services
 
         private void ProcessPositions(InstrumentBidAskPair quote)
         {
-            var stopoutAccounts = UpdateClosePriceAndDetectStopout(quote).ToArray();
+            var stopoutAccounts = UpdateClosePriceAndDetectStopout(quote);
             
             foreach (var account in stopoutAccounts)
                 CommitStopOut(account, quote);
         }
 
-        private IEnumerable<MarginTradingAccount> UpdateClosePriceAndDetectStopout(InstrumentBidAskPair quote)
+        private List<MarginTradingAccount> UpdateClosePriceAndDetectStopout(InstrumentBidAskPair quote)
         {
             var positionsByAccounts = _ordersCache.Positions.GetPositionsByInstrument(quote.Instrument)
                 .GroupBy(x => x.AccountId).ToDictionary(x => x.Key, x => x.ToArray());
+
+            var accountsWithStopout = new List<MarginTradingAccount>();
 
             foreach (var accountPositions in positionsByAccounts)
             {
@@ -528,35 +537,42 @@ namespace MarginTrading.Backend.Services
 
                 foreach (var position in accountPositions.Value)
                 {
-                    var defaultMatchingEngine = _meRouter.GetMatchingEngineForClose(position.OpenMatchingEngineId);
+                    var closeOrderDirection = position.Volume.GetClosePositionOrderDirection();
+                    var closePrice = quote.GetPriceForOrderDirection(closeOrderDirection);
 
-                    var closePrice = defaultMatchingEngine.GetPriceForClose(position.AssetPairId, position.Volume,
-                        position.ExternalProviderId);
-
-                    if (!closePrice.HasValue)
+                    if (quote.GetVolumeForOrderDirection(closeOrderDirection) < Math.Abs(position.Volume))
                     {
-                        var closeOrderDirection = position.Volume.GetClosePositionOrderDirection();
-                        closePrice = quote.GetPriceForOrderDirection(closeOrderDirection);
+                        var defaultMatchingEngine = _meRouter.GetMatchingEngineForClose(position.OpenMatchingEngineId);
+
+                        var orderbookPrice = defaultMatchingEngine.GetPriceForClose(position.AssetPairId, position.Volume,
+                            position.ExternalProviderId);
+
+                        if (orderbookPrice.HasValue)
+                            closePrice = orderbookPrice.Value;
                     }
                     
                     if (closePrice != 0)
                     {
-                        position.UpdateClosePrice(closePrice.Value);
+                        position.UpdateClosePriceWithoutAccountUpdate(closePrice);
 
                         UpdateTrailingStops(position);
                     }
                 }
+                
+                account.CacheNeedsToBeUpdated();
 
                 var newAccountLevel = account.GetAccountLevel();
-                
+
                 if (newAccountLevel == AccountLevel.StopOut)
-                    yield return account;
+                    accountsWithStopout.Add(account);
 
                 if (oldAccountLevel != newAccountLevel)
                 {
                     _marginCallEventChannel.SendEvent(this, new MarginCallEventArgs(account, newAccountLevel));
                 }
             }
+            
+            return accountsWithStopout;
         }
 
         private void UpdateTrailingStops(Position position)

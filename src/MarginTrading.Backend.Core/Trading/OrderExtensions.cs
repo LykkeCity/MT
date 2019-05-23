@@ -52,11 +52,6 @@ namespace MarginTrading.Backend.Core
             return order.CalculateFplData().Fpl;
         }
 
-        public static decimal GetFplRate(this Position order)
-        {
-            return order.CalculateFplData().FplRate;
-        }
-
         public static decimal GetMarginRate(this Position order)
         {
             return order.CalculateFplData().MarginRate;

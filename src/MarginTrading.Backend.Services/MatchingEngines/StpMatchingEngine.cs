@@ -32,6 +32,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly MarginTradingSettings _marginTradingSettings;
+        private readonly IQuoteCacheService _quoteCacheService;
         public string Id { get; }
 
         public MatchingEngineMode Mode => MatchingEngineMode.Stp;
@@ -44,7 +45,8 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             IDateService dateService,
             IRabbitMqNotifyService rabbitMqNotifyService,
             IAssetPairsCache assetPairsCache,
-            MarginTradingSettings marginTradingSettings)
+            MarginTradingSettings marginTradingSettings,
+            IQuoteCacheService quoteCacheService)
         {
             _externalOrderbookService = externalOrderbookService;
             _exchangeConnectorService = exchangeConnectorService;
@@ -54,17 +56,37 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             _rabbitMqNotifyService = rabbitMqNotifyService;
             _assetPairsCache = assetPairsCache;
             _marginTradingSettings = marginTradingSettings;
+            _quoteCacheService = quoteCacheService;
             Id = id;
         }
         
         public async Task<MatchedOrderCollection> MatchOrderAsync(Order order, bool shouldOpenNewPosition,
             OrderModality modality = OrderModality.Regular)
         {
-            var prices = _externalOrderbookService.GetOrderedPricesForExecution(order.AssetPairId, order.Volume, shouldOpenNewPosition);
-
-            if (prices == null || !prices.Any())
+            List<(string source, decimal? price)> prices = null;
+            
+            if (!string.IsNullOrEmpty(_marginTradingSettings.DefaultExternalExchangeId))
             {
-                return new MatchedOrderCollection();
+                var quote = _quoteCacheService.GetQuote(order.AssetPairId);
+
+                if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(order.Volume))
+                {
+                    prices = new List<(string source, decimal? price)>
+                    {
+                        (_marginTradingSettings
+                            .DefaultExternalExchangeId, quote.GetPriceForOrderDirection(order.Direction))
+                    };
+                }
+            }
+            
+            if (prices == null)
+            {
+                prices = _externalOrderbookService.GetOrderedPricesForExecution(order.AssetPairId, order.Volume, shouldOpenNewPosition);
+
+                if (prices == null || !prices.Any())
+                {
+                    return new MatchedOrderCollection();
+                }
             }
 
             var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(order.AssetPairId);

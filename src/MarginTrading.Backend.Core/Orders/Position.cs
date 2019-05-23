@@ -12,6 +12,9 @@ namespace MarginTrading.Backend.Core.Orders
     // ReSharper disable once ClassWithVirtualMembersNeverInherited.Global - it is inherited via Mock
     public class Position : StatefulObject<PositionStatus, PositionCommand>
     {
+        private decimal _openFxPrice;
+        private decimal _closeFxPrice;
+
         #region Properties
         
         [JsonProperty]
@@ -44,8 +47,19 @@ namespace MarginTrading.Backend.Core.Orders
         public decimal OpenOrderVolume { get; private set; }
         [JsonProperty]
         public decimal OpenPrice { get; private set; }
+
         [JsonProperty]
-        public decimal OpenFxPrice { get; private set; }
+        public decimal OpenFxPrice
+        {
+            get => _openFxPrice;
+            set
+            {
+                _openFxPrice = value;
+                if (CloseFxPrice == default) //migration
+                    CloseFxPrice = _openFxPrice;
+            }
+        }
+
         [JsonProperty]
         public string EquivalentAsset { get; private set; }
         [JsonProperty]
@@ -72,8 +86,18 @@ namespace MarginTrading.Backend.Core.Orders
         public string CloseMatchingEngineId { get; private set; }
         [JsonProperty]
         public decimal ClosePrice { get; private set; }
+
         [JsonProperty]
-        public decimal CloseFxPrice { get; private set; }
+        public decimal CloseFxPrice
+        {
+            get => _closeFxPrice;
+            private set
+            {
+                if (value != default)
+                    _closeFxPrice = value;
+            }
+        }
+
         [JsonProperty]
         public decimal ClosePriceEquivalent { get; private set; }
         [JsonProperty]
@@ -151,6 +175,7 @@ namespace MarginTrading.Backend.Core.Orders
             OpenOrderVolume = openOrderVolume;
             OpenPrice = openPrice;
             OpenFxPrice = openFxPrice;
+            CloseFxPrice = openFxPrice;
             EquivalentAsset = equivalentAsset;
             OpenPriceEquivalent = openPriceEquivalent;
             RelatedOrders = relatedOrders;
@@ -176,6 +201,13 @@ namespace MarginTrading.Backend.Core.Orders
             account.CacheNeedsToBeUpdated();
         }
 
+        //TODO: temp solution in order not to have a lot of changes
+        public void UpdateClosePriceWithoutAccountUpdate(decimal closePrice)
+        {
+            ClosePrice = closePrice;
+            FplData.ActualHash++;
+        }
+        
         public void UpdateClosePrice(decimal closePrice)
         {
             ClosePrice = closePrice;

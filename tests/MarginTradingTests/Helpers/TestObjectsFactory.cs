@@ -9,10 +9,11 @@ namespace MarginTradingTests.Helpers
     public static class TestObjectsFactory
     {
         public static Position CreateOpenedPosition(string assetPairId, IMarginTradingAccount account,
-            string tradingConditionId, decimal volume, decimal openPrice)
+            string tradingConditionId, decimal volume, decimal openPrice, decimal openFxPrice = 1)
         {
             return new Position(Guid.NewGuid().ToString("N"), 0, assetPairId, volume, account.Id, tradingConditionId,
-                account.BaseAssetId, null, MatchingEngineConstants.DefaultMm, DateTime.UtcNow, "OpenTrade", OrderType.Market, volume, openPrice, 1, "USD", openPrice,
+                account.BaseAssetId, null, MatchingEngineConstants.DefaultMm, DateTime.UtcNow, "OpenTrade", OrderType
+                .Market, volume, openPrice, openFxPrice, "USD", openPrice,
                 new List<RelatedOrderInfo>(), "LYKKETEST", OriginatorType.Investor, "", assetPairId, FxToAssetPairDirection.Straight, "");
         }//todo assetPairId is used as FxAssetPairId which is not very correct
         

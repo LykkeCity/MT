@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using MarginTrading.Backend.Core.Orders;
 
 namespace MarginTrading.Backend.Core.Orderbooks
 {
     public class ExternalOrderBook
     {
-        public ExternalOrderBook(string exchangeName, string assetPairId, DateTime timestamp, List<VolumePrice> asks, List<VolumePrice> bids)
+        public ExternalOrderBook(string exchangeName, string assetPairId, DateTime timestamp, VolumePrice[] asks, VolumePrice[] bids)
         {
             ExchangeName = exchangeName;
             AssetPairId = assetPairId;
@@ -22,9 +20,9 @@ namespace MarginTrading.Backend.Core.Orderbooks
 
         public DateTime Timestamp { get; }
 
-        public List<VolumePrice> Asks { get; }
+        public VolumePrice[] Asks { get; set; }
 
-        public List<VolumePrice> Bids { get; }
+        public VolumePrice[] Bids { get; set; }
 
         public void ApplyExchangeIdFromSettings(string exchangeIdFromSettings)
         {
@@ -38,8 +36,10 @@ namespace MarginTrading.Backend.Core.Orderbooks
         {
             return new InstrumentBidAskPair
             {
-                Bid = Bids.First().Price,
-                Ask = Asks.First().Price,
+                Bid = Bids[0].Price,
+                Ask = Asks[0].Price,
+                BidFirstLevelVolume = Bids[0].Volume,
+                AskFirstLevelVolume = Asks[0].Volume,
                 Date = Timestamp,
                 Instrument = AssetPairId
             };
@@ -47,25 +47,23 @@ namespace MarginTrading.Backend.Core.Orderbooks
 
         public decimal? GetMatchedPrice(decimal volumeToMatch, OrderDirection orderTypeToMatch)
         {
+            volumeToMatch = Math.Abs(volumeToMatch);
+            
             if (volumeToMatch == 0)
                 return null;
 
             var source = orderTypeToMatch == OrderDirection.Buy ? Asks : Bids;
             
-            var leftVolumeToMatch = Math.Abs(volumeToMatch);
-            
-            var matchedVolumePrices = new List<VolumePrice>();
+            var leftVolumeToMatch = volumeToMatch;
 
+            decimal matched = 0;
+            
             foreach (var priceLevel in source)
             {
                 var matchedVolume = Math.Min(priceLevel.Volume, leftVolumeToMatch);
 
-                matchedVolumePrices.Add(new VolumePrice
-                {
-                    Price = priceLevel.Price,
-                    Volume = matchedVolume
-                });
-
+                matched += priceLevel.Price * matchedVolume;
+                
                 leftVolumeToMatch = Math.Round(leftVolumeToMatch - matchedVolume, MarginTradingHelpers.VolumeAccuracy);
                 
                 if (leftVolumeToMatch <= 0)
@@ -76,7 +74,7 @@ namespace MarginTrading.Backend.Core.Orderbooks
             if (leftVolumeToMatch > 0)
                 return null;
 
-            return matchedVolumePrices.Sum(x => x.Price * Math.Abs(x.Volume)) / Math.Abs(volumeToMatch);
+            return matched / volumeToMatch;
         }
     }
 }
