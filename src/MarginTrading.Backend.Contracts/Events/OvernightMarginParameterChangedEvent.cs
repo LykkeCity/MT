@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using MessagePack;
 
 namespace MarginTrading.Backend.Contracts.Events
@@ -22,21 +23,15 @@ namespace MarginTrading.Backend.Contracts.Events
         public DateTime EventTimestamp { get; set; }
         
         /// <summary>
-        /// Old value of parameter.
+        /// Current state of parameter.
         /// </summary>
         [Key(2)]
-        public decimal OldValue { get; set; }
+        public bool CurrentState { get; set; }
         
         /// <summary>
-        /// New value of parameter.
+        /// List all items with parameter value != 1. Format: [(TradingCondition, Instrument), Value].
         /// </summary>
         [Key(3)]
-        public decimal NewValue { get; set; }
-        
-        /// <summary>
-        /// Indicated if currently applied parameter has been changed.
-        /// </summary>
-        [Key(4)]
-        public bool ChangedActualValue { get; set; }
+        public Dictionary<(string, string), decimal> ParameterValues { get; set; }
     }
 }

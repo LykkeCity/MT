@@ -77,10 +77,6 @@ namespace MarginTrading.Backend.Modules
                         _settings.Nested(x => x.Db.MarginTradingConnString)))
                     .SingleInstance();
 
-                builder.RegisterType<AzureRepositories.OvernightMarginRepository>()
-                    .As<IOvernightMarginRepository>()
-                    .SingleInstance();
-
                 builder.RegisterType<AzureRepositories.TradingEngineSnapshotsRepository>()
                     .As<ITradingEngineSnapshotsRepository>()
                     .SingleInstance();
@@ -136,10 +132,6 @@ namespace MarginTrading.Backend.Modules
                         _settings.CurrentValue.Db.PositionsHistorySqlConnectionString))
                     .WithParameter(new NamedParameter("tableName", 
                         _settings.CurrentValue.Db.PositionsHistoryTableName))
-                    .SingleInstance();
-
-                builder.RegisterType<SqlRepositories.Repositories.OvernightMarginRepository>()
-                    .As<IOvernightMarginRepository>()
                     .SingleInstance();
 
                 builder.RegisterType<SqlRepositories.Repositories.TradingEngineSnapshotsRepository>()

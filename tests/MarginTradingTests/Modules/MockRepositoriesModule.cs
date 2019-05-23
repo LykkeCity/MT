@@ -42,7 +42,6 @@ namespace MarginTradingTests.Modules
                     lastModified: DateTime.UtcNow,
                     data: new OperationData {State = OperationState.Initiated}
                 ));
-            var overnightMarginRepositoryMock = new Mock<IOvernightMarginRepository>();
 
             accountMarginFreezingRepository.Setup(x => x.GetAllAsync())
                 .ReturnsAsync(new List<IAccountMarginFreezing>().AsReadOnly());
@@ -70,8 +69,6 @@ namespace MarginTradingTests.Modules
                 .SingleInstance();
             builder.RegisterInstance(operationExecutionInfoRepositoryMock.Object)
                 .As<IOperationExecutionInfoRepository>().SingleInstance();
-            builder.RegisterInstance(overnightMarginRepositoryMock.Object).As<IOvernightMarginRepository>()
-                .SingleInstance();
         }
     }
 }

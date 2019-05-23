@@ -29,7 +29,6 @@ namespace MarginTrading.Backend.Services.Services
         private readonly IAccountUpdateService _accountUpdateService;
         private readonly IScheduleSettingsCacheService _scheduleSettingsCacheService;
         private readonly IOvernightMarginParameterContainer _overnightMarginParameterContainer;
-        private readonly IOvernightMarginRepository _overnightMarginRepository;
         private readonly ILog _log;
         private readonly IEventChannel<MarginCallEventArgs> _marginCallEventChannel;
         private readonly OvernightMarginSettings _overnightMarginSettings;
@@ -41,7 +40,6 @@ namespace MarginTrading.Backend.Services.Services
             IAccountUpdateService accountUpdateService,
             IScheduleSettingsCacheService scheduleSettingsCacheService,
             IOvernightMarginParameterContainer overnightMarginParameterContainer,
-            IOvernightMarginRepository overnightMarginRepository,
             ILog log,
             IEventChannel<MarginCallEventArgs> marginCallEventChannel,
             OvernightMarginSettings overnightMarginSettings)
@@ -52,7 +50,6 @@ namespace MarginTrading.Backend.Services.Services
             _accountUpdateService = accountUpdateService;
             _scheduleSettingsCacheService = scheduleSettingsCacheService;
             _overnightMarginParameterContainer = overnightMarginParameterContainer;
-            _overnightMarginRepository = overnightMarginRepository;
             _log = log;
             _marginCallEventChannel = marginCallEventChannel;
             _overnightMarginSettings = overnightMarginSettings;
@@ -64,15 +61,16 @@ namespace MarginTrading.Backend.Services.Services
             //need to know in which OvernightMarginJobType we are now and the moment of next change
             var platformTradingSchedule = _scheduleSettingsCacheService.GetPlatformTradingSchedule();
             
-            _overnightMarginParameterContainer.OvernightMarginParameter = 1;
+            _overnightMarginParameterContainer.SetOvernightMarginParameterState(false);
             
             var currentDateTime = _dateService.Now();
             DateTime nextStart;
+            (DateTime Warn, DateTime Start, DateTime End) operatingInterval = default;
             
             //no disabled trading schedule items.. doing nothing
             if (platformTradingSchedule.All(x => x.Enabled())
                 //OR no disabled intervals in current compilation, schedule recheck
-                || !TryGetOperatingInterval(platformTradingSchedule, currentDateTime, out var operatingInterval))
+                || !TryGetOperatingInterval(platformTradingSchedule, currentDateTime, out operatingInterval))
             {
                 nextStart = currentDateTime.Date.AddDays(1);
             }
@@ -90,19 +88,27 @@ namespace MarginTrading.Backend.Services.Services
             //schedule overnight margin parameter drop
             else if (currentDateTime < operatingInterval.End)
             {
-                _overnightMarginParameterContainer.OvernightMarginParameter = 
-                    _overnightMarginRepository.ReadOvernightMarginParameter();
+                _overnightMarginParameterContainer.SetOvernightMarginParameterState(true);
                 nextStart = operatingInterval.End;
 
                 PlanEodJob(operatingInterval.Start, currentDateTime);
             }
             else
             {
-                throw new Exception(
-                    $"Incorrect platform trading schedule! Need to fix it and restart the service. CurrentDateTime: {currentDateTime:s}, detected operation interval: {operatingInterval.ToJson()}");
+                _log.WriteFatalErrorAsync(nameof(OvernightMarginService), nameof(ScheduleNext),
+                        new Exception(
+                            $"Incorrect platform trading schedule! Need to fix it and restart the service. Check time: [{currentDateTime:s}], detected operation interval: [{operatingInterval.ToJson()}]"))
+                    .Wait();
+                return;
             }
             
-            JobManager.AddJob(ScheduleNext, (s) => s.NonReentrant().ToRunOnceAt(nextStart));
+            _log.WriteInfo(nameof(OvernightMarginService), nameof(ScheduleNext),
+                $"Planning next check to [{nextStart:s}]." 
+                + $" Current margin parameter state: [{_overnightMarginParameterContainer.GetOvernightMarginParameterState()}]."
+                + $" Check time: [{currentDateTime:s}]."
+                + (operatingInterval != default ? $" Detected operation interval: [{operatingInterval.ToJson()}]." : ""));
+            JobManager.AddJob(ScheduleNext, s => s
+                .WithName(nameof(OvernightMarginService)).NonReentrant().ToRunOnceAt(nextStart));
         }
 
         private void PlanEodJob(DateTime operatingIntervalStart, DateTime currentDateTime)
@@ -157,8 +163,8 @@ namespace MarginTrading.Backend.Services.Services
                 .MaxBy(x => x.Schedule.Rank);
 
             //find changing time: MIN(end of current, start of next with higher Rank)
-            //if the same state => continue 3.
-            //      other state => ON to OFF => Warn, Start & End => DateTime.Min
+            //if the same state => continue
+            //      other state => ON to OFF => Warn, Start, End
             //                     OFF to ON => End & Warn, Start => DateTime.Min
             DateTime? endOfInterval = null;
             foreach (var nextWithHigherRank in platformTrading.Where(x => x.Start > currentDateTime
@@ -191,7 +197,7 @@ namespace MarginTrading.Backend.Services.Services
                 resultingInterval = (resultingStart.Subtract(TimeSpan.FromMinutes(
                         _overnightMarginSettings.WarnPeriodMinutes + _overnightMarginSettings.ActivationPeriodMinutes)),
                     resultingStart.Subtract(TimeSpan.FromMinutes(_overnightMarginSettings.ActivationPeriodMinutes)),
-                    DateTime.MinValue);
+                    nextWithHigherRank.End);
                 return true;
             }
             

@@ -65,7 +65,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         public async Task UpdateSettingsAsync()
         {
-            var newScheduleContracts = (await _scheduleSettingsApi.StateList(_assetPairsCache.GetAllIds().ToArray()))
+            var newScheduleContracts = (await _scheduleSettingsApi.StateList(null))
                 .Where(x => x.ScheduleSettings.Any()).ToList();
             var invalidSchedules = InvalidSchedules(newScheduleContracts);
 
@@ -307,7 +307,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
         private void EnsureCacheValidUnsafe(DateTime currentDateTime)
         {
             //it must be safe to take _lastCacheRecalculationTime without a lock, because of upper UpgradeableReadLock
-            if (_lastCacheRecalculationTime.Date.Subtract(currentDateTime.Date) < TimeSpan.FromDays(1))
+            if (currentDateTime.Date.Subtract(_lastCacheRecalculationTime.Date) < TimeSpan.FromDays(1))
             {
                 return;
             }
