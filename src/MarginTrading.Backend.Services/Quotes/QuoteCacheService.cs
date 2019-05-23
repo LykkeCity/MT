@@ -8,8 +8,10 @@ using Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Messages;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Events;
+using MarginTrading.Backend.Services.Stp;
 
 namespace MarginTrading.Backend.Services.Quotes
 {
@@ -17,17 +19,76 @@ namespace MarginTrading.Backend.Services.Quotes
     {
         private readonly ILog _log;
         private readonly IMarginTradingBlobRepository _blobRepository;
-        private Dictionary<string, InstrumentBidAskPair> _quotes;
+        private readonly IExternalOrderbookService _externalOrderbookService;
+        
+        private Dictionary<string, InstrumentBidAskPair> _cache = new Dictionary<string, InstrumentBidAskPair>();
+        
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
-        private static string BlobName = "Quotes";
 
-        public QuoteCacheService(ILog log, IMarginTradingBlobRepository blobRepository, 
+        private const string BlobName = "Quotes";
+
+        public QuoteCacheService(ILog log, 
+            IMarginTradingBlobRepository blobRepository,
+            IExternalOrderbookService externalOrderbookService,
             MarginTradingSettings marginTradingSettings) 
-            : base(nameof(QuoteCacheService), marginTradingSettings.BlobPersistence.QuotesDumpPeriodMilliseconds, log)
+            : base(nameof(QuoteCacheService), 
+                marginTradingSettings.BlobPersistence.QuotesDumpPeriodMilliseconds, 
+                log)
         {
             _log = log;
             _blobRepository = blobRepository;
-            _quotes = new Dictionary<string, InstrumentBidAskPair>();
+            _externalOrderbookService = externalOrderbookService;
+        }
+
+        public override void Start()
+        {
+            _log.WriteInfo(nameof(QuoteCacheService), nameof(Start), "Quote cache init started.");
+            
+            var blobQuotes =
+                _blobRepository
+                    .Read<Dictionary<string, InstrumentBidAskPair>>(LykkeConstants.StateBlobContainer, BlobName)
+                    ?.ToDictionary(d => d.Key, d => d.Value) ??
+                new Dictionary<string, InstrumentBidAskPair>();
+            _log.WriteInfo(nameof(QuoteCacheService), nameof(Start), 
+                $"{blobQuotes.Count} quotes read from blob.");
+            
+            var orderBooks = _externalOrderbookService.GetOrderBooks();
+            _log.WriteInfo(nameof(QuoteCacheService), nameof(Start), 
+                $"{orderBooks.Count} order books read from {nameof(ExternalOrderbookService)}.");
+
+            var result = new Dictionary<string, InstrumentBidAskPair>();
+            foreach (var orderBook in orderBooks)
+            {
+                if (!blobQuotes.TryGetValue(orderBook.AssetPairId, out var quote)
+                    || orderBook.Timestamp > quote.Date)
+                {
+                    result.Add(orderBook.AssetPairId, orderBook.GetBestPrice());
+                }
+            }
+
+            foreach (var remainsToAdd in blobQuotes.Keys.Except(result.Keys))
+            {
+                var item = blobQuotes[remainsToAdd];
+                result.Add(item.Instrument, item);
+            }
+
+            _cache = result;
+            
+            _log.WriteInfo(nameof(QuoteCacheService), nameof(Start), 
+                $"Quote cache initialised with total {result.Count} items.");
+
+            base.Start();
+        }
+
+        public override Task Execute()
+        {
+            return DumpToRepository();
+        }
+
+        public override void Stop()
+        {
+            DumpToRepository().Wait();
+            base.Stop();
         }
 
         public InstrumentBidAskPair GetQuote(string instrument)
@@ -35,7 +96,7 @@ namespace MarginTrading.Backend.Services.Quotes
             _lockSlim.EnterReadLock();
             try
             {
-                if (!_quotes.TryGetValue(instrument, out var quote))
+                if (!_cache.TryGetValue(instrument, out var quote))
                     throw new QuoteNotFoundException(instrument, string.Format(MtMessages.QuoteNotFound, instrument));
 
                 return quote;
@@ -51,7 +112,7 @@ namespace MarginTrading.Backend.Services.Quotes
             _lockSlim.EnterReadLock();
             try
             {
-                if (!_quotes.TryGetValue(instrument, out var quote))
+                if (!_cache.TryGetValue(instrument, out var quote))
                 {
                     result = null;
                     return false;
@@ -71,7 +132,7 @@ namespace MarginTrading.Backend.Services.Quotes
             _lockSlim.EnterReadLock();
             try
             {
-                return _quotes.ToDictionary(x => x.Key, y => y.Value);
+                return _cache.ToDictionary(x => x.Key, y => y.Value);
             }
             finally
             {
@@ -84,8 +145,8 @@ namespace MarginTrading.Backend.Services.Quotes
             _lockSlim.EnterWriteLock();
             try
             {
-                if (_quotes.ContainsKey(assetPairId))
-                    _quotes.Remove(assetPairId);
+                if (_cache.ContainsKey(assetPairId))
+                    _cache.Remove(assetPairId);
                 else
                     throw new QuoteNotFoundException(assetPairId, string.Format(MtMessages.QuoteNotFound, assetPairId));
             }
@@ -104,41 +165,19 @@ namespace MarginTrading.Backend.Services.Quotes
             {
                 var bidAskPair = ea.BidAskPair;
 
-                if (_quotes.ContainsKey(bidAskPair.Instrument))
+                if (_cache.ContainsKey(bidAskPair.Instrument))
                 {
-                    _quotes[bidAskPair.Instrument] = bidAskPair;
+                    _cache[bidAskPair.Instrument] = bidAskPair;
                 }
                 else
                 {
-                    _quotes.Add(bidAskPair.Instrument, bidAskPair);
+                    _cache.Add(bidAskPair.Instrument, bidAskPair);
                 }
             }
             finally
             {
                 _lockSlim.ExitWriteLock();
             }
-        }
-
-        public override void Start()
-        {
-            _quotes =
-                _blobRepository
-                    .Read<Dictionary<string, InstrumentBidAskPair>>(LykkeConstants.StateBlobContainer, BlobName)
-                    ?.ToDictionary(d => d.Key, d => d.Value) ??
-                new Dictionary<string, InstrumentBidAskPair>();
-
-            base.Start();
-        }
-
-        public override Task Execute()
-        {
-            return DumpToRepository();
-        }
-
-        public override void Stop()
-        {
-            DumpToRepository().Wait();
-            base.Stop();
         }
 
         private async Task DumpToRepository()

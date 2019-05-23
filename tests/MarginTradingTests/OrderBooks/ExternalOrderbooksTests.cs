@@ -92,8 +92,9 @@ namespace MarginTradingTests.OrderBooks
         private ExternalOrderbookService GetNewOrderbooksList()
         {
             return new ExternalOrderbookService(_bestPricesChannelMock.Object, Mock.Of<IOrderBookProviderApi>(),
-                _dateServiceMock.Object, _assetPairsCacheMock.Object, _cqrsSenderMock.Object,
-                _identityGeneratorMock.Object, new ConvertService(), _logMock.Object, new MarginTradingSettings(), _assetPairDayOffMock.Object, _schedulteSettingsMock.Object);
+                _dateServiceMock.Object, new ConvertService(), _assetPairDayOffMock.Object, _schedulteSettingsMock.Object, 
+                _assetPairsCacheMock.Object, _cqrsSenderMock.Object, _identityGeneratorMock.Object, _logMock.Object, 
+                new MarginTradingSettings());
         }
 
         private void AssertErrorLogged(string expectedErrorMessage)
