@@ -10,6 +10,7 @@ namespace MarginTrading.Backend.Contracts.Activities
         Price = 1,
         Volume = 2,
         RelatedOrderRemoved = 3,
-        Validity = 4
+        Validity = 4,
+        ForceOpen = 5,
     }
 }

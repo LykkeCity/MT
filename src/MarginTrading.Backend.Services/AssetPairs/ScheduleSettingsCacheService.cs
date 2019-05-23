@@ -65,7 +65,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         public async Task UpdateSettingsAsync()
         {
-            var newScheduleContracts = (await _scheduleSettingsApi.StateList(_assetPairsCache.GetAllIds().ToArray()))
+            var newScheduleContracts = (await _scheduleSettingsApi.StateList(null))
                 .Where(x => x.ScheduleSettings.Any()).ToList();
             var invalidSchedules = InvalidSchedules(newScheduleContracts);
 
@@ -147,6 +147,33 @@ namespace MarginTrading.Backend.Services.AssetPairs
             {
                 _readerWriterLockSlim.ExitReadLock();
             }
+        }
+
+        public bool GetPlatformTradingEnabled()
+        {
+            var platformSchedule = GetPlatformTradingSchedule();
+
+            return GetTradingEnabled(platformSchedule);
+        }
+
+        public bool AssetPairTradingEnabled(string assetPairId, TimeSpan scheduleCutOff)
+        {
+            var schedule = GetCompiledScheduleSettings(assetPairId, _dateService.Now(), scheduleCutOff);
+
+            return GetTradingEnabled(schedule);
+        }
+
+        private bool GetTradingEnabled(IEnumerable<CompiledScheduleTimeInterval> timeIntervals)
+        {
+            var currentDateTime = _dateService.Now();
+            
+            var intersecting = timeIntervals.Where(x => x.Start <= currentDateTime && currentDateTime < x.End);
+
+            return intersecting
+                       .OrderByDescending(x => x.Schedule.Rank)
+                       .Select(x => x.Schedule)
+                       .FirstOrDefault()?
+                       .IsTradeEnabled ?? true;
         }
 
         private static bool TradingScheduleChanged(string key,
@@ -279,7 +306,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
         private void EnsureCacheValidUnsafe(DateTime currentDateTime)
         {
             //it must be safe to take _lastCacheRecalculationTime without a lock, because of upper UpgradeableReadLock
-            if (_lastCacheRecalculationTime.Date.Subtract(currentDateTime.Date) < TimeSpan.FromDays(1))
+            if (currentDateTime.Date.Subtract(_lastCacheRecalculationTime.Date) < TimeSpan.FromDays(1))
             {
                 return;
             }

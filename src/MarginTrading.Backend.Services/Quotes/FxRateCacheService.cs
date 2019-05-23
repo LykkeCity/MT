@@ -77,9 +77,17 @@ namespace MarginTrading.Backend.Services.Quotes
             var isEodOrderbook = orderBookMessage.ExchangeName == ExternalOrderbookService.EodExternalExchange;
 
             // we should process normal orderbook only if asset is currently tradable
-            // and process EOD orderbook only if asset is currently not tradable
-            if (isDayOff && !isEodOrderbook || !isDayOff && isEodOrderbook)
+            if (isDayOff && !isEodOrderbook)
             {
+                return Task.CompletedTask;
+            }
+            
+            // and process EOD orderbook only if asset is currently not tradable
+            if (!isDayOff && isEodOrderbook)
+            {
+                _log.WriteWarning("EOD FX quotes processing", "",
+                    $"EOD FX quote for {orderBookMessage.AssetPairId} is skipped, because instrument is within trading hours");
+                
                 return Task.CompletedTask;
             }
             

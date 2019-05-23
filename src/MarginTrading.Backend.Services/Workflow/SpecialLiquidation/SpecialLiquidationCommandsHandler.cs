@@ -168,7 +168,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         ExternalProviderId = externalProviderId,
                         AccountId = command.AccountId,
                         CausationOperationId = command.CausationOperationId,
-                        AdditionalInfo = command.AdditionalInfo
+                        AdditionalInfo = command.AdditionalInfo,
+                        OriginatorType = command.OriginatorType
                     }
                 ));
 
@@ -265,6 +266,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         Instrument = command.Instrument,
                         PositionIds = openedPositions.Select(x => x.Id).ToList(),
                         ExternalProviderId = externalProviderId,
+                        OriginatorType = OriginatorType.System,
                     }
                 ));
 
@@ -419,7 +421,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                             command.ExternalOrderId, command.ExternalExecutionTime), 
                         positionIds: executionInfo.Data.PositionIds.ToArray(), 
                         correlationId: command.OperationId,
-                        executionInfo.Data.AdditionalInfo);
+                        executionInfo.Data.AdditionalInfo,
+                        executionInfo.Data.OriginatorType);
                 
                     _chaosKitty.Meow(command.OperationId);
                     

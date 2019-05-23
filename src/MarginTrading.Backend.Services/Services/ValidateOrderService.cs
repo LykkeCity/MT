@@ -18,6 +18,7 @@ using MarginTrading.Backend.Services.Helpers;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
+// ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 
 namespace MarginTrading.Backend.Services
 {
@@ -63,7 +64,7 @@ namespace MarginTrading.Backend.Services
         
         
         #region Base validations
-
+        
         public async Task<(Order order, List<Order> relatedOrders)> ValidateRequestAndCreateOrders(
             OrderPlaceRequest request)
         {
@@ -128,8 +129,6 @@ namespace MarginTrading.Backend.Services
                     $"The minimum volume of a single order is limited to {tradingInstrument.DealMinLimit} {tradingInstrument.Instrument}.");
             }
 
-            var equivalentSettings = GetReportingEquivalentPricesSettings(account.LegalEntity);
-
             //set special account-quote instrument
 //            if (_assetPairsCache.TryGetAssetPairQuoteSubst(order.AccountAssetId, order.Instrument,
 //                    order.LegalEntity, out var substAssetPair))
@@ -142,6 +141,8 @@ namespace MarginTrading.Backend.Services
             }
 
             #endregion
+
+            var equivalentSettings = GetReportingEquivalentPricesSettings(account.LegalEntity);
 
             if (request.Type == OrderTypeContract.StopLoss ||
                 request.Type == OrderTypeContract.TakeProfit ||
@@ -211,6 +212,31 @@ namespace MarginTrading.Backend.Services
             }
             
             return (baseOrder, relatedOrders);
+        }
+
+        public void ValidateForceOpenChange(Order order, bool? forceOpen)
+        {
+            if (!forceOpen.HasValue || forceOpen.Value == order.ForceOpen)
+            {
+                return;
+            }
+            
+            if (!order.IsBasicPendingOrder() && forceOpen.Value)
+            {
+                throw new ValidateOrderException(OrderRejectReason.None,
+                    "Force open cannot be set to true for related order");
+            }
+
+            if (forceOpen.Value && order.Direction == OrderDirection.Sell)
+            {
+                var tradingInstrument =
+                    _tradingInstrumentsCache.GetTradingInstrument(order.TradingConditionId, order.AssetPairId);
+                if (!tradingInstrument.ShortPosition)
+                {
+                    throw new ValidateOrderException(OrderRejectReason.ShortPositionsDisabled,
+                        $"Short positions are disabled for {tradingInstrument.Instrument}.");
+                }
+            }
         }
 
         public void ValidateValidity(DateTime? validity, OrderType orderType)
@@ -532,7 +558,7 @@ namespace MarginTrading.Backend.Services
             return true;
         }
         
-        private IAssetPair GetAssetPairIfAvailableForTrading(string assetPairId, OrderType orderType, 
+        public IAssetPair GetAssetPairIfAvailableForTrading(string assetPairId, OrderType orderType, 
             bool shouldOpenNewPosition, bool isPreTradeValidation)
         {
             if (isPreTradeValidation || orderType == OrderType.Market)

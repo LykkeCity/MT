@@ -1,9 +1,9 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
-using Common;
 using Common.Log;
+using Lykke.Common;
 using MarginTrading.Backend.Core.Settings;
-using MarginTrading.Common.Services;
 using Microsoft.AspNetCore.Hosting;
 using StackExchange.Redis;
 
@@ -11,61 +11,87 @@ namespace MarginTrading.Backend.Services.Infrastructure
 {
     /// <inheritdoc />
     /// <summary>
-    /// Check that no instance is currently running. Save current timestamp to Redis.
+    /// Ensure that only single instance of the app is running.
     /// </summary>
-    public class StartupDeduplicationService : TimerPeriod
+    public class StartupDeduplicationService : IDisposable
     {
-        private const string ValueKey = "TradingEngine:DeduplicationTimestamp";
+        private const string LockKey = "TradingEngine:DeduplicationLock";
+        private readonly string _lockValue = Environment.MachineName;
 
-        private readonly IHostingEnvironment _environment;
-        private readonly IDateService _dateService;
-//        private readonly IDatabase _redisDatabase;
+        private readonly IHostingEnvironment _hostingEnvironment; 
+        private readonly ILog _log;
         private readonly MarginTradingSettings _marginTradingSettings;
 
+        private IDatabase _database = null;
+        private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
         public StartupDeduplicationService(
-            IHostingEnvironment environment,
-            IDateService dateService,
+            IHostingEnvironment hostingEnvironment,
             ILog log,
             MarginTradingSettings marginTradingSettings)
-            : base(nameof(StartupDeduplicationService),
-                (int) marginTradingSettings.DeduplicationTimestampPeriod.TotalMilliseconds,
-                log)
         {
-            _environment = environment;
-            _dateService = dateService;
-//            _redisDatabase = ConnectionMultiplexer.Connect(marginTradingSettings.RedisSettings.Configuration)
-//                .GetDatabase();
+            _hostingEnvironment = hostingEnvironment;
+            _log = log;
             _marginTradingSettings = marginTradingSettings;
         }
 
-        public override void Start()
+        /// <summary>
+        /// Check that no instance is currently running and hold Redis distributed lock during app lifetime.
+        /// Does nothing in debug mode.
+        /// Clarification.
+        /// There is a possibility of race condition in case when Redis is used in clustered/replicated mode:
+        /// - Client A acquires the lock in the master.
+        /// - The master crashes before the write to the key is transmitted to the slave.
+        /// - The slave gets promoted to master.
+        /// - Client B acquires the lock to the same resource A already holds a lock for. SAFETY VIOLATION!
+        /// But the probability of such situation is extremely small, so current implementation neglects it.
+        /// In case if it is required to assure safety in clustered/replicated mode RedLock algorithm may be used.
+        /// </summary>
+        public void HoldLock()
         {
-            //TODO tbd in next sprint
-//            if (!_environment.IsDevelopment())
-//            {
-//                var now = _dateService.Now();
-//                var lastTimestamp = DateTime.TryParse(_redisDatabase.StringGet(ValueKey), out var lastDt)
-//                    ? lastDt
-//                    : (DateTime?)null;
-//
-//                if (lastTimestamp != null && lastTimestamp > now.Subtract(
-//                        _marginTradingSettings.DeduplicationCheckPeriod))
-//                {
-//                    throw new Exception("Trading Engine failed to start due to deduplication validation failure");
-//                }
-//            }
+            if (_hostingEnvironment.IsDevelopment())
+            {
+                return;
+            }
             
-            base.Start();
+            var multiplexer = ConnectionMultiplexer.Connect(_marginTradingSettings.RedisSettings.Configuration);
+            _database = multiplexer.GetDatabase();
+
+            if (!_database.LockTake(LockKey, _lockValue, _marginTradingSettings.DeduplicationLockExpiryPeriod))
+            {
+                throw new Exception("Trading Engine failed to start due to deduplication validation failure.");
+                // exception is logged by the global handler
+            }
+
+            Exception workerException = null;
+            // ReSharper disable once PossibleNullReferenceException
+            _cancellationTokenSource.Token.Register(() => throw workerException);
+            
+            Task.Run(async () =>
+            {
+                try
+                {
+                    while (true)
+                    {
+                        // wait and extend lock
+                        Thread.Sleep(_marginTradingSettings.DeduplicationLockExtensionPeriod);
+
+                        await _database.LockExtendAsync(LockKey, _lockValue,
+                            _marginTradingSettings.DeduplicationLockExpiryPeriod);
+                    }
+                }
+                catch (Exception exception)
+                {
+                    workerException = exception;
+                    _cancellationTokenSource.Cancel();
+                }
+            });
         }
 
-        public override async Task Execute()
+        public void Dispose()
         {
-//            if (_environment.IsDevelopment())
-//            {
-//                return;
-//            }
-//            
-//            await _redisDatabase.StringSetAsync(ValueKey, $"{_dateService.Now():s}");
+            _database?.LockRelease(LockKey, _lockValue);
+            _cancellationTokenSource.Dispose();
         }
     }
 }

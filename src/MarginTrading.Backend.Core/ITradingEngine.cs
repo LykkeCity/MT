@@ -14,14 +14,13 @@ namespace MarginTrading.Backend.Core
         Task<Order> ClosePositionsAsync(PositionsCloseData data);
 
         Task<Order[]> LiquidatePositionsUsingSpecialWorkflowAsync(IMatchingEngineBase me, string[] positionIds,
-            string correlationId, string additionalInfo);
+            string correlationId, string additionalInfo, OriginatorType originator);
             
         Order CancelPendingOrder(string orderId, string additionalInfo, string correlationId,
             string comment = null, OrderCancellationReason reason = OrderCancellationReason.None);
             
         void ChangeOrder(string orderId, decimal price, DateTime? validity, OriginatorType originator,
-            string additionalInfo,
-            string correlationId);
+            string additionalInfo, string correlationId, bool? forceOpen = null);
             
         bool ShouldOpenNewPosition(Order order);
         

@@ -75,9 +75,10 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             {
                 var externalOrderModel = new OrderModel();
 
-                var orderType = order.OrderType == Core.Orders.OrderType.Market 
-                    ? OrderType.Market 
-                    : OrderType.Limit;
+                var orderType = order.OrderType == Core.Orders.OrderType.Limit
+                                || order.OrderType == Core.Orders.OrderType.TakeProfit
+                    ? OrderType.Limit
+                    : OrderType.Market;
 
                 var targetPrice = order.OrderType == Core.Orders.OrderType.Market
                     ? (double?) price
