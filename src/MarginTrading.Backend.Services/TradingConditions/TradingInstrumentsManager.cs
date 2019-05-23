@@ -6,25 +6,26 @@ using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Common.Services;
 using MarginTrading.SettingsService.Contracts;
 using MarginTrading.SettingsService.Contracts.TradingConditions;
+using Newtonsoft.Json;
 
 namespace MarginTrading.Backend.Services.TradingConditions
 {
     [UsedImplicitly]
     public class TradingInstrumentsManager : ITradingInstrumentsManager
     {
-        private readonly TradingInstrumentsCacheService _accountAssetsCacheService;
-        private readonly ITradingInstrumentsApi _tradingInstruments;
+        private readonly ITradingInstrumentsCacheService _tradingInstrumentsCacheService;
+        private readonly ITradingInstrumentsApi _tradingInstrumentsApi;
         private readonly IConvertService _convertService;
         private readonly IConsole _console;
 
         public TradingInstrumentsManager(
-            TradingInstrumentsCacheService accountAssetsCacheService,
-            ITradingInstrumentsApi tradingInstruments,
+            ITradingInstrumentsCacheService tradingInstrumentsCacheService,
+            ITradingInstrumentsApi tradingInstrumentsApi,
             IConvertService convertService,
             IConsole console)
         {
-            _accountAssetsCacheService = accountAssetsCacheService;
-            _tradingInstruments = tradingInstruments;
+            _tradingInstrumentsCacheService = tradingInstrumentsCacheService;
+            _tradingInstrumentsApi = tradingInstrumentsApi;
             _convertService = convertService;
             _console = console;
         }
@@ -34,20 +35,46 @@ namespace MarginTrading.Backend.Services.TradingConditions
             UpdateTradingInstrumentsCacheAsync().Wait();
         }
 
-        public async Task UpdateTradingInstrumentsCacheAsync()
+        public async Task UpdateTradingInstrumentsCacheAsync(string id = null)
         {
             _console.WriteLine($"Started {nameof(UpdateTradingInstrumentsCacheAsync)}");
-            
-            var instruments = await _tradingInstruments.List(string.Empty);
 
-            if (instruments != null)
+            var count = 0;
+            if (string.IsNullOrEmpty(id))
             {
-                _accountAssetsCacheService.InitAccountAssetsCache(instruments.Select(i =>
-                        (ITradingInstrument) _convertService.Convert<TradingInstrumentContract, TradingInstrument>(i))
-                    .ToList());
+                var instruments = (await _tradingInstrumentsApi.List(string.Empty))?
+                    .Select(i =>_convertService.Convert<TradingInstrumentContract, TradingInstrument>(i))
+                    .ToDictionary(x => x.GetKey());
+
+                if (instruments != null)
+                {
+                    _tradingInstrumentsCacheService.InitCache(instruments.Values.Select(i => (ITradingInstrument) i)
+                        .ToList());
+   
+                    count = instruments.Count;
+                }
+            }
+            else
+            {
+                var ids = JsonConvert.DeserializeObject<TradingInstrumentContract>(id);
+                
+                var instrumentContract = await _tradingInstrumentsApi.Get(ids.TradingConditionId, ids.Instrument);
+                
+                if (instrumentContract != null)
+                {
+                    var newInstrument = _convertService.Convert<TradingInstrumentContract, TradingInstrument>(instrumentContract);
+                    
+                    _tradingInstrumentsCacheService.UpdateCache(newInstrument);
+                    
+                    count = 1;
+                }
+                else
+                {
+                    _tradingInstrumentsCacheService.RemoveFromCache(ids.TradingConditionId, ids.Instrument);
+                }
             }
 
-            _console.WriteLine($"Finished {nameof(UpdateTradingInstrumentsCacheAsync)}. Count: {instruments?.Count ?? 0}");
+            _console.WriteLine($"Finished {nameof(UpdateTradingInstrumentsCacheAsync)} with count: {count}.");
         }
     }
 }

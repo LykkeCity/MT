@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Refit;
@@ -19,22 +20,19 @@ namespace MarginTrading.Backend.Contracts
         Task<string> MakeTradingDataSnapshot([Query, CanBeNull] string correlationId = null);
         
         /// <summary>
-        /// Get current value of overnight margin parameter.
+        /// Get current state of overnight margin parameter.
         /// </summary>
         [Get("/api/service/current-overnight-margin-parameter")]
-        Task<decimal> GetCurrentOvernightMarginParameter();
+        Task<bool> GetOvernightMarginParameterCurrentState();
 
         /// <summary>
-        /// Get persisted value of overnight margin parameter.
-        /// This value is applied at corresponding time, which depends on settings.
+        /// Get current margin parameter values for instruments (all / filtered by IDs).
         /// </summary>
+        /// <returns>
+        /// Dictionary with key = asset pair ID and value = (Dictionary with key = trading condition ID and value = multiplier)
+        /// </returns>
         [Get("/api/service/overnight-margin-parameter")]
-        Task<decimal> GetOvernightMarginParameter();
-
-        /// <summary>
-        /// Set and persist new value of overnight margin parameter.
-        /// </summary>
-        [Put("/api/service/overnight-margin-parameter")]
-        Task SetOvernightMarginParameter(decimal newValue, string correlationId = null);
+        Task<Dictionary<string, Dictionary<string, decimal>>> GetOvernightMarginParameterValues(
+            [Query, CanBeNull] string[] instruments = null);
     }
 }
