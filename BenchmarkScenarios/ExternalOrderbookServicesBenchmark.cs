@@ -47,6 +47,7 @@ namespace BenchmarkScenarios
                 Mock.Of<IOrderBookProviderApi>(),
                 Mock.Of<IDateService>(),
                 Mock.Of<IConvertService>(),
+                Mock.Of<IScheduleSettingsCacheService>(),
                 doMock.Object,
                 Mock.Of<IAssetPairsCache>(),
                 Mock.Of<ICqrsSender>(),

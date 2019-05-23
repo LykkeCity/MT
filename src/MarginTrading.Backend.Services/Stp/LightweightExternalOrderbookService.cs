@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Common;
 using Common.Log;
 using Lykke.MarginTrading.OrderBookService.Contracts;
 using Lykke.MarginTrading.OrderBookService.Contracts.Models;
@@ -28,6 +29,7 @@ namespace MarginTrading.Backend.Services.Stp
         private readonly IOrderBookProviderApi _orderBookProviderApi;
         private readonly IDateService _dateService;
         private readonly IConvertService _convertService;
+        private readonly IScheduleSettingsCacheService _scheduleSettingsCache;
         private readonly IAssetPairDayOffService _assetPairDayOffService;
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly ICqrsSender _cqrsSender;
@@ -50,6 +52,7 @@ namespace MarginTrading.Backend.Services.Stp
             IOrderBookProviderApi orderBookProviderApi,
             IDateService dateService,
             IConvertService convertService,
+            IScheduleSettingsCacheService scheduleSettingsCache,
             IAssetPairDayOffService assetPairDayOffService,
             IAssetPairsCache assetPairsCache,
             ICqrsSender cqrsSender,
@@ -61,6 +64,7 @@ namespace MarginTrading.Backend.Services.Stp
             _orderBookProviderApi = orderBookProviderApi;
             _dateService = dateService;
             _convertService = convertService;
+            _scheduleSettingsCache = scheduleSettingsCache;
             _assetPairDayOffService = assetPairDayOffService;
             _assetPairsCache = assetPairsCache;
             _cqrsSender = cqrsSender;
@@ -167,10 +171,24 @@ namespace MarginTrading.Backend.Services.Stp
             var isDayOff = _assetPairDayOffService.IsDayOff(orderbook.AssetPairId);
             var isEodOrderbook = orderbook.ExchangeName == ExternalOrderbookService.EodExternalExchange;
 
-            // we should process normal orderbook only if asset is currently tradeable
-            // and process EOD orderbook only if asset is currently not tradeable
-            if (isDayOff && !isEodOrderbook || !isDayOff && isEodOrderbook)
+            // we should process normal orderbook only if instrument is currently tradable
+            if (isDayOff && !isEodOrderbook)    
             {
+                return;
+            }
+
+            // and process EOD orderbook only if instrument is currently not tradable
+            if (!isDayOff && isEodOrderbook)
+            {
+                //log current schedule for the instrument
+                var schedule = _scheduleSettingsCache.GetCompiledScheduleSettings(
+                    orderbook.AssetPairId,
+                    _dateService.Now(),
+                    TimeSpan.Zero);
+
+                _log.WriteWarning("EOD quotes processing", $"Current schedule: {schedule.ToJson()}",
+                    $"EOD quote for {orderbook.AssetPairId} is skipped, because instrument is within trading hours");
+
                 return;
             }
             
