@@ -6,6 +6,7 @@ using Common.Log;
 using FluentScheduler;
 using JetBrains.Annotations;
 using Lykke.AzureQueueIntegration;
+using Lykke.Common;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
 using Lykke.Logs.MsSql;
@@ -108,7 +109,7 @@ namespace MarginTrading.Backend
             SetupLoggers(Configuration, services, mtSettings);
 
             var deduplicationService = RunHealthChecks(mtSettings.CurrentValue.MtBackend);
-//            builder.RegisterInstance(deduplicationService).AsSelf().SingleInstance();
+            builder.RegisterInstance(deduplicationService).AsSelf().As<IDisposable>().SingleInstance();
 
             RegisterModules(builder, mtSettings, Environment);
 
@@ -170,7 +171,7 @@ namespace MarginTrading.Backend
             );
         }
 
-        private void RegisterModules(ContainerBuilder builder, IReloadingManager<MtBackendSettings> mtSettings,
+        private static void RegisterModules(ContainerBuilder builder, IReloadingManager<MtBackendSettings> mtSettings,
             IHostingEnvironment environment)
         {
             var settings = mtSettings.Nested(x => x.MtBackend);
@@ -288,10 +289,10 @@ namespace MarginTrading.Backend
 
         private StartupDeduplicationService RunHealthChecks(MarginTradingSettings marginTradingSettings)
         {
-            //todo return DeduplicationService reference to container and register it
-            var deduplicationService = new StartupDeduplicationService(Environment, new DateService(),
-                LogLocator.CommonLog, marginTradingSettings);
-//            deduplicationService.Start();
+            var deduplicationService = new StartupDeduplicationService(Environment, LogLocator.CommonLog, 
+                marginTradingSettings);
+            deduplicationService
+                .HoldLock();
             
             new StartupQueuesCheckerService(marginTradingSettings)
                 .Check();
