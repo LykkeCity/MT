@@ -267,6 +267,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         PositionIds = openedPositions.Select(x => x.Id).ToList(),
                         ExternalProviderId = externalProviderId,
                         OriginatorType = OriginatorType.System,
+                        AdditionalInfo = LykkeConstants.LiquidationByCaAdditionalInfo,
                     }
                 ));
 

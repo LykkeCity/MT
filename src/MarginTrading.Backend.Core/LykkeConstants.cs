@@ -20,5 +20,7 @@
         
         public const string AscendingOrder = "ASC";
         public const string DescendingOrder = "DESC";
+
+        public const string LiquidationByCaAdditionalInfo = "{\"created_by\"=\"EOD\"}";
     }
 }
