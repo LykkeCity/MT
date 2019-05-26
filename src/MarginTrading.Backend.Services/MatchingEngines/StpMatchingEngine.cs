@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
@@ -120,8 +121,10 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                         orderId: order.Id,
                         modality: modality.ToType<TradeRequestModality>());
 
-                    var executionResult = await _exchangeConnectorService.CreateOrderAsync(externalOrderModel);
-
+                    var cts = new CancellationTokenSource();
+                    cts.CancelAfter(_marginTradingSettings.GavelTimeout);
+                    var executionResult = await _exchangeConnectorService.CreateOrderAsync(externalOrderModel, cts.Token);
+                    
                     if (!executionResult.Success)
                     {
                         throw new Exception(
