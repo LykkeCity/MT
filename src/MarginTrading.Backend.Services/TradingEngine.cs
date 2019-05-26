@@ -468,15 +468,14 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public void ProcessExpiredOrders()
+        public void ProcessExpiredOrders(DateTime operationIntervalEnd)
         {
             var pendingOrders = _ordersCache.Active.GetAllOrders();
-
             var now = _dateService.Now();
 
             foreach (var order in pendingOrders)
             {
-                if (order.Validity.HasValue && now.Date >= order.Validity.Value.Date)
+                if (order.Validity.HasValue && operationIntervalEnd.Date >= order.Validity.Value.Date)
                 {
                     _ordersCache.Active.Remove(order);
                     order.Expire(now);

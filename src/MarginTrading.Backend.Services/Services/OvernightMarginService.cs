@@ -91,7 +91,7 @@ namespace MarginTrading.Backend.Services.Services
                 _overnightMarginParameterContainer.SetOvernightMarginParameterState(true);
                 nextStart = operatingInterval.End;
 
-                PlanEodJob(operatingInterval.Start, currentDateTime);
+                PlanEodJob(operatingInterval.Start, operatingInterval.End, currentDateTime);
             }
             else
             {
@@ -111,18 +111,18 @@ namespace MarginTrading.Backend.Services.Services
                 .WithName(nameof(OvernightMarginService)).NonReentrant().ToRunOnceAt(nextStart));
         }
 
-        private void PlanEodJob(DateTime operatingIntervalStart, DateTime currentDateTime)
+        private void PlanEodJob(DateTime operatingIntervalStart, DateTime operatingIntervalEnd, DateTime currentDateTime)
         {
             var eodTime = operatingIntervalStart.AddMinutes(_overnightMarginSettings.ActivationPeriodMinutes);
 
             if (currentDateTime < eodTime)
             {
-                JobManager.AddJob(() => _tradingEngine.ProcessExpiredOrders(),
+                JobManager.AddJob(() => _tradingEngine.ProcessExpiredOrders(operatingIntervalEnd),
                     (s) => s.NonReentrant().ToRunOnceAt(eodTime));
             }
             else
             {
-                JobManager.AddJob(() => _tradingEngine.ProcessExpiredOrders(), 
+                JobManager.AddJob(() => _tradingEngine.ProcessExpiredOrders(operatingIntervalEnd), 
                     (s) => s.ToRunNow());
             }
         }
