@@ -172,7 +172,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         {
             var prices = _externalOrderbookService.GetOrderedPricesForExecution(assetPairId, volume, true);
 
-            return prices.FirstOrDefault();
+            return prices?.FirstOrDefault() ?? default;
         }
 
         public decimal? GetPriceForClose(string assetPairId, decimal volume, string externalProviderId)
