@@ -50,7 +50,8 @@ namespace MarginTrading.Backend.Services.Mappers
                     Price = relateOrder.Price ?? 0,
                     Type = relateOrder.OrderType.ToType<OrderTypeContract>(),
                     Status = relateOrder.Status.ToType<OrderStatusContract>(),
-                    ModifiedTimestamp = relateOrder.LastModified
+                    ModifiedTimestamp = relateOrder.LastModified,
+                    TrailingDistance = relateOrder.TrailingDistance
                 };
             }
             
@@ -127,7 +128,8 @@ namespace MarginTrading.Backend.Services.Mappers
                         Price = relatedOrder.Price ?? 0,
                         Type = relatedOrder.OrderType.ToType<OrderTypeContract>(),
                         Status = relatedOrder.Status.ToType<OrderStatusContract>(),
-                        ModifiedTimestamp = relatedOrder.LastModified
+                        ModifiedTimestamp = relatedOrder.LastModified,
+                        TrailingDistance = relatedOrder.TrailingDistance
                     });
                 }
             }
