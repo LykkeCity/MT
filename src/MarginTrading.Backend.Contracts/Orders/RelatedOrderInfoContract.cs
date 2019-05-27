@@ -12,5 +12,10 @@ namespace MarginTrading.Backend.Contracts.Orders
         public OrderStatusContract Status { get; set; }
         
         public DateTime ModifiedTimestamp { get; set; }
+
+        /// <summary>
+        /// Max distance between order price and parent order price (only for trailing order)
+        /// </summary>
+        public decimal? TrailingDistance { get; set; }
     }
 }
