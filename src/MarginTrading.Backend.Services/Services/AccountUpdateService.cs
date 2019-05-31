@@ -118,7 +118,7 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public bool IsEnoughBalance(Order order, IMatchingEngineBase matchingEngine)
+        public void CheckIsEnoughBalance(Order order, IMatchingEngineBase matchingEngine)
         {
             var orderMargin = _fplService.GetInitMarginForOrder(order);
             var accountMarginAvailable = _accountsCacheService.Get(order.AccountId).GetMarginAvailable();
@@ -128,28 +128,35 @@ namespace MarginTrading.Backend.Services
             var openPrice = order.Price ?? 0;
             var closePrice = 0m;
             var directionForClose = order.Volume.GetClosePositionOrderDirection();
-            
+
+            if (quote.GetVolumeForOrderDirection(directionForClose) >= Math.Abs(order.Volume))
+            {
+                closePrice = quote.GetPriceForOrderDirection(directionForClose);
+            }
+            else
+            {
+                var openPriceInfo = matchingEngine.GetBestPriceForOpen(order.AssetPairId, order.Volume);
+                var closePriceInfo =
+                    matchingEngine.GetPriceForClose(order.AssetPairId, order.Volume, openPriceInfo.externalProviderId);
+
+                if (openPriceInfo.price == null || closePriceInfo == null)
+                {
+                    throw new ValidateOrderException(OrderRejectReason.NoLiquidity,
+                        "Price for open can not be calculated");
+                }
+
+                closePrice = closePriceInfo.Value;
+
+                if (openPrice == 0)
+                    openPrice = openPriceInfo.price.Value;
+
+            }
+
             if (openPrice == 0)
             {
-                if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(order.Volume) &&
-                    quote.GetVolumeForOrderDirection(directionForClose) >= Math.Abs(order.Volume))
+                if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(order.Volume))
                 {
                     openPrice = quote.GetPriceForOrderDirection(order.Direction);
-                    closePrice = quote.GetPriceForOrderDirection(directionForClose);
-                }
-                else
-                {
-                    var openPriceInfo = matchingEngine.GetBestPriceForOpen(order.AssetPairId, order.Volume);
-                    var closePriceInfo =
-                        matchingEngine.GetPriceForClose(order.AssetPairId, order.Volume, openPriceInfo.externalProviderId);
-
-                    if (openPriceInfo.price == null || closePriceInfo == null)
-                    {
-                        throw new ValidateOrderException(OrderRejectReason.NoLiquidity, "Price for open can not be calculated");
-                    }
-
-                    openPrice = openPriceInfo.price.Value;
-                    closePrice = closePriceInfo.Value;
                 }
             }
 
@@ -162,14 +169,18 @@ namespace MarginTrading.Backend.Services
             // just in case... is should be always negative
             if (pnl > 0)
             {
-                _log.WriteWarning(nameof(IsEnoughBalance), order.ToJson(),
+                _log.WriteWarning(nameof(CheckIsEnoughBalance), order.ToJson(),
                     $"Theoretical PnL at the moment of order execution is positive");
                 pnl = 0;
             }
-                
-            return accountMarginAvailable + pnl >= orderMargin;
+
+            if (accountMarginAvailable + pnl < orderMargin)
+                throw new ValidateOrderException(OrderRejectReason.NotEnoughBalance,
+                    MtMessages.Validation_NotEnoughBalance,
+                    $"Account available margin: {accountMarginAvailable}, order margin: {orderMargin}, pnl: {pnl}d " +
+                    $"(open price: {openPrice}, close price: {closePrice}, fx rate: {fxRate})");
         }
-        
+
         public void RemoveLiquidationStateIfNeeded(string accountId, string reason,
             string liquidationOperationId = null, LiquidationType liquidationType = LiquidationType.Normal)
         {

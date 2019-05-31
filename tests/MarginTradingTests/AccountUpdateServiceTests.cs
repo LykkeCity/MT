@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Autofac;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Services;
@@ -92,31 +93,47 @@ namespace MarginTradingTests
             Assert.IsNotNull(account);
             Assert.IsTrue(account.GetMarginUsageLevel() <= 1.25M);
         }
-        
+
         [Test]
         public void Check_IsEnoughBalance()
         {
-            var me = new FakeMatchingEngine(10);
+            //account have 1000
             
+            var me = new FakeMatchingEngine(10);
+
             var order1 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 96000);
-            
-            var result1 = _accountUpdateService.IsEnoughBalance(order1, me);//account have 1000
-            Assert.IsTrue(result1);
-            
+
+            Assert.DoesNotThrow(() => _accountUpdateService.CheckIsEnoughBalance(order1, me));
+
             var order2 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 97000);
-            
-            var result2 = _accountUpdateService.IsEnoughBalance(order2, me);//account have 1000
-            Assert.IsFalse(result2);
+
+            Assert.Throws<ValidateOrderException>(() =>
+                _accountUpdateService.CheckIsEnoughBalance(order2, me));
 
             var meWithSpread = new FakeMatchingEngine(10, closePrice: 1);
-            
+
             var order3 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 96000);
+
+            Assert.Throws<ValidateOrderException>(
+                () => _accountUpdateService.CheckIsEnoughBalance(order3, meWithSpread));
             
-            var result3 = _accountUpdateService.IsEnoughBalance(order3, meWithSpread);//account have 1000
-            Assert.IsFalse(result3);
+            var meForLimitOk = new FakeMatchingEngine(999);
+            
+            var limitOrderOk = TestObjectsFactory.CreateNewOrder(OrderType.Limit, "EURUSD", Accounts[0],
+                MarginTradingTestsUtils.TradingConditionId, 960, price: 1000);
+
+            Assert.DoesNotThrow(() => _accountUpdateService.CheckIsEnoughBalance(limitOrderOk, meForLimitOk));
+            
+            var limitOrderErr = TestObjectsFactory.CreateNewOrder(OrderType.Limit, "EURUSD", Accounts[0],
+                MarginTradingTestsUtils.TradingConditionId, 960, price: 1000);
+
+            var ex = Assert.Throws<ValidateOrderException>(() =>
+                _accountUpdateService.CheckIsEnoughBalance(limitOrderErr, me));
+
+            Console.WriteLine(ex.Comment);
         }
     }
 }
