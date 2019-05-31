@@ -129,9 +129,13 @@ namespace MarginTrading.Backend.Services
             var closePrice = 0m;
             var directionForClose = order.Volume.GetClosePositionOrderDirection();
 
-            if (quote.GetVolumeForOrderDirection(directionForClose) >= Math.Abs(order.Volume))
+            if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(order.Volume) &&
+                quote.GetVolumeForOrderDirection(directionForClose) >= Math.Abs(order.Volume))
             {
                 closePrice = quote.GetPriceForOrderDirection(directionForClose);
+
+                if (openPrice == 0)
+                    openPrice = quote.GetPriceForOrderDirection(order.Direction);
             }
             else
             {
@@ -150,14 +154,6 @@ namespace MarginTrading.Backend.Services
                 if (openPrice == 0)
                     openPrice = openPriceInfo.price.Value;
 
-            }
-
-            if (openPrice == 0)
-            {
-                if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(order.Volume))
-                {
-                    openPrice = quote.GetPriceForOrderDirection(order.Direction);
-                }
             }
 
             var pnlInTradingCurrency = (closePrice - openPrice) * order.Volume;
