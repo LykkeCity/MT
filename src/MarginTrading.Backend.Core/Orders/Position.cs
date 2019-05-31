@@ -249,6 +249,7 @@ namespace MarginTrading.Backend.Core.Orders
 
             ChargePnlOperations.Add(operationId);
             ChargedPnL += value;
+            FplData.ActualHash++;
         }
 
         public void PartiallyClose(DateTime date, decimal closedVolume, string tradeId, decimal chargedPnl)
