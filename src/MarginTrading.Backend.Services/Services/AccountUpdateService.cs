@@ -146,7 +146,7 @@ namespace MarginTrading.Backend.Services
                 if (openPriceInfo.price == null || closePriceInfo == null)
                 {
                     throw new ValidateOrderException(OrderRejectReason.NoLiquidity,
-                        "Price for open can not be calculated");
+                        "Price for open/close can not be calculated");
                 }
 
                 closePrice = closePriceInfo.Value;
@@ -173,7 +173,7 @@ namespace MarginTrading.Backend.Services
             if (accountMarginAvailable + pnl < orderMargin)
                 throw new ValidateOrderException(OrderRejectReason.NotEnoughBalance,
                     MtMessages.Validation_NotEnoughBalance,
-                    $"Account available margin: {accountMarginAvailable}, order margin: {orderMargin}, pnl: {pnl}d " +
+                    $"Account available margin: {accountMarginAvailable}, order margin: {orderMargin}, pnl: {pnl} " +
                     $"(open price: {openPrice}, close price: {closePrice}, fx rate: {fxRate})");
         }
 
