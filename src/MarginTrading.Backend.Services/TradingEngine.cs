@@ -154,15 +154,17 @@ namespace MarginTrading.Backend.Services
         {
             if (order.IsBasicPendingOrder() || !string.IsNullOrEmpty(order.ParentPositionId))
             {
-                order.Activate(_dateService.Now(), false);
-                _ordersCache.Active.Add(order);
-                _orderActivatedEventChannel.SendEvent(this, new OrderActivatedEventArgs(order));
-
+                Position parentPosition = null;
+                
                 if (!string.IsNullOrEmpty(order.ParentPositionId))
                 {
-                    var position = _ordersCache.Positions.GetPositionById(order.ParentPositionId);
-                    position.AddRelatedOrder(order);
+                    parentPosition = _ordersCache.Positions.GetPositionById(order.ParentPositionId);
+                    parentPosition.AddRelatedOrder(order);
                 }
+
+                order.Activate(_dateService.Now(), false, parentPosition?.ClosePrice);
+                _ordersCache.Active.Add(order);
+                _orderActivatedEventChannel.SendEvent(this, new OrderActivatedEventArgs(order));
             }
             else if (!string.IsNullOrEmpty(order.ParentOrderId))
             {
@@ -183,7 +185,7 @@ namespace MarginTrading.Backend.Services
                         order.ChangeVolume(-parentPosition.Volume, _dateService.Now(), OriginatorType.System);
                     }
 
-                    order.Activate(_dateService.Now(), true);
+                    order.Activate(_dateService.Now(), true, parentPosition.ClosePrice);
                     _ordersCache.Active.Add(order);
                     _orderActivatedEventChannel.SendEvent(this, new OrderActivatedEventArgs(order));
                 }

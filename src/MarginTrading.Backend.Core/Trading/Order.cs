@@ -495,7 +495,7 @@ namespace MarginTrading.Backend.Core.Trading
             });
         }
                 
-        public void Activate(DateTime dateTime, bool relinkFromOrderToPosition)
+        public void Activate(DateTime dateTime, bool relinkFromOrderToPosition, decimal? positionClosePrice)
         {
             ChangeState(OrderCommand.Activate, () =>
             {
@@ -510,6 +510,11 @@ namespace MarginTrading.Backend.Core.Trading
                     {
                         PositionsToBeClosed.Add(ParentOrderId);
                     }
+                }
+
+                if (positionClosePrice.HasValue && OrderType == OrderType.TrailingStop)
+                {
+                    SetTrailingDistance(positionClosePrice.Value);
                 }
             });
         }
