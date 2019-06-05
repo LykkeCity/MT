@@ -166,7 +166,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
             SendPositionHistoryEvent(position, PositionHistoryTypeContract.Open, 0, metadata: metadata);
             
-            ActivateRelatedOrders(position.RelatedOrders);
+            ActivateRelatedOrders(position);
             
         }
 
@@ -280,13 +280,13 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             _rabbitMqNotifyService.PositionHistory(historyEvent);
         }
         
-        private void ActivateRelatedOrders(List<RelatedOrderInfo> relatedOrderInfos)
+        private void ActivateRelatedOrders(Position position)
         {
-            foreach (var relatedOrderInfo in relatedOrderInfos)
+            foreach (var relatedOrderInfo in position.RelatedOrders)
             {
                 if (_ordersCache.Inactive.TryPopById(relatedOrderInfo.Id, out var relatedOrder))
                 {
-                    relatedOrder.Activate(_dateService.Now(), true);
+                    relatedOrder.Activate(_dateService.Now(), true, position.ClosePrice);
                     _ordersCache.Active.Add(relatedOrder);
                     _orderActivatedEventChannel.SendEvent(this, new OrderActivatedEventArgs(relatedOrder));
                 }
