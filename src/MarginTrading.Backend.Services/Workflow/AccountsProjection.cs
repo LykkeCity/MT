@@ -103,15 +103,6 @@ namespace MarginTrading.Backend.Services.Workflow
                             var account = _accountsCacheService.TryGet(e.Account.Id);
                             if (await ValidateAccount(account, e))
                             {
-                                if (await _accountsCacheService.UpdateAccountBalance(updatedAccount.Id,
-                                    e.BalanceChange.Balance, e.ChangeTimestamp))
-                                {
-                                    _accountUpdateService.RemoveLiquidationStateIfNeeded(e.Account.Id,
-                                        "Balance updated");
-                                    _accountBalanceChangedEventChannel.SendEvent(this,
-                                        new AccountBalanceChangedEventArgs(updatedAccount));
-                                }
-                                
                                 switch (e.BalanceChange.ReasonType)
                                 {
                                     case AccountBalanceChangeReasonTypeContract.Withdraw:
@@ -134,6 +125,15 @@ namespace MarginTrading.Backend.Services.Workflow
                                         await _accountUpdateService.UnfreezeUnconfirmedMargin(e.Account.Id, 
                                             e.BalanceChange.EventSourceId);
                                         break;
+                                }
+                                
+                                if (await _accountsCacheService.UpdateAccountBalance(updatedAccount.Id,
+                                    e.BalanceChange.Balance, e.ChangeTimestamp))
+                                {
+                                    _accountUpdateService.RemoveLiquidationStateIfNeeded(e.Account.Id,
+                                        "Balance updated");
+                                    _accountBalanceChangedEventChannel.SendEvent(this,
+                                        new AccountBalanceChangedEventArgs(updatedAccount));
                                 }
                             }
                         }
