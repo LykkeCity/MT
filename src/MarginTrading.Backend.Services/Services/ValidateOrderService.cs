@@ -541,7 +541,7 @@ namespace MarginTrading.Backend.Services
             ValidateTradeLimits(order.AssetPairId, order.TradingConditionId, order.AccountId, order.Volume, shouldOpenNewPosition);
 
             if (shouldOpenNewPosition)
-                ValidateMargin(order, matchingEngine);
+                _accountUpdateService.CheckIsEnoughBalance(order, matchingEngine);
         }
 
         public bool CheckIfPendingOrderExecutionPossible(string assetPairId, OrderType orderType, bool shouldOpenNewPosition)
@@ -638,16 +638,6 @@ namespace MarginTrading.Backend.Services
             {
                 throw new ValidateOrderException(OrderRejectReason.ShortPositionsDisabled,
                     $"Short positions are disabled for {tradingInstrument.Instrument}.");
-            }
-        }
-        
-        private void ValidateMargin(Order order, IMatchingEngineBase matchingEngine)
-        {
-            if (!_accountUpdateService.IsEnoughBalance(order, matchingEngine))
-            {
-                var account = _accountsCacheService.Get(order.AccountId);
-                
-                throw new ValidateOrderException(OrderRejectReason.NotEnoughBalance, MtMessages.Validation_NotEnoughBalance, $"Account available balance is {account.GetTotalCapital()}");
             }
         }
 
