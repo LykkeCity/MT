@@ -375,7 +375,7 @@ namespace MarginTradingTests
                 InstrumentId = "BTCUSD",
                 Type = OrderTypeContract.Limit,
                 Price = 1,
-                Validity = DateTime.UtcNow.AddSeconds(-1),
+                Validity = DateTime.UtcNow.AddDays(-1),
                 Volume = 10
             };
             
@@ -383,6 +383,28 @@ namespace MarginTradingTests
                 await _validateOrderService.ValidateRequestAndCreateOrders(request));
 
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidValidity);
+        }
+        
+        [Test]
+        public void Is_ValidityDate_Valid_ForNotMarket()
+        {
+            var quote = new InstrumentBidAskPair {Instrument = "BTCUSD", Bid = 1.55M, Ask = 1.57M};
+            _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
+            
+            var request = new OrderPlaceRequest
+            {
+                AccountId = Accounts[0].Id,
+                CorrelationId = Guid.NewGuid().ToString(),
+                Direction = OrderDirectionContract.Buy,
+                InstrumentId = "BTCUSD",
+                Type = OrderTypeContract.Limit,
+                Price = 1,
+                Validity = DateTime.UtcNow.Date,
+                Volume = 10
+            };
+
+            Assert.DoesNotThrowAsync(async () =>
+                await _validateOrderService.ValidateRequestAndCreateOrders(request));
         }
 
         [Test]
