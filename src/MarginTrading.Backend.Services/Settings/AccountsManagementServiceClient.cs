@@ -8,5 +8,8 @@ namespace MarginTrading.Backend.Services.Settings
     {
         [HttpCheck("/api/isalive")]
         public string ServiceUrl { get; set; }
+		
+        [Optional]
+        public string ApiKey { get; set; }
     }
 }
