@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Common;
@@ -147,6 +148,36 @@ namespace MarginTrading.Backend.Services.Workflow
                     case AccountChangedEventTypeContract.Deleted:
                         //account deletion from cache is double-handled by CQRS flow
                         _accountsCacheService.Remove(e.Account.Id);
+                        break;
+                    case AccountChangedEventTypeContract.Reset:
+                        foreach (var position in _ordersCache.Positions.GetPositionsByAccountIds(e.Account.Id))
+                        {
+                            _ordersCache.Positions.Remove(position);
+                        }
+
+                        foreach (var order in _ordersCache.Active.GetOrdersByAccountIds(e.Account.Id))
+                        {
+                            _ordersCache.Active.Remove(order);
+                        }
+                        foreach (var order in _ordersCache.Inactive.GetOrdersByAccountIds(e.Account.Id))
+                        {
+                            _ordersCache.Inactive.Remove(order);
+                        }
+                        foreach (var order in _ordersCache.InProgress.GetOrdersByAccountIds(e.Account.Id))
+                        {
+                            _ordersCache.InProgress.Remove(order);
+                        }
+
+                        var warnings = _accountsCacheService.Reset(e.Account.Id);
+
+                        if (warnings.Any())
+                        {
+                            await _log.WriteWarningAsync(nameof(AccountChangedEvent),nameof(AccountChangedEventTypeContract.Reset),
+                                string.Join(",", warnings));
+                        }
+                        
+                        await _log.WriteInfoAsync(nameof(AccountChangedEvent),nameof(AccountChangedEventTypeContract.Reset),
+                            $"Account {e.Account.Id} was reset.");
                         break;
                     default:
                         await _log.WriteErrorAsync(nameof(AccountsProjection), nameof(AccountChangedEvent),

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core.Settings;
 
@@ -58,6 +60,36 @@ namespace MarginTrading.Backend.Core
                 LastBalanceChangeTime = src.LastBalanceChangeTime,
                 IsWithdrawalDisabled = src.IsWithdrawalDisabled
             };
+        }
+
+        public string Reset(DateTime now)
+        {
+            var warnings = new List<string>();
+
+            if (!string.IsNullOrEmpty(LiquidationOperationId))
+            {
+                warnings.Add($"Liquidation is in progress with id {LiquidationOperationId}");
+            }
+
+            if (AccountFpl.UnconfirmedMarginData.Any())
+            {
+                warnings.Add($"There is some unconfirmed margin data on account: {string.Join(",", AccountFpl.UnconfirmedMarginData)}");
+            }
+
+            if (AccountFpl.WithdrawalFrozenMarginData.Any())
+            {
+                warnings.Add($"There is some withdrawal frozen margin data on account: {string.Join(",", AccountFpl.WithdrawalFrozenMarginData)}");
+            }
+            
+            Balance = 0;
+            WithdrawTransferLimit = 0;
+            IsDisabled = false;
+            IsWithdrawalDisabled = false;
+            LiquidationOperationId = string.Empty;
+            LastUpdateTime = LastBalanceChangeTime = now;
+            AccountFpl = new AccountFpl();
+
+            return string.Join(", ", warnings);
         }
 
         public int CompareTo(MarginTradingAccount other)

@@ -26,7 +26,7 @@
     <PackageReference Include="Lykke.AzureQueueIntegration" Version="2.3.0" />
     <PackageReference Include="Lykke.Common" Version="7.3.1" />
     <PackageReference Include="Lykke.Cqrs" Version="4.6.0" />
-    <PackageReference Include="Lykke.MarginTrading.AccountsManagement.Contracts" Version="1.12.3" />
+    <PackageReference Include="Lykke.MarginTrading.AccountsManagement.Contracts" Version="1.12.7" />
     <PackageReference Include="Lykke.MarginTrading.OrderbookAggregator.Contracts" Version="1.0.1" />
     <PackageReference Include="Lykke.MarginTrading.SettingsService.Contracts" Version="1.1.16" />
     <PackageReference Include="Lykke.MarginTrading.OrderBookService.Contracts" Version="1.1.3" />
@@ -41,7 +41,7 @@
     <PackageReference Include="Lykke.SlackNotifications" Version="2.0.0" />
     <PackageReference Include="Lykke.WampSharp.NewtonsoftJson" Version="1.0.2" />
     <PackageReference Include="Lykke.WampSharp.AspNetCore.WebSockets.Server" Version="1.0.2" />
-    <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.2.0" />
     <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.11" />
     <PackageReference Include="morelinq" Version="2.10.0" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />

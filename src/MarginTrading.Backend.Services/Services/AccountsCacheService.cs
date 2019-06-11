@@ -222,5 +222,23 @@ namespace MarginTrading.Backend.Services
                 _lockSlim.ExitWriteLock();
             } 
         }
+
+        public string Reset(string accountId)
+        {
+            _lockSlim.EnterWriteLock();
+            try
+            {
+                if (!_accounts.TryGetValue(accountId, out var account))
+                {
+                    throw new Exception($"Account {accountId} does not exist.");
+                }
+
+                return account.Reset(_dateService.Now());
+            }
+            finally
+            {
+                _lockSlim.ExitWriteLock();
+            }
+        }
     }
 }

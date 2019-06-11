@@ -15,14 +15,14 @@
     <PackageReference Include="Lykke.RabbitMqBroker" Version="7.5.1" />
     <PackageReference Include="Lykke.SettingsReader" Version="5.2.0" />
     <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="2.0.5" />
-    <PackageReference Include="Microsoft.AspNetCore.ApplicationInsights.HostingStartup" Version="2.1.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.1.1" />
-    <PackageReference Include="microsoft.aspnetcore.Mvc" Version="2.1.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.1.1" />
-    <PackageReference Include="microsoft.extensions.configuration.binder" Version="2.1.1" />
-    <PackageReference Include="microsoft.extensions.configuration.json" Version="2.1.1" />
-    <PackageReference Include="microsoft.extensions.logging.console" Version="2.1.1" />
-    <PackageReference Include="microsoft.extensions.logging.debug" Version="2.1.1" />
+    <PackageReference Include="Microsoft.AspNetCore.ApplicationInsights.HostingStartup" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.2.0" />
+    <PackageReference Include="microsoft.aspnetcore.Mvc" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
+    <PackageReference Include="microsoft.extensions.configuration.binder" Version="2.2.0" />
+    <PackageReference Include="microsoft.extensions.configuration.json" Version="2.2.0" />
+    <PackageReference Include="microsoft.extensions.logging.console" Version="2.2.0" />
+    <PackageReference Include="microsoft.extensions.logging.debug" Version="2.2.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\MarginTrading.Common\MarginTrading.Common.csproj" />
