@@ -68,23 +68,22 @@ namespace MarginTrading.Backend.Core
 
             if (!string.IsNullOrEmpty(LiquidationOperationId))
             {
-                warnings.Add($"Liquidation is in progress with id {LiquidationOperationId}");
+                warnings.Add($"Liquidation is in progress with id {LiquidationOperationId}. ");
             }
 
             if (AccountFpl.UnconfirmedMarginData.Any())
             {
-                warnings.Add($"There is some unconfirmed margin data on account: {string.Join(",", AccountFpl.UnconfirmedMarginData)}");
+                warnings.Add($"There is some unconfirmed margin data on account: {string.Join(",", AccountFpl.UnconfirmedMarginData)}. ");
             }
 
             if (AccountFpl.WithdrawalFrozenMarginData.Any())
             {
-                warnings.Add($"There is some withdrawal frozen margin data on account: {string.Join(",", AccountFpl.WithdrawalFrozenMarginData)}");
+                warnings.Add($"There is some withdrawal frozen margin data on account: {string.Join(",", AccountFpl.WithdrawalFrozenMarginData)}. ");
             }
             
             Balance = 0;
             WithdrawTransferLimit = 0;
-            IsDisabled = false;
-            IsWithdrawalDisabled = false;
+            IsDisabled = IsWithdrawalDisabled = IsDeleted;
             LiquidationOperationId = string.Empty;
             LastUpdateTime = LastBalanceChangeTime = now;
             AccountFpl = new AccountFpl();
