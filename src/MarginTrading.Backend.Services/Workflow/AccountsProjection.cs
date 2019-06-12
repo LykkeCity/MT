@@ -146,11 +146,11 @@ namespace MarginTrading.Backend.Services.Workflow
                                         }
 
                                         var warnings = _accountsCacheService.Reset(e.Account.Id);
-                                        if (warnings.Any())
+                                        if (!string.IsNullOrEmpty(warnings))
                                         {
                                             await _log.WriteWarningAsync(nameof(AccountChangedEvent),
                                                 nameof(AccountBalanceChangeReasonTypeContract.Reset),
-                                                string.Join(",", warnings));
+                                                warnings);
                                         }
                         
                                         await _log.WriteInfoAsync(nameof(AccountChangedEvent),
