@@ -82,8 +82,6 @@ namespace MarginTrading.Backend.Core
             }
             
             Balance = 0;
-            WithdrawTransferLimit = 0;
-            IsDisabled = IsWithdrawalDisabled = IsDeleted;
             LiquidationOperationId = string.Empty;
             LastUpdateTime = LastBalanceChangeTime = now;
             AccountFpl = new AccountFpl();
