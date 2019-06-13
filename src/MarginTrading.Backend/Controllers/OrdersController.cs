@@ -156,17 +156,20 @@ namespace MarginTrading.Backend.Controllers
         /// <param name="accountId">Mandatory</param>
         /// <param name="assetPairId">Optional</param>
         /// <param name="direction">Optional</param>
+        /// <param name="includeLinkedToPositions">Optional, should orders, linked to positions, to be canceled</param>
         /// <param name="request">Optional</param>
         /// <returns>Dictionary of failed to close orderIds with exception message</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="InvalidOperationException"></exception>
-        [Route("close-group")]
+        [Route("close-group")]//todo: to be deleted
+        [Route("cancel-group")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpDelete]
-        public async Task<Dictionary<string, string>> CloseGroupAsync([FromQuery] string accountId, 
+        public async Task<Dictionary<string, string>> CancelGroupAsync([FromQuery] string accountId, 
             [FromQuery] string assetPairId = null,
             [FromQuery] OrderDirectionContract? direction = null,
+            [FromQuery] bool includeLinkedToPositions = false,
             [FromBody] OrderCancelRequest request = null)
         {
             accountId.RequiredNotNullOrWhiteSpace(nameof(accountId));
@@ -176,7 +179,8 @@ namespace MarginTrading.Backend.Controllers
             foreach (var order in _ordersCache.GetPending()
                 .Where(x => x.AccountId == accountId
                             && (string.IsNullOrEmpty(assetPairId) || x.AssetPairId == assetPairId)
-                            && (direction == null || x.Direction == direction.ToType<OrderDirection>())))
+                            && (direction == null || x.Direction == direction.ToType<OrderDirection>())
+                            && (includeLinkedToPositions || string.IsNullOrEmpty(x.ParentPositionId))))
             {
                 try
                 {
@@ -184,7 +188,7 @@ namespace MarginTrading.Backend.Controllers
                 }
                 catch (Exception exception)
                 {
-                    await _log.WriteWarningAsync(nameof(OrdersController), nameof(CloseGroupAsync),
+                    await _log.WriteWarningAsync(nameof(OrdersController), nameof(CancelGroupAsync),
                         "Failed to cancel order [{order.Id}]", exception);
                     failedOrderIds.Add(order.Id, exception.Message);
                 }

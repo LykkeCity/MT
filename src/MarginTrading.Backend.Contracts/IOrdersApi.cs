@@ -40,14 +40,16 @@ namespace MarginTrading.Backend.Contracts
         /// <param name="accountId">Mandatory</param>
         /// <param name="assetPairId">Optional</param>
         /// <param name="direction">Optional</param>
+        /// <param name="includeLinkedToPositions">Optional, should orders, linked to positions, to be canceled</param>
         /// <param name="request">Optional</param>
         /// <returns>Dictionary of failed to close orderIds with exception message</returns>
         /// <exception cref="ArgumentNullException"></exception>
         /// <exception cref="InvalidOperationException"></exception>
-        [Delete("/api/orders/close-group")]
-        Task<Dictionary<string, string>> CloseGroupAsync([Query] [NotNull] string accountId,
+        [Delete("/api/orders/cancel-group")]
+        Task<Dictionary<string, string>> CancelGroupAsync([Query] [NotNull] string accountId,
             [Query] [CanBeNull] string assetPairId = null,
             [Query] [CanBeNull] OrderDirectionContract? direction = null,
+            [Query] bool includeLinkedToPositions = false,
             [Body] [CanBeNull] OrderCancelRequest request = null);
 
         /// <summary>
