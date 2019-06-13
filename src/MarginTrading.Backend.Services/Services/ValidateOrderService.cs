@@ -243,7 +243,7 @@ namespace MarginTrading.Backend.Services
         {
             if (validity.HasValue &&
                 orderType != OrderType.Market &&
-                validity.Value <= _dateService.Now())
+                validity.Value.Date < _dateService.Now().Date)
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidValidity, "Invalid validity date");
             }
