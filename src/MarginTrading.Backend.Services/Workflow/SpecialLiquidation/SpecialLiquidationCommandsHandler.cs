@@ -356,13 +356,20 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 }
                 else
                 {
+                    var operationInfo = new TradeOperationInfo
+                    {
+                        OperationId = executionInfo.Id, 
+                        RequestNumber = executionInfo.Data.RequestNumber
+                    };
+                    
                     var order = new OrderModel(
                         tradeType: command.Volume > 0 ? TradeType.Buy : TradeType.Sell,
                         orderType: OrderType.Market.ToType<Lykke.Service.ExchangeConnector.Client.Models.OrderType>(),
                         timeInForce: TimeInForce.FillOrKill,
                         volume: (double) Math.Abs(command.Volume),
                         dateTime: _dateService.Now(),
-                        exchangeName: executionInfo.Data.ExternalProviderId,
+                        exchangeName: operationInfo.ToJson(), //hack, but ExchangeName is not used and we need this info
+                        // TODO: create a separate field and remove hack (?)
                         instrument: command.Instrument,
                         price: (double?) command.Price,
                         orderId: _identityGenerator.GenerateAlphanumericId());

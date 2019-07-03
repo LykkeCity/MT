@@ -80,6 +80,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
 
                 if (_marginTradingSettings.ExchangeConnector == ExchangeConnectorType.RealExchangeConnector)
                 {
+                    var requestNumber = 1;
+                    
                     //send it to the Gavel
                     sender.SendCommand(new GetPriceForSpecialLiquidationCommand
                     {
@@ -87,8 +89,10 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         CreationTime = _dateService.Now(),
                         Instrument = e.Instrument,
                         Volume = positionsVolume != 0 ? positionsVolume : 1,//hack, requested by the bank
-                        RequestNumber = 1,
+                        RequestNumber = requestNumber,
                     }, _cqrsContextNamesSettings.Gavel);
+
+                    executionInfo.Data.RequestNumber = requestNumber;
                 }
                 else
                 {
@@ -119,17 +123,20 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 var currentVolume = GetNetPositionCloseVolume(executionInfo.Data.PositionIds, executionInfo.Data.AccountId);
                 if (currentVolume != 0 && currentVolume != executionInfo.Data.Volume)
                 {
+                    var requestNumber = executionInfo.Data.RequestNumber + 1;
+                    
                     sender.SendCommand(new GetPriceForSpecialLiquidationCommand
                     {
                         OperationId = e.OperationId,
                         CreationTime = _dateService.Now(),
                         Instrument = executionInfo.Data.Instrument,
                         Volume = currentVolume,
-                        RequestNumber = e.RequestNumber + 1,
+                        RequestNumber = requestNumber,
                         AccountId = executionInfo.Data.AccountId,
                     }, _cqrsContextNamesSettings.Gavel);
                     
                     executionInfo.Data.Volume = currentVolume;
+                    executionInfo.Data.RequestNumber = requestNumber;
                     
                     await _operationExecutionInfoRepository.Save(executionInfo);
                     
