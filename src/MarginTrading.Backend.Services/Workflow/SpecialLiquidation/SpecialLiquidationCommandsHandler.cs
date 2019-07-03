@@ -369,6 +369,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         volume: (double) Math.Abs(command.Volume),
                         dateTime: _dateService.Now(),
                         exchangeName: operationInfo.ToJson(), //hack, but ExchangeName is not used and we need this info
+                        // TODO: create a separate field and remove hack (?)
                         instrument: command.Instrument,
                         price: (double?) command.Price,
                         orderId: _identityGenerator.GenerateAlphanumericId());
