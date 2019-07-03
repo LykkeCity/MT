@@ -117,7 +117,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             {
                 //validate that volume didn't changed to peek either to execute order or request the price again
                 var currentVolume = GetNetPositionCloseVolume(executionInfo.Data.PositionIds, executionInfo.Data.AccountId);
-                if (currentVolume != 0 && currentVolume != e.Volume)
+                if (currentVolume != 0 && currentVolume != executionInfo.Data.Volume)
                 {
                     sender.SendCommand(new GetPriceForSpecialLiquidationCommand
                     {
@@ -125,7 +125,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         CreationTime = _dateService.Now(),
                         Instrument = executionInfo.Data.Instrument,
                         Volume = currentVolume,
-                        RequestNumber = e.RequestNumber++,
+                        RequestNumber = e.RequestNumber + 1,
                         AccountId = executionInfo.Data.AccountId,
                     }, _cqrsContextNamesSettings.Gavel);
                     
