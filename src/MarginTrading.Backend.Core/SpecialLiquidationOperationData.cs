@@ -17,5 +17,6 @@ namespace MarginTrading.Backend.Core
         public string CausationOperationId { get; set; }
         public string AdditionalInfo { get; set; }
         public OriginatorType OriginatorType { get; set; }
+        public int RequestNumber { get; set; }
     }
 }

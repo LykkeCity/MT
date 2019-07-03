@@ -45,6 +45,7 @@ namespace MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Events
         /// Streaming number of request. Increases in case when price arrived, but volume has changed. 
         /// </summary>
         [Key(6)]
+        [Obsolete]
         public int RequestNumber { get; set; }
     }
 }
