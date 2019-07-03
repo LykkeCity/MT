@@ -22,15 +22,17 @@ namespace MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Events
         public DateTime CreationTime { get; set; }
         
         /// <summary>
-        /// Instrument
+        /// Instrument  - should not be used!
         /// </summary>
         [Key(3)]
+        [Obsolete]
         public string Instrument { get; set; }
         
         /// <summary>
-        /// Position volume
+        /// Position volume - should not be used!
         /// </summary>
         [Key(4)]
+        [Obsolete]
         public decimal Volume { get; set; }
         
         /// <summary>
