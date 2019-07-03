@@ -391,7 +391,7 @@ namespace MarginTrading.Backend.Core.Trading
         {
             if (OrderType == OrderType.TrailingStop)
             {
-                TrailingDistance += Price - newPrice;
+                TrailingDistance += newPrice - Price;
             }
             
             LastModified = dateTime;

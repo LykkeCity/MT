@@ -1087,6 +1087,41 @@ namespace MarginTradingTests
 
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidExpectedOpenPrice);
             StringAssert.Contains("1.05/1.1", ex.Comment);
+        }
+        
+        [Test]
+        [TestCase(5, 25, 20, -10, -15)]
+        [TestCase(5, 25, 30, -10, -5)]
+        [TestCase(-5, 45, 40, 10, 5)]
+        [TestCase(-5, 45, 50, 10, 15)]
+        public void Is_DistanceUpdated_ForTrailingStopOrders_OnChange(decimal volume, decimal oldPrice, decimal 
+        newPrice, decimal oldDistance, decimal newDistance)
+        {
+            _matchingEngine.SetOrders(MarketMaker1Id, new[]
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 35, Volume = -100 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 36, Volume = 100 }
+            });
+            
+            var position = TestObjectsFactory.CreateOpenedPosition("EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, volume, 36);
+            
+            position.UpdateClosePrice(35);
+
+            _ordersCache.Positions.Add(position);
+            
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.TrailingStop, "EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, -volume, price: oldPrice, parentPositionId: position.Id);
+            
+            order = _tradingEngine.PlaceOrderAsync(order).Result;
+
+            Assert.AreEqual(OrderStatus.Active, order.Status); //is not executed
+            
+            Assert.AreEqual(oldDistance, order.TrailingDistance);
+
+            _tradingEngine.ChangeOrder(order.Id, newPrice, null, OriginatorType.Investor, String.Empty, String.Empty);
+            
+            Assert.AreEqual(newDistance, order.TrailingDistance);
         }    
         
         #endregion
