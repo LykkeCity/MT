@@ -378,6 +378,13 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     {
                         var executionResult = await _exchangeConnectorService.CreateOrderAsync(order);
 
+                        if (!executionResult.Success)
+                        {
+                            throw new Exception(
+                                $"External order was not executed. Status: {executionResult.ExecutionStatus}. " +
+                                $"Failure: {executionResult.FailureType}");
+                        }
+
                         publisher.PublishEvent(new SpecialLiquidationOrderExecutedEvent
                         {
                             OperationId = command.OperationId,
