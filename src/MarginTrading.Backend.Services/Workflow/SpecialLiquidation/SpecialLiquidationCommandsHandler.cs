@@ -372,11 +372,19 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         // TODO: create a separate field and remove hack (?)
                         instrument: command.Instrument,
                         price: (double?) command.Price,
-                        orderId: _identityGenerator.GenerateAlphanumericId());
+                        orderId: _identityGenerator.GenerateAlphanumericId(),
+                        TradeRequestModality.Liquidation);
                 
                     try
                     {
                         var executionResult = await _exchangeConnectorService.CreateOrderAsync(order);
+
+                        if (!executionResult.Success)
+                        {
+                            throw new Exception(
+                                $"External order was not executed. Status: {executionResult.ExecutionStatus}. " +
+                                $"Failure: {executionResult.FailureType}");
+                        }
 
                         publisher.PublishEvent(new SpecialLiquidationOrderExecutedEvent
                         {
