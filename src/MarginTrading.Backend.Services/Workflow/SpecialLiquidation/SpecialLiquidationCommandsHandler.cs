@@ -372,7 +372,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         // TODO: create a separate field and remove hack (?)
                         instrument: command.Instrument,
                         price: (double?) command.Price,
-                        orderId: _identityGenerator.GenerateAlphanumericId());
+                        orderId: _identityGenerator.GenerateAlphanumericId(),
+                        TradeRequestModality.Liquidation);
                 
                     try
                     {
