@@ -387,11 +387,11 @@ namespace MarginTrading.Backend.Core.Trading
         #region Actions
 
         public void ChangePrice(decimal newPrice, DateTime dateTime, OriginatorType originator, string additionalInfo,
-            string correlationId)
+            string correlationId, bool shouldUpdateTrailingDistance = false)
         {
-            if (OrderType == OrderType.TrailingStop)
+            if (OrderType == OrderType.TrailingStop && shouldUpdateTrailingDistance)
             {
-                TrailingDistance += Price - newPrice;
+                TrailingDistance += newPrice - Price;
             }
             
             LastModified = dateTime;

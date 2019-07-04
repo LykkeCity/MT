@@ -787,7 +787,7 @@ namespace MarginTrading.Backend.Services
             {
                 var oldPrice = order.Price;
             
-                order.ChangePrice(price, _dateService.Now(), originator, additionalInfo, correlationId);
+                order.ChangePrice(price, _dateService.Now(), originator, additionalInfo, correlationId, true);
 
                 var metadata = new OrderChangedMetadata
                 {
