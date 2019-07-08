@@ -16,6 +16,7 @@ namespace MarginTrading.Backend.Core
 
         void TryAddNew(MarginTradingAccount account);
         void Remove(string accountId);
+        string Reset(string accountId);
 
         Task<bool> UpdateAccountChanges(string accountId, string updatedTradingConditionId,
             decimal updatedWithdrawTransferLimit, bool isDisabled, bool isWithdrawalDisabled, DateTime eventTime);
