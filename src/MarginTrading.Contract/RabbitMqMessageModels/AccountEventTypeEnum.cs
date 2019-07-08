@@ -1,4 +1,7 @@
-﻿namespace MarginTrading.Contract.RabbitMqMessageModels
+﻿// Copyright (c) 2019 Lykke Corp.
+// See the LICENSE file in the project root for more information.
+
+namespace MarginTrading.Contract.RabbitMqMessageModels
 {
     /// <summary>
     /// What happend to the account

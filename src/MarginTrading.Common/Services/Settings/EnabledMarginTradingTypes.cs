@@ -1,4 +1,7 @@
-﻿namespace MarginTrading.Common.Services.Settings
+﻿// Copyright (c) 2019 Lykke Corp.
+// See the LICENSE file in the project root for more information.
+
+namespace MarginTrading.Common.Services.Settings
 {
     /// <summary>
     /// Contains information about what types of margin trading are available for particular client

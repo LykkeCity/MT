@@ -1,4 +1,7 @@
-﻿using System.Reflection;
+﻿// Copyright (c) 2019 Lykke Corp.
+// See the LICENSE file in the project root for more information.
+
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following

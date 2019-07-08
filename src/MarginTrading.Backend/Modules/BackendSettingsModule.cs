@@ -1,4 +1,7 @@
-﻿using Autofac;
+﻿// Copyright (c) 2019 Lykke Corp.
+// See the LICENSE file in the project root for more information.
+
+using Autofac;
 using Lykke.SettingsReader;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Settings;

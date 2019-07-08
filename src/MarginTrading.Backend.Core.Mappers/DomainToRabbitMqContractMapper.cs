@@ -1,4 +1,7 @@
-﻿using MarginTrading.Backend.Contracts.TradingSchedule;
+﻿// Copyright (c) 2019 Lykke Corp.
+// See the LICENSE file in the project root for more information.
+
+using MarginTrading.Backend.Contracts.TradingSchedule;
 using MarginTrading.Backend.Core.DayOffSettings;
 using MarginTrading.Contract.RabbitMqMessageModels;
 
