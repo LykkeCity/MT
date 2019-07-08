@@ -228,7 +228,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             if (executionInfo?.Data == null)
                 return;
 
-            if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceReceived,
+            if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.ExternalOrderExecuted,
                 SpecialLiquidationOperationState.OnTheWayToFail))
             {
                 sender.SendCommand(new FailSpecialLiquidationInternalCommand
