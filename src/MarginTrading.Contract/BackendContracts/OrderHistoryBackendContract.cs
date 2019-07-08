@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 

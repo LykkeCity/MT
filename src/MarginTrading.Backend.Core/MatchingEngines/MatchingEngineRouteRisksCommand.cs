@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Backend.Core.MatchingEngines
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.Backend.Core.MatchingEngines
 {
     /// <summary>
     /// Routing direction set command for Trading Router from Risk Manager

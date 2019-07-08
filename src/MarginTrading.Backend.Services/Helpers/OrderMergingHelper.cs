@@ -1,3 +1,5 @@
+// Copyright (c) 2019 Lykke Corp.
+
 using System.Collections.Generic;
 using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Orders;

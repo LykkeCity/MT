@@ -1,4 +1,6 @@
-﻿using NUnit.Framework;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using NUnit.Framework;
 using System;
 using System.Runtime.CompilerServices;
 using Autofac;

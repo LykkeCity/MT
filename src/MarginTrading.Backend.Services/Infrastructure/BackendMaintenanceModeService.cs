@@ -1,4 +1,6 @@
-﻿using Lykke.SlackNotifications;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using Lykke.SlackNotifications;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Common.Enums;
 

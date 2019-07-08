@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Backend.Services
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.Backend.Services
 {
     public enum EventTypeEnum
     {

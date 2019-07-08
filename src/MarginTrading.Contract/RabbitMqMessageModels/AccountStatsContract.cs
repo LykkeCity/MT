@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Contract.RabbitMqMessageModels
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.Contract.RabbitMqMessageModels
 {
     public class AccountStatsContract
     {

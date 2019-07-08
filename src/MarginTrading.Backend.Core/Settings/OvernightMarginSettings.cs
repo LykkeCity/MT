@@ -1,3 +1,5 @@
+// Copyright (c) 2019 Lykke Corp.
+
 using System.ComponentModel;
 using Lykke.SettingsReader.Attributes;
 

@@ -1,4 +1,6 @@
-﻿using Common.Log;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using Common.Log;
 using NUnit.Framework;
 using System;
 using System.Threading.Tasks;

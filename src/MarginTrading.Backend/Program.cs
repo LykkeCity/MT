@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;

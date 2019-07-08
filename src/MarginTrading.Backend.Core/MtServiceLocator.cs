@@ -1,4 +1,6 @@
-﻿using MarginTrading.Backend.Core.Services;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 
 namespace MarginTrading.Backend.Core

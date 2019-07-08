@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Backend.Core
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.Backend.Core
 {
     public class FloatngProfitLoss
     {

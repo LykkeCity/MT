@@ -1,4 +1,6 @@
-﻿using Lykke.SettingsReader.Attributes;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using Lykke.SettingsReader.Attributes;
 using JetBrains.Annotations;
 
 namespace MarginTrading.BrokerBase.Settings

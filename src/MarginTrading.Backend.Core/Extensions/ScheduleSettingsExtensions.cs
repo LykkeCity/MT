@@ -1,3 +1,5 @@
+// Copyright (c) 2019 Lykke Corp.
+
 using MarginTrading.Backend.Core.DayOffSettings;
 
 namespace MarginTrading.Backend.Core.Extensions

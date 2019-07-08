@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Backend.Core.Orderbooks
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.Backend.Core.Orderbooks
 {
     public class VolumePrice
     {

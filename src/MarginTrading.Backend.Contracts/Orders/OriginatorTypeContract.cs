@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Backend.Contracts.Orders
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.Backend.Contracts.Orders
 {
     public enum OriginatorTypeContract
     {

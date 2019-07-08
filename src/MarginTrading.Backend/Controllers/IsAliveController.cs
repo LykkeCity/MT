@@ -1,4 +1,6 @@
-﻿using MarginTrading.Backend.Core.Settings;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Common.Services;
 using MarginTrading.Contract.BackendContracts;
 using Microsoft.AspNetCore.Mvc;

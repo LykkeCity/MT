@@ -1,4 +1,6 @@
-﻿using MarginTrading.Backend.Services.Helpers;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using MarginTrading.Backend.Services.Helpers;
 using NUnit.Framework;
 
 namespace MarginTradingTests

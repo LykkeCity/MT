@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Backend.Contracts.Events
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.Backend.Contracts.Events
 {
     public enum OrderHistoryTypeContract
     {

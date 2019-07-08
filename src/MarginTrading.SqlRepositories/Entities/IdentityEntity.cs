@@ -1,4 +1,6 @@
-﻿using Microsoft.WindowsAzure.Storage.Table;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using Microsoft.WindowsAzure.Storage.Table;
 
 namespace MarginTrading.SqlRepositories.Entities
 {

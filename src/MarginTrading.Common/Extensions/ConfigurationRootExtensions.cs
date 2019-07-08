@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using Microsoft.Extensions.Configuration;
 
 namespace MarginTrading.Common.Extensions
 {

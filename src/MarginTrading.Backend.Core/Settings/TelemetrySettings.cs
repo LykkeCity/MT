@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Backend.Core.Settings
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.Backend.Core.Settings
 {
     /// <summary>
     /// Telementry settings

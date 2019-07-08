@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.BrokerBase.Settings
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.BrokerBase.Settings
 {
     public class CurrentApplicationInfo
     {

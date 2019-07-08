@@ -1,3 +1,5 @@
+// Copyright (c) 2019 Lykke Corp.
+
 using MessagePack;
 
 namespace MarginTrading.Backend.Services.Workflow.Liquidation.Events

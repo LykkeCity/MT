@@ -1,4 +1,6 @@
-﻿using MarginTrading.Backend.Contracts.Orders;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using MarginTrading.Backend.Contracts.Orders;
 
 namespace MarginTrading.Backend.Contracts.Positions
 {

@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using System.Linq;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;

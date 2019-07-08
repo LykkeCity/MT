@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Common.Services
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.Common.Services
 {
     public interface IOperationsLogService
     {

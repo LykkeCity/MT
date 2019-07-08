@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Contract.BackendContracts.AccountsManagement
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.Contract.BackendContracts.AccountsManagement
 {
     public class AccountsMarginLevelContract
     {

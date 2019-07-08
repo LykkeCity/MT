@@ -1,4 +1,5 @@
-﻿
+﻿// Copyright (c) 2019 Lykke Corp.
+
 namespace MarginTrading.BrokerBase.Settings
 {
     public class BrokerSettingsRoot<TBrokerSettings>

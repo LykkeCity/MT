@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.PlatformAbstractions;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using Microsoft.Extensions.PlatformAbstractions;
 
 namespace MarginTrading.Common.RabbitMq
 {

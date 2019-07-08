@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Backend.Services.Helpers
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.Backend.Services.Helpers
 {
     public static class MarginTradingHelpers
     {

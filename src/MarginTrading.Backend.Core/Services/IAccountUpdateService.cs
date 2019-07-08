@@ -1,8 +1,7 @@
-using System.Collections.Generic;
+// Copyright (c) 2019 Lykke Corp.
+
 using System.Threading.Tasks;
 using MarginTrading.Backend.Core.MatchingEngines;
-using MarginTrading.Backend.Core.Orders;
-using System.Threading.Tasks;
 using MarginTrading.Backend.Core.Trading;
 
 namespace MarginTrading.Backend.Core.Services

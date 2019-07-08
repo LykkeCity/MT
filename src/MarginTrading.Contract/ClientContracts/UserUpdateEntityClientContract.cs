@@ -1,4 +1,6 @@
-﻿using System.ComponentModel;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using System.ComponentModel;
 
 namespace MarginTrading.Contract.ClientContracts
 {

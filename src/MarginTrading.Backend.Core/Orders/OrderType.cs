@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Backend.Core.Orders
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.Backend.Core.Orders
 {
     /// <summary>
     /// The type of order

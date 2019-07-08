@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Common.Services.Telemetry
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.Common.Services.Telemetry
 {
     public static class TelemetryConstants
     {

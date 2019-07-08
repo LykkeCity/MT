@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using System;
 using FluentAssertions;
 using FluentAssertions.Equivalency;
 using Moq;

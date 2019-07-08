@@ -1,4 +1,6 @@
-﻿using Autofac;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using Autofac;
 using AzureStorage.Tables;
 using Common.Log;
 using Lykke.SettingsReader;

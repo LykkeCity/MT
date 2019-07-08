@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Backend.Services.Events
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.Backend.Services.Events
 {
     public interface IEventChannel<TEventArgs>
     {

@@ -1,4 +1,6 @@
-﻿using MarginTrading.BrokerBase;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using MarginTrading.BrokerBase;
 
 namespace MarginTrading.ExternalOrderBroker
 {

@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Common.Enums
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.Common.Enums
 {
     public static class ChannelTypes
     {

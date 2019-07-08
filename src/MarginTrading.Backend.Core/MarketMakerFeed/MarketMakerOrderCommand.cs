@@ -1,4 +1,6 @@
-﻿using MarginTrading.Backend.Core.Orders;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using MarginTrading.Backend.Core.Orders;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 

@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Backend.Core.TradingConditions
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.Backend.Core.TradingConditions
 {
     public interface ITradingInstrument
     {

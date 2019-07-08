@@ -1,3 +1,5 @@
+// Copyright (c) 2019 Lykke Corp.
+
 namespace MarginTrading.Backend.Contracts.Workflow.Liquidation
 {
     public enum LiquidationTypeContract

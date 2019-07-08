@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.ExternalOrderBroker.Models
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.ExternalOrderBroker.Models
 {
 	public interface IExternalOrderReport
 	{

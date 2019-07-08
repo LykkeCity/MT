@@ -1,3 +1,5 @@
+// Copyright (c) 2019 Lykke Corp.
+
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;

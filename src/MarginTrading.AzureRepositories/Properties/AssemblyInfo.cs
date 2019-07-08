@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

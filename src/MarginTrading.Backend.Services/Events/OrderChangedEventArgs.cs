@@ -1,4 +1,6 @@
-﻿using Common;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using Common;
 using MarginTrading.Backend.Contracts.Activities;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;

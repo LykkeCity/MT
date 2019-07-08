@@ -1,3 +1,5 @@
+// Copyright (c) 2019 Lykke Corp.
+
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;

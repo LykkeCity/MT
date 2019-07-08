@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.ExternalOrderBroker.Settings
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.ExternalOrderBroker.Settings
 {
 	public class DbSettings
 	{

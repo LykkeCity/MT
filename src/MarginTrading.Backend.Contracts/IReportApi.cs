@@ -1,3 +1,5 @@
+// Copyright (c) 2019 Lykke Corp.
+
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using Refit;

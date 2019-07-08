@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using System.Collections.Generic;
 using MarginTrading.Backend.Core.TradingConditions;
 
 namespace MarginTrading.Backend.Services.TradingConditions

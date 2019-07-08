@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using System.IO;
 using System.Threading.Tasks;
 
 namespace MarginTrading.Common.Helpers

@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using System.Linq;
 using System.Threading.Tasks;
 using Common.Log;
 using JetBrains.Annotations;

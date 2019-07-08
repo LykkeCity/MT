@@ -1,3 +1,5 @@
+// Copyright (c) 2019 Lykke Corp.
+
 using System;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Extensions;

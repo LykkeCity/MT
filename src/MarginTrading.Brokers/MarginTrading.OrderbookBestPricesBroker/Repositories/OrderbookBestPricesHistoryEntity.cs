@@ -1,4 +1,6 @@
-﻿using Lykke.AzureStorage.Tables;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using Lykke.AzureStorage.Tables;
 
 namespace MarginTrading.OrderbookBestPricesBroker.Repositories
 {

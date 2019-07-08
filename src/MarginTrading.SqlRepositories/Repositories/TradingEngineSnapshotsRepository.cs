@@ -1,3 +1,5 @@
+// Copyright (c) 2019 Lykke Corp.
+
 using System;
 using System.Data.SqlClient;
 using System.Threading.Tasks;

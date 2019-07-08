@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using System.Text;
 using Lykke.RabbitMqBroker.Publisher;
 
 namespace MarginTrading.Common.RabbitMq

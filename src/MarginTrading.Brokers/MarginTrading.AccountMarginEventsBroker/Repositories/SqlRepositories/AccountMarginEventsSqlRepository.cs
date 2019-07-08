@@ -1,4 +1,6 @@
-﻿using Common;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using Common;
 using Common.Log;
 using Dapper;
 using MarginTrading.AccountMarginEventsBroker.Repositories.Models;

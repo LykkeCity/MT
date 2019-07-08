@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Backend.Services.AssetPairs
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.Backend.Services.AssetPairs
 {
     public interface IAssetPairDayOffService
     {

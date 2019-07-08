@@ -1,4 +1,6 @@
-﻿using AzureStorage.Tables;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using AzureStorage.Tables;
 using Common.Log;
 using Lykke.SettingsReader;
 using MarginTrading.AzureRepositories.Logs;

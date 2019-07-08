@@ -1,3 +1,5 @@
+// Copyright (c) 2019 Lykke Corp.
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 

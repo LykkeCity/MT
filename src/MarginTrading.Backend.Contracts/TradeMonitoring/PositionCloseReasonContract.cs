@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Backend.Contracts.TradeMonitoring
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.Backend.Contracts.TradeMonitoring
 {
     public enum PositionCloseReasonContract
     {

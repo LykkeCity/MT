@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using System;
 using MarginTrading.Contract.BackendContracts;
 
 namespace MarginTrading.Contract.ClientContracts

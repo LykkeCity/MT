@@ -1,4 +1,6 @@
-﻿using Microsoft.ApplicationInsights.Channel;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Net.Http.Headers;

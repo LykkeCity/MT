@@ -1,4 +1,6 @@
-﻿using MarginTrading.Backend.Core;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Events;

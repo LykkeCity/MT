@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using System.Threading.Tasks;
 using Common.Log;
 using Lykke.SlackNotifications;
 using MarginTrading.BrokerBase;

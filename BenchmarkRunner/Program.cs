@@ -1,4 +1,6 @@
-﻿using BenchmarkDotNet.Running;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using BenchmarkDotNet.Running;
 using BenchmarkScenarios;
 
 namespace ExternalOrderbooksBenchmark

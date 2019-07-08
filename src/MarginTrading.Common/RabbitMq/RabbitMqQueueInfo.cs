@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Common.RabbitMq
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.Common.RabbitMq
 {
     public class RabbitMqQueueInfo
     {

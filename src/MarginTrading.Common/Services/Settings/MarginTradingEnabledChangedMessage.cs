@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.Common.Services.Settings
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.Common.Services.Settings
 {
     public class MarginTradingEnabledChangedMessage
     {

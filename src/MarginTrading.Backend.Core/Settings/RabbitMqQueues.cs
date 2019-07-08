@@ -1,4 +1,6 @@
-﻿using MarginTrading.Common.RabbitMq;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using MarginTrading.Common.RabbitMq;
 
 namespace MarginTrading.Backend.Core.Settings
 {

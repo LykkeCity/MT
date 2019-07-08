@@ -1,4 +1,6 @@
-﻿using System.Data;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using System.Data;
 using System.Data.SqlClient;
 using Dapper;
 

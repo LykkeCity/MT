@@ -1,4 +1,6 @@
-﻿using Autofac;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using Autofac;
 using MarginTrading.Backend.Services.Events;
 
 namespace MarginTrading.Backend.Services.Modules

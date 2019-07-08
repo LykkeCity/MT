@@ -1,4 +1,6 @@
-﻿using MarginTrading.Backend.Core.Notifications;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using MarginTrading.Backend.Core.Notifications;
 using MarginTrading.Contract.BackendContracts;
 using Newtonsoft.Json;
 

@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using System;
 using MarginTrading.AccountMarginEventsBroker.Repositories.Models;
 using MarginTrading.Backend.Contracts.Events;
 

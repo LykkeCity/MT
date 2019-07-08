@@ -1,4 +1,6 @@
-﻿using MarginTrading.AccountMarginEventsBroker.Repositories.Models;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using MarginTrading.AccountMarginEventsBroker.Repositories.Models;
 using System.Threading.Tasks;
 
 namespace MarginTrading.AccountMarginEventsBroker.Repositories

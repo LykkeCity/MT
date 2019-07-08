@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using Microsoft.AspNetCore.Authentication;
 
 namespace MarginTrading.Backend.Middleware
 {

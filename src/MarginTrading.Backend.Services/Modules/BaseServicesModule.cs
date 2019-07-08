@@ -1,4 +1,6 @@
-﻿using Autofac;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using Autofac;
 using Common.Log;
 using Lykke.Common;
 using MarginTrading.Backend.Core;

@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using System.Linq;
 using FluentAssertions;
 using MarginTrading.AzureRepositories.Helpers;
 using Microsoft.WindowsAzure.Storage.Table;

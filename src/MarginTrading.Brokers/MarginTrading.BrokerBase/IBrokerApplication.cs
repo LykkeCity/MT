@@ -1,4 +1,6 @@
-﻿namespace MarginTrading.BrokerBase
+﻿// Copyright (c) 2019 Lykke Corp.
+
+namespace MarginTrading.BrokerBase
 {
     public interface IBrokerApplication
     {

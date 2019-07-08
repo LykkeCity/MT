@@ -1,4 +1,6 @@
-﻿using MarginTrading.ExternalOrderBroker.Models;
+﻿// Copyright (c) 2019 Lykke Corp.
+
+using MarginTrading.ExternalOrderBroker.Models;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace MarginTrading.ExternalOrderBroker.Repositories.Azure
