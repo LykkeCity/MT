@@ -262,6 +262,9 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         public void CacheWarmUp()
         {
+            _log.WriteInfoAsync(nameof(ScheduleSettingsCacheService), nameof(CacheWarmUp),
+                "Started asset pairs schedule cache update");
+            
             var currentDateTime = _dateService.Now();
             var assetPairIds = _assetPairsCache.GetAllIds();
 
@@ -282,10 +285,16 @@ namespace MarginTrading.Backend.Services.AssetPairs
             {
                 _readerWriterLockSlim.ExitUpgradeableReadLock();
             }
+            
+            _log.WriteInfoAsync(nameof(ScheduleSettingsCacheService), nameof(CacheWarmUp),
+                "Finished asset pairs schedule cache update");
         }
 
         public void PlatformCacheWarmUp()
         {
+            _log.WriteInfoAsync(nameof(ScheduleSettingsCacheService), nameof(CacheWarmUp),
+                "Started platform schedule cache update");
+            
             _readerWriterLockSlim.EnterWriteLock();
 
             try
@@ -296,6 +305,9 @@ namespace MarginTrading.Backend.Services.AssetPairs
             {
                 _readerWriterLockSlim.ExitWriteLock();   
             }
+            
+            _log.WriteInfoAsync(nameof(ScheduleSettingsCacheService), nameof(CacheWarmUp),
+                "Finished platform schedule cache update");
         }
 
         private void PlatformCacheWarmUpUnsafe()

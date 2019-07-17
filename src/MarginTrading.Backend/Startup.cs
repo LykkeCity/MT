@@ -284,13 +284,11 @@ namespace MarginTrading.Backend
         /// </summary>
         private void InitializeJobs()
         {   
-            var registry = new Registry();
-            
-            registry.Schedule<ScheduleSettingsCacheWarmUpJob>()
-                .WithName(nameof(ScheduleSettingsCacheWarmUpJob)).ToRunEvery(1).Days().At(0, 0);
-         
-            JobManager.UseUtcTime();   
-            JobManager.Initialize(registry);
+            JobManager.UseUtcTime();
+            JobManager.Initialize();
+
+            JobManager.AddJob(() => ApplicationContainer.Resolve<ScheduleSettingsCacheWarmUpJob>().Execute(),
+                (s) => s.NonReentrant().ToRunEvery(1).Days().At(0, 0));
             
             ApplicationContainer.Resolve<IOvernightMarginService>().ScheduleNext();
         }

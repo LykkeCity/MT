@@ -17,6 +17,7 @@ using MarginTrading.Backend.Services.EventsConsumers;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Quotes;
+using MarginTrading.Backend.Services.Scheduling;
 using MarginTrading.Backend.Services.Services;
 using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Backend.Services.TradingConditions;
@@ -183,6 +184,9 @@ namespace MarginTrading.Backend.Services.Modules
 
 			builder.RegisterType<OvernightMarginService>()
 				.As<IOvernightMarginService>()
+				.SingleInstance();
+
+			builder.RegisterType<ScheduleSettingsCacheWarmUpJob>()
 				.SingleInstance();
 		}
 	}
