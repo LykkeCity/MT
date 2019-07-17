@@ -168,9 +168,6 @@ namespace MarginTrading.Backend.Services.Stp
 
         public void SetOrderbook(ExternalOrderBook orderbook)
         {
-            if (!CheckZeroQuote(orderbook))
-                return;
-
             var isDayOff = _assetPairDayOffService.IsDayOff(orderbook.AssetPairId);
             var isEodOrderbook = orderbook.ExchangeName == ExternalOrderbookService.EodExternalExchange;
 
@@ -195,6 +192,9 @@ namespace MarginTrading.Backend.Services.Stp
                 return;
             }
             
+            if (!CheckZeroQuote(orderbook, isEodOrderbook))
+                return;
+            
             orderbook.ApplyExchangeIdFromSettings(_defaultExternalExchangeId);
 
             var bba = orderbook.GetBestPrice();
@@ -204,7 +204,7 @@ namespace MarginTrading.Backend.Services.Stp
             _bestPriceChangeEventChannel.SendEvent(this, new BestPriceChangeEventArgs(bba));
         }
 
-        private bool CheckZeroQuote(ExternalOrderBook orderbook)
+        private bool CheckZeroQuote(ExternalOrderBook orderbook, bool isEodOrderbook)
         {
             var isOrderbookValid = orderbook.Asks[0].Volume != 0 && orderbook.Bids[0].Volume != 0;
             
@@ -213,6 +213,10 @@ namespace MarginTrading.Backend.Services.Stp
             {
                 return isOrderbookValid;
             }
+            
+            //EOD quotes should not change asset pair state
+            if (isEodOrderbook)
+                return isOrderbookValid;
             
             if (!isOrderbookValid)
             {
