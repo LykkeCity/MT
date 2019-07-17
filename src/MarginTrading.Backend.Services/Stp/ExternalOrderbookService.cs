@@ -176,20 +176,15 @@ namespace MarginTrading.Backend.Services.Stp
 
         public void SetOrderbook(ExternalOrderBook orderbook)
         {
-            if (!ValidateOrderbook(orderbook) 
-                || !CheckZeroQuote(orderbook))
-                return;
-
             var isDayOff = _assetPairDayOffService.IsDayOff(orderbook.AssetPairId);
             var isEodOrderbook = orderbook.ExchangeName == EodExternalExchange;
-
+            
             // we should process normal orderbook only if asset is currently tradeable
-            // and process EOD orderbook only if asset is currently not tradeable
-            if (isDayOff && !isEodOrderbook || !isDayOff && isEodOrderbook)
+            if (isDayOff && !isEodOrderbook)
             {
                 return;
             }
-
+            
             // and process EOD orderbook only if instrument is currently not tradable
             if (!isDayOff && isEodOrderbook)
             {
@@ -204,6 +199,13 @@ namespace MarginTrading.Backend.Services.Stp
 
                 return;
             }
+            
+        
+            if (!ValidateOrderbook(orderbook) 
+                || !CheckZeroQuote(orderbook, isEodOrderbook))
+                return;
+
+            
             
             orderbook.ApplyExchangeIdFromSettings(_marginTradingSettings.DefaultExternalExchangeId);
 
@@ -281,7 +283,7 @@ namespace MarginTrading.Backend.Services.Stp
             }
         }
         
-        private bool CheckZeroQuote(ExternalOrderBook orderbook)
+        private bool CheckZeroQuote(ExternalOrderBook orderbook, bool isEodOrderbook)
         {
             var isOrderbookValid = orderbook.Asks.Length > 0 && orderbook.Bids.Length > 0;//after validations
             
@@ -290,6 +292,10 @@ namespace MarginTrading.Backend.Services.Stp
             {
                 return isOrderbookValid;
             }
+            
+            //EOD quotes should not change asset pair state
+            if (isEodOrderbook)
+                return isOrderbookValid;
             
             if (!isOrderbookValid)
             {
