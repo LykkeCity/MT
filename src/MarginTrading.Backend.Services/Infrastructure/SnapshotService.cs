@@ -58,8 +58,14 @@ namespace MarginTrading.Backend.Services.Infrastructure
         {
             if (!_scheduleSettingsCacheService.TryGetPlatformCurrentDisabledInterval(out var disabledInterval))
             {
-                throw new Exception(
-                    "Trading should be stopped for whole platform in order to make trading data snapshot.");
+                //TODO: remove later (if everything will work and we will never go to this branch)
+                _scheduleSettingsCacheService.PlatformCacheWarmUp();
+                
+                if (!_scheduleSettingsCacheService.TryGetPlatformCurrentDisabledInterval(out disabledInterval))
+                {
+                    throw new Exception(
+                        $"Trading should be stopped for whole platform in order to make trading data snapshot. Current schedule: {_scheduleSettingsCacheService.GetPlatformTradingSchedule()?.ToJson()}");
+                }
             }
 
             if (disabledInterval.Start.AddDays(-1) > tradingDay.Date || disabledInterval.End < tradingDay.Date)
