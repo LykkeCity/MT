@@ -48,7 +48,7 @@ namespace MarginTrading.Backend.Core.Orders
         public string ExternalProviderId { get; set; }
         public string MatchingEngineId { get; set; }
         public string LegalEntity { get; set; }
-        public List<MatchedOrder> MatchedOrders { get; set; }
+        public MatchedOrderCollection MatchedOrders { get; set; }
         public List<RelatedOrderInfo> RelatedOrderInfos { get; set; }
         public OrderUpdateType UpdateType { get; set; }
         public string AdditionalInfo { get; set; }
