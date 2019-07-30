@@ -209,7 +209,7 @@ namespace MarginTrading.Backend.Core.Orders
         /// <summary>
         /// Matched orders for execution
         /// </summary>
-        List<MatchedOrder> MatchedOrders { get; }
+        MatchedOrderCollection MatchedOrders { get; }
         
         /// <summary>
         /// Related orders

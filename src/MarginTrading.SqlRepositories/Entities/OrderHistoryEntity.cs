@@ -61,9 +61,9 @@ namespace MarginTrading.SqlRepositories.Entities
         public string MatchingEngineId { get; set; }
         public string LegalEntity { get; set; }
 
-        List<MatchedOrder> IOrderHistory.MatchedOrders => string.IsNullOrEmpty(MatchedOrders)
-            ? new List<MatchedOrder>()
-            : MatchedOrders.DeserializeJson<List<MatchedOrder>>();
+        MatchedOrderCollection IOrderHistory.MatchedOrders => string.IsNullOrEmpty(MatchedOrders)
+            ? new MatchedOrderCollection()
+            : MatchedOrders.DeserializeJson<MatchedOrderCollection>();
 
         List<RelatedOrderInfo> IOrderHistory.RelatedOrderInfos => string.IsNullOrEmpty(RelatedOrderInfos)
             ? new List<RelatedOrderInfo>()
