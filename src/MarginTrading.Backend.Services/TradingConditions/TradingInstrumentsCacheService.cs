@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using Common.Log;
 using MarginTrading.Backend.Contracts.Events;
+using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.TradingConditions;
@@ -25,7 +26,9 @@ namespace MarginTrading.Backend.Services.TradingConditions
         private readonly IIdentityGenerator _identityGenerator;
         private readonly IDateService _dateService;
         private readonly ILog _log;
-        
+        private readonly IOrderReader _orderReader;
+        private readonly IAccountsCacheService _accountsCacheService;
+
         private Dictionary<(string, string), ITradingInstrument> _instrumentsCache =
             new Dictionary<(string, string), ITradingInstrument>();
 
@@ -37,12 +40,16 @@ namespace MarginTrading.Backend.Services.TradingConditions
             ICqrsSender cqrsSender,
             IIdentityGenerator identityGenerator,
             IDateService dateService,
-            ILog log)
+            ILog log,
+            IOrderReader orderReader,
+            IAccountsCacheService accountsCacheService)
         {
             _cqrsSender = cqrsSender;
             _identityGenerator = identityGenerator;
             _dateService = dateService;
             _log = log;
+            _orderReader = orderReader;
+            _accountsCacheService = accountsCacheService;
         }
 
         public ITradingInstrument GetTradingInstrument(string tradingConditionId, string instrument)
@@ -86,7 +93,8 @@ namespace MarginTrading.Backend.Services.TradingConditions
         public (decimal MarginInit, decimal MarginMaintenance) GetMarginRates(ITradingInstrument tradingInstrument,
             bool isWarnCheck = false)
         {
-            var parameter = isWarnCheck || _overnightMarginParameterOn
+            var parameter = (isWarnCheck || _overnightMarginParameterOn) &&
+                            tradingInstrument.OvernightMarginMultiplier > 1
                 ? tradingInstrument.OvernightMarginMultiplier
                 : 1;
             
@@ -148,6 +156,16 @@ namespace MarginTrading.Backend.Services.TradingConditions
 
             if (multiplierChanged)
             {
+                foreach (var position in _orderReader.GetPositions())
+                {
+                    position.FplDataShouldBeRecalculated();
+                }
+
+                foreach (var account in _accountsCacheService.GetAll().Where(a => a.GetOpenPositionsCount() > 0))
+                {
+                    account.CacheNeedsToBeUpdated();
+                }
+                
                 //send event when the overnight margin parameter is enabled/disabled (margin requirement changes)
                 _cqrsSender.PublishEvent(new OvernightMarginParameterChangedEvent
                 {
