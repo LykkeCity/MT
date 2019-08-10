@@ -22,6 +22,7 @@ using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.EventsConsumers;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Quotes;
+using MarginTrading.Backend.Services.RabbitMq;
 using MarginTrading.Backend.Services.Services;
 using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Common.Services;
@@ -113,6 +114,10 @@ namespace MarginTrading.Backend.Modules
                 .SingleInstance();
             
             builder.RegisterChaosKitty(_settings.ChaosKitty);
+            
+            builder.RegisterType<PublishingQueueRepository>()
+                .As<IPublishingQueueRepository>()
+                .SingleInstance();
 
             RegisterPublishers(builder, consoleWriter);
         }

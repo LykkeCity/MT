@@ -23,6 +23,7 @@ namespace MarginTrading.Common.RabbitMq
     {
         private readonly ILog _logger;
         private readonly string _env;
+        private readonly IPublishingQueueRepository _publishingQueueRepository;
         private readonly IConsole _consoleWriter;
 
         private readonly ConcurrentDictionary<(RabbitMqSubscriptionSettings, int), IStopable> _subscribers =
@@ -34,11 +35,15 @@ namespace MarginTrading.Common.RabbitMq
 
         //[ItemCanBeNull] private readonly Lazy<MessagePackBlobPublishingQueueRepository> _queueRepository;
 
-        public RabbitMqService(ILog logger, IConsole consoleWriter, 
-            [CanBeNull] IReloadingManager<string> queueRepositoryConnectionString, string env)
+        public RabbitMqService(ILog logger, 
+            IConsole consoleWriter, 
+            [CanBeNull] IReloadingManager<string> queueRepositoryConnectionString, 
+            string env,
+            IPublishingQueueRepository publishingQueueRepository)
         {
             _logger = logger;
             _env = env;
+            _publishingQueueRepository = publishingQueueRepository;
             _consoleWriter = consoleWriter;
             //_queueRepository = new Lazy<MessagePackBlobPublishingQueueRepository>(() =>
 //            {
@@ -98,14 +103,14 @@ namespace MarginTrading.Common.RabbitMq
         }
 
         public IMessageProducer<TMessage> GetProducer<TMessage>(RabbitMqSettings settings,
-            bool isDurable, IRabbitMqSerializer<TMessage> serializer)
+            IRabbitMqSerializer<TMessage> serializer)
         {
             // on-the fly connection strings switch is not supported currently for rabbitMq
             var subscriptionSettings = new RabbitMqSubscriptionSettings
             {
                 ConnectionString = settings.ConnectionString,
                 ExchangeName = settings.ExchangeName,
-                IsDurable = isDurable,
+                IsDurable = settings.IsDurable,
             };
 
             return (IMessageProducer<TMessage>) _producers.GetOrAdd(subscriptionSettings, CreateProducer).Value;
@@ -118,9 +123,9 @@ namespace MarginTrading.Common.RabbitMq
                 {
                     var publisher = new RabbitMqPublisher<TMessage>(s);
 
-                    //if (isDurable && _queueRepository.Value != null)
-                    //    publisher.SetQueueRepository(_queueRepository.Value);
-                    //else
+                    if (s.IsDurable && _publishingQueueRepository != null)
+                        publisher.SetQueueRepository(_publishingQueueRepository);
+                    else
                         publisher.DisableInMemoryQueuePersistence();
 
                     return publisher

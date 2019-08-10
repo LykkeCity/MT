@@ -5,6 +5,7 @@ using Autofac;
 using Common.Log;
 using Autofac.Features.Variance;
 using Lykke.Common.Chaos;
+using Lykke.RabbitMqBroker.Publisher;
 using Lykke.SettingsReader;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
@@ -159,8 +160,11 @@ namespace MarginTrading.Backend.Services.Modules
 			builder.Register(c =>
 				{
 					var settings = c.Resolve<IReloadingManager<MarginTradingSettings>>();
-					return new RabbitMqService(c.Resolve<ILog>(), c.Resolve<IConsole>(),
-						settings.Nested(s => s.Db.StateConnString), settings.CurrentValue.Env);
+					return new RabbitMqService(c.Resolve<ILog>(),
+						c.Resolve<IConsole>(),
+						settings.Nested(s => s.Db.StateConnString),
+						settings.CurrentValue.Env,
+						c.Resolve<IPublishingQueueRepository>());
 				})
 				.As<IRabbitMqService>()
 				.SingleInstance();
@@ -173,10 +177,10 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<IAlertSeverityLevelService>()
 				.SingleInstance();
 
-			builder.RegisterType<MarginTradingEnablingService>()
-				.As<IMarginTradingEnablingService>()
-				.As<IStartable>()
-				.SingleInstance();
+//			builder.RegisterType<MarginTradingEnablingService>()
+//				.As<IMarginTradingEnablingService>()
+//				.As<IStartable>()
+//				.SingleInstance();
 
 			builder.RegisterType<ReportService>()
 				.As<IReportService>()
