@@ -80,12 +80,9 @@ namespace MarginTrading.Backend.Core
             return order.CalculateFplData().InitialMargin;
         }
         
-        public static void UpdatePendingOrderMargin(this Position order)
-        {
-            if (order is Position orderInstance)
-            {
-                orderInstance.FplData.ActualHash++;
-            }
+        public static void FplDataShouldBeRecalculated(this Position position)
+        { 
+            position.FplData.ActualHash++;
         }
 
         public static decimal GetSwaps(this Position order)
