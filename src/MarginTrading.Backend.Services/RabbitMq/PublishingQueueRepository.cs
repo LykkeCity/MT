@@ -19,11 +19,9 @@ namespace MarginTrading.Backend.Services.RabbitMq
             _blobRepository = blobRepository;
         }
         
-        public Task SaveAsync(IReadOnlyCollection<RawMessage> items, string exchangeName)
+        public async Task SaveAsync(IReadOnlyCollection<RawMessage> items, string exchangeName)
         {
-            _blobRepository.Write(BlobContainer, exchangeName, items);
-            
-            return Task.CompletedTask;
+            await _blobRepository.WriteAsync(BlobContainer, exchangeName, items);
         }
 
         public async Task<IReadOnlyCollection<RawMessage>> LoadAsync(string exchangeName)

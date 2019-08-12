@@ -59,7 +59,7 @@ namespace MarginTrading.AzureRepositories
             throw new NotImplementedException();
         }
 
-        public async Task Write<T>(string blobContainer, string key, T obj)
+        public async Task WriteAsync<T>(string blobContainer, string key, T obj)
         {
             var data = JsonConvert.SerializeObject(obj).ToUtf8Bytes();
             await _blobStorage.SaveBlobAsync(blobContainer, key, data);

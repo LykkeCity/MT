@@ -74,7 +74,7 @@ namespace MarginTrading.Backend.Services
 
                 if (orderbookState != null)
                 {
-                    await _blobRepository.Write(LykkeConstants.StateBlobContainer, BlobName, orderbookState);
+                    await _blobRepository.WriteAsync(LykkeConstants.StateBlobContainer, BlobName, orderbookState);
                 }
             }
             catch (Exception ex)
