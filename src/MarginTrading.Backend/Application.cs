@@ -182,7 +182,6 @@ namespace MarginTrading.Backend
             _consoleWriter.WriteLine($"Maintenance mode enabled for {ServiceName}");
             _consoleWriter.WriteLine($"Closing {ServiceName}");
             _logger.WriteInfoAsync(ServiceName, null, null, "Closing...").Wait();
-            _rabbitMqNotifyService.Stop();
             _consoleWriter.WriteLine($"Closed {ServiceName}");
         }
 

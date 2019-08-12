@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>MarginTrading.Common</AssemblyName>
@@ -18,7 +18,7 @@
     <PackageReference Include="Lykke.Common" Version="7.3.1" />
     <PackageReference Include="Lykke.Logs" Version="7.2.1" />
     <PackageReference Include="Lykke.RabbitMq.Azure" Version="5.2.0" />
-    <PackageReference Include="Lykke.RabbitMqBroker" Version="7.5.1" />
+    <PackageReference Include="Lykke.RabbitMqBroker" Version="7.10.2" />
     <PackageReference Include="Lykke.Rocks.Caching" Version="1.0.0" />
     <PackageReference Include="Lykke.Service.ClientAccount.Client" Version="1.4.1" />
     <PackageReference Include="Lykke.SettingsReader" Version="5.2.0" />

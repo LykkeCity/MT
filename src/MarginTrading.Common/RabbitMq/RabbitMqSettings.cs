@@ -15,5 +15,8 @@ namespace MarginTrading.Common.RabbitMq
         /// By default = 1
         [Optional]
         public int ConsumerCount { get; set; } = 1;
+
+        [Optional]
+        public bool IsDurable { get; set; } = true;
     }
 }

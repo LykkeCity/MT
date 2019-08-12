@@ -73,7 +73,7 @@ namespace MarginTrading.Backend.Services.Caches
 
                 if (orders != null)
                 {
-                    await _blobRepository.Write(LykkeConstants.StateBlobContainer, OrdersBlobName, orders);
+                    await _blobRepository.WriteAsync(LykkeConstants.StateBlobContainer, OrdersBlobName, orders);
                 }
             }
             catch (Exception ex)
@@ -90,7 +90,7 @@ namespace MarginTrading.Backend.Services.Caches
 
                 if (positions != null)
                 {
-                    await _blobRepository.Write(LykkeConstants.StateBlobContainer, PositionsBlobName, positions);
+                    await _blobRepository.WriteAsync(LykkeConstants.StateBlobContainer, PositionsBlobName, positions);
                 }
             }
             catch (Exception ex)

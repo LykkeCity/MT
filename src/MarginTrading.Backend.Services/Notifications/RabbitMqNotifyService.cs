@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using Autofac.Features.Indexed;
 using Common;
 using Common.Log;
+using Lykke.RabbitMqBroker.Publisher;
+using Lykke.RabbitMqBroker.Subscriber;
 using Lykke.Service.ExchangeConnector.Client.Models;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Core;
@@ -18,6 +20,7 @@ using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
 using MarginTrading.Contract.RabbitMqMessageModels;
 using MarginTrading.Backend.Services.Mappers;
+using MarginTrading.Common.RabbitMq;
 
 namespace MarginTrading.Backend.Services.Notifications
 {
@@ -25,18 +28,23 @@ namespace MarginTrading.Backend.Services.Notifications
     {
         private readonly IDateService _dateService;
         private readonly MarginTradingSettings _settings;
-        private readonly IIndex<string, IMessageProducer<string>> _publishers;
+        private readonly Dictionary<string, IMessageProducer<string>> _publishers;
         private readonly ILog _log;
         private readonly IOrderReader _orderReader;
 
-        public RabbitMqNotifyService(IDateService dateService, MarginTradingSettings settings,
-            IIndex<string, IMessageProducer<string>> publishers, ILog log, IOrderReader orderReader)
+        public RabbitMqNotifyService(IDateService dateService, 
+            MarginTradingSettings settings,
+            ILog log, 
+            IOrderReader orderReader,
+            IRabbitMqService rabbitMqService)
         {
             _dateService = dateService;
             _settings = settings;
-            _publishers = publishers;
             _log = log;
             _orderReader = orderReader;
+            _publishers = new Dictionary<string, IMessageProducer<string>>();
+
+            RegisterPublishers(rabbitMqService);
         }
 
         public Task OrderHistory(Order order, OrderUpdateType orderUpdateType, string activitiesMetadata = null)
@@ -109,15 +117,30 @@ namespace MarginTrading.Backend.Services.Notifications
             }
         }
 
-        public void Stop()
+        private void RegisterPublishers(IRabbitMqService rabbitMqService)
         {
-            ((IStopable) _publishers[_settings.RabbitMqQueues.OrderHistory.ExchangeName]).Stop();
-            ((IStopable) _publishers[_settings.RabbitMqQueues.OrderbookPrices.ExchangeName]).Stop();
-            ((IStopable) _publishers[_settings.RabbitMqQueues.AccountMarginEvents.ExchangeName]).Stop();
-            ((IStopable) _publishers[_settings.RabbitMqQueues.AccountStats.ExchangeName]).Stop();
-            ((IStopable) _publishers[_settings.RabbitMqQueues.Trades.ExchangeName]).Stop();
-            ((IStopable) _publishers[_settings.RabbitMqQueues.PositionHistory.ExchangeName]).Stop();
-            ((IStopable) _publishers[_settings.RabbitMqQueues.ExternalOrder.ExchangeName]).Stop();
+            var publishExchanges = new List<string>
+            {
+                _settings.RabbitMqQueues.OrderHistory.ExchangeName,
+                _settings.RabbitMqQueues.OrderbookPrices.ExchangeName,
+                _settings.RabbitMqQueues.AccountMarginEvents.ExchangeName,
+                _settings.RabbitMqQueues.AccountStats.ExchangeName,
+                _settings.RabbitMqQueues.Trades.ExchangeName,
+                _settings.RabbitMqQueues.PositionHistory.ExchangeName,
+                _settings.RabbitMqQueues.ExternalOrder.ExchangeName,
+            };
+
+            var bytesSerializer = new BytesStringSerializer();
+
+            foreach (var exchangeName in publishExchanges)
+            {
+                var settings = new RabbitMqSettings
+                {
+                    ConnectionString = _settings.MtRabbitMqConnString, ExchangeName
+                        = exchangeName
+                };
+                _publishers[exchangeName] = rabbitMqService.GetProducer(settings, bytesSerializer);
+            }
         }
     }
 }

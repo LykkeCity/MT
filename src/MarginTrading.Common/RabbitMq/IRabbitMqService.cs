@@ -11,7 +11,7 @@ namespace MarginTrading.Common.RabbitMq
 {
     public interface IRabbitMqService
     {
-        IMessageProducer<TMessage> GetProducer<TMessage>(RabbitMqSettings settings, bool isDurable,
+        IMessageProducer<TMessage> GetProducer<TMessage>(RabbitMqSettings settings,
             IRabbitMqSerializer<TMessage> serializer);
 
         void Subscribe<TMessage>(RabbitMqSettings settings, bool isDurable, Func<TMessage, Task> handler,

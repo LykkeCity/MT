@@ -17,6 +17,6 @@ namespace MarginTrading.Backend.Core
         (T, DateTime) ReadWithTimestamp<T>(string blobContainer, string key);
         Task<(T, DateTime)> ReadWithTimestampAsync<T>(string blobContainer, string key);
         
-        Task Write<T>(string blobContainer, string key, T obj);
+        Task WriteAsync<T>(string blobContainer, string key, T obj);
     }
 }

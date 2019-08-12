@@ -54,7 +54,7 @@ namespace MarginTrading.Backend.Services
                 }
             }
 
-            await _marginTradingBlobRepository.Write(LykkeConstants.MigrationsBlobContainer, "versions", migrationVersions);
+            await _marginTradingBlobRepository.WriteAsync(LykkeConstants.MigrationsBlobContainer, "versions", migrationVersions);
         }
     }
 }
