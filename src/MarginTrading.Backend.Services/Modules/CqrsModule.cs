@@ -4,6 +4,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using Autofac;
+using BookKeeper.Client.Workflow.Commands;
+using BookKeeper.Client.Workflow.Events;
 using Common.Log;
 using Lykke.Cqrs;
 using Lykke.Cqrs.Configuration;
@@ -136,6 +138,7 @@ namespace MarginTrading.Backend.Services.Modules
             RegisterDeleteAccountsCommandsHandler(contextRegistration);
             RegisterSpecialLiquidationCommandsHandler(contextRegistration);
             RegisterLiquidationCommandsHandler(contextRegistration);
+            RegisterEodCommandsHandler(contextRegistration);
             RegisterAccountsProjection(contextRegistration);
             RegisterAssetPairsProjection(contextRegistration);
             
@@ -275,6 +278,21 @@ namespace MarginTrading.Backend.Services.Modules
                     typeof(SpecialLiquidationOrderExecutionFailedEvent),
                     typeof(SpecialLiquidationFinishedEvent),
                     typeof(SpecialLiquidationFailedEvent)
+                )
+                .With(EventsRoute);
+        }
+
+        private void RegisterEodCommandsHandler(
+            ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
+        {
+            contextRegistration.ListeningCommands(
+                    typeof(CreateSnapshotCommand)
+                )
+                .On(CommandsRoute)
+                .WithCommandsHandler<EodCommandsHandler>()
+                .PublishingEvents(
+                    typeof(SnapshotCreatedEvent),
+                    typeof(SnapshotCreationFailedEvent)
                 )
                 .With(EventsRoute);
         }

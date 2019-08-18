@@ -74,6 +74,11 @@ namespace MarginTrading.Backend.Services.Infrastructure
                     $"{nameof(tradingDay)}'s Date component must be from current disabled interval's Start -1d to End: [{disabledInterval.Start.AddDays(-1)}, {disabledInterval.End}].");
             }
 
+            if (_semaphoreSlim.CurrentCount == 0)
+            {
+                throw new ArgumentException("Trading data snapshot creation is already in progress", "snapshot");
+            }
+            
             await _semaphoreSlim.WaitAsync();
 
             try
