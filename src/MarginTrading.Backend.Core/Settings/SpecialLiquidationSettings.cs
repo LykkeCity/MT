@@ -13,7 +13,7 @@ namespace MarginTrading.Backend.Core.Settings
         public bool Enabled { get; set; }
 
         [Optional]
-        public decimal FakePrice { get; set; } = 10;
+        public decimal FakePriceMultiplier { get; set; } = 1;
 
         [Optional]
         public int PriceRequestTimeoutSec { get; set; } = 3600;

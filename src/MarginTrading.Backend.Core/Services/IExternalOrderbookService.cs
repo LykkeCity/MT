@@ -19,5 +19,6 @@ namespace MarginTrading.Backend.Core.Services
             bool validateOppositeDirectionVolume);
 
         decimal? GetPriceForPositionClose(string assetPairId, decimal volume, string externalProviderId);
+        ExternalOrderBook GetOrderBook(string assetPairId);
     }
 }
