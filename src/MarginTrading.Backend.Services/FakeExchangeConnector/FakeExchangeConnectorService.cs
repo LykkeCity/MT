@@ -172,8 +172,11 @@ namespace MarginTrading.Backend.Services.FakeExchangeConnector
                     }
                 }, _settings.Cqrs.ContextNames.Gavel);
             }
-            catch
+            catch (Exception ex)
             {
+                _log.WriteErrorAsync(nameof(FakeExchangeConnectorService), nameof(CreateOrderWithHttpMessagesAsync),
+                    orderModel.ToJson(), ex);
+                
                 result.Body = new ExecutionReport(
                     type: orderModel.TradeType.ToType<TradeType>(),
                     time: DateTime.UtcNow,
