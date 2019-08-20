@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Common;
+using Common.Log;
 using MarginTrading.Backend.Contracts.Account;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
@@ -33,7 +34,8 @@ namespace MarginTrading.Backend.Services.Infrastructure
         private readonly IDateService _dateService;
 
         private readonly ITradingEngineSnapshotsRepository _tradingEngineSnapshotsRepository;
-        
+        private readonly ILog _log;
+
         private readonly SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1, 1);
 
         public SnapshotService(
@@ -43,7 +45,8 @@ namespace MarginTrading.Backend.Services.Infrastructure
             IFxRateCacheService fxRateCacheService,
             IOrderReader orderReader,
             IDateService dateService,
-            ITradingEngineSnapshotsRepository tradingEngineSnapshotsRepository)
+            ITradingEngineSnapshotsRepository tradingEngineSnapshotsRepository,
+            ILog log)
         {
             _scheduleSettingsCacheService = scheduleSettingsCacheService;
             _accountsCacheService = accountsCacheService;
@@ -52,6 +55,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
             _orderReader = orderReader;
             _dateService = dateService;
             _tradingEngineSnapshotsRepository = tradingEngineSnapshotsRepository;
+            _log = log;
         }
 
         public async Task<string> MakeTradingDataSnapshot(DateTime tradingDay, string correlationId)
@@ -88,6 +92,11 @@ namespace MarginTrading.Backend.Services.Infrastructure
                 var accountStats = _accountsCacheService.GetAll();
                 var bestFxPrices = _fxRateCacheService.GetAllQuotes();
                 var bestPrices = _quoteCacheService.GetAllQuotes();
+                
+                var msg = $"TradingDay: {tradingDay:yyyy-MM-dd}, Orders: {orders.Length}, positions: {positions.Length}, accounts: {accountStats.Count}, best FX prices: {bestFxPrices.Count}, best trading prices: {bestPrices.Count}.";
+
+                _log.WriteInfo(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
+                    $"Starting to write trading data snapshot. {msg}");                
 
                 await _tradingEngineSnapshotsRepository.Add(tradingDay, 
                     correlationId, 
@@ -98,9 +107,9 @@ namespace MarginTrading.Backend.Services.Infrastructure
                     bestFxPrices.ToDictionary(q => q.Key, q => q.Value.ConvertToContract()).ToJson(),
                     bestPrices.ToDictionary(q => q.Key, q => q.Value.ConvertToContract()).ToJson());
 
-                return $@"Trading data snapshot was written to the storage. 
-Orders: {orders.Length}, positions: {positions.Length}, accounts: {accountStats.Count}, 
-best FX prices: {bestFxPrices.Count}, best trading prices: {bestPrices.Count}.";
+                _log.WriteInfo(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
+                    $"Trading data snapshot was written to the storage. {msg}");   
+                return $"Trading data snapshot was written to the storage. {msg}";
             }
             finally
             {
