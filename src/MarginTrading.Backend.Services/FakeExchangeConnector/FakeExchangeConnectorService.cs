@@ -16,6 +16,7 @@ using Lykke.RabbitMqBroker.Publisher;
 using Lykke.Service.ExchangeConnector.Client;
 using Lykke.Service.ExchangeConnector.Client.Models;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
@@ -125,16 +126,44 @@ namespace MarginTrading.Backend.Services.FakeExchangeConnector
             {
                 _chaosKitty.Meow(nameof(FakeExchangeConnectorService));
 
-                var orderbook = _orderbookService.GetOrderBook(orderModel.Instrument);
+                ExternalOrderBook orderbook;
+                decimal? currentPrice;
 
-                if (orderbook == null)
+                if (orderModel.Modality == TradeRequestModality.Liquidation)
                 {
-                    _log.WriteWarning(nameof(FakeExchangeConnectorService), orderModel.ToJson(), "No orderbook");
-                    throw new InvalidOperationException();
-                }
+                    if (orderModel.Price == null)
+                    {
+                        throw new InvalidOperationException("Order should have price specified in case of special liquidation");
+                    }
+                    
+                    currentPrice = (decimal?) orderModel.Price;
 
-                var currentPrice = orderbook.GetMatchedPrice((decimal) orderModel.Volume,
-                    orderModel.TradeType == TradeType.Buy ? OrderDirection.Buy : OrderDirection.Sell);
+                    orderbook = new ExternalOrderBook(MatchingEngineConstants.DefaultSpecialLiquidation,
+                        orderModel.Instrument, _dateService.Now(), new
+                            []
+                            {
+                                new VolumePrice
+                                    {Price = currentPrice.Value, Volume = currentPrice.Value}
+                            },
+                        new
+                            []
+                            {
+                                new VolumePrice
+                                    {Price = currentPrice.Value, Volume = currentPrice.Value}
+                            });
+                }
+                else
+                {
+                    orderbook = _orderbookService.GetOrderBook(orderModel.Instrument);
+
+                    if (orderbook == null)
+                    {
+                        throw new InvalidOperationException("Orderbook was not found");
+                    }
+
+                    currentPrice = orderbook.GetMatchedPrice((decimal) orderModel.Volume,
+                        orderModel.TradeType == TradeType.Buy ? OrderDirection.Buy : OrderDirection.Sell);
+                }
                 
                 result.Body = new ExecutionReport(
                     type: orderModel.TradeType.ToType<TradeType>(),
