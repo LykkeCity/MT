@@ -138,6 +138,23 @@ namespace MarginTrading.Backend.Services
             {
                 var me = _meRouter.GetMatchingEngineForExecution(order);
 
+                foreach (var positionId in order.PositionsToBeClosed)
+                {
+                    if (!_ordersCache.Positions.TryGetPositionById(positionId, out var position))
+                    {
+                        RejectOrder(order, OrderRejectReason.ParentPositionDoesNotExist, positionId);
+                        return order;
+                    }
+
+                    if (position.Status != PositionStatus.Active)
+                    {
+                        RejectOrder(order, OrderRejectReason.ParentPositionIsNotActive, positionId);
+                        return order;
+                    }
+
+                    position.StartClosing(_dateService.Now(), order.OrderType.GetCloseReason(), order.Originator, "");
+                }
+
                 return await ExecuteOrderByMatchingEngineAsync(order, me, true);
             }
             catch (QuoteNotFoundException ex)
@@ -223,19 +240,11 @@ namespace MarginTrading.Backend.Services
         private async Task<Order> ExecuteOrderByMatchingEngineAsync(Order order, IMatchingEngineBase matchingEngine,
             bool checkStopout, OrderModality modality = OrderModality.Regular)
         {
-            //TODO: think how not to execute one order twice!!!
-            
             var now = _dateService.Now();
                 
             //just in case )
-            if (order.OrderType != OrderType.Market &&
-                order.Validity.HasValue && 
-                now.Date > order.Validity.Value.Date)
+            if (CheckIfOrderIsExpired(order, now))
             {
-                order.Expire(now);
-                _orderCancelledEventChannel.SendEvent(this,
-                    new OrderCancelledEventArgs(order,
-                        new OrderCancelledMetadata {Reason = OrderCancellationReasonContract.Expired}));
                 return order;
             }
             
@@ -243,53 +252,7 @@ namespace MarginTrading.Backend.Services
 
             _orderExecutionStartedEvenChannel.SendEvent(this, new OrderExecutionStartedEventArgs(order));
 
-            if (order.PositionsToBeClosed.Any())
-            {
-                var netVolume = 0M;
-                var rejectReason = default(OrderRejectReason?); 
-                foreach (var positionId in order.PositionsToBeClosed)
-                {
-                    if (!_ordersCache.Positions.TryGetPositionById(positionId, out var position))
-                    {
-                        rejectReason = OrderRejectReason.ParentPositionDoesNotExist;
-                        continue;
-                    }
-                    if (position.Status != PositionStatus.Active)
-                    {
-                        rejectReason = OrderRejectReason.ParentPositionIsNotActive;
-                        continue;
-                    }
-
-                    netVolume += position.Volume;
-                    
-                    position.StartClosing(_dateService.Now(), order.OrderType.GetCloseReason(), order.Originator, "");
-                }
-
-                if (netVolume == 0M && rejectReason.HasValue)
-                {
-                    order.Reject(rejectReason.Value, 
-                        rejectReason.Value == OrderRejectReason.ParentPositionDoesNotExist
-                        ? "Related position does not exist"
-                        : "Related position is not active", "", _dateService.Now());
-                    _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
-                    return order;
-                }
-                
-                // there is no any global lock of positions / orders, that's why it is possible to have concurrency 
-                // in position close process
-                // since orders, that have not empty PositionsToBeClosed should close positions and not open new ones
-                // volume of executed order should be equal to position volume, but should have opposite sign
-                if (order.Volume != -netVolume)
-                {
-                    var metadata = new OrderChangedMetadata
-                    {
-                        OldValue = order.Volume.ToString("F2"),
-                        UpdatedProperty = OrderChangedProperty.Volume
-                    };
-                    order.ChangeVolume(-netVolume, _dateService.Now(), order.Originator);
-                    _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata));
-                }
-            }
+            ChangeOrderVolumeIfNeeded(order);
             
             var equivalentRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.EquivalentAsset,
                 order.AssetPairId, order.LegalEntity);
@@ -350,21 +313,92 @@ namespace MarginTrading.Backend.Services
 
                 if (checkStopout)
                 {
-                    var account = _accountsCacheService.Get(order.AccountId);
-                    var accountLevel = account.GetAccountLevel();
-
-                    if (accountLevel == AccountLevel.StopOut)
-                    {
-                        CommitStopOut(account, null);
-                    }
-                    else if (accountLevel > AccountLevel.None)
-                    {
-                        _marginCallEventChannel.SendEvent(this, new MarginCallEventArgs(account, accountLevel));
-                    }
+                    CheckStopout(order);
                 }
             }
 
             return order;
+        }
+
+        private bool CheckIfOrderIsExpired(Order order, DateTime now)
+        {
+            if (order.OrderType != OrderType.Market &&
+                order.Validity.HasValue &&
+                now.Date > order.Validity.Value.Date)
+            {
+                order.Expire(now);
+                _orderCancelledEventChannel.SendEvent(this,
+                    new OrderCancelledEventArgs(order,
+                        new OrderCancelledMetadata {Reason = OrderCancellationReasonContract.Expired}));
+                return true;
+            }
+
+            return false;
+        }
+        
+        private void ChangeOrderVolumeIfNeeded(Order order)
+        {
+            if (order.PositionsToBeClosed.Any())
+            {
+                var netVolume = 0M;
+                var rejectReason = default(OrderRejectReason?);
+                foreach (var positionId in order.PositionsToBeClosed)
+                {
+                    if (!_ordersCache.Positions.TryGetPositionById(positionId, out var position))
+                    {
+                        rejectReason = OrderRejectReason.ParentPositionDoesNotExist;
+                        continue;
+                    }
+
+                    if (position.Status != PositionStatus.Closing)
+                    {
+                        rejectReason = OrderRejectReason.TechnicalError;
+                        continue;
+                    }
+
+                    netVolume += position.Volume;
+                }
+
+                if (netVolume == 0M && rejectReason.HasValue)
+                {
+                    order.Reject(rejectReason.Value,
+                        rejectReason.Value == OrderRejectReason.ParentPositionDoesNotExist
+                            ? "Related position does not exist"
+                            : "Related position is not in closing state", "", _dateService.Now());
+                    _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
+                    return;
+                }
+
+                // there is no any global lock of positions / orders, that's why it is possible to have concurrency 
+                // in position close process
+                // since orders, that have not empty PositionsToBeClosed should close positions and not open new ones
+                // volume of executed order should be equal to position volume, but should have opposite sign
+                if (order.Volume != -netVolume)
+                {
+                    var metadata = new OrderChangedMetadata
+                    {
+                        OldValue = order.Volume.ToString("F2"),
+                        UpdatedProperty = OrderChangedProperty.Volume
+                    };
+                    order.ChangeVolume(-netVolume, _dateService.Now(), order.Originator);
+                    _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata));
+                }
+            }
+        }
+        
+        private void CheckStopout(Order order)
+        {
+            var account = _accountsCacheService.Get(order.AccountId);
+            var accountLevel = account.GetAccountLevel();
+
+            if (accountLevel == AccountLevel.StopOut)
+            {
+                CommitStopOut(account, null);
+            }
+            else if (accountLevel > AccountLevel.None)
+            {
+                _marginCallEventChannel.SendEvent(this, new MarginCallEventArgs(account, accountLevel));
+            }
         }
 
         public bool ShouldOpenNewPosition(Order order)
@@ -643,9 +677,23 @@ namespace MarginTrading.Backend.Services
                 closeData.AccountId);
 
             var account = _accountsCacheService.Get(closeData.AccountId);
+            
+            var positionIds = new List<string>();
+            var now = _dateService.Now();
 
-            var positionIds = closeData.Positions.Select(p => p.Id).ToList();
+            foreach (var position in closeData.Positions.Where(p => p.Status == PositionStatus.Active))
+            {
+                if (position.TryStartClosing(now, PositionCloseReason.Close, closeData.Originator, ""))
+                {
+                    positionIds.Add(position.Id);
+                }
+            }
 
+            if (!positionIds.Any())
+            {
+                throw new Exception("No active positions to close");
+            }
+            
             var order = new Order(initialParameters.Id,
                 initialParameters.Code,
                 closeData.AssetPairId,

@@ -568,13 +568,13 @@ namespace MarginTrading.Backend.Services
             {
                 if (_assetDayOffService.IsDayOff(assetPairId))
                 {
-                    throw new ValidateOrderException(OrderRejectReason.NoLiquidity,
+                    throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
                         "Trades for instrument are not available");
                 }
             }
             else if (_assetDayOffService.ArePendingOrdersDisabled(assetPairId))
             {
-                throw new ValidateOrderException(OrderRejectReason.NoLiquidity,
+                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
                     "Pending orders for instrument are not available");
             }
 

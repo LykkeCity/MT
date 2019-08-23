@@ -184,10 +184,14 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             
             foreach (var openedPosition in openedPositions)
             {
+                if (!openedPosition.TryStartClosing(_dateService.Now(), order.OrderType.GetCloseReason(), order
+                    .Originator, ""))
+                {
+                    continue;
+                }
+
                 if (Math.Abs(openedPosition.Volume) <= leftVolumeToMatch)
                 {
-                    openedPosition.StartClosing(_dateService.Now(), order.OrderType.GetCloseReason(), order.Originator, "");
-                    
                     CloseExistingPosition(order, openedPosition);
                 
                     leftVolumeToMatch = leftVolumeToMatch - Math.Abs(openedPosition.Volume);
@@ -204,6 +208,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     
                     CancelRelatedOrdersForOrder(order, order.CorrelationId, OrderCancellationReason.ParentPositionClosed);
                 
+                    openedPosition.CancelClosing(_dateService.Now());
+                    
                     leftVolumeToMatch = 0;
                 }
 
