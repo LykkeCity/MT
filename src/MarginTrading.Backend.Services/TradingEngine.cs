@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using JetBrains.Annotations;
 using Lykke.Common;
 using MarginTrading.Backend.Contracts.Activities;
 using MarginTrading.Backend.Core;
@@ -23,10 +24,11 @@ using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
+using MoreLinq;
 
 namespace MarginTrading.Backend.Services
 {
-    public sealed class TradingEngine : ITradingEngine, 
+    public sealed class TradingEngine : ITradingEngine,
         IEventConsumer<BestPriceChangeEventArgs>,
         IEventConsumer<FxBestPriceChangeEventArgs>
     {
@@ -686,12 +688,22 @@ namespace MarginTrading.Backend.Services
             
             var positionIds = new List<string>();
             var now = _dateService.Now();
+            var volume = 0M;
 
-            foreach (var position in closeData.Positions.Where(p => p.Status == PositionStatus.Active))
+            var positions = closeData.Positions;
+
+            if (closeData.Modality != OrderModality.Liquidation)
             {
-                if (position.TryStartClosing(now, PositionCloseReason.Close, closeData.Originator, ""))
+                positions = positions.Where(p => p.Status == PositionStatus.Active).ToList();
+            }
+            
+            foreach (var position in positions)
+            {
+                if (closeData.Modality == OrderModality.Liquidation ||
+                    position.TryStartClosing(now, PositionCloseReason.Close, closeData.Originator, ""))
                 {
                     positionIds.Add(position.Id);
+                    volume += position.Volume;
                 }
             }
 
@@ -708,7 +720,7 @@ namespace MarginTrading.Backend.Services
             var order = new Order(initialParameters.Id,
                 initialParameters.Code,
                 closeData.AssetPairId,
-                -closeData.Volume,
+                -volume,
                 initialParameters.Now,
                 initialParameters.Now,
                 null,
@@ -775,6 +787,113 @@ namespace MarginTrading.Backend.Services
             return (PositionCloseResult.Closed, order);
         }
 
+        [ItemNotNull]
+        public async Task<Dictionary<string, (PositionCloseResult, Order)>> ClosePositionsGroupAsync(string accountId, 
+        string assetPairId, PositionDirection? direction, OriginatorType originator, string additionalInfo, string correlationId)
+        {
+            if (string.IsNullOrWhiteSpace(accountId))
+            {
+                throw new ArgumentNullException(nameof(accountId), "AccountId must be set.");
+            }
+            
+            var operationId = string.IsNullOrWhiteSpace(correlationId)
+                ? _identityGenerator.GenerateGuid()
+                : correlationId;
+            
+            if (string.IsNullOrEmpty(assetPairId))//close all
+            {
+                return StartLiquidation(accountId,originator, additionalInfo, operationId);
+            }
+            
+            var result = new Dictionary<string, (PositionCloseResult, Order)>();
+
+            var positions = _ordersCache.Positions.GetPositionsByInstrumentAndAccount(assetPairId, accountId);
+
+            var positionGroups = positions
+                .Where(p => direction == null || p.Direction == direction)
+                .GroupBy(p => (p.AssetPairId, p.AccountId, p.Direction, p
+                    .OpenMatchingEngineId, p.ExternalProviderId, p.EquivalentAsset))
+                .Where(gr => gr.Any())
+                .Select(gr => new PositionsCloseData(
+                    gr.ToList(),
+                    gr.Key.AccountId,
+                    gr.Key.AssetPairId,
+                    gr.Key.OpenMatchingEngineId,
+                    gr.Key.ExternalProviderId,
+                    originator,
+                    additionalInfo,
+                    operationId,
+                    gr.Key.EquivalentAsset,
+                    string.Empty));
+
+            foreach (var positionGroup in positionGroups)
+            {
+                try
+                {
+                    var closeResult = await ClosePositionsAsync(positionGroup, true);
+
+                    foreach (var position in positionGroup.Positions)
+                    {
+                        result.Add(position.Id, closeResult);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    await _log.WriteWarningAsync(nameof(ClosePositionsAsync),
+                        positionGroup.ToJson(),
+                        $"Failed to close positions {string.Join(",", positionGroup.Positions.Select(p => p.Id))}",
+                        ex);
+
+                    foreach (var position in positionGroup.Positions)
+                    {
+                        result.Add(position.Id, (PositionCloseResult.FailedToClose, null));
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        private Dictionary<string, (PositionCloseResult, Order)> StartLiquidation(string accountId,
+            OriginatorType originator, string additionalInfo, string operationId)
+        {
+            var result = new Dictionary<string, (PositionCloseResult, Order)>();
+
+            var command = new StartLiquidationInternalCommand
+            {
+                OperationId = operationId,
+                CreationTime = _dateService.Now(),
+                AccountId = accountId,
+                LiquidationType = LiquidationType.Forced,
+                OriginatorType = originator,
+                AdditionalInfo = additionalInfo
+            };
+
+            _cqrsSender.SendCommandToSelf(command);
+
+            var positions = _ordersCache.Positions.GetPositionsByAccountIds(accountId);
+
+            foreach (var position in positions)
+            {
+                switch (position.Status)
+                {
+                    case PositionStatus.Active:
+                        result.Add(position.Id, (PositionCloseResult.ClosingStarted, null));
+                        break;
+                    case PositionStatus.Closing:
+                        result.Add(position.Id, (PositionCloseResult.ClosingIsInProgress, null));
+                        break;
+                    case PositionStatus.Closed:
+                        result.Add(position.Id, (PositionCloseResult.Closed, null));
+                        break;
+                    default:
+                        throw new InvalidOperationException($"Position state {position.Status.ToString()} is not handled");
+                }
+            }
+
+            return result;
+        }
+
         public async Task<(PositionCloseResult, Order)[]> LiquidatePositionsUsingSpecialWorkflowAsync(IMatchingEngineBase me, string[] positionIds, string correlationId, string additionalInfo, OriginatorType originator)
         {
             var positionsToClose = _ordersCache.Positions.GetAllPositions()
@@ -788,7 +907,6 @@ namespace MarginTrading.Backend.Services
                     gr.ToList(),
                     gr.Key.AccountId,
                     gr.Key.AssetPairId,
-                    gr.Sum(x => x.Volume),
                     gr.Key.OpenMatchingEngineId,
                     gr.Key.ExternalProviderId,
                     originator,

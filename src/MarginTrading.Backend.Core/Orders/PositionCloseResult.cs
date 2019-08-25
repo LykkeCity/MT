@@ -7,6 +7,7 @@ namespace MarginTrading.Backend.Core.Orders
     {
         Closed,
         ClosingIsInProgress,
-        ClosingStarted
+        ClosingStarted,
+        FailedToClose
     }
 }

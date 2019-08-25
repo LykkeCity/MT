@@ -23,7 +23,7 @@ namespace MarginTrading.Backend.Contracts
         /// Close a position 
         /// </summary>
         [Delete("/api/positions/{positionId}")]
-        Task<PositionCloseResultContract> CloseAsync([NotNull] string positionId,
+        Task<PositionCloseResponse> CloseAsync([NotNull] string positionId,
             [Body] PositionCloseRequest request = null);
 
         /// <summary>
@@ -31,7 +31,7 @@ namespace MarginTrading.Backend.Contracts
         /// AccountId must be passed. Method signature allow nulls for backward compatibility.
         /// </summary>
         [Delete("/api/positions/close-group")]
-        Task CloseGroupAsync([Query, CanBeNull] string assetPairId = null,
+        Task<PositionsGroupCloseResponse> CloseGroupAsync([Query, CanBeNull] string assetPairId = null,
             [Query] string accountId = null,
             [Query, CanBeNull] PositionDirectionContract? direction = null,
             [Body, CanBeNull] PositionCloseRequest request = null);

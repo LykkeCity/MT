@@ -3,11 +3,8 @@
 
 namespace MarginTrading.Backend.Contracts.Orders
 {
-    public enum PositionCloseResultContract
+    public class PositionsGroupCloseResponse
     {
-        Closed,
-        ClosingIsInProgress,
-        ClosingStarted,
-        FailedToClose
+        public PositionCloseResponse[] Responses { get; set; }
     }
 }

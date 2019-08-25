@@ -333,7 +333,6 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                     gr.ToList(),
                     gr.Key.AccountId,
                     gr.Key.AssetPairId,
-                    gr.Sum(x => x.Volume),
                     gr.Key.OpenMatchingEngineId,
                     gr.Key.ExternalProviderId,
                     executionInfo.Data.OriginatorType,

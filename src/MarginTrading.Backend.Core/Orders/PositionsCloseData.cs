@@ -12,7 +12,6 @@ namespace MarginTrading.Backend.Core.Orders
             List<Position> positions,
             string accountId, 
             string assetPairId, 
-            decimal volume,
             string openMatchingEngineId, 
             string externalProviderId,
             OriginatorType originator, 
@@ -26,7 +25,6 @@ namespace MarginTrading.Backend.Core.Orders
             Positions = positions;
             AccountId = accountId;
             AssetPairId = assetPairId;
-            Volume = volume;
             OpenMatchingEngineId = openMatchingEngineId;
             ExternalProviderId = externalProviderId;
             Originator = originator;
@@ -44,8 +42,6 @@ namespace MarginTrading.Backend.Core.Orders
         
         public string AssetPairId { get; }
         
-        public decimal Volume { get; }
-
         public string OpenMatchingEngineId { get; }
         
         public string ExternalProviderId { get; }
