@@ -699,8 +699,8 @@ namespace MarginTrading.Backend.Services
             
             foreach (var position in positions)
             {
-                if (closeData.Modality == OrderModality.Liquidation ||
-                    position.TryStartClosing(now, PositionCloseReason.Close, closeData.Originator, ""))
+                if (position.TryStartClosing(now, PositionCloseReason.Close, closeData.Originator, "") ||
+                    closeData.Modality == OrderModality.Liquidation)
                 {
                     positionIds.Add(position.Id);
                     volume += position.Volume;
@@ -898,7 +898,7 @@ namespace MarginTrading.Backend.Services
         {
             var positionsToClose = _ordersCache.Positions.GetAllPositions()
                 .Where(x => positionIds.Contains(x.Id)).ToList();
-
+            
             var positionGroups = positionsToClose
                 .GroupBy(p => (p.AssetPairId, p.AccountId, p.Direction, p
                     .OpenMatchingEngineId, p.ExternalProviderId, p.EquivalentAsset))
