@@ -4,10 +4,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Autofac;
  using AutoMapper;
- using Lykke.Cqrs;
+using Common;
+using Lykke.Cqrs;
  using MarginTrading.AccountsManagement.Contracts.Events;
  using MarginTrading.AccountsManagement.Contracts.Models;
  using MarginTrading.Backend.Contracts.Events;
@@ -29,7 +31,7 @@ using MarginTrading.Backend.Services.Events;
 using MarginTrading.SettingsService.Contracts;
 using MarginTrading.SettingsService.Contracts.TradingConditions;
  using MarginTradingTests.Helpers;
- using Moq;
+using Moq;
  using MoreLinq;
  using NUnit.Framework;
 
@@ -319,7 +321,11 @@ namespace MarginTradingTests
                 Guid.NewGuid().ToString(),
                 position.EquivalentAsset);
             
-            var order = _tradingEngine.ClosePositionsAsync(data).Result;
+            var result = _tradingEngine.ClosePositionsAsync(data, true).Result;
+
+            Assert.AreEqual(PositionCloseResult.Closed, result.Item1);
+            
+            var order = result.Item2;
 
             ValidateOrderIsExecuted(order, new[] {"5"}, 1.2M);
             
@@ -349,8 +355,12 @@ namespace MarginTradingTests
                 Guid.NewGuid().ToString(),
                 position.EquivalentAsset);
             
-            var order = _tradingEngine.ClosePositionsAsync(data).Result;
+            var result = _tradingEngine.ClosePositionsAsync(data, true).Result;
 
+            Assert.AreEqual(PositionCloseResult.Closed, result.Item1);
+            
+            var order = result.Item2;
+            
             ValidateOrderIsExecuted(order, new[] {"3", "4"}, 1.1125M);
             
             ValidatePositionIsClosed(position, 1.1125M, -0.51M);
@@ -359,7 +369,120 @@ namespace MarginTradingTests
             Assert.AreEqual(999.49, account.Balance);
 
         }
+        
+        [Test]
+        public void Is_Duplicated_Position_Close_Command_Not_Executed()
+        {
+            var position = TestObjectsFactory.CreateOpenedPosition("EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, 8, 1.1125M);
+            
+            _ordersCache.Positions.Add(position);
+            
+            Assert.AreEqual(1000, _account.Balance);
+            
+            _matchingEngine.SetOrders("1", new[]
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2M, Volume = 8 }
+            });
 
+            Assert.AreEqual(1.2, position.ClosePrice);
+
+            var data = new PositionsCloseData(
+                new List<Position> {position},
+                position.AccountId,
+                position.AssetPairId,
+                position.Volume,
+                position.OpenMatchingEngineId,
+                position.ExternalProviderId,
+                OriginatorType.Investor,
+                string.Empty,
+                Guid.NewGuid().ToString(),
+                position.EquivalentAsset);
+
+            var tasks = new List<Task>();
+            var executedOrders = 0;
+            var exceptions = 0;
+            var createdOrders = 0;
+            var closingInProgress = 0;
+            
+            for (int i = 0; i < 10; i++)
+            {
+                var task = new Task(() =>
+                {
+                    try
+                    {
+                        var result = _tradingEngine.ClosePositionsAsync(data, true).Result;
+                        
+                        if (result.Item1 == PositionCloseResult.ClosingIsInProgress)
+                        {
+                            closingInProgress++;
+                        }
+                        
+                        if (result.Item2 != null)
+                        {
+                            createdOrders++;
+                            ValidateOrderIsExecuted(result.Item2, new[] {"5"}, 1.2M);
+                            executedOrders++;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        exceptions++;
+                    }
+                });
+                
+                tasks.Add(task);
+            }
+
+            tasks.ForEach(t => t.Start());
+            Task.WaitAll(tasks.ToArray());
+            
+            Assert.AreEqual(1, createdOrders);
+            Assert.AreEqual(1, executedOrders);
+            Assert.AreEqual(9, exceptions + closingInProgress);
+        }
+
+        [Test]
+        public void Is_Special_Liquidation_Started_On_Position_Close_If_No_Liquidity()
+        {
+            var position = TestObjectsFactory.CreateOpenedPosition("EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, 8, 1.1125M);
+            
+            _ordersCache.Positions.Add(position);
+            
+            Assert.AreEqual(1000, _account.Balance);
+            
+            _matchingEngine.SetOrders("1", new[]
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2M, Volume = 8 }
+            });
+            
+            Assert.AreEqual(1.2, position.ClosePrice);
+            
+            _matchingEngine.SetOrders("1", new[]
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 1.2M, Volume = 1 }
+            }, deleteAll: true);
+
+            var data = new PositionsCloseData(
+                new List<Position> {position},
+                position.AccountId,
+                position.AssetPairId,
+                position.Volume,
+                position.OpenMatchingEngineId,
+                position.ExternalProviderId,
+                OriginatorType.Investor,
+                string.Empty,
+                Guid.NewGuid().ToString(),
+                position.EquivalentAsset);
+            
+            var result = _tradingEngine.ClosePositionsAsync(data, true).Result;
+
+            Assert.AreEqual(PositionCloseResult.ClosingStarted, result.Item1);
+            Assert.IsNull(result.Item2);
+            Assert.AreEqual(PositionStatus.Closing, position.Status);
+        }
+        
         [Test]
         public void Is_Order_Limits_Changed()
         {
@@ -483,6 +606,45 @@ namespace MarginTradingTests
             
             var account = _accountsCacheService.Get(order.AccountId);
             Assert.AreEqual(998.70992, account.Balance);
+        }
+        
+        [Test]
+        public async Task Is_Position_Stays_Active_On_StopLoss_Not_Executed()
+        {
+            var position = TestObjectsFactory.CreateOpenedPosition("EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, 14, 1.12857M);
+
+            _ordersCache.Positions.Add(position);
+
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.StopLoss, "EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, -14, parentPositionId: position.Id, price: 0.98M);
+
+            order = _tradingEngine.PlaceOrderAsync(order).GetAwaiter().GetResult();    
+            
+            var instrumentContract = new TradingInstrumentContract
+            {
+                TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
+                Instrument = "EURUSD",
+                LeverageInit = 100,
+                LeverageMaintenance = 150,
+                Delta = 30,
+                ShortPosition = true,
+                DealMaxLimit = 1,
+                PositionLimit = 1
+            };
+
+            Mock.Get(_tradingInstruments).Setup(s => s.List(It.IsAny<string>()))
+                .ReturnsAsync(new List<TradingInstrumentContract> {instrumentContract});
+            
+            await _accountAssetsManager.UpdateTradingInstrumentsCacheAsync();
+            
+            _matchingEngine.SetOrders("1", new[]
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = 0.9M, Volume = 20}
+            }, new[] { "1", "2"});
+
+            Assert.AreEqual(OrderStatus.Rejected, order.Status);
+            Assert.AreEqual(PositionStatus.Active, position.Status);
         }
 
         [Test]
@@ -858,12 +1020,13 @@ namespace MarginTradingTests
             ValidateOrderIsExecuted(order2, new[] {"7"}, 1.04M);
             ValidatePositionIsOpened(order2.Id, 1.05M, -0.02M);
             
-            var orders = _tradingEngine.LiquidatePositionsUsingSpecialWorkflowAsync(new SpecialLiquidationMatchingEngine(2.5M, "Test",
+            var result = _tradingEngine.LiquidatePositionsUsingSpecialWorkflowAsync(new SpecialLiquidationMatchingEngine
+            (2.5M, "Test",
                 "test", DateTime.UtcNow), new [] {order1.Id, order2.Id}, "Test", "TestAdditionalInfo", OriginatorType.System).Result;
-            
-            orders.ForEach(o => ValidateOrderIsExecuted(o, new[] {"test"}, 2.5M));
-            Assert.AreEqual(2, orders.Max(x => x.Volume));
-            Assert.AreEqual(-8, orders.Min(x => x.Volume));
+            result.ForEach(r => Assert.AreEqual(PositionCloseResult.Closed, r.Item1));
+            result.ForEach(o => ValidateOrderIsExecuted(o.Item2, new[] {"test"}, 2.5M));
+            Assert.AreEqual(2, result.Max(x => x.Item2.Volume));
+            Assert.AreEqual(-8, result.Min(x => x.Item2.Volume));
             Assert.AreEqual(0, _ordersCache.Positions.GetPositionsByInstrument("EURUSD").Count);
         }
 

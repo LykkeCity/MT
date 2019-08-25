@@ -77,7 +77,7 @@ namespace MarginTrading.Backend.Controllers
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpDelete]
-        public async Task CloseAsync([CanBeNull] [FromRoute] string positionId,
+        public async Task<PositionCloseResultContract> CloseAsync([CanBeNull] [FromRoute] string positionId,
             [FromBody] PositionCloseRequest request = null)
         {
             if (!_ordersCache.Positions.TryGetPositionById(positionId, out var position))
@@ -91,7 +91,7 @@ namespace MarginTrading.Backend.Controllers
 
             var correlationId = request?.CorrelationId ?? _identityGenerator.GenerateGuid();
 
-            var order = await _tradingEngine.ClosePositionsAsync(
+            var closeResult = await _tradingEngine.ClosePositionsAsync(
                 new PositionsCloseData(
                     new List<Position> {position},
                     position.AccountId,
@@ -102,15 +102,12 @@ namespace MarginTrading.Backend.Controllers
                     originator,
                     request?.AdditionalInfo,
                     correlationId,
-                    position.EquivalentAsset));
+                    position.EquivalentAsset), true);
 
-            if (order.Status != OrderStatus.Executed && order.Status != OrderStatus.ExecutionStarted)
-            {
-                throw new InvalidOperationException(order.RejectReasonText);
-            }
+            _operationsLogService.AddLog("action order.close", closeResult.Item2.AccountId, request?.ToJson(),
+                closeResult.ToJson());
 
-            _operationsLogService.AddLog("action order.close", order.AccountId, request?.ToJson(),
-                order.ToJson());
+            return closeResult.Item1.ToType<PositionCloseResultContract>();
         }
 
         /// <summary>

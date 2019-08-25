@@ -14,9 +14,9 @@ namespace MarginTrading.Backend.Core
     {
         Task<Order> PlaceOrderAsync(Order order);
 
-        Task<Order> ClosePositionsAsync(PositionsCloseData data);
+        Task<(PositionCloseResult, Order)> ClosePositionsAsync(PositionsCloseData data, bool specialLiquidationEnabled);
 
-        Task<Order[]> LiquidatePositionsUsingSpecialWorkflowAsync(IMatchingEngineBase me, string[] positionIds,
+        Task<(PositionCloseResult, Order)[]> LiquidatePositionsUsingSpecialWorkflowAsync(IMatchingEngineBase me, string[] positionIds,
             string correlationId, string additionalInfo, OriginatorType originator);
             
         Order CancelPendingOrder(string orderId, string additionalInfo, string correlationId,

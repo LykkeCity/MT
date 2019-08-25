@@ -20,6 +20,7 @@ using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
+using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
 
@@ -127,7 +128,7 @@ namespace MarginTrading.Backend.Services
             catch (Exception ex)
             {
                 RejectOrder(order, OrderRejectReason.TechnicalError, ex.Message);
-                _log.WriteError(nameof(TradingEngine), nameof(PlaceOrderByMarketPrice), ex);
+                _log.WriteError(nameof(TradingEngine), nameof(PlaceOrderAsync), ex);
                 return order;
             }
         }
@@ -157,17 +158,34 @@ namespace MarginTrading.Backend.Services
 
                 return await ExecuteOrderByMatchingEngineAsync(order, me, true);
             }
-            catch (QuoteNotFoundException ex)
-            {
-                RejectOrder(order, OrderRejectReason.NoLiquidity, ex.Message);
-                return order;
-            }
             catch (Exception ex)
             {
-                RejectOrder(order, OrderRejectReason.TechnicalError, ex.Message);
+                var reason = ex is QuoteNotFoundException
+                    ? OrderRejectReason.NoLiquidity
+                    : OrderRejectReason.TechnicalError;
+                RejectOrder(order, reason, ex.Message);
                 _log.WriteError(nameof(TradingEngine), nameof(PlaceOrderByMarketPrice), ex);
                 return order;
             }
+        }
+
+        private async Task<Order> ExecutePendingOrder(Order order)
+        {
+            await PlaceOrderByMarketPrice(order);
+
+            if (order.Status != OrderStatus.Executed && order.Status != OrderStatus.ExecutionStarted)
+            {
+                foreach (var positionId in order.PositionsToBeClosed)
+                {
+                    if (_ordersCache.Positions.TryGetPositionById(positionId, out var position)
+                        && position.Status == PositionStatus.Closing)
+                    {
+                        position.CancelClosing(_dateService.Now());
+                    }
+                }
+            }
+
+            return order;
         }
 
         private async Task PlacePendingOrder(Order order)
@@ -232,7 +250,7 @@ namespace MarginTrading.Backend.Services
                     && order.IsSuitablePriceForPendingOrder(price))
                 {
                     _ordersCache.Active.Remove(order);
-                    await PlaceOrderByMarketPrice(order);
+                    await ExecutePendingOrder(order);
                 }
             }
         }
@@ -421,18 +439,6 @@ namespace MarginTrading.Backend.Services
 
         private void RejectOrder(Order order, OrderRejectReason reason, string message, string comment = null)
         {
-            if (reason != OrderRejectReason.ParentPositionIsNotActive)
-            {
-                foreach (var positionId in order.PositionsToBeClosed)
-                {
-                    if (_ordersCache.Positions.TryGetPositionById(positionId, out var position)
-                        && position.Status == PositionStatus.Closing)
-                    {
-                        position.CancelClosing(_dateService.Now());
-                    }
-                }
-            }
-
             if (order.OrderType == OrderType.Market 
                 || reason != OrderRejectReason.NoLiquidity
                 || order.PendingOrderRetriesCount >= _marginTradingSettings.PendingOrderRetriesThreshold)
@@ -469,7 +475,7 @@ namespace MarginTrading.Backend.Services
             {
                 _threadSwitcher.SwitchThread(async () =>
                 {
-                    await PlaceOrderByMarketPrice(order);
+                    await ExecutePendingOrder(order);
                 });
             }
         }
@@ -668,7 +674,7 @@ namespace MarginTrading.Backend.Services
             _stopOutEventChannel.SendEvent(this, new StopOutEventArgs(account));
         }
 
-        public async Task<Order> ClosePositionsAsync(PositionsCloseData closeData)
+        public async Task<(PositionCloseResult, Order)> ClosePositionsAsync(PositionsCloseData closeData, bool specialLiquidationEnabled)
         {
             var me = closeData.MatchingEngine ??
                      _meRouter.GetMatchingEngineForClose(closeData.OpenMatchingEngineId);
@@ -691,6 +697,11 @@ namespace MarginTrading.Backend.Services
 
             if (!positionIds.Any())
             {
+                if (closeData.Positions.Any(p => p.Status == PositionStatus.Closing))
+                {
+                    return (PositionCloseResult.ClosingIsInProgress, null);
+                }
+                
                 throw new Exception("No active positions to close");
             }
             
@@ -730,21 +741,41 @@ namespace MarginTrading.Backend.Services
             
             if (order.Status != OrderStatus.Executed && order.Status != OrderStatus.ExecutionStarted)
             {
-                foreach (var position in closeData.Positions)
+                if (specialLiquidationEnabled && order.RejectReason == OrderRejectReason.NoLiquidity)
                 {
-                    if (position.Status == PositionStatus.Closing)
-                        position.CancelClosing(_dateService.Now());    
-                }
+                    var command = new StartSpecialLiquidationInternalCommand
+                    {
+                        OperationId = Guid.NewGuid().ToString(),
+                        CreationTime = _dateService.Now(),
+                        AccountId = order.AccountId,
+                        PositionIds = order.PositionsToBeClosed.ToArray(),
+                        AdditionalInfo = order.AdditionalInfo,
+                        OriginatorType = order.Originator
+                    };
+                    
+                    _cqrsSender.SendCommandToSelf(command);
 
-                _log.WriteWarning(nameof(ClosePositionsAsync), order,
-                    $"Order {order.Id} was not executed. Closing of positions canceled");
+                    return (PositionCloseResult.ClosingStarted, null);
+                }
+                else
+                {
+                    foreach (var position in closeData.Positions)
+                    {
+                        if (position.Status == PositionStatus.Closing)
+                            position.CancelClosing(_dateService.Now());    
+                    }
+                    
+                    _log.WriteWarning(nameof(ClosePositionsAsync), order,
+                        $"Order {order.Id} was not executed. Closing of positions canceled");
+                    
+                    throw new Exception($"Positions were not closed. Reason: {order.RejectReasonText}");
+                }
             }
 
-            return order;
+            return (PositionCloseResult.Closed, order);
         }
 
-        public async Task<Order[]> LiquidatePositionsUsingSpecialWorkflowAsync(IMatchingEngineBase me, string[] positionIds,
-            string correlationId, string additionalInfo, OriginatorType originator)
+        public async Task<(PositionCloseResult, Order)[]> LiquidatePositionsUsingSpecialWorkflowAsync(IMatchingEngineBase me, string[] positionIds, string correlationId, string additionalInfo, OriginatorType originator)
         {
             var positionsToClose = _ordersCache.Positions.GetAllPositions()
                 .Where(x => positionIds.Contains(x.Id)).ToList();
@@ -775,14 +806,14 @@ namespace MarginTrading.Backend.Services
                 {
                     try
                     {
-                        return await ClosePositionsAsync(group);
+                        return await ClosePositionsAsync(group, false);
                     }
                     catch (Exception)
                     {
                         failedPositionIds.AddRange(group.Positions.Select(p => p.Id));
-                        return null;
+                        return default;
                     }
-                }).Where(x => x != null));
+                }).Where(x => x != default));
             
             if (failedPositionIds.Any())
             {

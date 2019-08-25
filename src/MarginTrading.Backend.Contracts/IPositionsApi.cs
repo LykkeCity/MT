@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Contracts.Common;
+using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
 using Refit;
 using PositionDirectionContract = MarginTrading.Backend.Contracts.Positions.PositionDirectionContract;
@@ -22,7 +23,8 @@ namespace MarginTrading.Backend.Contracts
         /// Close a position 
         /// </summary>
         [Delete("/api/positions/{positionId}")]
-        Task CloseAsync([NotNull] string positionId, [Body] PositionCloseRequest request = null);
+        Task<PositionCloseResultContract> CloseAsync([NotNull] string positionId,
+            [Body] PositionCloseRequest request = null);
 
         /// <summary>
         /// Close group of opened positions by accountId, assetPairId and direction.

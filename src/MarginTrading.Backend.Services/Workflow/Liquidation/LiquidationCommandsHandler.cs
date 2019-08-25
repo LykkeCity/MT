@@ -346,12 +346,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             {
                 try
                 {
-                    var order = await _tradingEngine.ClosePositionsAsync(positionGroup);
-
-                    if (order.Status != OrderStatus.Executed && order.Status != OrderStatus.ExecutionStarted)
-                    {
-                        throw new Exception(order.RejectReasonText);
-                    }
+                    var result = await _tradingEngine.ClosePositionsAsync(positionGroup, false);
 
                     foreach (var position in positionGroup.Positions)
                     {
@@ -359,7 +354,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                         {
                             PositionId = position.Id,
                             IsLiquidated = true,
-                            Comment = $"Order: {order.Id}"
+                            Comment = $"Order: {result.Item2.Id}"
                         });
                     }
                 }
