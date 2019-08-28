@@ -2,8 +2,11 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Extensions;
+using MarginTrading.Common.Services;
+using Moq;
 using NUnit.Framework;
 
 namespace MarginTradingTests
@@ -14,8 +17,9 @@ namespace MarginTradingTests
         [Test]
         public void TestSwitchState()
         {
+            LogLocator.CommonLog = Mock.Of<ILog>();
+            
             WithdrawalFreezeOperationData data = null;
-
             Assert.Throws<InvalidOperationException>(() =>
                 data.SwitchState(OperationState.Initiated, OperationState.Started));
             
@@ -32,6 +36,5 @@ namespace MarginTradingTests
 
             Assert.AreEqual(OperationState.Finished, data.State);
         }
-        
     }
 }
