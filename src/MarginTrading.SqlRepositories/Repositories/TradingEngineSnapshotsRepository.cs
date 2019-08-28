@@ -30,11 +30,13 @@ INDEX IX_{0}_Base (TradingDay, CorrelationId, Timestamp)
 );";
         
         private readonly string _connectionString;
+        private readonly MarginTradingSettings _settings;
         private readonly ILog _log;
         
         public TradingEngineSnapshotsRepository(MarginTradingSettings settings, ILog log)
         {
             _connectionString = settings.Db.SqlConnectionString;
+            _settings = settings;
             _log = log;
             
             using (var conn = new SqlConnection(_connectionString))
@@ -68,7 +70,7 @@ VALUES (@TradingDay,@CorrelationId,@Timestamp,@Orders,@Positions,@AccountStats,@
                         AccountStats = accounts,
                         BestFxPrices = bestFxPrices,
                         BestPrices = bestTradingPrices,
-                    });
+                    }, commandTimeout: _settings.SnapshotInsertTimeoutSec);
             }
         }
     }

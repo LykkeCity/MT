@@ -83,6 +83,9 @@ namespace MarginTrading.Backend.Core.Settings
         [Optional]
         public int PendingOrderRetriesThreshold { get; set; } = 100;
 
+        [Optional]
+        public int SnapshotInsertTimeoutSec { get; set; } = 3600;
+
         [UsedImplicitly(ImplicitUseKindFlags.Assign)]
         public RedisSettings RedisSettings { get; set; }
 
