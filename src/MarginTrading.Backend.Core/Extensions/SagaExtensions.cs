@@ -2,6 +2,9 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using Common;
+using Common.Log;
+using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Core.Extensions
 {
@@ -24,7 +27,8 @@ namespace MarginTrading.Backend.Core.Extensions
 
             if (Convert.ToInt32(data.State) > Convert.ToInt32(expectedState))
             {
-                // Already in the next state, so this event can be just ignored
+                LogLocator.CommonLog.WriteWarning(nameof(SagaExtensions), nameof(SwitchState),
+                    $"Operation is already in the next state, so this event is ignored, {new {data, expectedState, nextState}.ToJson()}.");
                 return false;
             }
 

@@ -38,9 +38,6 @@ namespace MarginTrading.Backend.Services.Workflow
             _operationExecutionInfoRepository = operationExecutionInfoRepository;
         }
         
-        /// <summary>
-        /// Freeze the the amount in the margin.
-        /// </summary>
         [UsedImplicitly]
         private async Task Handle(CreateSnapshotCommand command, IEventPublisher publisher)
         {
@@ -88,7 +85,7 @@ namespace MarginTrading.Backend.Services.Workflow
                         FailReason = exception.Message,
                     });
                     
-                    return;
+                    return; // state is not switched => it will work just fine on EOD re-run.
                 }
 
                 _chaosKitty.Meow(command.OperationId);
