@@ -12,6 +12,7 @@ using Lykke.Cqrs.Configuration;
 using Lykke.Cqrs.Configuration.BoundedContext;
 using Lykke.Cqrs.Configuration.Routing;
 using Lykke.Cqrs.Configuration.Saga;
+using Lykke.MarginTrading.OrderBookService.Contracts.Models;
 using Lykke.Messaging;
 using Lykke.Messaging.Contract;
 using Lykke.Messaging.RabbitMq;
@@ -114,10 +115,11 @@ namespace MarginTrading.Backend.Services.Modules
                 var contextRegistration = Register.BoundedContext(_settings.ContextNames.Gavel)
                     .FailedCommandRetryDelay(_defaultRetryDelayMs).ProcessingOptions(CommandsRoute).MultiThreaded(8)
                     .QueueCapacity(1024);
-                
+
                 contextRegistration
                     .PublishingEvents(
-                        typeof(PriceForSpecialLiquidationCalculatedEvent)
+                        typeof(PriceForSpecialLiquidationCalculatedEvent),
+                        typeof(OrderExecutionOrderBookContract)
                     ).With(EventsRoute);
                 
                 return contextRegistration;
