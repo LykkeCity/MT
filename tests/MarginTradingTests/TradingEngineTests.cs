@@ -322,9 +322,9 @@ namespace MarginTradingTests
             
             var result = _tradingEngine.ClosePositionsAsync(data, true).Result;
 
-            Assert.AreEqual(PositionCloseResult.Closed, result.Item1);
+            Assert.AreEqual(PositionCloseResult.Closed, result.result);
             
-            var order = result.Item2;
+            var order = result.order;
 
             ValidateOrderIsExecuted(order, new[] {"5"}, 1.2M);
             
@@ -355,9 +355,9 @@ namespace MarginTradingTests
             
             var result = _tradingEngine.ClosePositionsAsync(data, true).Result;
 
-            Assert.AreEqual(PositionCloseResult.Closed, result.Item1);
+            Assert.AreEqual(PositionCloseResult.Closed, result.result);
             
-            var order = result.Item2;
+            var order = result.order;
             
             ValidateOrderIsExecuted(order, new[] {"3", "4"}, 1.1125M);
             
@@ -410,15 +410,15 @@ namespace MarginTradingTests
                     {
                         var result = _tradingEngine.ClosePositionsAsync(data, true).Result;
                         
-                        if (result.Item1 == PositionCloseResult.ClosingIsInProgress)
+                        if (result.result == PositionCloseResult.ClosingIsInProgress)
                         {
                             closingInProgress++;
                         }
                         
-                        if (result.Item2 != null)
+                        if (result.order != null)
                         {
                             createdOrders++;
-                            ValidateOrderIsExecuted(result.Item2, new[] {"5"}, 1.2M);
+                            ValidateOrderIsExecuted(result.order, new[] {"5"}, 1.2M);
                             executedOrders++;
                         }
                     }
@@ -474,8 +474,8 @@ namespace MarginTradingTests
             
             var result = _tradingEngine.ClosePositionsAsync(data, true).Result;
 
-            Assert.AreEqual(PositionCloseResult.ClosingStarted, result.Item1);
-            Assert.IsNull(result.Item2);
+            Assert.AreEqual(PositionCloseResult.ClosingStarted, result.result);
+            Assert.IsNull(result.order);
             Assert.AreEqual(PositionStatus.Closing, position.Status);
         }
         

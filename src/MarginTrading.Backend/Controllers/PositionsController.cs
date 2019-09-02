@@ -109,8 +109,8 @@ namespace MarginTrading.Backend.Controllers
             return new PositionCloseResponse
             {
                 PositionId = positionId,
-                OrderId = closeResult.Item2?.Id,
-                Result = closeResult.Item1.ToType<PositionCloseResultContract>()
+                OrderId = closeResult.order?.Id,
+                Result = closeResult.result.ToType<PositionCloseResultContract>()
             };
         }
 

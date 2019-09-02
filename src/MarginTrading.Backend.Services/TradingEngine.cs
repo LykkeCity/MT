@@ -175,7 +175,7 @@ namespace MarginTrading.Backend.Services
         {
             await PlaceOrderByMarketPrice(order);
 
-            if (order.Status != OrderStatus.Executed && order.Status != OrderStatus.ExecutionStarted)
+            if (order.IsExecutionNotStarted)
             {
                 foreach (var positionId in order.PositionsToBeClosed)
                 {
@@ -751,7 +751,7 @@ namespace MarginTrading.Backend.Services
 
             order = await ExecuteOrderByMatchingEngineAsync(order, me, true, closeData.Modality);
             
-            if (order.Status != OrderStatus.Executed && order.Status != OrderStatus.ExecutionStarted)
+            if (order.IsExecutionNotStarted)
             {
                 if (specialLiquidationEnabled && order.RejectReason == OrderRejectReason.NoLiquidity)
                 {
@@ -813,7 +813,6 @@ namespace MarginTrading.Backend.Services
                 .Where(p => direction == null || p.Direction == direction)
                 .GroupBy(p => (p.AssetPairId, p.AccountId, p.Direction, p
                     .OpenMatchingEngineId, p.ExternalProviderId, p.EquivalentAsset))
-                .Where(gr => gr.Any())
                 .Select(gr => new PositionsCloseData(
                     gr.ToList(),
                     gr.Key.AccountId,
@@ -902,7 +901,6 @@ namespace MarginTrading.Backend.Services
             var positionGroups = positionsToClose
                 .GroupBy(p => (p.AssetPairId, p.AccountId, p.Direction, p
                     .OpenMatchingEngineId, p.ExternalProviderId, p.EquivalentAsset))
-                .Where(gr => gr.Any())
                 .Select(gr => new PositionsCloseData(
                     gr.ToList(),
                     gr.Key.AccountId,
@@ -918,8 +916,8 @@ namespace MarginTrading.Backend.Services
                     OrderModality.Liquidation));
             
             var failedPositionIds = new List<string>();
-            
-            var closeOrderList = await Task.WhenAll(positionGroups
+
+            var closeOrderList = (await Task.WhenAll(positionGroups
                 .Select(async group =>
                 {
                     try
@@ -931,7 +929,7 @@ namespace MarginTrading.Backend.Services
                         failedPositionIds.AddRange(group.Positions.Select(p => p.Id));
                         return default;
                     }
-                }).Where(x => x != default));
+                }))).Where(x => x != default).ToArray();
             
             if (failedPositionIds.Any())
             {

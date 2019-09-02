@@ -15,7 +15,8 @@ namespace MarginTrading.Backend.Core
     {
         Task<Order> PlaceOrderAsync(Order order);
 
-        Task<(PositionCloseResult, Order)> ClosePositionsAsync(PositionsCloseData data, bool specialLiquidationEnabled);
+        Task<(PositionCloseResult result, Order order)> ClosePositionsAsync(PositionsCloseData data, bool 
+        specialLiquidationEnabled);
         
         [ItemNotNull]
         Task<Dictionary<string, (PositionCloseResult, Order)>> ClosePositionsGroupAsync(string accountId, 

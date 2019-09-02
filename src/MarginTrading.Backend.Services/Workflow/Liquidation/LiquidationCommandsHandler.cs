@@ -328,7 +328,6 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             var positionGroups = positions
                 .GroupBy(p => (p.AssetPairId, p.AccountId, p.Direction, p
                     .OpenMatchingEngineId, p.ExternalProviderId, p.EquivalentAsset))
-                .Where(gr => gr.Any())
                 .Select(gr => new PositionsCloseData(
                     gr.ToList(),
                     gr.Key.AccountId,
