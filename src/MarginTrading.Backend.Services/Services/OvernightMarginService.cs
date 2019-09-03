@@ -130,7 +130,7 @@ namespace MarginTrading.Backend.Services.Services
             var accounts = _accountsCacheService.GetAll().Where(a => a.IsInLiquidation()).ToArray();
 
             _log.WriteInfo(nameof(OvernightMarginService), nameof(RestartFailedLiquidation),
-                $"{accounts.Length} account in liquidation state found");
+                $"{accounts.Length} accounts in liquidation state found");
 
             foreach (var account in accounts)
             {
