@@ -400,7 +400,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 return;
             }
 
-            if (!command.IsCausedBySpecialLiquidation || 
+            if ((!command.IsCausedBySpecialLiquidation &&
+                 (!command.ResumeOnlyFailed || executionInfo.Data.State == LiquidationOperationState.Failed)) ||
                 executionInfo.Data.State == LiquidationOperationState.SpecialLiquidationStarted)
             {
                 publisher.PublishEvent(new LiquidationResumedInternalEvent

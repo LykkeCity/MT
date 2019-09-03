@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using FluentScheduler;
+using Lykke.Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.DayOffSettings;
 using MarginTrading.Backend.Core.Extensions;
@@ -16,8 +17,10 @@ using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
+using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Scheduling;
 using MarginTrading.Backend.Services.TradingConditions;
+using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
 using MarginTrading.Common.Services;
 using MoreLinq;
 
@@ -35,7 +38,8 @@ namespace MarginTrading.Backend.Services.Services
         private readonly ILog _log;
         private readonly IEventChannel<MarginCallEventArgs> _marginCallEventChannel;
         private readonly OvernightMarginSettings _overnightMarginSettings;
-        
+        private readonly ICqrsSender _cqrsSender;
+
         public OvernightMarginService(
             IDateService dateService,
             ITradingEngine tradingEngine,
@@ -45,7 +49,8 @@ namespace MarginTrading.Backend.Services.Services
             IOvernightMarginParameterContainer overnightMarginParameterContainer,
             ILog log,
             IEventChannel<MarginCallEventArgs> marginCallEventChannel,
-            OvernightMarginSettings overnightMarginSettings)
+            OvernightMarginSettings overnightMarginSettings,
+            ICqrsSender cqrsSender)
         {
             _dateService = dateService;
             _tradingEngine = tradingEngine;
@@ -56,6 +61,7 @@ namespace MarginTrading.Backend.Services.Services
             _log = log;
             _marginCallEventChannel = marginCallEventChannel;
             _overnightMarginSettings = overnightMarginSettings;
+            _cqrsSender = cqrsSender;
         }
 
         /// <inheritdoc />
@@ -76,11 +82,13 @@ namespace MarginTrading.Backend.Services.Services
                 || !TryGetOperatingInterval(platformTradingSchedule, currentDateTime, out operatingInterval))
             {
                 nextStart = currentDateTime.Date.AddDays(1);
+                RestartFailedLiquidation();
             }
             //schedule warning
             else if (currentDateTime < operatingInterval.Warn)
             {   
                 nextStart = operatingInterval.Warn;
+                RestartFailedLiquidation();
             }
             //schedule overnight margin parameter start
             else if (currentDateTime < operatingInterval.Start)
@@ -110,8 +118,31 @@ namespace MarginTrading.Backend.Services.Services
                 + $" Current margin parameter state: [{_overnightMarginParameterContainer.GetOvernightMarginParameterState()}]."
                 + $" Check time: [{currentDateTime:s}]."
                 + (operatingInterval != default ? $" Detected operation interval: [{operatingInterval.ToJson()}]." : ""));
+            
             JobManager.AddJob(ScheduleNext, s => s
                 .WithName(nameof(OvernightMarginService)).NonReentrant().ToRunOnceAt(nextStart));
+        }
+
+        private void RestartFailedLiquidation()
+        {
+            _log.WriteInfo(nameof(OvernightMarginService), nameof(RestartFailedLiquidation), "Trying to restart failed liquidations");
+            
+            var accounts = _accountsCacheService.GetAll().Where(a => a.IsInLiquidation()).ToArray();
+
+            _log.WriteInfo(nameof(OvernightMarginService), nameof(RestartFailedLiquidation),
+                $"{accounts.Length} accounts in liquidation state found");
+
+            foreach (var account in accounts)
+            {
+                _cqrsSender.SendCommandToSelf(new ResumeLiquidationInternalCommand
+                {
+                    OperationId = account.LiquidationOperationId,
+                    CreationTime = DateTime.UtcNow,
+                    IsCausedBySpecialLiquidation = false,
+                    ResumeOnlyFailed = true,
+                    Comment = "Trying to resume liquidation because trading started"
+                });
+            }
         }
 
         private void PlanEodJob(DateTime operatingIntervalStart, DateTime operatingIntervalEnd, DateTime currentDateTime)
