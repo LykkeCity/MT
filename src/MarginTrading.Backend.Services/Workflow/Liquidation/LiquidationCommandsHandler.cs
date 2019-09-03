@@ -328,12 +328,10 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             var positionGroups = positions
                 .GroupBy(p => (p.AssetPairId, p.AccountId, p.Direction, p
                     .OpenMatchingEngineId, p.ExternalProviderId, p.EquivalentAsset))
-                .Where(gr => gr.Any())
                 .Select(gr => new PositionsCloseData(
                     gr.ToList(),
                     gr.Key.AccountId,
                     gr.Key.AssetPairId,
-                    gr.Sum(x => x.Volume),
                     gr.Key.OpenMatchingEngineId,
                     gr.Key.ExternalProviderId,
                     executionInfo.Data.OriginatorType,
@@ -346,12 +344,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             {
                 try
                 {
-                    var order = await _tradingEngine.ClosePositionsAsync(positionGroup);
-
-                    if (order.Status != OrderStatus.Executed && order.Status != OrderStatus.ExecutionStarted)
-                    {
-                        throw new Exception(order.RejectReasonText);
-                    }
+                    var result = await _tradingEngine.ClosePositionsAsync(positionGroup, false);
 
                     foreach (var position in positionGroup.Positions)
                     {
@@ -359,7 +352,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                         {
                             PositionId = position.Id,
                             IsLiquidated = true,
-                            Comment = $"Order: {order.Id}"
+                            Comment = $"Order: {result.Item2.Id}"
                         });
                     }
                 }

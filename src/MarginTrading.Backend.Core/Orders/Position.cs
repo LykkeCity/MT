@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Common;
+using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.StateMachines;
 using MarginTrading.Backend.Core.Trading;
 using Newtonsoft.Json;
@@ -277,6 +278,19 @@ namespace MarginTrading.Backend.Core.Orders
                 CloseOriginator = originator;
                 CloseComment = comment;
             });
+        }
+
+        public bool TryStartClosing(DateTime date, PositionCloseReason reason, OriginatorType originator, string comment)
+        {
+            try
+            {
+                StartClosing(date, reason, originator, comment);
+                return true;
+            }
+            catch (StateTransitionNotFoundException e)
+            {
+                return false;
+            }
         }
         
         public void CancelClosing(DateTime date)

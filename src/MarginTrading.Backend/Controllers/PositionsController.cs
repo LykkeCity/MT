@@ -77,7 +77,7 @@ namespace MarginTrading.Backend.Controllers
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpDelete]
-        public async Task CloseAsync([CanBeNull] [FromRoute] string positionId,
+        public async Task<PositionCloseResponse> CloseAsync([CanBeNull] [FromRoute] string positionId,
             [FromBody] PositionCloseRequest request = null)
         {
             if (!_ordersCache.Positions.TryGetPositionById(positionId, out var position))
@@ -91,26 +91,27 @@ namespace MarginTrading.Backend.Controllers
 
             var correlationId = request?.CorrelationId ?? _identityGenerator.GenerateGuid();
 
-            var order = await _tradingEngine.ClosePositionsAsync(
+            var closeResult = await _tradingEngine.ClosePositionsAsync(
                 new PositionsCloseData(
                     new List<Position> {position},
                     position.AccountId,
                     position.AssetPairId,
-                    position.Volume,
                     position.OpenMatchingEngineId,
                     position.ExternalProviderId,
                     originator,
                     request?.AdditionalInfo,
                     correlationId,
-                    position.EquivalentAsset));
+                    position.EquivalentAsset), true);
 
-            if (order.Status != OrderStatus.Executed && order.Status != OrderStatus.ExecutionStarted)
+            _operationsLogService.AddLog("action order.close", position.AccountId, request?.ToJson(),
+                closeResult.ToJson());
+
+            return new PositionCloseResponse
             {
-                throw new InvalidOperationException(order.RejectReasonText);
-            }
-
-            _operationsLogService.AddLog("action order.close", order.AccountId, request?.ToJson(),
-                order.ToJson());
+                PositionId = positionId,
+                OrderId = closeResult.order?.Id,
+                Result = closeResult.result.ToType<PositionCloseResultContract>()
+            };
         }
 
         /// <summary>
@@ -128,38 +129,26 @@ namespace MarginTrading.Backend.Controllers
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpDelete]
-        public Task CloseGroupAsync([FromQuery] string assetPairId = null, [FromQuery] string accountId = null, 
-            [FromQuery] PositionDirectionContract? direction = null, [FromBody] PositionCloseRequest request = null)
+        public async Task<PositionsGroupCloseResponse> CloseGroupAsync([FromQuery] string assetPairId = null, 
+        [FromQuery] string accountId = null, [FromQuery] PositionDirectionContract? direction = null, [FromBody] PositionCloseRequest request = null)
         {
-            if (string.IsNullOrWhiteSpace(accountId))
-            {
-                throw new ArgumentNullException(nameof(accountId), "AccountId must be set.");
-            }
-
-            var operationId = string.IsNullOrWhiteSpace(request?.CorrelationId) 
-                ? _identityGenerator.GenerateGuid()
-                : request.CorrelationId;
-
             var originator = GetOriginator(request?.Originator);
 
-            _cqrsSender.SendCommandToSelf(new StartLiquidationInternalCommand
-            {
-                OperationId = operationId,
-                CreationTime = _dateService.Now(),
-                AccountId = accountId,
-                AssetPairId = assetPairId,
-                Direction = direction?.ToType<PositionDirection>(),
-                QuoteInfo = null,
-                LiquidationType = LiquidationType.Forced,
-                OriginatorType = originator,
-                AdditionalInfo = request?.AdditionalInfo,
-            });
+            var closeResult = await _tradingEngine.ClosePositionsGroupAsync(accountId, assetPairId, direction?.ToType<PositionDirection>(), originator, request?.AdditionalInfo, request?.CorrelationId);
             
             _operationsLogService.AddLog("Position liquidation started", string.Empty, 
                 $"instrument = [{assetPairId}], account = [{accountId}], direction = [{direction}], request = [{request.ToJson()}]",
-                $"Started operation {operationId}");
-            
-            return Task.CompletedTask;
+                closeResult?.ToJson());
+
+            return new PositionsGroupCloseResponse
+            {
+                Responses = closeResult.Select(r => new PositionCloseResponse
+                {
+                    PositionId = r.Key,
+                    Result = r.Value.Item1.ToType<PositionCloseResultContract>(),
+                    OrderId = r.Value.Item2?.Id
+                }).ToArray()
+            };
         }
 
         /// <summary>

@@ -168,6 +168,8 @@ namespace MarginTrading.Backend.Core.Trading
         [JsonProperty]
         public sealed override OrderStatus Status { get; protected set; }
 
+        public bool IsExecutionNotStarted => Status != OrderStatus.Executed && Status != OrderStatus.ExecutionStarted;
+
         /// <summary>
         /// Order fill type
         /// </summary>

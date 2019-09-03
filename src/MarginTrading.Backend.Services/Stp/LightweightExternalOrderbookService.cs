@@ -110,10 +110,15 @@ namespace MarginTrading.Backend.Services.Stp
             {
                 return null;
             }
+
+            var price = MatchBestPriceForOrderExecution(orderBook, volume, validateOppositeDirectionVolume);
+
+            if (price == null)
+                return null;
             
             return new List<(string source, decimal? price)>
             {
-                (orderBook.ExchangeName, MatchBestPriceForOrderExecution(orderBook, volume, validateOppositeDirectionVolume))
+                (orderBook.ExchangeName, price)
             };
         }
 
