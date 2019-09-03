@@ -27,5 +27,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation.Commands
         
         [Key(5)]
         public List<string> PositionsLiquidatedBySpecialLiquidation { get; set; }
+        
+        [Key(6)]
+        public bool ResumeOnlyFailed { get; set; }
     }
 }

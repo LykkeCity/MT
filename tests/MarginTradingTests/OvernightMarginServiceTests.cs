@@ -14,6 +14,7 @@ using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
+using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Services;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Services;
@@ -38,7 +39,7 @@ namespace MarginTradingTests
             var overnightMarginService = new OvernightMarginService(Mock.Of<IDateService>(), Mock.Of<ITradingEngine>(),
                 Mock.Of<IAccountsCacheService>(), Mock.Of<IAccountUpdateService>(),
                 Mock.Of<IScheduleSettingsCacheService>(), Mock.Of<IOvernightMarginParameterContainer>(), 
-                Mock.Of<ILog>(), Mock.Of<IEventChannel<MarginCallEventArgs>>(), new OvernightMarginSettings());
+                Mock.Of<ILog>(), Mock.Of<IEventChannel<MarginCallEventArgs>>(), new OvernightMarginSettings(), Mock.Of<ICqrsSender>());
             var actualResult = overnightMarginService.TryGetOperatingInterval(platformTrading, currentDateTime, 
                 out var resultingInterval);
             
