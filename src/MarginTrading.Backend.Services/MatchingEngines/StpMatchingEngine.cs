@@ -8,9 +8,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
-using Lykke.Service.ExchangeConnector.Client;
-using Lykke.Service.ExchangeConnector.Client.Models;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.ExchangeConnector;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
@@ -22,14 +21,13 @@ using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
-using OrderType = Lykke.Service.ExchangeConnector.Client.Models.OrderType;
 
 namespace MarginTrading.Backend.Services.MatchingEngines
 {
     public class StpMatchingEngine : IStpMatchingEngine
     {
         private readonly IExternalOrderbookService _externalOrderbookService;
-        private readonly IExchangeConnectorService _exchangeConnectorService;
+        private readonly IExchangeConnectorClient _exchangeConnectorClient;
         private readonly ILog _log;
         private readonly IOperationsLogService _operationsLogService;
         private readonly IDateService _dateService;
@@ -43,7 +41,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
         public StpMatchingEngine(string id, 
             IExternalOrderbookService externalOrderbookService,
-            IExchangeConnectorService exchangeConnectorService,
+            IExchangeConnectorClient exchangeConnectorClient,
             ILog log,
             IOperationsLogService operationsLogService,
             IDateService dateService,
@@ -53,7 +51,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             IQuoteCacheService quoteCacheService)
         {
             _externalOrderbookService = externalOrderbookService;
-            _exchangeConnectorService = exchangeConnectorService;
+            _exchangeConnectorClient = exchangeConnectorClient;
             _log = log;
             _operationsLogService = operationsLogService;
             _dateService = dateService;
@@ -103,8 +101,8 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
                 var orderType = order.OrderType == Core.Orders.OrderType.Limit
                                 || order.OrderType == Core.Orders.OrderType.TakeProfit
-                    ? OrderType.Limit
-                    : OrderType.Market;
+                    ? Core.Orders.OrderType.Limit
+                    : Core.Orders.OrderType.Market;
 
                 var targetPrice = order.OrderType == Core.Orders.OrderType.Market
                     ? (double?) price
@@ -114,7 +112,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 {
                     externalOrderModel = new OrderModel(
                         tradeType: order.Direction.ToType<TradeType>(),
-                        orderType: orderType,
+                        orderType: orderType.ToType<Core.ExchangeConnector.OrderType>(),
                         timeInForce: TimeInForce.FillOrKill,
                         volume: (double) Math.Abs(order.Volume),
                         dateTime: _dateService.Now(),
@@ -126,7 +124,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
                     var cts = new CancellationTokenSource();
                     cts.CancelAfter(_marginTradingSettings.GavelTimeout);
-                    var executionResult = await _exchangeConnectorService.CreateOrderAsync(externalOrderModel, cts.Token);
+                    var executionResult = await _exchangeConnectorClient.ExecuteOrder(externalOrderModel, cts.Token);
                     
                     if (!executionResult.Success)
                     {
@@ -163,7 +161,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                     var connector =
                         _marginTradingSettings.ExchangeConnector == ExchangeConnectorType.FakeExchangeConnector
                             ? "Fake"
-                            : _exchangeConnectorService.BaseUri.OriginalString;
+                            : "Gavel";
                     
                     _log.WriteError(
                         $"{nameof(StpMatchingEngine)}:{nameof(MatchOrderAsync)}:{connector}",

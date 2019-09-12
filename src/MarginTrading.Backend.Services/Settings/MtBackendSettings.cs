@@ -2,7 +2,6 @@
 // See the LICENSE file in the project root for more information.
 
 using JetBrains.Annotations;
-using Lykke.Service.ExchangeConnector.Client;
 using Lykke.SettingsReader.Attributes;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Common.Settings;

@@ -42,7 +42,7 @@ namespace MarginTrading.ExternalOrderBroker.Models
 			       + "Message: " + this.Message;
 		}
 		
-		public static ExternalOrderReport Create(Lykke.Service.ExchangeConnector.Client.Models.ExecutionReport externalContract)
+		public static ExternalOrderReport Create(MarginTrading.Backend.Core.ExchangeConnector.ExecutionReport externalContract)
 		{
 			return new ExternalOrderReport
 			{
@@ -54,7 +54,7 @@ namespace MarginTrading.ExternalOrderBroker.Models
 				Time = externalContract.Time,
 				Price = externalContract.Price,
 				Volume = externalContract.Volume * 
-				         (externalContract.Type == Lykke.Service.ExchangeConnector.Client.Models.TradeType.Buy ? 1 : -1),
+				         (externalContract.Type == MarginTrading.Backend.Core.ExchangeConnector.TradeType.Buy ? 1 : -1),
 				Fee = externalContract.Fee,
 				Id = externalContract.ExchangeOrderId,
 				Status = externalContract.ExecutionStatus.ToString(),

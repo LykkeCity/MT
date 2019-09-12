@@ -10,15 +10,13 @@ using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
-using Lykke.Service.ExchangeConnector.Client;
-using Lykke.Service.ExchangeConnector.Client.Models;
 using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Events;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.ExchangeConnector;
 using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
-using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.MatchingEngines;
@@ -42,7 +40,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private readonly MarginTradingSettings _marginTradingSettings;
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly IAssetPairDayOffService _assetPairDayOffService;
-        private readonly IExchangeConnectorService _exchangeConnectorService;
+        private readonly IExchangeConnectorClient _exchangeConnectorClient;
         private readonly IIdentityGenerator _identityGenerator;
         private readonly IAccountsCacheService _accountsCacheService;
 
@@ -56,7 +54,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             MarginTradingSettings marginTradingSettings,
             IAssetPairsCache assetPairsCache,
             IAssetPairDayOffService assetPairDayOffService,
-            IExchangeConnectorService exchangeConnectorService,
+            IExchangeConnectorClient exchangeConnectorClient,
             IIdentityGenerator identityGenerator,
             IAccountsCacheService accountsCacheService)
         {
@@ -69,7 +67,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             _marginTradingSettings = marginTradingSettings;
             _assetPairsCache = assetPairsCache;
             _assetPairDayOffService = assetPairDayOffService;
-            _exchangeConnectorService = exchangeConnectorService;
+            _exchangeConnectorClient = exchangeConnectorClient;
             _identityGenerator = identityGenerator;
             _accountsCacheService = accountsCacheService;
         }
@@ -365,9 +363,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         RequestNumber = executionInfo.Data.RequestNumber
                     };
                     
-                    var order = new OrderModel(
+                    var order = new MarginTrading.Backend.Core.ExchangeConnector.OrderModel(
                         tradeType: command.Volume > 0 ? TradeType.Buy : TradeType.Sell,
-                        orderType: OrderType.Market.ToType<Lykke.Service.ExchangeConnector.Client.Models.OrderType>(),
+                        orderType: OrderType.Market.ToType<MarginTrading.Backend.Core.ExchangeConnector.OrderType>(),
                         timeInForce: TimeInForce.FillOrKill,
                         volume: (double) Math.Abs(command.Volume),
                         dateTime: _dateService.Now(),
@@ -380,7 +378,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 
                     try
                     {
-                        var executionResult = await _exchangeConnectorService.CreateOrderAsync(order);
+                        var executionResult = await _exchangeConnectorClient.ExecuteOrder(order);
 
                         if (!executionResult.Success)
                         {

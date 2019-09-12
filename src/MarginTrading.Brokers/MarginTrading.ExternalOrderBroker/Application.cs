@@ -11,7 +11,7 @@ using MarginTrading.ExternalOrderBroker.Repositories;
 
 namespace MarginTrading.ExternalOrderBroker
 {
-    public class Application : BrokerApplicationBase<Lykke.Service.ExchangeConnector.Client.Models.ExecutionReport>
+    public class Application : BrokerApplicationBase<MarginTrading.Backend.Core.ExchangeConnector.ExecutionReport>
     {
         private readonly IExternalOrderReportRepository _externalOrderReportRepository;
         private readonly Settings.AppSettings _appSettings;
@@ -30,7 +30,7 @@ namespace MarginTrading.ExternalOrderBroker
         protected override BrokerSettingsBase Settings => _appSettings;
         protected override string ExchangeName => _appSettings.RabbitMqQueues.ExternalOrder.ExchangeName;
 
-        protected override Task HandleMessage(Lykke.Service.ExchangeConnector.Client.Models.ExecutionReport order)
+        protected override Task HandleMessage(MarginTrading.Backend.Core.ExchangeConnector.ExecutionReport order)
         {
             var externalOrder = ExternalOrderReport.Create(order);
             return _externalOrderReportRepository.InsertOrReplaceAsync(externalOrder);

@@ -4,14 +4,11 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Autofac.Features.Indexed;
 using Common;
 using Common.Log;
-using Lykke.RabbitMqBroker.Publisher;
-using Lykke.RabbitMqBroker.Subscriber;
-using Lykke.Service.ExchangeConnector.Client.Models;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.ExchangeConnector;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Settings;
