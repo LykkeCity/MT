@@ -4,6 +4,7 @@
 using System.Threading.Tasks;
 using Common.Log;
 using Lykke.SlackNotifications;
+using MarginTrading.Backend.Contracts.ExchangeConnector;
 using MarginTrading.BrokerBase;
 using MarginTrading.BrokerBase.Settings;
 using MarginTrading.ExternalOrderBroker.Models;
@@ -11,7 +12,7 @@ using MarginTrading.ExternalOrderBroker.Repositories;
 
 namespace MarginTrading.ExternalOrderBroker
 {
-    public class Application : BrokerApplicationBase<MarginTrading.Backend.Core.ExchangeConnector.ExecutionReport>
+    public class Application : BrokerApplicationBase<ExecutionReport>
     {
         private readonly IExternalOrderReportRepository _externalOrderReportRepository;
         private readonly Settings.AppSettings _appSettings;
@@ -30,7 +31,7 @@ namespace MarginTrading.ExternalOrderBroker
         protected override BrokerSettingsBase Settings => _appSettings;
         protected override string ExchangeName => _appSettings.RabbitMqQueues.ExternalOrder.ExchangeName;
 
-        protected override Task HandleMessage(MarginTrading.Backend.Core.ExchangeConnector.ExecutionReport order)
+        protected override Task HandleMessage(ExecutionReport order)
         {
             var externalOrder = ExternalOrderReport.Create(order);
             return _externalOrderReportRepository.InsertOrReplaceAsync(externalOrder);

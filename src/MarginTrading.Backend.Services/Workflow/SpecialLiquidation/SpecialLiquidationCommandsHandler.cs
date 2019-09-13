@@ -10,10 +10,10 @@ using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
+using MarginTrading.Backend.Contracts.ExchangeConnector;
 using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Events;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.ExchangeConnector;
 using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
@@ -363,9 +363,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         RequestNumber = executionInfo.Data.RequestNumber
                     };
                     
-                    var order = new MarginTrading.Backend.Core.ExchangeConnector.OrderModel(
+                    var order = new OrderModel(
                         tradeType: command.Volume > 0 ? TradeType.Buy : TradeType.Sell,
-                        orderType: OrderType.Market.ToType<MarginTrading.Backend.Core.ExchangeConnector.OrderType>(),
+                        orderType: OrderType.Market.ToType<Contracts.ExchangeConnector.OrderType>(),
                         timeInForce: TimeInForce.FillOrKill,
                         volume: (double) Math.Abs(command.Volume),
                         dateTime: _dateService.Now(),

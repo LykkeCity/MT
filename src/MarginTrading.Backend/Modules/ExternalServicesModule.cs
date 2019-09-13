@@ -12,7 +12,7 @@ using Lykke.Service.EmailSender;
 using Lykke.SettingsReader;
 using Lykke.Snow.Common.Startup;
 using MarginTrading.AccountsManagement.Contracts;
-using MarginTrading.Backend.Core.ExchangeConnector;
+using MarginTrading.Backend.Contracts.ExchangeConnector;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Infrastructure;
 using MarginTrading.Backend.Services.FakeExchangeConnector;

@@ -1,12 +1,12 @@
 // Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
-namespace MarginTrading.Backend.Core.ExchangeConnector
+namespace MarginTrading.Backend.Contracts.ExchangeConnector
 {
-    public enum TradeType
+    public enum OrderType
     {
         Unknown,
-        Buy,
-        Sell
+        Market,
+        Limit
     }
 }

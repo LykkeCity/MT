@@ -4,10 +4,9 @@
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using Microsoft.Rest;
 using Refit;
 
-namespace MarginTrading.Backend.Core.ExchangeConnector
+namespace MarginTrading.Backend.Contracts.ExchangeConnector
 {
     [PublicAPI]
     public interface IExchangeConnectorClient

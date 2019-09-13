@@ -8,8 +8,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using MarginTrading.Backend.Contracts.ExchangeConnector;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.ExchangeConnector;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
@@ -18,10 +18,10 @@ using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Notifications;
-using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Settings;
+using OrderType = MarginTrading.Backend.Contracts.ExchangeConnector.OrderType;
 
 namespace MarginTrading.Backend.Services.MatchingEngines
 {
@@ -116,7 +116,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 {
                     externalOrderModel = new OrderModel(
                         tradeType: order.Direction.ToType<TradeType>(),
-                        orderType: orderType.ToType<Core.ExchangeConnector.OrderType>(),
+                        orderType: orderType.ToType<OrderType>(),
                         timeInForce: TimeInForce.FillOrKill,
                         volume: (double) Math.Abs(order.Volume),
                         dateTime: _dateService.Now(),

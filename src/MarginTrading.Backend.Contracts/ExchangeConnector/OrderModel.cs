@@ -5,7 +5,7 @@ using System;
 using System.ComponentModel;
 using Newtonsoft.Json;
 
-namespace MarginTrading.Backend.Core.ExchangeConnector
+namespace MarginTrading.Backend.Contracts.ExchangeConnector
 {
     public class OrderModel
     {

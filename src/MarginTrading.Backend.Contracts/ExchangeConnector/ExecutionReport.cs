@@ -2,11 +2,9 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using Common;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 
-namespace MarginTrading.Backend.Core.ExchangeConnector
+namespace MarginTrading.Backend.Contracts.ExchangeConnector
 {
     public class ExecutionReport
     {
@@ -174,7 +172,7 @@ namespace MarginTrading.Backend.Core.ExchangeConnector
         /// <exception cref="T:Microsoft.Rest.ValidationException">
         /// Thrown if validation fails
         /// </exception>
-        public virtual void Validate()
+        public void Validate()
         {
         }
     }
