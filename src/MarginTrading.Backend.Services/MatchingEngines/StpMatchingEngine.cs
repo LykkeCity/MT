@@ -21,6 +21,7 @@ using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
+using MarginTrading.Common.Settings;
 
 namespace MarginTrading.Backend.Services.MatchingEngines
 {
@@ -34,6 +35,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly MarginTradingSettings _marginTradingSettings;
+        private readonly ExchangeConnectorServiceClient _exchangeConnectorServiceClient;
         private readonly IQuoteCacheService _quoteCacheService;
         public string Id { get; }
 
@@ -48,6 +50,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             IRabbitMqNotifyService rabbitMqNotifyService,
             IAssetPairsCache assetPairsCache,
             MarginTradingSettings marginTradingSettings,
+            ExchangeConnectorServiceClient exchangeConnectorServiceClient,
             IQuoteCacheService quoteCacheService)
         {
             _externalOrderbookService = externalOrderbookService;
@@ -58,6 +61,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             _rabbitMqNotifyService = rabbitMqNotifyService;
             _assetPairsCache = assetPairsCache;
             _marginTradingSettings = marginTradingSettings;
+            _exchangeConnectorServiceClient = exchangeConnectorServiceClient;
             _quoteCacheService = quoteCacheService;
             Id = id;
         }
@@ -161,7 +165,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                     var connector =
                         _marginTradingSettings.ExchangeConnector == ExchangeConnectorType.FakeExchangeConnector
                             ? "Fake"
-                            : "Gavel";
+                            : _exchangeConnectorServiceClient.ServiceUrl;
                     
                     _log.WriteError(
                         $"{nameof(StpMatchingEngine)}:{nameof(MatchOrderAsync)}:{connector}",

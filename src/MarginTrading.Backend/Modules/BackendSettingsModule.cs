@@ -21,6 +21,7 @@ namespace MarginTrading.Backend.Modules
         {
             builder.RegisterInstance(_settings.Nested(s => s.MtBackend)).SingleInstance();
             builder.RegisterInstance(_settings.CurrentValue.MtBackend).SingleInstance();
+            builder.RegisterInstance(_settings.CurrentValue.MtStpExchangeConnectorClient).SingleInstance();
             builder.RegisterInstance(_settings.CurrentValue.MtBackend.RequestLoggerSettings).SingleInstance();
             builder.RegisterInstance(_settings.CurrentValue.MtBackend.SpecialLiquidation).SingleInstance();
             builder.RegisterInstance(_settings.CurrentValue.RiskInformingSettings ??

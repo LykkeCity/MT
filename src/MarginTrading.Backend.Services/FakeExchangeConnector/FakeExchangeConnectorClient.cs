@@ -28,8 +28,7 @@ namespace MarginTrading.Backend.Services.FakeExchangeConnector
         private readonly ILog _log;
         private readonly IDateService _dateService;
         private readonly ICqrsSender _cqrsSender;
-
-
+        
         public FakeExchangeConnectorClient(
             IExternalOrderbookService orderbookService,
             IChaosKitty chaosKitty,
