@@ -1,4 +1,4 @@
-FROM microsoft/dotnet:2.1.0-aspnetcore-runtime
+FROM mcr.microsoft.com/dotnet/core/aspnet:2.2
 WORKDIR /app
 COPY . .
 ENTRYPOINT ["dotnet", "MarginTrading.ExternalOrderBroker.dll"]

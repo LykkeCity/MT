@@ -3,23 +3,19 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.ClientAccount.Client.AutorestClient.Models;
 using Lykke.Service.ClientAccount.Client.Models;
-using Lykke.Service.ExchangeConnector.Client;
+using MarginTrading.Backend.Contracts.ExchangeConnector;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.DayOffSettings;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;
-using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Caches;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
@@ -29,6 +25,7 @@ using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Services.Settings;
+using MarginTrading.Common.Settings;
 using MarginTrading.SettingsService.Contracts;
 using MarginTrading.SettingsService.Contracts.Scheduling;
 using MarginTradingTests.Modules;
@@ -83,6 +80,7 @@ namespace MarginTradingTests
 
             builder.RegisterInstance(marginSettings).SingleInstance();
             builder.RegisterInstance(overnightMarginSettings).SingleInstance();
+            builder.RegisterInstance(Mock.Of<ExchangeConnectorServiceClient>());
             builder.RegisterInstance(new RiskInformingSettings
             {
                 Data = new[]
@@ -167,8 +165,8 @@ namespace MarginTradingTests
                 .ReturnsAsync(new List<CompiledScheduleContract>());
             builder.RegisterInstance(scheduleSettingsApiMock.Object).As<IScheduleSettingsApi>();
 
-            var exchangeConnector = Mock.Of<IExchangeConnectorService>();
-            builder.RegisterInstance(exchangeConnector).As<IExchangeConnectorService>();
+            var exchangeConnector = Mock.Of<IExchangeConnectorClient>();
+            builder.RegisterInstance(exchangeConnector).As<IExchangeConnectorClient>();
 
             builder.RegisterBuildCallback(c => c.Resolve<AccountManager>());
             builder.RegisterBuildCallback(c => c.Resolve<TradingInstrumentsManager>());

@@ -8,8 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
-using Lykke.Service.ExchangeConnector.Client;
-using Lykke.Service.ExchangeConnector.Client.Models;
+using MarginTrading.Backend.Contracts.ExchangeConnector;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
@@ -19,23 +18,24 @@ using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Notifications;
-using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
-using OrderType = Lykke.Service.ExchangeConnector.Client.Models.OrderType;
+using MarginTrading.Common.Settings;
+using OrderType = MarginTrading.Backend.Contracts.ExchangeConnector.OrderType;
 
 namespace MarginTrading.Backend.Services.MatchingEngines
 {
     public class StpMatchingEngine : IStpMatchingEngine
     {
         private readonly IExternalOrderbookService _externalOrderbookService;
-        private readonly IExchangeConnectorService _exchangeConnectorService;
+        private readonly IExchangeConnectorClient _exchangeConnectorClient;
         private readonly ILog _log;
         private readonly IOperationsLogService _operationsLogService;
         private readonly IDateService _dateService;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly MarginTradingSettings _marginTradingSettings;
+        private readonly ExchangeConnectorServiceClient _exchangeConnectorServiceClient;
         private readonly IQuoteCacheService _quoteCacheService;
         public string Id { get; }
 
@@ -43,23 +43,25 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
         public StpMatchingEngine(string id, 
             IExternalOrderbookService externalOrderbookService,
-            IExchangeConnectorService exchangeConnectorService,
+            IExchangeConnectorClient exchangeConnectorClient,
             ILog log,
             IOperationsLogService operationsLogService,
             IDateService dateService,
             IRabbitMqNotifyService rabbitMqNotifyService,
             IAssetPairsCache assetPairsCache,
             MarginTradingSettings marginTradingSettings,
+            ExchangeConnectorServiceClient exchangeConnectorServiceClient,
             IQuoteCacheService quoteCacheService)
         {
             _externalOrderbookService = externalOrderbookService;
-            _exchangeConnectorService = exchangeConnectorService;
+            _exchangeConnectorClient = exchangeConnectorClient;
             _log = log;
             _operationsLogService = operationsLogService;
             _dateService = dateService;
             _rabbitMqNotifyService = rabbitMqNotifyService;
             _assetPairsCache = assetPairsCache;
             _marginTradingSettings = marginTradingSettings;
+            _exchangeConnectorServiceClient = exchangeConnectorServiceClient;
             _quoteCacheService = quoteCacheService;
             Id = id;
         }
@@ -103,8 +105,8 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
                 var orderType = order.OrderType == Core.Orders.OrderType.Limit
                                 || order.OrderType == Core.Orders.OrderType.TakeProfit
-                    ? OrderType.Limit
-                    : OrderType.Market;
+                    ? Core.Orders.OrderType.Limit
+                    : Core.Orders.OrderType.Market;
 
                 var targetPrice = order.OrderType == Core.Orders.OrderType.Market
                     ? (double?) price
@@ -114,7 +116,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                 {
                     externalOrderModel = new OrderModel(
                         tradeType: order.Direction.ToType<TradeType>(),
-                        orderType: orderType,
+                        orderType: orderType.ToType<OrderType>(),
                         timeInForce: TimeInForce.FillOrKill,
                         volume: (double) Math.Abs(order.Volume),
                         dateTime: _dateService.Now(),
@@ -126,7 +128,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
                     var cts = new CancellationTokenSource();
                     cts.CancelAfter(_marginTradingSettings.GavelTimeout);
-                    var executionResult = await _exchangeConnectorService.CreateOrderAsync(externalOrderModel, cts.Token);
+                    var executionResult = await _exchangeConnectorClient.ExecuteOrder(externalOrderModel, cts.Token);
                     
                     if (!executionResult.Success)
                     {
@@ -163,7 +165,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                     var connector =
                         _marginTradingSettings.ExchangeConnector == ExchangeConnectorType.FakeExchangeConnector
                             ? "Fake"
-                            : _exchangeConnectorService.BaseUri.OriginalString;
+                            : _exchangeConnectorServiceClient.ServiceUrl;
                     
                     _log.WriteError(
                         $"{nameof(StpMatchingEngine)}:{nameof(MatchOrderAsync)}:{connector}",

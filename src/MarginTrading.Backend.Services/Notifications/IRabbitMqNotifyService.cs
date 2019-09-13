@@ -2,8 +2,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Threading.Tasks;
-using Lykke.Service.ExchangeConnector.Client.Models;
 using MarginTrading.Backend.Contracts.Events;
+using MarginTrading.Backend.Contracts.ExchangeConnector;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;

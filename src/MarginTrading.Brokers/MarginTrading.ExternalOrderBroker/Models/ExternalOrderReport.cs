@@ -1,6 +1,8 @@
 ﻿// Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using MarginTrading.Backend.Contracts.ExchangeConnector;
+
 namespace MarginTrading.ExternalOrderBroker.Models
 {
 	public class ExternalOrderReport : IExternalOrderReport
@@ -42,7 +44,7 @@ namespace MarginTrading.ExternalOrderBroker.Models
 			       + "Message: " + this.Message;
 		}
 		
-		public static ExternalOrderReport Create(Lykke.Service.ExchangeConnector.Client.Models.ExecutionReport externalContract)
+		public static ExternalOrderReport Create(ExecutionReport externalContract)
 		{
 			return new ExternalOrderReport
 			{
@@ -54,7 +56,7 @@ namespace MarginTrading.ExternalOrderBroker.Models
 				Time = externalContract.Time,
 				Price = externalContract.Price,
 				Volume = externalContract.Volume * 
-				         (externalContract.Type == Lykke.Service.ExchangeConnector.Client.Models.TradeType.Buy ? 1 : -1),
+				         (externalContract.Type == TradeType.Buy ? 1 : -1),
 				Fee = externalContract.Fee,
 				Id = externalContract.ExchangeOrderId,
 				Status = externalContract.ExecutionStatus.ToString(),

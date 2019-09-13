@@ -2,34 +2,25 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using Lykke.Common.Chaos;
 using Lykke.MarginTrading.OrderBookService.Contracts.Models;
-using Lykke.RabbitMqBroker.Publisher;
-using Lykke.Service.ExchangeConnector.Client;
-using Lykke.Service.ExchangeConnector.Client.Models;
+using MarginTrading.Backend.Contracts.ExchangeConnector;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Infrastructure;
-using MarginTrading.Common.Extensions;
-using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
-using Microsoft.Rest;
-using Newtonsoft.Json;
 
 namespace MarginTrading.Backend.Services.FakeExchangeConnector
 {
-    public class FakeExchangeConnectorService : IExchangeConnectorService
+    public class FakeExchangeConnectorClient : IExchangeConnectorClient
     {
         private readonly IExternalOrderbookService _orderbookService;
         private readonly IChaosKitty _chaosKitty;
@@ -37,9 +28,8 @@ namespace MarginTrading.Backend.Services.FakeExchangeConnector
         private readonly ILog _log;
         private readonly IDateService _dateService;
         private readonly ICqrsSender _cqrsSender;
-
-
-        public FakeExchangeConnectorService(
+        
+        public FakeExchangeConnectorClient(
             IExternalOrderbookService orderbookService,
             IChaosKitty chaosKitty,
             MarginTradingSettings settings,
@@ -54,77 +44,24 @@ namespace MarginTrading.Backend.Services.FakeExchangeConnector
             _cqrsSender = cqrsSender;
             _orderbookService = orderbookService;
         }
-
-        public void Dispose()
-        {
-        }
-
-        public Task<HttpOperationResponse<IList<TradeBalanceModel>>> GetTradeBalanceWithHttpMessagesAsync(
-            string exchangeName = null, Dictionary<string, List<string>> customHeaders = null,
-            CancellationToken cancellationToken = new CancellationToken())
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<HttpOperationResponse<IList<string>>> GetSupportedExchangesWithHttpMessagesAsync(
-            Dictionary<string, List<string>> customHeaders = null,
-            CancellationToken cancellationToken = new CancellationToken())
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<HttpOperationResponse<ExchangeInformationModel>> GetExchangeInfoWithHttpMessagesAsync(
-            string exchangeName, Dictionary<string, List<string>> customHeaders = null,
-            CancellationToken cancellationToken = new CancellationToken())
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<HttpOperationResponse<IsAliveResponseModel>> IsAliveWithHttpMessagesAsync(
-            Dictionary<string, List<string>> customHeaders = null,
-            CancellationToken cancellationToken = new CancellationToken())
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<HttpOperationResponse<ExecutionReport>> GetOrderWithHttpMessagesAsync(string id,
-            string exchangeName = null, string instrument = null,
-            Dictionary<string, List<string>> customHeaders = null,
-            CancellationToken cancellationToken = new CancellationToken())
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<HttpOperationResponse<ExecutionReport>> CancelOrderWithHttpMessagesAsync(string id,
-            string exchangeName = null, Dictionary<string, List<string>> customHeaders = null,
-            CancellationToken cancellationToken = new CancellationToken())
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<HttpOperationResponse<ExecutionReport>> CreateOrderWithHttpMessagesAsync(
-            OrderModel orderModel = null, Dictionary<string, List<string>> customHeaders = null,
-            CancellationToken cancellationToken = new CancellationToken())
+        
+        public Task<ExecutionReport> ExecuteOrder(OrderModel orderModel, CancellationToken cancellationToken)
         {
             if (orderModel == null || orderModel.Volume == 0)
             {
-                var report = new HttpOperationResponse<ExecutionReport>
+                return Task.FromResult(new ExecutionReport
                 {
-                    Response = new HttpResponseMessage()
-                    {
-                        Content = new StringContent("Bad model"),
-                        StatusCode = HttpStatusCode.BadRequest,
-                    }
-                };
-
-                return Task.FromResult(report);
+                    Success = false,
+                    ExecutionStatus = OrderExecutionStatus.Rejected,
+                    FailureType = OrderStatusUpdateFailureType.ConnectorError,
+                });
             }
 
-            var result = new HttpOperationResponse<ExecutionReport>();
+            ExecutionReport result;
             
             try
             {
-                _chaosKitty.Meow(nameof(FakeExchangeConnectorService));
+                _chaosKitty.Meow(nameof(FakeExchangeConnectorClient));
 
                 ExternalOrderBook orderbook;
                 decimal? currentPrice;
@@ -165,8 +102,8 @@ namespace MarginTrading.Backend.Services.FakeExchangeConnector
                         orderModel.TradeType == TradeType.Buy ? OrderDirection.Buy : OrderDirection.Sell);
                 }
                 
-                result.Body = new ExecutionReport(
-                    type: orderModel.TradeType.ToType<TradeType>(),
+                result = new ExecutionReport(
+                    type: orderModel.TradeType,
                     time: DateTime.UtcNow,
                     price: (double) (currentPrice ?? throw new Exception("No price")),
                     volume: orderModel.Volume,
@@ -203,11 +140,11 @@ namespace MarginTrading.Backend.Services.FakeExchangeConnector
             }
             catch (Exception ex)
             {
-                _log.WriteErrorAsync(nameof(FakeExchangeConnectorService), nameof(CreateOrderWithHttpMessagesAsync),
+                _log.WriteErrorAsync(nameof(FakeExchangeConnectorClient), nameof(ExecuteOrder),
                     orderModel.ToJson(), ex);
                 
-                result.Body = new ExecutionReport(
-                    type: orderModel.TradeType.ToType<TradeType>(),
+                result = new ExecutionReport(
+                    type: orderModel.TradeType,
                     time: DateTime.UtcNow,
                     price: 0,
                     volume: 0,
@@ -224,17 +161,5 @@ namespace MarginTrading.Backend.Services.FakeExchangeConnector
 
             return Task.FromResult(result);
         }
-
-        public Task<HttpOperationResponse<IList<PositionModel>>> GetOpenedPositionWithHttpMessagesAsync(
-            string exchangeName = null, Dictionary<string, List<string>> customHeaders = null,
-            CancellationToken cancellationToken = new CancellationToken())
-        {
-            throw new NotImplementedException();
-        }
-
-        public Uri BaseUri { get; set; }
-        public JsonSerializerSettings SerializationSettings { get; set; }
-        public JsonSerializerSettings DeserializationSettings { get; set; }
-        public ServiceClientCredentials Credentials { get; set; }
     }
 }

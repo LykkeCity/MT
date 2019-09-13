@@ -9,10 +9,10 @@ using Lykke.HttpClientGenerator.Retries;
 using Lykke.MarginTrading.OrderBookService.Contracts;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.EmailSender;
-using Lykke.Service.ExchangeConnector.Client;
 using Lykke.SettingsReader;
 using Lykke.Snow.Common.Startup;
 using MarginTrading.AccountsManagement.Contracts;
+using MarginTrading.Backend.Contracts.ExchangeConnector;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Infrastructure;
 using MarginTrading.Backend.Services.FakeExchangeConnector;
@@ -36,21 +36,22 @@ namespace MarginTrading.Backend.Modules
         {
             if (_settings.CurrentValue.MtBackend.ExchangeConnector == ExchangeConnectorType.RealExchangeConnector)
             {
-                var settings = new ExchangeConnectorServiceSettings
-                {
-                    ServiceUrl = _settings.CurrentValue.MtStpExchangeConnectorClient.ServiceUrl,
-                    ApiKey = _settings.CurrentValue.MtStpExchangeConnectorClient.ApiKey
-                };
-                
-                builder.RegisterType<ExchangeConnectorService>()
-                .As<IExchangeConnectorService>()
-                .WithParameter("settings", settings)
+                var gavelClientGenerator = HttpClientGenerator
+                    .BuildForUrl(_settings.CurrentValue.MtStpExchangeConnectorClient.ServiceUrl)
+                    .WithServiceName<LykkeErrorResponse>(
+                        $"Gavel [{_settings.CurrentValue.MtStpExchangeConnectorClient.ServiceUrl}]")
+                    .WithApiKey(_settings.CurrentValue.MtStpExchangeConnectorClient.ApiKey)
+                    .WithoutRetries()
+                    .Create();
+                    
+                builder.RegisterInstance(gavelClientGenerator.Generate<IExchangeConnectorClient>())
+                .As<IExchangeConnectorClient>()
                 .SingleInstance();
             }
             if (_settings.CurrentValue.MtBackend.ExchangeConnector == ExchangeConnectorType.FakeExchangeConnector)
             {
-                builder.RegisterType<FakeExchangeConnectorService>()
-                    .As<IExchangeConnectorService>()
+                builder.RegisterType<FakeExchangeConnectorClient>()
+                    .As<IExchangeConnectorClient>()
                     .SingleInstance();
             }
             
@@ -94,8 +95,7 @@ namespace MarginTrading.Backend.Modules
                 .BuildForUrl(_settings.CurrentValue.SettingsServiceClient.ServiceUrl)
                 .WithServiceName<LykkeErrorResponse>(
                     $"MT Settings [{_settings.CurrentValue.SettingsServiceClient.ServiceUrl}]")
-                .WithRetriesStrategy(new LinearRetryStrategy(TimeSpan.FromMilliseconds(300), 3))
-                ;
+                .WithRetriesStrategy(new LinearRetryStrategy(TimeSpan.FromMilliseconds(300), 3));
             
             if (!string.IsNullOrWhiteSpace(_settings.CurrentValue.SettingsServiceClient.ApiKey))
             {
