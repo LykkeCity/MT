@@ -25,6 +25,7 @@ using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Services.Settings;
+using MarginTrading.Common.Settings;
 using MarginTrading.SettingsService.Contracts;
 using MarginTrading.SettingsService.Contracts.Scheduling;
 using MarginTradingTests.Modules;
@@ -79,6 +80,7 @@ namespace MarginTradingTests
 
             builder.RegisterInstance(marginSettings).SingleInstance();
             builder.RegisterInstance(overnightMarginSettings).SingleInstance();
+            builder.RegisterInstance(Mock.Of<ExchangeConnectorServiceClient>());
             builder.RegisterInstance(new RiskInformingSettings
             {
                 Data = new[]
