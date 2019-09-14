@@ -281,12 +281,21 @@ namespace MarginTrading.Backend.Core.Trading
         /// </summary>
         [JsonProperty]
         public List<RelatedOrderInfo> RelatedOrders { get; private set; }
-        
+
+        private string _additionalInfo;
         /// <summary>
         /// Additional information about order, changed every time, when order is changed via user request
         /// </summary>
         [JsonProperty]
-        public string AdditionalInfo { get; private set; }
+        public string AdditionalInfo
+        {
+            get => _additionalInfo;
+            private set
+            {
+                _additionalInfo = value;
+                UpdateHasOnBehalf(value);
+            }
+        }
 
         /// <summary>
         /// Max distance between order price and parent order price (only for trailing order)
@@ -328,6 +337,12 @@ namespace MarginTrading.Backend.Core.Trading
         /// </summary>
         [JsonProperty]
         public int PendingOrderRetriesCount { get; private set; }
+        
+        /// <summary>
+        /// Show if order was managed on behalf at least once
+        /// </summary>
+        [JsonProperty]
+        public bool HasOnBehalf { get; set; }
         
         #endregion
         
@@ -606,5 +621,27 @@ namespace MarginTrading.Backend.Core.Trading
         }
 
         #endregion State changes
+
+        #region Helpers
+        
+        private void UpdateHasOnBehalf(string additionalInfo)
+        {
+            HasOnBehalf |= GetOnBehalfFlag(additionalInfo);
+        }
+        
+        private static bool GetOnBehalfFlag(string additionalInfo)
+        {
+            try
+            {
+                return JsonConvert.DeserializeAnonymousType(additionalInfo, new {WithOnBehalfFees = false})
+                    .WithOnBehalfFees;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        
+        #endregion Helpers
     }
 }

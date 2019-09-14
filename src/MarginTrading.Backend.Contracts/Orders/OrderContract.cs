@@ -242,5 +242,10 @@ namespace MarginTrading.Backend.Contracts.Orders
         /// Max distance between order price and parent order price (only for trailing order)
         /// </summary>
         public decimal? TrailingDistance { get; set; }
+
+        /// <summary>
+        /// Show if order was managed on behalf at least once
+        /// </summary>
+        public bool HasOnBehalf { get; set; }
     }
 }
