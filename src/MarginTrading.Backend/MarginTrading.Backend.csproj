@@ -87,10 +87,6 @@
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <Content Update="appsettings.dev.json">
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <Target Name="CopySerilogConfig" AfterTargets="AfterBuild">
     <Copy SourceFiles="appsettings.Serilog.json" DestinationFolder="$(OutDir)" />
