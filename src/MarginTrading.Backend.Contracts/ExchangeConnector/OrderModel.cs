@@ -33,7 +33,8 @@ namespace MarginTrading.Backend.Contracts.ExchangeConnector
             string instrument = null,
             double? price = null,
             string orderId = null,
-            TradeRequestModality modality = TradeRequestModality.Regular)
+            TradeRequestModality modality = TradeRequestModality.Regular,
+            bool isCancellationTrade = false)
         {
             this.ExchangeName = exchangeName;
             this.Instrument = instrument;
@@ -45,6 +46,7 @@ namespace MarginTrading.Backend.Contracts.ExchangeConnector
             this.DateTime = dateTime;
             this.OrderId = orderId;
             this.Modality = modality;
+            this.IsCancellationTrade = isCancellationTrade;
         }
 
         /// <summary>
@@ -97,5 +99,7 @@ namespace MarginTrading.Backend.Contracts.ExchangeConnector
 
         [DefaultValue(TradeRequestModality.Regular)]
         public TradeRequestModality Modality { get; set; }
+        
+        public bool IsCancellationTrade { get; set; }
     }
 }

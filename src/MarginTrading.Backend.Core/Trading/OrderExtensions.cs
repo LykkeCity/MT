@@ -7,6 +7,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;
+using Newtonsoft.Json;
 
 namespace MarginTrading.Backend.Core
 {
@@ -177,6 +178,19 @@ namespace MarginTrading.Backend.Core
                 .ThenBy(o => o.ExecutionPriceRank)
                 .ThenBy(o => o.Created)
                 .ToList();
+        }
+
+        public static bool IsCancellationTrade(this string additionalInfo)
+        {
+            try
+            {
+                return JsonConvert.DeserializeAnonymousType(additionalInfo, new {IsCancellationTrade = false})
+                    .IsCancellationTrade;
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

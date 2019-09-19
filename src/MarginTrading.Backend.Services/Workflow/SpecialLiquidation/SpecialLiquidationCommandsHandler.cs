@@ -362,7 +362,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         OperationId = executionInfo.Id, 
                         RequestNumber = executionInfo.Data.RequestNumber
                     };
-                    
+
                     var order = new OrderModel(
                         tradeType: command.Volume > 0 ? TradeType.Buy : TradeType.Sell,
                         orderType: OrderType.Market.ToType<Contracts.ExchangeConnector.OrderType>(),
@@ -374,7 +374,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         instrument: command.Instrument,
                         price: (double?) command.Price,
                         orderId: _identityGenerator.GenerateAlphanumericId(),
-                        TradeRequestModality.Liquidation);
+                        modality: TradeRequestModality.Liquidation);
                 
                     try
                     {
