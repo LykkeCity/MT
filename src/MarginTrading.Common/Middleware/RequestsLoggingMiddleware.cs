@@ -25,7 +25,7 @@ namespace MarginTrading.Common.Middleware
         private readonly ILog _requestsLog;
 
         private const int MaxStorageFieldLength = 2000;
-        private readonly string[] _personalDataHeaders = {"Authorization"};
+        private readonly string[] _personalDataHeaders = {"Authorization", "api-key"};
 
         public RequestsLoggingMiddleware(RequestDelegate next, RequestLoggerSettings settings, ILog log)
         {
