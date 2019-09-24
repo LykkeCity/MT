@@ -344,7 +344,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             {
                 try
                 {
-                    var result = await _tradingEngine.ClosePositionsAsync(positionGroup, false);
+                    var (result, order) = await _tradingEngine.ClosePositionsAsync(positionGroup, false);
 
                     foreach (var position in positionGroup.Positions)
                     {
@@ -352,7 +352,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                         {
                             PositionId = position.Id,
                             IsLiquidated = true,
-                            Comment = $"Order: {result.Item2.Id}"
+                            Comment = order != null ? $"Order: {order.Id}" : result.ToString()
                         });
                     }
                 }
@@ -427,32 +427,35 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         private bool CheckIfNetVolumeCanBeLiquidated(string accountId, string assetPairId, Position[] positions,
             out string details)
         {
-            var netPositionVolume = positions.Sum(p => p.Volume);
-
-            var account = _accountsCache.Get(accountId);
-            var tradingInstrument = _tradingInstrumentsCacheService.GetTradingInstrument(account.TradingConditionId, 
-                assetPairId);
-
-            if (tradingInstrument.LiquidationThreshold > 0 &&
-                Math.Abs(netPositionVolume) > tradingInstrument.LiquidationThreshold)
+            foreach (var positionsGroup in positions.GroupBy(p => p.Direction))
             {
-                details = $"Threshold exceeded. Net volume : {netPositionVolume}. " +
-                                 $"Threshold : {tradingInstrument.LiquidationThreshold}.";
-                return false;
-            }
+                var netPositionVolume = positionsGroup.Sum(p => p.Volume);
 
-            //TODO: discuss and handle situation with different MEs for different positions
-            //at the current moment all positions has the same asset pair
-            //and every asset pair can be processed only by one ME
-            var anyPosition = positions.First();
-            var me = _matchingEngineRouter.GetMatchingEngineForClose(anyPosition.OpenMatchingEngineId);
-            //the same for externalProvider.. 
-            var externalProvider = anyPosition.ExternalProviderId;
+                var account = _accountsCache.Get(accountId);
+                var tradingInstrument = _tradingInstrumentsCacheService.GetTradingInstrument(account.TradingConditionId, 
+                    assetPairId);
 
-            if (me.GetPriceForClose(assetPairId, netPositionVolume, externalProvider) == null)
-            {
-                details = $"Not enough depth of orderbook. Net volume : {netPositionVolume}.";
-                return false;
+                if (tradingInstrument.LiquidationThreshold > 0 &&
+                    Math.Abs(netPositionVolume) > tradingInstrument.LiquidationThreshold)
+                {
+                    details = $"Threshold exceeded. Net volume : {netPositionVolume}. " +
+                              $"Threshold : {tradingInstrument.LiquidationThreshold}.";
+                    return false;
+                }
+
+                //TODO: discuss and handle situation with different MEs for different positions
+                //at the current moment all positions has the same asset pair
+                //and every asset pair can be processed only by one ME
+                var anyPosition = positionsGroup.First();
+                var me = _matchingEngineRouter.GetMatchingEngineForClose(anyPosition.OpenMatchingEngineId);
+                //the same for externalProvider.. 
+                var externalProvider = anyPosition.ExternalProviderId;
+
+                if (me.GetPriceForClose(assetPairId, netPositionVolume, externalProvider) == null)
+                {
+                    details = $"Not enough depth of orderbook. Net volume : {netPositionVolume}.";
+                    return false;
+                }
             }
 
             details = string.Empty;
