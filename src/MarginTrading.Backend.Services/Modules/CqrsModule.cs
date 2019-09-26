@@ -119,6 +119,7 @@ namespace MarginTrading.Backend.Services.Modules
                 contextRegistration
                     .PublishingEvents(
                         typeof(PriceForSpecialLiquidationCalculatedEvent),
+                        typeof(PriceForSpecialLiquidationCalculationFailedEvent),
                         typeof(OrderExecutionOrderBookContract)
                     ).With(EventsRoute);
                 
