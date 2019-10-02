@@ -190,15 +190,20 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     continue;
                 }
 
-                if (Math.Abs(openedPosition.Volume) <= leftVolumeToMatch)
+                var absVolume = Math.Abs(openedPosition.Volume);
+
+                if (absVolume <= leftVolumeToMatch)
                 {
                     CloseExistingPosition(order, openedPosition);
                 
-                    leftVolumeToMatch = leftVolumeToMatch - Math.Abs(openedPosition.Volume);
+                    leftVolumeToMatch = leftVolumeToMatch - absVolume;
                 }
                 else
                 {
-                    var chargedPnl = leftVolumeToMatch / openedPosition.Volume * openedPosition.ChargedPnL;
+                    var accountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(openedPosition.AccountAssetId);
+                    
+                    var chargedPnl = Math.Round(leftVolumeToMatch / absVolume * openedPosition
+                    .ChargedPnL, accountBaseAssetAccuracy);
                     
                     openedPosition.PartiallyClose(order.Executed.Value, leftVolumeToMatch, order.Id, chargedPnl);
 
