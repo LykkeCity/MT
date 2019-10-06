@@ -200,10 +200,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 }
                 else
                 {
-                    var accountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(openedPosition.AccountAssetId);
-                    
-                    var chargedPnl = Math.Round(leftVolumeToMatch / absVolume * openedPosition
-                    .ChargedPnL, accountBaseAssetAccuracy);
+                    var chargedPnl = leftVolumeToMatch / absVolume * openedPosition.ChargedPnL;
                     
                     openedPosition.PartiallyClose(order.Executed.Value, leftVolumeToMatch, order.Id, chargedPnl);
 
