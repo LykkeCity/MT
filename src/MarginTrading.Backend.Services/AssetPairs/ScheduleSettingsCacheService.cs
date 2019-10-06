@@ -212,23 +212,23 @@ namespace MarginTrading.Backend.Services.AssetPairs
         public Dictionary<string, List<CompiledScheduleTimeInterval>> GetCompiledScheduleSettings(
             DateTime currentDateTime, TimeSpan scheduleCutOff)
         {
-            _readerWriterLockSlim.EnterReadLock();
+            _readerWriterLockSlim.EnterUpgradeableReadLock();
 
             try
             {
                 EnsureCacheValidUnsafe(currentDateTime);
+                
+                if (!_compiledScheduleTimelineCache.Any())
+                {
+                    CacheWarmUp();
+                }
+                
+                return _compiledScheduleTimelineCache;
             }
             finally
             {
-                _readerWriterLockSlim.ExitReadLock();
+                _readerWriterLockSlim.ExitUpgradeableReadLock();
             }
-
-            if (!_compiledScheduleTimelineCache.Any())
-            {
-                CacheWarmUp();
-            }
-
-            return _compiledScheduleTimelineCache;
         }
 
         public List<CompiledScheduleTimeInterval> GetCompiledScheduleSettings(string assetPairId,
