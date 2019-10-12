@@ -46,14 +46,10 @@ namespace MarginTrading.Backend.Services.Workflow
                     CreationTime = _dateService.Now(),
                 });
             }
-            catch (ArgumentException argumentException)
-            {
-                _log.WriteWarning(nameof(EodCommandsHandler), nameof(CreateSnapshotCommand),
-                    argumentException.Message, argumentException);
-            }
             catch (Exception exception)
             {
-                _log.WriteError(nameof(EodCommandsHandler), nameof(CreateSnapshotCommand), exception);
+                await _log.WriteErrorAsync(nameof(EodCommandsHandler), nameof(CreateSnapshotCommand), 
+                    exception);
                 
                 publisher.PublishEvent(new SnapshotCreationFailedEvent
                 {
