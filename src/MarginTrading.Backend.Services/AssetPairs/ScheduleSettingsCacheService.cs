@@ -396,7 +396,8 @@ namespace MarginTrading.Backend.Services.AssetPairs
                     return new[]
                     {
                         new CompiledScheduleTimeInterval(sch, currentStart, currentEnd),
-                        new CompiledScheduleTimeInterval(sch, currentStart.AddDays(-7), currentEnd.AddDays(-7))
+                        new CompiledScheduleTimeInterval(sch, currentStart.AddDays(-7), currentEnd.AddDays(-7)), 
+                        new CompiledScheduleTimeInterval(sch, currentStart.AddDays(7), currentEnd.AddDays(7))
                     };
                 })
                 : new List<CompiledScheduleTimeInterval>();
@@ -422,7 +423,8 @@ namespace MarginTrading.Backend.Services.AssetPairs
                     return new[]
                     {
                         new CompiledScheduleTimeInterval(sch, start, end),
-                        new CompiledScheduleTimeInterval(sch, start.AddDays(-1), end.AddDays(-1))
+                        new CompiledScheduleTimeInterval(sch, start.AddDays(-1), end.AddDays(-1)),
+                        new CompiledScheduleTimeInterval(sch, start.AddDays(1), end.AddDays(1))
                     };
                 })
                 : new List<CompiledScheduleTimeInterval>();

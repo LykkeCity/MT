@@ -192,5 +192,12 @@ namespace MarginTrading.Backend.Core
                 return false;
             }
         }
+
+        public static string MakeNonOnBehalf(this string additionalInfo)
+        {
+            var obj = JsonConvert.DeserializeObject<dynamic>(additionalInfo);
+            obj.WithOnBehalfFees = false;
+            return JsonConvert.SerializeObject(obj);
+        }
     }
 }
