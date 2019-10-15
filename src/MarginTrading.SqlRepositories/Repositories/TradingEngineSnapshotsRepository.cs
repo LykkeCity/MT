@@ -51,11 +51,13 @@ INDEX IX_{0}_Base (TradingDay, CorrelationId, Timestamp)
         }
 
         public async Task Add(DateTime tradingDay, string correlationId, DateTime timestamp, string orders,
-            string positions, string accounts,
-            string bestFxPrices, string bestTradingPrices)
+            string positions, string accounts, string bestFxPrices, string bestTradingPrices)
         {
             using (var conn = new SqlConnection(_connectionString))
             {
+                await _log.WriteInfoAsync(nameof(TradingEngineSnapshotsRepository), nameof(Add),
+                    $"Writing {tradingDay:yyyy-MM-dd} snapshot to repository with {correlationId} correlationId.");
+                
                 await conn.ExecuteAsync(
                     $@"INSERT INTO {TableName} 
 (TradingDay,CorrelationId,Timestamp,Orders,Positions,AccountStats,BestFxPrices,BestPrices) 

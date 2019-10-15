@@ -88,26 +88,40 @@ namespace MarginTrading.Backend.Services.Infrastructure
             try
             {
                 var orders = _orderReader.GetAllOrders();
+                var ordersData = orders.Select(x => x.ConvertToContract(_orderReader)).ToJson();
+                await _log.WriteInfoAsync(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
+                    $"Preparing data... {orders.Length} orders prepared.");
+                
                 var positions = _orderReader.GetPositions();
+                var positionsData = positions.Select(x => x.ConvertToContract(_orderReader)).ToJson();
+                await _log.WriteInfoAsync(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
+                    $"Preparing data... {positions.Length} positions prepared.");
+                
                 var accountStats = _accountsCacheService.GetAll();
+                var accountStatsData = accountStats.Select(x => x.ConvertToContract()).ToJson();
+                await _log.WriteInfoAsync(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
+                    $"Preparing data... {accountStats.Count} accounts prepared.");
+                
                 var bestFxPrices = _fxRateCacheService.GetAllQuotes();
+                var bestFxPricesData = bestFxPrices.ToDictionary(q => q.Key, q => q.Value.ConvertToContract()).ToJson();
+                await _log.WriteInfoAsync(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
+                    $"Preparing data... {bestFxPrices.Count} best FX prices prepared.");
+                
                 var bestPrices = _quoteCacheService.GetAllQuotes();
+                var bestPricesData = bestPrices.ToDictionary(q => q.Key, q => q.Value.ConvertToContract()).ToJson();
+                await _log.WriteInfoAsync(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
+                    $"Preparing data... {bestPrices.Count} best trading prices prepared.");
                 
                 var msg = $"TradingDay: {tradingDay:yyyy-MM-dd}, Orders: {orders.Length}, positions: {positions.Length}, accounts: {accountStats.Count}, best FX prices: {bestFxPrices.Count}, best trading prices: {bestPrices.Count}.";
 
-                _log.WriteInfo(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
-                    $"Starting to write trading data snapshot. {msg}");                
+                await _log.WriteInfoAsync(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
+                    $"Starting to write trading data snapshot. {msg}");
 
-                await _tradingEngineSnapshotsRepository.Add(tradingDay, 
-                    correlationId, 
-                    _dateService.Now(), 
-                    orders.Select(x => x.ConvertToContract(_orderReader)).ToJson(),
-                    positions.Select(x => x.ConvertToContract(_orderReader)).ToJson(),
-                    accountStats.Select(x => x.ConvertToContract()).ToJson(),
-                    bestFxPrices.ToDictionary(q => q.Key, q => q.Value.ConvertToContract()).ToJson(),
-                    bestPrices.ToDictionary(q => q.Key, q => q.Value.ConvertToContract()).ToJson());
+                await _tradingEngineSnapshotsRepository.Add(tradingDay, correlationId, _dateService.Now(), 
+                    ordersData, positionsData, accountStatsData, bestFxPricesData, 
+                    bestPricesData);
 
-                _log.WriteInfo(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
+                await _log.WriteInfoAsync(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
                     $"Trading data snapshot was written to the storage. {msg}");   
                 return $"Trading data snapshot was written to the storage. {msg}";
             }
