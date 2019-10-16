@@ -290,7 +290,7 @@ namespace MarginTrading.Backend.Core.Trading
         public string AdditionalInfo
         {
             get => _additionalInfo;
-            private set
+            set
             {
                 _additionalInfo = value;
                 UpdateHasOnBehalf(value);

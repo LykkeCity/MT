@@ -455,9 +455,16 @@ namespace MarginTrading.Backend.Services
                 order.CancelExecution(_dateService.Now());
                 
                 _ordersCache.Active.Add(order);
+
+                var initialAdditionalInfo = order.AdditionalInfo;
+                //to evade additional OnBehalf fee for this event
+                order.AdditionalInfo = initialAdditionalInfo.MakeNonOnBehalf();
+                
                 _orderChangedEventChannel.SendEvent(this,
                     new OrderChangedEventArgs(order,
                         new OrderChangedMetadata {UpdatedProperty = OrderChangedProperty.None}));
+
+                order.AdditionalInfo = initialAdditionalInfo;
             }
         }
 
