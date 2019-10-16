@@ -133,5 +133,10 @@ namespace MarginTrading.Backend.Contracts.Positions
         /// Additional information about the order, that opened position
         /// </summary>
         public string AdditionalInfo { get; set; }
+        
+        /// <summary>
+        /// Position status
+        /// </summary>
+        public PositionStatusContract Status { get; set; }
     }
 }

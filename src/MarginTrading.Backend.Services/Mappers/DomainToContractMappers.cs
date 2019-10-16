@@ -163,7 +163,8 @@ namespace MarginTrading.Backend.Services.Mappers
                 OpenTimestamp = position.OpenDate,
                 ModifiedTimestamp = position.LastModified,
                 TradeId = position.Id,
-                AdditionalInfo = position.AdditionalInfo
+                AdditionalInfo = position.AdditionalInfo,
+                Status = position.Status.ToType<PositionStatusContract>(),
             };
         }
         
