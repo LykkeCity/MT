@@ -88,8 +88,6 @@ namespace MarginTrading.Backend.Services.AssetPairs
                     .ForEach(key => _compiledScheduleTimelineCache.Remove(key));
 
                 _rawScheduleSettingsCache = newRawScheduleSettings;
-
-                _lastCacheRecalculationTime = _dateService.Now();
             }
             catch (Exception exception)
             {
@@ -113,7 +111,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
         {
             var platformSettingsRaw = (await _scheduleSettingsApi.List(_overnightMarginSettings.ScheduleMarketId))
                 .ToList();
-            var invalidSchedules = InvalidSchedules(platformSettingsRaw); 
+            var invalidSchedules = InvalidSchedules(platformSettingsRaw);
             var platformSettings = platformSettingsRaw.Except(invalidSchedules)
                 .Select(ScheduleSettings.Create).ToList();
 
@@ -122,14 +120,14 @@ namespace MarginTrading.Backend.Services.AssetPairs
             try
             {
                 _rawPlatformSchedule = platformSettings;
-            
+
                 PlatformCacheWarmUpUnsafe();
             }
             finally
             {
                 _readerWriterLockSlim.ExitWriteLock();
             }
-            
+
             if (invalidSchedules.Any())
             {
                 await _log.WriteWarningAsync(nameof(ScheduleSettingsCacheService), nameof(UpdatePlatformSettingsAsync),
@@ -170,13 +168,13 @@ namespace MarginTrading.Backend.Services.AssetPairs
             out CompiledScheduleTimeInterval selectedInterval)
         {
             var currentDateTime = _dateService.Now();
-            
+
             var intersecting = timeIntervals.Where(x => x.Start <= currentDateTime && currentDateTime < x.End);
 
             selectedInterval = intersecting
                        .OrderByDescending(x => x.Schedule.Rank)
                        .FirstOrDefault();
-            
+
             return selectedInterval?.Schedule.IsTradeEnabled ?? true;
         }
 
@@ -216,13 +214,8 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
             try
             {
-                EnsureCacheValidUnsafe(currentDateTime);
-                
-                if (!_compiledScheduleTimelineCache.Any())
-                {
-                    CacheWarmUp();
-                }
-                
+                CacheWarmUp();
+
                 return _compiledScheduleTimelineCache;
             }
             finally
@@ -234,17 +227,17 @@ namespace MarginTrading.Backend.Services.AssetPairs
         public List<CompiledScheduleTimeInterval> GetCompiledScheduleSettings(string assetPairId,
             DateTime currentDateTime, TimeSpan scheduleCutOff)
         {
+            if (string.IsNullOrEmpty(assetPairId))
+            {
+                return new List<CompiledScheduleTimeInterval>();
+            }
+
             _readerWriterLockSlim.EnterUpgradeableReadLock();
 
             EnsureCacheValidUnsafe(currentDateTime);
 
             try
             {
-                if (string.IsNullOrEmpty(assetPairId))
-                {
-                    return new List<CompiledScheduleTimeInterval>();
-                }
-
                 if (!_compiledScheduleTimelineCache.ContainsKey(assetPairId))
                 {
                     RecompileScheduleTimelineCacheUnsafe(assetPairId, currentDateTime, scheduleCutOff);
@@ -264,11 +257,13 @@ namespace MarginTrading.Backend.Services.AssetPairs
         {
             _log.WriteInfoAsync(nameof(ScheduleSettingsCacheService), nameof(CacheWarmUp),
                 "Started asset pairs schedule cache update");
-            
+
             var currentDateTime = _dateService.Now();
             var assetPairIds = _assetPairsCache.GetAllIds();
 
             _readerWriterLockSlim.EnterUpgradeableReadLock();
+
+            EnsureCacheValidUnsafe(currentDateTime);
 
             try
             {
@@ -276,7 +271,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 {
                     if (!_compiledScheduleTimelineCache.ContainsKey(assetPairId))
                     {
-//todo Zero timespan is ok for market orders, but if pending cut off should be applied, we will need one more cache for them..
+                        //todo Zero timespan is ok for market orders, but if pending cut off should be applied, we will need one more cache for them..
                         RecompileScheduleTimelineCacheUnsafe(assetPairId, currentDateTime, TimeSpan.Zero);
                     }
                 }
@@ -285,7 +280,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             {
                 _readerWriterLockSlim.ExitUpgradeableReadLock();
             }
-            
+
             _log.WriteInfoAsync(nameof(ScheduleSettingsCacheService), nameof(CacheWarmUp),
                 "Finished asset pairs schedule cache update");
         }
@@ -294,7 +289,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
         {
             _log.WriteInfoAsync(nameof(ScheduleSettingsCacheService), nameof(CacheWarmUp),
                 "Started platform schedule cache update");
-            
+
             _readerWriterLockSlim.EnterWriteLock();
 
             try
@@ -303,9 +298,9 @@ namespace MarginTrading.Backend.Services.AssetPairs
             }
             finally
             {
-                _readerWriterLockSlim.ExitWriteLock();   
+                _readerWriterLockSlim.ExitWriteLock();
             }
-            
+
             _log.WriteInfoAsync(nameof(ScheduleSettingsCacheService), nameof(CacheWarmUp),
                 "Finished platform schedule cache update");
         }
@@ -396,25 +391,25 @@ namespace MarginTrading.Backend.Services.AssetPairs
                     return new[]
                     {
                         new CompiledScheduleTimeInterval(sch, currentStart, currentEnd),
-                        new CompiledScheduleTimeInterval(sch, currentStart.AddDays(-7), currentEnd.AddDays(-7)), 
+                        new CompiledScheduleTimeInterval(sch, currentStart.AddDays(-7), currentEnd.AddDays(-7)),
                         new CompiledScheduleTimeInterval(sch, currentStart.AddDays(7), currentEnd.AddDays(7))
                     };
                 })
                 : new List<CompiledScheduleTimeInterval>();
-            
+
             //handle single
             var single = scheduleSettingsByType.TryGetValue(ScheduleConstraintType.Single, out var singleSchedule)
                 ? singleSchedule.Select(sch => new CompiledScheduleTimeInterval(sch,
                     sch.Start.Date.Value.Add(sch.Start.Time.Subtract(scheduleCutOff)),
                     sch.End.Date.Value.Add(sch.End.Time.Add(scheduleCutOff))))
                 : new List<CompiledScheduleTimeInterval>();
-            
+
             //handle daily
             var daily = scheduleSettingsByType.TryGetValue(ScheduleConstraintType.Daily, out var dailySchedule)
                 ? dailySchedule.SelectMany(sch =>
                 {
-                    var start = currentDateTime.Date.Add(sch.Start.Time);
-                    var end = currentDateTime.Date.Add(sch.End.Time);
+                    var start = currentDateTime.Date.Add(sch.Start.Time.Subtract(scheduleCutOff));
+                    var end = currentDateTime.Date.Add(sch.End.Time.Add(scheduleCutOff));
                     if (end < start)
                     {
                         end = end.AddDays(1);
@@ -434,9 +429,9 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         private static DateTime CurrentWeekday(DateTime start, DayOfWeek day)
         {
-            return start.Date.AddDays((int) day - (int) start.DayOfWeek);
+            return start.Date.AddDays((int)day - (int)start.DayOfWeek);
         }
-        
+
         private static Dictionary<string, List<CompiledScheduleSettingsContract>> InvalidSchedules(
             IEnumerable<CompiledScheduleContract> scheduleContracts)
         {
@@ -464,7 +459,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
             return invalidSchedules;
         }
-        
+
         private static List<ScheduleSettingsContract> InvalidSchedules(
             IEnumerable<ScheduleSettingsContract> scheduleContracts)
         {
