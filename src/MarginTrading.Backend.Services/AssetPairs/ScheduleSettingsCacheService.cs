@@ -85,7 +85,11 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 _rawScheduleSettingsCache
                     .Where(x => TradingScheduleChanged(x.Key, _rawScheduleSettingsCache, newRawScheduleSettings))
                     .Select(x => x.Key)
-                    .ForEach(key => _compiledScheduleTimelineCache.Remove(key));
+                    .ForEach(key =>
+                    {
+                        _compiledScheduleTimelineCache.Remove(key);
+                        CacheWarmUp(key);
+                    });
 
                 _rawScheduleSettingsCache = newRawScheduleSettings;
             }
@@ -97,7 +101,6 @@ namespace MarginTrading.Backend.Services.AssetPairs
             finally
             {
                 _readerWriterLockSlim.ExitWriteLock();
-                CacheWarmUp();
             }
 
             if (invalidSchedules.Any())
@@ -214,7 +217,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
             try
             {
-                CacheWarmUp();
+                CacheWarmUpIncludingValidation();
 
                 return _compiledScheduleTimelineCache;
             }
@@ -253,21 +256,31 @@ namespace MarginTrading.Backend.Services.AssetPairs
             }
         }
 
-        public void CacheWarmUp()
+        public void CacheWarmUpIncludingValidation()
+        {
+            EnsureCacheValidUnsafe(_dateService.Now());
+
+            if (!_compiledScheduleTimelineCache.Any())
+            {
+                CacheWarmUp();
+            }
+        }
+
+        public void CacheWarmUp(params string[] assetPairIds)
         {
             _log.WriteInfoAsync(nameof(ScheduleSettingsCacheService), nameof(CacheWarmUp),
                 "Started asset pairs schedule cache update");
 
             var currentDateTime = _dateService.Now();
-            var assetPairIds = _assetPairsCache.GetAllIds();
+            var assetPairIdsToWarmUp = assetPairIds.Any()
+                ? assetPairIds.ToArray()
+                : _assetPairsCache.GetAllIds().ToArray();
 
             _readerWriterLockSlim.EnterUpgradeableReadLock();
 
-            EnsureCacheValidUnsafe(currentDateTime);
-
             try
             {
-                foreach (var assetPairId in assetPairIds)
+                foreach (var assetPairId in assetPairIdsToWarmUp)
                 {
                     if (!_compiledScheduleTimelineCache.ContainsKey(assetPairId))
                     {
@@ -287,7 +300,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         public void PlatformCacheWarmUp()
         {
-            _log.WriteInfoAsync(nameof(ScheduleSettingsCacheService), nameof(CacheWarmUp),
+            _log.WriteInfoAsync(nameof(ScheduleSettingsCacheService), nameof(PlatformCacheWarmUp),
                 "Started platform schedule cache update");
 
             _readerWriterLockSlim.EnterWriteLock();
@@ -301,7 +314,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 _readerWriterLockSlim.ExitWriteLock();
             }
 
-            _log.WriteInfoAsync(nameof(ScheduleSettingsCacheService), nameof(CacheWarmUp),
+            _log.WriteInfoAsync(nameof(ScheduleSettingsCacheService), nameof(PlatformCacheWarmUp),
                 "Finished platform schedule cache update");
         }
 

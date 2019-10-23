@@ -21,7 +21,9 @@ namespace MarginTrading.Backend.Services.AssetPairs
         List<CompiledScheduleTimeInterval> GetCompiledScheduleSettings(string assetPairId,
             DateTime currentDateTime, TimeSpan scheduleCutOff);
 
-        void CacheWarmUp();
+        void CacheWarmUp(params string[] assetPairIds);
+
+        void CacheWarmUpIncludingValidation();
 
         void PlatformCacheWarmUp();
 
