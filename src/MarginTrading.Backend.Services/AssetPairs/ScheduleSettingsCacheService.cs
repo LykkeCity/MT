@@ -72,6 +72,8 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 .Where(x => x.ScheduleSettings.Any()).ToList();
             var invalidSchedules = InvalidSchedules(newScheduleContracts);
 
+            var assertPairIdsToWarmUp = new List<string>();
+
             _readerWriterLockSlim.EnterWriteLock();
 
             try
@@ -88,7 +90,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
                     .ForEach(key =>
                     {
                         _compiledScheduleTimelineCache.Remove(key);
-                        CacheWarmUp(key);
+                        assertPairIdsToWarmUp.Add(key);
                     });
 
                 _rawScheduleSettingsCache = newRawScheduleSettings;
@@ -101,6 +103,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             finally
             {
                 _readerWriterLockSlim.ExitWriteLock();
+                CacheWarmUp(assertPairIdsToWarmUp.ToArray());
             }
 
             if (invalidSchedules.Any())
