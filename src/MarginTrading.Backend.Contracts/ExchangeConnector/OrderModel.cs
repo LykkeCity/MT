@@ -23,30 +23,23 @@ namespace MarginTrading.Backend.Contracts.ExchangeConnector
         /// 'GoodTillCancel', 'FillOrKill'</param>
         /// <param name="dateTime">Date and time must be in 5 minutes threshold
         /// from UTC now</param>
-        public OrderModel(
-            TradeType tradeType,
-            OrderType orderType,
-            TimeInForce timeInForce,
-            double volume,
-            DateTime dateTime,
-            string exchangeName = null,
-            string instrument = null,
-            double? price = null,
-            string orderId = null,
-            TradeRequestModality modality = TradeRequestModality.Regular,
-            bool isCancellationTrade = false)
+        public OrderModel(TradeType tradeType, OrderType orderType, TimeInForce timeInForce, double volume,
+            DateTime dateTime, string exchangeName = null, string instrument = null, double? price = null, 
+            string orderId = null, TradeRequestModality modality = TradeRequestModality.Regular,
+            bool isCancellationTrade = false, string exchangeOrderId = null)
         {
-            this.ExchangeName = exchangeName;
-            this.Instrument = instrument;
-            this.TradeType = tradeType;
-            this.OrderType = orderType;
-            this.TimeInForce = timeInForce;
-            this.Price = price;
-            this.Volume = volume;
-            this.DateTime = dateTime;
-            this.OrderId = orderId;
-            this.Modality = modality;
-            this.IsCancellationTrade = isCancellationTrade;
+            ExchangeName = exchangeName;
+            Instrument = instrument;
+            TradeType = tradeType;
+            OrderType = orderType;
+            TimeInForce = timeInForce;
+            Price = price;
+            Volume = volume;
+            DateTime = dateTime;
+            OrderId = orderId;
+            Modality = modality;
+            IsCancellationTrade = isCancellationTrade;
+            ExchangeOrderId = exchangeOrderId;
         }
 
         /// <summary>
@@ -101,5 +94,7 @@ namespace MarginTrading.Backend.Contracts.ExchangeConnector
         public TradeRequestModality Modality { get; set; }
         
         public bool IsCancellationTrade { get; set; }
+        
+        public string ExchangeOrderId { get; set; }
     }
 }

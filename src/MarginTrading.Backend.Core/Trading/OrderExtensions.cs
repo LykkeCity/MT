@@ -180,15 +180,20 @@ namespace MarginTrading.Backend.Core
                 .ToList();
         }
 
-        public static bool IsCancellationTrade(this string additionalInfo)
+        public static bool IsCancellationTrade(this string additionalInfo, out string externalOrderId)
         {
             try
             {
-                return JsonConvert.DeserializeAnonymousType(additionalInfo, new {IsCancellationTrade = false})
-                    .IsCancellationTrade;
+                var model = JsonConvert.DeserializeAnonymousType(additionalInfo, 
+                        new {IsCancellationTrade = false, ExternalOrderId = ""});
+
+                externalOrderId = model.ExternalOrderId;
+                
+                return model.IsCancellationTrade;
             }
             catch
             {
+                externalOrderId = null;
                 return false;
             }
         }
