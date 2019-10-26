@@ -108,7 +108,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                     ? Core.Orders.OrderType.Limit
                     : Core.Orders.OrderType.Market;
 
-                var isCancellationTrade = order.AdditionalInfo.IsCancellationTrade(out var exchangeOrderId);
+                var isCancellationTrade = order.AdditionalInfo.IsCancellationTrade(out var cancellationTradeExternalId);
 
                 var targetPrice = order.OrderType != Core.Orders.OrderType.Market || isCancellationTrade
                     ? (double?) order.Price
@@ -128,7 +128,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                         orderId: order.Id,
                         modality: modality.ToType<TradeRequestModality>(),
                         isCancellationTrade: isCancellationTrade,
-                        exchangeOrderId: exchangeOrderId);
+                        cancellationTradeExternalId: cancellationTradeExternalId);
 
                     var cts = new CancellationTokenSource();
                     cts.CancelAfter(_marginTradingSettings.GavelTimeout);

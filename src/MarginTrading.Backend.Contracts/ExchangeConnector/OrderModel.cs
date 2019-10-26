@@ -26,7 +26,7 @@ namespace MarginTrading.Backend.Contracts.ExchangeConnector
         public OrderModel(TradeType tradeType, OrderType orderType, TimeInForce timeInForce, double volume,
             DateTime dateTime, string exchangeName = null, string instrument = null, double? price = null, 
             string orderId = null, TradeRequestModality modality = TradeRequestModality.Regular,
-            bool isCancellationTrade = false, string exchangeOrderId = null)
+            bool isCancellationTrade = false, string cancellationTradeExternalId = null)
         {
             ExchangeName = exchangeName;
             Instrument = instrument;
@@ -39,7 +39,7 @@ namespace MarginTrading.Backend.Contracts.ExchangeConnector
             OrderId = orderId;
             Modality = modality;
             IsCancellationTrade = isCancellationTrade;
-            ExchangeOrderId = exchangeOrderId;
+            CancellationTradeExternalId = cancellationTradeExternalId;
         }
 
         /// <summary>
@@ -95,6 +95,6 @@ namespace MarginTrading.Backend.Contracts.ExchangeConnector
         
         public bool IsCancellationTrade { get; set; }
         
-        public string ExchangeOrderId { get; set; }
+        public string CancellationTradeExternalId { get; set; }
     }
 }
