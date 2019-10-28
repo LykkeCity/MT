@@ -81,7 +81,7 @@ namespace MarginTrading.Backend.Services
             var assetPair = GetAssetPairIfAvailableForTrading(request.InstrumentId, request.Type.ToType<OrderType>(),
                 request.ForceOpen, false);
 
-            if (request.Type != OrderTypeContract.Market || request.AdditionalInfo.IsCancellationTrade())
+            if (request.Type != OrderTypeContract.Market || request.AdditionalInfo.IsCancellationTrade(out _))
             {
                 if (!request.Price.HasValue)
                 {
