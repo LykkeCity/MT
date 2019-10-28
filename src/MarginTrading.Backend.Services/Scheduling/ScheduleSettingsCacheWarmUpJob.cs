@@ -21,7 +21,7 @@ namespace MarginTrading.Backend.Services.Scheduling
         
         public void Execute()
         {
-            _scheduleSettingsCacheService.CacheWarmUp();
+            _scheduleSettingsCacheService.CacheWarmUpIncludingValidation();
             _scheduleSettingsCacheService.PlatformCacheWarmUp();
         }
 
