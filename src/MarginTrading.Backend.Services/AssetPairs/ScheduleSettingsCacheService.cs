@@ -220,7 +220,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
             try
             {
-                CacheWarmUpIncludingValidation();
+                CacheWarmUpIncludingValidationUnsafe();
 
                 return _compiledScheduleTimelineCache;
             }
@@ -261,11 +261,25 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         public void CacheWarmUpIncludingValidation()
         {
+            _readerWriterLockSlim.EnterUpgradeableReadLock();
+
+            try
+            {
+                CacheWarmUpIncludingValidationUnsafe();
+            }
+            finally
+            {
+                _readerWriterLockSlim.ExitUpgradeableReadLock();
+            }
+        }
+
+        private void CacheWarmUpIncludingValidationUnsafe()
+        {
             EnsureCacheValidUnsafe(_dateService.Now());
 
             if (!_compiledScheduleTimelineCache.Any())
             {
-                CacheWarmUp();
+                CacheWarmUpUnsafe();
             }
         }
 
@@ -274,23 +288,11 @@ namespace MarginTrading.Backend.Services.AssetPairs
             _log.WriteInfoAsync(nameof(ScheduleSettingsCacheService), nameof(CacheWarmUp),
                 "Started asset pairs schedule cache update");
 
-            var currentDateTime = _dateService.Now();
-            var assetPairIdsToWarmUp = assetPairIds.Any()
-                ? assetPairIds.ToArray()
-                : _assetPairsCache.GetAllIds().ToArray();
-
             _readerWriterLockSlim.EnterUpgradeableReadLock();
 
             try
             {
-                foreach (var assetPairId in assetPairIdsToWarmUp)
-                {
-                    if (!_compiledScheduleTimelineCache.ContainsKey(assetPairId))
-                    {
-                        //todo Zero timespan is ok for market orders, but if pending cut off should be applied, we will need one more cache for them..
-                        RecompileScheduleTimelineCacheUnsafe(assetPairId, currentDateTime, TimeSpan.Zero);
-                    }
-                }
+                CacheWarmUpUnsafe(assetPairIds);
             }
             finally
             {
@@ -299,6 +301,23 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
             _log.WriteInfoAsync(nameof(ScheduleSettingsCacheService), nameof(CacheWarmUp),
                 "Finished asset pairs schedule cache update");
+        }
+
+        private void CacheWarmUpUnsafe(params string[] assetPairIds)
+        {
+            var currentDateTime = _dateService.Now();
+            var assetPairIdsToWarmUp = assetPairIds.Any()
+                ? assetPairIds.ToArray()
+                : _assetPairsCache.GetAllIds().ToArray();
+
+            foreach (var assetPairId in assetPairIdsToWarmUp)
+            {
+                if (!_compiledScheduleTimelineCache.ContainsKey(assetPairId))
+                {
+                    //todo Zero timespan is ok for market orders, but if pending cut off should be applied, we will need one more cache for them..
+                    RecompileScheduleTimelineCacheUnsafe(assetPairId, currentDateTime, TimeSpan.Zero);
+                }
+            }
         }
 
         public void PlatformCacheWarmUp()
