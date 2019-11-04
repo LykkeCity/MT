@@ -35,7 +35,7 @@ namespace MarginTrading.Backend.Services.Mappers
 
             return order.ConvertToContract(relatedOrders);
         }
-        
+
         public static OrderContract ConvertToContract(this Order order, List<Order> relatedOrders)
         {
             RelatedOrderInfoContract Map(RelatedOrderInfo relatedOrderInfo)
@@ -57,7 +57,7 @@ namespace MarginTrading.Backend.Services.Mappers
                     TrailingDistance = relateOrder.TrailingDistance
                 };
             }
-            
+
             return new OrderContract
             {
                 Id = order.Id,
@@ -117,7 +117,7 @@ namespace MarginTrading.Backend.Services.Mappers
                 HasOnBehalf = order.HasOnBehalf,
             };
         }
-        
+
         public static OpenPositionContract ConvertToContract(this Position position, IOrderReader orderReader)
         {
             var relatedOrders = new List<RelatedOrderInfoContract>();
@@ -167,7 +167,7 @@ namespace MarginTrading.Backend.Services.Mappers
                 Status = position.Status.ToType<PositionStatusContract>(),
             };
         }
-        
+
         public static AccountStatContract ConvertToContract(this IMarginTradingAccount account)
         {
             return new AccountStatContract
@@ -175,6 +175,7 @@ namespace MarginTrading.Backend.Services.Mappers
                 AccountId = account.Id,
                 BaseAssetId = account.BaseAssetId,
                 Balance = account.Balance,
+                LastBalanceChangeTime = account.LastBalanceChangeTime,
                 MarginCallLevel = account.GetMarginCall1Level(),
                 StopOutLevel = account.GetStopOutLevel(),
                 TotalCapital = account.GetTotalCapital(),
@@ -194,7 +195,7 @@ namespace MarginTrading.Backend.Services.Mappers
                 MarginNotificationLevel = account.GetAccountLevel().ToString()
             };
         }
-        
+
         public static BestPriceContract ConvertToContract(this InstrumentBidAskPair arg)
         {
             return new BestPriceContract
