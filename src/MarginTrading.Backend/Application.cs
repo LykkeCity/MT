@@ -179,10 +179,7 @@ namespace MarginTrading.Backend
         public void StopApplication()
         {
             _maintenanceModeService.SetMode(true);
-            _consoleWriter.WriteLine($"Maintenance mode enabled for {ServiceName}");
-            _consoleWriter.WriteLine($"Closing {ServiceName}");
-            _logger.WriteInfoAsync(ServiceName, null, null, "Closing...").Wait();
-            _consoleWriter.WriteLine($"Closed {ServiceName}");
+            _logger.WriteInfoAsync(ServiceName, nameof(StopApplication), nameof(Application), "Closed").Wait();
         }
 
         private Task HandleNewOrdersMessage(MarketMakerOrderCommandsBatchMessage feedData)
