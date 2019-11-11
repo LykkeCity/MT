@@ -569,26 +569,26 @@ namespace MarginTrading.Backend.Services
                 if (_assetDayOffService.IsDayOff(assetPairId))
                 {
                     throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
-                        "Trades for instrument are not available");
+                        $"Trades for instrument {assetPairId} are not available");
                 }
             }
             else if (_assetDayOffService.ArePendingOrdersDisabled(assetPairId))
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
-                    "Pending orders for instrument are not available");
+                    $"Pending orders for instrument {assetPairId} are not available");
             }
 
             var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(assetPairId); 
             
             if (assetPair == null)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, "Instrument not found");
+                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, $"Instrument {assetPairId} not found");
             }
             
             if (assetPair.IsDiscontinued)
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, 
-                    "Trading for the instrument is discontinued");
+                    $"Trading for the instrument {assetPairId} is discontinued");
             }
 
             if (assetPair.IsSuspended)
@@ -596,20 +596,20 @@ namespace MarginTrading.Backend.Services
                 if (isPreTradeValidation)
                 {
                     throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, 
-                        "Orders execution for instrument is temporarily unavailable");
+                        $"Orders execution for instrument {assetPairId} is temporarily unavailable");
                 }
                
                 if (orderType == OrderType.Market)
                 {
                     throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, 
-                        "Market orders for instrument are temporarily unavailable");
+                        $"Market orders for instrument {assetPairId} are temporarily unavailable");
                 }
             } 
             
             if (assetPair.IsFrozen && shouldOpenNewPosition)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, 
-                    "Opening new positions is temporarily unavailable");
+                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
+                    $"Opening new positions for instrument {assetPairId} is temporarily unavailable");
             }
 
             return assetPair;
