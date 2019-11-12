@@ -244,12 +244,7 @@ namespace MarginTrading.Backend
             }
             else
             {
-                var log = settings.CurrentValue.UseSerilog
-                        ? (ILog)new SerilogLogger(typeof(Startup).Assembly, configuration)
-                        : new AggregateLogger(
-                            new LogToSql(new SqlLogRepository(logName,
-                                settings.CurrentValue.Db.LogsConnString)),
-                            new LogToConsole());
+                var log = GetLogForSlackNotificationsSenderLogStub(settings, configuration, logName);
 
                 slackService =
                     new MtSlackNotificationsSenderLogStub("MT Backend", settings.CurrentValue.Env, log);
@@ -286,27 +281,51 @@ namespace MarginTrading.Backend
             }
         }
 
+        private static ILog GetLogForSlackNotificationsSenderLogStub(IReloadingManager<MarginTradingSettings> settings,
+            IConfiguration configuration, string logName)
+        {
+            if (settings.CurrentValue.UseSerilog)
+            {
+                return new SerilogLogger(typeof(Startup).Assembly, configuration);
+            }
+            else if (settings.CurrentValue.Db.StorageMode == StorageMode.SqlServer)
+            {
+                return new AggregateLogger(
+                    new LogToSql(new SqlLogRepository(logName,
+                        settings.CurrentValue.Db.LogsConnString)),
+                    new LogToConsole());
+            }
+            else if (settings.CurrentValue.Db.StorageMode == StorageMode.Azure)
+            {
+                return new LogToConsole();
+            }
+            else
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         /// <summary>
         /// Initialize scheduled jobs. Each job will start in time with dispersion of 100ms.
         /// </summary>
         private void InitializeJobs()
-        {   
+        {
             JobManager.UseUtcTime();
             JobManager.Initialize();
 
             JobManager.AddJob(() => ApplicationContainer.Resolve<ScheduleSettingsCacheWarmUpJob>().Execute(),
                 (s) => s.NonReentrant().ToRunEvery(1).Days().At(0, 0));
-            
+
             ApplicationContainer.Resolve<IOvernightMarginService>().ScheduleNext();
         }
 
         private StartupDeduplicationService RunHealthChecks(MarginTradingSettings marginTradingSettings)
         {
-            var deduplicationService = new StartupDeduplicationService(Environment, LogLocator.CommonLog, 
+            var deduplicationService = new StartupDeduplicationService(Environment, LogLocator.CommonLog,
                 marginTradingSettings);
             deduplicationService
                 .HoldLock();
-            
+
             new StartupQueuesCheckerService(marginTradingSettings)
                 .Check();
 
