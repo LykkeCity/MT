@@ -244,8 +244,15 @@ namespace MarginTrading.Backend
             }
             else
             {
+                var log = settings.CurrentValue.UseSerilog
+                        ? (ILog)new SerilogLogger(typeof(Startup).Assembly, configuration)
+                        : new AggregateLogger(
+                            new LogToSql(new SqlLogRepository(logName,
+                                settings.CurrentValue.Db.LogsConnString)),
+                            new LogToConsole());
+
                 slackService =
-                    new MtSlackNotificationsSenderLogStub("MT Backend", settings.CurrentValue.Env, consoleLogger);
+                    new MtSlackNotificationsSenderLogStub("MT Backend", settings.CurrentValue.Env, log);
             }
 
             services.AddSingleton<ISlackNotificationsSender>(slackService);

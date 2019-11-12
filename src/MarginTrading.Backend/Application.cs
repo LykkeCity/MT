@@ -179,7 +179,7 @@ namespace MarginTrading.Backend
         public void StopApplication()
         {
             _maintenanceModeService.SetMode(true);
-            _logger.WriteInfoAsync(ServiceName, null, null, "Closed").Wait();
+            _logger.WriteInfoAsync(ServiceName, null, null, "Application is shutting down").Wait();
         }
 
         private Task HandleNewOrdersMessage(MarketMakerOrderCommandsBatchMessage feedData)
