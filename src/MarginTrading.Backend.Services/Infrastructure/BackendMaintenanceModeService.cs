@@ -12,7 +12,8 @@ namespace MarginTrading.Backend.Services.Infrastructure
         private readonly ISlackNotificationsSender _slackNotificationsSender;
         private readonly MarginTradingSettings _settings;
 
-        public BackendMaintenanceModeService(ISlackNotificationsSender slackNotificationsSender,
+        public BackendMaintenanceModeService(
+            ISlackNotificationsSender slackNotificationsSender,
             MarginTradingSettings settings)
         {
             _slackNotificationsSender = slackNotificationsSender;

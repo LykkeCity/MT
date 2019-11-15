@@ -124,7 +124,7 @@ namespace MarginTrading.Backend
             MtServiceLocator.AccountUpdateService = ApplicationContainer.Resolve<IAccountUpdateService>();
             MtServiceLocator.AccountsCacheService = ApplicationContainer.Resolve<IAccountsCacheService>();
             MtServiceLocator.SwapCommissionService = ApplicationContainer.Resolve<ICommissionService>();
-            
+
             ApplicationContainer.Resolve<IScheduleSettingsCacheService>()
                 .UpdateAllSettingsAsync().GetAwaiter().GetResult();
 
@@ -145,7 +145,7 @@ namespace MarginTrading.Backend
             {
                 app.UseHsts();
             }
-            
+
             app.UseMiddleware<GlobalErrorHandlerMiddleware>();
             app.UseMiddleware<MaintenanceModeMiddleware>();
             app.UseAuthentication();
@@ -178,7 +178,7 @@ namespace MarginTrading.Backend
             IHostingEnvironment environment)
         {
             var settings = mtSettings.Nested(x => x.MtBackend);
-            
+
             builder.RegisterModule(new BaseServicesModule(mtSettings.CurrentValue, LogLocator.CommonLog));
             builder.RegisterModule(new BackendSettingsModule(mtSettings));
             builder.RegisterModule(new BackendRepositoriesModule(settings, LogLocator.CommonLog));
@@ -223,7 +223,7 @@ namespace MarginTrading.Backend
             }
 
             #endregion Logs settings validation
-            
+
             #region Slack registration
 
             IMtSlackNotificationsSender slackService = null;
@@ -242,14 +242,6 @@ namespace MarginTrading.Backend
                 slackService =
                     new MtSlackNotificationsSender(commonSlackService, "MT Backend", settings.CurrentValue.Env);
             }
-            else
-            {
-                slackService =
-                    new MtSlackNotificationsSenderLogStub("MT Backend", settings.CurrentValue.Env, consoleLogger);
-            }
-
-            services.AddSingleton<ISlackNotificationsSender>(slackService);
-            services.AddSingleton<IMtSlackNotificationsSender>(slackService);
 
             #endregion Slack registration
 
@@ -271,35 +263,50 @@ namespace MarginTrading.Backend
             }
             else if (settings.CurrentValue.Db.StorageMode == StorageMode.Azure)
             {
+                if (slackService == null)
+                {
+                    slackService =
+                       new MtSlackNotificationsSenderLogStub("MT Backend", settings.CurrentValue.Env, consoleLogger);
+                }
+
                 LogLocator.RequestsLog = services.UseLogToAzureStorage(settings.Nested(s => s.Db.LogsConnString),
-                    slackService, requestsLogName, consoleLogger);
+                slackService, requestsLogName, consoleLogger);
 
                 LogLocator.CommonLog = services.UseLogToAzureStorage(settings.Nested(s => s.Db.LogsConnString),
                     slackService, logName, consoleLogger);
             }
+
+            if (slackService == null)
+            {
+                slackService =
+                       new MtSlackNotificationsSenderLogStub("MT Backend", settings.CurrentValue.Env, LogLocator.CommonLog);
+            }
+
+            services.AddSingleton<ISlackNotificationsSender>(slackService);
+            services.AddSingleton<IMtSlackNotificationsSender>(slackService);
         }
 
         /// <summary>
         /// Initialize scheduled jobs. Each job will start in time with dispersion of 100ms.
         /// </summary>
         private void InitializeJobs()
-        {   
+        {
             JobManager.UseUtcTime();
             JobManager.Initialize();
 
             JobManager.AddJob(() => ApplicationContainer.Resolve<ScheduleSettingsCacheWarmUpJob>().Execute(),
                 (s) => s.NonReentrant().ToRunEvery(1).Days().At(0, 0));
-            
+
             ApplicationContainer.Resolve<IOvernightMarginService>().ScheduleNext();
         }
 
         private StartupDeduplicationService RunHealthChecks(MarginTradingSettings marginTradingSettings)
         {
-            var deduplicationService = new StartupDeduplicationService(Environment, LogLocator.CommonLog, 
+            var deduplicationService = new StartupDeduplicationService(Environment, LogLocator.CommonLog,
                 marginTradingSettings);
             deduplicationService
                 .HoldLock();
-            
+
             new StartupQueuesCheckerService(marginTradingSettings)
                 .Check();
 

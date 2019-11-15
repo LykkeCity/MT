@@ -14,40 +14,40 @@ namespace MarginTrading.Backend.Services.Stubs
     {
         private readonly string _appName;
         private readonly string _env;
-        private readonly ILog _consoleLog;
+        private readonly ILog _log;
 
-        public MtSlackNotificationsSenderLogStub(string appName, string env, ILog consoleLog)
+        public MtSlackNotificationsSenderLogStub(string appName, string env, ILog log)
         {
             _appName = appName;
             _env = env;
-            _consoleLog = consoleLog;
+            _log = log;
         }
 
         public async Task SendAsync(string type, string sender, string message)
         {
             if (type.Equals(ChannelTypes.Monitor, StringComparison.InvariantCultureIgnoreCase))
             {
-                await _consoleLog.WriteInfoAsync(sender, type, message);
+                await _log.WriteInfoAsync(sender, type, message);
                 return;
             }
 
-            await _consoleLog.WriteInfoAsync(sender, ChannelTypes.MarginTrading, GetSlackMsg(message));
+            await _log.WriteInfoAsync(sender, ChannelTypes.MarginTrading, GetSlackMsg(message));
         }
 
         public async Task SendAsync(DateTime moment, string type, string sender, string message)
         {
             if (type.Equals(ChannelTypes.Monitor, StringComparison.InvariantCultureIgnoreCase))
             {
-                await _consoleLog.WriteInfoAsync(sender, type, message, moment);
+                await _log.WriteInfoAsync(sender, type, message, moment);
                 return;
             }
 
-            await _consoleLog.WriteInfoAsync(sender, ChannelTypes.MarginTrading, GetSlackMsg(message), moment);
+            await _log.WriteInfoAsync(sender, ChannelTypes.MarginTrading, GetSlackMsg(message), moment);
         }
 
         public Task SendRawAsync(string type, string sender, string message)
         {
-            return _consoleLog.WriteInfoAsync(sender, type, message);
+            return _log.WriteInfoAsync(sender, type, message);
         }
 
         private string GetSlackMsg(string message)
