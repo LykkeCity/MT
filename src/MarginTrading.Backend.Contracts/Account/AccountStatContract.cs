@@ -1,6 +1,8 @@
 ﻿// Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System;
+
 namespace MarginTrading.Backend.Contracts.Account
 {
     public class AccountStatContract
@@ -19,7 +21,9 @@ namespace MarginTrading.Backend.Contracts.Account
         /// Sum of all cash movements except for unrealized PnL 
         /// </summary>
         public decimal Balance { get; set; }
-        
+
+        public DateTime LastBalanceChangeTime { get; set; }
+
         /// <summary>
         /// Margin call level
         /// </summary>

@@ -34,7 +34,8 @@ namespace MarginTrading.Backend.Services
         private readonly ITradingEngine _tradingEngine;
         private readonly IAccountsApi _accountsApi;
         private readonly IConvertService _convertService;
-        
+        private readonly IDateService _dateService;
+
         private readonly IAccountMarginFreezingRepository _accountMarginFreezingRepository;
         private readonly IAccountMarginUnconfirmedRepository _accountMarginUnconfirmedRepository;
 
@@ -48,6 +49,7 @@ namespace MarginTrading.Backend.Services
             ITradingEngine tradingEngine,
             IAccountsApi accountsApi,
             IConvertService convertService,
+            IDateService dateService,
             IAccountMarginFreezingRepository accountMarginFreezingRepository,
             IAccountMarginUnconfirmedRepository accountMarginUnconfirmedRepository) 
             : base(nameof(AccountManager), 60000, log)
@@ -61,6 +63,7 @@ namespace MarginTrading.Backend.Services
             _tradingEngine = tradingEngine;
             _accountsApi = accountsApi;
             _convertService = convertService;
+            _dateService = dateService;
             _accountMarginFreezingRepository = accountMarginFreezingRepository;
             _accountMarginUnconfirmedRepository = accountMarginUnconfirmedRepository;
         }
@@ -131,6 +134,9 @@ namespace MarginTrading.Backend.Services
         {
             return _convertService.Convert<AccountContract, MarginTradingAccount>(accountContract,
                 o => o.ConfigureMap(MemberList.Source)
+                    // The line below is related to LT-1786 ticket.
+                    // After restarting core we cannot have LastBalanceChangeTime less than in donut's cache to avoid infinite account reloading
+                    .ForMember(x => x.LastBalanceChangeTime, opts => opts.UseValue(_dateService.Now()))
                     .ForSourceMember(x => x.ModificationTimestamp, c => c.Ignore()));
         }
     }
