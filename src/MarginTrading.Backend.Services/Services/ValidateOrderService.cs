@@ -123,7 +123,7 @@ namespace MarginTrading.Backend.Services
             catch
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
-                    "Instrument is not available for trading on selected account");
+                    $"Instrument {assetPair.Id} is not available for trading on selected account");
             }
 
             if (tradingInstrument.DealMinLimit > 0 && Math.Abs(request.Volume) < tradingInstrument.DealMinLimit)
@@ -569,26 +569,26 @@ namespace MarginTrading.Backend.Services
                 if (_assetDayOffService.IsDayOff(assetPairId))
                 {
                     throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
-                        "Trades for instrument are not available");
+                        $"Trades for instrument {assetPairId} are not available due to trading is closed");
                 }
             }
             else if (_assetDayOffService.ArePendingOrdersDisabled(assetPairId))
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
-                    "Pending orders for instrument are not available");
+                    $"Pending orders for instrument {assetPairId} are not available");
             }
 
             var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(assetPairId); 
             
             if (assetPair == null)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, "Instrument not found");
+                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, $"Instrument {assetPairId} not found");
             }
             
             if (assetPair.IsDiscontinued)
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, 
-                    "Trading for the instrument is discontinued");
+                    $"Trading for the instrument {assetPairId} is discontinued");
             }
 
             if (assetPair.IsSuspended)
@@ -596,20 +596,20 @@ namespace MarginTrading.Backend.Services
                 if (isPreTradeValidation)
                 {
                     throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, 
-                        "Orders execution for instrument is temporarily unavailable");
+                        $"Orders execution for instrument {assetPairId} is temporarily unavailable (instrument is suspended)");
                 }
                
                 if (orderType == OrderType.Market)
                 {
                     throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, 
-                        "Market orders for instrument are temporarily unavailable");
+                        $"Market orders for instrument {assetPairId} are temporarily unavailable (instrument is suspended)");
                 }
             } 
             
             if (assetPair.IsFrozen && shouldOpenNewPosition)
             {
-                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, 
-                    "Opening new positions is temporarily unavailable");
+                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
+                    $"Opening new positions for instrument {assetPairId} is temporarily unavailable (instrument is frozen)");
             }
 
             return assetPair;
