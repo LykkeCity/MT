@@ -243,9 +243,6 @@ namespace MarginTrading.Backend
                     new MtSlackNotificationsSender(commonSlackService, "MT Backend", settings.CurrentValue.Env);
             }
 
-            services.AddSingleton<ISlackNotificationsSender>(slackService);
-            services.AddSingleton<IMtSlackNotificationsSender>(slackService);
-
             #endregion Slack registration
 
             if (settings.CurrentValue.UseSerilog)
@@ -284,6 +281,9 @@ namespace MarginTrading.Backend
                 slackService =
                        new MtSlackNotificationsSenderLogStub("MT Backend", settings.CurrentValue.Env, LogLocator.CommonLog);
             }
+
+            services.AddSingleton<ISlackNotificationsSender>(slackService);
+            services.AddSingleton<IMtSlackNotificationsSender>(slackService);
         }
 
         /// <summary>
