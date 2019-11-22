@@ -119,7 +119,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             _ordersCache.Positions.Remove(position);
 
             SendPositionHistoryEvent(position, PositionHistoryTypeContract.Close,
-                position.ChargedPnL, order, Math.Abs(position.Volume));
+                position.ChargedPnL, order.AdditionalInfo, order, Math.Abs(position.Volume));
 
             var reason = OrderCancellationReason.None;
 
@@ -167,7 +167,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
             var metadata = new PositionOpenMetadata {ExistingPositionIncreased = isPositionAlreadyExist};
 
-            SendPositionHistoryEvent(position, PositionHistoryTypeContract.Open, 0, metadata: metadata);
+            SendPositionHistoryEvent(position, PositionHistoryTypeContract.Open, 0, 
+                order.AdditionalInfo, metadata: metadata);
             
             ActivateRelatedOrders(position);
             
@@ -204,7 +205,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     
                     openedPosition.PartiallyClose(order.Executed.Value, leftVolumeToMatch, order.Id, chargedPnl);
 
-                    SendPositionHistoryEvent(openedPosition, PositionHistoryTypeContract.PartiallyClose, chargedPnl, order, Math.Abs(leftVolumeToMatch));
+                    SendPositionHistoryEvent(openedPosition, PositionHistoryTypeContract.PartiallyClose, chargedPnl, 
+                        order.AdditionalInfo, order, Math.Abs(leftVolumeToMatch));
 
                     ChangeRelatedOrderVolume(openedPosition.RelatedOrders, -openedPosition.Volume);
                     
@@ -227,8 +229,9 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             }
         }
 
-        private void SendPositionHistoryEvent(Position position, PositionHistoryTypeContract historyType, decimal 
-        chargedPnl, Order dealOrder = null, decimal? dealVolume = null, PositionOpenMetadata metadata = null)
+        private void SendPositionHistoryEvent(Position position, PositionHistoryTypeContract historyType, 
+            decimal chargedPnl, string orderAdditionalInfo, Order dealOrder = null, decimal? dealVolume = null, 
+            PositionOpenMetadata metadata = null)
         {
             DealContract deal = null;
 
@@ -285,7 +288,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 Deal = deal,
                 EventType = historyType,
                 Timestamp = _dateService.Now(),
-                ActivitiesMetadata = metadata?.ToJson()
+                ActivitiesMetadata = metadata?.ToJson(),
+                OrderAdditionalInfo = orderAdditionalInfo,
             };
 
             _rabbitMqNotifyService.PositionHistory(historyEvent);

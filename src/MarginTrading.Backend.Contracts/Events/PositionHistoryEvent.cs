@@ -32,5 +32,7 @@ namespace MarginTrading.Backend.Contracts.Events
         /// Serialised object with additional information for activities in any format
         /// </summary>
         public string ActivitiesMetadata { get; set; }
+        
+        public string OrderAdditionalInfo { get; set; }
     }
 }
