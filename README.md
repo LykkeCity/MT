@@ -213,3 +213,9 @@ Settings schema is:
   }
 }
 ```
+
+Optional sections of MtBackend (with hardcoded default values):
+"OrderbookValidation": {
+    "ValidateInstrumentStatusForTradingQuotes": false,
+    "ValidateInstrumentStatusForEodQuotes": true
+}
