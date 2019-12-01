@@ -9,11 +9,13 @@ namespace MarginTrading.Backend.Services.Events
 {
     public class AccountBalanceChangedEventArgs
     {
-        public AccountBalanceChangedEventArgs([NotNull] MarginTradingAccount account)
+        public AccountBalanceChangedEventArgs([NotNull] string accountId)
         {
-            Account = account ?? throw new ArgumentNullException(nameof(account));
+            AccountId = string.IsNullOrEmpty(accountId)
+                ? throw new ArgumentNullException(nameof(accountId))
+                : accountId;
         }
 
-        public MarginTradingAccount Account { get; }
+        public string AccountId { get; }
     }
 }
