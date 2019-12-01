@@ -9,8 +9,14 @@ namespace MarginTrading.Backend.Core.Settings
     {
         [Optional]
         public bool ValidateInstrumentStatusForTradingQuotes { get; set; } = false;
+        
+        [Optional]
+        public bool ValidateInstrumentStatusForTradingFx { get; set; } = false;
 
         [Optional]
         public bool ValidateInstrumentStatusForEodQuotes { get; set; } = true;
+        
+        [Optional]
+        public bool ValidateInstrumentStatusForEodFx { get; set; } = true;
     }
 }

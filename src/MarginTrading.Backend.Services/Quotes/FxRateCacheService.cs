@@ -26,6 +26,7 @@ namespace MarginTrading.Backend.Services.Quotes
         private readonly ILog _log;
         private readonly IMarginTradingBlobRepository _blobRepository;
         private readonly IEventChannel<FxBestPriceChangeEventArgs> _fxBestPriceChangeEventChannel;
+        private readonly MarginTradingSettings _marginTradingSettings;
         private readonly IAssetPairDayOffService _assetPairDayOffService;
         private Dictionary<string, InstrumentBidAskPair> _quotes;
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
@@ -41,6 +42,7 @@ namespace MarginTrading.Backend.Services.Quotes
             _log = log;
             _blobRepository = blobRepository;
             _fxBestPriceChangeEventChannel = fxBestPriceChangeEventChannel;
+            _marginTradingSettings = marginTradingSettings;
             _assetPairDayOffService = assetPairDayOffService;
             _quotes = new Dictionary<string, InstrumentBidAskPair>();
         }
@@ -76,22 +78,27 @@ namespace MarginTrading.Backend.Services.Quotes
 
         public Task SetQuote(ExternalExchangeOrderbookMessage orderBookMessage)
         {
-            var isDayOff = _assetPairDayOffService.IsDayOff(orderBookMessage.AssetPairId);
             var isEodOrderbook = orderBookMessage.ExchangeName == ExternalOrderbookService.EodExternalExchange;
 
-            // we should process normal orderbook only if asset is currently tradable
-            if (isDayOff && !isEodOrderbook)
+            if (_marginTradingSettings.OrderbookValidation.ValidateInstrumentStatusForEodFx && isEodOrderbook ||
+                _marginTradingSettings.OrderbookValidation.ValidateInstrumentStatusForTradingFx && !isEodOrderbook)
             {
-                return Task.CompletedTask;
-            }
+                var isDayOff = _assetPairDayOffService.IsDayOff(orderBookMessage.AssetPairId);
             
-            // and process EOD orderbook only if asset is currently not tradable
-            if (!isDayOff && isEodOrderbook)
-            {
-                _log.WriteWarning("EOD FX quotes processing", "",
-                    $"EOD FX quote for {orderBookMessage.AssetPairId} is skipped, because instrument is within trading hours");
+                // we should process normal orderbook only if asset is currently tradable
+                if (_marginTradingSettings.OrderbookValidation.ValidateInstrumentStatusForTradingFx && isDayOff && !isEodOrderbook)
+                {
+                    return Task.CompletedTask;
+                }
+            
+                // and process EOD orderbook only if asset is currently not tradable
+                if (_marginTradingSettings.OrderbookValidation.ValidateInstrumentStatusForEodFx && !isDayOff && isEodOrderbook)
+                {
+                    _log.WriteWarning("EOD FX quotes processing", "",
+                        $"EOD FX quote for {orderBookMessage.AssetPairId} is skipped, because instrument is within trading hours");
                 
-                return Task.CompletedTask;
+                    return Task.CompletedTask;
+                }
             }
             
             var bidAskPair = CreatePair(orderBookMessage);
