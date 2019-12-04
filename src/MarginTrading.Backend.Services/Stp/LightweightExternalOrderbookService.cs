@@ -39,6 +39,7 @@ namespace MarginTrading.Backend.Services.Stp
         private readonly IIdentityGenerator _identityGenerator;
         private readonly ILog _log;
         private readonly string _defaultExternalExchangeId;
+        private readonly OrderbookValidationSettings _orderbookValidation;
 
         /// <summary>
         /// External orderbooks cache (AssetPairId, Orderbook)
@@ -76,6 +77,7 @@ namespace MarginTrading.Backend.Services.Stp
             _defaultExternalExchangeId = string.IsNullOrEmpty(marginTradingSettings.DefaultExternalExchangeId)
                 ? "Default"
                 : marginTradingSettings.DefaultExternalExchangeId;
+            _orderbookValidation = marginTradingSettings.OrderbookValidation;
         }
 
         public async Task InitializeAsync()
@@ -173,28 +175,33 @@ namespace MarginTrading.Backend.Services.Stp
 
         public void SetOrderbook(ExternalOrderBook orderbook)
         {
-            var isDayOff = _assetPairDayOffService.IsDayOff(orderbook.AssetPairId);
             var isEodOrderbook = orderbook.ExchangeName == ExternalOrderbookService.EodExternalExchange;
 
-            // we should process normal orderbook only if instrument is currently tradable
-            if (isDayOff && !isEodOrderbook)    
+            if (_orderbookValidation.ValidateInstrumentStatusForEodQuotes && isEodOrderbook ||
+                _orderbookValidation.ValidateInstrumentStatusForTradingQuotes && !isEodOrderbook)
             {
-                return;
-            }
+                var isDayOff = _assetPairDayOffService.IsDayOff(orderbook.AssetPairId);
+            
+                // we should process normal orderbook only if instrument is currently tradable
+                if (_orderbookValidation.ValidateInstrumentStatusForTradingQuotes && isDayOff && !isEodOrderbook)    
+                {
+                    return;
+                }
 
-            // and process EOD orderbook only if instrument is currently not tradable
-            if (!isDayOff && isEodOrderbook)
-            {
-                //log current schedule for the instrument
-                var schedule = _scheduleSettingsCache.GetCompiledScheduleSettings(
-                    orderbook.AssetPairId,
-                    _dateService.Now(),
-                    TimeSpan.Zero);
+                // and process EOD orderbook only if instrument is currently not tradable
+                if (_orderbookValidation.ValidateInstrumentStatusForEodQuotes && !isDayOff && isEodOrderbook)
+                {
+                    //log current schedule for the instrument
+                    var schedule = _scheduleSettingsCache.GetCompiledScheduleSettings(
+                        orderbook.AssetPairId,
+                        _dateService.Now(),
+                        TimeSpan.Zero);
 
-                _log.WriteWarning("EOD quotes processing", $"Current schedule: {schedule.ToJson()}",
-                    $"EOD quote for {orderbook.AssetPairId} is skipped, because instrument is within trading hours");
+                    _log.WriteWarning("EOD quotes processing", $"Current schedule: {schedule.ToJson()}",
+                        $"EOD quote for {orderbook.AssetPairId} is skipped, because instrument is within trading hours");
 
-                return;
+                    return;
+                }
             }
             
             if (!CheckZeroQuote(orderbook, isEodOrderbook))

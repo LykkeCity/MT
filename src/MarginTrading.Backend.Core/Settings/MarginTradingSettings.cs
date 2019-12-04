@@ -99,5 +99,8 @@ namespace MarginTrading.Backend.Core.Settings
         
         [Optional]
         public TimeSpan GavelTimeout { get; set; } = TimeSpan.FromSeconds(3);
+        
+        [Optional]
+        public OrderbookValidationSettings OrderbookValidation { get; set; } = new OrderbookValidationSettings();
     }
 }
