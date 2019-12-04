@@ -124,13 +124,15 @@ namespace MarginTrading.Backend.Services.Workflow
                                             _log.WriteWarning("AccountChangedEvent Handler", e.ToJson(),
                                                 $"Position [{e.BalanceChange.EventSourceId} was not found]");
                                         }
+
                                         break;
                                     case AccountBalanceChangeReasonTypeContract.RealizedPnL:
-                                        await _accountUpdateService.UnfreezeUnconfirmedMargin(e.Account.Id, 
+                                        await _accountUpdateService.UnfreezeUnconfirmedMargin(e.Account.Id,
                                             e.BalanceChange.EventSourceId);
                                         break;
                                     case AccountBalanceChangeReasonTypeContract.Reset:
-                                        foreach (var pos in _ordersCache.Positions.GetPositionsByAccountIds(e.Account.Id))
+                                        foreach (var pos in _ordersCache.Positions.GetPositionsByAccountIds(
+                                            e.Account.Id))
                                         {
                                             _ordersCache.Positions.Remove(pos);
                                         }
@@ -139,11 +141,14 @@ namespace MarginTrading.Backend.Services.Workflow
                                         {
                                             _ordersCache.Active.Remove(order);
                                         }
+
                                         foreach (var order in _ordersCache.Inactive.GetOrdersByAccountIds(e.Account.Id))
                                         {
                                             _ordersCache.Inactive.Remove(order);
                                         }
-                                        foreach (var order in _ordersCache.InProgress.GetOrdersByAccountIds(e.Account.Id))
+
+                                        foreach (var order in _ordersCache.InProgress.GetOrdersByAccountIds(
+                                            e.Account.Id))
                                         {
                                             _ordersCache.InProgress.Remove(order);
                                         }
@@ -155,21 +160,21 @@ namespace MarginTrading.Backend.Services.Workflow
                                                 nameof(AccountBalanceChangeReasonTypeContract.Reset),
                                                 warnings);
                                         }
-                        
+
                                         await _log.WriteInfoAsync(nameof(AccountChangedEvent),
                                             nameof(AccountBalanceChangeReasonTypeContract.Reset),
                                             $"Account {e.Account.Id} was reset.");
                                         break;
                                 }
+
+                                await _accountsCacheService.UpdateAccountBalance(updatedAccount.Id,
+                                    e.BalanceChange.Balance, e.ChangeTimestamp);
                                 
-                                if (await _accountsCacheService.UpdateAccountBalance(updatedAccount.Id,
-                                    e.BalanceChange.Balance, e.ChangeTimestamp))
-                                {
-                                    _accountUpdateService.RemoveLiquidationStateIfNeeded(e.Account.Id,
-                                        "Balance updated");
-                                    _accountBalanceChangedEventChannel.SendEvent(this,
-                                        new AccountBalanceChangedEventArgs(updatedAccount));
-                                }
+                                _accountUpdateService.RemoveLiquidationStateIfNeeded(e.Account.Id,
+                                    "Balance updated");
+                                
+                                _accountBalanceChangedEventChannel.SendEvent(this,
+                                    new AccountBalanceChangedEventArgs(updatedAccount.Id));
                             }
                         }
                         else

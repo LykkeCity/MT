@@ -28,7 +28,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         
         public void ConsumeEvent(object sender, AccountBalanceChangedEventArgs ea)
         {
-            NotifyAccountStatsChanged(ea.Account);
+            NotifyAccountStatsChanged(ea.AccountId);
         }
 
         public void ConsumeEvent(object sender, OrderPlacedEventArgs ea)
@@ -48,8 +48,10 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
         public int ConsumerRank => 102;
 
-        private void NotifyAccountStatsChanged(MarginTradingAccount account)
+        private void NotifyAccountStatsChanged(string accountId)
         {
+            var account = _accountsCacheService.Get(accountId);
+
             account.CacheNeedsToBeUpdated();
             
             // not needed right now
@@ -57,13 +59,6 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             //var stats = account.ToRabbitMqContract();
 
             //_rabbitMqNotifyService.UpdateAccountStats(new AccountStatsUpdateMessage {Accounts = new[] {stats}});
-        }
-        
-        private void NotifyAccountStatsChanged(string accountId)
-        {
-            var account = _accountsCacheService.Get(accountId);
-
-            NotifyAccountStatsChanged(account);
         }
     }
 }
