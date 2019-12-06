@@ -27,5 +27,7 @@ namespace MarginTrading.Backend.Core.Settings
         public string PositionsHistorySqlConnectionString { get; set; }
         
         public string PositionsHistoryTableName { get; set; }
+
+        public QueryTimeouts QueryTimeouts { get; set; }
     }
 }

@@ -13,6 +13,7 @@ namespace MarginTrading.SqlRepositories.Entities
     [UsedImplicitly]
     public class OrderHistoryEntity : IOrderHistory
     {
+        public long OID { get; set; }
         public string Id { get; set; }
         public string AccountId { get; set; }
         public string AssetPairId { get; set; }
