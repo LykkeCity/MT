@@ -295,9 +295,10 @@ namespace MarginTrading.Backend
             JobManager.Initialize();
 
             JobManager.AddJob(() => ApplicationContainer.Resolve<ScheduleSettingsCacheWarmUpJob>().Execute(),
-                (s) => s.NonReentrant().ToRunEvery(1).Days().At(0, 0));
+                s => s.NonReentrant().ToRunEvery(1).Days().At(0, 0));
 
             ApplicationContainer.Resolve<IOvernightMarginService>().ScheduleNext();
+            ApplicationContainer.Resolve<IScheduleControlService>().ScheduleNext();
         }
 
         private StartupDeduplicationService RunHealthChecks(MarginTradingSettings marginTradingSettings)

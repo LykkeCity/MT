@@ -49,7 +49,7 @@ namespace MarginTrading.Backend.Controllers
         public Task<Dictionary<string, List<CompiledScheduleTimeIntervalContract>>> CompiledTradingSchedule()
         {
             return Task.FromResult(
-                _scheduleSettingsCacheService.GetCompiledScheduleSettings(_dateService.Now(), TimeSpan.Zero)
+                _scheduleSettingsCacheService.GetCompiledAssetPairScheduleSettings(_dateService.Now(), TimeSpan.Zero)
                     .ToDictionary(x => x.Key, x => x.Value.Select(ti => ti.ToRabbitMqContract()).ToList()));
         }
 

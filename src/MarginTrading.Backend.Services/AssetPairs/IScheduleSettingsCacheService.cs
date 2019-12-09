@@ -12,32 +12,36 @@ namespace MarginTrading.Backend.Services.AssetPairs
 {
     public interface IScheduleSettingsCacheService
     {
-        Dictionary<string, List<CompiledScheduleTimeInterval>> GetCompiledScheduleSettings(DateTime currentDateTime,
+        Dictionary<string, List<CompiledScheduleTimeInterval>> GetCompiledAssetPairScheduleSettings(DateTime currentDateTime,
             TimeSpan scheduleCutOff);
         
         /// <summary>
         /// Get compiled schedule timeline from cache, recalculate it if needed.
         /// </summary>
-        List<CompiledScheduleTimeInterval> GetCompiledScheduleSettings(string assetPairId,
+        List<CompiledScheduleTimeInterval> GetCompiledAssetPairScheduleSettings(string assetPairId,
             DateTime currentDateTime, TimeSpan scheduleCutOff);
 
         void CacheWarmUp(params string[] assetPairIds);
 
         void CacheWarmUpIncludingValidation();
 
-        void PlatformCacheWarmUp();
+        void MarketsCacheWarmUp();
 
         Task UpdateAllSettingsAsync();
         
-        Task UpdateSettingsAsync();
+        Task UpdateScheduleSettingsAsync();
 
-        Task UpdatePlatformSettingsAsync();
+        Task UpdateMarketsScheduleSettingsAsync();
 
         /// <summary>
         /// Get current and next day time intervals of the platform disablement hours.
         /// </summary>
         List<CompiledScheduleTimeInterval> GetPlatformTradingSchedule();
 
+        Dictionary<string, List<CompiledScheduleTimeInterval>> GetMarketsTradingSchedule();
+
+        void HandleMarketStateChanges(DateTime currentTime, string[] marketIds = null);
+        
         bool TryGetPlatformCurrentDisabledInterval(out CompiledScheduleTimeInterval disabledInterval);
 
         bool AssetPairTradingEnabled(string assetPairId, TimeSpan scheduleCutOff);
