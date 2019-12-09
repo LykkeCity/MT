@@ -172,7 +172,6 @@ namespace MarginTrading.Backend.Services.AssetPairs
                     {
                         Id = marketId,
                         IsEnabled = newState.IsEnabled,
-                        NextChange = newState.NextChange,
                     });
                 }
 
@@ -268,8 +267,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             return false;
         }
 
-        public Dictionary<string, List<CompiledScheduleTimeInterval>> GetCompiledAssetPairScheduleSettings(
-            DateTime currentDateTime, TimeSpan scheduleCutOff)
+        public Dictionary<string, List<CompiledScheduleTimeInterval>> GetCompiledAssetPairScheduleSettings()
         {
             _readerWriterLockSlim.EnterUpgradeableReadLock();
 
@@ -282,6 +280,20 @@ namespace MarginTrading.Backend.Services.AssetPairs
             finally
             {
                 _readerWriterLockSlim.ExitUpgradeableReadLock();
+            }
+        }
+
+        public List<MarketState> GetMarketState()
+        {
+            _readerWriterLockSlim.EnterReadLock();
+
+            try
+            {
+                return _marketStates.ToList();
+            }
+            finally
+            {
+                _readerWriterLockSlim.ExitReadLock();
             }
         }
 

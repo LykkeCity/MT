@@ -11,11 +11,9 @@ namespace MarginTrading.Backend.Core.DayOffSettings
 
         public bool IsEnabled { get; set; }
 
-        public DateTime NextChange { get; set; }
-
         public override string ToString()
         {
-            return $"Id: {Id}, IsEnabled: {IsEnabled}, Next change: {NextChange:s}";
+            return $"Id: {Id}, IsEnabled: {IsEnabled}.";
         }
     }
 }

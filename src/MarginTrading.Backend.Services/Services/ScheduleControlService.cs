@@ -73,10 +73,11 @@ namespace MarginTrading.Backend.Services.Services
                     intervals.Add(marketId, interval);
                 }
             }
-            
-            nextStart = intervals.Values.SelectMany(x => new [] {x.Start, x.End})
+
+            var followingPoints = intervals.Values.SelectMany(x => new[] {x.Start, x.End})
                 .Where(x => x.Subtract(currentDateTime).TotalSeconds > 1)
-                .Min();
+                .ToList();
+            nextStart = followingPoints.Any() ? followingPoints.Min() : currentDateTime.AddDays(1);
 
             return intervals
                 .ToDictionary(x => x.Key, x =>
