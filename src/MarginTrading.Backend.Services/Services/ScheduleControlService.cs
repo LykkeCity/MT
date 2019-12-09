@@ -40,15 +40,6 @@ namespace MarginTrading.Backend.Services.Services
 
             var marketsToHandle = TryGetClosestPoint(marketsSchedule, currentDateTime, out var nextStart);
 
-            if (nextStart == default)
-            {
-                _log.WriteFatalErrorAsync(nameof(ScheduleControlService), nameof(ScheduleNext),
-                        new Exception(
-                            $"Incorrect markets schedule! Need to fix it and restart the service. Check time: [{currentDateTime:s}], detected markets to handle: [{marketsToHandle.ToJson()}]"))
-                    .Wait();
-                return;
-            }
-            
             _log.WriteInfo(nameof(ScheduleControlService), nameof(ScheduleNext),
                 $"Planning next check to [{nextStart:s}]."
                 + $" Check time: [{currentDateTime:s}]." 
