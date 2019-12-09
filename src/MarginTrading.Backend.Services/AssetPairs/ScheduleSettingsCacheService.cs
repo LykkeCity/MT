@@ -172,6 +172,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
                     {
                         Id = marketId,
                         IsEnabled = newState.IsEnabled,
+                        EventTimestamp = _dateService.Now(),
                     });
                 }
 

@@ -16,6 +16,6 @@ namespace MarginTrading.Backend.Contracts.TradingSchedule
         public bool IsEnabled { get; set; }
 
         [Key(2)]
-        public DateTime NextChange { get; set; }
+        public DateTime EventTimestamp { get; set; }
     }
 }
