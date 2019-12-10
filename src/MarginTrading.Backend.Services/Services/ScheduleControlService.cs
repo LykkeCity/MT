@@ -51,7 +51,7 @@ namespace MarginTrading.Backend.Services.Services
                 .WithName(nameof(ScheduleControlService)).NonReentrant().ToRunOnceAt(nextStart));
         }
 
-        private string[] TryGetClosestPoint(Dictionary<string, List<CompiledScheduleTimeInterval>> marketsSchedule, 
+        public string[] TryGetClosestPoint(Dictionary<string, List<CompiledScheduleTimeInterval>> marketsSchedule, 
             DateTime currentDateTime, out DateTime nextStart)
         {
             var intervals = new Dictionary<string, (DateTime Start, DateTime End)>();
@@ -79,7 +79,7 @@ namespace MarginTrading.Backend.Services.Services
                 .ToArray();
         }
 
-        private bool TryGetOperatingInterval(List<CompiledScheduleTimeInterval> compiledScheduleTimeIntervals,
+        public bool TryGetOperatingInterval(List<CompiledScheduleTimeInterval> compiledScheduleTimeIntervals,
             DateTime currentDateTime, out (DateTime Start, DateTime End) resultingInterval)
         {
             //no disabled intervals ahead => false
