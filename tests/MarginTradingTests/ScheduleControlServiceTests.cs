@@ -20,9 +20,9 @@ namespace MarginTradingTests
     {
         [TestCaseSource(nameof(TryGetClosestPointTestData))]
         [Test]
-        public string[] TryGetClosestPoint_Success(
+        public DateTime TryGetClosestPoint_Success(
             Dictionary<string, List<CompiledScheduleTimeInterval>> marketsSchedule, 
-            DateTime currentDateTime, DateTime nextStart)
+            DateTime currentDateTime)
         {
             var dateServiceMock = new Mock<IDateService>();
             dateServiceMock.Setup(x => x.Now()).Returns(currentDateTime);
@@ -30,11 +30,7 @@ namespace MarginTradingTests
             var sut = new ScheduleControlService(Mock.Of<IScheduleSettingsCacheService>(),
                 Mock.Of<ILog>(), dateServiceMock.Object);
 
-            var result = sut.TryGetClosestPoint(marketsSchedule, currentDateTime, out var resultingNextStart);
-
-            Assert.AreEqual(nextStart, resultingNextStart);
-
-            return result;
+            return sut.TryGetClosestPoint(marketsSchedule, currentDateTime);
         }
         
         [TestCaseSource(nameof(GetOperatingIntervalTestData))]
@@ -71,37 +67,8 @@ namespace MarginTradingTests
                                 }
                             }
                         },
-                        new DateTime(2019, 12, 10, 10, 0, 0),
-                        new DateTime(2019, 12, 10, 11, 0, 0))
-                    .Returns(Array.Empty<string>());
-                yield return new TestCaseData(new Dictionary<string, List<CompiledScheduleTimeInterval>>
-                        {
-                            {
-                                "market1", new List<CompiledScheduleTimeInterval>
-                                {
-                                    new CompiledScheduleTimeInterval(new ScheduleSettings {IsTradeEnabled = false},
-                                        new DateTime(2019, 12, 10, 10, 0, 0, 500),
-                                        new DateTime(2019, 12, 10, 11, 0, 0))
-                                }
-                            }
-                        },
-                        new DateTime(2019, 12, 10, 10, 0, 0),
-                        new DateTime(2019, 12, 10, 11, 0, 0))
-                    .Returns(new[] {"market1"});
-                yield return new TestCaseData(new Dictionary<string, List<CompiledScheduleTimeInterval>>
-                        {
-                            {
-                                "market1", new List<CompiledScheduleTimeInterval>
-                                {
-                                    new CompiledScheduleTimeInterval(new ScheduleSettings {IsTradeEnabled = false},
-                                        new DateTime(2019, 12, 10, 10, 0, 0),
-                                        new DateTime(2019, 12, 10, 11, 0, 0, 100))
-                                }
-                            }
-                        },
-                        new DateTime(2019, 12, 10, 11, 0, 0),
-                        new DateTime(2019, 12, 11, 11, 0, 0))
-                    .Returns(new[] {"market1"});
+                        new DateTime(2019, 12, 10, 10, 0, 0))
+                    .Returns(new DateTime(2019, 12, 10, 11, 0, 0));
                 yield return new TestCaseData(new Dictionary<string, List<CompiledScheduleTimeInterval>>
                         {
                             {
@@ -113,9 +80,8 @@ namespace MarginTradingTests
                                 }
                             }
                         },
-                        new DateTime(2019, 12, 10, 11, 0, 0),
-                        new DateTime(2019, 12, 11, 11, 0, 0))
-                    .Returns(Array.Empty<string>());
+                        new DateTime(2019, 12, 10, 10, 0, 0, 500))
+                    .Returns(new DateTime(2019, 12, 10, 11, 0, 0));
                 yield return new TestCaseData(new Dictionary<string, List<CompiledScheduleTimeInterval>>
                         {
                             {
@@ -123,13 +89,54 @@ namespace MarginTradingTests
                                 {
                                     new CompiledScheduleTimeInterval(new ScheduleSettings {IsTradeEnabled = false},
                                         new DateTime(2019, 12, 10, 10, 0, 0),
-                                        new DateTime(2019, 12, 10, 11, 0, 1, 100))
+                                        new DateTime(2019, 12, 10, 11, 0, 0))
                                 }
                             }
                         },
-                        new DateTime(2019, 12, 10, 11, 0, 0),
-                        new DateTime(2019, 12, 10, 11, 0, 1, 100))
-                    .Returns(Array.Empty<string>());
+                        new DateTime(2019, 12, 10, 11, 0, 0, 100))
+                    .Returns(new DateTime(2019, 12, 11, 11, 0, 0, 100));
+                yield return new TestCaseData(new Dictionary<string, List<CompiledScheduleTimeInterval>>
+                        {
+                            {
+                                "market1", new List<CompiledScheduleTimeInterval>
+                                {
+                                    new CompiledScheduleTimeInterval(new ScheduleSettings {IsTradeEnabled = false},
+                                        new DateTime(2019, 12, 10, 10, 0, 0),
+                                        new DateTime(2019, 12, 10, 11, 0, 0))
+                                }
+                            }
+                        },
+                        new DateTime(2019, 12, 10, 11, 0, 0))
+                    .Returns(new DateTime(2019, 12, 11, 11, 0, 0));
+                yield return new TestCaseData(new Dictionary<string, List<CompiledScheduleTimeInterval>>
+                        {
+                            {
+                                "market1", new List<CompiledScheduleTimeInterval>
+                                {
+                                    new CompiledScheduleTimeInterval(new ScheduleSettings {IsTradeEnabled = false},
+                                        new DateTime(2019, 12, 10, 10, 0, 0),
+                                        new DateTime(2019, 12, 10, 11, 0, 0)),
+                                    new CompiledScheduleTimeInterval(new ScheduleSettings {IsTradeEnabled = false},
+                                        new DateTime(2019, 12, 11, 10, 0, 0),
+                                        new DateTime(2019, 12, 11, 11, 0, 0))
+                                }
+                            }
+                        },
+                        new DateTime(2019, 12, 10, 11, 0, 0))
+                    .Returns(new DateTime(2019, 12, 11, 10, 0, 0));
+                yield return new TestCaseData(new Dictionary<string, List<CompiledScheduleTimeInterval>>
+                        {
+                            {
+                                "market1", new List<CompiledScheduleTimeInterval>
+                                {
+                                    new CompiledScheduleTimeInterval(new ScheduleSettings {IsTradeEnabled = false},
+                                        new DateTime(2019, 12, 10, 10, 0, 0),
+                                        new DateTime(2019, 12, 10, 11, 0, 1))
+                                }
+                            }
+                        },
+                        new DateTime(2019, 12, 10, 11, 0, 0, 100))
+                    .Returns(new DateTime(2019, 12, 10, 11, 0, 1));
             }
         }
 

@@ -38,21 +38,20 @@ namespace MarginTrading.Backend.Services.Services
             //need to know in which OvernightMarginJobType we are now and the moment of next change
             var marketsSchedule = _scheduleSettingsCacheService.GetMarketsTradingSchedule();
 
-            var marketsToHandle = TryGetClosestPoint(marketsSchedule, currentDateTime, out var nextStart);
+            var nextStart = TryGetClosestPoint(marketsSchedule, currentDateTime);
 
             _log.WriteInfo(nameof(ScheduleControlService), nameof(ScheduleNext),
                 $"Planning next check to [{nextStart:s}]."
-                + $" Check time: [{currentDateTime:s}]." 
-                + $" Markets to handle: [{marketsToHandle.ToJson()}]");
+                + $" Check time: [{currentDateTime:s}].");
             
-            _scheduleSettingsCacheService.HandleMarketStateChanges(currentDateTime, marketsToHandle);
+            _scheduleSettingsCacheService.HandleMarketStateChanges(currentDateTime);
             
             JobManager.AddJob(ScheduleNext, s => s
                 .WithName(nameof(ScheduleControlService)).NonReentrant().ToRunOnceAt(nextStart));
         }
 
-        public string[] TryGetClosestPoint(Dictionary<string, List<CompiledScheduleTimeInterval>> marketsSchedule, 
-            DateTime currentDateTime, out DateTime nextStart)
+        public DateTime TryGetClosestPoint(Dictionary<string, List<CompiledScheduleTimeInterval>> marketsSchedule, 
+            DateTime currentDateTime)
         {
             var intervals = new Dictionary<string, (DateTime Start, DateTime End)>();
 
@@ -66,17 +65,9 @@ namespace MarginTrading.Backend.Services.Services
             }
 
             var followingPoints = intervals.Values.SelectMany(x => new[] {x.Start, x.End})
-                .Where(x => x.Subtract(currentDateTime).TotalSeconds > 1)
+                .Where(x => x > currentDateTime)
                 .ToList();
-            nextStart = followingPoints.Any() ? followingPoints.Min() : currentDateTime.AddDays(1);
-
-            return intervals
-                .ToDictionary(x => x.Key, x =>
-                    Math.Min(Math.Abs(x.Value.Start.Subtract(currentDateTime).TotalSeconds),
-                        Math.Abs(x.Value.End.Subtract(currentDateTime).TotalSeconds)))
-                .Where(x => x.Value < 1)
-                .Select(x => x.Key)
-                .ToArray();
+            return followingPoints.Any() ? followingPoints.Min() : currentDateTime.AddDays(1);
         }
 
         public bool TryGetOperatingInterval(List<CompiledScheduleTimeInterval> compiledScheduleTimeIntervals,
@@ -101,8 +92,8 @@ namespace MarginTrading.Backend.Services.Services
 
             //find changing time: MIN(end of current, start of next with higher Rank)
             //if the same state => continue
-            //      other state => ON to OFF => Warn, Start, End
-            //                     OFF to ON => End & Warn, Start => DateTime.Min
+            //      other state => ON to OFF => Start, End
+            //                     OFF to ON => End, Start => DateTime.Min
             DateTime? endOfInterval = null;
             foreach (var nextWithHigherRank in compiledScheduleTimeIntervals.Where(x => x.Start > currentDateTime
                                                               && x.Start < currentActiveInterval.End
