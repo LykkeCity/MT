@@ -8,9 +8,6 @@ namespace MarginTrading.Backend.Core.Services
     /// </summary>
     public interface IScheduleControlService
     {
-        /// <summary>
-        /// Act and schedule the next job: warning, start or end. Job type depends on the next state.
-        /// </summary>
         void ScheduleNext();
     }
 }

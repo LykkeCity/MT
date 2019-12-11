@@ -135,7 +135,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 var newMarketsScheduleSettings = marketsScheduleSettingsRaw
                     .Except(invalidSchedules)
                     .GroupBy(x => x.MarketId)
-                    .ToDictionary(x => x.Key, x => x.ConcatWithPlatform(platformScheduleSettings)
+                    .ToDictionary(x => x.Key, x => x.ConcatWithPlatform(platformScheduleSettings, x.Key)
                         .Select(ScheduleSettings.Create)
                         .ToList());
 
@@ -153,7 +153,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             if (invalidSchedules.Any())
             {
                 await _log.WriteWarningAsync(nameof(ScheduleSettingsCacheService), nameof(UpdateMarketsScheduleSettingsAsync),
-                    $"{invalidSchedules.Count} of ScheduleSettingsContracts were invalid, so they were skipped. The first one: {invalidSchedules.First().ToJson()}");
+                    $"{invalidSchedules.Count} of ScheduleSettingsContracts were invalid, so they were skipped: {invalidSchedules.ToJson()}");
             }
         }
 
@@ -391,7 +391,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
         public void MarketsCacheWarmUp()
         {
             _log.WriteInfoAsync(nameof(ScheduleSettingsCacheService), nameof(MarketsCacheWarmUp),
-                "Started platform schedule cache update");
+                "Started market schedule cache update");
 
             _readerWriterLockSlim.EnterWriteLock();
 
@@ -405,7 +405,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             }
 
             _log.WriteInfoAsync(nameof(ScheduleSettingsCacheService), nameof(MarketsCacheWarmUp),
-                "Finished platform schedule cache update");
+                "Finished market schedule cache update");
         }
 
         private DateTime MarketsCacheWarmUpUnsafe()

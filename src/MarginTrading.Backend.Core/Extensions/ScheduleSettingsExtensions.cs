@@ -64,7 +64,9 @@ namespace MarginTrading.Backend.Core.Extensions
         }
 
         public static IEnumerable<ScheduleSettingsContract> ConcatWithPlatform(
-            this IEnumerable<ScheduleSettingsContract> targetSchedule, IEnumerable<ScheduleSettingsContract> platformSchedule)
+            this IEnumerable<ScheduleSettingsContract> targetSchedule, 
+            IEnumerable<ScheduleSettingsContract> platformSchedule,
+            string platformKey)
         {
             var rank = int.MaxValue;
             var prev = 0;
@@ -79,7 +81,9 @@ namespace MarginTrading.Backend.Core.Extensions
                     return result;
                 });
 
-            return targetSchedule.Concat(resultingPlatformSchedule);
+            return targetSchedule
+                .Where(x => x.Id != platformKey)
+                .Concat(resultingPlatformSchedule);
         }
 
         public static ScheduleSettingsContract CloneWithRank(this ScheduleSettingsContract schedule, int rank)
@@ -112,7 +116,7 @@ namespace MarginTrading.Backend.Core.Extensions
                 .OrderByDescending(x => x.Schedule.Rank)
                 .FirstOrDefault();
             
-            var isEnabled = currentInterval.Enabled();
+            var isEnabled = currentInterval?.Enabled() ?? true;
 
             var result = new MarketState
             {
