@@ -99,8 +99,7 @@ namespace MarginTrading.Backend.Controllers
         public Task<Dictionary<string, bool>> MarketsState()
         {
             return Task.FromResult(_scheduleSettingsCacheService.GetMarketState()
-                .GroupBy(x => x.Id)
-                .ToDictionary(x => x.Key, x => x.First().IsEnabled));
+                .ToDictionary(x => x.Key, x => x.Value.IsEnabled));
         }
     }
 }

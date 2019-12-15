@@ -43,7 +43,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
         private Dictionary<string, List<CompiledScheduleTimeInterval>> _compiledMarketScheduleCache =
             new Dictionary<string, List<CompiledScheduleTimeInterval>>();
 
-        private readonly List<MarketState> _marketStates = new List<MarketState>();
+        private readonly Dictionary<string, MarketState> _marketStates = new Dictionary<string, MarketState>();
 
         private DateTime _lastCacheRecalculationTime = DateTime.MinValue;
 
@@ -143,7 +143,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
                 var now = MarketsCacheWarmUpUnsafe();
 
-                HandleMarketStateChanges(now, newMarketsScheduleSettings.Keys.ToArray());
+                HandleMarketStateChangesUnsafe(now, newMarketsScheduleSettings.Keys.ToArray());
             }
             finally
             {
@@ -157,16 +157,28 @@ namespace MarginTrading.Backend.Services.AssetPairs
             }
         }
 
-        public void HandleMarketStateChanges(DateTime currentTime, string[] marketIds = null)
+        public void HandleMarketStateChanges(DateTime currentTime)
+        {
+            _readerWriterLockSlim.EnterWriteLock();
+            
+            try
+            {
+                HandleMarketStateChangesUnsafe(currentTime);
+            }
+            finally
+            {
+                _readerWriterLockSlim.ExitWriteLock();
+            }
+        }
+
+        private void HandleMarketStateChangesUnsafe(DateTime currentTime, string[] marketIds = null)
         {
             foreach (var (marketId, scheduleSettings) in _compiledMarketScheduleCache
                 // ReSharper disable once AssignNullToNotNullAttribute
                 .Where(x => marketIds.IsNullOrEmpty() || marketIds.Contains(x.Key)))
             {
-                var oldState = _marketStates.FirstOrDefault(x => x.Id == marketId);
-
                 var newState = scheduleSettings.GetMarketState(marketId, currentTime);
-                if (oldState == null || oldState.IsEnabled != newState.IsEnabled)
+                if (!_marketStates.TryGetValue(marketId, out var oldState) || oldState.IsEnabled != newState.IsEnabled)
                 {
                     _cqrsSender.PublishEvent(new MarketStateChangedEvent
                     {
@@ -176,8 +188,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
                     });
                 }
 
-                _marketStates.Remove(oldState);
-                _marketStates.Add(newState);
+                _marketStates[marketId] = newState;
             }
         }
 
@@ -284,13 +295,13 @@ namespace MarginTrading.Backend.Services.AssetPairs
             }
         }
 
-        public List<MarketState> GetMarketState()
+        public Dictionary<string, MarketState> GetMarketState()
         {
             _readerWriterLockSlim.EnterReadLock();
 
             try
             {
-                return _marketStates.ToList();
+                return _marketStates.ToDictionary();
             }
             finally
             {
@@ -414,7 +425,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             
             _compiledMarketScheduleCache = _rawMarketScheduleCache
                 .ToDictionary(x => x.Key, x => CompileSchedule(x.Value, now, TimeSpan.Zero));
-            HandleMarketStateChanges(now, _rawMarketScheduleCache.Keys.ToArray());
+            HandleMarketStateChangesUnsafe(now, _rawMarketScheduleCache.Keys.ToArray());
 
             return now;
         }

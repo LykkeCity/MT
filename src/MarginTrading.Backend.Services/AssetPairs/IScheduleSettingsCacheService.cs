@@ -39,9 +39,9 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         Dictionary<string, List<CompiledScheduleTimeInterval>> GetMarketsTradingSchedule();
 
-        List<MarketState> GetMarketState();
+        Dictionary<string, MarketState> GetMarketState();
 
-        void HandleMarketStateChanges(DateTime currentTime, string[] marketIds = null);
+        void HandleMarketStateChanges(DateTime currentTime);
         
         bool TryGetPlatformCurrentDisabledInterval(out CompiledScheduleTimeInterval disabledInterval);
 
