@@ -89,7 +89,11 @@ Settings schema is:
       "OrdersHistorySqlConnectionString": "sql connection string",
       "OrdersHistoryTableName": "OrdersHistory",
       "PositionsHistorySqlConnectionString": "sql connection string",
-      "PositionsHistoryTableName": "PositionsHistory"
+      "PositionsHistoryTableName": "PositionsHistory",
+	  "QueryTimeouts": 
+      {
+        "GetLastSnapshotTimeoutS": 120
+      }
     },
     "RabbitMqQueues": {
       "OrderHistory": {
