@@ -246,7 +246,7 @@ namespace MarginTrading.Backend.Services.Stp
                 k => UpdateOrderbooksDictionary(k, new Dictionary<string, ExternalOrderBook>()),
                 UpdateOrderbooksDictionary);
 
-            _bestPriceChangeEventChannel.SendEvent(this, new BestPriceChangeEventArgs(bba));
+            _bestPriceChangeEventChannel.SendEvent(this, new BestPriceChangeEventArgs(bba, isEodOrderbook));
         }
         
         //TODO: sort prices of uncomment validation
