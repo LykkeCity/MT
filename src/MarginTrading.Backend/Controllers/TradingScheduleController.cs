@@ -46,11 +46,22 @@ namespace MarginTrading.Backend.Controllers
         /// Cache is invalidated and recalculated after 00:00:00.000 each day on request. 
         /// </summary>
         [HttpGet("compiled")]
+        [HttpGet("asset-pairs-compiled")]
         public Task<Dictionary<string, List<CompiledScheduleTimeIntervalContract>>> CompiledTradingSchedule()
         {
             return Task.FromResult(
-                _scheduleSettingsCacheService.GetCompiledScheduleSettings(_dateService.Now(), TimeSpan.Zero)
+                _scheduleSettingsCacheService.GetCompiledAssetPairScheduleSettings()
                     .ToDictionary(x => x.Key, x => x.Value.Select(ti => ti.ToRabbitMqContract()).ToList()));
+        }
+
+        /// <summary>
+        /// Get current compiled trading schedule for each market.
+        /// </summary>
+        [HttpGet("markets-compiled")]
+        public Task<Dictionary<string, List<CompiledScheduleTimeIntervalContract>>> CompiledMarketTradingSchedule()
+        {
+            return Task.FromResult(_scheduleSettingsCacheService.GetMarketsTradingSchedule()
+                .ToDictionary(x => x.Key, x => x.Value.Select(m => m.ToRabbitMqContract()).ToList()));
         }
 
         /// <summary>
@@ -79,6 +90,16 @@ namespace MarginTrading.Backend.Controllers
             var areEnabled = assetPairIds.ToDictionary(x => x, x => !_assetPairDayOffService.IsDayOff(x));
             
             return Task.FromResult(areEnabled);
+        }
+
+        /// <summary>
+        /// Get current markets state: trading enabled or disabled.
+        /// </summary>
+        [HttpGet("markets-state")]
+        public Task<Dictionary<string, bool>> MarketsState()
+        {
+            return Task.FromResult(_scheduleSettingsCacheService.GetMarketState()
+                .ToDictionary(x => x.Key, x => x.Value.IsEnabled));
         }
     }
 }

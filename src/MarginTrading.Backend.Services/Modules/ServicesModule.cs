@@ -177,17 +177,16 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<IAlertSeverityLevelService>()
 				.SingleInstance();
 
-//			builder.RegisterType<MarginTradingEnablingService>()
-//				.As<IMarginTradingEnablingService>()
-//				.As<IStartable>()
-//				.SingleInstance();
-
 			builder.RegisterType<ReportService>()
 				.As<IReportService>()
 				.SingleInstance();
 
 			builder.RegisterType<OvernightMarginService>()
 				.As<IOvernightMarginService>()
+				.SingleInstance();
+
+			builder.RegisterType<ScheduleControlService>()
+				.As<IScheduleControlService>()
 				.SingleInstance();
 
 			builder.RegisterType<ScheduleSettingsCacheWarmUpJob>()

@@ -197,7 +197,7 @@ namespace MarginTrading.Backend.Services.Stp
                     isEodOrderbook)
                 {
                     //log current schedule for the instrument
-                    var schedule = _scheduleSettingsCache.GetCompiledScheduleSettings(
+                    var schedule = _scheduleSettingsCache.GetCompiledAssetPairScheduleSettings(
                         orderbook.AssetPairId,
                         _dateService.Now(),
                         TimeSpan.Zero);
