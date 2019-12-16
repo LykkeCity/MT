@@ -18,6 +18,7 @@ using Lykke.Logs.Serilog;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
 using Lykke.SlackNotifications;
+using Lykke.Snow.Common.Startup.Log;
 using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Services;
@@ -76,12 +77,6 @@ namespace MarginTrading.Backend
 
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
-            var loggerFactory = new LoggerFactory()
-                .AddConsole(LogLevel.Error)
-                .AddDebug(LogLevel.Error);
-
-            services.AddSingleton(loggerFactory);
-            services.AddLogging();
             services.AddSingleton(Configuration);
             services.AddMvc()
             .AddJsonOptions(options =>
@@ -134,8 +129,7 @@ namespace MarginTrading.Backend
         }
 
         [UsedImplicitly]
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory,
-            IApplicationLifetime appLifetime)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime appLifetime)
         {
             if (env.IsDevelopment())
             {
@@ -284,6 +278,8 @@ namespace MarginTrading.Backend
 
             services.AddSingleton<ISlackNotificationsSender>(slackService);
             services.AddSingleton<IMtSlackNotificationsSender>(slackService);
+
+            services.AddSingleton<ILoggerFactory>(x => new WebHostLoggerFactory(LogLocator.CommonLog));
         }
 
         /// <summary>

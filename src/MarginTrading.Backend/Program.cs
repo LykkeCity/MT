@@ -21,14 +21,19 @@ namespace MarginTrading.Backend
     {
         public static async Task Main(string[] args)
         {
+            AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
+            {
+                LogLocator.CommonLog?.WriteFatalErrorAsync("UnhandledException", nameof(AppDomain), (Exception)e.ExceptionObject);
+            };
+
             Console.WriteLine($@"{PlatformServices.Default.Application.ApplicationName} version {PlatformServices.Default.Application.ApplicationVersion}");
-            
+
             var restartAttemptsLeft = int.TryParse(Environment.GetEnvironmentVariable("RESTART_ATTEMPTS_NUMBER"),
-                out var restartAttemptsFromEnv) 
+                out var restartAttemptsFromEnv)
                 ? restartAttemptsFromEnv
                 : int.MaxValue;
             var restartAttemptsInterval = int.TryParse(Environment.GetEnvironmentVariable("RESTART_ATTEMPTS_INTERVAL_MS"),
-                out var restartAttemptsIntervalFromEnv) 
+                out var restartAttemptsIntervalFromEnv)
                 ? restartAttemptsIntervalFromEnv
                 : 10000;
 
@@ -41,7 +46,7 @@ namespace MarginTrading.Backend
                         .AddUserSecrets<Startup>()
                         .AddEnvironmentVariables()
                         .Build();
-                    
+
                     var host = WebHost.CreateDefaultBuilder()
                         .UseConfiguration(configuration)
                         .UseStartup<Startup>()
