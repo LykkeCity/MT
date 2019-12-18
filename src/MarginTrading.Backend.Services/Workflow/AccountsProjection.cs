@@ -153,7 +153,7 @@ namespace MarginTrading.Backend.Services.Workflow
                                             _ordersCache.InProgress.Remove(order);
                                         }
 
-                                        var warnings = _accountsCacheService.Reset(e.Account.Id);
+                                        var warnings = _accountsCacheService.Reset(e.Account.Id, e.ChangeTimestamp);
                                         if (!string.IsNullOrEmpty(warnings))
                                         {
                                             await _log.WriteWarningAsync(nameof(AccountChangedEvent),
