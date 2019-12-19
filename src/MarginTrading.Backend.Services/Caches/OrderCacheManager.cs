@@ -24,11 +24,11 @@ namespace MarginTrading.Backend.Services.Caches
         private readonly IOrdersHistoryRepository _ordersHistoryRepository;
         private readonly IPositionsHistoryRepository _positionsHistoryRepository;
         private readonly ILog _log;
-        
-        public const string OrdersBlobName= "orders";
-        public const string PositionsBlobName= "positions";
-        
-        private static readonly OrderStatus[] OrderTerminalStatuses = {OrderStatus.Canceled, OrderStatus.Rejected, OrderStatus.Executed};
+
+        public const string OrdersBlobName = "orders";
+        public const string PositionsBlobName = "positions";
+
+        private static readonly OrderStatus[] OrderTerminalStatuses = { OrderStatus.Canceled, OrderStatus.Rejected, OrderStatus.Executed };
         private static readonly PositionHistoryType PositionTerminalStatus = PositionHistoryType.Close;
 
         public OrderCacheManager(OrdersCache orderCache,
@@ -36,7 +36,7 @@ namespace MarginTrading.Backend.Services.Caches
             IOrdersHistoryRepository ordersHistoryRepository,
             IPositionsHistoryRepository positionsHistoryRepository,
             MarginTradingSettings marginTradingSettings,
-            ILog log) 
+            ILog log)
             : base(nameof(OrderCacheManager), marginTradingSettings.BlobPersistence.OrdersDumpPeriodMilliseconds, log)
         {
             _orderCache = orderCache;
@@ -111,34 +111,52 @@ namespace MarginTrading.Backend.Services.Caches
                 LykkeConstants.StateBlobContainer, OrdersBlobName);
             var blobPositionsTask = _blobRepository.ReadWithTimestampAsync<List<Position>>(
                 LykkeConstants.StateBlobContainer, PositionsBlobName);
+
             var (blobOrders, blobOrdersTimestamp) = blobOrdersTask.GetAwaiter().GetResult();
             var (blobPositions, blobPositionsTimestamp) = blobPositionsTask.GetAwaiter().GetResult();
-            
+
+            DetailedInitDataLog("Orders found", blobOrders, x => new { x.Id, x.Status });
+            DetailedInitDataLog("Positions found", blobPositions, x => new { x.Id, x.Status });
+
             _log.WriteInfo(nameof(OrderCacheManager), nameof(InferInitDataFromBlobAndHistory),
                 $"Finish reading data from blob, there are [{blobOrders.Count}] orders, [{blobPositions.Count}] positions. Start checking historical data.");
-            
+
             var orderSnapshotsTask = _ordersHistoryRepository.GetLastSnapshot(blobOrdersTimestamp);
             var positionSnapshotsTask = _positionsHistoryRepository.GetLastSnapshot(blobPositionsTimestamp);
             var orderSnapshots = orderSnapshotsTask.GetAwaiter().GetResult().Select(OrderHistory.Create).ToList();
+
+            DetailedInitDataLog("Orders on History found", orderSnapshots, x => new { x.Id, x.Status });
+
             PreProcess(orderSnapshots);
+
+            DetailedInitDataLog("Orders on History pre-processed", orderSnapshots, x => new { x.Id, x.Status });
+
             var positionSnapshots = positionSnapshotsTask.GetAwaiter().GetResult();
-            
+
+            DetailedInitDataLog("Positions on History found", positionSnapshots, x => new { x.Id, x.HistoryType });
+
             _log.WriteInfo(nameof(OrderCacheManager), nameof(InferInitDataFromBlobAndHistory),
                 $"Finish reading historical data. #{orderSnapshots.Count} order history items since [{blobOrdersTimestamp:s}], #{positionSnapshots.Count} position history items since [{blobPositionsTimestamp:s}].");
 
-            var (ordersResult, orderIdsChangedFromHistory) = MapOrders(blobOrders.ToDictionary(x => x.Id, x => x), 
+            var (ordersResult, orderIdsChangedFromHistory) = MapOrders(blobOrders.ToDictionary(x => x.Id, x => x),
                 orderSnapshots.ToDictionary(x => x.Id, x => x));
             var (positionsResult, positionIdsChangedFromHistory) = MapPositions(
                 blobPositions.ToDictionary(x => x.Id, x => x), positionSnapshots.ToDictionary(x => x.Id, x => x));
-            
+
+            DetailedInitDataLog("Orders after merge with history", ordersResult, x => new { x.Id, x.Status });
+            DetailedInitDataLog("Positions after merge with history", positionsResult, x => new { x.Id, x.Status });
+
             RefreshRelated(ordersResult.ToDictionary(x => x.Id), positionsResult.ToDictionary(x => x.Id),
                 orderSnapshots);
+
+            DetailedInitDataLog("Orders after refresh related", ordersResult, x => new { x.Id, x.Status });
+            DetailedInitDataLog("Positions after refresh related", positionsResult, x => new { x.Id, x.Status });
 
             _log.WriteInfo(nameof(OrderCacheManager), nameof(InferInitDataFromBlobAndHistory),
                 $"Initializing cache with [{ordersResult.Count}] orders and [{positionsResult.Count}] positions.");
 
             _orderCache.InitOrders(ordersResult, positionsResult);
-            
+
             if (orderIdsChangedFromHistory.Any() || positionIdsChangedFromHistory.Any())
             {
                 _log.WriteInfo(nameof(OrderCacheManager), nameof(InferInitDataFromBlobAndHistory),
@@ -156,10 +174,10 @@ namespace MarginTrading.Backend.Services.Caches
                 {
                     DumpPositionsToRepository().Wait();
                 }
-                
+
                 _log.WriteInfo(nameof(OrderCacheManager), nameof(InferInitDataFromBlobAndHistory),
                      "Finished dumping merged order and position data to the blob."
-                ); 
+                );
             }
 
             return (ordersResult, positionsResult);
@@ -183,7 +201,7 @@ namespace MarginTrading.Backend.Services.Caches
             {
                 return (blobOrders.Values.ToList(), new List<string>());
             }
-        
+
             var changedIds = new List<string>();
             var result = new List<Order>();
 
@@ -196,7 +214,7 @@ namespace MarginTrading.Backend.Services.Caches
                     {
                         continue;
                     }
-                    
+
                     changedIds.Add(id);
                 }
 
@@ -280,6 +298,12 @@ namespace MarginTrading.Backend.Services.Caches
                     }
                 }
             }
+        }
+
+        private void DetailedInitDataLog<T, R>(string message, IEnumerable<T> collection, Func<T, R> detail)
+        {
+            _log.WriteInfo(nameof(OrderCacheManager), nameof(InferInitDataFromBlobAndHistory),
+                $"{message}: {collection.Select(detail).ToArray().ToJson()}");
         }
     }
 }
