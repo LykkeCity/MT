@@ -19,7 +19,6 @@ namespace MarginTrading.Backend.Core.TradingConditions
         public decimal DealMaxLimit { get; set; }
         public decimal PositionLimit { get; set; }
         public bool ShortPosition { get; set; }
-        public decimal LiquidationThreshold { get; set; }
         public decimal OvernightMarginMultiplier { get; set; }
         
         public decimal CommissionRate { get; set; }
