@@ -65,7 +65,7 @@ namespace MarginTrading.Backend.Core
             };
         }
 
-        public string Reset(DateTime now)
+        public string Reset(DateTime eventTime)
         {
             var warnings = new List<string>();
 
@@ -86,7 +86,7 @@ namespace MarginTrading.Backend.Core
             
             Balance = 0;
             LiquidationOperationId = string.Empty;
-            LastUpdateTime = LastBalanceChangeTime = now;
+            LastUpdateTime = LastBalanceChangeTime = eventTime;
             AccountFpl = new AccountFpl();
 
             return string.Join(", ", warnings);
