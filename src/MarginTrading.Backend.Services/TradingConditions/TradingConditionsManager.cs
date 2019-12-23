@@ -18,17 +18,17 @@ namespace MarginTrading.Backend.Services.TradingConditions
     {
         private readonly ITradingConditionsApi _tradingConditions;
         private readonly TradingConditionsCacheService _tradingConditionsCacheService;
-        private readonly IConsole _console;
+        private readonly ILog _log;
         private readonly IConvertService _convertService;
 
         public TradingConditionsManager(
             ITradingConditionsApi tradingConditions,
             TradingConditionsCacheService tradingConditionsCacheService,
-            IConsole console,
+            ILog log,
             IConvertService convertService)
         {
             _tradingConditionsCacheService = tradingConditionsCacheService;
-            _console = console;
+            _log = log;
             _convertService = convertService;
             _tradingConditions = tradingConditions;
         }
@@ -40,7 +40,8 @@ namespace MarginTrading.Backend.Services.TradingConditions
 
         public async Task InitTradingConditionsAsync()
         {
-            _console.WriteLine($"Started {nameof(InitTradingConditionsAsync)}");
+            await _log.WriteInfoAsync(nameof(InitTradingConditionsAsync), nameof(TradingConditionsManager), 
+                $"Started {nameof(InitTradingConditionsAsync)}");
 
             var tradingConditions = await _tradingConditions.List();
 
@@ -51,7 +52,7 @@ namespace MarginTrading.Backend.Services.TradingConditions
                     .ToList());
             }
 
-            _console.WriteLine(
+            await _log.WriteInfoAsync(nameof(InitTradingConditionsAsync), nameof(TradingConditionsManager),
                 $"Finished {nameof(InitTradingConditionsAsync)}. Count:{tradingConditions?.Count ?? 0})");
         }
     }

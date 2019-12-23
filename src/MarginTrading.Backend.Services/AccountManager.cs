@@ -26,7 +26,6 @@ namespace MarginTrading.Backend.Services
     public class AccountManager : TimerPeriod
     {
         private readonly AccountsCacheService _accountsCacheService;
-        private readonly IConsole _console;
         private readonly MarginTradingSettings _marginSettings;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly ILog _log;
@@ -41,7 +40,6 @@ namespace MarginTrading.Backend.Services
 
         public AccountManager(
             AccountsCacheService accountsCacheService,
-            IConsole console,
             MarginTradingSettings marginSettings,
             IRabbitMqNotifyService rabbitMqNotifyService,
             ILog log,
@@ -51,11 +49,10 @@ namespace MarginTrading.Backend.Services
             IConvertService convertService,
             IDateService dateService,
             IAccountMarginFreezingRepository accountMarginFreezingRepository,
-            IAccountMarginUnconfirmedRepository accountMarginUnconfirmedRepository) 
+            IAccountMarginUnconfirmedRepository accountMarginUnconfirmedRepository)
             : base(nameof(AccountManager), 60000, log)
         {
             _accountsCacheService = accountsCacheService;
-            _console = console;
             _marginSettings = marginSettings;
             _rabbitMqNotifyService = rabbitMqNotifyService;
             _log = log;
@@ -71,26 +68,26 @@ namespace MarginTrading.Backend.Services
         public override Task Execute()
         {
             //TODO: to think if we need this process, at the current moment it is not used and only increases load on RabbitMq
-//            var accounts = GetAccountsToWriteStats();
-//            var accountsStatsMessages = GenerateAccountsStatsUpdateMessages(accounts);
-//            var tasks = accountsStatsMessages.Select(m => _rabbitMqNotifyService.UpdateAccountStats(m));
-//
-//            return Task.WhenAll(tasks);
-              return Task.CompletedTask;
+            //            var accounts = GetAccountsToWriteStats();
+            //            var accountsStatsMessages = GenerateAccountsStatsUpdateMessages(accounts);
+            //            var tasks = accountsStatsMessages.Select(m => _rabbitMqNotifyService.UpdateAccountStats(m));
+            //
+            //            return Task.WhenAll(tasks);
+            return Task.CompletedTask;
         }
 
         public override void Start()
         {
-            _console.WriteLine("Starting InitAccountsCache");
+            _log.WriteInfo(nameof(Start), nameof(AccountManager), "Starting InitAccountsCache");
 
             var accounts = _accountsApi.List().GetAwaiter().GetResult()
                 .Select(Convert).ToDictionary(x => x.Id);
 
             //TODO: think about approach
             //ApplyMarginFreezing(accounts);
-            
+
             _accountsCacheService.InitAccountsCache(accounts);
-            _console.WriteLine($"Finished InitAccountsCache. Count: {accounts.Count}");
+            _log.WriteInfo(nameof(Start), nameof(AccountManager), $"Finished InitAccountsCache. Count: {accounts.Count}");
 
             base.Start();
         }
@@ -127,7 +124,7 @@ namespace MarginTrading.Backend.Services
             IEnumerable<IMarginTradingAccount> accounts)
         {
             return accounts.Select(a => a.ToRabbitMqContract()).Batch(100)
-                .Select(ch => new AccountStatsUpdateMessage {Accounts = ch.ToArray()});
+                .Select(ch => new AccountStatsUpdateMessage { Accounts = ch.ToArray() });
         }
 
         private MarginTradingAccount Convert(AccountContract accountContract)
