@@ -16,13 +16,22 @@ namespace MarginTrading.SqlRepositories.Repositories
     public class OrdersHistoryRepository : IOrdersHistoryRepository
     {
         private readonly string _connectionString;
-        private readonly string _tableName;
         private readonly int _getLastSnapshotTimeoutS;
+        private readonly string _select = @";WITH cte AS
+       (
+         SELECT *,
+                ROW_NUMBER() OVER (PARTITION BY Id ORDER BY ModifiedTimestamp DESC) AS rn
+         FROM [{0}] oh
+       )
+SELECT *
+FROM cte
+WHERE rn = 1
+  AND cte.ModifiedTimestamp > @Timestamp";
 
         public OrdersHistoryRepository(string connectionString, string tableName, int getLastSnapshotTimeoutS)
         {
             _connectionString = connectionString;
-            _tableName = tableName;
+            _select = string.Format(_select, tableName);
             _getLastSnapshotTimeoutS = getLastSnapshotTimeoutS;
         }
 
@@ -30,26 +39,9 @@ namespace MarginTrading.SqlRepositories.Repositories
         {
             using (var conn = new SqlConnection(_connectionString))
             {
-                var idsToSelectColumns = new string[] {
-                    nameof(OrderHistoryEntity.OID),
-                    nameof(OrderHistoryEntity.Id),
-                    nameof(OrderHistoryEntity.ModifiedTimestamp)
-                };
-                var idsToSelect = (await conn.QueryAsync<OrderHistoryEntity>(
-                    $"SELECT {string.Join(",", idsToSelectColumns)} FROM {_tableName} WHERE ModifiedTimestamp > @Timestamp",
-                    new { Timestamp = @from },
-                    commandTimeout: _getLastSnapshotTimeoutS))
-                    .OrderByDescending(x => x.ModifiedTimestamp)
-                    .GroupBy(x => x.Id)
-                    .Select(g => g.First().OID)
-                    .ToList();
+                var data = await conn.QueryAsync<OrderHistoryEntity>(_select, new { Timestamp = @from }, commandTimeout: _getLastSnapshotTimeoutS);
 
-                return (await conn.QueryAsync<OrderHistoryEntity>(
-                    $"SELECT * FROM {_tableName} WHERE {nameof(OrderHistoryEntity.OID)} IN @IdsToSelect",
-                    new { IdsToSelect = idsToSelect },
-                    commandTimeout: _getLastSnapshotTimeoutS))
-                    .Cast<IOrderHistory>()
-                    .ToList();
+                return data.Cast<IOrderHistory>().ToList();
             }
         }
     }
