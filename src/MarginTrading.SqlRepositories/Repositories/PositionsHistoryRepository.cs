@@ -22,11 +22,11 @@ namespace MarginTrading.SqlRepositories.Repositories
          SELECT *,
                 ROW_NUMBER() OVER (PARTITION BY Id ORDER BY HistoryTimestamp DESC) AS rn
          FROM [{0}] ph
+         WHERE ph.HistoryTimestamp > @Timestamp
        )
 SELECT *
 FROM cte
-WHERE rn = 1
-  AND cte.HistoryTimestamp > @Timestamp";
+WHERE rn = 1";
 
         public PositionsHistoryRepository(string connectionString, string tableName, int getLastSnapshotTimeoutS)
         {
