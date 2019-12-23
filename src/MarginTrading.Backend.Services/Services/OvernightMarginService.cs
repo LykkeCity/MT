@@ -129,7 +129,7 @@ namespace MarginTrading.Backend.Services.Services
                     .WithName(nameof(OvernightMarginService)).NonReentrant().ToRunOnceAt(nextStart));
 
                 _log.WriteMonitor(nameof(OvernightMarginService), nameof(ScheduleNext),
-                    @$"All current schedules: {string.Join(", ",
+                    $@"All current schedules: {string.Join(", ",
                         JobManager.AllSchedules.Select(x => $"[{x.Name}:{x.NextRun:O}:{x.Disabled}]"))}.");
             }
         }
