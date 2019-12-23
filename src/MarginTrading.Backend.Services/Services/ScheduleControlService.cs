@@ -22,6 +22,8 @@ namespace MarginTrading.Backend.Services.Services
         private readonly IScheduleSettingsCacheService _scheduleSettingsCacheService;
         private readonly ILog _log;
         private readonly IDateService _dateService;
+        
+        private static readonly object LockObj = new object();
 
         public ScheduleControlService(IScheduleSettingsCacheService scheduleSettingsCacheService, ILog log, IDateService dateService)
         {
@@ -33,21 +35,25 @@ namespace MarginTrading.Backend.Services.Services
         /// <inheritdoc />
         public void ScheduleNext()
         {
-            var currentDateTime = _dateService.Now();
-            
-            //need to know in which OvernightMarginJobType we are now and the moment of next change
-            var marketsSchedule = _scheduleSettingsCacheService.GetMarketsTradingSchedule();
+            lock (LockObj)
+            {
+                var currentDateTime = _dateService.Now();
 
-            var nextStart = TryGetClosestPoint(marketsSchedule, currentDateTime);
+                //need to know in which OvernightMarginJobType we are now and the moment of next change
+                var marketsSchedule = _scheduleSettingsCacheService.GetMarketsTradingSchedule();
 
-            _log.WriteInfo(nameof(ScheduleControlService), nameof(ScheduleNext),
-                $"Planning next check to [{nextStart:s}]."
-                + $" Check time: [{currentDateTime:s}].");
-            
-            _scheduleSettingsCacheService.HandleMarketStateChanges(currentDateTime);
-            
-            JobManager.AddJob(ScheduleNext, s => s
-                .WithName(nameof(ScheduleControlService)).NonReentrant().ToRunOnceAt(nextStart));
+                var nextStart = TryGetClosestPoint(marketsSchedule, currentDateTime);
+
+                _log.WriteInfo(nameof(ScheduleControlService), nameof(ScheduleNext),
+                    $"Planning next check to [{nextStart:s}]."
+                    + $" Check time: [{currentDateTime:s}].");
+
+                _scheduleSettingsCacheService.HandleMarketStateChanges(currentDateTime);
+
+                JobManager.RemoveJob(nameof(ScheduleControlService));
+                JobManager.AddJob(ScheduleNext, s => s
+                    .WithName(nameof(ScheduleControlService)).NonReentrant().ToRunOnceAt(nextStart));
+            }
         }
 
         public DateTime TryGetClosestPoint(Dictionary<string, List<CompiledScheduleTimeInterval>> marketsSchedule, 
