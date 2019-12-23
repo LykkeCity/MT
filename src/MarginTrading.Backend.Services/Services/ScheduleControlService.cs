@@ -50,6 +50,7 @@ namespace MarginTrading.Backend.Services.Services
 
                 _scheduleSettingsCacheService.HandleMarketStateChanges(currentDateTime);
 
+                JobManager.RemoveJob(nameof(ScheduleControlService));
                 JobManager.AddJob(ScheduleNext, s => s
                     .WithName(nameof(ScheduleControlService)).NonReentrant().ToRunOnceAt(nextStart));
             }

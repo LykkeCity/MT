@@ -125,11 +125,12 @@ namespace MarginTrading.Backend.Services.Services
                         ? $" Detected operation interval: [{operatingInterval.ToJson()}]."
                         : ""));
 
+                JobManager.RemoveJob(nameof(OvernightMarginService));
                 JobManager.AddJob(ScheduleNext, s => s
                     .WithName(nameof(OvernightMarginService)).NonReentrant().ToRunOnceAt(nextStart));
 
-                _log.WriteMonitor(nameof(OvernightMarginService), nameof(ScheduleNext),
-                    $@"All current schedules: {string.Join(", ",
+                _log.WriteInfo(nameof(OvernightMarginService), nameof(ScheduleNext),
+                    $@"All current job schedules: {string.Join(", ",
                         JobManager.AllSchedules.Select(x => $"[{x.Name}:{x.NextRun:O}:{x.Disabled}]"))}.");
             }
         }
@@ -162,11 +163,13 @@ namespace MarginTrading.Backend.Services.Services
 
             if (currentDateTime < eodTime)
             {
+                JobManager.RemoveJob(nameof(PlanEodJob));
                 JobManager.AddJob(() => _tradingEngine.ProcessExpiredOrders(operatingIntervalEnd),
                     (s) => s.WithName(nameof(PlanEodJob)).NonReentrant().ToRunOnceAt(eodTime));
             }
             else
             {
+                JobManager.RemoveJob(nameof(PlanEodJob));
                 JobManager.AddJob(() => _tradingEngine.ProcessExpiredOrders(operatingIntervalEnd), 
                     (s) => s.WithName(nameof(PlanEodJob)).ToRunNow());
             }
