@@ -435,14 +435,6 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 var tradingInstrument = _tradingInstrumentsCacheService.GetTradingInstrument(account.TradingConditionId, 
                     assetPairId);
 
-                if (tradingInstrument.LiquidationThreshold > 0 &&
-                    Math.Abs(netPositionVolume) > tradingInstrument.LiquidationThreshold)
-                {
-                    details = $"Threshold exceeded. Net volume : {netPositionVolume}. " +
-                              $"Threshold : {tradingInstrument.LiquidationThreshold}.";
-                    return false;
-                }
-
                 //TODO: discuss and handle situation with different MEs for different positions
                 //at the current moment all positions has the same asset pair
                 //and every asset pair can be processed only by one ME
