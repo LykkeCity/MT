@@ -226,7 +226,7 @@ namespace MarginTrading.Backend.Services
             } 
         }
 
-        public string Reset(string accountId)
+        public string Reset(string accountId, DateTime eventTime)
         {
             _lockSlim.EnterWriteLock();
             try
@@ -236,7 +236,7 @@ namespace MarginTrading.Backend.Services
                     throw new Exception($"Account {accountId} does not exist.");
                 }
 
-                return account.Reset(_dateService.Now());
+                return account.Reset(eventTime);
             }
             finally
             {

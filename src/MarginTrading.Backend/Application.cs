@@ -4,7 +4,6 @@
 using System;
 using System.Threading.Tasks;
 using Common.Log;
-using Lykke.Common;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MarketMakerFeed;
 using MarginTrading.Backend.Core.MatchingEngines;
@@ -49,7 +48,7 @@ namespace MarginTrading.Backend
         private readonly ITradingConditionsManager _tradingConditionsManager;
         private readonly IScheduleSettingsCacheService _scheduleSettingsCacheService;
         private readonly IOvernightMarginService _overnightMarginService;
-        private readonly IThreadSwitcher _threadSwitcher;
+        private readonly IScheduleControlService _scheduleControlService;
         private const string ServiceName = "MarginTrading.Backend";
 
         public Application(
@@ -69,8 +68,8 @@ namespace MarginTrading.Backend
             ITradingInstrumentsManager tradingInstrumentsManager,
             ITradingConditionsManager tradingConditionsManager,
             IScheduleSettingsCacheService scheduleSettingsCacheService,
-            IOvernightMarginService overnightMarginService,
-            IThreadSwitcher threadSwitcher)
+            IOvernightMarginService overnightMarginService, 
+            IScheduleControlService scheduleControlService)
         {
             _rabbitMqNotifyService = rabbitMqNotifyService;
             _marketMakerService = marketMakerService;
@@ -89,7 +88,7 @@ namespace MarginTrading.Backend
             _tradingConditionsManager = tradingConditionsManager;
             _scheduleSettingsCacheService = scheduleSettingsCacheService;
             _overnightMarginService = overnightMarginService;
-            _threadSwitcher = threadSwitcher;
+            _scheduleControlService = scheduleControlService;
         }
 
         public async Task StartApplicationAsync()
@@ -210,6 +209,7 @@ namespace MarginTrading.Backend
                 case SettingsTypeContract.ScheduleSettings:
                     await _scheduleSettingsCacheService.UpdateAllSettingsAsync();
                     _overnightMarginService.ScheduleNext();
+                    _scheduleControlService.ScheduleNext();
                     break;
                 
                 case SettingsTypeContract.Market:

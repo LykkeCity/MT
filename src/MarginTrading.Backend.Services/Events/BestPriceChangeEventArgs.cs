@@ -8,11 +8,14 @@ namespace MarginTrading.Backend.Services.Events
 {
     public class BestPriceChangeEventArgs
     {
-        public BestPriceChangeEventArgs(InstrumentBidAskPair pair)
+        public BestPriceChangeEventArgs(InstrumentBidAskPair pair, bool isEod = false)
         {
             BidAskPair = pair ?? throw new ArgumentNullException(nameof(pair));
+            IsEod = isEod;
         }
 
         public InstrumentBidAskPair BidAskPair { get; }
+        
+        public bool IsEod { get; }
     }
 }

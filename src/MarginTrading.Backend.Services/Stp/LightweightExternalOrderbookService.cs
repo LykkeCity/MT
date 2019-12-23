@@ -192,7 +192,7 @@ namespace MarginTrading.Backend.Services.Stp
                 if (_orderbookValidation.ValidateInstrumentStatusForEodQuotes && !isDayOff && isEodOrderbook)
                 {
                     //log current schedule for the instrument
-                    var schedule = _scheduleSettingsCache.GetCompiledScheduleSettings(
+                    var schedule = _scheduleSettingsCache.GetCompiledAssetPairScheduleSettings(
                         orderbook.AssetPairId,
                         _dateService.Now(),
                         TimeSpan.Zero);
@@ -213,7 +213,7 @@ namespace MarginTrading.Backend.Services.Stp
 
             _orderbooks.AddOrUpdate(orderbook.AssetPairId,a => orderbook, (s, book) => orderbook);
             
-            _bestPriceChangeEventChannel.SendEvent(this, new BestPriceChangeEventArgs(bba));
+            _bestPriceChangeEventChannel.SendEvent(this, new BestPriceChangeEventArgs(bba, isEodOrderbook));
         }
 
         private bool CheckZeroQuote(ExternalOrderBook orderbook, bool isEodOrderbook)

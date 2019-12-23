@@ -63,7 +63,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
             if (!_scheduleSettingsCacheService.TryGetPlatformCurrentDisabledInterval(out var disabledInterval))
             {
                 //TODO: remove later (if everything will work and we will never go to this branch)
-                _scheduleSettingsCacheService.PlatformCacheWarmUp();
+                _scheduleSettingsCacheService.MarketsCacheWarmUp();
                 
                 if (!_scheduleSettingsCacheService.TryGetPlatformCurrentDisabledInterval(out disabledInterval))
                 {

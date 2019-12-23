@@ -11,9 +11,11 @@ using Common.Log;
 using MarginTrading.Backend.Contracts.TradingSchedule;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.DayOffSettings;
+using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Mappers;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Infrastructure;
+using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
 using MarginTrading.SettingsService.Contracts;
 using MarginTrading.SettingsService.Contracts.Scheduling;
@@ -31,14 +33,17 @@ namespace MarginTrading.Backend.Services.AssetPairs
         private readonly ILog _log;
         private readonly OvernightMarginSettings _overnightMarginSettings;
 
-        private Dictionary<string, List<ScheduleSettings>> _rawScheduleSettingsCache =
+        private Dictionary<string, List<ScheduleSettings>> _rawAssetPairScheduleCache =
             new Dictionary<string, List<ScheduleSettings>>();
-
-        private Dictionary<string, List<CompiledScheduleTimeInterval>> _compiledScheduleTimelineCache =
+        private Dictionary<string, List<CompiledScheduleTimeInterval>> _compiledAssetPairScheduleCache =
             new Dictionary<string, List<CompiledScheduleTimeInterval>>();
 
-        private List<ScheduleSettings> _rawPlatformSchedule = new List<ScheduleSettings>();
-        private List<CompiledScheduleTimeInterval> _compiledPlatformSchedule = new List<CompiledScheduleTimeInterval>();
+        private Dictionary<string, List<ScheduleSettings>> _rawMarketScheduleCache =
+            new Dictionary<string, List<ScheduleSettings>>();
+        private Dictionary<string, List<CompiledScheduleTimeInterval>> _compiledMarketScheduleCache =
+            new Dictionary<string, List<CompiledScheduleTimeInterval>>();
+
+        private readonly Dictionary<string, MarketState> _marketStates = new Dictionary<string, MarketState>();
 
         private DateTime _lastCacheRecalculationTime = DateTime.MinValue;
 
@@ -62,15 +67,15 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         public async Task UpdateAllSettingsAsync()
         {
-            await UpdateSettingsAsync();
-            await UpdatePlatformSettingsAsync();
+            await UpdateScheduleSettingsAsync();
+            await UpdateMarketsScheduleSettingsAsync();
         }
 
-        public async Task UpdateSettingsAsync()
+        public async Task UpdateScheduleSettingsAsync()
         {
             var newScheduleContracts = (await _scheduleSettingsApi.StateList(null))
                 .Where(x => x.ScheduleSettings.Any()).ToList();
-            var invalidSchedules = InvalidSchedules(newScheduleContracts);
+            var invalidSchedules = newScheduleContracts.InvalidSchedules();
 
             var assertPairIdsToWarmUp = new List<string>();
 
@@ -84,20 +89,20 @@ namespace MarginTrading.Backend.Services.AssetPairs
                             : new List<CompiledScheduleSettingsContract>())
                         .Select(ScheduleSettings.Create).ToList());
 
-                _rawScheduleSettingsCache
-                    .Where(x => TradingScheduleChanged(x.Key, _rawScheduleSettingsCache, newRawScheduleSettings))
+                _rawAssetPairScheduleCache
+                    .Where(x => TradingScheduleChanged(x.Key, _rawAssetPairScheduleCache, newRawScheduleSettings))
                     .Select(x => x.Key)
                     .ForEach(key =>
                     {
-                        _compiledScheduleTimelineCache.Remove(key);
+                        _compiledAssetPairScheduleCache.Remove(key);
                         assertPairIdsToWarmUp.Add(key);
                     });
 
-                _rawScheduleSettingsCache = newRawScheduleSettings;
+                _rawAssetPairScheduleCache = newRawScheduleSettings;
             }
             catch (Exception exception)
             {
-                await _log.WriteErrorAsync(nameof(ScheduleSettingsCacheService), nameof(UpdateSettingsAsync),
+                await _log.WriteErrorAsync(nameof(ScheduleSettingsCacheService), nameof(UpdateScheduleSettingsAsync),
                     exception);
             }
             finally
@@ -108,26 +113,37 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
             if (invalidSchedules.Any())
             {
-                await _log.WriteWarningAsync(nameof(ScheduleSettingsCacheService), nameof(UpdateSettingsAsync),
+                await _log.WriteWarningAsync(nameof(ScheduleSettingsCacheService), nameof(UpdateScheduleSettingsAsync),
                     $"Some of CompiledScheduleSettingsContracts were invalid, so they were skipped. The first one: {invalidSchedules.First().ToJson()}");
             }
         }
 
-        public async Task UpdatePlatformSettingsAsync()
+        public async Task UpdateMarketsScheduleSettingsAsync()
         {
-            var platformSettingsRaw = (await _scheduleSettingsApi.List(_overnightMarginSettings.ScheduleMarketId))
+            var marketsScheduleSettingsRaw = (await _scheduleSettingsApi.List())
+                .Where(x => !string.IsNullOrWhiteSpace(x.MarketId))
                 .ToList();
-            var invalidSchedules = InvalidSchedules(platformSettingsRaw);
-            var platformSettings = platformSettingsRaw.Except(invalidSchedules)
-                .Select(ScheduleSettings.Create).ToList();
+            var invalidSchedules = marketsScheduleSettingsRaw.InvalidSchedules();
 
             _readerWriterLockSlim.EnterWriteLock();
 
             try
             {
-                _rawPlatformSchedule = platformSettings;
+                var platformScheduleSettings = marketsScheduleSettingsRaw
+                    .Where(x => x.MarketId == _overnightMarginSettings.ScheduleMarketId).ToList();
+                
+                var newMarketsScheduleSettings = marketsScheduleSettingsRaw
+                    .Except(invalidSchedules)
+                    .GroupBy(x => x.MarketId)
+                    .ToDictionary(x => x.Key, x => x.ConcatWithPlatform(platformScheduleSettings, x.Key)
+                        .Select(ScheduleSettings.Create)
+                        .ToList());
 
-                PlatformCacheWarmUpUnsafe();
+                _rawMarketScheduleCache = newMarketsScheduleSettings;
+
+                var now = MarketsCacheWarmUpUnsafe();
+
+                HandleMarketStateChangesUnsafe(now, newMarketsScheduleSettings.Keys.ToArray());
             }
             finally
             {
@@ -136,8 +152,43 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
             if (invalidSchedules.Any())
             {
-                await _log.WriteWarningAsync(nameof(ScheduleSettingsCacheService), nameof(UpdatePlatformSettingsAsync),
-                    $"Some of ScheduleSettingsContracts were invalid, so they were skipped. The first one: {invalidSchedules.First().ToJson()}");
+                await _log.WriteWarningAsync(nameof(ScheduleSettingsCacheService), nameof(UpdateMarketsScheduleSettingsAsync),
+                    $"{invalidSchedules.Count} of ScheduleSettingsContracts were invalid, so they were skipped: {invalidSchedules.ToJson()}");
+            }
+        }
+
+        public void HandleMarketStateChanges(DateTime currentTime)
+        {
+            _readerWriterLockSlim.EnterWriteLock();
+            
+            try
+            {
+                HandleMarketStateChangesUnsafe(currentTime);
+            }
+            finally
+            {
+                _readerWriterLockSlim.ExitWriteLock();
+            }
+        }
+
+        private void HandleMarketStateChangesUnsafe(DateTime currentTime, string[] marketIds = null)
+        {
+            foreach (var (marketId, scheduleSettings) in _compiledMarketScheduleCache
+                // ReSharper disable once AssignNullToNotNullAttribute
+                .Where(x => marketIds.IsNullOrEmpty() || marketIds.Contains(x.Key)))
+            {
+                var newState = scheduleSettings.GetMarketState(marketId, currentTime);
+                if (!_marketStates.TryGetValue(marketId, out var oldState) || oldState.IsEnabled != newState.IsEnabled)
+                {
+                    _cqrsSender.PublishEvent(new MarketStateChangedEvent
+                    {
+                        Id = marketId,
+                        IsEnabled = newState.IsEnabled,
+                        EventTimestamp = _dateService.Now(),
+                    });
+                }
+
+                _marketStates[marketId] = newState;
             }
         }
 
@@ -148,7 +199,22 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
             try
             {
-                return _compiledPlatformSchedule.ToList();
+                return _compiledMarketScheduleCache[_overnightMarginSettings.ScheduleMarketId].ToList();
+            }
+            finally
+            {
+                _readerWriterLockSlim.ExitReadLock();
+            }
+        }
+
+        /// <inheritdoc cref="IScheduleSettingsCacheService"/>
+        public Dictionary<string, List<CompiledScheduleTimeInterval>> GetMarketsTradingSchedule()
+        {
+            _readerWriterLockSlim.EnterReadLock();
+
+            try
+            {
+                return _compiledMarketScheduleCache.ToDictionary();
             }
             finally
             {
@@ -165,7 +231,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         public bool AssetPairTradingEnabled(string assetPairId, TimeSpan scheduleCutOff)
         {
-            var schedule = GetCompiledScheduleSettings(assetPairId, _dateService.Now(), scheduleCutOff);
+            var schedule = GetCompiledAssetPairScheduleSettings(assetPairId, _dateService.Now(), scheduleCutOff);
 
             return GetTradingEnabled(schedule, out _);
         }
@@ -213,8 +279,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             return false;
         }
 
-        public Dictionary<string, List<CompiledScheduleTimeInterval>> GetCompiledScheduleSettings(
-            DateTime currentDateTime, TimeSpan scheduleCutOff)
+        public Dictionary<string, List<CompiledScheduleTimeInterval>> GetCompiledAssetPairScheduleSettings()
         {
             _readerWriterLockSlim.EnterUpgradeableReadLock();
 
@@ -222,7 +287,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             {
                 CacheWarmUpIncludingValidationUnsafe();
 
-                return _compiledScheduleTimelineCache;
+                return _compiledAssetPairScheduleCache;
             }
             finally
             {
@@ -230,7 +295,21 @@ namespace MarginTrading.Backend.Services.AssetPairs
             }
         }
 
-        public List<CompiledScheduleTimeInterval> GetCompiledScheduleSettings(string assetPairId,
+        public Dictionary<string, MarketState> GetMarketState()
+        {
+            _readerWriterLockSlim.EnterReadLock();
+
+            try
+            {
+                return _marketStates.ToDictionary();
+            }
+            finally
+            {
+                _readerWriterLockSlim.ExitReadLock();
+            }
+        }
+
+        public List<CompiledScheduleTimeInterval> GetCompiledAssetPairScheduleSettings(string assetPairId,
             DateTime currentDateTime, TimeSpan scheduleCutOff)
         {
             if (string.IsNullOrEmpty(assetPairId))
@@ -244,12 +323,12 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
             try
             {
-                if (!_compiledScheduleTimelineCache.ContainsKey(assetPairId))
+                if (!_compiledAssetPairScheduleCache.ContainsKey(assetPairId))
                 {
                     RecompileScheduleTimelineCacheUnsafe(assetPairId, currentDateTime, scheduleCutOff);
                 }
 
-                return _compiledScheduleTimelineCache.TryGetValue(assetPairId, out var timeline)
+                return _compiledAssetPairScheduleCache.TryGetValue(assetPairId, out var timeline)
                     ? timeline
                     : new List<CompiledScheduleTimeInterval>();
             }
@@ -277,7 +356,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
         {
             EnsureCacheValidUnsafe(_dateService.Now());
 
-            if (!_compiledScheduleTimelineCache.Any())
+            if (!_compiledAssetPairScheduleCache.Any())
             {
                 CacheWarmUpUnsafe();
             }
@@ -312,7 +391,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
             foreach (var assetPairId in assetPairIdsToWarmUp)
             {
-                if (!_compiledScheduleTimelineCache.ContainsKey(assetPairId))
+                if (!_compiledAssetPairScheduleCache.ContainsKey(assetPairId))
                 {
                     //todo Zero timespan is ok for market orders, but if pending cut off should be applied, we will need one more cache for them..
                     RecompileScheduleTimelineCacheUnsafe(assetPairId, currentDateTime, TimeSpan.Zero);
@@ -320,29 +399,35 @@ namespace MarginTrading.Backend.Services.AssetPairs
             }
         }
 
-        public void PlatformCacheWarmUp()
+        public void MarketsCacheWarmUp()
         {
-            _log.WriteInfoAsync(nameof(ScheduleSettingsCacheService), nameof(PlatformCacheWarmUp),
-                "Started platform schedule cache update");
+            _log.WriteInfoAsync(nameof(ScheduleSettingsCacheService), nameof(MarketsCacheWarmUp),
+                "Started market schedule cache update");
 
             _readerWriterLockSlim.EnterWriteLock();
 
             try
             {
-                PlatformCacheWarmUpUnsafe();
+                MarketsCacheWarmUpUnsafe();
             }
             finally
             {
                 _readerWriterLockSlim.ExitWriteLock();
             }
 
-            _log.WriteInfoAsync(nameof(ScheduleSettingsCacheService), nameof(PlatformCacheWarmUp),
-                "Finished platform schedule cache update");
+            _log.WriteInfoAsync(nameof(ScheduleSettingsCacheService), nameof(MarketsCacheWarmUp),
+                "Finished market schedule cache update");
         }
 
-        private void PlatformCacheWarmUpUnsafe()
+        private DateTime MarketsCacheWarmUpUnsafe()
         {
-            _compiledPlatformSchedule = CompileSchedule(_rawPlatformSchedule, _dateService.Now(), TimeSpan.Zero);
+            var now = _dateService.Now();
+            
+            _compiledMarketScheduleCache = _rawMarketScheduleCache
+                .ToDictionary(x => x.Key, x => CompileSchedule(x.Value, now, TimeSpan.Zero));
+            HandleMarketStateChangesUnsafe(now, _rawMarketScheduleCache.Keys.ToArray());
+
+            return now;
         }
 
         /// <summary>
@@ -361,7 +446,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
             try
             {
-                _compiledScheduleTimelineCache =
+                _compiledAssetPairScheduleCache =
                     new Dictionary<string, List<CompiledScheduleTimeInterval>>();
                 _lastCacheRecalculationTime = currentDateTime;
             }
@@ -374,7 +459,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
         private void RecompileScheduleTimelineCacheUnsafe(string assetPairId, DateTime currentDateTime,
             TimeSpan scheduleCutOff)
         {
-            var scheduleSettings = _rawScheduleSettingsCache.TryGetValue(assetPairId, out var settings)
+            var scheduleSettings = _rawAssetPairScheduleCache.TryGetValue(assetPairId, out var settings)
                 ? settings
                 : new List<ScheduleSettings>();
 
@@ -388,7 +473,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             _readerWriterLockSlim.EnterWriteLock();
             try
             {
-                _compiledScheduleTimelineCache[assetPairId] = resultingTimeIntervals;
+                _compiledAssetPairScheduleCache[assetPairId] = resultingTimeIntervals;
 
                 _cqrsSender.PublishEvent(new CompiledScheduleChangedEvent
                 {
@@ -465,53 +550,6 @@ namespace MarginTrading.Backend.Services.AssetPairs
         private static DateTime CurrentWeekday(DateTime start, DayOfWeek day)
         {
             return start.Date.AddDays((int)day - (int)start.DayOfWeek);
-        }
-
-        private static Dictionary<string, List<CompiledScheduleSettingsContract>> InvalidSchedules(
-            IEnumerable<CompiledScheduleContract> scheduleContracts)
-        {
-            var invalidSchedules = new Dictionary<string, List<CompiledScheduleSettingsContract>>();
-            foreach (var scheduleContract in scheduleContracts)
-            {
-                var scheduleSettings = new List<CompiledScheduleSettingsContract>();
-                foreach (var scheduleSetting in scheduleContract.ScheduleSettings)
-                {
-                    try
-                    {
-                        ScheduleConstraintContract.Validate(scheduleSetting);
-                    }
-                    catch
-                    {
-                        scheduleSettings.Add(scheduleSetting);
-                    }
-                }
-
-                if (scheduleSettings.Any())
-                {
-                    invalidSchedules.Add(scheduleContract.AssetPairId, scheduleSettings);
-                }
-            }
-
-            return invalidSchedules;
-        }
-
-        private static List<ScheduleSettingsContract> InvalidSchedules(
-            IEnumerable<ScheduleSettingsContract> scheduleContracts)
-        {
-            var scheduleSettings = new List<ScheduleSettingsContract>();
-            foreach (var scheduleSetting in scheduleContracts)
-            {
-                try
-                {
-                    ScheduleConstraintContract.Validate(scheduleSetting);
-                }
-                catch
-                {
-                    scheduleSettings.Add(scheduleSetting);
-                }
-            }
-
-            return scheduleSettings;
         }
     }
 }

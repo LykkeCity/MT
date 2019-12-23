@@ -85,7 +85,7 @@ namespace MarginTrading.Backend.Services.Workflow
                 ));
             }
 
-            await _scheduleSettingsCacheService.UpdateSettingsAsync();
+            await _scheduleSettingsCacheService.UpdateScheduleSettingsAsync();
 
             void CloseAllOrders()
             {
