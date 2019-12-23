@@ -18,6 +18,7 @@ using Lykke.Logs.Serilog;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
 using Lykke.SlackNotifications;
+using Lykke.Snow.Common.Startup.Hosting;
 using Lykke.Snow.Common.Startup.Log;
 using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Core;
@@ -155,8 +156,10 @@ namespace MarginTrading.Backend
 
             var application = app.ApplicationServices.GetService<Application>();
 
-            appLifetime.ApplicationStarted.Register(() =>
+            appLifetime.ApplicationStarted.Register(async () =>
             {
+                await Program.Host.WriteLogsAsync(Environment, LogLocator.CommonLog);
+
                 LogLocator.CommonLog?.WriteMonitorAsync("", "", $"{Configuration.ServerType()} Started");
             });
 

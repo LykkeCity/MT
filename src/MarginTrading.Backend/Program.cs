@@ -19,6 +19,8 @@ namespace MarginTrading.Backend
     [UsedImplicitly]
     public class Program
     {
+        internal static IWebHost Host { get; private set; }
+
         public static async Task Main(string[] args)
         {
             AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
@@ -47,13 +49,13 @@ namespace MarginTrading.Backend
                         .AddEnvironmentVariables()
                         .Build();
 
-                    var host = WebHost.CreateDefaultBuilder()
+                    Host = WebHost.CreateDefaultBuilder()
                         .UseConfiguration(configuration)
                         .UseStartup<Startup>()
                         .UseApplicationInsights()
                         .Build();
 
-                    await host.RunAsync();
+                    await Host.RunAsync();
                 }
                 catch (Exception e)
                 {
