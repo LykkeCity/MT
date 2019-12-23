@@ -19,18 +19,18 @@ namespace MarginTrading.Backend.Services.TradingConditions
         private readonly ITradingInstrumentsCacheService _tradingInstrumentsCacheService;
         private readonly ITradingInstrumentsApi _tradingInstrumentsApi;
         private readonly IConvertService _convertService;
-        private readonly IConsole _console;
+        private readonly ILog _log;
 
         public TradingInstrumentsManager(
             ITradingInstrumentsCacheService tradingInstrumentsCacheService,
             ITradingInstrumentsApi tradingInstrumentsApi,
             IConvertService convertService,
-            IConsole console)
+            ILog log)
         {
             _tradingInstrumentsCacheService = tradingInstrumentsCacheService;
             _tradingInstrumentsApi = tradingInstrumentsApi;
             _convertService = convertService;
-            _console = console;
+            _log = log;
         }
 
         public void Start()
@@ -40,7 +40,8 @@ namespace MarginTrading.Backend.Services.TradingConditions
 
         public async Task UpdateTradingInstrumentsCacheAsync(string id = null)
         {
-            _console.WriteLine($"Started {nameof(UpdateTradingInstrumentsCacheAsync)}");
+            await _log.WriteInfoAsync(nameof(UpdateTradingInstrumentsCacheAsync), nameof(TradingInstrumentsManager), 
+                $"Started {nameof(UpdateTradingInstrumentsCacheAsync)}");
 
             var count = 0;
             if (string.IsNullOrEmpty(id))
@@ -77,7 +78,8 @@ namespace MarginTrading.Backend.Services.TradingConditions
                 }
             }
 
-            _console.WriteLine($"Finished {nameof(UpdateTradingInstrumentsCacheAsync)} with count: {count}.");
+            await _log.WriteInfoAsync(nameof(UpdateTradingInstrumentsCacheAsync), nameof(TradingInstrumentsManager), 
+                $"Finished {nameof(UpdateTradingInstrumentsCacheAsync)} with count: {count}.");
         }
     }
 }

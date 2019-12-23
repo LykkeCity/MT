@@ -33,7 +33,6 @@ namespace MarginTrading.Backend
     public sealed class Application
     {
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
-        private readonly IConsole _consoleWriter;
         private readonly MarketMakerService _marketMakerService;
         private readonly ILog _logger;
         private readonly MarginTradingSettings _marginSettings;
@@ -42,7 +41,7 @@ namespace MarginTrading.Backend
         private readonly IMatchingEngineRoutesManager _matchingEngineRoutesManager;
         private readonly IMigrationService _migrationService;
         private readonly IConvertService _convertService;
-        private readonly IFxRateCacheService _fxRateCacheService; 
+        private readonly IFxRateCacheService _fxRateCacheService;
         private readonly IExternalOrderbookService _externalOrderbookService;
         private readonly IAssetsManager _assetsManager;
         private readonly IAssetPairsManager _assetPairsManager;
@@ -55,16 +54,15 @@ namespace MarginTrading.Backend
 
         public Application(
             IRabbitMqNotifyService rabbitMqNotifyService,
-            IConsole consoleWriter,
             MarketMakerService marketMakerService,
-            ILog logger, 
+            ILog logger,
             MarginTradingSettings marginSettings,
             IMaintenanceModeService maintenanceModeService,
             IRabbitMqService rabbitMqService,
             MatchingEngineRoutesManager matchingEngineRoutesManager,
             IMigrationService migrationService,
             IConvertService convertService,
-            IFxRateCacheService fxRateCacheService, 
+            IFxRateCacheService fxRateCacheService,
             IExternalOrderbookService externalOrderbookService,
             IAssetsManager assetsManager,
             IAssetPairsManager assetPairsManager,
@@ -75,7 +73,6 @@ namespace MarginTrading.Backend
             IThreadSwitcher threadSwitcher)
         {
             _rabbitMqNotifyService = rabbitMqNotifyService;
-            _consoleWriter = consoleWriter;
             _marketMakerService = marketMakerService;
             _logger = logger;
             _marginSettings = marginSettings;
@@ -84,7 +81,7 @@ namespace MarginTrading.Backend
             _matchingEngineRoutesManager = matchingEngineRoutesManager;
             _migrationService = migrationService;
             _convertService = convertService;
-            _fxRateCacheService = fxRateCacheService; 
+            _fxRateCacheService = fxRateCacheService;
             _externalOrderbookService = externalOrderbookService;
             _assetsManager = assetsManager;
             _assetPairsManager = assetPairsManager;
@@ -97,8 +94,7 @@ namespace MarginTrading.Backend
 
         public async Task StartApplicationAsync()
         {
-            _consoleWriter.WriteLine($"Starting {ServiceName}");
-            await _logger.WriteInfoAsync(ServiceName, null, null, "Starting...");
+            await _logger.WriteInfoAsync(nameof(StartApplicationAsync), nameof(Application), $"Starting {ServiceName}");
 
             if (_marginSettings.MarketMakerRabbitMqSettings == null &&
                 _marginSettings.StpAggregatorRabbitMqSettings == null)
@@ -109,7 +105,7 @@ namespace MarginTrading.Backend
             try
             {
                 await _migrationService.InvokeAll();
-                
+
                 if (_marginSettings.MarketMakerRabbitMqSettings != null)
                 {
                     _rabbitMqService.Subscribe(
@@ -127,7 +123,7 @@ namespace MarginTrading.Backend
                     _rabbitMqService.Subscribe(_marginSettings.FxRateRabbitMqSettings, false,
                         _fxRateCacheService.SetQuote, _rabbitMqService.GetMsgPackDeserializer<ExternalExchangeOrderbookMessage>());
                 }
-                
+
                 if (_marginSettings.StpAggregatorRabbitMqSettings != null)
                 {
                     _rabbitMqService.Subscribe(_marginSettings.StpAggregatorRabbitMqSettings,
@@ -164,7 +160,6 @@ namespace MarginTrading.Backend
             }
             catch (Exception ex)
             {
-                _consoleWriter.WriteLine($"{ServiceName} error: {ex.Message}");
                 await _logger.WriteErrorAsync(ServiceName, "Application.RunAsync", null, ex);
             }
         }
