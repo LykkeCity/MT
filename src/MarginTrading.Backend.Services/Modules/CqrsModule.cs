@@ -90,7 +90,7 @@ namespace MarginTrading.Backend.Services.Modules
         {
             var rabbitMqConventionEndpointResolver =
                 new RabbitMqConventionEndpointResolver("RabbitMq", SerializationFormat.MessagePack,
-                    environment: "atarutin");
+                    environment: _settings.EnvironmentName);
 
             var registrations = new List<IRegistration>
             {
