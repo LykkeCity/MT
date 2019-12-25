@@ -12,7 +12,7 @@
     <PackageReference Include="flurl.http" Version="2.3.1" />
     <PackageReference Include="JetBrains.Annotations" Version="2018.2.1" />
     <PackageReference Include="Lykke.Logs" Version="7.2.1" />
-    <PackageReference Include="Lykke.RabbitMqBroker" Version="7.10.2" />
+    <PackageReference Include="Lykke.RabbitMqBroker" Version="7.12.0" />
     <PackageReference Include="Lykke.SettingsReader" Version="5.2.0" />
     <PackageReference Include="Lykke.SlackNotification.AzureQueue" Version="2.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.ApplicationInsights.HostingStartup" Version="2.2.0" />

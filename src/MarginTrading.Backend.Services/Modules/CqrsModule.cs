@@ -16,6 +16,7 @@ using Lykke.MarginTrading.OrderBookService.Contracts.Models;
 using Lykke.Messaging;
 using Lykke.Messaging.Contract;
 using Lykke.Messaging.RabbitMq;
+using Lykke.Messaging.Serialization;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.Backend.Contracts.Events;
@@ -88,8 +89,8 @@ namespace MarginTrading.Backend.Services.Modules
         private CqrsEngine CreateEngine(IComponentContext ctx, IMessagingEngine messagingEngine)
         {
             var rabbitMqConventionEndpointResolver =
-                new RabbitMqConventionEndpointResolver("RabbitMq", "messagepack",
-                    environment: _settings.EnvironmentName);
+                new RabbitMqConventionEndpointResolver("RabbitMq", SerializationFormat.MessagePack,
+                    environment: "atarutin");
 
             var registrations = new List<IRegistration>
             {
@@ -104,8 +105,11 @@ namespace MarginTrading.Backend.Services.Modules
             if (fakeGavel != null)
                 registrations.Add(fakeGavel);
 
-            return new CqrsEngine(_log, ctx.Resolve<IDependencyResolver>(), messagingEngine,
+            var engine = new CqrsEngine(_log, ctx.Resolve<IDependencyResolver>(), messagingEngine,
                 new DefaultEndpointProvider(), true, registrations.ToArray());
+            engine.StartPublishers();
+
+            return engine;
         }
 
         private IRegistration RegisterGavelContextIfNeeded()
