@@ -210,7 +210,7 @@ namespace MarginTrading.Backend.Controllers
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpPut]
-        public Task ChangeAsync(string orderId, [FromBody] OrderChangeRequest request)
+        public async Task ChangeAsync(string orderId, [FromBody] OrderChangeRequest request)
         {
             if (!_ordersCache.TryGetOrderById(orderId, out var order))
             {
@@ -225,7 +225,7 @@ namespace MarginTrading.Backend.Controllers
                     ? _identityGenerator.GenerateGuid()
                     : request.CorrelationId;
 
-                _tradingEngine.ChangeOrder(order.Id, request.Price, request.Validity, originator,
+                await _tradingEngine.ChangeOrderAsync(order.Id, request.Price, request.Validity, originator,
                     request.AdditionalInfo, correlationId, request.ForceOpen);
             }
             catch (ValidateOrderException ex)
@@ -235,8 +235,6 @@ namespace MarginTrading.Backend.Controllers
 
             _operationsLogService.AddLog("action order.changeLimits", order.AccountId, 
                 new { orderId = orderId, request = request.ToJson() }.ToJson(), "");
-
-            return Task.CompletedTask;
         }
 
         /// <summary>
