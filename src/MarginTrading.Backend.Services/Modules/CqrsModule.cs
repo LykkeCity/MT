@@ -12,6 +12,7 @@ using Lykke.Cqrs.Configuration;
 using Lykke.Cqrs.Configuration.BoundedContext;
 using Lykke.Cqrs.Configuration.Routing;
 using Lykke.Cqrs.Configuration.Saga;
+using Lykke.Cqrs.Middleware.Logging;
 using Lykke.MarginTrading.OrderBookService.Contracts.Models;
 using Lykke.Messaging;
 using Lykke.Messaging.Contract;
@@ -99,6 +100,8 @@ namespace MarginTrading.Backend.Services.Modules
                 RegisterSpecialLiquidationSaga(),
                 RegisterLiquidationSaga(),
                 RegisterContext(),
+                Register.CommandInterceptors(new DefaultCommandLoggingInterceptor(_log)),
+                Register.EventInterceptors(new DefaultEventLoggingInterceptor(_log))
             };
 
             var fakeGavel = RegisterGavelContextIfNeeded();
