@@ -492,7 +492,7 @@ namespace MarginTradingTests
             Assert.AreEqual(OriginatorType.Investor, order.Originator);
             Assert.AreEqual(null, order.AdditionalInfo);
             
-            _tradingEngine.ChangeOrder(order.Id, 0.9M, null, OriginatorType.OnBehalf, "info", Guid.NewGuid().ToString());
+            _tradingEngine.ChangeOrderAsync(order.Id, 0.9M, null, OriginatorType.OnBehalf, "info", Guid.NewGuid().ToString());
 
             Assert.AreEqual(OrderStatus.Active, order.Status);
             Assert.AreEqual(0.9M, order.Price);
@@ -1244,7 +1244,7 @@ namespace MarginTradingTests
             Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
 
             var ex = Assert.Throws<ValidateOrderException>(() =>
-                _tradingEngine.ChangeOrder(order.Id, 1.2M, null, OriginatorType.Investor, "",
+                _tradingEngine.ChangeOrderAsync(order.Id, 1.2M, null, OriginatorType.Investor, "",
                     Guid.NewGuid().ToString()));
 
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidExpectedOpenPrice);
@@ -1281,7 +1281,7 @@ namespace MarginTradingTests
             
             Assert.AreEqual(oldDistance, order.TrailingDistance);
 
-            _tradingEngine.ChangeOrder(order.Id, newPrice, null, OriginatorType.Investor, String.Empty, String.Empty);
+            _tradingEngine.ChangeOrderAsync(order.Id, newPrice, null, OriginatorType.Investor, String.Empty, String.Empty);
             
             Assert.AreEqual(newDistance, order.TrailingDistance);
         }    
