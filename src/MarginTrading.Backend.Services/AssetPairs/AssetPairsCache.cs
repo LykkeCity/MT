@@ -99,13 +99,19 @@ namespace MarginTrading.Backend.Services.AssetPairs
             }
         }
 
-        public void AddOrUpdate(IAssetPair assetPair)
+        /// <summary>
+        /// Adds new item item if does not exist, otherwise updates
+        /// </summary>
+        /// <param name="assetPair"></param>
+        /// <returns>true if added, false if updated</returns>
+        public bool AddOrUpdate(IAssetPair assetPair)
         {
             _readerWriterLockSlim.EnterWriteLock();
+            var itemExists = _assetPairs.ContainsKey(assetPair.Id);
 
             try
             {
-                if (_assetPairs.ContainsKey(assetPair.Id))
+                if (itemExists)
                 {
                     _assetPairs.Remove(assetPair.Id);
                 }
@@ -114,6 +120,8 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 
                 _assetPairsByAssets = GetAssetPairsByAssetsCache();
                 _assetPairsIds = Calculate.Cached(() => _assetPairs, CacheChangedCondition, p => p.Keys.ToImmutableHashSet());
+
+                return !itemExists;
             }
             finally
             {
