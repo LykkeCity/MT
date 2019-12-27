@@ -68,7 +68,7 @@ namespace MarginTrading.Backend.Services.Workflow
                     CloseAllOrders();
                 }
                 
-                _assetPairsCache.AddOrUpdate(new AssetPair(
+                var isAdded = _assetPairsCache.AddOrUpdate(new AssetPair(
                     id: @event.AssetPair.Id,
                     name: @event.AssetPair.Name,
                     baseAssetId: @event.AssetPair.BaseAssetId,
@@ -83,9 +83,10 @@ namespace MarginTrading.Backend.Services.Workflow
                     isFrozen: @event.AssetPair.IsFrozen,
                     isDiscontinued: @event.AssetPair.IsDiscontinued
                 ));
+                
+                if (isAdded)
+                    await _scheduleSettingsCacheService.UpdateScheduleSettingsAsync();
             }
-
-            await _scheduleSettingsCacheService.UpdateScheduleSettingsAsync();
 
             void CloseAllOrders()
             {
