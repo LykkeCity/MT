@@ -214,19 +214,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     CreationTime = _dateService.Now(),
                     Reason = $"Asset pair {command.Instrument} market must be disabled to start Special Liquidation",
                 });
-                
-                return;
-            }
 
-            if (_assetPairsCache.GetAssetPairById(command.Instrument).IsDiscontinued)
-            {
-                publisher.PublishEvent(new SpecialLiquidationFailedEvent
-                {
-                    OperationId = command.OperationId,
-                    CreationTime = _dateService.Now(),
-                    Reason = $"Asset pair {command.Instrument} is discontinued",
-                });
-                
                 return;
             }
 
@@ -241,6 +229,14 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     Reason = "No positions to liquidate",
                 });
                 return;
+            }
+
+            if (_assetPairsCache.GetAssetPairById(command.Instrument).IsDiscontinued)
+            {
+                await _log.WriteWarningAsync(
+                    nameof(StartSpecialLiquidationCommand),
+                    nameof(SpecialLiquidationCommandsHandler),
+                    $"Position(s) {string.Join(", ", openedPositions.Select(x => x.Id))} should be closed for discontinued instrument {command.Instrument}.");
             }
 
             if (!TryGetExchangeNameFromPositions(openedPositions, out var externalProviderId))
