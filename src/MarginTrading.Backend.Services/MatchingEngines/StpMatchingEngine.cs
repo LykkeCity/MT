@@ -10,6 +10,7 @@ using Common;
 using Common.Log;
 using MarginTrading.Backend.Contracts.ExchangeConnector;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
@@ -132,53 +133,61 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
                     var cts = new CancellationTokenSource();
                     cts.CancelAfter(_marginTradingSettings.GavelTimeout);
-                    
+
                     var executionResult = await _exchangeConnectorClient.ExecuteOrder(externalOrderModel, cts.Token);
-                    
+
                     if (!executionResult.Success)
                     {
-                        throw new Exception(
+                        var ex = new Exception(
                             $"External order was not executed. Status: {executionResult.ExecutionStatus}. Failure: {executionResult.FailureType}");
+                        LogOrderExecutionExcetion(order, externalOrderModel, ex);
                     }
-
-                    var executedPrice = Math.Abs(executionResult.Price) > 0
-                        ? (decimal) executionResult.Price
-                        : price.Value;
-
-                    var matchedOrders = new MatchedOrderCollection
+                    else
                     {
-                        new MatchedOrder
+                        var executedPrice = Math.Abs(executionResult.Price) > 0
+                            ? (decimal)executionResult.Price
+                            : price.Value;
+
+                        var matchedOrders = new MatchedOrderCollection
                         {
-                            MarketMakerId = source,
-                            MatchedDate = _dateService.Now(),
-                            OrderId = executionResult.ExchangeOrderId,
-                            Price = CalculatePriceWithMarkups(assetPair, order.Direction, executedPrice),
-                            Volume = (decimal) executionResult.Volume,
-                            IsExternal = true
-                        }
-                    };
+                            new MatchedOrder
+                            {
+                                MarketMakerId = source,
+                                MatchedDate = _dateService.Now(),
+                                OrderId = executionResult.ExchangeOrderId,
+                                Price = CalculatePriceWithMarkups(assetPair, order.Direction, executedPrice),
+                                Volume = (decimal) executionResult.Volume,
+                                IsExternal = true
+                            }
+                        };
 
-                    await _rabbitMqNotifyService.ExternalOrder(executionResult);
-                    
-                    _operationsLogService.AddLog("external order executed", order.AccountId, 
-                        externalOrderModel.ToJson(), executionResult.ToJson());
+                        await _rabbitMqNotifyService.ExternalOrder(executionResult);
 
-                    return matchedOrders;
+                        _operationsLogService.AddLog("external order executed", order.AccountId,
+                            externalOrderModel.ToJson(), executionResult.ToJson());
+                        throw new OrderExecutionTechnicalException();
+                        return matchedOrders;
+                    }
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
-                    var connector =
-                        _marginTradingSettings.ExchangeConnector == ExchangeConnectorType.FakeExchangeConnector
-                            ? "Fake"
-                            : _exchangeConnectorServiceClient.ServiceUrl;
-                    
-                    _log.WriteError(
-                        $"{nameof(StpMatchingEngine)}:{nameof(MatchOrderAsync)}:{connector}",
-                        $"Internal order: {order.ToJson()}, External order model: {externalOrderModel.ToJson()}", e);
+                    LogOrderExecutionExcetion(order, externalOrderModel, ex);
+                    throw new OrderExecutionTechnicalException();
                 }
             }
 
             return new MatchedOrderCollection();
+        }
+
+        private void LogOrderExecutionExcetion(Order internalOrder, OrderModel externalOrderModel, Exception ex)
+        {
+            var connector = _marginTradingSettings.ExchangeConnector == ExchangeConnectorType.FakeExchangeConnector
+                ? "Fake"
+                : _exchangeConnectorServiceClient.ServiceUrl;
+
+            _log.WriteError(
+                $"{nameof(StpMatchingEngine)}:{nameof(MatchOrderAsync)}:{connector}",
+                $"Internal order: {internalOrder.ToJson()}, External order model: {externalOrderModel.ToJson()}", ex);
         }
 
         public (string externalProviderId, decimal? price) GetBestPriceForOpen(string assetPairId, decimal volume)
