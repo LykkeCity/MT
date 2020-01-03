@@ -165,7 +165,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
 
                         _operationsLogService.AddLog("external order executed", order.AccountId,
                             externalOrderModel.ToJson(), executionResult.ToJson());
-                        throw new OrderExecutionTechnicalException();
+                        
                         return matchedOrders;
                     }
                 }
