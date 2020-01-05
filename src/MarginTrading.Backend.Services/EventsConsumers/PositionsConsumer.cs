@@ -244,10 +244,14 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 var fpl = Math.Round((dealOrder.ExecutionPrice.Value - position.OpenPrice) *
                                      dealOrder.FxRate * dealVolume.Value * sign, accountBaseAssetAccuracy);
                 var balanceDelta = Math.Round(fpl - chargedPnl, accountBaseAssetAccuracy);
+
+                var dealId = historyType == PositionHistoryTypeContract.Close
+                    ? position.Id
+                    : _identityGenerator.GenerateAlphanumericId();
                 
                 deal = new DealContract
                 {
-                    DealId = _identityGenerator.GenerateAlphanumericId(),
+                    DealId = dealId,
                     PositionId = position.Id,
                     Volume = dealVolume.Value,
                     Created = dealOrder.Executed.Value,
