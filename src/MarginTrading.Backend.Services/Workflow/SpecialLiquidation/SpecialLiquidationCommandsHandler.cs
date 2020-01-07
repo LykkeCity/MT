@@ -265,6 +265,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         ExternalProviderId = externalProviderId,
                         OriginatorType = OriginatorType.System,
                         AdditionalInfo = LykkeConstants.LiquidationByCaAdditionalInfo,
+                        RequestedFromCorporateActions = true
                     }
                 ));
 
@@ -363,15 +364,15 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         tradeType: command.Volume > 0 ? TradeType.Buy : TradeType.Sell,
                         orderType: OrderType.Market.ToType<Contracts.ExchangeConnector.OrderType>(),
                         timeInForce: TimeInForce.FillOrKill,
-                        volume: (double) Math.Abs(command.Volume),
+                        volume: (double)Math.Abs(command.Volume),
                         dateTime: _dateService.Now(),
                         exchangeName: operationInfo.ToJson(), //hack, but ExchangeName is not used and we need this info
-                        // TODO: create a separate field and remove hack (?)
+                                                              // TODO: create a separate field and remove hack (?)
                         instrument: command.Instrument,
-                        price: (double?) command.Price,
+                        price: (double?)command.Price,
                         orderId: _identityGenerator.GenerateAlphanumericId(),
-                        modality: TradeRequestModality.Liquidation);
-                
+                        modality: executionInfo.Data.RequestedFromCorporateActions ? TradeRequestModality.Liquidation_CorporateAction : TradeRequestModality.Liquidation_MarginCall);
+
                     try
                     {
                         var executionResult = await _exchangeConnectorClient.ExecuteOrder(order);
