@@ -49,5 +49,7 @@ namespace MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Commands
         [CanBeNull]
         [Key(6)]
         public string AccountId { get; set; }
+
+        public bool RequestedFromCorporateActions { get; set; }
     }
 }

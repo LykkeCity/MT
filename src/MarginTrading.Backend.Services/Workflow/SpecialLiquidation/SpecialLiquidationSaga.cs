@@ -93,6 +93,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         Instrument = e.Instrument,
                         Volume = positionsVolume != 0 ? positionsVolume : 1,//hack, requested by the bank
                         RequestNumber = requestNumber,
+                        RequestedFromCorporateActions = executionInfo.Data.RequestedFromCorporateActions
                     }, _cqrsContextNamesSettings.Gavel);
 
                     executionInfo.Data.RequestNumber = requestNumber;
@@ -136,6 +137,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         Volume = currentVolume,
                         RequestNumber = requestNumber,
                         AccountId = executionInfo.Data.AccountId,
+                        RequestedFromCorporateActions = executionInfo.Data.RequestedFromCorporateActions
                     }, _cqrsContextNamesSettings.Gavel);
                     
                     executionInfo.Data.Volume = currentVolume;
