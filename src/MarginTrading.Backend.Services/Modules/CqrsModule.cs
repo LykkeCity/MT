@@ -39,6 +39,8 @@ namespace MarginTrading.Backend.Services.Modules
     public class CqrsModule : Module
     {
         private const string EventsRoute = "events";
+        private const string AccountProjectionRoute = "a";
+        private const string AssetPairsProjectionRoute = "ap";
         private const string CommandsRoute = "commands";
         private readonly CqrsSettings _settings;
         private readonly MarginTradingSettings _marginTradingSettings;
@@ -160,7 +162,7 @@ namespace MarginTrading.Backend.Services.Modules
             contextRegistration.ListeningEvents(
                     typeof(AssetPairChangedEvent))
                 .From(_settings.ContextNames.SettingsService)
-                .On(EventsRoute)
+                .On(AssetPairsProjectionRoute)
                 .WithProjection(
                     typeof(AssetPairProjection), _settings.ContextNames.SettingsService);
 		}
@@ -188,7 +190,7 @@ namespace MarginTrading.Backend.Services.Modules
         {
             contextRegistration.ListeningEvents(
                     typeof(AccountChangedEvent))
-                .From(_settings.ContextNames.AccountsManagement).On(EventsRoute)
+                .From(_settings.ContextNames.AccountsManagement).On(AccountProjectionRoute)
                 .WithProjection(
                     typeof(AccountsProjection), _settings.ContextNames.AccountsManagement);
         }
