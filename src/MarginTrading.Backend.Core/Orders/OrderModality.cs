@@ -11,7 +11,8 @@ namespace MarginTrading.Backend.Core.Orders
     public enum OrderModality
     {
         [EnumMember(Value = "Unspecified")] Unspecified = 0,
-        [EnumMember(Value = "Liquidation")] Liquidation = 76, // 0x4C
+        [EnumMember(Value = "Liquidation_CorporateAction")] Liquidation_CorporateAction = 76, // 0x4C
         [EnumMember(Value = "Regular")] Regular = 82, // 0x52
+        [EnumMember(Value = "Liquidation_MarginCall")] Liquidation_MarginCall = 108
     }
 }

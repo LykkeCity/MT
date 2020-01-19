@@ -699,15 +699,18 @@ namespace MarginTrading.Backend.Services
 
             var positions = closeData.Positions;
 
-            if (closeData.Modality != OrderModality.Liquidation)
+            if (closeData.Modality != OrderModality.Liquidation_MarginCall && closeData.Modality != OrderModality.Liquidation_CorporateAction)
             {
                 positions = positions.Where(p => p.Status == PositionStatus.Active).ToList();
             }
             
             foreach (var position in positions)
             {
-                if (position.TryStartClosing(now, PositionCloseReason.Close, closeData.Originator, "") ||
-                    closeData.Modality == OrderModality.Liquidation)
+                if (position.TryStartClosing(now, PositionCloseReason.Close, closeData.Originator, "") 
+                    ||
+                    closeData.Modality == OrderModality.Liquidation_MarginCall
+                    ||
+                    closeData.Modality == OrderModality.Liquidation_CorporateAction)
                 {
                     positionIds.Add(position.Id);
                     volume += position.Volume;
@@ -920,7 +923,7 @@ namespace MarginTrading.Backend.Services
                     gr.Key.EquivalentAsset,
                     "Special Liquidation",
                     me,
-                    OrderModality.Liquidation));
+                    OrderModality.Liquidation_MarginCall));
             
             var failedPositionIds = new List<string>();
 
