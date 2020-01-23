@@ -217,6 +217,7 @@ namespace MarginTrading.Backend.Services.Workflow
         {
             return _convertService.Convert<AccountContract, MarginTradingAccount>(accountContract,
                 o => o.ConfigureMap(MemberList.Source)
+                    .ForMember(x => x.LastBalanceChangeTime, opts => opts.UseValue(_dateService.Now()))
                     .ForSourceMember(x => x.ModificationTimestamp, c => c.Ignore()));
         }
     }
