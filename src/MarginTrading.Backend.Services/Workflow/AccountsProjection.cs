@@ -39,16 +39,16 @@ namespace MarginTrading.Backend.Services.Workflow
         private readonly ILog _log;
 
         private const string OperationName = "AccountsProjection";
-        
+
         public AccountsProjection(
-            IAccountsCacheService accountsCacheService, 
+            IAccountsCacheService accountsCacheService,
             IEventChannel<AccountBalanceChangedEventArgs> accountBalanceChangedEventChannel,
-            IConvertService convertService, 
+            IConvertService convertService,
             IAccountUpdateService accountUpdateService,
             IDateService dateService,
             IOperationExecutionInfoRepository operationExecutionInfoRepository,
             IChaosKitty chaosKitty,
-            OrdersCache ordersCache, 
+            OrdersCache ordersCache,
             ILog log)
         {
             _accountsCacheService = accountsCacheService;
@@ -80,7 +80,7 @@ namespace MarginTrading.Backend.Services.Workflow
 
             if (executionInfo.Data.SwitchState(OperationState.Initiated, OperationState.Finished))
             {
-                var updatedAccount = Convert(e.Account);
+                var updatedAccount = Convert(e.Account, e.ChangeTimestamp);
 
                 switch (e.EventType)
                 {
@@ -88,113 +88,113 @@ namespace MarginTrading.Backend.Services.Workflow
                         _accountsCacheService.TryAddNew(MarginTradingAccount.Create(updatedAccount));
                         break;
                     case AccountChangedEventTypeContract.Updated:
-                    {
-                        var account = _accountsCacheService.TryGet(e.Account.Id);
-                        if (await ValidateAccount(account, e)
-                            && await _accountsCacheService.UpdateAccountChanges(updatedAccount.Id,
-                                updatedAccount.TradingConditionId, updatedAccount.WithdrawTransferLimit,
-                                updatedAccount.IsDisabled, updatedAccount.IsWithdrawalDisabled, e.ChangeTimestamp))
-                        {
-                            _accountUpdateService.RemoveLiquidationStateIfNeeded(e.Account.Id,
-                                "Trading conditions changed");
-                        }
-                        break;
-                    }
-                    case AccountChangedEventTypeContract.BalanceUpdated:
-                    {
-                        if (e.BalanceChange != null)
                         {
                             var account = _accountsCacheService.TryGet(e.Account.Id);
-                            if (await ValidateAccount(account, e))
+                            if (await ValidateAccount(account, e)
+                                && await _accountsCacheService.UpdateAccountChanges(updatedAccount.Id,
+                                    updatedAccount.TradingConditionId, updatedAccount.WithdrawTransferLimit,
+                                    updatedAccount.IsDisabled, updatedAccount.IsWithdrawalDisabled, e.ChangeTimestamp))
                             {
-                                switch (e.BalanceChange.ReasonType)
-                                {
-                                    case AccountBalanceChangeReasonTypeContract.Withdraw:
-                                        await _accountUpdateService.UnfreezeWithdrawalMargin(updatedAccount.Id,
-                                            e.BalanceChange.Id);
-                                        break;
-                                    case AccountBalanceChangeReasonTypeContract.UnrealizedDailyPnL:
-                                        if (_ordersCache.Positions.TryGetPositionById(e.BalanceChange.EventSourceId,
-                                            out var position))
-                                        {
-                                            position.ChargePnL(e.BalanceChange.Id, e.BalanceChange.ChangeAmount);
-                                        }
-                                        else
-                                        {
-                                            _log.WriteWarning("AccountChangedEvent Handler", e.ToJson(),
-                                                $"Position [{e.BalanceChange.EventSourceId} was not found]");
-                                        }
-
-                                        break;
-                                    case AccountBalanceChangeReasonTypeContract.RealizedPnL:
-                                        await _accountUpdateService.UnfreezeUnconfirmedMargin(e.Account.Id,
-                                            e.BalanceChange.EventSourceId);
-                                        break;
-                                    case AccountBalanceChangeReasonTypeContract.Reset:
-                                        foreach (var pos in _ordersCache.Positions.GetPositionsByAccountIds(
-                                            e.Account.Id))
-                                        {
-                                            _ordersCache.Positions.Remove(pos);
-                                        }
-
-                                        foreach (var order in _ordersCache.Active.GetOrdersByAccountIds(e.Account.Id))
-                                        {
-                                            _ordersCache.Active.Remove(order);
-                                        }
-
-                                        foreach (var order in _ordersCache.Inactive.GetOrdersByAccountIds(e.Account.Id))
-                                        {
-                                            _ordersCache.Inactive.Remove(order);
-                                        }
-
-                                        foreach (var order in _ordersCache.InProgress.GetOrdersByAccountIds(
-                                            e.Account.Id))
-                                        {
-                                            _ordersCache.InProgress.Remove(order);
-                                        }
-
-                                        var warnings = _accountsCacheService.Reset(e.Account.Id, e.ChangeTimestamp);
-                                        if (!string.IsNullOrEmpty(warnings))
-                                        {
-                                            await _log.WriteWarningAsync(nameof(AccountChangedEvent),
-                                                nameof(AccountBalanceChangeReasonTypeContract.Reset),
-                                                warnings);
-                                        }
-
-                                        await _log.WriteInfoAsync(nameof(AccountChangedEvent),
-                                            nameof(AccountBalanceChangeReasonTypeContract.Reset),
-                                            $"Account {e.Account.Id} was reset.");
-                                        break;
-                                }
-
-                                await _accountsCacheService.UpdateAccountBalance(updatedAccount.Id,
-                                    e.BalanceChange.Balance, e.ChangeTimestamp);
-                                
                                 _accountUpdateService.RemoveLiquidationStateIfNeeded(e.Account.Id,
-                                    "Balance updated");
-                                
-                                _accountBalanceChangedEventChannel.SendEvent(this,
-                                    new AccountBalanceChangedEventArgs(updatedAccount.Id));
+                                    "Trading conditions changed");
                             }
+                            break;
                         }
-                        else
+                    case AccountChangedEventTypeContract.BalanceUpdated:
                         {
-                            _log.WriteWarning("AccountChangedEvent Handler", e.ToJson(), "BalanceChange info is empty");
-                        }
+                            if (e.BalanceChange != null)
+                            {
+                                var account = _accountsCacheService.TryGet(e.Account.Id);
+                                if (await ValidateAccount(account, e))
+                                {
+                                    switch (e.BalanceChange.ReasonType)
+                                    {
+                                        case AccountBalanceChangeReasonTypeContract.Withdraw:
+                                            await _accountUpdateService.UnfreezeWithdrawalMargin(updatedAccount.Id,
+                                                e.BalanceChange.Id);
+                                            break;
+                                        case AccountBalanceChangeReasonTypeContract.UnrealizedDailyPnL:
+                                            if (_ordersCache.Positions.TryGetPositionById(e.BalanceChange.EventSourceId,
+                                                out var position))
+                                            {
+                                                position.ChargePnL(e.BalanceChange.Id, e.BalanceChange.ChangeAmount);
+                                            }
+                                            else
+                                            {
+                                                _log.WriteWarning("AccountChangedEvent Handler", e.ToJson(),
+                                                    $"Position [{e.BalanceChange.EventSourceId} was not found]");
+                                            }
 
-                        break;
-                    }
+                                            break;
+                                        case AccountBalanceChangeReasonTypeContract.RealizedPnL:
+                                            await _accountUpdateService.UnfreezeUnconfirmedMargin(e.Account.Id,
+                                                e.BalanceChange.EventSourceId);
+                                            break;
+                                        case AccountBalanceChangeReasonTypeContract.Reset:
+                                            foreach (var pos in _ordersCache.Positions.GetPositionsByAccountIds(
+                                                e.Account.Id))
+                                            {
+                                                _ordersCache.Positions.Remove(pos);
+                                            }
+
+                                            foreach (var order in _ordersCache.Active.GetOrdersByAccountIds(e.Account.Id))
+                                            {
+                                                _ordersCache.Active.Remove(order);
+                                            }
+
+                                            foreach (var order in _ordersCache.Inactive.GetOrdersByAccountIds(e.Account.Id))
+                                            {
+                                                _ordersCache.Inactive.Remove(order);
+                                            }
+
+                                            foreach (var order in _ordersCache.InProgress.GetOrdersByAccountIds(
+                                                e.Account.Id))
+                                            {
+                                                _ordersCache.InProgress.Remove(order);
+                                            }
+
+                                            var warnings = _accountsCacheService.Reset(e.Account.Id, e.ChangeTimestamp);
+                                            if (!string.IsNullOrEmpty(warnings))
+                                            {
+                                                await _log.WriteWarningAsync(nameof(AccountChangedEvent),
+                                                    nameof(AccountBalanceChangeReasonTypeContract.Reset),
+                                                    warnings);
+                                            }
+
+                                            await _log.WriteInfoAsync(nameof(AccountChangedEvent),
+                                                nameof(AccountBalanceChangeReasonTypeContract.Reset),
+                                                $"Account {e.Account.Id} was reset.");
+                                            break;
+                                    }
+
+                                    await _accountsCacheService.UpdateAccountBalance(updatedAccount.Id,
+                                        e.BalanceChange.Balance, e.ChangeTimestamp);
+
+                                    _accountUpdateService.RemoveLiquidationStateIfNeeded(e.Account.Id,
+                                        "Balance updated");
+
+                                    _accountBalanceChangedEventChannel.SendEvent(this,
+                                        new AccountBalanceChangedEventArgs(updatedAccount.Id));
+                                }
+                            }
+                            else
+                            {
+                                _log.WriteWarning("AccountChangedEvent Handler", e.ToJson(), "BalanceChange info is empty");
+                            }
+
+                            break;
+                        }
                     case AccountChangedEventTypeContract.Deleted:
                         //account deletion from cache is double-handled by CQRS flow
                         _accountsCacheService.Remove(e.Account.Id);
                         break;
-                        
+
                     default:
                         await _log.WriteErrorAsync(nameof(AccountsProjection), nameof(AccountChangedEvent),
                             e.ToJson(), new Exception("AccountChangedEventTypeContract was in incorrect state"));
                         break;
                 }
-                
+
                 _chaosKitty.Meow(e.OperationId);
 
                 await _operationExecutionInfoRepository.Save(executionInfo);
@@ -213,11 +213,13 @@ namespace MarginTrading.Backend.Services.Workflow
             return true;
         }
 
-        private MarginTradingAccount Convert(AccountContract accountContract)
+        private MarginTradingAccount Convert(AccountContract accountContract, DateTime eventTime)
         {
-            return _convertService.Convert<AccountContract, MarginTradingAccount>(accountContract,
+            var retVal = _convertService.Convert<AccountContract, MarginTradingAccount>(accountContract,
                 o => o.ConfigureMap(MemberList.Source)
                     .ForSourceMember(x => x.ModificationTimestamp, c => c.Ignore()));
+            retVal.LastBalanceChangeTime = eventTime;
+            return retVal;
         }
     }
 }
