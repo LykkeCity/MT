@@ -129,12 +129,13 @@ namespace MarginTrading.Backend.Services
 
         private MarginTradingAccount Convert(AccountContract accountContract)
         {
-            return _convertService.Convert<AccountContract, MarginTradingAccount>(accountContract,
+            var retVal = _convertService.Convert<AccountContract, MarginTradingAccount>(accountContract,
                 o => o.ConfigureMap(MemberList.Source)
-                    // The line below is related to LT-1786 ticket.
-                    // After restarting core we cannot have LastBalanceChangeTime less than in donut's cache to avoid infinite account reloading
-                    .ForMember(x => x.LastBalanceChangeTime, opts => opts.UseValue(_dateService.Now()))
                     .ForSourceMember(x => x.ModificationTimestamp, c => c.Ignore()));
+            // The line below is related to LT-1786 ticket.
+            // After restarting core we cannot have LastBalanceChangeTime less than in donut's cache to avoid infinite account reloading
+            retVal.LastBalanceChangeTime = _dateService.Now();
+            return retVal;
         }
     }
 }
