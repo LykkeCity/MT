@@ -12,6 +12,7 @@ using Lykke.Common;
 using MarginTrading.Backend.Contracts.Activities;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
@@ -288,14 +289,23 @@ namespace MarginTrading.Backend.Services
                 }
             }
 
-            var matchedOrders = await matchingEngine.MatchOrderAsync(order, shouldOpenNewPosition, modality);
+            MatchedOrderCollection matchedOrders;
+            try
+            {
+                matchedOrders = await matchingEngine.MatchOrderAsync(order, shouldOpenNewPosition, modality);
+            }
+            catch (OrderExecutionTechnicalException)
+            {
+                RejectOrder(order, OrderRejectReason.TechnicalError, $"Unexpected reject (Order ID: {order.Id})");
+                return order;
+            }
 
             if (!matchedOrders.Any())
             {
                 RejectOrder(order, OrderRejectReason.NoLiquidity, "No orders to match", "");
                 return order;
-            } 
-            
+            }
+
             if (matchedOrders.SummaryVolume < Math.Abs(order.Volume))
             {
                 if (order.FillType == OrderFillType.FillOrKill)
