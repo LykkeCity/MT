@@ -28,7 +28,7 @@ namespace MarginTrading.Backend.Core
         Order CancelPendingOrder(string orderId, string additionalInfo, string correlationId,
             string comment = null, OrderCancellationReason reason = OrderCancellationReason.None);
             
-        void ChangeOrder(string orderId, decimal price, DateTime? validity, OriginatorType originator,
+        Task ChangeOrderAsync(string orderId, decimal price, DateTime? validity, OriginatorType originator,
             string additionalInfo, string correlationId, bool? forceOpen = null);
             
         bool ShouldOpenNewPosition(Order order);

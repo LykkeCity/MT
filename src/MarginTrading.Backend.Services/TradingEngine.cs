@@ -243,18 +243,7 @@ namespace MarginTrading.Backend.Services
                 throw new ValidateOrderException(OrderRejectReason.InvalidParent, "Order parent is not valid");
             }
 
-            if (order.Status == OrderStatus.Active &&
-                _quoteCacheService.TryGetQuoteById(order.AssetPairId, out var pair))
-            {
-                var price = pair.GetPriceForOrderDirection(order.Direction);
-
-                if (!_assetPairDayOffService.IsDayOff(order.AssetPairId) //!_assetPairDayOffService.ArePendingOrdersDisabled(order.AssetPairId))
-                    && order.IsSuitablePriceForPendingOrder(price))
-                {
-                    _ordersCache.Active.Remove(order);
-                    await ExecutePendingOrder(order);
-                }
-            }
+            await ExecutePendingOrderIfNeededAsync(order);
         }
 
         private async Task<Order> ExecuteOrderByMatchingEngineAsync(Order order, IMatchingEngineBase matchingEngine,
@@ -963,27 +952,27 @@ namespace MarginTrading.Backend.Services
             {
                 throw new InvalidOperationException($"Order in state {order.Status} can not be cancelled");
             }
-            
+
             order.Cancel(_dateService.Now(), additionalInfo, correlationId);
 
-            var metadata = new OrderCancelledMetadata {Reason = reason.ToType<OrderCancellationReasonContract>()};
+            var metadata = new OrderCancelledMetadata { Reason = reason.ToType<OrderCancellationReasonContract>() };
             _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order, metadata));
-            
+
             return order;
         }
 
         #endregion
 
 
-        public void ChangeOrder(string orderId, decimal price, DateTime? validity, OriginatorType originator,
+        public async Task ChangeOrderAsync(string orderId, decimal price, DateTime? validity, OriginatorType originator,
             string additionalInfo, string correlationId, bool? forceOpen = null)
         {
             var order = _ordersCache.GetOrderById(orderId);
-            
-            var assetPair = _validateOrderService.GetAssetPairIfAvailableForTrading(order.AssetPairId, order.OrderType, 
+
+            var assetPair = _validateOrderService.GetAssetPairIfAvailableForTrading(order.AssetPairId, order.OrderType,
                 order.ForceOpen, false);
             price = Math.Round(price, assetPair.Accuracy);
-          
+
             _validateOrderService.ValidateOrderPriceChange(order, price);
             _validateOrderService.ValidateValidity(validity, order.OrderType);
             _validateOrderService.ValidateForceOpenChange(order, forceOpen);
@@ -1029,11 +1018,29 @@ namespace MarginTrading.Backend.Services
                     UpdatedProperty = OrderChangedProperty.ForceOpen,
                     OldValue = oldForceOpen.ToString(),
                 };
-            
-                _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata)); 
+
+                _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata));
+            }
+
+            await ExecutePendingOrderIfNeededAsync(order);
+        }
+
+        private async Task ExecutePendingOrderIfNeededAsync(Order order)
+        {
+            if (order.Status == OrderStatus.Active &&
+                   _quoteCacheService.TryGetQuoteById(order.AssetPairId, out var pair))
+            {
+                var price = pair.GetPriceForOrderDirection(order.Direction);
+
+                if (!_assetPairDayOffService.IsDayOff(order.AssetPairId) //!_assetPairDayOffService.ArePendingOrdersDisabled(order.AssetPairId))
+                    && order.IsSuitablePriceForPendingOrder(price))
+                {
+                    _ordersCache.Active.Remove(order);
+                    await ExecutePendingOrder(order);
+                }
             }
         }
-        
+
         int IEventConsumer.ConsumerRank => 101;
 
         void IEventConsumer<BestPriceChangeEventArgs>.ConsumeEvent(object sender, BestPriceChangeEventArgs ea)
