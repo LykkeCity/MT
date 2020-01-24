@@ -12,10 +12,12 @@ using Lykke.Cqrs.Configuration;
 using Lykke.Cqrs.Configuration.BoundedContext;
 using Lykke.Cqrs.Configuration.Routing;
 using Lykke.Cqrs.Configuration.Saga;
+using Lykke.Cqrs.Middleware.Logging;
 using Lykke.MarginTrading.OrderBookService.Contracts.Models;
 using Lykke.Messaging;
 using Lykke.Messaging.Contract;
 using Lykke.Messaging.RabbitMq;
+using Lykke.Messaging.Serialization;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.Backend.Contracts.Events;
@@ -90,7 +92,7 @@ namespace MarginTrading.Backend.Services.Modules
         private CqrsEngine CreateEngine(IComponentContext ctx, IMessagingEngine messagingEngine)
         {
             var rabbitMqConventionEndpointResolver =
-                new RabbitMqConventionEndpointResolver("RabbitMq", "messagepack",
+                new RabbitMqConventionEndpointResolver("RabbitMq", SerializationFormat.MessagePack,
                     environment: _settings.EnvironmentName);
 
             var registrations = new List<IRegistration>
@@ -100,14 +102,19 @@ namespace MarginTrading.Backend.Services.Modules
                 RegisterSpecialLiquidationSaga(),
                 RegisterLiquidationSaga(),
                 RegisterContext(),
+                Register.CommandInterceptors(new DefaultCommandLoggingInterceptor(_log)),
+                Register.EventInterceptors(new DefaultEventLoggingInterceptor(_log))
             };
 
             var fakeGavel = RegisterGavelContextIfNeeded();
             if (fakeGavel != null)
                 registrations.Add(fakeGavel);
 
-            return new CqrsEngine(_log, ctx.Resolve<IDependencyResolver>(), messagingEngine,
+            var engine = new CqrsEngine(_log, ctx.Resolve<IDependencyResolver>(), messagingEngine,
                 new DefaultEndpointProvider(), true, registrations.ToArray());
+            engine.StartPublishers();
+
+            return engine;
         }
 
         private IRegistration RegisterGavelContextIfNeeded()

@@ -11,6 +11,7 @@ using JetBrains.Annotations;
 using Lykke.AzureQueueIntegration;
 using Lykke.Common;
 using Lykke.Common.ApiLibrary.Swagger;
+using Lykke.Cqrs;
 using Lykke.Logs;
 using Lykke.Logs.MsSql;
 using Lykke.Logs.MsSql.Repositories;
@@ -158,6 +159,10 @@ namespace MarginTrading.Backend
 
             appLifetime.ApplicationStarted.Register(async () =>
             {
+                var cqrsEngine = ApplicationContainer.Resolve<ICqrsEngine>();
+                cqrsEngine.StartSubscribers();
+                cqrsEngine.StartProcesses();
+                
                 await Program.Host.WriteLogsAsync(Environment, LogLocator.CommonLog);
 
                 LogLocator.CommonLog?.WriteMonitorAsync("", "", $"{Configuration.ServerType()} Started");
