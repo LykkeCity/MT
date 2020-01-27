@@ -1018,7 +1018,7 @@ namespace MarginTradingTests
             
             var result = _tradingEngine.LiquidatePositionsUsingSpecialWorkflowAsync(new SpecialLiquidationMatchingEngine
             (2.5M, "Test",
-                "test", DateTime.UtcNow), new [] {order1.Id, order2.Id}, "Test", "TestAdditionalInfo", OriginatorType.System).Result;
+                "test", DateTime.UtcNow), new [] {order1.Id, order2.Id}, "Test", "TestAdditionalInfo", OriginatorType.System, OrderModality.Liquidation_MarginCall).Result;
             result.ForEach(r => Assert.AreEqual(PositionCloseResult.Closed, r.Item1));
             result.ForEach(o => ValidateOrderIsExecuted(o.Item2, new[] {"test"}, 2.5M));
             Assert.AreEqual(2, result.Max(x => x.Item2.Volume));

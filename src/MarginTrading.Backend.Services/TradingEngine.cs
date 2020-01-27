@@ -903,7 +903,9 @@ namespace MarginTrading.Backend.Services
             return result;
         }
 
-        public async Task<(PositionCloseResult, Order)[]> LiquidatePositionsUsingSpecialWorkflowAsync(IMatchingEngineBase me, string[] positionIds, string correlationId, string additionalInfo, OriginatorType originator)
+        public async Task<(PositionCloseResult, Order)[]> LiquidatePositionsUsingSpecialWorkflowAsync(
+            IMatchingEngineBase me, string[] positionIds, string correlationId, string additionalInfo,
+            OriginatorType originator, OrderModality modality)
         {
             var positionsToClose = _ordersCache.Positions.GetAllPositions()
                 .Where(x => positionIds.Contains(x.Id)).ToList();
@@ -923,7 +925,7 @@ namespace MarginTrading.Backend.Services
                     gr.Key.EquivalentAsset,
                     "Special Liquidation",
                     me,
-                    OrderModality.Liquidation_MarginCall));
+                    modality));
             
             var failedPositionIds = new List<string>();
 

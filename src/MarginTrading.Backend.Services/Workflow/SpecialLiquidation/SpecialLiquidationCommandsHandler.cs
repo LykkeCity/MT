@@ -429,6 +429,10 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             {
                 try
                 {
+                    var modality = executionInfo.Data.RequestedFromCorporateActions
+                        ? OrderModality.Liquidation_CorporateAction
+                        : OrderModality.Liquidation_MarginCall;
+                    
                     //close positions with the quotes from gavel
                     await _tradingEngine.LiquidatePositionsUsingSpecialWorkflowAsync(
                         me: new SpecialLiquidationMatchingEngine(command.Price, command.MarketMakerId,
@@ -436,7 +440,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         positionIds: executionInfo.Data.PositionIds.ToArray(), 
                         correlationId: command.OperationId,
                         executionInfo.Data.AdditionalInfo,
-                        executionInfo.Data.OriginatorType);
+                        executionInfo.Data.OriginatorType,
+                        modality);
                 
                     _chaosKitty.Meow(command.OperationId);
                     
