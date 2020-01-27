@@ -200,6 +200,9 @@ namespace MarginTrading.Backend.Core
 
         public static string MakeNonOnBehalf(this string additionalInfo)
         {
+            if (string.IsNullOrEmpty(additionalInfo))
+                return additionalInfo;
+            
             var obj = JsonConvert.DeserializeObject<dynamic>(additionalInfo);
             obj.WithOnBehalfFees = false;
             return JsonConvert.SerializeObject(obj);
