@@ -25,6 +25,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         public void ConsumeEvent(object sender, OrderExecutedEventArgs ea)
         {
             var tradeType = ea.Order.Direction.ToType<TradeType>();
+            var volume = Math.Abs(ea.Order.Volume);
             
             var trade = new TradeContract
             {
@@ -34,7 +35,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 AssetPairId = ea.Order.AssetPairId,
                 Date = ea.Order.Executed.Value,
                 Price = ea.Order.ExecutionPrice.Value,
-                Volume = ea.Order.Volume,
+                Volume = volume,
                 Type = tradeType
             };
 
