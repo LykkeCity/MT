@@ -100,7 +100,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
         }
 
         private static IReadOnlyList<PositionInfo> RestorePositionsCurrentStateFromHistory(
-            IEnumerable<PositionContract> lastPositions, IEnumerable<IPositionHistory> positionsHistory)
+            IEnumerable<OpenPositionContract> lastPositions, IEnumerable<IPositionHistory> positionsHistory)
         {
             var lastPositionsMap = lastPositions.ToDictionary(o => o.Id, o => o);
             var positionsHistoryMap = positionsHistory.ToDictionary(o => o.Id, o => o);
@@ -108,7 +108,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
             var unchangedPositions = lastPositionsMap.Keys
                 .Except(positionsHistoryMap.Keys)
                 .Select(positionId => lastPositionsMap[positionId])
-                .Select(position => new PositionInfo(position.Id, position.Volume));
+                .Select(position => new PositionInfo(position.Id, position.CurrentVolume));
 
             var newPositions = positionsHistoryMap.Keys
                 .Except(lastPositionsMap.Keys)
@@ -201,9 +201,9 @@ namespace MarginTrading.Backend.Services.Infrastructure
                 ? tradingEngineSnapshot.Orders.DeserializeJson<List<OrderContract>>()
                 : new List<OrderContract>();
 
-        private static IReadOnlyList<PositionContract> GetPositions(TradingEngineSnapshot tradingEngineSnapshot)
+        private static IReadOnlyList<OpenPositionContract> GetPositions(TradingEngineSnapshot tradingEngineSnapshot)
             => !string.IsNullOrEmpty(tradingEngineSnapshot.Positions)
-                ? tradingEngineSnapshot.Positions.DeserializeJson<List<PositionContract>>()
-                : new List<PositionContract>();
+                ? tradingEngineSnapshot.Positions.DeserializeJson<List<OpenPositionContract>>()
+                : new List<OpenPositionContract>();
     }
 }
