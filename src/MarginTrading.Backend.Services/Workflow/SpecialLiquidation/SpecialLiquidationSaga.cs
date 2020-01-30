@@ -69,14 +69,6 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 SpecialLiquidationOperationState.PriceRequested))
             {
                 var positionsVolume = GetNetPositionCloseVolume(executionInfo.Data.PositionIds, executionInfo.Data.AccountId);
-                
-                //special command is sent instantly for timeout control.. it is retried until timeout occurs
-                sender.SendCommand(new GetPriceForSpecialLiquidationTimeoutInternalCommand
-                {
-                    OperationId = e.OperationId,
-                    CreationTime = _dateService.Now(),
-                    TimeoutSeconds = _marginTradingSettings.SpecialLiquidation.PriceRequestTimeoutSec,
-                }, _cqrsContextNamesSettings.TradingEngine);
 
                 executionInfo.Data.Instrument = e.Instrument;
                 executionInfo.Data.Volume = positionsVolume;
@@ -103,6 +95,14 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     _specialLiquidationService.FakeGetPriceForSpecialLiquidation(e.OperationId, e.Instrument,
                         positionsVolume);
                 }
+
+                //special command is sent instantly for timeout control.. it is retried until timeout occurs
+                sender.SendCommand(new GetPriceForSpecialLiquidationTimeoutInternalCommand
+                {
+                    OperationId = e.OperationId,
+                    CreationTime = _dateService.Now(),
+                    TimeoutSeconds = _marginTradingSettings.SpecialLiquidation.PriceRequestTimeoutSec,
+                }, _cqrsContextNamesSettings.TradingEngine);
 
                 _chaosKitty.Meow(e.OperationId);
 

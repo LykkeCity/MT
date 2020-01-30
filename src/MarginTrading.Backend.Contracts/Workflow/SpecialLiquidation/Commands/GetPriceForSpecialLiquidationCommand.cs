@@ -50,6 +50,10 @@ namespace MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Commands
         [Key(6)]
         public string AccountId { get; set; }
 
+        /// <summary>
+        /// Flag that shows whether request comes from CA.
+        /// </summary>
+        [Key(7)]
         public bool RequestedFromCorporateActions { get; set; }
     }
 }

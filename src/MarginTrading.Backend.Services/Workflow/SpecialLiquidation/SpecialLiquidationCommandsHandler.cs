@@ -301,7 +301,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 
                 if (_dateService.Now() >= command.CreationTime.AddSeconds(command.TimeoutSeconds))
                 {
-                    if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceRequested,
+                    if (executionInfo.Data.SwitchState(executionInfo.Data.State,
                         SpecialLiquidationOperationState.Failed))
                     {
                         publisher.PublishEvent(new SpecialLiquidationFailedEvent
