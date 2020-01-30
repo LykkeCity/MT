@@ -66,7 +66,9 @@ namespace MarginTrading.Backend.Services.FakeExchangeConnector
                 ExternalOrderBook orderbook;
                 decimal? currentPrice;
 
-                if (orderModel.Modality == TradeRequestModality.Liquidation)
+                if (orderModel.Modality == TradeRequestModality.Liquidation_CorporateAction
+                    ||
+                    orderModel.Modality == TradeRequestModality.Liquidation_MarginCall)
                 {
                     if (orderModel.Price == null)
                     {

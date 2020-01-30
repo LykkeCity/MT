@@ -21,5 +21,6 @@ namespace MarginTrading.Backend.Core
         public string AdditionalInfo { get; set; }
         public OriginatorType OriginatorType { get; set; }
         public int RequestNumber { get; set; }
+        public bool RequestedFromCorporateActions { get; set; } = false;
     }
 }

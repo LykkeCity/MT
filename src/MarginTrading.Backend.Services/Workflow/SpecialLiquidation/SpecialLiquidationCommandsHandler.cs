@@ -265,6 +265,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         ExternalProviderId = externalProviderId,
                         OriginatorType = OriginatorType.System,
                         AdditionalInfo = LykkeConstants.LiquidationByCaAdditionalInfo,
+                        RequestedFromCorporateActions = true
                     }
                 ));
 
@@ -300,7 +301,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 
                 if (_dateService.Now() >= command.CreationTime.AddSeconds(command.TimeoutSeconds))
                 {
-                    if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceRequested,
+                    if (executionInfo.Data.SwitchState(executionInfo.Data.State,
                         SpecialLiquidationOperationState.Failed))
                     {
                         publisher.PublishEvent(new SpecialLiquidationFailedEvent
@@ -363,15 +364,15 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         tradeType: command.Volume > 0 ? TradeType.Buy : TradeType.Sell,
                         orderType: OrderType.Market.ToType<Contracts.ExchangeConnector.OrderType>(),
                         timeInForce: TimeInForce.FillOrKill,
-                        volume: (double) Math.Abs(command.Volume),
+                        volume: (double)Math.Abs(command.Volume),
                         dateTime: _dateService.Now(),
                         exchangeName: operationInfo.ToJson(), //hack, but ExchangeName is not used and we need this info
-                        // TODO: create a separate field and remove hack (?)
+                                                              // TODO: create a separate field and remove hack (?)
                         instrument: command.Instrument,
-                        price: (double?) command.Price,
+                        price: (double?)command.Price,
                         orderId: _identityGenerator.GenerateAlphanumericId(),
-                        modality: TradeRequestModality.Liquidation);
-                
+                        modality: executionInfo.Data.RequestedFromCorporateActions ? TradeRequestModality.Liquidation_CorporateAction : TradeRequestModality.Liquidation_MarginCall);
+
                     try
                     {
                         var executionResult = await _exchangeConnectorClient.ExecuteOrder(order);
@@ -428,6 +429,10 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             {
                 try
                 {
+                    var modality = executionInfo.Data.RequestedFromCorporateActions
+                        ? OrderModality.Liquidation_CorporateAction
+                        : OrderModality.Liquidation_MarginCall;
+                    
                     //close positions with the quotes from gavel
                     await _tradingEngine.LiquidatePositionsUsingSpecialWorkflowAsync(
                         me: new SpecialLiquidationMatchingEngine(command.Price, command.MarketMakerId,
@@ -435,7 +440,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         positionIds: executionInfo.Data.PositionIds.ToArray(), 
                         correlationId: command.OperationId,
                         executionInfo.Data.AdditionalInfo,
-                        executionInfo.Data.OriginatorType);
+                        executionInfo.Data.OriginatorType,
+                        modality);
                 
                     _chaosKitty.Meow(command.OperationId);
                     

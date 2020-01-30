@@ -6,7 +6,8 @@ namespace MarginTrading.Backend.Contracts.ExchangeConnector
     public enum TradeRequestModality
     {
         Unspecified = 0,
-        Liquidation = 76,
-        Regular = 82
+        Liquidation_CorporateAction = 76,
+        Regular = 82,
+        Liquidation_MarginCall = 108
     }
 }

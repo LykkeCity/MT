@@ -698,15 +698,18 @@ namespace MarginTrading.Backend.Services
 
             var positions = closeData.Positions;
 
-            if (closeData.Modality != OrderModality.Liquidation)
+            if (closeData.Modality != OrderModality.Liquidation_MarginCall && closeData.Modality != OrderModality.Liquidation_CorporateAction)
             {
                 positions = positions.Where(p => p.Status == PositionStatus.Active).ToList();
             }
             
             foreach (var position in positions)
             {
-                if (position.TryStartClosing(now, PositionCloseReason.Close, closeData.Originator, "") ||
-                    closeData.Modality == OrderModality.Liquidation)
+                if (position.TryStartClosing(now, PositionCloseReason.Close, closeData.Originator, "") 
+                    ||
+                    closeData.Modality == OrderModality.Liquidation_MarginCall
+                    ||
+                    closeData.Modality == OrderModality.Liquidation_CorporateAction)
                 {
                     positionIds.Add(position.Id);
                     volume += position.Volume;
@@ -899,7 +902,9 @@ namespace MarginTrading.Backend.Services
             return result;
         }
 
-        public async Task<(PositionCloseResult, Order)[]> LiquidatePositionsUsingSpecialWorkflowAsync(IMatchingEngineBase me, string[] positionIds, string correlationId, string additionalInfo, OriginatorType originator)
+        public async Task<(PositionCloseResult, Order)[]> LiquidatePositionsUsingSpecialWorkflowAsync(
+            IMatchingEngineBase me, string[] positionIds, string correlationId, string additionalInfo,
+            OriginatorType originator, OrderModality modality)
         {
             var positionsToClose = _ordersCache.Positions.GetAllPositions()
                 .Where(x => positionIds.Contains(x.Id)).ToList();
@@ -919,7 +924,7 @@ namespace MarginTrading.Backend.Services
                     gr.Key.EquivalentAsset,
                     "Special Liquidation",
                     me,
-                    OrderModality.Liquidation));
+                    modality));
             
             var failedPositionIds = new List<string>();
 
