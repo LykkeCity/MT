@@ -112,7 +112,17 @@ namespace MarginTrading.Backend.Modules
                 .As<ISpecialLiquidationService>()
                 .PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies)
                 .SingleInstance();
-            
+
+            builder.RegisterType<QueueValidationService>()
+                .As<IQueueValidationService>()
+                .WithParameter("connectionString", _mtSettings.MtBackend.StartupQueuesChecker.ConnectionString)
+                .WithParameter("queueNames", new List<string>
+                {
+                    _mtSettings.MtBackend.StartupQueuesChecker.OrderHistoryQueueName,
+                    _mtSettings.MtBackend.StartupQueuesChecker.PositionHistoryQueueName
+                })
+                .SingleInstance();
+
             builder.RegisterChaosKitty(_settings.ChaosKitty);
             
             builder.RegisterType<PublishingQueueRepository>()

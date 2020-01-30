@@ -3,12 +3,14 @@
 
 using System;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Threading.Tasks;
-using Common;
 using Common.Log;
 using Dapper;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Core.Snapshots;
+using MarginTrading.SqlRepositories.Entities;
 
 namespace MarginTrading.SqlRepositories.Repositories
 {
@@ -50,29 +52,31 @@ INDEX IX_{0}_Base (TradingDay, CorrelationId, Timestamp)
             }
         }
 
-        public async Task Add(DateTime tradingDay, string correlationId, DateTime timestamp, string orders,
-            string positions, string accounts, string bestFxPrices, string bestTradingPrices)
+        public async Task<TradingEngineSnapshot> GetLastAsync()
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var entities = await connection.QueryAsync<TradingEngineSnapshotEntity>(
+                    $"SELECT TOP(1) * FROM {TableName} ORDER BY Timestamp DESC");
+
+                return entities.FirstOrDefault()?.ToDomain();
+            }
+        }
+
+        public async Task AddAsync(TradingEngineSnapshot tradingEngineSnapshot)
         {
             using (var conn = new SqlConnection(_connectionString))
             {
-                await _log.WriteInfoAsync(nameof(TradingEngineSnapshotsRepository), nameof(Add),
-                    $"Writing {tradingDay:yyyy-MM-dd} snapshot to repository with {correlationId} correlationId.");
-                
+                await _log.WriteInfoAsync(nameof(TradingEngineSnapshotsRepository), nameof(AddAsync),
+                    $"Writing {tradingEngineSnapshot.TradingDay:yyyy-MM-dd} snapshot to repository with {tradingEngineSnapshot.CorrelationId} correlationId.");
+
+                var entity = new TradingEngineSnapshotEntity(tradingEngineSnapshot);
+
                 await conn.ExecuteAsync(
                     $@"INSERT INTO {TableName} 
 (TradingDay,CorrelationId,Timestamp,Orders,Positions,AccountStats,BestFxPrices,BestPrices) 
 VALUES (@TradingDay,@CorrelationId,@Timestamp,@Orders,@Positions,@AccountStats,@BestFxPrices,@BestPrices)",
-                    new
-                    {
-                        TradingDay = tradingDay,
-                        CorrelationId = correlationId,
-                        Timestamp = timestamp,
-                        Orders = orders,
-                        Positions = positions,
-                        AccountStats = accounts,
-                        BestFxPrices = bestFxPrices,
-                        BestPrices = bestTradingPrices,
-                    }, commandTimeout: _settings.SnapshotInsertTimeoutSec);
+                    entity, commandTimeout: _settings.SnapshotInsertTimeoutSec);
             }
         }
     }

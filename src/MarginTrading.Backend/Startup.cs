@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
@@ -309,11 +310,15 @@ namespace MarginTrading.Backend
         {
             var deduplicationService = new StartupDeduplicationService(Environment, LogLocator.CommonLog,
                 marginTradingSettings);
-            deduplicationService
-                .HoldLock();
+            deduplicationService.HoldLock();
 
-            new StartupQueuesCheckerService(marginTradingSettings)
-                .Check();
+            new QueueValidationService(marginTradingSettings.StartupQueuesChecker.ConnectionString,
+                    new[]
+                    {
+                        marginTradingSettings.StartupQueuesChecker.OrderHistoryQueueName,
+                        marginTradingSettings.StartupQueuesChecker.PositionHistoryQueueName
+                    })
+                .ThrowExceptionIfQueuesNotEmpty(true);
 
             return deduplicationService;
         }

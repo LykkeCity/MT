@@ -2,24 +2,17 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
-using MarginTrading.Backend.Contracts.Account;
-using MarginTrading.Backend.Contracts.Orders;
-using MarginTrading.Backend.Contracts.Positions;
-using MarginTrading.Backend.Contracts.Snow.Prices;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
-using MarginTrading.Backend.Core.Trading;
+using MarginTrading.Backend.Core.Snapshots;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Mappers;
-using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services.Infrastructure
@@ -34,6 +27,8 @@ namespace MarginTrading.Backend.Services.Infrastructure
         private readonly IDateService _dateService;
 
         private readonly ITradingEngineSnapshotsRepository _tradingEngineSnapshotsRepository;
+        private readonly ISnapshotValidationService _snapshotValidationService;
+        private readonly IQueueValidationService _queueValidationService;
         private readonly ILog _log;
 
         private readonly SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1, 1);
@@ -46,6 +41,8 @@ namespace MarginTrading.Backend.Services.Infrastructure
             IOrderReader orderReader,
             IDateService dateService,
             ITradingEngineSnapshotsRepository tradingEngineSnapshotsRepository,
+            ISnapshotValidationService snapshotValidationService,
+            IQueueValidationService queueValidationService,
             ILog log)
         {
             _scheduleSettingsCacheService = scheduleSettingsCacheService;
@@ -55,6 +52,8 @@ namespace MarginTrading.Backend.Services.Infrastructure
             _orderReader = orderReader;
             _dateService = dateService;
             _tradingEngineSnapshotsRepository = tradingEngineSnapshotsRepository;
+            _snapshotValidationService = snapshotValidationService;
+            _queueValidationService = queueValidationService;
             _log = log;
         }
 
@@ -82,7 +81,26 @@ namespace MarginTrading.Backend.Services.Infrastructure
             {
                 throw new ArgumentException("Trading data snapshot creation is already in progress", "snapshot");
             }
-            
+
+            // We must be sure all messages have been processed by history brokers before starting current state validation.
+            // If one or more queues contain not delivered messages the snapshot can not be created.  
+            _queueValidationService.ThrowExceptionIfQueuesNotEmpty(true);
+
+            // Before starting snapshot creation the current state should be validated.
+            var validationResult = await _snapshotValidationService.ValidateCurrentStateAsync();
+
+            if (!validationResult.IsValid)
+            {
+                await _log.WriteWarningAsync(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
+                    validationResult.ToJson(),
+                    "Can not create a trading data snapshot. The current state of orders and positions is incorrect.");
+            }
+            else
+            {
+                await _log.WriteInfoAsync(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
+                    "The current state of orders and positions is correct.");
+            }
+
             await _semaphoreSlim.WaitAsync();
 
             try
@@ -117,9 +135,19 @@ namespace MarginTrading.Backend.Services.Infrastructure
                 await _log.WriteInfoAsync(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
                     $"Starting to write trading data snapshot. {msg}");
 
-                await _tradingEngineSnapshotsRepository.Add(tradingDay, correlationId, _dateService.Now(), 
-                    ordersData, positionsData, accountStatsData, bestFxPricesData, 
-                    bestPricesData);
+                var snapshot = new TradingEngineSnapshot
+                {
+                    TradingDay = tradingDay,
+                    CorrelationId = correlationId,
+                    Timestamp = _dateService.Now(),
+                    Orders = ordersData,
+                    Positions = positionsData,
+                    AccountStats = accountStatsData,
+                    BestFxPrices = bestFxPricesData,
+                    BestPrices = bestPricesData
+                };
+
+                await _tradingEngineSnapshotsRepository.AddAsync(snapshot);
 
                 await _log.WriteInfoAsync(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
                     $"Trading data snapshot was written to the storage. {msg}");   
