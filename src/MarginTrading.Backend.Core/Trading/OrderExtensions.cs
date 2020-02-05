@@ -50,10 +50,27 @@ namespace MarginTrading.Backend.Core
 
             return position.FplData;
         }
-
-        public static decimal GetFpl(this Position order)
+        
+        public static decimal GetFpl(this Position position)
         {
-            return order.CalculateFplData().Fpl;
+            var data = position.CalculateFplData();
+            
+            //TODO: remove after migration
+            if (data.RawFpl == 0)
+                data.RawFpl = data.Fpl;
+            
+            return Math.Round(data.RawFpl, data.AccountBaseAssetAccuracy);
+        }
+        
+        public static decimal GetUnrealisedFpl(this Position position)
+        {
+            var data = position.CalculateFplData();
+            
+            //TODO: remove after migration
+            if (data.RawFpl == 0)
+                data.RawFpl = data.Fpl;
+            
+            return Math.Round(data.RawFpl - position.ChargedPnL, data.AccountBaseAssetAccuracy);
         }
 
         public static decimal GetMarginRate(this Position order)

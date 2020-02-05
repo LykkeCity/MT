@@ -1,10 +1,14 @@
 ﻿// Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System;
+
 namespace MarginTrading.Backend.Core
 {
     public class FplData
     {
+        public decimal RawFpl { get; set; }
+        [Obsolete]
         public decimal Fpl { get; set; }
         public decimal MarginRate { get; set; }
         public decimal MarginInit { get; set; }
