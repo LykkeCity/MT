@@ -341,6 +341,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceReceived,
                 SpecialLiquidationOperationState.ExternalOrderExecuted))
             {
+                var orderId = _identityGenerator.GenerateAlphanumericId();
+
                 if (command.Volume == 0)
                 {
                     publisher.PublishEvent(new SpecialLiquidationOrderExecutedEvent
@@ -349,7 +351,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         CreationTime = _dateService.Now(),
                         MarketMakerId = "ZeroNetVolume",
                         ExecutionTime = _dateService.Now(),
-                        OrderId = _identityGenerator.GenerateGuid(),
+                        OrderId = orderId,
                     });
                 }
                 else
@@ -370,7 +372,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                                                               // TODO: create a separate field and remove hack (?)
                         instrument: command.Instrument,
                         price: (double?)command.Price,
-                        orderId: _identityGenerator.GenerateAlphanumericId(),
+                        orderId: orderId,
                         modality: executionInfo.Data.RequestedFromCorporateActions ? TradeRequestModality.Liquidation_CorporateAction : TradeRequestModality.Liquidation_MarginCall);
 
                     try
@@ -407,7 +409,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                             exception);
                     }
                 }
-                
+
+                executionInfo.Data.OrderId = orderId;
+
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }
         }
@@ -441,7 +445,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         correlationId: command.OperationId,
                         executionInfo.Data.AdditionalInfo,
                         executionInfo.Data.OriginatorType,
-                        modality);
+                        modality, executionInfo.Data.OrderId);
                 
                     _chaosKitty.Meow(command.OperationId);
                     

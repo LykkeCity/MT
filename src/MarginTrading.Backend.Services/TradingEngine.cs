@@ -682,7 +682,8 @@ namespace MarginTrading.Backend.Services
             _stopOutEventChannel.SendEvent(this, new StopOutEventArgs(account));
         }
 
-        public async Task<(PositionCloseResult, Order)> ClosePositionsAsync(PositionsCloseData closeData, bool specialLiquidationEnabled)
+        public async Task<(PositionCloseResult, Order)> ClosePositionsAsync(PositionsCloseData closeData,
+            bool specialLiquidationEnabled, string orderId = null)
         {
             var me = closeData.MatchingEngine ??
                      _meRouter.GetMatchingEngineForClose(closeData.OpenMatchingEngineId);
@@ -726,7 +727,8 @@ namespace MarginTrading.Backend.Services
                 throw new Exception("No active positions to close");
             }
             
-            var order = new Order(initialParameters.Id,
+            var order = new Order(
+                string.IsNullOrEmpty(orderId) ? initialParameters.Id : orderId,
                 initialParameters.Code,
                 closeData.AssetPairId,
                 -volume,
@@ -904,7 +906,7 @@ namespace MarginTrading.Backend.Services
 
         public async Task<(PositionCloseResult, Order)[]> LiquidatePositionsUsingSpecialWorkflowAsync(
             IMatchingEngineBase me, string[] positionIds, string correlationId, string additionalInfo,
-            OriginatorType originator, OrderModality modality)
+            OriginatorType originator, OrderModality modality, string orderId = null)
         {
             var positionsToClose = _ordersCache.Positions.GetAllPositions()
                 .Where(x => positionIds.Contains(x.Id)).ToList();
@@ -933,7 +935,7 @@ namespace MarginTrading.Backend.Services
                 {
                     try
                     {
-                        return await ClosePositionsAsync(group, false);
+                        return await ClosePositionsAsync(group, false, orderId);
                     }
                     catch (Exception)
                     {

@@ -22,5 +22,13 @@ namespace MarginTrading.Backend.Core
         public OriginatorType OriginatorType { get; set; }
         public int RequestNumber { get; set; }
         public bool RequestedFromCorporateActions { get; set; } = false;
+
+        /// <summary>
+        /// The order identifier.
+        /// </summary>
+        /// <remarks>
+        /// This identifier should be the same for external and internal order. 
+        /// </remarks>
+        public string OrderId { get; set; }
     }
 }
