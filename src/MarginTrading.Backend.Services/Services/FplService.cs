@@ -73,11 +73,12 @@ namespace MarginTrading.Backend.Services
 
         private void UpdatePositionFplData(Position position, FplData fplData)
         {
-            fplData.AccountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(position.AccountAssetId);
+            if (fplData.AccountBaseAssetAccuracy == default)
+            {
+                fplData.AccountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(position.AccountAssetId);
+            }
             
-            var fpl = (position.ClosePrice - position.OpenPrice) * position.CloseFxPrice * position.Volume;
-            
-            fplData.Fpl = Math.Round(fpl, fplData.AccountBaseAssetAccuracy);
+            fplData.RawFpl = (position.ClosePrice - position.OpenPrice) * position.CloseFxPrice * position.Volume;
 
             if (position.ClosePrice == 0)
                 position.UpdateClosePrice(position.OpenPrice);
