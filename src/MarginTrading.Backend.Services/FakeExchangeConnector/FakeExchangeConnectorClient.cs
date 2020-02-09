@@ -82,13 +82,13 @@ namespace MarginTrading.Backend.Services.FakeExchangeConnector
                             []
                             {
                                 new VolumePrice
-                                    {Price = currentPrice.Value, Volume = currentPrice.Value}
+                                    {Price = currentPrice.Value, Volume = (decimal)orderModel.Volume}
                             },
                         new
                             []
                             {
                                 new VolumePrice
-                                    {Price = currentPrice.Value, Volume = currentPrice.Value}
+                                    {Price = currentPrice.Value, Volume = (decimal)orderModel.Volume}
                             });
                 }
                 else
