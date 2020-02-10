@@ -567,12 +567,15 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        private void ProcessPositions(InstrumentBidAskPair quote)
+        private void ProcessPositions(InstrumentBidAskPair quote, bool allowCommitStopOut)
         {
             var stopoutAccounts = UpdateClosePriceAndDetectStopout(quote);
             
-            foreach (var account in stopoutAccounts)
-                CommitStopOut(account, quote);
+            if(allowCommitStopOut)
+            {
+                foreach (var account in stopoutAccounts)
+                    CommitStopOut(account, quote);
+            }
         }
 
         private List<MarginTradingAccount> UpdateClosePriceAndDetectStopout(InstrumentBidAskPair quote)
@@ -1060,7 +1063,7 @@ namespace MarginTrading.Backend.Services
 
         void IEventConsumer<BestPriceChangeEventArgs>.ConsumeEvent(object sender, BestPriceChangeEventArgs ea)
         {
-            ProcessPositions(ea.BidAskPair);
+            ProcessPositions(ea.BidAskPair, !ea.IsEod);
             ProcessOrdersWaitingForExecution(ea.BidAskPair);
         }
 
