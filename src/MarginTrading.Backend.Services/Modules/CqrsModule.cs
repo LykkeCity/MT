@@ -331,7 +331,8 @@ namespace MarginTrading.Backend.Services.Modules
                     typeof(LiquidationResumedInternalEvent),
                     typeof(LiquidationStartedInternalEvent),
                     typeof(NotEnoughLiquidityInternalEvent),
-                    typeof(PositionsLiquidationFinishedInternalEvent)
+                    typeof(PositionsLiquidationFinishedInternalEvent),
+                    typeof(MarketStateChangedEvent)
                 )
                 .From(_settings.ContextNames.TradingEngine)
                 .On(EventsRoute);

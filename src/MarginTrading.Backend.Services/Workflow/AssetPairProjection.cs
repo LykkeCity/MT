@@ -74,6 +74,7 @@ namespace MarginTrading.Backend.Services.Workflow
                     baseAssetId: @event.AssetPair.BaseAssetId,
                     quoteAssetId: @event.AssetPair.QuoteAssetId,
                     accuracy: @event.AssetPair.Accuracy,
+                    marketId: @event.AssetPair.MarketId,
                     legalEntity: @event.AssetPair.LegalEntity,
                     basePairId: @event.AssetPair.BasePairId,
                     matchingEngineMode: @event.AssetPair.MatchingEngineMode.ToType<MatchingEngineMode>(),
