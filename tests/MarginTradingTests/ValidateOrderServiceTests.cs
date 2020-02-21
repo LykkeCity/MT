@@ -680,7 +680,7 @@ namespace MarginTradingTests
             
             _assetPairsCache.AddOrUpdate(
                 new AssetPair(pair.Id, pair.Name, pair.BaseAssetId, pair.QuoteAssetId,
-                    pair.Accuracy, pair.LegalEntity, pair.BaseAssetId, pair.MatchingEngineMode,
+                    pair.Accuracy, pair.MarketId, pair.LegalEntity, pair.BaseAssetId, pair.MatchingEngineMode,
                     pair.StpMultiplierMarkupAsk, pair.StpMultiplierMarkupBid,
                     isSuspended, isFrozen, isDiscontinued));
             

@@ -36,6 +36,11 @@ namespace MarginTrading.Backend.Core
         int Accuracy { get; }
 
         /// <summary>
+        /// Market identifier.
+        /// </summary>
+        string MarketId { get; }
+
+        /// <summary>
         /// Id of legal entity
         /// </summary>
         string LegalEntity { get; }
@@ -87,17 +92,17 @@ namespace MarginTrading.Backend.Core
 
     public class AssetPair : IAssetPair
     {
-        public AssetPair(string id, string name, string baseAssetId,
-            string quoteAssetId, int accuracy, string legalEntity,
-            [CanBeNull] string basePairId, MatchingEngineMode matchingEngineMode, decimal stpMultiplierMarkupBid,
-            decimal stpMultiplierMarkupAsk, bool isSuspended, bool isFrozen, bool isDiscontinued)
+        public AssetPair(string id, string name, string baseAssetId, string quoteAssetId, int accuracy, string marketId,
+            string legalEntity, [CanBeNull] string basePairId, MatchingEngineMode matchingEngineMode,
+            decimal stpMultiplierMarkupBid,  decimal stpMultiplierMarkupAsk, bool isSuspended, bool isFrozen,
+            bool isDiscontinued)
         {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Name = name ?? throw new ArgumentNullException(nameof(name));
             BaseAssetId = baseAssetId ?? throw new ArgumentNullException(nameof(baseAssetId));
             QuoteAssetId = quoteAssetId ?? throw new ArgumentNullException(nameof(quoteAssetId));
             Accuracy = accuracy;
-            
+            MarketId = marketId;
             LegalEntity = legalEntity.RequiredNotNullOrWhiteSpace(nameof(legalEntity));
             BasePairId = basePairId;
             MatchingEngineMode = matchingEngineMode.RequiredEnum(nameof(matchingEngineMode));
@@ -114,7 +119,8 @@ namespace MarginTrading.Backend.Core
         public string BaseAssetId { get; }
         public string QuoteAssetId { get; }
         public int Accuracy { get; }
-        
+        public string MarketId { get; }
+
         public string LegalEntity { get; }
         public string BasePairId { get; }
         public MatchingEngineMode MatchingEngineMode { get; }

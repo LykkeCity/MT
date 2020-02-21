@@ -9,6 +9,7 @@ using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
+using MarginTrading.Backend.Contracts.TradingSchedule;
 using MarginTrading.Backend.Contracts.Workflow.Liquidation.Events;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Extensions;
@@ -25,6 +26,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
 {
     public class LiquidationSaga
     {
+        private readonly IAssetPairsCache _assetPairsCache;
         private readonly IDateService _dateService;
         private readonly IChaosKitty _chaosKitty;
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
@@ -37,6 +39,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         public const string OperationName = "Liquidation";
 
         public LiquidationSaga(
+            IAssetPairsCache assetPairsCache,
             IDateService dateService,
             IChaosKitty chaosKitty,
             IOperationExecutionInfoRepository operationExecutionInfoRepository,
@@ -46,6 +49,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             IAccountsCacheService accountsCacheService,
             IAssetPairDayOffService assetPairDayOffService)
         {
+            _assetPairsCache = assetPairsCache;
             _dateService = dateService;
             _chaosKitty = chaosKitty;
             _operationExecutionInfoRepository = operationExecutionInfoRepository;
@@ -231,7 +235,42 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }
         }
-        
+
+        [UsedImplicitly]
+        public Task Handle(MarketStateChangedEvent e, ICommandSender sender)
+        {
+            if(!e.IsEnabled)
+                return Task.CompletedTask;
+
+            var accounts = _accountsCacheService.GetAll()
+                .Where(account => account.IsInLiquidation())
+                .ToList();
+
+            foreach (var account in accounts)
+            {
+                var positions = _ordersCache.Positions.GetPositionsByAccountIds(account.Id);
+
+                var assetPairs = positions
+                    .Select(position => _assetPairsCache.GetAssetPairById(position.AssetPairId))
+                    .Where(assetPair => assetPair.MarketId == e.Id)
+                    .ToList();
+
+                if (assetPairs.Any())
+                {
+                    sender.SendCommand(new ResumeLiquidationInternalCommand
+                    {
+                        OperationId = account.LiquidationOperationId,
+                        CreationTime = DateTime.UtcNow,
+                        IsCausedBySpecialLiquidation = false,
+                        ResumeOnlyFailed = true,
+                        Comment = "Trying to resume liquidation because market has been opened"
+                    }, _cqrsContextNamesSettings.TradingEngine);
+                }
+            }
+
+            return Task.CompletedTask;
+        }
+
         #region Private methods
 
         private (string AssetPairId, string[] Positions)? GetLiquidationData(
