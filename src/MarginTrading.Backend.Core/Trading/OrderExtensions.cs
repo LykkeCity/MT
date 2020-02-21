@@ -61,8 +61,9 @@ namespace MarginTrading.Backend.Core
         public static decimal GetUnrealisedFpl(this Position position)
         {
             var data = position.CalculateFplData();
+            var pnl = Math.Round(data.RawFpl, data.AccountBaseAssetAccuracy);
 
-            return Math.Round(data.RawFpl - position.ChargedPnL, data.AccountBaseAssetAccuracy);
+            return Math.Round(pnl - position.ChargedPnL, data.AccountBaseAssetAccuracy);
         }
 
         public static decimal GetMarginRate(this Position order)
