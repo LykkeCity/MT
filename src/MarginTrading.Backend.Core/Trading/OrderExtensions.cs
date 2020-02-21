@@ -54,23 +54,16 @@ namespace MarginTrading.Backend.Core
         public static decimal GetFpl(this Position position)
         {
             var data = position.CalculateFplData();
-            
-            //TODO: remove after migration
-            if (data.RawFpl == 0)
-                data.RawFpl = data.Fpl;
-            
+
             return Math.Round(data.RawFpl, data.AccountBaseAssetAccuracy);
         }
         
         public static decimal GetUnrealisedFpl(this Position position)
         {
             var data = position.CalculateFplData();
-            
-            //TODO: remove after migration
-            if (data.RawFpl == 0)
-                data.RawFpl = data.Fpl;
-            
-            return Math.Round(data.RawFpl - position.ChargedPnL, data.AccountBaseAssetAccuracy);
+            var pnl = Math.Round(data.RawFpl, data.AccountBaseAssetAccuracy);
+
+            return Math.Round(pnl - position.ChargedPnL, data.AccountBaseAssetAccuracy);
         }
 
         public static decimal GetMarginRate(this Position order)
