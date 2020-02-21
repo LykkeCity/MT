@@ -71,8 +71,16 @@ namespace MarginTrading.Backend.Services
             return fplData.MarginMaintenance;
         }
 
+        //TODO: change the approach completely!
         private void UpdatePositionFplData(Position position, FplData fplData)
         {
+            if (fplData.ActualHash == 0)
+            {
+                fplData.ActualHash = 1;
+            }
+            
+            fplData.CalculatedHash = fplData.ActualHash;
+            
             if (fplData.AccountBaseAssetAccuracy == default)
             {
                 fplData.AccountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(position.AccountAssetId);
@@ -84,12 +92,6 @@ namespace MarginTrading.Backend.Services
                 position.UpdateClosePrice(position.OpenPrice);
             
             CalculateMargin(position, fplData);
-
-            if (fplData.ActualHash == 0)
-            {
-                fplData.ActualHash = 1;
-            }
-            fplData.CalculatedHash = fplData.ActualHash;
         }
 
         private void UpdatePendingOrderMargin(Position order, FplData fplData)
@@ -108,9 +110,7 @@ namespace MarginTrading.Backend.Services
                 _tradingInstrumentsCache.GetTradingInstrument(position.TradingConditionId, position.AssetPairId);
             var volumeForCalculation = Math.Abs(position.Volume);
 
-            fplData.MarginRate = _cfdCalculatorService.GetQuoteRateForBaseAsset(position.AccountAssetId,
-                position.AssetPairId,
-                position.LegalEntity, position.Direction == PositionDirection.Short); // to use close price
+            fplData.MarginRate = position.ClosePrice * position.CloseFxPrice;
 
             var (marginInit, marginMaintenance) = GetMargins(tradingInstrument, volumeForCalculation,
                 fplData.MarginRate, isWarnCheck);
