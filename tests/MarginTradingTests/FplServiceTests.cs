@@ -161,14 +161,16 @@ namespace MarginTradingTests
             positions[1].UpdateClosePrice(1.061M);
             positions[2].UpdateClosePrice(1.06M);
             positions[3].UpdateClosePrice(1091M);
+            
+            positions[3].UpdateCloseFxPrice(1.061M);
 
             var account = Accounts[0];
 
             Assert.AreEqual(50000, account.Balance);
-            Assert.AreEqual(43676.000, Math.Round(account.GetTotalCapital(), 5));
-            Assert.AreEqual(33484.3M, Math.Round(account.GetFreeMargin(), 1));
-            Assert.AreEqual(28388.5M, Math.Round(account.GetMarginAvailable(), 1));
-            Assert.AreEqual(-6324.000, Math.Round(account.GetPnl(), 5));
+            Assert.AreEqual(43673.1m, Math.Round(account.GetTotalCapital(), 5));
+            Assert.AreEqual(33481.4m, Math.Round(account.GetFreeMargin(), 1));
+            Assert.AreEqual(28385.6M, Math.Round(account.GetMarginAvailable(), 1));
+            Assert.AreEqual(-6326.9M, Math.Round(account.GetPnl(), 5));
             Assert.AreEqual(10191.7M, Math.Round(account.GetUsedMargin(), 1));
             Assert.AreEqual(15287.5M, Math.Round(account.GetMarginInit(), 1));
         }
@@ -212,12 +214,14 @@ namespace MarginTradingTests
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "EURJPY", Ask = 2.3M, Bid = 2.3M });
 
             var position1 = TestObjectsFactory.CreateOpenedPosition("EURUSD", Accounts[1],
-                MarginTradingTestsUtils.TradingConditionId, 15000, 1.3M);
+                MarginTradingTestsUtils.TradingConditionId, 15000, 1.3M, 1/9000M);
             position1.UpdateClosePrice(1.2M);
+            position1.UpdateCloseFxPrice(1/9000M);
             
             var position2 = TestObjectsFactory.CreateOpenedPosition("CHFJPY", Accounts[1],
-                MarginTradingTestsUtils.TradingConditionId, -100, 2.3M);
+                MarginTradingTestsUtils.TradingConditionId, -100, 2.3M, 1/2.3M);
             position2.UpdateClosePrice(2.5M);
+            position2.UpdateCloseFxPrice(1/2.3M);
             
             Assert.AreEqual(0.02M, position1.GetMarginInit());
             Assert.AreEqual(0.01333333M, position1.GetMarginMaintenance());

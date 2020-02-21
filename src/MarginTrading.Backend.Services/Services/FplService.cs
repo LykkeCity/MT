@@ -110,9 +110,7 @@ namespace MarginTrading.Backend.Services
                 _tradingInstrumentsCache.GetTradingInstrument(position.TradingConditionId, position.AssetPairId);
             var volumeForCalculation = Math.Abs(position.Volume);
 
-            fplData.MarginRate = _cfdCalculatorService.GetQuoteRateForBaseAsset(position.AccountAssetId,
-                position.AssetPairId,
-                position.LegalEntity, position.Direction == PositionDirection.Short); // to use close price
+            fplData.MarginRate = position.ClosePrice * position.CloseFxPrice;
 
             var (marginInit, marginMaintenance) = GetMargins(tradingInstrument, volumeForCalculation,
                 fplData.MarginRate, isWarnCheck);
