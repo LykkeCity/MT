@@ -3,6 +3,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Xml.Serialization;
 using Autofac;
 using Common.Log;
 using MarginTrading.Backend.Core;
@@ -249,6 +251,43 @@ namespace MarginTradingTests
 
             Assert.AreEqual(-0.25M, position1.GetFpl());
             Assert.AreEqual(-112.94939759M, position2.GetFpl());
+        }
+
+        [Test]
+        public async Task Check_Position_PnL_Multi_Thread()
+        {
+            _bestPriceConsumer.SendEvent(this,
+                new BestPriceChangeEventArgs(
+                    new InstrumentBidAskPair {Instrument = "BTCUSD", Ask = 2M, Bid = 1M}));
+            
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair {Instrument = "EURUSD", Ask = 1, Bid = 1});
+            
+            var position1 = TestObjectsFactory.CreateOpenedPosition("BTCUSD", Accounts[1],
+                MarginTradingTestsUtils.TradingConditionId, 1, 2M, 1M);
+            
+            var updateFxTask = new Action(() => {position1.UpdateCloseFxPrice(2);});
+            var getPnLTask = new Action(() => { position1.GetFpl(); });
+
+            var wrong = 0;
+            const int attempts = 100000;
+
+            for (int i = 0; i < attempts; i++)
+            {
+                position1.UpdateClosePrice(1M);
+            
+                await Task.WhenAll(Task.Factory.StartNew(getPnLTask), Task.Factory.StartNew(updateFxTask));
+
+                var pnl = position1.GetFpl();
+                
+                if (pnl != -2)
+                    wrong++;
+
+                position1.UpdateClosePrice(2M);
+                position1.UpdateCloseFxPrice(1);
+                Assert.AreEqual(0, position1.GetFpl());
+            }
+
+            Assert.AreEqual(0, wrong, $"Number of wrong P&L calculations from {attempts} attempts");
         }
     }
 }

@@ -71,8 +71,16 @@ namespace MarginTrading.Backend.Services
             return fplData.MarginMaintenance;
         }
 
+        //TODO: change the approach completely!
         private void UpdatePositionFplData(Position position, FplData fplData)
         {
+            if (fplData.ActualHash == 0)
+            {
+                fplData.ActualHash = 1;
+            }
+            
+            fplData.CalculatedHash = fplData.ActualHash;
+            
             if (fplData.AccountBaseAssetAccuracy == default)
             {
                 fplData.AccountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(position.AccountAssetId);
@@ -84,12 +92,6 @@ namespace MarginTrading.Backend.Services
                 position.UpdateClosePrice(position.OpenPrice);
             
             CalculateMargin(position, fplData);
-
-            if (fplData.ActualHash == 0)
-            {
-                fplData.ActualHash = 1;
-            }
-            fplData.CalculatedHash = fplData.ActualHash;
         }
 
         private void UpdatePendingOrderMargin(Position order, FplData fplData)
