@@ -17,5 +17,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands
         
         [Key(2)]
         public int TimeoutSeconds { get; set; }
+        
+        [Key(3)]
+        public int RequestNumber { get; set; }
     }
 }
