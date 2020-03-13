@@ -83,13 +83,14 @@ namespace MarginTrading.SqlRepositories
             
             using (var conn = new SqlConnection(_connectionString))
             {
-                try
+                if (await conn.ExecuteScalarAsync<int>($"select count(*) from {TableName} where BlobKey=@blobKey",
+                        request) == 0)
                 {
                     await conn.ExecuteAsync(
                         $"insert into {TableName} (BlobKey, Data, Timestamp) values (@blobKey, @data, @timestamp)",
                         request);
                 }
-                catch
+                else
                 {
                     await conn.ExecuteAsync(
                         $"update {TableName} set Data=@data, Timestamp = @timestamp where BlobKey=@blobKey",
