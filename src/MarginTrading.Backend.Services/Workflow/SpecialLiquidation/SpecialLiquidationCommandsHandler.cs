@@ -294,7 +294,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
 
             if (executionInfo?.Data != null)
             {
-                if (executionInfo.Data.State > SpecialLiquidationOperationState.PriceRequested)
+                if (executionInfo.Data.State > SpecialLiquidationOperationState.PriceRequested 
+                    || executionInfo.Data.RequestNumber > command.RequestNumber)
                 {
                     return CommandHandlingResult.Ok();
                 }
@@ -320,7 +321,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 }
             }
 
-            return CommandHandlingResult.Fail(_marginTradingSettings.SpecialLiquidation.RetryTimeout);
+            return CommandHandlingResult.Fail(_marginTradingSettings.SpecialLiquidation.PriceRequestTimeoutCheckPeriod);
         }
 
         /// <summary>
