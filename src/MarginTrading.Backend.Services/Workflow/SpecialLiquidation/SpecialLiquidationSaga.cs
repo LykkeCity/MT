@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Common;
+using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
@@ -25,6 +27,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
     [UsedImplicitly]
     public class SpecialLiquidationSaga
     {
+        private readonly ILog _log;
         private readonly IDateService _dateService;
         private readonly IChaosKitty _chaosKitty;
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
@@ -37,6 +40,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         public const string OperationName = "SpecialLiquidation";
 
         public SpecialLiquidationSaga(
+            ILog log,
             IDateService dateService,
             IChaosKitty chaosKitty,
             IOperationExecutionInfoRepository operationExecutionInfoRepository,
@@ -45,6 +49,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             MarginTradingSettings marginTradingSettings,
             CqrsContextNamesSettings cqrsContextNamesSettings)
         {
+            _log = log;
             _dateService = dateService;
             _chaosKitty = chaosKitty;
             _operationExecutionInfoRepository = operationExecutionInfoRepository;
@@ -137,6 +142,11 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             
             if (executionInfo?.Data == null)
                 return;
+
+            await _log.WriteInfoAsync(
+                nameof(SpecialLiquidationSaga),
+                nameof(Handle),
+                $"{nameof(PriceForSpecialLiquidationCalculationFailedEvent)}: {e.ToJson()}.");
 
             if (_marginTradingSettings.SpecialLiquidation.PriceRequestRetryTimeout.HasValue
                 && (!executionInfo.Data.RequestedFromCorporateActions
