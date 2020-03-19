@@ -60,7 +60,8 @@ namespace MarginTrading.Backend
                                 // Set properties and call methods on options
                             })
                             .UseConfiguration(configuration)
-                            .UseStartup<Startup>();
+                            .UseStartup<Startup>()
+                            .UseApplicationInsights();
                         })
                         .Build();
 
