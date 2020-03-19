@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
@@ -46,14 +47,18 @@ using MarginTrading.Common.Services;
 using MarginTrading.SqlRepositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using StackExchange.Redis;
 using GlobalErrorHandlerMiddleware = MarginTrading.Backend.Middleware.GlobalErrorHandlerMiddleware;
+using IApplicationLifetime = Microsoft.Extensions.Hosting.IApplicationLifetime;
+using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 #pragma warning disable 1591
@@ -62,9 +67,11 @@ namespace MarginTrading.Backend
 {
     public class Startup
     {
+        private IReloadingManager<MtBackendSettings> _mtSettingsManager;
+
         public IConfigurationRoot Configuration { get; }
         public IHostingEnvironment Environment { get; }
-        public IContainer ApplicationContainer { get; set; }
+        public ILifetimeScope ApplicationContainer { get; set; }
 
         public Startup(IHostingEnvironment env)
         {
@@ -77,15 +84,15 @@ namespace MarginTrading.Backend
             Environment = env;
         }
 
-        public IServiceProvider ConfigureServices(IServiceCollection services)
+        public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton(Configuration);
-            services.AddMvc()
-            .AddJsonOptions(options =>
-            {
-                options.SerializerSettings.ContractResolver = new DefaultContractResolver();
-                options.SerializerSettings.Converters.Add(new StringEnumConverter());
-            });
+            services.AddMvc(options => options.EnableEndpointRouting = false)
+                .AddNewtonsoftJson(options =>
+                {
+                    options.SerializerSettings.ContractResolver = new DefaultContractResolver();
+                    options.SerializerSettings.Converters.Add(new StringEnumConverter());
+                });
             services.AddScoped<MarginTradingEnabledFilter>();
             services.AddAuthentication(KeyAuthOptions.AuthenticationScheme)
                 .AddScheme<KeyAuthOptions, KeyAuthHandler>(KeyAuthOptions.AuthenticationScheme, "", options => { });
@@ -96,9 +103,7 @@ namespace MarginTrading.Backend
                 options.OperationFilter<ApiKeyHeaderOperationFilter>();
             });
 
-            var builder = new ContainerBuilder();
-
-            var mtSettings = Configuration.LoadSettings<MtBackendSettings>(
+            _mtSettingsManager = Configuration.LoadSettings<MtBackendSettings>(
                     throwExceptionOnCheckError: !Configuration.NotThrowExceptionsOnServiceValidation())
                 .Nested(s =>
                 {
@@ -106,16 +111,24 @@ namespace MarginTrading.Backend
                     return s;
                 });
 
-            SetupLoggers(Configuration, services, mtSettings);
+            SetupLoggers(Configuration, services, _mtSettingsManager);
 
-            var deduplicationService = RunHealthChecks(mtSettings.CurrentValue.MtBackend);
+            //return new AutofacServiceProvider(ApplicationContainer);
+        }
+
+        public void ConfigureContainer(ContainerBuilder builder)
+        {
+            var deduplicationService = RunHealthChecks(_mtSettingsManager.CurrentValue.MtBackend);
+
             builder.RegisterInstance(deduplicationService).AsSelf().As<IDisposable>().SingleInstance();
 
-            RegisterModules(builder, mtSettings, Environment);
+            RegisterModules(builder, _mtSettingsManager, Environment);
+        }
 
-            builder.Populate(services);
-
-            ApplicationContainer = builder.Build();
+        [UsedImplicitly]
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime appLifetime)
+        {
+            ApplicationContainer = app.ApplicationServices.GetAutofacRoot();
 
             MtServiceLocator.FplService = ApplicationContainer.Resolve<IFplService>();
             MtServiceLocator.AccountUpdateService = ApplicationContainer.Resolve<IAccountUpdateService>();
@@ -127,12 +140,6 @@ namespace MarginTrading.Backend
 
             InitializeJobs();
 
-            return new AutofacServiceProvider(ApplicationContainer);
-        }
-
-        [UsedImplicitly]
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime appLifetime)
-        {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -144,8 +151,14 @@ namespace MarginTrading.Backend
 
             app.UseMiddleware<GlobalErrorHandlerMiddleware>();
             app.UseMiddleware<MaintenanceModeMiddleware>();
+
+            //app.UseRouting();
             app.UseAuthentication();
+            app.UseAuthorization();
             app.UseMvc();
+            //app.UseEndpoints(endpoints => {
+            //    endpoints.MapControllers();
+            //});
 
             app.UseSwagger(c =>
             {
@@ -162,8 +175,8 @@ namespace MarginTrading.Backend
                 var cqrsEngine = ApplicationContainer.Resolve<ICqrsEngine>();
                 cqrsEngine.StartSubscribers();
                 cqrsEngine.StartProcesses();
-                
-                await Program.Host.WriteLogsAsync(Environment, LogLocator.CommonLog);
+
+                await WriteLogsAsync(Program.AppHost, Environment, LogLocator.CommonLog);
 
                 LogLocator.CommonLog?.WriteMonitorAsync("", "", $"{Configuration.ServerType()} Started");
             });
@@ -176,7 +189,9 @@ namespace MarginTrading.Backend
             );
         }
 
-        private static void RegisterModules(ContainerBuilder builder, IReloadingManager<MtBackendSettings> mtSettings,
+        private static void RegisterModules(
+            ContainerBuilder builder,
+            IReloadingManager<MtBackendSettings> mtSettings,
             IHostingEnvironment environment)
         {
             var settings = mtSettings.Nested(x => x.MtBackend);
@@ -188,8 +203,11 @@ namespace MarginTrading.Backend
             builder.RegisterModule(new CacheModule());
             builder.RegisterModule(new ManagersModule());
             builder.RegisterModule(new ServicesModule());
-            builder.RegisterModule(new BackendServicesModule(mtSettings.CurrentValue, settings.CurrentValue,
-                environment, LogLocator.CommonLog));
+            builder.RegisterModule(new BackendServicesModule(
+                mtSettings.CurrentValue,
+                settings.CurrentValue,
+                environment,
+                LogLocator.CommonLog));
             builder.RegisterModule(new MarginTradingCommonModule());
             builder.RegisterModule(new ExternalServicesModule(mtSettings));
             builder.RegisterModule(new BackendMigrationsModule());
@@ -316,6 +334,20 @@ namespace MarginTrading.Backend
                 .Check();
 
             return deduplicationService;
+        }
+
+        private static async Task WriteLogsAsync(IHost host, IHostingEnvironment environment, ILog log)
+        {
+            await log.WriteInfoAsync(nameof(WriteLogsAsync), nameof(Startup), $"Hosting environment: {environment.EnvironmentName}");
+            await log.WriteInfoAsync(nameof(WriteLogsAsync), nameof(Startup), $"Content root path: {environment.ContentRootPath}");
+            var serverAddresses = host.Services.GetRequiredService<IServerAddressesFeature>()?.Addresses;
+            if (serverAddresses != null)
+            {
+                foreach (var address in serverAddresses)
+                {
+                    await log.WriteInfoAsync(nameof(WriteLogsAsync), nameof(Startup), $"Now listening on: {address}");
+                }
+            }
         }
     }
 }

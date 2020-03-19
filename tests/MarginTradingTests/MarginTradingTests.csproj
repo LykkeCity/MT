@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
     <AssemblyName>MarginTradingTests</AssemblyName>
     <PackageId>MarginTradingTests</PackageId>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
@@ -28,13 +28,12 @@
     <PackageReference Include="FluentAssertions" Version="5.3.2" />
     <PackageReference Include="Lykke.Common" Version="7.5.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.7.2" />
-    <PackageReference Include="Moq" Version="4.8.2" />
+    <PackageReference Include="Moq" Version="4.10.1" />
     <PackageReference Include="dotnet-test-nunit" Version="3.4.0-beta-2" />
     <PackageReference Include="NUnit" Version="3.10.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="3.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="3.0.3" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.10.0" />
     <PackageReference Include="SuperSocket.ClientEngine" Version="0.10.0" />
     <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
