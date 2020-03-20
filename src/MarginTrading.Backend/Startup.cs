@@ -52,10 +52,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Console;
+using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using StackExchange.Redis;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using GlobalErrorHandlerMiddleware = MarginTrading.Backend.Middleware.GlobalErrorHandlerMiddleware;
 using IApplicationLifetime = Microsoft.Extensions.Hosting.IApplicationLifetime;
 using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
@@ -86,6 +87,8 @@ namespace MarginTrading.Backend
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddApplicationInsightsTelemetry();
+
             services.AddSingleton(Configuration);
             services.AddMvc(options => options.EnableEndpointRouting = false)
                 .AddNewtonsoftJson(options =>
@@ -162,7 +165,10 @@ namespace MarginTrading.Backend
 
             app.UseSwagger(c =>
             {
-                c.PreSerializeFilters.Add((swagger, httpReq) => swagger.Host = httpReq.Host.Value);
+                c.PreSerializeFilters.Add((swagger, httpReq) =>
+                    swagger.Servers = new List<OpenApiServer> {
+                        new OpenApiServer { Url = $"{httpReq.Scheme}://{httpReq.Host.Value}" }
+                    });
             });
             app.UseSwaggerUI(a => a.SwaggerEndpoint("/swagger/v1/swagger.json", "Trading Engine API Swagger"));
 
@@ -170,13 +176,13 @@ namespace MarginTrading.Backend
 
             var application = app.ApplicationServices.GetService<Application>();
 
-            appLifetime.ApplicationStarted.Register(async () =>
+            appLifetime.ApplicationStarted.Register(() =>
             {
                 var cqrsEngine = ApplicationContainer.Resolve<ICqrsEngine>();
                 cqrsEngine.StartSubscribers();
                 cqrsEngine.StartProcesses();
 
-                await WriteLogsAsync(Program.AppHost, Environment, LogLocator.CommonLog);
+                Program.AppHost.WriteLogs(Environment, LogLocator.CommonLog);
 
                 LogLocator.CommonLog?.WriteMonitorAsync("", "", $"{Configuration.ServerType()} Started");
             });
@@ -334,20 +340,6 @@ namespace MarginTrading.Backend
                 .Check();
 
             return deduplicationService;
-        }
-
-        private static async Task WriteLogsAsync(IHost host, IHostingEnvironment environment, ILog log)
-        {
-            await log.WriteInfoAsync(nameof(WriteLogsAsync), nameof(Startup), $"Hosting environment: {environment.EnvironmentName}");
-            await log.WriteInfoAsync(nameof(WriteLogsAsync), nameof(Startup), $"Content root path: {environment.ContentRootPath}");
-            var serverAddresses = host.Services.GetRequiredService<IServerAddressesFeature>()?.Addresses;
-            if (serverAddresses != null)
-            {
-                foreach (var address in serverAddresses)
-                {
-                    await log.WriteInfoAsync(nameof(WriteLogsAsync), nameof(Startup), $"Now listening on: {address}");
-                }
-            }
         }
     }
 }
