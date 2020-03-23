@@ -445,7 +445,18 @@ namespace MarginTrading.Backend.Services
                 || order.PendingOrderRetriesCount >= _marginTradingSettings.PendingOrderRetriesThreshold)
             {
                 order.Reject(reason, message, comment, _dateService.Now());
-            
+
+                _log.WriteWarning(
+                    nameof(TradingEngine), 
+                    nameof(RejectOrder), 
+                    new
+                    {
+                        order,
+                        reason,
+                        message,
+                        comment
+                    }.ToJson());
+
                 _orderRejectedEventChannel.SendEvent(this, new OrderRejectedEventArgs(order));
             }
             //TODO: think how to avoid infinite loop
