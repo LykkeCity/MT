@@ -3,14 +3,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
 using FluentScheduler;
 using JetBrains.Annotations;
 using Lykke.AzureQueueIntegration;
-using Lykke.Common;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Cqrs;
 using Lykke.Logs;
@@ -23,12 +21,10 @@ using Lykke.SlackNotifications;
 using Lykke.Snow.Common.Startup.ApiKey;
 using Lykke.Snow.Common.Startup.Hosting;
 using Lykke.Snow.Common.Startup.Log;
-using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Filters;
-using MarginTrading.Backend.Infrastructure;
 using MarginTrading.Backend.Middleware;
 using MarginTrading.Backend.Modules;
 using MarginTrading.Backend.Services;
@@ -39,16 +35,13 @@ using MarginTrading.Backend.Services.Modules;
 using MarginTrading.Backend.Services.Quotes;
 using MarginTrading.Backend.Services.Scheduling;
 using MarginTrading.Backend.Services.Settings;
-using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Backend.Services.Stubs;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Modules;
 using MarginTrading.Common.Services;
-using MarginTrading.SqlRepositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -56,13 +49,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using StackExchange.Redis;
-using Swashbuckle.AspNetCore.SwaggerGen;
 using GlobalErrorHandlerMiddleware = MarginTrading.Backend.Middleware.GlobalErrorHandlerMiddleware;
 using IApplicationLifetime = Microsoft.Extensions.Hosting.IApplicationLifetime;
 using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 using KeyAuthHandler = MarginTrading.Backend.Middleware.KeyAuthHandler;
-using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 #pragma warning disable 1591
 
