@@ -20,6 +20,7 @@ using Lykke.Logs.Serilog;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
 using Lykke.SlackNotifications;
+using Lykke.Snow.Common.Startup.ApiKey;
 using Lykke.Snow.Common.Startup.Hosting;
 using Lykke.Snow.Common.Startup.Log;
 using MarginTrading.AzureRepositories;
@@ -60,6 +61,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using GlobalErrorHandlerMiddleware = MarginTrading.Backend.Middleware.GlobalErrorHandlerMiddleware;
 using IApplicationLifetime = Microsoft.Extensions.Hosting.IApplicationLifetime;
 using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
+using KeyAuthHandler = MarginTrading.Backend.Middleware.KeyAuthHandler;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 #pragma warning disable 1591
@@ -90,7 +92,9 @@ namespace MarginTrading.Backend
             services.AddApplicationInsightsTelemetry();
 
             services.AddSingleton(Configuration);
-            services.AddMvc(options => options.EnableEndpointRouting = false)
+            services
+                .AddControllers()
+                //.AddMvc(options => options.EnableEndpointRouting = false)
                 .AddNewtonsoftJson(options =>
                 {
                     options.SerializerSettings.ContractResolver = new DefaultContractResolver();
@@ -155,13 +159,14 @@ namespace MarginTrading.Backend
             app.UseMiddleware<GlobalErrorHandlerMiddleware>();
             app.UseMiddleware<MaintenanceModeMiddleware>();
 
-            //app.UseRouting();
+            app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
-            app.UseMvc();
-            //app.UseEndpoints(endpoints => {
-            //    endpoints.MapControllers();
-            //});
+            //app.UseMvc();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
 
             app.UseSwagger(c =>
             {
