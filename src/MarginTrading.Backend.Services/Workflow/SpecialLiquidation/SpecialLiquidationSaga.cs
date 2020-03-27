@@ -138,30 +138,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             if (executionInfo?.Data == null)
                 return;
 
-            if (_marginTradingSettings.SpecialLiquidation.PriceRequestRetryTimeout.HasValue
-                && (!executionInfo.Data.RequestedFromCorporateActions
-                    || _marginTradingSettings.SpecialLiquidation.RetryPriceRequestForCorporateActions))
-            {
-                var now = _dateService.Now();
-                var shouldRetryAfter =
-                    e.CreationTime.Add(_marginTradingSettings.SpecialLiquidation.PriceRequestRetryTimeout.Value);
-
-                var timeLeftBeforeRetry = shouldRetryAfter - now;
-
-                if (timeLeftBeforeRetry > TimeSpan.Zero)
-                {
-                    await Task.Delay(timeLeftBeforeRetry);
-                }
-                
-                executionInfo.Data.RequestNumber++;
-                
-                RequestPrice(sender, executionInfo);
-                    
-                await _operationExecutionInfoRepository.Save(executionInfo);
-                    
-                return;//wait for the new price
-                
-            }
+            if (await RetryPriceRequestIfNeeded(e.CreationTime, sender, executionInfo)) 
+                return;
 
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceRequested,
                 SpecialLiquidationOperationState.OnTheWayToFail))
@@ -218,6 +196,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 id: e.OperationId);
             
             if (executionInfo?.Data == null)
+                return;
+            
+            if (await RetryPriceRequestIfNeeded(e.CreationTime, sender, executionInfo)) 
                 return;
 
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.ExternalOrderExecuted,
@@ -276,6 +257,10 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 id: e.OperationId);
             
             if (executionInfo?.Data == null)
+                return;
+
+            if (e.CanRetryPriceRequest &&
+                await RetryPriceRequestIfNeeded(e.CreationTime, sender, executionInfo))
                 return;
 
             if (executionInfo.Data.SwitchState(executionInfo.Data.State,//from any state
@@ -342,6 +327,36 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 _specialLiquidationService.FakeGetPriceForSpecialLiquidation(executionInfo.Id,
                     executionInfo.Data.Instrument, executionInfo.Data.Volume);
             }
+        }
+        
+        private async Task<bool> RetryPriceRequestIfNeeded(DateTime eventCreationTime, ICommandSender sender,
+            IOperationExecutionInfo<SpecialLiquidationOperationData> executionInfo)
+        {
+            if (_marginTradingSettings.SpecialLiquidation.PriceRequestRetryTimeout.HasValue
+                && (!executionInfo.Data.RequestedFromCorporateActions
+                    || _marginTradingSettings.SpecialLiquidation.RetryPriceRequestForCorporateActions))
+            {
+                var now = _dateService.Now();
+                var shouldRetryAfter =
+                    eventCreationTime.Add(_marginTradingSettings.SpecialLiquidation.PriceRequestRetryTimeout.Value);
+
+                var timeLeftBeforeRetry = shouldRetryAfter - now;
+
+                if (timeLeftBeforeRetry > TimeSpan.Zero)
+                {
+                    await Task.Delay(timeLeftBeforeRetry);
+                }
+
+                executionInfo.Data.RequestNumber++;
+
+                RequestPrice(sender, executionInfo);
+
+                await _operationExecutionInfoRepository.Save(executionInfo);
+
+                return true;
+            }
+
+            return false;
         }
     }
 }
