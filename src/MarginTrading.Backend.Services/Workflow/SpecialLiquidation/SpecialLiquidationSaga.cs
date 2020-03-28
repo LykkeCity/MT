@@ -138,7 +138,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             if (executionInfo?.Data == null)
                 return;
 
-            if (await RetryPriceRequestIfNeeded(e.CreationTime, sender, executionInfo)) 
+            if (await RetryPriceRequestIfNeeded(e.CreationTime, sender, executionInfo, SpecialLiquidationOperationState.PriceRequested)) 
                 return;
 
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceRequested,
@@ -197,8 +197,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             
             if (executionInfo?.Data == null)
                 return;
-            
-            if (await RetryPriceRequestIfNeeded(e.CreationTime, sender, executionInfo)) 
+
+            if (await RetryPriceRequestIfNeeded(e.CreationTime, sender, executionInfo,
+                SpecialLiquidationOperationState.ExternalOrderExecuted))
                 return;
 
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.ExternalOrderExecuted,
@@ -260,7 +261,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 return;
 
             if (e.CanRetryPriceRequest &&
-                await RetryPriceRequestIfNeeded(e.CreationTime, sender, executionInfo))
+                await RetryPriceRequestIfNeeded(e.CreationTime, sender, executionInfo, executionInfo.Data.State))
                 return;
 
             if (executionInfo.Data.SwitchState(executionInfo.Data.State,//from any state
@@ -330,11 +331,14 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         }
         
         private async Task<bool> RetryPriceRequestIfNeeded(DateTime eventCreationTime, ICommandSender sender,
-            IOperationExecutionInfo<SpecialLiquidationOperationData> executionInfo)
+            IOperationExecutionInfo<SpecialLiquidationOperationData> executionInfo,
+            SpecialLiquidationOperationState currentState)
         {
             if (_marginTradingSettings.SpecialLiquidation.PriceRequestRetryTimeout.HasValue
                 && (!executionInfo.Data.RequestedFromCorporateActions
-                    || _marginTradingSettings.SpecialLiquidation.RetryPriceRequestForCorporateActions))
+                    || _marginTradingSettings.SpecialLiquidation.RetryPriceRequestForCorporateActions)
+                && executionInfo.Data.SwitchState(currentState, 
+                    SpecialLiquidationOperationState.PriceRequested))
             {
                 var now = _dateService.Now();
                 var shouldRetryAfter =
