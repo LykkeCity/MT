@@ -310,6 +310,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                             OperationId = command.OperationId,
                             CreationTime = _dateService.Now(),
                             Reason = $"Timeout of {command.TimeoutSeconds} seconds from {command.CreationTime:s}",
+                            CanRetryPriceRequest = true
                         });
                 
                         _chaosKitty.Meow(command.OperationId);
@@ -463,6 +464,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         OperationId = command.OperationId,
                         CreationTime = _dateService.Now(),
                         Reason = ex.Message,
+                        CanRetryPriceRequest = true
                     });
                 }
                 
