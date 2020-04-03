@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace MarginTrading.Backend.Core
@@ -35,9 +36,13 @@ namespace MarginTrading.Backend.Core
         public decimal MarginCall2Level { get; set; }
         public decimal StopOutLevel { get; set; }
         public decimal WithdrawalFrozenMargin { get; set; }
-        public Dictionary<string, decimal> WithdrawalFrozenMarginData { get; set; } = new Dictionary<string, decimal>();
+
+        public ConcurrentDictionary<string, decimal> WithdrawalFrozenMarginData { get; set; } =
+            new ConcurrentDictionary<string, decimal>();
         public decimal UnconfirmedMargin { get; set; }
-        public Dictionary<string, decimal> UnconfirmedMarginData { get; set; } = new Dictionary<string, decimal>();
+
+        public ConcurrentDictionary<string, decimal> UnconfirmedMarginData { get; set; } =
+            new ConcurrentDictionary<string, decimal>();
 
         public int CalculatedHash { get; set; }
         public int ActualHash { get; set; }

@@ -8,21 +8,19 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
-using Lykke.Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Core.Orders;
-using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
-using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.TradingConditions;
+
 #pragma warning disable 1998
 
-namespace MarginTrading.Backend.Services
+namespace MarginTrading.Backend.Services.Services
 {
     [UsedImplicitly]
     public class AccountUpdateService : IAccountUpdateService
@@ -33,10 +31,7 @@ namespace MarginTrading.Backend.Services
         private readonly OrdersCache _ordersCache;
         private readonly IAssetsCache _assetsCache;
         
-        private readonly IAccountMarginFreezingRepository _accountMarginFreezingRepository;
-        private readonly IAccountMarginUnconfirmedRepository _accountMarginUnconfirmedRepository;
         private readonly ILog _log;
-        private readonly MarginTradingSettings _marginTradingSettings;
         private readonly ICfdCalculatorService _cfdCalculatorService;
         private readonly IQuoteCacheService _quoteCacheService;
 
@@ -46,10 +41,7 @@ namespace MarginTrading.Backend.Services
             IAccountsCacheService accountsCacheService,
             OrdersCache ordersCache,
             IAssetsCache assetsCache,
-            IAccountMarginFreezingRepository accountMarginFreezingRepository,
-            IAccountMarginUnconfirmedRepository accountMarginUnconfirmedRepository,
             ILog log,
-            MarginTradingSettings marginTradingSettings,
             ICfdCalculatorService cfdCalculatorService,
             IQuoteCacheService quoteCacheService)
         {
@@ -58,10 +50,7 @@ namespace MarginTrading.Backend.Services
             _accountsCacheService = accountsCacheService;
             _ordersCache = ordersCache;
             _assetsCache = assetsCache;
-            _accountMarginFreezingRepository = accountMarginFreezingRepository;
-            _accountMarginUnconfirmedRepository = accountMarginUnconfirmedRepository;
             _log = log;
-            _marginTradingSettings = marginTradingSettings;
             _cfdCalculatorService = cfdCalculatorService;
             _quoteCacheService = quoteCacheService;
         }
@@ -78,9 +67,6 @@ namespace MarginTrading.Backend.Services
             if (account.AccountFpl.WithdrawalFrozenMarginData.TryAdd(operationId, amount))
             {
                 account.AccountFpl.WithdrawalFrozenMargin = account.AccountFpl.WithdrawalFrozenMarginData.Values.Sum();
-                //TODO: think about approach
-                //await _accountMarginFreezingRepository.TryInsertAsync(new AccountMarginFreezing(operationId,
-                //    accountId, amount));
             }
         }
 
@@ -88,11 +74,9 @@ namespace MarginTrading.Backend.Services
         {
             var account = _accountsCacheService.Get(accountId);
             
-            if (account.AccountFpl.WithdrawalFrozenMarginData.Remove(operationId))
+            if (account.AccountFpl.WithdrawalFrozenMarginData.TryRemove(operationId, out _))
             {
                 account.AccountFpl.WithdrawalFrozenMargin = account.AccountFpl.WithdrawalFrozenMarginData.Values.Sum();
-                //TODO: think about approach
-                //await _accountMarginFreezingRepository.DeleteAsync(operationId);
             }
         }
 
@@ -103,9 +87,6 @@ namespace MarginTrading.Backend.Services
             if (account.AccountFpl.UnconfirmedMarginData.TryAdd(operationId, amount))
             {
                 account.AccountFpl.UnconfirmedMargin = account.AccountFpl.UnconfirmedMarginData.Values.Sum();
-                //TODO: think about approach
-                //await _accountMarginUnconfirmedRepository.TryInsertAsync(new AccountMarginFreezing(operationId,
-                //    accountId, amount));
             }
         }
 
@@ -113,11 +94,9 @@ namespace MarginTrading.Backend.Services
         {
             var account = _accountsCacheService.Get(accountId);
             
-            if (account.AccountFpl.UnconfirmedMarginData.Remove(operationId))
+            if (account.AccountFpl.UnconfirmedMarginData.TryRemove(operationId, out _))
             {
                 account.AccountFpl.UnconfirmedMargin = account.AccountFpl.UnconfirmedMarginData.Values.Sum();
-                //TODO: think about approach
-                //await _accountMarginUnconfirmedRepository.DeleteAsync(operationId);
             }
         }
 
