@@ -208,13 +208,38 @@ namespace MarginTradingTests
                 Direction = OrderDirectionContract.Buy,
                 InstrumentId = instrument,
                 Type = OrderTypeContract.Market,
-                Volume = 10
+                Volume = 10,
+                ForceOpen = true
             };
 
             var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
                 await _validateOrderService.ValidateRequestAndCreateOrders(request));
 
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
+        }
+
+        [Test]
+        public void Is_Suspended_Instrument_Valid_If_Closing_Opened_Positions()
+        {
+            const string instrument = "EURUSD";
+
+            const bool shouldOpenNewPosition = false;
+
+            SetupAssetPair(instrument, isSuspended: true);
+            
+            var request = new OrderPlaceRequest
+            {
+                AccountId = Accounts[0].Id,
+                CorrelationId = Guid.NewGuid().ToString(),
+                Direction = OrderDirectionContract.Buy,
+                InstrumentId = instrument,
+                Type = OrderTypeContract.Market,
+                Volume = 10,
+                ForceOpen = shouldOpenNewPosition
+            };
+            
+            Assert.DoesNotThrowAsync(async () =>
+                await _validateOrderService.ValidateRequestAndCreateOrders(request));
         }
         
         [Test]

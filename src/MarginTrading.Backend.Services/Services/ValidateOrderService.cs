@@ -591,21 +591,21 @@ namespace MarginTrading.Backend.Services
                     $"Trading for the instrument {assetPairId} is discontinued");
             }
 
-            if (assetPair.IsSuspended)
+            if (assetPair.IsSuspended && shouldOpenNewPosition)
             {
                 if (isPreTradeValidation)
                 {
-                    throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, 
+                    throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
                         $"Orders execution for instrument {assetPairId} is temporarily unavailable (instrument is suspended)");
                 }
-               
+
                 if (orderType == OrderType.Market)
                 {
-                    throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, 
+                    throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
                         $"Market orders for instrument {assetPairId} are temporarily unavailable (instrument is suspended)");
                 }
-            } 
-            
+            }
+
             if (assetPair.IsFrozen && shouldOpenNewPosition)
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
