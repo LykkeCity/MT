@@ -2,15 +2,16 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using Lykke.Common.Log;
 using Lykke.MarginTrading.OrderBookService.Contracts;
 using Lykke.MarginTrading.OrderBookService.Contracts.Models;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
@@ -240,6 +241,8 @@ namespace MarginTrading.Backend.Services.Stp
                         AssetPairId = assetPair.Id,
                         OperationId = _identityGenerator.GenerateGuid(),
                     });
+                    
+                    _log.Info($"Suspending instrument {assetPair.Id}", context: orderbook.ToContextData()?.ToJson());
                 }
             }
             else
@@ -251,7 +254,9 @@ namespace MarginTrading.Backend.Services.Stp
                     {
                         AssetPairId = assetPair.Id,
                         OperationId = _identityGenerator.GenerateGuid(),
-                    });   
+                    }); 
+                    
+                    _log.Info($"Un-suspending instrument {assetPair.Id}", context: orderbook.ToContextData()?.ToJson());
                 }
             }
 
