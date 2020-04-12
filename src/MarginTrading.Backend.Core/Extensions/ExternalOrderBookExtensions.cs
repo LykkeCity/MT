@@ -15,8 +15,8 @@ namespace MarginTrading.Backend.Core.Extensions
             {
                 assetPairId = orderbook.AssetPairId,
                 timestamp = orderbook.Timestamp,
-                askVolume = orderbook.Asks[0]?.Volume,
-                bidVolume = orderbook.Bids[0]?.Volume,
+                bestAsk = orderbook.Asks[0],
+                bestBid = orderbook.Bids[0],
                 exchangeName = orderbook.ExchangeName
             };
         }
