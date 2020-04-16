@@ -15,6 +15,7 @@ using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.EventsConsumers;
+using MarginTrading.Backend.Services.Helpers;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Quotes;
@@ -190,6 +191,9 @@ namespace MarginTrading.Backend.Services.Modules
 				.SingleInstance();
 
 			builder.RegisterType<ScheduleSettingsCacheWarmUpJob>()
+				.SingleInstance();
+
+			builder.RegisterType<LiquidationHelper>()
 				.SingleInstance();
 		}
 	}

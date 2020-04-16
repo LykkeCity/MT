@@ -20,6 +20,7 @@ using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
+using MarginTrading.Backend.Services.Helpers;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
@@ -57,6 +58,7 @@ namespace MarginTrading.Backend.Services
         private readonly IEventChannel<StopOutEventArgs> _stopOutEventChannel;
         private readonly IQuoteCacheService _quoteCacheService;
         private readonly MarginTradingSettings _marginTradingSettings;
+        private readonly LiquidationHelper _liquidationHelper;
 
         public TradingEngine(
             IEventChannel<MarginCallEventArgs> marginCallEventChannel,
@@ -81,7 +83,8 @@ namespace MarginTrading.Backend.Services
             ICqrsSender cqrsSender,
             IEventChannel<StopOutEventArgs> stopOutEventChannel,
             IQuoteCacheService quoteCacheService,
-            MarginTradingSettings marginTradingSettings)
+            MarginTradingSettings marginTradingSettings,
+            LiquidationHelper liquidationHelper)
         {
             _marginCallEventChannel = marginCallEventChannel;
             _orderPlacedEventChannel = orderPlacedEventChannel;
@@ -107,6 +110,7 @@ namespace MarginTrading.Backend.Services
             _stopOutEventChannel = stopOutEventChannel;
             _quoteCacheService = quoteCacheService;
             _marginTradingSettings = marginTradingSettings;
+            _liquidationHelper = liquidationHelper;
         }
 
         public async Task<Order> PlaceOrderAsync(Order order)
@@ -827,7 +831,7 @@ namespace MarginTrading.Backend.Services
             
             if (string.IsNullOrEmpty(assetPairId))//close all
             {
-                return StartLiquidation(accountId,originator, additionalInfo, operationId);
+                return _liquidationHelper.StartLiquidation(accountId, originator, additionalInfo, operationId);
             }
             
             var result = new Dictionary<string, (PositionCloseResult, Order)>();
@@ -872,46 +876,6 @@ namespace MarginTrading.Backend.Services
                     {
                         result.Add(position.Id, (PositionCloseResult.FailedToClose, null));
                     }
-                }
-            }
-
-            return result;
-        }
-
-        private Dictionary<string, (PositionCloseResult, Order)> StartLiquidation(string accountId,
-            OriginatorType originator, string additionalInfo, string operationId)
-        {
-            var result = new Dictionary<string, (PositionCloseResult, Order)>();
-
-            var command = new StartLiquidationInternalCommand
-            {
-                OperationId = operationId,
-                CreationTime = _dateService.Now(),
-                AccountId = accountId,
-                LiquidationType = LiquidationType.Forced,
-                OriginatorType = originator,
-                AdditionalInfo = additionalInfo
-            };
-
-            _cqrsSender.SendCommandToSelf(command);
-
-            var positions = _ordersCache.Positions.GetPositionsByAccountIds(accountId);
-
-            foreach (var position in positions)
-            {
-                switch (position.Status)
-                {
-                    case PositionStatus.Active:
-                        result.Add(position.Id, (PositionCloseResult.ClosingStarted, null));
-                        break;
-                    case PositionStatus.Closing:
-                        result.Add(position.Id, (PositionCloseResult.ClosingIsInProgress, null));
-                        break;
-                    case PositionStatus.Closed:
-                        result.Add(position.Id, (PositionCloseResult.Closed, null));
-                        break;
-                    default:
-                        throw new InvalidOperationException($"Position state {position.Status.ToString()} is not handled");
                 }
             }
 
