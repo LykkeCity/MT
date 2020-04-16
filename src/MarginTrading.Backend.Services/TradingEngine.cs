@@ -2,8 +2,10 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
@@ -57,6 +59,9 @@ namespace MarginTrading.Backend.Services
         private readonly IEventChannel<StopOutEventArgs> _stopOutEventChannel;
         private readonly IQuoteCacheService _quoteCacheService;
         private readonly MarginTradingSettings _marginTradingSettings;
+
+        private static readonly ConcurrentDictionary<string, SemaphoreSlim> _accountSemaphores =
+            new ConcurrentDictionary<string, SemaphoreSlim>();
 
         public TradingEngine(
             IEventChannel<MarginCallEventArgs> marginCallEventChannel,
@@ -250,93 +255,104 @@ namespace MarginTrading.Backend.Services
         private async Task<Order> ExecuteOrderByMatchingEngineAsync(Order order, IMatchingEngineBase matchingEngine,
             bool checkStopout, OrderModality modality = OrderModality.Regular)
         {
-            var now = _dateService.Now();
-                
-            //just in case )
-            if (CheckIfOrderIsExpired(order, now))
-            {
-                return order;
-            }
-            
-            order.StartExecution(_dateService.Now(), matchingEngine.Id);
+            var semaphore = _accountSemaphores.GetOrAdd(order.AccountId, new SemaphoreSlim(1, 1));
 
-            _orderExecutionStartedEvenChannel.SendEvent(this, new OrderExecutionStartedEventArgs(order));
+            await semaphore.WaitAsync();
 
-            ChangeOrderVolumeIfNeeded(order);
-            
-            var equivalentRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.EquivalentAsset,
-                order.AssetPairId, order.LegalEntity);
-            var fxRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.AccountAssetId,
-                order.AssetPairId, order.LegalEntity);
-
-            order.SetRates(equivalentRate, fxRate);
-
-            var shouldOpenNewPosition = ShouldOpenNewPosition(order);
-
-            if (modality == OrderModality.Regular && order.Originator != OriginatorType.System)
-            {
-                try
-                {
-                    _validateOrderService.MakePreTradeValidation(
-                        order,
-                        shouldOpenNewPosition,
-                        matchingEngine);
-                }
-                catch (ValidateOrderException ex)
-                {
-                    RejectOrder(order, ex.RejectReason, ex.Message, ex.Comment);
-                    return order;
-                }
-            }
-
-            MatchedOrderCollection matchedOrders;
             try
             {
-                matchedOrders = await matchingEngine.MatchOrderAsync(order, shouldOpenNewPosition, modality);
-            }
-            catch (OrderExecutionTechnicalException)
-            {
-                RejectOrder(order, OrderRejectReason.TechnicalError, $"Unexpected reject (Order ID: {order.Id})");
-                return order;
-            }
+                var now = _dateService.Now();
 
-            if (!matchedOrders.Any())
-            {
-                RejectOrder(order, OrderRejectReason.NoLiquidity, "No orders to match", "");
-                return order;
-            }
-
-            if (matchedOrders.SummaryVolume < Math.Abs(order.Volume))
-            {
-                if (order.FillType == OrderFillType.FillOrKill)
+                //just in case )
+                if (CheckIfOrderIsExpired(order, now))
                 {
-                    RejectOrder(order, OrderRejectReason.NoLiquidity, "Not fully matched", "");
                     return order;
                 }
-                else
+
+                order.StartExecution(_dateService.Now(), matchingEngine.Id);
+
+                _orderExecutionStartedEvenChannel.SendEvent(this, new OrderExecutionStartedEventArgs(order));
+
+                ChangeOrderVolumeIfNeeded(order);
+
+                var equivalentRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.EquivalentAsset,
+                    order.AssetPairId, order.LegalEntity);
+                var fxRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.AccountAssetId,
+                    order.AssetPairId, order.LegalEntity);
+
+                order.SetRates(equivalentRate, fxRate);
+
+                var shouldOpenNewPosition = ShouldOpenNewPosition(order);
+
+                if (modality == OrderModality.Regular && order.Originator != OriginatorType.System)
                 {
-                    order.PartiallyExecute(_dateService.Now(), matchedOrders);
-                    _ordersCache.InProgress.Add(order);
+                    try
+                    {
+                        _validateOrderService.MakePreTradeValidation(
+                            order,
+                            shouldOpenNewPosition,
+                            matchingEngine);
+                    }
+                    catch (ValidateOrderException ex)
+                    {
+                        RejectOrder(order, ex.RejectReason, ex.Message, ex.Comment);
+                        return order;
+                    }
+                }
+
+                MatchedOrderCollection matchedOrders;
+                try
+                {
+                    matchedOrders = await matchingEngine.MatchOrderAsync(order, shouldOpenNewPosition, modality);
+                }
+                catch (OrderExecutionTechnicalException)
+                {
+                    RejectOrder(order, OrderRejectReason.TechnicalError, $"Unexpected reject (Order ID: {order.Id})");
                     return order;
                 }
-            }
 
-            if (order.Status == OrderStatus.ExecutionStarted)
-            {
-                var accuracy = _assetPairsCache.GetAssetPairByIdOrDefault(order.AssetPairId)?.Accuracy ??
-                               AssetPairsCache.DefaultAssetPairAccuracy;
-                
-                order.Execute(_dateService.Now(), matchedOrders, accuracy);
-                
-                _orderExecutedEventChannel.SendEvent(this, new OrderExecutedEventArgs(order));
-
-                if (checkStopout)
+                if (!matchedOrders.Any())
                 {
-                    CheckStopout(order);
+                    RejectOrder(order, OrderRejectReason.NoLiquidity, "No orders to match", "");
+                    return order;
                 }
-            }
 
-            return order;
+                if (matchedOrders.SummaryVolume < Math.Abs(order.Volume))
+                {
+                    if (order.FillType == OrderFillType.FillOrKill)
+                    {
+                        RejectOrder(order, OrderRejectReason.NoLiquidity, "Not fully matched", "");
+                        return order;
+                    }
+                    else
+                    {
+                        order.PartiallyExecute(_dateService.Now(), matchedOrders);
+                        _ordersCache.InProgress.Add(order);
+                        return order;
+                    }
+                }
+
+                if (order.Status == OrderStatus.ExecutionStarted)
+                {
+                    var accuracy = _assetPairsCache.GetAssetPairByIdOrDefault(order.AssetPairId)?.Accuracy ??
+                                   AssetPairsCache.DefaultAssetPairAccuracy;
+
+                    order.Execute(_dateService.Now(), matchedOrders, accuracy);
+
+                    _orderExecutedEventChannel.SendEvent(this, new OrderExecutedEventArgs(order));
+
+                    if (checkStopout)
+                    {
+                        CheckStopout(order);
+                    }
+                }
+
+                return order;
+            }
+            finally
+            {
+                semaphore.Release();
+            }
         }
 
         private bool CheckIfOrderIsExpired(Order order, DateTime now)
