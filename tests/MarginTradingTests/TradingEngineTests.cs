@@ -1256,7 +1256,7 @@ namespace MarginTradingTests
         [TestCase(5, 25, 30, -10, -5)]
         [TestCase(-5, 45, 40, 10, 5)]
         [TestCase(-5, 45, 50, 10, 15)]
-        public void Is_DistanceUpdated_ForTrailingStopOrders_OnChange(decimal volume, decimal oldPrice, decimal 
+        public void Is_DistanceUpdated_ForTrailingStopOrders_OnPriceChange(decimal volume, decimal oldPrice, decimal 
         newPrice, decimal oldDistance, decimal newDistance)
         {
             _matchingEngine.SetOrders(MarketMaker1Id, new[]
@@ -1284,6 +1284,79 @@ namespace MarginTradingTests
             _tradingEngine.ChangeOrderAsync(order.Id, newPrice, null, OriginatorType.Investor, String.Empty, String.Empty).GetAwaiter().GetResult();
             
             Assert.AreEqual(newDistance, order.TrailingDistance);
+        }    
+        
+        [Test]
+        [TestCase(5, 25, 23, 20, true)]
+        [TestCase(5, 25, 23, 24, false)]
+        [TestCase(5, 25, 23, 26, false)]
+        [TestCase(5, 25, 23, 30, false)]
+        [TestCase(-5, 45, 47, 40, false)]
+        [TestCase(-5, 45, 47, 46, false)]
+        [TestCase(-5, 45, 47, 44, false)]
+        [TestCase(-5, 45, 47, 50, true)]
+        public async Task Is_TrailingStopOrder_Executed_OnNewQuote(decimal volume, decimal oldPrice, decimal tsPrice, 
+            decimal newPrice, bool isExecuted)
+        {
+            var oldOpenPrice = oldPrice + Math.Sign(volume);
+            
+            _matchingEngine.SetOrders(MarketMaker1Id, new[]
+            {
+                new LimitOrder
+                {
+                    CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id,
+                    Price = Math.Max(oldPrice, oldOpenPrice), Volume = -100
+                },
+                new LimitOrder
+                {
+                    CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id,
+                    Price = Math.Min(oldPrice, oldOpenPrice), Volume = 100
+                }
+            }, deleteAll: true);
+
+            var position = TestObjectsFactory.CreateOpenedPosition("EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, volume, oldOpenPrice);
+
+            position.UpdateClosePrice(oldPrice);
+
+            _ordersCache.Positions.Add(position);
+
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.TrailingStop, "EURUSD", _account,
+                MarginTradingTestsUtils.TradingConditionId, -volume, price: tsPrice, parentPositionId: position.Id);
+
+            order = await _tradingEngine.PlaceOrderAsync(order);
+
+            Assert.AreEqual(OrderStatus.Active, order.Status); //is not executed
+
+            var newOpenPrice = newPrice + Math.Sign(volume);
+            
+            _matchingEngine.SetOrders(MarketMaker1Id, new[]
+            {
+                new LimitOrder
+                {
+                    CreateDate = DateTime.UtcNow, Id = "5", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id,
+                    Price = Math.Max(newPrice, newOpenPrice), Volume = -100
+                },
+                new LimitOrder
+                {
+                    CreateDate = DateTime.UtcNow, Id = "6", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id,
+                    Price = Math.Min(newPrice, newOpenPrice), Volume = 100
+                }
+            }, deleteAll: true);
+
+            if (isExecuted)
+            {
+                Assert.AreEqual(OrderStatus.Executed, order.Status);
+                Assert.AreEqual(tsPrice, order.Price);
+            }
+            else
+            {
+                Assert.AreEqual(OrderStatus.Active, order.Status);
+                var shouldChangeTsPrice = Math.Abs(newPrice - tsPrice) > Math.Abs(oldPrice - tsPrice);
+                Assert.AreEqual(shouldChangeTsPrice, order.Price != tsPrice);
+            }
+
+
         }    
         
         #endregion
