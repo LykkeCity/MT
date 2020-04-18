@@ -673,15 +673,23 @@ namespace MarginTrading.Backend.Services
                 {
                     if (trailingOrder.TrailingDistance.HasValue)
                     {
-                        if (Math.Abs(trailingOrder.Price.Value - position.ClosePrice) >
-                            Math.Abs(trailingOrder.TrailingDistance.Value))
+                        var currentDistance = trailingOrder.Price.Value - position.ClosePrice;
+                        
+                        if (Math.Abs(currentDistance) > Math.Abs(trailingOrder.TrailingDistance.Value)
+                        && Math.Sign(currentDistance) == Math.Sign(trailingOrder.TrailingDistance.Value))
                         {
                             var newPrice = position.ClosePrice + trailingOrder.TrailingDistance.Value;
+                            var oldPrice = trailingOrder.Price;
                             trailingOrder.ChangePrice(newPrice,
                                 _dateService.Now(),
                                 trailingOrder.Originator,
                                 null,
                                 _identityGenerator.GenerateGuid()); //todo in fact price change correlationId must be used
+
+                            _log.WriteInfoAsync(nameof(TradingEngine), nameof(UpdateTrailingStops),
+                                $"Price for trailing stop order {trailingOrder.Id} changed. " +
+                                $"Old price: {oldPrice}. " +
+                                $"New price: {trailingOrder.Price}");
                         }
                     }
                     else
