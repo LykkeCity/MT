@@ -6,7 +6,7 @@
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <Version>1.16.49</Version>
+    <Version>1.16.50</Version>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup>

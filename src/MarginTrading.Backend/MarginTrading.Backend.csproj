@@ -8,7 +8,7 @@
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <Version>1.16.49</Version>
+    <Version>1.16.50</Version>
     <LangVersion>7.3</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
