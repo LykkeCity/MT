@@ -17,14 +17,15 @@ namespace MarginTrading.Backend.Core
 
         Task<(PositionCloseResult result, Order order)> ClosePositionsAsync(PositionsCloseData data, bool 
         specialLiquidationEnabled);
-        
+
         [ItemNotNull]
-        Task<Dictionary<string, (PositionCloseResult, Order)>> ClosePositionsGroupAsync(string accountId, 
-            string assetPairId, PositionDirection? direction, OriginatorType originator, string additionalInfo, string correlationId);
+        Task<Dictionary<string, (PositionCloseResult, Order)>> ClosePositionsGroupAsync(string accountId,
+            string assetPairId, PositionDirection? direction, OriginatorType originator, string additionalInfo,
+            string correlationId);
 
         Task<(PositionCloseResult, Order)[]> LiquidatePositionsUsingSpecialWorkflowAsync(IMatchingEngineBase me,
-            string[] positionIds,
-            string correlationId, string additionalInfo, OriginatorType originator, OrderModality modality);
+            string[] positionIds, string correlationId, string additionalInfo, OriginatorType originator,
+            OrderModality modality);
             
         Order CancelPendingOrder(string orderId, string additionalInfo, string correlationId,
             string comment = null, OrderCancellationReason reason = OrderCancellationReason.None);
