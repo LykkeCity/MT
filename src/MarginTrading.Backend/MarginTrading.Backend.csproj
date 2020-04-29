@@ -8,7 +8,7 @@
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <Version>1.16.47</Version>
+    <Version>1.16.51</Version>
     <LangVersion>latest</LangVersion>
     <AspNetCoreHostingModel>OutOfProcess</AspNetCoreHostingModel>
     <AspNetCoreModuleName>AspNetCoreModuleV2</AspNetCoreModuleName>
@@ -18,9 +18,6 @@
     <UserSecretsId>F7428201-B7F7-4571-9ABD-20DDECF71A33</UserSecretsId>
     <AssemblyName>MarginTrading.Backend</AssemblyName>
   </PropertyGroup>
-  <ItemGroup>
-    <FrameworkReference Include="Microsoft.AspNetCore.App" />
-  </ItemGroup>
   <ItemGroup>
     <None Update="Email\Templates\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -41,7 +38,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FluentScheduler" Version="5.3.0" />
-    <PackageReference Include="JetBrains.Annotations" Version="2018.2.1" />
+    <PackageReference Include="JetBrains.Annotations" Version="2020.1.0" />
     <PackageReference Include="Lykke.Common.ApiLibrary" Version="3.1.1" />
     <PackageReference Include="Lykke.HttpClientGenerator" Version="2.5.0" />
     <PackageReference Include="Lykke.Logs" Version="7.4.0" />
@@ -67,8 +64,8 @@
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="Nustache.Core" Version="1.0.0-alfa2" />
     <PackageReference Include="StackExchange.Redis" Version="2.0.600" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="5.1.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="5.1.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="5.4.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="5.4.0" />
     <PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
   </ItemGroup>
   <Target Name="PrepublishScript" BeforeTargets="PrepareForPublish">

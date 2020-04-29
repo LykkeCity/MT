@@ -84,7 +84,6 @@ namespace MarginTrading.Backend
             services.AddSingleton(Configuration);
             services
                 .AddControllers()
-                //.AddMvc(options => options.EnableEndpointRouting = false)
                 .AddNewtonsoftJson(options =>
                 {
                     options.SerializerSettings.ContractResolver = new DefaultContractResolver();
@@ -109,8 +108,6 @@ namespace MarginTrading.Backend
                 });
 
             SetupLoggers(Configuration, services, _mtSettingsManager);
-
-            //return new AutofacServiceProvider(ApplicationContainer);
         }
 
         public void ConfigureContainer(ContainerBuilder builder)
@@ -152,7 +149,6 @@ namespace MarginTrading.Backend
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
-            //app.UseMvc();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

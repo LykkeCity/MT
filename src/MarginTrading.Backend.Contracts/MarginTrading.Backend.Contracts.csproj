@@ -13,8 +13,8 @@
     <NoWarn>1701;1702;1705;1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="2018.2.1" developmentDependency="true" />
-    <PackageReference Include="MessagePack" Version="1.7.3.4" />
+    <PackageReference Include="JetBrains.Annotations" Version="2020.1.0" developmentDependency="true" />
+    <PackageReference Include="MessagePack" Version="1.9.11" />
     <PackageReference Include="Polly" Version="6.0.1" />
     <PackageReference Include="Polly.Caching.MemoryCache" Version="1.1.0" />
     <PackageReference Include="Refit" Version="4.6.30" />
