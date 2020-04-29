@@ -110,6 +110,7 @@ namespace MarginTrading.Backend
             SetupLoggers(Configuration, services, _mtSettingsManager);
         }
 
+        [UsedImplicitly]
         public void ConfigureContainer(ContainerBuilder builder)
         {
             var deduplicationService = RunHealthChecks(_mtSettingsManager.CurrentValue.MtBackend);
