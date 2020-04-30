@@ -12,7 +12,6 @@ using Lykke.MarginTrading.BrokerBase;
 using Lykke.MarginTrading.BrokerBase.Models;
 using Lykke.MarginTrading.BrokerBase.Settings;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace MarginTrading.AccountMarginEventsBroker
 {
@@ -25,7 +24,9 @@ namespace MarginTrading.AccountMarginEventsBroker
         {
         }
         
-        protected override void RegisterCustomServices(IServiceCollection services, ContainerBuilder builder, IReloadingManager<Settings> settings,
+        protected override void RegisterCustomServices(
+            ContainerBuilder builder,
+            IReloadingManager<Settings> settings,
             ILog log)
         {
             builder.RegisterType<Application>().As<IBrokerApplication>().SingleInstance();

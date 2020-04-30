@@ -9,7 +9,6 @@ using Common.Log;
 using FluentScheduler;
 using JetBrains.Annotations;
 using Lykke.AzureQueueIntegration;
-using Lykke.Common;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Cqrs;
 using Lykke.Logs;
@@ -19,14 +18,13 @@ using Lykke.Logs.Serilog;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
 using Lykke.SlackNotifications;
+using Lykke.Snow.Common.Startup.ApiKey;
 using Lykke.Snow.Common.Startup.Hosting;
 using Lykke.Snow.Common.Startup.Log;
-using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Filters;
-using MarginTrading.Backend.Infrastructure;
 using MarginTrading.Backend.Middleware;
 using MarginTrading.Backend.Modules;
 using MarginTrading.Backend.Services;
@@ -37,24 +35,24 @@ using MarginTrading.Backend.Services.Modules;
 using MarginTrading.Backend.Services.Quotes;
 using MarginTrading.Backend.Services.Scheduling;
 using MarginTrading.Backend.Services.Settings;
-using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Backend.Services.Stubs;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Modules;
 using MarginTrading.Common.Services;
-using MarginTrading.SqlRepositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Console;
+using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using StackExchange.Redis;
 using GlobalErrorHandlerMiddleware = MarginTrading.Backend.Middleware.GlobalErrorHandlerMiddleware;
-using LogLevel = Microsoft.Extensions.Logging.LogLevel;
+using IApplicationLifetime = Microsoft.Extensions.Hosting.IApplicationLifetime;
+using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
+using KeyAuthHandler = MarginTrading.Backend.Middleware.KeyAuthHandler;
 
 #pragma warning disable 1591
 
@@ -62,9 +60,11 @@ namespace MarginTrading.Backend
 {
     public class Startup
     {
+        private IReloadingManager<MtBackendSettings> _mtSettingsManager;
+
         public IConfigurationRoot Configuration { get; }
         public IHostingEnvironment Environment { get; }
-        public IContainer ApplicationContainer { get; set; }
+        public ILifetimeScope ApplicationContainer { get; set; }
 
         public Startup(IHostingEnvironment env)
         {
@@ -77,15 +77,18 @@ namespace MarginTrading.Backend
             Environment = env;
         }
 
-        public IServiceProvider ConfigureServices(IServiceCollection services)
+        public void ConfigureServices(IServiceCollection services)
         {
+            services.AddApplicationInsightsTelemetry();
+
             services.AddSingleton(Configuration);
-            services.AddMvc()
-            .AddJsonOptions(options =>
-            {
-                options.SerializerSettings.ContractResolver = new DefaultContractResolver();
-                options.SerializerSettings.Converters.Add(new StringEnumConverter());
-            });
+            services
+                .AddControllers()
+                .AddNewtonsoftJson(options =>
+                {
+                    options.SerializerSettings.ContractResolver = new DefaultContractResolver();
+                    options.SerializerSettings.Converters.Add(new StringEnumConverter());
+                });
             services.AddScoped<MarginTradingEnabledFilter>();
             services.AddAuthentication(KeyAuthOptions.AuthenticationScheme)
                 .AddScheme<KeyAuthOptions, KeyAuthHandler>(KeyAuthOptions.AuthenticationScheme, "", options => { });
@@ -93,12 +96,10 @@ namespace MarginTrading.Backend
             services.AddSwaggerGen(options =>
             {
                 options.DefaultLykkeConfiguration("v1", $"MarginTradingEngine_Api_{Configuration.ServerType()}");
-                options.OperationFilter<ApiKeyHeaderOperationFilter>();
+                options.AddApiKeyAwareness();
             });
 
-            var builder = new ContainerBuilder();
-
-            var mtSettings = Configuration.LoadSettings<MtBackendSettings>(
+            _mtSettingsManager = Configuration.LoadSettings<MtBackendSettings>(
                     throwExceptionOnCheckError: !Configuration.NotThrowExceptionsOnServiceValidation())
                 .Nested(s =>
                 {
@@ -106,16 +107,23 @@ namespace MarginTrading.Backend
                     return s;
                 });
 
-            SetupLoggers(Configuration, services, mtSettings);
+            SetupLoggers(Configuration, services, _mtSettingsManager);
+        }
 
-            var deduplicationService = RunHealthChecks(mtSettings.CurrentValue.MtBackend);
+        [UsedImplicitly]
+        public void ConfigureContainer(ContainerBuilder builder)
+        {
+            var deduplicationService = RunHealthChecks(_mtSettingsManager.CurrentValue.MtBackend);
+
             builder.RegisterInstance(deduplicationService).AsSelf().As<IDisposable>().SingleInstance();
 
-            RegisterModules(builder, mtSettings, Environment);
+            RegisterModules(builder, _mtSettingsManager, Environment);
+        }
 
-            builder.Populate(services);
-
-            ApplicationContainer = builder.Build();
+        [UsedImplicitly]
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime appLifetime)
+        {
+            ApplicationContainer = app.ApplicationServices.GetAutofacRoot();
 
             MtServiceLocator.FplService = ApplicationContainer.Resolve<IFplService>();
             MtServiceLocator.AccountUpdateService = ApplicationContainer.Resolve<IAccountUpdateService>();
@@ -127,12 +135,6 @@ namespace MarginTrading.Backend
 
             InitializeJobs();
 
-            return new AutofacServiceProvider(ApplicationContainer);
-        }
-
-        [UsedImplicitly]
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime appLifetime)
-        {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -144,12 +146,21 @@ namespace MarginTrading.Backend
 
             app.UseMiddleware<GlobalErrorHandlerMiddleware>();
             app.UseMiddleware<MaintenanceModeMiddleware>();
+
+            app.UseRouting();
             app.UseAuthentication();
-            app.UseMvc();
+            app.UseAuthorization();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
 
             app.UseSwagger(c =>
             {
-                c.PreSerializeFilters.Add((swagger, httpReq) => swagger.Host = httpReq.Host.Value);
+                c.PreSerializeFilters.Add((swagger, httpReq) =>
+                    swagger.Servers = new List<OpenApiServer> {
+                        new OpenApiServer { Url = $"{httpReq.Scheme}://{httpReq.Host.Value}" }
+                    });
             });
             app.UseSwaggerUI(a => a.SwaggerEndpoint("/swagger/v1/swagger.json", "Trading Engine API Swagger"));
 
@@ -157,13 +168,13 @@ namespace MarginTrading.Backend
 
             var application = app.ApplicationServices.GetService<Application>();
 
-            appLifetime.ApplicationStarted.Register(async () =>
+            appLifetime.ApplicationStarted.Register(() =>
             {
                 var cqrsEngine = ApplicationContainer.Resolve<ICqrsEngine>();
                 cqrsEngine.StartSubscribers();
                 cqrsEngine.StartProcesses();
-                
-                await Program.Host.WriteLogsAsync(Environment, LogLocator.CommonLog);
+
+                Program.AppHost.WriteLogs(Environment, LogLocator.CommonLog);
 
                 LogLocator.CommonLog?.WriteMonitorAsync("", "", $"{Configuration.ServerType()} Started");
             });
@@ -176,7 +187,9 @@ namespace MarginTrading.Backend
             );
         }
 
-        private static void RegisterModules(ContainerBuilder builder, IReloadingManager<MtBackendSettings> mtSettings,
+        private static void RegisterModules(
+            ContainerBuilder builder,
+            IReloadingManager<MtBackendSettings> mtSettings,
             IHostingEnvironment environment)
         {
             var settings = mtSettings.Nested(x => x.MtBackend);
@@ -188,8 +201,11 @@ namespace MarginTrading.Backend
             builder.RegisterModule(new CacheModule());
             builder.RegisterModule(new ManagersModule());
             builder.RegisterModule(new ServicesModule());
-            builder.RegisterModule(new BackendServicesModule(mtSettings.CurrentValue, settings.CurrentValue,
-                environment, LogLocator.CommonLog));
+            builder.RegisterModule(new BackendServicesModule(
+                mtSettings.CurrentValue,
+                settings.CurrentValue,
+                environment,
+                LogLocator.CommonLog));
             builder.RegisterModule(new MarginTradingCommonModule());
             builder.RegisterModule(new ExternalServicesModule(mtSettings));
             builder.RegisterModule(new BackendMigrationsModule());
