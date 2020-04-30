@@ -5,4 +5,5 @@ RUN apk add --no-cache icu-libs \
 && cp cert/*.crt /usr/local/share/ca-certificates/ 2>/dev/null \
 && update-ca-certificates \
 || echo "No specific certificate given."
+RUN apk update && apk add bash
 ENTRYPOINT ["dotnet", "MarginTrading.AccountMarginEventsBroker.dll"]
