@@ -2,9 +2,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Threading.Tasks;
-using Common;
 using Common.Log;
 using Dapper;
 using MarginTrading.Backend.Core.Repositories;

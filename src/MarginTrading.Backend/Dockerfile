@@ -6,4 +6,5 @@ RUN apk add --no-cache icu-libs \
 && update-ca-certificates \
 || echo "No specific certificate given."
 RUN apk update && apk add bash
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 ENTRYPOINT ["dotnet", "MarginTrading.Backend.dll"]

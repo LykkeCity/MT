@@ -6,7 +6,7 @@ using Common.Log;
 using Dapper;
 using MarginTrading.AccountMarginEventsBroker.Repositories.Models;
 using System;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 using Lykke.MarginTrading.BrokerBase.Extensions;

@@ -2,15 +2,12 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
-using Common;
 using Dapper;
 using MarginTrading.Common.Services;
 using MarginTrading.SqlRepositories.Entities;
-using Microsoft.Extensions.Internal;
-using Microsoft.WindowsAzure.Storage.Table;
 
 namespace MarginTrading.SqlRepositories
 {
