@@ -60,8 +60,6 @@ namespace MarginTrading.Backend.Services.Services
                     {
                         OperationId = operationId,
                         CreationTime = _dateService.Now(),
-                        Instrument = instrument,
-                        Volume = volume,
                         Price = price,
                     }, _cqrsContextNamesSettings.Gavel);
                 }

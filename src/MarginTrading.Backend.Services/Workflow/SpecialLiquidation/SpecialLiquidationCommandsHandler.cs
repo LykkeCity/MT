@@ -393,6 +393,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                             MarketMakerId = executionInfo.Data.ExternalProviderId,
                             ExecutionTime = executionResult.Time,
                             OrderId = executionResult.ExchangeOrderId,
+                            ExecutionPrice = (decimal) executionResult.Price
                         });
                     }
                     catch (Exception exception)
