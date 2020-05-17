@@ -176,7 +176,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     CreationTime = _dateService.Now(),
                     Instrument = executionInfo.Data.Instrument,
                     Volume = executionInfo.Data.Volume,
-                    Price = executionInfo.Data.Price,
+                    Price = e.ExecutionPrice,
                     MarketMakerId = e.MarketMakerId,
                     ExternalOrderId = e.OrderId,
                     ExternalExecutionTime = e.ExecutionTime,

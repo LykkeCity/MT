@@ -352,6 +352,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         MarketMakerId = "ZeroNetVolume",
                         ExecutionTime = _dateService.Now(),
                         OrderId = _identityGenerator.GenerateGuid(),
+                        ExecutionPrice = command.Price
                     });
                 }
                 else
@@ -393,6 +394,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                             MarketMakerId = executionInfo.Data.ExternalProviderId,
                             ExecutionTime = executionResult.Time,
                             OrderId = executionResult.ExchangeOrderId,
+                            ExecutionPrice = (decimal) executionResult.Price == default
+                                ? command.Price
+                                : (decimal) executionResult.Price
                         });
                     }
                     catch (Exception exception)
