@@ -255,6 +255,17 @@ namespace MarginTrading.Backend.Core.Orders
             ChargedPnL += value;
             FplData.ActualHash++;
         }
+        
+        public virtual void SetChargedPnL(string operationId, decimal value)
+        {
+            //if operation was already processed - it is duplicated event
+            if (ChargePnlOperations.Contains(operationId))
+                return;
+
+            ChargePnlOperations.Add(operationId);
+            ChargedPnL = value;
+            FplData.ActualHash++;
+        }
 
         public void PartiallyClose(DateTime date, decimal closedVolume, string tradeId, decimal chargedPnl)
         {

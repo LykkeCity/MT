@@ -243,7 +243,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
                 var fpl = Math.Round((dealOrder.ExecutionPrice.Value - position.OpenPrice) *
                                      dealOrder.FxRate * dealVolume.Value * sign, accountBaseAssetAccuracy);
-                var balanceDelta = Math.Round(fpl - chargedPnl, accountBaseAssetAccuracy);
+                var balanceDelta = fpl - Math.Round(chargedPnl, accountBaseAssetAccuracy);
 
                 var dealId = historyType == PositionHistoryTypeContract.Close
                     ? position.Id

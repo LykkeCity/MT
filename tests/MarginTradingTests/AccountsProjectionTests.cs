@@ -8,10 +8,12 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AutoMapper;
+using Common;
 using Common.Log;
 using Lykke.Common.Chaos;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Contracts.Models;
+using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
@@ -194,10 +196,12 @@ namespace MarginTradingTests
         }
         
         [Test]
-        [TestCase("testAccount1", 1, AccountBalanceChangeReasonTypeContract.Withdraw)]
-        [TestCase("testAccount1", 5000, AccountBalanceChangeReasonTypeContract.UnrealizedDailyPnL)]
+        [TestCase("testAccount1", 1, AccountBalanceChangeReasonTypeContract.Withdraw, null)]
+        [TestCase("testAccount1", 5000, AccountBalanceChangeReasonTypeContract.UnrealizedDailyPnL, null)]
+        [TestCase("testAccount1", 5000, AccountBalanceChangeReasonTypeContract.UnrealizedDailyPnL, "{\"RawTotalPnl\": 0}")]
+        [TestCase("testAccount1", 5000, AccountBalanceChangeReasonTypeContract.UnrealizedDailyPnL, "{\"RawTotalPnl\": 1}")]
         public async Task TestAccountBalanceUpdate_Success(string accountId, decimal changeAmount,
-            AccountBalanceChangeReasonTypeContract balanceChangeReasonType)
+            AccountBalanceChangeReasonTypeContract balanceChangeReasonType, string auditLog)
         {
             var account = Accounts.Single(x => x.Id == accountId);
             var time = DateService.Now().AddMinutes(1);
@@ -207,12 +211,12 @@ namespace MarginTradingTests
             var updatedContract = new AccountContract(accountId, account.ClientId, account.TradingConditionId,
                 account.BaseAssetId, changeAmount, account.WithdrawTransferLimit, account.LegalEntity,
                 account.IsDisabled, account.ModificationTimestamp, account.IsWithdrawalDisabled, false);
-            
+
             await accountsProjection.Handle(new AccountChangedEvent(time, "test",
                 updatedContract, AccountChangedEventTypeContract.BalanceUpdated,
                 new AccountBalanceChangeContract("test", time, accountId, account.ClientId, changeAmount, 
                     account.Balance + changeAmount, account.WithdrawTransferLimit, "test", balanceChangeReasonType,
-                    "test", "Default", null, null, time)));
+                    "test", "Default", auditLog, null, time)));
 
             var resultedAccount = _accountsCacheService.Get(accountId);
             Assert.AreEqual(account.Balance + changeAmount, resultedAccount.Balance);
@@ -224,7 +228,16 @@ namespace MarginTradingTests
 
             if (balanceChangeReasonType == AccountBalanceChangeReasonTypeContract.UnrealizedDailyPnL)
             {
-                _fakePosition.Verify(s => s.ChargePnL("test", changeAmount), Times.Once);
+                var metadata = auditLog?.DeserializeJson<UnrealizedPnlMetadataContract>();
+
+                if (metadata == null || metadata.RawTotalPnl == 0)
+                {
+                    _fakePosition.Verify(s => s.ChargePnL("test", changeAmount), Times.Once);
+                }
+                else
+                {
+                    _fakePosition.Verify(s => s.SetChargedPnL("test", metadata.RawTotalPnl), Times.Once);
+                }
             }
             
             _accountBalanceChangedEventChannelMock.Verify(s => s.SendEvent(It.IsAny<object>(), 

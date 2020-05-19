@@ -62,8 +62,9 @@ namespace MarginTrading.Backend.Core
         {
             var data = position.CalculateFplData();
             var pnl = Math.Round(data.RawFpl, data.AccountBaseAssetAccuracy);
+            var chargedPnl = Math.Round(position.ChargedPnL, data.AccountBaseAssetAccuracy);
 
-            return Math.Round(pnl - position.ChargedPnL, data.AccountBaseAssetAccuracy);
+            return pnl - chargedPnl;
         }
 
         public static decimal GetMarginRate(this Position order)
