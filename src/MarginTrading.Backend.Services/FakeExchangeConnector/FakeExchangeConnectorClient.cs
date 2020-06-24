@@ -123,6 +123,7 @@ namespace MarginTrading.Backend.Services.FakeExchangeConnector
                 {
                     OrderId = orderModel.OrderId,
                     Volume = (decimal) orderModel.Volume,
+                    ExternalOrderId = result.ExchangeOrderId,
                     OrderBook = new ExternalOrderBookContract
                     {
                         AssetPairId = orderbook.AssetPairId,
