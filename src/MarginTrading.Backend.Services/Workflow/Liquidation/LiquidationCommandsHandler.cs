@@ -272,7 +272,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             }
 
             var account = _accountsCache.Get(executionInfo.Data.AccountId);
-            if (account.GetAccountLevel() != ValidAccountLevel)
+            if (ShouldFailExecution(account.GetAccountLevel(), executionInfo.Data.LiquidationType))
             {
                 await _log.WriteWarningAsync(
                     nameof(LiquidationCommandsHandler),
@@ -416,7 +416,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             }
 
             var account = _accountsCache.Get(executionInfo.Data.AccountId);
-            if (account.GetAccountLevel() != ValidAccountLevel)
+            if (ShouldFailExecution(account.GetAccountLevel(), executionInfo.Data.LiquidationType))
             {
                 await _log.WriteWarningAsync(
                     nameof(LiquidationCommandsHandler),
@@ -453,6 +453,11 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                     null,
                     $"Unable to resume liquidation in state {executionInfo.Data.State}. Command: {command.ToJson()}");
             }
+        }
+
+        private bool ShouldFailExecution(AccountLevel accountLevel, LiquidationType liquidationType)
+        {
+            return accountLevel != ValidAccountLevel && liquidationType != LiquidationType.Forced;
         }
     }
 }
