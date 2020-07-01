@@ -31,7 +31,7 @@ namespace MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Events
         public string Reason { get; set; }
         
         /// <summary>
-        /// Shows it the process can be restarted from request price step
+        /// Shows if the process can be restarted from request price step
         /// </summary>
         [Key(3)]
         public bool CanRetryPriceRequest { get; set; }

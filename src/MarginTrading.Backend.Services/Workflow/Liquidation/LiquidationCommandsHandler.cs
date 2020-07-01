@@ -14,14 +14,11 @@ using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Contracts.Workflow.Liquidation;
 using MarginTrading.Backend.Contracts.Workflow.Liquidation.Events;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
-using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Helpers;
-using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.Liquidation.Events;
 using MarginTrading.Common.Extensions;
@@ -42,6 +39,9 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         private readonly IAccountUpdateService _accountUpdateService;
         private readonly IEventChannel<LiquidationEndEventArgs> _liquidationEndEventChannel;
         private readonly LiquidationHelper _liquidationHelper;
+        private readonly ILiquidationFailureExecutor _failureExecutor;
+
+        private const AccountLevel ValidAccountLevel = AccountLevel.StopOut;
 
         public LiquidationCommandsHandler(
             IAccountsCacheService accountsCache,
@@ -53,7 +53,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             ILog log,
             IAccountUpdateService accountUpdateService,
             IEventChannel<LiquidationEndEventArgs> liquidationEndEventChannel,
-            LiquidationHelper liquidationHelper)
+            LiquidationHelper liquidationHelper, 
+            ILiquidationFailureExecutor failureExecutor)
         {
             _accountsCache = accountsCache;
             _dateService = dateService;
@@ -65,6 +66,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             _accountUpdateService = accountUpdateService;
             _liquidationEndEventChannel = liquidationEndEventChannel;
             _liquidationHelper = liquidationHelper;
+            _failureExecutor = failureExecutor;
         }
 
         [UsedImplicitly]
@@ -269,6 +271,23 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 return;
             }
 
+            var account = _accountsCache.Get(executionInfo.Data.AccountId);
+            if (account.GetAccountLevel() != ValidAccountLevel)
+            {
+                await _log.WriteWarningAsync(
+                    nameof(LiquidationCommandsHandler),
+                    nameof(LiquidatePositionsInternalCommand),
+                    new {accountId = account.Id, accountLevel = account.GetAccountLevel().ToString()}.ToJson(),
+                    $"Unable to liquidate positions since account level is not {ValidAccountLevel.ToString()}.");
+
+                await _failureExecutor.ExecuteAsync(publisher,
+                    account.Id,
+                    command.OperationId,
+                    $"Account level is not {ValidAccountLevel.ToString()}.");
+
+                return;
+            }
+
             var positions = _ordersCache.Positions
                 .GetPositionsByAccountIds(executionInfo.Data.AccountId)
                 .Where(p => command.PositionIds.Contains(p.Id))
@@ -384,7 +403,6 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         public async Task Handle(ResumeLiquidationInternalCommand command,
             IEventPublisher publisher)
         {
-            
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<LiquidationOperationData>(
                 operationName: LiquidationSaga.OperationName,
                 id: command.OperationId);
@@ -397,8 +415,25 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 return;
             }
 
-            if ((!command.IsCausedBySpecialLiquidation &&
-                 (!command.ResumeOnlyFailed || executionInfo.Data.State == LiquidationOperationState.Failed)) ||
+            var account = _accountsCache.Get(executionInfo.Data.AccountId);
+            if (account.GetAccountLevel() != ValidAccountLevel)
+            {
+                await _log.WriteWarningAsync(
+                    nameof(LiquidationCommandsHandler),
+                    nameof(ResumeLiquidationInternalCommand),
+                    new {accountId = account.Id, accountLevel = account.GetAccountLevel().ToString()}.ToJson(),
+                    $"Unable to resume liquidation since account level is not {ValidAccountLevel.ToString()}.");
+                
+                await _failureExecutor.ExecuteAsync(publisher, 
+                    account.Id, 
+                    command.OperationId,
+                    $"Account level is not {ValidAccountLevel.ToString()}.");
+
+                return;
+            }
+            
+            if (!command.IsCausedBySpecialLiquidation &&
+                (!command.ResumeOnlyFailed || executionInfo.Data.State == LiquidationOperationState.Failed) ||
                 executionInfo.Data.State == LiquidationOperationState.SpecialLiquidationStarted)
             {
                 publisher.PublishEvent(new LiquidationResumedInternalEvent
@@ -412,8 +447,10 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             }
             else
             {
-                await _log.WriteWarningAsync(nameof(LiquidationCommandsHandler),
+                await _log.WriteWarningAsync(
+                    nameof(LiquidationCommandsHandler),
                     nameof(ResumeLiquidationInternalCommand),
+                    null,
                     $"Unable to resume liquidation in state {executionInfo.Data.State}. Command: {command.ToJson()}");
             }
         }
