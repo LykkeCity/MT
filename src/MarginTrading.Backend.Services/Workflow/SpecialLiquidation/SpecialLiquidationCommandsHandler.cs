@@ -342,11 +342,20 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 return;
             }
 
-            // if (!string.IsNullOrEmpty(executionInfo.Data.CausationOperationId))
-            // {
+            await _log.WriteInfoAsync(nameof(SpecialLiquidationCommandsHandler),
+                nameof(ExecuteSpecialLiquidationOrderCommand), 
+                command.ToJson(), 
+                "Checking if position special liquidation should be failed");
+            if (!string.IsNullOrEmpty(executionInfo.Data.CausationOperationId))
+            {
+                await _log.WriteInfoAsync(nameof(SpecialLiquidationCommandsHandler),
+                    nameof(ExecuteSpecialLiquidationOrderCommand), 
+                    command.ToJson(), 
+                    "Special liquidation is caused by regular liquidation");
+                
                 var account = _accountsCacheService.Get(executionInfo.Data.AccountId);
-                //if (account.GetAccountLevel() != ValidAccountLevel)
-                //{
+                if (account.GetAccountLevel() != ValidAccountLevel)
+                {
                     await _log.WriteWarningAsync(
                         nameof(SpecialLiquidationCommandsHandler),
                         nameof(ExecuteSpecialLiquidationOrderCommand),
@@ -362,8 +371,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     });
                     
                     return;
-                //}
-            //}
+                }
+            }
 
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceReceived,
                 SpecialLiquidationOperationState.ExternalOrderExecuted))

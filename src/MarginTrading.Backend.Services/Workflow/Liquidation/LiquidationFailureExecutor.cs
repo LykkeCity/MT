@@ -56,6 +56,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<LiquidationOperationData>(
                 LiquidationSaga.OperationName,
                 operationId);
+            
             if (executionInfo?.Data == null)
             {
                 await _log.WriteWarningAsync(nameof(LiquidationFailureExecutor),
@@ -82,6 +83,11 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 OpenPositionsRemainingOnAccount = _ordersCache.Positions.GetPositionsByAccountIds(executionInfo.Data.AccountId).Count,
                 CurrentTotalCapital = account.GetTotalCapital(),
             });
+
+            await _log.WriteInfoAsync(nameof(LiquidationFailureExecutor),
+                nameof(ExecuteAsync),
+                new {account, operationId, reason}.ToJson(),
+                $"Successfully published {nameof(LiquidationFailedEvent)} event");
             
             _liquidationEndEventChannel.SendEvent(this, new LiquidationEndEventArgs
             {
@@ -91,6 +97,11 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 LiquidatedPositionIds = executionInfo.Data.LiquidatedPositionIds,
                 FailReason = reason,
             });
+            
+            await _log.WriteInfoAsync(nameof(LiquidationFailureExecutor),
+                nameof(ExecuteAsync),
+                new {account, operationId, reason}.ToJson(),
+                $"Successfully published {nameof(LiquidationEndEventArgs)} event");
         }
     }
 }

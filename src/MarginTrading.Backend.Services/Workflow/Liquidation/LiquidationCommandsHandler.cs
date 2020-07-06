@@ -9,6 +9,7 @@ using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
+using Lykke.Common.Log;
 using Lykke.Cqrs;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Contracts.Workflow.Liquidation;
@@ -271,6 +272,10 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 return;
             }
 
+            await _log.WriteInfoAsync(nameof(LiquidationCommandsHandler),
+                nameof(LiquidatePositionsInternalCommand), 
+                command.ToJson(), 
+                "Checking if position liquidation should be failed");
             var account = _accountsCache.Get(executionInfo.Data.AccountId);
             if (ShouldFailExecution(account.GetAccountLevel(), executionInfo.Data.LiquidationType))
             {
@@ -415,6 +420,10 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 return;
             }
 
+            await _log.WriteInfoAsync(nameof(LiquidationCommandsHandler),
+                nameof(ResumeLiquidationInternalCommand), 
+                command.ToJson(), 
+                "Checking if position liquidation should be failed");
             var account = _accountsCache.Get(executionInfo.Data.AccountId);
             if (ShouldFailExecution(account.GetAccountLevel(), executionInfo.Data.LiquidationType))
             {
