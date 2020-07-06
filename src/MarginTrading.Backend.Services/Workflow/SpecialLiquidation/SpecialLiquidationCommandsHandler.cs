@@ -342,11 +342,11 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 return;
             }
 
-            if (!string.IsNullOrEmpty(executionInfo.Data.CausationOperationId))
-            {
+            // if (!string.IsNullOrEmpty(executionInfo.Data.CausationOperationId))
+            // {
                 var account = _accountsCacheService.Get(executionInfo.Data.AccountId);
-                if (account.GetAccountLevel() != ValidAccountLevel)
-                {
+                //if (account.GetAccountLevel() != ValidAccountLevel)
+                //{
                     await _log.WriteWarningAsync(
                         nameof(SpecialLiquidationCommandsHandler),
                         nameof(ExecuteSpecialLiquidationOrderCommand),
@@ -362,8 +362,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     });
                     
                     return;
-                }
-            }
+                //}
+            //}
 
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceReceived,
                 SpecialLiquidationOperationState.ExternalOrderExecuted))
