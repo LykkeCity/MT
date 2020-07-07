@@ -442,12 +442,12 @@ namespace MarginTrading.Backend.Services
                 .FirstOrDefault(o => o.OrderType == OrderType.TakeProfit)?.Price;
 
             if (baseOrder.Direction == OrderDirection.Buy &&
-                (slPrice.HasValue && slPrice > newPrice
-                 || tpPrice.HasValue && tpPrice < newPrice)
+                (slPrice.HasValue && slPrice >= newPrice
+                 || tpPrice.HasValue && tpPrice <= newPrice)
                 ||
                 baseOrder.Direction == OrderDirection.Sell &&
-                (slPrice.HasValue && slPrice < newPrice
-                 || tpPrice.HasValue && tpPrice > newPrice))
+                (slPrice.HasValue && slPrice <= newPrice
+                 || tpPrice.HasValue && tpPrice >= newPrice))
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
                     "Price is not valid against related orders prices.");
