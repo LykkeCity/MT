@@ -18,13 +18,25 @@ namespace MarginTrading.Backend.Contracts
     public interface IOrdersApi
     {
         /// <summary>
+        /// Update related order
+        /// </summary>
+        [Patch("/api/orders/{positionId}")]
+        Task UpdateRelatedOrderAsync(string positionId, [Body][NotNull] UpdateRelatedOrderRequest request);
+
+        /// <summary>
+        /// Update related order bulk
+        /// </summary>
+        [Patch("/api/orders/bulk")]
+        Task<Dictionary<string, string>> UpdateRelatedOrderBulkAsync([Body][NotNull] UpdateRelatedOrderBulkRequest request);
+
+        /// <summary>
         /// Place new order
         /// </summary>
         /// <param name="request">Order model</param>
         /// <returns>Order Id</returns>
         [Post("/api/orders")]
         Task<string> PlaceAsync([Body] [NotNull] OrderPlaceRequest request);
-        
+
         /// <summary>
         /// Change existing order
         /// </summary>

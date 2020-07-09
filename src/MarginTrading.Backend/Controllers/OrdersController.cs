@@ -66,9 +66,7 @@ namespace MarginTrading.Backend.Controllers
         /// <summary>
         /// Update related order bulk
         /// </summary>
-        /// <param name="request">Order model</param>
-        /// <returns>Order Id</returns>
-        [Route("")]
+        [Route("bulk")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpPatch]
@@ -96,8 +94,6 @@ namespace MarginTrading.Backend.Controllers
         /// <summary>
         /// Update related order
         /// </summary>
-        /// <param name="request">Order model</param>
-        /// <returns>Order Id</returns>
         [Route("{positionId}")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [ServiceFilter(typeof(MarginTradingEnabledFilter))]
@@ -254,7 +250,6 @@ namespace MarginTrading.Backend.Controllers
         /// <summary>
         /// Cancel order bulk
         /// </summary>
-        /// <param name="request">Additional cancellation info</param>
         [Route("bulk")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [ServiceFilter(typeof(MarginTradingEnabledFilter))]

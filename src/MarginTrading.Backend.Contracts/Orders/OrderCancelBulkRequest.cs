@@ -6,7 +6,7 @@ namespace MarginTrading.Backend.Contracts.Orders
 {
     public class OrderCancelBulkRequest
     {
-        public string[] OrderIds { get; set; }
+        public IEnumerable<string> OrderIds { get; set; }
         public OrderCancelRequest OrderCancelRequest { get; set; }
     }
 }
