@@ -38,6 +38,12 @@ namespace MarginTrading.Backend.Contracts
         Task CancelAsync([NotNull] string orderId, [Body] OrderCancelRequest request = null);
 
         /// <summary>
+        /// Close order bulk
+        /// </summary>
+        [Delete("/api/orders/bulk")]
+        Task<Dictionary<string, string>> CancelBulkAsync([Body] OrderCancelBulkRequest request = null);
+
+        /// <summary>
         /// Close group of orders by accountId, assetPairId and direction.
         /// </summary>
         /// <param name="accountId">Mandatory</param>

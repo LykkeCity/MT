@@ -20,7 +20,6 @@ using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Filters;
 using MarginTrading.Backend.Services;
-using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Mappers;
 using MarginTrading.Common.Extensions;
@@ -35,37 +34,29 @@ namespace MarginTrading.Backend.Controllers
     [Route("api/orders")]
     public class OrdersController : Controller, IOrdersApi
     {
-        private readonly IAssetPairsCache _assetPairsCache;
         private readonly ITradingEngine _tradingEngine;
-        private readonly IAccountsCacheService _accountsCacheService;
         private readonly IOperationsLogService _operationsLogService;
         private readonly ILog _log;
         private readonly OrdersCache _ordersCache;
-        private readonly IAssetPairDayOffService _assetDayOffService;
         private readonly IDateService _dateService;
         private readonly IValidateOrderService _validateOrderService;
         private readonly IIdentityGenerator _identityGenerator;
         private readonly ICqrsSender _cqrsSender;
 
-        public OrdersController(IAssetPairsCache assetPairsCache, 
+        public OrdersController(
             ITradingEngine tradingEngine,
-            IAccountsCacheService accountsCacheService, 
             IOperationsLogService operationsLogService,
             ILog log, 
             OrdersCache ordersCache, 
-            IAssetPairDayOffService assetDayOffService,
             IDateService dateService, 
             IValidateOrderService validateOrderService, 
             IIdentityGenerator identityGenerator,
             ICqrsSender cqrsSender)
         {
-            _assetPairsCache = assetPairsCache;
             _tradingEngine = tradingEngine;
-            _accountsCacheService = accountsCacheService;
             _operationsLogService = operationsLogService;
             _log = log;
             _ordersCache = ordersCache;
-            _assetDayOffService = assetDayOffService;
             _dateService = dateService;
             _validateOrderService = validateOrderService;
             _identityGenerator = identityGenerator;
@@ -154,6 +145,35 @@ namespace MarginTrading.Backend.Controllers
         }
 
         /// <summary>
+        /// Cancel order bulk
+        /// </summary>
+        /// <param name="request">Additional cancellation info</param>
+        [Route("bulk")]
+        [MiddlewareFilter(typeof(RequestLoggingPipeline))]
+        [ServiceFilter(typeof(MarginTradingEnabledFilter))]
+        [HttpDelete]
+        public async Task<Dictionary<string, string>> CancelBulkAsync([FromBody] OrderCancelBulkRequest request = null)
+        {
+            var failedOrderIds = new Dictionary<string, string>();
+
+            foreach (var id in request.OrderIds)
+            {
+                try
+                {
+                    await CancelAsync(id, request.OrderCancelRequest);
+                }
+                catch (Exception exception)
+                {
+                    await _log.WriteWarningAsync(nameof(OrdersController), nameof(CancelGroupAsync),
+                        $"Failed to cancel order {id}", exception);
+                    failedOrderIds.Add(id, exception.Message);
+                }
+            }
+
+            return failedOrderIds;
+        }
+
+        /// <summary>
         /// Close group of orders by accountId, assetPairId and direction.
         /// </summary>
         /// <param name="accountId">Mandatory</param>
@@ -192,7 +212,7 @@ namespace MarginTrading.Backend.Controllers
                 catch (Exception exception)
                 {
                     await _log.WriteWarningAsync(nameof(OrdersController), nameof(CancelGroupAsync),
-                        "Failed to cancel order [{order.Id}]", exception);
+                        $"Failed to cancel order {order.Id}", exception);
                     failedOrderIds.Add(order.Id, exception.Message);
                 }
             }
