@@ -107,19 +107,17 @@ namespace MarginTrading.Backend.Controllers
             var stopLoss = position.RelatedOrders?.FirstOrDefault(x => x.Type == OrderType.StopLoss || x.Type == OrderType.TrailingStop);
 
             var relatedOrderShouldBeRemoved = request.NewPrice == default;
-            var relatedOrderExists = request.OrderType == RelatedOrderTypeContract.TakeProfit ? takeProfit != null : stopLoss != null;
-            Func<string> relatedOrderIdFunc = () => request.OrderType == RelatedOrderTypeContract.TakeProfit
-                ? takeProfit.Id
-                : stopLoss.Id;
+            var relatedOrderId = request.OrderType == RelatedOrderTypeContract.TakeProfit ? takeProfit?.Id : stopLoss?.Id;
+            var relatedOrderExists = !string.IsNullOrWhiteSpace(relatedOrderId);
 
             if (!relatedOrderShouldBeRemoved)
             {
                 if (request.OrderType == RelatedOrderTypeContract.StopLoss && relatedOrderExists)
                 {
-                    var order = _ordersCache.GetOrderById(relatedOrderIdFunc());
-                    if (order.TrailingDistance.HasValue != request.HasTrailingStop)
+                    var order = _ordersCache.GetOrderById(relatedOrderId);
+                    if ((order.OrderType == OrderType.TrailingStop) != request.HasTrailingStop)
                     {
-                        await CancelAsync(relatedOrderIdFunc(), new OrderCancelRequest
+                        await CancelAsync(relatedOrderId, new OrderCancelRequest
                         {
                             Originator = request.Originator,
                             AdditionalInfo = request.AdditionalInfoJson
@@ -156,7 +154,7 @@ namespace MarginTrading.Backend.Controllers
                 }
                 else
                 {
-                    await ChangeAsync(relatedOrderIdFunc(), new OrderChangeRequest
+                    await ChangeAsync(relatedOrderId, new OrderChangeRequest
                     {
                         Price = request.NewPrice,
                         Originator = request.Originator,
@@ -166,7 +164,7 @@ namespace MarginTrading.Backend.Controllers
             }
             else if (relatedOrderExists)
             {
-                await CancelAsync(relatedOrderIdFunc(), new OrderCancelRequest
+                await CancelAsync(relatedOrderId, new OrderCancelRequest
                 {
                     Originator = request.Originator,
                     AdditionalInfo = request.AdditionalInfoJson
