@@ -17,10 +17,10 @@ using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
-using MarginTrading.SettingsService.Contracts;
-using MarginTrading.SettingsService.Contracts.Scheduling;
+using MarginTrading.AssetService.Contracts;
+using MarginTrading.AssetService.Contracts.Scheduling;
 using MoreLinq;
-using ScheduleSettingsContract = MarginTrading.SettingsService.Contracts.Scheduling.ScheduleSettingsContract;
+using ScheduleSettingsContract = MarginTrading.AssetService.Contracts.Scheduling.ScheduleSettingsContract;
 
 namespace MarginTrading.Backend.Services.AssetPairs
 {

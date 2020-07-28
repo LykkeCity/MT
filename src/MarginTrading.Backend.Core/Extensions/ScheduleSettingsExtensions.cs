@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using MarginTrading.Backend.Core.DayOffSettings;
-using MarginTrading.SettingsService.Contracts.Scheduling;
+using MarginTrading.AssetService.Contracts.Scheduling;
 
 namespace MarginTrading.Backend.Core.Extensions
 {

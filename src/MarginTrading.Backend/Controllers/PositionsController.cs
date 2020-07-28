@@ -166,7 +166,7 @@ namespace MarginTrading.Backend.Controllers
             [FromQuery] string assetPairId = null)
         {
             var positions = _ordersCache.Positions.GetAllPositions().AsEnumerable();
-            
+
             if (!string.IsNullOrWhiteSpace(accountId))
                 positions = positions.Where(o => o.AccountId == accountId);
 

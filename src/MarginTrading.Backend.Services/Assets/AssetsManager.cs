@@ -7,8 +7,8 @@ using Autofac;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core;
 using MarginTrading.Common.Services;
-using MarginTrading.SettingsService.Contracts;
-using MarginTrading.SettingsService.Contracts.Asset;
+using MarginTrading.AssetService.Contracts;
+using MarginTrading.AssetService.Contracts.Asset;
 
 namespace MarginTrading.Backend.Services.Assets
 {

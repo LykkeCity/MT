@@ -8,8 +8,8 @@ using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Common.Services;
-using MarginTrading.SettingsService.Contracts;
-using MarginTrading.SettingsService.Contracts.TradingConditions;
+using MarginTrading.AssetService.Contracts;
+using MarginTrading.AssetService.Contracts.TradingConditions;
 
 namespace MarginTrading.Backend.Services.TradingConditions
 {

@@ -3,7 +3,7 @@
 
 using System;
 using JetBrains.Annotations;
-using MarginTrading.SettingsService.Contracts.Scheduling;
+using MarginTrading.AssetService.Contracts.Scheduling;
 // ReSharper disable NotNullMemberIsNotInitialized
 
 namespace MarginTrading.Backend.Core.DayOffSettings

@@ -26,8 +26,8 @@ using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Services.Settings;
 using MarginTrading.Common.Settings;
-using MarginTrading.SettingsService.Contracts;
-using MarginTrading.SettingsService.Contracts.Scheduling;
+using MarginTrading.AssetService.Contracts;
+using MarginTrading.AssetService.Contracts.Scheduling;
 using MarginTradingTests.Modules;
 using Moq;
 

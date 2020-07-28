@@ -10,12 +10,12 @@ using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
-using MarginTrading.SettingsService.Contracts;
-using MarginTrading.SettingsService.Contracts.Asset;
-using MarginTrading.SettingsService.Contracts.Enums;
-using MarginTrading.SettingsService.Contracts.TradingConditions;
+using MarginTrading.AssetService.Contracts;
+using MarginTrading.AssetService.Contracts.Asset;
+using MarginTrading.AssetService.Contracts.Enums;
+using MarginTrading.AssetService.Contracts.TradingConditions;
 using Moq;
-using AssetPairContract = MarginTrading.SettingsService.Contracts.AssetPair.AssetPairContract;
+using AssetPairContract = MarginTrading.AssetService.Contracts.AssetPair.AssetPairContract;
 
 namespace MarginTradingTests
 {

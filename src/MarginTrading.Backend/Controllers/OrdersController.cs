@@ -390,10 +390,10 @@ namespace MarginTrading.Backend.Controllers
         {
             // do not call get by account, it's slower for single account 
             IEnumerable<Order> orders = _ordersCache.GetAllOrders();
-
+            
             if (!string.IsNullOrWhiteSpace(accountId))
                 orders = orders.Where(o => o.AccountId == accountId);
-
+            
             if (!string.IsNullOrWhiteSpace(assetPairId))
                 orders = orders.Where(o => o.AssetPairId == assetPairId);
 

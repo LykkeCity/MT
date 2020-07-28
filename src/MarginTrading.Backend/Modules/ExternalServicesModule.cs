@@ -19,7 +19,7 @@ using MarginTrading.Backend.Services.FakeExchangeConnector;
 using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Backend.Services.Stubs;
 using MarginTrading.Common.Services.Client;
-using MarginTrading.SettingsService.Contracts;
+using MarginTrading.AssetService.Contracts;
 
 namespace MarginTrading.Backend.Modules
 {

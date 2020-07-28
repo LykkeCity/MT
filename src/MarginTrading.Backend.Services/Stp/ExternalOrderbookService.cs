@@ -23,7 +23,7 @@ using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Helpers;
 using MarginTrading.Common.Services;
-using MarginTrading.SettingsService.Contracts.AssetPair;
+using MarginTrading.AssetService.Contracts.AssetPair;
 using MoreLinq;
 
 namespace MarginTrading.Backend.Services.Stp

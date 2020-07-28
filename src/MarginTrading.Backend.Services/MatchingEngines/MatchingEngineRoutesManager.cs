@@ -15,8 +15,8 @@ using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
-using MarginTrading.SettingsService.Contracts;
-using MarginTrading.SettingsService.Contracts.Routes;
+using MarginTrading.AssetService.Contracts;
+using MarginTrading.AssetService.Contracts.Routes;
 
 namespace MarginTrading.Backend.Services.MatchingEngines
 {

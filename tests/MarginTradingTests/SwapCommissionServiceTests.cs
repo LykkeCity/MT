@@ -9,8 +9,8 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.TradingConditions;
-using MarginTrading.SettingsService.Contracts;
-using MarginTrading.SettingsService.Contracts.TradingConditions;
+using MarginTrading.AssetService.Contracts;
+using MarginTrading.AssetService.Contracts.TradingConditions;
 using Moq;
 using NUnit.Framework;
 
