@@ -20,7 +20,6 @@ using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Filters;
 using MarginTrading.Backend.Services;
-using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Mappers;
 using MarginTrading.Common.Extensions;
@@ -35,41 +34,146 @@ namespace MarginTrading.Backend.Controllers
     [Route("api/orders")]
     public class OrdersController : Controller, IOrdersApi
     {
-        private readonly IAssetPairsCache _assetPairsCache;
         private readonly ITradingEngine _tradingEngine;
-        private readonly IAccountsCacheService _accountsCacheService;
         private readonly IOperationsLogService _operationsLogService;
         private readonly ILog _log;
         private readonly OrdersCache _ordersCache;
-        private readonly IAssetPairDayOffService _assetDayOffService;
         private readonly IDateService _dateService;
         private readonly IValidateOrderService _validateOrderService;
         private readonly IIdentityGenerator _identityGenerator;
         private readonly ICqrsSender _cqrsSender;
 
-        public OrdersController(IAssetPairsCache assetPairsCache, 
+        public OrdersController(
             ITradingEngine tradingEngine,
-            IAccountsCacheService accountsCacheService, 
             IOperationsLogService operationsLogService,
-            ILog log, 
-            OrdersCache ordersCache, 
-            IAssetPairDayOffService assetDayOffService,
-            IDateService dateService, 
-            IValidateOrderService validateOrderService, 
+            ILog log,
+            OrdersCache ordersCache,
+            IDateService dateService,
+            IValidateOrderService validateOrderService,
             IIdentityGenerator identityGenerator,
             ICqrsSender cqrsSender)
         {
-            _assetPairsCache = assetPairsCache;
             _tradingEngine = tradingEngine;
-            _accountsCacheService = accountsCacheService;
             _operationsLogService = operationsLogService;
             _log = log;
             _ordersCache = ordersCache;
-            _assetDayOffService = assetDayOffService;
             _dateService = dateService;
             _validateOrderService = validateOrderService;
             _identityGenerator = identityGenerator;
             _cqrsSender = cqrsSender;
+        }
+
+        /// <summary>
+        /// Update related order bulk
+        /// </summary>
+        [Route("bulk")]
+        [MiddlewareFilter(typeof(RequestLoggingPipeline))]
+        [ServiceFilter(typeof(MarginTradingEnabledFilter))]
+        [HttpPatch]
+        public async Task<Dictionary<string, string>> UpdateRelatedOrderBulkAsync([FromBody] UpdateRelatedOrderBulkRequest request)
+        {
+            var result = new Dictionary<string, string>();
+
+            foreach (var id in request.PositionIds)
+            {
+                try
+                {
+                    await UpdateRelatedOrderAsync(id, request.UpdateRelatedOrderRequest);
+                }
+                catch (Exception exception)
+                {
+                    await _log.WriteWarningAsync(nameof(OrdersController), nameof(UpdateRelatedOrderBulkAsync),
+                        $"Failed to update related order for position {id}", exception);
+                    result.Add(id, exception.Message);
+                }
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Update related order
+        /// </summary>
+        [Route("{positionId}")]
+        [MiddlewareFilter(typeof(RequestLoggingPipeline))]
+        [ServiceFilter(typeof(MarginTradingEnabledFilter))]
+        [HttpPatch]
+        public async Task UpdateRelatedOrderAsync(string positionId, [FromBody] UpdateRelatedOrderRequest request)
+        {
+            if (!_ordersCache.Positions.TryGetPositionById(positionId, out var position))
+                throw new InvalidOperationException($"Position {positionId} not found");
+
+            var takeProfit = position.RelatedOrders?.FirstOrDefault(x => x.Type == OrderType.TakeProfit);
+            var stopLoss = position.RelatedOrders?.FirstOrDefault(x => x.Type == OrderType.StopLoss || x.Type == OrderType.TrailingStop);
+
+            var relatedOrderShouldBeRemoved = request.NewPrice == default;
+            var relatedOrderId = request.OrderType == RelatedOrderTypeContract.TakeProfit ? takeProfit?.Id : stopLoss?.Id;
+            var relatedOrderExists = !string.IsNullOrWhiteSpace(relatedOrderId);
+
+            if (!relatedOrderShouldBeRemoved)
+            {
+                if (request.OrderType == RelatedOrderTypeContract.StopLoss && relatedOrderExists)
+                {
+                    var order = _ordersCache.GetOrderById(relatedOrderId);
+                    if ((order.OrderType == OrderType.TrailingStop) != request.HasTrailingStop)
+                    {
+                        await CancelAsync(relatedOrderId, new OrderCancelRequest
+                        {
+                            Originator = request.Originator,
+                            AdditionalInfo = request.AdditionalInfoJson
+                        });
+                        relatedOrderExists = false;
+                    }
+                }
+                if (!relatedOrderExists)
+                {
+                    var orderPlaceRequest = new OrderPlaceRequest
+                    {
+                        AccountId = request.AccountId,
+                        InstrumentId = position.AssetPairId,
+                        Direction = position.Direction == PositionDirection.Long ? OrderDirectionContract.Buy : OrderDirectionContract.Sell,
+                        Price = request.NewPrice,
+                        Volume = position.Volume,
+                        Type = request.OrderType == RelatedOrderTypeContract.TakeProfit ? OrderTypeContract.TakeProfit : OrderTypeContract.StopLoss,
+                        Originator = request.Originator,
+                        ForceOpen = false,
+                        PositionId = position.Id,
+                        AdditionalInfo = request.AdditionalInfoJson,
+                        UseTrailingStop = request.HasTrailingStop ?? false
+                    };
+
+                    if (orderPlaceRequest.UseTrailingStop
+                        && orderPlaceRequest.Type == OrderTypeContract.StopLoss
+                        && (!string.IsNullOrWhiteSpace(orderPlaceRequest.ParentOrderId) || !string.IsNullOrWhiteSpace(orderPlaceRequest.PositionId)))
+                    {
+                        orderPlaceRequest.Type = OrderTypeContract.TrailingStop;
+                        orderPlaceRequest.UseTrailingStop = false;
+                    }
+
+                    await PlaceAsync(orderPlaceRequest);
+                }
+                else
+                {
+                    await ChangeAsync(relatedOrderId, new OrderChangeRequest
+                    {
+                        Price = request.NewPrice,
+                        Originator = request.Originator,
+                        AdditionalInfo = request.AdditionalInfoJson
+                    });
+                }
+            }
+            else if (relatedOrderExists)
+            {
+                await CancelAsync(relatedOrderId, new OrderCancelRequest
+                {
+                    Originator = request.Originator,
+                    AdditionalInfo = request.AdditionalInfoJson
+                });
+            }
+            else
+            {
+                throw new Exception($"Couldn't update related order for position {positionId}");
+            }
         }
 
         /// <summary>
@@ -102,7 +206,7 @@ namespace MarginTrading.Backend.Controllers
             }
 
             var placedOrder = await _tradingEngine.PlaceOrderAsync(baseOrder);
-            
+
             _operationsLogService.AddLog("action order.place", request.AccountId, request.ToJson(),
                 placedOrder.ToJson());
 
@@ -143,14 +247,42 @@ namespace MarginTrading.Backend.Controllers
             var reason = request?.Originator == OriginatorTypeContract.System
                 ? OrderCancellationReason.CorporateAction
                 : OrderCancellationReason.None;
-            
-            var canceledOrder = _tradingEngine.CancelPendingOrder(order.Id, request?.AdditionalInfo, 
+
+            var canceledOrder = _tradingEngine.CancelPendingOrder(order.Id, request?.AdditionalInfo,
                 correlationId, request?.Comment, reason);
 
             _operationsLogService.AddLog("action order.cancel", order.AccountId, request?.ToJson(),
                 canceledOrder.ToJson());
 
             return Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Cancel order bulk
+        /// </summary>
+        [Route("bulk")]
+        [MiddlewareFilter(typeof(RequestLoggingPipeline))]
+        [ServiceFilter(typeof(MarginTradingEnabledFilter))]
+        [HttpDelete]
+        public async Task<Dictionary<string, string>> CancelBulkAsync([FromBody] OrderCancelBulkRequest request = null)
+        {
+            var failedOrderIds = new Dictionary<string, string>();
+
+            foreach (var id in request.OrderIds)
+            {
+                try
+                {
+                    await CancelAsync(id, request.OrderCancelRequest);
+                }
+                catch (Exception exception)
+                {
+                    await _log.WriteWarningAsync(nameof(OrdersController), nameof(CancelGroupAsync),
+                        $"Failed to cancel order {id}", exception);
+                    failedOrderIds.Add(id, exception.Message);
+                }
+            }
+
+            return failedOrderIds;
         }
 
         /// <summary>
@@ -169,14 +301,14 @@ namespace MarginTrading.Backend.Controllers
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpDelete]
-        public async Task<Dictionary<string, string>> CancelGroupAsync([FromQuery] string accountId, 
+        public async Task<Dictionary<string, string>> CancelGroupAsync([FromQuery] string accountId,
             [FromQuery] string assetPairId = null,
             [FromQuery] OrderDirectionContract? direction = null,
             [FromQuery] bool includeLinkedToPositions = false,
             [FromBody] OrderCancelRequest request = null)
         {
             accountId.RequiredNotNullOrWhiteSpace(nameof(accountId));
-            
+
             var failedOrderIds = new Dictionary<string, string>();
 
             foreach (var order in _ordersCache.GetPending()
@@ -192,7 +324,7 @@ namespace MarginTrading.Backend.Controllers
                 catch (Exception exception)
                 {
                     await _log.WriteWarningAsync(nameof(OrdersController), nameof(CancelGroupAsync),
-                        "Failed to cancel order [{order.Id}]", exception);
+                        $"Failed to cancel order {order.Id}", exception);
                     failedOrderIds.Add(order.Id, exception.Message);
                 }
             }
@@ -233,7 +365,7 @@ namespace MarginTrading.Backend.Controllers
                 throw new InvalidOperationException(ex.Message);
             }
 
-            _operationsLogService.AddLog("action order.changeLimits", order.AccountId, 
+            _operationsLogService.AddLog("action order.changeLimits", order.AccountId,
                 new { orderId = orderId, request = request.ToJson() }.ToJson(), "");
         }
 
@@ -294,7 +426,7 @@ namespace MarginTrading.Backend.Controllers
             {
                 throw new ArgumentOutOfRangeException(nameof(skip), "Skip must be >= 0, take must be > 0");
             }
-            
+
             var orders = _ordersCache.GetAllOrders().AsEnumerable();
 
             if (!string.IsNullOrWhiteSpace(accountId))
