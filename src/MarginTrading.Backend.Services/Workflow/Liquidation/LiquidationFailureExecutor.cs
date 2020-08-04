@@ -3,6 +3,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Common;
 using Common.Log;
 using Lykke.Cqrs;
 using MarginTrading.Backend.Contracts.Positions;
@@ -13,7 +14,6 @@ using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
-using MongoDB.Bson;
 
 namespace MarginTrading.Backend.Services.Workflow.Liquidation
 {
