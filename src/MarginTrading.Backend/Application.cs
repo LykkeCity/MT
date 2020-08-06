@@ -214,6 +214,12 @@ namespace MarginTrading.Backend
                     break;
                 case SettingsTypeContract.ServiceMaintenance:
                     break;
+                case SettingsTypeContract.OrderExecution:
+                    break;
+                case SettingsTypeContract.OvernightSwap:
+                    break;
+                case SettingsTypeContract.OnBehalf:
+                    break;
                 default:
                     throw new NotImplementedException($"Type {message.SettingsType} is not supported");
             }
