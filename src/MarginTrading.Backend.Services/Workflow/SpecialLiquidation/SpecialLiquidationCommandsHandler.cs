@@ -43,6 +43,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private readonly IExchangeConnectorClient _exchangeConnectorClient;
         private readonly IIdentityGenerator _identityGenerator;
         private readonly IAccountsCacheService _accountsCacheService;
+        
+        private const AccountLevel ValidAccountLevel = AccountLevel.StopOut;
 
         public SpecialLiquidationCommandsHandler(
             ITradingEngine tradingEngine,
@@ -340,6 +342,38 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 return;
             }
 
+            await _log.WriteInfoAsync(nameof(SpecialLiquidationCommandsHandler),
+                nameof(ExecuteSpecialLiquidationOrderCommand), 
+                command.ToJson(), 
+                "Checking if position special liquidation should be failed");
+            if (!string.IsNullOrEmpty(executionInfo.Data.CausationOperationId))
+            {
+                await _log.WriteInfoAsync(nameof(SpecialLiquidationCommandsHandler),
+                    nameof(ExecuteSpecialLiquidationOrderCommand), 
+                    command.ToJson(), 
+                    "Special liquidation is caused by regular liquidation");
+                
+                var account = _accountsCacheService.Get(executionInfo.Data.AccountId);
+                if (account.GetAccountLevel() != ValidAccountLevel)
+                {
+                    await _log.WriteWarningAsync(
+                        nameof(SpecialLiquidationCommandsHandler),
+                        nameof(ExecuteSpecialLiquidationOrderCommand),
+                        new {accountId = account.Id, accountLevel = account.GetAccountLevel().ToString()}.ToJson(),
+                        $"Unable to execute special liquidation since account level is not {ValidAccountLevel.ToString()}.");
+                    
+                    publisher.PublishEvent(new SpecialLiquidationFailedEvent
+                    {
+                        OperationId = command.OperationId,
+                        CreationTime = _dateService.Now(),
+                        Reason = $"Account level is not {ValidAccountLevel.ToString()}.",
+                        CanRetryPriceRequest = false
+                    });
+                    
+                    return;
+                }
+            }
+
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceReceived,
                 SpecialLiquidationOperationState.ExternalOrderExecuted))
             {
@@ -480,7 +514,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
                 operationName: SpecialLiquidationSaga.OperationName,
                 id: command.OperationId);
-
+            
             if (executionInfo?.Data == null)
             {
                 return;

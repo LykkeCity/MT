@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using Autofac;
 using Common.Log;
 using Autofac.Features.Variance;
@@ -23,6 +24,7 @@ using MarginTrading.Backend.Services.Scheduling;
 using MarginTrading.Backend.Services.Services;
 using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Backend.Services.TradingConditions;
+using MarginTrading.Backend.Services.Workflow.Liquidation;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Services.Telemetry;
@@ -194,6 +196,10 @@ namespace MarginTrading.Backend.Services.Modules
 				.SingleInstance();
 
 			builder.RegisterType<LiquidationHelper>()
+				.SingleInstance();
+
+			builder.RegisterType<LiquidationFailureExecutor>()
+				.As<ILiquidationFailureExecutor>()
 				.SingleInstance();
 		}
 	}
