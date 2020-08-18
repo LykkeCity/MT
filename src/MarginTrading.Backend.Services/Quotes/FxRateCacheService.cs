@@ -107,7 +107,7 @@ namespace MarginTrading.Backend.Services.Quotes
             {
                 return Task.CompletedTask;
             }
-            
+
             SetQuote(bidAskPair);
             
             _fxBestPriceChangeEventChannel.SendEvent(this, new FxBestPriceChangeEventArgs(bidAskPair));
