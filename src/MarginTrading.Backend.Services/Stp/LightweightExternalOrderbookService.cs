@@ -237,7 +237,7 @@ namespace MarginTrading.Backend.Services.Stp
             if (!isOrderbookValid)
             {
                 // suspend instrument in case of zero volumes only
-                if (!assetPair.IsSuspended && hasZeroVolume && !hasZeroPrice)
+                if (!assetPair.IsSuspended && hasZeroVolume)
                 {
                     assetPair.IsSuspended = true;//todo apply changes to trading engine
                     _cqrsSender.SendCommandToSettingsService(new SuspendAssetPairCommand
