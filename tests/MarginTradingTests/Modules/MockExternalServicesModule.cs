@@ -9,7 +9,7 @@ using Lykke.MarginTrading.OrderBookService.Contracts;
 using Lykke.MarginTrading.OrderBookService.Contracts.Models;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.Backend.Core;
-using MarginTrading.SettingsService.Contracts;
+using MarginTrading.AssetService.Contracts;
 using Moq;
 
 namespace MarginTradingTests.Modules

@@ -11,7 +11,7 @@ using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Common.Extensions;
-using MarginTrading.SettingsService.Contracts.AssetPair;
+using MarginTrading.AssetService.Contracts.AssetPair;
 
 namespace MarginTrading.Backend.Services.Workflow
 {
