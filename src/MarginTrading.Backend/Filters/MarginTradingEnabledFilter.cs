@@ -79,7 +79,7 @@ namespace MarginTrading.Backend.Filters
                     if (!(bool) isAccEnabled)
                     {
                         throw new InvalidOperationException(
-                            $"Using this type of margin trading is restricted for account id {accountId}. Error Code: {CommonErrorCodes.AccountDisabled}");
+                            $"Using this type of margin trading is restricted for account {accountId}. Error Code: {CommonErrorCodes.AccountDisabled}");
                     }
                 }
             }
