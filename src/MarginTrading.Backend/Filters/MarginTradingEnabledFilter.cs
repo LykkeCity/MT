@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Rocks.Caching;
 using MarginTrading.Backend.Services.Services;
+using MarginTrading.Backend.Contracts.ErrorCodes;
 
 namespace MarginTrading.Backend.Filters
 {
@@ -78,7 +79,7 @@ namespace MarginTrading.Backend.Filters
                     if (!(bool) isAccEnabled)
                     {
                         throw new InvalidOperationException(
-                            "Using this type of margin trading is restricted for account id " + accountId);
+                            $"Using this type of margin trading is restricted for account {accountId}. Error Code: {CommonErrorCodes.AccountDisabled}");
                     }
                 }
             }

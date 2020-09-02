@@ -121,7 +121,7 @@ namespace MarginTradingTests.Backend.Filters
 
             //assert
             invocation.Should().Throw<InvalidOperationException>()
-                .WithMessage("Using this type of margin trading is restricted for account id id of account");
+                .WithMessage("Using this type of margin trading is restricted for account id of account. Error Code: ACCOUNT_DISABLED");
         }
 
 
@@ -200,7 +200,7 @@ namespace MarginTradingTests.Backend.Filters
 
             //assert
             invocation.Should().Throw<InvalidOperationException>()
-                .WithMessage("Using this type of margin trading is restricted for account id id of account");
+                .WithMessage("Using this type of margin trading is restricted for account id of account. Error Code: ACCOUNT_DISABLED");
         }
 
 
