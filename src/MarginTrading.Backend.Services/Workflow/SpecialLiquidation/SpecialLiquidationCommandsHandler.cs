@@ -421,6 +421,15 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                                 $"Failure: {executionResult.FailureType}");
                         }
 
+                        var executionPrice = (decimal) executionResult.Price == default
+                            ? command.Price
+                            : (decimal) executionResult.Price;
+
+                        if (executionPrice.EqualsZero())
+                        {
+                            throw new Exception("Execution price is equal to 0.");
+                        }
+                        
                         publisher.PublishEvent(new SpecialLiquidationOrderExecutedEvent
                         {
                             OperationId = command.OperationId,
@@ -428,9 +437,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                             MarketMakerId = executionInfo.Data.ExternalProviderId,
                             ExecutionTime = executionResult.Time,
                             OrderId = executionResult.ExchangeOrderId,
-                            ExecutionPrice = (decimal) executionResult.Price == default
-                                ? command.Price
-                                : (decimal) executionResult.Price
+                            ExecutionPrice = executionPrice
                         });
                     }
                     catch (Exception exception)
