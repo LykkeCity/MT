@@ -66,6 +66,17 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 return;
             }
 
+            if (!_accountsCache.TryFinishLiquidation(accountId, reason, operationId))
+            {
+                await _log.WriteWarningAsync(nameof(LiquidationFailureExecutor),
+                    nameof(ExecuteAsync),
+                    new {operationId, accountId}.ToJson(),
+                    $"Unable to execute failure. Couldn't finish liquidation.");
+
+                throw new InvalidOperationException(
+                    "Liquidation can't be failed because it has not been finished explicitly");
+            }
+            
             var account = _accountsCache.Get(accountId);
 
             failurePublisher.PublishEvent(new LiquidationFailedEvent
