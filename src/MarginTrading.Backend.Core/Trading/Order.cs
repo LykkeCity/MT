@@ -432,6 +432,11 @@ namespace MarginTrading.Backend.Core.Trading
             CorrelationId = correlationId;
         }
 
+        public void FixValidity(DateTime? newValidity)
+        {
+            ChangeValidity(newValidity, LastModified, Originator, AdditionalInfo, CorrelationId);
+        }
+        
         public void ChangeForceOpen(bool newForceOpen, DateTime dateTime, OriginatorType originator, string additionalInfo,
             string correlationId)
         {
