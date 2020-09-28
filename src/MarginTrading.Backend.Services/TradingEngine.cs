@@ -559,7 +559,7 @@ namespace MarginTrading.Backend.Services
 
             foreach (var order in pendingOrders)
             {
-                if (order.Validity.HasValue && operationIntervalEnd.Date >= order.Validity.Value.Date)
+                if (order.Validity.HasValue && operationIntervalEnd.Date > order.Validity.Value.Date)
                 {
                     _ordersCache.Active.Remove(order);
                     order.Expire(now);

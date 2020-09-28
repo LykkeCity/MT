@@ -131,8 +131,8 @@ namespace MarginTrading.Backend.Services.Caches
             var (positionsResult, positionIdsChangedFromHistory) = MapPositions(
                 blobPositions.ToDictionary(x => x.Id, x => x), positionSnapshots.ToDictionary(x => x.Id, x => x));
             
-            RefreshRelated(ordersResult.ToDictionary(x => x.Id), positionsResult.ToDictionary(x => x.Id),
-                orderSnapshots);
+            RefreshRelated(ordersResult.ToDictionary(x => x.Id), positionsResult.ToDictionary(x => x.Id), orderSnapshots);
+            ApplyExpirationDateFix(ordersResult);
 
             _log.WriteInfo(nameof(OrderCacheManager), nameof(InferInitDataFromBlobAndHistory),
                 $"Initializing cache with [{ordersResult.Count}] orders and [{positionsResult.Count}] positions.");
@@ -163,6 +163,34 @@ namespace MarginTrading.Backend.Services.Caches
             }
 
             return (ordersResult, positionsResult);
+        }
+
+        /// <summary>
+        /// Method is added in order to fix wrong value of expiration date previously being passed by FE
+        /// https://lykke-snow.atlassian.net/browse/BC-2375 
+        /// </summary>
+        /// <param name="orders"></param>
+        private void ApplyExpirationDateFix(List<Order> orders)
+        {
+            var noonTime = new TimeSpan(12, 0 ,0);
+            
+            foreach (var order in orders)
+            {
+                if (!order.Validity.HasValue)
+                    continue;
+
+                var timeOfValidityDay = order.Validity.Value.TimeOfDay;
+                
+                // if we already fixed that validity datetime the time portion will be cut
+                if (timeOfValidityDay.TotalSeconds == 0)
+                    continue;
+
+                var newDateTime = timeOfValidityDay >= noonTime
+                    ? order.Validity.Value.AddDays(1)
+                    : order.Validity.Value;
+                
+                order.FixValidity(newDateTime.Date);
+            }
         }
 
         private void PreProcess(List<OrderHistory> orderHistories)
