@@ -5,7 +5,6 @@ using System;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
-using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.TradingConditions;
 
 namespace MarginTrading.Backend.Services
@@ -15,16 +14,13 @@ namespace MarginTrading.Backend.Services
     {
         private readonly ITradingInstrumentsCacheService _accountAssetsCacheService;
         private readonly ICfdCalculatorService _cfdCalculatorService;
-        private readonly IAssetsCache _assetsCache;
 
         public CommissionService(
             ITradingInstrumentsCacheService accountAssetsCacheService,
-            ICfdCalculatorService cfdCalculatorService,
-            IAssetsCache assetsCache)
+            ICfdCalculatorService cfdCalculatorService)
         {
             _accountAssetsCacheService = accountAssetsCacheService;
             _cfdCalculatorService = cfdCalculatorService;
-            _assetsCache = assetsCache;
         }
 
         private decimal GetSwaps(string accountAssetId, string instrument, DateTime? openDate, DateTime? closeDate,
@@ -41,7 +37,7 @@ namespace MarginTrading.Backend.Services
                 var quote = _cfdCalculatorService.GetQuoteRateForBaseAsset(accountAssetId, instrument, legalEntity, 
                     volume * swapRate > 0);
                 var swaps = quote * volume * swapRate * seconds / secondsInYear;
-                result = Math.Round(swaps, _assetsCache.GetAssetAccuracy(accountAssetId));
+                result = Math.Round(swaps, AssetsConstants.DefaultAssetAccuracy);
             }
 
             return result;

@@ -18,7 +18,6 @@ namespace MarginTradingTests
     public class MatchingEngineRouteTests: BaseTests
     {
         private IAccountsCacheService _accountsCacheService;
-        private TradingConditionsCacheService _tradingConditionsCache;
         private MatchingEngineRoutesManager _matchingEngineRoutesManager;
         
         [OneTimeSetUp]
@@ -26,7 +25,6 @@ namespace MarginTradingTests
         {
             RegisterDependencies();
             _accountsCacheService = Container.Resolve<IAccountsCacheService>();
-            _tradingConditionsCache = Container.Resolve<TradingConditionsCacheService>();
             _matchingEngineRoutesManager = Container.Resolve<MatchingEngineRoutesManager>();
             if (_matchingEngineRoutesManager == null)
                 throw new Exception("Unable to resolve MatchingEngineRoutesCacheService");
@@ -38,10 +36,10 @@ namespace MarginTradingTests
             _accountsCacheService.TryAddNew(new MarginTradingAccount {Id = "CLIENT004"});
 
             // Add trading conditions 
-            _tradingConditionsCache.AddOrUpdateTradingCondition(new TradingCondition() { Id = "TCID001", Name= "MarginTradingCondition 1", IsDefault = true });
-            _tradingConditionsCache.AddOrUpdateTradingCondition(new TradingCondition() { Id = "TCID003", Name = "MarginTradingCondition 3", IsDefault = false});
-            _tradingConditionsCache.AddOrUpdateTradingCondition(new TradingCondition() { Id = "TCID004", Name = "MarginTradingCondition 4", IsDefault = false });
-            _tradingConditionsCache.AddOrUpdateTradingCondition(new TradingCondition() { Id = "TCID005", Name = "MarginTradingCondition 5", IsDefault = false });
+            //_tradingConditionsCache.AddOrUpdateTradingCondition(new TradingCondition() { Id = "TCID001", Name= "MarginTradingCondition 1", IsDefault = true });
+            //_tradingConditionsCache.AddOrUpdateTradingCondition(new TradingCondition() { Id = "TCID003", Name = "MarginTradingCondition 3", IsDefault = false});
+            //_tradingConditionsCache.AddOrUpdateTradingCondition(new TradingCondition() { Id = "TCID004", Name = "MarginTradingCondition 4", IsDefault = false });
+            //_tradingConditionsCache.AddOrUpdateTradingCondition(new TradingCondition() { Id = "TCID005", Name = "MarginTradingCondition 5", IsDefault = false });
 
             System.Threading.Tasks.Task.Run(async () =>
             {

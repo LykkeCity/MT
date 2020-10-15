@@ -102,5 +102,10 @@ namespace MarginTrading.Backend.Core.Settings
         
         [Optional]
         public OrderbookValidationSettings OrderbookValidation { get; set; } = new OrderbookValidationSettings();
+
+        [Optional]
+        public DefaultTradingConditionsSettings DefaultTradingConditionsSettings { get; set; } = new DefaultTradingConditionsSettings();
+
+        public DefaultLegalEntitySettings DefaultLegalEntitySettings { get; set; }
     }
 }

@@ -14,8 +14,8 @@ using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Services;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
-using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.TradingConditions;
 
 #pragma warning disable 1998
@@ -26,33 +26,30 @@ namespace MarginTrading.Backend.Services.Services
     public class AccountUpdateService : IAccountUpdateService
     {
         private readonly IFplService _fplService;
-        private readonly ITradingConditionsCacheService _tradingConditionsCache;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly OrdersCache _ordersCache;
-        private readonly IAssetsCache _assetsCache;
         
         private readonly ILog _log;
         private readonly ICfdCalculatorService _cfdCalculatorService;
         private readonly IQuoteCacheService _quoteCacheService;
+        private readonly MarginTradingSettings _marginTradingSettings;
 
         public AccountUpdateService(
             IFplService fplService,
-            ITradingConditionsCacheService tradingConditionsCache,
             IAccountsCacheService accountsCacheService,
             OrdersCache ordersCache,
-            IAssetsCache assetsCache,
             ILog log,
             ICfdCalculatorService cfdCalculatorService,
-            IQuoteCacheService quoteCacheService)
+            IQuoteCacheService quoteCacheService,
+            MarginTradingSettings marginTradingSettings)
         {
             _fplService = fplService;
-            _tradingConditionsCache = tradingConditionsCache;
             _accountsCacheService = accountsCacheService;
             _ordersCache = ordersCache;
-            _assetsCache = assetsCache;
             _log = log;
             _cfdCalculatorService = cfdCalculatorService;
             _quoteCacheService = quoteCacheService;
+            _marginTradingSettings = marginTradingSettings;
         }
 
         public void UpdateAccount(IMarginTradingAccount account)
@@ -178,7 +175,7 @@ namespace MarginTrading.Backend.Services.Services
         public decimal CalculateOvernightUsedMargin(IMarginTradingAccount account)
         {
             var positions = GetPositions(account.Id);
-            var accuracy = _assetsCache.GetAssetAccuracy(account.BaseAssetId);
+            var accuracy = AssetsConstants.DefaultAssetAccuracy;
             var positionsMargin = positions.Sum(item => item.GetOvernightMarginMaintenance());
             var pendingOrdersMargin = 0;// pendingOrders.Sum(item => item.GetMarginInit());
 
@@ -191,7 +188,7 @@ namespace MarginTrading.Backend.Services.Services
         {
             account.AccountFpl.CalculatedHash = account.AccountFpl.ActualHash;
             
-            var accuracy = _assetsCache.GetAssetAccuracy(account.BaseAssetId);
+            var accuracy = AssetsConstants.DefaultAssetAccuracy;
             var positionsMaintenanceMargin = positions.Sum(item => item.GetMarginMaintenance());
             var positionsInitMargin = positions.Sum(item => item.GetMarginInit());
             var pendingOrdersMargin = 0;// pendingOrders.Sum(item => item.GetMarginInit());
@@ -206,12 +203,10 @@ namespace MarginTrading.Backend.Services.Services
             account.AccountFpl.OpenPositionsCount = positions.Count;
             account.AccountFpl.ActiveOrdersCount = pendingOrders.Count;
 
-            var tradingCondition = _tradingConditionsCache.GetTradingCondition(account.TradingConditionId);
+            account.AccountFpl.MarginCall1Level = _marginTradingSettings.DefaultTradingConditionsSettings.MarginCall1;
+            account.AccountFpl.MarginCall2Level = _marginTradingSettings.DefaultTradingConditionsSettings.MarginCall2;
+            account.AccountFpl.StopOutLevel = _marginTradingSettings.DefaultTradingConditionsSettings.StopOut;
 
-            account.AccountFpl.MarginCall1Level = tradingCondition.MarginCall1;
-            account.AccountFpl.MarginCall2Level = tradingCondition.MarginCall2;
-            account.AccountFpl.StopOutLevel = tradingCondition.StopOut;
-           
         }
 
         private ICollection<Position> GetPositions(string accountId)

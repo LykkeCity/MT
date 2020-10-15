@@ -32,24 +32,15 @@ namespace MarginTrading.Backend.Controllers
     public class AccountsController : Controller, IAccountsApi
     {
         private readonly IAccountsCacheService _accountsCacheService;
-        private readonly IDateService _dateService;
-        private readonly AccountManager _accountManager;
         private readonly IOrderReader _orderReader;
-        private readonly TradingConditionsCacheService _tradingConditionsCache;
         private readonly ICqrsSender _cqrsSender;
 
         public AccountsController(IAccountsCacheService accountsCacheService,
-            IDateService dateService,
-            AccountManager accountManager,
             IOrderReader orderReader,
-            TradingConditionsCacheService tradingConditionsCache,
             ICqrsSender cqrsSender)
         {
             _accountsCacheService = accountsCacheService;
-            _dateService = dateService;
-            _accountManager = accountManager;
             _orderReader = orderReader;
-            _tradingConditionsCache = tradingConditionsCache;
             _cqrsSender = cqrsSender;
         }
 

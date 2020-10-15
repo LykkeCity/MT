@@ -8,7 +8,6 @@ using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Core.TradingConditions;
-using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.TradingConditions;
 
 namespace MarginTrading.Backend.Services
@@ -19,7 +18,6 @@ namespace MarginTrading.Backend.Services
         private readonly ICfdCalculatorService _cfdCalculatorService;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly ITradingInstrumentsCacheService _tradingInstrumentsCache;
-        private readonly IAssetsCache _assetsCache;
         private readonly MarginTradingSettings _marginTradingSettings;
 
         public FplService(
@@ -27,13 +25,11 @@ namespace MarginTrading.Backend.Services
             IAssetPairsCache assetPairsCache,
             IAccountsCacheService accountsCacheService,
             ITradingInstrumentsCacheService tradingInstrumentsCache,
-            IAssetsCache assetsCache,
             MarginTradingSettings marginTradingSettings)
         {
             _cfdCalculatorService = cfdCalculatorService;
             _accountsCacheService = accountsCacheService;
             _tradingInstrumentsCache = tradingInstrumentsCache;
-            _assetsCache = assetsCache;
             _marginTradingSettings = marginTradingSettings;
         }
 
@@ -55,7 +51,7 @@ namespace MarginTrading.Backend.Services
                 _tradingInstrumentsCache.GetTradingInstrument(order.TradingConditionId, order.AssetPairId);
             var marginRate = _cfdCalculatorService.GetQuoteRateForBaseAsset(order.AccountAssetId, order.AssetPairId,
                 order.LegalEntity, order.Direction == OrderDirection.Buy);
-            var accountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(order.AccountAssetId);
+            var accountBaseAssetAccuracy = AssetsConstants.DefaultAssetAccuracy;
 
             return Math.Round(
                 GetMargins(accountAsset, Math.Abs(order.Volume), marginRate).MarginInit,
@@ -83,7 +79,7 @@ namespace MarginTrading.Backend.Services
             
             if (fplData.AccountBaseAssetAccuracy == default)
             {
-                fplData.AccountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(position.AccountAssetId);
+                fplData.AccountBaseAssetAccuracy = AssetsConstants.DefaultAssetAccuracy;
             }
             
             fplData.RawFpl = (position.ClosePrice - position.OpenPrice) * position.CloseFxPrice * position.Volume;
@@ -96,8 +92,8 @@ namespace MarginTrading.Backend.Services
 
         private void UpdatePendingOrderMargin(Position order, FplData fplData)
         {
-            fplData.AccountBaseAssetAccuracy = _assetsCache.GetAssetAccuracy(order.AccountAssetId);
-            
+            fplData.AccountBaseAssetAccuracy = AssetsConstants.DefaultAssetAccuracy;
+
             CalculateMargin(order, fplData);
             
             fplData.CalculatedHash = fplData.ActualHash;
