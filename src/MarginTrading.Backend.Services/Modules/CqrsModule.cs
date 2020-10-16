@@ -35,6 +35,7 @@ using MarginTrading.Backend.Services.Workflow.Liquidation.Events;
 using MarginTrading.AssetService.Contracts.AssetPair;
 using MarginTrading.AssetService.Contracts.ClientProfiles;
 using MarginTrading.AssetService.Contracts.ClientProfileSettings;
+using MarginTrading.AssetService.Contracts.MarketSettings;
 using MarginTrading.AssetService.Contracts.Products;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
@@ -158,6 +159,7 @@ namespace MarginTrading.Backend.Services.Modules
             RegisterProductChangedProjection(contextRegistration);
             RegisterClientProfileChangedProjection(contextRegistration);
             RegisterClientProfileSettingsChangedProjection(contextRegistration);
+            RegisterMarketSettingsChangedProjection(contextRegistration);
 
             contextRegistration.PublishingEvents(typeof(PositionClosedEvent)).With(EventsRoute);
             contextRegistration.PublishingEvents(typeof(CompiledScheduleChangedEvent)).With(EventsRoute);
@@ -199,6 +201,17 @@ namespace MarginTrading.Backend.Services.Modules
                 .On(nameof(ClientProfileSettingsChangedEvent))
                 .WithProjection(
                     typeof(ClientProfileSettingsChangedProjection), _settings.ContextNames.SettingsService);
+        }
+
+        private void RegisterMarketSettingsChangedProjection(
+            ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
+        {
+            contextRegistration.ListeningEvents(
+                    typeof(MarketSettingsChangedEvent))
+                .From(_settings.ContextNames.SettingsService)
+                .On(nameof(MarketSettingsChangedEvent))
+                .WithProjection(
+                    typeof(MarketSettingsChangedProjection), _settings.ContextNames.SettingsService);
         }
 
         private PublishingCommandsDescriptor<IDefaultRoutingRegistration> RegisterDefaultRouting()
