@@ -196,6 +196,10 @@ namespace MarginTrading.Backend.Services.Modules
 			builder.RegisterType<LiquidationFailureExecutor>()
 				.As<ILiquidationFailureExecutor>()
 				.SingleInstance();
+
+            builder.RegisterType<BrokerSettingsChangedHandler>()
+                .AsSelf()
+                .SingleInstance();
 		}
 	}
 }

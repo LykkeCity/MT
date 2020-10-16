@@ -38,7 +38,9 @@ namespace MarginTrading.Backend.Core.Settings
         
         [Optional, CanBeNull]
         public RabbitMqSettings RisksRabbitMqSettings { get; set; }
-        
+
+        public RabbitMqSettings BrokerSettingsRabbitMqSettings { get; set; }
+
         [AmqpCheck]
         public string MtRabbitMqConnString { get; set; }
         

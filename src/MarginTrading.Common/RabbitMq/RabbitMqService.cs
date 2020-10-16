@@ -151,6 +151,7 @@ namespace MarginTrading.Common.RabbitMq
                     QueueName = QueueHelper.BuildQueueName(settings.ExchangeName, _env),
                     ExchangeName = settings.ExchangeName,
                     IsDurable = isDurable,
+                    RoutingKey = settings.RoutingKey,
                 };
                 
                 var rabbitMqSubscriber = new RabbitMqSubscriber<TMessage>(subscriptionSettings,

@@ -157,8 +157,8 @@ namespace MarginTradingTests
                 Name = "Default trading condition",
                 BaseAssets = new List<string> {"USD", "EUR", "CHF"},
                 MarginCall1 = 1.25M,
-                MarginCall2 = 1.15M,
-                StopOut = 1.05M
+                MarginCall2 = 1.11M,
+                StopOut = 1M
             };
 
             var mock = new Mock<ITradingConditionsApi>();
