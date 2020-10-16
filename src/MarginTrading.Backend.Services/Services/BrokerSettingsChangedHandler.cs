@@ -8,6 +8,7 @@ using JetBrains.Annotations;
 using Lykke.Snow.Mdm.Contracts.Models.Contracts;
 using Lykke.Snow.Mdm.Contracts.Models.Events;
 using MarginTrading.Backend.Core.Services;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Settings;
 
@@ -15,13 +16,13 @@ namespace MarginTrading.Backend.Services.Services
 {
     public class BrokerSettingsChangedHandler
     {
-        private readonly MtBackendSettings _settings;
+        private readonly MarginTradingSettings _settings;
         private readonly IScheduleSettingsCacheService _scheduleSettingsCache;
         private readonly IOvernightMarginService _overnightMarginService;
         private readonly IScheduleControlService _scheduleControlService;
 
         public BrokerSettingsChangedHandler(
-            MtBackendSettings settings,
+            MarginTradingSettings settings,
             IScheduleSettingsCacheService scheduleSettingsCache,
             IOvernightMarginService overnightMarginService,
             IScheduleControlService scheduleControlService)

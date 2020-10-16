@@ -19,7 +19,6 @@ namespace MarginTrading.Backend.Modules
 
         protected override void Load(ContainerBuilder builder)
         {
-            builder.RegisterInstance(_settings.CurrentValue).SingleInstance();
             builder.RegisterInstance(_settings.Nested(s => s.MtBackend)).SingleInstance();
             builder.RegisterInstance(_settings.CurrentValue.MtBackend).SingleInstance();
             builder.RegisterInstance(_settings.CurrentValue.MtStpExchangeConnectorClient).SingleInstance();

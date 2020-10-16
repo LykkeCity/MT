@@ -109,5 +109,7 @@ namespace MarginTrading.Backend.Core.Settings
         public DefaultTradingConditionsSettings DefaultTradingConditionsSettings { get; set; } = new DefaultTradingConditionsSettings();
 
         public DefaultLegalEntitySettings DefaultLegalEntitySettings { get; set; }
+
+        public string BrokerId { get; set; }
     }
 }
