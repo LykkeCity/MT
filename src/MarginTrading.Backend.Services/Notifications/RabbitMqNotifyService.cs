@@ -72,7 +72,7 @@ namespace MarginTrading.Backend.Services.Notifications
         {
             return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderbookPrices.ExchangeName,
                 quote.ToRabbitMqContract(isEod),
-                _settings.RabbitMqQueues.OrderbookPrices.LogEventPublishing);
+                false);
         }
 
         public Task AccountMarginEvent(MarginEventMessage eventMessage)
