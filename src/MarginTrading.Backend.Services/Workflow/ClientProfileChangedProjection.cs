@@ -23,7 +23,7 @@ namespace MarginTrading.Backend.Services.Workflow
             {
                 case ChangeType.Creation:
                 case ChangeType.Edition:
-                    if (e.NewValue.IsDefault && e.OldValue == null || !e.OldValue.IsDefault)
+                    if (e.NewValue.IsDefault && (e.OldValue == null || !e.OldValue.IsDefault))
                         await _tradingInstrumentsManager.UpdateTradingInstrumentsCacheAsync();
                     break;
                 case ChangeType.Deletion:
