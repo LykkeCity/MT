@@ -62,9 +62,9 @@ namespace MarginTradingTests
             Assert.AreEqual(1000, account.Balance);
             Assert.AreEqual(20, Math.Round(account.GetPnl(), 5));
             Assert.AreEqual(1020, account.GetTotalCapital());
-            Assert.AreEqual(6.93333333M, account.GetUsedMargin());
+            Assert.AreEqual(6.93M, account.GetUsedMargin());
             Assert.AreEqual(1009.6M, account.GetMarginAvailable());
-            Assert.AreEqual(147.11538468611316571447748352m, account.GetMarginUsageLevel());
+            Assert.AreEqual(147.18614718614718614718614719m, account.GetMarginUsageLevel());
 
             var position2 = TestObjectsFactory.CreateOpenedPosition("EURUSD", Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, -30000, 1.02M);
@@ -77,9 +77,9 @@ namespace MarginTradingTests
             Assert.AreEqual(1000, account.Balance);
             Assert.AreEqual(-580, Math.Round(account.GetPnl(), 5));
             Assert.AreEqual(420, Math.Round(account.GetTotalCapital(), 5));
-            Assert.AreEqual(214.93333333m, account.GetUsedMargin());
+            Assert.AreEqual(214.93m, account.GetUsedMargin());
             Assert.AreEqual(97.6m, Math.Round(account.GetMarginAvailable(), 5));
-            Assert.AreEqual(1.95409m, Math.Round(account.GetMarginUsageLevel(), 5));
+            Assert.AreEqual(1.95412m, Math.Round(account.GetMarginUsageLevel(), 5));
         }
 
         [Test]

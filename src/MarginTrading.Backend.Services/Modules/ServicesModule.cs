@@ -51,12 +51,7 @@ namespace MarginTrading.Backend.Services.Modules
 				.As<IFplService>()
 				.SingleInstance();
 
-			builder.RegisterType<TradingConditionsCacheService>()
-				.AsSelf()
-				.As<ITradingConditionsCacheService>()
-				.SingleInstance();
-
-			builder.RegisterType<TradingInstrumentsCacheService>()
+            builder.RegisterType<TradingInstrumentsCacheService>()
 				.AsSelf()
 				.As<ITradingInstrumentsCacheService>()
 				.As<IOvernightMarginParameterContainer>()
@@ -201,6 +196,10 @@ namespace MarginTrading.Backend.Services.Modules
 			builder.RegisterType<LiquidationFailureExecutor>()
 				.As<ILiquidationFailureExecutor>()
 				.SingleInstance();
+
+            builder.RegisterType<BrokerSettingsChangedHandler>()
+                .AsSelf()
+                .SingleInstance();
 		}
 	}
 }

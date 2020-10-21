@@ -3,6 +3,7 @@
 
 using System;
 using JetBrains.Annotations;
+using MarginTrading.AssetService.Contracts.Products;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Common.Extensions;
 
@@ -153,6 +154,48 @@ namespace MarginTrading.Backend.Core
         public override int GetHashCode()
         {
             return Id.GetHashCode();
+        }
+
+        public static IAssetPair CreateFromProduct(ProductContract product, string legalEntity)
+        {
+            return new AssetPair(
+                id: product.ProductId,
+                name: product.Name,
+                baseAssetId: product.ProductId,
+                quoteAssetId: product.TradingCurrency,
+                accuracy: AssetPairConstants.Accuracy,
+                marketId: product.Market,
+                legalEntity: legalEntity,
+                basePairId: AssetPairConstants.BasePairId,
+                matchingEngineMode: AssetPairConstants.MatchingEngineMode,
+                stpMultiplierMarkupBid: AssetPairConstants.StpMultiplierMarkupBid,
+                stpMultiplierMarkupAsk: AssetPairConstants.StpMultiplierMarkupAsk,
+                isSuspended: product.IsSuspended,
+                isFrozen: product.IsFrozen,
+                isDiscontinued: product.IsDiscontinued
+            );
+        }
+
+        public static IAssetPair CreateFromCurrency(string currencyId, string legalEntity)
+        {
+            var id = $"{AssetPairConstants.BaseCurrencyId}{currencyId}";
+
+            return new AssetPair(
+                id: id,
+                name: id,
+                baseAssetId: AssetPairConstants.BaseCurrencyId,
+                quoteAssetId: currencyId,
+                accuracy: AssetPairConstants.Accuracy,
+                marketId: AssetPairConstants.FxMarketId,
+                legalEntity: legalEntity,
+                basePairId: AssetPairConstants.BasePairId,
+                matchingEngineMode: AssetPairConstants.MatchingEngineMode,
+                stpMultiplierMarkupBid: AssetPairConstants.StpMultiplierMarkupBid,
+                stpMultiplierMarkupAsk: AssetPairConstants.StpMultiplierMarkupAsk,
+                isSuspended: false,
+                isFrozen: false,
+                isDiscontinued: false
+                );
         }
     }
 }

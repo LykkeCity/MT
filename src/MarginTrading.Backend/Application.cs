@@ -4,6 +4,7 @@
 using System;
 using System.Threading.Tasks;
 using Common.Log;
+using Lykke.Snow.Mdm.Contracts.Models.Events;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MarketMakerFeed;
 using MarginTrading.Backend.Core.MatchingEngines;
@@ -12,16 +13,14 @@ using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
-using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
-using MarginTrading.Backend.Services.Notifications;
-using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
 using MarginTrading.OrderbookAggregator.Contracts.Messages;
 using MarginTrading.AssetService.Contracts.Enums;
 using MarginTrading.AssetService.Contracts.Messages;
+using MarginTrading.Backend.Services.Services;
 
 #pragma warning disable 1591
 
@@ -29,7 +28,6 @@ namespace MarginTrading.Backend
 {
     public sealed class Application
     {
-        private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly MarketMakerService _marketMakerService;
         private readonly ILog _logger;
         private readonly MarginTradingSettings _marginSettings;
@@ -40,17 +38,10 @@ namespace MarginTrading.Backend
         private readonly IConvertService _convertService;
         private readonly IFxRateCacheService _fxRateCacheService;
         private readonly IExternalOrderbookService _externalOrderbookService;
-        private readonly IAssetsManager _assetsManager;
-        private readonly IAssetPairsManager _assetPairsManager;
-        private readonly ITradingInstrumentsManager _tradingInstrumentsManager;
-        private readonly ITradingConditionsManager _tradingConditionsManager;
-        private readonly IScheduleSettingsCacheService _scheduleSettingsCacheService;
-        private readonly IOvernightMarginService _overnightMarginService;
-        private readonly IScheduleControlService _scheduleControlService;
+        private readonly BrokerSettingsChangedHandler _brokerSettingsChangedHandler;
         private const string ServiceName = "MarginTrading.Backend";
 
         public Application(
-            IRabbitMqNotifyService rabbitMqNotifyService,
             MarketMakerService marketMakerService,
             ILog logger,
             MarginTradingSettings marginSettings,
@@ -61,15 +52,8 @@ namespace MarginTrading.Backend
             IConvertService convertService,
             IFxRateCacheService fxRateCacheService,
             IExternalOrderbookService externalOrderbookService,
-            IAssetsManager assetsManager,
-            IAssetPairsManager assetPairsManager,
-            ITradingInstrumentsManager tradingInstrumentsManager,
-            ITradingConditionsManager tradingConditionsManager,
-            IScheduleSettingsCacheService scheduleSettingsCacheService,
-            IOvernightMarginService overnightMarginService, 
-            IScheduleControlService scheduleControlService)
+            BrokerSettingsChangedHandler brokerSettingsChangedHandler)
         {
-            _rabbitMqNotifyService = rabbitMqNotifyService;
             _marketMakerService = marketMakerService;
             _logger = logger;
             _marginSettings = marginSettings;
@@ -80,13 +64,7 @@ namespace MarginTrading.Backend
             _convertService = convertService;
             _fxRateCacheService = fxRateCacheService;
             _externalOrderbookService = externalOrderbookService;
-            _assetsManager = assetsManager;
-            _assetPairsManager = assetPairsManager;
-            _tradingInstrumentsManager = tradingInstrumentsManager;
-            _tradingConditionsManager = tradingConditionsManager;
-            _scheduleSettingsCacheService = scheduleSettingsCacheService;
-            _overnightMarginService = overnightMarginService;
-            _scheduleControlService = scheduleControlService;
+            _brokerSettingsChangedHandler = brokerSettingsChangedHandler;
         }
 
         public async Task StartApplicationAsync()
@@ -154,6 +132,10 @@ namespace MarginTrading.Backend
                 _rabbitMqService.Subscribe(settingsChanged,
                     true, HandleChangeSettingsMessage,
                     _rabbitMqService.GetJsonDeserializer<SettingsChangedEvent>());
+
+                _rabbitMqService.Subscribe(_marginSettings.BrokerSettingsRabbitMqSettings, false,
+                    _brokerSettingsChangedHandler.Handle,
+                    _rabbitMqService.GetMsgPackDeserializer<BrokerSettingsChangedEvent>());
             }
             catch (Exception ex)
             {
@@ -182,47 +164,8 @@ namespace MarginTrading.Backend
 
         private async Task HandleChangeSettingsMessage(SettingsChangedEvent message)
         {
-            switch (message.SettingsType)
-            {
-                case SettingsTypeContract.Asset:
-                    await _assetsManager.UpdateCacheAsync();
-                    break;
-                
-                case SettingsTypeContract.AssetPair:
-                    //AssetPair change handled in AssetPairProjection
-                    break;
-                
-                case SettingsTypeContract.TradingCondition:
-                    await _tradingConditionsManager.InitTradingConditionsAsync();
-                    break;
-                
-                case SettingsTypeContract.TradingInstrument:
-                    await _tradingInstrumentsManager.UpdateTradingInstrumentsCacheAsync(message.ChangedEntityId);
-                    break;
-                
-                case SettingsTypeContract.TradingRoute:
-                    await _matchingEngineRoutesManager.UpdateRoutesCacheAsync();
-                    break;
-                
-                case SettingsTypeContract.ScheduleSettings:
-                    await _scheduleSettingsCacheService.UpdateAllSettingsAsync();
-                    _overnightMarginService.ScheduleNext();
-                    _scheduleControlService.ScheduleNext();
-                    break;
-                
-                case SettingsTypeContract.Market:
-                    break;
-                case SettingsTypeContract.ServiceMaintenance:
-                    break;
-                case SettingsTypeContract.OrderExecution:
-                    break;
-                case SettingsTypeContract.OvernightSwap:
-                    break;
-                case SettingsTypeContract.OnBehalf:
-                    break;
-                default:
-                    throw new NotImplementedException($"Type {message.SettingsType} is not supported");
-            }
+            if (message.SettingsType == SettingsTypeContract.TradingRoute)
+                await _matchingEngineRoutesManager.UpdateRoutesCacheAsync();
         }
     }
 }

@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -575,7 +576,7 @@ namespace MarginTradingTests
             ValidatePositionIsClosed(position, 0.9M, -3.2M, PositionCloseReason.StopLoss);
             
             var account = _accountsCacheService.Get(order.AccountId);
-            Assert.AreEqual(996.80002M, account.Balance);
+            Assert.AreEqual(996.80M, account.Balance);
         }
 
         [Test]
@@ -601,7 +602,7 @@ namespace MarginTradingTests
             ValidatePositionIsClosed(position, 1.16364M, -1.29M, PositionCloseReason.StopLoss);
             
             var account = _accountsCacheService.Get(order.AccountId);
-            Assert.AreEqual(998.70992, account.Balance);
+            Assert.AreEqual(998.71, account.Balance);
         }
         
         [Test]
@@ -695,9 +696,9 @@ namespace MarginTradingTests
             
             var account = _accountsCacheService.Get(position.AccountId);
 
-            Assert.AreEqual(-4.035, Math.Round(position.GetFpl(), 3));
+            Assert.AreEqual(-4.03, Math.Round(position.GetFpl(), 3));
             
-            Assert.AreEqual(-4.035, Math.Round(account.GetPnl(), 3));
+            Assert.AreEqual(-4.03, Math.Round(account.GetPnl(), 3));
             
             Assert.AreEqual(position.GetMarginMaintenance(), account.GetUsedMargin());
         }
@@ -726,9 +727,9 @@ namespace MarginTradingTests
             
             var account = _accountsCacheService.Get(position.AccountId);
 
-            Assert.AreEqual(-4.035, Math.Round(position.GetFpl(), 3));
+            Assert.AreEqual(-4.03, Math.Round(position.GetFpl(), 3));
             
-            Assert.AreEqual(-4.035, Math.Round(account.GetPnl(), 3));
+            Assert.AreEqual(-4.03, Math.Round(account.GetPnl(), 3));
             
             Assert.AreEqual(position.GetMarginMaintenance(), account.GetUsedMargin());
             
@@ -959,7 +960,7 @@ namespace MarginTradingTests
 
             var position = ValidatePositionIsOpened(order.Id, 0.8M, -400);
             
-            Assert.AreEqual(10.66666667m, position.GetMarginMaintenance());
+            Assert.AreEqual(10.67m, position.GetMarginMaintenance());
             Assert.AreEqual(16.0, position.GetMarginInit());
         }
         
@@ -968,7 +969,7 @@ namespace MarginTradingTests
         {
             var ordersSet = new[]
             {
-                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "CHFJPY", MarketMakerId = MarketMaker1Id, Price = 99.978M, Volume = 100000 },
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "CHFJPY", MarketMakerId = MarketMaker1Id, Price = 98.978M, Volume = 100000 },
                 new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "CHFJPY", MarketMakerId = MarketMaker1Id, Price = 100.039M, Volume = -100000 },
             };
 
@@ -983,10 +984,10 @@ namespace MarginTradingTests
             
             order = _tradingEngine.PlaceOrderAsync(order).Result;
             
-            var position = ValidatePositionIsOpened(order.Id, 99.978M, -0.001M);
+            var position = ValidatePositionIsOpened(order.Id, 98.978M, -0.01M);
 
-            Assert.AreEqual(0.0733172M, position.GetMarginMaintenance());
-            Assert.AreEqual(0.1099758M, position.GetMarginInit());
+            Assert.AreEqual(0.07M, position.GetMarginMaintenance());
+            Assert.AreEqual(0.11M, position.GetMarginInit());
         }
 
         [Test]
@@ -1248,7 +1249,8 @@ namespace MarginTradingTests
                     Guid.NewGuid().ToString()).GetAwaiter().GetResult());
 
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidExpectedOpenPrice);
-            StringAssert.Contains("1.05/1.1", ex.Comment);
+            var decimalSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+            StringAssert.Contains($"1{decimalSeparator}05/1{decimalSeparator}1", ex.Comment);
         }
         
         [Test]

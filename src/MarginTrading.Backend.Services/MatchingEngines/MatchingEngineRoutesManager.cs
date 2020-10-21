@@ -28,8 +28,6 @@ namespace MarginTrading.Backend.Services.MatchingEngines
         private readonly MatchingEngineRoutesCacheService _routesCacheService;
         private readonly ITradingRoutesApi _routesApi;
         private readonly IAssetPairsCache _assetPairsCache;
-        private readonly ITradingConditionsCacheService _tradingConditionsCacheService;
-        private readonly IAccountsCacheService _accountsCacheService;
         //private readonly IRiskSystemCommandsLogRepository _riskSystemCommandsLogRepository;
         private readonly ILog _log;
         private readonly IConvertService _convertService;
@@ -38,7 +36,6 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             MatchingEngineRoutesCacheService routesCacheService,
             ITradingRoutesApi routesApi,
             IAssetPairsCache assetPairsCache,
-            ITradingConditionsCacheService tradingConditionsCacheService,
             IAccountsCacheService accountsCacheService,
             //IRiskSystemCommandsLogRepository riskSystemCommandsLogRepository,
             ILog log,
@@ -47,8 +44,6 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             _routesCacheService = routesCacheService;
             _routesApi = routesApi;            
             _assetPairsCache = assetPairsCache;
-            _tradingConditionsCacheService = tradingConditionsCacheService;
-            _accountsCacheService = accountsCacheService;
             //_riskSystemCommandsLogRepository = riskSystemCommandsLogRepository;
             _log = log;
             _convertService = convertService;
@@ -137,7 +132,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             var matchingEngineRoute = MatchingEngineRoute.Create(route);
 
             matchingEngineRoute.ClientId = GetValueOrAnyIfValid(route.ClientId, null);
-            matchingEngineRoute.TradingConditionId = GetValueOrAnyIfValid(route.TradingConditionId, ValidateTradingCondition);
+            matchingEngineRoute.TradingConditionId = GetValueOrAnyIfValid(route.TradingConditionId, null);
             matchingEngineRoute.Instrument = GetValueOrAnyIfValid(route.Instrument, ValidateInstrument);
             matchingEngineRoute.Asset = GetValueOrAnyIfValid(route.Asset, null);
 
@@ -274,12 +269,6 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             validationAction?.Invoke(value);
 
             return value;
-        }
-
-        private void ValidateTradingCondition(string tradingConditionId)
-        {
-            if (!_tradingConditionsCacheService.IsTradingConditionExists(tradingConditionId))
-                throw new ArgumentException("Invalid TradingConditionId");
         }
 
         private void ValidateInstrument(string instrumentId)

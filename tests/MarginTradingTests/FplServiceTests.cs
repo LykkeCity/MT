@@ -121,7 +121,7 @@ namespace MarginTradingTests
             
             position.UpdateClosePrice(935.61M);
 
-            Assert.AreEqual(-138.989, Math.Round(position.GetFpl(), 3));
+            Assert.AreEqual(-138.99, Math.Round(position.GetFpl(), 3));
         }
 
         [Test]
@@ -224,10 +224,10 @@ namespace MarginTradingTests
             position2.UpdateCloseFxPrice(1/2.3M);
             
             Assert.AreEqual(0.02M, position1.GetMarginInit());
-            Assert.AreEqual(0.01333333M, position1.GetMarginMaintenance());
+            Assert.AreEqual(0.01M, position1.GetMarginMaintenance());
             
-            Assert.AreEqual(10.86956522M, position2.GetMarginInit());
-            Assert.AreEqual(7.24637681M, position2.GetMarginMaintenance());
+            Assert.AreEqual(10.87, position2.GetMarginInit());
+            Assert.AreEqual(7.25M, position2.GetMarginMaintenance());
         }
         
         [Test]
@@ -254,7 +254,7 @@ namespace MarginTradingTests
             
 
             Assert.AreEqual(-0.25M, position1.GetFpl());
-            Assert.AreEqual(-112.94939759M, position2.GetFpl());
+            Assert.AreEqual(-112.95M, position2.GetFpl());
         }
 
         [Test]

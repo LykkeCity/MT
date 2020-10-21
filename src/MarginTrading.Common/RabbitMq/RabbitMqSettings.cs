@@ -18,5 +18,8 @@ namespace MarginTrading.Common.RabbitMq
 
         [Optional]
         public bool IsDurable { get; set; } = true;
+
+        [Optional]
+        public string RoutingKey { get; set; }
     }
 }
