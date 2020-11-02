@@ -53,6 +53,31 @@ namespace MarginTrading.Backend.Services.Workflow
         [UsedImplicitly]
         public async Task Handle(ProductChangedEvent @event)
         {
+            switch (@event.ChangeType)
+            {
+                case ChangeType.Creation:
+                case ChangeType.Edition:
+                    if (!@event.NewValue.IsStarted)
+                    {
+                        _log.WriteInfo(nameof(ProductChangedProjection),
+                            nameof(Handle),
+                            $"ProductChangedEvent received for productId: {@event.NewValue.ProductId}, but it was ignored because it has not been started yet.");
+                        return;
+                    }
+                    break;
+                case ChangeType.Deletion:
+                    if (!@event.OldValue.IsStarted)
+                    {
+                        _log.WriteInfo(nameof(ProductChangedProjection),
+                            nameof(Handle),
+                            $"ProductChangedEvent received for productId: {@event.NewValue.ProductId}, but it was ignored because it has not been started yet.");
+                        return;
+                    }
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            
             if(@event.ChangeType == ChangeType.Deletion)
             {
                 CloseAllOrders();
