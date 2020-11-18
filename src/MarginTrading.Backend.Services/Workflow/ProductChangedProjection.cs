@@ -70,7 +70,7 @@ namespace MarginTrading.Backend.Services.Workflow
                     {
                         _log.WriteInfo(nameof(ProductChangedProjection),
                             nameof(Handle),
-                            $"ProductChangedEvent received for productId: {@event.NewValue.ProductId}, but it was ignored because it has not been started yet.");
+                            $"ProductChangedEvent received for productId: {@event.OldValue.ProductId}, but it was ignored because it has not been started yet.");
                         return;
                     }
                     break;
