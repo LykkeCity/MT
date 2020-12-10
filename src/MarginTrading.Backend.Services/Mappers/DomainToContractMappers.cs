@@ -166,6 +166,7 @@ namespace MarginTrading.Backend.Services.Mappers
                 TradeId = position.Id,
                 AdditionalInfo = position.AdditionalInfo,
                 Status = position.Status.ToType<PositionStatusContract>(),
+                ForceOpen = position.ForceOpen
             };
         }
 

@@ -143,6 +143,10 @@ namespace MarginTrading.Backend.Contracts.Positions
         /// Position status
         /// </summary>
         public PositionStatusContract Status { get; set; }
-        
+
+        /// <summary>
+        /// Reflect if the order which has open position was flagged ForceOpen
+        /// </summary>
+        public bool ForceOpen { get; set; }
     }
 }
