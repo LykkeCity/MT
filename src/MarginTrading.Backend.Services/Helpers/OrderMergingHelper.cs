@@ -135,7 +135,8 @@ namespace MarginTrading.Backend.Services.Helpers
                 externalProviderId: positionHistory.ExternalProviderId,
                 fxAssetPairId: positionHistory.FxAssetPairId,
                 fxToAssetPairDirection: positionHistory.FxToAssetPairDirection,
-                additionalInfo: positionHistory.AdditionalInfo
+                additionalInfo: positionHistory.AdditionalInfo,
+                forceOpen: positionHistory.ForceOpen
             );
         }
     }

@@ -60,7 +60,8 @@ namespace MarginTrading.SqlRepositories.Repositories
 [TotalPnL] [float] NULL,
 [ChargedPnl] [float] NULL,
 [Margin] [float] NULL,
-[HistoryTimestamp] [datetime] NOT NULL
+[HistoryTimestamp] [datetime] NOT NULL,
+[ForceOpen] [bit] NULL
 );";
         
         private static Type DataType => typeof(OpenPositionEntity);
