@@ -209,7 +209,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 {
                     (GetAssetPairKey(p.BaseAssetId, p.QuoteAssetId, p.LegalEntity), p),
                     (GetAssetPairKey(p.QuoteAssetId, p.BaseAssetId, p.LegalEntity), p),
-                }).ToDictionary());
+                }).DistinctBy(p => p.Item1).ToDictionary());
         }
 
         private static AssetPairKey GetAssetPairKey(string asset1, string asset2, string legalEntity)
