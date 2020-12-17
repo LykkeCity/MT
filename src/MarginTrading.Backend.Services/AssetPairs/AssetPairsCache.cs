@@ -204,8 +204,9 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         private ICachedCalculation<IReadOnlyDictionary<AssetPairKey, IAssetPair>> GetAssetPairsByAssetsCache()
         {
+             // TODO: (anokhin) FX and trading pairs should be separated and we should use only FX here. For now, knowing that we receive Trading + FX, we are hacking that by reverting the order of the items to use FX rates first
             return Calculate.Cached(() => _assetPairs, CacheChangedCondition,
-                pairs => pairs.Values.SelectMany(p => new []
+                pairs => pairs.Values.Reverse().SelectMany(p => new []
                 {
                     (GetAssetPairKey(p.BaseAssetId, p.QuoteAssetId, p.LegalEntity), p),
                     (GetAssetPairKey(p.QuoteAssetId, p.BaseAssetId, p.LegalEntity), p),

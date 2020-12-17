@@ -29,7 +29,7 @@ namespace MarginTradingTests
             (cache as IAssetPairsInitializableCache).InitPairsCache(pairs.ToDictionary(p => p.Id));
             
             //assert
-            Assert.AreEqual("1", cache.FindAssetPair("EUR", "USD", "Default").Id);
+            Assert.AreEqual("4", cache.FindAssetPair("EUR", "USD", "Default").Id);
         }
 
         private IAssetPair CreateAssetPair(string id, string baseAsset, string quoteAsset)
