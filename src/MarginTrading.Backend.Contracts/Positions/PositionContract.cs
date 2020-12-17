@@ -54,5 +54,6 @@ namespace MarginTrading.Backend.Contracts.Positions
         public decimal TotalPnL { get; set; }
         public decimal ChargedPnl { get; set; }
         public string AdditionalInfo { get; set; }
+        public bool ForceOpen { get; set; }
     }
 }
