@@ -136,6 +136,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                         LiquidationType = command.LiquidationType,
                         OriginatorType = command.OriginatorType,
                         AdditionalInfo = command.AdditionalInfo,
+                        StartedAt = command.CreationTime
                     }
                 ));
             

@@ -277,6 +277,10 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             LiquidationOperationData data)
         {
             var positionsOnAccount = _ordersCache.Positions.GetPositionsByAccountIds(data.AccountId);
+            if (data.LiquidationType == LiquidationType.Forced)
+            {
+                positionsOnAccount = positionsOnAccount.Where(p => p.OpenDate < data.StartedAt).ToList();
+            }
 
             //group positions and take only not processed, filtered and with open market
             var positionGroups = positionsOnAccount
@@ -287,6 +291,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 .Where(gr => !_assetPairDayOffService.IsDayOff(gr.Key))
                 .ToArray();
 
+  
             IGrouping<string, Position> targetPositions = null;
 
             //take positions from group with max margin used or max initially used margin
@@ -359,6 +364,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             {
                 if (!_ordersCache.Positions.GetPositionsByAccountIds(data.AccountId)
                     .Any(x => (string.IsNullOrWhiteSpace(data.AssetPairId) || x.AssetPairId == data.AssetPairId)
+                              &&  x.OpenDate < data.StartedAt
                               && (data.Direction == null || x.Direction == data.Direction)))
                 {
                     FinishWithReason("All positions are closed");
