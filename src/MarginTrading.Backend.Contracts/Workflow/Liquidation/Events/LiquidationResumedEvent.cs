@@ -5,10 +5,10 @@ using System;
 using System.Collections.Generic;
 using MessagePack;
 
-namespace MarginTrading.Backend.Services.Workflow.Liquidation.Events
+namespace MarginTrading.Backend.Contracts.Workflow.Liquidation.Events
 {
     [MessagePackObject]
-    public class LiquidationResumedInternalEvent
+    public class LiquidationResumedEvent
     {
         [Key(0)]
         public string OperationId { get; set; }

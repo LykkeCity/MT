@@ -61,7 +61,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         }
         
         [UsedImplicitly]
-        public async Task Handle(LiquidationStartedInternalEvent e, ICommandSender sender)
+        public async Task Handle(LiquidationStartedEvent e, ICommandSender sender)
         {
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<LiquidationOperationData>(
                 operationName: OperationName,
@@ -79,7 +79,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 LiquidatePositionsIfAnyAvailable(e.OperationId, executionInfo.Data, sender);
 
                 _chaosKitty.Meow(
-                    $"{nameof(LiquidationStartedInternalEvent)}:" +
+                    $"{nameof(LiquidationStartedEvent)}:" +
                     $"Save_OperationExecutionInfo:" +
                     $"{e.OperationId}");
 
@@ -197,7 +197,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         }
         
         [UsedImplicitly]
-        public async Task Handle(LiquidationResumedInternalEvent e, ICommandSender sender)
+        public async Task Handle(LiquidationResumedEvent e, ICommandSender sender)
         {
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<LiquidationOperationData>(
                 operationName: OperationName,

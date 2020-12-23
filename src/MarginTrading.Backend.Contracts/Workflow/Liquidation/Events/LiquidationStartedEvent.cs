@@ -4,10 +4,10 @@
 using System;
 using MessagePack;
 
-namespace MarginTrading.Backend.Services.Workflow.Liquidation.Events
+namespace MarginTrading.Backend.Contracts.Workflow.Liquidation.Events
 {
     [MessagePackObject]
-    public class LiquidationStartedInternalEvent
+    public class LiquidationStartedEvent
     {
         [Key(0)]
         public string OperationId { get; set; }

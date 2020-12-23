@@ -158,7 +158,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                     $"Publish_LiquidationStartedInternalEvent:" +
                     $"{command.OperationId}");
                 
-                publisher.PublishEvent(new LiquidationStartedInternalEvent
+                publisher.PublishEvent(new LiquidationStartedEvent
                 {
                     OperationId = command.OperationId,
                     CreationTime = _dateService.Now()
@@ -446,7 +446,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 (!command.ResumeOnlyFailed || executionInfo.Data.State == LiquidationOperationState.Failed) ||
                 executionInfo.Data.State == LiquidationOperationState.SpecialLiquidationStarted)
             {
-                publisher.PublishEvent(new LiquidationResumedInternalEvent
+                publisher.PublishEvent(new LiquidationResumedEvent
                 {
                     OperationId = command.OperationId,
                     CreationTime = _dateService.Now(),
