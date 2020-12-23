@@ -161,7 +161,10 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 publisher.PublishEvent(new LiquidationStartedEvent
                 {
                     OperationId = command.OperationId,
-                    CreationTime = _dateService.Now()
+                    CreationTime = _dateService.Now(),
+                    AssetPairId = executionInfo.Data.AssetPairId,
+                    AccountId = executionInfo.Data.AccountId,
+                    LiquidationType = executionInfo.Data.LiquidationType.ToType<LiquidationTypeContract>()
                 });
             }
         }
@@ -452,7 +455,10 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                     CreationTime = _dateService.Now(),
                     Comment = command.Comment,
                     IsCausedBySpecialLiquidation = command.IsCausedBySpecialLiquidation,
-                    PositionsLiquidatedBySpecialLiquidation = command.PositionsLiquidatedBySpecialLiquidation
+                    PositionsLiquidatedBySpecialLiquidation = command.PositionsLiquidatedBySpecialLiquidation,
+                    AccountId = executionInfo.Data.AccountId,
+                    AssetPairId = executionInfo.Data.AssetPairId,
+                    LiquidationType = executionInfo.Data.LiquidationType.ToType<LiquidationTypeContract>()
                 });
             }
             else

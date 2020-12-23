@@ -14,5 +14,14 @@ namespace MarginTrading.Backend.Contracts.Workflow.Liquidation.Events
         
         [Key(1)]
         public DateTime CreationTime { get; set; }
+
+        [Key(2)]
+        public LiquidationTypeContract LiquidationType { get; set; }
+
+        [Key(3)]
+        public string AccountId { get; set; }
+
+        [Key(4)]
+        public string AssetPairId { get; set; }
     }
 }
