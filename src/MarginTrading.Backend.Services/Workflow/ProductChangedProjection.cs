@@ -93,16 +93,7 @@ namespace MarginTrading.Backend.Services.Workflow
                     CloseAllOrders();
                 }
 
-                //We need to update cache if new product is added or if any of product properties in TradingInstrument is changed
-                if (@event.ChangeType == ChangeType.Creation || 
-                    @event.OldValue.OvernightMarginMultiplier != @event.NewValue.OvernightMarginMultiplier ||
-                    @event.OldValue.MinOrderSize != @event.NewValue.MinOrderSize ||
-                    @event.OldValue.MaxOrderSize != @event.NewValue.MaxOrderSize ||
-                    @event.OldValue.MaxPositionSize != @event.NewValue.MaxPositionSize ||
-                    @event.OldValue.ShortPosition != @event.NewValue.ShortPosition)
-                {
-                    await _tradingInstrumentsManager.UpdateTradingInstrumentsCacheAsync();
-                }
+                await _tradingInstrumentsManager.UpdateTradingInstrumentsCacheAsync();
 
                 var isAdded = _assetPairsCache.AddOrUpdate(AssetPair.CreateFromProduct(@event.NewValue,
                     _mtSettings.DefaultLegalEntitySettings.DefaultLegalEntity));
