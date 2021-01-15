@@ -9,7 +9,7 @@ using System;
 using Microsoft.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
-using Lykke.MarginTrading.BrokerBase.Extensions;
+using Lykke.Logs.MsSql.Extensions;
 
 namespace MarginTrading.AccountMarginEventsBroker.Repositories.SqlRepositories
 {
