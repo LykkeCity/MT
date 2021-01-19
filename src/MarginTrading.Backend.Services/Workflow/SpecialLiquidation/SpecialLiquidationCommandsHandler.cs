@@ -20,6 +20,7 @@ using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.MatchingEngines;
+using MarginTrading.Backend.Services.Workflow.Liquidation;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Events;
 using MarginTrading.Common.Extensions;
@@ -351,26 +352,50 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 await _log.WriteInfoAsync(nameof(SpecialLiquidationCommandsHandler),
                     nameof(ExecuteSpecialLiquidationOrderCommand), 
                     command.ToJson(), 
-                    "Special liquidation is caused by regular liquidation");
+                    "Special liquidation is caused by regular liquidation, checking liquidation type.");
                 
-                var account = _accountsCacheService.Get(executionInfo.Data.AccountId);
-                if (account.GetAccountLevel() != ValidAccountLevel)
+                var liquidationInfo = await _operationExecutionInfoRepository.GetAsync<LiquidationOperationData>(
+                    operationName: LiquidationSaga.OperationName,
+                    id: executionInfo.Data.CausationOperationId);
+
+                if (liquidationInfo == null)
                 {
-                    await _log.WriteWarningAsync(
-                        nameof(SpecialLiquidationCommandsHandler),
-                        nameof(ExecuteSpecialLiquidationOrderCommand),
-                        new {accountId = account.Id, accountLevel = account.GetAccountLevel().ToString()}.ToJson(),
-                        $"Unable to execute special liquidation since account level is not {ValidAccountLevel.ToString()}.");
-                    
-                    publisher.PublishEvent(new SpecialLiquidationFailedEvent
+                    await _log.WriteInfoAsync(nameof(SpecialLiquidationCommandsHandler),
+                        nameof(ExecuteSpecialLiquidationOrderCommand), 
+                        command.ToJson(), 
+                        "Regular liquidation does not exist, position close will not be failed.");
+                }
+                else
+                {
+                    if (liquidationInfo.Data.LiquidationType == LiquidationType.Forced)
                     {
-                        OperationId = command.OperationId,
-                        CreationTime = _dateService.Now(),
-                        Reason = $"Account level is not {ValidAccountLevel.ToString()}.",
-                        CanRetryPriceRequest = false
-                    });
+                        await _log.WriteInfoAsync(nameof(SpecialLiquidationCommandsHandler),
+                            nameof(ExecuteSpecialLiquidationOrderCommand), 
+                            command.ToJson(), 
+                            "Regular liquidation type is Forced (Close All), position close will not be failed.");
+                    }
+                    else
+                    {
+                        var account = _accountsCacheService.Get(executionInfo.Data.AccountId);
+                        if (account.GetAccountLevel() != ValidAccountLevel)
+                        {
+                            await _log.WriteWarningAsync(
+                                nameof(SpecialLiquidationCommandsHandler),
+                                nameof(ExecuteSpecialLiquidationOrderCommand),
+                                new {accountId = account.Id, accountLevel = account.GetAccountLevel().ToString()}.ToJson(),
+                                $"Unable to execute special liquidation since account level is not {ValidAccountLevel.ToString()}.");
                     
-                    return;
+                            publisher.PublishEvent(new SpecialLiquidationFailedEvent
+                            {
+                                OperationId = command.OperationId,
+                                CreationTime = _dateService.Now(),
+                                Reason = $"Account level is not {ValidAccountLevel.ToString()}.",
+                                CanRetryPriceRequest = false
+                            });
+                    
+                            return;
+                        }
+                    }
                 }
             }
 
