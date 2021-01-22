@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -7,7 +6,6 @@ using MarginTrading.AssetService.Contracts.Enums;
 using MarginTrading.AssetService.Contracts.MarketSettings;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Services.AssetPairs;
-using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services.Workflow
 {
@@ -50,14 +48,13 @@ namespace MarginTrading.Backend.Services.Workflow
 
         private static bool IsScheduleDataChanged(MarketSettingsContract oldSettings, MarketSettingsContract newSettings)
         {
-            if (oldSettings.Open != newSettings.Open || oldSettings.Close != newSettings.Close ||
-                oldSettings.Timezone != newSettings.Timezone)
-                return true;
+            var isSameSchedule = oldSettings.Open.SequenceEqual(newSettings.Open) &&
+                                 oldSettings.Close.SequenceEqual(newSettings.Close) &&
+                                 oldSettings.Holidays.SequenceEqual(newSettings.Holidays) &&
+                                 oldSettings.Timezone == newSettings.Timezone &&
+                                 oldSettings.MarketSchedule.HalfWorkingDays.SequenceEqual(newSettings.MarketSchedule.HalfWorkingDays);
 
-            var oldHolidays = oldSettings.Holidays.ToHashSet();
-            var newHolidays = newSettings.Holidays.ToHashSet();
-
-            return !oldHolidays.SetEquals(newHolidays);
+            return !isSameSchedule;
         }
     }
 }
