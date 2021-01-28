@@ -368,8 +368,8 @@ namespace MarginTrading.Backend.Services.Modules
                 .ListeningEvents(
                     typeof(LiquidationFailedEvent),
                     typeof(LiquidationFinishedEvent),
-                    typeof(LiquidationResumedInternalEvent),
-                    typeof(LiquidationStartedInternalEvent),
+                    typeof(LiquidationResumedEvent),
+                    typeof(LiquidationStartedEvent),
                     typeof(NotEnoughLiquidityInternalEvent),
                     typeof(PositionsLiquidationFinishedInternalEvent),
                     typeof(MarketStateChangedEvent)
@@ -395,8 +395,8 @@ namespace MarginTrading.Backend.Services.Modules
                 .PublishingEvents(
                     typeof(LiquidationFailedEvent),
                     typeof(LiquidationFinishedEvent),
-                    typeof(LiquidationResumedInternalEvent),
-                    typeof(LiquidationStartedInternalEvent),
+                    typeof(LiquidationResumedEvent),
+                    typeof(LiquidationStartedEvent),
                     typeof(NotEnoughLiquidityInternalEvent),
                     typeof(PositionsLiquidationFinishedInternalEvent)
                 )
