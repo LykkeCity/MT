@@ -10,7 +10,6 @@ using Lykke.Snow.Mdm.Contracts.Models.Events;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
-using MarginTrading.Backend.Services.Settings;
 
 namespace MarginTrading.Backend.Services.Services
 {
@@ -57,17 +56,17 @@ namespace MarginTrading.Backend.Services.Services
 
         private static bool IsScheduleDataChanged(BrokerSettingsContract oldSettings, BrokerSettingsContract newSettings, string brokerId)
         {
-            if (!newSettings.BrokerId.Equals(brokerId, StringComparison.InvariantCultureIgnoreCase))
-                return false;
+            var brokerConditionGuard = newSettings.BrokerId.Equals(brokerId, StringComparison.InvariantCultureIgnoreCase);
+            if (!brokerConditionGuard) return false;
 
-            if (oldSettings.Open != newSettings.Open || oldSettings.Close != newSettings.Close ||
-                oldSettings.Timezone != newSettings.Timezone)
-                return true;
+            var isSameSchedule = oldSettings.Open == newSettings.Open &&
+                                 oldSettings.Close == newSettings.Close &&
+                                 oldSettings.Timezone == newSettings.Timezone &&
+                                 oldSettings.Holidays.SequenceEqual(newSettings.Holidays) &&
+                                 oldSettings.Weekends.SequenceEqual(newSettings.Weekends) &&
+                                 oldSettings.PlatformSchedule.HalfWorkingDays.SequenceEqual(newSettings.PlatformSchedule.HalfWorkingDays);
 
-            var oldHolidays = oldSettings.Holidays.ToHashSet();
-            var newHolidays = newSettings.Holidays.ToHashSet();
-
-            return !oldHolidays.SetEquals(newHolidays);
+            return !isSameSchedule;
         }
     }
 }
