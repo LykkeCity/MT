@@ -11,6 +11,7 @@ using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.EmailSender;
 using Lykke.SettingsReader;
 using Lykke.Snow.Common.Startup;
+using Lykke.Snow.Mdm.Contracts.Api;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.Backend.Contracts.ExchangeConnector;
 using MarginTrading.Backend.Core.Settings;
@@ -143,6 +144,25 @@ namespace MarginTrading.Backend.Modules
 
             builder.RegisterInstance(accountsClientGeneratorBuilder.Create().Generate<IAccountsApi>())
                 .As<IAccountsApi>().SingleInstance();
+
+            #endregion
+
+            #region Mdm
+
+            //for feature management
+            var mdmGenerator = HttpClientGenerator
+                .BuildForUrl(_settings.CurrentValue.MdmServiceClient.ServiceUrl)
+                .WithServiceName<LykkeErrorResponse>(
+                    $"Mdm [{_settings.CurrentValue.MdmServiceClient.ServiceUrl}]");
+
+            if (!string.IsNullOrWhiteSpace(_settings.CurrentValue.MdmServiceClient.ApiKey))
+            {
+                mdmGenerator = mdmGenerator
+                    .WithApiKey(_settings.CurrentValue.MdmServiceClient.ApiKey);
+            }
+
+            builder.RegisterInstance(mdmGenerator.Create().Generate<IBrokerSettingsApi>())
+                .As<IBrokerSettingsApi>().SingleInstance();
 
             #endregion
 

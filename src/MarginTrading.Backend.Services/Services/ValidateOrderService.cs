@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Lykke.Snow.Mdm.Contracts.BrokerFeatures;
+using MarginTrading.AccountsManagement.Contracts.Models.AdditionalInfo;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
@@ -21,6 +23,8 @@ using MarginTrading.Backend.Services.Helpers;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
+using Microsoft.FeatureManagement;
+
 // ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 
 namespace MarginTrading.Backend.Services
@@ -38,6 +42,7 @@ namespace MarginTrading.Backend.Services
         private readonly IDateService _dateService;
         private readonly MarginTradingSettings _marginSettings;
         private readonly ICfdCalculatorService _cfdCalculatorService;
+        private readonly IFeatureManager _featureManager;
 
         public ValidateOrderService(
             IQuoteCacheService quoteCashService,
@@ -50,7 +55,8 @@ namespace MarginTrading.Backend.Services
             IIdentityGenerator identityGenerator,
             IDateService dateService,
             MarginTradingSettings marginSettings,
-            ICfdCalculatorService cfdCalculatorService)
+            ICfdCalculatorService cfdCalculatorService, 
+            IFeatureManager featureManager)
         {
             _quoteCashService = quoteCashService;
             _accountUpdateService = accountUpdateService;
@@ -63,6 +69,7 @@ namespace MarginTrading.Backend.Services
             _dateService = dateService;
             _marginSettings = marginSettings;
             _cfdCalculatorService = cfdCalculatorService;
+            _featureManager = featureManager;
         }
         
         
@@ -213,8 +220,46 @@ namespace MarginTrading.Backend.Services
                 if (tp != null)
                     relatedOrders.Add(tp);    
             }
+
+            await ValidateProductComplexityConfirmation(request, account);
             
             return (baseOrder, relatedOrders);
+        }
+
+        private async Task ValidateProductComplexityConfirmation(OrderPlaceRequest order, MarginTradingAccount account)
+        {
+            if (!await _featureManager.IsEnabledAsync(BrokerFeature.ProductComplexityWarning))
+            {
+                return;
+            }
+
+            var isBasicOrder = new[]
+                {
+                    OrderTypeContract.Market,
+                    OrderTypeContract.Limit,
+                    OrderTypeContract.Stop
+                }
+                .Contains(order.Type);
+
+            
+            if (!isBasicOrder)
+            {
+                return;
+            }
+
+            var shouldShowProductComplexityWarning = AccountAdditionalInfoExtensions.Deserialize(account.AdditionalInfo).ShouldShowProductComplexityWarning ?? true;
+            if (!shouldShowProductComplexityWarning)
+            {
+                return;
+            }
+
+            var productComplexityConfimationReceived = order.AdditionalInfo.ProductComplexityConfirmationReceived();
+
+            if (!productComplexityConfimationReceived)
+            {
+                throw new ValidateOrderException(OrderRejectReason.AccountInvalidState,
+                    $"Product complexity warning not received for order with correlation {order.CorrelationId}, placed by account {account.Id}");
+            }
         }
 
         public void ValidateForceOpenChange(Order order, bool? forceOpen)

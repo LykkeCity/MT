@@ -218,5 +218,23 @@ namespace MarginTrading.Backend.Core
             obj.WithOnBehalfFees = false;
             return JsonConvert.SerializeObject(obj);
         }
+
+        public static bool ProductComplexityConfirmationReceived(this string additionalInfo, bool defaultValue = false)
+        {
+            try
+            {
+                var model = JsonConvert.DeserializeAnonymousType(additionalInfo,
+                    new
+                    {
+                        ProductComplexityConfirmationReceived = (bool?)null
+                    });
+
+                return model.ProductComplexityConfirmationReceived ?? defaultValue;
+            }
+            catch (Exception)
+            {
+                return defaultValue;
+            }
+        }
     }
 }

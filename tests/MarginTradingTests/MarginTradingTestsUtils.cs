@@ -6,6 +6,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Lykke.Snow.Mdm.Contracts.Api;
+using Lykke.Snow.Mdm.Contracts.Models.Contracts;
+using Lykke.Snow.Mdm.Contracts.Models.Responses;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.Backend.Core;
@@ -14,6 +17,9 @@ using MarginTrading.AssetService.Contracts;
 using MarginTrading.AssetService.Contracts.Asset;
 using MarginTrading.AssetService.Contracts.Enums;
 using MarginTrading.AssetService.Contracts.TradingConditions;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.FeatureManagement;
+using Lykke.Snow.Mdm.Contracts.BrokerFeatures;
 using Moq;
 using AssetPairContract = MarginTrading.AssetService.Contracts.AssetPair.AssetPairContract;
 
@@ -45,11 +51,54 @@ namespace MarginTradingTests
 
         public static IAccountsApi GetPopulatedAccountsApi(List<MarginTradingAccount> accounts)
         {
-            var list = accounts.Select(a => new AccountContract(a.Id, a.ClientId, a.TradingConditionId, a.BaseAssetId,
-                a.Balance, a.WithdrawTransferLimit, a.LegalEntity, a.IsDisabled, DateTime.UtcNow, 
-                a.IsWithdrawalDisabled, false)).ToList();
+            var list = accounts.Select(a => new AccountContract
+            {
+                Id = a.Id,
+                ClientId = a.ClientId,
+                TradingConditionId = a.TradingConditionId,
+                BaseAssetId = a.BaseAssetId,
+                Balance = a.Balance,
+                WithdrawTransferLimit = a.WithdrawTransferLimit,
+                LegalEntity = a.LegalEntity,
+                IsDisabled = a.IsDisabled,
+                ModificationTimestamp = DateTime.UtcNow,
+                IsWithdrawalDisabled = a.IsWithdrawalDisabled,
+                IsDeleted = false,
+                AdditionalInfo = "{}"
+            }).ToList();
             return Mock.Of<IAccountsApi>(a => a.List(null, false) == Task.FromResult(list));
         }
+
+
+        public static IBrokerSettingsApi GetBrokerSettingsApi(string brokerId, bool productComplexityEnabled = false)
+        {
+            var resp = new GetBrokerSettingsByIdResponse
+            {
+                BrokerSettings = new BrokerSettingsContract
+                {
+                    BrokerId = brokerId,
+                    ProductComplexityWarningEnabled = productComplexityEnabled
+                },
+                ErrorCode = BrokerSettingsErrorCodesContract.None
+            };
+
+            var api = new Mock<IBrokerSettingsApi>();
+
+            api.Setup(x => x.GetByIdAsync(brokerId)).ReturnsAsync(resp);
+
+            return api.Object;
+        }
+
+
+        public static IFeatureManager GetFeatureManager(string brokerId, IBrokerSettingsApi api)
+        {
+            var services = new ServiceCollection();
+            services.AddSingleton(api);
+            services.AddFeatureManagement(brokerId);
+
+            return services.BuildServiceProvider().GetRequiredService<IFeatureManager>();
+        }
+
 
         public static ITradingInstrumentsApi GetPopulatedTradingInstruments()
         {

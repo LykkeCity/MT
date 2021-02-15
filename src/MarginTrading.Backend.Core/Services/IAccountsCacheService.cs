@@ -22,7 +22,7 @@ namespace MarginTrading.Backend.Core
         string Reset(string accountId, DateTime eventTime);
 
         Task<bool> UpdateAccountChanges(string accountId, string updatedTradingConditionId,
-            decimal updatedWithdrawTransferLimit, bool isDisabled, bool isWithdrawalDisabled, DateTime eventTime);
+            decimal updatedWithdrawTransferLimit, bool isDisabled, bool isWithdrawalDisabled, DateTime eventTime, string additionalInfo);
         Task<bool> UpdateAccountBalance(string accountId, decimal accountBalance, DateTime eventTime);
         
         bool TryStartLiquidation(string accountId, string operationId, out string currentOperationId);
