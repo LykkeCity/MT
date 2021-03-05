@@ -102,7 +102,7 @@ namespace MarginTradingTests
                     var accountContract =
                         convertService.Convert<MarginTradingAccount, AccountContract>(account,
                             o => o.ConfigureMap(MemberList.Destination)
-                                .ForCtorParam("modificationTimestamp",
+                                .ForMember(p=>p.ModificationTimestamp,  
                                     p => p.MapFrom(tradingAccount => DateTime.UtcNow)));
                     await accountsProjection.Handle(new AccountChangedEvent(DateTime.UtcNow, "Source", accountContract,
                         AccountChangedEventTypeContract.BalanceUpdated));
