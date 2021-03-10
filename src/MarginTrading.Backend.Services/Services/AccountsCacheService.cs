@@ -167,7 +167,7 @@ namespace MarginTrading.Backend.Services
                 account.IsDisabled = isDisabled;
                 account.IsWithdrawalDisabled = isWithdrawalDisabled;
                 account.LastUpdateTime = eventTime;
-                account.AdditionalInfo = account.AdditionalInfo;
+                account.AdditionalInfo = additionalInfo;
             }
             finally
             {
