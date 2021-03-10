@@ -29,6 +29,7 @@ using MarginTrading.Common.Settings;
 using MarginTrading.AssetService.Contracts;
 using MarginTrading.AssetService.Contracts.Scheduling;
 using MarginTradingTests.Modules;
+using Microsoft.FeatureManagement;
 using Moq;
 
 namespace MarginTradingTests
@@ -102,7 +103,10 @@ namespace MarginTradingTests
 
             builder.RegisterModule(new MockBaseServicesModule());
             builder.RegisterModule(new MockRepositoriesModule());
-            builder.RegisterModule(new MockExternalServicesModule(Accounts));
+
+            var brokerId = Guid.NewGuid().ToString();
+            
+            builder.RegisterModule(new MockExternalServicesModule(Accounts, brokerId));
             
             if (mockEvents)
             {
@@ -181,7 +185,7 @@ namespace MarginTradingTests
             MtServiceLocator.AccountUpdateService = Container.Resolve<IAccountUpdateService>();
             MtServiceLocator.AccountsCacheService = Container.Resolve<IAccountsCacheService>();
             MtServiceLocator.SwapCommissionService = Container.Resolve<ICommissionService>();
-
+            
             Container.Resolve<OrderBookList>().Init(null);
         }
 

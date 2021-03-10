@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core.Settings;
+using Newtonsoft.Json;
 
 namespace MarginTrading.Backend.Core
 {
@@ -25,6 +26,8 @@ namespace MarginTrading.Backend.Core
         DateTime LastBalanceChangeTime { get; }
         bool IsWithdrawalDisabled { get; }
         string LiquidationOperationId { get; }
+        string AdditionalInfo { get; }
+        string AccountName { get; }
     }
 
     public class MarginTradingAccount : IMarginTradingAccount, IComparable<MarginTradingAccount>
@@ -42,6 +45,8 @@ namespace MarginTrading.Backend.Core
         public DateTime LastBalanceChangeTime { get; set; }
         public bool IsWithdrawalDisabled { get; set; }
         public string LiquidationOperationId { get; set; }
+        public string AdditionalInfo { get; set; }
+        public string AccountName { get; set; }
 
         public AccountFpl AccountFpl { get; private set; } = new AccountFpl();
 
@@ -61,7 +66,9 @@ namespace MarginTrading.Backend.Core
                 IsDeleted = src.IsDeleted,
                 LastUpdateTime = src.LastUpdateTime,
                 LastBalanceChangeTime = src.LastBalanceChangeTime,
-                IsWithdrawalDisabled = src.IsWithdrawalDisabled
+                IsWithdrawalDisabled = src.IsWithdrawalDisabled,
+                AdditionalInfo = src.AdditionalInfo,
+                AccountName = src.AccountName
             };
         }
 

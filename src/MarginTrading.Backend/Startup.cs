@@ -21,6 +21,7 @@ using Lykke.SlackNotifications;
 using Lykke.Snow.Common.Startup.ApiKey;
 using Lykke.Snow.Common.Startup.Hosting;
 using Lykke.Snow.Common.Startup.Log;
+using Lykke.Snow.Mdm.Contracts.BrokerFeatures;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
@@ -106,6 +107,8 @@ namespace MarginTrading.Backend
                     s.MtBackend.Env = Configuration.ServerType();
                     return s;
                 });
+
+            services.AddFeatureManagement(_mtSettingsManager.CurrentValue.MtBackend.BrokerId);
 
             SetupLoggers(Configuration, services, _mtSettingsManager);
         }

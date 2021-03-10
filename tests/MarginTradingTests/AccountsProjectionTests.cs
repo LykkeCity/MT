@@ -48,32 +48,36 @@ namespace MarginTradingTests
 
         private static readonly AccountContract[] Accounts =
         {
-            new AccountContract( //already existed
-                id: "testAccount1",
-                clientId: "testClient1",
-                tradingConditionId: "testTradingCondition1",
-                baseAssetId: "EUR",
-                balance: 100,
-                withdrawTransferLimit: 0,
-                legalEntity: "Default",
-                isDisabled: false,
-                modificationTimestamp: new DateTime(2018, 09, 13),
-                isWithdrawalDisabled: false,
-                isDeleted: false
-            ),
-            new AccountContract(
-                id: "testAccount2",
-                clientId: "testClient1",
-                tradingConditionId: "testTradingCondition1",
-                baseAssetId: "EUR",
-                balance: 1000,
-                withdrawTransferLimit: 0,
-                legalEntity: "Default",
-                isDisabled: true,
-                modificationTimestamp: new DateTime(2018, 09, 13),
-                isWithdrawalDisabled: false,
-                isDeleted: false
-            )
+            new AccountContract()
+            {
+                Id = "testAccount1",
+                ClientId = "testClient1",
+                TradingConditionId = "testTradingCondition1",
+                BaseAssetId = "EUR",
+                Balance = 100,
+                WithdrawTransferLimit = 0,
+                LegalEntity = "Default",
+                IsDisabled = false,
+                ModificationTimestamp = new DateTime(2018,09,10),
+                IsWithdrawalDisabled = false,
+                IsDeleted = false,
+                AdditionalInfo = "{}"
+            },
+            new AccountContract()
+            {
+                Id = "testAccount2",
+                ClientId = "testClient1",
+                TradingConditionId = "testTradingCondition1",
+                BaseAssetId = "EUR",
+                Balance = 1000,
+                WithdrawTransferLimit = 0,
+                LegalEntity = "Default",
+                IsDisabled = true,
+                ModificationTimestamp = new DateTime(2018,09,10),
+                IsWithdrawalDisabled = false,
+                IsDeleted = false,
+                AdditionalInfo = "{}"
+            },
         };
 
         [Test]
@@ -105,10 +109,22 @@ namespace MarginTradingTests
             
             var accountsProjection = AssertEnv();
 
-            var updatedContract = new AccountContract(accountId, account.ClientId, updatedTradingConditionId,
-                account.BaseAssetId, account.Balance, updatedWithdrawTransferLimit, account.LegalEntity,
-                isDisabled, account.ModificationTimestamp, account.IsWithdrawalDisabled, false);
-            
+            var updatedContract = new AccountContract()
+            {
+                Id = accountId,
+                ClientId = account.ClientId,
+                TradingConditionId = updatedTradingConditionId,
+                BaseAssetId = account.BaseAssetId,
+                Balance = account.Balance,
+                WithdrawTransferLimit = updatedWithdrawTransferLimit,
+                LegalEntity = account.LegalEntity,
+                IsDisabled = isDisabled,
+                ModificationTimestamp = account.ModificationTimestamp,
+                IsWithdrawalDisabled = account.IsWithdrawalDisabled,
+                IsDeleted = false,
+                AdditionalInfo = "{}"
+            };
+
             await accountsProjection.Handle(new AccountChangedEvent(time, "test",
                 updatedContract, AccountChangedEventTypeContract.Updated));
 
@@ -133,9 +149,24 @@ namespace MarginTradingTests
             //act
             var t1 = new Thread(async () =>
             {
+
+                var accountContract = new AccountContract()
+                {
+                    Id = account.Id,
+                    ClientId = account.ClientId,
+                    TradingConditionId = "test",
+                    BaseAssetId = "test",
+                    Balance = 0,
+                    WithdrawTransferLimit = 0,
+                    LegalEntity = "test",
+                    IsDisabled = false,
+                    ModificationTimestamp = time.AddMilliseconds(1),
+                    IsWithdrawalDisabled = true,
+                    IsDeleted = false,
+                    AdditionalInfo = "{}"
+                };
                 await accountsProjection.Handle(new AccountChangedEvent(time.AddMilliseconds(1), "test",
-                    new AccountContract(account.Id, account.ClientId, "test", "test", 0, 0, "test", false,
-                        time.AddMilliseconds(1), true, false),
+                    accountContract,
                     AccountChangedEventTypeContract.Updated, null, "operation1"));
                 manualResetEvent.WaitOne();
             });
@@ -143,9 +174,23 @@ namespace MarginTradingTests
 
             var t2 = new Thread(async () =>
             {
+                var accountContract = new AccountContract()
+                {
+                    Id = account.Id,
+                    ClientId = account.ClientId,
+                    TradingConditionId = "new",
+                    BaseAssetId = "test",
+                    Balance = 0,
+                    WithdrawTransferLimit = 1,
+                    LegalEntity = "test",
+                    IsDisabled = true,
+                    ModificationTimestamp = time.AddMilliseconds(2),
+                    IsWithdrawalDisabled = false,
+                    IsDeleted = false,
+                    AdditionalInfo = "{}"
+                };
                 await accountsProjection.Handle(new AccountChangedEvent(time.AddMilliseconds(2), "test",
-                    new AccountContract(account.Id, account.ClientId, "new", "test", 0, 1, "test", true,
-                        time.AddMilliseconds(2), false, false),
+                    accountContract,
                     AccountChangedEventTypeContract.Updated, null, "operation2"));
                 manualResetEvent.WaitOne();
             });
@@ -184,11 +229,23 @@ namespace MarginTradingTests
             var time = DateService.Now();
             
             var accountsProjection = AssertEnv(failMessage: failMessage);
-
-            var updatedContract = new AccountContract(accountId, account.ClientId, updatedTradingConditionId,
-                account.BaseAssetId, account.Balance, updatedWithdrawTransferLimit, account.LegalEntity,
-                isDisabled, account.ModificationTimestamp, account.IsWithdrawalDisabled, false);
             
+            var updatedContract = new AccountContract()
+            {
+                Id = accountId,
+                ClientId = account.ClientId,
+                TradingConditionId = updatedTradingConditionId,
+                BaseAssetId = account.BaseAssetId,
+                Balance = account.Balance,
+                WithdrawTransferLimit = updatedWithdrawTransferLimit,
+                LegalEntity = account.LegalEntity,
+                IsDisabled = isDisabled,
+                ModificationTimestamp = account.ModificationTimestamp,
+                IsWithdrawalDisabled = account.IsWithdrawalDisabled,
+                IsDeleted = false,
+                AdditionalInfo = "{}"
+            };
+
             await accountsProjection.Handle(new AccountChangedEvent(time, "test",
                 updatedContract, AccountChangedEventTypeContract.Updated));
 
@@ -207,11 +264,23 @@ namespace MarginTradingTests
             var time = DateService.Now().AddMinutes(1);
             
             var accountsProjection = AssertEnv(accountId: accountId);
-
-            var updatedContract = new AccountContract(accountId, account.ClientId, account.TradingConditionId,
-                account.BaseAssetId, changeAmount, account.WithdrawTransferLimit, account.LegalEntity,
-                account.IsDisabled, account.ModificationTimestamp, account.IsWithdrawalDisabled, false);
-
+            
+            var updatedContract = new AccountContract()
+            {
+                Id = accountId,
+                ClientId = account.ClientId,
+                TradingConditionId = account.TradingConditionId,
+                BaseAssetId = account.BaseAssetId,
+                Balance = account.Balance,
+                WithdrawTransferLimit = account.WithdrawTransferLimit,
+                LegalEntity = account.LegalEntity,
+                IsDisabled = account.IsDisabled,
+                ModificationTimestamp = account.ModificationTimestamp,
+                IsWithdrawalDisabled = account.IsWithdrawalDisabled,
+                IsDeleted = false,
+                AdditionalInfo = "{}"
+            };
+            
             await accountsProjection.Handle(new AccountChangedEvent(time, "test",
                 updatedContract, AccountChangedEventTypeContract.BalanceUpdated,
                 new AccountBalanceChangeContract("test", time, accountId, account.ClientId, changeAmount, 
