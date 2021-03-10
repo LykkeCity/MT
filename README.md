@@ -216,7 +216,7 @@ Settings schema is:
     "ServiceUrl": "http://mt-settings-service.mt.svc.cluster.local"
   },
   "MdmServiceClient": {
-    "ServiceUrl": "http://gavel.mt.svc.cluster.local:5019",
+    "ServiceUrl": "http://mdm.mt.svc.cluster.local",
     "ApiKey": "key"
   }
 }
