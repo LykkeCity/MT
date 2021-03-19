@@ -97,10 +97,10 @@ namespace MarginTrading.Backend.Services.Services
             }
         }
 
-        public void CheckIsEnoughBalance(Order order, IMatchingEngineBase matchingEngine)
+        public void CheckIsEnoughBalance(Order order, IMatchingEngineBase matchingEngine, decimal additionalMargin)
         {
             var orderMargin = _fplService.GetInitMarginForOrder(order);
-            var accountMarginAvailable = _accountsCacheService.Get(order.AccountId).GetMarginAvailable();
+            var accountMarginAvailable = _accountsCacheService.Get(order.AccountId).GetMarginAvailable() + additionalMargin;
 
             var quote = _quoteCacheService.GetQuote(order.AssetPairId);
 

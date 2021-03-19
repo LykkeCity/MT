@@ -582,14 +582,15 @@ namespace MarginTrading.Backend.Services
         
         #region Pre-trade validations
         
-        public void MakePreTradeValidation(Order order, bool shouldOpenNewPosition, IMatchingEngineBase matchingEngine)
+        public void MakePreTradeValidation(Order order, bool shouldOpenNewPosition, IMatchingEngineBase 
+        matchingEngine, decimal additionalMargin)
         {
             GetAssetPairIfAvailableForTrading(order.AssetPairId, order.OrderType, shouldOpenNewPosition, true);
 
             ValidateTradeLimits(order.AssetPairId, order.TradingConditionId, order.AccountId, order.Volume, shouldOpenNewPosition);
 
             if (shouldOpenNewPosition)
-                _accountUpdateService.CheckIsEnoughBalance(order, matchingEngine);
+                _accountUpdateService.CheckIsEnoughBalance(order, matchingEngine, additionalMargin);
         }
 
         public bool CheckIfPendingOrderExecutionPossible(string assetPairId, OrderType orderType, bool shouldOpenNewPosition)
