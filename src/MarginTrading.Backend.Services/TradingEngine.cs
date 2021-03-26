@@ -286,7 +286,7 @@ namespace MarginTrading.Backend.Services
 
                 order.SetRates(equivalentRate, fxRate);
 
-                var shouldOpenNewPosition = ShouldOpenNewPosition(order);
+                var matchOnPositionsResult = MatchOnExistingPositions(order);
 
                 if (modality == OrderModality.Regular && order.Originator != OriginatorType.System)
                 {
@@ -294,8 +294,9 @@ namespace MarginTrading.Backend.Services
                     {
                         _validateOrderService.MakePreTradeValidation(
                             order,
-                            shouldOpenNewPosition,
-                            matchingEngine);
+                            matchOnPositionsResult.WillOpenPosition,
+                            matchingEngine, 
+                            matchOnPositionsResult.ReleasedMargin);
                     }
                     catch (ValidateOrderException ex)
                     {
@@ -307,7 +308,7 @@ namespace MarginTrading.Backend.Services
                 MatchedOrderCollection matchedOrders;
                 try
                 {
-                    matchedOrders = await matchingEngine.MatchOrderAsync(order, shouldOpenNewPosition, modality);
+                    matchedOrders = await matchingEngine.MatchOrderAsync(order, matchOnPositionsResult.WillOpenPosition, modality);
                 }
                 catch (OrderExecutionTechnicalException)
                 {
@@ -440,22 +441,44 @@ namespace MarginTrading.Backend.Services
             }
         }
 
-        public bool ShouldOpenNewPosition(Order order)
+        public (bool WillOpenPosition, decimal ReleasedMargin) MatchOnExistingPositions(Order order)
         {
-            var shouldOpenNewPosition = order.ForceOpen;
+            if (order.ForceOpen)
+                return (true, 0);
 
-            if (!order.PositionsToBeClosed.Any() && !shouldOpenNewPosition)
+            var existingPositions =
+                _ordersCache.Positions.GetPositionsByInstrumentAndAccount(order.AssetPairId, order.AccountId);
+            
+            if (order.PositionsToBeClosed.Any())
             {
-                var existingPositions =
-                    _ordersCache.Positions.GetPositionsByInstrumentAndAccount(order.AssetPairId, order.AccountId);
-                var netVolume = existingPositions.Where(p => p.Status == PositionStatus.Active).Sum(p => p.Volume);
-                var newNetVolume = netVolume + order.Volume;
+                var targetPositionsMargin = existingPositions.Where(p => order.PositionsToBeClosed.Contains(p.Id))
+                    .Sum(p => p.GetMarginMaintenance());
 
-                shouldOpenNewPosition = (Math.Sign(netVolume) != Math.Sign(newNetVolume) && newNetVolume != 0) ||
-                                        Math.Abs(netVolume) < Math.Abs(newNetVolume);
+                return (false, targetPositionsMargin);
             }
 
-            return shouldOpenNewPosition;
+            var oppositeDirectionPositions =
+                existingPositions.Where(p =>
+                        p.Status == PositionStatus.Active && p.Direction == order.Direction.GetClosePositionDirection())
+                    .ToArray();
+            
+            var oppositeDirectionVolume = 0m;
+            var oppositeDirectionMargin = 0m;
+
+            foreach (var position in oppositeDirectionPositions)
+            {
+                oppositeDirectionVolume += position.Volume;
+                oppositeDirectionMargin += position.GetMarginMaintenance();
+            }
+
+            if (Math.Abs(oppositeDirectionVolume) < Math.Abs(order.Volume))
+            {
+                return (true, oppositeDirectionMargin);
+            }
+
+            var wightedMargin = oppositeDirectionMargin / Math.Abs(oppositeDirectionVolume) * Math.Abs(order.Volume);
+
+            return (false, wightedMargin);
         }
 
         private void RejectOrder(Order order, OrderRejectReason reason, string message, string comment = null)
@@ -529,7 +552,7 @@ namespace MarginTrading.Backend.Services
 
                 if (order.IsSuitablePriceForPendingOrder(price) &&
                     _validateOrderService.CheckIfPendingOrderExecutionPossible(order.AssetPairId, order.OrderType,
-                        ShouldOpenNewPosition(order)))
+                        MatchOnExistingPositions(order).WillOpenPosition))
                 {
                     if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(order.Volume))
                     {

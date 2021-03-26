@@ -33,7 +33,7 @@ namespace MarginTrading.Backend.Core
         Task ChangeOrderAsync(string orderId, decimal price, DateTime? validity, OriginatorType originator,
             string additionalInfo, string correlationId, bool? forceOpen = null);
             
-        bool ShouldOpenNewPosition(Order order);
+        (bool WillOpenPosition, decimal ReleasedMargin) MatchOnExistingPositions(Order order);
         
         void ProcessExpiredOrders(DateTime operationIntervalEnd);
     }

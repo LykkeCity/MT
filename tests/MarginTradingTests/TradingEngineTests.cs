@@ -1367,40 +1367,47 @@ namespace MarginTradingTests
         #region Common functions
 
         [Test]
-        [TestCase(new int[0], 1, true)]
-        [TestCase(new int[0], -1, true)]
-        [TestCase(new[] { 1 }, 1, true)]
-        [TestCase(new[] { 1, 2 }, 1, true)]
-        [TestCase(new[] { -1, 2 }, 1, true)]
-        [TestCase(new[] { -1 }, -1, true)]
-        [TestCase(new[] { -1, -2 }, -1, true)]
-        [TestCase(new[] { 1, -2 }, -1, true)]
-        [TestCase(new[] { -1 }, 1, false)]
-        [TestCase(new[] { 1 }, -1, false)]
-        [TestCase(new[] { 2 }, -1, false)]
-        [TestCase(new[] { -2 }, 1, false)]
-        [TestCase(new[] { 2 }, -3, true)]
-        [TestCase(new[] { -2 }, 3, true)]
+        [TestCase(new int[0], 1, true, 0)]
+        [TestCase(new int[0], -1, true, 0)]
+        [TestCase(new[] { 1 }, 1, true, 0)]
+        [TestCase(new[] { 1, 2 }, 1, true, 0)]
+        [TestCase(new[] { -1, 2 }, 1, false, 0.01)]
+        [TestCase(new[] { -1 }, -1, true, 0)]
+        [TestCase(new[] { -1, -2 }, -1, true, 0)]
+        [TestCase(new[] { 1, -2 }, -1, false, 0.01)]
+        [TestCase(new[] { -1 }, 1, false, 0.01)]
+        [TestCase(new[] { 1 }, -1, false, 0.01)]
+        [TestCase(new[] { 2 }, -1, false, 0.01)]
+        [TestCase(new[] { -3 }, 1, false, 0.01)]
+        [TestCase(new[] { 2 }, -3, true, 0.02)]
+        [TestCase(new[] { -2 }, 3, true, 0.02)]
         public void Test_That_Position_Should_Be_Opened_Is_Checked_Correctly(int[] existingVolumes, int newVolume,
-            bool shouldOpenPosition)
+            bool willOpenPosition, decimal releasedMargin)
         {
             foreach (var existingVolume in existingVolumes)
             {
-                var position = TestObjectsFactory.CreateOpenedPosition("EURUSD", _account,
+                var position = TestObjectsFactory.CreateOpenedPosition("EURRUB", _account,
                     MarginTradingTestsUtils.TradingConditionId, existingVolume, 1);
 
                 _ordersCache.Positions.Add(position);
             }
 
-            var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", _account,
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURRUB", _account,
                 MarginTradingTestsUtils.TradingConditionId, newVolume);
 
-            Assert.AreEqual(shouldOpenPosition, _tradingEngine.ShouldOpenNewPosition(order));
+            var matchOnPositionsResult = _tradingEngine.MatchOnExistingPositions(order);
+            
+            Assert.AreEqual(willOpenPosition, matchOnPositionsResult.WillOpenPosition);
+            Assert.AreEqual(releasedMargin, matchOnPositionsResult.ReleasedMargin);
+            
 
-            var orderWithForce = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", _account,
+            var orderWithForce = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURRUB", _account,
                 MarginTradingTestsUtils.TradingConditionId, newVolume, forceOpen: true);
+            
+            var matchOnPositionsWithForceResult = _tradingEngine.MatchOnExistingPositions(orderWithForce);
 
-            Assert.AreEqual(true, _tradingEngine.ShouldOpenNewPosition(orderWithForce));
+            Assert.AreEqual(true, matchOnPositionsWithForceResult.WillOpenPosition);
+            Assert.AreEqual(0m, matchOnPositionsWithForceResult.ReleasedMargin);
         }
 
         #endregion

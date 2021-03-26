@@ -127,6 +127,17 @@ namespace MarginTradingTests
                 new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
+                    Instrument = "EURRUB",
+                    LeverageInit = 100,
+                    LeverageMaintenance = 100,
+                    Delta = 30,
+                    ShortPosition = true,
+                    DealMaxLimit = 1000000,
+                    PositionLimit = 10000000
+                },
+                new TradingInstrumentContract
+                {
+                    TradingConditionId = TradingConditionId,
                     Instrument = "BTCEUR",
                     LeverageInit = 10,
                     LeverageMaintenance = 15,

@@ -107,13 +107,13 @@ namespace MarginTradingTests
             var order1 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 96000);
 
-            Assert.DoesNotThrow(() => _accountUpdateService.CheckIsEnoughBalance(order1, me));
+            Assert.DoesNotThrow(() => _accountUpdateService.CheckIsEnoughBalance(order1, me, 0));
 
             var order2 = TestObjectsFactory.CreateNewOrder(OrderType.Market, "EURUSD", Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 97000);
 
             Assert.Throws<ValidateOrderException>(() =>
-                _accountUpdateService.CheckIsEnoughBalance(order2, me));
+                _accountUpdateService.CheckIsEnoughBalance(order2, me, 0));
 
             var meWithSpread = new FakeMatchingEngine(10, closePrice: 1);
 
@@ -121,20 +121,20 @@ namespace MarginTradingTests
                 MarginTradingTestsUtils.TradingConditionId, 96000);
 
             Assert.Throws<ValidateOrderException>(
-                () => _accountUpdateService.CheckIsEnoughBalance(order3, meWithSpread));
+                () => _accountUpdateService.CheckIsEnoughBalance(order3, meWithSpread, 0));
             
             var meForLimitOk = new FakeMatchingEngine(999);
             
             var limitOrderOk = TestObjectsFactory.CreateNewOrder(OrderType.Limit, "EURUSD", Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 960, price: 1000);
 
-            Assert.DoesNotThrow(() => _accountUpdateService.CheckIsEnoughBalance(limitOrderOk, meForLimitOk));
+            Assert.DoesNotThrow(() => _accountUpdateService.CheckIsEnoughBalance(limitOrderOk, meForLimitOk, 0));
             
             var limitOrderErr = TestObjectsFactory.CreateNewOrder(OrderType.Limit, "EURUSD", Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 960, price: 1000);
 
             var ex = Assert.Throws<ValidateOrderException>(() =>
-                _accountUpdateService.CheckIsEnoughBalance(limitOrderErr, me));
+                _accountUpdateService.CheckIsEnoughBalance(limitOrderErr, me, 0));
 
             Console.WriteLine(ex.Comment);
         }
