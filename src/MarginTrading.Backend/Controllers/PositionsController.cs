@@ -17,8 +17,10 @@ using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Filters;
+using MarginTrading.Backend.Infrastructure;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
+using MarginTrading.Backend.Services.Helpers;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Mappers;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
@@ -79,6 +81,8 @@ namespace MarginTrading.Backend.Controllers
             {
                 throw new InvalidOperationException("Position not found");
             }
+
+            ValidationHelper.ValidateAccountId(position, request?.AccountId);
 
             ValidateDayOff(position.AssetPairId);
 

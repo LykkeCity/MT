@@ -20,6 +20,7 @@ using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Filters;
 using MarginTrading.Backend.Services;
+using MarginTrading.Backend.Services.Helpers;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Mappers;
 using MarginTrading.Common.Extensions;
@@ -102,6 +103,8 @@ namespace MarginTrading.Backend.Controllers
         {
             if (!_ordersCache.Positions.TryGetPositionById(positionId, out var position))
                 throw new InvalidOperationException($"Position {positionId} not found");
+
+            ValidationHelper.ValidateAccountId(position, request.AccountId); 
 
             var takeProfit = position.RelatedOrders?.FirstOrDefault(x => x.Type == OrderType.TakeProfit);
             var stopLoss = position.RelatedOrders?.FirstOrDefault(x => x.Type == OrderType.StopLoss || x.Type == OrderType.TrailingStop);
@@ -240,6 +243,8 @@ namespace MarginTrading.Backend.Controllers
             if (!_ordersCache.TryGetOrderById(orderId, out var order))
                 throw new InvalidOperationException("Order not found");
 
+            ValidationHelper.ValidateAccountId(order, request?.AccountId);
+
             var correlationId = string.IsNullOrWhiteSpace(request?.CorrelationId)
                 ? _identityGenerator.GenerateGuid()
                 : request.CorrelationId;
@@ -348,6 +353,8 @@ namespace MarginTrading.Backend.Controllers
             {
                 throw new InvalidOperationException("Order not found");
             }
+
+            ValidationHelper.ValidateAccountId(order, request.AccountId);
 
             try
             {
