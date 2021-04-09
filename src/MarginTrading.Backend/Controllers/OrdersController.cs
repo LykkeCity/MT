@@ -124,7 +124,7 @@ namespace MarginTrading.Backend.Controllers
                         {
                             Originator = request.Originator,
                             AdditionalInfo = request.AdditionalInfoJson
-                        });
+                        }, request.AccountId);
                         relatedOrderExists = false;
                     }
                 }
@@ -161,17 +161,20 @@ namespace MarginTrading.Backend.Controllers
                     {
                         Price = request.NewPrice,
                         Originator = request.Originator,
-                        AdditionalInfo = request.AdditionalInfoJson
+                        AdditionalInfo = request.AdditionalInfoJson,
+                        AccountId = request.AccountId,
                     });
                 }
             }
             else if (relatedOrderExists)
             {
-                await CancelAsync(relatedOrderId, new OrderCancelRequest
-                {
-                    Originator = request.Originator,
-                    AdditionalInfo = request.AdditionalInfoJson
-                });
+                await CancelAsync(relatedOrderId, 
+                    new OrderCancelRequest
+                    {
+                        Originator = request.Originator,
+                        AdditionalInfo = request.AdditionalInfoJson
+                    },
+                    request.AccountId);
             }
             else
             {
@@ -234,16 +237,17 @@ namespace MarginTrading.Backend.Controllers
         /// </summary>
         /// <param name="orderId">Id of order to cancel</param>
         /// <param name="request">Additional cancellation info</param>
+        /// <param name="accountId"></param>
         [Route("{orderId}")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpDelete]
-        public Task CancelAsync(string orderId, [FromBody] OrderCancelRequest request = null)
+        public Task CancelAsync(string orderId, [FromBody] OrderCancelRequest request = null, string accountId = null)
         {
             if (!_ordersCache.TryGetOrderById(orderId, out var order))
                 throw new InvalidOperationException("Order not found");
 
-            ValidationHelper.ValidateAccountId(order, request?.AccountId);
+            ValidationHelper.ValidateAccountId(order, accountId);
 
             var correlationId = string.IsNullOrWhiteSpace(request?.CorrelationId)
                 ? _identityGenerator.GenerateGuid()
@@ -269,7 +273,8 @@ namespace MarginTrading.Backend.Controllers
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpDelete]
-        public async Task<Dictionary<string, string>> CancelBulkAsync([FromBody] OrderCancelBulkRequest request = null)
+        public async Task<Dictionary<string, string>> CancelBulkAsync([FromBody] OrderCancelBulkRequest request = null,
+            string accountId = null)
         {
             var failedOrderIds = new Dictionary<string, string>();
 
@@ -277,11 +282,11 @@ namespace MarginTrading.Backend.Controllers
             {
                 try
                 {
-                    await CancelAsync(id, request.OrderCancelRequest);
+                    await CancelAsync(id, request.OrderCancelRequest, accountId);
                 }
                 catch (Exception exception)
                 {
-                    await _log.WriteWarningAsync(nameof(OrdersController), nameof(CancelGroupAsync),
+                    await _log.WriteWarningAsync(nameof(OrdersController), nameof(CancelBulkAsync),
                         $"Failed to cancel order {id}", exception);
                     failedOrderIds.Add(id, exception.Message);
                 }
@@ -324,7 +329,7 @@ namespace MarginTrading.Backend.Controllers
             {
                 try
                 {
-                    await CancelAsync(order.Id, request);
+                    await CancelAsync(order.Id, request, accountId);
                 }
                 catch (Exception exception)
                 {
