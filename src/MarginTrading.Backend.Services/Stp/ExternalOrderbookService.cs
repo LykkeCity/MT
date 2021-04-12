@@ -199,10 +199,7 @@ namespace MarginTrading.Backend.Services.Stp
                     isEodOrderbook)
                 {
                     //log current schedule for the instrument
-                    var schedule = _scheduleSettingsCache.GetCompiledAssetPairScheduleSettings(
-                        orderbook.AssetPairId,
-                        _dateService.Now(),
-                        TimeSpan.Zero);
+                    var schedule = _scheduleSettingsCache.GetMarketTradingScheduleByAssetPair(orderbook.AssetPairId);
 
                     _log.WriteWarning("EOD quotes processing", $"Current schedule: {schedule.ToJson()}",
                         $"EOD quote for {orderbook.AssetPairId} is skipped, because instrument is within trading hours");

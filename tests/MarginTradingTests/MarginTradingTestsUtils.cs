@@ -29,6 +29,8 @@ namespace MarginTradingTests
     public static class MarginTradingTestsUtils
     {
         public const string TradingConditionId = "1";
+        public const string DefaultMarket = "DefaultMarket";
+        
 
         public static IAssetsApi GetPopulatedAssets()
         {
@@ -243,6 +245,7 @@ namespace MarginTradingTests
                     Accuracy = 5,
                     BaseAssetId = "EUR",
                     QuoteAssetId = "USD",
+                    MarketId = DefaultMarket
                 },
                 new AssetPairContract
                 {
@@ -250,7 +253,8 @@ namespace MarginTradingTests
                     Name = "BTCEUR",
                     Accuracy = 3,
                     BaseAssetId = "BTC",
-                    QuoteAssetId = "EUR"
+                    QuoteAssetId = "EUR",
+                    MarketId = DefaultMarket
                 },
                 new AssetPairContract
                 {
@@ -258,7 +262,8 @@ namespace MarginTradingTests
                     Name = "BTCUSD",
                     Accuracy = 3,
                     BaseAssetId = "BTC",
-                    QuoteAssetId = "USD"
+                    QuoteAssetId = "USD",
+                    MarketId = DefaultMarket
                 },
                 new AssetPairContract
                 {
@@ -266,7 +271,8 @@ namespace MarginTradingTests
                     Name = "BTCCHF",
                     Accuracy = 3,
                     BaseAssetId = "BTC",
-                    QuoteAssetId = "CHF"
+                    QuoteAssetId = "CHF",
+                    MarketId = DefaultMarket
                 },
                 new AssetPairContract
                 {
@@ -274,7 +280,8 @@ namespace MarginTradingTests
                     Name = "CHFJPY",
                     Accuracy = 3,
                     BaseAssetId = "CHF",
-                    QuoteAssetId = "JPY"
+                    QuoteAssetId = "JPY",
+                    MarketId = DefaultMarket
                 },
                 new AssetPairContract
                 {
@@ -282,7 +289,8 @@ namespace MarginTradingTests
                     Name = "USDCHF",
                     Accuracy = 3,
                     BaseAssetId = "USD",
-                    QuoteAssetId = "CHF"
+                    QuoteAssetId = "CHF",
+                    MarketId = DefaultMarket
                 },
                 new AssetPairContract
                 {
@@ -290,7 +298,8 @@ namespace MarginTradingTests
                     Name = "EURCHF",
                     Accuracy = 5,
                     BaseAssetId = "EUR",
-                    QuoteAssetId = "CHF"
+                    QuoteAssetId = "CHF",
+                    MarketId = DefaultMarket
                 },
                 new AssetPairContract
                 {
@@ -298,7 +307,8 @@ namespace MarginTradingTests
                     Name = "BTCJPY",
                     Accuracy = 5,
                     BaseAssetId = "BTC",
-                    QuoteAssetId = "JPY"
+                    QuoteAssetId = "JPY",
+                    MarketId = DefaultMarket
                 },
                 new AssetPairContract
                 {
@@ -306,7 +316,8 @@ namespace MarginTradingTests
                     Name = "EURJPY",
                     Accuracy = 3,
                     BaseAssetId = "EUR",
-                    QuoteAssetId = "JPY"
+                    QuoteAssetId = "JPY",
+                    MarketId = DefaultMarket
                 },
                 new AssetPairContract
                 {
@@ -314,7 +325,8 @@ namespace MarginTradingTests
                     Name = "JPYUSD",
                     Accuracy = 3,
                     BaseAssetId = "JPY",
-                    QuoteAssetId = "USD"
+                    QuoteAssetId = "USD",
+                    MarketId = DefaultMarket
                 },
                 new AssetPairContract
                 {
@@ -322,7 +334,8 @@ namespace MarginTradingTests
                     Name = "EURGBP",
                     Accuracy = 3,
                     BaseAssetId = "EUR",
-                    QuoteAssetId = "GBP"
+                    QuoteAssetId = "GBP",
+                    MarketId = DefaultMarket
                 },
                 new AssetPairContract
                 {
@@ -330,7 +343,8 @@ namespace MarginTradingTests
                     Name = "GBPUSD",
                     Accuracy = 3,
                     BaseAssetId = "GBP",
-                    QuoteAssetId = "USD"
+                    QuoteAssetId = "USD",
+                    MarketId = DefaultMarket
                 },
             };
 
