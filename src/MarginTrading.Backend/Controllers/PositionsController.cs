@@ -17,8 +17,10 @@ using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Filters;
+using MarginTrading.Backend.Infrastructure;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
+using MarginTrading.Backend.Services.Helpers;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Mappers;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
@@ -68,17 +70,21 @@ namespace MarginTrading.Backend.Controllers
         /// </summary>
         /// <param name="positionId">Id of position</param>
         /// <param name="request">Additional info for close</param>
+        /// <param name="accountId">AccountId</param>
         [Route("{positionId}")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpDelete]
         public async Task<PositionCloseResponse> CloseAsync([CanBeNull] [FromRoute] string positionId,
-            [FromBody] PositionCloseRequest request = null)
+            [FromBody] PositionCloseRequest request = null,
+            [FromQuery] string accountId = null)
         {
             if (!_ordersCache.Positions.TryGetPositionById(positionId, out var position))
             {
                 throw new InvalidOperationException("Position not found");
             }
+
+            ValidationHelper.ValidateAccountId(position, accountId);
 
             ValidateDayOff(position.AssetPairId);
 
