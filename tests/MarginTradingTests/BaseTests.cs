@@ -28,6 +28,7 @@ using MarginTrading.Common.Services.Settings;
 using MarginTrading.Common.Settings;
 using MarginTrading.AssetService.Contracts;
 using MarginTrading.AssetService.Contracts.Scheduling;
+using MarginTrading.Backend.Services.AssetPairs;
 using MarginTradingTests.Modules;
 using Microsoft.FeatureManagement;
 using Moq;
@@ -168,6 +169,11 @@ namespace MarginTradingTests
             scheduleSettingsApiMock.Setup(m => m.StateList(It.IsAny<string[]>()))
                 .ReturnsAsync(new List<CompiledScheduleContract>());
             builder.RegisterInstance(scheduleSettingsApiMock.Object).As<IScheduleSettingsApi>();
+            
+            
+            
+            scheduleSettingsApiMock.Setup(m => m.List(It.IsAny<string>()))
+                .ReturnsAsync(new List<ScheduleSettingsContract>() {AlwaysOnMarketSchedule});
 
             var exchangeConnector = Mock.Of<IExchangeConnectorClient>();
             builder.RegisterInstance(exchangeConnector).As<IExchangeConnectorClient>();
@@ -187,6 +193,7 @@ namespace MarginTradingTests
             MtServiceLocator.SwapCommissionService = Container.Resolve<ICommissionService>();
             
             Container.Resolve<OrderBookList>().Init(null);
+            Container.Resolve<IScheduleSettingsCacheService>().UpdateAllSettingsAsync().GetAwaiter().GetResult();
         }
 
         protected List<MarginTradingAccount> Accounts = new List<MarginTradingAccount>
@@ -245,6 +252,27 @@ namespace MarginTradingTests
                 ClientId = ClientId2,
                 Balance = 1000, 
                 LegalEntity = "LYKKETEST"
+            }
+        };
+        
+        private static ScheduleSettingsContract AlwaysOnMarketSchedule = new ScheduleSettingsContract
+        {
+            Id = "AlwaysOnMarketSchedule",
+            Rank = int.MinValue,
+            IsTradeEnabled = true,
+            PendingOrdersCutOff = TimeSpan.Zero,
+            MarketId = MarginTradingTestsUtils.DefaultMarket,
+            Start = new ScheduleConstraintContract
+            {
+                Date = null,
+                DayOfWeek = null,
+                Time = new TimeSpan(0, 0, 0)
+            },
+            End = new ScheduleConstraintContract
+            {
+                Date = null,
+                DayOfWeek = null,
+                Time = new TimeSpan(23, 59, 59)
             }
         };
     }
