@@ -60,8 +60,12 @@ namespace MarginTrading.Backend.Services.Caches
 
         public override void Stop()
         {
-            DumpOrdersToRepository().Wait();
-            DumpPositionsToRepository().Wait();
+            if (Working)
+            {
+                DumpOrdersToRepository().Wait();
+                DumpPositionsToRepository().Wait();    
+            }
+            
             base.Stop();
         }
 
