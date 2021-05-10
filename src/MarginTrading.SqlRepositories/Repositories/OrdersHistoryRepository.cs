@@ -17,16 +17,35 @@ namespace MarginTrading.SqlRepositories.Repositories
     {
         private readonly string _connectionString;
         private readonly int _getLastSnapshotTimeoutS;
-        private readonly string _select = @";WITH cte AS
-       (
-         SELECT *,
-                ROW_NUMBER() OVER (PARTITION BY Id ORDER BY ModifiedTimestamp DESC) AS rn
-         FROM [{0}] oh
-         WHERE oh.ModifiedTimestamp > @Timestamp
-       )
+
+        private readonly string _select = @"
+;WITH 
+    filteredOrderHist AS (
+        SELECT *,
+               CASE [Status]
+                   WHEN 'Placed' THEN 0
+                   WHEN 'Inactive'THEN 1
+                   WHEN 'Active'THEN 2
+                   WHEN 'ExecutionStarted'THEN 3
+                   WHEN 'Executed'THEN 4
+                   WHEN 'Canceled'THEN 5
+                   WHEN 'Rejected'THEN 6
+                   WHEN 'Expired'THEN 7
+                   ELSE 99
+               END as StatusOrder
+        FROM [{0}] oh (NOLOCK)
+        WHERE oh.ModifiedTimestamp > @Timestamp
+    ),
+    filteredOrderHistWithRowNumber AS (
+        SELECT *, ROW_NUMBER() OVER (PARTITION BY Id ORDER BY
+            [ModifiedTimestamp] DESC,
+            StatusOrder DESC
+            ) AS RowNumber
+        FROM filteredOrderHist
+    )
 SELECT *
-FROM cte
-WHERE rn = 1";
+FROM filteredOrderHistWithRowNumber
+WHERE RowNumber = 1";
 
         public OrdersHistoryRepository(string connectionString, string tableName, int getLastSnapshotTimeoutS)
         {
