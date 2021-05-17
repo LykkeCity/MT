@@ -78,7 +78,7 @@ namespace MarginTrading.SqlRepositories
             {
                 data = JsonConvert.SerializeObject(obj),
                 blobKey = $"{blobContainer}_{key}",
-                timestamp = DateTime.Now
+                timestamp = DateTime.UtcNow
             };
             
             using (var conn = new SqlConnection(_connectionString))
