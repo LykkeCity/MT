@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Autofac;
+using Common.Log;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.ClientAccount.Client.AutorestClient.Models;
 using Lykke.Service.ClientAccount.Client.Models;
@@ -29,6 +30,7 @@ using MarginTrading.Common.Settings;
 using MarginTrading.AssetService.Contracts;
 using MarginTrading.AssetService.Contracts.Scheduling;
 using MarginTrading.Backend.Services.AssetPairs;
+using MarginTrading.Backend.Services.Quotes;
 using MarginTradingTests.Modules;
 using Microsoft.FeatureManagement;
 using Moq;
@@ -177,12 +179,24 @@ namespace MarginTradingTests
 
             var exchangeConnector = Mock.Of<IExchangeConnectorClient>();
             builder.RegisterInstance(exchangeConnector).As<IExchangeConnectorClient>();
-
-            builder.RegisterBuildCallback(c => c.Resolve<AccountManager>());
-            builder.RegisterBuildCallback(c => c.Resolve<TradingInstrumentsManager>());
-            builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
             builder.RegisterInstance(new Mock<IMtSlackNotificationsSender>(MockBehavior.Loose).Object).SingleInstance();
             builder.RegisterInstance(Mock.Of<IRabbitMqService>()).As<IRabbitMqService>();
+            
+            builder.RegisterBuildCallback(c =>
+            {
+                void StartService<T>() where T: IStartable
+                {
+                    c.Resolve<T>().Start();
+                }
+
+                // note the order here is important!
+                StartService<TradingInstrumentsManager>();
+                StartService<AccountManager>();
+                StartService<OrderCacheManager>();
+                StartService<PendingOrdersCleaningService>();
+                StartService<QuoteCacheService>();
+                StartService<FxRateCacheService>();
+            });
 
             builder.RegisterType<SimpleIdentityGenerator>().As<IIdentityGenerator>();
             Container = builder.Build();
