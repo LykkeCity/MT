@@ -9,6 +9,7 @@ using Common.Log;
 using FluentScheduler;
 using JetBrains.Annotations;
 using Lykke.AzureQueueIntegration;
+using Lykke.Common;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Cqrs;
 using Lykke.Logs;
@@ -214,17 +215,26 @@ namespace MarginTrading.Backend
             builder.RegisterModule(new BackendMigrationsModule());
             builder.RegisterModule(new CqrsModule(settings.CurrentValue.Cqrs, LogLocator.CommonLog, settings.CurrentValue));
 
-            builder.RegisterBuildCallback(async c =>
+            builder.RegisterBuildCallback(c =>
             {
+                void StartService<T>() where T: IStartable
+                {
+                    LogLocator.CommonLog.WriteInfo("RegisterModules", "Start services",
+                        $"Starting {typeof(T)}");
+                    c.Resolve<T>().Start();
+                    LogLocator.CommonLog.WriteInfo("RegisterModules", "Start services",
+                        $"{typeof(T)} is started");
+                }
+
                 // note the order here is important!
-                c.Resolve<TradingInstrumentsManager>();
-                c.Resolve<OrderBookSaveService>();
-                await c.Resolve<IExternalOrderbookService>().InitializeAsync();
-                c.Resolve<QuoteCacheService>().Start();
-                c.Resolve<FxRateCacheService>();
-                c.Resolve<AccountManager>();
-                c.Resolve<OrderCacheManager>();
-                c.Resolve<PendingOrdersCleaningService>();
+                StartService<TradingInstrumentsManager>();
+                StartService<OrderBookSaveService>();
+                StartService<IExternalOrderbookService>();
+                StartService<QuoteCacheService>();
+                StartService<FxRateCacheService>();
+                StartService<AccountManager>();
+                StartService<OrderCacheManager>();
+                StartService<PendingOrdersCleaningService>();
             });
         }
 

@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using Lykke.Common.Log;
@@ -81,11 +80,11 @@ namespace MarginTrading.Backend.Services.Stp
             _marginTradingSettings = marginTradingSettings;
         }
 
-        public async Task InitializeAsync()
+        public void Start()
         {
             try
             {
-                var orderBooks = (await _orderBookProviderApi.GetOrderBooks())
+                var orderBooks = _orderBookProviderApi.GetOrderBooks().GetAwaiter().GetResult()
                     .GroupBy(x => x.AssetPairId)
                     .Select(x => _convertService.Convert<ExternalOrderBookContract, ExternalOrderBook>(
                         x.MaxBy(o => o.ReceiveTimestamp)))
@@ -96,12 +95,12 @@ namespace MarginTrading.Backend.Services.Stp
                     SetOrderbook(externalOrderBook);
                 }
                 
-                await _log.WriteInfoAsync(nameof(ExternalOrderbookService), nameof(InitializeAsync),
+                _log.WriteInfo(nameof(ExternalOrderbookService), nameof(Start),
                     $"External order books cache initialized with {orderBooks.Count} items from OrderBooks Service");
             }
             catch (Exception exception)
             {
-                await _log.WriteWarningAsync(nameof(ExternalOrderbookService), nameof(InitializeAsync),
+                _log.WriteWarning(nameof(ExternalOrderbookService), nameof(Start),
                     "Failed to initialize cache from OrderBook Service", exception);
             }
         }
