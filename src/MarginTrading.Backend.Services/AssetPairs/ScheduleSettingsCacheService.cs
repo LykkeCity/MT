@@ -65,10 +65,10 @@ namespace MarginTrading.Backend.Services.AssetPairs
             _overnightMarginSettings = overnightMarginSettings;
         }
 
-        public async Task UpdateAllSettingsAsync()
+        public async Task UpdateAllSettingsAsync(bool forcePublishMarketStateChanged = false)
         {
             await UpdateScheduleSettingsAsync();
-            await UpdateMarketsScheduleSettingsAsync();
+            await UpdateMarketsScheduleSettingsAsync(forcePublishMarketStateChanged);
         }
 
         public async Task UpdateScheduleSettingsAsync()
@@ -118,7 +118,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             }
         }
 
-        public async Task UpdateMarketsScheduleSettingsAsync()
+        public async Task UpdateMarketsScheduleSettingsAsync(bool forcePublishMarketStateChanged = false)
         {
             var marketsScheduleSettingsRaw = (await _scheduleSettingsApi.List())
                 .Where(x => !string.IsNullOrWhiteSpace(x.MarketId))
@@ -143,7 +143,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
                 var now = MarketsCacheWarmUpUnsafe();
 
-                HandleMarketStateChangesUnsafe(now, newMarketsScheduleSettings.Keys.ToArray());
+                HandleMarketStateChangesUnsafe(now, newMarketsScheduleSettings.Keys.ToArray(), forcePublishMarketStateChanged);
             }
             finally
             {
@@ -171,14 +171,14 @@ namespace MarginTrading.Backend.Services.AssetPairs
             }
         }
 
-        private void HandleMarketStateChangesUnsafe(DateTime currentTime, string[] marketIds = null)
+        private void HandleMarketStateChangesUnsafe(DateTime currentTime, string[] marketIds = null, bool forcePublishMarketStateChanged = false)
         {
             foreach (var (marketId, scheduleSettings) in _compiledMarketScheduleCache
                 // ReSharper disable once AssignNullToNotNullAttribute
                 .Where(x => marketIds.IsNullOrEmpty() || marketIds.Contains(x.Key)))
             {
                 var newState = scheduleSettings.GetMarketState(marketId, currentTime);
-                if (!_marketStates.TryGetValue(marketId, out var oldState) || oldState.IsEnabled != newState.IsEnabled)
+                if (forcePublishMarketStateChanged || !_marketStates.TryGetValue(marketId, out var oldState) || oldState.IsEnabled != newState.IsEnabled)
                 {
                     _cqrsSender.PublishEvent(new MarketStateChangedEvent
                     {
