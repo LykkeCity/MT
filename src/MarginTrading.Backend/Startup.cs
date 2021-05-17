@@ -268,7 +268,10 @@ namespace MarginTrading.Backend
 
             if (settings.CurrentValue.UseSerilog)
             {
-                LogLocator.RequestsLog = LogLocator.CommonLog = new SerilogLogger(typeof(Startup).Assembly, configuration);
+                LogLocator.RequestsLog = LogLocator.CommonLog = new SerilogLogger(typeof(Startup).Assembly, configuration, new List<Func<(string Name, object Value)>>()
+                {
+                    () => ("BrokerId", settings.CurrentValue.BrokerId),
+                });
             }
             else if (settings.CurrentValue.Db.StorageMode == StorageMode.SqlServer)
             {
