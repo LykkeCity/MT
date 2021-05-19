@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
+using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Helpers;
 using MarginTrading.Contract.BackendContracts;
@@ -32,6 +33,15 @@ namespace MarginTrading.Backend.Middleware
             {
                 await _next.Invoke(context);
             }
+            catch (ValidateOrderFunctionalException ex)
+            {
+                await LogFunctionalError(context);
+#if DEBUG
+                await SendError(context, ex.ToString());
+#else
+                await SendError(context, ex.Message);
+#endif
+            }
             catch (Exception ex)
             {
                 await LogError(context, ex);
@@ -41,6 +51,18 @@ namespace MarginTrading.Backend.Middleware
                 await SendError(context, ex.Message);
 #endif
             }
+        }
+
+        private async Task LogFunctionalError(HttpContext context)
+        {
+            string bodyPart;
+
+            using (var memoryStream = new MemoryStream())
+            {
+                bodyPart = await StreamHelpers.GetStreamPart(memoryStream, 1024);
+            }
+
+            await _log.WriteInfoAsync("GlobalHandler", context.Request.GetUri().AbsoluteUri, bodyPart);
         }
 
         private async Task LogError(HttpContext context, Exception ex)
