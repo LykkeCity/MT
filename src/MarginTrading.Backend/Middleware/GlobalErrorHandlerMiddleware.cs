@@ -33,18 +33,17 @@ namespace MarginTrading.Backend.Middleware
             {
                 await _next.Invoke(context);
             }
-            catch (ValidateOrderFunctionalException ex)
-            {
-                await LogFunctionalError(context);
-#if DEBUG
-                await SendError(context, ex.ToString());
-#else
-                await SendError(context, ex.Message);
-#endif
-            }
             catch (Exception ex)
             {
-                await LogError(context, ex);
+                if(ex is ValidateOrderFunctionalException)
+                {
+                    await LogFunctionalError(context);
+                }
+                else
+                {
+                    await LogError(context, ex);
+                }
+
 #if DEBUG
                 await SendError(context, ex.ToString());
 #else
