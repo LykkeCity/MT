@@ -380,7 +380,7 @@ namespace MarginTrading.Backend.Controllers
                 await _tradingEngine.ChangeOrderAsync(order.Id, request.Price, request.Validity, originator,
                     request.AdditionalInfo, correlationId, request.ForceOpen);
             }
-            catch (ValidateOrderException ex) when (ex is not ValidateOrderFunctionalException)
+            catch (ValidateOrderException ex) when (!(ex is ValidateOrderFunctionalException))
             {
                 throw new InvalidOperationException(ex.Message);
             }
