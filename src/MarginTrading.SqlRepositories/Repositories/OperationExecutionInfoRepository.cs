@@ -1,19 +1,21 @@
-﻿// Copyright (c) 2019 Lykke Corp.
+﻿// Copyright (c) 2021 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using Microsoft.Data.SqlClient;
-using System.Linq;
-using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using Dapper;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Common.Services;
 using MarginTrading.SqlRepositories.Entities;
+using Microsoft.Data.SqlClient;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace MarginTrading.SqlRepositories.Repositories
 {
@@ -29,26 +31,26 @@ namespace MarginTrading.SqlRepositories.Repositories
                                                  "[Data] [nvarchar] (MAX) NOT NULL," +
                                                  "CONSTRAINT [MTEx_Id] UNIQUE NONCLUSTERED ([Id], [OperationName])" +
                                                  ");";
-        
+
         private static Type DataType => typeof(IOperationExecutionInfo<object>);
         private static readonly string GetColumns = string.Join(",", DataType.GetProperties().Select(x => x.Name));
         private static readonly string GetFields = string.Join(",", DataType.GetProperties().Select(x => "@" + x.Name));
-        private static readonly string GetUpdateClause = string.Join(",", 
+        private static readonly string GetUpdateClause = string.Join(",",
             DataType.GetProperties().Select(x => "[" + x.Name + "]=@" + x.Name));
 
         private readonly string _connectionString;
         private readonly ILog _log;
         private readonly IDateService _dateService;
 
-        public OperationExecutionInfoRepository( 
-            string connectionString, 
+        public OperationExecutionInfoRepository(
+            string connectionString,
             ILog log,
             IDateService dateService)
         {
             _connectionString = connectionString;
             _log = log;
             _dateService = dateService;
-            
+
             using (var conn = new SqlConnection(_connectionString))
             {
                 try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
@@ -59,7 +61,7 @@ namespace MarginTrading.SqlRepositories.Repositories
                 }
             }
         }
-        
+
         public async Task<IOperationExecutionInfo<TData>> GetOrAddAsync<TData>(
             string operationName, string operationId, Func<IOperationExecutionInfo<TData>> factory) where TData : class
         {
@@ -69,7 +71,7 @@ namespace MarginTrading.SqlRepositories.Repositories
                 {
                     var operationInfo = await conn.QueryFirstOrDefaultAsync<OperationExecutionInfoEntity>(
                         $"SELECT * FROM {TableName} WHERE Id=@operationId and OperationName=@operationName",
-                        new {operationId, operationName});
+                        new { operationId, operationName });
 
                     if (operationInfo == null)
                     {
@@ -91,13 +93,49 @@ namespace MarginTrading.SqlRepositories.Repositories
             }
         }
 
+        public async Task<PaginatedResponse<OperationExecutionInfo<SpecialLiquidationOperationData>>> GetRfqAsync(string rfqId, string instrumentId,
+            string accountId, List<SpecialLiquidationOperationState> states, DateTime? from, DateTime? to, int skip, int take,
+            bool isAscendingOrder = true)
+        {
+            const string whereRfq = "WHERE [OperationName] = 'SpecialLiquidation' ";
+
+            var whereFields = (string.IsNullOrWhiteSpace(rfqId) ? "" : " AND [Id] = @rfqId")
+                            + (from == null ? "" : " AND [LastModified] >= @from")
+                            + (to == null ? "" : " AND [LastModified] < @to");
+
+            var whereJson = (string.IsNullOrWhiteSpace(instrumentId) ? "" : " AND JSON_VALUE([Data], '$.Instrument') = @instrumentId")
+                          + (string.IsNullOrWhiteSpace(accountId) ? "" : " AND JSON_VALUE([Data], '$.AccountId') = @accountId")
+                          + (states == null || states.Count == 0 ? "" : $" AND JSON_VALUE([Data], '$.State') in ({string.Join(",", states.Select(x => $"'{x}'"))})");
+
+            var whereClause = whereRfq + whereFields + whereJson;
+
+            const int MaxResults = 1000;
+            var sorting = isAscendingOrder ? "ASC" : "DESC";
+            take = take <= 0 ? MaxResults : Math.Min(take, MaxResults);
+            var paginationClause = $"ORDER BY [LastModified] {sorting} OFFSET {skip} ROWS FETCH NEXT {take} ROWS ONLY";
+
+            using var conn = new SqlConnection(_connectionString);
+            var sql = $"SELECT * FROM [{TableName}] {whereClause} {paginationClause}; SELECT COUNT(*) FROM [{TableName}] {whereClause}";
+            var gridReader = await conn.QueryMultipleAsync(sql, new { rfqId, instrumentId, accountId, from, to });
+
+            var contents = (await gridReader.ReadAsync<OperationExecutionInfoEntity>()).ToList();
+            var totalCount = await gridReader.ReadSingleAsync<int>();
+
+            return new PaginatedResponse<OperationExecutionInfo<SpecialLiquidationOperationData>>(
+                    contents: contents.Select(x=>Convert<SpecialLiquidationOperationData>(x)).ToArray(),
+                    start: skip,
+                    size: contents.Count,
+                    totalSize: totalCount
+                );
+        }
+
         public async Task<IOperationExecutionInfo<TData>> GetAsync<TData>(string operationName, string id) where TData : class
         {
             using (var conn = new SqlConnection(_connectionString))
             {
                 var operationInfo = await conn.QuerySingleOrDefaultAsync<OperationExecutionInfoEntity>(
                     $"SELECT * FROM {TableName} WHERE Id = @id and OperationName=@operationName",
-                    new {id, operationName});
+                    new { id, operationName });
 
                 return operationInfo == null ? null : Convert<TData>(operationInfo);
             }
@@ -107,7 +145,7 @@ namespace MarginTrading.SqlRepositories.Repositories
         {
             var entity = Convert(executionInfo, _dateService.Now());
             var affectedRows = 0;
-            
+
             using (var conn = new SqlConnection(_connectionString))
             {
                 try
@@ -141,7 +179,7 @@ namespace MarginTrading.SqlRepositories.Repositories
                     $"New info: [{executionInfo.ToJson()}]");
             }
         }
-        
+
         private static OperationExecutionInfo<TData> Convert<TData>(OperationExecutionInfoEntity entity)
             where TData : class
         {
@@ -151,7 +189,7 @@ namespace MarginTrading.SqlRepositories.Repositories
                 lastModified: entity.LastModified,
                 data: entity.Data is string dataStr
                     ? JsonConvert.DeserializeObject<TData>(dataStr)
-                    : ((JToken) entity.Data).ToObject<TData>());
+                    : ((JToken)entity.Data).ToObject<TData>());
         }
 
         private static OperationExecutionInfoEntity Convert<TData>(IOperationExecutionInfo<TData> model, DateTime now)
