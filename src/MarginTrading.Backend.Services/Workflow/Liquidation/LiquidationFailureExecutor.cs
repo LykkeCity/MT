@@ -11,6 +11,7 @@ using MarginTrading.Backend.Contracts.Workflow.Liquidation;
 using MarginTrading.Backend.Contracts.Workflow.Liquidation.Events;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
@@ -24,6 +25,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         private readonly IDateService _dateService;
         private readonly OrdersCache _ordersCache;
         private readonly IEventChannel<LiquidationEndEventArgs> _liquidationEndEventChannel;
+        private readonly IAccountUpdateService _accountUpdateService;
         private readonly ILog _log;
 
         public LiquidationFailureExecutor(
@@ -32,6 +34,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             IDateService dateService,
             OrdersCache ordersCache,
             IEventChannel<LiquidationEndEventArgs> liquidationEndEventChannel,
+            IAccountUpdateService accountUpdateService,
             ILog log)
         {
             _operationExecutionInfoRepository = operationExecutionInfoRepository;
@@ -39,6 +42,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             _dateService = dateService;
             _ordersCache = ordersCache;
             _liquidationEndEventChannel = liquidationEndEventChannel;
+            _accountUpdateService = accountUpdateService;
             _log = log;
         }
 
@@ -65,16 +69,9 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                     $"Unable to execute failure. Liquidation execution info was not found.");
                 return;
             }
-
-            if (!_accountsCache.TryFinishLiquidation(accountId, reason, operationId))
-            {
-                await _log.WriteWarningAsync(nameof(LiquidationFailureExecutor),
-                    nameof(ExecuteAsync),
-                    new {operationId, accountId}.ToJson(),
-                    $"Unable to execute failure. Couldn't finish liquidation.");
-                return;
-            }
             
+            _accountUpdateService.RemoveLiquidationStateIfNeeded(accountId, reason, operationId, executionInfo.Data.LiquidationType);
+
             var account = _accountsCache.Get(accountId);
 
             failurePublisher.PublishEvent(new LiquidationFailedEvent
