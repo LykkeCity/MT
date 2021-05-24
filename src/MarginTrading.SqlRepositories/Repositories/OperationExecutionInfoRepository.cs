@@ -109,7 +109,7 @@ namespace MarginTrading.SqlRepositories.Repositories
 
             var whereClause = whereRfq + whereFields + whereJson;
 
-            const int MaxResults = 1000;
+            const int MaxResults = 100;
             var sorting = isAscendingOrder ? "ASC" : "DESC";
             take = take <= 0 ? MaxResults : Math.Min(take, MaxResults);
             var paginationClause = $"ORDER BY [LastModified] {sorting} OFFSET {skip} ROWS FETCH NEXT {take} ROWS ONLY";
