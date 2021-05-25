@@ -18,19 +18,16 @@ namespace MarginTrading.Backend.Services.Modules
         {
             builder.RegisterType<AccountManager>()
                 .AsSelf()
-                .SingleInstance()
-                .OnActivated(args => args.Instance.Start());
+                .SingleInstance();
 
             builder.RegisterType<OrderCacheManager>()
                 .AsSelf()
-                .SingleInstance()
-                .OnActivated(args => args.Instance.Start());
+                .SingleInstance();
 
             builder.RegisterType<TradingInstrumentsManager>()
                 .AsSelf()
                 .As<ITradingInstrumentsManager>()
-                .SingleInstance()
-                .OnActivated(args => args.Instance.Start());
+                .SingleInstance();
 
             builder.RegisterType<MatchingEngineRoutesManager>()
                 .AsSelf()
@@ -46,8 +43,7 @@ namespace MarginTrading.Backend.Services.Modules
 
             builder.RegisterType<PendingOrdersCleaningService>()
                 .AsSelf()
-                .SingleInstance()
-                .OnActivated(args => args.Instance.Start());
+                .SingleInstance();
             
             builder.RegisterType<QuotesMonitor>()
                 .AsSelf()

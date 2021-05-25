@@ -44,8 +44,7 @@ namespace MarginTrading.Backend.Services.Modules
 			builder.RegisterType<FxRateCacheService>() 
 				.AsSelf()
 				.As<IFxRateCacheService>()
-				.SingleInstance()
-				.OnActivated(args => args.Instance.Start()); 
+				.SingleInstance(); 
 
 			builder.RegisterType<FplService>()
 				.As<IFplService>()
