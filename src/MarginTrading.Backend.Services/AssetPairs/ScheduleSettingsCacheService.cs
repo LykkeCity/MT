@@ -20,7 +20,6 @@ using MarginTrading.Common.Services;
 using MarginTrading.AssetService.Contracts;
 using MarginTrading.AssetService.Contracts.Scheduling;
 using MoreLinq;
-using ScheduleSettingsContract = MarginTrading.AssetService.Contracts.Scheduling.ScheduleSettingsContract;
 
 namespace MarginTrading.Backend.Services.AssetPairs
 {
@@ -65,10 +64,10 @@ namespace MarginTrading.Backend.Services.AssetPairs
             _overnightMarginSettings = overnightMarginSettings;
         }
 
-        public async Task UpdateAllSettingsAsync(bool forcePublishMarketStateChanged = false)
+        public async Task UpdateAllSettingsAsync()
         {
             await UpdateScheduleSettingsAsync();
-            await UpdateMarketsScheduleSettingsAsync(forcePublishMarketStateChanged);
+            await UpdateMarketsScheduleSettingsAsync();
         }
 
         public async Task UpdateScheduleSettingsAsync()
@@ -118,7 +117,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
             }
         }
 
-        public async Task UpdateMarketsScheduleSettingsAsync(bool forcePublishMarketStateChanged = false)
+        public async Task UpdateMarketsScheduleSettingsAsync()
         {
             var marketsScheduleSettingsRaw = (await _scheduleSettingsApi.List())
                 .Where(x => !string.IsNullOrWhiteSpace(x.MarketId))
@@ -143,7 +142,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
                 var now = MarketsCacheWarmUpUnsafe();
 
-                HandleMarketStateChangesUnsafe(now, newMarketsScheduleSettings.Keys.ToArray(), forcePublishMarketStateChanged);
+                HandleMarketStateChangesUnsafe(now, newMarketsScheduleSettings.Keys.ToArray());
             }
             finally
             {
@@ -171,22 +170,19 @@ namespace MarginTrading.Backend.Services.AssetPairs
             }
         }
 
-        private void HandleMarketStateChangesUnsafe(DateTime currentTime, string[] marketIds = null, bool forcePublishMarketStateChanged = false)
+        private void HandleMarketStateChangesUnsafe(DateTime currentTime, string[] marketIds = null)
         {
             foreach (var (marketId, scheduleSettings) in _compiledMarketScheduleCache
                 // ReSharper disable once AssignNullToNotNullAttribute
                 .Where(x => marketIds.IsNullOrEmpty() || marketIds.Contains(x.Key)))
             {
                 var newState = scheduleSettings.GetMarketState(marketId, currentTime);
-                if (forcePublishMarketStateChanged || !_marketStates.TryGetValue(marketId, out var oldState) || oldState.IsEnabled != newState.IsEnabled)
+                _cqrsSender.PublishEvent(new MarketStateChangedEvent
                 {
-                    _cqrsSender.PublishEvent(new MarketStateChangedEvent
-                    {
-                        Id = marketId,
-                        IsEnabled = newState.IsEnabled,
-                        EventTimestamp = _dateService.Now(),
-                    });
-                }
+                    Id = marketId,
+                    IsEnabled = newState.IsEnabled,
+                    EventTimestamp = _dateService.Now(),
+                });
 
                 _marketStates[marketId] = newState;
             }

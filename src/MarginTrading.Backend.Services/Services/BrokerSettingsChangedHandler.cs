@@ -42,7 +42,7 @@ namespace MarginTrading.Backend.Services.Services
                 case ChangeType.Edition:
                     if (e.OldValue == null || IsScheduleDataChanged(e.OldValue, e.NewValue, _settings.BrokerId))
                     {
-                        await _scheduleSettingsCache.UpdateAllSettingsAsync(true);
+                        await _scheduleSettingsCache.UpdateAllSettingsAsync();
                         _overnightMarginService.ScheduleNext();
                         _scheduleControlService.ScheduleNext();
                     }

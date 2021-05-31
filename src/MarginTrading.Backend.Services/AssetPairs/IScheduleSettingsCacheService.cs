@@ -17,7 +17,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         void MarketsCacheWarmUp();
 
-        Task UpdateAllSettingsAsync(bool forcePublishMarketStateChanged = false);
+        Task UpdateAllSettingsAsync();
         
         Task UpdateScheduleSettingsAsync();
 
