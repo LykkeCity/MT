@@ -35,9 +35,9 @@ namespace MarginTrading.Backend.Middleware
             }
             catch (Exception ex)
             {
-                if(ex is ValidateOrderFunctionalException)
+                if (ex is ValidateOrderFunctionalException)
                 {
-                    await LogFunctionalError(context);
+                    await LogFunctionalError(context, ex);
                 }
                 else
                 {
@@ -52,7 +52,7 @@ namespace MarginTrading.Backend.Middleware
             }
         }
 
-        private async Task LogFunctionalError(HttpContext context)
+        private async Task LogFunctionalError(HttpContext context, Exception ex)
         {
             string bodyPart;
 
@@ -61,7 +61,7 @@ namespace MarginTrading.Backend.Middleware
                 bodyPart = await StreamHelpers.GetStreamPart(memoryStream, 1024);
             }
 
-            await _log.WriteInfoAsync("GlobalHandler", context.Request.GetUri().AbsoluteUri, bodyPart);
+            await _log.WriteInfoAsync("GlobalHandler", context.Request.GetUri().AbsoluteUri, bodyPart + ex.Message);
         }
 
         private async Task LogError(HttpContext context, Exception ex)
