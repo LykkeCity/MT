@@ -20,7 +20,6 @@ using MarginTrading.Common.Services;
 using MarginTrading.AssetService.Contracts;
 using MarginTrading.AssetService.Contracts.Scheduling;
 using MoreLinq;
-using ScheduleSettingsContract = MarginTrading.AssetService.Contracts.Scheduling.ScheduleSettingsContract;
 
 namespace MarginTrading.Backend.Services.AssetPairs
 {
@@ -178,15 +177,12 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 .Where(x => marketIds.IsNullOrEmpty() || marketIds.Contains(x.Key)))
             {
                 var newState = scheduleSettings.GetMarketState(marketId, currentTime);
-                if (!_marketStates.TryGetValue(marketId, out var oldState) || oldState.IsEnabled != newState.IsEnabled)
+                _cqrsSender.PublishEvent(new MarketStateChangedEvent
                 {
-                    _cqrsSender.PublishEvent(new MarketStateChangedEvent
-                    {
-                        Id = marketId,
-                        IsEnabled = newState.IsEnabled,
-                        EventTimestamp = _dateService.Now(),
-                    });
-                }
+                    Id = marketId,
+                    IsEnabled = newState.IsEnabled,
+                    EventTimestamp = _dateService.Now(),
+                });
 
                 _marketStates[marketId] = newState;
             }
