@@ -556,7 +556,7 @@ namespace MarginTrading.Backend.Services
         {
             if (orderDirection == OrderDirection.Buy && basePrice >= orderPrice)
             {
-                throw new ValidateOrderFunctionalException(OrderRejectReason.InvalidStoploss,
+                throw new ValidateOrderException(OrderRejectReason.InvalidStoploss,
                     string.Format(MtMessages.Validation_StopLossMustBeMore, orderPrice, basePrice));
             }
             
@@ -641,7 +641,7 @@ namespace MarginTrading.Backend.Services
             {
                 if (isPreTradeValidation)
                 {
-                    throw new ValidateOrderFunctionalException(OrderRejectReason.InvalidInstrument,
+                    throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
                         $"Orders execution for instrument {assetPairId} is temporarily unavailable (instrument is suspended)");
                 }
 
@@ -654,7 +654,7 @@ namespace MarginTrading.Backend.Services
 
             if (assetPair.IsFrozen && shouldOpenNewPosition)
             {
-                throw new ValidateOrderFunctionalException(OrderRejectReason.InvalidInstrument,
+                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
                     $"Opening new positions for instrument {assetPairId} is temporarily unavailable (instrument is frozen)");
             }
 

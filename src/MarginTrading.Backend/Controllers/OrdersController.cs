@@ -219,14 +219,7 @@ namespace MarginTrading.Backend.Controllers
             if (placedOrder.Status == OrderStatus.Rejected)
             {
                 var message = $"Order {placedOrder.Id} from account {placedOrder.AccountId} for instrument {placedOrder.AssetPairId} is rejected: {placedOrder.RejectReason} ({placedOrder.RejectReasonText}). Comment: {placedOrder.Comment}.";
-                switch (placedOrder.RejectReason)
-                {
-                    case OrderRejectReason.NotEnoughBalance:
-                    case OrderRejectReason.InvalidInstrument:
-                        throw new ValidateOrderFunctionalException(placedOrder.RejectReason, placedOrder.RejectReasonText, message);
-                    default:
-                        throw new Exception(message);
-                }
+                throw new ValidateOrderException(placedOrder.RejectReason, placedOrder.RejectReasonText, message);
             }
 
             foreach (var order in relatedOrders)
@@ -369,21 +362,15 @@ namespace MarginTrading.Backend.Controllers
 
             ValidationHelper.ValidateAccountId(order, request.AccountId);
 
-            try
-            {
-                var originator = GetOriginator(request.Originator);
+           
+            var originator = GetOriginator(request.Originator);
 
-                var correlationId = string.IsNullOrWhiteSpace(request.CorrelationId)
-                    ? _identityGenerator.GenerateGuid()
-                    : request.CorrelationId;
+            var correlationId = string.IsNullOrWhiteSpace(request.CorrelationId)
+                ? _identityGenerator.GenerateGuid()
+                : request.CorrelationId;
 
-                await _tradingEngine.ChangeOrderAsync(order.Id, request.Price, request.Validity, originator,
-                    request.AdditionalInfo, correlationId, request.ForceOpen);
-            }
-            catch (ValidateOrderException ex) when (!(ex is ValidateOrderFunctionalException))
-            {
-                throw new InvalidOperationException(ex.Message);
-            }
+            await _tradingEngine.ChangeOrderAsync(order.Id, request.Price, request.Validity, originator,
+                request.AdditionalInfo, correlationId, request.ForceOpen);
 
             _operationsLogService.AddLog("action order.changeLimits", order.AccountId,
                 new { orderId = orderId, request = request.ToJson() }.ToJson(), "");

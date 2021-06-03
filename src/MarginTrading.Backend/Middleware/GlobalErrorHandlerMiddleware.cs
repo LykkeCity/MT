@@ -35,9 +35,9 @@ namespace MarginTrading.Backend.Middleware
             }
             catch (Exception ex)
             {
-                if (ex is ValidateOrderFunctionalException)
+                if (ex is ValidateOrderException)
                 {
-                    await LogFunctionalError(context, ex);
+                    await LogValidationError(context, ex);
                 }
                 else
                 {
@@ -52,7 +52,7 @@ namespace MarginTrading.Backend.Middleware
             }
         }
 
-        private async Task LogFunctionalError(HttpContext context, Exception ex)
+        private async Task LogValidationError(HttpContext context, Exception ex)
         {
             string bodyPart;
 

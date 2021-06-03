@@ -150,7 +150,7 @@ namespace MarginTrading.Backend.Services.Services
             }
 
             if (accountMarginAvailable + pnl < orderMargin)
-                throw new ValidateOrderFunctionalException(OrderRejectReason.NotEnoughBalance,
+                throw new ValidateOrderException(OrderRejectReason.NotEnoughBalance,
                     MtMessages.Validation_NotEnoughBalance,
                     $"Account available margin: {accountMarginAvailable}, order margin: {orderMargin}, pnl: {pnl} " +
                     $"(open price: {openPrice}, close price: {closePrice}, fx rate: {fxRate})");

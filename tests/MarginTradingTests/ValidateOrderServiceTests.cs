@@ -274,7 +274,7 @@ namespace MarginTradingTests
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, instrument, Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 10);
 
-            var ex = Assert.Throws<ValidateOrderFunctionalException>(() =>
+            var ex = Assert.Throws<ValidateOrderException>(() =>
                 _validateOrderService.MakePreTradeValidation(order, true, _me, 0));
             
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
@@ -290,7 +290,7 @@ namespace MarginTradingTests
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Limit, instrument, Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 10, price: 1);
 
-            var ex = Assert.Throws<ValidateOrderFunctionalException>(() =>
+            var ex = Assert.Throws<ValidateOrderException>(() =>
                 _validateOrderService.MakePreTradeValidation(order, true, _me, 0));
             
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
@@ -314,7 +314,7 @@ namespace MarginTradingTests
                 ForceOpen = true
             };
 
-            var ex = Assert.ThrowsAsync<ValidateOrderFunctionalException>(async () =>
+            var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
                 await _validateOrderService.ValidateRequestAndCreateOrders(request));
 
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
@@ -352,7 +352,7 @@ namespace MarginTradingTests
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, instrument, Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 10);
 
-            var ex = Assert.Throws<ValidateOrderFunctionalException>(() =>
+            var ex = Assert.Throws<ValidateOrderException>(() =>
                 _validateOrderService.MakePreTradeValidation(order, true, _me, 0));
             
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
@@ -456,7 +456,7 @@ namespace MarginTradingTests
             var order = TestObjectsFactory.CreateNewOrder(OrderType.Market, instrument, Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 150000);
 
-            var ex = Assert.Throws<ValidateOrderFunctionalException>(() =>
+            var ex = Assert.Throws<ValidateOrderException>(() =>
                 _validateOrderService.MakePreTradeValidation(order, true, _me, 0));
 
             Assert.That(ex.RejectReason == OrderRejectReason.NotEnoughBalance);
@@ -524,18 +524,18 @@ namespace MarginTradingTests
         }
 
         [Test]
-        [GenericTestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, null, null, null)]
-        [GenericTestCase(typeof(ValidateOrderException), OrderDirectionContract.Sell, null, null, null)]
-        [GenericTestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, 0.1, null, null)]
-        [GenericTestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, null, 3, null)]
-        [GenericTestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, 0.1, 3, null)]
-        [GenericTestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, 3, null, OrderRejectReason.InvalidStoploss)]
-        [GenericTestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, null, 0.1, OrderRejectReason.InvalidTakeProfit)]
-        [GenericTestCase(typeof(ValidateOrderException), OrderDirectionContract.Sell, 3, null, null)]
-        [GenericTestCase(typeof(ValidateOrderException), OrderDirectionContract.Sell, null, 0.1, null)]
-        [GenericTestCase(typeof(ValidateOrderException), OrderDirectionContract.Sell, 3, 0.1, null)]
-        [GenericTestCase(typeof(ValidateOrderFunctionalException), OrderDirectionContract.Sell, 0.1, null, OrderRejectReason.InvalidStoploss)]
-        [GenericTestCase(typeof(ValidateOrderException), OrderDirectionContract.Sell, null, 3, OrderRejectReason.InvalidTakeProfit)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, null, null, null)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Sell, null, null, null)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, 0.1, null, null)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, null, 3, null)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, 0.1, 3, null)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, 3, null, OrderRejectReason.InvalidStoploss)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, null, 0.1, OrderRejectReason.InvalidTakeProfit)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Sell, 3, null, null)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Sell, null, 0.1, null)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Sell, 3, 0.1, null)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Sell, 0.1, null, OrderRejectReason.InvalidStoploss)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Sell, null, 3, OrderRejectReason.InvalidTakeProfit)]
         
         public void Is_RelatedOrder_Validated_Correctly_Against_Base_PendingOrder_On_Create<T>(
             OrderDirectionContract baseDirection,decimal? slPrice, decimal? tpPrice, OrderRejectReason? rejectReason) where T : ValidateOrderException
@@ -593,20 +593,20 @@ namespace MarginTradingTests
         }
         
         [Test]
-        [GenericTestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, null, null, null)]
-        [GenericTestCase(typeof(ValidateOrderException), OrderDirectionContract.Sell, null, null, null)]
-        [GenericTestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, 0.1, null, null)]
-        [GenericTestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, null, 3, null)]
-        [GenericTestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, null, 1.56, null)]
-        [GenericTestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, 0.1, 3, null)]
-        [GenericTestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, 3, null, OrderRejectReason.InvalidStoploss)]
-        [GenericTestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, null, 0.1, OrderRejectReason.InvalidTakeProfit)]
-        [GenericTestCase(typeof(ValidateOrderException), OrderDirectionContract.Sell, 3, null, null)]
-        [GenericTestCase(typeof(ValidateOrderException), OrderDirectionContract.Sell, null, 0.1, null)]
-        [GenericTestCase(typeof(ValidateOrderException), OrderDirectionContract.Sell, null, 1.56, null)]
-        [GenericTestCase(typeof(ValidateOrderException), OrderDirectionContract.Sell, 3, 0.1, null)]
-        [GenericTestCase(typeof(ValidateOrderFunctionalException), OrderDirectionContract.Sell, 0.1, null, OrderRejectReason.InvalidStoploss)]
-        [GenericTestCase(typeof(ValidateOrderException), OrderDirectionContract.Sell, null, 3, OrderRejectReason.InvalidTakeProfit)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, null, null, null)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Sell, null, null, null)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, 0.1, null, null)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, null, 3, null)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, null, 1.56, null)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, 0.1, 3, null)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, 3, null, OrderRejectReason.InvalidStoploss)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Buy, null, 0.1, OrderRejectReason.InvalidTakeProfit)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Sell, 3, null, null)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Sell, null, 0.1, null)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Sell, null, 1.56, null)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Sell, 3, 0.1, null)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Sell, 0.1, null, OrderRejectReason.InvalidStoploss)]
+        [TestCase(typeof(ValidateOrderException), OrderDirectionContract.Sell, null, 3, OrderRejectReason.InvalidTakeProfit)]
         
         public void Is_RelatedOrder_Validated_Correctly_Against_Base_MarketOrder_On_Create<T>(
             OrderDirectionContract baseDirection,decimal? slPrice, decimal? tpPrice, OrderRejectReason? rejectReason) where T : ValidateOrderException
