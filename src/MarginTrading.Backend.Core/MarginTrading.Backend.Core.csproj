@@ -14,7 +14,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="JetBrains.Annotations" Version="2020.1.0" />
-    <PackageReference Include="Lykke.MarginTrading.AssetService.Contracts" Version="4.29.2" />
+    <PackageReference Include="Lykke.MarginTrading.AssetService.Contracts" Version="9.3.1" />
     <PackageReference Include="Lykke.MarginTrading.OrderbookAggregator.Contracts" Version="1.0.1" />
     <PackageReference Include="Lykke.SettingsReader" Version="5.3.0" />
     <PackageReference Include="Refit" Version="5.2.4" />

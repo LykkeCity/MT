@@ -48,7 +48,8 @@ namespace MarginTradingTests
                 stpMultiplierMarkupAsk: AssetPairConstants.StpMultiplierMarkupAsk,
                 isSuspended: false,
                 isFrozen: false,
-                isDiscontinued: false
+                isDiscontinued: false,
+                assetType: null
             );
         }
     }
