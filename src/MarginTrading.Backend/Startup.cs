@@ -23,6 +23,7 @@ using Lykke.Snow.Common.Startup.ApiKey;
 using Lykke.Snow.Common.Startup.Hosting;
 using Lykke.Snow.Common.Startup.Log;
 using Lykke.Snow.Mdm.Contracts.BrokerFeatures;
+using MarginTrading.AssetService.Contracts.ClientProfileSettings;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
@@ -177,6 +178,9 @@ namespace MarginTrading.Backend
                 var cqrsEngine = ApplicationContainer.Resolve<ICqrsEngine>();
                 cqrsEngine.StartSubscribers();
                 cqrsEngine.StartProcesses();
+
+                var clientProfileSettingsCache = ApplicationContainer.Resolve<IClientProfileSettingsCache>();
+                clientProfileSettingsCache.Start();
 
                 Program.AppHost.WriteLogs(Environment, LogLocator.CommonLog);
 

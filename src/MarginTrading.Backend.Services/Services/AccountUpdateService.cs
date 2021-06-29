@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
+using Lykke.Snow.Common.Commissions;
+using Lykke.Snow.Common.Percents;
+using MarginTrading.AssetService.Contracts.ClientProfileSettings;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.MatchingEngines;
@@ -16,7 +19,6 @@ using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
-using MarginTrading.Backend.Services.TradingConditions;
 
 #pragma warning disable 1998
 
@@ -28,11 +30,13 @@ namespace MarginTrading.Backend.Services.Services
         private readonly IFplService _fplService;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly OrdersCache _ordersCache;
-        
+
         private readonly ILog _log;
         private readonly ICfdCalculatorService _cfdCalculatorService;
         private readonly IQuoteCacheService _quoteCacheService;
         private readonly MarginTradingSettings _marginTradingSettings;
+        private readonly IClientProfileSettingsCache _clientProfileSettingsCache;
+        private readonly IAssetPairsCache _assetPairsCache;
 
         public AccountUpdateService(
             IFplService fplService,
@@ -41,7 +45,9 @@ namespace MarginTrading.Backend.Services.Services
             ILog log,
             ICfdCalculatorService cfdCalculatorService,
             IQuoteCacheService quoteCacheService,
-            MarginTradingSettings marginTradingSettings)
+            MarginTradingSettings marginTradingSettings,
+            IClientProfileSettingsCache clientProfileSettingsCache,
+            IAssetPairsCache assetPairsCache)
         {
             _fplService = fplService;
             _accountsCacheService = accountsCacheService;
@@ -50,6 +56,8 @@ namespace MarginTrading.Backend.Services.Services
             _cfdCalculatorService = cfdCalculatorService;
             _quoteCacheService = quoteCacheService;
             _marginTradingSettings = marginTradingSettings;
+            _clientProfileSettingsCache = clientProfileSettingsCache;
+            _assetPairsCache = assetPairsCache;
         }
 
         public void UpdateAccount(IMarginTradingAccount account)
@@ -60,7 +68,7 @@ namespace MarginTrading.Backend.Services.Services
         public async Task FreezeWithdrawalMargin(string accountId, string operationId, decimal amount)
         {
             var account = _accountsCacheService.Get(accountId);
-            
+
             if (account.AccountFpl.WithdrawalFrozenMarginData.TryAdd(operationId, amount))
             {
                 account.AccountFpl.WithdrawalFrozenMargin = account.AccountFpl.WithdrawalFrozenMarginData.Values.Sum();
@@ -70,7 +78,7 @@ namespace MarginTrading.Backend.Services.Services
         public async Task UnfreezeWithdrawalMargin(string accountId, string operationId)
         {
             var account = _accountsCacheService.Get(accountId);
-            
+
             if (account.AccountFpl.WithdrawalFrozenMarginData.TryRemove(operationId, out _))
             {
                 account.AccountFpl.WithdrawalFrozenMargin = account.AccountFpl.WithdrawalFrozenMarginData.Values.Sum();
@@ -80,7 +88,7 @@ namespace MarginTrading.Backend.Services.Services
         public async Task FreezeUnconfirmedMargin(string accountId, string operationId, decimal amount)
         {
             var account = _accountsCacheService.Get(accountId);
-            
+
             if (account.AccountFpl.UnconfirmedMarginData.TryAdd(operationId, amount))
             {
                 account.AccountFpl.UnconfirmedMargin = account.AccountFpl.UnconfirmedMarginData.Values.Sum();
@@ -90,7 +98,7 @@ namespace MarginTrading.Backend.Services.Services
         public async Task UnfreezeUnconfirmedMargin(string accountId, string operationId)
         {
             var account = _accountsCacheService.Get(accountId);
-            
+
             if (account.AccountFpl.UnconfirmedMarginData.TryRemove(operationId, out _))
             {
                 account.AccountFpl.UnconfirmedMargin = account.AccountFpl.UnconfirmedMarginData.Values.Sum();
@@ -100,7 +108,8 @@ namespace MarginTrading.Backend.Services.Services
         public void CheckIsEnoughBalance(Order order, IMatchingEngineBase matchingEngine, decimal additionalMargin)
         {
             var orderMargin = _fplService.GetInitMarginForOrder(order);
-            var accountMarginAvailable = _accountsCacheService.Get(order.AccountId).GetMarginAvailable() + additionalMargin;
+            var account = _accountsCacheService.Get(order.AccountId);
+            var accountMarginAvailable = account.GetMarginAvailable() + additionalMargin;
 
             var quote = _quoteCacheService.GetQuote(order.AssetPairId);
 
@@ -148,11 +157,30 @@ namespace MarginTrading.Backend.Services.Services
                     $"Theoretical PnL at the moment of order execution is positive");
                 pnl = 0;
             }
+            
+            var assetType = _assetPairsCache.GetAssetPairById(order.AssetPairId).AssetType;
+            if (!_clientProfileSettingsCache.TryGetValue(account.TradingConditionId, assetType, out var clientProfileSettings))
+                throw new InvalidOperationException($"Client profile settings for [{account.TradingConditionId}] and asset type [{assetType}] were not found in cache");
 
-            if (accountMarginAvailable + pnl < orderMargin)
+            var entryCommission = CommissionHelper.CalculateCommission(
+                openPrice,
+                order.Volume,
+                fxRate,
+                clientProfileSettings.ExecutionFeesCap,
+                clientProfileSettings.ExecutionFeesFloor,
+                new ExecutionFeeRate(clientProfileSettings.ExecutionFeesRate));
+            var exitCommission = CommissionHelper.CalculateCommission(
+                closePrice,
+                order.Volume,
+                fxRate,
+                clientProfileSettings.ExecutionFeesCap,
+                clientProfileSettings.ExecutionFeesFloor,
+                new ExecutionFeeRate(clientProfileSettings.ExecutionFeesRate));
+
+            if (accountMarginAvailable + pnl - entryCommission - exitCommission < orderMargin)
                 throw new ValidateOrderException(OrderRejectReason.NotEnoughBalance,
                     MtMessages.Validation_NotEnoughBalance,
-                    $"Account available margin: {accountMarginAvailable}, order margin: {orderMargin}, pnl: {pnl} " +
+                    $"Account available margin: {accountMarginAvailable}, order margin: {orderMargin}, pnl: {pnl}, entry commission: {entryCommission}, exit commission: {exitCommission} " +
                     $"(open price: {openPrice}, close price: {closePrice}, fx rate: {fxRate})");
         }
 
@@ -165,7 +193,7 @@ namespace MarginTrading.Backend.Services.Services
                 return;
 
             if (!string.IsNullOrEmpty(account.LiquidationOperationId)
-                && (liquidationType == LiquidationType.Forced 
+                && (liquidationType == LiquidationType.Forced
                     || account.GetAccountLevel() != AccountLevel.StopOut))
             {
                 _accountsCacheService.TryFinishLiquidation(accountId, reason, liquidationOperationId);
@@ -187,7 +215,7 @@ namespace MarginTrading.Backend.Services.Services
             ICollection<Order> pendingOrders)
         {
             account.AccountFpl.CalculatedHash = account.AccountFpl.ActualHash;
-            
+
             var accuracy = AssetsConstants.DefaultAssetAccuracy;
             var positionsMaintenanceMargin = positions.Sum(item => item.GetMarginMaintenance());
             var positionsInitMargin = positions.Sum(item => item.GetMarginInit());
@@ -213,7 +241,7 @@ namespace MarginTrading.Backend.Services.Services
         {
             return _ordersCache.Positions.GetPositionsByAccountIds(accountId);
         }
-        
+
         private ICollection<Order> GetActiveOrders(string accountId)
         {
             return _ordersCache.Active.GetOrdersByAccountIds(accountId);

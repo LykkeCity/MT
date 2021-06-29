@@ -14,7 +14,6 @@ using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.AssetService.Contracts;
-using MarginTrading.AssetService.Contracts.Asset;
 using MarginTrading.AssetService.Contracts.Enums;
 using MarginTrading.AssetService.Contracts.TradingConditions;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +21,7 @@ using Microsoft.FeatureManagement;
 using Lykke.Snow.Mdm.Contracts.BrokerFeatures;
 using Moq;
 using AssetPairContract = MarginTrading.AssetService.Contracts.AssetPair.AssetPairContract;
+using MarginTrading.AssetService.Contracts.LegacyAsset;
 
 namespace MarginTradingTests
 {

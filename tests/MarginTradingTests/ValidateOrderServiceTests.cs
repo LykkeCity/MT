@@ -723,7 +723,7 @@ namespace MarginTradingTests
                 new AssetPair(pair.Id, pair.Name, pair.BaseAssetId, pair.QuoteAssetId,
                     pair.Accuracy, pair.MarketId, pair.LegalEntity, pair.BaseAssetId, pair.MatchingEngineMode,
                     pair.StpMultiplierMarkupAsk, pair.StpMultiplierMarkupBid,
-                    isSuspended, isFrozen, isDiscontinued));
+                    isSuspended, isFrozen, isDiscontinued, pair.AssetType));
             
             var quote = new InstrumentBidAskPair { Instrument = id, Bid = 1.55M, Ask = 1.57M };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));

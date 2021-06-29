@@ -160,6 +160,7 @@ namespace MarginTrading.Backend.Services.Modules
             RegisterClientProfileChangedProjection(contextRegistration);
             RegisterClientProfileSettingsChangedProjection(contextRegistration);
             RegisterMarketSettingsChangedProjection(contextRegistration);
+            RegisterClientProfileSettingsProjection(contextRegistration);
 
             contextRegistration.PublishingEvents(typeof(PositionClosedEvent)).With(EventsRoute);
             contextRegistration.PublishingEvents(typeof(CompiledScheduleChangedEvent)).With(EventsRoute);
@@ -168,6 +169,17 @@ namespace MarginTrading.Backend.Services.Modules
             contextRegistration.PublishingEvents(typeof(OrderPlacementRejectedEvent)).With(EventsRoute);
 
             return contextRegistration;
+        }
+
+        private void RegisterClientProfileSettingsProjection(
+            ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
+        {
+            contextRegistration.ListeningEvents(
+                    typeof(ClientProfileSettingsChangedEvent))
+                .From(_settings.ContextNames.SettingsService)
+                .On(nameof(ClientProfileSettingsChangedEvent))
+                .WithProjection(
+                    typeof(ClientProfileSettingsProjection), _settings.ContextNames.SettingsService);
         }
 
         private void RegisterProductChangedProjection(
