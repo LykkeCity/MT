@@ -28,7 +28,9 @@ using MarginTrading.Common.Services;
 using MarginTrading.Common.Services.Settings;
 using MarginTrading.Common.Settings;
 using MarginTrading.AssetService.Contracts;
+using MarginTrading.AssetService.Contracts.ClientProfileSettings;
 using MarginTrading.AssetService.Contracts.Scheduling;
+using MarginTrading.Backend.Modules;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Quotes;
 using MarginTradingTests.Modules;
@@ -128,6 +130,15 @@ namespace MarginTradingTests
                 .As<IEventChannel<AccountBalanceChangedEventArgs>>()
                 .SingleInstance();
 
+            var clientProfileSettingsCacheMock = new Mock<IClientProfileSettingsCache>();
+            var outClientProfileSettingsContractDummy = new ClientProfileSettingsContract();
+            clientProfileSettingsCacheMock.Setup(s =>
+                    s.TryGetValue(It.IsAny<string>(), It.IsAny<string>(), out outClientProfileSettingsContractDummy))
+                .Returns(true);
+            builder.RegisterInstance(clientProfileSettingsCacheMock.Object)
+                .As<IClientProfileSettingsCache>()
+                .SingleInstance();
+
             var settingsServiceMock = new Mock<IMarginTradingSettingsCacheService>();
             settingsServiceMock.Setup(s => s.IsMarginTradingEnabled(It.IsAny<string>()))
                 .ReturnsAsync(new EnabledMarginTradingTypes {Live = true, Demo = true});
@@ -170,12 +181,9 @@ namespace MarginTradingTests
             var scheduleSettingsApiMock = new Mock<IScheduleSettingsApi>();
             scheduleSettingsApiMock.Setup(m => m.StateList(It.IsAny<string[]>()))
                 .ReturnsAsync(new List<CompiledScheduleContract>());
-            builder.RegisterInstance(scheduleSettingsApiMock.Object).As<IScheduleSettingsApi>();
-            
-            
-            
             scheduleSettingsApiMock.Setup(m => m.List(It.IsAny<string>()))
                 .ReturnsAsync(new List<ScheduleSettingsContract>() {AlwaysOnMarketSchedule});
+            builder.RegisterInstance(scheduleSettingsApiMock.Object).As<IScheduleSettingsApi>();
 
             var exchangeConnector = Mock.Of<IExchangeConnectorClient>();
             builder.RegisterInstance(exchangeConnector).As<IExchangeConnectorClient>();
