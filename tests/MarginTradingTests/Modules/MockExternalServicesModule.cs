@@ -50,6 +50,7 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(accountApi).As<IAccountsApi>().SingleInstance();
             builder.RegisterInstance(Mock.Of<IOrderBookProviderApi>(x =>
                 x.GetOrderBooks(null) == Task.FromResult(new List<ExternalOrderBookContract>())));
+            builder.RegisterInstance(Mock.Of<IClientProfileSettingsApi>()).As<IClientProfileSettingsApi>().SingleInstance();
         }
     }
 }
