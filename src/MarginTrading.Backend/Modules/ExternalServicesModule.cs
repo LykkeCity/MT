@@ -90,7 +90,7 @@ namespace MarginTrading.Backend.Modules
             
             #endregion
             
-            #region MT Settings
+            #region Asset Service
 
             var settingsClientGeneratorBuilder = HttpClientGenerator
                 .BuildForUrl(_settings.CurrentValue.SettingsServiceClient.ServiceUrl)
@@ -126,6 +126,9 @@ namespace MarginTrading.Backend.Modules
             
             builder.RegisterInstance(settingsClientGenerator.Generate<IServiceMaintenanceApi>())
                 .As<IServiceMaintenanceApi>().SingleInstance();
+
+            builder.RegisterInstance(settingsClientGenerator.Generate<IClientProfileSettingsApi>())
+                .As<IClientProfileSettingsApi>().SingleInstance();
 
             #endregion
 
