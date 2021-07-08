@@ -39,7 +39,7 @@
     <PackageReference Include="Lykke.Service.EmailSender" Version="1.1.0" />
     <PackageReference Include="Lykke.Service.Session" Version="16.0.0" />
     <PackageReference Include="Lykke.SlackNotifications" Version="2.0.0" />
-    <PackageReference Include="Lykke.Snow.Common" Version="1.22.0" />
+    <PackageReference Include="Lykke.Snow.Common" Version="1.23.0" />
     <PackageReference Include="Lykke.Snow.Mdm.Contracts" Version="3.20.0" />
     <PackageReference Include="Lykke.WampSharp.NewtonsoftJson" Version="1.0.2" />
     <PackageReference Include="Lykke.WampSharp.AspNetCore.WebSockets.Server" Version="1.0.2" />
