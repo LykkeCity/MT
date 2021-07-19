@@ -75,13 +75,13 @@ namespace MarginTrading.Backend.Services.TradingConditions
                     tradingConditionId, instrument));
             }
 
-            if (accountAssetPair.LeverageMaintenance < 1)
+            if (accountAssetPair.LeverageMnt < 1)
             {
                 throw new Exception(
                     string.Format(MtMessages.LeverageMaintanceIncorrect, tradingConditionId, instrument));
             }
 
-            if (accountAssetPair.LeverageInit < 1)
+            if (accountAssetPair.LeverageIni < 1)
             {
                 throw new Exception(string.Format(MtMessages.LeverageInitIncorrect, tradingConditionId,
                     instrument));
@@ -97,8 +97,8 @@ namespace MarginTrading.Backend.Services.TradingConditions
                             tradingInstrument.OvernightMarginMultiplier > 1
                 ? tradingInstrument.OvernightMarginMultiplier
                 : 1;
-            
-            return (parameter / tradingInstrument.LeverageInit, parameter / tradingInstrument.LeverageMaintenance);
+
+            return (parameter / tradingInstrument.LeverageIni, parameter / tradingInstrument.LeverageMnt);
         }
 
         public void InitCache(IEnumerable<ITradingInstrument> tradingInstruments)

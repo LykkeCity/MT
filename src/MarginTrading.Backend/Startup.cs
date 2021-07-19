@@ -41,7 +41,6 @@ using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Backend.Services.Stubs;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Extensions;
-using MarginTrading.Common.Modules;
 using MarginTrading.Common.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
