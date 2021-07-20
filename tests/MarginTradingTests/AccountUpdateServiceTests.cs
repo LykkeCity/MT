@@ -133,8 +133,9 @@ namespace MarginTradingTests
             var limitOrderErr = TestObjectsFactory.CreateNewOrder(OrderType.Limit, "EURUSD", Accounts[0],
                 MarginTradingTestsUtils.TradingConditionId, 960, price: 1000);
 
+            var meWithHighPrice = new FakeMatchingEngine(1000, 10);
             var ex = Assert.Throws<ValidateOrderException>(() =>
-                _accountUpdateService.CheckIsEnoughBalance(limitOrderErr, me, 0));
+                _accountUpdateService.CheckIsEnoughBalance(limitOrderErr, meWithHighPrice, 0));
 
             Console.WriteLine(ex.Comment);
         }
