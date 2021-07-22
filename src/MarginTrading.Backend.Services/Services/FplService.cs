@@ -111,7 +111,7 @@ namespace MarginTrading.Backend.Services
             var (marginInit, marginMaintenance) = GetMargins(tradingInstrument, volumeForCalculation, fplData.MarginRate, isWarnCheck);
             fplData.MarginInit = Math.Round(marginInit, fplData.AccountBaseAssetAccuracy);
             fplData.MarginMaintenance = Math.Round(marginMaintenance, fplData.AccountBaseAssetAccuracy);
-            fplData.InitialMargin = Math.Round(position.OpenPrice * position.OpenFxPrice * volumeForCalculation / tradingInstrument.LeverageIni, fplData.AccountBaseAssetAccuracy);
+            fplData.InitialMargin = Math.Round(position.OpenPrice * position.OpenFxPrice * volumeForCalculation / tradingInstrument.InitLeverage, fplData.AccountBaseAssetAccuracy);
         }
 
         private (decimal MarginInit, decimal MarginMaintenance) GetMargins(ITradingInstrument tradingInstrument,
@@ -119,8 +119,10 @@ namespace MarginTrading.Backend.Services
         {
             var (marginInit, marginMaintenance) = _tradingInstrumentsCache.GetMarginRates(tradingInstrument, isWarnCheck);
 
-            return (volumeForCalculation * marginRate * marginInit, 
-                volumeForCalculation * marginRate * marginMaintenance);
+            return (
+                volumeForCalculation * marginRate * marginInit,
+                volumeForCalculation * marginRate * marginMaintenance
+            );
         }
     }
 }

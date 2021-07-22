@@ -46,8 +46,8 @@ namespace MarginTradingTests
                 Instrument = "EURUSD",
                 SwapLong = 100,
                 SwapShort = 100,
-                LeverageIni = 100,
-                LeverageMnt = 150,
+                InitLeverage = 100,
+                MaintenanceLeverage = 150,
                 MarginRatePercent = 0.67M
             };
 

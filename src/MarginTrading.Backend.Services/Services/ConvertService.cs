@@ -29,8 +29,8 @@ namespace MarginTrading.Backend.Services
             return new MapperConfiguration(cfg =>
             {
                 cfg.CreateMap<TradingInstrumentContract, TradingInstrument>()
-                    .ForMember(dest => dest.LeverageIni, opt => opt.MapFrom(x => new Leverage(x.LeverageIni)))
-                    .ForMember(dest => dest.LeverageMnt, opt => opt.MapFrom(x => new Leverage(x.LeverageMnt)))
+                    .ForMember(dest => dest.InitLeverage, opt => opt.MapFrom(x => new Leverage(x.InitLeverage)))
+                    .ForMember(dest => dest.MaintenanceLeverage, opt => opt.MapFrom(x => new Leverage(x.MaintenanceLeverage)))
                     .ForMember(dest => dest.MarginRate, opt => opt.MapFrom(x => new MarginRate(x.MarginRatePercent)));
                 
                 

@@ -26,8 +26,11 @@ namespace MarginTrading.Backend.Core.TradingConditions
         decimal CommissionMax { get; }
         string CommissionCurrency { get; }
         
-        Leverage LeverageIni { get; }
-        Leverage LeverageMnt { get; }
+        Leverage InitLeverage { get; }
+        Leverage MaintenanceLeverage { get; }
         MarginRate MarginRate { get; }
+
+        public decimal GetMarginInitByLeverage(bool isOvernightMarginParameterOn, bool isWarnCheck);
+        public decimal GetMarginMaintenanceByLeverage(bool isOvernightMarginParameterOn, bool isWarnCheck);
     }
 }

@@ -25,10 +25,30 @@ namespace MarginTrading.Backend.Core.TradingConditions
         public decimal CommissionMin { get; set; }
         public decimal CommissionMax { get; set; }
         public string CommissionCurrency { get; set; }
-        public Leverage LeverageIni { get; set; }
-        public Leverage LeverageMnt { get; set; }
+        public Leverage InitLeverage { get; set; }
+        public Leverage MaintenanceLeverage { get; set; }
+        // TODO: Probably, MarginRate should be used instead of margin init and margin maintenance. This value comes from
+        // asset service and is the source whereas margin init and maring maintenance are calculated based on leverage
         public MarginRate MarginRate { get; set; }
 
         public (string, string) GetKey() => (TradingConditionId, Instrument);
+
+        public decimal GetMarginInitByLeverage(bool isOvernightMarginParameterOn, bool isWarnCheck) =>
+            GetMarginRateByLeverage(isOvernightMarginParameterOn, isWarnCheck, InitLeverage);
+
+        public decimal GetMarginMaintenanceByLeverage(bool isOvernightMarginParameterOn, bool isWarnCheck) =>
+            GetMarginRateByLeverage(isOvernightMarginParameterOn, isWarnCheck, MaintenanceLeverage);
+
+        private decimal GetMarginRateByLeverage(bool isOvernightMarginParameterOn, bool isWarnCheck, decimal leverage)
+        {
+            var nominator = GetMarginCalculationNominator(isOvernightMarginParameterOn, isWarnCheck);
+
+            return nominator / leverage;
+        }
+
+        private decimal GetMarginCalculationNominator(bool isOvernightMarginParameterOn, bool isWarnCheck) =>
+            (isWarnCheck || isOvernightMarginParameterOn) && OvernightMarginMultiplier > 1
+                ? OvernightMarginMultiplier
+                : 1;
     }
 }

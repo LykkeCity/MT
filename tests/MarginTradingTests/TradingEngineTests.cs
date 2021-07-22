@@ -626,8 +626,8 @@ namespace MarginTradingTests
                 ShortPosition = true,
                 DealMaxLimit = 1,
                 PositionLimit = 1,
-                LeverageIni = 100,
-                LeverageMnt = 150,
+                InitLeverage = 100,
+                MaintenanceLeverage = 150,
                 MarginRatePercent = 0.67M
             };
 
@@ -657,8 +657,8 @@ namespace MarginTradingTests
                 Instrument = "EURUSD",
                 Delta = 30,
                 CommissionRate = 0.5M,
-                LeverageIni = 100,
-                LeverageMnt = 150,
+                InitLeverage = 100,
+                MaintenanceLeverage = 150,
                 MarginRatePercent = 0.67M
             };
 
