@@ -311,7 +311,7 @@ namespace MarginTradingTests
             Assert.AreEqual(1.2, position.ClosePrice);
 
             var data = new PositionsCloseData(
-                new List<Position> {position},
+                position,
                 position.AccountId,
                 position.AssetPairId,
                 position.OpenMatchingEngineId,
@@ -344,7 +344,7 @@ namespace MarginTradingTests
             _ordersCache.Positions.Add(position);
             
             var data = new PositionsCloseData(
-                new List<Position> {position},
+                position,
                 position.AccountId,
                 position.AssetPairId,
                 position.OpenMatchingEngineId,
@@ -387,7 +387,7 @@ namespace MarginTradingTests
             Assert.AreEqual(1.2, position.ClosePrice);
 
             var data = new PositionsCloseData(
-                new List<Position> {position},
+                position,
                 position.AccountId,
                 position.AssetPairId,
                 position.OpenMatchingEngineId,
@@ -463,7 +463,7 @@ namespace MarginTradingTests
             }, deleteAll: true);
 
             var data = new PositionsCloseData(
-                new List<Position> {position},
+                position,
                 position.AccountId,
                 position.AssetPairId,
                 position.OpenMatchingEngineId,

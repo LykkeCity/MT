@@ -2,6 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +15,7 @@ using Lykke.Common;
 using MarginTrading.Backend.Contracts.Activities;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
@@ -765,25 +767,27 @@ namespace MarginTrading.Backend.Services
 
             if (closeData.Modality != OrderModality.Liquidation_MarginCall && closeData.Modality != OrderModality.Liquidation_CorporateAction)
             {
-                positions = positions.Where(p => p.Status == PositionStatus.Active).ToList();
+                positions = positions
+                    .Where(p => p.Value.Status == PositionStatus.Active)
+                    .ToSortedList(x => x.Key, x => x.Value);
             }
             
             foreach (var position in positions)
             {
-                if (position.TryStartClosing(now, PositionCloseReason.Close, closeData.Originator, "") 
+                if (position.Value.TryStartClosing(now, PositionCloseReason.Close, closeData.Originator, "") 
                     ||
                     closeData.Modality == OrderModality.Liquidation_MarginCall
                     ||
                     closeData.Modality == OrderModality.Liquidation_CorporateAction)
                 {
-                    positionIds.Add(position.Id);
-                    volume += position.Volume;
+                    positionIds.Add(position.Value.Id);
+                    volume += position.Value.Volume;
                 }
             }
 
             if (!positionIds.Any())
             {
-                if (closeData.Positions.Any(p => p.Status == PositionStatus.Closing))
+                if (closeData.Positions.Any(p => p.Value.Status == PositionStatus.Closing))
                 {
                     return (PositionCloseResult.ClosingIsInProgress, null);
                 }
@@ -843,19 +847,17 @@ namespace MarginTrading.Backend.Services
 
                     return (PositionCloseResult.ClosingStarted, null);
                 }
-                else
+
+                foreach (var position in closeData.Positions)
                 {
-                    foreach (var position in closeData.Positions)
-                    {
-                        if (position.Status == PositionStatus.Closing)
-                            position.CancelClosing(_dateService.Now());    
-                    }
-                    
-                    _log.WriteWarning(nameof(ClosePositionsAsync), order,
-                        $"Order {order.Id} was not executed. Closing of positions canceled");
-                    
-                    throw new Exception($"Positions were not closed. Reason: {order.RejectReasonText}");
+                    if (position.Value.Status == PositionStatus.Closing)
+                        position.Value.CancelClosing(_dateService.Now());    
                 }
+                    
+                _log.WriteWarning(nameof(ClosePositionsAsync), order,
+                    $"Order {order.Id} was not executed. Closing of positions canceled");
+                    
+                throw new Exception($"Positions were not closed. Reason: {order.RejectReasonText}");
             }
 
             return (PositionCloseResult.Closed, order);
@@ -873,22 +875,32 @@ namespace MarginTrading.Backend.Services
             var operationId = string.IsNullOrWhiteSpace(correlationId)
                 ? _identityGenerator.GenerateGuid()
                 : correlationId;
+
+            bool closeAll = string.IsNullOrEmpty(assetPairId);
             
-            if (string.IsNullOrEmpty(assetPairId))//close all
+            if (closeAll)
             {
                 return _liquidationHelper.StartLiquidation(accountId, originator, additionalInfo, operationId);
             }
+            
+            // Closing group of positions (asset and direction are always defined)
+            
+            // let's ensure direction is always passed in
+            if (!direction.HasValue)
+                throw new ArgumentNullException(nameof(direction), "When closing group of positions direction is mandatory");
+
+            var mandatoryDirection = direction.Value;
             
             var result = new Dictionary<string, (PositionCloseResult, Order)>();
 
             var positions = _ordersCache.Positions.GetPositionsByInstrumentAndAccount(assetPairId, accountId);
 
             var positionGroups = positions
-                .Where(p => direction == null || p.Direction == direction)
-                .GroupBy(p => (p.AssetPairId, p.AccountId, p.Direction, p
-                    .OpenMatchingEngineId, p.ExternalProviderId, p.EquivalentAsset))
+                .Where(p => p.Direction == mandatoryDirection)
+                // grouping is required to optimize price requests but in fact we'll always have a SINGLE group here
+                .GroupBy(p => (p.AssetPairId, p.AccountId, p.Direction, p.OpenMatchingEngineId, p.ExternalProviderId, p.EquivalentAsset))
                 .Select(gr => new PositionsCloseData(
-                    gr.ToList(),
+                    gr.LargestPnlFirst().FreezeOrder(),
                     gr.Key.AccountId,
                     gr.Key.AssetPairId,
                     gr.Key.OpenMatchingEngineId,
@@ -909,19 +921,19 @@ namespace MarginTrading.Backend.Services
 
                     foreach (var position in positionGroup.Positions)
                     {
-                        result.Add(position.Id, closeResult);
+                        result.Add(position.Value.Id, closeResult);
                     }
                 }
                 catch (Exception ex)
                 {
                     await _log.WriteWarningAsync(nameof(ClosePositionsAsync),
                         positionGroup.ToJson(),
-                        $"Failed to close positions {string.Join(",", positionGroup.Positions.Select(p => p.Id))}",
+                        $"Failed to close positions {string.Join(",", positionGroup.Positions.Select(p => p.Value.Id))}",
                         ex);
 
                     foreach (var position in positionGroup.Positions)
                     {
-                        result.Add(position.Id, (PositionCloseResult.FailedToClose, null));
+                        result.Add(position.Value.Id, (PositionCloseResult.FailedToClose, null));
                     }
                 }
             }
@@ -937,10 +949,9 @@ namespace MarginTrading.Backend.Services
                 .Where(x => positionIds.Contains(x.Id)).ToList();
             
             var positionGroups = positionsToClose
-                .GroupBy(p => (p.AssetPairId, p.AccountId, p.Direction, p
-                    .OpenMatchingEngineId, p.ExternalProviderId, p.EquivalentAsset))
+                .GroupBy(p => (p.AssetPairId, p.AccountId, p.Direction, p.OpenMatchingEngineId, p.ExternalProviderId, p.EquivalentAsset))
                 .Select(gr => new PositionsCloseData(
-                    gr.ToList(),
+                    gr.FreezeOrder(),
                     gr.Key.AccountId,
                     gr.Key.AssetPairId,
                     gr.Key.OpenMatchingEngineId,
@@ -964,7 +975,7 @@ namespace MarginTrading.Backend.Services
                     }
                     catch (Exception)
                     {
-                        failedPositionIds.AddRange(group.Positions.Select(p => p.Id));
+                        failedPositionIds.AddRange(group.Positions.Select(p => p.Value.Id));
                         return default;
                     }
                 }))).Where(x => x != default).ToArray();

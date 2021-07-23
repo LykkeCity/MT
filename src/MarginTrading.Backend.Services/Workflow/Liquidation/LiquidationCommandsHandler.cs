@@ -354,7 +354,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 .GroupBy(p => (p.AssetPairId, p.AccountId, p.Direction, p
                     .OpenMatchingEngineId, p.ExternalProviderId, p.EquivalentAsset))
                 .Select(gr => new PositionsCloseData(
-                    gr.ToList(),
+                    gr.FreezeOrder(),
                     gr.Key.AccountId,
                     gr.Key.AssetPairId,
                     gr.Key.OpenMatchingEngineId,
@@ -375,7 +375,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                     {
                         liquidationInfos.Add(new LiquidationInfo
                         {
-                            PositionId = position.Id,
+                            PositionId = position.Value.Id,
                             IsLiquidated = true,
                             Comment = order != null ? $"Order: {order.Id}" : result.ToString()
                         });
@@ -385,14 +385,14 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 {
                     await _log.WriteWarningAsync(nameof(LiquidationCommandsHandler),
                         nameof(LiquidatePositionsInternalCommand),
-                        $"Failed to close positions {string.Join(",", positionGroup.Positions.Select(p => p.Id))} on liquidation operation #{command.OperationId}",
+                        $"Failed to close positions {string.Join(",", positionGroup.Positions.Select(p => p.Value.Id))} on liquidation operation #{command.OperationId}",
                         ex);
 
                     foreach (var position in positionGroup.Positions)
                     {
                         liquidationInfos.Add(new LiquidationInfo
                         {
-                            PositionId = position.Id,
+                            PositionId = position.Value.Id,
                             IsLiquidated = false,
                             Comment = $"Close position failed: {ex.Message}"
                         });

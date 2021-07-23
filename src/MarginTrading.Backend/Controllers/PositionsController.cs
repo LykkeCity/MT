@@ -94,7 +94,7 @@ namespace MarginTrading.Backend.Controllers
 
             var closeResult = await _tradingEngine.ClosePositionsAsync(
                 new PositionsCloseData(
-                    new List<Position> {position},
+                    position,
                     position.AccountId,
                     position.AssetPairId,
                     position.OpenMatchingEngineId,
