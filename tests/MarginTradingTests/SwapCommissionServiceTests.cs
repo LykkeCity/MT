@@ -44,19 +44,18 @@ namespace MarginTradingTests
             {
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 Instrument = "EURUSD",
-                LeverageInit = 100,
-                LeverageMaintenance = 150,
                 SwapLong = 100,
-                SwapShort = 100
+                SwapShort = 100,
+                InitLeverage = 100,
+                MaintenanceLeverage = 150,
+                MarginRatePercent = 0.67M
             };
 
             Mock.Get(_tradingInstruments).Setup(s => s.List(It.IsAny<string>()))
                 .ReturnsAsync(new List<TradingInstrumentContract> {instrumentContract});
 
             await _accountAssetsManager.UpdateTradingInstrumentsCacheAsync();
-
-
-
+            
             var dayPosition = new Position(Guid.NewGuid().ToString("N"), 0, "EURUSD", 20, Accounts[0].Id,
                 MarginTradingTestsUtils.TradingConditionId, Accounts[0].BaseAssetId, null, MatchingEngineConstants.DefaultMm,
                 new DateTime(2017, 01, 01, 20, 50, 0), "OpenTrade", OrderType.Market, 20, 1, 1, "USD", 1,

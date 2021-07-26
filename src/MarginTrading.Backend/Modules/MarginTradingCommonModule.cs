@@ -7,8 +7,9 @@ using MarginTrading.Common.Helpers;
 using MarginTrading.Common.Services;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.DependencyInjection;
+using MarginTrading.Backend.Services;
 
-namespace MarginTrading.Common.Modules
+namespace MarginTrading.Backend.Modules
 {
     public class MarginTradingCommonModule: Module
     {

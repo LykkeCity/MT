@@ -110,97 +110,107 @@ namespace MarginTradingTests
                 {
                     TradingConditionId = TradingConditionId,
                     Instrument = "BTCCHF",
-                    LeverageInit = 10,
-                    LeverageMaintenance = 15,
                     Delta = 30,
                     ShortPosition = true,
+                    InitLeverage = 10,
+                    MaintenanceLeverage = 15,
+                    MarginRatePercent = 6.67M,
                 },
                 new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
                     Instrument = "EURUSD",
-                    LeverageInit = 100,
-                    LeverageMaintenance = 150,
                     Delta = 30,
                     ShortPosition = true,
                     DealMaxLimit = 1000000,
-                    PositionLimit = 10000000
+                    PositionLimit = 10000000,
+                    InitLeverage = 100,
+                    MaintenanceLeverage = 150,
+                    MarginRatePercent = 0.67M,
                 },
                 new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
                     Instrument = "EURRUB",
-                    LeverageInit = 100,
-                    LeverageMaintenance = 100,
                     Delta = 30,
                     ShortPosition = true,
                     DealMaxLimit = 1000000,
-                    PositionLimit = 10000000
+                    PositionLimit = 10000000,
+                    InitLeverage = 100,
+                    MaintenanceLeverage = 100,
+                    MarginRatePercent = 1,
                 },
                 new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
                     Instrument = "BTCEUR",
-                    LeverageInit = 10,
-                    LeverageMaintenance = 15,
                     Delta = 30,
                     ShortPosition = true,
+                    InitLeverage = 10,
+                    MaintenanceLeverage = 15,
+                    MarginRatePercent = 6.67M,
                 },
                 new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
                     Instrument = "BTCUSD",
-                    LeverageInit = 10,
-                    LeverageMaintenance = 15,
                     Delta = 30,
                     ShortPosition = true,
                     DealMaxLimit = 10,
-                    PositionLimit = 100
+                    PositionLimit = 100,
+                    InitLeverage = 10,
+                    MaintenanceLeverage = 15,
+                    MarginRatePercent = 6.67M,
                 },
                 new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
                     Instrument = "CHFJPY",
-                    LeverageInit = 10,
-                    LeverageMaintenance = 15,
                     Delta = 30,
                     ShortPosition = true,
+                    InitLeverage = 10,
+                    MaintenanceLeverage = 15,
+                    MarginRatePercent = 6.67M,
                 },
                 new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
                     Instrument = "JPYUSD",
-                    LeverageInit = 100,
-                    LeverageMaintenance = 150,
                     Delta = 30,
                     ShortPosition = true,
+                    InitLeverage = 100,
+                    MaintenanceLeverage = 150,
+                    MarginRatePercent = 0.67M,
                 },
                 new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
                     Instrument = "EURGBP",
-                    LeverageInit = 100,
-                    LeverageMaintenance = 150,
                     Delta = 30,
                     ShortPosition = true,
+                    InitLeverage = 100,
+                    MaintenanceLeverage = 150,
+                    MarginRatePercent = 0.67M,
                 },
                 new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
                     Instrument = "GBPUSD",
-                    LeverageInit = 100,
-                    LeverageMaintenance = 150,
                     Delta = 30,
                     ShortPosition = true,
+                    InitLeverage = 100,
+                    MaintenanceLeverage = 150,
+                    MarginRatePercent = 0.67M,
                 },
                 new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
                     Instrument = "BTCJPY",
-                    LeverageInit = 100,
-                    LeverageMaintenance = 150,
                     Delta = 30,
                     ShortPosition = true,
+                    InitLeverage = 100,
+                    MaintenanceLeverage = 150,
+                    MarginRatePercent = 0.67M,
                 }
             };
 

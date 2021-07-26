@@ -622,12 +622,13 @@ namespace MarginTradingTests
             {
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 Instrument = "EURUSD",
-                LeverageInit = 100,
-                LeverageMaintenance = 150,
                 Delta = 30,
                 ShortPosition = true,
                 DealMaxLimit = 1,
-                PositionLimit = 1
+                PositionLimit = 1,
+                InitLeverage = 100,
+                MaintenanceLeverage = 150,
+                MarginRatePercent = 0.67M
             };
 
             Mock.Get(_tradingInstruments).Setup(s => s.List(It.IsAny<string>()))
@@ -654,10 +655,11 @@ namespace MarginTradingTests
             {
                 TradingConditionId = MarginTradingTestsUtils.TradingConditionId,
                 Instrument = "EURUSD",
-                LeverageInit = 100,
-                LeverageMaintenance = 150,
                 Delta = 30,
-                CommissionRate = 0.5M
+                CommissionRate = 0.5M,
+                InitLeverage = 100,
+                MaintenanceLeverage = 150,
+                MarginRatePercent = 0.67M
             };
 
             Mock.Get(_tradingInstruments).Setup(s => s.List(It.IsAny<string>()))

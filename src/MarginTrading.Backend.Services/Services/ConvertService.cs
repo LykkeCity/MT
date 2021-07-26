@@ -6,13 +6,18 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using AutoMapper;
 using JetBrains.Annotations;
+using Lykke.Snow.Common;
+using Lykke.Snow.Common.Percents;
+using MarginTrading.AssetService.Contracts.TradingConditions;
+using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Common.Extensions;
+using MarginTrading.Common.Services;
 using Microsoft.AspNetCore.Routing;
 
-namespace MarginTrading.Common.Services
+namespace MarginTrading.Backend.Services
 {
     [UsedImplicitly]
-    internal class ConvertService : IConvertService
+    public class ConvertService : IConvertService
     {
         private readonly IMapper _mapper = CreateMapper();
 
@@ -23,7 +28,12 @@ namespace MarginTrading.Common.Services
         {
             return new MapperConfiguration(cfg =>
             {
-                // todo: specify common conversion rules?
+                cfg.CreateMap<TradingInstrumentContract, TradingInstrument>()
+                    .ForMember(dest => dest.InitLeverage, opt => opt.MapFrom(x => new Leverage(x.InitLeverage)))
+                    .ForMember(dest => dest.MaintenanceLeverage, opt => opt.MapFrom(x => new Leverage(x.MaintenanceLeverage)))
+                    .ForMember(dest => dest.MarginRate, opt => opt.MapFrom(x => new MarginRate(x.MarginRatePercent)));
+                
+                
             }).CreateMapper();
         }
 

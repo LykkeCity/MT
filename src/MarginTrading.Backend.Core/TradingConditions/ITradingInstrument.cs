@@ -1,14 +1,16 @@
 ﻿// Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using Lykke.Snow.Common;
+using Lykke.Snow.Common.Percents;
+
 namespace MarginTrading.Backend.Core.TradingConditions
 {
     public interface ITradingInstrument
     {
         string TradingConditionId { get; }
         string Instrument { get; }
-        int LeverageInit { get; }
-        int LeverageMaintenance { get; }
+        
         decimal SwapLong { get; }
         decimal SwapShort { get; }
         
@@ -23,5 +25,12 @@ namespace MarginTrading.Backend.Core.TradingConditions
         decimal CommissionMin { get; }
         decimal CommissionMax { get; }
         string CommissionCurrency { get; }
+        
+        Leverage InitLeverage { get; }
+        Leverage MaintenanceLeverage { get; }
+        MarginRate MarginRate { get; }
+
+        public decimal GetMarginInitByLeverage(bool isOvernightMarginParameterOn, bool isWarnCheck);
+        public decimal GetMarginMaintenanceByLeverage(bool isOvernightMarginParameterOn, bool isWarnCheck);
     }
 }
