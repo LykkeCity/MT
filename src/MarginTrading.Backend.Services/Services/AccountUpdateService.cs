@@ -113,7 +113,7 @@ namespace MarginTrading.Backend.Services.Services
 
             var quote = _quoteCacheService.GetQuote(order.AssetPairId);
 
-            var openPrice = order.Price ?? 0;
+            var openPrice = 0m;
             var closePrice = 0m;
             var directionForClose = order.Volume.GetClosePositionOrderDirection();
 
@@ -121,9 +121,7 @@ namespace MarginTrading.Backend.Services.Services
                 quote.GetVolumeForOrderDirection(directionForClose) >= Math.Abs(order.Volume))
             {
                 closePrice = quote.GetPriceForOrderDirection(directionForClose);
-
-                if (openPrice == 0)
-                    openPrice = quote.GetPriceForOrderDirection(order.Direction);
+                openPrice = quote.GetPriceForOrderDirection(order.Direction);
             }
             else
             {
@@ -138,9 +136,7 @@ namespace MarginTrading.Backend.Services.Services
                 }
 
                 closePrice = closePriceInfo.Value;
-
-                if (openPrice == 0)
-                    openPrice = openPriceInfo.price.Value;
+                openPrice = openPriceInfo.price.Value;
 
             }
 
