@@ -20,6 +20,7 @@
     <PackageReference Include="Refit" Version="5.2.4" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MarginTrading.Backend.Contracts\MarginTrading.Backend.Contracts.csproj" />
     <ProjectReference Include="..\MarginTrading.Common\MarginTrading.Common.csproj" />
   </ItemGroup>
 </Project>

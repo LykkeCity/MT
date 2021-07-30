@@ -118,6 +118,10 @@ namespace MarginTrading.Backend.Modules
                 .As<IPublishingQueueRepository>()
                 .SingleInstance();
 
+            builder.RegisterType<FakeSnapshotService>()
+                .As<IFakeSnapshotService>()
+                .SingleInstance();
+
             RegisterPublishers(builder, consoleWriter);
         }
 

@@ -111,5 +111,8 @@ namespace MarginTrading.Backend.Core.Settings
         public DefaultLegalEntitySettings DefaultLegalEntitySettings { get; set; }
 
         public string BrokerId { get; set; }
+
+        [Optional]
+        public TestSettings TestSettings { get; set; }
     }
 }
