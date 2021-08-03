@@ -316,7 +316,8 @@ namespace MarginTrading.Backend.Services.Modules
                     typeof(SpecialLiquidationStartedInternalEvent),
                     typeof(SpecialLiquidationOrderExecutionFailedEvent),
                     typeof(SpecialLiquidationFinishedEvent),
-                    typeof(SpecialLiquidationFailedEvent)
+                    typeof(SpecialLiquidationFailedEvent),
+                    typeof(SpecialLiquidationCancelledEvent)
                 )
                 .From(_settings.ContextNames.TradingEngine)
                 .On(EventsRoute);
@@ -342,7 +343,8 @@ namespace MarginTrading.Backend.Services.Modules
                     typeof(SpecialLiquidationOrderExecutedEvent),
                     typeof(SpecialLiquidationOrderExecutionFailedEvent),
                     typeof(SpecialLiquidationFinishedEvent),
-                    typeof(SpecialLiquidationFailedEvent)
+                    typeof(SpecialLiquidationFailedEvent),
+                    typeof(SpecialLiquidationCancelledEvent)
                 )
                 .With(EventsRoute);
         }

@@ -385,12 +385,11 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                                 new {accountId = account.Id, accountLevel = account.GetAccountLevel().ToString()}.ToJson(),
                                 $"Unable to execute special liquidation since account level is not {ValidAccountLevel.ToString()}.");
                     
-                            publisher.PublishEvent(new SpecialLiquidationFailedEvent
+                            publisher.PublishEvent(new SpecialLiquidationCancelledEvent()
                             {
                                 OperationId = command.OperationId,
                                 CreationTime = _dateService.Now(),
                                 Reason = $"Account level is not {ValidAccountLevel.ToString()}.",
-                                CanRetryPriceRequest = false
                             });
                     
                             return;

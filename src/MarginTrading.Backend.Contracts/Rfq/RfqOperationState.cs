@@ -18,6 +18,7 @@ namespace MarginTrading.Backend.Contracts.Rfq
         InternalOrdersExecuted,
         Finished,
         OnTheWayToFail,
-        Failed
+        Failed,
+        Cancelled,
     }
 }

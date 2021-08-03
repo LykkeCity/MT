@@ -284,6 +284,25 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }
         }
+        
+        [UsedImplicitly]
+        private async Task Handle(SpecialLiquidationCancelledEvent e, ICommandSender sender)
+        {
+            var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
+                operationName: OperationName,
+                id: e.OperationId);
+            
+            if (executionInfo?.Data == null)
+                return;
+
+            if (executionInfo.Data.SwitchState(executionInfo.Data.State,//from any state
+                SpecialLiquidationOperationState.Cancelled))
+            {
+                _chaosKitty.Meow(e.OperationId);
+
+                await _operationExecutionInfoRepository.Save(executionInfo);
+            }
+        }
 
         private decimal GetNetPositionCloseVolume(ICollection<string> positionIds, string accountId)
         {
