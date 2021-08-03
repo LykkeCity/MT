@@ -277,9 +277,24 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             LiquidationOperationData data)
         {
             var positionsOnAccount = _ordersCache.Positions.GetPositionsByAccountIds(data.AccountId);
+            
             if (data.LiquidationType == LiquidationType.Forced)
             {
                 positionsOnAccount = positionsOnAccount.Where(p => p.OpenDate < data.StartedAt).ToList();
+                
+                //group positions by asset and pnl sign, take only not processed, filtered and with open market
+                //groups are ordered by positive pnl first
+                var targetPositionsByPnlSign = positionsOnAccount
+                    .Where(p => !data.ProcessedPositionIds.Contains(p.Id))
+                    .GroupBy(p => (p.AssetPairId, p.GetUnrealisedFpl() >= 0))
+                    .Where(gr => !_assetPairDayOffService.IsDayOff(gr.Key.AssetPairId))
+                    .OrderByDescending(gr => gr.Key.Item2)
+                    .FirstOrDefault();
+
+                if (targetPositionsByPnlSign == null)
+                    return null;
+
+                return (targetPositionsByPnlSign.Key.AssetPairId, targetPositionsByPnlSign.Select(p => p.Id).ToArray());
             }
 
             //group positions and take only not processed, filtered and with open market

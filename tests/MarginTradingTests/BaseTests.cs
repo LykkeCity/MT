@@ -30,6 +30,7 @@ using MarginTrading.Common.Settings;
 using MarginTrading.AssetService.Contracts;
 using MarginTrading.AssetService.Contracts.ClientProfileSettings;
 using MarginTrading.AssetService.Contracts.Scheduling;
+using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Modules;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Quotes;
@@ -45,6 +46,8 @@ namespace MarginTradingTests
         private const string ClientId2 = "2";
 
         protected IContainer Container { get; set; }
+
+        protected List<PositionHistoryEvent> PositionHistoryEvents = new List<PositionHistoryEvent>();
 
         protected void RegisterDependencies(bool mockEvents = false)
         {
@@ -85,6 +88,7 @@ namespace MarginTradingTests
             };
 
             builder.RegisterInstance(marginSettings).SingleInstance();
+            builder.RegisterInstance(PositionHistoryEvents).As<List<PositionHistoryEvent>>().SingleInstance();
             builder.RegisterInstance(overnightMarginSettings).SingleInstance();
             builder.RegisterInstance(Mock.Of<ExchangeConnectorServiceClient>());
             builder.RegisterInstance(new RiskInformingSettings
