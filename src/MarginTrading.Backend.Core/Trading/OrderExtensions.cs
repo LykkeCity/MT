@@ -111,8 +111,8 @@ namespace MarginTrading.Backend.Core
             return Math.Abs(order.Volume) * order.CloseCommissionRate;
         }
 
-        public static SortedList<int, Position> ToSortedList(this Position order) =>
-            new SortedList<int, Position> {{0, order}};
+        public static SortedList<int, Position> ToSortedList(this Position position) =>
+            new SortedList<int, Position> {{0, position}};
 
         public static OrderDirection GetOpositeDirection(this OrderDirection orderType)
         {

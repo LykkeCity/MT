@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Autofac;
  using AutoMapper;
 using Common;
+using Common.Log;
 using Lykke.Cqrs;
  using MarginTrading.AccountsManagement.Contracts.Events;
  using MarginTrading.AccountsManagement.Contracts.Models;
@@ -31,7 +32,9 @@ using MarginTrading.Backend.Services.Events;
  using MarginTrading.Common.Services;
 using MarginTrading.AssetService.Contracts;
 using MarginTrading.AssetService.Contracts.TradingConditions;
- using MarginTradingTests.Helpers;
+using MarginTrading.Backend.Core.Extensions;
+using MarginTrading.Common.Extensions;
+using MarginTradingTests.Helpers;
 using Moq;
  using MoreLinq;
  using NUnit.Framework;
@@ -115,6 +118,14 @@ namespace MarginTradingTests
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "EURUSD", Ask = 1, Bid = 1 });
 
             _dateService = Container.Resolve<IDateService>();
+            
+            LogLocator.CommonLog = Mock.Of<ILog>();
+        }
+
+        [TearDown]
+        public void Clear()
+        {
+            PositionHistoryEvents.Clear();
         }
 
         #region Market orders
@@ -1027,6 +1038,51 @@ namespace MarginTradingTests
             Assert.AreEqual(0, _ordersCache.Positions.GetPositionsByInstrument("EURUSD").Count);
         }
 
+        [TestCase(PositionDirection.Long, 1)]
+        [TestCase(PositionDirection.Short, -1)]
+        public void Is_Positive_Pnl_Positions_Closed_First_When_Closing_Group(PositionDirection direction, int closingVolumeSign)
+        {
+            var positions = (direction == PositionDirection.Long
+                    ? SampleLongPositions()
+                    : SampleShortPositions())
+                .ToList();
+            
+            positions.ForEach(p => _ordersCache.Positions.Add(p));
+            
+            Assert.AreEqual(1000, _account.Balance);
+
+            _matchingEngine.SetOrders("1", deleteAll: true);
+
+            const decimal closePrice = 1.25M;
+            
+            _matchingEngine.SetOrders("1", new[]
+            {
+                new LimitOrder { CreateDate = DateTime.UtcNow, Id = "1", Instrument = "EURUSD", MarketMakerId = MarketMaker1Id, Price = closePrice, Volume = closingVolumeSign * 30 }
+            });
+
+            Assert.True(positions.All(p => closePrice == p.ClosePrice));
+
+            _tradingEngine.ClosePositionsGroupAsync(_account.Id,
+                    "EURUSD",
+                    direction,
+                    OriginatorType.Investor,
+                    string.Empty,
+                    string.Empty)
+                .GetAwaiter()
+                .GetResult();
+
+            var expectedPositionsOrder = positions
+                .LargestPnlFirst()
+                .Select(p => p.Id)
+                .FreezeOrder();
+            
+            var actualPositionsOrder = PositionHistoryEvents
+                .Select(p => p.PositionSnapshot.Id)
+                .FreezeOrder();
+            
+            Assert.True(actualPositionsOrder.SequenceEqual(expectedPositionsOrder));
+        }
+
         #endregion
 
         
@@ -1497,7 +1553,34 @@ namespace MarginTradingTests
             Assert.AreEqual(closeReason, position.CloseReason);
         }
 
-        #endregion 
+        #endregion
         
+        # region Sample Data
+
+        private IEnumerable<Position> SampleLongPositions()
+        {
+            yield return TestObjectsFactory.CreateOpenedPosition("EURUSD", _account, 
+                MarginTradingTestsUtils.TradingConditionId, 10, 1.4m);
+            
+            yield return TestObjectsFactory.CreateOpenedPosition("EURUSD", _account, 
+                MarginTradingTestsUtils.TradingConditionId, 10, 1.3m);
+            
+            yield return TestObjectsFactory.CreateOpenedPosition("EURUSD", _account, 
+                MarginTradingTestsUtils.TradingConditionId, 10, 1.2m);
+        }
+
+        private IEnumerable<Position> SampleShortPositions()
+        {
+            yield return TestObjectsFactory.CreateOpenedPosition("EURUSD", _account, 
+                MarginTradingTestsUtils.TradingConditionId, -10, 1.4m);
+            
+            yield return TestObjectsFactory.CreateOpenedPosition("EURUSD", _account, 
+                MarginTradingTestsUtils.TradingConditionId, -10, 1.2m);
+            
+            yield return TestObjectsFactory.CreateOpenedPosition("EURUSD", _account, 
+                MarginTradingTestsUtils.TradingConditionId, -10, 1.3m);
+        }
+        
+        # endregion
     }
 }
