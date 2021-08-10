@@ -377,7 +377,8 @@ namespace MarginTradingTests.Infrastructure
             => new Position(id, 0, string.Empty, volume, string.Empty, string.Empty, string.Empty, 0, string.Empty,
                 DateTime.Now, string.Empty, OrderType.Limit, 0, 0, 0, string.Empty, 0, new List<RelatedOrderInfo>(),
                 string.Empty, OriginatorType.Investor, string.Empty, string.Empty, FxToAssetPairDirection.Reverse,
-                string.Empty);
+                string.Empty,
+                false);
 
         private static PositionHistory CreatePositionHistory(string id, decimal volume, PositionHistoryType historyType)
             => new PositionHistory {Id = id, Volume = volume, HistoryType = historyType};
