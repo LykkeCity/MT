@@ -2,15 +2,16 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using Lykke.Common.Log;
 using Lykke.MarginTrading.OrderBookService.Contracts;
 using Lykke.MarginTrading.OrderBookService.Contracts.Models;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
@@ -21,7 +22,7 @@ using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Common.Helpers;
 using MarginTrading.Common.Services;
-using MarginTrading.SettingsService.Contracts.AssetPair;
+using MarginTrading.AssetService.Contracts.AssetPair;
 using MoreLinq;
 
 namespace MarginTrading.Backend.Services.Stp
@@ -80,11 +81,11 @@ namespace MarginTrading.Backend.Services.Stp
             _orderbookValidation = marginTradingSettings.OrderbookValidation;
         }
 
-        public async Task InitializeAsync()
+        public void Start()
         {
             try
             {
-                var orderBooks = (await _orderBookProviderApi.GetOrderBooks())
+                var orderBooks = _orderBookProviderApi.GetOrderBooks().GetAwaiter().GetResult()
                     .GroupBy(x => x.AssetPairId)
                     .Select(x => _convertService.Convert<ExternalOrderBookContract, ExternalOrderBook>(
                         x.MaxBy(o => o.ReceiveTimestamp)))
@@ -95,12 +96,12 @@ namespace MarginTrading.Backend.Services.Stp
                     SetOrderbook(externalOrderBook);
                 }
                 
-                await _log.WriteInfoAsync(nameof(LightweightExternalOrderbookService), nameof(InitializeAsync),
+                _log.WriteInfo(nameof(LightweightExternalOrderbookService), nameof(Start),
                     $"External order books cache initialized with {orderBooks.Count} items from OrderBooks Service");
             }
             catch (Exception exception)
             {
-                await _log.WriteWarningAsync(nameof(LightweightExternalOrderbookService), nameof(InitializeAsync),
+                _log.WriteWarning(nameof(LightweightExternalOrderbookService), nameof(Start),
                     "Failed to initialize cache from OrderBook Service", exception);
             }
         }
@@ -192,12 +193,9 @@ namespace MarginTrading.Backend.Services.Stp
                 if (_orderbookValidation.ValidateInstrumentStatusForEodQuotes && !isDayOff && isEodOrderbook)
                 {
                     //log current schedule for the instrument
-                    var schedule = _scheduleSettingsCache.GetCompiledAssetPairScheduleSettings(
-                        orderbook.AssetPairId,
-                        _dateService.Now(),
-                        TimeSpan.Zero);
+                    var schedule = _scheduleSettingsCache.GetMarketTradingScheduleByAssetPair(orderbook.AssetPairId);
 
-                    _log.WriteWarning("EOD quotes processing", $"Current schedule: {schedule.ToJson()}",
+                    _log.WriteWarning("EOD quotes processing", $"Current schedule for the instrument's market: {schedule.ToJson()}",
                         $"EOD quote for {orderbook.AssetPairId} is skipped, because instrument is within trading hours");
 
                     return;
@@ -218,7 +216,10 @@ namespace MarginTrading.Backend.Services.Stp
 
         private bool CheckZeroQuote(ExternalOrderBook orderbook, bool isEodOrderbook)
         {
-            var isOrderbookValid = orderbook.Asks[0].Volume != 0 && orderbook.Bids[0].Volume != 0;
+            // TODO: the code below supposes we have only one quote in orderbook
+            var hasZeroVolume = orderbook.Asks[0].Volume == 0 || orderbook.Bids[0].Volume == 0;
+            var hasZeroPrice = orderbook.Asks[0].Price == 0 || orderbook.Bids[0].Price == 0;
+            var isOrderbookValid = !hasZeroVolume && !hasZeroPrice;
             
             var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(orderbook.AssetPairId);
             if (assetPair == null)
@@ -232,7 +233,8 @@ namespace MarginTrading.Backend.Services.Stp
             
             if (!isOrderbookValid)
             {
-                if (!assetPair.IsSuspended)
+                // suspend instrument in case of zero volumes only
+                if (!assetPair.IsSuspended && hasZeroVolume)
                 {
                     assetPair.IsSuspended = true;//todo apply changes to trading engine
                     _cqrsSender.SendCommandToSettingsService(new SuspendAssetPairCommand
@@ -240,6 +242,8 @@ namespace MarginTrading.Backend.Services.Stp
                         AssetPairId = assetPair.Id,
                         OperationId = _identityGenerator.GenerateGuid(),
                     });
+                    
+                    _log.Info($"Suspending instrument {assetPair.Id}", context: orderbook.ToContextData()?.ToJson());
                 }
             }
             else
@@ -251,7 +255,9 @@ namespace MarginTrading.Backend.Services.Stp
                     {
                         AssetPairId = assetPair.Id,
                         OperationId = _identityGenerator.GenerateGuid(),
-                    });   
+                    }); 
+                    
+                    _log.Info($"Un-suspending instrument {assetPair.Id}", context: orderbook.ToContextData()?.ToJson());
                 }
             }
 

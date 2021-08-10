@@ -432,6 +432,11 @@ namespace MarginTrading.Backend.Core.Trading
             CorrelationId = correlationId;
         }
 
+        public void FixValidity(DateTime? newValidity)
+        {
+            ChangeValidity(newValidity, LastModified, Originator, AdditionalInfo, CorrelationId);
+        }
+        
         public void ChangeForceOpen(bool newForceOpen, DateTime dateTime, OriginatorType originator, string additionalInfo,
             string correlationId)
         {
@@ -623,14 +628,17 @@ namespace MarginTrading.Backend.Core.Trading
         #endregion State changes
 
         #region Helpers
-        
+
         private void UpdateHasOnBehalf(string additionalInfo)
         {
             HasOnBehalf |= GetOnBehalfFlag(additionalInfo);
         }
-        
+
         private static bool GetOnBehalfFlag(string additionalInfo)
         {
+            if (string.IsNullOrWhiteSpace(additionalInfo))
+                return false;
+
             try
             {
                 return JsonConvert.DeserializeAnonymousType(additionalInfo, new {WithOnBehalfFees = false})

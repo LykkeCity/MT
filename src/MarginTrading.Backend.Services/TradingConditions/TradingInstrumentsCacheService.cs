@@ -75,13 +75,13 @@ namespace MarginTrading.Backend.Services.TradingConditions
                     tradingConditionId, instrument));
             }
 
-            if (accountAssetPair.LeverageMaintenance < 1)
+            if (accountAssetPair.MaintenanceLeverage < 1)
             {
                 throw new Exception(
                     string.Format(MtMessages.LeverageMaintanceIncorrect, tradingConditionId, instrument));
             }
 
-            if (accountAssetPair.LeverageInit < 1)
+            if (accountAssetPair.InitLeverage < 1)
             {
                 throw new Exception(string.Format(MtMessages.LeverageInitIncorrect, tradingConditionId,
                     instrument));
@@ -91,15 +91,11 @@ namespace MarginTrading.Backend.Services.TradingConditions
         }
 
         public (decimal MarginInit, decimal MarginMaintenance) GetMarginRates(ITradingInstrument tradingInstrument,
-            bool isWarnCheck = false)
-        {
-            var parameter = (isWarnCheck || _overnightMarginParameterOn) &&
-                            tradingInstrument.OvernightMarginMultiplier > 1
-                ? tradingInstrument.OvernightMarginMultiplier
-                : 1;
-            
-            return (parameter / tradingInstrument.LeverageInit, parameter / tradingInstrument.LeverageMaintenance);
-        }
+            bool isWarnCheck = false) =>
+        (
+            tradingInstrument.GetMarginInitByLeverage(_overnightMarginParameterOn, isWarnCheck),
+            tradingInstrument.GetMarginMaintenanceByLeverage(_overnightMarginParameterOn, isWarnCheck)
+        );
 
         public void InitCache(IEnumerable<ITradingInstrument> tradingInstruments)
         {

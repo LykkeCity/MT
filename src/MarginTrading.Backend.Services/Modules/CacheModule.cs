@@ -2,9 +2,9 @@
 // See the LICENSE file in the project root for more information.
 
 using Autofac;
+using MarginTrading.AssetService.Contracts.ClientProfileSettings;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Services.AssetPairs;
-using MarginTrading.Backend.Services.Assets;
 using Rocks.Caching;
 
 namespace MarginTrading.Backend.Services.Modules
@@ -16,11 +16,6 @@ namespace MarginTrading.Backend.Services.Modules
             builder.RegisterType<AssetPairsCache>()
                 .As<IAssetPairsCache>()
                 .As<IAssetPairsInitializableCache>()
-                .AsSelf()
-                .SingleInstance();
-            
-            builder.RegisterType<AssetsCache>()
-                .As<IAssetsCache>()
                 .AsSelf()
                 .SingleInstance();
 
@@ -38,6 +33,11 @@ namespace MarginTrading.Backend.Services.Modules
                    .As<ICacheProvider>()
                    .AsSelf()
                    .SingleInstance();
+
+            builder.RegisterType<ClientProfileSettingsCache>()
+                .As<IClientProfileSettingsCache>()
+                .AsSelf()
+                .SingleInstance();
         }
     }
 }

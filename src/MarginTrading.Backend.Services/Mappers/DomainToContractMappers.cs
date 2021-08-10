@@ -153,6 +153,7 @@ namespace MarginTrading.Backend.Services.Mappers
                 OpenOrderType = position.OpenOrderType.ToType<OrderTypeContract>(),
                 OpenOrderVolume = position.OpenOrderVolume,
                 PnL = position.GetFpl(),
+                UnrealizedPnl = position.GetUnrealisedFpl(),
                 ChargedPnl = position.ChargedPnL,
                 Margin = position.GetMarginMaintenance(),
                 FxRate = position.CloseFxPrice,
@@ -165,6 +166,7 @@ namespace MarginTrading.Backend.Services.Mappers
                 TradeId = position.Id,
                 AdditionalInfo = position.AdditionalInfo,
                 Status = position.Status.ToType<PositionStatusContract>(),
+                ForceOpen = position.ForceOpen
             };
         }
 

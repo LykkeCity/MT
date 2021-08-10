@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 using Common.Log;
@@ -60,7 +60,8 @@ namespace MarginTrading.SqlRepositories.Repositories
 [TotalPnL] [float] NULL,
 [ChargedPnl] [float] NULL,
 [Margin] [float] NULL,
-[HistoryTimestamp] [datetime] NOT NULL
+[HistoryTimestamp] [datetime] NOT NULL,
+[ForceOpen] [bit] NULL
 );";
         
         private static Type DataType => typeof(OpenPositionEntity);

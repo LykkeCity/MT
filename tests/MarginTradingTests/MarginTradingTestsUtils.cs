@@ -6,16 +6,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using Lykke.Snow.Mdm.Contracts.Api;
+using Lykke.Snow.Mdm.Contracts.Models.Contracts;
+using Lykke.Snow.Mdm.Contracts.Models.Responses;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
-using MarginTrading.SettingsService.Contracts;
-using MarginTrading.SettingsService.Contracts.Asset;
-using MarginTrading.SettingsService.Contracts.Enums;
-using MarginTrading.SettingsService.Contracts.TradingConditions;
+using MarginTrading.AssetService.Contracts;
+using MarginTrading.AssetService.Contracts.Enums;
+using MarginTrading.AssetService.Contracts.TradingConditions;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.FeatureManagement;
+using Lykke.Snow.Mdm.Contracts.BrokerFeatures;
 using Moq;
-using AssetPairContract = MarginTrading.SettingsService.Contracts.AssetPair.AssetPairContract;
+using AssetPairContract = MarginTrading.AssetService.Contracts.AssetPair.AssetPairContract;
+using MarginTrading.AssetService.Contracts.LegacyAsset;
 
 namespace MarginTradingTests
 {
@@ -23,6 +29,8 @@ namespace MarginTradingTests
     public static class MarginTradingTestsUtils
     {
         public const string TradingConditionId = "1";
+        public const string DefaultMarket = "DefaultMarket";
+        
 
         public static IAssetsApi GetPopulatedAssets()
         {
@@ -45,11 +53,54 @@ namespace MarginTradingTests
 
         public static IAccountsApi GetPopulatedAccountsApi(List<MarginTradingAccount> accounts)
         {
-            var list = accounts.Select(a => new AccountContract(a.Id, a.ClientId, a.TradingConditionId, a.BaseAssetId,
-                a.Balance, a.WithdrawTransferLimit, a.LegalEntity, a.IsDisabled, DateTime.UtcNow, 
-                a.IsWithdrawalDisabled, false)).ToList();
+            var list = accounts.Select(a => new AccountContract
+            {
+                Id = a.Id,
+                ClientId = a.ClientId,
+                TradingConditionId = a.TradingConditionId,
+                BaseAssetId = a.BaseAssetId,
+                Balance = a.Balance,
+                WithdrawTransferLimit = a.WithdrawTransferLimit,
+                LegalEntity = a.LegalEntity,
+                IsDisabled = a.IsDisabled,
+                ModificationTimestamp = DateTime.UtcNow,
+                IsWithdrawalDisabled = a.IsWithdrawalDisabled,
+                IsDeleted = false,
+                AdditionalInfo = "{}"
+            }).ToList();
             return Mock.Of<IAccountsApi>(a => a.List(null, false) == Task.FromResult(list));
         }
+
+
+        public static IBrokerSettingsApi GetBrokerSettingsApi(string brokerId, bool productComplexityEnabled = false)
+        {
+            var resp = new GetBrokerSettingsByIdResponse
+            {
+                BrokerSettings = new BrokerSettingsContract
+                {
+                    BrokerId = brokerId,
+                    ProductComplexityWarningEnabled = productComplexityEnabled
+                },
+                ErrorCode = BrokerSettingsErrorCodesContract.None
+            };
+
+            var api = new Mock<IBrokerSettingsApi>();
+
+            api.Setup(x => x.GetByIdAsync(brokerId)).ReturnsAsync(resp);
+
+            return api.Object;
+        }
+
+
+        public static IFeatureManager GetFeatureManager(string brokerId, IBrokerSettingsApi api)
+        {
+            var services = new ServiceCollection();
+            services.AddSingleton(api);
+            services.AddFeatureManagement(brokerId);
+
+            return services.BuildServiceProvider().GetRequiredService<IFeatureManager>();
+        }
+
 
         public static ITradingInstrumentsApi GetPopulatedTradingInstruments()
         {
@@ -59,86 +110,107 @@ namespace MarginTradingTests
                 {
                     TradingConditionId = TradingConditionId,
                     Instrument = "BTCCHF",
-                    LeverageInit = 10,
-                    LeverageMaintenance = 15,
                     Delta = 30,
                     ShortPosition = true,
+                    InitLeverage = 10,
+                    MaintenanceLeverage = 15,
+                    MarginRatePercent = 6.67M,
                 },
                 new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
                     Instrument = "EURUSD",
-                    LeverageInit = 100,
-                    LeverageMaintenance = 150,
                     Delta = 30,
                     ShortPosition = true,
                     DealMaxLimit = 1000000,
-                    PositionLimit = 10000000
+                    PositionLimit = 10000000,
+                    InitLeverage = 100,
+                    MaintenanceLeverage = 150,
+                    MarginRatePercent = 0.67M,
+                },
+                new TradingInstrumentContract
+                {
+                    TradingConditionId = TradingConditionId,
+                    Instrument = "EURRUB",
+                    Delta = 30,
+                    ShortPosition = true,
+                    DealMaxLimit = 1000000,
+                    PositionLimit = 10000000,
+                    InitLeverage = 100,
+                    MaintenanceLeverage = 100,
+                    MarginRatePercent = 1,
                 },
                 new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
                     Instrument = "BTCEUR",
-                    LeverageInit = 10,
-                    LeverageMaintenance = 15,
                     Delta = 30,
                     ShortPosition = true,
+                    InitLeverage = 10,
+                    MaintenanceLeverage = 15,
+                    MarginRatePercent = 6.67M,
                 },
                 new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
                     Instrument = "BTCUSD",
-                    LeverageInit = 10,
-                    LeverageMaintenance = 15,
                     Delta = 30,
                     ShortPosition = true,
                     DealMaxLimit = 10,
-                    PositionLimit = 100
+                    PositionLimit = 100,
+                    InitLeverage = 10,
+                    MaintenanceLeverage = 15,
+                    MarginRatePercent = 6.67M,
                 },
                 new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
                     Instrument = "CHFJPY",
-                    LeverageInit = 10,
-                    LeverageMaintenance = 15,
                     Delta = 30,
                     ShortPosition = true,
+                    InitLeverage = 10,
+                    MaintenanceLeverage = 15,
+                    MarginRatePercent = 6.67M,
                 },
                 new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
                     Instrument = "JPYUSD",
-                    LeverageInit = 100,
-                    LeverageMaintenance = 150,
                     Delta = 30,
                     ShortPosition = true,
+                    InitLeverage = 100,
+                    MaintenanceLeverage = 150,
+                    MarginRatePercent = 0.67M,
                 },
                 new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
                     Instrument = "EURGBP",
-                    LeverageInit = 100,
-                    LeverageMaintenance = 150,
                     Delta = 30,
                     ShortPosition = true,
+                    InitLeverage = 100,
+                    MaintenanceLeverage = 150,
+                    MarginRatePercent = 0.67M,
                 },
                 new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
                     Instrument = "GBPUSD",
-                    LeverageInit = 100,
-                    LeverageMaintenance = 150,
                     Delta = 30,
                     ShortPosition = true,
+                    InitLeverage = 100,
+                    MaintenanceLeverage = 150,
+                    MarginRatePercent = 0.67M,
                 },
                 new TradingInstrumentContract
                 {
                     TradingConditionId = TradingConditionId,
                     Instrument = "BTCJPY",
-                    LeverageInit = 100,
-                    LeverageMaintenance = 150,
                     Delta = 30,
                     ShortPosition = true,
+                    InitLeverage = 100,
+                    MaintenanceLeverage = 150,
+                    MarginRatePercent = 0.67M,
                 }
             };
 
@@ -157,8 +229,8 @@ namespace MarginTradingTests
                 Name = "Default trading condition",
                 BaseAssets = new List<string> {"USD", "EUR", "CHF"},
                 MarginCall1 = 1.25M,
-                MarginCall2 = 1.15M,
-                StopOut = 1.05M
+                MarginCall2 = 1.11M,
+                StopOut = 1M
             };
 
             var mock = new Mock<ITradingConditionsApi>();
@@ -183,6 +255,7 @@ namespace MarginTradingTests
                     Accuracy = 5,
                     BaseAssetId = "EUR",
                     QuoteAssetId = "USD",
+                    MarketId = DefaultMarket
                 },
                 new AssetPairContract
                 {
@@ -190,7 +263,8 @@ namespace MarginTradingTests
                     Name = "BTCEUR",
                     Accuracy = 3,
                     BaseAssetId = "BTC",
-                    QuoteAssetId = "EUR"
+                    QuoteAssetId = "EUR",
+                    MarketId = DefaultMarket
                 },
                 new AssetPairContract
                 {
@@ -198,7 +272,8 @@ namespace MarginTradingTests
                     Name = "BTCUSD",
                     Accuracy = 3,
                     BaseAssetId = "BTC",
-                    QuoteAssetId = "USD"
+                    QuoteAssetId = "USD",
+                    MarketId = DefaultMarket
                 },
                 new AssetPairContract
                 {
@@ -206,7 +281,8 @@ namespace MarginTradingTests
                     Name = "BTCCHF",
                     Accuracy = 3,
                     BaseAssetId = "BTC",
-                    QuoteAssetId = "CHF"
+                    QuoteAssetId = "CHF",
+                    MarketId = DefaultMarket
                 },
                 new AssetPairContract
                 {
@@ -214,7 +290,8 @@ namespace MarginTradingTests
                     Name = "CHFJPY",
                     Accuracy = 3,
                     BaseAssetId = "CHF",
-                    QuoteAssetId = "JPY"
+                    QuoteAssetId = "JPY",
+                    MarketId = DefaultMarket
                 },
                 new AssetPairContract
                 {
@@ -222,7 +299,8 @@ namespace MarginTradingTests
                     Name = "USDCHF",
                     Accuracy = 3,
                     BaseAssetId = "USD",
-                    QuoteAssetId = "CHF"
+                    QuoteAssetId = "CHF",
+                    MarketId = DefaultMarket
                 },
                 new AssetPairContract
                 {
@@ -230,7 +308,8 @@ namespace MarginTradingTests
                     Name = "EURCHF",
                     Accuracy = 5,
                     BaseAssetId = "EUR",
-                    QuoteAssetId = "CHF"
+                    QuoteAssetId = "CHF",
+                    MarketId = DefaultMarket
                 },
                 new AssetPairContract
                 {
@@ -238,7 +317,8 @@ namespace MarginTradingTests
                     Name = "BTCJPY",
                     Accuracy = 5,
                     BaseAssetId = "BTC",
-                    QuoteAssetId = "JPY"
+                    QuoteAssetId = "JPY",
+                    MarketId = DefaultMarket
                 },
                 new AssetPairContract
                 {
@@ -246,7 +326,8 @@ namespace MarginTradingTests
                     Name = "EURJPY",
                     Accuracy = 3,
                     BaseAssetId = "EUR",
-                    QuoteAssetId = "JPY"
+                    QuoteAssetId = "JPY",
+                    MarketId = DefaultMarket
                 },
                 new AssetPairContract
                 {
@@ -254,7 +335,8 @@ namespace MarginTradingTests
                     Name = "JPYUSD",
                     Accuracy = 3,
                     BaseAssetId = "JPY",
-                    QuoteAssetId = "USD"
+                    QuoteAssetId = "USD",
+                    MarketId = DefaultMarket
                 },
                 new AssetPairContract
                 {
@@ -262,7 +344,8 @@ namespace MarginTradingTests
                     Name = "EURGBP",
                     Accuracy = 3,
                     BaseAssetId = "EUR",
-                    QuoteAssetId = "GBP"
+                    QuoteAssetId = "GBP",
+                    MarketId = DefaultMarket
                 },
                 new AssetPairContract
                 {
@@ -270,7 +353,8 @@ namespace MarginTradingTests
                     Name = "GBPUSD",
                     Accuracy = 3,
                     BaseAssetId = "GBP",
-                    QuoteAssetId = "USD"
+                    QuoteAssetId = "USD",
+                    MarketId = DefaultMarket
                 },
             };
 
@@ -283,7 +367,7 @@ namespace MarginTradingTests
             }
 
             var mock = new Mock<IAssetPairsApi>();
-            mock.Setup(m => m.List(It.IsAny<string>(), It.IsAny<MatchingEngineModeContract?>(), It.IsAny<string>()))
+            mock.Setup(m => m.List())
                 .ReturnsAsync(assetPairs);
 
             return mock.Object;

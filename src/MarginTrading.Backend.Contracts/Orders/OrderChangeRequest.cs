@@ -21,5 +21,7 @@ namespace MarginTrading.Backend.Contracts.Orders
         public string CorrelationId { get; set; }
         
         public bool? ForceOpen { get; set; }
+
+        public string AccountId { get; set; }
     }
 }

@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;
@@ -50,10 +49,21 @@ namespace MarginTrading.Backend.Core
 
             return position.FplData;
         }
-
-        public static decimal GetFpl(this Position order)
+        
+        public static decimal GetFpl(this Position position)
         {
-            return order.CalculateFplData().Fpl;
+            var data = position.CalculateFplData();
+
+            return Math.Round(data.RawFpl, data.AccountBaseAssetAccuracy);
+        }
+        
+        public static decimal GetUnrealisedFpl(this Position position)
+        {
+            var data = position.CalculateFplData();
+            var pnl = Math.Round(data.RawFpl, data.AccountBaseAssetAccuracy);
+            var chargedPnl = Math.Round(position.ChargedPnL, data.AccountBaseAssetAccuracy);
+
+            return pnl - chargedPnl;
         }
 
         public static decimal GetMarginRate(this Position order)
@@ -100,6 +110,9 @@ namespace MarginTrading.Backend.Core
         {
             return Math.Abs(order.Volume) * order.CloseCommissionRate;
         }
+
+        public static SortedList<int, Position> ToSortedList(this Position position) =>
+            new SortedList<int, Position> {{0, position}};
 
         public static OrderDirection GetOpositeDirection(this OrderDirection orderType)
         {
@@ -206,6 +219,24 @@ namespace MarginTrading.Backend.Core
             var obj = JsonConvert.DeserializeObject<dynamic>(additionalInfo);
             obj.WithOnBehalfFees = false;
             return JsonConvert.SerializeObject(obj);
+        }
+
+        public static bool ProductComplexityConfirmationReceived(this string additionalInfo, bool defaultValue = false)
+        {
+            try
+            {
+                var model = JsonConvert.DeserializeAnonymousType(additionalInfo,
+                    new
+                    {
+                        ProductComplexityConfirmationReceived = (bool?)null
+                    });
+
+                return model.ProductComplexityConfirmationReceived ?? defaultValue;
+            }
+            catch (Exception)
+            {
+                return defaultValue;
+            }
         }
     }
 }

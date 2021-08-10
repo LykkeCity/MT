@@ -1,7 +1,8 @@
-// Copyright (c) 2019 Lykke Corp.
+// Copyright (c) 2021 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using AzureStorage;
 using AzureStorage.Tables;
@@ -88,6 +89,11 @@ namespace MarginTrading.AzureRepositories
                 OperationName = model.OperationName,
                 Data = model.Data.ToJson(),
             };
+        }
+
+        public Task<PaginatedResponse<OperationExecutionInfo<SpecialLiquidationOperationData>>> GetRfqAsync(string rfqId, string instrumetnId, string accountId, List<SpecialLiquidationOperationState> states, DateTime? from, DateTime? to, int skip, int take, bool isAscendingOrder = true)
+        {
+            throw new NotSupportedException("Azure is not supported");
         }
     }
 }

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Autofac;
+using Common.Log;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.ClientAccount.Client.AutorestClient.Models;
 using Lykke.Service.ClientAccount.Client.Models;
@@ -26,9 +27,15 @@ using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services;
 using MarginTrading.Common.Services.Settings;
 using MarginTrading.Common.Settings;
-using MarginTrading.SettingsService.Contracts;
-using MarginTrading.SettingsService.Contracts.Scheduling;
+using MarginTrading.AssetService.Contracts;
+using MarginTrading.AssetService.Contracts.ClientProfileSettings;
+using MarginTrading.AssetService.Contracts.Scheduling;
+using MarginTrading.Backend.Contracts.Events;
+using MarginTrading.Backend.Modules;
+using MarginTrading.Backend.Services.AssetPairs;
+using MarginTrading.Backend.Services.Quotes;
 using MarginTradingTests.Modules;
+using Microsoft.FeatureManagement;
 using Moq;
 
 namespace MarginTradingTests
@@ -39,6 +46,8 @@ namespace MarginTradingTests
         private const string ClientId2 = "2";
 
         protected IContainer Container { get; set; }
+
+        protected List<PositionHistoryEvent> PositionHistoryEvents = new List<PositionHistoryEvent>();
 
         protected void RegisterDependencies(bool mockEvents = false)
         {
@@ -79,6 +88,7 @@ namespace MarginTradingTests
             };
 
             builder.RegisterInstance(marginSettings).SingleInstance();
+            builder.RegisterInstance(PositionHistoryEvents).As<List<PositionHistoryEvent>>().SingleInstance();
             builder.RegisterInstance(overnightMarginSettings).SingleInstance();
             builder.RegisterInstance(Mock.Of<ExchangeConnectorServiceClient>());
             builder.RegisterInstance(new RiskInformingSettings
@@ -102,7 +112,10 @@ namespace MarginTradingTests
 
             builder.RegisterModule(new MockBaseServicesModule());
             builder.RegisterModule(new MockRepositoriesModule());
-            builder.RegisterModule(new MockExternalServicesModule(Accounts));
+
+            var brokerId = Guid.NewGuid().ToString();
+            
+            builder.RegisterModule(new MockExternalServicesModule(Accounts, brokerId));
             
             if (mockEvents)
             {
@@ -119,6 +132,15 @@ namespace MarginTradingTests
             
             builder.RegisterType<EventChannel<AccountBalanceChangedEventArgs>>()
                 .As<IEventChannel<AccountBalanceChangedEventArgs>>()
+                .SingleInstance();
+
+            var clientProfileSettingsCacheMock = new Mock<IClientProfileSettingsCache>();
+            var outClientProfileSettingsContractDummy = new ClientProfileSettingsContract();
+            clientProfileSettingsCacheMock.Setup(s =>
+                    s.TryGetValue(It.IsAny<string>(), It.IsAny<string>(), out outClientProfileSettingsContractDummy))
+                .Returns(true);
+            builder.RegisterInstance(clientProfileSettingsCacheMock.Object)
+                .As<IClientProfileSettingsCache>()
                 .SingleInstance();
 
             var settingsServiceMock = new Mock<IMarginTradingSettingsCacheService>();
@@ -163,16 +185,30 @@ namespace MarginTradingTests
             var scheduleSettingsApiMock = new Mock<IScheduleSettingsApi>();
             scheduleSettingsApiMock.Setup(m => m.StateList(It.IsAny<string[]>()))
                 .ReturnsAsync(new List<CompiledScheduleContract>());
+            scheduleSettingsApiMock.Setup(m => m.List(It.IsAny<string>()))
+                .ReturnsAsync(new List<ScheduleSettingsContract>() {AlwaysOnMarketSchedule});
             builder.RegisterInstance(scheduleSettingsApiMock.Object).As<IScheduleSettingsApi>();
 
             var exchangeConnector = Mock.Of<IExchangeConnectorClient>();
             builder.RegisterInstance(exchangeConnector).As<IExchangeConnectorClient>();
-
-            builder.RegisterBuildCallback(c => c.Resolve<AccountManager>());
-            builder.RegisterBuildCallback(c => c.Resolve<TradingInstrumentsManager>());
-            builder.RegisterBuildCallback(c => c.Resolve<OrderCacheManager>());
             builder.RegisterInstance(new Mock<IMtSlackNotificationsSender>(MockBehavior.Loose).Object).SingleInstance();
             builder.RegisterInstance(Mock.Of<IRabbitMqService>()).As<IRabbitMqService>();
+            
+            builder.RegisterBuildCallback(c =>
+            {
+                void StartService<T>() where T: IStartable
+                {
+                    c.Resolve<T>().Start();
+                }
+
+                // note the order here is important!
+                StartService<TradingInstrumentsManager>();
+                StartService<AccountManager>();
+                StartService<OrderCacheManager>();
+                StartService<PendingOrdersCleaningService>();
+                StartService<QuoteCacheService>();
+                StartService<FxRateCacheService>();
+            });
 
             builder.RegisterType<SimpleIdentityGenerator>().As<IIdentityGenerator>();
             Container = builder.Build();
@@ -181,8 +217,9 @@ namespace MarginTradingTests
             MtServiceLocator.AccountUpdateService = Container.Resolve<IAccountUpdateService>();
             MtServiceLocator.AccountsCacheService = Container.Resolve<IAccountsCacheService>();
             MtServiceLocator.SwapCommissionService = Container.Resolve<ICommissionService>();
-
+            
             Container.Resolve<OrderBookList>().Init(null);
+            Container.Resolve<IScheduleSettingsCacheService>().UpdateAllSettingsAsync().GetAwaiter().GetResult();
         }
 
         protected List<MarginTradingAccount> Accounts = new List<MarginTradingAccount>
@@ -241,6 +278,27 @@ namespace MarginTradingTests
                 ClientId = ClientId2,
                 Balance = 1000, 
                 LegalEntity = "LYKKETEST"
+            }
+        };
+        
+        private static ScheduleSettingsContract AlwaysOnMarketSchedule = new ScheduleSettingsContract
+        {
+            Id = "AlwaysOnMarketSchedule",
+            Rank = int.MinValue,
+            IsTradeEnabled = true,
+            PendingOrdersCutOff = TimeSpan.Zero,
+            MarketId = MarginTradingTestsUtils.DefaultMarket,
+            Start = new ScheduleConstraintContract
+            {
+                Date = null,
+                DayOfWeek = null,
+                Time = new TimeSpan(0, 0, 0)
+            },
+            End = new ScheduleConstraintContract
+            {
+                Date = null,
+                DayOfWeek = null,
+                Time = new TimeSpan(23, 59, 59)
             }
         };
     }

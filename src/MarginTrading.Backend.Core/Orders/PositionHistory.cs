@@ -53,5 +53,6 @@ namespace MarginTrading.Backend.Core.Orders
         public string AdditionalInfo { get; set; }
         public PositionHistoryType HistoryType { get; set; }
         public DateTime HistoryTimestamp { get; set; }
+        public bool ForceOpen { get; set; }
     }
 }

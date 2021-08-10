@@ -88,6 +88,11 @@ namespace MarginTrading.Backend.Contracts.Positions
         public decimal PnL { get; set; }
         
         /// <summary>
+        /// Profit and loss of the position in account asset units since previous EOD
+        /// </summary>
+        public decimal UnrealizedPnl { get; set; }
+        
+        /// <summary>
         /// PnL changed on account balance
         /// </summary>
         public decimal ChargedPnl { get; set; }
@@ -138,5 +143,10 @@ namespace MarginTrading.Backend.Contracts.Positions
         /// Position status
         /// </summary>
         public PositionStatusContract Status { get; set; }
+
+        /// <summary>
+        /// Reflect if the order which has open position was flagged ForceOpen
+        /// </summary>
+        public bool ForceOpen { get; set; }
     }
 }

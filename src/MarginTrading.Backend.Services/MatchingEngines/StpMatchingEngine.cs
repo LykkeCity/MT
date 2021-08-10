@@ -11,6 +11,7 @@ using Common.Log;
 using MarginTrading.Backend.Contracts.ExchangeConnector;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.MatchedOrders;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
@@ -140,7 +141,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                     {
                         var ex = new Exception(
                             $"External order was not executed. Status: {executionResult.ExecutionStatus}. Failure: {executionResult.FailureType}");
-                        LogOrderExecutionExcetion(order, externalOrderModel, ex);
+                        LogOrderExecutionException(order, externalOrderModel, ex);
                     }
                     else
                     {
@@ -148,30 +149,38 @@ namespace MarginTrading.Backend.Services.MatchingEngines
                             ? (decimal)executionResult.Price
                             : price.Value;
 
-                        var matchedOrders = new MatchedOrderCollection
+                        if (executedPrice.EqualsZero())
                         {
-                            new MatchedOrder
+                            var ex = new Exception($"Have got execution price from Gavel equal to 0. Ignoring.");
+                            LogOrderExecutionException(order, externalOrderModel, ex);
+                        }
+                        else
+                        {
+                            var matchedOrders = new MatchedOrderCollection
                             {
-                                MarketMakerId = source,
-                                MatchedDate = _dateService.Now(),
-                                OrderId = executionResult.ExchangeOrderId,
-                                Price = CalculatePriceWithMarkups(assetPair, order.Direction, executedPrice),
-                                Volume = (decimal) executionResult.Volume,
-                                IsExternal = true
-                            }
-                        };
+                                new MatchedOrder
+                                {
+                                    MarketMakerId = source,
+                                    MatchedDate = _dateService.Now(),
+                                    OrderId = executionResult.ExchangeOrderId,
+                                    Price = CalculatePriceWithMarkups(assetPair, order.Direction, executedPrice),
+                                    Volume = (decimal) executionResult.Volume,
+                                    IsExternal = true
+                                }
+                            };
 
-                        await _rabbitMqNotifyService.ExternalOrder(executionResult);
+                            await _rabbitMqNotifyService.ExternalOrder(executionResult);
 
-                        _operationsLogService.AddLog("external order executed", order.AccountId,
-                            externalOrderModel.ToJson(), executionResult.ToJson());
+                            _operationsLogService.AddLog("external order executed", order.AccountId,
+                                externalOrderModel.ToJson(), executionResult.ToJson());
                         
-                        return matchedOrders;
+                            return matchedOrders;
+                        }
                     }
                 }
                 catch (Exception ex)
                 {
-                    LogOrderExecutionExcetion(order, externalOrderModel, ex);
+                    LogOrderExecutionException(order, externalOrderModel, ex);
                     throw new OrderExecutionTechnicalException();
                 }
             }
@@ -179,7 +188,7 @@ namespace MarginTrading.Backend.Services.MatchingEngines
             return new MatchedOrderCollection();
         }
 
-        private void LogOrderExecutionExcetion(Order internalOrder, OrderModel externalOrderModel, Exception ex)
+        private void LogOrderExecutionException(Order internalOrder, OrderModel externalOrderModel, Exception ex)
         {
             var connector = _marginTradingSettings.ExchangeConnector == ExchangeConnectorType.FakeExchangeConnector
                 ? "Fake"

@@ -8,18 +8,11 @@ using System.Threading.Tasks;
 using MarginTrading.Backend.Contracts.Account;
 using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Mappers;
-using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Mappers;
-using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
-using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Middleware;
-using MarginTrading.Common.Services;
-using MarginTrading.Contract.BackendContracts;
-using MarginTrading.Contract.BackendContracts.AccountsManagement;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using IAccountsApi = MarginTrading.Backend.Contracts.IAccountsApi;
@@ -32,24 +25,15 @@ namespace MarginTrading.Backend.Controllers
     public class AccountsController : Controller, IAccountsApi
     {
         private readonly IAccountsCacheService _accountsCacheService;
-        private readonly IDateService _dateService;
-        private readonly AccountManager _accountManager;
         private readonly IOrderReader _orderReader;
-        private readonly TradingConditionsCacheService _tradingConditionsCache;
         private readonly ICqrsSender _cqrsSender;
 
         public AccountsController(IAccountsCacheService accountsCacheService,
-            IDateService dateService,
-            AccountManager accountManager,
             IOrderReader orderReader,
-            TradingConditionsCacheService tradingConditionsCache,
             ICqrsSender cqrsSender)
         {
             _accountsCacheService = accountsCacheService;
-            _dateService = dateService;
-            _accountManager = accountManager;
             _orderReader = orderReader;
-            _tradingConditionsCache = tradingConditionsCache;
             _cqrsSender = cqrsSender;
         }
 

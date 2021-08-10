@@ -11,6 +11,7 @@ using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.EmailSender;
 using Lykke.SettingsReader;
 using Lykke.Snow.Common.Startup;
+using Lykke.Snow.Mdm.Contracts.Api;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.Backend.Contracts.ExchangeConnector;
 using MarginTrading.Backend.Core.Settings;
@@ -19,7 +20,7 @@ using MarginTrading.Backend.Services.FakeExchangeConnector;
 using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Backend.Services.Stubs;
 using MarginTrading.Common.Services.Client;
-using MarginTrading.SettingsService.Contracts;
+using MarginTrading.AssetService.Contracts;
 
 namespace MarginTrading.Backend.Modules
 {
@@ -89,7 +90,7 @@ namespace MarginTrading.Backend.Modules
             
             #endregion
             
-            #region MT Settings
+            #region Asset Service
 
             var settingsClientGeneratorBuilder = HttpClientGenerator
                 .BuildForUrl(_settings.CurrentValue.SettingsServiceClient.ServiceUrl)
@@ -126,6 +127,9 @@ namespace MarginTrading.Backend.Modules
             builder.RegisterInstance(settingsClientGenerator.Generate<IServiceMaintenanceApi>())
                 .As<IServiceMaintenanceApi>().SingleInstance();
 
+            builder.RegisterInstance(settingsClientGenerator.Generate<IClientProfileSettingsApi>())
+                .As<IClientProfileSettingsApi>().SingleInstance();
+
             #endregion
 
             #region MT Accounts Management
@@ -143,6 +147,25 @@ namespace MarginTrading.Backend.Modules
 
             builder.RegisterInstance(accountsClientGeneratorBuilder.Create().Generate<IAccountsApi>())
                 .As<IAccountsApi>().SingleInstance();
+
+            #endregion
+
+            #region Mdm
+
+            //for feature management
+            var mdmGenerator = HttpClientGenerator
+                .BuildForUrl(_settings.CurrentValue.MdmServiceClient.ServiceUrl)
+                .WithServiceName<LykkeErrorResponse>(
+                    $"Mdm [{_settings.CurrentValue.MdmServiceClient.ServiceUrl}]");
+
+            if (!string.IsNullOrWhiteSpace(_settings.CurrentValue.MdmServiceClient.ApiKey))
+            {
+                mdmGenerator = mdmGenerator
+                    .WithApiKey(_settings.CurrentValue.MdmServiceClient.ApiKey);
+            }
+
+            builder.RegisterInstance(mdmGenerator.Create().Generate<IBrokerSettingsApi>())
+                .As<IBrokerSettingsApi>().SingleInstance();
 
             #endregion
 

@@ -65,7 +65,7 @@ namespace MarginTrading.Common.RabbitMq
         /// </summary>
         public static uint GetMessageCount(string connectionString, string queueName)
         {
-            var factory = new ConnectionFactory { Uri = connectionString };
+            var factory = new ConnectionFactory { Uri = new Uri(connectionString, UriKind.Absolute) };
             
             using (var connection = factory.CreateConnection())
             using (var channel = connection.CreateModel())
@@ -151,6 +151,7 @@ namespace MarginTrading.Common.RabbitMq
                     QueueName = QueueHelper.BuildQueueName(settings.ExchangeName, _env),
                     ExchangeName = settings.ExchangeName,
                     IsDurable = isDurable,
+                    RoutingKey = settings.RoutingKey,
                 };
                 
                 var rabbitMqSubscriber = new RabbitMqSubscriber<TMessage>(subscriptionSettings,

@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Lykke.Snow.Mdm.Contracts.BrokerFeatures;
+using MarginTrading.AccountsManagement.Contracts.Models.AdditionalInfo;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
@@ -21,6 +23,8 @@ using MarginTrading.Backend.Services.Helpers;
 using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
+using Microsoft.FeatureManagement;
+
 // ReSharper disable ParameterOnlyUsedForPreconditionCheck.Local
 
 namespace MarginTrading.Backend.Services
@@ -38,6 +42,7 @@ namespace MarginTrading.Backend.Services
         private readonly IDateService _dateService;
         private readonly MarginTradingSettings _marginSettings;
         private readonly ICfdCalculatorService _cfdCalculatorService;
+        private readonly IFeatureManager _featureManager;
 
         public ValidateOrderService(
             IQuoteCacheService quoteCashService,
@@ -50,7 +55,8 @@ namespace MarginTrading.Backend.Services
             IIdentityGenerator identityGenerator,
             IDateService dateService,
             MarginTradingSettings marginSettings,
-            ICfdCalculatorService cfdCalculatorService)
+            ICfdCalculatorService cfdCalculatorService, 
+            IFeatureManager featureManager)
         {
             _quoteCashService = quoteCashService;
             _accountUpdateService = accountUpdateService;
@@ -63,6 +69,7 @@ namespace MarginTrading.Backend.Services
             _dateService = dateService;
             _marginSettings = marginSettings;
             _cfdCalculatorService = cfdCalculatorService;
+            _featureManager = featureManager;
         }
         
         
@@ -213,8 +220,46 @@ namespace MarginTrading.Backend.Services
                 if (tp != null)
                     relatedOrders.Add(tp);    
             }
+
+            await ValidateProductComplexityConfirmation(request, account);
             
             return (baseOrder, relatedOrders);
+        }
+
+        private async Task ValidateProductComplexityConfirmation(OrderPlaceRequest order, MarginTradingAccount account)
+        {
+            if (!await _featureManager.IsEnabledAsync(BrokerFeature.ProductComplexityWarning))
+            {
+                return;
+            }
+
+            var isBasicOrder = new[]
+                {
+                    OrderTypeContract.Market,
+                    OrderTypeContract.Limit,
+                    OrderTypeContract.Stop
+                }
+                .Contains(order.Type);
+
+            
+            if (!isBasicOrder)
+            {
+                return;
+            }
+
+            var shouldShowProductComplexityWarning = AccountAdditionalInfoExtensions.Deserialize(account.AdditionalInfo).ShouldShowProductComplexityWarning ?? true;
+            if (!shouldShowProductComplexityWarning)
+            {
+                return;
+            }
+
+            var productComplexityConfimationReceived = order.AdditionalInfo.ProductComplexityConfirmationReceived();
+
+            if (!productComplexityConfimationReceived)
+            {
+                throw new ValidateOrderException(OrderRejectReason.AccountInvalidState,
+                    $"Product complexity warning not received for order with correlation {order.CorrelationId}, placed by account {account.Id}");
+            }
         }
 
         public void ValidateForceOpenChange(Order order, bool? forceOpen)
@@ -442,12 +487,12 @@ namespace MarginTrading.Backend.Services
                 .FirstOrDefault(o => o.OrderType == OrderType.TakeProfit)?.Price;
 
             if (baseOrder.Direction == OrderDirection.Buy &&
-                (slPrice.HasValue && slPrice > newPrice
-                 || tpPrice.HasValue && tpPrice < newPrice)
+                (slPrice.HasValue && slPrice >= newPrice
+                 || tpPrice.HasValue && tpPrice <= newPrice)
                 ||
                 baseOrder.Direction == OrderDirection.Sell &&
-                (slPrice.HasValue && slPrice < newPrice
-                 || tpPrice.HasValue && tpPrice > newPrice))
+                (slPrice.HasValue && slPrice <= newPrice
+                 || tpPrice.HasValue && tpPrice >= newPrice))
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidExpectedOpenPrice,
                     "Price is not valid against related orders prices.");
@@ -537,14 +582,15 @@ namespace MarginTrading.Backend.Services
         
         #region Pre-trade validations
         
-        public void MakePreTradeValidation(Order order, bool shouldOpenNewPosition, IMatchingEngineBase matchingEngine)
+        public void MakePreTradeValidation(Order order, bool shouldOpenNewPosition, IMatchingEngineBase 
+        matchingEngine, decimal additionalMargin)
         {
             GetAssetPairIfAvailableForTrading(order.AssetPairId, order.OrderType, shouldOpenNewPosition, true);
 
             ValidateTradeLimits(order.AssetPairId, order.TradingConditionId, order.AccountId, order.Volume, shouldOpenNewPosition);
 
             if (shouldOpenNewPosition)
-                _accountUpdateService.CheckIsEnoughBalance(order, matchingEngine);
+                _accountUpdateService.CheckIsEnoughBalance(order, matchingEngine, additionalMargin);
         }
 
         public bool CheckIfPendingOrderExecutionPossible(string assetPairId, OrderType orderType, bool shouldOpenNewPosition)
@@ -591,21 +637,21 @@ namespace MarginTrading.Backend.Services
                     $"Trading for the instrument {assetPairId} is discontinued");
             }
 
-            if (assetPair.IsSuspended)
+            if (assetPair.IsSuspended && shouldOpenNewPosition)
             {
                 if (isPreTradeValidation)
                 {
-                    throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, 
+                    throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
                         $"Orders execution for instrument {assetPairId} is temporarily unavailable (instrument is suspended)");
                 }
-               
+
                 if (orderType == OrderType.Market)
                 {
-                    throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, 
+                    throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
                         $"Market orders for instrument {assetPairId} are temporarily unavailable (instrument is suspended)");
                 }
-            } 
-            
+            }
+
             if (assetPair.IsFrozen && shouldOpenNewPosition)
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,

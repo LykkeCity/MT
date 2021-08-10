@@ -14,24 +14,21 @@ using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Helpers;
-using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
-using MarginTrading.Backend.Core.Settings;
-using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Filters;
+using MarginTrading.Backend.Infrastructure;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
+using MarginTrading.Backend.Services.Helpers;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Mappers;
-using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Middleware;
 using MarginTrading.Common.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MoreLinq;
 
 namespace MarginTrading.Backend.Controllers
 {
@@ -73,17 +70,21 @@ namespace MarginTrading.Backend.Controllers
         /// </summary>
         /// <param name="positionId">Id of position</param>
         /// <param name="request">Additional info for close</param>
+        /// <param name="accountId">AccountId</param>
         [Route("{positionId}")]
         [MiddlewareFilter(typeof(RequestLoggingPipeline))]
         [ServiceFilter(typeof(MarginTradingEnabledFilter))]
         [HttpDelete]
         public async Task<PositionCloseResponse> CloseAsync([CanBeNull] [FromRoute] string positionId,
-            [FromBody] PositionCloseRequest request = null)
+            [FromBody] PositionCloseRequest request = null,
+            [FromQuery] string accountId = null)
         {
             if (!_ordersCache.Positions.TryGetPositionById(positionId, out var position))
             {
                 throw new InvalidOperationException("Position not found");
             }
+
+            ValidationHelper.ValidateAccountId(position, accountId);
 
             ValidateDayOff(position.AssetPairId);
 
@@ -93,7 +94,7 @@ namespace MarginTrading.Backend.Controllers
 
             var closeResult = await _tradingEngine.ClosePositionsAsync(
                 new PositionsCloseData(
-                    new List<Position> {position},
+                    position,
                     position.AccountId,
                     position.AssetPairId,
                     position.OpenMatchingEngineId,
@@ -171,7 +172,7 @@ namespace MarginTrading.Backend.Controllers
             [FromQuery] string assetPairId = null)
         {
             var positions = _ordersCache.Positions.GetAllPositions().AsEnumerable();
-            
+
             if (!string.IsNullOrWhiteSpace(accountId))
                 positions = positions.Where(o => o.AccountId == accountId);
 

@@ -77,5 +77,7 @@ namespace MarginTrading.SqlRepositories.Entities
 
         public string RelatedOrders { get; set; }
         public string CloseTrades { get; set; }
+
+        public bool ForceOpen { get; set; }
     }
 }

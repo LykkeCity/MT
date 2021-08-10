@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
+using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Helpers;
 using MarginTrading.Contract.BackendContracts;
@@ -34,13 +35,33 @@ namespace MarginTrading.Backend.Middleware
             }
             catch (Exception ex)
             {
-                await LogError(context, ex);
+                if (ex is ValidateOrderException)
+                {
+                    await LogValidationError(context, ex);
+                }
+                else
+                {
+                    await LogError(context, ex);
+                }
+
 #if DEBUG
                 await SendError(context, ex.ToString());
 #else
                 await SendError(context, ex.Message);
 #endif
             }
+        }
+
+        private async Task LogValidationError(HttpContext context, Exception ex)
+        {
+            string bodyPart;
+
+            using (var memoryStream = new MemoryStream())
+            {
+                bodyPart = await StreamHelpers.GetStreamPart(memoryStream, 1024);
+            }
+
+            await _log.WriteInfoAsync("GlobalHandler", context.Request.GetUri().AbsoluteUri, bodyPart + ex.Message);
         }
 
         private async Task LogError(HttpContext context, Exception ex)

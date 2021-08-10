@@ -4,7 +4,6 @@
 using Autofac;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Services.AssetPairs;
-using MarginTrading.Backend.Services.Assets;
 using MarginTrading.Backend.Services.Caches;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
@@ -19,25 +18,16 @@ namespace MarginTrading.Backend.Services.Modules
         {
             builder.RegisterType<AccountManager>()
                 .AsSelf()
-                .SingleInstance()
-                .OnActivated(args => args.Instance.Start());
+                .SingleInstance();
 
             builder.RegisterType<OrderCacheManager>()
                 .AsSelf()
-                .SingleInstance()
-                .OnActivated(args => args.Instance.Start());
-
-            builder.RegisterType<TradingConditionsManager>()
-                .AsSelf()
-                .As<IStartable>()
-                .As<ITradingConditionsManager>()
                 .SingleInstance();
 
             builder.RegisterType<TradingInstrumentsManager>()
                 .AsSelf()
                 .As<ITradingInstrumentsManager>()
-                .SingleInstance()
-                .OnActivated(args => args.Instance.Start());
+                .SingleInstance();
 
             builder.RegisterType<MatchingEngineRoutesManager>()
                 .AsSelf()
@@ -50,17 +40,10 @@ namespace MarginTrading.Backend.Services.Modules
                 .As<IStartable>()
                 .As<IAssetPairsManager>()
                 .SingleInstance();
-            
-            builder.RegisterType<AssetsManager>()
-                .AsSelf()
-                .As<IStartable>()
-                .As<IAssetsManager>()
-                .SingleInstance();
-            
+
             builder.RegisterType<PendingOrdersCleaningService>()
                 .AsSelf()
-                .SingleInstance()
-                .OnActivated(args => args.Instance.Start());
+                .SingleInstance();
             
             builder.RegisterType<QuotesMonitor>()
                 .AsSelf()

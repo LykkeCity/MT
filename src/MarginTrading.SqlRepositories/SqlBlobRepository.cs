@@ -2,7 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Linq;
 using System.Threading.Tasks;
@@ -78,18 +78,19 @@ namespace MarginTrading.SqlRepositories
             {
                 data = JsonConvert.SerializeObject(obj),
                 blobKey = $"{blobContainer}_{key}",
-                timestamp = DateTime.Now
+                timestamp = DateTime.UtcNow
             };
             
             using (var conn = new SqlConnection(_connectionString))
             {
-                try
+                if (await conn.ExecuteScalarAsync<int>($"select count(*) from {TableName} where BlobKey=@blobKey",
+                        request) == 0)
                 {
                     await conn.ExecuteAsync(
                         $"insert into {TableName} (BlobKey, Data, Timestamp) values (@blobKey, @data, @timestamp)",
                         request);
                 }
-                catch
+                else
                 {
                     await conn.ExecuteAsync(
                         $"update {TableName} set Data=@data, Timestamp = @timestamp where BlobKey=@blobKey",

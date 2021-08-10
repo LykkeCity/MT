@@ -4,23 +4,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using FluentScheduler;
-using Lykke.Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.DayOffSettings;
 using MarginTrading.Backend.Core.Extensions;
-using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
-using MarginTrading.Backend.Services.Infrastructure;
-using MarginTrading.Backend.Services.Scheduling;
 using MarginTrading.Backend.Services.TradingConditions;
-using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
 using MarginTrading.Common.Services;
 using MoreLinq;
 
@@ -38,7 +32,6 @@ namespace MarginTrading.Backend.Services.Services
         private readonly ILog _log;
         private readonly IEventChannel<MarginCallEventArgs> _marginCallEventChannel;
         private readonly OvernightMarginSettings _overnightMarginSettings;
-        private readonly ICqrsSender _cqrsSender;
         
         private static readonly object LockObj = new object();
 
@@ -51,8 +44,7 @@ namespace MarginTrading.Backend.Services.Services
             IOvernightMarginParameterContainer overnightMarginParameterContainer,
             ILog log,
             IEventChannel<MarginCallEventArgs> marginCallEventChannel,
-            OvernightMarginSettings overnightMarginSettings,
-            ICqrsSender cqrsSender)
+            OvernightMarginSettings overnightMarginSettings)
         {
             _dateService = dateService;
             _tradingEngine = tradingEngine;
@@ -63,7 +55,6 @@ namespace MarginTrading.Backend.Services.Services
             _log = log;
             _marginCallEventChannel = marginCallEventChannel;
             _overnightMarginSettings = overnightMarginSettings;
-            _cqrsSender = cqrsSender;
         }
 
         /// <inheritdoc />
@@ -86,13 +77,11 @@ namespace MarginTrading.Backend.Services.Services
                     || !TryGetOperatingInterval(platformTradingSchedule, currentDateTime, out operatingInterval))
                 {
                     nextStart = currentDateTime.Date.AddDays(1);
-                    RestartFailedLiquidation();
                 }
                 //schedule warning
                 else if (currentDateTime < operatingInterval.Warn)
                 {
                     nextStart = operatingInterval.Warn;
-                    RestartFailedLiquidation();
                 }
                 //schedule overnight margin parameter start
                 else if (currentDateTime < operatingInterval.Start)
@@ -132,28 +121,6 @@ namespace MarginTrading.Backend.Services.Services
                 _log.WriteInfo(nameof(OvernightMarginService), nameof(ScheduleNext),
                     $@"All current job schedules: {string.Join(", ",
                         JobManager.AllSchedules.Select(x => $"[{x.Name}:{x.NextRun:O}:{x.Disabled}]"))}.");
-            }
-        }
-
-        private void RestartFailedLiquidation()
-        {
-            _log.WriteInfo(nameof(OvernightMarginService), nameof(RestartFailedLiquidation), "Trying to restart failed liquidations");
-            
-            var accounts = _accountsCacheService.GetAll().Where(a => a.IsInLiquidation()).ToArray();
-
-            _log.WriteInfo(nameof(OvernightMarginService), nameof(RestartFailedLiquidation),
-                $"{accounts.Length} accounts in liquidation state found");
-
-            foreach (var account in accounts)
-            {
-                _cqrsSender.SendCommandToSelf(new ResumeLiquidationInternalCommand
-                {
-                    OperationId = account.LiquidationOperationId,
-                    CreationTime = DateTime.UtcNow,
-                    IsCausedBySpecialLiquidation = false,
-                    ResumeOnlyFailed = true,
-                    Comment = "Trying to resume liquidation because trading started"
-                });
             }
         }
 

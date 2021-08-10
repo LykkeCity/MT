@@ -9,18 +9,17 @@ using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
+using Lykke.Common.Log;
 using Lykke.Cqrs;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Contracts.Workflow.Liquidation;
 using MarginTrading.Backend.Contracts.Workflow.Liquidation.Events;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
-using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Events;
-using MarginTrading.Backend.Services.TradingConditions;
+using MarginTrading.Backend.Services.Helpers;
 using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.Liquidation.Events;
 using MarginTrading.Common.Extensions;
@@ -31,42 +30,44 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
     [UsedImplicitly]
     public class LiquidationCommandsHandler
     {
-        private readonly ITradingInstrumentsCacheService _tradingInstrumentsCacheService;
         private readonly IAccountsCacheService _accountsCache;
         private readonly IDateService _dateService;
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
         private readonly IChaosKitty _chaosKitty;
-        private readonly IMatchingEngineRouter _matchingEngineRouter;
         private readonly ITradingEngine _tradingEngine;
         private readonly OrdersCache _ordersCache;
         private readonly ILog _log;
         private readonly IAccountUpdateService _accountUpdateService;
         private readonly IEventChannel<LiquidationEndEventArgs> _liquidationEndEventChannel;
+        private readonly LiquidationHelper _liquidationHelper;
+        private readonly ILiquidationFailureExecutor _failureExecutor;
+
+        private const AccountLevel ValidAccountLevel = AccountLevel.StopOut;
 
         public LiquidationCommandsHandler(
-            ITradingInstrumentsCacheService tradingInstrumentsCacheService,
             IAccountsCacheService accountsCache,
             IDateService dateService,
             IOperationExecutionInfoRepository operationExecutionInfoRepository,
-            IChaosKitty chaosKitty, 
-            IMatchingEngineRouter matchingEngineRouter,
+            IChaosKitty chaosKitty,
             ITradingEngine tradingEngine,
             OrdersCache ordersCache,
             ILog log,
             IAccountUpdateService accountUpdateService,
-            IEventChannel<LiquidationEndEventArgs> liquidationEndEventChannel)
+            IEventChannel<LiquidationEndEventArgs> liquidationEndEventChannel,
+            LiquidationHelper liquidationHelper, 
+            ILiquidationFailureExecutor failureExecutor)
         {
-            _tradingInstrumentsCacheService = tradingInstrumentsCacheService;
             _accountsCache = accountsCache;
             _dateService = dateService;
             _operationExecutionInfoRepository = operationExecutionInfoRepository;
             _chaosKitty = chaosKitty;
-            _matchingEngineRouter = matchingEngineRouter;
             _tradingEngine = tradingEngine;
             _ordersCache = ordersCache;
             _log = log;
             _accountUpdateService = accountUpdateService;
             _liquidationEndEventChannel = liquidationEndEventChannel;
+            _liquidationHelper = liquidationHelper;
+            _failureExecutor = failureExecutor;
         }
 
         [UsedImplicitly]
@@ -135,6 +136,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                         LiquidationType = command.LiquidationType,
                         OriginatorType = command.OriginatorType,
                         AdditionalInfo = command.AdditionalInfo,
+                        StartedAt = command.CreationTime
                     }
                 ));
             
@@ -156,10 +158,13 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                     $"Publish_LiquidationStartedInternalEvent:" +
                     $"{command.OperationId}");
                 
-                publisher.PublishEvent(new LiquidationStartedInternalEvent
+                publisher.PublishEvent(new LiquidationStartedEvent
                 {
                     OperationId = command.OperationId,
-                    CreationTime = _dateService.Now()
+                    CreationTime = _dateService.Now(),
+                    AssetPairId = executionInfo.Data.AssetPairId,
+                    AccountId = executionInfo.Data.AccountId,
+                    LiquidationType = executionInfo.Data.LiquidationType.ToType<LiquidationTypeContract>()
                 });
             }
         }
@@ -271,6 +276,27 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 return;
             }
 
+            await _log.WriteInfoAsync(nameof(LiquidationCommandsHandler),
+                nameof(LiquidatePositionsInternalCommand), 
+                command.ToJson(), 
+                "Checking if position liquidation should be failed");
+            var account = _accountsCache.Get(executionInfo.Data.AccountId);
+            if (ShouldFailExecution(account.GetAccountLevel(), executionInfo.Data.LiquidationType))
+            {
+                await _log.WriteWarningAsync(
+                    nameof(LiquidationCommandsHandler),
+                    nameof(LiquidatePositionsInternalCommand),
+                    new {accountId = account.Id, accountLevel = account.GetAccountLevel().ToString()}.ToJson(),
+                    $"Unable to liquidate positions since account level is not {ValidAccountLevel.ToString()}.");
+
+                await _failureExecutor.ExecuteAsync(publisher,
+                    account.Id,
+                    command.OperationId,
+                    $"Account level is not {ValidAccountLevel.ToString()}.");
+
+                return;
+            }
+
             var positions = _ordersCache.Positions
                 .GetPositionsByAccountIds(executionInfo.Data.AccountId)
                 .Where(p => command.PositionIds.Contains(p.Id))
@@ -293,8 +319,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 return;
             }
 
-            if (!CheckIfNetVolumeCanBeLiquidated(executionInfo.Data.AccountId, command.AssetPairId, positions, 
-                out var details))
+            if (!_liquidationHelper.CheckIfNetVolumeCanBeLiquidated(command.AssetPairId, positions, out var details))
             {
                 publisher.PublishEvent(new NotEnoughLiquidityInternalEvent
                 {
@@ -305,7 +330,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 });
                 return;
             }
-            
+
             var liquidationInfos = new List<LiquidationInfo>();
 
             var comment = string.Empty;
@@ -329,7 +354,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 .GroupBy(p => (p.AssetPairId, p.AccountId, p.Direction, p
                     .OpenMatchingEngineId, p.ExternalProviderId, p.EquivalentAsset))
                 .Select(gr => new PositionsCloseData(
-                    gr.ToList(),
+                    gr.FreezeOrder(),
                     gr.Key.AccountId,
                     gr.Key.AssetPairId,
                     gr.Key.OpenMatchingEngineId,
@@ -350,7 +375,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                     {
                         liquidationInfos.Add(new LiquidationInfo
                         {
-                            PositionId = position.Id,
+                            PositionId = position.Value.Id,
                             IsLiquidated = true,
                             Comment = order != null ? $"Order: {order.Id}" : result.ToString()
                         });
@@ -360,14 +385,14 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 {
                     await _log.WriteWarningAsync(nameof(LiquidationCommandsHandler),
                         nameof(LiquidatePositionsInternalCommand),
-                        $"Failed to close positions {string.Join(",", positionGroup.Positions.Select(p => p.Id))} on liquidation operation #{command.OperationId}",
+                        $"Failed to close positions {string.Join(",", positionGroup.Positions.Select(p => p.Value.Id))} on liquidation operation #{command.OperationId}",
                         ex);
 
                     foreach (var position in positionGroup.Positions)
                     {
                         liquidationInfos.Add(new LiquidationInfo
                         {
-                            PositionId = position.Id,
+                            PositionId = position.Value.Id,
                             IsLiquidated = false,
                             Comment = $"Close position failed: {ex.Message}"
                         });
@@ -387,7 +412,6 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         public async Task Handle(ResumeLiquidationInternalCommand command,
             IEventPublisher publisher)
         {
-            
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<LiquidationOperationData>(
                 operationName: LiquidationSaga.OperationName,
                 id: command.OperationId);
@@ -400,61 +424,56 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 return;
             }
 
-            if ((!command.IsCausedBySpecialLiquidation &&
-                 (!command.ResumeOnlyFailed || executionInfo.Data.State == LiquidationOperationState.Failed)) ||
+            await _log.WriteInfoAsync(nameof(LiquidationCommandsHandler),
+                nameof(ResumeLiquidationInternalCommand), 
+                command.ToJson(), 
+                "Checking if position liquidation should be failed");
+            var account = _accountsCache.Get(executionInfo.Data.AccountId);
+            if (ShouldFailExecution(account.GetAccountLevel(), executionInfo.Data.LiquidationType))
+            {
+                await _log.WriteWarningAsync(
+                    nameof(LiquidationCommandsHandler),
+                    nameof(ResumeLiquidationInternalCommand),
+                    new {accountId = account.Id, accountLevel = account.GetAccountLevel().ToString()}.ToJson(),
+                    $"Unable to resume liquidation since account level is not {ValidAccountLevel.ToString()}.");
+                
+                await _failureExecutor.ExecuteAsync(publisher, 
+                    account.Id, 
+                    command.OperationId,
+                    $"Account level is not {ValidAccountLevel.ToString()}.");
+
+                return;
+            }
+            
+            if (!command.IsCausedBySpecialLiquidation &&
+                (!command.ResumeOnlyFailed || executionInfo.Data.State == LiquidationOperationState.Failed) ||
                 executionInfo.Data.State == LiquidationOperationState.SpecialLiquidationStarted)
             {
-                publisher.PublishEvent(new LiquidationResumedInternalEvent
+                publisher.PublishEvent(new LiquidationResumedEvent
                 {
                     OperationId = command.OperationId,
                     CreationTime = _dateService.Now(),
                     Comment = command.Comment,
                     IsCausedBySpecialLiquidation = command.IsCausedBySpecialLiquidation,
-                    PositionsLiquidatedBySpecialLiquidation = command.PositionsLiquidatedBySpecialLiquidation
+                    PositionsLiquidatedBySpecialLiquidation = command.PositionsLiquidatedBySpecialLiquidation,
+                    AccountId = executionInfo.Data.AccountId,
+                    AssetPairId = executionInfo.Data.AssetPairId,
+                    LiquidationType = executionInfo.Data.LiquidationType.ToType<LiquidationTypeContract>()
                 });
             }
             else
             {
-                await _log.WriteWarningAsync(nameof(LiquidationCommandsHandler),
+                await _log.WriteWarningAsync(
+                    nameof(LiquidationCommandsHandler),
                     nameof(ResumeLiquidationInternalCommand),
+                    null,
                     $"Unable to resume liquidation in state {executionInfo.Data.State}. Command: {command.ToJson()}");
             }
         }
-        
-        
-        #region Private methods
-        
-        private bool CheckIfNetVolumeCanBeLiquidated(string accountId, string assetPairId, Position[] positions,
-            out string details)
+
+        private bool ShouldFailExecution(AccountLevel accountLevel, LiquidationType liquidationType)
         {
-            foreach (var positionsGroup in positions.GroupBy(p => p.Direction))
-            {
-                var netPositionVolume = positionsGroup.Sum(p => p.Volume);
-
-                var account = _accountsCache.Get(accountId);
-                var tradingInstrument = _tradingInstrumentsCacheService.GetTradingInstrument(account.TradingConditionId, 
-                    assetPairId);
-
-                //TODO: discuss and handle situation with different MEs for different positions
-                //at the current moment all positions has the same asset pair
-                //and every asset pair can be processed only by one ME
-                var anyPosition = positionsGroup.First();
-                var me = _matchingEngineRouter.GetMatchingEngineForClose(anyPosition.OpenMatchingEngineId);
-                //the same for externalProvider.. 
-                var externalProvider = anyPosition.ExternalProviderId;
-
-                if (me.GetPriceForClose(assetPairId, netPositionVolume, externalProvider) == null)
-                {
-                    details = $"Not enough depth of orderbook. Net volume : {netPositionVolume}.";
-                    return false;
-                }
-            }
-
-            details = string.Empty;
-            return true;
+            return accountLevel != ValidAccountLevel && liquidationType != LiquidationType.Forced;
         }
-        
-        #endregion
-
     }
 }

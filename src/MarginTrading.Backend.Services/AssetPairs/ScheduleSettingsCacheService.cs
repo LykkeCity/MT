@@ -17,10 +17,9 @@ using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
-using MarginTrading.SettingsService.Contracts;
-using MarginTrading.SettingsService.Contracts.Scheduling;
+using MarginTrading.AssetService.Contracts;
+using MarginTrading.AssetService.Contracts.Scheduling;
 using MoreLinq;
-using ScheduleSettingsContract = MarginTrading.SettingsService.Contracts.Scheduling.ScheduleSettingsContract;
 
 namespace MarginTrading.Backend.Services.AssetPairs
 {
@@ -178,15 +177,12 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 .Where(x => marketIds.IsNullOrEmpty() || marketIds.Contains(x.Key)))
             {
                 var newState = scheduleSettings.GetMarketState(marketId, currentTime);
-                if (!_marketStates.TryGetValue(marketId, out var oldState) || oldState.IsEnabled != newState.IsEnabled)
+                _cqrsSender.PublishEvent(new MarketStateChangedEvent
                 {
-                    _cqrsSender.PublishEvent(new MarketStateChangedEvent
-                    {
-                        Id = marketId,
-                        IsEnabled = newState.IsEnabled,
-                        EventTimestamp = _dateService.Now(),
-                    });
-                }
+                    Id = marketId,
+                    IsEnabled = newState.IsEnabled,
+                    EventTimestamp = _dateService.Now(),
+                });
 
                 _marketStates[marketId] = newState;
             }
@@ -221,6 +217,28 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 _readerWriterLockSlim.ExitReadLock();
             }
         }
+        
+        /// <inheritdoc cref="IScheduleSettingsCacheService"/>
+        public List<CompiledScheduleTimeInterval> GetMarketTradingScheduleByAssetPair(string assetPairId)
+        {
+            _readerWriterLockSlim.EnterReadLock();
+
+            try
+            {
+                var assetPair = _assetPairsCache.GetAssetPairById(assetPairId);
+
+                if (assetPair == null)
+                {
+                    return new List<CompiledScheduleTimeInterval>();
+                }
+
+                return _compiledMarketScheduleCache[assetPair.MarketId];
+            }
+            finally
+            {
+                _readerWriterLockSlim.ExitReadLock();
+            }
+        }
 
         public bool TryGetPlatformCurrentDisabledInterval(out CompiledScheduleTimeInterval disabledInterval)
         {
@@ -231,9 +249,24 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
         public bool AssetPairTradingEnabled(string assetPairId, TimeSpan scheduleCutOff)
         {
-            var schedule = GetCompiledAssetPairScheduleSettings(assetPairId, _dateService.Now(), scheduleCutOff);
+            var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(assetPairId);
 
-            return GetTradingEnabled(schedule, out _);
+            if (assetPair == null)
+            {
+                _log.WriteWarningAsync(nameof(ScheduleSettingsCacheService), nameof(AssetPairTradingEnabled),
+                    $"AssetPair [{assetPairId}] does not exist in cache. Trading is disabled.").GetAwaiter().GetResult();
+                return false;
+            }
+                
+
+            if (!_marketStates.TryGetValue(assetPair.MarketId, out var marketState))
+            {
+                _log.WriteWarningAsync(nameof(ScheduleSettingsCacheService), nameof(AssetPairTradingEnabled),
+                    $"Market status of market [{assetPair.MarketId}] for asset pair [{assetPairId}] does not exist in cache. Trading is disabled.").GetAwaiter().GetResult();
+                return false;
+            }
+
+            return marketState.IsEnabled;
         }
 
         private bool GetTradingEnabled(IEnumerable<CompiledScheduleTimeInterval> timeIntervals,
@@ -306,35 +339,6 @@ namespace MarginTrading.Backend.Services.AssetPairs
             finally
             {
                 _readerWriterLockSlim.ExitReadLock();
-            }
-        }
-
-        public List<CompiledScheduleTimeInterval> GetCompiledAssetPairScheduleSettings(string assetPairId,
-            DateTime currentDateTime, TimeSpan scheduleCutOff)
-        {
-            if (string.IsNullOrEmpty(assetPairId))
-            {
-                return new List<CompiledScheduleTimeInterval>();
-            }
-
-            _readerWriterLockSlim.EnterUpgradeableReadLock();
-
-            EnsureCacheValidUnsafe(currentDateTime);
-
-            try
-            {
-                if (!_compiledAssetPairScheduleCache.ContainsKey(assetPairId))
-                {
-                    RecompileScheduleTimelineCacheUnsafe(assetPairId, currentDateTime, scheduleCutOff);
-                }
-
-                return _compiledAssetPairScheduleCache.TryGetValue(assetPairId, out var timeline)
-                    ? timeline
-                    : new List<CompiledScheduleTimeInterval>();
-            }
-            finally
-            {
-                _readerWriterLockSlim.ExitUpgradeableReadLock();
             }
         }
 

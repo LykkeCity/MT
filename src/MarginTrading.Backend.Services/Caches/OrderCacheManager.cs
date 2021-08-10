@@ -28,7 +28,7 @@ namespace MarginTrading.Backend.Services.Caches
         public const string OrdersBlobName= "orders";
         public const string PositionsBlobName= "positions";
         
-        private static readonly OrderStatus[] OrderTerminalStatuses = {OrderStatus.Canceled, OrderStatus.Rejected, OrderStatus.Executed};
+        private static readonly OrderStatus[] OrderTerminalStatuses = {OrderStatus.Canceled, OrderStatus.Rejected, OrderStatus.Executed, OrderStatus.Expired};
         private static readonly PositionHistoryType PositionTerminalStatus = PositionHistoryType.Close;
 
         public OrderCacheManager(OrdersCache orderCache,
@@ -60,8 +60,12 @@ namespace MarginTrading.Backend.Services.Caches
 
         public override void Stop()
         {
-            DumpOrdersToRepository().Wait();
-            DumpPositionsToRepository().Wait();
+            if (Working)
+            {
+                DumpOrdersToRepository().Wait();
+                DumpPositionsToRepository().Wait();    
+            }
+            
             base.Stop();
         }
 
@@ -127,12 +131,12 @@ namespace MarginTrading.Backend.Services.Caches
                 $"Finish reading historical data. #{orderSnapshots.Count} order history items since [{blobOrdersTimestamp:s}], #{positionSnapshots.Count} position history items since [{blobPositionsTimestamp:s}].");
 
             var (ordersResult, orderIdsChangedFromHistory) = MapOrders(blobOrders.ToDictionary(x => x.Id, x => x), 
-                orderSnapshots.ToDictionary(x => x.Id, x => x));
+                orderSnapshots.ToDictionary(x => x.Id, x => x), _log);
             var (positionsResult, positionIdsChangedFromHistory) = MapPositions(
                 blobPositions.ToDictionary(x => x.Id, x => x), positionSnapshots.ToDictionary(x => x.Id, x => x));
             
-            RefreshRelated(ordersResult.ToDictionary(x => x.Id), positionsResult.ToDictionary(x => x.Id),
-                orderSnapshots);
+            RefreshRelated(ordersResult.ToDictionary(x => x.Id), positionsResult.ToDictionary(x => x.Id), orderSnapshots);
+            ApplyExpirationDateFix(ordersResult);
 
             _log.WriteInfo(nameof(OrderCacheManager), nameof(InferInitDataFromBlobAndHistory),
                 $"Initializing cache with [{ordersResult.Count}] orders and [{positionsResult.Count}] positions.");
@@ -165,11 +169,42 @@ namespace MarginTrading.Backend.Services.Caches
             return (ordersResult, positionsResult);
         }
 
+        /// <summary>
+        /// Method is added in order to fix wrong value of expiration date previously being passed by FE
+        /// https://lykke-snow.atlassian.net/browse/BC-2375 
+        /// </summary>
+        /// <param name="orders"></param>
+        private void ApplyExpirationDateFix(List<Order> orders)
+        {
+            var noonTime = new TimeSpan(12, 0 ,0);
+            
+            foreach (var order in orders)
+            {
+                if (!order.Validity.HasValue)
+                    continue;
+
+                var timeOfValidityDay = order.Validity.Value.TimeOfDay;
+                
+                // if we already fixed that validity datetime the time portion will be cut
+                if (timeOfValidityDay.TotalSeconds == 0)
+                    continue;
+
+                var newDateTime = timeOfValidityDay >= noonTime
+                    ? order.Validity.Value.AddDays(1)
+                    : order.Validity.Value;
+                
+                order.FixValidity(newDateTime.Date);
+            }
+        }
+
         private void PreProcess(List<OrderHistory> orderHistories)
         {
+            var relatedOrderTypes = new HashSet<OrderType>
+                {OrderType.TakeProfit, OrderType.StopLoss, OrderType.TrailingStop};
+            
             foreach (var orderHistory in orderHistories)
             {
-                if (orderHistory.Status == OrderStatus.Placed)
+                if (orderHistory.Status == OrderStatus.Placed && relatedOrderTypes.Contains(orderHistory.Type))
                 {
                     orderHistory.Status = OrderStatus.Inactive;
                 }
@@ -177,7 +212,7 @@ namespace MarginTrading.Backend.Services.Caches
         }
 
         private static (List<Order> orders, List<string> orderIdsChangedFromHistory) MapOrders(
-            Dictionary<string, Order> blobOrders, IReadOnlyDictionary<string, OrderHistory> orderSnapshots)
+            Dictionary<string, Order> blobOrders, IReadOnlyDictionary<string, OrderHistory> orderSnapshots, ILog log)
         {
             if (!orderSnapshots.Any())
             {
@@ -196,7 +231,15 @@ namespace MarginTrading.Backend.Services.Caches
                     {
                         continue;
                     }
-                    
+
+                    if (orderHistory.Status == OrderStatus.Placed)
+                    {
+                        log.WriteWarning(nameof(OrderCacheManager), nameof(MapOrders),
+                            $"Order in invalid status [Placed] found and skipped: {orderHistory.ToJson()}");
+                        
+                        continue;
+                    }
+
                     changedIds.Add(id);
                 }
 
@@ -206,6 +249,14 @@ namespace MarginTrading.Backend.Services.Caches
             foreach (var (id, orderHistory) in orderSnapshots
                 .Where(x => !blobOrders.Keys.Contains(x.Key) && OrderTerminalStatuses.All(ts => ts != x.Value.Status)))
             {
+                if (orderHistory.Status == OrderStatus.Placed)
+                {
+                    log.WriteWarning(nameof(OrderCacheManager), nameof(MapOrders),
+                        $"Order in invalid status [Placed] found and skipped: {orderHistory.ToJson()}");
+                        
+                    continue;
+                }
+                
                 changedIds.Add(id);
                 result.Add(orderHistory.FromHistory());
             }

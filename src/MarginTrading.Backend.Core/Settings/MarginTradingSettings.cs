@@ -38,7 +38,9 @@ namespace MarginTrading.Backend.Core.Settings
         
         [Optional, CanBeNull]
         public RabbitMqSettings RisksRabbitMqSettings { get; set; }
-        
+
+        public RabbitMqSettings BrokerSettingsRabbitMqSettings { get; set; }
+
         [AmqpCheck]
         public string MtRabbitMqConnString { get; set; }
         
@@ -102,5 +104,12 @@ namespace MarginTrading.Backend.Core.Settings
         
         [Optional]
         public OrderbookValidationSettings OrderbookValidation { get; set; } = new OrderbookValidationSettings();
+
+        [Optional]
+        public DefaultTradingConditionsSettings DefaultTradingConditionsSettings { get; set; } = new DefaultTradingConditionsSettings();
+
+        public DefaultLegalEntitySettings DefaultLegalEntitySettings { get; set; }
+
+        public string BrokerId { get; set; }
     }
 }

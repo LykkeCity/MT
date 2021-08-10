@@ -19,6 +19,12 @@ namespace MarginTrading.Backend.Core.Settings
         public int PriceRequestTimeoutSec { get; set; } = 3600;
 
         [Optional]
-        public TimeSpan RetryTimeout { get; set; } = new TimeSpan(0, 1, 0);
+        public TimeSpan? PriceRequestRetryTimeout { get; set; } = new TimeSpan(0, 1, 0);
+        
+        [Optional]
+        public bool RetryPriceRequestForCorporateActions { get; set; } = false;
+        
+        [Optional]
+        public TimeSpan PriceRequestTimeoutCheckPeriod { get; set; } = new TimeSpan(0, 1, 0);
     }
 }

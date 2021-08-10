@@ -4,12 +4,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using Lykke.Common.Log;
 using Lykke.MarginTrading.OrderBookService.Contracts;
 using Lykke.MarginTrading.OrderBookService.Contracts.Models;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
@@ -21,7 +22,7 @@ using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Helpers;
 using MarginTrading.Common.Services;
-using MarginTrading.SettingsService.Contracts.AssetPair;
+using MarginTrading.AssetService.Contracts.AssetPair;
 using MoreLinq;
 
 namespace MarginTrading.Backend.Services.Stp
@@ -79,11 +80,11 @@ namespace MarginTrading.Backend.Services.Stp
             _marginTradingSettings = marginTradingSettings;
         }
 
-        public async Task InitializeAsync()
+        public void Start()
         {
             try
             {
-                var orderBooks = (await _orderBookProviderApi.GetOrderBooks())
+                var orderBooks = _orderBookProviderApi.GetOrderBooks().GetAwaiter().GetResult()
                     .GroupBy(x => x.AssetPairId)
                     .Select(x => _convertService.Convert<ExternalOrderBookContract, ExternalOrderBook>(
                         x.MaxBy(o => o.ReceiveTimestamp)))
@@ -94,12 +95,12 @@ namespace MarginTrading.Backend.Services.Stp
                     SetOrderbook(externalOrderBook);
                 }
                 
-                await _log.WriteInfoAsync(nameof(ExternalOrderbookService), nameof(InitializeAsync),
+                _log.WriteInfo(nameof(ExternalOrderbookService), nameof(Start),
                     $"External order books cache initialized with {orderBooks.Count} items from OrderBooks Service");
             }
             catch (Exception exception)
             {
-                await _log.WriteWarningAsync(nameof(ExternalOrderbookService), nameof(InitializeAsync),
+                _log.WriteWarning(nameof(ExternalOrderbookService), nameof(Start),
                     "Failed to initialize cache from OrderBook Service", exception);
             }
         }
@@ -197,10 +198,7 @@ namespace MarginTrading.Backend.Services.Stp
                     isEodOrderbook)
                 {
                     //log current schedule for the instrument
-                    var schedule = _scheduleSettingsCache.GetCompiledAssetPairScheduleSettings(
-                        orderbook.AssetPairId,
-                        _dateService.Now(),
-                        TimeSpan.Zero);
+                    var schedule = _scheduleSettingsCache.GetMarketTradingScheduleByAssetPair(orderbook.AssetPairId);
 
                     _log.WriteWarning("EOD quotes processing", $"Current schedule: {schedule.ToJson()}",
                         $"EOD quote for {orderbook.AssetPairId} is skipped, because instrument is within trading hours");
@@ -313,6 +311,8 @@ namespace MarginTrading.Backend.Services.Stp
                         AssetPairId = assetPair.Id,
                         OperationId = _identityGenerator.GenerateGuid(),
                     });
+                    
+                    _log.Info($"Suspending instrument {assetPair.Id}", context: orderbook.ToContextData()?.ToJson());
                 }
             }
             else
@@ -325,6 +325,8 @@ namespace MarginTrading.Backend.Services.Stp
                         AssetPairId = assetPair.Id,
                         OperationId = _identityGenerator.GenerateGuid(),
                     });   
+                    
+                    _log.Info($"Un-suspending instrument {assetPair.Id}", context: orderbook.ToContextData()?.ToJson());
                 }
             }
 

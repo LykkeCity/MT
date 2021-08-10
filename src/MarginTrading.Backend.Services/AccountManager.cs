@@ -2,6 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -83,34 +84,10 @@ namespace MarginTrading.Backend.Services
             var accounts = _accountsApi.List().GetAwaiter().GetResult()
                 .Select(Convert).ToDictionary(x => x.Id);
 
-            //TODO: think about approach
-            //ApplyMarginFreezing(accounts);
-
             _accountsCacheService.InitAccountsCache(accounts);
             _log.WriteInfo(nameof(Start), nameof(AccountManager), $"Finished InitAccountsCache. Count: {accounts.Count}");
 
             base.Start();
-        }
-
-        private void ApplyMarginFreezing(Dictionary<string, MarginTradingAccount> accounts)
-        {
-            var marginFreezings = _accountMarginFreezingRepository.GetAllAsync().GetAwaiter().GetResult()
-                .GroupBy(x => x.AccountId)
-                .ToDictionary(x => x.Key, x => x.ToDictionary(z => z.OperationId, z => z.Amount));
-            var unconfirmedMargin = _accountMarginUnconfirmedRepository.GetAllAsync().GetAwaiter().GetResult()
-                .GroupBy(x => x.AccountId)
-                .ToDictionary(x => x.Key, x => x.ToDictionary(z => z.OperationId, z => z.Amount));
-            foreach (var account in accounts.Select(x => x.Value))
-            {
-                account.AccountFpl.WithdrawalFrozenMarginData = marginFreezings.TryGetValue(account.Id, out var withdrawalFrozenMargin)
-                    ? withdrawalFrozenMargin
-                    : new Dictionary<string, decimal>();
-                account.AccountFpl.WithdrawalFrozenMargin = account.AccountFpl.WithdrawalFrozenMarginData.Sum(x => x.Value);
-                account.AccountFpl.UnconfirmedMarginData = unconfirmedMargin.TryGetValue(account.Id, out var unconfirmedFrozenMargin)
-                    ? unconfirmedFrozenMargin
-                    : new Dictionary<string, decimal>();
-                account.AccountFpl.UnconfirmedMargin = account.AccountFpl.UnconfirmedMarginData.Sum(x => x.Value);
-            }
         }
 
         private IReadOnlyList<IMarginTradingAccount> GetAccountsToWriteStats()

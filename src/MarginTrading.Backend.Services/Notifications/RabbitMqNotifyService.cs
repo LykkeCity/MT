@@ -64,47 +64,58 @@ namespace MarginTrading.Backend.Services.Notifications
                 ActivitiesMetadata = activitiesMetadata
             };
             
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderHistory.ExchangeName, historyEvent);
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderHistory.ExchangeName, historyEvent,
+                _settings.RabbitMqQueues.OrderHistory.LogEventPublishing);
         }
 
         public Task OrderBookPrice(InstrumentBidAskPair quote, bool isEod)
         {
             return TryProduceMessageAsync(_settings.RabbitMqQueues.OrderbookPrices.ExchangeName,
-                quote.ToRabbitMqContract(isEod));
+                quote.ToRabbitMqContract(isEod),
+                false);
         }
 
         public Task AccountMarginEvent(MarginEventMessage eventMessage)
         {
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountMarginEvents.ExchangeName, eventMessage);
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountMarginEvents.ExchangeName, eventMessage,
+                _settings.RabbitMqQueues.AccountMarginEvents.LogEventPublishing);
         }
 
         public Task UpdateAccountStats(AccountStatsUpdateMessage message)
         {
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountStats.ExchangeName, message);
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.AccountStats.ExchangeName, message,
+                _settings.RabbitMqQueues.AccountStats.LogEventPublishing);
         }
 
         public Task NewTrade(TradeContract trade)
         {
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.Trades.ExchangeName, trade);
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.Trades.ExchangeName, trade,
+                _settings.RabbitMqQueues.Trades.LogEventPublishing);
         }
 
         public Task ExternalOrder(ExecutionReport trade)
         {
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.ExternalOrder.ExchangeName, trade);
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.ExternalOrder.ExchangeName, trade,
+                _settings.RabbitMqQueues.ExternalOrder.LogEventPublishing);
         }
         
         public Task PositionHistory(PositionHistoryEvent historyEvent)
         {
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.PositionHistory.ExchangeName, historyEvent);
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.PositionHistory.ExchangeName, historyEvent,
+                _settings.RabbitMqQueues.PositionHistory.LogEventPublishing);
         }
 
-        private async Task TryProduceMessageAsync(string exchangeName, object message)
+        private async Task TryProduceMessageAsync(string exchangeName, object message, bool logEvent)
         {
             string messageStr = null;
             try
             {
                 messageStr = message.ToJson();
                 await _publishers[exchangeName].ProduceAsync(messageStr);
+
+                if (logEvent)
+                    _log.WriteInfoAsync(nameof(RabbitMqNotifyService), exchangeName, messageStr,
+                        "Published RabbitMqEvent");
             }
             catch (Exception ex)
             {

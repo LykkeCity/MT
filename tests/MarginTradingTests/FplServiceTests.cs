@@ -3,6 +3,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Xml.Serialization;
 using Autofac;
 using Common.Log;
 using MarginTrading.Backend.Core;
@@ -119,7 +121,7 @@ namespace MarginTradingTests
             
             position.UpdateClosePrice(935.61M);
 
-            Assert.AreEqual(-138.989, Math.Round(position.GetFpl(), 3));
+            Assert.AreEqual(-138.99, Math.Round(position.GetFpl(), 3));
         }
 
         [Test]
@@ -159,14 +161,16 @@ namespace MarginTradingTests
             positions[1].UpdateClosePrice(1.061M);
             positions[2].UpdateClosePrice(1.06M);
             positions[3].UpdateClosePrice(1091M);
+            
+            positions[3].UpdateCloseFxPrice(1.061M);
 
             var account = Accounts[0];
 
             Assert.AreEqual(50000, account.Balance);
-            Assert.AreEqual(43676.000, Math.Round(account.GetTotalCapital(), 5));
-            Assert.AreEqual(33484.3M, Math.Round(account.GetFreeMargin(), 1));
-            Assert.AreEqual(28388.5M, Math.Round(account.GetMarginAvailable(), 1));
-            Assert.AreEqual(-6324.000, Math.Round(account.GetPnl(), 5));
+            Assert.AreEqual(43673.1m, Math.Round(account.GetTotalCapital(), 5));
+            Assert.AreEqual(33481.4m, Math.Round(account.GetFreeMargin(), 1));
+            Assert.AreEqual(28385.6M, Math.Round(account.GetMarginAvailable(), 1));
+            Assert.AreEqual(-6326.9M, Math.Round(account.GetPnl(), 5));
             Assert.AreEqual(10191.7M, Math.Round(account.GetUsedMargin(), 1));
             Assert.AreEqual(15287.5M, Math.Round(account.GetMarginInit(), 1));
         }
@@ -210,18 +214,20 @@ namespace MarginTradingTests
             _fxRateCacheService.SetQuote(new InstrumentBidAskPair { Instrument = "EURJPY", Ask = 2.3M, Bid = 2.3M });
 
             var position1 = TestObjectsFactory.CreateOpenedPosition("EURUSD", Accounts[1],
-                MarginTradingTestsUtils.TradingConditionId, 15000, 1.3M);
+                MarginTradingTestsUtils.TradingConditionId, 15000, 1.3M, 1/9000M);
             position1.UpdateClosePrice(1.2M);
+            position1.UpdateCloseFxPrice(1/9000M);
             
             var position2 = TestObjectsFactory.CreateOpenedPosition("CHFJPY", Accounts[1],
-                MarginTradingTestsUtils.TradingConditionId, -100, 2.3M);
+                MarginTradingTestsUtils.TradingConditionId, -100, 2.3M, 1/2.3M);
             position2.UpdateClosePrice(2.5M);
+            position2.UpdateCloseFxPrice(1/2.3M);
             
             Assert.AreEqual(0.02M, position1.GetMarginInit());
-            Assert.AreEqual(0.01333333M, position1.GetMarginMaintenance());
+            Assert.AreEqual(0.01M, position1.GetMarginMaintenance());
             
-            Assert.AreEqual(10.86956522M, position2.GetMarginInit());
-            Assert.AreEqual(7.24637681M, position2.GetMarginMaintenance());
+            Assert.AreEqual(10.87, position2.GetMarginInit());
+            Assert.AreEqual(7.25M, position2.GetMarginMaintenance());
         }
         
         [Test]
@@ -248,7 +254,44 @@ namespace MarginTradingTests
             
 
             Assert.AreEqual(-0.25M, position1.GetFpl());
-            Assert.AreEqual(-112.94939759M, position2.GetFpl());
+            Assert.AreEqual(-112.95M, position2.GetFpl());
+        }
+
+        [Test]
+        public async Task Check_Position_PnL_Multi_Thread()
+        {
+            _bestPriceConsumer.SendEvent(this,
+                new BestPriceChangeEventArgs(
+                    new InstrumentBidAskPair {Instrument = "BTCUSD", Ask = 2M, Bid = 1M}));
+            
+            _fxRateCacheService.SetQuote(new InstrumentBidAskPair {Instrument = "EURUSD", Ask = 1, Bid = 1});
+            
+            var position1 = TestObjectsFactory.CreateOpenedPosition("BTCUSD", Accounts[1],
+                MarginTradingTestsUtils.TradingConditionId, 1, 2M, 1M);
+            
+            var updateFxTask = new Action(() => {position1.UpdateCloseFxPrice(2);});
+            var getPnLTask = new Action(() => { position1.GetFpl(); });
+
+            var wrong = 0;
+            const int attempts = 100000;
+
+            for (int i = 0; i < attempts; i++)
+            {
+                position1.UpdateClosePrice(1M);
+            
+                await Task.WhenAll(Task.Factory.StartNew(getPnLTask), Task.Factory.StartNew(updateFxTask));
+
+                var pnl = position1.GetFpl();
+                
+                if (pnl != -2)
+                    wrong++;
+
+                position1.UpdateClosePrice(2M);
+                position1.UpdateCloseFxPrice(1);
+                Assert.AreEqual(0, position1.GetFpl());
+            }
+
+            Assert.AreEqual(0, wrong, $"Number of wrong P&L calculations from {attempts} attempts");
         }
     }
 }

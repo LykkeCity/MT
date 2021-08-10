@@ -7,7 +7,7 @@ namespace MarginTrading.Backend.Core.Helpers
 {
     public static class PaginationHelper
     {
-        public const int MaxResults = 100;
+        public const int MaxResults = 1000;
         public const int UnspecifiedResults = 20;
 
         public static int GetTake(int? take)

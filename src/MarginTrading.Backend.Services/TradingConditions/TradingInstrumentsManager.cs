@@ -3,18 +3,19 @@
 
 using System.Linq;
 using System.Threading.Tasks;
+using Autofac;
 using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core.TradingConditions;
 using MarginTrading.Common.Services;
-using MarginTrading.SettingsService.Contracts;
-using MarginTrading.SettingsService.Contracts.TradingConditions;
+using MarginTrading.AssetService.Contracts;
+using MarginTrading.AssetService.Contracts.TradingConditions;
 using Newtonsoft.Json;
 
 namespace MarginTrading.Backend.Services.TradingConditions
 {
     [UsedImplicitly]
-    public class TradingInstrumentsManager : ITradingInstrumentsManager
+    public class TradingInstrumentsManager : ITradingInstrumentsManager, IStartable
     {
         private readonly ITradingInstrumentsCacheService _tradingInstrumentsCacheService;
         private readonly ITradingInstrumentsApi _tradingInstrumentsApi;

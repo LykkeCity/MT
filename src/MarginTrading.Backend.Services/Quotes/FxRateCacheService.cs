@@ -107,7 +107,7 @@ namespace MarginTrading.Backend.Services.Quotes
             {
                 return Task.CompletedTask;
             }
-            
+
             SetQuote(bidAskPair);
             
             _fxBestPriceChangeEventChannel.SendEvent(this, new FxBestPriceChangeEventArgs(bidAskPair));
@@ -230,7 +230,11 @@ namespace MarginTrading.Backend.Services.Quotes
 
         public override void Stop()
         {
-            DumpToRepository().Wait();
+            if (Working)
+            {
+                DumpToRepository().Wait();    
+            }
+            
             base.Stop();
         }
 

@@ -35,5 +35,8 @@ namespace MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Events
         
         [Key(4)]
         public DateTime ExecutionTime { get; set; }
+        
+        [Key(5)]
+        public decimal ExecutionPrice { get; set; }
     }
 }

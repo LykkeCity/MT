@@ -1,6 +1,7 @@
 // Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using MarginTrading.Backend.Core.MatchingEngines;
 
@@ -9,7 +10,7 @@ namespace MarginTrading.Backend.Core.Orders
     public class PositionsCloseData
     {
         public PositionsCloseData(
-            List<Position> positions,
+            SortedList<int, Position> positions,
             string accountId, 
             string assetPairId, 
             string openMatchingEngineId, 
@@ -22,7 +23,7 @@ namespace MarginTrading.Backend.Core.Orders
             IMatchingEngineBase matchingEngine = null, 
             OrderModality modality = OrderModality.Regular)
         {
-            Positions = positions;
+            Positions = positions ?? throw new ArgumentNullException(nameof(positions));
             AccountId = accountId;
             AssetPairId = assetPairId;
             OpenMatchingEngineId = openMatchingEngineId;
@@ -36,7 +37,25 @@ namespace MarginTrading.Backend.Core.Orders
             Modality = modality;
         }
 
-        public List<Position> Positions { get; }
+        public PositionsCloseData(
+            Position position,
+            string accountId,
+            string assetPairId,
+            string openMatchingEngineId,
+            string externalProviderId,
+            OriginatorType originator,
+            string additionalInfo,
+            string correlationId,
+            string equivalentAsset,
+            string comment = null,
+            IMatchingEngineBase matchingEngine = null,
+            OrderModality modality = OrderModality.Regular) : this(position?.ToSortedList(), accountId, assetPairId,
+            openMatchingEngineId, externalProviderId, originator, additionalInfo, correlationId, equivalentAsset,
+            comment, matchingEngine, modality)
+        {
+        }
+
+        public SortedList<int, Position> Positions { get; }
         
         public string AccountId { get; }
         

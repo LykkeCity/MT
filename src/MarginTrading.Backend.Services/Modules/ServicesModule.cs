@@ -4,7 +4,6 @@
 using Autofac;
 using Common.Log;
 using Autofac.Features.Variance;
-using Lykke.Common.Chaos;
 using Lykke.RabbitMqBroker.Publisher;
 using Lykke.SettingsReader;
 using MarginTrading.Backend.Core;
@@ -15,6 +14,7 @@ using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Events;
 using MarginTrading.Backend.Services.EventsConsumers;
+using MarginTrading.Backend.Services.Helpers;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Backend.Services.Quotes;
@@ -22,8 +22,8 @@ using MarginTrading.Backend.Services.Scheduling;
 using MarginTrading.Backend.Services.Services;
 using MarginTrading.Backend.Services.Stp;
 using MarginTrading.Backend.Services.TradingConditions;
+using MarginTrading.Backend.Services.Workflow.Liquidation;
 using MarginTrading.Common.RabbitMq;
-using MarginTrading.Common.Services;
 using MarginTrading.Common.Services.Telemetry;
 
 namespace MarginTrading.Backend.Services.Modules
@@ -41,19 +41,13 @@ namespace MarginTrading.Backend.Services.Modules
 			builder.RegisterType<FxRateCacheService>() 
 				.AsSelf()
 				.As<IFxRateCacheService>()
-				.SingleInstance()
-				.OnActivated(args => args.Instance.Start()); 
+				.SingleInstance(); 
 
 			builder.RegisterType<FplService>()
 				.As<IFplService>()
 				.SingleInstance();
 
-			builder.RegisterType<TradingConditionsCacheService>()
-				.AsSelf()
-				.As<ITradingConditionsCacheService>()
-				.SingleInstance();
-
-			builder.RegisterType<TradingInstrumentsCacheService>()
+            builder.RegisterType<TradingInstrumentsCacheService>()
 				.AsSelf()
 				.As<ITradingInstrumentsCacheService>()
 				.As<IOvernightMarginParameterContainer>()
@@ -191,6 +185,17 @@ namespace MarginTrading.Backend.Services.Modules
 
 			builder.RegisterType<ScheduleSettingsCacheWarmUpJob>()
 				.SingleInstance();
+
+			builder.RegisterType<LiquidationHelper>()
+				.SingleInstance();
+
+			builder.RegisterType<LiquidationFailureExecutor>()
+				.As<ILiquidationFailureExecutor>()
+				.SingleInstance();
+
+            builder.RegisterType<BrokerSettingsChangedHandler>()
+                .AsSelf()
+                .SingleInstance();
 		}
 	}
 }

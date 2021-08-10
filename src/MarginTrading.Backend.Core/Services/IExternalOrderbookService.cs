@@ -3,14 +3,13 @@
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Autofac;
 using MarginTrading.Backend.Core.Orderbooks;
 
 namespace MarginTrading.Backend.Core.Services
 {
-    public interface IExternalOrderbookService
+    public interface IExternalOrderbookService : IStartable
     {
-        Task InitializeAsync();
-
         List<ExternalOrderBook> GetOrderBooks();
 
         void SetOrderbook(ExternalOrderBook orderbook);

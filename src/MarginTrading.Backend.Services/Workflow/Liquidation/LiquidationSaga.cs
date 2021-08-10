@@ -9,6 +9,7 @@ using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
+using MarginTrading.Backend.Contracts.TradingSchedule;
 using MarginTrading.Backend.Contracts.Workflow.Liquidation.Events;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Extensions;
@@ -25,6 +26,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
 {
     public class LiquidationSaga
     {
+        private readonly IAssetPairsCache _assetPairsCache;
         private readonly IDateService _dateService;
         private readonly IChaosKitty _chaosKitty;
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
@@ -37,6 +39,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         public const string OperationName = "Liquidation";
 
         public LiquidationSaga(
+            IAssetPairsCache assetPairsCache,
             IDateService dateService,
             IChaosKitty chaosKitty,
             IOperationExecutionInfoRepository operationExecutionInfoRepository,
@@ -46,6 +49,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             IAccountsCacheService accountsCacheService,
             IAssetPairDayOffService assetPairDayOffService)
         {
+            _assetPairsCache = assetPairsCache;
             _dateService = dateService;
             _chaosKitty = chaosKitty;
             _operationExecutionInfoRepository = operationExecutionInfoRepository;
@@ -57,7 +61,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         }
         
         [UsedImplicitly]
-        public async Task Handle(LiquidationStartedInternalEvent e, ICommandSender sender)
+        public async Task Handle(LiquidationStartedEvent e, ICommandSender sender)
         {
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<LiquidationOperationData>(
                 operationName: OperationName,
@@ -75,7 +79,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 LiquidatePositionsIfAnyAvailable(e.OperationId, executionInfo.Data, sender);
 
                 _chaosKitty.Meow(
-                    $"{nameof(LiquidationStartedInternalEvent)}:" +
+                    $"{nameof(LiquidationStartedEvent)}:" +
                     $"Save_OperationExecutionInfo:" +
                     $"{e.OperationId}");
 
@@ -193,7 +197,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         }
         
         [UsedImplicitly]
-        public async Task Handle(LiquidationResumedInternalEvent e, ICommandSender sender)
+        public async Task Handle(LiquidationResumedEvent e, ICommandSender sender)
         {
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<LiquidationOperationData>(
                 operationName: OperationName,
@@ -231,13 +235,67 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }
         }
-        
+
+        [UsedImplicitly]
+        public Task Handle(MarketStateChangedEvent e, ICommandSender sender)
+        {
+            if(!e.IsEnabled)
+                return Task.CompletedTask;
+
+            var accounts = _accountsCacheService.GetAll()
+                .Where(account => account.IsInLiquidation())
+                .ToList();
+
+            foreach (var account in accounts)
+            {
+                var positions = _ordersCache.Positions.GetPositionsByAccountIds(account.Id);
+
+                var assetPairs = positions
+                    .Select(position => _assetPairsCache.GetAssetPairById(position.AssetPairId))
+                    .Where(assetPair => assetPair.MarketId == e.Id)
+                    .ToList();
+
+                if (assetPairs.Any())
+                {
+                    sender.SendCommand(new ResumeLiquidationInternalCommand
+                    {
+                        OperationId = account.LiquidationOperationId,
+                        CreationTime = DateTime.UtcNow,
+                        IsCausedBySpecialLiquidation = false,
+                        ResumeOnlyFailed = true,
+                        Comment = "Trying to resume liquidation because market has been opened"
+                    }, _cqrsContextNamesSettings.TradingEngine);
+                }
+            }
+
+            return Task.CompletedTask;
+        }
+
         #region Private methods
 
         private (string AssetPairId, string[] Positions)? GetLiquidationData(
             LiquidationOperationData data)
         {
             var positionsOnAccount = _ordersCache.Positions.GetPositionsByAccountIds(data.AccountId);
+            
+            if (data.LiquidationType == LiquidationType.Forced)
+            {
+                positionsOnAccount = positionsOnAccount.Where(p => p.OpenDate < data.StartedAt).ToList();
+                
+                //group positions by asset and pnl sign, take only not processed, filtered and with open market
+                //groups are ordered by positive pnl first
+                var targetPositionsByPnlSign = positionsOnAccount
+                    .Where(p => !data.ProcessedPositionIds.Contains(p.Id))
+                    .GroupBy(p => (p.AssetPairId, p.GetUnrealisedFpl() >= 0))
+                    .Where(gr => !_assetPairDayOffService.IsDayOff(gr.Key.AssetPairId))
+                    .OrderByDescending(gr => gr.Key.Item2)
+                    .FirstOrDefault();
+
+                if (targetPositionsByPnlSign == null)
+                    return null;
+
+                return (targetPositionsByPnlSign.Key.AssetPairId, targetPositionsByPnlSign.Select(p => p.Id).ToArray());
+            }
 
             //group positions and take only not processed, filtered and with open market
             var positionGroups = positionsOnAccount
@@ -248,6 +306,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 .Where(gr => !_assetPairDayOffService.IsDayOff(gr.Key))
                 .ToArray();
 
+  
             IGrouping<string, Position> targetPositions = null;
 
             //take positions from group with max margin used or max initially used margin
@@ -320,6 +379,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             {
                 if (!_ordersCache.Positions.GetPositionsByAccountIds(data.AccountId)
                     .Any(x => (string.IsNullOrWhiteSpace(data.AssetPairId) || x.AssetPairId == data.AssetPairId)
+                              &&  x.OpenDate < data.StartedAt
                               && (data.Direction == null || x.Direction == data.Direction)))
                 {
                     FinishWithReason("All positions are closed");

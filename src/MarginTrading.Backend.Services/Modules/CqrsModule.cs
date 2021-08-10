@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Autofac;
@@ -31,7 +32,11 @@ using MarginTrading.Backend.Services.Workflow;
 using MarginTrading.Backend.Services.Workflow.Liquidation;
 using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.Liquidation.Events;
-using MarginTrading.SettingsService.Contracts.AssetPair;
+using MarginTrading.AssetService.Contracts.AssetPair;
+using MarginTrading.AssetService.Contracts.ClientProfiles;
+using MarginTrading.AssetService.Contracts.ClientProfileSettings;
+using MarginTrading.AssetService.Contracts.MarketSettings;
+using MarginTrading.AssetService.Contracts.Products;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Events;
@@ -42,7 +47,6 @@ namespace MarginTrading.Backend.Services.Modules
     {
         private const string EventsRoute = "events";
         private const string AccountProjectionRoute = "a";
-        private const string AssetPairsProjectionRoute = "ap";
         private const string CommandsRoute = "commands";
         private readonly CqrsSettings _settings;
         private readonly MarginTradingSettings _marginTradingSettings;
@@ -69,7 +73,7 @@ namespace MarginTrading.Backend.Services.Modules
 
             var rabbitMqSettings = new RabbitMQ.Client.ConnectionFactory
             {
-                Uri = _settings.ConnectionString
+                Uri = new Uri(_settings.ConnectionString, UriKind.Absolute)
             };
             var messagingEngine = new MessagingEngine(_log, new TransportResolver(
                 new Dictionary<string, TransportInfo>
@@ -152,8 +156,12 @@ namespace MarginTrading.Backend.Services.Modules
             RegisterLiquidationCommandsHandler(contextRegistration);
             RegisterEodCommandsHandler(contextRegistration);
             RegisterAccountsProjection(contextRegistration);
-            RegisterAssetPairsProjection(contextRegistration);
-            
+            RegisterProductChangedProjection(contextRegistration);
+            RegisterClientProfileChangedProjection(contextRegistration);
+            RegisterClientProfileSettingsChangedProjection(contextRegistration);
+            RegisterMarketSettingsChangedProjection(contextRegistration);
+            RegisterClientProfileSettingsProjection(contextRegistration);
+
             contextRegistration.PublishingEvents(typeof(PositionClosedEvent)).With(EventsRoute);
             contextRegistration.PublishingEvents(typeof(CompiledScheduleChangedEvent)).With(EventsRoute);
             contextRegistration.PublishingEvents(typeof(MarketStateChangedEvent)).With(EventsRoute);
@@ -163,17 +171,61 @@ namespace MarginTrading.Backend.Services.Modules
             return contextRegistration;
         }
 
-        private void RegisterAssetPairsProjection(
+        private void RegisterClientProfileSettingsProjection(
             ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
         {
             contextRegistration.ListeningEvents(
-                    typeof(AssetPairChangedEvent))
+                    typeof(ClientProfileSettingsChangedEvent))
                 .From(_settings.ContextNames.SettingsService)
-                .On(AssetPairsProjectionRoute)
+                .On(nameof(ClientProfileSettingsChangedEvent))
                 .WithProjection(
-                    typeof(AssetPairProjection), _settings.ContextNames.SettingsService);
+                    typeof(ClientProfileSettingsProjection), _settings.ContextNames.SettingsService);
+        }
+
+        private void RegisterProductChangedProjection(
+            ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
+        {
+            contextRegistration.ListeningEvents(
+                    typeof(ProductChangedEvent))
+                .From(_settings.ContextNames.SettingsService)
+                .On(nameof(ProductChangedEvent))
+                .WithProjection(
+                    typeof(ProductChangedProjection), _settings.ContextNames.SettingsService);
 		}
-                    
+
+        private void RegisterClientProfileChangedProjection(
+            ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
+        {
+            contextRegistration.ListeningEvents(
+                    typeof(ClientProfileChangedEvent))
+                .From(_settings.ContextNames.SettingsService)
+                .On(nameof(ClientProfileChangedEvent))
+                .WithProjection(
+                    typeof(ClientProfileChangedProjection), _settings.ContextNames.SettingsService);
+        }
+
+        private void RegisterClientProfileSettingsChangedProjection(
+            ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
+        {
+            contextRegistration.ListeningEvents(
+                    typeof(ClientProfileSettingsChangedEvent))
+                .From(_settings.ContextNames.SettingsService)
+                .On(nameof(ClientProfileSettingsChangedEvent))
+                .WithProjection(
+                    typeof(ClientProfileSettingsChangedProjection), _settings.ContextNames.SettingsService);
+        }
+
+        private void RegisterMarketSettingsChangedProjection(
+            ProcessingOptionsDescriptor<IBoundedContextRegistration> contextRegistration)
+        {
+            contextRegistration.ListeningEvents(
+                    typeof(MarketSettingsChangedEvent))
+                .From(_settings.ContextNames.SettingsService)
+                .On(nameof(MarketSettingsChangedEvent))
+                .WithProjection(
+                    typeof(MarketSettingsChangedProjection), _settings.ContextNames.SettingsService);
+        }
+
         private PublishingCommandsDescriptor<IDefaultRoutingRegistration> RegisterDefaultRouting()
         {
             return Register.DefaultRouting
@@ -328,10 +380,11 @@ namespace MarginTrading.Backend.Services.Modules
                 .ListeningEvents(
                     typeof(LiquidationFailedEvent),
                     typeof(LiquidationFinishedEvent),
-                    typeof(LiquidationResumedInternalEvent),
-                    typeof(LiquidationStartedInternalEvent),
+                    typeof(LiquidationResumedEvent),
+                    typeof(LiquidationStartedEvent),
                     typeof(NotEnoughLiquidityInternalEvent),
-                    typeof(PositionsLiquidationFinishedInternalEvent)
+                    typeof(PositionsLiquidationFinishedInternalEvent),
+                    typeof(MarketStateChangedEvent)
                 )
                 .From(_settings.ContextNames.TradingEngine)
                 .On(EventsRoute);
@@ -354,8 +407,8 @@ namespace MarginTrading.Backend.Services.Modules
                 .PublishingEvents(
                     typeof(LiquidationFailedEvent),
                     typeof(LiquidationFinishedEvent),
-                    typeof(LiquidationResumedInternalEvent),
-                    typeof(LiquidationStartedInternalEvent),
+                    typeof(LiquidationResumedEvent),
+                    typeof(LiquidationStartedEvent),
                     typeof(NotEnoughLiquidityInternalEvent),
                     typeof(PositionsLiquidationFinishedInternalEvent)
                 )

@@ -66,7 +66,9 @@ namespace MarginTrading.Backend.Services.FakeExchangeConnector
                 ExternalOrderBook orderbook;
                 decimal? currentPrice;
 
-                if (orderModel.Modality == TradeRequestModality.Liquidation)
+                if (orderModel.Modality == TradeRequestModality.Liquidation_CorporateAction
+                    ||
+                    orderModel.Modality == TradeRequestModality.Liquidation_MarginCall)
                 {
                     if (orderModel.Price == null)
                     {
@@ -80,13 +82,13 @@ namespace MarginTrading.Backend.Services.FakeExchangeConnector
                             []
                             {
                                 new VolumePrice
-                                    {Price = currentPrice.Value, Volume = currentPrice.Value}
+                                    {Price = currentPrice.Value, Volume = (decimal) orderModel.Volume}
                             },
                         new
                             []
                             {
                                 new VolumePrice
-                                    {Price = currentPrice.Value, Volume = currentPrice.Value}
+                                    {Price = currentPrice.Value, Volume = (decimal) orderModel.Volume}
                             });
                 }
                 else
@@ -121,6 +123,7 @@ namespace MarginTrading.Backend.Services.FakeExchangeConnector
                 {
                     OrderId = orderModel.OrderId,
                     Volume = (decimal) orderModel.Volume,
+                    ExternalOrderId = result.ExchangeOrderId,
                     OrderBook = new ExternalOrderBookContract
                     {
                         AssetPairId = orderbook.AssetPairId,

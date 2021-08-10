@@ -2,7 +2,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Threading.Tasks;
-using Lykke.Logs;
 
 namespace MarginTrading.Backend.Core
 {

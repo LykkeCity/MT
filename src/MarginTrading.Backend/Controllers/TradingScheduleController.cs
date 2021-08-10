@@ -9,7 +9,6 @@ using MarginTrading.Backend.Contracts;
 using MarginTrading.Backend.Contracts.TradingSchedule;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Mappers;
-using MarginTrading.Backend.Filters;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Common.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -24,7 +23,6 @@ namespace MarginTrading.Backend.Controllers
     [Route("api/trading-schedule")]
     public class TradingScheduleController : Controller, ITradingScheduleApi
     {
-        private readonly IDateService _dateService;
         private readonly IScheduleSettingsCacheService _scheduleSettingsCacheService;
         private readonly IAssetPairDayOffService _assetPairDayOffService;
         private readonly IAssetPairsCache _assetPairsCache;
@@ -35,7 +33,6 @@ namespace MarginTrading.Backend.Controllers
             IAssetPairDayOffService assetPairDayOffService,
             IAssetPairsCache assetPairsCache)
         {
-            _dateService = dateService;
             _scheduleSettingsCacheService = scheduleSettingsCacheService;
             _assetPairDayOffService = assetPairDayOffService;
             _assetPairsCache = assetPairsCache;
@@ -47,6 +44,7 @@ namespace MarginTrading.Backend.Controllers
         /// </summary>
         [HttpGet("compiled")]
         [HttpGet("asset-pairs-compiled")]
+        [Obsolete("Markets schedule should be used")]
         public Task<Dictionary<string, List<CompiledScheduleTimeIntervalContract>>> CompiledTradingSchedule()
         {
             return Task.FromResult(
@@ -69,6 +67,7 @@ namespace MarginTrading.Backend.Controllers
         /// Do not use this endpoint from FrontEnd!
         /// </summary>
         [HttpGet("is-enabled/{assetPairId}")]
+        [Obsolete("Markets schedule should be used")]
         public Task<bool> IsInstrumentEnabled(string assetPairId)
         {
             _assetPairsCache.GetAssetPairById(assetPairId);
@@ -83,6 +82,7 @@ namespace MarginTrading.Backend.Controllers
         /// Do not use this endpoint from FrontEnd!
         /// </summary>
         [HttpGet("are-enabled")]
+        [Obsolete("Markets schedule should be used")]
         public Task<Dictionary<string, bool>> AreInstrumentsEnabled()
         {
             var assetPairIds = _assetPairsCache.GetAllIds();
