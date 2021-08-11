@@ -21,5 +21,15 @@ namespace MarginTrading.Backend.Core.Repositories
             int skip, int take, bool isAscendingOrder = true);
 
         Task Save<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class;
+
+        /// <summary>
+        /// Checks the list of positions against database and returns the ones which are currently in
+        /// Special Liquidation process or the process has been already successfully completed.
+        /// Special Liquidation processes in all statuses except OnTheWayToFail and Failed are taken
+        /// into consideration. 
+        /// </summary>
+        /// <param name="positions">The list of positions</param>
+        /// <returns></returns>
+        Task<IEnumerable<string>> FilterPositionsInSpecialLiquidationAsync(IEnumerable<string> positions);
     }
 }

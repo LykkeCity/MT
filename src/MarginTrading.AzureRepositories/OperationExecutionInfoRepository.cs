@@ -68,6 +68,11 @@ namespace MarginTrading.AzureRepositories
             await _tableStorage.ReplaceAsync(entity);
         }
 
+        public async Task<IEnumerable<string>> FilterPositionsInSpecialLiquidationAsync(IEnumerable<string> positions)
+        {
+            throw new NotImplementedException();
+        }
+
         private static IOperationExecutionInfo<TData> Convert<TData>(OperationExecutionInfoEntity entity)
             where TData : class
         {
