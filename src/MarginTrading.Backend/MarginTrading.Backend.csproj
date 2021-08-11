@@ -91,4 +91,7 @@
   <ItemGroup>
     <WCFMetadata Include="Connected Services" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\MarginTrading.SqlRepositories\Scripts\**" CopyToOutputDirectory="PreserveNewest" LinkBase="Scripts" />
+  </ItemGroup>
 </Project>
