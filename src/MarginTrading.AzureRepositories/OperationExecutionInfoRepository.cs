@@ -68,7 +68,7 @@ namespace MarginTrading.AzureRepositories
             await _tableStorage.ReplaceAsync(entity);
         }
 
-        public async Task<IEnumerable<string>> FilterPositionsInSpecialLiquidationAsync(IList<string> positions)
+        public async Task<IEnumerable<string>> FilterPositionsInSpecialLiquidationAsync(IEnumerable<string> positionIds)
         {
             throw new NotImplementedException();
         }

@@ -186,8 +186,12 @@ namespace MarginTrading.SqlRepositories.Repositories
             }
         }
 
-        public Task<IEnumerable<string>> FilterPositionsInSpecialLiquidationAsync(IList<string> positions) =>
-            GetAllAsync(
+        public Task<IEnumerable<string>> FilterPositionsInSpecialLiquidationAsync(IEnumerable<string> positionIds)
+        {
+            var positionIdCollection = new PositionIdCollection();
+            positionIdCollection.AddRange(positionIds.Select(id => new PositionId {Id = id}));
+         
+            return GetAllAsync(
                 _getPositionsInSpecialLiquidation.FullyQualifiedName,
                 new[]
                 {
@@ -196,9 +200,10 @@ namespace MarginTrading.SqlRepositories.Repositories
                         ParameterName = "@positions",
                         SqlDbType = SqlDbType.Structured,
                         TypeName = "dbo.PositionListDataType",
-                        Value = positions
+                        Value = positionIdCollection
                     }
                 }, MapPositionId);
+        }
 
         private static OperationExecutionInfo<TData> Convert<TData>(OperationExecutionInfoEntity entity)
             where TData : class

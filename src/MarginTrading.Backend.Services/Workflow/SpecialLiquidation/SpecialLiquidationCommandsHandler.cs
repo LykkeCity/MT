@@ -122,9 +122,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             }
             
             // excluding positions which have already been used for Special Liquidation
-            var alreadyUsedPositionIds = (
-                await _operationExecutionInfoRepository.FilterPositionsInSpecialLiquidationAsync(
-                    positions.Select(p => p.Id).ToList())
+            var alreadyUsedPositionIds = (await _operationExecutionInfoRepository
+                    .FilterPositionsInSpecialLiquidationAsync(positions.Select(p => p.Id))
                 ).ToList();
 
             if (alreadyUsedPositionIds.Any())

@@ -28,8 +28,8 @@ namespace MarginTrading.Backend.Core.Repositories
         /// Special Liquidation processes in all statuses except OnTheWayToFail and Failed are taken
         /// into consideration. 
         /// </summary>
-        /// <param name="positions">The list of positions</param>
+        /// <param name="positionIds">The list of positions</param>
         /// <returns></returns>
-        Task<IEnumerable<string>> FilterPositionsInSpecialLiquidationAsync(IList<string> positions);
+        Task<IEnumerable<string>> FilterPositionsInSpecialLiquidationAsync(IEnumerable<string> positionIds);
     }
 }
