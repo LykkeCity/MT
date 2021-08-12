@@ -186,7 +186,7 @@ namespace MarginTrading.SqlRepositories.Repositories
             }
         }
 
-        public Task<IEnumerable<string>> FilterPositionsInSpecialLiquidationAsync(IEnumerable<string> positions) =>
+        public Task<IEnumerable<string>> FilterPositionsInSpecialLiquidationAsync(IList<string> positions) =>
             GetAllAsync(
                 _getPositionsInSpecialLiquidation.FullyQualifiedName,
                 new[]

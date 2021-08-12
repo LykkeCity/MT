@@ -30,6 +30,6 @@ namespace MarginTrading.Backend.Core.Repositories
         /// </summary>
         /// <param name="positions">The list of positions</param>
         /// <returns></returns>
-        Task<IEnumerable<string>> FilterPositionsInSpecialLiquidationAsync(IEnumerable<string> positions);
+        Task<IEnumerable<string>> FilterPositionsInSpecialLiquidationAsync(IList<string> positions);
     }
 }
