@@ -190,7 +190,7 @@ namespace MarginTrading.SqlRepositories.Repositories
         {
             var positionIdCollection = new PositionIdCollection();
             positionIdCollection.AddRange(positionIds.Select(id => new PositionId {Id = id}));
-         
+            
             return GetAllAsync(
                 _getPositionsInSpecialLiquidation.FullyQualifiedName,
                 new[]
@@ -200,7 +200,7 @@ namespace MarginTrading.SqlRepositories.Repositories
                         ParameterName = "@positions",
                         SqlDbType = SqlDbType.Structured,
                         TypeName = "dbo.PositionListDataType",
-                        Value = positionIdCollection
+                        Value = positionIdCollection.Count > 0 ? positionIdCollection : null
                     }
                 }, MapPositionId);
         }
