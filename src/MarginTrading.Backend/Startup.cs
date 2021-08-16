@@ -353,7 +353,7 @@ namespace MarginTrading.Backend
                         marginTradingSettings.StartupQueuesChecker.OrderHistoryQueueName,
                         marginTradingSettings.StartupQueuesChecker.PositionHistoryQueueName
                     })
-                .ThrowExceptionIfQueuesNotEmpty(true);
+                .ThrowExceptionIfQueuesNotEmpty(!marginTradingSettings.StartupQueuesChecker.DisablePoisonQueueCheck);
 
             return deduplicationService;
         }

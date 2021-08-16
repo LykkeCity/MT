@@ -29,6 +29,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
         private readonly ITradingEngineSnapshotsRepository _tradingEngineSnapshotsRepository;
         private readonly ISnapshotValidationService _snapshotValidationService;
         private readonly IQueueValidationService _queueValidationService;
+        private readonly IMarginTradingBlobRepository _blobRepository;
         private readonly ILog _log;
 
         private readonly SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1, 1);
@@ -43,6 +44,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
             ITradingEngineSnapshotsRepository tradingEngineSnapshotsRepository,
             ISnapshotValidationService snapshotValidationService,
             IQueueValidationService queueValidationService,
+            IMarginTradingBlobRepository blobRepository,
             ILog log)
         {
             _scheduleSettingsCacheService = scheduleSettingsCacheService;
@@ -54,6 +56,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
             _tradingEngineSnapshotsRepository = tradingEngineSnapshotsRepository;
             _snapshotValidationService = snapshotValidationService;
             _queueValidationService = queueValidationService;
+            _blobRepository = blobRepository;
             _log = log;
         }
 
@@ -91,9 +94,13 @@ namespace MarginTrading.Backend.Services.Infrastructure
 
             if (!validationResult.IsValid)
             {
-                await _log.WriteWarningAsync(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
+                var ex = new InvalidOperationException(
+                    $"The trading data snapshot might be corrupted. The current state of orders and positions is incorrect. Check the dbo.BlobData table for more info: container {LykkeConstants.MtCoreSnapshotBlobContainer}, correlationId {correlationId}");
+                await _log.WriteFatalErrorAsync(nameof(SnapshotService), 
+                    nameof(MakeTradingDataSnapshot),
                     validationResult.ToJson(),
-                    "Can not create a trading data snapshot. The current state of orders and positions is incorrect.");
+                    ex);
+                await _blobRepository.WriteAsync(LykkeConstants.MtCoreSnapshotBlobContainer, correlationId, validationResult);
             }
             else
             {

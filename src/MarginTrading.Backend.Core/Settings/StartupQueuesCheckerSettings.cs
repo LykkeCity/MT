@@ -14,5 +14,7 @@ namespace MarginTrading.Backend.Core.Settings
         public string OrderHistoryQueueName { get; set; }
         
         public string PositionHistoryQueueName { get; set; }
+
+        public bool DisablePoisonQueueCheck { get; set; }
     }
 }

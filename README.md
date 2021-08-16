@@ -64,6 +64,10 @@ All variables and value constraints are default. For instance, to set host URL t
 * *RESTART_ATTEMPTS_INTERVAL_MS* - interval between restarts in milliseconds. If not set 10000 is used.
 * *SettingsUrl* - defines URL of remote settings or path for local settings.
 
+### Queues checker
+
+The service checks `OrdersHistory` and `PositionsHistory` queues on startup. If those queues contain any unprocessed events, the service startup fails. The `StartupQueuesCheckerSettings.DisablePoisonQueueCheck` parameter controls this behaviour: by default, poison queues (with postfix `-poison`) are checked too. By setting `StartupQueuesCheckerSettings.DisablePoisonQueueCheck` to true you can skip checking the poison queues (only normal queues will be checked) and start the service.
+
 ### Settings ###
 
 Settings schema is:

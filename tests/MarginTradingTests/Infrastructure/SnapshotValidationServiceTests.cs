@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Common;
+using Common.Log;
+using Lykke.Logs;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core.Orders;
@@ -70,7 +72,8 @@ namespace MarginTradingTests.Infrastructure
                 _tradingEngineSnapshotsRepositoryMock.Object,
                 _ordersHistoryRepositoryMock.Object,
                 _positionsHistoryRepositoryMock.Object,
-                _orderCacheMock.Object);
+                _orderCacheMock.Object,
+                EmptyLog.Instance);
         }
 
         [Test]

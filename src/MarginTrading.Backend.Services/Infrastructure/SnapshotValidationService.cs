@@ -1,11 +1,13 @@
 // Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
+using Common.Log;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core.Orders;
@@ -29,27 +31,34 @@ namespace MarginTrading.Backend.Services.Infrastructure
         private readonly IOrdersHistoryRepository _ordersHistoryRepository;
         private readonly IPositionsHistoryRepository _positionsHistoryRepository;
         private readonly IOrderReader _orderCache;
+        private readonly ILog _log;
 
         public SnapshotValidationService(
             ITradingEngineSnapshotsRepository tradingEngineSnapshotsRepository,
             IOrdersHistoryRepository ordersHistoryRepository,
             IPositionsHistoryRepository positionsHistoryRepository,
-            IOrderReader orderCache)
+            IOrderReader orderCache,
+            ILog log)
         {
             _tradingEngineSnapshotsRepository = tradingEngineSnapshotsRepository;
             _ordersHistoryRepository = ordersHistoryRepository;
             _positionsHistoryRepository = positionsHistoryRepository;
             _orderCache = orderCache;
+            _log = log;
         }
 
         /// <inheritdoc/> 
         public async Task<SnapshotValidationResult> ValidateCurrentStateAsync()
         {
+            await _log.WriteInfoAsync(nameof(SnapshotValidationService), nameof(ValidateCurrentStateAsync),
+                $"Snapshot validation started: {DateTime.UtcNow}");
             var currentOrders = _orderCache.GetAllOrders();
             var currentPositions = _orderCache.GetPositions();
 
             var tradingEngineSnapshot = await _tradingEngineSnapshotsRepository.GetLastAsync();
-
+            await _log.WriteInfoAsync(nameof(SnapshotValidationService), nameof(ValidateCurrentStateAsync),
+                $"Last snapshot correlationId {tradingEngineSnapshot.CorrelationId}, tradingDay {tradingEngineSnapshot.TradingDay}, timestamp {tradingEngineSnapshot.Timestamp}");
+            
             var lastOrders = GetOrders(tradingEngineSnapshot);
             var lastPositions = GetPositions(tradingEngineSnapshot);
 
@@ -61,6 +70,28 @@ namespace MarginTrading.Backend.Services.Infrastructure
 
             var ordersValidationResult = CompareOrders(currentOrders, restoredOrders);
             var positionsValidationResult = ComparePositions(currentPositions, restoredPositions);
+
+            if (ordersValidationResult.IsValid)
+            {
+                await _log.WriteInfoAsync(nameof(SnapshotValidationService), nameof(ValidateCurrentStateAsync),
+                    $"Orders validation result is valid");
+            }
+            else
+            {
+                await _log.WriteWarningAsync(nameof(SnapshotValidationService), nameof(ValidateCurrentStateAsync),
+                    $"Orders validation result is NOT valid. Extra: {ordersValidationResult.Extra.Count}, missed: {ordersValidationResult.Missed.Count}, inconsistent: {ordersValidationResult.Inconsistent.Count}");
+            }
+
+            if (positionsValidationResult.IsValid)
+            {
+                await _log.WriteInfoAsync(nameof(SnapshotValidationService), nameof(ValidateCurrentStateAsync),
+                    $"Positions validation result is valid");
+            }
+            else
+            {
+                await _log.WriteWarningAsync(nameof(SnapshotValidationService), nameof(ValidateCurrentStateAsync),
+                    $"Positions validation result is NOT valid. Extra: {positionsValidationResult.Extra.Count}, missed: {positionsValidationResult.Missed.Count}, inconsistent: {positionsValidationResult.Inconsistent.Count}");
+            }
 
             return new SnapshotValidationResult
             {
