@@ -13,7 +13,6 @@ using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Contracts.Snow.Prices;
 using MarginTrading.Backend.Core.Repositories;
-using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Services.Extensions;
 using MarginTrading.Common.Services;
 
