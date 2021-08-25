@@ -3,6 +3,7 @@
 
 using System;
 using System.Threading.Tasks;
+using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
 
 namespace MarginTrading.AzureRepositories
@@ -14,6 +15,16 @@ namespace MarginTrading.AzureRepositories
             string bestFxPrices, string bestTradingPrices)
         {
             throw new System.NotImplementedException();
+        }
+
+        public Task<TradingEngineSnapshot> Get(string correlationId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task Delete(string correlationId)
+        {
+            throw new NotImplementedException();
         }
     }
 }
