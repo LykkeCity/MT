@@ -1,8 +1,8 @@
 // Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.Generic;
 using JetBrains.Annotations;
+using Lykke.SettingsReader.Attributes;
 
 namespace MarginTrading.Backend.Core.Settings
 {
@@ -15,6 +15,7 @@ namespace MarginTrading.Backend.Core.Settings
         
         public string PositionHistoryQueueName { get; set; }
 
+        [Optional]
         public bool DisablePoisonQueueCheck { get; set; }
     }
 }
