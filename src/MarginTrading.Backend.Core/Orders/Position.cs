@@ -340,5 +340,11 @@ namespace MarginTrading.Backend.Core.Orders
         }
 
         #endregion State changes
+        
+        # region Get data
+
+        public virtual decimal GetUnrealisedPnl() => this.GetUnrealisedFpl();
+
+        # endregion
     }
 }

@@ -10,6 +10,6 @@ namespace MarginTrading.Backend.Core.Extensions
     public static class PositionsListExtensions
     {
         public static IOrderedEnumerable<Position> LargestPnlFirst(this IEnumerable<Position> source) =>
-            source.OrderByDescending(p => p.GetUnrealisedFpl());
+            source.OrderByDescending(p => p.GetUnrealisedPnl());
     }
 }
