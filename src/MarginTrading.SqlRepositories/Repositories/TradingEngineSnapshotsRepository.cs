@@ -7,6 +7,7 @@ using Microsoft.Data.SqlClient;
 using System.Threading.Tasks;
 using Common.Log;
 using Dapper;
+using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Snapshots;
@@ -30,23 +31,27 @@ namespace MarginTrading.SqlRepositories.Repositories
 [BestPrices] [nvarchar](MAX) NOT NULL,
 INDEX IX_{0}_Base (TradingDay, CorrelationId, Timestamp)
 );";
-        
+
         private readonly string _connectionString;
         private readonly MarginTradingSettings _settings;
         private readonly ILog _log;
-        
+
         public TradingEngineSnapshotsRepository(MarginTradingSettings settings, ILog log)
         {
             _connectionString = settings.Db.SqlConnectionString;
             _settings = settings;
             _log = log;
-            
+
             using (var conn = new SqlConnection(_connectionString))
             {
-                try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
+                try
+                {
+                    conn.CreateTableIfDoesntExists(CreateTableScript, TableName);
+                }
                 catch (Exception ex)
                 {
-                    _log?.WriteErrorAsync(nameof(TradingEngineSnapshotsRepository), "CreateTableIfDoesntExists", null, ex);
+                    _log?.WriteErrorAsync(nameof(TradingEngineSnapshotsRepository), "CreateTableIfDoesntExists", null,
+                        ex);
                     throw;
                 }
             }
@@ -78,6 +83,34 @@ INDEX IX_{0}_Base (TradingDay, CorrelationId, Timestamp)
 VALUES (@TradingDay,@CorrelationId,@Timestamp,@Orders,@Positions,@AccountStats,@BestFxPrices,@BestPrices)",
                     entity, commandTimeout: _settings.SnapshotInsertTimeoutSec);
             }
+        }
+
+        public async Task<TradingEngineSnapshot> Get(string correlationId)
+        {
+            var sql = @$"select top(1) TradingDay,
+                            CorrelationId,                            
+                            Orders as OrdersJson,
+                            Positions as PositionsJson,
+                            AccountStats as AccountsJson,
+                            BestFxPrices as BestFxPricesJson,
+                            BestPrices as BestTradingPricesJson,
+                            Timestamp
+                        from {TableName} where correlationId = @id
+                        order by Timestamp desc";
+
+            await using var conn = new SqlConnection(_connectionString);
+
+            var result = await conn.QueryFirstOrDefaultAsync<TradingEngineSnapshot>(sql, new {id = correlationId});
+            return result;
+        }
+
+        public async Task Delete(string correlationId)
+        {
+            var sql = @$"delete from {TableName} where correlationId = @id";
+
+            await using var conn = new SqlConnection(_connectionString);
+
+            await conn.ExecuteAsync(sql, new {id = correlationId});
         }
     }
 }

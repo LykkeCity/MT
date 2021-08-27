@@ -11,5 +11,13 @@ namespace MarginTrading.Backend.Core.Repositories
         Task<TradingEngineSnapshot> GetLastAsync();
 
         Task AddAsync(TradingEngineSnapshot tradingEngineSnapshot);
+
+        Task Add(DateTime tradingDay, string correlationId, DateTime timestamp, string orders, string positions,
+            string accounts,
+            string bestFxPrices, string bestTradingPrices);
+
+        Task<TradingEngineSnapshot> Get(string correlationId);
+
+        Task Delete(string correlationId);
     }
 }

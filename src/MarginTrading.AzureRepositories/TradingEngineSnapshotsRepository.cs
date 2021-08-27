@@ -3,6 +3,7 @@
 
 using System;
 using System.Threading.Tasks;
+using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Snapshots;
 
@@ -16,6 +17,16 @@ namespace MarginTrading.AzureRepositories
         }
 
         public Task AddAsync(TradingEngineSnapshot tradingEngineSnapshot)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<TradingEngineSnapshot> Get(string correlationId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task Delete(string correlationId)
         {
             throw new NotImplementedException();
         }
