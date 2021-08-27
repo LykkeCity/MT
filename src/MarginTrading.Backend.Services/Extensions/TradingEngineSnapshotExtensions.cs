@@ -7,7 +7,7 @@ using MarginTrading.Backend.Contracts.Account;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Contracts.Snow.Prices;
-using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Snapshots;
 
 namespace MarginTrading.Backend.Services.Extensions
 {

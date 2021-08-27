@@ -228,13 +228,13 @@ namespace MarginTrading.Backend.Services.Infrastructure
         }
 
         private static IReadOnlyList<OrderContract> GetOrders(TradingEngineSnapshot tradingEngineSnapshot)
-            => !string.IsNullOrEmpty(tradingEngineSnapshot.Orders)
-                ? tradingEngineSnapshot.Orders.DeserializeJson<List<OrderContract>>()
+            => !string.IsNullOrEmpty(tradingEngineSnapshot.OrdersJson)
+                ? tradingEngineSnapshot.OrdersJson.DeserializeJson<List<OrderContract>>()
                 : new List<OrderContract>();
 
         private static IReadOnlyList<OpenPositionContract> GetPositions(TradingEngineSnapshot tradingEngineSnapshot)
-            => !string.IsNullOrEmpty(tradingEngineSnapshot.Positions)
-                ? tradingEngineSnapshot.Positions.DeserializeJson<List<OpenPositionContract>>()
+            => !string.IsNullOrEmpty(tradingEngineSnapshot.PositionsJson)
+                ? tradingEngineSnapshot.PositionsJson.DeserializeJson<List<OpenPositionContract>>()
                 : new List<OpenPositionContract>();
     }
 }

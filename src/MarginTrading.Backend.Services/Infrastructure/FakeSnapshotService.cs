@@ -13,6 +13,7 @@ using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Contracts.Snow.Prices;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Snapshots;
 using MarginTrading.Backend.Services.Extensions;
 using MarginTrading.Common.Services;
 
@@ -70,14 +71,19 @@ namespace MarginTrading.Backend.Services.Infrastructure
                     bestTradingPrices = Union(bestTradingPrices, snapshot.GetBestTradingPrices());
                 }
 
-                await _tradingEngineSnapshotsRepository.Add(tradingDay,
-                    correlationId,
-                    _dateService.Now(),
-                    orders.ToJson(),
-                    positions.ToJson(),
-                    accounts.ToJson(),
-                    bestFxPrices.ToJson(),
-                    bestTradingPrices.ToJson());
+                var newSnapshot = new TradingEngineSnapshot()
+                {
+                    TradingDay = tradingDay,
+                    CorrelationId = correlationId,
+                    Timestamp = _dateService.Now(),
+                    PositionsJson = positions.ToJson(),
+                    OrdersJson = orders.ToJson(),
+                    AccountsJson = accounts.ToJson(),
+                    BestFxPricesJson = bestFxPrices.ToJson(),
+                    BestTradingPricesJson = bestTradingPrices.ToJson(),
+                };
+
+                await _tradingEngineSnapshotsRepository.AddAsync(newSnapshot);
 
                 await _log.WriteInfoAsync(nameof(FakeSnapshotService), nameof(AddOrUpdateFakeTradingDataSnapshot),
                     $"Trading data snapshot was written to the storage. {msg}");

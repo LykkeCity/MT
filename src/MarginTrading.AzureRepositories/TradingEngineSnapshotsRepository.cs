@@ -3,7 +3,6 @@
 
 using System;
 using System.Threading.Tasks;
-using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Snapshots;
 

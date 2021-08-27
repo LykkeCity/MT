@@ -17,11 +17,11 @@ namespace MarginTrading.SqlRepositories.Entities
             TradingDay = tradingEngineSnapshot.TradingDay;
             CorrelationId = tradingEngineSnapshot.CorrelationId;
             Timestamp = tradingEngineSnapshot.Timestamp;
-            Orders = tradingEngineSnapshot.Orders;
-            Positions = tradingEngineSnapshot.Positions;
-            AccountStats = tradingEngineSnapshot.AccountStats;
-            BestFxPrices = tradingEngineSnapshot.BestFxPrices;
-            BestPrices = tradingEngineSnapshot.BestPrices;
+            Orders = tradingEngineSnapshot.OrdersJson;
+            Positions = tradingEngineSnapshot.PositionsJson;
+            AccountStats = tradingEngineSnapshot.AccountsJson;
+            BestFxPrices = tradingEngineSnapshot.BestFxPricesJson;
+            BestPrices = tradingEngineSnapshot.BestTradingPricesJson;
         }
 
         public DateTime TradingDay { get; set; }
@@ -46,11 +46,11 @@ namespace MarginTrading.SqlRepositories.Entities
                 TradingDay = TradingDay,
                 CorrelationId = CorrelationId,
                 Timestamp = Timestamp,
-                Orders = Orders,
-                Positions = Positions,
-                AccountStats = AccountStats,
-                BestFxPrices = BestFxPrices,
-                BestPrices = BestPrices
+                OrdersJson = Orders,
+                PositionsJson = Positions,
+                AccountsJson = AccountStats,
+                BestFxPricesJson = BestFxPrices,
+                BestTradingPricesJson = BestPrices
             };
     }
 }

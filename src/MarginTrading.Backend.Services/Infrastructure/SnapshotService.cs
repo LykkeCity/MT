@@ -147,11 +147,11 @@ namespace MarginTrading.Backend.Services.Infrastructure
                     TradingDay = tradingDay,
                     CorrelationId = correlationId,
                     Timestamp = _dateService.Now(),
-                    Orders = ordersData,
-                    Positions = positionsData,
-                    AccountStats = accountStatsData,
-                    BestFxPrices = bestFxPricesData,
-                    BestPrices = bestPricesData
+                    OrdersJson = ordersData,
+                    PositionsJson = positionsData,
+                    AccountsJson = accountStatsData,
+                    BestFxPricesJson = bestFxPricesData,
+                    BestTradingPricesJson = bestPricesData
                 };
 
                 await _tradingEngineSnapshotsRepository.AddAsync(snapshot);

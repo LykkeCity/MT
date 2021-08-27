@@ -7,7 +7,6 @@ using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
-using Lykke.Logs;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core.Orders;
@@ -81,7 +80,7 @@ namespace MarginTradingTests.Infrastructure
         {
             // arrange
 
-            _tradingEngineSnapshot.Orders = new[]
+            _tradingEngineSnapshot.OrdersJson = new[]
             {
                 CreateSnapshotOrder("1", 1, 1, OrderStatusContract.Active),
                 CreateSnapshotOrder("2", 2, 2, OrderStatusContract.Active),
@@ -117,7 +116,7 @@ namespace MarginTradingTests.Infrastructure
         {
             // arrange
 
-            _tradingEngineSnapshot.Orders = new[]
+            _tradingEngineSnapshot.OrdersJson = new[]
             {
                 CreateSnapshotOrder("1", 1, 1, OrderStatusContract.Active),
                 CreateSnapshotOrder("2", 2, 2, OrderStatusContract.Active),
@@ -152,7 +151,7 @@ namespace MarginTradingTests.Infrastructure
         {
             // arrange
 
-            _tradingEngineSnapshot.Orders = new[]
+            _tradingEngineSnapshot.OrdersJson = new[]
             {
                 CreateSnapshotOrder("1", 1, 1, OrderStatusContract.Active),
                 CreateSnapshotOrder("2", 2, 2, OrderStatusContract.Active),
@@ -187,7 +186,7 @@ namespace MarginTradingTests.Infrastructure
         {
             // arrange
 
-            _tradingEngineSnapshot.Orders = new[]
+            _tradingEngineSnapshot.OrdersJson = new[]
             {
                 CreateSnapshotOrder("1", 1, 1, OrderStatusContract.Active),
                 CreateSnapshotOrder("2", 2, 2, OrderStatusContract.Active),
@@ -223,7 +222,7 @@ namespace MarginTradingTests.Infrastructure
         {
             // arrange
 
-            _tradingEngineSnapshot.Positions = new[]
+            _tradingEngineSnapshot.PositionsJson = new[]
             {
                 CreateSnapshotPosition("1", 1),
                 CreateSnapshotPosition("2", 2),
@@ -259,7 +258,7 @@ namespace MarginTradingTests.Infrastructure
         {
             // arrange
 
-            _tradingEngineSnapshot.Positions = new[]
+            _tradingEngineSnapshot.PositionsJson = new[]
             {
                 CreateSnapshotPosition("1", 1),
                 CreateSnapshotPosition("2", 2),
@@ -294,7 +293,7 @@ namespace MarginTradingTests.Infrastructure
         {
             // arrange
 
-            _tradingEngineSnapshot.Positions = new[]
+            _tradingEngineSnapshot.PositionsJson = new[]
             {
                 CreateSnapshotPosition("1", 1),
                 CreateSnapshotPosition("2", 2),
@@ -329,7 +328,7 @@ namespace MarginTradingTests.Infrastructure
         {
             // arrange
 
-            _tradingEngineSnapshot.Positions = new[]
+            _tradingEngineSnapshot.PositionsJson = new[]
             {
                 CreateSnapshotPosition("1", 1),
                 CreateSnapshotPosition("2", 2),

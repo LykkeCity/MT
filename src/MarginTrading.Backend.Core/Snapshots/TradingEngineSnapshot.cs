@@ -13,14 +13,14 @@ namespace MarginTrading.Backend.Core.Snapshots
 
         public DateTime Timestamp { get; set; }
 
-        public string Orders { get; set; }
+        public string OrdersJson { get; set; }
 
-        public string Positions { get; set; }
+        public string PositionsJson { get; set; }
 
-        public string AccountStats { get; set; }
-        
-        public string BestFxPrices { get; set; }
+        public string AccountsJson { get; set; }
 
-        public string BestPrices { get; set; }
+        public string BestFxPricesJson { get; set; }
+
+        public string BestTradingPricesJson { get; set; }
     }
 }
