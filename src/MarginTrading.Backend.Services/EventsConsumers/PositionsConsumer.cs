@@ -181,9 +181,15 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             
             foreach (var openedPosition in openedPositions)
             {
-                if (!openedPosition.TryStartClosing(_dateService.Now(), order.OrderType.GetCloseReason(), order
-                    .Originator, ""))
+                var (closingStarted, reasonIfNot) = openedPosition.TryStartClosing(_dateService.Now(),
+                    order.OrderType.GetCloseReason(),
+                    order.Originator,
+                    string.Empty);
+
+                if (closingStarted)
                 {
+                    _log.WriteWarning(nameof(MatchOrderOnExistingPositions), order.ToJson(),
+                        $"Couldn't start position closing due to: {reasonIfNot}");
                     continue;
                 }
 
