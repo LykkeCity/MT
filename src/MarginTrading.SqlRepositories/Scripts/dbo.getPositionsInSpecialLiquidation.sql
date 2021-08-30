@@ -20,7 +20,7 @@ BEGIN
         ) positions
     WHERE
         e.OperationName = 'SpecialLiquidation' AND
-        JSON_VALUE(e.Data, '$.State') NOT IN ('OnTheWayToFail', 'Failed')
+        JSON_VALUE(e.Data, '$.State') NOT IN ('OnTheWayToFail', 'Failed', 'Cancelled')
     
     INTERSECT
     

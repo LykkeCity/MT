@@ -25,8 +25,7 @@ namespace MarginTrading.Backend.Core.Repositories
         /// <summary>
         /// Checks the list of positions against database and returns the ones which are currently in
         /// Special Liquidation process or the process has been already successfully completed.
-        /// Special Liquidation processes in all statuses except OnTheWayToFail and Failed are taken
-        /// into consideration. 
+        /// Special Liquidation processes in all statuses except OnTheWayToFail, Failed and Cancelled are considered. 
         /// </summary>
         /// <param name="positionIds">The list of positions</param>
         /// <returns></returns>
