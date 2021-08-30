@@ -5,7 +5,6 @@ using Common;
 using Common.Log;
 using Dapper;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Common.Services;
 using MarginTrading.SqlRepositories.Entities;
@@ -14,12 +13,15 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Lykke.Snow.Common;
+using Lykke.Snow.Common.Model;
 
 namespace MarginTrading.SqlRepositories.Repositories
 {
-    public class OperationExecutionInfoRepository : IOperationExecutionInfoRepository
+    public class OperationExecutionInfoRepository : SqlRepositoryBase, IOperationExecutionInfoRepository
     {
         private const string TableName = "MarginTradingExecutionInfo";
         private const string CreateTableScript = "CREATE TABLE [{0}](" +
@@ -38,28 +40,32 @@ namespace MarginTrading.SqlRepositories.Repositories
         private static readonly string GetUpdateClause = string.Join(",",
             DataType.GetProperties().Select(x => "[" + x.Name + "]=@" + x.Name));
 
-        private readonly string _connectionString;
         private readonly ILog _log;
         private readonly IDateService _dateService;
+        private readonly StoredProcedure _getPositionsInSpecialLiquidation = new StoredProcedure("getPositionsInSpecialLiquidation", "dbo");
 
         public OperationExecutionInfoRepository(
             string connectionString,
             ILog log,
-            IDateService dateService)
+            IDateService dateService) : base(connectionString)
         {
-            _connectionString = connectionString;
             _log = log;
             _dateService = dateService;
 
-            using (var conn = new SqlConnection(_connectionString))
+            using (var conn = new SqlConnection(connectionString))
             {
-                try { conn.CreateTableIfDoesntExists(CreateTableScript, TableName); }
+                try
+                {
+                    conn.CreateTableIfDoesntExists(CreateTableScript, TableName);
+                }
                 catch (Exception ex)
                 {
                     _log?.WriteErrorAsync(nameof(OperationExecutionInfoRepository), "CreateTableIfDoesntExists", null, ex);
                     throw;
                 }
             }
+
+            ExecCreateOrAlter(_getPositionsInSpecialLiquidation.FileName);
         }
 
         public async Task<IOperationExecutionInfo<TData>> GetOrAddAsync<TData>(
@@ -67,7 +73,7 @@ namespace MarginTrading.SqlRepositories.Repositories
         {
             try
             {
-                using (var conn = new SqlConnection(_connectionString))
+                using (var conn = new SqlConnection(ConnectionString))
                 {
                     var operationInfo = await conn.QueryFirstOrDefaultAsync<OperationExecutionInfoEntity>(
                         $"SELECT * FROM {TableName} WHERE Id=@operationId and OperationName=@operationName",
@@ -114,7 +120,7 @@ namespace MarginTrading.SqlRepositories.Repositories
             take = take <= 0 ? MaxResults : Math.Min(take, MaxResults);
             var paginationClause = $"ORDER BY [LastModified] {sorting} OFFSET {skip} ROWS FETCH NEXT {take} ROWS ONLY";
 
-            using var conn = new SqlConnection(_connectionString);
+            using var conn = new SqlConnection(ConnectionString);
             var sql = $"SELECT * FROM [{TableName}] {whereClause} {paginationClause}; SELECT COUNT(*) FROM [{TableName}] {whereClause}";
             var gridReader = await conn.QueryMultipleAsync(sql, new { rfqId, instrumentId, accountId, from, to });
 
@@ -131,7 +137,7 @@ namespace MarginTrading.SqlRepositories.Repositories
 
         public async Task<IOperationExecutionInfo<TData>> GetAsync<TData>(string operationName, string id) where TData : class
         {
-            using (var conn = new SqlConnection(_connectionString))
+            using (var conn = new SqlConnection(ConnectionString))
             {
                 var operationInfo = await conn.QuerySingleOrDefaultAsync<OperationExecutionInfoEntity>(
                     $"SELECT * FROM {TableName} WHERE Id = @id and OperationName=@operationName",
@@ -146,7 +152,7 @@ namespace MarginTrading.SqlRepositories.Repositories
             var entity = Convert(executionInfo, _dateService.Now());
             var affectedRows = 0;
 
-            using (var conn = new SqlConnection(_connectionString))
+            using (var conn = new SqlConnection(ConnectionString))
             {
                 try
                 {
@@ -180,6 +186,25 @@ namespace MarginTrading.SqlRepositories.Repositories
             }
         }
 
+        public Task<IEnumerable<string>> FilterPositionsInSpecialLiquidationAsync(IEnumerable<string> positionIds)
+        {
+            var positionIdCollection = new PositionIdCollection();
+            positionIdCollection.AddRange(positionIds.Select(id => new PositionId {Id = id}));
+            
+            return GetAllAsync(
+                _getPositionsInSpecialLiquidation.FullyQualifiedName,
+                new[]
+                {
+                    new SqlParameter
+                    {
+                        ParameterName = "@positions",
+                        SqlDbType = SqlDbType.Structured,
+                        TypeName = "dbo.PositionListDataType",
+                        Value = positionIdCollection.Count > 0 ? positionIdCollection : null
+                    }
+                }, MapPositionId);
+        }
+
         private static OperationExecutionInfo<TData> Convert<TData>(OperationExecutionInfoEntity entity)
             where TData : class
         {
@@ -203,6 +228,11 @@ namespace MarginTrading.SqlRepositories.Repositories
                 PrevLastModified = model.LastModified,
                 LastModified = now
             };
+        }
+        
+        private static string MapPositionId(SqlDataReader reader)
+        {
+            return reader?["PositionId"] as string;
         }
     }
 }

@@ -120,6 +120,21 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 
                 return;
             }
+            
+            // excluding positions which have already been used for Special Liquidation
+            var alreadyUsedPositionIds = (await _operationExecutionInfoRepository
+                    .FilterPositionsInSpecialLiquidationAsync(positions.Select(p => p.Id))
+                ).ToList();
+
+            if (alreadyUsedPositionIds.Any())
+            {
+                await _log.WriteWarningAsync(
+                    nameof(StartSpecialLiquidationInternalCommand),
+                    nameof(SpecialLiquidationCommandsHandler),
+                    $"Position(s) {string.Join(", ", alreadyUsedPositionIds)} will be excluded since they are already in Special Liquidation process or the process was successfully finished.");
+
+                positions = positions.Where(p => !alreadyUsedPositionIds.Contains(p.Id)).ToList();
+            }
 
             if (!positions.Any())
             {
