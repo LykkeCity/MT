@@ -19,5 +19,6 @@ namespace MarginTrading.Backend.Core
         Finished = 7,
         OnTheWayToFail = 8,
         Failed = 9,
+        Cancelled = 10,
     }
 }

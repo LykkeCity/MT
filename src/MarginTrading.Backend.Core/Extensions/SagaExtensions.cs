@@ -10,14 +10,15 @@ namespace MarginTrading.Backend.Core.Extensions
 {
     public static class SagaExtensions
     {
-        public static bool SwitchState<TState>(this OperationDataBase<TState> data, TState expectedState, TState nextState)
+        public static bool SwitchState<TState>(this OperationDataBase<TState> data, TState expectedState,
+            TState nextState)
             where TState : struct, IConvertible
         {
             if (data == null)
             {
                 throw new InvalidOperationException("Operation execution data was not properly initialized.");
             }
-            
+
             if (Convert.ToInt32(data.State) < Convert.ToInt32(expectedState))
             {
                 // Throws to retry and wait until the operation will be in the required state
@@ -29,6 +30,41 @@ namespace MarginTrading.Backend.Core.Extensions
             {
                 LogLocator.CommonLog.WriteWarning(nameof(SagaExtensions), nameof(SwitchState),
                     $"Operation is already in the next state, so this event is ignored, {new {data, expectedState, nextState}.ToJson()}.");
+                return false;
+            }
+
+            data.State = nextState;
+
+            return true;
+        }
+
+        public static bool SwitchState(this OperationDataBase<SpecialLiquidationOperationState> data,
+            SpecialLiquidationOperationState expectedState, SpecialLiquidationOperationState nextState)
+        {
+            if (data == null)
+            {
+                throw new InvalidOperationException("Operation execution data was not properly initialized.");
+            }
+
+            if (Convert.ToInt32(data.State) < Convert.ToInt32(expectedState))
+            {
+                // Throws to retry and wait until the operation will be in the required state
+                throw new InvalidOperationException(
+                    $"Operation execution state can't be switched: {data.State} -> {nextState}. Waiting for the {expectedState} state.");
+            }
+
+            if (Convert.ToInt32(data.State) > Convert.ToInt32(expectedState))
+            {
+                LogLocator.CommonLog.WriteWarning(nameof(SagaExtensions), nameof(SwitchState),
+                    $"Operation is already in the next state, so this event is ignored, {new {data, expectedState, nextState}.ToJson()}.");
+                return false;
+            }
+
+            if (data.State == SpecialLiquidationOperationState.Failed &&
+                nextState == SpecialLiquidationOperationState.Cancelled)
+            {
+                LogLocator.CommonLog.WriteWarning(nameof(SagaExtensions), nameof(SwitchState),
+                    $"Cannot switch from Failed to Cancelled state (both states are final), so this event is ignored, {new {data, expectedState, nextState}.ToJson()}.");
                 return false;
             }
 
