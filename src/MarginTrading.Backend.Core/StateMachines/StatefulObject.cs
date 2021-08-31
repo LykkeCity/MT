@@ -34,7 +34,7 @@ namespace MarginTrading.Backend.Core.StateMachines
         private TState GetTransition(TCommand command)
         {
             var transition = new StateTransition<TState, TCommand>(Status, command);
-
+            
             if (!TransitionConfig.TryGetValue(transition, out var transitionConfig))
             {
                 throw new StateTransitionNotFoundException($"Invalid {GetType().Name} transition: {Status} -> {command}");

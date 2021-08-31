@@ -774,7 +774,18 @@ namespace MarginTrading.Backend.Services
             
             foreach (var position in positions)
             {
-                if (position.Value.TryStartClosing(now, PositionCloseReason.Close, closeData.Originator, "") 
+                var (closingStarted, reasonIfNot) = position.Value.TryStartClosing(now,
+                    PositionCloseReason.Close,
+                    closeData.Originator,
+                    string.Empty);
+
+                if (!closingStarted)
+                {
+                    _log.WriteWarning(nameof(ClosePositionsAsync), position.ToJson(),
+                        $"Couldn't start position closing due to: {reasonIfNot}");
+                }
+                
+                if (closingStarted 
                     ||
                     closeData.Modality == OrderModality.Liquidation_MarginCall
                     ||

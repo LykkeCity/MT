@@ -295,16 +295,16 @@ namespace MarginTrading.Backend.Core.Orders
             });
         }
 
-        public bool TryStartClosing(DateTime date, PositionCloseReason reason, OriginatorType originator, string comment)
+        public (bool succeeded, string reasonIfNot) TryStartClosing(DateTime date, PositionCloseReason reason, OriginatorType originator, string comment)
         {
             try
             {
                 StartClosing(date, reason, originator, comment);
-                return true;
+                return (true, string.Empty);
             }
             catch (StateTransitionNotFoundException e)
             {
-                return false;
+                return (false, e.Message);
             }
         }
         
