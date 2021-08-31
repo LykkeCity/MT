@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Common;
+using Common.Log;
 using Lykke.Common;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Core;
@@ -26,7 +27,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
         private readonly MarginTradingSettings _settings;
         private readonly IRabbitMqNotifyService _rabbitMqNotifyService;
         private readonly IDateService _dateService;
-        
+        private readonly ILog _log;
+
         private readonly ConcurrentDictionary<string, DateTime> _mc1LastNotifications = 
             new ConcurrentDictionary<string, DateTime>();
         private readonly ConcurrentDictionary<string, DateTime> _mc2LastNotifications = 
@@ -40,7 +42,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             IOperationsLogService operationsLogService,
             MarginTradingSettings settings,
             IRabbitMqNotifyService rabbitMqNotifyService,
-            IDateService dateService)
+            IDateService dateService,
+            ILog log)
         {
             _threadSwitcher = threadSwitcher;
             _emailService = emailService;
@@ -49,6 +52,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             _settings = settings;
             _rabbitMqNotifyService = rabbitMqNotifyService;
             _dateService = dateService;
+            _log = log;
         }
 
         int IEventConsumer.ConsumerRank => 103;
@@ -71,6 +75,8 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 if (lastNotifications.TryGetValue(account.Id, out var lastNotification)
                     && lastNotification.AddMinutes(_settings.Throttling.MarginCallThrottlingPeriodMin) > eventTime)
                 {
+                    _log.WriteInfo(nameof(MarginCallConsumer), nameof(IEventConsumer<MarginCallEventArgs>.ConsumeEvent),
+                        $"MarginCall event is ignored for accountId {account.Id} because of throttling: event time {eventTime}, last notification was sent at {lastNotification}");
                     return;
                 }
 
