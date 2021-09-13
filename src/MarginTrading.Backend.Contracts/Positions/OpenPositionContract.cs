@@ -148,5 +148,7 @@ namespace MarginTrading.Backend.Contracts.Positions
         /// Reflect if the order which has open position was flagged ForceOpen
         /// </summary>
         public bool ForceOpen { get; set; }
+
+        public string TradingConditionId { get; set; }
     }
 }
