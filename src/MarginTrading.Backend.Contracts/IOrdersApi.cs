@@ -97,5 +97,23 @@ namespace MarginTrading.Backend.Contracts
             [Query] [CanBeNull] string parentOrderId = null,
             [Query] [CanBeNull] int? skip = null, [Query] [CanBeNull] int? take = null,
             [Query] string order = "DESC");
+
+        /// <summary>
+        /// Change validity on existing order
+        /// </summary>
+        /// <param name="orderId">Id of order to change</param>
+        /// <param name="request">Values to change</param>
+        /// <exception cref="System.InvalidOperationException"></exception>
+        [Put("/api/orders/{orderId}/validity")]
+        Task ChangeValidityAsync(string orderId, [Body] ChangeValidityRequest request);
+
+        /// <summary>
+        /// Remove validity on existing order
+        /// </summary>
+        /// <param name="orderId">Id of order to change</param>
+        /// <param name="request">Values to change</param>
+        /// <exception cref="System.InvalidOperationException"></exception>
+        [Delete("/api/orders/{orderId}/validity")]
+        Task RemoveValidityAsync(string orderId, [Body] DeleteValidityRequest request);
     }
 }

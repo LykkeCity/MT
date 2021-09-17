@@ -369,8 +369,72 @@ namespace MarginTrading.Backend.Controllers
                 ? _identityGenerator.GenerateGuid()
                 : request.CorrelationId;
 
-            await _tradingEngine.ChangeOrderAsync(order.Id, request.Price, request.Validity, originator,
+            await _tradingEngine.ChangeOrderAsync(order.Id, request.Price, originator,
                 request.AdditionalInfo, correlationId, request.ForceOpen);
+
+            _operationsLogService.AddLog("action order.changeLimits", order.AccountId,
+                new { orderId = orderId, request = request.ToJson() }.ToJson(), "");
+        }
+        
+        /// <summary>
+        /// Change validity on existing order
+        /// </summary>
+        /// <param name="orderId">Id of order to change</param>
+        /// <param name="request">Values to change</param>
+        /// <exception cref="InvalidOperationException"></exception>
+        [Route("{orderId}/validity")]
+        [MiddlewareFilter(typeof(RequestLoggingPipeline))]
+        [ServiceFilter(typeof(MarginTradingEnabledFilter))]
+        [HttpPut]
+        public async Task ChangeValidityAsync(string orderId, [FromBody] ChangeValidityRequest request)
+        {
+            if (!_ordersCache.TryGetOrderById(orderId, out var order))
+            {
+                throw new InvalidOperationException("Order not found");
+            }
+
+            ValidationHelper.ValidateAccountId(order, request.AccountId);
+
+            var originator = GetOriginator(request.Originator);
+
+            var correlationId = string.IsNullOrWhiteSpace(request.CorrelationId)
+                ? _identityGenerator.GenerateGuid()
+                : request.CorrelationId;
+
+            await _tradingEngine.ChangeOrderValidityAsync(order.Id, request.Validity, originator,
+                request.AdditionalInfo, correlationId);
+
+            _operationsLogService.AddLog("action order.changeLimits", order.AccountId,
+                new { orderId = orderId, request = request.ToJson() }.ToJson(), "");
+        }
+        
+        /// <summary>
+        /// Remove validity on existing order
+        /// </summary>
+        /// <param name="orderId">Id of order to change</param>
+        /// <param name="request">Values to change</param>
+        /// <exception cref="InvalidOperationException"></exception>
+        [Route("{orderId}/validity")]
+        [MiddlewareFilter(typeof(RequestLoggingPipeline))]
+        [ServiceFilter(typeof(MarginTradingEnabledFilter))]
+        [HttpDelete]
+        public async Task RemoveValidityAsync(string orderId, [FromBody] DeleteValidityRequest request)
+        {
+            if (!_ordersCache.TryGetOrderById(orderId, out var order))
+            {
+                throw new InvalidOperationException("Order not found");
+            }
+
+            ValidationHelper.ValidateAccountId(order, request.AccountId);
+
+            var originator = GetOriginator(request.Originator);
+
+            var correlationId = string.IsNullOrWhiteSpace(request.CorrelationId)
+                ? _identityGenerator.GenerateGuid()
+                : request.CorrelationId;
+
+            await _tradingEngine.RemoveOrderValidityAsync(order.Id, originator,
+                request.AdditionalInfo, correlationId);
 
             _operationsLogService.AddLog("action order.changeLimits", order.AccountId,
                 new { orderId = orderId, request = request.ToJson() }.ToJson(), "");

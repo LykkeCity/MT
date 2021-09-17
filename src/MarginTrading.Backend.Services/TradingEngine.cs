@@ -1028,7 +1028,7 @@ namespace MarginTrading.Backend.Services
         #endregion
 
 
-        public async Task ChangeOrderAsync(string orderId, decimal price, DateTime? validity, OriginatorType originator,
+        public async Task ChangeOrderAsync(string orderId, decimal price, OriginatorType originator,
             string additionalInfo, string correlationId, bool? forceOpen = null)
         {
             var order = _ordersCache.GetOrderById(orderId);
@@ -1038,7 +1038,6 @@ namespace MarginTrading.Backend.Services
             price = Math.Round(price, assetPair.Accuracy);
 
             _validateOrderService.ValidateOrderPriceChange(order, price);
-            _validateOrderService.ValidateValidity(validity, order.OrderType);
             _validateOrderService.ValidateForceOpenChange(order, forceOpen);
 
             if (order.Price != price)
@@ -1051,21 +1050,6 @@ namespace MarginTrading.Backend.Services
                 {
                     UpdatedProperty = OrderChangedProperty.Price,
                     OldValue = oldPrice.HasValue ? oldPrice.Value.ToString("F5") : string.Empty
-                };
-            
-                _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata));    
-            }
-            
-            if (order.Validity != validity)
-            {
-                var oldValidity = order.Validity;
-            
-                order.ChangeValidity(validity, _dateService.Now(), originator, additionalInfo, correlationId);
-
-                var metadata = new OrderChangedMetadata
-                {
-                    UpdatedProperty = OrderChangedProperty.Validity,
-                    OldValue = oldValidity.HasValue ? oldValidity.Value.ToString("g") : "GTC"
                 };
             
                 _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata));    
@@ -1086,6 +1070,54 @@ namespace MarginTrading.Backend.Services
                 _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata));
             }
 
+            await ExecutePendingOrderIfNeededAsync(order);
+        }
+
+        public async Task ChangeOrderValidityAsync(string orderId, DateTime validity, OriginatorType originator,
+            string additionalInfo, string correlationId)
+        {
+            var order = _ordersCache.GetOrderById(orderId);
+
+            _validateOrderService.ValidateValidity(validity, order.OrderType);
+            
+            if (order.Validity != validity)
+            {
+                var oldValidity = order.Validity;
+            
+                order.ChangeValidity(validity, _dateService.Now(), originator, additionalInfo, correlationId);
+
+                var metadata = new OrderChangedMetadata
+                {
+                    UpdatedProperty = OrderChangedProperty.Validity,
+                    OldValue = oldValidity.HasValue ? oldValidity.Value.ToString("g") : "GTC"
+                };
+            
+                _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata));    
+            }
+            
+            await ExecutePendingOrderIfNeededAsync(order);
+        }
+        
+        public async Task RemoveOrderValidityAsync(string orderId, OriginatorType originator,
+            string additionalInfo, string correlationId)
+        {
+            var order = _ordersCache.GetOrderById(orderId);
+
+            if (order.Validity != null)
+            {
+                var oldValidity = order.Validity;
+            
+                order.ChangeValidity(null, _dateService.Now(), originator, additionalInfo, correlationId);
+
+                var metadata = new OrderChangedMetadata
+                {
+                    UpdatedProperty = OrderChangedProperty.Validity,
+                    OldValue = oldValidity.Value.ToString("g")
+                };
+            
+                _orderChangedEventChannel.SendEvent(this, new OrderChangedEventArgs(order, metadata));    
+            }
+            
             await ExecutePendingOrderIfNeededAsync(order);
         }
 
