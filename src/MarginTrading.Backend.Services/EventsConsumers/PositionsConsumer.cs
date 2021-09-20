@@ -186,7 +186,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                     order.Originator,
                     string.Empty);
 
-                if (closingStarted)
+                if (!closingStarted)
                 {
                     _log.WriteWarning(nameof(MatchOrderOnExistingPositions), order.ToJson(),
                         $"Couldn't start position closing due to: {reasonIfNot}");
