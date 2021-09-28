@@ -30,11 +30,17 @@ namespace MarginTrading.Backend.Core
         Order CancelPendingOrder(string orderId, string additionalInfo, string correlationId,
             string comment = null, OrderCancellationReason reason = OrderCancellationReason.None);
             
-        Task ChangeOrderAsync(string orderId, decimal price, DateTime? validity, OriginatorType originator,
+        Task ChangeOrderAsync(string orderId, decimal price, OriginatorType originator,
             string additionalInfo, string correlationId, bool? forceOpen = null);
             
         (bool WillOpenPosition, decimal ReleasedMargin) MatchOnExistingPositions(Order order);
         
         void ProcessExpiredOrders(DateTime operationIntervalEnd);
+
+        Task ChangeOrderValidityAsync(string orderId, DateTime validity, OriginatorType originator,
+            string additionalInfo, string correlationId);
+
+        Task RemoveOrderValidityAsync(string orderId, OriginatorType originator,
+            string additionalInfo, string correlationId);
     }
 }
