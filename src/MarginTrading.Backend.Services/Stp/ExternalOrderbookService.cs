@@ -306,10 +306,12 @@ namespace MarginTrading.Backend.Services.Stp
                 if (!assetPair.IsSuspended)
                 {
                     assetPair.IsSuspended = true;//todo apply changes to trading engine
-                    _cqrsSender.SendCommandToSettingsService(new SuspendAssetPairCommand
+                    _cqrsSender.SendCommandToSettingsService(new ChangeProductSuspendedStatusCommand()
                     {
-                        AssetPairId = assetPair.Id,
+                        ProductId = assetPair.Id,
                         OperationId = _identityGenerator.GenerateGuid(),
+                        Timestamp = _dateService.Now(),
+                        IsSuspended = true,
                     });
                     
                     _log.Info($"Suspending instrument {assetPair.Id}", context: orderbook.ToContextData()?.ToJson());
@@ -320,10 +322,12 @@ namespace MarginTrading.Backend.Services.Stp
                 if (assetPair.IsSuspended)
                 {
                     assetPair.IsSuspended = false;//todo apply changes to trading engine
-                    _cqrsSender.SendCommandToSettingsService(new UnsuspendAssetPairCommand
+                    _cqrsSender.SendCommandToSettingsService(new ChangeProductSuspendedStatusCommand
                     {
-                        AssetPairId = assetPair.Id,
+                        ProductId = assetPair.Id,
                         OperationId = _identityGenerator.GenerateGuid(),
+                        Timestamp = _dateService.Now(),
+                        IsSuspended = false,
                     });   
                     
                     _log.Info($"Un-suspending instrument {assetPair.Id}", context: orderbook.ToContextData()?.ToJson());

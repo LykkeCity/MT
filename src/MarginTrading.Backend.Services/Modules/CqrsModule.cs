@@ -229,10 +229,7 @@ namespace MarginTrading.Backend.Services.Modules
         private PublishingCommandsDescriptor<IDefaultRoutingRegistration> RegisterDefaultRouting()
         {
             return Register.DefaultRouting
-                .PublishingCommands(
-                    typeof(SuspendAssetPairCommand),
-                    typeof(UnsuspendAssetPairCommand)
-                )
+                .PublishingCommands(typeof(ChangeProductSuspendedStatusCommand))
                 .To(_settings.ContextNames.SettingsService)
                 .With(CommandsRoute)
                 .PublishingCommands(
