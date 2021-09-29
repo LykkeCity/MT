@@ -392,12 +392,19 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     else
                     {
                         var account = _accountsCacheService.Get(executionInfo.Data.AccountId);
-                        if (account.GetAccountLevel() != ValidAccountLevel)
+                        var level = account.GetAccountLevel();
+
+                        await _log.WriteInfoAsync(nameof(SpecialLiquidationCommandsHandler),
+                            nameof(ExecuteSpecialLiquidationOrderCommand),
+                            command.ToJson(),
+                            $"Current account state: {account.ToJson()}, level: {level}");
+
+                        if (level != ValidAccountLevel)
                         {
                             await _log.WriteWarningAsync(
                                 nameof(SpecialLiquidationCommandsHandler),
                                 nameof(ExecuteSpecialLiquidationOrderCommand),
-                                new {accountId = account.Id, accountLevel = account.GetAccountLevel().ToString()}.ToJson(),
+                                new {accountId = account.Id, accountLevel = level.ToString()}.ToJson(),
                                 $"Unable to execute special liquidation since account level is not {ValidAccountLevel.ToString()}.");
                     
                             publisher.PublishEvent(new SpecialLiquidationCancelledEvent()
