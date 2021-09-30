@@ -1,16 +1,18 @@
-﻿// Copyright (c) 2019 Lykke Corp.
+// Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
 using System;
 
-namespace MarginTrading.Backend.Core
+namespace MarginTrading.Backend.Core.Snapshots
 {
     public class TradingEngineSnapshot
     {
         public DateTime TradingDay { get; set; }
 
         public string CorrelationId { get; set; }
-        
+
+        public DateTime Timestamp { get; set; }
+
         public string OrdersJson { get; set; }
 
         public string PositionsJson { get; set; }

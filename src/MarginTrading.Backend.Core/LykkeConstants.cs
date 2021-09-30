@@ -18,6 +18,7 @@ namespace MarginTrading.Backend.Core
 
         public const string StateBlobContainer = "state";
         public const string MigrationsBlobContainer = "migrations";
+        public const string MtCoreSnapshotBlobContainer = "mt_snapshot";
 
         public const string MaintenanceModeRoute = "maintenance";
         

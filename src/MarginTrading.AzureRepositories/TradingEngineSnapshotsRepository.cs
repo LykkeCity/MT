@@ -3,18 +3,21 @@
 
 using System;
 using System.Threading.Tasks;
-using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Snapshots;
 
 namespace MarginTrading.AzureRepositories
 {
     public class TradingEngineSnapshotsRepository : ITradingEngineSnapshotsRepository
     {
-        public Task Add(DateTime tradingDay, string correlationId, DateTime timestamp, string orders, string positions,
-            string accounts,
-            string bestFxPrices, string bestTradingPrices)
+        public Task<TradingEngineSnapshot> GetLastAsync()
         {
-            throw new System.NotImplementedException();
+            throw new NotImplementedException();
+        }
+
+        public Task AddAsync(TradingEngineSnapshot tradingEngineSnapshot)
+        {
+            throw new NotImplementedException();
         }
 
         public Task<TradingEngineSnapshot> Get(string correlationId)
