@@ -8,8 +8,11 @@ using Autofac;
 using Common;
 using Common.Log;
 using Lykke.Common.Chaos;
+using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Publisher;
+using Lykke.RabbitMqBroker.Publisher.Strategies;
 using Lykke.RabbitMqBroker.Subscriber;
+using Lykke.Snow.Common.Correlation.RabbitMq;
 using MarginTrading.Backend.Email;
 using MarginTrading.Backend.Middleware.Validator;
 using MarginTrading.Common.RabbitMq;
@@ -26,6 +29,7 @@ using MarginTrading.Backend.Services.RabbitMq;
 using MarginTrading.Backend.Services.Services;
 using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Common.Services;
+using Microsoft.Extensions.Logging;
 
 namespace MarginTrading.Backend.Modules
 {
@@ -35,13 +39,23 @@ namespace MarginTrading.Backend.Modules
         private readonly MarginTradingSettings _settings;
         private readonly IHostingEnvironment _environment;
         private readonly ILog _log;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly RabbitMqCorrelationManager _correlationManager;
 
-        public BackendServicesModule(MtBackendSettings mtSettings, MarginTradingSettings settings, IHostingEnvironment environment, ILog log)
+        public BackendServicesModule(
+            MtBackendSettings mtSettings,
+            MarginTradingSettings settings,
+            IHostingEnvironment environment,
+            ILog log,
+            ILoggerFactory loggerFactory,
+            RabbitMqCorrelationManager correlationManager)
         {
             _mtSettings = mtSettings;
             _settings = settings;
             _environment = environment;
             _log = log;
+            _loggerFactory = loggerFactory;
+            _correlationManager = correlationManager;
         }
 
         protected override void Load(ContainerBuilder builder)
@@ -152,7 +166,7 @@ namespace MarginTrading.Backend.Modules
 
             foreach (var exchangeName in publishers)
             {
-                var pub = new RabbitMqPublisher<string>(new RabbitMqSubscriptionSettings
+                var pub = new RabbitMqPublisher<string>(_loggerFactory, new RabbitMqSubscriptionSettings
                     {
                         ConnectionString = _settings.MtRabbitMqConnString,
                         ExchangeName = exchangeName
@@ -160,13 +174,12 @@ namespace MarginTrading.Backend.Modules
                     .SetSerializer(bytesSerializer)
                     .SetPublishStrategy(new DefaultFanoutPublishStrategy(new RabbitMqSubscriptionSettings {IsDurable = true}))
                     .DisableInMemoryQueuePersistence()
-                    .SetLogger(_log)
-                    .SetConsole(consoleWriter)
-                    .Start();
+                    .SetWriteHeadersFunc(_correlationManager.BuildCorrelationHeadersIfExists);
+                pub.Start();
 
                 builder.RegisterInstance(pub)
-                    .Named<IMessageProducer<string>>(exchangeName)
-                    .As<IStopable>()
+                    .Named<global::Common.IMessageProducer<string>>(exchangeName)
+                    .As<IStartStop>()
                     .SingleInstance();
             }
         }

@@ -6,57 +6,55 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AzureStorage.Blob;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
-using Lykke.RabbitMq.Azure;
 using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Publisher;
+using Lykke.RabbitMqBroker.Publisher.Serializers;
 using Lykke.RabbitMqBroker.Subscriber;
+using Lykke.RabbitMqBroker.Subscriber.Deserializers;
+using Lykke.RabbitMqBroker.Subscriber.Middleware.ErrorHandling;
 using Lykke.SettingsReader;
+using Lykke.Snow.Common.Correlation.RabbitMq;
+using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 
 namespace MarginTrading.Common.RabbitMq
 {
     public class RabbitMqService : IRabbitMqService, IDisposable
     {
+        private readonly ILoggerFactory _loggerFactory;
         private readonly ILog _logger;
         private readonly string _env;
         private readonly IPublishingQueueRepository _publishingQueueRepository;
         private readonly IConsole _consoleWriter;
+        private readonly RabbitMqCorrelationManager _correlationManager;
 
-        private readonly ConcurrentDictionary<(RabbitMqSubscriptionSettings, int), IStopable> _subscribers =
-            new ConcurrentDictionary<(RabbitMqSubscriptionSettings, int), IStopable>(new SubscriptionSettingsWithNumberEqualityComparer());
+        private readonly ConcurrentDictionary<(RabbitMqSubscriptionSettings, int), IStartStop> _subscribers =
+            new ConcurrentDictionary<(RabbitMqSubscriptionSettings, int), IStartStop>(new SubscriptionSettingsWithNumberEqualityComparer());
 
-        private readonly ConcurrentDictionary<RabbitMqSubscriptionSettings, Lazy<IStopable>> _producers =
-            new ConcurrentDictionary<RabbitMqSubscriptionSettings, Lazy<IStopable>>(
+        private readonly ConcurrentDictionary<RabbitMqSubscriptionSettings, Lazy<IStartStop>> _producers =
+            new ConcurrentDictionary<RabbitMqSubscriptionSettings, Lazy<IStartStop>>(
                 new SubscriptionSettingsEqualityComparer());
 
         //[ItemCanBeNull] private readonly Lazy<MessagePackBlobPublishingQueueRepository> _queueRepository;
 
-        public RabbitMqService(ILog logger, 
+        public RabbitMqService(
+            ILoggerFactory loggerFactory,
+            ILog logger, 
             IConsole consoleWriter, 
             [CanBeNull] IReloadingManager<string> queueRepositoryConnectionString, 
             string env,
-            IPublishingQueueRepository publishingQueueRepository)
+            IPublishingQueueRepository publishingQueueRepository,
+            RabbitMqCorrelationManager correlationManager)
         {
+            _loggerFactory = loggerFactory;
             _logger = logger;
             _env = env;
             _publishingQueueRepository = publishingQueueRepository;
             _consoleWriter = consoleWriter;
-            //_queueRepository = new Lazy<MessagePackBlobPublishingQueueRepository>(() =>
-//            {
-//                if (string.IsNullOrWhiteSpace(queueRepositoryConnectionString?.CurrentValue))
-//                {
-//                    _logger.WriteWarning(nameof(RabbitMqService), "",
-//                        "QueueRepositoryConnectionString is not configured");
-//                    return null;
-//                }
-
-                //var blob = AzureBlobStorage.Create(queueRepositoryConnectionString);
-                //return new MessagePackBlobPublishingQueueRepository(blob);
-            //});
+            _correlationManager = correlationManager;
         }
 
         /// <summary>
@@ -102,7 +100,7 @@ namespace MarginTrading.Common.RabbitMq
             return new MessagePackMessageDeserializer<TMessage>();
         }
 
-        public IMessageProducer<TMessage> GetProducer<TMessage>(RabbitMqSettings settings,
+        public global::Common.IMessageProducer<TMessage> GetProducer<TMessage>(RabbitMqSettings settings,
             IRabbitMqSerializer<TMessage> serializer)
         {
             // on-the fly connection strings switch is not supported currently for rabbitMq
@@ -113,26 +111,26 @@ namespace MarginTrading.Common.RabbitMq
                 IsDurable = settings.IsDurable,
             };
 
-            return (IMessageProducer<TMessage>) _producers.GetOrAdd(subscriptionSettings, CreateProducer).Value;
+            return (global::Common.IMessageProducer<TMessage>) _producers.GetOrAdd(subscriptionSettings, CreateProducer).Value;
 
-            Lazy<IStopable> CreateProducer(RabbitMqSubscriptionSettings s)
+            Lazy<IStartStop> CreateProducer(RabbitMqSubscriptionSettings s)
             {
                 // Lazy ensures RabbitMqPublisher will be created and started only once
                 // https://andrewlock.net/making-getoradd-on-concurrentdictionary-thread-safe-using-lazy/
-                return new Lazy<IStopable>(() =>
+                return new Lazy<IStartStop>(() =>
                 {
-                    var publisher = new RabbitMqPublisher<TMessage>(s);
+                    var publisher = new RabbitMqPublisher<TMessage>(_loggerFactory, s);
 
                     if (s.IsDurable && _publishingQueueRepository != null)
                         publisher.SetQueueRepository(_publishingQueueRepository);
                     else
                         publisher.DisableInMemoryQueuePersistence();
 
-                    return publisher
+                    var result = publisher
                         .SetSerializer(serializer)
-                        .SetLogger(_logger)
-                        .SetConsole(_consoleWriter)
-                        .Start();
+                        .SetWriteHeadersFunc(_correlationManager.BuildCorrelationHeadersIfExists);
+                    result.Start();
+                    return result;
                 });
             }
         }
@@ -154,12 +152,14 @@ namespace MarginTrading.Common.RabbitMq
                     RoutingKey = settings.RoutingKey,
                 };
                 
-                var rabbitMqSubscriber = new RabbitMqSubscriber<TMessage>(subscriptionSettings,
-                        new DefaultErrorHandlingStrategy(_logger, subscriptionSettings))
+                var rabbitMqSubscriber = new RabbitMqSubscriber<TMessage>(
+                        _loggerFactory.CreateLogger<RabbitMqSubscriber<TMessage>>(),
+                        subscriptionSettings)
                     .SetMessageDeserializer(deserializer)
                     .Subscribe(handler)
-                    .SetLogger(_logger)
-                    .SetConsole(_consoleWriter);
+                    .SetReadHeadersAction(_correlationManager.FetchCorrelationIfExists)
+                    .UseMiddleware(new ExceptionSwallowMiddleware<TMessage>(
+                        _loggerFactory.CreateLogger<ExceptionSwallowMiddleware<TMessage>>()));
 
                 if (!_subscribers.TryAdd((subscriptionSettings, consumerNumber), rabbitMqSubscriber))
                 {

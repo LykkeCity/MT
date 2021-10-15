@@ -10,6 +10,7 @@ using Lykke.MarginTrading.OrderBookService.Contracts;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.EmailSender;
 using Lykke.SettingsReader;
+using Lykke.Snow.Common.Correlation.Http;
 using Lykke.Snow.Common.Startup;
 using Lykke.Snow.Mdm.Contracts.Api;
 using MarginTrading.AccountsManagement.Contracts;
@@ -27,10 +28,12 @@ namespace MarginTrading.Backend.Modules
     public class ExternalServicesModule : Module
     {
         private readonly IReloadingManager<MtBackendSettings> _settings;
+        private readonly HttpCorrelationHandler _correlationHandler;
 
-        public ExternalServicesModule(IReloadingManager<MtBackendSettings> settings)
+        public ExternalServicesModule(IReloadingManager<MtBackendSettings> settings, HttpCorrelationHandler correlationHandler)
         {
             _settings = settings;
+            _correlationHandler = correlationHandler;
         }
 
         protected override void Load(ContainerBuilder builder)
@@ -39,6 +42,7 @@ namespace MarginTrading.Backend.Modules
             {
                 var gavelClientGenerator = HttpClientGenerator
                     .BuildForUrl(_settings.CurrentValue.MtStpExchangeConnectorClient.ServiceUrl)
+                    .WithAdditionalDelegatingHandler(_correlationHandler)
                     .WithServiceName<LykkeErrorResponse>(
                         $"Gavel [{_settings.CurrentValue.MtStpExchangeConnectorClient.ServiceUrl}]")
                     .WithApiKey(_settings.CurrentValue.MtStpExchangeConnectorClient.ApiKey)
@@ -94,6 +98,7 @@ namespace MarginTrading.Backend.Modules
 
             var settingsClientGeneratorBuilder = HttpClientGenerator
                 .BuildForUrl(_settings.CurrentValue.SettingsServiceClient.ServiceUrl)
+                .WithAdditionalDelegatingHandler(_correlationHandler)
                 .WithServiceName<LykkeErrorResponse>(
                     $"MT Settings [{_settings.CurrentValue.SettingsServiceClient.ServiceUrl}]")
                 .WithRetriesStrategy(new LinearRetryStrategy(TimeSpan.FromMilliseconds(300), 3));
@@ -136,6 +141,7 @@ namespace MarginTrading.Backend.Modules
 
             var accountsClientGeneratorBuilder = HttpClientGenerator
                 .BuildForUrl(_settings.CurrentValue.AccountsManagementServiceClient.ServiceUrl)
+                .WithAdditionalDelegatingHandler(_correlationHandler)
                 .WithServiceName<LykkeErrorResponse>(
                     $"MT Account Management [{_settings.CurrentValue.AccountsManagementServiceClient.ServiceUrl}]");
             
@@ -155,6 +161,7 @@ namespace MarginTrading.Backend.Modules
             //for feature management
             var mdmGenerator = HttpClientGenerator
                 .BuildForUrl(_settings.CurrentValue.MdmServiceClient.ServiceUrl)
+                .WithAdditionalDelegatingHandler(_correlationHandler)
                 .WithServiceName<LykkeErrorResponse>(
                     $"Mdm [{_settings.CurrentValue.MdmServiceClient.ServiceUrl}]");
 
@@ -173,6 +180,7 @@ namespace MarginTrading.Backend.Modules
 
             var orderBookServiceClientGeneratorBuilder = HttpClientGenerator
                 .BuildForUrl(_settings.CurrentValue.OrderBookServiceClient.ServiceUrl)
+                .WithAdditionalDelegatingHandler(_correlationHandler)
                 .WithServiceName<LykkeErrorResponse>(
                     $"MT OrderBook Service [{_settings.CurrentValue.OrderBookServiceClient.ServiceUrl}]");
             

@@ -6,6 +6,7 @@ using Common.Log;
 using Autofac.Features.Variance;
 using Lykke.RabbitMqBroker.Publisher;
 using Lykke.SettingsReader;
+using Lykke.Snow.Common.Correlation.RabbitMq;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Orderbooks;
@@ -25,6 +26,7 @@ using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Backend.Services.Workflow.Liquidation;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services.Telemetry;
+using Microsoft.Extensions.Logging;
 
 namespace MarginTrading.Backend.Services.Modules
 {
@@ -154,11 +156,14 @@ namespace MarginTrading.Backend.Services.Modules
 			builder.Register(c =>
 				{
 					var settings = c.Resolve<IReloadingManager<MarginTradingSettings>>();
-					return new RabbitMqService(c.Resolve<ILog>(),
+					return new RabbitMqService(
+						c.Resolve<ILoggerFactory>(),
+						c.Resolve<ILog>(),
 						c.Resolve<IConsole>(),
 						settings.Nested(s => s.Db.StateConnString),
 						settings.CurrentValue.Env,
-						c.Resolve<IPublishingQueueRepository>());
+						c.Resolve<IPublishingQueueRepository>(),
+						c.Resolve<RabbitMqCorrelationManager>());
 				})
 				.As<IRabbitMqService>()
 				.SingleInstance();

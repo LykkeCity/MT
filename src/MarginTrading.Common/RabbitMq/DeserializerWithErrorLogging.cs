@@ -5,6 +5,7 @@ using System;
 using System.Text;
 using Common.Log;
 using Lykke.RabbitMqBroker.Subscriber;
+using Lykke.RabbitMqBroker.Subscriber.Deserializers;
 
 namespace MarginTrading.Common.RabbitMq
 {

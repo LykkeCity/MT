@@ -19,6 +19,7 @@ using Lykke.Messaging;
 using Lykke.Messaging.Contract;
 using Lykke.Messaging.RabbitMq;
 using Lykke.Messaging.Serialization;
+using Lykke.Snow.Common.Correlation.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.Backend.Contracts.Events;
@@ -114,8 +115,11 @@ namespace MarginTrading.Backend.Services.Modules
             if (fakeGavel != null)
                 registrations.Add(fakeGavel);
 
+            var correlationManager = ctx.Resolve<CqrsCorrelationManager>();
             var engine = new CqrsEngine(_log, ctx.Resolve<IDependencyResolver>(), messagingEngine,
                 new DefaultEndpointProvider(), true, registrations.ToArray());
+            engine.SetReadHeadersAction(correlationManager.FetchCorrelationIfExists);
+            engine.SetWriteHeadersFunc(correlationManager.BuildCorrelationHeadersIfExists);
             engine.StartPublishers();
 
             return engine;

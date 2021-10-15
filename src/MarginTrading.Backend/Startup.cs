@@ -20,6 +20,9 @@ using Lykke.Logs.Serilog;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
 using Lykke.SlackNotifications;
+using Lykke.Snow.Common.Correlation;
+using Lykke.Snow.Common.Correlation.Http;
+using Lykke.Snow.Common.Correlation.RabbitMq;
 using Lykke.Snow.Common.Startup.ApiKey;
 using Lykke.Snow.Common.Startup.Hosting;
 using Lykke.Snow.Common.Startup.Log;
@@ -82,6 +85,7 @@ namespace MarginTrading.Backend
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCorrelation();
             services.AddApplicationInsightsTelemetry();
 
             services.AddSingleton(Configuration);
@@ -122,7 +126,7 @@ namespace MarginTrading.Backend
 
             builder.RegisterInstance(deduplicationService).AsSelf().As<IDisposable>().SingleInstance();
 
-            RegisterModules(builder, _mtSettingsManager, Environment);
+            RegisterModules(builder, _mtSettingsManager, Environment, ApplicationContainer);
         }
 
         [UsedImplicitly]
@@ -149,6 +153,7 @@ namespace MarginTrading.Backend
                 app.UseHsts();
             }
 
+            app.UseCorrelation();
             app.UseMiddleware<GlobalErrorHandlerMiddleware>();
             app.UseMiddleware<MaintenanceModeMiddleware>();
 
@@ -198,7 +203,8 @@ namespace MarginTrading.Backend
         private static void RegisterModules(
             ContainerBuilder builder,
             IReloadingManager<MtBackendSettings> mtSettings,
-            IHostingEnvironment environment)
+            IHostingEnvironment environment,
+            ILifetimeScope applicationContainer)
         {
             var settings = mtSettings.Nested(x => x.MtBackend);
 
@@ -213,9 +219,11 @@ namespace MarginTrading.Backend
                 mtSettings.CurrentValue,
                 settings.CurrentValue,
                 environment,
-                LogLocator.CommonLog));
+                LogLocator.CommonLog,
+                applicationContainer.Resolve<ILoggerFactory>(),
+                applicationContainer.Resolve<RabbitMqCorrelationManager>()));
             builder.RegisterModule(new MarginTradingCommonModule());
-            builder.RegisterModule(new ExternalServicesModule(mtSettings));
+            builder.RegisterModule(new ExternalServicesModule(mtSettings, applicationContainer.Resolve<HttpCorrelationHandler>()));
             builder.RegisterModule(new BackendMigrationsModule());
             builder.RegisterModule(new CqrsModule(settings.CurrentValue.Cqrs, LogLocator.CommonLog, settings.CurrentValue));
 
