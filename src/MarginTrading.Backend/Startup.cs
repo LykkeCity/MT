@@ -126,7 +126,7 @@ namespace MarginTrading.Backend
 
             builder.RegisterInstance(deduplicationService).AsSelf().As<IDisposable>().SingleInstance();
 
-            RegisterModules(builder, _mtSettingsManager, Environment, ApplicationContainer);
+            RegisterModules(builder, _mtSettingsManager, Environment);
         }
 
         [UsedImplicitly]
@@ -203,8 +203,7 @@ namespace MarginTrading.Backend
         private static void RegisterModules(
             ContainerBuilder builder,
             IReloadingManager<MtBackendSettings> mtSettings,
-            IHostingEnvironment environment,
-            ILifetimeScope applicationContainer)
+            IHostingEnvironment environment)
         {
             var settings = mtSettings.Nested(x => x.MtBackend);
 
@@ -219,11 +218,9 @@ namespace MarginTrading.Backend
                 mtSettings.CurrentValue,
                 settings.CurrentValue,
                 environment,
-                LogLocator.CommonLog,
-                applicationContainer.Resolve<ILoggerFactory>(),
-                applicationContainer.Resolve<RabbitMqCorrelationManager>()));
+                LogLocator.CommonLog));
             builder.RegisterModule(new MarginTradingCommonModule());
-            builder.RegisterModule(new ExternalServicesModule(mtSettings, applicationContainer.Resolve<HttpCorrelationHandler>()));
+            builder.RegisterModule(new ExternalServicesModule(mtSettings));
             builder.RegisterModule(new BackendMigrationsModule());
             builder.RegisterModule(new CqrsModule(settings.CurrentValue.Cqrs, LogLocator.CommonLog, settings.CurrentValue));
 

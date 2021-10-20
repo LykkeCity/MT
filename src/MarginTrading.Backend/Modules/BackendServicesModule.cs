@@ -37,23 +37,17 @@ namespace MarginTrading.Backend.Modules
         private readonly MarginTradingSettings _settings;
         private readonly IHostingEnvironment _environment;
         private readonly ILog _log;
-        private readonly ILoggerFactory _loggerFactory;
-        private readonly RabbitMqCorrelationManager _correlationManager;
 
         public BackendServicesModule(
             MtBackendSettings mtSettings,
             MarginTradingSettings settings,
             IHostingEnvironment environment,
-            ILog log,
-            ILoggerFactory loggerFactory,
-            RabbitMqCorrelationManager correlationManager)
+            ILog log)
         {
             _mtSettings = mtSettings;
             _settings = settings;
             _environment = environment;
             _log = log;
-            _loggerFactory = loggerFactory;
-            _correlationManager = correlationManager;
         }
 
         protected override void Load(ContainerBuilder builder)
@@ -164,18 +158,21 @@ namespace MarginTrading.Backend.Modules
 
             foreach (var exchangeName in publishers)
             {
-                var pub = new RabbitMqPublisher<string>(_loggerFactory, new RabbitMqSubscriptionSettings
+                builder
+                    .Register(ctx =>
                     {
-                        ConnectionString = _settings.MtRabbitMqConnString,
-                        ExchangeName = exchangeName
+                        var pub = new RabbitMqPublisher<string>(ctx.Resolve<ILoggerFactory>(), new RabbitMqSubscriptionSettings
+                            {
+                                ConnectionString = _settings.MtRabbitMqConnString,
+                                ExchangeName = exchangeName
+                            })
+                            .SetSerializer(bytesSerializer)
+                            .SetPublishStrategy(new DefaultFanoutPublishStrategy(new RabbitMqSubscriptionSettings {IsDurable = true}))
+                            .DisableInMemoryQueuePersistence()
+                            .SetWriteHeadersFunc(ctx.Resolve<RabbitMqCorrelationManager>().BuildCorrelationHeadersIfExists);
+                        pub.Start();
+                        return pub;
                     })
-                    .SetSerializer(bytesSerializer)
-                    .SetPublishStrategy(new DefaultFanoutPublishStrategy(new RabbitMqSubscriptionSettings {IsDurable = true}))
-                    .DisableInMemoryQueuePersistence()
-                    .SetWriteHeadersFunc(_correlationManager.BuildCorrelationHeadersIfExists);
-                pub.Start();
-
-                builder.RegisterInstance(pub)
                     .Named<IMessageProducer<string>>(exchangeName)
                     .As<IStartStop>()
                     .SingleInstance();
