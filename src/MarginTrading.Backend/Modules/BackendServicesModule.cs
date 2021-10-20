@@ -5,13 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Autofac;
-using Common;
 using Common.Log;
 using Lykke.Common.Chaos;
 using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Publisher;
 using Lykke.RabbitMqBroker.Publisher.Strategies;
-using Lykke.RabbitMqBroker.Subscriber;
 using Lykke.Snow.Common.Correlation.RabbitMq;
 using MarginTrading.Backend.Email;
 using MarginTrading.Backend.Middleware.Validator;
@@ -178,7 +176,7 @@ namespace MarginTrading.Backend.Modules
                 pub.Start();
 
                 builder.RegisterInstance(pub)
-                    .Named<global::Common.IMessageProducer<string>>(exchangeName)
+                    .Named<IMessageProducer<string>>(exchangeName)
                     .As<IStartStop>()
                     .SingleInstance();
             }

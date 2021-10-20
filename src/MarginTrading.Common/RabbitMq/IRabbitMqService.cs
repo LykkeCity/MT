@@ -3,7 +3,7 @@
 
 using System;
 using System.Threading.Tasks;
-using Common;
+using Lykke.RabbitMqBroker.Publisher;
 using Lykke.RabbitMqBroker.Publisher.Serializers;
 using Lykke.RabbitMqBroker.Subscriber.Deserializers;
 

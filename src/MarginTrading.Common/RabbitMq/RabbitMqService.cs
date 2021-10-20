@@ -6,7 +6,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.RabbitMqBroker;
@@ -100,7 +99,7 @@ namespace MarginTrading.Common.RabbitMq
             return new MessagePackMessageDeserializer<TMessage>();
         }
 
-        public global::Common.IMessageProducer<TMessage> GetProducer<TMessage>(RabbitMqSettings settings,
+        public IMessageProducer<TMessage> GetProducer<TMessage>(RabbitMqSettings settings,
             IRabbitMqSerializer<TMessage> serializer)
         {
             // on-the fly connection strings switch is not supported currently for rabbitMq
@@ -111,7 +110,7 @@ namespace MarginTrading.Common.RabbitMq
                 IsDurable = settings.IsDurable,
             };
 
-            return (global::Common.IMessageProducer<TMessage>) _producers.GetOrAdd(subscriptionSettings, CreateProducer).Value;
+            return (IMessageProducer<TMessage>) _producers.GetOrAdd(subscriptionSettings, CreateProducer).Value;
 
             Lazy<IStartStop> CreateProducer(RabbitMqSubscriptionSettings s)
             {
