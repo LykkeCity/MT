@@ -303,7 +303,9 @@ namespace MarginTrading.Backend.Services.Modules
                     typeof(ExecuteSpecialLiquidationOrderCommand),
                     typeof(ExecuteSpecialLiquidationOrdersInternalCommand),
                     typeof(GetPriceForSpecialLiquidationTimeoutInternalCommand),
-                    typeof(ResumeLiquidationInternalCommand)
+                    typeof(ResumeLiquidationInternalCommand),
+                    typeof(CancelSpecialLiquidationCommand),
+                    typeof(ClosePositionsRegularFlowCommand)
                 )
                 .To(_settings.ContextNames.TradingEngine)
                 .With(CommandsRoute)
@@ -331,7 +333,9 @@ namespace MarginTrading.Backend.Services.Modules
                     typeof(GetPriceForSpecialLiquidationTimeoutInternalCommand),
                     typeof(ExecuteSpecialLiquidationOrderCommand),
                     typeof(FailSpecialLiquidationInternalCommand),
-                    typeof(ExecuteSpecialLiquidationOrdersInternalCommand)
+                    typeof(ExecuteSpecialLiquidationOrdersInternalCommand),
+                    typeof(CancelSpecialLiquidationCommand),
+                    typeof(ClosePositionsRegularFlowCommand)
                 )
                 .On(CommandsRoute)
                 .WithCommandsHandler<SpecialLiquidationCommandsHandler>()

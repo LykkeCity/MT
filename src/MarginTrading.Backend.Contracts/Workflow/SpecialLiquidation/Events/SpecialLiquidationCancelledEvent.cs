@@ -29,5 +29,11 @@ namespace MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Events
         /// </summary>
         [Key(2)]
         public string Reason { get; set; }
+        
+        /// <summary>
+        /// If positions needs to be closed within regular flow
+        /// </summary>
+        [Key(3)]
+        public bool ClosePositions { get; set; }
     }
 }

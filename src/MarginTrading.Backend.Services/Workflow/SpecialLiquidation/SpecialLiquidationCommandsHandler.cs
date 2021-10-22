@@ -25,6 +25,7 @@ using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Events;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
+using MoreLinq;
 using OrderType = MarginTrading.Backend.Core.Orders.OrderType;
 
 namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
@@ -34,7 +35,6 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
     {
         private readonly ITradingEngine _tradingEngine;
         private readonly IDateService _dateService;
-        private readonly IOrderReader _orderReader;
         private readonly IChaosKitty _chaosKitty;
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
         private readonly ILog _log;
@@ -44,13 +44,13 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private readonly IExchangeConnectorClient _exchangeConnectorClient;
         private readonly IIdentityGenerator _identityGenerator;
         private readonly IAccountsCacheService _accountsCacheService;
-        
+        private readonly OrdersCache _ordersCache;
+
         private const AccountLevel ValidAccountLevel = AccountLevel.StopOut;
 
         public SpecialLiquidationCommandsHandler(
             ITradingEngine tradingEngine,
             IDateService dateService,
-            IOrderReader orderReader,
             IChaosKitty chaosKitty,
             IOperationExecutionInfoRepository operationExecutionInfoRepository,
             ILog log,
@@ -59,11 +59,11 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             IAssetPairDayOffService assetPairDayOffService,
             IExchangeConnectorClient exchangeConnectorClient,
             IIdentityGenerator identityGenerator,
-            IAccountsCacheService accountsCacheService)
+            IAccountsCacheService accountsCacheService,
+            OrdersCache ordersCache)
         {
             _tradingEngine = tradingEngine;
             _dateService = dateService;
-            _orderReader = orderReader;
             _chaosKitty = chaosKitty;
             _operationExecutionInfoRepository = operationExecutionInfoRepository;
             _log = log;
@@ -73,6 +73,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             _exchangeConnectorClient = exchangeConnectorClient;
             _identityGenerator = identityGenerator;
             _accountsCacheService = accountsCacheService;
+            _ordersCache = ordersCache;
         }
         
         [UsedImplicitly]
@@ -91,7 +92,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             }
             
             //validate the list of positions contain only the same instrument
-            var positions = _orderReader.GetPositions().Where(x => command.PositionIds.Contains(x.Id)).ToList();
+            var positions = _ordersCache.GetPositions().Where(x => command.PositionIds.Contains(x.Id)).ToList();
 
             if (!string.IsNullOrEmpty(command.AccountId))
             {
@@ -236,7 +237,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 return;
             }
 
-            var openedPositions = _orderReader.GetPositions().Where(x => x.AssetPairId == command.Instrument).ToList();
+            var openedPositions = _ordersCache.GetPositions().Where(x => x.AssetPairId == command.Instrument).ToList();
 
             if (!openedPositions.Any())
             {
@@ -587,6 +588,57 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
 
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }
+        }
+
+        [UsedImplicitly]
+        private async Task Handle(CancelSpecialLiquidationCommand command, IEventPublisher publisher)
+        {
+            var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
+                operationName: SpecialLiquidationSaga.OperationName,
+                id: command.OperationId);
+            
+            if (executionInfo?.Data == null)
+            {
+                return;
+            }
+
+            // to be on the safe side revert back each affected position state
+            _ordersCache.Positions
+                .GetPositionsByAccountIds(executionInfo.Data.AccountId)
+                .Where(p => executionInfo.Data.PositionIds.Contains(p.Id))
+                .Where(p => p.Status == PositionStatus.Closing)
+                .ForEach(p => p.CancelClosing(_dateService.Now()));
+            
+            _chaosKitty.Meow(command.OperationId);
+            
+            publisher.PublishEvent(new SpecialLiquidationCancelledEvent
+            {
+                OperationId = command.OperationId,
+                CreationTime = _dateService.Now(),
+                Reason = command.Reason,
+                // unconditionally closing positions since this command handler is used for single case so far 
+                ClosePositions = true,
+            });
+        }
+
+        [UsedImplicitly]
+        private async Task Handle(ClosePositionsRegularFlowCommand command, IEventPublisher publisher)
+        {
+            var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
+                operationName: SpecialLiquidationSaga.OperationName,
+                id: command.OperationId);
+            
+            if (executionInfo?.Data == null)
+            {
+                return;
+            }
+
+            var positions = _ordersCache.Positions
+                .GetPositionsByAccountIds(executionInfo.Data.AccountId)
+                .Where(p => executionInfo.Data.PositionIds.Contains(p.Id))
+                .ToList();
+
+            await _tradingEngine.ClosePositionsGroupAsync(positions, command.OperationId, OriginatorType.System);
         }
 
         private bool TryGetExchangeNameFromPositions(IEnumerable<Position> positions, out string externalProviderId)
