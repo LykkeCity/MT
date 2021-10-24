@@ -111,7 +111,6 @@ namespace MarginTrading.Backend.Services.Mappers
                 RelatedOrderInfos = order.RelatedOrders.Select(Map).Where(o => o != null).ToList(),
                 TradingConditionId = order.TradingConditionId,
                 AdditionalInfo = order.AdditionalInfo,
-                CorrelationId = order.CorrelationId,
                 PendingOrderRetriesCount = order.PendingOrderRetriesCount,
                 TrailingDistance = order.TrailingDistance,
                 HasOnBehalf = order.HasOnBehalf,

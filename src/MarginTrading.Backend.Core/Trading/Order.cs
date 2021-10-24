@@ -302,15 +302,6 @@ namespace MarginTrading.Backend.Core.Trading
         /// </summary>
         [JsonProperty]
         public decimal? TrailingDistance { get; private set; }
-        
-        /// <summary>
-        /// The correlation identifier.
-        /// In every operation that results in the creation of a new message the correlationId should be copied from
-        /// the inbound message to the outbound message. This facilitates tracking of an operation through the system.
-        /// If there is no inbound identifier then one should be created eg. on the service layer boundary (API).  
-        /// </summary>
-        [JsonProperty]
-        public string CorrelationId { get; private set; }
 
         [JsonProperty]
         public List<string> PositionsToBeClosed
@@ -363,7 +354,7 @@ namespace MarginTrading.Backend.Core.Trading
             string legalEntity, bool forceOpen, OrderType orderType, string parentOrderId, string parentPositionId, 
             OriginatorType originator, decimal equivalentRate, decimal fxRate, 
             string fxAssetPairId, FxToAssetPairDirection fxToAssetPairDirection, OrderStatus status, 
-            string additionalInfo, string correlationId, List<string> positionsToBeClosed = null, 
+            string additionalInfo, List<string> positionsToBeClosed = null, 
             string externalProviderId = null)
         {
             Id = id;
@@ -393,7 +384,6 @@ namespace MarginTrading.Backend.Core.Trading
             Direction = volume.GetOrderDirection();
             Status = status;
             AdditionalInfo = additionalInfo;
-            CorrelationId = correlationId;
             _positionsToBeClosed = positionsToBeClosed?.Distinct().ToList() ?? (string.IsNullOrEmpty(parentPositionId)
                                        ? new List<string>()
                                        : new List<string> {parentPositionId});
@@ -407,7 +397,7 @@ namespace MarginTrading.Backend.Core.Trading
         #region Actions
 
         public void ChangePrice(decimal newPrice, DateTime dateTime, OriginatorType originator, string additionalInfo,
-            string correlationId, bool shouldUpdateTrailingDistance = false)
+            bool shouldUpdateTrailingDistance = false)
         {
             if (OrderType == OrderType.TrailingStop && shouldUpdateTrailingDistance)
             {
@@ -418,33 +408,28 @@ namespace MarginTrading.Backend.Core.Trading
             Price = newPrice;
             Originator = originator;
             AdditionalInfo = additionalInfo ?? AdditionalInfo;
-            CorrelationId = correlationId;
             SetExecutionSortRank();
         }
         
-        public void ChangeValidity(DateTime? newValidity, DateTime dateTime, OriginatorType originator, string additionalInfo,
-            string correlationId)
+        public void ChangeValidity(DateTime? newValidity, DateTime dateTime, OriginatorType originator, string additionalInfo)
         {
             LastModified = dateTime;
             Validity = newValidity;
             Originator = originator;
             AdditionalInfo = additionalInfo ?? AdditionalInfo;
-            CorrelationId = correlationId;
         }
 
         public void FixValidity(DateTime? newValidity)
         {
-            ChangeValidity(newValidity, LastModified, Originator, AdditionalInfo, CorrelationId);
+            ChangeValidity(newValidity, LastModified, Originator, AdditionalInfo);
         }
         
-        public void ChangeForceOpen(bool newForceOpen, DateTime dateTime, OriginatorType originator, string additionalInfo,
-            string correlationId)
+        public void ChangeForceOpen(bool newForceOpen, DateTime dateTime, OriginatorType originator, string additionalInfo)
         {
             LastModified = dateTime;
             ForceOpen = newForceOpen;
             Originator = originator;
             AdditionalInfo = additionalInfo ?? AdditionalInfo;
-            CorrelationId = correlationId;
         }
         
         public void ChangeVolume(decimal newVolume, DateTime dateTime, OriginatorType originator)
@@ -605,14 +590,13 @@ namespace MarginTrading.Backend.Core.Trading
             });
         }
 
-        public void Cancel(DateTime dateTime, string additionalInfo, string correlationId)
+        public void Cancel(DateTime dateTime, string additionalInfo)
         {
             ChangeState(OrderCommand.Cancel, () =>
             {
                 Canceled = dateTime;
                 LastModified = dateTime;
                 AdditionalInfo = additionalInfo ?? AdditionalInfo;
-                CorrelationId = correlationId;
             });
         }
 

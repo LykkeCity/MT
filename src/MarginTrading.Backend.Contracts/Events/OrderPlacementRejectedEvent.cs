@@ -18,7 +18,7 @@ namespace MarginTrading.Backend.Contracts.Events
         /// Id of the process which caused parameter change.
         /// </summary>
         [Key(0)]
-        public string CorrelationId { get; set; }
+        public string CorrelationIdDeprecated { get; set; }
         
         /// <summary>
         /// Time of event generation.

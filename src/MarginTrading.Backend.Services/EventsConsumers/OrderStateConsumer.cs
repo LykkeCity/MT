@@ -44,7 +44,6 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 case OrderUpdateType.Reject:
                     CancelRelatedOrders(
                         ea.Order.RelatedOrders,
-                        ea.Order.CorrelationId,
                         OrderCancellationReason.BaseOrderCancelled);
                     RemoveRelatedOrderFromParent(ea.Order);
                     break;
@@ -61,8 +60,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
                 ea.ActivitiesMetadata);
         }
         
-        private void CancelRelatedOrders(List<RelatedOrderInfo> relatedOrderInfos, string correlationId,
-            OrderCancellationReason reason)
+        private void CancelRelatedOrders(List<RelatedOrderInfo> relatedOrderInfos, OrderCancellationReason reason)
         {
             var metadata = new OrderCancelledMetadata
             {
@@ -73,12 +71,12 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             {
                 if (_ordersCache.Inactive.TryPopById(relatedOrderInfo.Id, out var inactiveRelatedOrder))
                 {
-                    inactiveRelatedOrder.Cancel(_dateService.Now(), null, correlationId);
+                    inactiveRelatedOrder.Cancel(_dateService.Now(), null);
                     _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(inactiveRelatedOrder, metadata));
                 } 
                 else if (_ordersCache.Active.TryPopById(relatedOrderInfo.Id, out var activeRelatedOrder))
                 {
-                    activeRelatedOrder.Cancel(_dateService.Now(), null, correlationId);
+                    activeRelatedOrder.Cancel(_dateService.Now(), null);
                     _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(activeRelatedOrder, metadata));
                 }
             }

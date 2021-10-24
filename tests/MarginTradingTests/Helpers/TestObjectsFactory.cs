@@ -29,7 +29,7 @@ namespace MarginTradingTests.Helpers
             return new Order(Guid.NewGuid().ToString("N"), 0, assetPairId, volume, created.Value, created.Value,
                 validity, account.Id, tradingConditionId, account.BaseAssetId, price, "EUR", fillType,
                 null, "LYKKETEST", forceOpen, orderType, parentOrderId, parentPositionId, OriginatorType.Investor, 1,
-                1, assetPairId, FxToAssetPairDirection.Straight, OrderStatus.Placed, null, Guid.NewGuid().ToString());
+                1, assetPairId, FxToAssetPairDirection.Straight, OrderStatus.Placed, null);
         }//todo assetPairId is used as FxAssetPairId which is not very correct
     }
 }

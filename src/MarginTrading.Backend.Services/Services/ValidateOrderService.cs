@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Lykke.Snow.Common.Correlation;
 using Lykke.Snow.Mdm.Contracts.BrokerFeatures;
 using MarginTrading.AccountsManagement.Contracts.Models.AdditionalInfo;
 using MarginTrading.Backend.Contracts.Orders;
@@ -43,6 +44,7 @@ namespace MarginTrading.Backend.Services
         private readonly MarginTradingSettings _marginSettings;
         private readonly ICfdCalculatorService _cfdCalculatorService;
         private readonly IFeatureManager _featureManager;
+        private readonly CorrelationContextAccessor _correlationContextAccessor;
 
         public ValidateOrderService(
             IQuoteCacheService quoteCashService,
@@ -56,7 +58,8 @@ namespace MarginTrading.Backend.Services
             IDateService dateService,
             MarginTradingSettings marginSettings,
             ICfdCalculatorService cfdCalculatorService, 
-            IFeatureManager featureManager)
+            IFeatureManager featureManager,
+            CorrelationContextAccessor correlationContextAccessor)
         {
             _quoteCashService = quoteCashService;
             _accountUpdateService = accountUpdateService;
@@ -70,6 +73,7 @@ namespace MarginTrading.Backend.Services
             _marginSettings = marginSettings;
             _cfdCalculatorService = cfdCalculatorService;
             _featureManager = featureManager;
+            _correlationContextAccessor = correlationContextAccessor;
         }
         
         
@@ -139,17 +143,6 @@ namespace MarginTrading.Backend.Services
                     $"The minimum volume of a single order is limited to {tradingInstrument.DealMinLimit} {tradingInstrument.Instrument}.");
             }
 
-            //set special account-quote instrument
-//            if (_assetPairsCache.TryGetAssetPairQuoteSubst(order.AccountAssetId, order.Instrument,
-//                    order.LegalEntity, out var substAssetPair))
-//            {
-//                order.MarginCalcInstrument = substAssetPair.Id;
-//            }
-            if (string.IsNullOrWhiteSpace(request.CorrelationId))
-            {
-                request.CorrelationId = _identityGenerator.GenerateGuid();
-            }
-
             #endregion
 
             var equivalentSettings = GetReportingEquivalentPricesSettings(account.LegalEntity);
@@ -179,7 +172,7 @@ namespace MarginTrading.Backend.Services
                 string.Empty, account.LegalEntity, request.ForceOpen, request.Type.ToType<OrderType>(),
                 request.ParentOrderId, null, originator, initialParameters.EquivalentPrice,
                 initialParameters.FxPrice, initialParameters.FxAssetPairId, initialParameters.FxToAssetPairDirection,
-                OrderStatus.Placed, request.AdditionalInfo, request.CorrelationId);
+                OrderStatus.Placed, request.AdditionalInfo);
 
             ValidateBaseOrderPrice(baseOrder, baseOrder.Price);
 
@@ -257,8 +250,10 @@ namespace MarginTrading.Backend.Services
 
             if (!productComplexityConfimationReceived)
             {
+                // TODO: remove correlation id after it included by default in logging subsystem
+                var correlationId = _correlationContextAccessor.CorrelationContext?.CorrelationId;
                 throw new ValidateOrderException(OrderRejectReason.AccountInvalidState,
-                    $"Product complexity warning not received for order with correlation {order.CorrelationId}, placed by account {account.Id}");
+                    $"Product complexity warning not received for order with correlation {correlationId}, placed by account {account.Id}");
             }
         }
 
@@ -376,8 +371,7 @@ namespace MarginTrading.Backend.Services
                     parentOrder.EquivalentAsset, OrderFillType.FillOrKill, string.Empty, parentOrder.LegalEntity, false,
                     orderType, parentOrder.Id, null, originator, initialParameters.EquivalentPrice,
                     initialParameters.FxPrice, initialParameters.FxAssetPairId,
-                    initialParameters.FxToAssetPairDirection, OrderStatus.Placed, request.AdditionalInfo,
-                    request.CorrelationId);
+                    initialParameters.FxToAssetPairDirection, OrderStatus.Placed, request.AdditionalInfo);
             } 
             else if (!string.IsNullOrEmpty(request.PositionId))
             {
@@ -396,7 +390,7 @@ namespace MarginTrading.Backend.Services
                     OrderFillType.FillOrKill, string.Empty, position.LegalEntity, false, orderType, null, position.Id,
                     originator, initialParameters.EquivalentPrice, initialParameters.FxPrice,
                     initialParameters.FxAssetPairId, initialParameters.FxToAssetPairDirection, OrderStatus.Placed,
-                    request.AdditionalInfo, request.CorrelationId);
+                    request.AdditionalInfo);
             }
 
             if (order == null)

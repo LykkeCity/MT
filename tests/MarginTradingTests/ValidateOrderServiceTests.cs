@@ -58,7 +58,6 @@ namespace MarginTradingTests
             var request = new OrderPlaceRequest
             {
                 AccountId = Accounts[0].Id,
-                CorrelationId = Guid.NewGuid().ToString(),
                 Direction = OrderDirectionContract.Buy,
                 InstrumentId = instrument,
                 Type = OrderTypeContract.Market,
@@ -142,7 +141,6 @@ namespace MarginTradingTests
             var request = new OrderPlaceRequest
             {
                 AccountId = Accounts[0].Id,
-                CorrelationId = Guid.NewGuid().ToString(),
                 Direction = OrderDirectionContract.Buy,
                 InstrumentId = instrument,
                 Type = OrderTypeContract.Market,
@@ -165,7 +163,6 @@ namespace MarginTradingTests
             var request = new OrderPlaceRequest
             {
                 AccountId = Accounts[0].Id,
-                CorrelationId = Guid.NewGuid().ToString(),
                 Direction = OrderDirectionContract.Buy,
                 InstrumentId = instrument,
                 Type = OrderTypeContract.Market,
@@ -204,7 +201,6 @@ namespace MarginTradingTests
             var request = new OrderPlaceRequest
             {
                 AccountId = Accounts[0].Id,
-                CorrelationId = Guid.NewGuid().ToString(),
                 Direction = OrderDirectionContract.Buy,
                 InstrumentId = instrument,
                 Type = OrderTypeContract.Market,
@@ -230,7 +226,6 @@ namespace MarginTradingTests
             var request = new OrderPlaceRequest
             {
                 AccountId = Accounts[0].Id,
-                CorrelationId = Guid.NewGuid().ToString(),
                 Direction = OrderDirectionContract.Buy,
                 InstrumentId = instrument,
                 Type = OrderTypeContract.Market,
@@ -252,7 +247,6 @@ namespace MarginTradingTests
             var request = new OrderPlaceRequest
             {
                 AccountId = Accounts[0].Id,
-                CorrelationId = Guid.NewGuid().ToString(),
                 Direction = OrderDirectionContract.Buy,
                 InstrumentId = instrument,
                 Type = OrderTypeContract.Limit,
@@ -306,7 +300,6 @@ namespace MarginTradingTests
             var request = new OrderPlaceRequest
             {
                 AccountId = Accounts[0].Id,
-                CorrelationId = Guid.NewGuid().ToString(),
                 Direction = OrderDirectionContract.Buy,
                 InstrumentId = instrument,
                 Type = OrderTypeContract.Market,
@@ -330,7 +323,6 @@ namespace MarginTradingTests
             var request = new OrderPlaceRequest
             {
                 AccountId = Accounts[0].Id,
-                CorrelationId = Guid.NewGuid().ToString(),
                 Direction = OrderDirectionContract.Buy,
                 InstrumentId = instrument,
                 Type = OrderTypeContract.Market,
@@ -379,7 +371,6 @@ namespace MarginTradingTests
             var request = new OrderPlaceRequest
             {
                 AccountId = accountId,
-                CorrelationId = Guid.NewGuid().ToString(),
                 Direction = OrderDirectionContract.Buy,
                 InstrumentId = "BTCUSD",
                 Type = OrderTypeContract.Market,
@@ -398,7 +389,6 @@ namespace MarginTradingTests
             var request = new OrderPlaceRequest
             {
                 AccountId = Accounts[0].Id,
-                CorrelationId = Guid.NewGuid().ToString(),
                 Direction = OrderDirectionContract.Buy,
                 InstrumentId = "BTCUSD",
                 Type = OrderTypeContract.Limit,
@@ -422,7 +412,6 @@ namespace MarginTradingTests
             var request = new OrderPlaceRequest
             {
                 AccountId = Accounts[0].Id,
-                CorrelationId = Guid.NewGuid().ToString(),
                 Direction = OrderDirectionContract.Buy,
                 InstrumentId = "BTCUSD",
                 Type = OrderTypeContract.Limit,
@@ -500,7 +489,6 @@ namespace MarginTradingTests
             var request = new OrderPlaceRequest
             {
                 AccountId = Accounts[0].Id,
-                CorrelationId = Guid.NewGuid().ToString(),
                 Direction = direction,
                 InstrumentId = instrument,
                 Type = orderType,
@@ -547,7 +535,6 @@ namespace MarginTradingTests
             var limitOrderRequest = new OrderPlaceRequest
             {
                 AccountId = Accounts[0].Id,
-                CorrelationId = Guid.NewGuid().ToString(),
                 Direction = baseDirection,
                 InstrumentId = instrument,
                 Type = OrderTypeContract.Limit,
@@ -560,7 +547,6 @@ namespace MarginTradingTests
             var stopOrderRequest = new OrderPlaceRequest
             {
                 AccountId = Accounts[0].Id,
-                CorrelationId = Guid.NewGuid().ToString(),
                 Direction = baseDirection,
                 InstrumentId = instrument,
                 Type = OrderTypeContract.Stop,
@@ -618,7 +604,6 @@ namespace MarginTradingTests
             var orderRequest = new OrderPlaceRequest
             {
                 AccountId = Accounts[0].Id,
-                CorrelationId = Guid.NewGuid().ToString(),
                 Direction = baseDirection,
                 InstrumentId = instrument,
                 Type = OrderTypeContract.Market,

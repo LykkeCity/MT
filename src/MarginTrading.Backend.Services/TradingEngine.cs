@@ -2,7 +2,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +11,7 @@ using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common;
+using Lykke.Snow.Common.Correlation;
 using MarginTrading.Backend.Contracts.Activities;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
@@ -30,7 +30,6 @@ using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
-using MoreLinq;
 
 namespace MarginTrading.Backend.Services
 {
@@ -63,6 +62,7 @@ namespace MarginTrading.Backend.Services
         private readonly IQuoteCacheService _quoteCacheService;
         private readonly MarginTradingSettings _marginTradingSettings;
         private readonly LiquidationHelper _liquidationHelper;
+        private readonly CorrelationContextAccessor _correlationContextAccessor;
 
         private static readonly ConcurrentDictionary<string, SemaphoreSlim> _accountSemaphores =
             new ConcurrentDictionary<string, SemaphoreSlim>();
@@ -91,7 +91,8 @@ namespace MarginTrading.Backend.Services
             IEventChannel<StopOutEventArgs> stopOutEventChannel,
             IQuoteCacheService quoteCacheService,
             MarginTradingSettings marginTradingSettings,
-            LiquidationHelper liquidationHelper)
+            LiquidationHelper liquidationHelper,
+            CorrelationContextAccessor correlationContextAccessor)
         {
             _marginCallEventChannel = marginCallEventChannel;
             _orderPlacedEventChannel = orderPlacedEventChannel;
@@ -118,6 +119,7 @@ namespace MarginTrading.Backend.Services
             _quoteCacheService = quoteCacheService;
             _marginTradingSettings = marginTradingSettings;
             _liquidationHelper = liquidationHelper;
+            _correlationContextAccessor = correlationContextAccessor;
         }
 
         public async Task<Order> PlaceOrderAsync(Order order)
@@ -245,9 +247,7 @@ namespace MarginTrading.Backend.Services
                 {
                     order.MakeInactive(_dateService.Now());
                     _ordersCache.Inactive.Add(order);
-                    CancelPendingOrder(order.Id, order.AdditionalInfo,
-                        _identityGenerator.GenerateAlphanumericId(),
-                        $"Parent order closed the position, so {order.OrderType.ToString()} order is cancelled");
+                    CancelPendingOrder(order.Id, order.AdditionalInfo, $"Parent order closed the position, so {order.OrderType.ToString()} order is cancelled");
                 }
             }
             else
@@ -708,8 +708,7 @@ namespace MarginTrading.Backend.Services
                             trailingOrder.ChangePrice(newPrice,
                                 _dateService.Now(),
                                 trailingOrder.Originator,
-                                null,
-                                _identityGenerator.GenerateGuid()); //todo in fact price change correlationId must be used
+                                null);
 
                             _log.WriteInfoAsync(nameof(TradingEngine), nameof(UpdateTrailingStops),
                                 $"Price for trailing stop order {trailingOrder.Id} changed. " +
@@ -738,7 +737,8 @@ namespace MarginTrading.Backend.Services
 
             _cqrsSender.SendCommandToSelf(new StartLiquidationInternalCommand
             {
-                OperationId = _identityGenerator.GenerateGuid(),//TODO: use quote correlationId
+                // TODO: correlation id should be passed together with headers in rabbit mq publisher
+                OperationId = _correlationContextAccessor.CorrelationContext?.CorrelationId ?? _identityGenerator.GenerateGuid(),
                 AccountId = account.Id,
                 CreationTime = _dateService.Now(),
                 QuoteInfo = quote?.ToJson(),
@@ -832,7 +832,6 @@ namespace MarginTrading.Backend.Services
                 initialParameters.FxToAssetPairDirection,
                 OrderStatus.Placed,
                 closeData.AdditionalInfo,
-                closeData.CorrelationId,
                 positionIds,
                 closeData.ExternalProviderId);
             
@@ -876,22 +875,20 @@ namespace MarginTrading.Backend.Services
 
         [ItemNotNull]
         public async Task<Dictionary<string, (PositionCloseResult, Order)>> ClosePositionsGroupAsync(string accountId, 
-        string assetPairId, PositionDirection? direction, OriginatorType originator, string additionalInfo, string correlationId)
+        string assetPairId, PositionDirection? direction, OriginatorType originator, string additionalInfo)
         {
             if (string.IsNullOrWhiteSpace(accountId))
             {
                 throw new ArgumentNullException(nameof(accountId), "AccountId must be set.");
             }
-            
-            var operationId = string.IsNullOrWhiteSpace(correlationId)
-                ? _identityGenerator.GenerateGuid()
-                : correlationId;
 
             bool closeAll = string.IsNullOrEmpty(assetPairId);
             
             if (closeAll)
             {
-                return _liquidationHelper.StartLiquidation(accountId, originator, additionalInfo, operationId);
+                // TODO: should be passed as a header from rabbit mq publisher
+                var correlationId = _correlationContextAccessor.CorrelationContext?.CorrelationId ?? _identityGenerator.GenerateGuid();
+                return _liquidationHelper.StartLiquidation(accountId, originator, additionalInfo, correlationId);
             }
             
             // Closing group of positions (asset and direction are always defined)
@@ -918,7 +915,6 @@ namespace MarginTrading.Backend.Services
                     gr.Key.ExternalProviderId,
                     originator,
                     additionalInfo,
-                    operationId,
                     gr.Key.EquivalentAsset,
                     string.Empty));
 
@@ -953,7 +949,7 @@ namespace MarginTrading.Backend.Services
         }
 
         public async Task<(PositionCloseResult, Order)[]> LiquidatePositionsUsingSpecialWorkflowAsync(
-            IMatchingEngineBase me, string[] positionIds, string correlationId, string additionalInfo,
+            IMatchingEngineBase me, string[] positionIds, string additionalInfo,
             OriginatorType originator, OrderModality modality)
         {
             var positionsToClose = _ordersCache.Positions.GetAllPositions()
@@ -969,7 +965,6 @@ namespace MarginTrading.Backend.Services
                     gr.Key.ExternalProviderId,
                     originator,
                     additionalInfo,
-                    correlationId,
                     gr.Key.EquivalentAsset,
                     "Special Liquidation",
                     me,
@@ -993,6 +988,8 @@ namespace MarginTrading.Backend.Services
             
             if (failedPositionIds.Any())
             {
+                // TODO: remove correlationId when it is added to loggint subsystem by default
+                var correlationId = _correlationContextAccessor.CorrelationContext?.CorrelationId;
                 throw new Exception($"Special liquidation #{correlationId} failed to close these positions: {string.Join(", ", failedPositionIds)}");
             }
 
@@ -1000,7 +997,7 @@ namespace MarginTrading.Backend.Services
         }
 
         public Order CancelPendingOrder(string orderId, string additionalInfo,
-            string correlationId, string comment = null, OrderCancellationReason reason = OrderCancellationReason.None)
+            string comment = null, OrderCancellationReason reason = OrderCancellationReason.None)
         {
             var order = _ordersCache.GetOrderById(orderId);
 
@@ -1017,7 +1014,7 @@ namespace MarginTrading.Backend.Services
                 throw new InvalidOperationException($"Order in state {order.Status} can not be cancelled");
             }
 
-            order.Cancel(_dateService.Now(), additionalInfo, correlationId);
+            order.Cancel(_dateService.Now(), additionalInfo);
 
             var metadata = new OrderCancelledMetadata { Reason = reason.ToType<OrderCancellationReasonContract>() };
             _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(order, metadata));
@@ -1029,7 +1026,7 @@ namespace MarginTrading.Backend.Services
 
 
         public async Task ChangeOrderAsync(string orderId, decimal price, OriginatorType originator,
-            string additionalInfo, string correlationId, bool? forceOpen = null)
+            string additionalInfo, bool? forceOpen = null)
         {
             var order = _ordersCache.GetOrderById(orderId);
 
@@ -1044,7 +1041,7 @@ namespace MarginTrading.Backend.Services
             {
                 var oldPrice = order.Price;
             
-                order.ChangePrice(price, _dateService.Now(), originator, additionalInfo, correlationId, true);
+                order.ChangePrice(price, _dateService.Now(), originator, additionalInfo, true);
 
                 var metadata = new OrderChangedMetadata
                 {
@@ -1059,7 +1056,7 @@ namespace MarginTrading.Backend.Services
             {
                 var oldForceOpen = order.ForceOpen;
                 
-                order.ChangeForceOpen(forceOpen.Value, _dateService.Now(), originator, additionalInfo, correlationId);
+                order.ChangeForceOpen(forceOpen.Value, _dateService.Now(), originator, additionalInfo);
 
                 var metadata = new OrderChangedMetadata
                 {
@@ -1074,7 +1071,7 @@ namespace MarginTrading.Backend.Services
         }
 
         public async Task ChangeOrderValidityAsync(string orderId, DateTime validity, OriginatorType originator,
-            string additionalInfo, string correlationId)
+            string additionalInfo)
         {
             var order = _ordersCache.GetOrderById(orderId);
 
@@ -1084,7 +1081,7 @@ namespace MarginTrading.Backend.Services
             {
                 var oldValidity = order.Validity;
             
-                order.ChangeValidity(validity, _dateService.Now(), originator, additionalInfo, correlationId);
+                order.ChangeValidity(validity, _dateService.Now(), originator, additionalInfo);
 
                 var metadata = new OrderChangedMetadata
                 {
@@ -1098,8 +1095,7 @@ namespace MarginTrading.Backend.Services
             await ExecutePendingOrderIfNeededAsync(order);
         }
         
-        public async Task RemoveOrderValidityAsync(string orderId, OriginatorType originator,
-            string additionalInfo, string correlationId)
+        public async Task RemoveOrderValidityAsync(string orderId, OriginatorType originator, string additionalInfo)
         {
             var order = _ordersCache.GetOrderById(orderId);
 
@@ -1107,7 +1103,7 @@ namespace MarginTrading.Backend.Services
             {
                 var oldValidity = order.Validity;
             
-                order.ChangeValidity(null, _dateService.Now(), originator, additionalInfo, correlationId);
+                order.ChangeValidity(null, _dateService.Now(), originator, additionalInfo);
 
                 var metadata = new OrderChangedMetadata
                 {

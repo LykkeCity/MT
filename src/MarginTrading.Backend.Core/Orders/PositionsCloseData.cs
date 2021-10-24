@@ -17,7 +17,6 @@ namespace MarginTrading.Backend.Core.Orders
             string externalProviderId,
             OriginatorType originator, 
             string additionalInfo, 
-            string correlationId, 
             string equivalentAsset, 
             string comment = null, 
             IMatchingEngineBase matchingEngine = null, 
@@ -30,7 +29,6 @@ namespace MarginTrading.Backend.Core.Orders
             ExternalProviderId = externalProviderId;
             Originator = originator;
             AdditionalInfo = additionalInfo;
-            CorrelationId = correlationId;
             EquivalentAsset = equivalentAsset;
             Comment = comment;
             MatchingEngine = matchingEngine;
@@ -45,12 +43,11 @@ namespace MarginTrading.Backend.Core.Orders
             string externalProviderId,
             OriginatorType originator,
             string additionalInfo,
-            string correlationId,
             string equivalentAsset,
             string comment = null,
             IMatchingEngineBase matchingEngine = null,
             OrderModality modality = OrderModality.Regular) : this(position?.ToSortedList(), accountId, assetPairId,
-            openMatchingEngineId, externalProviderId, originator, additionalInfo, correlationId, equivalentAsset,
+            openMatchingEngineId, externalProviderId, originator, additionalInfo, equivalentAsset,
             comment, matchingEngine, modality)
         {
         }
@@ -70,8 +67,6 @@ namespace MarginTrading.Backend.Core.Orders
         public OriginatorType Originator { get; }
         
         public string AdditionalInfo { get; }
-        
-        public string CorrelationId { get; }
         
         public string Comment { get; }
         

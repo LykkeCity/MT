@@ -504,7 +504,7 @@ namespace MarginTradingTests
             Assert.AreEqual(OriginatorType.Investor, order.Originator);
             Assert.AreEqual(null, order.AdditionalInfo);
             
-            _tradingEngine.ChangeOrderAsync(order.Id, 0.9M, OriginatorType.OnBehalf, "info", Guid.NewGuid().ToString()).GetAwaiter().GetResult();
+            _tradingEngine.ChangeOrderAsync(order.Id, 0.9M, OriginatorType.OnBehalf, "info").GetAwaiter().GetResult();
 
             Assert.AreEqual(OrderStatus.Active, order.Status);
             Assert.AreEqual(0.9M, order.Price);
@@ -1032,7 +1032,7 @@ namespace MarginTradingTests
             
             var result = _tradingEngine.LiquidatePositionsUsingSpecialWorkflowAsync(new SpecialLiquidationMatchingEngine
             (2.5M, "Test",
-                "test", DateTime.UtcNow), new [] {order1.Id, order2.Id}, "Test", "TestAdditionalInfo", OriginatorType.System, OrderModality.Liquidation_MarginCall).Result;
+                "test", DateTime.UtcNow), new [] {order1.Id, order2.Id}, "TestAdditionalInfo", OriginatorType.System, OrderModality.Liquidation_MarginCall).Result;
             result.ForEach(r => Assert.AreEqual(PositionCloseResult.Closed, r.Item1));
             result.ForEach(o => ValidateOrderIsExecuted(o.Item2, new[] {"test"}, 2.5M));
             Assert.AreEqual(2, result.Max(x => x.Item2.Volume));
@@ -1068,7 +1068,6 @@ namespace MarginTradingTests
                     "EURUSD",
                     direction,
                     OriginatorType.Investor,
-                    string.Empty,
                     string.Empty)
                 .GetAwaiter()
                 .GetResult();
@@ -1303,7 +1302,7 @@ namespace MarginTradingTests
             Assert.AreEqual(0, account.GetOpenPositionsCount()); //position is not opened
 
             var ex = Assert.Throws<ValidateOrderException>(() =>
-                _tradingEngine.ChangeOrderAsync(order.Id, 1.2M, OriginatorType.Investor, "",
+                _tradingEngine.ChangeOrderAsync(order.Id, 1.2M, OriginatorType.Investor,
                     Guid.NewGuid().ToString()).GetAwaiter().GetResult());
 
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidExpectedOpenPrice);
@@ -1341,7 +1340,7 @@ namespace MarginTradingTests
             
             Assert.AreEqual(oldDistance, order.TrailingDistance);
 
-            _tradingEngine.ChangeOrderAsync(order.Id, newPrice, OriginatorType.Investor, String.Empty, String.Empty).GetAwaiter().GetResult();
+            _tradingEngine.ChangeOrderAsync(order.Id, newPrice, OriginatorType.Investor, String.Empty).GetAwaiter().GetResult();
             
             Assert.AreEqual(newDistance, order.TrailingDistance);
         }    

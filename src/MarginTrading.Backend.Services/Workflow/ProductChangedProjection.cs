@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common.Log;
 using JetBrains.Annotations;
+using Lykke.Snow.Common.Correlation;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services.AssetPairs;
@@ -31,6 +32,7 @@ namespace MarginTrading.Backend.Services.Workflow
         private readonly ITradingInstrumentsManager _tradingInstrumentsManager;
         private readonly MarginTradingSettings _mtSettings;
         private readonly ILog _log;
+        private readonly CorrelationContextAccessor _correlationContextAccessor;
 
         public ProductChangedProjection(
             ITradingEngine tradingEngine,
@@ -39,7 +41,8 @@ namespace MarginTrading.Backend.Services.Workflow
             IScheduleSettingsCacheService scheduleSettingsCacheService,
             ITradingInstrumentsManager tradingInstrumentsManager,
             MarginTradingSettings mtSettings,
-            ILog log)
+            ILog log,
+            CorrelationContextAccessor correlationContextAccessor)
         {
             _tradingEngine = tradingEngine;
             _assetPairsCache = assetPairsCache;
@@ -48,11 +51,19 @@ namespace MarginTrading.Backend.Services.Workflow
             _tradingInstrumentsManager = tradingInstrumentsManager;
             _mtSettings = mtSettings;
             _log = log;
+            _correlationContextAccessor = correlationContextAccessor;
         }
 
         [UsedImplicitly]
         public async Task Handle(ProductChangedEvent @event)
         {
+            // TODO: correlation should be sent by publisher
+            if (_correlationContextAccessor.CorrelationContext == null)
+            {
+                var correlationId = $"{nameof(ProductChangedEvent)}-{@event.EventId}";
+                _correlationContextAccessor.CorrelationContext = new CorrelationContext(correlationId);
+            }
+            
             switch (@event.ChangeType)
             {
                 case ChangeType.Creation:
@@ -113,7 +124,7 @@ namespace MarginTrading.Backend.Services.Workflow
                 {
                     foreach (var order in _orderReader.GetPending().Where(x => x.AssetPairId == @event.OldValue.ProductId))
                     {
-                        _tradingEngine.CancelPendingOrder(order.Id, null,@event.EventId, 
+                        _tradingEngine.CancelPendingOrder(order.Id, null, 
                             null, OrderCancellationReason.InstrumentInvalidated);
                     }
                 }

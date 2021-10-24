@@ -11,6 +11,7 @@ using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Common.Log;
 using Lykke.Cqrs;
+using Lykke.Snow.Common.Correlation;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Contracts.Workflow.Liquidation;
 using MarginTrading.Backend.Contracts.Workflow.Liquidation.Events;
@@ -41,6 +42,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         private readonly IEventChannel<LiquidationEndEventArgs> _liquidationEndEventChannel;
         private readonly LiquidationHelper _liquidationHelper;
         private readonly ILiquidationFailureExecutor _failureExecutor;
+        private readonly CorrelationContextAccessor _correlationContextAccessor;
 
         private const AccountLevel ValidAccountLevel = AccountLevel.StopOut;
 
@@ -55,7 +57,8 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             IAccountUpdateService accountUpdateService,
             IEventChannel<LiquidationEndEventArgs> liquidationEndEventChannel,
             LiquidationHelper liquidationHelper, 
-            ILiquidationFailureExecutor failureExecutor)
+            ILiquidationFailureExecutor failureExecutor,
+            CorrelationContextAccessor correlationContextAccessor)
         {
             _accountsCache = accountsCache;
             _dateService = dateService;
@@ -68,6 +71,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             _liquidationEndEventChannel = liquidationEndEventChannel;
             _liquidationHelper = liquidationHelper;
             _failureExecutor = failureExecutor;
+            _correlationContextAccessor = correlationContextAccessor;
         }
 
         [UsedImplicitly]
@@ -267,6 +271,13 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
         [UsedImplicitly]
         public async Task Handle(LiquidatePositionsInternalCommand command, IEventPublisher publisher)
         {
+            // TODO: correlation should be sent by publisher
+            if (_correlationContextAccessor.CorrelationContext == null)
+            {
+                var correlationId = $"{nameof(LiquidatePositionsInternalCommand)}-{command.OperationId}";
+                _correlationContextAccessor.CorrelationContext = new CorrelationContext(correlationId);
+            }
+            
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<LiquidationOperationData>(
                 operationName: LiquidationSaga.OperationName,
                 id: command.OperationId);
@@ -361,7 +372,6 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                     gr.Key.ExternalProviderId,
                     executionInfo.Data.OriginatorType,
                     executionInfo.Data.AdditionalInfo,
-                    command.OperationId,
                     gr.Key.EquivalentAsset,
                     comment));
 
