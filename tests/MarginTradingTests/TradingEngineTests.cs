@@ -329,7 +329,6 @@ namespace MarginTradingTests
                 position.ExternalProviderId,
                 OriginatorType.Investor,
                 string.Empty,
-                Guid.NewGuid().ToString(),
                 position.EquivalentAsset);
             
             var result = _tradingEngine.ClosePositionsAsync(data, true).Result;
@@ -362,7 +361,6 @@ namespace MarginTradingTests
                 position.ExternalProviderId,
                 OriginatorType.Investor,
                 string.Empty,
-                Guid.NewGuid().ToString(),
                 position.EquivalentAsset);
             
             var result = _tradingEngine.ClosePositionsAsync(data, true).Result;
@@ -405,7 +403,6 @@ namespace MarginTradingTests
                 position.ExternalProviderId,
                 OriginatorType.Investor,
                 string.Empty,
-                Guid.NewGuid().ToString(),
                 position.EquivalentAsset);
 
             var tasks = new List<Task>();
@@ -481,7 +478,6 @@ namespace MarginTradingTests
                 position.ExternalProviderId,
                 OriginatorType.Investor,
                 string.Empty,
-                Guid.NewGuid().ToString(),
                 position.EquivalentAsset);
             
             var result = _tradingEngine.ClosePositionsAsync(data, true).Result;
