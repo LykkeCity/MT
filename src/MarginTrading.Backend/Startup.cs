@@ -23,6 +23,7 @@ using Lykke.SlackNotifications;
 using Lykke.Snow.Common.Correlation;
 using Lykke.Snow.Common.Correlation.Http;
 using Lykke.Snow.Common.Correlation.RabbitMq;
+using Lykke.Snow.Common.Correlation.Serilog;
 using Lykke.Snow.Common.Startup.ApiKey;
 using Lykke.Snow.Common.Startup.Hosting;
 using Lykke.Snow.Common.Startup.Log;
@@ -55,6 +56,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using Serilog.Core;
 using GlobalErrorHandlerMiddleware = MarginTrading.Backend.Middleware.GlobalErrorHandlerMiddleware;
 using IApplicationLifetime = Microsoft.Extensions.Hosting.IApplicationLifetime;
 using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
@@ -287,10 +289,16 @@ namespace MarginTrading.Backend
 
             if (settings.CurrentValue.UseSerilog)
             {
-                LogLocator.RequestsLog = LogLocator.CommonLog = new SerilogLogger(typeof(Startup).Assembly, configuration, new List<Func<(string Name, object Value)>>()
-                {
-                    () => ("BrokerId", settings.CurrentValue.BrokerId),
-                });
+                var correlationContextAccessor = services.BuildServiceProvider().GetService<CorrelationContextAccessor>();
+                LogLocator.RequestsLog = LogLocator.CommonLog = new SerilogLogger(typeof(Startup).Assembly, configuration, 
+                    new List<Func<(string Name, object Value)>>
+                    {
+                        () => ("BrokerId", settings.CurrentValue.BrokerId)
+                    },
+                    new List<ILogEventEnricher>
+                    {
+                        new CorrelationLogEventEnricher("CorrelationId", correlationContextAccessor)
+                    });
             }
             else if (settings.CurrentValue.Db.StorageMode == StorageMode.SqlServer)
             {

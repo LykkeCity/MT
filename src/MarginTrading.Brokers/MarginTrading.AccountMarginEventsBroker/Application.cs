@@ -6,9 +6,11 @@ using Common.Log;
 using Lykke.MarginTrading.BrokerBase.Settings;
 using Lykke.SlackNotifications;
 using Lykke.MarginTrading.BrokerBase;
+using Lykke.Snow.Common.Correlation.RabbitMq;
 using MarginTrading.AccountMarginEventsBroker.Repositories;
 using MarginTrading.AccountMarginEventsBroker.Repositories.Models;
 using MarginTrading.Backend.Contracts.Events;
+using Microsoft.Extensions.Logging;
 
 namespace MarginTrading.AccountMarginEventsBroker
 {
@@ -17,11 +19,15 @@ namespace MarginTrading.AccountMarginEventsBroker
         private readonly IAccountMarginEventsRepository _accountMarginEventsRepository;
         private readonly Settings _settings;
 
-        public Application(ILog logger, Settings settings,
+        public Application(
+            RabbitMqCorrelationManager correlationManager,
+            ILoggerFactory loggerFactory,
+            ILog logger,
+            Settings settings,
             CurrentApplicationInfo applicationInfo,
             IAccountMarginEventsRepository accountMarginEventsRepository,
             ISlackNotificationsSender slackNotificationsSender)
-            : base(logger, slackNotificationsSender, applicationInfo)
+            : base(correlationManager, loggerFactory, logger, slackNotificationsSender, applicationInfo)
         {
             _settings = settings;
             _accountMarginEventsRepository = accountMarginEventsRepository;
