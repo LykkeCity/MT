@@ -23,7 +23,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
     public class SnapshotValidationService : ISnapshotValidationService
     {
         private static readonly OrderStatus[] OrderTerminalStatuses =
-            {OrderStatus.Canceled, OrderStatus.Rejected, OrderStatus.Executed};
+            { OrderStatus.Canceled, OrderStatus.Rejected, OrderStatus.Executed, OrderStatus.Expired };
 
         private static readonly PositionHistoryType PositionTerminalStatus = PositionHistoryType.Close;
 
@@ -96,7 +96,8 @@ namespace MarginTrading.Backend.Services.Infrastructure
             return new SnapshotValidationResult
             {
                 Orders = ordersValidationResult,
-                Positions = positionsValidationResult
+                Positions = positionsValidationResult,
+                PreviousSnapshotCorrelationId = tradingEngineSnapshot.CorrelationId
             };
         }
 
@@ -110,19 +111,19 @@ namespace MarginTrading.Backend.Services.Infrastructure
                 .Except(ordersHistoryMap.Keys)
                 .Select(orderId => lastOrdersMap[orderId])
                 .Select(order => new OrderInfo(order.Id, order.Volume ?? 0, order.ExpectedOpenPrice,
-                    order.Status.ToType<OrderStatus>()));
+                    order.Status.ToType<OrderStatus>(), order.Type.ToType<OrderType>()));
 
             var newOrders = ordersHistoryMap.Keys
                 .Except(lastOrdersMap.Keys)
                 .Select(orderId => ordersHistoryMap[orderId])
                 .Where(order => !OrderTerminalStatuses.Contains(order.Status))
-                .Select(order => new OrderInfo(order.Id, order.Volume, order.ExpectedOpenPrice, order.Status));
+                .Select(order => new OrderInfo(order.Id, order.Volume, order.ExpectedOpenPrice, order.Status, order.Type));
 
             var changedOrders = ordersHistoryMap.Keys
                 .Intersect(lastOrdersMap.Keys)
                 .Select(orderId => ordersHistoryMap[orderId])
                 .Where(order => !OrderTerminalStatuses.Contains(order.Status))
-                .Select(order => new OrderInfo(order.Id, order.Volume, order.ExpectedOpenPrice, order.Status));
+                .Select(order => new OrderInfo(order.Id, order.Volume, order.ExpectedOpenPrice, order.Status, order.Type));
 
             return unchangedOrders
                 .Union(newOrders)
@@ -168,7 +169,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
             var extraOrders = currentOrdersMap.Keys
                 .Except(restoredOrdersMap.Keys)
                 .Select(orderId => currentOrdersMap[orderId])
-                .Select(order => new OrderInfo(order.Id, order.Volume, order.Price, order.Status));
+                .Select(order => new OrderInfo(order.Id, order.Volume, order.Price, order.Status, order.OrderType));
 
             var missedOrders = restoredOrdersMap.Keys
                 .Except(currentOrdersMap.Keys)
@@ -176,15 +177,15 @@ namespace MarginTrading.Backend.Services.Infrastructure
 
             var inconsistentOrders = restoredOrdersMap.Keys
                 .Intersect(currentOrdersMap.Keys)
-                .Select(orderId => new
+                .Select(orderId => new ValidationPair<OrderInfo>()
                 {
-                    RestoredOrder = restoredOrdersMap[orderId],
-                    CurrentOrder = currentOrdersMap[orderId]
+                    Restored = restoredOrdersMap[orderId],
+                    Current = Map(currentOrdersMap[orderId])
                 })
-                .Where(pair => pair.RestoredOrder.Volume != pair.CurrentOrder.Volume ||
-                               pair.RestoredOrder.ExpectedOpenPrice != pair.CurrentOrder.Price ||
-                               pair.RestoredOrder.Status != pair.CurrentOrder.Status)
-                .Select(pair => pair.RestoredOrder);
+                .Where(pair => pair.Restored.Volume != pair.Current.Volume ||
+                               (pair.Restored.ExpectedOpenPrice != pair.Current.ExpectedOpenPrice && pair.Current
+                                   .Type != OrderType.TrailingStop) ||
+                               pair.Restored.Status != pair.Current.Status);
 
             return new ValidationResult<OrderInfo>
             {
@@ -211,13 +212,12 @@ namespace MarginTrading.Backend.Services.Infrastructure
 
             var inconsistentPositions = restoredPositionsMap.Keys
                 .Intersect(currentPositionsMap.Keys)
-                .Select(positionId => new
+                .Select(positionId => new ValidationPair<PositionInfo>()
                 {
-                    RestoredPosition = restoredPositionsMap[positionId],
-                    CurrentPosition = currentPositionsMap[positionId]
+                    Restored = restoredPositionsMap[positionId],
+                    Current = Map(currentPositionsMap[positionId])
                 })
-                .Where(pair => pair.RestoredPosition.Volume != pair.CurrentPosition.Volume)
-                .Select(pair => pair.RestoredPosition);
+                .Where(pair => pair.Restored.Volume != pair.Current.Volume);
 
             return new ValidationResult<PositionInfo>
             {
@@ -236,5 +236,15 @@ namespace MarginTrading.Backend.Services.Infrastructure
             => !string.IsNullOrEmpty(tradingEngineSnapshot.PositionsJson)
                 ? tradingEngineSnapshot.PositionsJson.DeserializeJson<List<OpenPositionContract>>()
                 : new List<OpenPositionContract>();
+
+        private static OrderInfo Map(Order order)
+        {
+            return new OrderInfo(order.Id, order.Volume, order.Price, order.Status, order.OrderType);
+        }
+
+        private static PositionInfo Map(Position position)
+        {
+            return new PositionInfo(position.Id, position.Volume);
+        }
     }
 }

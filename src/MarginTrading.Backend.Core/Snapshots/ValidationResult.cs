@@ -30,6 +30,6 @@ namespace MarginTrading.Backend.Core.Snapshots
         /// <summary>
         /// The collection of inconsistent entities in the current state. 
         /// </summary>
-        public IReadOnlyList<T> Inconsistent { get; set; }
+        public IReadOnlyList<ValidationPair<T>> Inconsistent { get; set; }
     }
 }
