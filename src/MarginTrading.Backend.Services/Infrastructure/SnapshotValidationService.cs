@@ -117,13 +117,13 @@ namespace MarginTrading.Backend.Services.Infrastructure
                 .Except(lastOrdersMap.Keys)
                 .Select(orderId => ordersHistoryMap[orderId])
                 .Where(order => !OrderTerminalStatuses.Contains(order.Status))
-                .Select(order => new OrderInfo(order.Id, order.Volume, order.ExpectedOpenPrice, order.Status, order.Type));
+                .Select(Map);
 
             var changedOrders = ordersHistoryMap.Keys
                 .Intersect(lastOrdersMap.Keys)
                 .Select(orderId => ordersHistoryMap[orderId])
                 .Where(order => !OrderTerminalStatuses.Contains(order.Status))
-                .Select(order => new OrderInfo(order.Id, order.Volume, order.ExpectedOpenPrice, order.Status, order.Type));
+                .Select(Map);
 
             return unchangedOrders
                 .Union(newOrders)
@@ -182,10 +182,12 @@ namespace MarginTrading.Backend.Services.Infrastructure
                     Restored = restoredOrdersMap[orderId],
                     Current = Map(currentOrdersMap[orderId])
                 })
-                .Where(pair => pair.Restored.Volume != pair.Current.Volume ||
-                               (pair.Restored.ExpectedOpenPrice != pair.Current.ExpectedOpenPrice && pair.Current
-                                   .Type != OrderType.TrailingStop) ||
-                               pair.Restored.Status != pair.Current.Status);
+                .Where(pair => pair.Restored.Volume != pair.Current.Volume 
+                               ||
+                               (pair.Restored.ExpectedOpenPrice != pair.Current.ExpectedOpenPrice 
+                                && pair.Current.Type != OrderType.TrailingStop) 
+                               ||
+                               (pair.Restored.Status != pair.Current.Status));
 
             return new ValidationResult<OrderInfo>
             {
@@ -240,6 +242,12 @@ namespace MarginTrading.Backend.Services.Infrastructure
         private static OrderInfo Map(Order order)
         {
             return new OrderInfo(order.Id, order.Volume, order.Price, order.Status, order.OrderType);
+        }
+        
+        private static OrderInfo Map(IOrderHistory order)
+        {
+            var status = order.Status == OrderStatus.Placed ? OrderStatus.Inactive : order.Status;
+            return new OrderInfo(order.Id, order.Volume, order.ExpectedOpenPrice, status, order.Type);
         }
 
         private static PositionInfo Map(Position position)
