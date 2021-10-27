@@ -10,7 +10,6 @@ using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
-using Lykke.Snow.Common.Correlation;
 using MarginTrading.Backend.Contracts.ExchangeConnector;
 using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Events;
@@ -45,7 +44,6 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private readonly IExchangeConnectorClient _exchangeConnectorClient;
         private readonly IIdentityGenerator _identityGenerator;
         private readonly IAccountsCacheService _accountsCacheService;
-        private readonly CorrelationContextAccessor _correlationContextAccessor;
         
         private const AccountLevel ValidAccountLevel = AccountLevel.StopOut;
 
@@ -61,8 +59,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             IAssetPairDayOffService assetPairDayOffService,
             IExchangeConnectorClient exchangeConnectorClient,
             IIdentityGenerator identityGenerator,
-            IAccountsCacheService accountsCacheService,
-            CorrelationContextAccessor correlationContextAccessor)
+            IAccountsCacheService accountsCacheService)
 
         {
             _tradingEngine = tradingEngine;
@@ -77,7 +74,6 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             _exchangeConnectorClient = exchangeConnectorClient;
             _identityGenerator = identityGenerator;
             _accountsCacheService = accountsCacheService;
-            _correlationContextAccessor = correlationContextAccessor;
         }
         
         [UsedImplicitly]
@@ -513,13 +509,6 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         [UsedImplicitly]
         private async Task Handle(ExecuteSpecialLiquidationOrdersInternalCommand command, IEventPublisher publisher)
         {
-            // TODO: correlation should be sent by publisher
-            if (_correlationContextAccessor.CorrelationContext == null)
-            {
-                var correlationId = $"{nameof(ExecuteSpecialLiquidationOrdersInternalCommand)}-{command.OperationId}";
-                _correlationContextAccessor.CorrelationContext = new CorrelationContext(correlationId);
-            }
-
             var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
                 operationName: SpecialLiquidationSaga.OperationName,
                 id: command.OperationId);

@@ -9,20 +9,13 @@ using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
-using Lykke.Common.Log;
 using Lykke.Cqrs;
-using Lykke.Snow.Common.Correlation;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
-using MarginTrading.Backend.Contracts.Activities;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
-using MarginTrading.Backend.Core.Services;
-using MarginTrading.Backend.Services.Infrastructure;
-using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
-using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services.Workflow
@@ -36,7 +29,6 @@ namespace MarginTrading.Backend.Services.Workflow
         private readonly IChaosKitty _chaosKitty;
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
         private readonly ILog _log;
-        private readonly CorrelationContextAccessor _correlationContextAccessor;
         
         private const string OperationName = "DeleteAccounts";
         
@@ -47,8 +39,7 @@ namespace MarginTrading.Backend.Services.Workflow
             ITradingEngine tradingEngine,
             IChaosKitty chaosKitty,
             IOperationExecutionInfoRepository operationExecutionInfoRepository,
-            ILog log,
-            CorrelationContextAccessor correlationContextAccessor)
+            ILog log)
         {
             _orderReader = orderReader;
             _dateService = dateService;
@@ -57,7 +48,6 @@ namespace MarginTrading.Backend.Services.Workflow
             _chaosKitty = chaosKitty;
             _operationExecutionInfoRepository = operationExecutionInfoRepository;
             _log = log;
-            _correlationContextAccessor = correlationContextAccessor;
         }
 
         /// <summary>
@@ -66,13 +56,6 @@ namespace MarginTrading.Backend.Services.Workflow
         [UsedImplicitly]
         private async Task Handle(BlockAccountsForDeletionCommand command, IEventPublisher publisher)
         {
-            // TODO: correlation should be sent by publisher
-            if (_correlationContextAccessor.CorrelationContext == null)
-            {
-                var correlationId = $"{nameof(BlockAccountsForDeletionCommand)}-{command.OperationId}";
-                _correlationContextAccessor.CorrelationContext = new CorrelationContext(correlationId);
-            }
-            
             var executionInfo = await _operationExecutionInfoRepository.GetOrAddAsync(
                 operationName: OperationName,
                 operationId: command.OperationId,
