@@ -21,6 +21,7 @@ using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
 using Lykke.SlackNotifications;
 using Lykke.Snow.Common.Correlation;
+using Lykke.Snow.Common.Correlation.Cqrs;
 using Lykke.Snow.Common.Correlation.Http;
 using Lykke.Snow.Common.Correlation.RabbitMq;
 using Lykke.Snow.Common.Correlation.Serilog;
@@ -69,7 +70,7 @@ namespace MarginTrading.Backend
     public class Startup
     {
         private IReloadingManager<MtBackendSettings> _mtSettingsManager;
-
+        
         public IConfigurationRoot Configuration { get; }
         public IHostingEnvironment Environment { get; }
         public ILifetimeScope ApplicationContainer { get; set; }
@@ -87,7 +88,12 @@ namespace MarginTrading.Backend
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCorrelation();
+            var correlationContextAccessor = new CorrelationContextAccessor();
+            services.AddSingleton(correlationContextAccessor);
+            services.AddSingleton<RabbitMqCorrelationManager>();
+            services.AddSingleton<CqrsCorrelationManager>();
+            services.AddTransient<HttpCorrelationHandler>();
+            
             services.AddApplicationInsightsTelemetry();
 
             services.AddSingleton(Configuration);
@@ -118,7 +124,7 @@ namespace MarginTrading.Backend
 
             services.AddFeatureManagement(_mtSettingsManager.CurrentValue.MtBackend.BrokerId);
 
-            SetupLoggers(Configuration, services, _mtSettingsManager);
+            SetupLoggers(Configuration, services, _mtSettingsManager, correlationContextAccessor);
         }
 
         [UsedImplicitly]
@@ -250,7 +256,7 @@ namespace MarginTrading.Backend
         }
 
         private static void SetupLoggers(IConfiguration configuration, IServiceCollection services,
-            IReloadingManager<MtBackendSettings> mtSettings)
+            IReloadingManager<MtBackendSettings> mtSettings, CorrelationContextAccessor correlationContextAccessor)
         {
             var settings = mtSettings.Nested(x => x.MtBackend);
             const string requestsLogName = "MarginTradingBackendRequestsLog";
@@ -289,7 +295,6 @@ namespace MarginTrading.Backend
 
             if (settings.CurrentValue.UseSerilog)
             {
-                var correlationContextAccessor = services.BuildServiceProvider().GetService<CorrelationContextAccessor>();
                 LogLocator.RequestsLog = LogLocator.CommonLog = new SerilogLogger(typeof(Startup).Assembly, configuration, 
                     new List<Func<(string Name, object Value)>>
                     {
