@@ -616,8 +616,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 OperationId = command.OperationId,
                 CreationTime = _dateService.Now(),
                 Reason = command.Reason,
-                // unconditionally closing positions since this command handler is used for single case so far 
-                ClosePositions = true,
+                ClosePositions = !executionInfo.Data.RequestedFromCorporateActions,
             });
         }
 

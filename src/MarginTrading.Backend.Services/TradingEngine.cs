@@ -908,7 +908,7 @@ namespace MarginTrading.Backend.Services
                 if (positions.Any(p => p.Direction != direction))
                 {
                     throw new ArgumentOutOfRangeException(nameof(positions),
-                        "Positions list contains elements of different direction");
+                        "Direction was not specified explicitly and positions list contains elements of different direction");
                 }
             }
 

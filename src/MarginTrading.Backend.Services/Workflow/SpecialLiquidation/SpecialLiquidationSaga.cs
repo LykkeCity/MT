@@ -16,6 +16,7 @@ using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Helpers;
+using MarginTrading.Backend.Services.Services;
 using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Events;
@@ -29,7 +30,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private readonly IDateService _dateService;
         private readonly IChaosKitty _chaosKitty;
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
-        private readonly ISpecialLiquidationService _specialLiquidationService;
+        private readonly IRfqService _specialLiquidationService;
         private readonly LiquidationHelper _liquidationHelper;
         private readonly OrdersCache _ordersCache;
 
@@ -42,7 +43,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             IDateService dateService,
             IChaosKitty chaosKitty,
             IOperationExecutionInfoRepository operationExecutionInfoRepository,
-            ISpecialLiquidationService specialLiquidationService,
+            IRfqService specialLiquidationService,
             MarginTradingSettings marginTradingSettings,
             CqrsContextNamesSettings cqrsContextNamesSettings,
             LiquidationHelper liquidationHelper,
@@ -264,22 +265,25 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             if (executionInfo?.Data == null)
                 return;
 
-            if (e.CanRetryPriceRequest) // todo: check if it was corporate actions flow, if it is the case - use previous logic (do not try to close positions within regular flow)
+            if (e.CanRetryPriceRequest)
             {
-                var positions = _ordersCache.Positions
-                    .GetPositionsByAccountIds(executionInfo.Data.AccountId)
-                    .Where(p => executionInfo.Data.PositionIds.Contains(p.Id))
-                    .ToArray();
-
-                if (_liquidationHelper.CheckIfNetVolumeCanBeLiquidated(executionInfo.Data.Instrument, positions, out _))
+                if (!executionInfo.Data.RequestedFromCorporateActions)
                 {
-                    // there is liquidity so we can cancel the special liquidation flow.
-                    sender.SendCommand(new CancelSpecialLiquidationCommand
+                    var positions = _ordersCache.Positions
+                        .GetPositionsByAccountIds(executionInfo.Data.AccountId)
+                        .Where(p => executionInfo.Data.PositionIds.Contains(p.Id))
+                        .ToArray();
+
+                    if (_liquidationHelper.CheckIfNetVolumeCanBeLiquidated(executionInfo.Data.Instrument, positions, out _))
                     {
-                        OperationId = e.OperationId,
-                        Reason = "Liquidity is enough to close positions within regular flow"
-                    }, _cqrsContextNamesSettings.TradingEngine);
-                    return;
+                        // there is liquidity so we can cancel the special liquidation flow.
+                        sender.SendCommand(new CancelSpecialLiquidationCommand
+                        {
+                            OperationId = e.OperationId,
+                            Reason = "Liquidity is enough to close positions within regular flow"
+                        }, _cqrsContextNamesSettings.TradingEngine);
+                        return;
+                    }
                 }
 
                 if (await RetryPriceRequestIfNeeded(e.CreationTime, sender, executionInfo, executionInfo.Data.State))
@@ -347,36 +351,37 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private void RequestPrice(ICommandSender sender, IOperationExecutionInfo<SpecialLiquidationOperationData> 
             executionInfo)
         {
+            //hack, requested by the bank
+            var positionsVolume = executionInfo.Data.Volume != 0 ? executionInfo.Data.Volume : 1;
+            
+            var command = new GetPriceForSpecialLiquidationCommand
+            {
+                OperationId = executionInfo.Id,
+                CreationTime = _dateService.Now(),
+                Instrument = executionInfo.Data.Instrument,
+                Volume = positionsVolume,
+                RequestNumber = executionInfo.Data.RequestNumber,
+                RequestedFromCorporateActions = executionInfo.Data.RequestedFromCorporateActions
+            };
+            
             if (_marginTradingSettings.ExchangeConnector == ExchangeConnectorType.RealExchangeConnector)
             {
-                //hack, requested by the bank
-                var positionsVolume = executionInfo.Data.Volume != 0 ? executionInfo.Data.Volume : 1;
-
                 //send it to the Gavel
-                sender.SendCommand(new GetPriceForSpecialLiquidationCommand
-                {
-                    OperationId = executionInfo.Id,
-                    CreationTime = _dateService.Now(),
-                    Instrument = executionInfo.Data.Instrument,
-                    Volume = positionsVolume,
-                    RequestNumber = executionInfo.Data.RequestNumber,
-                    RequestedFromCorporateActions = executionInfo.Data.RequestedFromCorporateActions
-                }, _cqrsContextNamesSettings.Gavel);
-
-                //special command is sent instantly for timeout control.. it is retried until timeout occurs
-                sender.SendCommand(new GetPriceForSpecialLiquidationTimeoutInternalCommand
-                {
-                    OperationId = executionInfo.Id,
-                    CreationTime = _dateService.Now(),
-                    TimeoutSeconds = _marginTradingSettings.SpecialLiquidation.PriceRequestTimeoutSec,
-                    RequestNumber = executionInfo.Data.RequestNumber
-                }, _cqrsContextNamesSettings.TradingEngine);
+                sender.SendCommand(command, _cqrsContextNamesSettings.Gavel);
             }
             else
             {
-                _specialLiquidationService.FakeGetPriceForSpecialLiquidation(executionInfo.Id,
-                    executionInfo.Data.Instrument, executionInfo.Data.Volume);
+                _specialLiquidationService.SavePriceRequestForSpecialLiquidation(command);
             }
+            
+            //special command is sent instantly for timeout control.. it is retried until timeout occurs
+            sender.SendCommand(new GetPriceForSpecialLiquidationTimeoutInternalCommand
+            {
+                OperationId = executionInfo.Id,
+                CreationTime = _dateService.Now(),
+                TimeoutSeconds = _marginTradingSettings.SpecialLiquidation.PriceRequestTimeoutSec,
+                RequestNumber = executionInfo.Data.RequestNumber
+            }, _cqrsContextNamesSettings.TradingEngine);
         }
         
         private async Task<bool> RetryPriceRequestIfNeeded(DateTime eventCreationTime, ICommandSender sender,
