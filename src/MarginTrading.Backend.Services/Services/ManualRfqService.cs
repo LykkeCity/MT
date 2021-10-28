@@ -51,7 +51,7 @@ namespace MarginTrading.Backend.Services.Services
                 OperationId = operationId,
                 CreationTime = _dateService.Now(),
                 Reason = reason
-            });
+            }, _cqrsContextNamesSettings.Gavel);
             
             _requests.TryRemove(operationId, out _);
         }

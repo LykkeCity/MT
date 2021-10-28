@@ -313,29 +313,21 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
 
             if (executionInfo?.Data != null)
             {
-                if (executionInfo.Data.State > SpecialLiquidationOperationState.PriceRequested 
+                if (executionInfo.Data.State > SpecialLiquidationOperationState.PriceRequested
                     || executionInfo.Data.RequestNumber > command.RequestNumber)
                 {
                     return CommandHandlingResult.Ok();
                 }
-                
+
                 if (_dateService.Now() >= command.CreationTime.AddSeconds(command.TimeoutSeconds))
                 {
-                    if (executionInfo.Data.SwitchState(executionInfo.Data.State,
-                        SpecialLiquidationOperationState.Failed))
+                    publisher.PublishEvent(new SpecialLiquidationFailedEvent
                     {
-                        publisher.PublishEvent(new SpecialLiquidationFailedEvent
-                        {
-                            OperationId = command.OperationId,
-                            CreationTime = _dateService.Now(),
-                            Reason = $"Timeout of {command.TimeoutSeconds} seconds from {command.CreationTime:s}",
-                            CanRetryPriceRequest = true
-                        });
-                
-                        _chaosKitty.Meow(command.OperationId);
-
-                        await _operationExecutionInfoRepository.Save(executionInfo);
-                    }
+                        OperationId = command.OperationId,
+                        CreationTime = _dateService.Now(),
+                        Reason = $"Timeout of {command.TimeoutSeconds} seconds from {command.CreationTime:s}",
+                        CanRetryPriceRequest = true
+                    });
 
                     return CommandHandlingResult.Ok();
                 }
