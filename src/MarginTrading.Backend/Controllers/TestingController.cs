@@ -2,11 +2,14 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Contracts;
 using MarginTrading.Backend.Contracts.Testing;
+using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Infrastructure;
+using MarginTrading.Backend.Services.Services;
 using MarginTrading.Common.Middleware;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,11 +23,14 @@ namespace MarginTrading.Backend.Controllers
     {
         private readonly IFakeSnapshotService _fakeSnapshotService;
         private readonly string _protectionKey;
+        private IRfqService _rfqService;
 
         public TestingController(IFakeSnapshotService fakeSnapshotService,
-            MarginTradingSettings settings)
+            MarginTradingSettings settings, 
+            IRfqService rfqService)
         {
             _fakeSnapshotService = fakeSnapshotService;
+            _rfqService = rfqService;
             _protectionKey = settings.TestSettings?.ProtectionKey;
         }
 
@@ -72,6 +78,40 @@ namespace MarginTrading.Backend.Controllers
 
             await _fakeSnapshotService.DeleteFakeTradingSnapshot(correlationId);
             return $"Snapshot {correlationId} deleted";
+        }
+
+        /// <summary>
+        /// Gets all requests for quote
+        /// FOR TEST PURPOSES ONLY.
+        /// </summary>
+        [HttpGet("rfq")]
+        public Task<List<GetPriceForSpecialLiquidationCommand>> GetAllPriceRequests()
+        {
+            return Task.FromResult(_rfqService.GetAllRequest());
+        }
+
+        /// <summary>
+        /// Approves request for quote
+        /// FOR TEST PURPOSES ONLY.
+        /// </summary>
+        [HttpPost("rfq/{operationId}/approve")]
+        public Task ApproveRfq([FromRoute] string operationId, [FromQuery] decimal? price = null)
+        {
+            _rfqService.ApprovePriceRequest(operationId, price);
+            
+            return Task.CompletedTask;
+        }
+        
+        /// <summary>
+        /// Rejects request for quote
+        /// FOR TEST PURPOSES ONLY.
+        /// </summary>
+        [HttpPost("rfq/{operationId}/reject")]
+        public Task RejectRfq([FromRoute] string operationId, [FromQuery] string reason = null)
+        {
+            _rfqService.RejectPriceRequest(operationId, reason);
+            
+            return Task.CompletedTask;
         }
 
         private (bool isValid, string message) ValidateProtectionKey(string protectionKey)

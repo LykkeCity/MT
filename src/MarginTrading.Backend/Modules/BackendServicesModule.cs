@@ -107,8 +107,8 @@ namespace MarginTrading.Backend.Modules
                 .As<IEquivalentPricesService>()
                 .SingleInstance();
 
-            builder.RegisterType<SpecialLiquidationService>()
-                .As<ISpecialLiquidationService>()
+            builder.RegisterType<ManualRfqService>()
+                .As<IRfqService>()
                 .PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies)
                 .SingleInstance();
 

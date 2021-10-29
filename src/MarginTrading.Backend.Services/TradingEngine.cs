@@ -875,39 +875,54 @@ namespace MarginTrading.Backend.Services
         }
 
         [ItemNotNull]
-        public async Task<Dictionary<string, (PositionCloseResult, Order)>> ClosePositionsGroupAsync(string accountId, 
-        string assetPairId, PositionDirection? direction, OriginatorType originator, string additionalInfo, string correlationId)
+        public async Task<Dictionary<string, (PositionCloseResult, Order)>> ClosePositionsGroupAsync( 
+            IList<Position> positions, 
+            string operationId,
+            OriginatorType originator,
+            PositionDirection? direction = null,
+            string additionalInfo = null)
         {
-            if (string.IsNullOrWhiteSpace(accountId))
-            {
-                throw new ArgumentNullException(nameof(accountId), "AccountId must be set.");
-            }
+            # region Validations
             
-            var operationId = string.IsNullOrWhiteSpace(correlationId)
-                ? _identityGenerator.GenerateGuid()
-                : correlationId;
+            if (string.IsNullOrWhiteSpace(operationId))
+            {
+                throw new ArgumentNullException(nameof(operationId), "OperationId must be set.");
+            }
 
-            bool closeAll = string.IsNullOrEmpty(assetPairId);
-            
-            if (closeAll)
+            if (positions == null || !positions.Any())
             {
-                return _liquidationHelper.StartLiquidation(accountId, originator, additionalInfo, operationId);
+                throw new ArgumentNullException(nameof(positions), "Positions list is empty");
             }
-            
-            // Closing group of positions (asset and direction are always defined)
-            
-            // let's ensure direction is always passed in
+
+            var accountId = positions.First().AccountId;
+            if (positions.Any(p => p.AccountId != accountId))
+            {
+                throw new ArgumentOutOfRangeException(nameof(positions),
+                    "Positions list contains elements of different accounts");
+            }
+
+            // if direction was not passed in we have to ensure all the positions in the list are of single direction
             if (!direction.HasValue)
-                throw new ArgumentNullException(nameof(direction), "When closing group of positions direction is mandatory");
+            {
+                direction = positions.First().Direction;
+                if (positions.Any(p => p.Direction != direction))
+                {
+                    throw new ArgumentOutOfRangeException(nameof(positions),
+                        "Direction was not specified explicitly and positions list contains elements of different direction");
+                }
+            }
 
-            var mandatoryDirection = direction.Value;
+            var assetPairId = positions.First().AssetPairId;
+            if (positions.Any(p => p.AssetPairId != assetPairId))
+            {
+                throw new ArgumentOutOfRangeException(nameof(positions),
+                    "Positions list contains elements of different instruments");
+            }
             
-            var result = new Dictionary<string, (PositionCloseResult, Order)>();
-
-            var positions = _ordersCache.Positions.GetPositionsByInstrumentAndAccount(assetPairId, accountId);
-
+            #endregion
+            
             var positionGroups = positions
-                .Where(p => p.Direction == mandatoryDirection)
+                .Where(p => p.Direction == direction)
                 // grouping is required to optimize price requests but in fact we'll always have a SINGLE group here
                 .GroupBy(p => (p.AssetPairId, p.AccountId, p.Direction, p.OpenMatchingEngineId, p.ExternalProviderId, p.EquivalentAsset))
                 .Select(gr => new PositionsCloseData(
@@ -921,6 +936,8 @@ namespace MarginTrading.Backend.Services
                     operationId,
                     gr.Key.EquivalentAsset,
                     string.Empty));
+            
+            var result = new Dictionary<string, (PositionCloseResult, Order)>();
 
             foreach (var positionGroup in positionGroups)
             {
@@ -950,6 +967,45 @@ namespace MarginTrading.Backend.Services
             }
 
             return result;
+        }
+
+        [ItemNotNull]
+        public async Task<Dictionary<string, (PositionCloseResult, Order)>> ClosePositionsGroupAsync(string accountId, 
+            string assetPairId, 
+            PositionDirection? direction,
+            OriginatorType originator,
+            string additionalInfo,
+            string correlationId)
+        {
+            if (string.IsNullOrWhiteSpace(accountId))
+            {
+                throw new ArgumentNullException(nameof(accountId), "AccountId must be set.");
+            }
+            
+            var operationId = string.IsNullOrWhiteSpace(correlationId)
+                ? _identityGenerator.GenerateGuid()
+                : correlationId;
+
+            bool closeAll = string.IsNullOrEmpty(assetPairId);
+            
+            if (closeAll)
+            {
+                return _liquidationHelper.StartLiquidation(accountId, originator, additionalInfo, operationId);
+            }
+            
+            // Closing group of positions (asset and direction are always defined)
+            // let's ensure direction is always passed in
+            if (!direction.HasValue)
+                throw new ArgumentNullException(nameof(direction), "When closing group of positions direction is mandatory");
+
+            var mandatoryDirection = direction.Value;
+            
+            var positions = _ordersCache
+                .Positions
+                .GetPositionsByInstrumentAndAccount(assetPairId, accountId)
+                .ToList();
+
+            return await ClosePositionsGroupAsync(positions, operationId, originator, mandatoryDirection, additionalInfo);
         }
 
         public async Task<(PositionCloseResult, Order)[]> LiquidatePositionsUsingSpecialWorkflowAsync(
