@@ -32,7 +32,7 @@
     <PackageReference Include="Lykke.MarginTrading.OrderBookService.Contracts" Version="1.6.0" />
     <PackageReference Include="Lykke.Messaging" Version="6.3.1" />
     <PackageReference Include="Lykke.Messaging.RabbitMq" Version="2.2.2" />
-    <PackageReference Include="LykkeBiz.RabbitMqBroker" Version="9.2.5" />
+    <PackageReference Include="LykkeBiz.RabbitMqBroker" Version="9.2.6" />
     <PackageReference Include="Lykke.Rocks.Caching" Version="1.0.0" />
     <PackageReference Include="Lykke.Service.ClientAccount.Client" Version="1.4.1" />
     <PackageReference Include="Lykke.Service.EmailSender" Version="1.1.0" />
