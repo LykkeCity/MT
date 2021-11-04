@@ -250,10 +250,8 @@ namespace MarginTrading.Backend.Services
 
             if (!productComplexityConfimationReceived)
             {
-                // TODO: remove correlation id after it included by default in logging subsystem
-                var correlationId = _correlationContextAccessor.CorrelationContext?.CorrelationId;
                 throw new ValidateOrderException(OrderRejectReason.AccountInvalidState,
-                    $"Product complexity warning not received for order with correlation {correlationId}, placed by account {account.Id}");
+                    $"Product complexity warning not received for order, placed by account {account.Id}");
             }
         }
 
