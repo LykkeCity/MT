@@ -531,14 +531,16 @@ namespace MarginTrading.Backend.Services
             //ProcessPendingOrdersMarginRecalc(instrument);
 
             var orders = GetPendingOrdersToBeExecuted(quote).GetSortedForExecution();
-            
+
             if (!orders.Any())
                 return;
 
+            var correlationContext = _correlationContextAccessor.CorrelationContext;
             foreach (var order in orders)
             {
                 _threadSwitcher.SwitchThread(async () =>
                 {
+                    _correlationContextAccessor.CorrelationContext = correlationContext;
                     await ExecutePendingOrder(order);
                 });
             }
@@ -988,9 +990,7 @@ namespace MarginTrading.Backend.Services
             
             if (failedPositionIds.Any())
             {
-                // TODO: remove correlationId when it is added to loggint subsystem by default
-                var correlationId = _correlationContextAccessor.CorrelationContext?.CorrelationId;
-                throw new Exception($"Special liquidation #{correlationId} failed to close these positions: {string.Join(", ", failedPositionIds)}");
+                throw new Exception($"Special liquidation failed to close these positions: {string.Join(", ", failedPositionIds)}");
             }
 
             return closeOrderList;
