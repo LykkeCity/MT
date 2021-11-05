@@ -3,7 +3,7 @@
 
 using System.Threading.Tasks;
 using Autofac;
-using Common;
+using Lykke.RabbitMqBroker.Publisher;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Services;
 using MarginTrading.Common.RabbitMq;

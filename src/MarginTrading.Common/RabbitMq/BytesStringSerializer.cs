@@ -3,6 +3,7 @@
 
 using System.Text;
 using Lykke.RabbitMqBroker.Publisher;
+using Lykke.RabbitMqBroker.Publisher.Serializers;
 
 namespace MarginTrading.Common.RabbitMq
 {

@@ -9,19 +9,13 @@ using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
-using Lykke.Common.Log;
 using Lykke.Cqrs;
 using MarginTrading.AccountsManagement.Contracts.Commands;
 using MarginTrading.AccountsManagement.Contracts.Events;
-using MarginTrading.Backend.Contracts.Activities;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
-using MarginTrading.Backend.Core.Services;
-using MarginTrading.Backend.Services.Infrastructure;
-using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
-using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services.Workflow
@@ -108,7 +102,7 @@ namespace MarginTrading.Backend.Services.Workflow
                         {
                             try
                             {
-                                _tradingEngine.CancelPendingOrder(order.Id, order.AdditionalInfo,command.OperationId, 
+                                _tradingEngine.CancelPendingOrder(order.Id, order.AdditionalInfo,
                                 $"{nameof(DeleteAccountsCommandsHandler)}: force close all orders.",
                                 OrderCancellationReason.AccountInactivated); 
                             }

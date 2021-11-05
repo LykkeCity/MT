@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using Lykke.RabbitMqBroker.Publisher;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Contracts.ExchangeConnector;
 using MarginTrading.Backend.Core;
@@ -25,7 +26,7 @@ namespace MarginTrading.Backend.Services.Notifications
     {
         private readonly IDateService _dateService;
         private readonly MarginTradingSettings _settings;
-        private readonly Dictionary<string, IMessageProducer<string>> _publishers;
+        private readonly Dictionary<string, Lykke.RabbitMqBroker.Publisher.IMessageProducer<string>> _publishers;
         private readonly ILog _log;
         private readonly IOrderReader _orderReader;
 
@@ -39,7 +40,7 @@ namespace MarginTrading.Backend.Services.Notifications
             _settings = settings;
             _log = log;
             _orderReader = orderReader;
-            _publishers = new Dictionary<string, IMessageProducer<string>>();
+            _publishers = new Dictionary<string, Lykke.RabbitMqBroker.Publisher.IMessageProducer<string>>();
 
             RegisterPublishers(rabbitMqService);
         }

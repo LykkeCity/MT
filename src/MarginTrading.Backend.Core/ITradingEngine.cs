@@ -25,14 +25,9 @@ namespace MarginTrading.Backend.Core
         /// <param name="direction"></param>
         /// <param name="originator"></param>
         /// <param name="additionalInfo"></param>
-        /// <param name="correlationId"></param>
         /// <returns></returns>
         Task<Dictionary<string, (PositionCloseResult, Order)>> ClosePositionsGroupAsync(string accountId,
-            string assetPairId, 
-            PositionDirection? direction, 
-            OriginatorType originator, 
-            string additionalInfo,
-            string correlationId);
+            string assetPairId, PositionDirection? direction, OriginatorType originator, string additionalInfo);
 
         /// <summary>
         /// Close predefined group of positions, assuming the list of positions is of single account, instrument and direction
@@ -51,23 +46,23 @@ namespace MarginTrading.Backend.Core
             string additionalInfo = null);
 
         Task<(PositionCloseResult, Order)[]> LiquidatePositionsUsingSpecialWorkflowAsync(IMatchingEngineBase me,
-            string[] positionIds, string correlationId, string additionalInfo, OriginatorType originator,
+            string[] positionIds, string additionalInfo, OriginatorType originator,
             OrderModality modality);
             
-        Order CancelPendingOrder(string orderId, string additionalInfo, string correlationId,
+        Order CancelPendingOrder(string orderId, string additionalInfo,
             string comment = null, OrderCancellationReason reason = OrderCancellationReason.None);
             
         Task ChangeOrderAsync(string orderId, decimal price, OriginatorType originator,
-            string additionalInfo, string correlationId, bool? forceOpen = null);
+            string additionalInfo, bool? forceOpen = null);
             
         (bool WillOpenPosition, decimal ReleasedMargin) MatchOnExistingPositions(Order order);
         
         void ProcessExpiredOrders(DateTime operationIntervalEnd);
 
         Task ChangeOrderValidityAsync(string orderId, DateTime validity, OriginatorType originator,
-            string additionalInfo, string correlationId);
+            string additionalInfo);
 
         Task RemoveOrderValidityAsync(string orderId, OriginatorType originator,
-            string additionalInfo, string correlationId);
+            string additionalInfo);
     }
 }

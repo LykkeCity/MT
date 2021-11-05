@@ -10,6 +10,7 @@ using Lykke.MarginTrading.OrderBookService.Contracts;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.EmailSender;
 using Lykke.SettingsReader;
+using Lykke.Snow.Common.Correlation.Http;
 using Lykke.Snow.Common.Startup;
 using Lykke.Snow.Mdm.Contracts.Api;
 using MarginTrading.AccountsManagement.Contracts;
@@ -36,18 +37,21 @@ namespace MarginTrading.Backend.Modules
         protected override void Load(ContainerBuilder builder)
         {
             if (_settings.CurrentValue.MtBackend.ExchangeConnector == ExchangeConnectorType.RealExchangeConnector)
-            {
-                var gavelClientGenerator = HttpClientGenerator
-                    .BuildForUrl(_settings.CurrentValue.MtStpExchangeConnectorClient.ServiceUrl)
-                    .WithServiceName<LykkeErrorResponse>(
-                        $"Gavel [{_settings.CurrentValue.MtStpExchangeConnectorClient.ServiceUrl}]")
-                    .WithApiKey(_settings.CurrentValue.MtStpExchangeConnectorClient.ApiKey)
-                    .WithoutRetries()
-                    .Create();
-                    
-                builder.RegisterInstance(gavelClientGenerator.Generate<IExchangeConnectorClient>())
-                .As<IExchangeConnectorClient>()
-                .SingleInstance();
+            {    
+                builder
+                    .Register(ctx =>
+                    {
+                        var gavelClientGenerator = HttpClientGenerator
+                            .BuildForUrl(_settings.CurrentValue.MtStpExchangeConnectorClient.ServiceUrl)
+                            .WithAdditionalDelegatingHandler(ctx.Resolve<HttpCorrelationHandler>())
+                            .WithServiceName<LykkeErrorResponse>(
+                                $"Gavel [{_settings.CurrentValue.MtStpExchangeConnectorClient.ServiceUrl}]")
+                            .WithApiKey(_settings.CurrentValue.MtStpExchangeConnectorClient.ApiKey)
+                            .WithoutRetries()
+                            .Create();
+                        return gavelClientGenerator.Generate<IExchangeConnectorClient>();
+                    })
+                    .As<IExchangeConnectorClient>().SingleInstance();
             }
             if (_settings.CurrentValue.MtBackend.ExchangeConnector == ExchangeConnectorType.FakeExchangeConnector)
             {
@@ -92,8 +96,113 @@ namespace MarginTrading.Backend.Modules
             
             #region Asset Service
 
+            builder
+                .Register(ctx => BuildSettingsClientGenerator(ctx).Generate<IAssetsApi>())
+                .As<IAssetsApi>().SingleInstance();
+            
+            builder
+                .Register(ctx => BuildSettingsClientGenerator(ctx).Generate<IAssetPairsApi>())
+                .As<IAssetPairsApi>().SingleInstance();
+            
+            builder
+                .Register(ctx => BuildSettingsClientGenerator(ctx).Generate<ITradingConditionsApi>())
+                .As<ITradingConditionsApi>().SingleInstance();
+            
+            builder
+                .Register(ctx => BuildSettingsClientGenerator(ctx).Generate<ITradingInstrumentsApi>())
+                .As<ITradingInstrumentsApi>().SingleInstance();
+            
+            builder
+                .Register(ctx => BuildSettingsClientGenerator(ctx).Generate<IScheduleSettingsApi>())
+                .As<IScheduleSettingsApi>().SingleInstance();
+            
+            builder
+                .Register(ctx => BuildSettingsClientGenerator(ctx).Generate<ITradingRoutesApi>())
+                .As<ITradingRoutesApi>().SingleInstance();
+            
+            builder
+                .Register(ctx => BuildSettingsClientGenerator(ctx).Generate<IServiceMaintenanceApi>())
+                .As<IServiceMaintenanceApi>().SingleInstance();
+
+            builder
+                .Register(ctx => BuildSettingsClientGenerator(ctx).Generate<IClientProfileSettingsApi>())
+                .As<IClientProfileSettingsApi>().SingleInstance();
+
+            #endregion
+
+            #region MT Accounts Management
+
+            builder
+                .Register(ctx =>
+                {
+                    var accountsClientGeneratorBuilder = HttpClientGenerator
+                        .BuildForUrl(_settings.CurrentValue.AccountsManagementServiceClient.ServiceUrl)
+                        .WithAdditionalDelegatingHandler(ctx.Resolve<HttpCorrelationHandler>())
+                        .WithServiceName<LykkeErrorResponse>(
+                            $"MT Account Management [{_settings.CurrentValue.AccountsManagementServiceClient.ServiceUrl}]");
+            
+                    if (!string.IsNullOrWhiteSpace(_settings.CurrentValue.AccountsManagementServiceClient.ApiKey))
+                    {
+                        accountsClientGeneratorBuilder = accountsClientGeneratorBuilder
+                            .WithApiKey(_settings.CurrentValue.AccountsManagementServiceClient.ApiKey);
+                    }
+                    return accountsClientGeneratorBuilder.Create().Generate<IAccountsApi>();
+                })
+                .As<IAccountsApi>().SingleInstance();
+
+            #endregion
+
+            #region Mdm
+
+            builder
+                .Register(ctx =>
+                {
+                    //for feature management
+                    var mdmGenerator = HttpClientGenerator
+                        .BuildForUrl(_settings.CurrentValue.MdmServiceClient.ServiceUrl)
+                        .WithAdditionalDelegatingHandler(ctx.Resolve<HttpCorrelationHandler>())
+                        .WithServiceName<LykkeErrorResponse>(
+                            $"Mdm [{_settings.CurrentValue.MdmServiceClient.ServiceUrl}]");
+
+                    if (!string.IsNullOrWhiteSpace(_settings.CurrentValue.MdmServiceClient.ApiKey))
+                    {
+                        mdmGenerator = mdmGenerator
+                            .WithApiKey(_settings.CurrentValue.MdmServiceClient.ApiKey);
+                    }
+                    return mdmGenerator.Create().Generate<IBrokerSettingsApi>();
+                })
+                .As<IBrokerSettingsApi>().SingleInstance();
+
+            #endregion
+
+            #region OrderBook Service
+
+            builder
+                .Register(ctx =>
+                {
+                    var orderBookServiceClientGeneratorBuilder = HttpClientGenerator
+                        .BuildForUrl(_settings.CurrentValue.OrderBookServiceClient.ServiceUrl)
+                        .WithAdditionalDelegatingHandler(ctx.Resolve<HttpCorrelationHandler>())
+                        .WithServiceName<LykkeErrorResponse>(
+                            $"MT OrderBook Service [{_settings.CurrentValue.OrderBookServiceClient.ServiceUrl}]");
+            
+                    if (!string.IsNullOrWhiteSpace(_settings.CurrentValue.OrderBookServiceClient.ApiKey))
+                    {
+                        orderBookServiceClientGeneratorBuilder = orderBookServiceClientGeneratorBuilder
+                            .WithApiKey(_settings.CurrentValue.OrderBookServiceClient.ApiKey);
+                    }
+                    return orderBookServiceClientGeneratorBuilder.Create().Generate<IOrderBookProviderApi>();
+                })
+                .As<IOrderBookProviderApi>().SingleInstance();
+
+            #endregion OrderBook Service
+        }
+
+        private HttpClientGenerator BuildSettingsClientGenerator(IComponentContext ctx)
+        {
             var settingsClientGeneratorBuilder = HttpClientGenerator
                 .BuildForUrl(_settings.CurrentValue.SettingsServiceClient.ServiceUrl)
+                .WithAdditionalDelegatingHandler(ctx.Resolve<HttpCorrelationHandler>())
                 .WithServiceName<LykkeErrorResponse>(
                     $"MT Settings [{_settings.CurrentValue.SettingsServiceClient.ServiceUrl}]")
                 .WithRetriesStrategy(new LinearRetryStrategy(TimeSpan.FromMilliseconds(300), 3));
@@ -104,89 +213,7 @@ namespace MarginTrading.Backend.Modules
                     .WithApiKey(_settings.CurrentValue.SettingsServiceClient.ApiKey);
             }
 
-            var settingsClientGenerator = settingsClientGeneratorBuilder.Create();
-                
-            builder.RegisterInstance(settingsClientGenerator.Generate<IAssetsApi>())
-                .As<IAssetsApi>().SingleInstance();
-            
-            builder.RegisterInstance(settingsClientGenerator.Generate<IAssetPairsApi>())
-                .As<IAssetPairsApi>().SingleInstance();
-            
-            builder.RegisterInstance(settingsClientGenerator.Generate<ITradingConditionsApi>())
-                .As<ITradingConditionsApi>().SingleInstance();
-            
-            builder.RegisterInstance(settingsClientGenerator.Generate<ITradingInstrumentsApi>())
-                .As<ITradingInstrumentsApi>().SingleInstance();
-            
-            builder.RegisterInstance(settingsClientGenerator.Generate<IScheduleSettingsApi>())
-                .As<IScheduleSettingsApi>().SingleInstance();
-            
-            builder.RegisterInstance(settingsClientGenerator.Generate<ITradingRoutesApi>())
-                .As<ITradingRoutesApi>().SingleInstance();
-            
-            builder.RegisterInstance(settingsClientGenerator.Generate<IServiceMaintenanceApi>())
-                .As<IServiceMaintenanceApi>().SingleInstance();
-
-            builder.RegisterInstance(settingsClientGenerator.Generate<IClientProfileSettingsApi>())
-                .As<IClientProfileSettingsApi>().SingleInstance();
-
-            #endregion
-
-            #region MT Accounts Management
-
-            var accountsClientGeneratorBuilder = HttpClientGenerator
-                .BuildForUrl(_settings.CurrentValue.AccountsManagementServiceClient.ServiceUrl)
-                .WithServiceName<LykkeErrorResponse>(
-                    $"MT Account Management [{_settings.CurrentValue.AccountsManagementServiceClient.ServiceUrl}]");
-            
-            if (!string.IsNullOrWhiteSpace(_settings.CurrentValue.AccountsManagementServiceClient.ApiKey))
-            {
-                accountsClientGeneratorBuilder = accountsClientGeneratorBuilder
-                    .WithApiKey(_settings.CurrentValue.AccountsManagementServiceClient.ApiKey);
-            }
-
-            builder.RegisterInstance(accountsClientGeneratorBuilder.Create().Generate<IAccountsApi>())
-                .As<IAccountsApi>().SingleInstance();
-
-            #endregion
-
-            #region Mdm
-
-            //for feature management
-            var mdmGenerator = HttpClientGenerator
-                .BuildForUrl(_settings.CurrentValue.MdmServiceClient.ServiceUrl)
-                .WithServiceName<LykkeErrorResponse>(
-                    $"Mdm [{_settings.CurrentValue.MdmServiceClient.ServiceUrl}]");
-
-            if (!string.IsNullOrWhiteSpace(_settings.CurrentValue.MdmServiceClient.ApiKey))
-            {
-                mdmGenerator = mdmGenerator
-                    .WithApiKey(_settings.CurrentValue.MdmServiceClient.ApiKey);
-            }
-
-            builder.RegisterInstance(mdmGenerator.Create().Generate<IBrokerSettingsApi>())
-                .As<IBrokerSettingsApi>().SingleInstance();
-
-            #endregion
-
-            #region OrderBook Service
-
-            var orderBookServiceClientGeneratorBuilder = HttpClientGenerator
-                .BuildForUrl(_settings.CurrentValue.OrderBookServiceClient.ServiceUrl)
-                .WithServiceName<LykkeErrorResponse>(
-                    $"MT OrderBook Service [{_settings.CurrentValue.OrderBookServiceClient.ServiceUrl}]");
-            
-            if (!string.IsNullOrWhiteSpace(_settings.CurrentValue.OrderBookServiceClient.ApiKey))
-            {
-                orderBookServiceClientGeneratorBuilder = orderBookServiceClientGeneratorBuilder
-                    .WithApiKey(_settings.CurrentValue.OrderBookServiceClient.ApiKey);
-            }
-
-            builder.RegisterInstance(orderBookServiceClientGeneratorBuilder.Create().Generate<IOrderBookProviderApi>())
-                .As<IOrderBookProviderApi>()
-                .SingleInstance();
-
-            #endregion OrderBook Service
+            return settingsClientGeneratorBuilder.Create();
         }
     }
 }

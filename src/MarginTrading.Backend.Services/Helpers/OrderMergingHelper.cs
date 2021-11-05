@@ -73,7 +73,6 @@ namespace MarginTrading.Backend.Services.Helpers
                 fxToAssetPairDirection: orderHistory.FxToAssetPairDirection,
                 status: orderHistory.Status,
                 additionalInfo: orderHistory.AdditionalInfo,
-                correlationId: orderHistory.CorrelationId,
                 positionsToBeClosed: string.IsNullOrWhiteSpace(orderHistory.PositionId)
                     ? new List<string>()
                     : new List<string> {orderHistory.PositionId},

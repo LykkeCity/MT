@@ -523,8 +523,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     await _tradingEngine.LiquidatePositionsUsingSpecialWorkflowAsync(
                         me: new SpecialLiquidationMatchingEngine(command.Price, command.MarketMakerId,
                             command.ExternalOrderId, command.ExternalExecutionTime), 
-                        positionIds: executionInfo.Data.PositionIds.ToArray(), 
-                        correlationId: command.OperationId,
+                        positionIds: executionInfo.Data.PositionIds.ToArray(),
                         executionInfo.Data.AdditionalInfo,
                         executionInfo.Data.OriginatorType,
                         modality);

@@ -8,6 +8,7 @@ using Autofac.Extensions.DependencyInjection;
 using Common.Log;
 using Lykke.MarginTrading.OrderBookService.Contracts;
 using Lykke.MarginTrading.OrderBookService.Contracts.Models;
+using Lykke.Snow.Common.Correlation;
 using Lykke.Snow.Mdm.Contracts.Api;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.Backend.Core;
@@ -39,6 +40,7 @@ namespace MarginTradingTests.Modules
             var brokerSettingsApi = MarginTradingTestsUtils.GetBrokerSettingsApi(_brokerId);
             var featureManager = MarginTradingTestsUtils.GetFeatureManager(_brokerId, brokerSettingsApi);
             
+            builder.RegisterInstance(new CorrelationContextAccessor()).AsSelf();
             builder.RegisterInstance(new LogToMemory()).As<ILog>();
             builder.RegisterInstance(assets).As<IAssetsApi>().SingleInstance();
             builder.RegisterInstance(brokerSettingsApi).As<IBrokerSettingsApi>().SingleInstance();

@@ -3,9 +3,9 @@
 
 using System;
 using System.Threading.Tasks;
-using Common;
 using Lykke.RabbitMqBroker.Publisher;
-using Lykke.RabbitMqBroker.Subscriber;
+using Lykke.RabbitMqBroker.Publisher.Serializers;
+using Lykke.RabbitMqBroker.Subscriber.Deserializers;
 
 namespace MarginTrading.Common.RabbitMq
 {

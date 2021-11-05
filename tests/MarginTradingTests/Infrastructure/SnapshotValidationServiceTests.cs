@@ -371,7 +371,7 @@ namespace MarginTradingTests.Infrastructure
             => new Order(id, 0, string.Empty, volume, DateTime.Now, DateTime.Now, null, string.Empty, string.Empty,
                 string.Empty, price, string.Empty, OrderFillType.FillOrKill, string.Empty, string.Empty, true,
                 OrderType.Market, string.Empty, string.Empty, OriginatorType.Investor, 0, 0, string.Empty,
-                FxToAssetPairDirection.Reverse, status, string.Empty, string.Empty);
+                FxToAssetPairDirection.Reverse, status, string.Empty);
 
         private static OrderHistory CreateOrderHistory(string id, decimal volume, decimal? price, OrderStatus status)
             => new OrderHistory {Id = id, Volume = volume, ExpectedOpenPrice = price, Status = status};

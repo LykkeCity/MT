@@ -113,7 +113,7 @@ namespace MarginTrading.Backend.Services.Workflow
                 {
                     foreach (var order in _orderReader.GetPending().Where(x => x.AssetPairId == @event.OldValue.ProductId))
                     {
-                        _tradingEngine.CancelPendingOrder(order.Id, null,@event.EventId, 
+                        _tradingEngine.CancelPendingOrder(order.Id, null, 
                             null, OrderCancellationReason.InstrumentInvalidated);
                     }
                 }

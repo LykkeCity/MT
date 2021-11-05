@@ -11,6 +11,7 @@ using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Common.Log;
 using Lykke.Cqrs;
+using Lykke.Snow.Common.Correlation;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Contracts.Workflow.Liquidation;
 using MarginTrading.Backend.Contracts.Workflow.Liquidation.Events;
@@ -361,7 +362,6 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                     gr.Key.ExternalProviderId,
                     executionInfo.Data.OriginatorType,
                     executionInfo.Data.AdditionalInfo,
-                    command.OperationId,
                     gr.Key.EquivalentAsset,
                     comment));
 

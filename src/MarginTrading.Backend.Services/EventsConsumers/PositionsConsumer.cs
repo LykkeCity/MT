@@ -122,14 +122,14 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             if (order.IsBasicOrder())
             {
                 reason = OrderCancellationReason.ParentPositionClosed;
-                CancelRelatedOrdersForOrder(order, order.CorrelationId, reason);
+                CancelRelatedOrdersForOrder(order, reason);
             }
             else
             {
                 reason = OrderCancellationReason.ConnectedOrderExecuted;
             }
             
-            CancelRelatedOrdersForPosition(position, order.CorrelationId, reason);
+            CancelRelatedOrdersForPosition(position, reason);
            
         }
 
@@ -212,7 +212,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
 
                     ChangeRelatedOrderVolume(openedPosition.RelatedOrders, -openedPosition.Volume);
                     
-                    CancelRelatedOrdersForOrder(order, order.CorrelationId, OrderCancellationReason.ParentPositionClosed);
+                    CancelRelatedOrdersForOrder(order, OrderCancellationReason.ParentPositionClosed);
                 
                     openedPosition.CancelClosing(_dateService.Now());
                     
@@ -314,8 +314,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             }
         }
         
-        private void CancelRelatedOrdersForPosition(Position position, string correlationId,
-            OrderCancellationReason reason)
+        private void CancelRelatedOrdersForPosition(Position position, OrderCancellationReason reason)
         {
             var metadata = new OrderCancelledMetadata {Reason = reason.ToType<OrderCancellationReasonContract>()};
             
@@ -323,14 +322,13 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             {
                 if (_ordersCache.Active.TryPopById(relatedOrderInfo.Id, out var relatedOrder))
                 {
-                    relatedOrder.Cancel(_dateService.Now(), null, correlationId);
+                    relatedOrder.Cancel(_dateService.Now(), null);
                     _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(relatedOrder, metadata));
                 }
             }
         }
         
-        private void CancelRelatedOrdersForOrder(Order order, string correlationId,
-            OrderCancellationReason reason)
+        private void CancelRelatedOrdersForOrder(Order order, OrderCancellationReason reason)
         {
             var metadata = new OrderCancelledMetadata {Reason = reason.ToType<OrderCancellationReasonContract>()};
             
@@ -338,7 +336,7 @@ namespace MarginTrading.Backend.Services.EventsConsumers
             {
                 if (_ordersCache.Inactive.TryPopById(relatedOrderInfo.Id, out var relatedOrder))
                 {
-                    relatedOrder.Cancel(_dateService.Now(), null, correlationId);
+                    relatedOrder.Cancel(_dateService.Now(), null);
                     _orderCancelledEventChannel.SendEvent(this, new OrderCancelledEventArgs(relatedOrder, metadata));
                 }
             }

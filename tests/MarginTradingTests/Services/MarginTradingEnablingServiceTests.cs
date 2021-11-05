@@ -2,8 +2,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Threading.Tasks;
-using Common;
 using FluentAssertions;
+using Lykke.RabbitMqBroker.Publisher;
 using Lykke.Service.ClientAccount.Client.Models;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;

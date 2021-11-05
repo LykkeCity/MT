@@ -202,7 +202,6 @@ namespace MarginTrading.Backend.Controllers
             {
                 _cqrsSender.PublishEvent(new OrderPlacementRejectedEvent
                 {
-                    CorrelationId = request.CorrelationId ?? _identityGenerator.GenerateGuid(),
                     EventTimestamp = _dateService.Now(),
                     OrderPlaceRequest = request,
                     RejectReason = exception.RejectReason.ToType<OrderRejectReasonContract>(),
@@ -250,16 +249,12 @@ namespace MarginTrading.Backend.Controllers
 
             ValidationHelper.ValidateAccountId(order, accountId);
 
-            var correlationId = string.IsNullOrWhiteSpace(request?.CorrelationId)
-                ? _identityGenerator.GenerateGuid()
-                : request.CorrelationId;
-
             var reason = request?.Originator == OriginatorTypeContract.System
                 ? OrderCancellationReason.CorporateAction
                 : OrderCancellationReason.None;
 
             var canceledOrder = _tradingEngine.CancelPendingOrder(order.Id, request?.AdditionalInfo,
-                correlationId, request?.Comment, reason);
+                request?.Comment, reason);
 
             _operationsLogService.AddLog("action order.cancel", order.AccountId, request?.ToJson(),
                 canceledOrder.ToJson());
@@ -365,12 +360,8 @@ namespace MarginTrading.Backend.Controllers
            
             var originator = GetOriginator(request.Originator);
 
-            var correlationId = string.IsNullOrWhiteSpace(request.CorrelationId)
-                ? _identityGenerator.GenerateGuid()
-                : request.CorrelationId;
-
             await _tradingEngine.ChangeOrderAsync(order.Id, request.Price, originator,
-                request.AdditionalInfo, correlationId, request.ForceOpen);
+                request.AdditionalInfo, request.ForceOpen);
 
             _operationsLogService.AddLog("action order.changeLimits", order.AccountId,
                 new { orderId = orderId, request = request.ToJson() }.ToJson(), "");
@@ -397,12 +388,8 @@ namespace MarginTrading.Backend.Controllers
 
             var originator = GetOriginator(request.Originator);
 
-            var correlationId = string.IsNullOrWhiteSpace(request.CorrelationId)
-                ? _identityGenerator.GenerateGuid()
-                : request.CorrelationId;
-
             await _tradingEngine.ChangeOrderValidityAsync(order.Id, request.Validity, originator,
-                request.AdditionalInfo, correlationId);
+                request.AdditionalInfo);
 
             _operationsLogService.AddLog("action order.changeLimits", order.AccountId,
                 new { orderId = orderId, request = request.ToJson() }.ToJson(), "");
@@ -429,12 +416,8 @@ namespace MarginTrading.Backend.Controllers
 
             var originator = GetOriginator(request.Originator);
 
-            var correlationId = string.IsNullOrWhiteSpace(request.CorrelationId)
-                ? _identityGenerator.GenerateGuid()
-                : request.CorrelationId;
-
             await _tradingEngine.RemoveOrderValidityAsync(order.Id, originator,
-                request.AdditionalInfo, correlationId);
+                request.AdditionalInfo);
 
             _operationsLogService.AddLog("action order.changeLimits", order.AccountId,
                 new { orderId = orderId, request = request.ToJson() }.ToJson(), "");

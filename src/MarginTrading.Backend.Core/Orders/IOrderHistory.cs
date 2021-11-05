@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core.MatchedOrders;
-using MarginTrading.Backend.Core.MatchingEngines;
 
 namespace MarginTrading.Backend.Core.Orders
 {

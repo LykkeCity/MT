@@ -17,7 +17,6 @@ using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Filters;
-using MarginTrading.Backend.Infrastructure;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Helpers;
@@ -90,8 +89,6 @@ namespace MarginTrading.Backend.Controllers
 
             var originator = GetOriginator(request?.Originator);
 
-            var correlationId = request?.CorrelationId ?? _identityGenerator.GenerateGuid();
-
             var closeResult = await _tradingEngine.ClosePositionsAsync(
                 new PositionsCloseData(
                     position,
@@ -101,7 +98,6 @@ namespace MarginTrading.Backend.Controllers
                     position.ExternalProviderId,
                     originator,
                     request?.AdditionalInfo,
-                    correlationId,
                     position.EquivalentAsset), true);
 
             _operationsLogService.AddLog("action order.close", position.AccountId, request?.ToJson(),
@@ -135,7 +131,7 @@ namespace MarginTrading.Backend.Controllers
         {
             var originator = GetOriginator(request?.Originator);
 
-            var closeResult = await _tradingEngine.ClosePositionsGroupAsync(accountId, assetPairId, direction?.ToType<PositionDirection>(), originator, request?.AdditionalInfo, request?.CorrelationId);
+            var closeResult = await _tradingEngine.ClosePositionsGroupAsync(accountId, assetPairId, direction?.ToType<PositionDirection>(), originator, request?.AdditionalInfo);
             
             _operationsLogService.AddLog("Position liquidation started", string.Empty, 
                 $"instrument = [{assetPairId}], account = [{accountId}], direction = [{direction}], request = [{request.ToJson()}]",

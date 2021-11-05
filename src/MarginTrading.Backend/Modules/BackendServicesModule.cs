@@ -5,11 +5,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Autofac;
-using Common;
 using Common.Log;
 using Lykke.Common.Chaos;
+using Lykke.RabbitMqBroker;
 using Lykke.RabbitMqBroker.Publisher;
-using Lykke.RabbitMqBroker.Subscriber;
+using Lykke.RabbitMqBroker.Publisher.Strategies;
+using Lykke.Snow.Common.Correlation.RabbitMq;
 using MarginTrading.Backend.Email;
 using MarginTrading.Backend.Middleware.Validator;
 using MarginTrading.Common.RabbitMq;
@@ -26,6 +27,7 @@ using MarginTrading.Backend.Services.RabbitMq;
 using MarginTrading.Backend.Services.Services;
 using MarginTrading.Backend.Services.Settings;
 using MarginTrading.Common.Services;
+using Microsoft.Extensions.Logging;
 
 namespace MarginTrading.Backend.Modules
 {
@@ -36,7 +38,11 @@ namespace MarginTrading.Backend.Modules
         private readonly IHostingEnvironment _environment;
         private readonly ILog _log;
 
-        public BackendServicesModule(MtBackendSettings mtSettings, MarginTradingSettings settings, IHostingEnvironment environment, ILog log)
+        public BackendServicesModule(
+            MtBackendSettings mtSettings,
+            MarginTradingSettings settings,
+            IHostingEnvironment environment,
+            ILog log)
         {
             _mtSettings = mtSettings;
             _settings = settings;
@@ -152,21 +158,23 @@ namespace MarginTrading.Backend.Modules
 
             foreach (var exchangeName in publishers)
             {
-                var pub = new RabbitMqPublisher<string>(new RabbitMqSubscriptionSettings
+                builder
+                    .Register(ctx =>
                     {
-                        ConnectionString = _settings.MtRabbitMqConnString,
-                        ExchangeName = exchangeName
+                        var pub = new RabbitMqPublisher<string>(ctx.Resolve<ILoggerFactory>(), new RabbitMqSubscriptionSettings
+                            {
+                                ConnectionString = _settings.MtRabbitMqConnString,
+                                ExchangeName = exchangeName
+                            })
+                            .SetSerializer(bytesSerializer)
+                            .SetPublishStrategy(new DefaultFanoutPublishStrategy(new RabbitMqSubscriptionSettings {IsDurable = true}))
+                            .DisableInMemoryQueuePersistence()
+                            .SetWriteHeadersFunc(ctx.Resolve<RabbitMqCorrelationManager>().BuildCorrelationHeadersIfExists);
+                        pub.Start();
+                        return pub;
                     })
-                    .SetSerializer(bytesSerializer)
-                    .SetPublishStrategy(new DefaultFanoutPublishStrategy(new RabbitMqSubscriptionSettings {IsDurable = true}))
-                    .DisableInMemoryQueuePersistence()
-                    .SetLogger(_log)
-                    .SetConsole(consoleWriter)
-                    .Start();
-
-                builder.RegisterInstance(pub)
                     .Named<IMessageProducer<string>>(exchangeName)
-                    .As<IStopable>()
+                    .As<IStartStop>()
                     .SingleInstance();
             }
         }

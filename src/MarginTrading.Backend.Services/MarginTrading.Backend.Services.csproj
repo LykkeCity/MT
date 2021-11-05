@@ -25,7 +25,6 @@
     <PackageReference Include="FluentScheduler" Version="5.3.0" />
     <PackageReference Include="Lykke.AzureQueueIntegration" Version="2.3.0" />
     <PackageReference Include="Lykke.Common" Version="7.5.0" />
-    <PackageReference Include="Lykke.Cqrs" Version="9.0.1" />
     <PackageReference Include="Lykke.MarginTrading.AccountsManagement.Contracts" Version="2.3.5" />
     <PackageReference Include="Lykke.MarginTrading.AssetService.Contracts" Version="9.7.5" />
     <PackageReference Include="Lykke.MarginTrading.BookKeeper.Contracts" Version="1.0.9" />
@@ -33,16 +32,17 @@
     <PackageReference Include="Lykke.MarginTrading.OrderBookService.Contracts" Version="1.6.0" />
     <PackageReference Include="Lykke.Messaging" Version="6.3.1" />
     <PackageReference Include="Lykke.Messaging.RabbitMq" Version="2.2.2" />
-    <PackageReference Include="Lykke.RabbitMqBroker" Version="7.13.2" />
+    <PackageReference Include="LykkeBiz.RabbitMqBroker" Version="9.2.6" />
     <PackageReference Include="Lykke.Rocks.Caching" Version="1.0.0" />
     <PackageReference Include="Lykke.Service.ClientAccount.Client" Version="1.4.1" />
     <PackageReference Include="Lykke.Service.EmailSender" Version="1.1.0" />
     <PackageReference Include="Lykke.Service.Session" Version="16.0.0" />
     <PackageReference Include="Lykke.SlackNotifications" Version="2.0.0" />
-    <PackageReference Include="Lykke.Snow.Common" Version="1.25.1" />
+    <PackageReference Include="Lykke.Snow.Common" Version="1.31.0" />
     <PackageReference Include="Lykke.Snow.Mdm.Contracts" Version="3.20.0" />
     <PackageReference Include="Lykke.WampSharp.NewtonsoftJson" Version="1.0.2" />
     <PackageReference Include="Lykke.WampSharp.AspNetCore.WebSockets.Server" Version="1.0.2" />
+    <PackageReference Include="LykkeBiz.Cqrs" Version="10.0.0" />
     <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="2.3.11" />
     <PackageReference Include="morelinq" Version="2.10.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
