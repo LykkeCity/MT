@@ -15,12 +15,35 @@ namespace MarginTrading.Backend.Core
     {
         Task<Order> PlaceOrderAsync(Order order);
 
-        Task<(PositionCloseResult result, Order order)> ClosePositionsAsync(PositionsCloseData data, bool 
-        specialLiquidationEnabled);
+        Task<(PositionCloseResult result, Order order)> ClosePositionsAsync(PositionsCloseData data, bool specialLiquidationEnabled);
 
-        [ItemNotNull]
+        /// <summary>
+        /// Close group of positions by accountId, assetPairId and direction
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <param name="assetPairId"></param>
+        /// <param name="direction"></param>
+        /// <param name="originator"></param>
+        /// <param name="additionalInfo"></param>
+        /// <returns></returns>
         Task<Dictionary<string, (PositionCloseResult, Order)>> ClosePositionsGroupAsync(string accountId,
             string assetPairId, PositionDirection? direction, OriginatorType originator, string additionalInfo);
+
+        /// <summary>
+        /// Close predefined group of positions, assuming the list of positions is of single account, instrument and direction
+        /// </summary>
+        /// <param name="positions"></param>
+        /// <param name="operationId"></param>
+        /// <param name="direction"></param>
+        /// <param name="originator"></param>
+        /// <param name="additionalInfo"></param>
+        /// <returns></returns>
+        Task<Dictionary<string, (PositionCloseResult, Order)>> ClosePositionsGroupAsync(
+            IList<Position> positions,
+            string operationId,
+            OriginatorType originator,
+            PositionDirection? direction = null,
+            string additionalInfo = null);
 
         Task<(PositionCloseResult, Order)[]> LiquidatePositionsUsingSpecialWorkflowAsync(IMatchingEngineBase me,
             string[] positionIds, string additionalInfo, OriginatorType originator,

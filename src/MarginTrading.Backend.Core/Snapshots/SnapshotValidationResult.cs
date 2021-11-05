@@ -13,5 +13,7 @@ namespace MarginTrading.Backend.Core.Snapshots
         public ValidationResult<OrderInfo> Orders { get; set; }
 
         public ValidationResult<PositionInfo> Positions { get; set; }
+        
+        public string PreviousSnapshotCorrelationId { get; set; }
     }
 }

@@ -92,6 +92,7 @@ namespace MarginTradingTests.Infrastructure
                 CreateOrder("1", 1, 1, OrderStatus.Active),
                 CreateOrder("3", 3.1m, 3.1m, OrderStatus.Active),
                 CreateOrder("4", 4, 4, OrderStatus.Active),
+                CreateOrder("5", 5, 5, OrderStatus.Inactive),
             };
 
             _ordersHistory = new List<OrderHistory>
@@ -99,7 +100,8 @@ namespace MarginTradingTests.Infrastructure
                 CreateOrderHistory("1", 1, 1, OrderStatus.Active),
                 CreateOrderHistory("2", 2, 2, OrderStatus.Executed),
                 CreateOrderHistory("3", 3.1m, 3.1m, OrderStatus.Active),
-                CreateOrderHistory("4", 4, 4, OrderStatus.Active)
+                CreateOrderHistory("4", 4, 4, OrderStatus.Active),
+                CreateOrderHistory("5", 5, 5, OrderStatus.Placed)
             };
 
             // act
@@ -155,7 +157,8 @@ namespace MarginTradingTests.Infrastructure
             {
                 CreateSnapshotOrder("1", 1, 1, OrderStatusContract.Active),
                 CreateSnapshotOrder("2", 2, 2, OrderStatusContract.Active),
-                CreateSnapshotOrder("3", 3, 3, OrderStatusContract.Active)
+                CreateSnapshotOrder("3", 3, 3, OrderStatusContract.Active),
+                CreateSnapshotOrder("4", 4, 4, OrderStatusContract.Active)
             }.ToJson();
 
             _currentOrders = new List<Order>
@@ -169,7 +172,8 @@ namespace MarginTradingTests.Infrastructure
                 CreateOrderHistory("1", 1, 1, OrderStatus.Active),
                 CreateOrderHistory("2", 2, 2, OrderStatus.Executed),
                 CreateOrderHistory("3", 3.1m, 3.1m, OrderStatus.Active),
-                CreateOrderHistory("4", 4, 4, OrderStatus.Active)
+                CreateOrderHistory("4", 4, 4, OrderStatus.Expired),
+                CreateOrderHistory("5", 5, 5, OrderStatus.Active),
             };
 
             // act
