@@ -25,6 +25,8 @@ namespace MarginTrading.Backend.Core.TradingConditions
         public decimal CommissionMin { get; set; }
         public decimal CommissionMax { get; set; }
         public string CommissionCurrency { get; set; }
+        public decimal HedgeCost { get; set; }
+        public decimal Spread { get; set; }
         public Leverage InitLeverage { get; set; }
         public Leverage MaintenanceLeverage { get; set; }
         // TODO: Probably, MarginRate should be used instead of margin init and margin maintenance. This value comes from

@@ -25,7 +25,8 @@ namespace MarginTrading.Backend.Core.TradingConditions
         decimal CommissionMin { get; }
         decimal CommissionMax { get; }
         string CommissionCurrency { get; }
-        
+        public decimal HedgeCost { get; set; }
+        public decimal Spread { get; set; }
         Leverage InitLeverage { get; }
         Leverage MaintenanceLeverage { get; }
         MarginRate MarginRate { get; }

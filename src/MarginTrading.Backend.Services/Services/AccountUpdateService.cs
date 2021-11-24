@@ -9,6 +9,7 @@ using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Snow.Common.Commissions;
+using Lykke.Snow.Common.Costs;
 using Lykke.Snow.Common.Percents;
 using MarginTrading.AssetService.Contracts.ClientProfileSettings;
 using MarginTrading.Backend.Core;
@@ -19,6 +20,8 @@ using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
+using MarginTrading.Backend.Services.TradingConditions;
+using OrderDirection = MarginTrading.Backend.Core.Orders.OrderDirection;
 
 #pragma warning disable 1998
 
@@ -37,6 +40,7 @@ namespace MarginTrading.Backend.Services.Services
         private readonly MarginTradingSettings _marginTradingSettings;
         private readonly IClientProfileSettingsCache _clientProfileSettingsCache;
         private readonly IAssetPairsCache _assetPairsCache;
+        private readonly ITradingInstrumentsCacheService _tradingInstrumentsCache;
 
         public AccountUpdateService(
             IFplService fplService,
@@ -47,7 +51,8 @@ namespace MarginTrading.Backend.Services.Services
             IQuoteCacheService quoteCacheService,
             MarginTradingSettings marginTradingSettings,
             IClientProfileSettingsCache clientProfileSettingsCache,
-            IAssetPairsCache assetPairsCache)
+            IAssetPairsCache assetPairsCache,
+            ITradingInstrumentsCacheService tradingInstrumentsCache)
         {
             _fplService = fplService;
             _accountsCacheService = accountsCacheService;
@@ -58,6 +63,7 @@ namespace MarginTrading.Backend.Services.Services
             _marginTradingSettings = marginTradingSettings;
             _clientProfileSettingsCache = clientProfileSettingsCache;
             _assetPairsCache = assetPairsCache;
+            _tradingInstrumentsCache = tradingInstrumentsCache;
         }
 
         public void UpdateAccount(IMarginTradingAccount account)
@@ -158,25 +164,34 @@ namespace MarginTrading.Backend.Services.Services
             if (!_clientProfileSettingsCache.TryGetValue(account.TradingConditionId, assetType, out var clientProfileSettings))
                 throw new InvalidOperationException($"Client profile settings for [{account.TradingConditionId}] and asset type [{assetType}] were not found in cache");
 
-            var entryCommission = CommissionHelper.CalculateCommission(
-                openPrice,
-                order.Volume,
-                fxRate,
-                clientProfileSettings.ExecutionFeesCap,
-                clientProfileSettings.ExecutionFeesFloor,
-                new ExecutionFeeRate(clientProfileSettings.ExecutionFeesRate));
-            var exitCommission = CommissionHelper.CalculateCommission(
-                closePrice,
-                order.Volume,
-                fxRate,
-                clientProfileSettings.ExecutionFeesCap,
-                clientProfileSettings.ExecutionFeesFloor,
-                new ExecutionFeeRate(clientProfileSettings.ExecutionFeesRate));
+            var tradingInstrument =
+                _tradingInstrumentsCache.GetTradingInstrument(account.TradingConditionId, order.AssetPairId);
 
-            if (accountMarginAvailable + pnl - entryCommission - exitCommission < orderMargin)
+            var entryCost = CostHelper.CalculateEntryCost(
+                order.Price,
+                order.Direction == OrderDirection.Buy ? Lykke.Snow.Common.Costs.OrderDirection.Buy : Lykke.Snow.Common.Costs.OrderDirection.Sell,
+                quote.Ask,
+                quote.Bid,
+                fxRate,
+                tradingInstrument.Spread,
+                tradingInstrument.HedgeCost,
+                _marginTradingSettings.BrokerDefaultCcVolume,
+                _marginTradingSettings.BrokerDonationShare);
+            var exitCost = CostHelper.CalculateExitCost(
+                order.Price,
+                order.Direction == OrderDirection.Buy ? Lykke.Snow.Common.Costs.OrderDirection.Buy : Lykke.Snow.Common.Costs.OrderDirection.Sell,
+                quote.Ask,
+                quote.Bid,
+                fxRate,
+                tradingInstrument.Spread,
+                tradingInstrument.HedgeCost,
+                _marginTradingSettings.BrokerDefaultCcVolume,
+                _marginTradingSettings.BrokerDonationShare);
+
+            if (accountMarginAvailable + pnl - entryCost - exitCost < orderMargin)
                 throw new ValidateOrderException(OrderRejectReason.NotEnoughBalance,
                     MtMessages.Validation_NotEnoughBalance,
-                    $"Account available margin: {accountMarginAvailable}, order margin: {orderMargin}, pnl: {pnl}, entry commission: {entryCommission}, exit commission: {exitCommission} " +
+                    $"Account available margin: {accountMarginAvailable}, order margin: {orderMargin}, pnl: {pnl}, entry cost: {entryCost}, exit cost: {exitCost} " +
                     $"(open price: {openPrice}, close price: {closePrice}, fx rate: {fxRate})");
         }
 

@@ -112,6 +112,10 @@ namespace MarginTrading.Backend.Core.Settings
 
         public string BrokerId { get; set; }
 
+        public decimal BrokerDefaultCcVolume { get; set; }
+
+        public decimal BrokerDonationShare { get; set; }
+
         [Optional]
         public TestSettings TestSettings { get; set; }
     }
