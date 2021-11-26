@@ -40,6 +40,7 @@ Below is the API description.
 if DeduplicationTimestamp > (now - DeduplicationCheckPeriod) exception is thrown saying:
 "Trading Engine failed to start due to deduplication validation failure".
 - StartupQueuesCheckerService checks that OrderHistory and PositionHistory broker related queues are empty.
+- Additionally, corresponding poison queues are checked for emptyness if parameter `DisablePoisonQueueCheck` is disabled.  
 Queue names are set in settings StartupQueuesChecker section with OrderHistoryQueueName and PositionHistoryQueueName. 
 4. IoC container is built, all caches are warmed up.
 5. Scheduled jobs are initialised.
@@ -66,7 +67,7 @@ All variables and value constraints are default. For instance, to set host URL t
 
 ### Queues checker
 
-The service checks `OrdersHistory` and `PositionsHistory` queues on startup. If those queues contain any unprocessed events, the service startup fails. The `StartupQueuesCheckerSettings.DisablePoisonQueueCheck` parameter controls this behaviour: by default, poison queues (with postfix `-poison`) are checked too. By setting `StartupQueuesCheckerSettings.DisablePoisonQueueCheck` to true you can skip checking the poison queues (only normal queues will be checked) and start the service.
+The service checks `OrdersHistory` and `PositionsHistory` queues on startup. If those queues contain any unprocessed events, the service startup fails. The `StartupQueuesChecker.DisablePoisonQueueCheck` parameter controls this behaviour: by default, poison queues (with postfix `-poison`) are checked too. By setting `StartupQueuesChecker.DisablePoisonQueueCheck` to true you can skip checking the poison queues (only normal queues will be checked) and start the service.
 
 ### Settings ###
 
@@ -206,7 +207,8 @@ Settings schema is:
      "StartupQueuesChecker": {
        "ConnectionString": "amqp://login:pwd@rabbit-mt.mt.svc.cluster.local:5672",
        "OrderHistoryQueueName": "lykke.mt.orderhistory.MarginTrading.TradingHistory.OrderHistoryBroker.DefaultEnv",
-       "PositionHistoryQueueName": "lykke.mt.position.history.MarginTrading.TradingHistory.PositionHistoryBroker.DefaultEnv.PositionsHistory"
+       "PositionHistoryQueueName": "lykke.mt.position.history.MarginTrading.TradingHistory.PositionHistoryBroker.DefaultEnv.PositionsHistory",
+       "DisablePoisonQueueCheck": true | false
      }
   },
   "MtStpExchangeConnectorClient": {
