@@ -96,7 +96,7 @@ namespace MarginTrading.AzureRepositories
             };
         }
 
-        public Task<PaginatedResponse<OperationExecutionInfo<SpecialLiquidationOperationData>>> GetRfqAsync(string rfqId, string instrumetnId, string accountId, List<SpecialLiquidationOperationState> states, DateTime? from, DateTime? to, int skip, int take, bool isAscendingOrder = true)
+        public Task<PaginatedResponse<OperationExecutionInfo<SpecialLiquidationOperationData>>> GetRfqAsync(string rfqId, string instrumetnId, string accountId, List<SpecialLiquidationOperationState> states, DateTime? from, DateTime? to, int skip, int take, bool isAscendingOrder = false)
         {
             throw new NotSupportedException("Azure is not supported");
         }
