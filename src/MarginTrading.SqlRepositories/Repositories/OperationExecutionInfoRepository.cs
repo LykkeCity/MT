@@ -101,7 +101,7 @@ namespace MarginTrading.SqlRepositories.Repositories
 
         public async Task<PaginatedResponse<OperationExecutionInfo<SpecialLiquidationOperationData>>> GetRfqAsync(string rfqId, string instrumentId,
             string accountId, List<SpecialLiquidationOperationState> states, DateTime? from, DateTime? to, int skip, int take,
-            bool isAscendingOrder = true)
+            bool isAscendingOrder = false)
         {
             const string whereRfq = "WHERE [OperationName] = 'SpecialLiquidation' ";
 
