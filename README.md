@@ -183,7 +183,8 @@ Settings schema is:
       "PriceRequestTimeoutSec": 600,
       "RetryTimeout": "00:01:00",
       "VolumeThreshold": 1000,
-      "VolumeThresholdCurrency": "EUR"
+      "VolumeThresholdCurrency": "EUR",
+      "FakePriceRequestAutoApproval": true
     },
     "ChaosKitty": {
       "StateOfChaos": 0

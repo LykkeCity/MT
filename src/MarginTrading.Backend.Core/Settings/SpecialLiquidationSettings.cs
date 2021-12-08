@@ -26,5 +26,8 @@ namespace MarginTrading.Backend.Core.Settings
         
         [Optional]
         public TimeSpan PriceRequestTimeoutCheckPeriod { get; set; } = new TimeSpan(0, 1, 0);
+
+        [Optional] 
+        public bool FakePriceRequestAutoApproval { get; set; } = true;
     }
 }
