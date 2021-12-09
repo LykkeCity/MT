@@ -2,6 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using MarginTrading.Backend.Core.Quotes;
 
 namespace MarginTrading.Backend.Core
 {
@@ -9,7 +10,7 @@ namespace MarginTrading.Backend.Core
     {
         InstrumentBidAskPair GetQuote(string instrument);
         Dictionary<string, InstrumentBidAskPair> GetAllQuotes();
-        bool TryGetQuoteById(string instrument, out InstrumentBidAskPair result); 
-        void RemoveQuote(string assetPairId);
+        bool TryGetQuoteById(string instrument, out InstrumentBidAskPair result);
+        RemoveQuoteError RemoveQuote(string assetPairId);
     }
 }
