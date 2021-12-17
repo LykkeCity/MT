@@ -142,17 +142,16 @@ namespace MarginTrading.Backend.Services.Infrastructure
                 await _log.WriteInfoAsync(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
                     $"Starting to write trading data snapshot. {msg}");
 
-                var snapshot = new TradingEngineSnapshot
-                {
-                    TradingDay = tradingDay,
-                    CorrelationId = correlationId,
-                    Timestamp = _dateService.Now(),
-                    OrdersJson = ordersData,
-                    PositionsJson = positionsData,
-                    AccountsJson = accountStatsData,
-                    BestFxPricesJson = bestFxPricesData,
-                    BestTradingPricesJson = bestPricesData
-                };
+                var snapshot = new TradingEngineSnapshot(
+                    tradingDay,
+                    correlationId,
+                    _dateService.Now(),
+                    ordersJson: ordersData,
+                    positionsJson: positionsData,
+                    accountsJson: accountStatsData,
+                    bestFxPricesJson: bestFxPricesData,
+                    bestTradingPricesJson: bestPricesData,
+                    status: SnapshotStatus.Final);
 
                 await _tradingEngineSnapshotsRepository.AddAsync(snapshot);
 

@@ -205,7 +205,7 @@ namespace MarginTrading.Backend.Services.Modules
                 .From(_settings.ContextNames.TradingEngine)
                 .On(EventsRoute)
                 .WithProjection(
-                    typeof(MarketStateChangedProjection), _settings.ContextNames.TradingEngine);
+                    typeof(PlatformClosureProjection), _settings.ContextNames.TradingEngine);
         }
 
         private void RegisterClientProfileChangedProjection(

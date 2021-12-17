@@ -7,7 +7,6 @@ using Microsoft.Data.SqlClient;
 using System.Threading.Tasks;
 using Common.Log;
 using Dapper;
-using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Snapshots;
@@ -29,6 +28,7 @@ namespace MarginTrading.SqlRepositories.Repositories
 [AccountStats] [nvarchar](MAX) NOT NULL,
 [BestFxPrices] [nvarchar](MAX) NOT NULL,
 [BestPrices] [nvarchar](MAX) NOT NULL,
+[Status] [nvarchar](32) constraint TradingEngineSnapshots_Status_Default_Value default 'Final' not null,
 INDEX IX_{0}_Base (TradingDay, CorrelationId, Timestamp)
 );";
 
@@ -62,7 +62,7 @@ INDEX IX_{0}_Base (TradingDay, CorrelationId, Timestamp)
             using (var connection = new SqlConnection(_connectionString))
             {
                 var entities = await connection.QueryAsync<TradingEngineSnapshotEntity>(
-                    $"SELECT TOP(1) * FROM {TableName} ORDER BY Timestamp DESC");
+                    $"SELECT TOP(1) * FROM {TableName} WHERE [Status] = 'Final' ORDER BY [Timestamp] DESC");
 
                 return entities.FirstOrDefault()?.ToDomain();
             }
@@ -79,8 +79,8 @@ INDEX IX_{0}_Base (TradingDay, CorrelationId, Timestamp)
 
                 await conn.ExecuteAsync(
                     $@"INSERT INTO {TableName} 
-(TradingDay,CorrelationId,Timestamp,Orders,Positions,AccountStats,BestFxPrices,BestPrices) 
-VALUES (@TradingDay,@CorrelationId,@Timestamp,@Orders,@Positions,@AccountStats,@BestFxPrices,@BestPrices)",
+(TradingDay,CorrelationId,Timestamp,Orders,Positions,AccountStats,BestFxPrices,BestPrices,Status) 
+VALUES (@TradingDay,@CorrelationId,@Timestamp,@Orders,@Positions,@AccountStats,@BestFxPrices,@BestPrices,@Status)",
                     entity, commandTimeout: _settings.SnapshotInsertTimeoutSec);
             }
         }

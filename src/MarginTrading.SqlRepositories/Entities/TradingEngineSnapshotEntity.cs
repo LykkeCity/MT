@@ -8,10 +8,6 @@ namespace MarginTrading.SqlRepositories.Entities
 {
     public class TradingEngineSnapshotEntity
     {
-        public TradingEngineSnapshotEntity()
-        {
-        }
-
         public TradingEngineSnapshotEntity(TradingEngineSnapshot tradingEngineSnapshot)
         {
             TradingDay = tradingEngineSnapshot.TradingDay;
@@ -22,6 +18,7 @@ namespace MarginTrading.SqlRepositories.Entities
             AccountStats = tradingEngineSnapshot.AccountsJson;
             BestFxPrices = tradingEngineSnapshot.BestFxPricesJson;
             BestPrices = tradingEngineSnapshot.BestTradingPricesJson;
+            Status = tradingEngineSnapshot.Status;
         }
 
         public DateTime TradingDay { get; set; }
@@ -39,18 +36,19 @@ namespace MarginTrading.SqlRepositories.Entities
         public string BestFxPrices { get; set; }
 
         public string BestPrices { get; set; }
+        
+        public SnapshotStatus Status { get; set; }
 
         internal TradingEngineSnapshot ToDomain()
-            => new TradingEngineSnapshot
-            {
-                TradingDay = TradingDay,
-                CorrelationId = CorrelationId,
-                Timestamp = Timestamp,
-                OrdersJson = Orders,
-                PositionsJson = Positions,
-                AccountsJson = AccountStats,
-                BestFxPricesJson = BestFxPrices,
-                BestTradingPricesJson = BestPrices
-            };
+            => new TradingEngineSnapshot(
+                TradingDay,
+                CorrelationId,
+                Timestamp,
+                Orders,
+                Positions,
+                AccountStats,
+                BestFxPrices,
+                BestPrices,
+                Status = Status);
     }
 }

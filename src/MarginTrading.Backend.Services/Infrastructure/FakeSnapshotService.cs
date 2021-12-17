@@ -71,17 +71,16 @@ namespace MarginTrading.Backend.Services.Infrastructure
                     bestTradingPrices = Union(bestTradingPrices, snapshot.GetBestTradingPrices());
                 }
 
-                var newSnapshot = new TradingEngineSnapshot()
-                {
-                    TradingDay = tradingDay,
-                    CorrelationId = correlationId,
-                    Timestamp = _dateService.Now(),
-                    PositionsJson = positions.ToJson(),
-                    OrdersJson = orders.ToJson(),
-                    AccountsJson = accounts.ToJson(),
-                    BestFxPricesJson = bestFxPrices.ToJson(),
-                    BestTradingPricesJson = bestTradingPrices.ToJson(),
-                };
+                var newSnapshot = new TradingEngineSnapshot(
+                    tradingDay,
+                    correlationId,
+                    _dateService.Now(),
+                    positionsJson: positions.ToJson(),
+                    ordersJson: orders.ToJson(),
+                    accountsJson: accounts.ToJson(),
+                    bestFxPricesJson: bestFxPrices.ToJson(),
+                    bestTradingPricesJson: bestTradingPrices.ToJson(),
+                    status: SnapshotStatus.Final);
 
                 await _tradingEngineSnapshotsRepository.AddAsync(newSnapshot);
 

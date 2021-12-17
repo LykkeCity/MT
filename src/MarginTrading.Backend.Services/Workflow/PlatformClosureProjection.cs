@@ -11,13 +11,13 @@ using MarginTrading.Backend.Services.Extensions;
 
 namespace MarginTrading.Backend.Services.Workflow
 {
-    public class MarketStateChangedProjection
+    public class PlatformClosureProjection
     {
         private readonly ISnapshotService _snapshotService;
         private readonly IIdentityGenerator _identityGenerator;
         private readonly ILog _log;
 
-        public MarketStateChangedProjection(ISnapshotService snapshotService, ILog log, IIdentityGenerator identityGenerator)
+        public PlatformClosureProjection(ISnapshotService snapshotService, ILog log, IIdentityGenerator identityGenerator)
         {
             _snapshotService = snapshotService;
             _log = log;
@@ -26,19 +26,16 @@ namespace MarginTrading.Backend.Services.Workflow
 
         public async Task Handle(MarketStateChangedEvent e)
         {
-            await _log.WriteInfoAsync(nameof(MarketStateChangedProjection), nameof(Handle), e.ToJson(),
-                $"Received {nameof(MarketStateChangedEvent)} event");
-            
             if (!e.IsPlatformClosureEvent())
                 return;
 
-            await _log.WriteInfoAsync(nameof(MarketStateChangedProjection), nameof(Handle), e.ToJson(),
+            await _log.WriteInfoAsync(nameof(PlatformClosureProjection), nameof(Handle), e.ToJson(),
                 "Platform is being closed. Starting trading snapshot backup");
 
             var result = string.Empty;
             //var result = await _snapshotService.MakeTradingDataSnapshot(e.EventTimestamp.Date, _identityGenerator.GenerateGuid());
 
-            await _log.WriteInfoAsync(nameof(MarketStateChangedProjection), nameof(Handle), e.ToJson(), result);
+            await _log.WriteInfoAsync(nameof(PlatformClosureProjection), nameof(Handle), e.ToJson(), result);
         }
     }   
 }

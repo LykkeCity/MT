@@ -7,20 +7,53 @@ namespace MarginTrading.Backend.Core.Snapshots
 {
     public class TradingEngineSnapshot
     {
-        public DateTime TradingDay { get; set; }
+        public DateTime TradingDay { get; }
 
-        public string CorrelationId { get; set; }
+        public string CorrelationId { get; }
 
-        public DateTime Timestamp { get; set; }
+        public DateTime Timestamp { get; }
 
-        public string OrdersJson { get; set; }
+        public string OrdersJson { get; private set; }
 
-        public string PositionsJson { get; set; }
+        public string PositionsJson { get; private set; }
 
-        public string AccountsJson { get; set; }
+        public string AccountsJson { get; }
 
-        public string BestFxPricesJson { get; set; }
+        public string BestFxPricesJson { get; }
 
-        public string BestTradingPricesJson { get; set; }
+        public string BestTradingPricesJson { get; }
+
+        public SnapshotStatus Status { get; }
+
+        public TradingEngineSnapshot(DateTime tradingDay,
+            string correlationId,
+            DateTime timestamp,
+            string ordersJson,
+            string positionsJson,
+            string accountsJson,
+            string bestFxPricesJson,
+            string bestTradingPricesJson,
+            SnapshotStatus status)
+        {
+            TradingDay = tradingDay;
+            CorrelationId = correlationId;
+            Timestamp = timestamp;
+            OrdersJson = ordersJson;
+            PositionsJson = positionsJson;
+            AccountsJson = accountsJson;
+            BestFxPricesJson = bestFxPricesJson;
+            BestTradingPricesJson = bestTradingPricesJson;
+            Status = status;
+        }
+
+        public void UpdatePositionsFromJson(string json)
+        {
+            PositionsJson = json;
+        }
+
+        public void UpdateOrdersFromJson(string json)
+        {
+            OrdersJson = json;
+        }
     }
 }
