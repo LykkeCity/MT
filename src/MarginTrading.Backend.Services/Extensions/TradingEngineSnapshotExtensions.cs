@@ -7,6 +7,8 @@ using MarginTrading.Backend.Contracts.Account;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Contracts.Snow.Prices;
+using MarginTrading.Backend.Contracts.TradingSchedule;
+using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Snapshots;
 
 namespace MarginTrading.Backend.Services.Extensions
@@ -47,5 +49,9 @@ namespace MarginTrading.Backend.Services.Extensions
                 ? new Dictionary<string, BestPriceContract>()
                 : snapshot.BestTradingPricesJson.DeserializeJson<Dictionary<string, BestPriceContract>>();
         }
+
+
+        public static bool IsPlatformClosureEvent(this MarketStateChangedEvent evt) =>
+            evt.Id == LykkeConstants.PlatformMarketIdentifier && !evt.IsEnabled;
     }
 }
