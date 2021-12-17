@@ -12,7 +12,7 @@ namespace MarginTrading.Backend.Core.Settings
         /// Id of market which determines platform trading schedule.
         /// </summary>
         [Optional]
-        public string ScheduleMarketId { get; set; } = "PlatformScheduleMarketId";
+        public string ScheduleMarketId { get; set; } = LykkeConstants.PlatformMarketIdentifier;
 
         /// <summary>
         /// Stop out warnings will be done this minutes before activating OvernightMarginParameter.

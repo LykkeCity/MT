@@ -26,5 +26,7 @@ namespace MarginTrading.Backend.Core
         public const string DescendingOrder = "DESC";
 
         public const string LiquidationByCaAdditionalInfo = "{\"CreatedBy\":\"EOD\"}";
+
+        public const string PlatformMarketIdentifier = "PlatformScheduleMarketId";
     }
 }
