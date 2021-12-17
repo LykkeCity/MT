@@ -35,6 +35,7 @@ namespace MarginTrading.Backend.Services.Workflow
             await _log.WriteInfoAsync(nameof(MarketStateChangedProjection), nameof(Handle), e.ToJson(),
                 "Platform is being closed. Starting trading snapshot backup");
 
+            var result = string.Empty;
             //var result = await _snapshotService.MakeTradingDataSnapshot(e.EventTimestamp.Date, _identityGenerator.GenerateGuid());
 
             await _log.WriteInfoAsync(nameof(MarketStateChangedProjection), nameof(Handle), e.ToJson(), result);
