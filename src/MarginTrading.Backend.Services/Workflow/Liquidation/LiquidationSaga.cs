@@ -2,6 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
@@ -21,6 +22,7 @@ using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.Liquidation.Events;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Common.Services;
+using MoreLinq;
 
 namespace MarginTrading.Backend.Services.Workflow.Liquidation
 {
@@ -242,33 +244,38 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             if(!e.IsEnabled)
                 return Task.CompletedTask;
 
-            var accounts = _accountsCacheService.GetAll()
-                .Where(account => account.IsInLiquidation())
-                .ToList();
-
-            foreach (var account in accounts)
-            {
-                var positions = _ordersCache.Positions.GetPositionsByAccountIds(account.Id);
-
-                var assetPairs = positions
-                    .Select(position => _assetPairsCache.GetAssetPairById(position.AssetPairId))
-                    .Where(assetPair => assetPair.MarketId == e.Id)
-                    .ToList();
-
-                if (assetPairs.Any())
-                {
-                    sender.SendCommand(new ResumeLiquidationInternalCommand
-                    {
-                        OperationId = account.LiquidationOperationId,
-                        CreationTime = DateTime.UtcNow,
-                        IsCausedBySpecialLiquidation = false,
-                        ResumeOnlyFailed = true,
-                        Comment = "Trying to resume liquidation because market has been opened"
-                    }, _cqrsContextNamesSettings.TradingEngine);
-                }
-            }
+            // resuming liquidations on corresponding accounts upon market open
+            _accountsCacheService.GetAll()
+                .Where(a => a.IsInLiquidation())
+                .SelectMany(a => _ordersCache.Positions.GetPositionsByAccountIds(a.Id))
+                .GroupBy(p => p.AccountId)
+                .Where(AnyAssetRelatesToMarket)
+                .ForEach(account => SendResumeCommand(account.Key));
 
             return Task.CompletedTask;
+            
+            #region internal functions
+            
+            bool AnyAssetRelatesToMarket(IGrouping<string, Position> positions) =>
+                positions
+                    .Select(p => _assetPairsCache.GetAssetPairById(p.AssetPairId))
+                    .Any(assetPair => assetPair.MarketId == e.Id);
+
+            void SendResumeCommand(string accountId)
+            {
+                var account = _accountsCacheService.Get(accountId);
+
+                sender.SendCommand(new ResumeLiquidationInternalCommand
+                {
+                    OperationId = account.LiquidationOperationId,
+                    CreationTime = DateTime.UtcNow,
+                    IsCausedBySpecialLiquidation = false,
+                    ResumeOnlyFailed = true,
+                    Comment = "Trying to resume liquidation because market has been opened"
+                }, _cqrsContextNamesSettings.TradingEngine);
+            }
+            
+            #endregion
         }
 
         #region Private methods
