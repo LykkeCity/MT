@@ -57,16 +57,9 @@ INDEX IX_{0}_Base (TradingDay, CorrelationId, Timestamp)
             }
         }
 
-        public async Task<TradingEngineSnapshot> GetLastAsync()
-        {
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                var entities = await connection.QueryAsync<TradingEngineSnapshotEntity>(
-                    $"SELECT TOP(1) * FROM {TableName} WHERE [Status] = 'Final' ORDER BY [Timestamp] DESC");
+        public Task<TradingEngineSnapshot> GetLastAsync() => DoGetLastAsync(SnapshotStatus.Final);
 
-                return entities.FirstOrDefault()?.ToDomain();
-            }
-        }
+        public Task<TradingEngineSnapshot> GetLastDraftAsync() => DoGetLastAsync(SnapshotStatus.Draft);
 
         public async Task AddAsync(TradingEngineSnapshot tradingEngineSnapshot)
         {
@@ -111,6 +104,18 @@ VALUES (@TradingDay,@CorrelationId,@Timestamp,@Orders,@Positions,@AccountStats,@
             await using var conn = new SqlConnection(_connectionString);
 
             await conn.ExecuteAsync(sql, new {id = correlationId});
+        }
+        
+        private async Task<TradingEngineSnapshot> DoGetLastAsync(SnapshotStatus status)
+
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var entities = await connection.QueryAsync<TradingEngineSnapshotEntity>(
+                    $"SELECT TOP(1) * FROM {TableName} WHERE [Status] = '{status.ToString()}' ORDER BY [Timestamp] DESC");
+
+                return entities.FirstOrDefault()?.ToDomain();
+            }
         }
     }
 }

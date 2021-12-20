@@ -10,6 +10,8 @@ namespace MarginTrading.Backend.Core.Repositories
     public interface ITradingEngineSnapshotsRepository
     {
         Task<TradingEngineSnapshot> GetLastAsync();
+        
+        Task<TradingEngineSnapshot> GetLastDraftAsync();
 
         Task AddAsync(TradingEngineSnapshot tradingEngineSnapshot);
 
