@@ -2,12 +2,19 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using JetBrains.Annotations;
 using MarginTrading.Backend.Core.Snapshots;
 
 namespace MarginTrading.SqlRepositories.Entities
 {
     public class TradingEngineSnapshotEntity
     {
+        // Constructor is required for entity materialization by Dapper
+        [UsedImplicitly]
+        public TradingEngineSnapshotEntity()
+        {
+            
+        }
         public TradingEngineSnapshotEntity(TradingEngineSnapshot tradingEngineSnapshot)
         {
             TradingDay = tradingEngineSnapshot.TradingDay;
