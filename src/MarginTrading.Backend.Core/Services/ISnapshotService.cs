@@ -3,11 +3,12 @@
 
 using System;
 using System.Threading.Tasks;
+using MarginTrading.Backend.Core.Snapshots;
 
 namespace MarginTrading.Backend.Core.Services
 {
     public interface ISnapshotService
     {
-        Task<string> MakeTradingDataSnapshot(DateTime tradingDay, string correlationId);
+        Task<string> MakeTradingDataSnapshot(DateTime tradingDay, string correlationId, SnapshotStatus status = SnapshotStatus.Final);
     }
 }

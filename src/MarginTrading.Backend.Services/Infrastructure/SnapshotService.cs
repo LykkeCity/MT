@@ -60,7 +60,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
             _log = log;
         }
 
-        public async Task<string> MakeTradingDataSnapshot(DateTime tradingDay, string correlationId)
+        public async Task<string> MakeTradingDataSnapshot(DateTime tradingDay, string correlationId, SnapshotStatus status = SnapshotStatus.Final)
         {
             if (!_scheduleSettingsCacheService.TryGetPlatformCurrentDisabledInterval(out var disabledInterval))
             {
@@ -151,7 +151,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
                     accountsJson: accountStatsData,
                     bestFxPricesJson: bestFxPricesData,
                     bestTradingPricesJson: bestPricesData,
-                    status: SnapshotStatus.Final);
+                    status: status);
 
                 await _tradingEngineSnapshotsRepository.AddAsync(snapshot);
 

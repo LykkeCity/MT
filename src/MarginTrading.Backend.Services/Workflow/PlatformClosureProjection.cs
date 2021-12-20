@@ -7,6 +7,7 @@ using Common.Log;
 using MarginTrading.Backend.Contracts.TradingSchedule;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
+using MarginTrading.Backend.Core.Snapshots;
 using MarginTrading.Backend.Services.Extensions;
 
 namespace MarginTrading.Backend.Services.Workflow
@@ -28,14 +29,20 @@ namespace MarginTrading.Backend.Services.Workflow
         {
             if (!e.IsPlatformClosureEvent())
                 return;
+            
+            var tradingDay = e.EventTimestamp.Date;
 
             await _log.WriteInfoAsync(nameof(PlatformClosureProjection), nameof(Handle), e.ToJson(),
-                "Platform is being closed. Starting trading snapshot backup");
+                $"Platform is being closed. Starting trading snapshot backup for [{tradingDay}]");
 
-            var result = string.Empty;
-            //var result = await _snapshotService.MakeTradingDataSnapshot(e.EventTimestamp.Date, _identityGenerator.GenerateGuid());
+            var result = await _snapshotService.MakeTradingDataSnapshot(e.EventTimestamp.Date,
+                _identityGenerator.GenerateGuid(),
+                SnapshotStatus.Draft);
 
-            await _log.WriteInfoAsync(nameof(PlatformClosureProjection), nameof(Handle), e.ToJson(), result);
+            await _log.WriteInfoAsync(nameof(PlatformClosureProjection),
+                nameof(Handle),
+                e.ToJson(),
+                result);
         }
     }   
 }
