@@ -25,7 +25,7 @@ namespace MarginTrading.SqlRepositories.Entities
             AccountStats = tradingEngineSnapshot.AccountsJson;
             BestFxPrices = tradingEngineSnapshot.BestFxPricesJson;
             BestPrices = tradingEngineSnapshot.BestTradingPricesJson;
-            Status = tradingEngineSnapshot.Status.ToString();
+            Status = tradingEngineSnapshot.Status;
         }
 
         public DateTime TradingDay { get; set; }
@@ -44,17 +44,10 @@ namespace MarginTrading.SqlRepositories.Entities
 
         public string BestPrices { get; set; }
         
-        public string Status { get; set; }
+        public SnapshotStatusString Status { get; set; }
 
         internal TradingEngineSnapshot ToDomain()
-        {
-            if (!Enum.TryParse<SnapshotStatus>(Status, out var status))
-            {
-                throw new ArgumentOutOfRangeException(nameof(Status),
-                    $"Unrecognized value of snapshot status ({Status})");
-            }
-
-            return new TradingEngineSnapshot(
+            => new TradingEngineSnapshot(
                 TradingDay,
                 CorrelationId,
                 Timestamp,
@@ -63,7 +56,6 @@ namespace MarginTrading.SqlRepositories.Entities
                 AccountStats,
                 BestFxPrices,
                 BestPrices,
-                status);
-        }
+                Status);
     }
 }

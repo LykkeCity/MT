@@ -11,6 +11,7 @@ using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Snapshots;
 using MarginTrading.SqlRepositories.Entities;
+using SnapshotStatus = MarginTrading.Backend.Core.Snapshots.SnapshotStatus;
 
 namespace MarginTrading.SqlRepositories.Repositories
 {
@@ -111,8 +112,10 @@ VALUES (@TradingDay,@CorrelationId,@Timestamp,@Orders,@Positions,@AccountStats,@
         {
             using (var connection = new SqlConnection(_connectionString))
             {
+                string ss = new SnapshotStatusString(status);
+                
                 var entities = await connection.QueryAsync<TradingEngineSnapshotEntity>(
-                    $"SELECT TOP(1) * FROM {TableName} WHERE [Status] = '{status.ToString()}' ORDER BY [Timestamp] DESC");
+                    $"SELECT TOP(1) * FROM {TableName} WHERE [Status] = '{ss}' ORDER BY [Timestamp] DESC");
 
                 return entities.FirstOrDefault()?.ToDomain();
             }
