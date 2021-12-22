@@ -12,6 +12,7 @@ using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.AssetService.Contracts.AssetPair;
 using MarginTrading.AssetService.Contracts.Enums;
 using MarginTrading.AssetService.Contracts.Products;
+using MarginTrading.Backend.Core.Quotes;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.TradingConditions;
 
@@ -30,6 +31,7 @@ namespace MarginTrading.Backend.Services.Workflow
         private readonly IScheduleSettingsCacheService _scheduleSettingsCacheService;
         private readonly ITradingInstrumentsManager _tradingInstrumentsManager;
         private readonly MarginTradingSettings _mtSettings;
+        private readonly IQuoteCacheService _quoteCache;
         private readonly ILog _log;
 
         public ProductChangedProjection(
@@ -39,7 +41,8 @@ namespace MarginTrading.Backend.Services.Workflow
             IScheduleSettingsCacheService scheduleSettingsCacheService,
             ITradingInstrumentsManager tradingInstrumentsManager,
             MarginTradingSettings mtSettings,
-            ILog log)
+            ILog log,
+            IQuoteCacheService quoteCache)
         {
             _tradingEngine = tradingEngine;
             _assetPairsCache = assetPairsCache;
@@ -48,6 +51,7 @@ namespace MarginTrading.Backend.Services.Workflow
             _tradingInstrumentsManager = tradingInstrumentsManager;
             _mtSettings = mtSettings;
             _log = log;
+            _quoteCache = quoteCache;
         }
 
         [UsedImplicitly]
@@ -91,6 +95,7 @@ namespace MarginTrading.Backend.Services.Workflow
                 if (@event.NewValue.IsDiscontinued)
                 {
                     CloseAllOrders();
+                    RemoveQuoteFromCache();
                 }
 
                 await _tradingInstrumentsManager.UpdateTradingInstrumentsCacheAsync();
@@ -105,6 +110,15 @@ namespace MarginTrading.Backend.Services.Workflow
                 //only for product
                 if (isAdded)
                     await _scheduleSettingsCacheService.UpdateScheduleSettingsAsync();
+            }
+
+            void RemoveQuoteFromCache()
+            {
+                var result = _quoteCache.RemoveQuote(@event.OldValue.ProductId);
+                if (result != RemoveQuoteErrorCode.None)
+                {
+                    _log.WriteWarning(nameof(ProductChangedProjection), nameof(RemoveQuoteFromCache), result.Message);
+                }
             }
 
             void CloseAllOrders()

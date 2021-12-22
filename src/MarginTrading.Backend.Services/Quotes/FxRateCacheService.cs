@@ -11,6 +11,7 @@ using Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Messages;
+using MarginTrading.Backend.Core.Quotes;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
@@ -30,13 +31,15 @@ namespace MarginTrading.Backend.Services.Quotes
         private readonly IAssetPairDayOffService _assetPairDayOffService;
         private Dictionary<string, InstrumentBidAskPair> _quotes;
         private readonly ReaderWriterLockSlim _lockSlim = new ReaderWriterLockSlim();
+        private readonly OrdersCache _ordersCache;
         private const string BlobName = "FxRates";
 
         public FxRateCacheService(ILog log, 
             IMarginTradingBlobRepository blobRepository,
             IEventChannel<FxBestPriceChangeEventArgs> fxBestPriceChangeEventChannel,
             MarginTradingSettings marginTradingSettings,
-            IAssetPairDayOffService assetPairDayOffService)
+            IAssetPairDayOffService assetPairDayOffService,
+            OrdersCache ordersCache)
             : base(nameof(FxRateCacheService), marginTradingSettings.BlobPersistence.FxRatesDumpPeriodMilliseconds, log)
         {
             _log = log;
@@ -44,6 +47,7 @@ namespace MarginTrading.Backend.Services.Quotes
             _fxBestPriceChangeEventChannel = fxBestPriceChangeEventChannel;
             _marginTradingSettings = marginTradingSettings;
             _assetPairDayOffService = assetPairDayOffService;
+            _ordersCache = ordersCache;
             _quotes = new Dictionary<string, InstrumentBidAskPair>();
         }
 
@@ -141,15 +145,38 @@ namespace MarginTrading.Backend.Services.Quotes
             }
         }
 
-        public void RemoveQuote(string assetPairId)
+        public RemoveQuoteError RemoveQuote(string assetPairId)
         {
+            #region Validation
+
+            var positions = _ordersCache.Positions.GetPositionsByFxInstrument(assetPairId).ToList();
+            if (positions.Any())
+            {
+                return RemoveQuoteError.Failure(
+                    $"Cannot delete [{assetPairId}] best FX price because there are {positions.Count} opened positions.",
+                    RemoveQuoteErrorCode.PositionsOpened);
+            }
+            
+            var orders = _ordersCache.Active.GetOrdersByFxInstrument(assetPairId).ToList();
+            if (orders.Any())
+            {
+                return RemoveQuoteError.Failure(
+                    $"Cannot delete [{assetPairId}] best FX price because there are {orders.Count} active orders.",
+                    RemoveQuoteErrorCode.OrdersOpened);
+            }
+
+            #endregion
+
             _lockSlim.EnterWriteLock();
             try
             {
                 if (_quotes.ContainsKey(assetPairId))
+                {
                     _quotes.Remove(assetPairId);
-                else
-                    throw new QuoteNotFoundException(assetPairId, string.Format(MtMessages.QuoteNotFound, assetPairId));
+                    return RemoveQuoteError.Success();
+                }
+
+                return RemoveQuoteError.Failure(string.Format(MtMessages.QuoteNotFound, assetPairId), RemoveQuoteErrorCode.QuoteNotFound);
             }
             finally
             {

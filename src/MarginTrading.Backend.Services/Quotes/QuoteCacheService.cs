@@ -11,10 +11,10 @@ using Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Messages;
+using MarginTrading.Backend.Core.Quotes;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Events;
-using MarginTrading.Backend.Services.Stp;
 
 namespace MarginTrading.Backend.Services.Quotes
 {
@@ -23,6 +23,7 @@ namespace MarginTrading.Backend.Services.Quotes
         private readonly ILog _log;
         private readonly IMarginTradingBlobRepository _blobRepository;
         private readonly IExternalOrderbookService _externalOrderbookService;
+        private readonly OrdersCache _ordersCache;
         
         private Dictionary<string, InstrumentBidAskPair> _cache = new Dictionary<string, InstrumentBidAskPair>();
         
@@ -33,7 +34,8 @@ namespace MarginTrading.Backend.Services.Quotes
         public QuoteCacheService(ILog log, 
             IMarginTradingBlobRepository blobRepository,
             IExternalOrderbookService externalOrderbookService,
-            MarginTradingSettings marginTradingSettings) 
+            MarginTradingSettings marginTradingSettings,
+            OrdersCache ordersCache) 
             : base(nameof(QuoteCacheService), 
                 marginTradingSettings.BlobPersistence.QuotesDumpPeriodMilliseconds, 
                 log)
@@ -41,6 +43,7 @@ namespace MarginTrading.Backend.Services.Quotes
             _log = log;
             _blobRepository = blobRepository;
             _externalOrderbookService = externalOrderbookService;
+            _ordersCache = ordersCache;
         }
 
         public override void Start()
@@ -147,15 +150,38 @@ namespace MarginTrading.Backend.Services.Quotes
             }
         }
 
-        public void RemoveQuote(string assetPairId)
+        public RemoveQuoteError RemoveQuote(string assetPairId)
         {
+            #region Validation
+            
+            var positions = _ordersCache.Positions.GetPositionsByInstrument(assetPairId).ToList();
+            if (positions.Any())
+            {
+                return RemoveQuoteError.Failure(
+                    $"Cannot delete [{assetPairId}] best price because there are {positions.Count} opened positions.",
+                    RemoveQuoteErrorCode.PositionsOpened);
+            }
+            
+            var orders = _ordersCache.Active.GetOrdersByInstrument(assetPairId).ToList();
+            if (orders.Any())
+            {
+                return RemoveQuoteError.Failure(
+                    $"Cannot delete [{assetPairId}] best price because there are {orders.Count} active orders.",
+                    RemoveQuoteErrorCode.OrdersOpened);
+            }
+            
+            #endregion
+            
             _lockSlim.EnterWriteLock();
             try
             {
                 if (_cache.ContainsKey(assetPairId))
+                {
                     _cache.Remove(assetPairId);
-                else
-                    throw new QuoteNotFoundException(assetPairId, string.Format(MtMessages.QuoteNotFound, assetPairId));
+                    return RemoveQuoteError.Success();
+                }
+
+                return RemoveQuoteError.Failure(string.Format(MtMessages.QuoteNotFound, assetPairId), RemoveQuoteErrorCode.QuoteNotFound);
             }
             finally
             {
