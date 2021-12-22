@@ -2,6 +2,8 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Data;
+using Dapper;
 using MarginTrading.Backend.Core.Snapshots;
 
 namespace MarginTrading.SqlRepositories.Entities
@@ -12,6 +14,11 @@ namespace MarginTrading.SqlRepositories.Entities
     public class SnapshotStatusString
     {
         private readonly string _value;
+        
+        static SnapshotStatusString()
+        {
+            SqlMapper.AddTypeMap(typeof(SnapshotStatusString), DbType.String);
+        }
 
         private SnapshotStatusString(string status)
         {

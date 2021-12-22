@@ -249,6 +249,7 @@ namespace MarginTrading.Backend
                 StartService<IExternalOrderbookService>();
                 StartService<QuoteCacheService>();
                 StartService<FxRateCacheService>();
+                
                 StartService<AccountManager>();
                 StartService<OrderCacheManager>();
                 StartService<PendingOrdersCleaningService>();
