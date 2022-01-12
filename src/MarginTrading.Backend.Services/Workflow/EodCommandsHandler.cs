@@ -7,13 +7,8 @@ using BookKeeper.Client.Workflow.Commands;
 using BookKeeper.Client.Workflow.Events;
 using Common.Log;
 using JetBrains.Annotations;
-using Lykke.Common.Chaos;
 using Lykke.Cqrs;
-using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Extensions;
-using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
-using MarginTrading.Backend.Core.Workflow;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services.Workflow
@@ -38,7 +33,9 @@ namespace MarginTrading.Backend.Services.Workflow
             //deduplication is inside _snapshotService.MakeTradingDataSnapshot
             try
             {
-                await _snapshotService.MakeTradingDataSnapshot(command.TradingDay, command.OperationId);
+                await (command.IsMissing
+                    ? _snapshotService.MakeTradingDataSnapshotFromBackup(command.TradingDay, command.OperationId)
+                    : _snapshotService.MakeTradingDataSnapshot(command.TradingDay, command.OperationId));
                 
                 publisher.PublishEvent(new SnapshotCreatedEvent
                 {

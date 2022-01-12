@@ -11,7 +11,7 @@ namespace MarginTrading.Backend.Core.Repositories
     {
         Task<TradingEngineSnapshot> GetLastAsync();
         
-        Task<TradingEngineSnapshot> GetLastDraftAsync();
+        Task<TradingEngineSnapshot> GetLastDraftAsync(DateTime? tradingDay);
 
         Task AddAsync(TradingEngineSnapshot tradingEngineSnapshot);
 

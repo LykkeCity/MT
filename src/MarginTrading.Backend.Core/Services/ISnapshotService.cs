@@ -10,5 +10,7 @@ namespace MarginTrading.Backend.Core.Services
     public interface ISnapshotService
     {
         Task<string> MakeTradingDataSnapshot(DateTime tradingDay, string correlationId, SnapshotStatus status = SnapshotStatus.Final);
+
+        Task<string> MakeTradingDataSnapshotFromBackup(DateTime tradingDay, string correlationId);
     }
 }

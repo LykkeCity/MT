@@ -164,5 +164,45 @@ namespace MarginTrading.Backend.Services.Infrastructure
                 _semaphoreSlim.Release();
             }
         }
+
+        public async Task<string> MakeTradingDataSnapshotFromBackup(DateTime tradingDay, string correlationId)
+        {
+            if (_semaphoreSlim.CurrentCount == 0)
+            {
+                throw new ArgumentException("Trading data snapshot manipulations are already in progress", "snapshot");
+            }
+            
+            await _semaphoreSlim.WaitAsync();
+
+            try
+            {
+                var draft = await _tradingEngineSnapshotsRepository.GetLastDraftAsync(tradingDay);
+
+                var final = new TradingEngineSnapshot(tradingDay,
+                    correlationId,
+                    _dateService.Now(),
+                    draft.OrdersJson,
+                    draft.PositionsJson,
+                    draft.AccountsJson,
+                    null, // todo: uploaded fx prices
+                    null, // todo: uploaded cfd quotes
+                    SnapshotStatus.Final);
+                
+                await _tradingEngineSnapshotsRepository.AddAsync(final);
+
+                // todo:
+                // 1. take snapshot from backup for the trading day
+                // 2. take prices
+                // 3. create new snapshot with status Final and correlationId
+                // 4. apply prices
+                // 5. save snapshot to database
+            }
+            finally
+            {
+                _semaphoreSlim.Release();
+            }
+
+            return string.Empty;
+        }
     }
 }

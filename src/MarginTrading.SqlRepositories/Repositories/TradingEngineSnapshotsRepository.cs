@@ -58,9 +58,9 @@ INDEX IX_{0}_Base (TradingDay, CorrelationId, Timestamp)
             }
         }
 
-        public Task<TradingEngineSnapshot> GetLastAsync() => DoGetLastAsync(SnapshotStatus.Final);
+        public Task<TradingEngineSnapshot> GetLastAsync() => DoGetLastAsync(null, SnapshotStatus.Final);
 
-        public Task<TradingEngineSnapshot> GetLastDraftAsync() => DoGetLastAsync(SnapshotStatus.Draft);
+        public Task<TradingEngineSnapshot> GetLastDraftAsync(DateTime? tradingDay) => DoGetLastAsync(tradingDay, SnapshotStatus.Draft);
 
         public async Task AddAsync(TradingEngineSnapshot tradingEngineSnapshot)
         {
@@ -107,15 +107,19 @@ VALUES (@TradingDay,@CorrelationId,@Timestamp,@Orders,@Positions,@AccountStats,@
             await conn.ExecuteAsync(sql, new {id = correlationId});
         }
         
-        private async Task<TradingEngineSnapshot> DoGetLastAsync(SnapshotStatus status)
+        private async Task<TradingEngineSnapshot> DoGetLastAsync(DateTime? tradingDay, SnapshotStatus status)
 
         {
             using (var connection = new SqlConnection(_connectionString))
             {
                 string ss = new SnapshotStatusString(status);
-                
+
                 var entities = await connection.QueryAsync<TradingEngineSnapshotEntity>(
-                    $"SELECT TOP(1) * FROM {TableName} WHERE [Status] = '{ss}' ORDER BY [Timestamp] DESC");
+                    $"SELECT TOP(1) * FROM {TableName} WHERE [Status] = '{ss}' "
+                    + (tradingDay.HasValue
+                        ? $"AND TradingDay = {tradingDay} "
+                        : string.Empty)
+                    + "ORDER BY [Timestamp] DESC");
 
                 return entities.FirstOrDefault()?.ToDomain();
             }
