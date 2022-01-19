@@ -18,5 +18,7 @@ namespace MarginTrading.Backend.Core.Repositories
         Task<TradingEngineSnapshot> Get(string correlationId);
 
         Task Delete(string correlationId);
+
+        Task<bool> DraftExistsAsync(DateTime tradingDay);
     }
 }

@@ -4,6 +4,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using MarginTrading.Backend.Contracts.ErrorCodes;
 using MarginTrading.Backend.Contracts.Prices;
 using MarginTrading.Backend.Contracts.Snow.Prices;
 using Refit;
@@ -23,8 +24,8 @@ namespace MarginTrading.Backend.Contracts
         /// Post because the query string will be too long otherwise
         /// </remarks>
         [Post("/api/prices/best")]
-        Task<Dictionary<string, BestPriceContract>> GetBestAsync([Body][NotNull] InitPricesBackendRequest request);
-        
+        Task<Dictionary<string, BestPriceContract>> GetBestAsync([Body] [NotNull] InitPricesBackendRequest request);
+
         /// <summary>
         /// Get current best fx prices
         /// </summary>
@@ -32,6 +33,13 @@ namespace MarginTrading.Backend.Contracts
         /// Post because the query string will be too long otherwise
         /// </remarks>
         [Post("/api/prices/bestFx")]
-        Task<Dictionary<string, BestPriceContract>> GetBestFxAsync([Body][NotNull] InitPricesBackendRequest request);
+        Task<Dictionary<string, BestPriceContract>> GetBestFxAsync([Body] [NotNull] InitPricesBackendRequest request);
+
+        /// <summary>
+        /// Upload EOD quotes for the trading day EOD was missed for
+        /// </summary>
+        /// <returns></returns>
+        [Post("/api/prices/missed")]
+        Task<QuotesUploadErrorCode> UploadMissingQuotesAsync([Body] [NotNull] UploadMissingQuotesRequest request);
     }
 }

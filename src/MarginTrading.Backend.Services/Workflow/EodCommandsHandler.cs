@@ -33,9 +33,7 @@ namespace MarginTrading.Backend.Services.Workflow
             //deduplication is inside _snapshotService.MakeTradingDataSnapshot
             try
             {
-                await (command.IsMissing
-                    ? _snapshotService.MakeTradingDataSnapshotFromBackup(command.TradingDay, command.OperationId)
-                    : _snapshotService.MakeTradingDataSnapshot(command.TradingDay, command.OperationId));
+                await _snapshotService.MakeTradingDataSnapshot(command.TradingDay, command.OperationId);
                 
                 publisher.PublishEvent(new SnapshotCreatedEvent
                 {

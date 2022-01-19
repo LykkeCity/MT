@@ -201,6 +201,28 @@ namespace MarginTrading.Backend.Services.Modules
             builder.RegisterType<BrokerSettingsChangedHandler>()
                 .AsSelf()
                 .SingleInstance();
+
+            builder.RegisterType<PositionsProvider>()
+	            .As<IPositionsProvider>()
+	            .SingleInstance();
+
+            builder.RegisterType<OrdersProvider>()
+	            .As<IOrdersProvider>()
+	            .SingleInstance();
+
+            builder.RegisterType<AccountsProvider>()
+	            .As<IAccountsProvider>()
+	            .SingleInstance();
+
+            builder.RegisterType<FinalSnapshotCalculator>()
+	            .As<IFinalSnapshotCalculator>()
+	            .InstancePerMatchingLifetimeScope(ScopeConstants.SnapshotDraft);
+            
+            // @atarutin: DraftSnapshotKeeper implements IOrderReader interface for convenient access to positions
+            // and orders but it is not required to be used for registration in DI container
+            builder.RegisterType<DraftSnapshotKeeper>()
+	            .As<IDraftSnapshotKeeper>()
+	            .InstancePerMatchingLifetimeScope(ScopeConstants.SnapshotDraft);
 		}
 	}
 }

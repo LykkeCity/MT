@@ -31,8 +31,6 @@ namespace MarginTrading.Backend.Services.Services
     public class AccountUpdateService : IAccountUpdateService
     {
         private readonly IFplService _fplService;
-        private readonly IAccountsCacheService _accountsCacheService;
-        private readonly OrdersCache _ordersCache;
 
         private readonly ILog _log;
         private readonly ICfdCalculatorService _cfdCalculatorService;
@@ -42,9 +40,12 @@ namespace MarginTrading.Backend.Services.Services
         private readonly IAssetPairsCache _assetPairsCache;
         private readonly ITradingInstrumentsCacheService _tradingInstrumentsCache;
 
+        private readonly IOrdersProvider _ordersProvider;
+        private readonly IPositionsProvider _positionsProvider;
+        private readonly IAccountsProvider _accountsProvider;
+
         public AccountUpdateService(
             IFplService fplService,
-            IAccountsCacheService accountsCacheService,
             OrdersCache ordersCache,
             ILog log,
             ICfdCalculatorService cfdCalculatorService,
@@ -52,17 +53,21 @@ namespace MarginTrading.Backend.Services.Services
             MarginTradingSettings marginTradingSettings,
             IClientProfileSettingsCache clientProfileSettingsCache,
             IAssetPairsCache assetPairsCache,
+            IPositionsProvider positionsProvider,
+            IOrdersProvider ordersProvider,
+            IAccountsProvider accountsProvider,
             ITradingInstrumentsCacheService tradingInstrumentsCache)
         {
             _fplService = fplService;
-            _accountsCacheService = accountsCacheService;
-            _ordersCache = ordersCache;
             _log = log;
             _cfdCalculatorService = cfdCalculatorService;
             _quoteCacheService = quoteCacheService;
             _marginTradingSettings = marginTradingSettings;
             _clientProfileSettingsCache = clientProfileSettingsCache;
             _assetPairsCache = assetPairsCache;
+            _positionsProvider = positionsProvider;
+            _ordersProvider = ordersProvider;
+            _accountsProvider = accountsProvider;
             _tradingInstrumentsCache = tradingInstrumentsCache;
         }
 
@@ -73,7 +78,7 @@ namespace MarginTrading.Backend.Services.Services
 
         public async Task FreezeWithdrawalMargin(string accountId, string operationId, decimal amount)
         {
-            var account = _accountsCacheService.Get(accountId);
+            var account = _accountsProvider.GetAccountById(accountId);
 
             if (account.AccountFpl.WithdrawalFrozenMarginData.TryAdd(operationId, amount))
             {
@@ -83,7 +88,7 @@ namespace MarginTrading.Backend.Services.Services
 
         public async Task UnfreezeWithdrawalMargin(string accountId, string operationId)
         {
-            var account = _accountsCacheService.Get(accountId);
+            var account = _accountsProvider.GetAccountById(accountId);
 
             if (account.AccountFpl.WithdrawalFrozenMarginData.TryRemove(operationId, out _))
             {
@@ -93,7 +98,7 @@ namespace MarginTrading.Backend.Services.Services
 
         public async Task FreezeUnconfirmedMargin(string accountId, string operationId, decimal amount)
         {
-            var account = _accountsCacheService.Get(accountId);
+            var account = _accountsProvider.GetAccountById(accountId);
 
             if (account.AccountFpl.UnconfirmedMarginData.TryAdd(operationId, amount))
             {
@@ -103,7 +108,7 @@ namespace MarginTrading.Backend.Services.Services
 
         public async Task UnfreezeUnconfirmedMargin(string accountId, string operationId)
         {
-            var account = _accountsCacheService.Get(accountId);
+            var account = _accountsProvider.GetAccountById(accountId);
 
             if (account.AccountFpl.UnconfirmedMarginData.TryRemove(operationId, out _))
             {
@@ -114,13 +119,13 @@ namespace MarginTrading.Backend.Services.Services
         public void CheckIsEnoughBalance(Order order, IMatchingEngineBase matchingEngine, decimal additionalMargin)
         {
             var orderMargin = _fplService.GetInitMarginForOrder(order);
-            var account = _accountsCacheService.Get(order.AccountId);
+            var account =_accountsProvider.GetAccountById(order.AccountId);
             var accountMarginAvailable = account.GetMarginAvailable() + additionalMargin;
 
             var quote = _quoteCacheService.GetQuote(order.AssetPairId);
 
-            var openPrice = 0m;
-            var closePrice = 0m;
+            decimal openPrice;
+            decimal closePrice;
             var directionForClose = order.Volume.GetClosePositionOrderDirection();
 
             if (quote.GetVolumeForOrderDirection(order.Direction) >= Math.Abs(order.Volume) &&
@@ -198,7 +203,7 @@ namespace MarginTrading.Backend.Services.Services
         public void RemoveLiquidationStateIfNeeded(string accountId, string reason,
             string liquidationOperationId = null, LiquidationType liquidationType = LiquidationType.Normal)
         {
-            var account = _accountsCacheService.TryGet(accountId);
+            var account = _accountsProvider.GetAccountById(accountId);
 
             if (account == null)
                 return;
@@ -207,7 +212,7 @@ namespace MarginTrading.Backend.Services.Services
                 && (liquidationType == LiquidationType.Forced
                     || account.GetAccountLevel() != AccountLevel.StopOut))
             {
-                _accountsCacheService.TryFinishLiquidation(accountId, reason, liquidationOperationId);
+                _accountsProvider.TryFinishLiquidation(accountId, reason, liquidationOperationId);
             }
         }
 
@@ -248,14 +253,10 @@ namespace MarginTrading.Backend.Services.Services
 
         }
 
-        private ICollection<Position> GetPositions(string accountId)
-        {
-            return _ordersCache.Positions.GetPositionsByAccountIds(accountId);
-        }
+        private ICollection<Position> GetPositions(string accountId) =>
+            _positionsProvider.GetPositionsByAccountIds(accountId);
 
-        private ICollection<Order> GetActiveOrders(string accountId)
-        {
-            return _ordersCache.Active.GetOrdersByAccountIds(accountId);
-        }
+        private ICollection<Order> GetActiveOrders(string accountId) =>
+            _ordersProvider.GetActiveOrdersByAccountIds(accountId);
     }
 }

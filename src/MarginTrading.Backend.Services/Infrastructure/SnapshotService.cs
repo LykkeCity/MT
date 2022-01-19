@@ -2,11 +2,14 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Autofac;
 using Common;
 using Common.Log;
+using MarginTrading.Backend.Contracts.Prices;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
@@ -30,6 +33,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
         private readonly ISnapshotValidationService _snapshotValidationService;
         private readonly IQueueValidationService _queueValidationService;
         private readonly IMarginTradingBlobRepository _blobRepository;
+        private readonly ILifetimeScope _lifetimeScope;
         private readonly ILog _log;
 
         private readonly SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1, 1);
@@ -45,6 +49,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
             ISnapshotValidationService snapshotValidationService,
             IQueueValidationService queueValidationService,
             IMarginTradingBlobRepository blobRepository,
+            ILifetimeScope lifetimeScope,
             ILog log)
         {
             _scheduleSettingsCacheService = scheduleSettingsCacheService;
@@ -57,9 +62,11 @@ namespace MarginTrading.Backend.Services.Infrastructure
             _snapshotValidationService = snapshotValidationService;
             _queueValidationService = queueValidationService;
             _blobRepository = blobRepository;
+            _lifetimeScope = lifetimeScope;
             _log = log;
         }
 
+        /// <inheritdoc />
         public async Task<string> MakeTradingDataSnapshot(DateTime tradingDay, string correlationId, SnapshotStatus status = SnapshotStatus.Final)
         {
             if (!_scheduleSettingsCacheService.TryGetPlatformCurrentDisabledInterval(out var disabledInterval))
@@ -82,7 +89,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
 
             if (_semaphoreSlim.CurrentCount == 0)
             {
-                throw new ArgumentException("Trading data snapshot creation is already in progress", "snapshot");
+                throw new InvalidOperationException("Trading data snapshot creation is already in progress");
             }
 
             // We must be sure all messages have been processed by history brokers before starting current state validation.
@@ -113,17 +120,17 @@ namespace MarginTrading.Backend.Services.Infrastructure
             try
             {
                 var orders = _orderReader.GetAllOrders();
-                var ordersData = orders.Select(x => x.ConvertToContract(_orderReader)).ToJson();
+                var ordersJson = orders.Select(o => o.ConvertToSnapshotContract(_orderReader, status)).ToJson();
                 await _log.WriteInfoAsync(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
                     $"Preparing data... {orders.Length} orders prepared.");
                 
                 var positions = _orderReader.GetPositions();
-                var positionsData = positions.Select(x => x.ConvertToContract(_orderReader)).ToJson();
+                var positionsJson = positions.Select(p => p.ConvertToSnapshotContract(_orderReader, status)).ToJson();
                 await _log.WriteInfoAsync(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
                     $"Preparing data... {positions.Length} positions prepared.");
                 
                 var accountStats = _accountsCacheService.GetAll();
-                var accountStatsData = accountStats.Select(x => x.ConvertToContract()).ToJson();
+                var accountsJson = accountStats.Select(a => a.ConvertToSnapshotContract(status)).ToJson();
                 await _log.WriteInfoAsync(nameof(SnapshotService), nameof(MakeTradingDataSnapshot),
                     $"Preparing data... {accountStats.Count} accounts prepared.");
                 
@@ -146,9 +153,9 @@ namespace MarginTrading.Backend.Services.Infrastructure
                     tradingDay,
                     correlationId,
                     _dateService.Now(),
-                    ordersJson: ordersData,
-                    positionsJson: positionsData,
-                    accountsJson: accountStatsData,
+                    ordersJson: ordersJson,
+                    positionsJson: positionsJson,
+                    accountsJson: accountsJson,
                     bestFxPricesJson: bestFxPricesData,
                     bestTradingPricesJson: bestPricesData,
                     status: status);
@@ -165,44 +172,34 @@ namespace MarginTrading.Backend.Services.Infrastructure
             }
         }
 
-        public async Task<string> MakeTradingDataSnapshotFromBackup(DateTime tradingDay, string correlationId)
+        /// <inheritdoc />
+        public async Task MakeTradingDataSnapshotFromDraft(
+            string correlationId,
+            IEnumerable<ClosingAssetPrice> cfdQuotes,
+            IEnumerable<ClosingFxRate> fxRates)
         {
             if (_semaphoreSlim.CurrentCount == 0)
             {
-                throw new ArgumentException("Trading data snapshot manipulations are already in progress", "snapshot");
+                throw new InvalidOperationException("Trading data snapshot manipulations are already in progress");
             }
             
             await _semaphoreSlim.WaitAsync();
 
             try
             {
-                var draft = await _tradingEngineSnapshotsRepository.GetLastDraftAsync(tradingDay);
-
-                var final = new TradingEngineSnapshot(tradingDay,
-                    correlationId,
-                    _dateService.Now(),
-                    draft.OrdersJson,
-                    draft.PositionsJson,
-                    draft.AccountsJson,
-                    null, // todo: uploaded fx prices
-                    null, // todo: uploaded cfd quotes
-                    SnapshotStatus.Final);
-                
-                await _tradingEngineSnapshotsRepository.AddAsync(final);
-
-                // todo:
-                // 1. take snapshot from backup for the trading day
-                // 2. take prices
-                // 3. create new snapshot with status Final and correlationId
-                // 4. apply prices
-                // 5. save snapshot to database
+                using (var scope = _lifetimeScope.BeginLifetimeScope())
+                {
+                    var snapshot = await scope
+                        .Resolve<IFinalSnapshotCalculator>()
+                        .RunAsync(fxRates, cfdQuotes, correlationId);
+                    
+                    await _tradingEngineSnapshotsRepository.AddAsync(snapshot);
+                }
             }
             finally
             {
                 _semaphoreSlim.Release();
             }
-
-            return string.Empty;
         }
     }
 }

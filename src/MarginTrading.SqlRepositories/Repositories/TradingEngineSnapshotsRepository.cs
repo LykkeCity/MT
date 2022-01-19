@@ -106,7 +106,18 @@ VALUES (@TradingDay,@CorrelationId,@Timestamp,@Orders,@Positions,@AccountStats,@
 
             await conn.ExecuteAsync(sql, new {id = correlationId});
         }
-        
+
+        public async Task<bool> DraftExistsAsync(DateTime tradingDay)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var o = await connection.QuerySingleOrDefaultAsync(
+                    $"SELECT TOP 1 OID FROM {TableName} WHERE [TradingDay] = {tradingDay} AND [Status] = '{nameof(SnapshotStatus.Draft)}' ORDER BY [Timestamp] DESC");
+
+                return o != null;
+            }
+        }
+
         private async Task<TradingEngineSnapshot> DoGetLastAsync(DateTime? tradingDay, SnapshotStatus status)
 
         {

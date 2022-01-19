@@ -34,5 +34,10 @@ namespace MarginTrading.AzureRepositories
         {
             throw new NotImplementedException();
         }
+
+        public async Task<bool> DraftExistsAsync(DateTime tradingDay)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

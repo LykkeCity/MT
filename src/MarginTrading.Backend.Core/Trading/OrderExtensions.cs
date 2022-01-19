@@ -114,6 +114,11 @@ namespace MarginTrading.Backend.Core
         public static SortedList<int, Position> ToSortedList(this Position position) =>
             new SortedList<int, Position> {{0, position}};
 
+        public static IEnumerable<string> GetTrailingStopOrderIds(this Position position) =>
+            position.RelatedOrders
+                .Where(o => o.Type == OrderType.TrailingStop)
+                .Select(o => o.Id);
+
         public static OrderDirection GetOpositeDirection(this OrderDirection orderType)
         {
             return orderType == OrderDirection.Buy ? OrderDirection.Sell : OrderDirection.Buy;
@@ -236,6 +241,31 @@ namespace MarginTrading.Backend.Core
             catch (Exception)
             {
                 return defaultValue;
+            }
+        }
+
+
+        public static void UpdateTrailingStopWithClosePrice(this Order order, decimal closePrice, Func<DateTime> dateProvider)
+        {
+            if (!order.Price.HasValue) return;
+            
+            if (order.TrailingDistance.HasValue)
+            {
+                var currentDistance = order.Price.Value - closePrice;
+                        
+                if (Math.Abs(currentDistance) > Math.Abs(order.TrailingDistance.Value)
+                    && Math.Sign(currentDistance) == Math.Sign(order.TrailingDistance.Value))
+                {
+                    var newPrice = closePrice + order.TrailingDistance.Value;
+                    order.ChangePrice(newPrice,
+                        dateProvider(),
+                        order.Originator,
+                        null);
+                }
+            }
+            else
+            {
+                order.SetTrailingDistance(closePrice);
             }
         }
     }

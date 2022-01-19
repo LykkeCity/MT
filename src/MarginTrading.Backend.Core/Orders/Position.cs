@@ -208,6 +208,12 @@ namespace MarginTrading.Backend.Core.Orders
             var account = MtServiceLocator.AccountsCacheService.Get(AccountId);
             account.CacheNeedsToBeUpdated();
         }
+        
+        public void UpdateCloseFxPriceWithoutAccountUpdate(decimal closeFxPrice)
+        {
+            CloseFxPrice = closeFxPrice;
+            FplData.ActualHash++;
+        }
 
         //TODO: temp solution in order not to have a lot of changes
         public void UpdateClosePriceWithoutAccountUpdate(decimal closePrice)

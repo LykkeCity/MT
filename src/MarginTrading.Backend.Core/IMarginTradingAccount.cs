@@ -5,8 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
-using MarginTrading.Backend.Core.Settings;
-using Newtonsoft.Json;
 
 namespace MarginTrading.Backend.Core
 {
