@@ -6,6 +6,7 @@ using System.Linq;
 using Autofac;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Services;
+using MarginTrading.Common.Extensions;
 
 namespace MarginTrading.Backend.Services.Services
 {
@@ -30,7 +31,7 @@ namespace MarginTrading.Backend.Services.Services
             
             using (var scope = _lifetimeScope.BeginLifetimeScope())
             {
-                if (scope.TryResolve<IDraftSnapshotKeeper>(out var snapshotKeeper))
+                if (scope.TryResolveWithoutException<IDraftSnapshotKeeper>(out var snapshotKeeper))
                 {
                     var accounts = snapshotKeeper
                         .GetAccountsAsync()
