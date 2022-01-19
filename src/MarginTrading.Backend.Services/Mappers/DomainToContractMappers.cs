@@ -46,7 +46,7 @@ namespace MarginTrading.Backend.Services.Mappers
         public static object ConvertToSnapshotContract(this Order order, IOrderReader orderReader, SnapshotStatus status = SnapshotStatus.Final)
         {
             return status == SnapshotStatus.Draft
-                ? order
+                ? (object) order
                 : order.ConvertToContract(orderReader);
         }
         
@@ -194,7 +194,7 @@ namespace MarginTrading.Backend.Services.Mappers
         public static object ConvertToSnapshotContract(this Position position, IOrderReader orderReader, SnapshotStatus status = SnapshotStatus.Final)
         {
             return status == SnapshotStatus.Draft
-                ? position
+                ? (object) position
                 : position.ConvertToContract(orderReader);
         }
 
@@ -235,7 +235,7 @@ namespace MarginTrading.Backend.Services.Mappers
         public static object ConvertToSnapshotContract(this IMarginTradingAccount account, SnapshotStatus status = SnapshotStatus.Final)
         {
             return status == SnapshotStatus.Draft
-                ? account
+                ? (object) account
                 : account.ConvertToContract();
         }
 

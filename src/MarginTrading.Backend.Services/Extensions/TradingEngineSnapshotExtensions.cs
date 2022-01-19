@@ -18,7 +18,7 @@ namespace MarginTrading.Backend.Services.Extensions
 {
     public static class TradingEngineSnapshotExtensions
     {
-        private const string DraftStatusMessage = $"Snapshot is supposed to be in [{nameof(SnapshotStatus.Draft)}] status";
+        private static readonly string DraftStatusMessage = $"Snapshot is supposed to be in [{nameof(SnapshotStatus.Draft)}] status";
 
         public static List<OrderContract> GetOrders(this TradingEngineSnapshot snapshot)
         {
