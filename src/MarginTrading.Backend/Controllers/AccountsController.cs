@@ -9,6 +9,7 @@ using MarginTrading.Backend.Contracts.Account;
 using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Exceptions;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Mappers;
@@ -150,8 +151,7 @@ namespace MarginTrading.Backend.Controllers
             }
             catch (AccountNotFoundException ex)
             {
-                ex.LogInfoOnly = true;
-                throw ex;
+                throw new LogInfoOnlyException(ex.Message, ex);
             }
         }
         

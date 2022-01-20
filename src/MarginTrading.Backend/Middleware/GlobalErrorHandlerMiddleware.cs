@@ -8,6 +8,7 @@ using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Exceptions;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Helpers;
 using MarginTrading.Contract.BackendContracts;
@@ -35,8 +36,7 @@ namespace MarginTrading.Backend.Middleware
             }
             catch (Exception ex)
             {
-                if (ex is ValidateOrderException ||
-                    (ex is AccountNotFoundException && ((AccountNotFoundException)ex).LogInfoOnly))
+                if (ex is ValidateOrderException || ex is LogInfoOnlyException)
                 {
                     await LogValidationError(context, ex);
                 }
