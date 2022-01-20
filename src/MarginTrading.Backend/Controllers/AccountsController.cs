@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using MarginTrading.Backend.Contracts.Account;
 using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Mappers;
@@ -141,9 +142,17 @@ namespace MarginTrading.Backend.Controllers
         [Route("stats/{accountId}")]
         public Task<AccountStatContract> GetAccountStats(string accountId)
         {
-            var stats = _accountsCacheService.Get(accountId);
+            try
+            {
+                var stats = _accountsCacheService.Get(accountId);
 
-            return Task.FromResult(stats.ConvertToContract());
+                return Task.FromResult(stats.ConvertToContract());
+            }
+            catch (AccountNotFoundException ex)
+            {
+                ex.LogInfoOnly = true;
+                throw ex;
+            }
         }
         
         [HttpPost, Route("resume-liquidation/{accountId}")]

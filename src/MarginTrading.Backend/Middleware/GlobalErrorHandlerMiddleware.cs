@@ -35,7 +35,8 @@ namespace MarginTrading.Backend.Middleware
             }
             catch (Exception ex)
             {
-                if (ex is ValidateOrderException)
+                if (ex is ValidateOrderException ||
+                    (ex is AccountNotFoundException && ((AccountNotFoundException)ex).LogInfoOnly))
                 {
                     await LogValidationError(context, ex);
                 }

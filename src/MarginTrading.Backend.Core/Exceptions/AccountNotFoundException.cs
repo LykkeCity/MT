@@ -7,6 +7,7 @@ namespace MarginTrading.Backend.Core.Exceptions
 {
     public class AccountNotFoundException : Exception
     {
+        public bool LogInfoOnly { get; set; }
         public string AccountId { get; private set; }
 
         public AccountNotFoundException(string accountId, string message):base(message)
