@@ -61,14 +61,14 @@ namespace MarginTrading.Backend.Services.Extensions
         
         public static Dictionary<string, BestPriceContract> GetBestFxPrices(this TradingEngineSnapshot snapshot)
         {
-            return snapshot.BestFxPricesJson == null
+            return string.IsNullOrWhiteSpace(snapshot.BestFxPricesJson)
                 ? new Dictionary<string, BestPriceContract>()
                 : snapshot.BestFxPricesJson.DeserializeJson<Dictionary<string, BestPriceContract>>();
         }
         
         public static Dictionary<string, BestPriceContract> GetBestTradingPrices(this TradingEngineSnapshot snapshot)
         {
-            return snapshot.BestTradingPricesJson == null
+            return string.IsNullOrWhiteSpace(snapshot.BestTradingPricesJson)
                 ? new Dictionary<string, BestPriceContract>()
                 : snapshot.BestTradingPricesJson.DeserializeJson<Dictionary<string, BestPriceContract>>();
         }
@@ -79,21 +79,21 @@ namespace MarginTrading.Backend.Services.Extensions
         
         private static List<T> GetOrders<T>(this TradingEngineSnapshot snapshot)
         {
-            return snapshot.OrdersJson == null
+            return string.IsNullOrWhiteSpace(snapshot.OrdersJson)
                 ? new List<T>()
                 : snapshot.OrdersJson.DeserializeJson<List<T>>();
         }
         
         private static List<T> GetPositions<T>(this TradingEngineSnapshot snapshot)
         {
-            return snapshot.PositionsJson == null
+            return string.IsNullOrWhiteSpace(snapshot.PositionsJson)
                 ? new List<T>()
                 : snapshot.PositionsJson.DeserializeJson<List<T>>();
         }
         
         private static List<T> GetAccounts<T>(this TradingEngineSnapshot snapshot)
         {
-            return snapshot.AccountsJson == null
+            return string.IsNullOrWhiteSpace(snapshot.AccountsJson)
                 ? new List<T>()
                 : snapshot.AccountsJson.DeserializeJson<List<T>>();
         }
