@@ -23,7 +23,7 @@ namespace MarginTrading.Common.Extensions
         /// <typeparam name="T"></typeparam>
         /// <exception cref="ArgumentNullException">When context is null</exception>
         /// <returns></returns>
-        public static bool TryResolveWithoutException<T>(this IComponentContext context, [NotNullWhen(returnValue: true)] out T? instance)
+        public static bool TryResolveWithoutException<T>(this IComponentContext context, [NotNullWhen(returnValue: true)] out T? instance) where T: class
         {
             if (context == null)
             {

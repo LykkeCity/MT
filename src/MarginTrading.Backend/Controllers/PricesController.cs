@@ -15,6 +15,7 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Quotes;
 using MarginTrading.Backend.Core.Services;
+using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Mappers;
 using MarginTrading.Contract.BackendContracts;
 using Microsoft.AspNetCore.Authorization;
