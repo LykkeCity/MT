@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using Autofac;
 using Autofac.Extras.Moq;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services;
@@ -66,12 +67,15 @@ namespace MarginTradingTests
                 .Setup(d => d.GetPositions())
                 .Returns(ImmutableArray.Create<Position>());
 
-            using (var mock = AutoMock.GetLoose(cfg => cfg.RegisterMock(draftSnapshotKeeperMock)))
+            using (var mock = AutoMock.GetLoose(cfg => cfg
+                           .RegisterInstance(draftSnapshotKeeperMock.Object)
+                           .As<IDraftSnapshotKeeper>()
+                           .ExternallyOwned()))
             {
                 var sut = mock.Create<PositionsProvider>();
-                
+
                 var _ = sut.GetPositionsByAccountIds("accountId");
-                
+
                 draftSnapshotKeeperMock.Verify(d => d.GetPositions(), Times.Once);
             }
         }
