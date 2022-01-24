@@ -67,16 +67,21 @@ namespace MarginTradingTests
                 .Setup(d => d.GetPositions())
                 .Returns(ImmutableArray.Create<Position>());
 
-            using (var mock = AutoMock.GetLoose(cfg => cfg
-                           .RegisterInstance(draftSnapshotKeeperMock.Object)
-                           .As<IDraftSnapshotKeeper>()
-                           .ExternallyOwned()))
+            using (var mock = AutoMock.GetLoose(BeforeBuild))
             {
                 var sut = mock.Create<PositionsProvider>();
 
                 var _ = sut.GetPositionsByAccountIds("accountId");
 
                 draftSnapshotKeeperMock.Verify(d => d.GetPositions(), Times.Once);
+            }
+            
+            void BeforeBuild(ContainerBuilder builder)
+            {
+                builder
+                    .RegisterInstance(draftSnapshotKeeperMock.Object)
+                    .As<IDraftSnapshotKeeper>()
+                    .ExternallyOwned();
             }
         }
     }
