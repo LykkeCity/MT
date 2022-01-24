@@ -698,11 +698,14 @@ namespace MarginTrading.Backend.Services
                     var oldPrice = trailingOrder.Price;
                     
                     trailingOrder.UpdateTrailingStopWithClosePrice(position.ClosePrice, () => _dateService.Now());
-                    
-                    _log.WriteInfoAsync(nameof(TradingEngine), nameof(UpdateTrailingStops),
-                        $"Price for trailing stop order {trailingOrder.Id} changed. " +
-                        $"Old price: {oldPrice}. " +
-                        $"New price: {trailingOrder.Price}");
+
+                    if (oldPrice != trailingOrder.Price)
+                    {
+                        _log.WriteInfoAsync(nameof(TradingEngine), nameof(UpdateTrailingStops),
+                            $"Price for trailing stop order {trailingOrder.Id} changed. " +
+                            $"Old price: {oldPrice}. " +
+                            $"New price: {trailingOrder.Price}");
+                    }
                 }
             }
         }
