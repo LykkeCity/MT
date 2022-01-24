@@ -1,6 +1,10 @@
 // Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+#nullable enable
+
+using System;
+using System.Diagnostics.CodeAnalysis;
 using Autofac;
 using Autofac.Core;
 
@@ -17,17 +21,35 @@ namespace MarginTrading.Common.Extensions
         /// <param name="context"></param>
         /// <param name="instance"></param>
         /// <typeparam name="T"></typeparam>
+        /// <exception cref="ArgumentNullException">When context is null</exception>
         /// <returns></returns>
-        public static bool TryResolveWithoutException<T>(this IComponentContext context, out T instance)
+        public static bool TryResolveWithoutException<T>(this IComponentContext context, [NotNullWhen(returnValue: true)] out T? instance)
         {
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
+
+            instance = default(T);
+            
             try
             {
-                return context.TryResolve<T>(out instance);
-            }
-            catch (DependencyResolutionException e)
-            {
-                instance = default(T);
+                if (context.TryResolve(typeof(T), out object? component))
+                {
+                    instance = (T)component;
+                    return true;
+                }
+
                 return false;
+            }
+            catch (Exception e)
+            {
+                if (e is InvalidCastException || e is DependencyResolutionException)
+                {
+                    return false;
+                }
+
+                throw;
             }
         }
     }
