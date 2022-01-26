@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
+using Common;
 using Common.Log;
 using MarginTrading.Backend.Contracts;
 using MarginTrading.Backend.Contracts.ErrorCodes;
@@ -98,7 +99,14 @@ namespace MarginTrading.Backend.Controllers
         public async Task<QuotesUploadErrorCode> UploadMissingQuotesAsync(UploadMissingQuotesRequest request)
         {
             if (!DateTime.TryParse(request.TradingDay, out var tradingDay))
+            {
+                await _log.WriteWarningAsync(nameof(PricesController), 
+                    nameof(UploadMissingQuotesAsync),
+                    request.ToJson(), 
+                    "Couldn't parse trading day");
+                
                 return QuotesUploadErrorCode.InvalidTradingDay;
+            }
 
             using (var scope = _lifetimeScope.BeginLifetimeScope(ScopeConstants.SnapshotDraft))
             {
