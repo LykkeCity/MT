@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Autofac;
+using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Trading;
@@ -31,7 +32,7 @@ namespace MarginTrading.Backend.Services.Services
             if (accountIds == null || !accountIds.Any() || accountIds.Any(string.IsNullOrWhiteSpace))
                 throw new ArgumentNullException(nameof(accountIds));
             
-            using (var scope = _lifetimeScope.BeginLifetimeScope())
+            using (var scope = _lifetimeScope.BeginLifetimeScope(ScopeConstants.SnapshotDraft))
             {
                 if (scope.TryResolveSnapshotKeeper(out var snapshotKeeper))
                 {

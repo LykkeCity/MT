@@ -47,7 +47,7 @@ namespace MarginTrading.Backend.Services.Services
             if (cfdQuotesList == null || !cfdQuotesList.Any())
                 throw new ArgumentNullException(nameof(cfdQuotes), @"CFD quotes can't be null or empty");
             
-            using (var scope = _lifetimeScope.BeginLifetimeScope())
+            using (var scope = _lifetimeScope.BeginLifetimeScope(ScopeConstants.SnapshotDraft))
             {
                 var snapshotKeeper = scope.Resolve<IDraftSnapshotKeeper>();
 
