@@ -739,8 +739,7 @@ namespace MarginTrading.Backend.Services
 
             _cqrsSender.SendCommandToSelf(new StartLiquidationInternalCommand
             {
-                // TODO: correlation id should be passed together with headers in rabbit mq publisher
-                OperationId = _correlationContextAccessor.CorrelationContext?.CorrelationId ?? _identityGenerator.GenerateGuid(),
+                OperationId = _identityGenerator.GenerateGuid(),
                 AccountId = account.Id,
                 CreationTime = _dateService.Now(),
                 QuoteInfo = quote?.ToJson(),
@@ -983,8 +982,7 @@ namespace MarginTrading.Backend.Services
 
             bool closeAll = string.IsNullOrEmpty(assetPairId);
             
-            // TODO: should be passed as a header from rabbit mq publisher
-            var operationId = _correlationContextAccessor.CorrelationContext?.CorrelationId ?? _identityGenerator.GenerateGuid();
+            var operationId = _identityGenerator.GenerateGuid();
             if (closeAll)
             {
                 return _liquidationHelper.StartLiquidation(accountId, originator, additionalInfo, operationId);
