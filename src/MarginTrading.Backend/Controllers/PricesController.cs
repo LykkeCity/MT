@@ -96,13 +96,13 @@ namespace MarginTrading.Backend.Controllers
         /// <inheritdoc />
         [HttpPost]
         [Route("missed")]
-        public async Task<QuotesUploadErrorCode> UploadMissingQuotesAsync(UploadMissingQuotesRequest request)
+        public async Task<QuotesUploadErrorCode> UploadMissingQuotesAsync([FromBody] UploadMissingQuotesRequest request)
         {
             if (!DateTime.TryParse(request.TradingDay, out var tradingDay))
             {
                 await _log.WriteWarningAsync(nameof(PricesController), 
                     nameof(UploadMissingQuotesAsync),
-                    request.ToJson(), 
+                    request.TradingDay, 
                     "Couldn't parse trading day");
                 
                 return QuotesUploadErrorCode.InvalidTradingDay;
