@@ -111,8 +111,16 @@ VALUES (@TradingDay,@CorrelationId,@Timestamp,@Orders,@Positions,@AccountStats,@
         {
             using (var connection = new SqlConnection(_connectionString))
             {
-                var o = await connection.QuerySingleOrDefaultAsync(
-                    $"SELECT TOP 1 OID FROM {TableName} WHERE [TradingDay] = {tradingDay} AND [Status] = '{nameof(SnapshotStatus.Draft)}' ORDER BY [Timestamp] DESC");
+                var sql =
+                    $"SELECT TOP 1 OID FROM {TableName} WHERE [TradingDay] = {tradingDay} AND [Status] = '{nameof(SnapshotStatus.Draft)}' ORDER BY [Timestamp] DESC";
+
+                await _log.WriteInfoAsync(
+                    nameof(TradingEngineSnapshotsRepository), 
+                    nameof(DraftExistsAsync), 
+                    sql,
+                    "Checking if trading snapshot draft exists ...");
+                
+                var o = await connection.QuerySingleOrDefaultAsync(sql);
 
                 return o != null;
             }
