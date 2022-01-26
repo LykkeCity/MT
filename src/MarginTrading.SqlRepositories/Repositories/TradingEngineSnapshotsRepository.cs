@@ -112,7 +112,7 @@ VALUES (@TradingDay,@CorrelationId,@Timestamp,@Orders,@Positions,@AccountStats,@
             using (var connection = new SqlConnection(_connectionString))
             {
                 var sql =
-                    $"SELECT TOP 1 OID FROM {TableName} WHERE [TradingDay] = {tradingDay} AND [Status] = '{nameof(SnapshotStatus.Draft)}' ORDER BY [Timestamp] DESC";
+                    $"SELECT TOP 1 OID FROM {TableName} WHERE [TradingDay] = '{tradingDay}' AND [Status] = '{nameof(SnapshotStatus.Draft)}' ORDER BY [Timestamp] DESC";
 
                 await _log.WriteInfoAsync(
                     nameof(TradingEngineSnapshotsRepository), 
