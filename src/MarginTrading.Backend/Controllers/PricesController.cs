@@ -115,11 +115,10 @@ namespace MarginTrading.Backend.Controllers
                     .Init(tradingDay)
                     .ExistsAsync();
 
-                using (var scope2 = scope.BeginLifetimeScope())
+                using (var scope2 = _lifetimeScope.BeginLifetimeScope())
                 {
                     var c = scope2.Resolve<IFinalSnapshotCalculator>();
-                    await _log.WriteWarningAsync(nameof(PricesController), nameof(UploadMissingQuotesAsync),
-                        $"Calculator resolved? : {c != null}");
+                    await _log.WriteWarningAsync(nameof(PricesController), nameof(UploadMissingQuotesAsync), $"Calculator resolved? : {c != null}")
                 }
 
                 if (!draftExists)
