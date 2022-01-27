@@ -187,7 +187,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
 
             try
             {
-                using (var scope = _lifetimeScope.BeginLifetimeScope(ScopeConstants.SnapshotDraft))
+                using (var scope = _lifetimeScope.BeginLifetimeScope())
                 {
                     var snapshot = await scope
                         .Resolve<IFinalSnapshotCalculator>()

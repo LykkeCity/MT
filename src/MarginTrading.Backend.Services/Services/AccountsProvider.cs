@@ -29,7 +29,7 @@ namespace MarginTrading.Backend.Services.Services
             if (string.IsNullOrWhiteSpace(accountId))
                 throw new ArgumentNullException(nameof(accountId));
             
-            using (var scope = _lifetimeScope.BeginLifetimeScope(ScopeConstants.SnapshotDraft))
+            using (var scope = _lifetimeScope.BeginLifetimeScope())
             {
                 if (scope.TryResolveSnapshotKeeper(out var snapshotKeeper))
                 {
