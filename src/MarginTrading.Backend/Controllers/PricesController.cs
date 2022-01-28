@@ -127,7 +127,7 @@ namespace MarginTrading.Backend.Controllers
                 return QuotesUploadErrorCode.EmptyQuotes;
             }
 
-                return QuotesUploadErrorCode.None;
+            return QuotesUploadErrorCode.None;
         }
 
         [HttpDelete]

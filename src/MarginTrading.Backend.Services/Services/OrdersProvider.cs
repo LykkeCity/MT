@@ -48,11 +48,6 @@ namespace MarginTrading.Backend.Services.Services
                     .ToList();
             }
             
-            _log.WriteInfoAsync(nameof(OrdersProvider),
-                nameof(GetActiveOrdersByAccountIds),
-                null,
-                "Draft snapshot keeper is NOT initialized, orders cache will be used as provider");
-            
             return _ordersCache.Active.GetOrdersByAccountIds(accountIds);
         }
     }

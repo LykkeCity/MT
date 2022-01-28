@@ -48,11 +48,6 @@ namespace MarginTrading.Backend.Services.Services
                     .SingleOrDefault(a => a.Id == accountId);
             }
             
-            _log.WriteInfoAsync(nameof(AccountsProvider),
-                nameof(GetAccountById),
-                null,
-                "Draft snapshot keeper is NOT initialized, accounts cache will be used as accounts provider");
-
             return _accountsCacheService.TryGet(accountId);
         }
 
