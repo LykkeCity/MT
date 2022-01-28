@@ -81,8 +81,8 @@ namespace MarginTrading.Backend.Services
                 _lockSlim.ExitWriteLock();
             }
 
-            var account = ContainerProvider.Container.Resolve<IAccountsCacheService>().Get(position.AccountId);
-            account.CacheNeedsToBeUpdated();
+            var account = ContainerProvider.Container?.Resolve<IAccountsCacheService>().Get(position.AccountId);
+            account?.CacheNeedsToBeUpdated();
         }
 
         public void Remove(Position order)
@@ -106,8 +106,8 @@ namespace MarginTrading.Backend.Services
                 _lockSlim.ExitWriteLock();
             }
 
-            var account = ContainerProvider.Container.Resolve<IAccountsCacheService>().Get(order.AccountId);
-            account.CacheNeedsToBeUpdated();
+            var account = ContainerProvider.Container?.Resolve<IAccountsCacheService>().Get(order.AccountId);
+            account?.CacheNeedsToBeUpdated();
         }
 
         #endregion

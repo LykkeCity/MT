@@ -197,6 +197,8 @@ namespace MarginTradingTests
                     c.Resolve<T>().Start();
                 }
 
+                ContainerProvider.Container = c;
+
                 // note the order here is important!
                 StartService<TradingInstrumentsManager>();
                 StartService<AccountManager>();
@@ -209,8 +211,6 @@ namespace MarginTradingTests
             builder.RegisterType<SimpleIdentityGenerator>().As<IIdentityGenerator>();
             Container = builder.Build();
             
-            ContainerProvider.Container = Container;
-
             Container.Resolve<OrderBookList>().Init(null);
             Container.Resolve<IScheduleSettingsCacheService>().UpdateAllSettingsAsync().GetAwaiter().GetResult();
         }
