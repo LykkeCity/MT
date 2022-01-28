@@ -35,9 +35,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
         private readonly ILog _log;
         private readonly IFinalSnapshotCalculator _finalSnapshotCalculator;
 
-        // todo: rethink this implementation since ISnapshotService is registered per scope in DI container
-        // probably, semaphore should be moved to singleton 
-        private readonly SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1, 1);
+        private static readonly SemaphoreSlim Lock = new SemaphoreSlim(1, 1);
 
         public SnapshotService(
             IScheduleSettingsCacheService scheduleSettingsCacheService,
@@ -88,7 +86,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
                     $"{nameof(tradingDay)}'s Date component must be from current disabled interval's Start -1d to End: [{disabledInterval.Start.AddDays(-1)}, {disabledInterval.End}].");
             }
 
-            if (_semaphoreSlim.CurrentCount == 0)
+            if (Lock.CurrentCount == 0)
             {
                 throw new InvalidOperationException("Trading data snapshot creation is already in progress");
             }
@@ -116,7 +114,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
                     "The current state of orders and positions is correct.");
             }
 
-            await _semaphoreSlim.WaitAsync();
+            await Lock.WaitAsync();
 
             try
             {
@@ -169,7 +167,7 @@ namespace MarginTrading.Backend.Services.Infrastructure
             }
             finally
             {
-                _semaphoreSlim.Release();
+                Lock.Release();
             }
         }
 
@@ -179,9 +177,22 @@ namespace MarginTrading.Backend.Services.Infrastructure
             IEnumerable<ClosingAssetPrice> cfdQuotes,
             IEnumerable<ClosingFxRate> fxRates)
         {
-            var snapshot = await _finalSnapshotCalculator.RunAsync(fxRates, cfdQuotes, correlationId);
+            if (Lock.CurrentCount == 0)
+            {
+                throw new InvalidOperationException("Trading data snapshot manipulations are already in progress");
+            }
+            
+            await Lock.WaitAsync();
+            try
+            {
+                var snapshot = await _finalSnapshotCalculator.RunAsync(fxRates, cfdQuotes, correlationId);
                     
-            await _tradingEngineSnapshotsRepository.AddAsync(snapshot);
+                await _tradingEngineSnapshotsRepository.AddAsync(snapshot);
+            }
+            finally
+            {
+                Lock.Release();
+            }
         }
     }
 }
