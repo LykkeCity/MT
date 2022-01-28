@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Autofac;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;
 using Newtonsoft.Json;
@@ -44,7 +45,7 @@ namespace MarginTrading.Backend.Core
         {
             if (position.FplData.ActualHash != position.FplData.CalculatedHash || position.FplData.ActualHash == 0)
             {
-                MtServiceLocator.FplService.UpdatePositionFpl(position);
+                ContainerProvider.Container.Resolve<IFplService>().UpdatePositionFpl(position);
             }
 
             return position.FplData;
@@ -73,7 +74,7 @@ namespace MarginTrading.Backend.Core
 
         public static decimal GetOvernightMarginMaintenance(this Position position)
         {
-            return MtServiceLocator.FplService.CalculateOvernightMaintenanceMargin(position);
+            return ContainerProvider.Container.Resolve<IFplService>().CalculateOvernightMaintenanceMargin(position);
         }
 
         public static decimal GetMarginMaintenance(this Position order)
@@ -98,7 +99,7 @@ namespace MarginTrading.Backend.Core
 
         public static decimal GetSwaps(this Position order)
         {
-            return MtServiceLocator.SwapCommissionService.GetSwaps(order);
+            return ContainerProvider.Container.Resolve<ICommissionService>().GetSwaps(order);
         }
 
         public static decimal GetOpenCommission(this Position order)

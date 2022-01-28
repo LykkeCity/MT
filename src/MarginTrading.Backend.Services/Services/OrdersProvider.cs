@@ -4,7 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Autofac;
+using Common;
+using Common.Log;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Trading;
@@ -18,12 +19,14 @@ namespace MarginTrading.Backend.Services.Services
     public class OrdersProvider : IOrdersProvider
     {
         private readonly OrdersCache _ordersCache;
-        private readonly ILifetimeScope _lifetimeScope;
+        private readonly IDraftSnapshotKeeper _draftSnapshotKeeper;
+        private readonly ILog _log;
 
-        public OrdersProvider(OrdersCache ordersCache, ILifetimeScope lifetimeScope)
+        public OrdersProvider(OrdersCache ordersCache, IDraftSnapshotKeeper draftSnapshotKeeper, ILog log)
         {
             _ordersCache = ordersCache;
-            _lifetimeScope = lifetimeScope;
+            _draftSnapshotKeeper = draftSnapshotKeeper;
+            _log = log;
         }
 
         public ICollection<Order> GetActiveOrdersByAccountIds(params string[] accountIds)
@@ -31,17 +34,24 @@ namespace MarginTrading.Backend.Services.Services
             if (accountIds == null || !accountIds.Any() || accountIds.Any(string.IsNullOrWhiteSpace))
                 throw new ArgumentNullException(nameof(accountIds));
             
-            using (var scope = _lifetimeScope.BeginLifetimeScope())
+            if (_draftSnapshotKeeper.Initialized())
             {
-                if (scope.TryResolveSnapshotKeeper(out var snapshotKeeper))
-                {
-                    var orders = snapshotKeeper.GetAllOrders();
+                _log.WriteInfoAsync(nameof(OrdersProvider),
+                    nameof(GetActiveOrdersByAccountIds),
+                    _draftSnapshotKeeper.TradingDay.ToJson(),
+                    "Draft snapshot keeper initialized and will be used as orders provider");
+                
+                var orders = _draftSnapshotKeeper.GetAllOrders();
 
-                    return orders
-                        .Where(o => o.Status == OrderStatus.Active && accountIds.Contains(o.AccountId))
-                        .ToList();
-                }
+                return orders
+                    .Where(o => o.Status == OrderStatus.Active && accountIds.Contains(o.AccountId))
+                    .ToList();
             }
+            
+            _log.WriteInfoAsync(nameof(OrdersProvider),
+                nameof(GetActiveOrdersByAccountIds),
+                null,
+                "Draft snapshot keeper is NOT initialized, orders cache will be used as provider");
             
             return _ordersCache.Active.GetOrdersByAccountIds(accountIds);
         }

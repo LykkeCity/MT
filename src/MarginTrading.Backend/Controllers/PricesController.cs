@@ -5,15 +5,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Autofac;
-using Common;
 using Common.Log;
 using MarginTrading.Backend.Contracts;
 using MarginTrading.Backend.Contracts.ErrorCodes;
 using MarginTrading.Backend.Contracts.Prices;
 using MarginTrading.Backend.Contracts.Snow.Prices;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Quotes;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Services;
@@ -34,25 +31,22 @@ namespace MarginTrading.Backend.Controllers
     {
         private readonly IQuoteCacheService _quoteCacheService;
         private readonly IFxRateCacheService _fxRateCacheService;
-        private readonly ITradingEngineSnapshotsRepository _tradingEngineSnapshotsRepository;
         private readonly ISnapshotService _snapshotService;
-        private readonly ILifetimeScope _lifetimeScope;
+        private readonly IDraftSnapshotKeeper _draftSnapshotKeeper;
         private readonly ILog _log;
 
         public PricesController(
             IQuoteCacheService quoteCacheService,
             IFxRateCacheService fxRateCacheService,
-            ITradingEngineSnapshotsRepository tradingEngineSnapshotsRepository,
             ISnapshotService snapshotService,
-            ILifetimeScope lifetimeScope,
-            ILog log)
+            ILog log,
+            IDraftSnapshotKeeper draftSnapshotKeeper)
         {
             _quoteCacheService = quoteCacheService;
             _fxRateCacheService = fxRateCacheService;
-            _tradingEngineSnapshotsRepository = tradingEngineSnapshotsRepository;
             _snapshotService = snapshotService;
-            _lifetimeScope = lifetimeScope;
             _log = log;
+            _draftSnapshotKeeper = draftSnapshotKeeper;
         }
 
         /// <summary>
@@ -108,36 +102,32 @@ namespace MarginTrading.Backend.Controllers
                 return QuotesUploadErrorCode.InvalidTradingDay;
             }
 
-            using (var scope = _lifetimeScope.BeginLifetimeScope(ScopeConstants.SnapshotDraft))
+            var draftExists = await _draftSnapshotKeeper
+                .Init(tradingDay)
+                .ExistsAsync();
+
+            if (!draftExists)
+                return QuotesUploadErrorCode.NoDraft;
+
+            try
             {
-                var draftExists = await scope
-                    .Resolve<IDraftSnapshotKeeper>()
-                    .Init(tradingDay)
-                    .ExistsAsync();
-
-                if (!draftExists)
-                    return QuotesUploadErrorCode.NoDraft;
-
-                try
-                {
-                    await _snapshotService.MakeTradingDataSnapshotFromDraft(
-                        request.CorrelationId,
-                        request.Underlyings,
-                        request.Forex);
-                }
-                catch (InvalidOperationException e)
-                {
-                    await _log.WriteErrorAsync(nameof(PricesController), nameof(UploadMissingQuotesAsync), null, e);
-                    return QuotesUploadErrorCode.AlreadyInProgress;
-                }
-                catch (ArgumentNullException e)
-                {
-                    await _log.WriteErrorAsync(nameof(PricesController), nameof(UploadMissingQuotesAsync), null, e);
-                    return QuotesUploadErrorCode.EmptyQuotes;
-                }
+                await _snapshotService.MakeTradingDataSnapshotFromDraft(
+                    request.CorrelationId,
+                    request.Underlyings,
+                    request.Forex);
+            }
+            catch (InvalidOperationException e)
+            {
+                await _log.WriteErrorAsync(nameof(PricesController), nameof(UploadMissingQuotesAsync), null, e);
+                return QuotesUploadErrorCode.AlreadyInProgress;
+            }
+            catch (ArgumentNullException e)
+            {
+                await _log.WriteErrorAsync(nameof(PricesController), nameof(UploadMissingQuotesAsync), null, e);
+                return QuotesUploadErrorCode.EmptyQuotes;
             }
 
-            return QuotesUploadErrorCode.None;
+                return QuotesUploadErrorCode.None;
         }
 
         [HttpDelete]

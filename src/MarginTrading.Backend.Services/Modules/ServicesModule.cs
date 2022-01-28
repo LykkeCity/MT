@@ -47,7 +47,7 @@ namespace MarginTrading.Backend.Services.Modules
 
 			builder.RegisterType<FplService>()
 				.As<IFplService>()
-				.SingleInstance();
+				.InstancePerLifetimeScope();
 
             builder.RegisterType<TradingInstrumentsCacheService>()
 				.AsSelf()
@@ -57,7 +57,7 @@ namespace MarginTrading.Backend.Services.Modules
 
 			builder.RegisterType<AccountUpdateService>()
 				.As<IAccountUpdateService>()
-				.SingleInstance();
+				.InstancePerLifetimeScope();
 
 			builder.RegisterType<ValidateOrderService>()
 				.As<IValidateOrderService>()
@@ -204,25 +204,25 @@ namespace MarginTrading.Backend.Services.Modules
 
             builder.RegisterType<PositionsProvider>()
 	            .As<IPositionsProvider>()
-	            .SingleInstance();
+	            .InstancePerLifetimeScope();
 
             builder.RegisterType<OrdersProvider>()
 	            .As<IOrdersProvider>()
-	            .SingleInstance();
+	            .InstancePerLifetimeScope();
 
             builder.RegisterType<AccountsProvider>()
 	            .As<IAccountsProvider>()
-	            .SingleInstance();
+	            .InstancePerLifetimeScope();
 
             builder.RegisterType<FinalSnapshotCalculator>()
 	            .As<IFinalSnapshotCalculator>()
-	            .InstancePerMatchingLifetimeScope(ScopeConstants.SnapshotDraft);
+	            .InstancePerLifetimeScope();
             
             // @atarutin: DraftSnapshotKeeper implements IOrderReader interface for convenient access to positions
             // and orders but it is not required to be used for registration in DI container
             builder.RegisterType<DraftSnapshotKeeper>()
 	            .As<IDraftSnapshotKeeper>()
-	            .InstancePerMatchingLifetimeScope(ScopeConstants.SnapshotDraft);
+	            .InstancePerLifetimeScope();
 		}
 	}
 }

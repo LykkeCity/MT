@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Autofac;
 using Common;
 using Common.Log;
 using MarginTrading.Backend.Contracts.Prices;
@@ -33,9 +32,11 @@ namespace MarginTrading.Backend.Services.Infrastructure
         private readonly ISnapshotValidationService _snapshotValidationService;
         private readonly IQueueValidationService _queueValidationService;
         private readonly IMarginTradingBlobRepository _blobRepository;
-        private readonly ILifetimeScope _lifetimeScope;
         private readonly ILog _log;
+        private readonly IFinalSnapshotCalculator _finalSnapshotCalculator;
 
+        // todo: rethink this implementation since ISnapshotService is registered per scope in DI container
+        // probably, semaphore should be moved to singleton 
         private readonly SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1, 1);
 
         public SnapshotService(
@@ -49,8 +50,8 @@ namespace MarginTrading.Backend.Services.Infrastructure
             ISnapshotValidationService snapshotValidationService,
             IQueueValidationService queueValidationService,
             IMarginTradingBlobRepository blobRepository,
-            ILifetimeScope lifetimeScope,
-            ILog log)
+            ILog log,
+            IFinalSnapshotCalculator finalSnapshotCalculator)
         {
             _scheduleSettingsCacheService = scheduleSettingsCacheService;
             _accountsCacheService = accountsCacheService;
@@ -62,8 +63,8 @@ namespace MarginTrading.Backend.Services.Infrastructure
             _snapshotValidationService = snapshotValidationService;
             _queueValidationService = queueValidationService;
             _blobRepository = blobRepository;
-            _lifetimeScope = lifetimeScope;
             _log = log;
+            _finalSnapshotCalculator = finalSnapshotCalculator;
         }
 
         /// <inheritdoc />
@@ -178,28 +179,9 @@ namespace MarginTrading.Backend.Services.Infrastructure
             IEnumerable<ClosingAssetPrice> cfdQuotes,
             IEnumerable<ClosingFxRate> fxRates)
         {
-            if (_semaphoreSlim.CurrentCount == 0)
-            {
-                throw new InvalidOperationException("Trading data snapshot manipulations are already in progress");
-            }
-            
-            await _semaphoreSlim.WaitAsync();
-
-            try
-            {
-                using (var scope = _lifetimeScope.BeginLifetimeScope())
-                {
-                    var snapshot = await scope
-                        .Resolve<IFinalSnapshotCalculator>()
-                        .RunAsync(fxRates, cfdQuotes, correlationId);
+            var snapshot = await _finalSnapshotCalculator.RunAsync(fxRates, cfdQuotes, correlationId);
                     
-                    await _tradingEngineSnapshotsRepository.AddAsync(snapshot);
-                }
-            }
-            finally
-            {
-                _semaphoreSlim.Release();
-            }
+            await _tradingEngineSnapshotsRepository.AddAsync(snapshot);
         }
     }
 }

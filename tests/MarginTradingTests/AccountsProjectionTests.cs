@@ -343,7 +343,6 @@ namespace MarginTradingTests
             
             _accountsCacheService = new AccountsCacheService(DateService, _logMock.Object);
             _accountsCacheService.TryAddNew(Convert(Accounts[0]));
-            MtServiceLocator.AccountsCacheService = _accountsCacheService;
             
             _ordersCache = new OrdersCache();
             _fakePosition = new Mock<Position>();

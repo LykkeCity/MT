@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Autofac;
 using Common;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.StateMachines;
@@ -205,7 +206,7 @@ namespace MarginTrading.Backend.Core.Orders
         {
             CloseFxPrice = closeFxPrice;
             FplData.ActualHash++;
-            var account = MtServiceLocator.AccountsCacheService.Get(AccountId);
+            var account = ContainerProvider.Container.Resolve<IAccountsCacheService>().Get(AccountId);
             account.CacheNeedsToBeUpdated();
         }
         
@@ -226,7 +227,7 @@ namespace MarginTrading.Backend.Core.Orders
         {
             ClosePrice = closePrice;
             FplData.ActualHash++;
-            var account = MtServiceLocator.AccountsCacheService.Get(AccountId);
+            var account = ContainerProvider.Container.Resolve<IAccountsCacheService>().Get(AccountId);
             account.CacheNeedsToBeUpdated();
         }
 

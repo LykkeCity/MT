@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Autofac;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Messages;
@@ -80,7 +81,7 @@ namespace MarginTrading.Backend.Services
                 _lockSlim.ExitWriteLock();
             }
 
-            var account = MtServiceLocator.AccountsCacheService.Get(position.AccountId);
+            var account = ContainerProvider.Container.Resolve<IAccountsCacheService>().Get(position.AccountId);
             account.CacheNeedsToBeUpdated();
         }
 
@@ -105,8 +106,8 @@ namespace MarginTrading.Backend.Services
                 _lockSlim.ExitWriteLock();
             }
 
-            var account = MtServiceLocator.AccountsCacheService?.Get(order.AccountId);
-            account?.CacheNeedsToBeUpdated();
+            var account = ContainerProvider.Container.Resolve<IAccountsCacheService>().Get(order.AccountId);
+            account.CacheNeedsToBeUpdated();
         }
 
         #endregion

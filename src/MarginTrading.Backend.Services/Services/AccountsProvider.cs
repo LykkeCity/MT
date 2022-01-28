@@ -3,7 +3,8 @@
 
 using System;
 using System.Linq;
-using Autofac;
+using Common;
+using Common.Log;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Services.Extensions;
@@ -16,12 +17,14 @@ namespace MarginTrading.Backend.Services.Services
     public class AccountsProvider : IAccountsProvider
     {
         private readonly IAccountsCacheService _accountsCacheService;
-        private readonly ILifetimeScope _lifetimeScope;
+        private readonly IDraftSnapshotKeeper _draftSnapshotKeeper;
+        private readonly ILog _log;
 
-        public AccountsProvider(IAccountsCacheService accountsCacheService, ILifetimeScope lifetimeScope)
+        public AccountsProvider(IAccountsCacheService accountsCacheService, IDraftSnapshotKeeper draftSnapshotKeeper, ILog log)
         {
             _accountsCacheService = accountsCacheService;
-            _lifetimeScope = lifetimeScope;
+            _draftSnapshotKeeper = draftSnapshotKeeper;
+            _log = log;
         }
 
         public MarginTradingAccount GetAccountById(string accountId)
@@ -29,19 +32,26 @@ namespace MarginTrading.Backend.Services.Services
             if (string.IsNullOrWhiteSpace(accountId))
                 throw new ArgumentNullException(nameof(accountId));
             
-            using (var scope = _lifetimeScope.BeginLifetimeScope())
+            if (_draftSnapshotKeeper.Initialized())
             {
-                if (scope.TryResolveSnapshotKeeper(out var snapshotKeeper))
-                {
-                    var accounts = snapshotKeeper
-                        .GetAccountsAsync()
-                        .GetAwaiter()
-                        .GetResult();
+                _log.WriteInfoAsync(nameof(AccountsProvider),
+                    nameof(GetAccountById),
+                    _draftSnapshotKeeper.TradingDay.ToJson(),
+                    "Draft snapshot keeper initialized and will be used as accounts provider");
+                
+                var accounts = _draftSnapshotKeeper
+                    .GetAccountsAsync()
+                    .GetAwaiter()
+                    .GetResult();
 
-                    return accounts
-                        .SingleOrDefault(a => a.Id == accountId);
-                }
+                return accounts
+                    .SingleOrDefault(a => a.Id == accountId);
             }
+            
+            _log.WriteInfoAsync(nameof(AccountsProvider),
+                nameof(GetAccountById),
+                null,
+                "Draft snapshot keeper is NOT initialized, accounts cache will be used as accounts provider");
 
             return _accountsCacheService.TryGet(accountId);
         }

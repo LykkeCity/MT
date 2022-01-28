@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-using Autofac;
 using Common;
 using Common.Log;
 using MarginTrading.Backend.Contracts.Prices;
@@ -24,15 +23,15 @@ namespace MarginTrading.Backend.Services.Services
     {
         private readonly ICfdCalculatorService _cfdCalculatorService;
         private readonly IDateService _dateService;
-        private readonly ILifetimeScope _lifetimeScope;
         private readonly ILog _log;
+        private readonly IDraftSnapshotKeeper _draftSnapshotKeeper;
 
-        public FinalSnapshotCalculator(ICfdCalculatorService cfdCalculatorService, ILog log, IDateService dateService, ILifetimeScope lifetimeScope)
+        public FinalSnapshotCalculator(ICfdCalculatorService cfdCalculatorService, ILog log, IDateService dateService, IDraftSnapshotKeeper draftSnapshotKeeper)
         {
             _cfdCalculatorService = cfdCalculatorService;
             _log = log;
             _dateService = dateService;
-            _lifetimeScope = lifetimeScope;
+            _draftSnapshotKeeper = draftSnapshotKeeper;
         }
         
         /// <inheritdoc />
@@ -47,37 +46,32 @@ namespace MarginTrading.Backend.Services.Services
             if (cfdQuotesList == null || !cfdQuotesList.Any())
                 throw new ArgumentNullException(nameof(cfdQuotes), @"CFD quotes can't be null or empty");
             
-            using (var scope = _lifetimeScope.BeginLifetimeScope())
+            var positions = _draftSnapshotKeeper.GetPositions();
+            var accounts = (await _draftSnapshotKeeper.GetAccountsAsync()).ToImmutableArray();
+            foreach (var closingFxRate in fxRatesList)
             {
-                var snapshotKeeper = scope.Resolve<IDraftSnapshotKeeper>();
-
-                var positions = snapshotKeeper.GetPositions();
-                var accounts = (await snapshotKeeper.GetAccountsAsync()).ToImmutableArray();
-                foreach (var closingFxRate in fxRatesList)
-                {
-                    ApplyFxRate(positions, accounts, closingFxRate.ClosePrice, closingFxRate.FhQuoterCode);
-                }
-                
-                var orders = snapshotKeeper.GetAllOrders();
-                foreach (var closingAssetPrice in cfdQuotesList)
-                {
-                    ApplyCfdQuote(positions, orders, accounts, closingAssetPrice.ClosePrice, closingAssetPrice.MdsCode);
-                }
-
-                await snapshotKeeper.UpdateAsync(positions, orders, accounts);
-
-                var timestamp = _dateService.Now();
-
-                return new TradingEngineSnapshot(snapshotKeeper.TradingDay,
-                    correlationId,
-                    timestamp,
-                    MapToFinalJson(orders, snapshotKeeper),
-                    MapToFinalJson(positions, snapshotKeeper),
-                    MapToFinalJson(accounts),
-                    MapToJson(fxRatesList, timestamp),
-                    MapToJson(cfdQuotesList, timestamp),
-                    SnapshotStatus.Final);
+                ApplyFxRate(positions, accounts, closingFxRate.ClosePrice, closingFxRate.FhQuoterCode);
             }
+            
+            var orders = _draftSnapshotKeeper.GetAllOrders();
+            foreach (var closingAssetPrice in cfdQuotesList)
+            {
+                ApplyCfdQuote(positions, orders, accounts, closingAssetPrice.ClosePrice, closingAssetPrice.MdsCode);
+            }
+
+            await _draftSnapshotKeeper.UpdateAsync(positions, orders, accounts);
+
+            var timestamp = _dateService.Now();
+
+            return new TradingEngineSnapshot(_draftSnapshotKeeper.TradingDay,
+                correlationId,
+                timestamp,
+                MapToFinalJson(orders, _draftSnapshotKeeper),
+                MapToFinalJson(positions, _draftSnapshotKeeper),
+                MapToFinalJson(accounts),
+                MapToJson(fxRatesList, timestamp),
+                MapToJson(cfdQuotesList, timestamp),
+                SnapshotStatus.Final);
         }
 
         private void ApplyFxRate(ImmutableArray<Position> positionsProvider, 

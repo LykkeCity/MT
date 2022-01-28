@@ -4,7 +4,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Autofac;
 using JetBrains.Annotations;
+using MarginTrading.Backend.Core.Services;
 
 namespace MarginTrading.Backend.Core
 {
@@ -126,7 +128,7 @@ namespace MarginTrading.Backend.Core
             {
                 if (accountInstance.AccountFpl.ActualHash != accountInstance.AccountFpl.CalculatedHash)
                 {
-                    MtServiceLocator.AccountUpdateService.UpdateAccount(account);
+                    ContainerProvider.Container.Resolve<IAccountUpdateService>().UpdateAccount(account);
                 }
 
                 return accountInstance.AccountFpl;

@@ -35,9 +35,4 @@ namespace MarginTrading.Backend.Core
         public const string BaseCurrencyId = "EUR";
         public const string FxMarketId = "FxMarket";
     }
-
-    public static class ScopeConstants
-    {
-        public const string SnapshotDraft = "snapshot-draft-recalculation-with-prices";
-    }
 }

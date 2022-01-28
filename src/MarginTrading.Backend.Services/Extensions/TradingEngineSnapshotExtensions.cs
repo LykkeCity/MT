@@ -73,6 +73,8 @@ namespace MarginTrading.Backend.Services.Extensions
                 : snapshot.BestTradingPricesJson.DeserializeJson<Dictionary<string, BestPriceContract>>();
         }
 
+        public static bool Initialized(this IDraftSnapshotKeeper keeper) =>
+            keeper != null && keeper.TradingDay != default(DateTime);
 
         public static bool IsPlatformClosureEvent(this MarketStateChangedEvent evt) =>
             evt.Id == LykkeConstants.PlatformMarketIdentifier && !evt.IsEnabled;
