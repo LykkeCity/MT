@@ -11,6 +11,7 @@ using MarginTrading.Backend.Contracts.ErrorCodes;
 using MarginTrading.Backend.Contracts.Prices;
 using MarginTrading.Backend.Contracts.Snow.Prices;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Quotes;
 using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Services;
@@ -113,7 +114,7 @@ namespace MarginTrading.Backend.Controllers
             {
                 await _snapshotService.MakeTradingDataSnapshotFromDraft(
                     request.CorrelationId,
-                    request.Underlyings,
+                    request.Cfd,
                     request.Forex);
             }
             catch (InvalidOperationException e)
@@ -121,7 +122,7 @@ namespace MarginTrading.Backend.Controllers
                 await _log.WriteErrorAsync(nameof(PricesController), nameof(UploadMissingQuotesAsync), null, e);
                 return QuotesUploadErrorCode.AlreadyInProgress;
             }
-            catch (ArgumentNullException e)
+            catch (EmptyPriceUploadException e)
             {
                 await _log.WriteErrorAsync(nameof(PricesController), nameof(UploadMissingQuotesAsync), null, e);
                 return QuotesUploadErrorCode.EmptyQuotes;

@@ -10,6 +10,7 @@ using Common;
 using Common.Log;
 using MarginTrading.Backend.Contracts.Prices;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Snapshots;
 using MarginTrading.Backend.Core.Trading;
@@ -41,22 +42,22 @@ namespace MarginTrading.Backend.Services.Services
             var cfdQuotesList = cfdQuotes?.ToList();
             
             if (fxRatesList == null || !fxRatesList.Any())
-                throw new ArgumentNullException(nameof(fxRates), @"FX rates can't be null or empty");
+                throw new EmptyPriceUploadException();
             
             if (cfdQuotesList == null || !cfdQuotesList.Any())
-                throw new ArgumentNullException(nameof(cfdQuotes), @"CFD quotes can't be null or empty");
+                throw new EmptyPriceUploadException();
             
             var positions = _draftSnapshotKeeper.GetPositions();
             var accounts = (await _draftSnapshotKeeper.GetAccountsAsync()).ToImmutableArray();
             foreach (var closingFxRate in fxRatesList)
             {
-                ApplyFxRate(positions, accounts, closingFxRate.ClosePrice, closingFxRate.FhQuoterCode);
+                ApplyFxRate(positions, accounts, closingFxRate.ClosePrice, closingFxRate.AssetId);
             }
             
             var orders = _draftSnapshotKeeper.GetAllOrders();
             foreach (var closingAssetPrice in cfdQuotesList)
             {
-                ApplyCfdQuote(positions, orders, accounts, closingAssetPrice.ClosePrice, closingAssetPrice.MdsCode);
+                ApplyCfdQuote(positions, orders, accounts, closingAssetPrice.ClosePrice, closingAssetPrice.AssetId);
             }
 
             await _draftSnapshotKeeper.UpdateAsync(positions, orders, accounts);
@@ -79,6 +80,9 @@ namespace MarginTrading.Backend.Services.Services
             decimal closePrice, 
             string instrument)
         {
+            if (closePrice == 0)
+                return;
+            
             var positions = positionsProvider.Where(p => p.FxAssetPairId == instrument);
 
             var positionsByAccounts = positions

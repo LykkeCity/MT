@@ -11,7 +11,7 @@ namespace MarginTrading.Backend.Contracts.Prices
     [PublicAPI]
     public class ClosingFxRate
     {
-        public string FhQuoterCode { get; set; }
+        public string AssetId { get; set; }
 
         public decimal ClosePrice { get; set; }
     }

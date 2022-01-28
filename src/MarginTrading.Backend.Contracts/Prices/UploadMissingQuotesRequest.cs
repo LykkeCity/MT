@@ -16,7 +16,7 @@ namespace MarginTrading.Backend.Contracts.Prices
         
         public string CorrelationId { get; set; }
         
-        public IEnumerable<ClosingAssetPrice> Underlyings { get; set; }
+        public IEnumerable<ClosingAssetPrice> Cfd { get; set; }
 
         public IEnumerable<ClosingFxRate> Forex { get; set; }
     }

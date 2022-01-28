@@ -13,7 +13,7 @@ namespace MarginTrading.Backend.Contracts.Prices
             {
                 Ask = src.ClosePrice,
                 Bid = src.ClosePrice,
-                Id = src.MdsCode,
+                Id = src.AssetId,
                 Timestamp = timestamp
             };
 
@@ -22,7 +22,7 @@ namespace MarginTrading.Backend.Contracts.Prices
             {
                 Ask = src.ClosePrice,
                 Bid = src.ClosePrice,
-                Id = src.FhQuoterCode,
+                Id = src.AssetId,
                 Timestamp = timestamp
             };
     }
