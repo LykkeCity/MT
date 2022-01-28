@@ -134,9 +134,9 @@ VALUES (@TradingDay,@CorrelationId,@Timestamp,@Orders,@Positions,@AccountStats,@
                 string ss = new SnapshotStatusString(status);
 
                 var entities = await connection.QueryAsync<TradingEngineSnapshotEntity>(
-                    $"SELECT TOP(1) * FROM {TableName} WHERE [Status] = '{ss}' "
+                    $"SELECT TOP 1 * FROM {TableName} WHERE [Status] = '{ss}' "
                     + (tradingDay.HasValue
-                        ? $"AND TradingDay = {tradingDay} "
+                        ? $"AND [TradingDay] = '{tradingDay}' "
                         : string.Empty)
                     + "ORDER BY [Timestamp] DESC");
 
