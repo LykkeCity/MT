@@ -33,7 +33,6 @@ namespace MarginTrading.Backend.Services
                     .ForMember(dest => dest.MaintenanceLeverage, opt => opt.MapFrom(x => new Leverage(x.MaintenanceLeverage)))
                     .ForMember(dest => dest.MarginRate, opt => opt.MapFrom(x => new MarginRate(x.MarginRatePercent)));
                 
-                
             }).CreateMapper();
         }
 

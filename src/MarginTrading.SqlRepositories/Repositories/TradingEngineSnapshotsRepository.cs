@@ -7,11 +7,11 @@ using Microsoft.Data.SqlClient;
 using System.Threading.Tasks;
 using Common.Log;
 using Dapper;
-using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Snapshots;
 using MarginTrading.SqlRepositories.Entities;
+using SnapshotStatus = MarginTrading.Backend.Core.Snapshots.SnapshotStatus;
 
 namespace MarginTrading.SqlRepositories.Repositories
 {
@@ -29,6 +29,7 @@ namespace MarginTrading.SqlRepositories.Repositories
 [AccountStats] [nvarchar](MAX) NOT NULL,
 [BestFxPrices] [nvarchar](MAX) NOT NULL,
 [BestPrices] [nvarchar](MAX) NOT NULL,
+[Status] [nvarchar](32) constraint TradingEngineSnapshots_Status_Default_Value default 'Final' not null,
 INDEX IX_{0}_Base (TradingDay, CorrelationId, Timestamp)
 );";
 
@@ -57,16 +58,9 @@ INDEX IX_{0}_Base (TradingDay, CorrelationId, Timestamp)
             }
         }
 
-        public async Task<TradingEngineSnapshot> GetLastAsync()
-        {
-            using (var connection = new SqlConnection(_connectionString))
-            {
-                var entities = await connection.QueryAsync<TradingEngineSnapshotEntity>(
-                    $"SELECT TOP(1) * FROM {TableName} ORDER BY Timestamp DESC");
+        public Task<TradingEngineSnapshot> GetLastAsync() => DoGetLastAsync(null, SnapshotStatus.Final);
 
-                return entities.FirstOrDefault()?.ToDomain();
-            }
-        }
+        public Task<TradingEngineSnapshot> GetLastDraftAsync(DateTime? tradingDay) => DoGetLastAsync(tradingDay, SnapshotStatus.Draft);
 
         public async Task AddAsync(TradingEngineSnapshot tradingEngineSnapshot)
         {
@@ -79,8 +73,8 @@ INDEX IX_{0}_Base (TradingDay, CorrelationId, Timestamp)
 
                 await conn.ExecuteAsync(
                     $@"INSERT INTO {TableName} 
-(TradingDay,CorrelationId,Timestamp,Orders,Positions,AccountStats,BestFxPrices,BestPrices) 
-VALUES (@TradingDay,@CorrelationId,@Timestamp,@Orders,@Positions,@AccountStats,@BestFxPrices,@BestPrices)",
+(TradingDay,CorrelationId,Timestamp,Orders,Positions,AccountStats,BestFxPrices,BestPrices,Status) 
+VALUES (@TradingDay,@CorrelationId,@Timestamp,@Orders,@Positions,@AccountStats,@BestFxPrices,@BestPrices,@Status)",
                     entity, commandTimeout: _settings.SnapshotInsertTimeoutSec);
             }
         }
@@ -96,6 +90,7 @@ VALUES (@TradingDay,@CorrelationId,@Timestamp,@Orders,@Positions,@AccountStats,@
                             BestPrices as BestTradingPricesJson,
                             Timestamp
                         from {TableName} where correlationId = @id
+                        and status = '{nameof(SnapshotStatus.Final)}'
                         order by Timestamp desc";
 
             await using var conn = new SqlConnection(_connectionString);
@@ -111,6 +106,43 @@ VALUES (@TradingDay,@CorrelationId,@Timestamp,@Orders,@Positions,@AccountStats,@
             await using var conn = new SqlConnection(_connectionString);
 
             await conn.ExecuteAsync(sql, new {id = correlationId});
+        }
+
+        public async Task<bool> DraftExistsAsync(DateTime tradingDay)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                var sql =
+                    $"SELECT TOP 1 OID FROM {TableName} WHERE [TradingDay] = '{tradingDay}' AND [Status] = '{nameof(SnapshotStatus.Draft)}'";
+
+                await _log.WriteInfoAsync(
+                    nameof(TradingEngineSnapshotsRepository), 
+                    nameof(DraftExistsAsync), 
+                    sql,
+                    "Checking if trading snapshot draft exists ...");
+                
+                var o = await connection.QuerySingleOrDefaultAsync(sql);
+
+                return o != null;
+            }
+        }
+
+        private async Task<TradingEngineSnapshot> DoGetLastAsync(DateTime? tradingDay, SnapshotStatus status)
+
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                string ss = new SnapshotStatusString(status);
+
+                var entities = await connection.QueryAsync<TradingEngineSnapshotEntity>(
+                    $"SELECT TOP 1 * FROM {TableName} WHERE [Status] = '{ss}' "
+                    + (tradingDay.HasValue
+                        ? $"AND [TradingDay] = '{tradingDay}' "
+                        : string.Empty)
+                    + "ORDER BY [Timestamp] DESC");
+
+                return entities.FirstOrDefault()?.ToDomain();
+            }
         }
     }
 }

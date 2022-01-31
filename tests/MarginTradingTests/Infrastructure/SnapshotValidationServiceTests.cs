@@ -50,7 +50,8 @@ namespace MarginTradingTests.Infrastructure
             _currentPositions = new List<Position>();
             _ordersHistory = new List<OrderHistory>();
             _positionsHistory = new List<IPositionHistory>();
-            _tradingEngineSnapshot = new TradingEngineSnapshot {Timestamp = DateTime.Now};
+            _tradingEngineSnapshot = new TradingEngineSnapshot(DateTime.UtcNow, string.Empty, DateTime.UtcNow,
+                string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, SnapshotStatus.Final);
 
             _tradingEngineSnapshotsRepositoryMock.Setup(o => o.GetLastAsync())
                 .ReturnsAsync(() => _tradingEngineSnapshot);
@@ -80,12 +81,12 @@ namespace MarginTradingTests.Infrastructure
         {
             // arrange
 
-            _tradingEngineSnapshot.OrdersJson = new[]
+            _tradingEngineSnapshot.UpdateOrdersFromJson(new[]
             {
                 CreateSnapshotOrder("1", 1, 1, OrderStatusContract.Active),
                 CreateSnapshotOrder("2", 2, 2, OrderStatusContract.Active),
                 CreateSnapshotOrder("3", 3, 3, OrderStatusContract.Active)
-            }.ToJson();
+            }.ToJson());
 
             _currentOrders = new List<Order>
             {
@@ -118,12 +119,12 @@ namespace MarginTradingTests.Infrastructure
         {
             // arrange
 
-            _tradingEngineSnapshot.OrdersJson = new[]
+            _tradingEngineSnapshot.UpdateOrdersFromJson(new[]
             {
                 CreateSnapshotOrder("1", 1, 1, OrderStatusContract.Active),
                 CreateSnapshotOrder("2", 2, 2, OrderStatusContract.Active),
                 CreateSnapshotOrder("3", 3, 3, OrderStatusContract.Active)
-            }.ToJson();
+            }.ToJson());
 
             _currentOrders = new List<Order>
             {
@@ -153,13 +154,13 @@ namespace MarginTradingTests.Infrastructure
         {
             // arrange
 
-            _tradingEngineSnapshot.OrdersJson = new[]
+            _tradingEngineSnapshot.UpdateOrdersFromJson(new[]
             {
                 CreateSnapshotOrder("1", 1, 1, OrderStatusContract.Active),
                 CreateSnapshotOrder("2", 2, 2, OrderStatusContract.Active),
                 CreateSnapshotOrder("3", 3, 3, OrderStatusContract.Active),
                 CreateSnapshotOrder("4", 4, 4, OrderStatusContract.Active)
-            }.ToJson();
+            }.ToJson());
 
             _currentOrders = new List<Order>
             {
@@ -190,12 +191,12 @@ namespace MarginTradingTests.Infrastructure
         {
             // arrange
 
-            _tradingEngineSnapshot.OrdersJson = new[]
+            _tradingEngineSnapshot.UpdateOrdersFromJson(new[]
             {
                 CreateSnapshotOrder("1", 1, 1, OrderStatusContract.Active),
                 CreateSnapshotOrder("2", 2, 2, OrderStatusContract.Active),
                 CreateSnapshotOrder("3", 3, 3, OrderStatusContract.Active)
-            }.ToJson();
+            }.ToJson());
 
             _currentOrders = new List<Order>
             {
@@ -226,12 +227,12 @@ namespace MarginTradingTests.Infrastructure
         {
             // arrange
 
-            _tradingEngineSnapshot.PositionsJson = new[]
+            _tradingEngineSnapshot.UpdatePositionsFromJson(new[]
             {
                 CreateSnapshotPosition("1", 1),
                 CreateSnapshotPosition("2", 2),
                 CreateSnapshotPosition("3", 3)
-            }.ToJson();
+            }.ToJson());
 
             _currentPositions = new List<Position>
             {
@@ -262,12 +263,12 @@ namespace MarginTradingTests.Infrastructure
         {
             // arrange
 
-            _tradingEngineSnapshot.PositionsJson = new[]
+            _tradingEngineSnapshot.UpdatePositionsFromJson(new[]
             {
                 CreateSnapshotPosition("1", 1),
                 CreateSnapshotPosition("2", 2),
                 CreateSnapshotPosition("3", 3)
-            }.ToJson();
+            }.ToJson());
 
             _currentPositions = new List<Position>
             {
@@ -297,12 +298,12 @@ namespace MarginTradingTests.Infrastructure
         {
             // arrange
 
-            _tradingEngineSnapshot.PositionsJson = new[]
+            _tradingEngineSnapshot.UpdatePositionsFromJson(new[]
             {
                 CreateSnapshotPosition("1", 1),
                 CreateSnapshotPosition("2", 2),
                 CreateSnapshotPosition("3", 3)
-            }.ToJson();
+            }.ToJson());
 
             _currentPositions = new List<Position>
             {
@@ -332,12 +333,12 @@ namespace MarginTradingTests.Infrastructure
         {
             // arrange
 
-            _tradingEngineSnapshot.PositionsJson = new[]
+            _tradingEngineSnapshot.UpdatePositionsFromJson(new[]
             {
                 CreateSnapshotPosition("1", 1),
                 CreateSnapshotPosition("2", 2),
                 CreateSnapshotPosition("3", 3)
-            }.ToJson();
+            }.ToJson());
 
             _currentPositions = new List<Position>
             {

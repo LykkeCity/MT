@@ -1,7 +1,6 @@
 ﻿// Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using MarginTrading.Backend.Contracts.Account;
@@ -11,6 +10,7 @@ using MarginTrading.Backend.Contracts.Snow.Prices;
 using MarginTrading.Backend.Contracts.TradeMonitoring;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
+using MarginTrading.Backend.Core.Snapshots;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Common.Extensions;
 using MatchedOrderContract = MarginTrading.Backend.Contracts.Orders.MatchedOrderContract;
@@ -36,6 +36,20 @@ namespace MarginTrading.Backend.Services.Mappers
             return order.ConvertToContract(relatedOrders);
         }
 
+        /// <summary>
+        /// Convert order to a model, supposed to be used for snapshot serialization
+        /// </summary>
+        /// <param name="order">Order domain model</param>
+        /// <param name="status">Snapshot status</param>
+        /// <param name="orderReader"></param>
+        /// <returns></returns>
+        public static object ConvertToSnapshotContract(this Order order, IOrderReader orderReader, SnapshotStatus status = SnapshotStatus.Final)
+        {
+            return status == SnapshotStatus.Draft
+                ? (object) order
+                : order.ConvertToContract(orderReader);
+        }
+        
         public static OrderContract ConvertToContract(this Order order, List<Order> relatedOrders)
         {
             RelatedOrderInfoContract Map(RelatedOrderInfo relatedOrderInfo)
@@ -136,7 +150,7 @@ namespace MarginTrading.Backend.Services.Mappers
                     });
                 }
             }
-
+            
             return new OpenPositionContract
             {
                 AccountId = position.AccountId,
@@ -169,6 +183,20 @@ namespace MarginTrading.Backend.Services.Mappers
                 TradingConditionId = position.TradingConditionId,
             };
         }
+        
+        /// <summary>
+        /// Convert position to a model, supposed to be used for snapshot serialization
+        /// </summary>
+        /// <param name="position">Position domain model</param>
+        /// <param name="status">Snapshot status</param>
+        /// <param name="orderReader"></param>
+        /// <returns></returns>
+        public static object ConvertToSnapshotContract(this Position position, IOrderReader orderReader, SnapshotStatus status = SnapshotStatus.Final)
+        {
+            return status == SnapshotStatus.Draft
+                ? (object) position
+                : position.ConvertToContract(orderReader);
+        }
 
         public static AccountStatContract ConvertToContract(this IMarginTradingAccount account)
         {
@@ -196,6 +224,19 @@ namespace MarginTrading.Backend.Services.Mappers
                 IsInLiquidation = account.IsInLiquidation(),
                 MarginNotificationLevel = account.GetAccountLevel().ToString()
             };
+        }
+        
+        /// <summary>
+        /// Convert account to a model, supposed to be used for snapshot serialization
+        /// </summary>
+        /// <param name="account">Account domain model</param>
+        /// <param name="status">Snapshot status</param>
+        /// <returns></returns>
+        public static object ConvertToSnapshotContract(this IMarginTradingAccount account, SnapshotStatus status = SnapshotStatus.Final)
+        {
+            return status == SnapshotStatus.Draft
+                ? (object) account
+                : account.ConvertToContract();
         }
 
         public static BestPriceContract ConvertToContract(this InstrumentBidAskPair arg)
