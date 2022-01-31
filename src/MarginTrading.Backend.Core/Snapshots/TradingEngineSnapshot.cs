@@ -25,6 +25,13 @@ namespace MarginTrading.Backend.Core.Snapshots
 
         public SnapshotStatus Status { get; }
 
+        /// <summary>
+        /// for dapper
+        /// </summary>
+        public TradingEngineSnapshot()
+        {
+        }
+
         public TradingEngineSnapshot(DateTime tradingDay,
             string correlationId,
             DateTime timestamp,

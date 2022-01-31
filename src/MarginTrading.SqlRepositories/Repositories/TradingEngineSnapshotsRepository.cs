@@ -90,6 +90,7 @@ VALUES (@TradingDay,@CorrelationId,@Timestamp,@Orders,@Positions,@AccountStats,@
                             BestPrices as BestTradingPricesJson,
                             Timestamp
                         from {TableName} where correlationId = @id
+                        and status = '{nameof(SnapshotStatus.Final)}'
                         order by Timestamp desc";
 
             await using var conn = new SqlConnection(_connectionString);
