@@ -33,56 +33,56 @@ namespace MarginTradingTests
                 null, 
                 ImmutableArray.Create<Order>(GetDumbOrder()),
                 ImmutableArray.Create<MarginTradingAccount>(new MarginTradingAccount()),
-                Enumerable.Empty<BestPriceContract>(),
-                Enumerable.Empty<BestPriceContract>()
+                new List<BestPriceContract>(),
+                new List<BestPriceContract>(),
             },
             new object[]
             {
                 ImmutableArray.Create<Position>(new Position()), 
                 null,
                 ImmutableArray.Create<MarginTradingAccount>(new MarginTradingAccount()),
-                Enumerable.Empty<BestPriceContract>(),
-                Enumerable.Empty<BestPriceContract>()
+                new List<BestPriceContract>(),
+                new List<BestPriceContract>(),
             },
             new object[]
             {
                 ImmutableArray.Create<Position>(new Position()), 
                 ImmutableArray.Create<Order>(GetDumbOrder()), 
                 null,
-                Enumerable.Empty<BestPriceContract>(),
-                Enumerable.Empty<BestPriceContract>()
+                new List<BestPriceContract>(),
+                new List<BestPriceContract>(),
             },
             new object[]
             {
                 ImmutableArray.Create<Position>(),
                 ImmutableArray.Create<Order>(),
                 ImmutableArray.Create<MarginTradingAccount>(),
-                Enumerable.Empty<BestPriceContract>(),
-                Enumerable.Empty<BestPriceContract>()
+                new List<BestPriceContract>(),
+                new List<BestPriceContract>(),
             },
             new object[]
             {
                 ImmutableArray.Create<Position>(),
                 ImmutableArray.Create<Order>(GetDumbOrder()),
                 ImmutableArray.Create<MarginTradingAccount>(new MarginTradingAccount()),
-                Enumerable.Empty<BestPriceContract>(),
-                Enumerable.Empty<BestPriceContract>()
+                new List<BestPriceContract>(),
+                new List<BestPriceContract>(),
             },
             new object[]
             {
                 ImmutableArray.Create<Position>(new Position()),
                 ImmutableArray.Create<Order>(),
                 ImmutableArray.Create<MarginTradingAccount>(new MarginTradingAccount()),
-                Enumerable.Empty<BestPriceContract>(),
-                Enumerable.Empty<BestPriceContract>()
+                new List<BestPriceContract>(),
+                new List<BestPriceContract>(),
             },
             new object[]
             {
                 ImmutableArray.Create<Position>(new Position()),
                 ImmutableArray.Create<Order>(GetDumbOrder()),
                 ImmutableArray.Create<MarginTradingAccount>(),
-                Enumerable.Empty<BestPriceContract>(),
-                Enumerable.Empty<BestPriceContract>()
+                new List<BestPriceContract>(),
+                new List<BestPriceContract>(),
             },
         };
         
