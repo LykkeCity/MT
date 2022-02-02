@@ -1,7 +1,6 @@
 // Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -9,6 +8,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using MarginTrading.Backend.Contracts.Prices;
+using MarginTrading.Backend.Contracts.Snow.Prices;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Orders;
@@ -60,9 +60,15 @@ namespace MarginTrading.Backend.Services.Services
                 ApplyCfdQuote(positions, orders, accounts, closingAssetPrice.ClosePrice, closingAssetPrice.AssetId);
             }
 
-            await _draftSnapshotKeeper.UpdateAsync(positions, orders, accounts);
-
             var timestamp = _dateService.Now();
+
+            await _draftSnapshotKeeper.UpdateAsync(
+                positions,
+                orders,
+                accounts,
+                fxRatesList.Select(r => r.ToContract(timestamp)),
+                cfdQuotesList.Select(q => q.ToContract(timestamp))
+            );
 
             return new TradingEngineSnapshot(_draftSnapshotKeeper.TradingDay,
                 correlationId,
@@ -70,8 +76,8 @@ namespace MarginTrading.Backend.Services.Services
                 MapToFinalJson(orders, _draftSnapshotKeeper),
                 MapToFinalJson(positions, _draftSnapshotKeeper),
                 MapToFinalJson(accounts),
-                MapToJson(fxRatesList, timestamp),
-                MapToJson(cfdQuotesList, timestamp),
+                MapToJson(_draftSnapshotKeeper.FxPrices),
+                MapToJson(_draftSnapshotKeeper.CfdQuotes),
                 SnapshotStatus.Final);
         }
 
@@ -177,10 +183,7 @@ namespace MarginTrading.Backend.Services.Services
         private static string MapToFinalJson(IList<MarginTradingAccount> accounts) =>
             accounts.Select(a => a.ConvertToSnapshotContract()).ToJson();
 
-        private static string MapToJson(IList<ClosingFxRate> fxRates, DateTime timestamp) =>
-            fxRates.Select(r => r.ToContract(timestamp)).ToJson();
-
-        private static string MapToJson(IList<ClosingAssetPrice> cfdQuotes, DateTime timestamp) =>
-            cfdQuotes.Select(q => q.ToContract(timestamp)).ToJson();
+        private static string MapToJson(IList<BestPriceContract> prices) =>
+            prices.ToDictionary(p => p.Id, p => p).ToJson();
     }
 }
