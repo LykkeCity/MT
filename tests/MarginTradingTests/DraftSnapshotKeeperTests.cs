@@ -7,6 +7,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
+using MarginTrading.Backend.Contracts.Snow.Prices;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Orders;
@@ -26,48 +27,62 @@ namespace MarginTradingTests
 
         private static readonly object[] UpdateCases =
         {
-            new object[] { null, null, null },
+            new object[] { null, null, null, null, null },
             new object[]
             {
                 null, 
                 ImmutableArray.Create<Order>(GetDumbOrder()),
-                ImmutableArray.Create<MarginTradingAccount>(new MarginTradingAccount())
+                ImmutableArray.Create<MarginTradingAccount>(new MarginTradingAccount()),
+                new List<BestPriceContract>(),
+                new List<BestPriceContract>(),
             },
             new object[]
             {
                 ImmutableArray.Create<Position>(new Position()), 
                 null,
-                ImmutableArray.Create<MarginTradingAccount>(new MarginTradingAccount())
+                ImmutableArray.Create<MarginTradingAccount>(new MarginTradingAccount()),
+                new List<BestPriceContract>(),
+                new List<BestPriceContract>(),
             },
             new object[]
             {
                 ImmutableArray.Create<Position>(new Position()), 
                 ImmutableArray.Create<Order>(GetDumbOrder()), 
-                null
+                null,
+                new List<BestPriceContract>(),
+                new List<BestPriceContract>(),
             },
             new object[]
             {
                 ImmutableArray.Create<Position>(),
                 ImmutableArray.Create<Order>(),
-                ImmutableArray.Create<MarginTradingAccount>()
+                ImmutableArray.Create<MarginTradingAccount>(),
+                new List<BestPriceContract>(),
+                new List<BestPriceContract>(),
             },
             new object[]
             {
                 ImmutableArray.Create<Position>(),
                 ImmutableArray.Create<Order>(GetDumbOrder()),
-                ImmutableArray.Create<MarginTradingAccount>(new MarginTradingAccount())
+                ImmutableArray.Create<MarginTradingAccount>(new MarginTradingAccount()),
+                new List<BestPriceContract>(),
+                new List<BestPriceContract>(),
             },
             new object[]
             {
                 ImmutableArray.Create<Position>(new Position()),
                 ImmutableArray.Create<Order>(),
-                ImmutableArray.Create<MarginTradingAccount>(new MarginTradingAccount())
+                ImmutableArray.Create<MarginTradingAccount>(new MarginTradingAccount()),
+                new List<BestPriceContract>(),
+                new List<BestPriceContract>(),
             },
             new object[]
             {
                 ImmutableArray.Create<Position>(new Position()),
                 ImmutableArray.Create<Order>(GetDumbOrder()),
-                ImmutableArray.Create<MarginTradingAccount>()
+                ImmutableArray.Create<MarginTradingAccount>(),
+                new List<BestPriceContract>(),
+                new List<BestPriceContract>(),
             },
         };
         
@@ -154,12 +169,14 @@ namespace MarginTradingTests
         public void Update_InvalidArguments_ThrowsException(
             ImmutableArray<Position> positions, 
             ImmutableArray<Order> orders, 
-            ImmutableArray<MarginTradingAccount> accounts)
+            ImmutableArray<MarginTradingAccount> accounts,
+            IList<BestPriceContract> fxRates,
+            IList<BestPriceContract> cfdQuotes)
         {
             var keeper = GetSut();
 
             Assert.ThrowsAsync<ArgumentNullException>(async () =>
-                await keeper.UpdateAsync(positions, orders, accounts));
+                await keeper.UpdateAsync(positions, orders, accounts, fxRates, cfdQuotes));
         }
 
         private IDraftSnapshotKeeper GetSut() => new DraftSnapshotKeeper(_repositoryMock.Object).Init(DateTime.UtcNow);

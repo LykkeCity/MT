@@ -8,8 +8,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using JetBrains.Annotations;
+using MarginTrading.Backend.Contracts.Snow.Prices;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
+using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Snapshots;
@@ -35,6 +37,12 @@ namespace MarginTrading.Backend.Services
         
         [CanBeNull]
         private List<MarginTradingAccount> _accounts;
+
+        [CanBeNull] 
+        private List<BestPriceContract> _fxPrices;
+
+        [CanBeNull] 
+        private List<BestPriceContract> _cfdQuotes;
         
         private readonly ITradingEngineSnapshotsRepository _tradingEngineSnapshotsRepository;
         
@@ -54,6 +62,38 @@ namespace MarginTrading.Backend.Services
                     throw new InvalidOperationException("The draft snapshot provider has not been initialized yet");
 
                 return _tradingDay.Value;
+            }
+        }
+
+        /// <inheritdoc />
+        public List<BestPriceContract> FxPrices
+        {
+            get
+            {
+                if (_fxPrices != null)
+                    return _fxPrices;
+                
+                EnsureSnapshotLoadedOrThrowAsync().GetAwaiter().GetResult();
+
+                _fxPrices = _snapshot.GetBestFxPrices().Values.ToList();
+
+                return _fxPrices;
+            }
+        }
+
+        /// <inheritdoc />
+        public List<BestPriceContract> CfdQuotes
+        {
+            get
+            {
+                if (_cfdQuotes != null)
+                    return _cfdQuotes;
+                
+                EnsureSnapshotLoadedOrThrowAsync().GetAwaiter().GetResult();
+
+                _cfdQuotes = _snapshot.GetBestTradingPrices().Values.ToList();
+                
+                return _cfdQuotes;
             }
         }
 
@@ -87,10 +127,6 @@ namespace MarginTrading.Backend.Services
             if (_accounts != null)
                 return _accounts;
 
-            if (!_tradingDay.HasValue)
-                throw new InvalidOperationException(
-                    "Couldn't load accounts, draft snapshot provider has not been initialized yet");
-
             await EnsureSnapshotLoadedOrThrowAsync();
 
             _accounts = _snapshot.GetAccountsFromDraft();
@@ -99,7 +135,11 @@ namespace MarginTrading.Backend.Services
         }
         
         /// <inheritdoc />
-        public async Task UpdateAsync(ImmutableArray<Position> positions, ImmutableArray<Order> orders, ImmutableArray<MarginTradingAccount> accounts)
+        public async Task UpdateAsync(ImmutableArray<Position> positions, 
+            ImmutableArray<Order> orders, 
+            ImmutableArray<MarginTradingAccount> accounts,
+            IEnumerable<BestPriceContract> fxRates,
+            IEnumerable<BestPriceContract> cfdQuotes)
         {
             if (!_tradingDay.HasValue)
                 throw new InvalidOperationException("Unable to update snapshot: the draft snapshot provider has not been initialized yet");
@@ -115,22 +155,34 @@ namespace MarginTrading.Backend.Services
 
             await EnsureSnapshotLoadedOrThrowAsync();
             
-            _snapshot = new TradingEngineSnapshot(_snapshot.TradingDay, 
-                _snapshot.CorrelationId, 
+            var fxPrices = fxRates?.ToDictionary(r => r.Id, r => r);
+
+            var tradingPrices = cfdQuotes?.ToDictionary(q => q.Id, q => q);
+
+            _snapshot = new TradingEngineSnapshot(_snapshot.TradingDay,
+                _snapshot.CorrelationId,
                 _snapshot.Timestamp,
-                orders.ToJson(), 
-                positions.ToJson(), 
-                accounts.ToJson(), 
-                _snapshot.BestFxPricesJson,
-                _snapshot.BestTradingPricesJson, 
+                orders.ToJson(),
+                positions.ToJson(),
+                accounts.ToJson(),
+                _snapshot
+                    .GetBestFxPrices()
+                    .Merge(fxPrices)
+                    .ToJson(),
+                _snapshot
+                    .GetBestTradingPrices()
+                    .Merge(tradingPrices)
+                    .ToJson(),
                 _snapshot.Status);
 
             // to force keeper deserialize updated values from json next time data is accessed
             _positions = null;
             _orders = null;
             _accounts = null;
+            _fxPrices = null;
+            _cfdQuotes = null;
         }
-        
+
         #endregion
         
         #region IOrderReader implementation
