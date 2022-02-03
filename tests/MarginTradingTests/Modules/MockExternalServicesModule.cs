@@ -37,6 +37,7 @@ namespace MarginTradingTests.Modules
             var tradingInstruments = MarginTradingTestsUtils.GetPopulatedTradingInstruments();
             var meRoutes = MarginTradingTestsUtils.GetPopulatedMatchingEngineRoutes();
             var accountApi = MarginTradingTestsUtils.GetPopulatedAccountsApi(_accounts);
+            var accountBalanceHistoryApi = MarginTradingTestsUtils.GetPopulatedAccountBalanceHistoryApi();
             var brokerSettingsApi = MarginTradingTestsUtils.GetBrokerSettingsApi(_brokerId);
             var featureManager = MarginTradingTestsUtils.GetFeatureManager(_brokerId, brokerSettingsApi);
             
@@ -50,6 +51,7 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(tradingInstruments).As<ITradingInstrumentsApi>().SingleInstance();
             builder.RegisterInstance(meRoutes).As<ITradingRoutesApi>().SingleInstance();
             builder.RegisterInstance(accountApi).As<IAccountsApi>().SingleInstance();
+            builder.RegisterInstance(accountBalanceHistoryApi).As<IAccountBalanceHistoryApi>().SingleInstance();
             builder.RegisterInstance(Mock.Of<IOrderBookProviderApi>(x =>
                 x.GetOrderBooks(null) == Task.FromResult(new List<ExternalOrderBookContract>())));
             builder.RegisterInstance(Mock.Of<IClientProfileSettingsApi>()).As<IClientProfileSettingsApi>().SingleInstance();

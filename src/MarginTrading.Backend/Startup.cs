@@ -349,6 +349,9 @@ namespace MarginTrading.Backend
 
             JobManager.AddJob(() => ApplicationContainer.Resolve<ScheduleSettingsCacheWarmUpJob>().Execute(),
                 s => s.NonReentrant().ToRunEvery(1).Days().At(0, 0));
+            
+            JobManager.AddJob(ApplicationContainer.Resolve<AccountsCacheService>().ResetTodayProps, s => s
+                .WithName(nameof(AccountManager)).NonReentrant().ToRunEvery(1).Days().At(0, 0));
 
             ApplicationContainer.Resolve<IOvernightMarginService>().ScheduleNext();
             ApplicationContainer.Resolve<IScheduleControlService>().ScheduleNext();

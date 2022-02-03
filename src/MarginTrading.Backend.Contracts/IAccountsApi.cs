@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -37,7 +38,14 @@ namespace MarginTrading.Backend.Contracts
         /// Returns stats of selected account
         /// </summary>
         [Get("/api/accounts/stats/{accountId}")]
+        [Obsolete("Use GetCapitalFigures instead.")]
         Task<AccountStatContract> GetAccountStats([NotNull] string accountId);
+        
+        /// <summary>
+        /// Returns capital-figures of selected account
+        /// </summary>
+        [Get("/api/accounts/capital-figures/{accountId}")]
+        Task<AccountCapitalFigures> GetCapitalFigures([NotNull] string accountId);
 
         /// <summary>
         /// Resumes liquidation of selected account

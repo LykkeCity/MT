@@ -50,7 +50,7 @@ namespace MarginTradingTests
 
             return assetsService.Object;
         }
-
+        
         public static IAccountsApi GetPopulatedAccountsApi(List<MarginTradingAccount> accounts)
         {
             var list = accounts.Select(a => new AccountContract
@@ -69,6 +69,12 @@ namespace MarginTradingTests
                 AdditionalInfo = "{}"
             }).ToList();
             return Mock.Of<IAccountsApi>(a => a.List(null, false) == Task.FromResult(list));
+        }
+        
+        public static IAccountBalanceHistoryApi GetPopulatedAccountBalanceHistoryApi()
+        {
+            return Mock.Of<IAccountBalanceHistoryApi>(a =>
+                a.ByDate(It.IsAny<DateTime>(), It.IsAny<DateTime>()) == Task.FromResult(new Dictionary<string, AccountBalanceChangeLightContract[]>()));
         }
 
 

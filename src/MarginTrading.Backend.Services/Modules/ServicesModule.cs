@@ -26,6 +26,7 @@ using MarginTrading.Backend.Services.TradingConditions;
 using MarginTrading.Backend.Services.Workflow.Liquidation;
 using MarginTrading.Common.RabbitMq;
 using MarginTrading.Common.Services.Telemetry;
+using Microsoft.Extensions.Internal;
 using Microsoft.Extensions.Logging;
 
 namespace MarginTrading.Backend.Services.Modules
@@ -223,6 +224,8 @@ namespace MarginTrading.Backend.Services.Modules
             builder.RegisterType<DraftSnapshotKeeper>()
 	            .As<IDraftSnapshotKeeper>()
 	            .InstancePerLifetimeScope();
+            
+            builder.RegisterType<SystemClock>().As<ISystemClock>().SingleInstance();
 		}
 	}
 }

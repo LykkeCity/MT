@@ -154,7 +154,27 @@ namespace MarginTrading.Backend.Controllers
                 throw new LogInfoOnlyException(ex.Message, ex);
             }
         }
-        
+
+        /// <summary>
+        /// Returns capital-figures of selected account
+        /// </summary>
+        /// <param name="accountId"></param>
+        [HttpGet]
+        [Route("capital-figures/{accountId}")]
+        public Task<AccountCapitalFigures> GetCapitalFigures(string accountId)
+        {
+            try
+            {
+                var stats = _accountsCacheService.Get(accountId);
+
+                return Task.FromResult(stats.ConvertToCapitalFiguresContract());
+            }
+            catch (AccountNotFoundException)
+            {
+                return Task.FromResult((AccountCapitalFigures)null);
+            }
+        }
+
         [HttpPost, Route("resume-liquidation/{accountId}")]
         public Task ResumeLiquidation(string accountId, string comment)
         {

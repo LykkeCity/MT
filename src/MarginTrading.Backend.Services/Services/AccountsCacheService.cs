@@ -7,12 +7,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Common.Log;
+using MarginTrading.Backend.Contracts.Account;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Messages;
-using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Common.Services;
+using MoreLinq;
 
 namespace MarginTrading.Backend.Services
 {
@@ -80,6 +81,28 @@ namespace MarginTrading.Backend.Services
             try
             {
                 _accounts = accounts;
+            }
+            finally
+            {
+                _lockSlim.ExitWriteLock();
+            }
+        }
+
+        public void ResetTodayProps()
+        {
+            _lockSlim.EnterWriteLock();
+            try
+            {
+                _accounts.Values.ForEach(x =>
+                {
+                    x.TodayStartBalance = x.Balance;
+                    x.TodayRealizedPnL = 0;
+                    x.TodayUnrealizedPnL = 0;
+                    x.TodayDepositAmount = 0;
+                    x.TodayWithdrawAmount = 0;
+                    x.TodayCommissionAmount = 0;
+                    x.TodaOtherAmount = 0;
+                });
             }
             finally
             {
@@ -176,19 +199,43 @@ namespace MarginTrading.Backend.Services
             return true;
         }
 
-        public async Task<bool> UpdateAccountBalance(string accountId, decimal accountBalance, DateTime eventTime)
+        public async Task<bool> HandleBalanceChange(string accountId,
+            decimal accountBalance, decimal changeAmount, AccountBalanceChangeReasonType reasonType, DateTime eventTime)
         {
             _lockSlim.EnterWriteLock();
             try
             {
                 var account = _accounts[accountId];
 
+                switch (reasonType)
+                {
+                    case AccountBalanceChangeReasonType.RealizedPnL:
+                        account.TodayRealizedPnL += changeAmount;
+                        break;
+                    case AccountBalanceChangeReasonType.UnrealizedDailyPnL:
+                        account.TodayUnrealizedPnL += changeAmount;
+                        account.TodaOtherAmount += changeAmount; // TODO: why?
+                        break;
+                    case AccountBalanceChangeReasonType.Deposit:
+                        account.TodayDepositAmount += changeAmount;
+                        break;
+                    case AccountBalanceChangeReasonType.Withdraw:
+                        account.TodayWithdrawAmount += changeAmount;
+                        break;
+                    case AccountBalanceChangeReasonType.Commission:
+                        account.TodayCommissionAmount += changeAmount;
+                        break;
+                    default:
+                        account.TodaOtherAmount += changeAmount;
+                        break;
+                }
+
                 if (account.LastBalanceChangeTime > eventTime)
                 {
-                    await _log.WriteInfoAsync(nameof(AccountsCacheService), nameof(UpdateAccountBalance), 
+                    await _log.WriteInfoAsync(nameof(AccountsCacheService), nameof(HandleBalanceChange), 
                         $"Account with id {account.Id} has balance in newer state then the event");
                     return false;
-                } 
+                }
                 
                 account.Balance = accountBalance;
                 account.LastBalanceChangeTime = eventTime;

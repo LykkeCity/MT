@@ -133,22 +133,12 @@ namespace MarginTrading.Backend.Modules
             #region MT Accounts Management
 
             builder
-                .Register(ctx =>
-                {
-                    var accountsClientGeneratorBuilder = HttpClientGenerator
-                        .BuildForUrl(_settings.CurrentValue.AccountsManagementServiceClient.ServiceUrl)
-                        .WithAdditionalDelegatingHandler(ctx.Resolve<HttpCorrelationHandler>())
-                        .WithServiceName<LykkeErrorResponse>(
-                            $"MT Account Management [{_settings.CurrentValue.AccountsManagementServiceClient.ServiceUrl}]");
-            
-                    if (!string.IsNullOrWhiteSpace(_settings.CurrentValue.AccountsManagementServiceClient.ApiKey))
-                    {
-                        accountsClientGeneratorBuilder = accountsClientGeneratorBuilder
-                            .WithApiKey(_settings.CurrentValue.AccountsManagementServiceClient.ApiKey);
-                    }
-                    return accountsClientGeneratorBuilder.Create().Generate<IAccountsApi>();
-                })
+                .Register(ctx => BuildAccountManagementClientGenerator(ctx).Generate<IAccountsApi>())
                 .As<IAccountsApi>().SingleInstance();
+            
+            builder
+                .Register(ctx => BuildAccountManagementClientGenerator(ctx).Generate<IAccountBalanceHistoryApi>())
+                .As<IAccountBalanceHistoryApi>().SingleInstance();
 
             #endregion
 
@@ -196,6 +186,23 @@ namespace MarginTrading.Backend.Modules
                 .As<IOrderBookProviderApi>().SingleInstance();
 
             #endregion OrderBook Service
+        }
+
+        private HttpClientGenerator BuildAccountManagementClientGenerator(IComponentContext ctx)
+        {
+            var accountManagementClientGeneratorBuilder = HttpClientGenerator
+                .BuildForUrl(_settings.CurrentValue.AccountsManagementServiceClient.ServiceUrl)
+                .WithAdditionalDelegatingHandler(ctx.Resolve<HttpCorrelationHandler>())
+                .WithServiceName<LykkeErrorResponse>(
+                    $"MT Account Management [{_settings.CurrentValue.AccountsManagementServiceClient.ServiceUrl}]");
+            
+            if (!string.IsNullOrWhiteSpace(_settings.CurrentValue.AccountsManagementServiceClient.ApiKey))
+            {
+                accountManagementClientGeneratorBuilder = accountManagementClientGeneratorBuilder
+                    .WithApiKey(_settings.CurrentValue.AccountsManagementServiceClient.ApiKey);
+            }
+
+            return accountManagementClientGeneratorBuilder.Create();
         }
 
         private HttpClientGenerator BuildSettingsClientGenerator(IComponentContext ctx)
