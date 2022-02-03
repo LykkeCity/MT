@@ -218,7 +218,8 @@ namespace MarginTrading.Backend.Services.Mappers
                 TodayDepositAmount = account.TodayDepositAmount,
                 TodayWithdrawAmount = account.TodayWithdrawAmount,
                 TodayCommissionAmount = account.TodayCommissionAmount,
-                TodaOtherAmount = account.TodaOtherAmount
+                TodaOtherAmount = account.TodaOtherAmount,
+                AdditionalInfo = account.AdditionalInfo
             };
         }
 

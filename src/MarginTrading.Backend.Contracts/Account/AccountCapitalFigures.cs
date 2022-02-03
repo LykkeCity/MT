@@ -17,7 +17,8 @@ namespace MarginTrading.Backend.Contracts.Account
         public decimal PnL { get; set; }
         public decimal UnrealizedDailyPnl { get; set; }
         public int OpenPositionsCount { get; set; }
-        
+        public string AdditionalInfo { get; set; }
+
         public decimal TodayRealizedPnL { get; set; }
         public decimal TodayUnrealizedPnL { get; set; }
         public decimal TodayDepositAmount { get; set; }
