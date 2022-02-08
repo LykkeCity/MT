@@ -115,7 +115,7 @@ namespace MarginTrading.Backend.Services
                 account.TodayDepositAmount = x.Value.GetTotalByType(AccountBalanceChangeReasonTypeContract.Deposit);
                 account.TodayWithdrawAmount = x.Value.GetTotalByType(AccountBalanceChangeReasonTypeContract.Withdraw);
                 account.TodayCommissionAmount = x.Value.GetTotalByType(AccountBalanceChangeReasonTypeContract.Commission);
-                account.TodaOtherAmount = x.Value.Where(x => !new[]
+                account.TodayOtherAmount = x.Value.Where(x => !new[]
                 {
                     AccountBalanceChangeReasonTypeContract.RealizedPnL,
                     // AccountBalanceChangeReasonTypeContract.UnrealizedDailyPnL, // TODO: why not (copied from account management)?

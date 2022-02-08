@@ -24,7 +24,7 @@ namespace MarginTrading.Backend.Contracts.Account
         public decimal TodayDepositAmount { get; set; }
         public decimal TodayWithdrawAmount { get; set; }
         public decimal TodayCommissionAmount { get; set; }
-        public decimal TodaOtherAmount { get; set; }
+        public decimal TodayOtherAmount { get; set; }
         public decimal TodayStartBalance { get; set; }
     }
 }

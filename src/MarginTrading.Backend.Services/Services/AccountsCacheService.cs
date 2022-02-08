@@ -101,7 +101,7 @@ namespace MarginTrading.Backend.Services
                     x.TodayDepositAmount = 0;
                     x.TodayWithdrawAmount = 0;
                     x.TodayCommissionAmount = 0;
-                    x.TodaOtherAmount = 0;
+                    x.TodayOtherAmount = 0;
                 });
             }
             finally
@@ -214,7 +214,7 @@ namespace MarginTrading.Backend.Services
                         break;
                     case AccountBalanceChangeReasonType.UnrealizedDailyPnL:
                         account.TodayUnrealizedPnL += changeAmount;
-                        account.TodaOtherAmount += changeAmount; // TODO: why?
+                        account.TodayOtherAmount += changeAmount; // TODO: why?
                         break;
                     case AccountBalanceChangeReasonType.Deposit:
                         account.TodayDepositAmount += changeAmount;
@@ -226,7 +226,7 @@ namespace MarginTrading.Backend.Services
                         account.TodayCommissionAmount += changeAmount;
                         break;
                     default:
-                        account.TodaOtherAmount += changeAmount;
+                        account.TodayOtherAmount += changeAmount;
                         break;
                 }
 
