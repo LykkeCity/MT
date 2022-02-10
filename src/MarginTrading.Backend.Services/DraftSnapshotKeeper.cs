@@ -25,6 +25,7 @@ namespace MarginTrading.Backend.Services
     public class DraftSnapshotKeeper : IDraftSnapshotKeeper
     {
         private DateTime? _tradingDay;
+        private DateTime? _timestamp;
         
         [CanBeNull]
         private TradingEngineSnapshot _snapshot;
@@ -62,6 +63,22 @@ namespace MarginTrading.Backend.Services
                     throw new InvalidOperationException("The draft snapshot provider has not been initialized yet");
 
                 return _tradingDay.Value;
+            }
+        }
+
+        /// <inheritdoc />
+        public DateTime Timestamp
+        {
+            get
+            {
+                if (_timestamp.HasValue)
+                    return _timestamp.Value;
+                
+                EnsureSnapshotLoadedOrThrowAsync().GetAwaiter().GetResult();
+
+                _timestamp = _snapshot.Timestamp;
+
+                return _timestamp.Value;
             }
         }
 

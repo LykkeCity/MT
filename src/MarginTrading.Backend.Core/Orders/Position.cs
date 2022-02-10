@@ -5,12 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Autofac;
-using Common;
 using MarginTrading.Backend.Core.Exceptions;
 using MarginTrading.Backend.Core.StateMachines;
 using MarginTrading.Backend.Core.Trading;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
 namespace MarginTrading.Backend.Core.Orders
 {
@@ -156,6 +154,7 @@ namespace MarginTrading.Backend.Core.Orders
         public Position()
         {
             FplData = new FplData {ActualHash = 1};
+            RelatedOrders = new List<RelatedOrderInfo>();
         }
 
         public Position(string id, long code, string assetPairId, decimal volume, string accountId, 

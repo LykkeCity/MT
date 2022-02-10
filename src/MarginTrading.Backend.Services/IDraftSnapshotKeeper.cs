@@ -22,6 +22,13 @@ namespace MarginTrading.Backend.Services
         /// The trading day draft trading snapshot is being kept for
         /// </summary>
         DateTime TradingDay { get; }
+        
+        /// <summary>
+        /// The timestamp of the snapshot (when it was created).
+        /// The timestamp of the Final snapshot will have the timestamp of Draft
+        /// it was created upon
+        /// </summary>
+        DateTime Timestamp { get; }
 
         /// <summary>
         /// The list of fx prices
