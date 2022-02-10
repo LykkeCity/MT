@@ -148,6 +148,12 @@ namespace MarginTrading.Backend.Modules
                 builder.RegisterType<SqlRepositories.Repositories.TradingEngineSnapshotsRepository>()
                     .As<ITradingEngineSnapshotsRepository>()
                     .SingleInstance();
+                
+                builder.RegisterType<SqlRepositories.Repositories.OperationExecutionPauseRepository>()
+                    .As<IOperationExecutionPauseRepository>()
+                    .WithParameter(new NamedParameter("connectionString", 
+                        _settings.CurrentValue.Db.SqlConnectionString))
+                    .SingleInstance();
             }
             
             builder.RegisterType<MatchingEngineInMemoryRepository>().As<IMatchingEngineRepository>().SingleInstance();

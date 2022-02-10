@@ -2,7 +2,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Commands;
 
 namespace MarginTrading.Backend.Services.Services

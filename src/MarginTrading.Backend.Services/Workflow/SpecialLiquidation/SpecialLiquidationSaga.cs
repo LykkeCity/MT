@@ -33,10 +33,11 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private readonly IRfqService _specialLiquidationService;
         private readonly LiquidationHelper _liquidationHelper;
         private readonly OrdersCache _ordersCache;
-
+        private readonly IRfqPauseService _rfqPauseService;
+        
         private readonly MarginTradingSettings _marginTradingSettings;
         private readonly CqrsContextNamesSettings _cqrsContextNamesSettings;
-        
+
         public const string OperationName = "SpecialLiquidation";
 
         public SpecialLiquidationSaga(
@@ -47,7 +48,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             MarginTradingSettings marginTradingSettings,
             CqrsContextNamesSettings cqrsContextNamesSettings,
             LiquidationHelper liquidationHelper,
-            OrdersCache ordersCache)
+            OrdersCache ordersCache,
+            IRfqPauseService rfqPauseService)
         {
             _dateService = dateService;
             _chaosKitty = chaosKitty;
@@ -57,6 +59,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             _cqrsContextNamesSettings = cqrsContextNamesSettings;
             _liquidationHelper = liquidationHelper;
             _ordersCache = ordersCache;
+            _rfqPauseService = rfqPauseService;
         }
 
         [UsedImplicitly]
@@ -105,6 +108,10 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 var currentVolume = GetNetPositionCloseVolume(executionInfo.Data.PositionIds, executionInfo.Data.AccountId);
                 if (currentVolume != 0 && currentVolume != executionInfo.Data.Volume)
                 {
+                    // if RFQ is paused we will not continue
+                    var pauseAcknowledged = await _rfqPauseService.AcknowledgeIfPausedAsync(e.OperationId);
+                    if (pauseAcknowledged) return;
+                    
                     executionInfo.Data.RequestNumber++;
                     executionInfo.Data.Volume = currentVolume;
                     
@@ -143,8 +150,14 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             if (executionInfo?.Data == null)
                 return;
 
-            if (await RetryPriceRequestIfNeeded(e.CreationTime, sender, executionInfo, SpecialLiquidationOperationState.PriceRequested)) 
-                return;
+            if (PriceRequestRetryRequired(executionInfo.Data.RequestedFromCorporateActions))
+            {
+                var pauseAcknowledged = await _rfqPauseService.AcknowledgeIfPausedAsync(executionInfo.Id);
+                if (pauseAcknowledged) return;
+
+                await InternalRetryPriceRequest(e.CreationTime, sender, executionInfo,
+                    _marginTradingSettings.SpecialLiquidation.PriceRequestRetryTimeout.Value);
+            }
 
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceRequested,
                 SpecialLiquidationOperationState.OnTheWayToFail))
@@ -203,9 +216,17 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             if (executionInfo?.Data == null)
                 return;
 
-            if (await RetryPriceRequestIfNeeded(e.CreationTime, sender, executionInfo,
-                SpecialLiquidationOperationState.ExternalOrderExecuted))
-                return;
+            if (PriceRequestRetryRequired(executionInfo.Data.RequestedFromCorporateActions))
+            {
+                if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.ExternalOrderExecuted,
+                        SpecialLiquidationOperationState.PriceRequested))
+                {
+                    await InternalRetryPriceRequest(e.CreationTime, sender, executionInfo,
+                        _marginTradingSettings.SpecialLiquidation.PriceRequestRetryTimeout.Value);
+
+                    return;
+                }
+            }
 
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.ExternalOrderExecuted,
                 SpecialLiquidationOperationState.OnTheWayToFail))
@@ -286,8 +307,20 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     }
                 }
 
-                if (await RetryPriceRequestIfNeeded(e.CreationTime, sender, executionInfo, executionInfo.Data.State))
-                    return;
+                if (PriceRequestRetryRequired(executionInfo.Data.RequestedFromCorporateActions))
+                {
+                    var pauseAcknowledged = await _rfqPauseService.AcknowledgeIfPausedAsync(executionInfo.Id);
+                    if (pauseAcknowledged) return;
+                    
+                    if (executionInfo.Data.SwitchState(executionInfo.Data.State,
+                            SpecialLiquidationOperationState.PriceRequested))
+                    {
+                        await InternalRetryPriceRequest(e.CreationTime, sender, executionInfo,
+                            _marginTradingSettings.SpecialLiquidation.PriceRequestRetryTimeout.Value);
+                        
+                        return;
+                    }
+                }
             }
 
             if (executionInfo.Data.SwitchState(executionInfo.Data.State,//from any state
@@ -383,38 +416,31 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 RequestNumber = executionInfo.Data.RequestNumber
             }, _cqrsContextNamesSettings.TradingEngine);
         }
+
+        private bool PriceRequestRetryRequired(bool requestedFromCorporateActions) =>
+            _marginTradingSettings.SpecialLiquidation.PriceRequestRetryTimeout.HasValue &&
+            (!requestedFromCorporateActions ||
+             _marginTradingSettings.SpecialLiquidation.RetryPriceRequestForCorporateActions);
         
-        private async Task<bool> RetryPriceRequestIfNeeded(DateTime eventCreationTime, ICommandSender sender,
+        private async Task InternalRetryPriceRequest(DateTime eventCreationTime, 
+            ICommandSender sender,
             IOperationExecutionInfo<SpecialLiquidationOperationData> executionInfo,
-            SpecialLiquidationOperationState currentState)
+            TimeSpan retryTimeout)
         {
-            if (_marginTradingSettings.SpecialLiquidation.PriceRequestRetryTimeout.HasValue
-                && (!executionInfo.Data.RequestedFromCorporateActions
-                    || _marginTradingSettings.SpecialLiquidation.RetryPriceRequestForCorporateActions)
-                && executionInfo.Data.SwitchState(currentState, 
-                    SpecialLiquidationOperationState.PriceRequested))
+            var shouldRetryAfter = eventCreationTime.Add(retryTimeout);
+
+            var timeLeftBeforeRetry = shouldRetryAfter - _dateService.Now();
+
+            if (timeLeftBeforeRetry > TimeSpan.Zero)
             {
-                var now = _dateService.Now();
-                var shouldRetryAfter =
-                    eventCreationTime.Add(_marginTradingSettings.SpecialLiquidation.PriceRequestRetryTimeout.Value);
-
-                var timeLeftBeforeRetry = shouldRetryAfter - now;
-
-                if (timeLeftBeforeRetry > TimeSpan.Zero)
-                {
-                    await Task.Delay(timeLeftBeforeRetry);
-                }
-
-                executionInfo.Data.RequestNumber++;
-
-                RequestPrice(sender, executionInfo);
-
-                await _operationExecutionInfoRepository.Save(executionInfo);
-
-                return true;
+                await Task.Delay(timeLeftBeforeRetry);
             }
 
-            return false;
+            executionInfo.Data.RequestNumber++;
+
+            RequestPrice(sender, executionInfo);
+
+            await _operationExecutionInfoRepository.Save(executionInfo);
         }
     }
 }

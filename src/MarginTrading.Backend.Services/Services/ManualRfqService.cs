@@ -24,8 +24,7 @@ namespace MarginTrading.Backend.Services.Services
         private readonly IQuoteCacheService _quoteCacheService;
         private readonly ILog _log;
 
-        private ConcurrentDictionary<string, GetPriceForSpecialLiquidationCommand> _requests =
-            new ConcurrentDictionary<string, GetPriceForSpecialLiquidationCommand>();
+        private ConcurrentDictionary<string, GetPriceForSpecialLiquidationCommand> _requests = new ConcurrentDictionary<string, GetPriceForSpecialLiquidationCommand>();
 
         public ManualRfqService(
             ICqrsSender cqrsSender,

@@ -1,6 +1,7 @@
 // Copyright (c) 2021 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Contracts;
 using MarginTrading.Backend.Contracts.Common;
@@ -12,6 +13,8 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Linq;
 using System.Threading.Tasks;
+using MarginTrading.Backend.Contracts.ErrorCodes;
+using MarginTrading.Backend.Services.Services;
 
 namespace MarginTrading.Backend.Controllers
 {
@@ -25,10 +28,12 @@ namespace MarginTrading.Backend.Controllers
         }
 
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
+        private readonly IRfqPauseService _rfqPauseService;
 
-        public RfqController(IOperationExecutionInfoRepository operationExecutionInfoRepository)
+        public RfqController(IOperationExecutionInfoRepository operationExecutionInfoRepository, IRfqPauseService rfqPauseService)
         {
             _operationExecutionInfoRepository = operationExecutionInfoRepository;
+            _rfqPauseService = rfqPauseService;
         }
 
         [HttpGet]
@@ -39,6 +44,41 @@ namespace MarginTrading.Backend.Controllers
 
             var rfq = data.Contents.Select(Convert).ToList();
             return new PaginatedResponseContract<RfqContract>(rfq, skip, data.Contents.Count, data.TotalSize);
+        }
+
+        [HttpPost]
+        [Route("{id}/pause")]
+        public async Task<RfqPauseErrorCode> PauseAsync(string id, [FromBody] RfqPauseRequest request)
+        {
+            var errorCode = await _rfqPauseService.AddAsync(id, request.Initiator);
+
+            return errorCode;
+        }
+
+        [HttpGet]
+        [Route("{id}/pause")]
+        public async Task<RfqPauseInfoContract> GetPauseInfoAsync(string id)
+        {
+            var pause = await _rfqPauseService.GetCurrentAsync(id);
+
+            if (pause == null)
+                return null;
+
+            return new RfqPauseInfoContract
+            {
+                State = pause?.State.ToString(),
+                CreatedAt = pause.CreatedAt,
+                EffectiveSince = pause.EffectiveSince,
+                Initiator = pause.Initiator,
+                Source = pause.Source.ToString()
+            };
+        }
+
+        [HttpPost]
+        [Route("{id}/resume")]
+        public async Task<RfqResumeErrorCode> ResumeAsync(string id, [FromBody] RfqResumeRequest request)
+        {
+            throw new NotImplementedException();
         }
 
         private RfqContract Convert(OperationExecutionInfo<SpecialLiquidationOperationData> operation)
