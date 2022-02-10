@@ -98,31 +98,34 @@ namespace MarginTrading.Backend.Services
             var balanceChanges = await balanceChangesTask;
             
             var result = accounts.Select(Convert).ToDictionary(x => x.Id);
-            balanceChanges.ForEach(x =>
+            result.ForEach(x =>
             {
-                if (!result.ContainsKey(x.Key))
+                var account = x.Value;
+                if (balanceChanges.ContainsKey(x.Key))
                 {
-                    _log.WriteWarning(nameof(Start), nameof(AccountManager), $"Account {x.Key} not found");
+                    var accountBalanceChanges = balanceChanges[x.Key];
+                    var firstBalanceChange = accountBalanceChanges.OrderBy(b => b.ChangeTimestamp).FirstOrDefault();
+                    account.TodayStartBalance = firstBalanceChange !=null
+                        ? firstBalanceChange.Balance - firstBalanceChange.ChangeAmount
+                        : account.Balance;
+                    account.TodayRealizedPnL = accountBalanceChanges.GetTotalByType(AccountBalanceChangeReasonTypeContract.RealizedPnL);
+                    account.TodayUnrealizedPnL = accountBalanceChanges.GetTotalByType(AccountBalanceChangeReasonTypeContract.UnrealizedDailyPnL);
+                    account.TodayDepositAmount = accountBalanceChanges.GetTotalByType(AccountBalanceChangeReasonTypeContract.Deposit);
+                    account.TodayWithdrawAmount = accountBalanceChanges.GetTotalByType(AccountBalanceChangeReasonTypeContract.Withdraw);
+                    account.TodayCommissionAmount = accountBalanceChanges.GetTotalByType(AccountBalanceChangeReasonTypeContract.Commission);
+                    account.TodayOtherAmount = accountBalanceChanges.Where(x => !new[]
+                    {
+                        AccountBalanceChangeReasonTypeContract.RealizedPnL,
+                        // AccountBalanceChangeReasonTypeContract.UnrealizedDailyPnL, // TODO: why not (copied from account management)?
+                        AccountBalanceChangeReasonTypeContract.Deposit,
+                        AccountBalanceChangeReasonTypeContract.Withdraw,
+                        AccountBalanceChangeReasonTypeContract.Commission,
+                    }.Contains(x.ReasonType)).Sum(x => x.ChangeAmount);
                 }
-
-                var account = result[x.Key];
-                var firstBalanceChange = x.Value.OrderBy(x => x.ChangeTimestamp).FirstOrDefault();
-                account.TodayStartBalance = firstBalanceChange !=null
-                    ? firstBalanceChange.Balance - firstBalanceChange.ChangeAmount
-                    : account.Balance;
-                account.TodayRealizedPnL = x.Value.GetTotalByType(AccountBalanceChangeReasonTypeContract.RealizedPnL);
-                account.TodayUnrealizedPnL = x.Value.GetTotalByType(AccountBalanceChangeReasonTypeContract.UnrealizedDailyPnL);
-                account.TodayDepositAmount = x.Value.GetTotalByType(AccountBalanceChangeReasonTypeContract.Deposit);
-                account.TodayWithdrawAmount = x.Value.GetTotalByType(AccountBalanceChangeReasonTypeContract.Withdraw);
-                account.TodayCommissionAmount = x.Value.GetTotalByType(AccountBalanceChangeReasonTypeContract.Commission);
-                account.TodayOtherAmount = x.Value.Where(x => !new[]
+                else
                 {
-                    AccountBalanceChangeReasonTypeContract.RealizedPnL,
-                    // AccountBalanceChangeReasonTypeContract.UnrealizedDailyPnL, // TODO: why not (copied from account management)?
-                    AccountBalanceChangeReasonTypeContract.Deposit,
-                    AccountBalanceChangeReasonTypeContract.Withdraw,
-                    AccountBalanceChangeReasonTypeContract.Commission,
-                }.Contains(x.ReasonType)).Sum(x => x.ChangeAmount);
+                    account.TodayStartBalance = account.Balance;
+                }
             });
             return result;
         }

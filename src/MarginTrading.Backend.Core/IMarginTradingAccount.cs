@@ -106,6 +106,13 @@ namespace MarginTrading.Backend.Core
             }
             
             Balance = 0;
+            TodayStartBalance = 0;
+            TodayRealizedPnL = 0;
+            TodayUnrealizedPnL = 0;
+            TodayDepositAmount = 0;
+            TodayWithdrawAmount = 0;
+            TodayCommissionAmount = 0;
+            TodayOtherAmount = 0;
             LiquidationOperationId = string.Empty;
             LastUpdateTime = LastBalanceChangeTime = eventTime;
             AccountFpl = new AccountFpl();
