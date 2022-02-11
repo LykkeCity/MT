@@ -154,7 +154,6 @@ namespace MarginTrading.Backend.Core.Orders
         public Position()
         {
             FplData = new FplData {ActualHash = 1};
-            RelatedOrders = new List<RelatedOrderInfo>();
         }
 
         public Position(string id, long code, string assetPairId, decimal volume, string accountId, 

@@ -96,7 +96,31 @@ namespace MarginTradingTests
 
         private static Position GetDumbPosition()
         {
-            var result = new Position();
+            var result = new Position("1",
+                1,
+                string.Empty,
+                default,
+                string.Empty,
+                string.Empty,
+                string.Empty,
+                null,
+                string.Empty,
+                default,
+                string.Empty,
+                default,
+                default,
+                default,
+                default,
+                string.Empty,
+                default,
+                new List<RelatedOrderInfo>(),
+                string.Empty,
+                default,
+                string.Empty,
+                string.Empty,
+                default,
+                string.Empty,
+                default);
 
             result.FplData.CalculatedHash = 1;
 
