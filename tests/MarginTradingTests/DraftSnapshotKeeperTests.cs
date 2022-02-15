@@ -108,6 +108,17 @@ namespace MarginTradingTests
                 var _ = keeper.TradingDay;
             });
         }
+        
+        [Test]
+        public void AccessTimestamp_BeforeInitialization_ThrowsException()
+        {
+            var keeper = new DraftSnapshotKeeper(_repositoryMock.Object);
+
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                var _ = keeper.Timestamp;
+            });
+        }
 
         [Test]
         public void Exists_BeforeInitialization_ThrowsException()
@@ -193,7 +204,7 @@ namespace MarginTradingTests
                 string.Empty,
                 SnapshotStatus.Draft);
 
-        private static Order GetDumbOrder() =>
+        public static Order GetDumbOrder() =>
             new Order(
                 "1", 
                 default, 
