@@ -30,6 +30,7 @@ using MarginTrading.Backend.Services.Workflow.Liquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Common.Extensions;
 using MarginTrading.Common.Services;
+using MoreLinq;
 
 namespace MarginTrading.Backend.Services
 {
@@ -618,7 +619,7 @@ namespace MarginTrading.Backend.Services
         {
             foreach (var position in _ordersCache.GetPositionsByFxAssetPairId(quote.Instrument))
             {
-                var fxPrice = _cfdCalculatorService.GetPrice(quote, position.FxToAssetPairDirection,
+                var fxPrice = _cfdCalculatorService.GetPrice(quote.Bid, quote.Ask, position.FxToAssetPairDirection,
                     position.Volume * (position.ClosePrice - position.OpenPrice) > 0);
 
                 position.UpdateCloseFxPrice(fxPrice);
@@ -690,37 +691,20 @@ namespace MarginTrading.Backend.Services
 
         private void UpdateTrailingStops(Position position)
         {
-            var trailingOrderIds = position.RelatedOrders.Where(o => o.Type == OrderType.TrailingStop)
-                .Select(o => o.Id);
-
-            foreach (var trailingOrderId in trailingOrderIds)
+            foreach (var trailingOrderId in position.GetTrailingStopOrderIds())
             {
-                if (_ordersCache.TryGetOrderById(trailingOrderId, out var trailingOrder)
-                    && trailingOrder.Price.HasValue)
+                if (_ordersCache.TryGetOrderById(trailingOrderId, out var trailingOrder))
                 {
-                    if (trailingOrder.TrailingDistance.HasValue)
-                    {
-                        var currentDistance = trailingOrder.Price.Value - position.ClosePrice;
-                        
-                        if (Math.Abs(currentDistance) > Math.Abs(trailingOrder.TrailingDistance.Value)
-                        && Math.Sign(currentDistance) == Math.Sign(trailingOrder.TrailingDistance.Value))
-                        {
-                            var newPrice = position.ClosePrice + trailingOrder.TrailingDistance.Value;
-                            var oldPrice = trailingOrder.Price;
-                            trailingOrder.ChangePrice(newPrice,
-                                _dateService.Now(),
-                                trailingOrder.Originator,
-                                null);
+                    var oldPrice = trailingOrder.Price;
+                    
+                    trailingOrder.UpdateTrailingStopWithClosePrice(position.ClosePrice, () => _dateService.Now());
 
-                            _log.WriteInfoAsync(nameof(TradingEngine), nameof(UpdateTrailingStops),
-                                $"Price for trailing stop order {trailingOrder.Id} changed. " +
-                                $"Old price: {oldPrice}. " +
-                                $"New price: {trailingOrder.Price}");
-                        }
-                    }
-                    else
+                    if (oldPrice != trailingOrder.Price)
                     {
-                        trailingOrder.SetTrailingDistance(position.ClosePrice);
+                        _log.WriteInfoAsync(nameof(TradingEngine), nameof(UpdateTrailingStops),
+                            $"Price for trailing stop order {trailingOrder.Id} changed. " +
+                            $"Old price: {oldPrice}. " +
+                            $"New price: {trailingOrder.Price}");
                     }
                 }
             }
@@ -739,8 +723,7 @@ namespace MarginTrading.Backend.Services
 
             _cqrsSender.SendCommandToSelf(new StartLiquidationInternalCommand
             {
-                // TODO: correlation id should be passed together with headers in rabbit mq publisher
-                OperationId = _correlationContextAccessor.CorrelationContext?.CorrelationId ?? _identityGenerator.GenerateGuid(),
+                OperationId = _identityGenerator.GenerateGuid(),
                 AccountId = account.Id,
                 CreationTime = _dateService.Now(),
                 QuoteInfo = quote?.ToJson(),
@@ -983,8 +966,7 @@ namespace MarginTrading.Backend.Services
 
             bool closeAll = string.IsNullOrEmpty(assetPairId);
             
-            // TODO: should be passed as a header from rabbit mq publisher
-            var operationId = _correlationContextAccessor.CorrelationContext?.CorrelationId ?? _identityGenerator.GenerateGuid();
+            var operationId = _identityGenerator.GenerateGuid();
             if (closeAll)
             {
                 return _liquidationHelper.StartLiquidation(accountId, originator, additionalInfo, operationId);

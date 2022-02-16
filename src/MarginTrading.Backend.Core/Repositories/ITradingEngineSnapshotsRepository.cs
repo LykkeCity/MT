@@ -10,11 +10,15 @@ namespace MarginTrading.Backend.Core.Repositories
     public interface ITradingEngineSnapshotsRepository
     {
         Task<TradingEngineSnapshot> GetLastAsync();
+        
+        Task<TradingEngineSnapshot> GetLastDraftAsync(DateTime? tradingDay);
 
         Task AddAsync(TradingEngineSnapshot tradingEngineSnapshot);
 
         Task<TradingEngineSnapshot> Get(string correlationId);
 
         Task Delete(string correlationId);
+
+        Task<bool> DraftExistsAsync(DateTime tradingDay);
     }
 }

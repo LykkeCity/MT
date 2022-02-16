@@ -52,7 +52,7 @@ namespace MarginTrading.Backend.Services.Modules
             
             builder.RegisterType<SnapshotService>()
                 .As<ISnapshotService>()
-                .SingleInstance();
+                .InstancePerLifetimeScope();
 
             builder.RegisterType<SnapshotValidationService>()
                 .As<ISnapshotValidationService>()

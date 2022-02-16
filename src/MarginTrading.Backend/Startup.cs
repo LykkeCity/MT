@@ -3,14 +3,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Common.Log;
 using FluentScheduler;
 using JetBrains.Annotations;
 using Lykke.AzureQueueIntegration;
-using Lykke.Common;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Cqrs;
 using Lykke.Logs;
@@ -52,7 +50,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Converters;
@@ -141,11 +138,6 @@ namespace MarginTrading.Backend
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IApplicationLifetime appLifetime)
         {
             ApplicationContainer = app.ApplicationServices.GetAutofacRoot();
-
-            MtServiceLocator.FplService = ApplicationContainer.Resolve<IFplService>();
-            MtServiceLocator.AccountUpdateService = ApplicationContainer.Resolve<IAccountUpdateService>();
-            MtServiceLocator.AccountsCacheService = ApplicationContainer.Resolve<IAccountsCacheService>();
-            MtServiceLocator.SwapCommissionService = ApplicationContainer.Resolve<ICommissionService>();
 
             ApplicationContainer.Resolve<IScheduleSettingsCacheService>()
                 .UpdateAllSettingsAsync().GetAwaiter().GetResult();
@@ -243,12 +235,15 @@ namespace MarginTrading.Backend
                         $"{typeof(T)} is started");
                 }
 
+                ContainerProvider.Container = c;
+
                 // note the order here is important!
                 StartService<TradingInstrumentsManager>();
                 StartService<OrderBookSaveService>();
                 StartService<IExternalOrderbookService>();
                 StartService<QuoteCacheService>();
                 StartService<FxRateCacheService>();
+                
                 StartService<AccountManager>();
                 StartService<OrderCacheManager>();
                 StartService<PendingOrdersCleaningService>();

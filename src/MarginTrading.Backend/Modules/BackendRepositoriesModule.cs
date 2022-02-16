@@ -6,8 +6,6 @@ using AzureStorage.Tables;
 using Common.Log;
 using Lykke.SettingsReader;
 using MarginTrading.AzureRepositories;
-using MarginTrading.AzureRepositories.Entities;
-using MarginTrading.AzureRepositories.Logs;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
 using MarginTrading.Backend.Core.Repositories;
@@ -17,7 +15,7 @@ using MarginTrading.Backend.Services.MatchingEngines;
 using MarginTrading.Common.Services;
 using MarginTrading.SqlRepositories.Repositories;
 using MarginTrading.SqlRepositories;
-using Microsoft.Extensions.Internal;
+using IdentityEntity = MarginTrading.AzureRepositories.Entities.IdentityEntity;
 using OperationLogEntity = MarginTrading.AzureRepositories.OperationLogEntity;
 
 namespace MarginTrading.Backend.Modules
@@ -167,20 +165,6 @@ namespace MarginTrading.Backend.Modules
             builder.RegisterType<AccountMarginUnconfirmedRepository>()
                 .As<IAccountMarginUnconfirmedRepository>()
                 .SingleInstance();
-            
-            
-            //            builder.Register(ctx =>
-//                AzureRepoFactories.MarginTrading.CreateDayOffSettingsRepository(
-//                    _settings.Nested(s => s.Db.MarginTradingConnString))).SingleInstance();
-            
-//            builder.Register(ctx =>
-//                    AzureRepoFactories.MarginTrading.CreateOrdersByIdRepository(
-//                        _settings.Nested(s => s.Db.MarginTradingConnString), _log, ctx.Resolve<IConvertService>()))
-//                .SingleInstance();
-            
-            //            builder.Register<IRiskSystemCommandsLogRepository>(ctx =>
-//                AzureRepoFactories.MarginTrading.CreateRiskSystemCommandsLogRepository(
-//                    _settings.Nested(s => s.Db.LogsConnString), _log)).SingleInstance();
         }
     }
 }

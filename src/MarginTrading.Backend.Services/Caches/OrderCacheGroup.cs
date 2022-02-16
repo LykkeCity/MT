@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Autofac;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Core.Orders;
@@ -98,7 +99,7 @@ namespace MarginTrading.Backend.Services
                 _lockSlim.ExitWriteLock();
             }
 
-            var account = MtServiceLocator.AccountsCacheService.Get(order.AccountId);
+            var account = ContainerProvider.Container.Resolve<IAccountsCacheService>().Get(order.AccountId);
             account.CacheNeedsToBeUpdated();
         }
 
@@ -124,7 +125,7 @@ namespace MarginTrading.Backend.Services
                 _lockSlim.ExitWriteLock();
             }
 
-            var account = MtServiceLocator.AccountsCacheService?.Get(order.AccountId);
+            var account = ContainerProvider.Container.Resolve<IAccountsCacheService>().Get(order.AccountId);
             account?.CacheNeedsToBeUpdated();
         }
         

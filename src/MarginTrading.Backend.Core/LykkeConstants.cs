@@ -27,5 +27,7 @@ namespace MarginTrading.Backend.Core
 
         public const string LiquidationByCaAdditionalInfo = "{\"CreatedBy\":\"EOD\"}";
         public const string LiquidationBySystemAdditionalInfo = "{\"CreatedBy\":\"System\"}";
+      
+        public const string PlatformMarketIdentifier = "PlatformScheduleMarketId";
     }
 }

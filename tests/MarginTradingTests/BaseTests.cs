@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Autofac;
-using Common.Log;
 using Lykke.Service.ClientAccount.Client;
 using Lykke.Service.ClientAccount.Client.AutorestClient.Models;
 using Lykke.Service.ClientAccount.Client.Models;
@@ -14,7 +13,6 @@ using MarginTrading.Backend.Contracts.ExchangeConnector;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Repositories;
-using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.Caches;
@@ -31,11 +29,9 @@ using MarginTrading.AssetService.Contracts;
 using MarginTrading.AssetService.Contracts.ClientProfileSettings;
 using MarginTrading.AssetService.Contracts.Scheduling;
 using MarginTrading.Backend.Contracts.Events;
-using MarginTrading.Backend.Modules;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.Quotes;
 using MarginTradingTests.Modules;
-using Microsoft.FeatureManagement;
 using Moq;
 
 namespace MarginTradingTests
@@ -201,6 +197,8 @@ namespace MarginTradingTests
                     c.Resolve<T>().Start();
                 }
 
+                ContainerProvider.Container = c;
+
                 // note the order here is important!
                 StartService<TradingInstrumentsManager>();
                 StartService<AccountManager>();
@@ -212,11 +210,6 @@ namespace MarginTradingTests
 
             builder.RegisterType<SimpleIdentityGenerator>().As<IIdentityGenerator>();
             Container = builder.Build();
-
-            MtServiceLocator.FplService = Container.Resolve<IFplService>();
-            MtServiceLocator.AccountUpdateService = Container.Resolve<IAccountUpdateService>();
-            MtServiceLocator.AccountsCacheService = Container.Resolve<IAccountsCacheService>();
-            MtServiceLocator.SwapCommissionService = Container.Resolve<ICommissionService>();
             
             Container.Resolve<OrderBookList>().Init(null);
             Container.Resolve<IScheduleSettingsCacheService>().UpdateAllSettingsAsync().GetAwaiter().GetResult();

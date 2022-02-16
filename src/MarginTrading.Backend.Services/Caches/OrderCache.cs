@@ -5,11 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Messages;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Trading;
-using MarginTrading.Backend.Services.Infrastructure;
 
 namespace MarginTrading.Backend.Services
 {
@@ -36,7 +34,7 @@ namespace MarginTrading.Backend.Services
         public OrderCacheGroup Active { get; private set; }
         public OrderCacheGroup Inactive { get; private set; }
         public OrderCacheGroup InProgress { get; private set; }
-        public PositionsCache Positions { get; private set; }
+        public virtual PositionsCache Positions { get; private set; }
 
         public ImmutableArray<Order> GetAllOrders()
         {

@@ -71,16 +71,15 @@ namespace MarginTrading.Backend.Services
             return rate;
         }
 
-        public decimal GetPrice(InstrumentBidAskPair quote, FxToAssetPairDirection direction, 
-            bool metricIsPositive = true)
+        public decimal GetPrice(decimal bid, decimal ask, FxToAssetPairDirection direction, bool metricIsPositive = true)
         {
             return metricIsPositive
                 ? direction == FxToAssetPairDirection.Straight
-                    ? quote.Ask
-                    : 1 / quote.Bid
+                    ? ask
+                    : 1 / bid
                 : direction == FxToAssetPairDirection.Straight
-                    ? quote.Bid
-                    : 1 / quote.Ask;
+                    ? bid
+                    : 1 / ask;
         }
 
         public (string id, FxToAssetPairDirection direction) GetFxAssetPairIdAndDirection(string accountAssetId,
