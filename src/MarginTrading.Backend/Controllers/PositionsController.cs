@@ -227,6 +227,8 @@ namespace MarginTrading.Backend.Controllers
                 CreationTime = _dateService.Now(),
                 PositionIds = positionIds,
                 AccountId = accountId,
+                AdditionalInfo = LykkeConstants.LiquidationBySystemAdditionalInfo,
+                OriginatorType = OriginatorType.System
             });
         }
 
