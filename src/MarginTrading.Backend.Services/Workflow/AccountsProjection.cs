@@ -111,6 +111,9 @@ namespace MarginTrading.Backend.Services.Workflow
                                 {
                                     switch (e.BalanceChange.ReasonType)
                                     {
+                                        case AccountBalanceChangeReasonTypeContract.Swap:
+                                            HandleSwap(e);
+                                            break;
                                         case AccountBalanceChangeReasonTypeContract.Withdraw:
                                             await _accountUpdateService.UnfreezeWithdrawalMargin(updatedAccount.Id,
                                                 e.BalanceChange.Id);
@@ -196,6 +199,19 @@ namespace MarginTrading.Backend.Services.Workflow
             await _log.WriteInfoAsync(nameof(AccountChangedEvent),
                 nameof(AccountBalanceChangeReasonTypeContract.Reset),
                 $"Account {e.Account.Id} was reset.");
+        }
+
+        private void HandleSwap(AccountChangedEvent e)
+        {
+            if (_ordersCache.Positions.TryGetPositionById(e.BalanceChange.EventSourceId, out var position))
+            {
+                position.SetSwapTotal(position.SwapTotal + e.BalanceChange.ChangeAmount);
+            }
+            else
+            {
+                _log.WriteWarning("AccountChangedEvent Handler", e.ToJson(),
+                    $"Position [{e.BalanceChange.EventSourceId} was not found]");
+            }
         }
 
         private void HandleUnrealizedPnLTransaction(AccountChangedEvent e)

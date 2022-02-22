@@ -139,6 +139,12 @@ namespace MarginTrading.Backend.Modules
                         _settings.CurrentValue.Db.QueryTimeouts.GetLastSnapshotTimeoutS))
                     .SingleInstance();
 
+                builder.RegisterType<AccountHistoryRepository>()
+                    .As<IAccountHistoryRepository>()
+                    .WithParameter(new NamedParameter("connectionString", 
+                        _settings.CurrentValue.Db.SqlConnectionString))
+                    .SingleInstance();
+
                 builder.RegisterType<SqlRepositories.Repositories.TradingEngineSnapshotsRepository>()
                     .As<ITradingEngineSnapshotsRepository>()
                     .SingleInstance();

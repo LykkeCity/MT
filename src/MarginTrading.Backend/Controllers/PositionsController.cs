@@ -19,6 +19,7 @@ using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Filters;
 using MarginTrading.Backend.Services;
 using MarginTrading.Backend.Services.AssetPairs;
+using MarginTrading.Backend.Services.Caches;
 using MarginTrading.Backend.Services.Helpers;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Mappers;
@@ -28,6 +29,7 @@ using MarginTrading.Common.Middleware;
 using MarginTrading.Common.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MoreLinq;
 
 namespace MarginTrading.Backend.Controllers
 {
@@ -43,6 +45,8 @@ namespace MarginTrading.Backend.Controllers
         private readonly IIdentityGenerator _identityGenerator;
         private readonly ICqrsSender _cqrsSender;
         private readonly IDateService _dateService;
+        private readonly IAccountHistoryRepository _accountHistoryRepository;
+        private readonly IMarginTradingBlobRepository _blobRepository;
 
         public PositionsController(
             ITradingEngine tradingEngine,
@@ -52,7 +56,9 @@ namespace MarginTrading.Backend.Controllers
             IAssetPairDayOffService assetDayOffService,
             IIdentityGenerator identityGenerator,
             ICqrsSender cqrsSender,
-            IDateService dateService)
+            IDateService dateService,
+            IAccountHistoryRepository accountHistoryRepository,
+            IMarginTradingBlobRepository blobRepository)
         {
             _tradingEngine = tradingEngine;
             _operationsLogService = operationsLogService;
@@ -62,6 +68,8 @@ namespace MarginTrading.Backend.Controllers
             _identityGenerator = identityGenerator;
             _cqrsSender = cqrsSender;
             _dateService = dateService;
+            _accountHistoryRepository = accountHistoryRepository;
+            _blobRepository = blobRepository;
         }
 
         /// <summary>
@@ -213,6 +221,35 @@ namespace MarginTrading.Backend.Controllers
                 size: filtered.Count,
                 totalSize: positionList.Count
             ));
+        }
+
+        [HttpPut, Route("reset-swaps")]
+        public async Task ResetSwaps()
+        {
+            var positions = _ordersCache.Positions.GetAllPositions();
+            if (positions.Any())
+            {
+                var positionsIds = positions.Select(x => x.Id);
+                var swapTotalPerPosition = await _accountHistoryRepository.GetSwapTotalPerPosition(positionsIds);
+
+                if (swapTotalPerPosition.Any())
+                {
+                    swapTotalPerPosition.ForEach(x =>
+                    {
+                        var position = positions.Single(p => p.Id == x.Key);
+                        position.SetSwapTotal(x.Value);
+                    });
+                    
+                    try
+                    {
+                        await _blobRepository.WriteAsync(LykkeConstants.StateBlobContainer, OrderCacheManager.PositionsBlobName, positions);
+                    }
+                    catch (Exception ex)
+                    {
+                        await _log.WriteErrorAsync(nameof(OrdersCache), "Save positions", "", ex);
+                    }
+                }
+            }
         }
 
         /// <summary>

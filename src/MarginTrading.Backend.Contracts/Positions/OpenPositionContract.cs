@@ -150,5 +150,7 @@ namespace MarginTrading.Backend.Contracts.Positions
         public bool ForceOpen { get; set; }
 
         public string TradingConditionId { get; set; }
+
+        public decimal SwapTotal { get; set; }
     }
 }

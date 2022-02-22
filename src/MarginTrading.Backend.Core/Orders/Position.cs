@@ -77,6 +77,9 @@ namespace MarginTrading.Backend.Core.Orders
         public string ExternalProviderId { get; private set; }
 
         [JsonProperty]
+        public decimal SwapTotal { get; private set; }
+
+        [JsonProperty]
         public decimal SwapCommissionRate { get; private set; }
         [JsonProperty]
         public decimal OpenCommissionRate { get; private set; }
@@ -236,6 +239,11 @@ namespace MarginTrading.Backend.Core.Orders
             OpenCommissionRate = openCommissionRate;
             CloseCommissionRate = closeCommissionRate;
             CommissionLot = commissionLot;
+        }
+
+        public void SetSwapTotal(decimal swapTotal)
+        {
+            SwapTotal = swapTotal;
         }
         
         public void AddRelatedOrder(Order order)
