@@ -223,8 +223,8 @@ namespace MarginTrading.Backend.Controllers
             ));
         }
 
-        [HttpPut, Route("reset-swaps")]
-        public async Task ResetSwaps()
+        [HttpPut, Route("restore-swaps")]
+        public async Task RestoreSwaps()
         {
             var positions = _ordersCache.Positions.GetAllPositions();
             if (positions.Any())
