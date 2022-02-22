@@ -12,4 +12,3 @@ BEGIN
     WHERE db_tb.ReasonType = 'Swap'
     GROUP BY db_tb.EventSourceId
 END
-GO
