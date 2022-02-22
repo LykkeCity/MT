@@ -5,9 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace MarginTrading.Backend.Core.Repositories;
-
-public interface IAccountHistoryRepository
+namespace MarginTrading.Backend.Core.Repositories
 {
-    Task<Dictionary<string, decimal>> GetSwapTotalPerPosition(IEnumerable<string> positionIds);
+    public interface IAccountHistoryRepository
+    {
+        Task<Dictionary<string, decimal>> GetSwapTotalPerPosition(IEnumerable<string> positionIds);
+    }
 }
