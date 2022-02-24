@@ -12,6 +12,7 @@ using Lykke.Common.Chaos;
 using Lykke.Common.Log;
 using MarginTrading.AccountsManagement.Contracts.Events;
 using MarginTrading.AccountsManagement.Contracts.Models;
+using MarginTrading.Backend.Contracts.Account;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Extensions;
@@ -127,8 +128,11 @@ namespace MarginTrading.Backend.Services.Workflow
                                             break;
                                     }
 
-                                    await _accountsCacheService.UpdateAccountBalance(updatedAccount.Id,
-                                        e.BalanceChange.Balance, e.ChangeTimestamp);
+                                    await _accountsCacheService.HandleBalanceChange(updatedAccount.Id,
+                                        e.BalanceChange.Balance,
+                                        e.BalanceChange.ChangeAmount,
+                                        e.BalanceChange.ReasonType.ToType<AccountBalanceChangeReasonType>(),
+                                        e.ChangeTimestamp);
 
                                     _accountUpdateService.RemoveLiquidationStateIfNeeded(e.Account.Id,
                                         "Balance updated");

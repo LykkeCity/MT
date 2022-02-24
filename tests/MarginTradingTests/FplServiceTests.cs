@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Autofac;
 using Common.Log;
+using MarginTrading.Backend.Contracts.Account;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Services;
@@ -128,7 +129,7 @@ namespace MarginTradingTests
         public void Check_Calculations_As_In_Excel_Document()
         {
             Accounts[0].Balance = 50000;
-            _accountsCacheService.UpdateAccountBalance(Accounts[0].Id, Accounts[0].Balance, DateTime.UtcNow);
+            _accountsCacheService.HandleBalanceChange(Accounts[0].Id, Accounts[0].Balance, 0, AccountBalanceChangeReasonType.RealizedPnL, DateTime.UtcNow);
 
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "EURUSD", Ask = 1.061M, Bid = 1.06M }));
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(new InstrumentBidAskPair { Instrument = "BTCEUR", Ask = 1092M, Bid = 1091M }));

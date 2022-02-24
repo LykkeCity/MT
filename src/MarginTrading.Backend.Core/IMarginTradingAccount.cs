@@ -28,6 +28,13 @@ namespace MarginTrading.Backend.Core
         string LiquidationOperationId { get; }
         string AdditionalInfo { get; }
         string AccountName { get; }
+        decimal TodayRealizedPnL { get; }
+        decimal TodayUnrealizedPnL { get; }
+        decimal TodayDepositAmount { get; }
+        decimal TodayWithdrawAmount { get; }
+        decimal TodayCommissionAmount { get; }
+        decimal TodayOtherAmount { get; }
+        decimal TodayStartBalance { get; }
     }
 
     public class MarginTradingAccount : IMarginTradingAccount, IComparable<MarginTradingAccount>
@@ -47,6 +54,13 @@ namespace MarginTrading.Backend.Core
         public string LiquidationOperationId { get; set; }
         public string AdditionalInfo { get; set; }
         public string AccountName { get; set; }
+        public decimal TodayRealizedPnL { get; set; }
+        public decimal TodayUnrealizedPnL { get; set; }
+        public decimal TodayDepositAmount { get; set; }
+        public decimal TodayWithdrawAmount { get; set; }
+        public decimal TodayCommissionAmount { get; set; }
+        public decimal TodayOtherAmount { get; set; }
+        public decimal TodayStartBalance { get; set; }
 
         public AccountFpl AccountFpl { get; private set; } = new AccountFpl();
 
@@ -92,6 +106,13 @@ namespace MarginTrading.Backend.Core
             }
             
             Balance = 0;
+            TodayStartBalance = 0;
+            TodayRealizedPnL = 0;
+            TodayUnrealizedPnL = 0;
+            TodayDepositAmount = 0;
+            TodayWithdrawAmount = 0;
+            TodayCommissionAmount = 0;
+            TodayOtherAmount = 0;
             LiquidationOperationId = string.Empty;
             LastUpdateTime = LastBalanceChangeTime = eventTime;
             AccountFpl = new AccountFpl();

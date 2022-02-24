@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Common;
 using Common.Log;
+using FluentScheduler;
 using MarginTrading.AccountsManagement.Contracts;
 using MarginTrading.AccountsManagement.Contracts.Models;
 using MarginTrading.Backend.Core;
@@ -17,9 +18,11 @@ using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
+using MarginTrading.Backend.Services.Extensions;
 using MarginTrading.Backend.Services.Notifications;
 using MarginTrading.Common.Services;
 using MarginTrading.Contract.RabbitMqMessageModels;
+using Microsoft.Extensions.Internal;
 using MoreLinq;
 
 namespace MarginTrading.Backend.Services
@@ -33,8 +36,10 @@ namespace MarginTrading.Backend.Services
         private readonly OrdersCache _ordersCache;
         private readonly ITradingEngine _tradingEngine;
         private readonly IAccountsApi _accountsApi;
+        private readonly IAccountBalanceHistoryApi _accountBalanceHistoryApi;
         private readonly IConvertService _convertService;
         private readonly IDateService _dateService;
+        private readonly ISystemClock _systemClock;
 
         private readonly IAccountMarginFreezingRepository _accountMarginFreezingRepository;
         private readonly IAccountMarginUnconfirmedRepository _accountMarginUnconfirmedRepository;
@@ -47,8 +52,10 @@ namespace MarginTrading.Backend.Services
             OrdersCache ordersCache,
             ITradingEngine tradingEngine,
             IAccountsApi accountsApi,
+            IAccountBalanceHistoryApi accountBalanceHistoryApi,
             IConvertService convertService,
             IDateService dateService,
+            ISystemClock systemClock,
             IAccountMarginFreezingRepository accountMarginFreezingRepository,
             IAccountMarginUnconfirmedRepository accountMarginUnconfirmedRepository)
             : base(nameof(AccountManager), 60000, log)
@@ -60,8 +67,10 @@ namespace MarginTrading.Backend.Services
             _ordersCache = ordersCache;
             _tradingEngine = tradingEngine;
             _accountsApi = accountsApi;
+            _accountBalanceHistoryApi = accountBalanceHistoryApi;
             _convertService = convertService;
             _dateService = dateService;
+            _systemClock = systemClock;
             _accountMarginFreezingRepository = accountMarginFreezingRepository;
             _accountMarginUnconfirmedRepository = accountMarginUnconfirmedRepository;
         }
@@ -77,16 +86,59 @@ namespace MarginTrading.Backend.Services
             return Task.CompletedTask;
         }
 
+        private async Task<Dictionary<string, MarginTradingAccount>> GetAccounts()
+        {
+            var accountsTask = _accountsApi.List();
+            var onDate = _systemClock.UtcNow.UtcDateTime.Date; 
+            var balanceChangesTask = _accountBalanceHistoryApi.ByDate(onDate, onDate.AddDays(1));
+
+            await Task.WhenAll(accountsTask, balanceChangesTask);
+
+            var accounts = await accountsTask;
+            var balanceChanges = await balanceChangesTask;
+            
+            var result = accounts.Select(Convert).ToDictionary(x => x.Id);
+            result.ForEach(x =>
+            {
+                var account = x.Value;
+                if (balanceChanges.ContainsKey(x.Key))
+                {
+                    var accountBalanceChanges = balanceChanges[x.Key];
+                    var firstBalanceChange = accountBalanceChanges.OrderBy(b => b.ChangeTimestamp).FirstOrDefault();
+                    account.TodayStartBalance = firstBalanceChange !=null
+                        ? firstBalanceChange.Balance - firstBalanceChange.ChangeAmount
+                        : account.Balance;
+                    account.TodayRealizedPnL = accountBalanceChanges.GetTotalByType(AccountBalanceChangeReasonTypeContract.RealizedPnL);
+                    account.TodayUnrealizedPnL = accountBalanceChanges.GetTotalByType(AccountBalanceChangeReasonTypeContract.UnrealizedDailyPnL);
+                    account.TodayDepositAmount = accountBalanceChanges.GetTotalByType(AccountBalanceChangeReasonTypeContract.Deposit);
+                    account.TodayWithdrawAmount = accountBalanceChanges.GetTotalByType(AccountBalanceChangeReasonTypeContract.Withdraw);
+                    account.TodayCommissionAmount = accountBalanceChanges.GetTotalByType(AccountBalanceChangeReasonTypeContract.Commission);
+                    account.TodayOtherAmount = accountBalanceChanges.Where(x => !new[]
+                    {
+                        AccountBalanceChangeReasonTypeContract.RealizedPnL,
+                        // AccountBalanceChangeReasonTypeContract.UnrealizedDailyPnL, // TODO: why not (copied from account management)?
+                        AccountBalanceChangeReasonTypeContract.Deposit,
+                        AccountBalanceChangeReasonTypeContract.Withdraw,
+                        AccountBalanceChangeReasonTypeContract.Commission,
+                    }.Contains(x.ReasonType)).Sum(x => x.ChangeAmount);
+                }
+                else
+                {
+                    account.TodayStartBalance = account.Balance;
+                }
+            });
+            return result;
+        }
+
         public override void Start()
         {
             _log.WriteInfo(nameof(Start), nameof(AccountManager), "Starting InitAccountsCache");
 
-            var accounts = _accountsApi.List().GetAwaiter().GetResult()
-                .Select(Convert).ToDictionary(x => x.Id);
+            var accounts = GetAccounts().GetAwaiter().GetResult();
 
             _accountsCacheService.InitAccountsCache(accounts);
             _log.WriteInfo(nameof(Start), nameof(AccountManager), $"Finished InitAccountsCache. Count: {accounts.Count}");
-
+            
             base.Start();
         }
 

@@ -5,11 +5,14 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
+using MarginTrading.Backend.Contracts.Account;
 
 namespace MarginTrading.Backend.Core
 {
     public interface IAccountsCacheService
     {
+        void ResetTodayProps();
+        
         [NotNull]
         MarginTradingAccount Get(string accountId);
         [CanBeNull]
@@ -23,7 +26,8 @@ namespace MarginTrading.Backend.Core
 
         Task<bool> UpdateAccountChanges(string accountId, string updatedTradingConditionId,
             decimal updatedWithdrawTransferLimit, bool isDisabled, bool isWithdrawalDisabled, DateTime eventTime, string additionalInfo);
-        Task<bool> UpdateAccountBalance(string accountId, decimal accountBalance, DateTime eventTime);
+        Task<bool> HandleBalanceChange(string accountId,
+            decimal accountBalance, decimal changeAmount, AccountBalanceChangeReasonType reasonType, DateTime eventTime);
         
         bool TryStartLiquidation(string accountId, string operationId, out string currentOperationId);
         

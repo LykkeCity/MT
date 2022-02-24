@@ -198,6 +198,31 @@ namespace MarginTrading.Backend.Services.Mappers
                 : position.ConvertToContract(orderReader);
         }
 
+        public static AccountCapitalFigures ConvertToCapitalFiguresContract(this IMarginTradingAccount account)
+        {
+            return new AccountCapitalFigures
+            {
+                Balance = account.Balance,
+                LastBalanceChangeTime = account.LastBalanceChangeTime,
+                TotalCapital = account.GetTotalCapital(),
+                FreeMargin = account.GetFreeMargin(),
+                UsedMargin = account.GetUsedMargin(),
+                CurrentlyUsedMargin = account.GetCurrentlyUsedMargin(),
+                InitiallyUsedMargin = account.GetInitiallyUsedMargin(),
+                PnL = account.GetPnl(),
+                UnrealizedDailyPnl = account.GetUnrealizedDailyPnl(),
+                OpenPositionsCount = account.GetOpenPositionsCount(),
+                TodayStartBalance = account.TodayStartBalance,
+                TodayRealizedPnL = account.TodayRealizedPnL,
+                TodayUnrealizedPnL = account.TodayUnrealizedPnL,
+                TodayDepositAmount = account.TodayDepositAmount,
+                TodayWithdrawAmount = account.TodayWithdrawAmount,
+                TodayCommissionAmount = account.TodayCommissionAmount,
+                TodayOtherAmount = account.TodayOtherAmount,
+                AdditionalInfo = account.AdditionalInfo
+            };
+        }
+
         public static AccountStatContract ConvertToContract(this IMarginTradingAccount account)
         {
             return new AccountStatContract
