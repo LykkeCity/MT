@@ -181,6 +181,7 @@ namespace MarginTrading.Backend.Services.Mappers
                 Status = position.Status.ToType<PositionStatusContract>(),
                 ForceOpen = position.ForceOpen,
                 TradingConditionId = position.TradingConditionId,
+                SwapTotal = position.SwapTotal
             };
         }
         

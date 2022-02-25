@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using MarginTrading.Backend.Core;
-using MarginTrading.Backend.Core.Helpers;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Core.Trading;
 using MarginTrading.Backend.Services.Helpers;
+using MoreLinq;
 
 namespace MarginTrading.Backend.Services.Caches
 {
@@ -23,10 +23,11 @@ namespace MarginTrading.Backend.Services.Caches
         private readonly IMarginTradingBlobRepository _blobRepository;
         private readonly IOrdersHistoryRepository _ordersHistoryRepository;
         private readonly IPositionsHistoryRepository _positionsHistoryRepository;
+        private readonly IAccountHistoryRepository _accountHistoryRepository;
         private readonly ILog _log;
         
-        public const string OrdersBlobName= "orders";
-        public const string PositionsBlobName= "positions";
+        public static readonly string OrdersBlobName= "orders";
+        public static readonly string PositionsBlobName= "positions";
         
         private static readonly OrderStatus[] OrderTerminalStatuses = {OrderStatus.Canceled, OrderStatus.Rejected, OrderStatus.Executed, OrderStatus.Expired};
         private static readonly PositionHistoryType PositionTerminalStatus = PositionHistoryType.Close;
@@ -35,6 +36,7 @@ namespace MarginTrading.Backend.Services.Caches
             IMarginTradingBlobRepository blobRepository,
             IOrdersHistoryRepository ordersHistoryRepository,
             IPositionsHistoryRepository positionsHistoryRepository,
+            IAccountHistoryRepository accountHistoryRepository,
             MarginTradingSettings marginTradingSettings,
             ILog log) 
             : base(nameof(OrderCacheManager), marginTradingSettings.BlobPersistence.OrdersDumpPeriodMilliseconds, log)
@@ -43,6 +45,7 @@ namespace MarginTrading.Backend.Services.Caches
             _blobRepository = blobRepository;
             _ordersHistoryRepository = ordersHistoryRepository;
             _positionsHistoryRepository = positionsHistoryRepository;
+            _accountHistoryRepository = accountHistoryRepository;
             _log = log;
         }
 
@@ -134,7 +137,17 @@ namespace MarginTrading.Backend.Services.Caches
                 orderSnapshots.ToDictionary(x => x.Id, x => x), _log);
             var (positionsResult, positionIdsChangedFromHistory) = MapPositions(
                 blobPositions.ToDictionary(x => x.Id, x => x), positionSnapshots.ToDictionary(x => x.Id, x => x));
-            
+
+            if (positionIdsChangedFromHistory.Any())
+            {
+                var swapTotalPerPosition = _accountHistoryRepository.GetSwapTotalPerPosition(positionIdsChangedFromHistory).GetAwaiter().GetResult();
+                swapTotalPerPosition.ForEach(x =>
+                {
+                    var position = positionsResult.Single(p => p.Id == x.Key);
+                    position.SetSwapTotal(x.Value);
+                });
+            }
+
             RefreshRelated(ordersResult.ToDictionary(x => x.Id), positionsResult.ToDictionary(x => x.Id), orderSnapshots);
             ApplyExpirationDateFix(ordersResult);
 

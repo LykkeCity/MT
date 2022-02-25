@@ -31,8 +31,11 @@ namespace MarginTradingTests.Modules
             orderHistoryRepository.Setup(s => s.GetLastSnapshot(It.IsAny<DateTime>()))
                 .ReturnsAsync(new List<IOrderHistory>());
             var positionHistoryRepository = new Mock<IPositionsHistoryRepository>();
+            var accountHistoryRepository = new Mock<IAccountHistoryRepository>();
             positionHistoryRepository.Setup(s => s.GetLastSnapshot(It.IsAny<DateTime>()))
                 .ReturnsAsync(new List<IPositionHistory>());
+            accountHistoryRepository.Setup(s => s.GetSwapTotalPerPosition(It.IsAny<IEnumerable<string>>()))
+                .ReturnsAsync(new Dictionary<string, decimal>());
             var riskSystemCommandsLogRepository = new Mock<IRiskSystemCommandsLogRepository>();
             var accountMarginFreezingRepository = new Mock<IAccountMarginFreezingRepository>();
             var accountMarginUnconfirmedRepository = new Mock<IAccountMarginUnconfirmedRepository>();
@@ -64,6 +67,8 @@ namespace MarginTradingTests.Modules
             builder.RegisterInstance(orderHistoryRepository.Object).As<IOrdersHistoryRepository>()
                 .SingleInstance();
             builder.RegisterInstance(positionHistoryRepository.Object).As<IPositionsHistoryRepository>()
+                .SingleInstance();
+            builder.RegisterInstance(accountHistoryRepository.Object).As<IAccountHistoryRepository>()
                 .SingleInstance();
             builder.RegisterInstance(riskSystemCommandsLogRepository.Object).As<IRiskSystemCommandsLogRepository>()
                 .SingleInstance();
