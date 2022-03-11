@@ -14,6 +14,7 @@ using Newtonsoft.Json;
 using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Contracts.ErrorCodes;
+using MarginTrading.Backend.Core.Rfq;
 using MarginTrading.Backend.Services.Services;
 
 namespace MarginTrading.Backend.Controllers
@@ -50,7 +51,7 @@ namespace MarginTrading.Backend.Controllers
         [Route("{id}/pause")]
         public async Task<RfqPauseErrorCode> PauseAsync(string id, [FromBody] RfqPauseRequest request)
         {
-            var errorCode = await _rfqPauseService.AddAsync(id, request.Initiator);
+            var errorCode = await _rfqPauseService.AddAsync(id, PauseSource.Manual, request.Initiator);
 
             return errorCode;
         }
@@ -78,7 +79,9 @@ namespace MarginTrading.Backend.Controllers
         [Route("{id}/resume")]
         public async Task<RfqResumeErrorCode> ResumeAsync(string id, [FromBody] RfqResumeRequest request)
         {
-            throw new NotImplementedException();
+            var errorCode = await _rfqPauseService.ResumeAsync(id, PauseCancellationSource.Manual, request.Initiator);
+
+            return errorCode;
         }
 
         private RfqContract Convert(OperationExecutionInfo<SpecialLiquidationOperationData> operation)

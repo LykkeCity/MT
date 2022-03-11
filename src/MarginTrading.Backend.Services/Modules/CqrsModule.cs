@@ -250,7 +250,8 @@ namespace MarginTrading.Backend.Services.Modules
                 .PublishingCommands(
                     typeof(StartLiquidationInternalCommand),
                     typeof(ResumeLiquidationInternalCommand),
-                    typeof(StartSpecialLiquidationInternalCommand)
+                    typeof(StartSpecialLiquidationInternalCommand),
+                    typeof(ResumePausedSpecialLiquidationCommand)
                 )
                 .To(_settings.ContextNames.TradingEngine)
                 .With(CommandsRoute);
@@ -320,7 +321,8 @@ namespace MarginTrading.Backend.Services.Modules
                     typeof(GetPriceForSpecialLiquidationTimeoutInternalCommand),
                     typeof(ResumeLiquidationInternalCommand),
                     typeof(CancelSpecialLiquidationCommand),
-                    typeof(ClosePositionsRegularFlowCommand)
+                    typeof(ClosePositionsRegularFlowCommand),
+                    typeof(ResumePausedSpecialLiquidationCommand)
                 )
                 .To(_settings.ContextNames.TradingEngine)
                 .With(CommandsRoute)
@@ -331,7 +333,9 @@ namespace MarginTrading.Backend.Services.Modules
                     typeof(SpecialLiquidationOrderExecutionFailedEvent),
                     typeof(SpecialLiquidationFinishedEvent),
                     typeof(SpecialLiquidationFailedEvent),
-                    typeof(SpecialLiquidationCancelledEvent)
+                    typeof(SpecialLiquidationCancelledEvent),
+                    typeof(ResumePausedSpecialLiquidationFailedEvent),
+                    typeof(ResumePausedSpecialLiquidationSucceededEvent)
                 )
                 .From(_settings.ContextNames.TradingEngine)
                 .On(EventsRoute);
@@ -350,7 +354,8 @@ namespace MarginTrading.Backend.Services.Modules
                     typeof(FailSpecialLiquidationInternalCommand),
                     typeof(ExecuteSpecialLiquidationOrdersInternalCommand),
                     typeof(CancelSpecialLiquidationCommand),
-                    typeof(ClosePositionsRegularFlowCommand)
+                    typeof(ClosePositionsRegularFlowCommand),
+                    typeof(ResumePausedSpecialLiquidationCommand)
                 )
                 .On(CommandsRoute)
                 .WithCommandsHandler<SpecialLiquidationCommandsHandler>()
@@ -360,7 +365,9 @@ namespace MarginTrading.Backend.Services.Modules
                     typeof(SpecialLiquidationOrderExecutionFailedEvent),
                     typeof(SpecialLiquidationFinishedEvent),
                     typeof(SpecialLiquidationFailedEvent),
-                    typeof(SpecialLiquidationCancelledEvent)
+                    typeof(SpecialLiquidationCancelledEvent),
+                    typeof(ResumePausedSpecialLiquidationFailedEvent),
+                    typeof(ResumePausedSpecialLiquidationSucceededEvent)
                 )
                 .With(EventsRoute);
         }

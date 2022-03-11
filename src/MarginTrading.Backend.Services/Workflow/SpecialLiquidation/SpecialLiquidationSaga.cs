@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
 using Lykke.Cqrs;
@@ -13,7 +14,6 @@ using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Events;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Repositories;
-using MarginTrading.Backend.Core.Services;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Helpers;
 using MarginTrading.Backend.Services.Services;
@@ -34,6 +34,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private readonly LiquidationHelper _liquidationHelper;
         private readonly OrdersCache _ordersCache;
         private readonly IRfqPauseService _rfqPauseService;
+        private readonly ILog _log;
         
         private readonly MarginTradingSettings _marginTradingSettings;
         private readonly CqrsContextNamesSettings _cqrsContextNamesSettings;
@@ -49,7 +50,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             CqrsContextNamesSettings cqrsContextNamesSettings,
             LiquidationHelper liquidationHelper,
             OrdersCache ordersCache,
-            IRfqPauseService rfqPauseService)
+            IRfqPauseService rfqPauseService,
+            ILog log)
         {
             _dateService = dateService;
             _chaosKitty = chaosKitty;
@@ -60,6 +62,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             _liquidationHelper = liquidationHelper;
             _ordersCache = ordersCache;
             _rfqPauseService = rfqPauseService;
+            _log = log;
         }
 
         [UsedImplicitly]
@@ -109,7 +112,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 if (currentVolume != 0 && currentVolume != executionInfo.Data.Volume)
                 {
                     // if RFQ is paused we will not continue
-                    var pauseAcknowledged = await _rfqPauseService.AcknowledgeIfPausedAsync(e.OperationId);
+                    var pauseAcknowledged = await _rfqPauseService.AcknowledgeAsync(e.OperationId);
                     if (pauseAcknowledged) return;
                     
                     executionInfo.Data.RequestNumber++;
@@ -152,7 +155,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
 
             if (PriceRequestRetryRequired(executionInfo.Data.RequestedFromCorporateActions))
             {
-                var pauseAcknowledged = await _rfqPauseService.AcknowledgeIfPausedAsync(executionInfo.Id);
+                var pauseAcknowledged = await _rfqPauseService.AcknowledgeAsync(executionInfo.Id);
                 if (pauseAcknowledged) return;
 
                 await InternalRetryPriceRequest(e.CreationTime, sender, executionInfo,
@@ -309,7 +312,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
 
                 if (PriceRequestRetryRequired(executionInfo.Data.RequestedFromCorporateActions))
                 {
-                    var pauseAcknowledged = await _rfqPauseService.AcknowledgeIfPausedAsync(executionInfo.Id);
+                    var pauseAcknowledged = await _rfqPauseService.AcknowledgeAsync(executionInfo.Id);
                     if (pauseAcknowledged) return;
                     
                     if (executionInfo.Data.SwitchState(executionInfo.Data.State,
@@ -367,6 +370,58 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
 
                 _chaosKitty.Meow(e.OperationId);
                 
+                await _operationExecutionInfoRepository.Save(executionInfo);
+            }
+        }
+        
+        [UsedImplicitly]
+        private async Task Handle(ResumePausedSpecialLiquidationFailedEvent e, ICommandSender sender)
+        {
+            var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
+                operationName: OperationName,
+                id: e.OperationId);
+            
+            if (executionInfo?.Data == null)
+                return;
+
+            await _log.WriteWarningAsync(nameof(SpecialLiquidationSaga),
+                nameof(ResumePausedSpecialLiquidationFailedEvent), $"Pause cancellation failed. Reason: {e.Reason}");
+        }
+        
+        [UsedImplicitly]
+        private async Task Handle(ResumePausedSpecialLiquidationSucceededEvent e, ICommandSender sender)
+        {
+            var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
+                operationName: OperationName,
+                id: e.OperationId);
+            
+            if (executionInfo?.Data == null)
+                return;
+            
+            if (PriceRequestRetryRequired(executionInfo.Data.RequestedFromCorporateActions))
+            {
+                if (executionInfo.Data.SwitchState(executionInfo.Data.State,
+                        SpecialLiquidationOperationState.PriceRequested))
+                {
+                    await InternalRetryPriceRequest(e.CreationTime, sender, executionInfo,
+                        _marginTradingSettings.SpecialLiquidation.PriceRequestRetryTimeout.Value);
+
+                    return;
+                }
+            }
+
+            if (executionInfo.Data.SwitchState(executionInfo.Data.State,
+                    SpecialLiquidationOperationState.OnTheWayToFail))
+            {
+                sender.SendCommand(new FailSpecialLiquidationInternalCommand
+                {
+                    OperationId = e.OperationId,
+                    CreationTime = _dateService.Now(),
+                    Reason = $"Pause cancellation succeeded but then price request was not initiated for operation id [{e.OperationId} and name [{OperationName}]]"
+                }, _cqrsContextNamesSettings.TradingEngine);
+                
+                _chaosKitty.Meow(e.OperationId);
+
                 await _operationExecutionInfoRepository.Save(executionInfo);
             }
         }

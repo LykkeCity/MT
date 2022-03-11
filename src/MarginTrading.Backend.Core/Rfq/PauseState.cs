@@ -19,6 +19,11 @@ namespace MarginTrading.Backend.Core.Rfq
         Active,
         
         /// <summary>
+        /// An intention to resume the workflow has been declared
+        /// </summary>
+        PendingCancellation,
+        
+        /// <summary>
         /// The pause has been cancelled (workflow resumed)
         /// </summary>
         Cancelled

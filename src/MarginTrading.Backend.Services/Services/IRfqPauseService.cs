@@ -14,9 +14,10 @@ namespace MarginTrading.Backend.Services.Services
         /// Add new pause for the operation
         /// </summary>
         /// <param name="operationId"></param>
+        /// <param name="source"></param>
         /// <param name="initiator"></param>
         /// <returns></returns>
-        Task<RfqPauseErrorCode> AddAsync(string operationId, Initiator initiator);
+        Task<RfqPauseErrorCode> AddAsync(string operationId, PauseSource source, Initiator initiator);
 
         /// <summary>
         /// Get current pending or active pause object. Cancelled pauses are not taken into account
@@ -30,8 +31,22 @@ namespace MarginTrading.Backend.Services.Services
         /// </summary>
         /// <param name="operationId"></param>
         /// <returns></returns>
-        Task<bool> AcknowledgeIfPausedAsync(string operationId);
+        Task<bool> AcknowledgeAsync(string operationId);
 
-        Task ContinueAsync(string operationId);
+        /// <summary>
+        /// If there is pending cancellation pause - cancel it 
+        /// </summary>
+        /// <param name="operationId"></param>
+        /// <returns></returns>
+        Task<bool> AcknowledgeCancellationAsync(string operationId);
+
+        /// <summary>
+        /// Resumes paused special liquidation 
+        /// </summary>
+        /// <param name="operationId"></param>
+        /// <param name="source"></param>
+        /// <param name="initiator"></param>
+        /// <returns></returns>
+        Task<RfqResumeErrorCode> ResumeAsync(string operationId, PauseCancellationSource source, Initiator initiator);
     }
 }

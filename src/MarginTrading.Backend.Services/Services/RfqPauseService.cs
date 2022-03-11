@@ -13,7 +13,9 @@ using MarginTrading.Backend.Contracts.ErrorCodes;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Rfq;
+using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation;
+using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Common.Services;
 
 namespace MarginTrading.Backend.Services.Services
@@ -23,6 +25,7 @@ namespace MarginTrading.Backend.Services.Services
         private readonly IOperationExecutionPauseRepository _pauseRepository;
         private readonly IOperationExecutionInfoRepository _executionInfoRepository;
         private readonly IDateService _dateService;
+        private readonly ICqrsSender _cqrsSender;
         private readonly ILog _log;
 
         private static readonly IEnumerable<SpecialLiquidationOperationState> AllowedOperationStatesToPauseIn = new[]
@@ -37,15 +40,17 @@ namespace MarginTrading.Backend.Services.Services
         public RfqPauseService(IOperationExecutionPauseRepository pauseRepository,
             IOperationExecutionInfoRepository executionInfoRepository,
             ILog log,
-            IDateService dateService)
+            IDateService dateService,
+            ICqrsSender cqrsSender)
         {
             _pauseRepository = pauseRepository;
             _executionInfoRepository = executionInfoRepository;
             _log = log;
             _dateService = dateService;
+            _cqrsSender = cqrsSender;
         }
 
-        public async Task<RfqPauseErrorCode> AddAsync(string operationId, Initiator initiator)
+        public async Task<RfqPauseErrorCode> AddAsync(string operationId, PauseSource source, Initiator initiator)
         {
             if (string.IsNullOrEmpty(operationId))
                 throw new ArgumentNullException(nameof(operationId));
@@ -88,7 +93,7 @@ namespace MarginTrading.Backend.Services.Services
                     _dateService.Now(),
                     null,
                     PauseState.Pending,
-                    PauseSource.Manual,
+                    source,
                     initiator,
                     null,
                     null,
@@ -119,7 +124,7 @@ namespace MarginTrading.Backend.Services.Services
                 .SingleOrDefault();
         }
 
-        public async Task<bool> AcknowledgeIfPausedAsync(string operationId)
+        public async Task<bool> AcknowledgeAsync(string operationId)
         {
             var locker = _lock.GetOrAdd(operationId, new SemaphoreSlim(1, 1));
 
@@ -135,7 +140,7 @@ namespace MarginTrading.Backend.Services.Services
 
                 if (activePause != null)
                 {
-                    await _log.WriteInfoAsync(nameof(RfqPauseService), nameof(AcknowledgeIfPausedAsync), null,
+                    await _log.WriteInfoAsync(nameof(RfqPauseService), nameof(AcknowledgeAsync), null,
                         $"The pause for operation id [{operationId}] and name [{SpecialLiquidationSaga.OperationName}] is effective since [{activePause.EffectiveSince}]");
 
                     return true;
@@ -160,7 +165,7 @@ namespace MarginTrading.Backend.Services.Services
 
                     if (!updated)
                     {
-                        await _log.WriteWarningAsync(nameof(RfqPauseService), nameof(AcknowledgeIfPausedAsync), null,
+                        await _log.WriteWarningAsync(nameof(RfqPauseService), nameof(AcknowledgeAsync), null,
                             $"Couldn't activate pending pause for operation id [{operationId}] and name [{SpecialLiquidationSaga.OperationName}]");
 
                         return false;
@@ -178,10 +183,127 @@ namespace MarginTrading.Backend.Services.Services
             
             return false;
         }
-
-        public async Task ContinueAsync(string operationId)
+        
+        public async Task<bool> AcknowledgeCancellationAsync(string operationId)
         {
-            throw new System.NotImplementedException();
+            var locker = _lock.GetOrAdd(operationId, new SemaphoreSlim(1, 1));
+
+            await locker.WaitAsync();
+
+            try
+            {
+                var cancelledPause = (await _pauseRepository.FindAsync(
+                        operationId,
+                        SpecialLiquidationSaga.OperationName,
+                        o => o.State == PauseState.Cancelled))
+                    .SingleOrDefault();
+
+                if (cancelledPause != null)
+                {
+                    await _log.WriteInfoAsync(nameof(RfqPauseService), nameof(AcknowledgeCancellationAsync), null,
+                        $"The pause for operation id [{operationId}] and name [{SpecialLiquidationSaga.OperationName}] already cancelled effective since [{cancelledPause.CancellationEffectiveSince}]");
+
+                    return true;
+                }
+                
+                var pendingCancellationPause = (await _pauseRepository.FindAsync(
+                        operationId,
+                        SpecialLiquidationSaga.OperationName,
+                        o => o.State == PauseState.PendingCancellation))
+                    .SingleOrDefault();
+
+                if (pendingCancellationPause != null)
+                {
+                    var updated = await _pauseRepository.UpdateAsync(
+                        pendingCancellationPause.Oid ?? throw new InvalidOperationException("Pause oid is required to update"), 
+                        pendingCancellationPause.EffectiveSince ?? throw new InvalidOperationException("Pending cancellation pause must have an [Effective Since] value"), 
+                        PauseState.Cancelled,
+                        pendingCancellationPause.CancelledAt,
+                        _dateService.Now(),
+                        pendingCancellationPause.CancellationInitiator,
+                        pendingCancellationPause.CancellationSource);
+                    
+                    if (!updated)
+                    {
+                        await _log.WriteWarningAsync(nameof(RfqPauseService), nameof(AcknowledgeCancellationAsync), null,
+                            $"Couldn't cancel pending cancellation pause for operation id [{operationId}] and name [{SpecialLiquidationSaga.OperationName}]");
+
+                        return false;
+                    }
+                    
+                    // todo: add audit log
+
+                    return true;
+                }
+            }
+            finally
+            {
+                locker.Release();
+            }
+
+            return false;
+        }
+
+        public async Task<RfqResumeErrorCode> ResumeAsync(string operationId, PauseCancellationSource source, Initiator initiator)
+        {
+            if (string.IsNullOrEmpty(operationId))
+                throw new ArgumentNullException(nameof(operationId));
+            
+            var locker = _lock.GetOrAdd(operationId, new SemaphoreSlim(1, 1));
+
+            await locker.WaitAsync();
+
+            try
+            {
+                var executionInfo = await _executionInfoRepository
+                    .GetAsync<SpecialLiquidationOperationData>(SpecialLiquidationSaga.OperationName, operationId);
+                
+                if (executionInfo == null)
+                    return RfqResumeErrorCode.NotFound;
+                
+                var activePause = (await _pauseRepository.FindAsync(
+                        operationId,
+                        SpecialLiquidationSaga.OperationName,
+                        o => o.State == PauseState.Active))
+                    .SingleOrDefault();
+
+                if (activePause == null)
+                {
+                    await _log.WriteInfoAsync(nameof(RfqPauseService), nameof(ResumeAsync), null,
+                        $"The active pause for operation id [{operationId}] and name [{SpecialLiquidationSaga.OperationName}] was not found");
+
+                    return RfqResumeErrorCode.NotPaused;
+                }
+
+                var updated = await _pauseRepository.UpdateAsync(
+                    activePause.Oid ?? throw new InvalidOperationException("Pause oid is required to update"), 
+                    activePause.EffectiveSince ?? throw new InvalidOperationException("Activated pause must have an [Effective Since] value"), 
+                    PauseState.PendingCancellation,
+                    _dateService.Now(),
+                    null, 
+                    initiator, 
+                    source);
+
+                if (updated)
+                {
+                    _cqrsSender.SendCommandToSelf(new ResumePausedSpecialLiquidationCommand{OperationId = operationId});   
+                }
+                else
+                {
+                    await _log.WriteWarningAsync(nameof(RfqPauseService), nameof(ResumeAsync), null,
+                        $"Couldn't cancel active pause for operation id [{operationId}] and name [{SpecialLiquidationSaga.OperationName}] due to database issues");
+
+                    return RfqResumeErrorCode.Persistence;
+                }
+                
+                // todo: add audit log
+            }
+            finally
+            {
+                locker.Release();
+            }
+
+            return RfqResumeErrorCode.None;
         }
     }
 }

@@ -17,9 +17,11 @@ using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Rfq;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.Backend.Services.MatchingEngines;
+using MarginTrading.Backend.Services.Services;
 using MarginTrading.Backend.Services.Workflow.Liquidation;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation.Events;
@@ -45,6 +47,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private readonly IIdentityGenerator _identityGenerator;
         private readonly IAccountsCacheService _accountsCacheService;
         private readonly OrdersCache _ordersCache;
+        private readonly IRfqPauseService _rfqPauseService;
 
         private const AccountLevel ValidAccountLevel = AccountLevel.StopOut;
 
@@ -60,7 +63,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             IExchangeConnectorClient exchangeConnectorClient,
             IIdentityGenerator identityGenerator,
             IAccountsCacheService accountsCacheService,
-            OrdersCache ordersCache)
+            OrdersCache ordersCache,
+            IRfqPauseService rfqPauseService)
         {
             _tradingEngine = tradingEngine;
             _dateService = dateService;
@@ -74,6 +78,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             _identityGenerator = identityGenerator;
             _accountsCacheService = accountsCacheService;
             _ordersCache = ordersCache;
+            _rfqPauseService = rfqPauseService;
         }
         
         [UsedImplicitly]
@@ -642,6 +647,53 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
 
             externalProviderId = externalProviderIds.Single();
             return true;
+        }
+        
+        [UsedImplicitly]
+        private async Task Handle(ResumePausedSpecialLiquidationCommand command, IEventPublisher publisher)
+        {
+            var executionInfo = await _operationExecutionInfoRepository.GetAsync<SpecialLiquidationOperationData>(
+                operationName: SpecialLiquidationSaga.OperationName,
+                id: command.OperationId);
+            
+            if (executionInfo?.Data == null)
+            {
+                return;
+            }
+
+            var pause = await _rfqPauseService.GetCurrentAsync(command.OperationId);
+
+            if (pause?.State == PauseState.PendingCancellation)
+            {
+                _chaosKitty.Meow(command.OperationId);
+
+                var cancellationAcknowledged = await _rfqPauseService.AcknowledgeCancellationAsync(command.OperationId);
+
+                if (cancellationAcknowledged)
+                {
+                    publisher.PublishEvent(new ResumePausedSpecialLiquidationSucceededEvent
+                    {
+                        OperationId = command.OperationId,
+                        CreationTime = _dateService.Now()
+                    });
+
+                    return;
+                }
+
+                publisher.PublishEvent(new ResumePausedSpecialLiquidationFailedEvent
+                {
+                    OperationId = command.OperationId,
+                    Reason = $"Couldn't acknowledge pause cancellation for operation id [{command.OperationId}] and name [{SpecialLiquidationSaga.OperationName}]"
+                });
+
+                return;
+            }
+
+            publisher.PublishEvent(new ResumePausedSpecialLiquidationFailedEvent
+            {
+                OperationId = command.OperationId,
+                Reason = $"There is no active pause for operation id [{command.OperationId}] and name [{SpecialLiquidationSaga.OperationName}]"
+            });
         }
     }
 }

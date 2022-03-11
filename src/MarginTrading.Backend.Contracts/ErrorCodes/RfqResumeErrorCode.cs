@@ -21,6 +21,11 @@ namespace MarginTrading.Backend.Contracts.ErrorCodes
         /// <summary>
         /// The RFQ is not on pause
         /// </summary>
-        NotPaused
+        NotPaused,
+        
+        /// <summary>
+        /// Database issue
+        /// </summary>
+        Persistence
     }
 }
