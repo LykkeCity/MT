@@ -16,7 +16,7 @@ namespace MarginTrading.Backend.Core.Repositories
         Task<IEnumerable<Pause>> FindAsync(string operationId, string operationName, Func<Pause, bool> filter = null);
 
         Task<bool> UpdateAsync(long oid,
-            DateTime effectiveSince,
+            DateTime?  effectiveSince,
             PauseState state,
             DateTime? cancelledAt,
             DateTime? cancellationEffectiveSince,

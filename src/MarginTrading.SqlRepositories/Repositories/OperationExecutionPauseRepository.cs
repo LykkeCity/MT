@@ -82,7 +82,7 @@ values (@OperationId, @OperationName, @Source, @CreatedAt, @State, @Initiator)",
         }
 
         public async Task<bool> UpdateAsync(long oid,
-            DateTime effectiveSince,
+            DateTime? effectiveSince,
             PauseState state,
             DateTime? cancelledAt,
             DateTime? cancellationEffectiveSince,

@@ -48,5 +48,14 @@ namespace MarginTrading.Backend.Services.Services
         /// <param name="initiator"></param>
         /// <returns></returns>
         Task<RfqResumeErrorCode> ResumeAsync(string operationId, PauseCancellationSource source, Initiator initiator);
+
+        /// <summary>
+        /// Stop pending pause
+        /// </summary>
+        /// <param name="operationId"></param>
+        /// <param name="source"></param>
+        /// <param name="initiator"></param>
+        /// <returns></returns>
+        Task StopPendingAsync(string operationId, PauseCancellationSource source, Initiator initiator);
     }
 }

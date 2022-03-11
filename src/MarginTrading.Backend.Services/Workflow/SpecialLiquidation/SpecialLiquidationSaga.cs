@@ -14,6 +14,7 @@ using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Events;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Rfq;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Helpers;
 using MarginTrading.Backend.Services.Services;
@@ -124,6 +125,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                     
                     return;//wait for the new price
                 }
+
+                await _rfqPauseService.StopPendingAsync(e.OperationId, PauseCancellationSource.PriceReceived, nameof(SpecialLiquidationSaga));
 
                 executionInfo.Data.Price = e.Price;
 

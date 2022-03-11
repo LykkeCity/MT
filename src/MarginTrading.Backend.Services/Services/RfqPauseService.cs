@@ -183,6 +183,46 @@ namespace MarginTrading.Backend.Services.Services
             
             return false;
         }
+
+        public async Task StopPendingAsync(string operationId, PauseCancellationSource source, Initiator initiator)
+        {
+            var locker = _lock.GetOrAdd(operationId, new SemaphoreSlim(1, 1));
+
+            await locker.WaitAsync();
+
+            try
+            {
+                var pendingPause = (await _pauseRepository.FindAsync(
+                        operationId,
+                        SpecialLiquidationSaga.OperationName,
+                        o => o.State == PauseState.Pending))
+                    .SingleOrDefault();
+
+                if (pendingPause != null)
+                {
+                    var updated = await _pauseRepository.UpdateAsync(
+                        pendingPause.Oid ?? throw new InvalidOperationException("Pause oid is required to update"),
+                        pendingPause.EffectiveSince,
+                        PauseState.Cancelled,
+                        _dateService.Now(),
+                        _dateService.Now(),
+                        initiator,
+                        source);
+                    
+                    if (!updated)
+                    {
+                        await _log.WriteWarningAsync(nameof(RfqPauseService), nameof(StopPendingAsync), null,
+                            $"Couldn't stop pending pause for operation id [{operationId}] and name [{SpecialLiquidationSaga.OperationName}]");
+                    }
+                }
+
+                // todo: add audit log
+            }
+            finally
+            {
+                locker.Release();
+            }
+        }
         
         public async Task<bool> AcknowledgeCancellationAsync(string operationId)
         {
@@ -216,7 +256,7 @@ namespace MarginTrading.Backend.Services.Services
                 {
                     var updated = await _pauseRepository.UpdateAsync(
                         pendingCancellationPause.Oid ?? throw new InvalidOperationException("Pause oid is required to update"), 
-                        pendingCancellationPause.EffectiveSince ?? throw new InvalidOperationException("Pending cancellation pause must have an [Effective Since] value"), 
+                        pendingCancellationPause.EffectiveSince, 
                         PauseState.Cancelled,
                         pendingCancellationPause.CancelledAt,
                         _dateService.Now(),
