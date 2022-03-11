@@ -18,7 +18,6 @@ namespace MarginTrading.SqlRepositories.Repositories
 {
     public class OperationExecutionPauseRepository : SqlRepositoryBase, IOperationExecutionPauseRepository
     {
-        private const string TableName = "MarginTradingExecutionPause";
         private const string CreateTableScript = @"
 create table [dbo].[{0}]
 (
@@ -29,7 +28,7 @@ create table [dbo].[{0}]
     CancellationSource         nvarchar(64),
     CreatedAt                  datetime2                       not null,
     EffectiveSince             datetime2,
-    State                      nvarchar(32) default 'Inactive' not null,
+    State                      nvarchar(32) default 'Pending'  not null,
     Initiator                  nvarchar(64)                    not null,
     CancelledAt                datetime2,
     CancellationEffectiveSince datetime2,
@@ -39,6 +38,8 @@ create table [dbo].[{0}]
 );";
         
         private readonly ILog _log;
+        
+        public const string TableName = "MarginTradingExecutionPause";
         
         public OperationExecutionPauseRepository(
             string connectionString,

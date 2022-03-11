@@ -17,6 +17,5 @@ namespace MarginTrading.SqlRepositories.Entities
 
         object IOperationExecutionInfo<object>.Data => JsonConvert.DeserializeObject<object>(Data);
         public string Data { get; set; }
-        
     }
 }

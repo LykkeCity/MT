@@ -22,5 +22,7 @@ namespace MarginTrading.Backend.Contracts.Rfq
         public bool RequestedFromCorporateActions { get; set; }
         public RfqOperationState State { get; set; }
         public DateTime LastModified { get; set; }
+        
+        public RfqPauseDetailsContract Pause { get; set; }
     }
 }

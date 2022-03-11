@@ -16,7 +16,7 @@ namespace MarginTrading.Backend.Core.Repositories
         [ItemCanBeNull]
         Task<IOperationExecutionInfo<TData>> GetAsync<TData>(string operationName, string id) where TData : class;
 
-        Task<PaginatedResponse<OperationExecutionInfo<SpecialLiquidationOperationData>>> GetRfqAsync(string rfqId, 
+        Task<PaginatedResponse<OperationExecutionInfoWithPause<SpecialLiquidationOperationData>>> GetRfqAsync(string rfqId, 
             string instrumentId, string accountId, List<SpecialLiquidationOperationState> states, DateTime? from, DateTime? to, 
             int skip, int take, bool isAscendingOrder = false);
 

@@ -98,36 +98,44 @@ namespace MarginTrading.SqlRepositories.Repositories
                 throw;
             }
         }
-
-        public async Task<PaginatedResponse<OperationExecutionInfo<SpecialLiquidationOperationData>>> GetRfqAsync(string rfqId, string instrumentId,
+        
+        public async Task<PaginatedResponse<OperationExecutionInfoWithPause<SpecialLiquidationOperationData>>> GetRfqAsync(string rfqId, string instrumentId,
             string accountId, List<SpecialLiquidationOperationState> states, DateTime? from, DateTime? to, int skip, int take,
             bool isAscendingOrder = false)
         {
-            const string whereRfq = "WHERE [OperationName] = 'SpecialLiquidation' ";
+            const string whereRfq = "WHERE i.OperationName = 'SpecialLiquidation'";
 
-            var whereFields = (string.IsNullOrWhiteSpace(rfqId) ? "" : " AND [Id] = @rfqId")
-                            + (from == null ? "" : " AND [LastModified] >= @from")
-                            + (to == null ? "" : " AND [LastModified] < @to");
+            var whereFields = (string.IsNullOrWhiteSpace(rfqId) ? "" : " AND i.Id = @rfqId")
+                            + (from == null ? "" : " AND i.LastModified >= @from")
+                            + (to == null ? "" : " AND i.LastModified < @to");
 
-            var whereJson = (string.IsNullOrWhiteSpace(instrumentId) ? "" : " AND JSON_VALUE([Data], '$.Instrument') = @instrumentId")
-                          + (string.IsNullOrWhiteSpace(accountId) ? "" : " AND JSON_VALUE([Data], '$.AccountId') = @accountId")
-                          + (states == null || states.Count == 0 ? "" : $" AND JSON_VALUE([Data], '$.State') in ({string.Join(",", states.Select(x => $"'{x}'"))})");
+            var whereJson = (string.IsNullOrWhiteSpace(instrumentId) ? "" : " AND JSON_VALUE(i.Data, '$.Instrument') = @instrumentId")
+                          + (string.IsNullOrWhiteSpace(accountId) ? "" : " AND JSON_VALUE(i.Data, '$.AccountId') = @accountId")
+                          + (states == null || states.Count == 0 ? "" : $" AND JSON_VALUE(i.Data, '$.State') in ({string.Join(",", states.Select(x => $"'{x}'"))})");
 
             var whereClause = whereRfq + whereFields + whereJson;
 
             const int MaxResults = 100;
             var sorting = isAscendingOrder ? "ASC" : "DESC";
             take = take <= 0 ? MaxResults : Math.Min(take, MaxResults);
-            var paginationClause = $"ORDER BY [LastModified] {sorting} OFFSET {skip} ROWS FETCH NEXT {take} ROWS ONLY";
+            var paginationClause = $"ORDER BY i.LastModified {sorting} OFFSET {skip} ROWS FETCH NEXT {take} ROWS ONLY";
 
             using var conn = new SqlConnection(ConnectionString);
-            var sql = $"SELECT * FROM [{TableName}] {whereClause} {paginationClause}; SELECT COUNT(*) FROM [{TableName}] {whereClause}";
+            var sql = $@"
+SELECT i.*, p.* 
+FROM [{TableName}] i 
+LEFT JOIN [{OperationExecutionPauseRepository.TableName}] p 
+ON (p.OperationId = i.Id AND p.OperationName = i.OperationName AND p.State != 'Cancelled') 
+{whereClause} {paginationClause}; 
+
+SELECT COUNT(*) FROM [{TableName}] {whereClause}";
+            
             var gridReader = await conn.QueryMultipleAsync(sql, new { rfqId, instrumentId, accountId, from, to });
 
-            var contents = (await gridReader.ReadAsync<OperationExecutionInfoEntity>()).ToList();
+            var contents = (await gridReader.ReadAsync<OperationExecutionInfoWithPauseEntity>()).ToList();
             var totalCount = await gridReader.ReadSingleAsync<int>();
 
-            return new PaginatedResponse<OperationExecutionInfo<SpecialLiquidationOperationData>>(
+            return new PaginatedResponse<OperationExecutionInfoWithPause<SpecialLiquidationOperationData>>(
                     contents: contents.Select(x=>Convert<SpecialLiquidationOperationData>(x)).ToArray(),
                     start: skip,
                     size: contents.Count,
@@ -203,6 +211,37 @@ namespace MarginTrading.SqlRepositories.Repositories
                         Value = positionIdCollection.Count > 0 ? positionIdCollection : null
                     }
                 }, MapPositionId);
+        }
+
+        private static OperationExecutionInfoWithPause<TData> Convert<TData>(OperationExecutionInfoWithPauseEntity entity)
+            where TData : class
+        {
+            var result = new OperationExecutionInfoWithPause<TData>(
+                operationName: entity.OperationName,
+                id: entity.Id,
+                lastModified: entity.LastModified,
+                data: entity.Data is string dataStr
+                    ? JsonConvert.DeserializeObject<TData>(dataStr)
+                    : ((JToken)entity.Data).ToObject<TData>());
+
+            // if there is information on pause
+            if (entity.Source.HasValue)
+            {
+                result.Pause = new OperationExecutionPause
+                {
+                    Source = entity.Source.Value,
+                    CancellationSource = entity.CancellationSource,
+                    CreatedAt = entity.CreatedAt.Value,
+                    EffectiveSince = entity.EffectiveSince,
+                    State = entity.State.Value,
+                    Initiator = entity.Initiator.Value,
+                    CancelledAt = entity.CancelledAt,
+                    CancellationEffectiveSince = entity.CancellationEffectiveSince,
+                    CancellationInitiator = entity.CancellationInitiator
+                };
+            }
+            
+            return result;
         }
 
         private static OperationExecutionInfo<TData> Convert<TData>(OperationExecutionInfoEntity entity)

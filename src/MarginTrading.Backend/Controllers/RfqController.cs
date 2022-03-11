@@ -1,7 +1,6 @@
 // Copyright (c) 2021 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Contracts;
 using MarginTrading.Backend.Contracts.Common;
@@ -40,10 +39,25 @@ namespace MarginTrading.Backend.Controllers
         [HttpGet]
         public async Task<PaginatedResponseContract<RfqContract>> GetAsync([CanBeNull, FromQuery] GetRfqRequest getRfqRequest, [FromQuery] int skip = 0, [FromQuery] int take = 20)
         {
-            var states = getRfqRequest.States?.Select(x => (SpecialLiquidationOperationState)x).ToList();
-            var data =  await _operationExecutionInfoRepository.GetRfqAsync(getRfqRequest.RfqId, getRfqRequest.InstrumentId, getRfqRequest.AccountId, states, getRfqRequest.DateFrom, getRfqRequest.DateTo, skip, take);
+            var states = getRfqRequest.States?
+                .Select(x => (SpecialLiquidationOperationState)x)
+                .ToList();
 
-            var rfq = data.Contents.Select(Convert).ToList();
+            var data = await _operationExecutionInfoRepository
+                .GetRfqAsync(getRfqRequest.RfqId,
+                    getRfqRequest.InstrumentId,
+                    getRfqRequest.AccountId,
+                    states,
+                    getRfqRequest.DateFrom,
+                    getRfqRequest.DateTo,
+                    skip,
+                    take);
+
+            var rfq = data
+                .Contents
+                .Select(Convert)
+                .ToList();
+            
             return new PaginatedResponseContract<RfqContract>(rfq, skip, data.Contents.Count, data.TotalSize);
         }
 
@@ -84,7 +98,7 @@ namespace MarginTrading.Backend.Controllers
             return errorCode;
         }
 
-        private RfqContract Convert(OperationExecutionInfo<SpecialLiquidationOperationData> operation)
+        private RfqContract Convert(OperationExecutionInfoWithPause<SpecialLiquidationOperationData> operation)
         {
             return new RfqContract
             {
@@ -102,6 +116,16 @@ namespace MarginTrading.Backend.Controllers
                 RequestedFromCorporateActions = operation.Data.RequestedFromCorporateActions,
                 State = (RfqOperationState)operation.Data.State,
                 LastModified = operation.LastModified,
+                Pause = new RfqPauseDetailsContract
+                {
+                    CanBePaused = operation.Pause == null || operation.Pause.State == PauseState.Cancelled,
+                    CanBeResumed = operation.Pause?.State == PauseState.Active,
+                    IsPaused = operation.Pause?.State == PauseState.Active || operation.Pause?.State == PauseState.PendingCancellation,
+                    PauseReason = operation.Pause?.Source.ToString(),
+                    // todo: currently, we'll never get this value cause only not cancelled pauses are taken into account
+                    // and only cancelled pauses have information on resume reason
+                    ResumeReason = operation.Pause?.CancellationSource?.ToString()
+                }
             };
         }
     }
