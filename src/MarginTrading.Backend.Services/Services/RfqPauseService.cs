@@ -28,7 +28,7 @@ namespace MarginTrading.Backend.Services.Services
         private readonly ICqrsSender _cqrsSender;
         private readonly ILog _log;
 
-        private static readonly IEnumerable<SpecialLiquidationOperationState> AllowedOperationStatesToPauseIn = new[]
+        public static readonly IEnumerable<SpecialLiquidationOperationState> AllowedOperationStatesToPauseIn = new[]
         {
             SpecialLiquidationOperationState.PriceRequested,
             SpecialLiquidationOperationState.PriceReceived

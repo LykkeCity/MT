@@ -118,7 +118,7 @@ namespace MarginTrading.Backend.Controllers
                 LastModified = operation.LastModified,
                 Pause = new RfqPauseDetailsContract
                 {
-                    CanBePaused = operation.Pause == null || operation.Pause.State == PauseState.Cancelled,
+                    CanBePaused = (operation.Pause == null || operation.Pause.State == PauseState.Cancelled) && RfqPauseService.AllowedOperationStatesToPauseIn.Contains(operation.Data.State),
                     CanBeResumed = operation.Pause?.State == PauseState.Active,
                     IsPaused = operation.Pause?.State == PauseState.Active || operation.Pause?.State == PauseState.PendingCancellation,
                     PauseReason = operation.Pause?.Source.ToString(),
