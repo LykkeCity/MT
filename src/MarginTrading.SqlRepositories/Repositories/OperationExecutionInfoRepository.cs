@@ -128,7 +128,7 @@ LEFT JOIN [{OperationExecutionPauseRepository.TableName}] p
 ON (p.OperationId = i.Id AND p.OperationName = i.OperationName AND p.State != 'Cancelled') 
 {whereClause} {paginationClause}; 
 
-SELECT COUNT(*) FROM [{TableName}] {whereClause}";
+SELECT COUNT(*) FROM [{TableName}] i {whereClause}";
             
             var gridReader = await conn.QueryMultipleAsync(sql, new { rfqId, instrumentId, accountId, from, to });
 
