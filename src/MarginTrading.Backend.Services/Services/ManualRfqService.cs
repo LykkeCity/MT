@@ -5,11 +5,15 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Common.Log;
 using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Commands;
 using MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Events;
 using MarginTrading.Backend.Core;
+using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Core.Rfq;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Services.Extensions;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Common.Services;
 
@@ -22,6 +26,7 @@ namespace MarginTrading.Backend.Services.Services
         private readonly SpecialLiquidationSettings _specialLiquidationSettings;
         private readonly CqrsContextNamesSettings _cqrsContextNamesSettings;
         private readonly IQuoteCacheService _quoteCacheService;
+        private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
         private readonly ILog _log;
 
         private ConcurrentDictionary<string, GetPriceForSpecialLiquidationCommand> _requests = new ConcurrentDictionary<string, GetPriceForSpecialLiquidationCommand>();
@@ -32,6 +37,7 @@ namespace MarginTrading.Backend.Services.Services
             SpecialLiquidationSettings specialLiquidationSettings,
             CqrsContextNamesSettings cqrsContextNamesSettings,
             IQuoteCacheService quoteCacheService,
+            IOperationExecutionInfoRepository operationExecutionInfoRepository,
             ILog log)
         {
             _cqrsSender = cqrsSender;
@@ -39,6 +45,7 @@ namespace MarginTrading.Backend.Services.Services
             _specialLiquidationSettings = specialLiquidationSettings;
             _cqrsContextNamesSettings = cqrsContextNamesSettings;
             _quoteCacheService = quoteCacheService;
+            _operationExecutionInfoRepository = operationExecutionInfoRepository;
             _log = log;
         }
         
@@ -102,6 +109,29 @@ namespace MarginTrading.Backend.Services.Services
         public List<GetPriceForSpecialLiquidationCommand> GetAllRequest()
         {
             return _requests.Values.ToList();
+        }
+
+        public async Task<PaginatedResponse<Rfq>> GetAsync(RfqFilter filter, int skip, int take)
+        {
+            var specialLiquidationStates = filter?.States?
+                .Select(x => (SpecialLiquidationOperationState)x)
+                .ToList();
+
+            var data = await _operationExecutionInfoRepository
+                .GetRfqAsync(filter?.OperationId,
+                    filter?.InstrumentId,
+                    filter?.AccountId,
+                    specialLiquidationStates,
+                    filter?.DateFrom,
+                    filter?.DateTo,
+                    skip,
+                    take);
+
+            return new PaginatedResponse<Rfq>(
+                data.Contents.Select(o => o.ToRfq()).ToList(),
+                data.Start,
+                data.Size,
+                data.TotalSize);
         }
     }
 }

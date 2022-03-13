@@ -1,9 +1,9 @@
 // Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
-namespace MarginTrading.Backend.Contracts.Rfq
+namespace MarginTrading.Backend.Core.Rfq
 {
-    public class RfqPauseDetailsContract
+    public class RfqPauseSummary
     {
         public bool IsPaused { get; set; }
         

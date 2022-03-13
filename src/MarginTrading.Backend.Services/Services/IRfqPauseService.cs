@@ -1,9 +1,11 @@
 // Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System.Linq;
 using System.Threading.Tasks;
 using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Contracts.ErrorCodes;
+using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Rfq;
 
 namespace MarginTrading.Backend.Services.Services
@@ -57,5 +59,27 @@ namespace MarginTrading.Backend.Services.Services
         /// <param name="initiator"></param>
         /// <returns></returns>
         Task StopPendingAsync(string operationId, PauseCancellationSource source, Initiator initiator);
+
+        /// <summary>
+        /// Builds pause summary for operation
+        /// </summary>
+        /// <param name="operationExecutionInfo"></param>
+        /// <returns></returns>
+        static RfqPauseSummary GetPauseSummary(
+            OperationExecutionInfoWithPause<SpecialLiquidationOperationData> operationExecutionInfo)
+        {
+            return new RfqPauseSummary
+            {
+                CanBePaused = (operationExecutionInfo.Pause == null || operationExecutionInfo.Pause.State == PauseState.Cancelled) &&
+                              RfqPauseService.AllowedOperationStatesToPauseIn.Contains(operationExecutionInfo.Data.State),
+                CanBeResumed = operationExecutionInfo.Pause?.State == PauseState.Active,
+                IsPaused = operationExecutionInfo.Pause?.State == PauseState.Active ||
+                           operationExecutionInfo.Pause?.State == PauseState.PendingCancellation,
+                PauseReason = operationExecutionInfo.Pause?.Source.ToString(),
+                // todo: currently, we'll never get this value cause only not cancelled pauses are taken into account
+                // and only cancelled pauses have information on resume reason
+                ResumeReason = operationExecutionInfo.Pause?.CancellationSource?.ToString()
+            };
+        }
     }
 }
