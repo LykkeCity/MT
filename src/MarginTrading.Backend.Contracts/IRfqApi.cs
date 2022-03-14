@@ -19,6 +19,6 @@ namespace MarginTrading.Backend.Contracts
         /// Returns RFQs
         /// </summary>
         [Get("/api/rfq")]
-        Task<PaginatedResponseContract<RfqContract>> GetAsync([Query, CanBeNull] GetRfqRequest getRfqRequest, [Query] int skip = 0, [Query] int take = 20);
+        Task<PaginatedResponseContract<RfqContract>> GetAsync([Query, CanBeNull] ListRfqRequest listRfqRequest, [Query] int skip = 0, [Query] int take = 20);
     }
 }

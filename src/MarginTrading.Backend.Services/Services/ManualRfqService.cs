@@ -117,7 +117,7 @@ namespace MarginTrading.Backend.Services.Services
                 .Select(x => (SpecialLiquidationOperationState)x)
                 .ToList();
 
-            var data = await _operationExecutionInfoRepository
+            var filteredRfq = await _operationExecutionInfoRepository
                 .GetRfqAsync(filter?.OperationId,
                     filter?.InstrumentId,
                     filter?.AccountId,
@@ -127,11 +127,17 @@ namespace MarginTrading.Backend.Services.Services
                     skip,
                     take);
 
+            var pauseFilterAppliedRfq = filteredRfq.Contents
+                .Select(o => o.ToRfq())
+                .Where(o =>
+                    (filter?.CanBePaused == null || o.PauseSummary.CanBePaused == filter.CanBePaused) &&
+                    (filter?.CanBeResumed == null || o.PauseSummary.CanBeResumed == filter.CanBeResumed));
+
             return new PaginatedResponse<Rfq>(
-                data.Contents.Select(o => o.ToRfq()).ToList(),
-                data.Start,
-                data.Size,
-                data.TotalSize);
+                pauseFilterAppliedRfq.ToList(),
+                filteredRfq.Start,
+                filteredRfq.Size,
+                filteredRfq.TotalSize);
         }
     }
 }

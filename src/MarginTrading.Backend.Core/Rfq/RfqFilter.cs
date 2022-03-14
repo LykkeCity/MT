@@ -14,5 +14,9 @@ namespace MarginTrading.Backend.Core.Rfq
         public IReadOnlyCollection<RfqOperationState> States { get; set; }
         public DateTime? DateFrom { get; set; }
         public DateTime? DateTo { get; set; }
+        
+        public bool? CanBePaused { get; set; }
+        
+        public bool? CanBeResumed { get; set; }
     }
 }

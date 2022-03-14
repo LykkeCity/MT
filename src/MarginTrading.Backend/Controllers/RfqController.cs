@@ -30,11 +30,11 @@ namespace MarginTrading.Backend.Controllers
 
         [HttpGet]
         public async Task<PaginatedResponseContract<RfqContract>> GetAsync(
-            [FromQuery] GetRfqRequest getRfqRequest,
+            [FromQuery] ListRfqRequest listRfqRequest,
             [FromQuery] int skip = 0,
             [FromQuery] int take = 20)
         {
-            var result = await _rfqService.GetAsync(getRfqRequest.ToFilter(), skip, take);
+            var result = await _rfqService.GetAsync(listRfqRequest.ToFilter(), skip, take);
 
             return new PaginatedResponseContract<RfqContract>(
                 result.Contents.Select(rfq => rfq.ToContract()).ToList(),

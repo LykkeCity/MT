@@ -8,7 +8,7 @@ namespace MarginTrading.Backend.Extensions
 {
     public static class RfqExtensions
     {
-        public static RfqFilter ToFilter(this GetRfqRequest request)
+        public static RfqFilter ToFilter(this ListRfqRequest request)
         {
             return request != null
                 ? new RfqFilter
@@ -18,7 +18,9 @@ namespace MarginTrading.Backend.Extensions
                     OperationId = request.RfqId,
                     DateFrom = request.DateFrom,
                     DateTo = request.DateTo,
-                    States = request.States
+                    States = request.States,
+                    CanBePaused = request.CanBePaused,
+                    CanBeResumed = request.CanBeResumed
                 }
                 : null;
         }
