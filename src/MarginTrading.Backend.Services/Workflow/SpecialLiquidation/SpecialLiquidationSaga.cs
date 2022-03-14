@@ -35,6 +35,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
         private readonly LiquidationHelper _liquidationHelper;
         private readonly OrdersCache _ordersCache;
         private readonly IRfqPauseService _rfqPauseService;
+        private readonly IAssetPairsCache _assetPairsCache;
         private readonly ILog _log;
         
         private readonly MarginTradingSettings _marginTradingSettings;
@@ -52,7 +53,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             LiquidationHelper liquidationHelper,
             OrdersCache ordersCache,
             IRfqPauseService rfqPauseService,
-            ILog log)
+            ILog log,
+            IAssetPairsCache assetPairsCache)
         {
             _dateService = dateService;
             _chaosKitty = chaosKitty;
@@ -64,6 +66,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             _ordersCache = ordersCache;
             _rfqPauseService = rfqPauseService;
             _log = log;
+            _assetPairsCache = assetPairsCache;
         }
 
         [UsedImplicitly]
@@ -163,6 +166,8 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
 
                 await InternalRetryPriceRequest(e.CreationTime, sender, executionInfo,
                     _marginTradingSettings.SpecialLiquidation.PriceRequestRetryTimeout.Value);
+                
+                return;
             }
 
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceRequested,
