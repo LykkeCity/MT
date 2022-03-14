@@ -161,6 +161,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
 
             if (PriceRequestRetryRequired(executionInfo.Data.RequestedFromCorporateActions))
             {
+                var isDiscontinued = await FailIfInstrumentDiscontinued(executionInfo, sender);
+                if (isDiscontinued) return;
+
                 var pauseAcknowledged = await _rfqPauseService.AcknowledgeAsync(executionInfo.Id);
                 if (pauseAcknowledged) return;
 
@@ -229,6 +232,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
 
             if (PriceRequestRetryRequired(executionInfo.Data.RequestedFromCorporateActions))
             {
+                var isDiscontinued = await FailIfInstrumentDiscontinued(executionInfo, sender);
+                if (isDiscontinued) return;
+
                 if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.ExternalOrderExecuted,
                         SpecialLiquidationOperationState.PriceRequested))
                 {
@@ -408,6 +414,9 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             
             if (PriceRequestRetryRequired(executionInfo.Data.RequestedFromCorporateActions))
             {
+                var isDiscontinued = await FailIfInstrumentDiscontinued(executionInfo, sender);
+                if (isDiscontinued) return;
+
                 if (executionInfo.Data.SwitchState(executionInfo.Data.State,
                         SpecialLiquidationOperationState.PriceRequested))
                 {
@@ -504,6 +513,32 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             RequestPrice(sender, executionInfo);
 
             await _operationExecutionInfoRepository.Save(executionInfo);
+        }
+
+        private async Task<bool> FailIfInstrumentDiscontinued(IOperationExecutionInfo<SpecialLiquidationOperationData> executionInfo, ICommandSender sender)
+        {
+            var isDiscontinued = _assetPairsCache.GetAssetPairById(executionInfo.Data.Instrument).IsDiscontinued;
+            
+            if (isDiscontinued)
+            {
+                if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceRequested,
+                        SpecialLiquidationOperationState.OnTheWayToFail))
+                {
+                    sender.SendCommand(new FailSpecialLiquidationInternalCommand
+                    {
+                        OperationId = executionInfo.Id,
+                        CreationTime = _dateService.Now(),
+                        Reason = "Instrument discontinuation",
+                            
+                    }, _cqrsContextNamesSettings.TradingEngine);
+                
+                    await _operationExecutionInfoRepository.Save(executionInfo);
+                }
+
+                return true;
+            }
+
+            return false;
         }
     }
 }
