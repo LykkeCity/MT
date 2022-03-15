@@ -34,6 +34,14 @@ namespace MarginTrading.Backend.Services.Services
             SpecialLiquidationOperationState.PriceReceived
         };
 
+        public static readonly Func<Pause, bool> ActivePredicate = p => p.State == PauseState.Active;
+        
+        public static readonly Func<Pause, bool> PendingPredicate = p => p.State == PauseState.Pending;
+
+        public static readonly Func<Pause, bool> NotCancelledPredicate = p => p.State != PauseState.Cancelled;
+        
+        public static readonly Func<Pause, bool> PendingCancellationPredicate = p => p.State == PauseState.Cancelled;
+
         private readonly ConcurrentDictionary<string, SemaphoreSlim> _lock =
             new ConcurrentDictionary<string, SemaphoreSlim>();
 
@@ -64,7 +72,7 @@ namespace MarginTrading.Backend.Services.Services
                 var existingPause = (await _pauseRepository.FindAsync(
                         operationId,
                         SpecialLiquidationSaga.OperationName,
-                        o => o.State != PauseState.Cancelled))
+                        NotCancelledPredicate))
                     .SingleOrDefault();
 
                 if (existingPause != null)
@@ -120,7 +128,7 @@ namespace MarginTrading.Backend.Services.Services
             return (await _pauseRepository.FindAsync(
                     operationId,
                     SpecialLiquidationSaga.OperationName,
-                    o => o.State != PauseState.Cancelled))
+                    NotCancelledPredicate))
                 .SingleOrDefault();
         }
 
@@ -135,7 +143,7 @@ namespace MarginTrading.Backend.Services.Services
                 var activePause = (await _pauseRepository.FindAsync(
                         operationId,
                         SpecialLiquidationSaga.OperationName,
-                        o => o.State == PauseState.Active))
+                        ActivePredicate))
                     .SingleOrDefault();
 
                 if (activePause != null)
@@ -149,7 +157,7 @@ namespace MarginTrading.Backend.Services.Services
                 var pendingPause = (await _pauseRepository.FindAsync(
                         operationId,
                         SpecialLiquidationSaga.OperationName,
-                        o => o.State == PauseState.Pending))
+                        PendingPredicate))
                     .SingleOrDefault();
 
                 if (pendingPause != null)
@@ -195,7 +203,7 @@ namespace MarginTrading.Backend.Services.Services
                 var pendingPause = (await _pauseRepository.FindAsync(
                         operationId,
                         SpecialLiquidationSaga.OperationName,
-                        o => o.State == PauseState.Pending))
+                        PendingPredicate))
                     .SingleOrDefault();
 
                 if (pendingPause != null)
@@ -232,24 +240,10 @@ namespace MarginTrading.Backend.Services.Services
 
             try
             {
-                var cancelledPause = (await _pauseRepository.FindAsync(
-                        operationId,
-                        SpecialLiquidationSaga.OperationName,
-                        o => o.State == PauseState.Cancelled))
-                    .SingleOrDefault();
-
-                if (cancelledPause != null)
-                {
-                    await _log.WriteInfoAsync(nameof(RfqPauseService), nameof(AcknowledgeCancellationAsync), null,
-                        $"The pause for operation id [{operationId}] and name [{SpecialLiquidationSaga.OperationName}] already cancelled effective since [{cancelledPause.CancellationEffectiveSince}]");
-
-                    return true;
-                }
-                
                 var pendingCancellationPause = (await _pauseRepository.FindAsync(
                         operationId,
                         SpecialLiquidationSaga.OperationName,
-                        o => o.State == PauseState.PendingCancellation))
+                        PendingCancellationPredicate))
                     .SingleOrDefault();
 
                 if (pendingCancellationPause != null)
@@ -304,7 +298,7 @@ namespace MarginTrading.Backend.Services.Services
                 var activePause = (await _pauseRepository.FindAsync(
                         operationId,
                         SpecialLiquidationSaga.OperationName,
-                        o => o.State == PauseState.Active))
+                        ActivePredicate))
                     .SingleOrDefault();
 
                 if (activePause == null)
