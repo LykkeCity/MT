@@ -2,7 +2,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System.ComponentModel.DataAnnotations;
-using MarginTrading.Backend.Contracts.Common;
 
 namespace MarginTrading.Backend.Contracts.Rfq
 {
@@ -15,6 +14,6 @@ namespace MarginTrading.Backend.Contracts.Rfq
         /// The author of pause request
         /// </summary>
         [Required]
-        public Initiator Initiator { get; set; } 
+        public string Initiator { get; set; } 
     }
 }
