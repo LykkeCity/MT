@@ -128,9 +128,9 @@ LEFT JOIN [{OperationExecutionPauseRepository.TableName}] pause
 ON (pause.OperationId = i.Id AND pause.OperationName = i.OperationName AND pause.State != 'Cancelled')
 LEFT JOIN [{OperationExecutionPauseRepository.TableName}] cancelledPause
 ON (cancelledPause.Oid = 
-    SELECT MAX(Oid) 
+    (SELECT MAX(Oid) 
     FROM [{OperationExecutionPauseRepository.TableName}] 
-    WHERE OperationId = i.Id AND OperationName = i.OperationName AND [State] = 'Cancelled')
+    WHERE OperationId = i.Id AND OperationName = i.OperationName AND [State] = 'Cancelled')) 
 {whereClause} {paginationClause}; 
 
 SELECT COUNT(*) FROM [{TableName}] i {whereClause}";
