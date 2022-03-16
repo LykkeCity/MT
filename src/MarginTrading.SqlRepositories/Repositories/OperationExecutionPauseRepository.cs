@@ -179,5 +179,36 @@ where OperationId = @OperationId AND OperationName = @OperationName", new {Opera
                 throw;
             }
         }
+
+        public async Task<Pause> FindAsync(long oid)
+        {
+            try
+            {
+                using (var conn = new SqlConnection(ConnectionString))
+                {
+                    var entity = await conn.QuerySingleAsync($@"
+select Oid, OperationId, OperationName, Source, CancellationSource, CreatedAt, EffectiveSince, State, Initiator, CancelledAt, CancellationEffectiveSince, CancellationInitiator from [dbo].[MarginTradingExecutionPause]
+where Oid = @oid", new { oid = oid });
+
+                    return Pause.Initialize(entity.Oid,
+                        entity.OperationId,
+                        entity.OperationName,
+                        entity.CreatedAt,
+                        entity.EffectiveSince,
+                        entity.State,
+                        entity.Source,
+                        entity.Initiator,
+                        entity.CancelledAt,
+                        entity.CancellationEffectiveSince,
+                        entity.CancellationInitiator,
+                        entity.CancellationSource);
+                }
+            }
+            catch (Exception ex)
+            {
+                await _log.WriteErrorAsync(nameof(OperationExecutionPauseRepository), nameof(FindAsync), ex);
+                throw;
+            }
+        }
     }
 }

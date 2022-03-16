@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
@@ -10,6 +11,7 @@ using JetBrains.Annotations;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
+using MarginTrading.Backend.Services.Extensions;
 using MarginTrading.Backend.Services.Notifications;
 
 namespace MarginTrading.Backend.Services.Services
@@ -39,7 +41,9 @@ namespace MarginTrading.Backend.Services.Services
                     new { Id = operationId, Name = operationName }.ToJson(),
                     $"New RFQ has been added therefore {nameof(RfqChangedEvent)} is about to be published");
 
-                await _notifyService.RfqChanged(new RfqChangedEvent());
+                var rfq = await GetRfqByIdAsync(operationId);
+
+                await _notifyService.RfqChanged(rfq.ToEventContract());
             }
             
             return (executionInfo, added);
@@ -72,12 +76,22 @@ namespace MarginTrading.Backend.Services.Services
                 new { Id = executionInfo.Id, Name = executionInfo.OperationName }.ToJson(),
                 $"RFQ has been updated therefore {nameof(RfqChangedEvent)} is about to be published");
 
-            await _notifyService.RfqChanged(new RfqChangedEvent());
+            var rfq = await GetRfqByIdAsync(executionInfo.Id);
+
+            await _notifyService.RfqChanged(rfq.ToEventContract());
         }
 
         public Task<IEnumerable<string>> FilterPositionsInSpecialLiquidationAsync(IEnumerable<string> positionIds)
         {
             return _decoratee.FilterPositionsInSpecialLiquidationAsync(positionIds);
+        }
+
+        private async Task<OperationExecutionInfoWithPause<SpecialLiquidationOperationData>> GetRfqByIdAsync(string id)
+        {
+            return (await _decoratee
+                    .GetRfqAsync(id, null, null, null, null, null, 0, 1))
+                .Contents
+                .Single();
         }
     }
 }

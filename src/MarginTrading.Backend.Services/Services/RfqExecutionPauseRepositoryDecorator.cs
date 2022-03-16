@@ -3,14 +3,17 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Contracts.Events;
+using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Rfq;
+using MarginTrading.Backend.Services.Extensions;
 using MarginTrading.Backend.Services.Notifications;
 
 namespace MarginTrading.Backend.Services.Services
@@ -19,13 +22,18 @@ namespace MarginTrading.Backend.Services.Services
     public class RfqExecutionPauseRepositoryDecorator : IOperationExecutionPauseRepository
     {
         private readonly IOperationExecutionPauseRepository _decoratee;
+        private readonly IOperationExecutionInfoRepository _executionInfoRepository;
         private readonly IRabbitMqNotifyService _notifyService;
         private readonly ILog _log;
 
-        public RfqExecutionPauseRepositoryDecorator(IOperationExecutionPauseRepository decoratee, ILog log, IRabbitMqNotifyService notifyService)
+        public RfqExecutionPauseRepositoryDecorator(IOperationExecutionPauseRepository decoratee,
+            IRabbitMqNotifyService notifyService,
+            IOperationExecutionInfoRepository executionInfoRepository,
+            ILog log)
         {
             _decoratee = decoratee;
             _notifyService = notifyService;
+            _executionInfoRepository = executionInfoRepository;
             _log = log;
         }
 
@@ -38,12 +46,19 @@ namespace MarginTrading.Backend.Services.Services
                 pause.ToJson(),
                 $"New RFQ pause has been added therefore {nameof(RfqChangedEvent)} is about to be published");
 
-            await _notifyService.RfqChanged(new RfqChangedEvent());
+            var rfq = await GetRfqByIdAsync(pause.OperationId);
+
+            await _notifyService.RfqChanged(rfq.ToEventContract());
         }
 
         public Task<IEnumerable<Pause>> FindAsync(string operationId, string operationName, Func<Pause, bool> filter = null)
         {
             return _decoratee.FindAsync(operationId, operationName, filter);
+        }
+
+        public Task<Pause> FindAsync(long oid)
+        {
+            return _decoratee.FindAsync(oid);
         }
 
         public async Task<bool> UpdateAsync(long oid,
@@ -69,10 +84,25 @@ namespace MarginTrading.Backend.Services.Services
                     new { Oid = oid }.ToJson(),
                     $"RFQ pause has been updated therefore {nameof(RfqChangedEvent)} is about to be published");
 
-                await _notifyService.RfqChanged(new RfqChangedEvent());
+                var pause = await _decoratee.FindAsync(oid);
+
+                if (pause != null)
+                {
+                    var rfq = await GetRfqByIdAsync(pause.OperationId);
+
+                    await _notifyService.RfqChanged(rfq.ToEventContract());
+                }
             }
 
             return updated;
+        }
+        
+        private async Task<OperationExecutionInfoWithPause<SpecialLiquidationOperationData>> GetRfqByIdAsync(string id)
+        {
+            return (await _executionInfoRepository
+                    .GetRfqAsync(id, null, null, null, null, null, 0, 1))
+                .Contents
+                .Single();
         }
     }
 }
