@@ -65,7 +65,7 @@ namespace MarginTrading.Backend.Services.Services
         /// </summary>
         /// <param name="operationExecutionInfo"></param>
         /// <returns></returns>
-        static RfqPauseSummary GetPauseSummary(
+        static RfqPauseSummary CalculatePauseSummary(
             OperationExecutionInfoWithPause<SpecialLiquidationOperationData> operationExecutionInfo)
         {
             return new RfqPauseSummary
@@ -76,9 +76,7 @@ namespace MarginTrading.Backend.Services.Services
                 IsPaused = operationExecutionInfo.Pause?.State == PauseState.Active ||
                            operationExecutionInfo.Pause?.State == PauseState.PendingCancellation,
                 PauseReason = operationExecutionInfo.Pause?.Source.ToString(),
-                // todo: currently, we'll never get this value cause only not cancelled pauses are taken into account
-                // and only cancelled pauses have information on resume reason
-                ResumeReason = operationExecutionInfo.Pause?.CancellationSource?.ToString()
+                ResumeReason = operationExecutionInfo.Pause?.LatestCancellationSource?.ToString()
             };
         }
     }

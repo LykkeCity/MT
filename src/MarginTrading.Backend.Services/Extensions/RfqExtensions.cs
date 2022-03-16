@@ -30,7 +30,7 @@ namespace MarginTrading.Backend.Services.Extensions
                 RequestedFromCorporateActions = o.Data.RequestedFromCorporateActions,
                 State = o.Data.State,
                 LastModified = o.LastModified,
-                PauseSummary = IRfqPauseService.GetPauseSummary(o)
+                PauseSummary = IRfqPauseService.CalculatePauseSummary(o)
             };
         }
     }

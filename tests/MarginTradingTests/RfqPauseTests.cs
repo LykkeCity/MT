@@ -28,6 +28,13 @@ namespace MarginTradingTests
         private Mock<ICqrsSender> _cqrsSenderMock;
         private Mock<ILog> _logMock;
 
+        private static readonly object[] PauseStatesCannotCancelIn =
+        {
+            new object[] { PauseState.Cancelled },
+            new object[] { PauseState.Pending },
+            new object[] { PauseState.PendingCancellation }
+        };
+
         [SetUp]
         public void Setup()
         {
@@ -76,7 +83,7 @@ namespace MarginTradingTests
         [Test]
         public async Task AddPause_When_OperationState_IsNotAllowed_Returns_Error()
         {
-            var executionInfo = GetExecutionInfoWithState(GetRandomNotAllowedOperationState());
+            var executionInfo = GetExecutionInfoWithState(GetRandomOperationState(false));
             
             // configure repository to always return operation info with not allowed state for pause
             _repositoryInfoMock
@@ -354,6 +361,99 @@ namespace MarginTradingTests
             Assert.AreEqual(RfqResumeErrorCode.None, errorCode);
         }
 
+        [Test]
+        public void CalculatePauseSummary_Can_Be_Paused_When_ThereIsNo_Pause_Yet_And_State_Allows()
+        {
+            var pauseSummary = IRfqPauseService.CalculatePauseSummary(
+                new OperationExecutionInfoWithPause<SpecialLiquidationOperationData>(
+                    "name",
+                    "id",
+                    DateTime.UtcNow,
+                    new SpecialLiquidationOperationData { State = GetRandomOperationState(true) }) { Pause = null });
+            
+            Assert.IsTrue(pauseSummary.CanBePaused);
+        }
+
+        [Test]
+        public void CalculatePauseSummary_Cannot_Be_Paused_When_ThereIsNo_Pause_But_State_IsNotAllowed()
+        {
+            var pauseSummary = IRfqPauseService.CalculatePauseSummary(
+                new OperationExecutionInfoWithPause<SpecialLiquidationOperationData>(
+                    "name",
+                    "id",
+                    DateTime.UtcNow,
+                    new SpecialLiquidationOperationData { State = GetRandomOperationState(false) }) { Pause = null });
+            
+            Assert.IsFalse(pauseSummary.CanBePaused);
+        }
+
+        [Test]
+        public void CalculatePauseSummary_Cannot_Be_Paused_When_ThereIs_Pause_Already()
+        {
+            var pauseSummary = IRfqPauseService.CalculatePauseSummary(
+                new OperationExecutionInfoWithPause<SpecialLiquidationOperationData>(
+                    "name",
+                    "id",
+                    DateTime.UtcNow,
+                    new SpecialLiquidationOperationData
+                    {
+                        State = GetRandomOperationState()
+                    }) { Pause = new OperationExecutionPause { State = PauseState.Active } });
+            
+            Assert.IsFalse(pauseSummary.CanBePaused);
+        }
+
+        [Test]
+        public void CalculatePauseSummary_Can_Be_Paused_When_ThereIs_CancelledPause()
+        {
+            var pauseSummary = IRfqPauseService.CalculatePauseSummary(
+                new OperationExecutionInfoWithPause<SpecialLiquidationOperationData>(
+                    "name",
+                    "id",
+                    DateTime.UtcNow,
+                    new SpecialLiquidationOperationData
+                    {
+                        State = GetRandomOperationState(true)
+                    }) { Pause = new OperationExecutionPause { State = PauseState.Cancelled } });
+            
+            Assert.IsTrue(pauseSummary.CanBePaused);
+        }
+
+        [Test]
+        [TestCaseSource(nameof(PauseStatesCannotCancelIn))]
+        public void CalculatePauseSummary_Cannot_Be_Cancelled_When_ThereIsNo_Active_Pause(PauseState pauseState)
+        {
+            var pauseSummary = IRfqPauseService.CalculatePauseSummary(
+                new OperationExecutionInfoWithPause<SpecialLiquidationOperationData>(
+                    "name",
+                    "id",
+                    DateTime.UtcNow,
+                    new SpecialLiquidationOperationData
+                    {
+                        State = GetRandomOperationState()
+                    }) { Pause = new OperationExecutionPause { State = pauseState } });
+            
+            Assert.IsFalse(pauseSummary.CanBeResumed);
+        }
+
+        [Test]
+        [TestCase(PauseState.Active)]
+        [TestCase(PauseState.PendingCancellation)]
+        public void CalculatePauseSummary_Considered_As_Paused_When_Active_Or_Pending_Cancellation(PauseState pauseState)
+        {
+            var pauseSummary = IRfqPauseService.CalculatePauseSummary(
+                new OperationExecutionInfoWithPause<SpecialLiquidationOperationData>(
+                    "name",
+                    "id",
+                    DateTime.UtcNow,
+                    new SpecialLiquidationOperationData
+                    {
+                        State = GetRandomOperationState()
+                    }) { Pause = new OperationExecutionPause { State = pauseState } });
+            
+            Assert.IsTrue(pauseSummary.IsPaused);
+        }
+
         #region Helper methods
 
         private RfqPauseService GetSut() => new RfqPauseService(
@@ -395,7 +495,7 @@ namespace MarginTradingTests
                 "id",
                 DateTime.UtcNow,
                 new SpecialLiquidationOperationData());
-
+            
             result.Data.State = state ?? default;
 
             return result;
@@ -407,19 +507,34 @@ namespace MarginTradingTests
             return (T)values.GetValue(new Random().Next(values.Length));
         }
 
-        private static SpecialLiquidationOperationState GetRandomNotAllowedOperationState()
+        private static SpecialLiquidationOperationState GetRandomOperationState(bool? shouldBeAllowedToPauseIn = null)
         {
-            SpecialLiquidationOperationState? randomState;
-            
-            do
+            var randomState = GetRandomEnumValue<SpecialLiquidationOperationState>();
+
+            // any state
+            if (!shouldBeAllowedToPauseIn.HasValue)
+                return randomState;
+
+            // only state which is allowed to pause in
+            if (shouldBeAllowedToPauseIn.Value)
+            {
+                while (!RfqPauseService.AllowedOperationStatesToPauseIn.Contains(randomState))
+                {
+                    randomState = GetRandomEnumValue<SpecialLiquidationOperationState>();
+                }
+
+                return randomState;
+            }
+
+            // only state which is not allowed to pause in
+            while (RfqPauseService.AllowedOperationStatesToPauseIn.Contains(randomState))
             {
                 randomState = GetRandomEnumValue<SpecialLiquidationOperationState>();
-                
-            } while (RfqPauseService.AllowedOperationStatesToPauseIn.Contains(randomState.Value));
+            }
 
-            return randomState.Value;
+            return randomState;
         }
-        
+
         #endregion
     }
 }

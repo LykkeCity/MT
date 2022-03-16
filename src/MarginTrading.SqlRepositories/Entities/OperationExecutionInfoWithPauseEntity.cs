@@ -13,6 +13,8 @@ namespace MarginTrading.SqlRepositories.Entities
         
         public PauseCancellationSource? CancellationSource { get; set; }
         
+        public PauseCancellationSource? LatestCancellationSource { get; set; }
+        
         public DateTime? CreatedAt { get; set; }
         
         public DateTime? EffectiveSince { get; set; }

@@ -122,10 +122,15 @@ namespace MarginTrading.SqlRepositories.Repositories
 
             using var conn = new SqlConnection(ConnectionString);
             var sql = $@"
-SELECT i.*, p.* 
+SELECT i.*, pause.*, cancelledPause.CancellationSource as LatestCancellationSource 
 FROM [{TableName}] i 
-LEFT JOIN [{OperationExecutionPauseRepository.TableName}] p 
-ON (p.OperationId = i.Id AND p.OperationName = i.OperationName AND p.State != 'Cancelled') 
+LEFT JOIN [{OperationExecutionPauseRepository.TableName}] pause 
+ON (pause.OperationId = i.Id AND pause.OperationName = i.OperationName AND pause.State != 'Cancelled')
+LEFT JOIN [{OperationExecutionPauseRepository.TableName}] cancelledPause
+ON (cancelledPause.Oid = 
+    SELECT MAX(Oid) 
+    FROM [{OperationExecutionPauseRepository.TableName}] 
+    WHERE OperationId = i.Id AND OperationName = i.OperationName AND [State] = 'Cancelled')
 {whereClause} {paginationClause}; 
 
 SELECT COUNT(*) FROM [{TableName}] i {whereClause}";
@@ -231,6 +236,7 @@ SELECT COUNT(*) FROM [{TableName}] i {whereClause}";
                 {
                     Source = entity.Source.Value,
                     CancellationSource = entity.CancellationSource,
+                    LatestCancellationSource = entity.LatestCancellationSource,
                     CreatedAt = entity.CreatedAt.Value,
                     EffectiveSince = entity.EffectiveSince,
                     State = entity.State.Value,
