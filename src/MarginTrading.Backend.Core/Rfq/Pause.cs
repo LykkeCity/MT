@@ -11,29 +11,29 @@ namespace MarginTrading.Backend.Core.Rfq
     /// </summary>
     public class Pause
     {
-        public readonly int? Oid;
+        public int? Oid { get; }
 
-        public readonly string OperationId;
+        public string OperationId { get; }
 
-        public readonly string OperationName;
+        public string OperationName { get; }
 
-        public readonly DateTime CreatedAt;
+        public DateTime CreatedAt { get; }
 
-        public readonly DateTime? EffectiveSince;
+        public DateTime? EffectiveSince { get; }
 
-        public readonly PauseState State;
+        public PauseState State { get; }
 
-        public readonly PauseSource Source;
+        public PauseSource Source { get; }
 
-        public readonly Initiator Initiator;
+        public Initiator Initiator  { get; }
 
-        public readonly DateTime? CancelledAt;
+        public DateTime? CancelledAt { get; }
 
-        public readonly DateTime? CancellationEffectiveSince;
+        public DateTime? CancellationEffectiveSince { get; }
 
-        public readonly Initiator? CancellationInitiator;
+        public Initiator? CancellationInitiator { get; }
 
-        public readonly PauseCancellationSource? CancellationSource;
+        public PauseCancellationSource? CancellationSource { get; }
 
         private Pause(int? oid,
             string operationId,

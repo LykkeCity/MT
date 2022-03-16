@@ -188,7 +188,7 @@ where OperationId = @OperationId AND OperationName = @OperationName", new {Opera
                 {
                     var entity = await conn.QuerySingleAsync($@"
 select Oid, OperationId, OperationName, Source, CancellationSource, CreatedAt, EffectiveSince, State, Initiator, CancelledAt, CancellationEffectiveSince, CancellationInitiator from [dbo].[MarginTradingExecutionPause]
-where Oid = @oid", new { oid = oid });
+where Oid = @oid", new { oid });
 
                     return Pause.Initialize(entity.Oid,
                         entity.OperationId,
