@@ -71,7 +71,7 @@ namespace MarginTrading.Backend.Services.Workflow
         [UsedImplicitly]
         public async Task Handle(AccountChangedEvent e)
         {
-            var executionInfo = await _operationExecutionInfoRepository.GetOrAddAsync(
+            var (executionInfo, _) = await _operationExecutionInfoRepository.GetOrAddAsync(
                 operationName: OperationName,
                 operationId: e.OperationId,
                 factory: () => new OperationExecutionInfo<OperationData>(

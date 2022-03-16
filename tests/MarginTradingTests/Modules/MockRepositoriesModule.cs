@@ -44,12 +44,12 @@ namespace MarginTradingTests.Modules
             
             operationExecutionInfoRepositoryMock.Setup(s => s.GetOrAddAsync(It.IsIn("AccountsProjection"),
                     It.IsAny<string>(), It.IsAny<Func<IOperationExecutionInfo<OperationData>>>()))
-                .ReturnsAsync(new OperationExecutionInfo<OperationData>(
+                .ReturnsAsync((new OperationExecutionInfo<OperationData>(
                     operationName: "AccountsProjection",
                     id: Guid.NewGuid().ToString(),
                     lastModified: DateTime.UtcNow,
                     data: new OperationData {State = OperationState.Initiated}
-                ));
+                ), true));
 
             accountMarginFreezingRepository.Setup(x => x.GetAllAsync())
                 .ReturnsAsync(new List<IAccountMarginFreezing>().AsReadOnly());

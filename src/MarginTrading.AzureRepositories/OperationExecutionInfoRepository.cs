@@ -34,7 +34,7 @@ namespace MarginTrading.AzureRepositories
             _dateService = dateService;
         }
         
-        public async Task<IOperationExecutionInfo<TData>> GetOrAddAsync<TData>(
+        public async Task<(IOperationExecutionInfo<TData>, bool added)> GetOrAddAsync<TData>(
             string operationName, string operationId, Func<IOperationExecutionInfo<TData>> factory) where TData : class
         {
             var entity = await _tableStorage.GetOrInsertAsync(
@@ -47,7 +47,8 @@ namespace MarginTrading.AzureRepositories
                     return result;
                 });
                 
-            return Convert<TData>(entity);
+            // todo: Azure implementation is not used so far but it will be required to think on proper implementation if case Azure implementation is needed
+            return (Convert<TData>(entity), false);
         }
 
         public async Task<IOperationExecutionInfo<TData>> GetAsync<TData>(string operationName, string id)

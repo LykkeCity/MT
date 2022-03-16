@@ -322,12 +322,12 @@ namespace MarginTradingTests
             _operationExecutionInfoRepositoryMock = new Mock<IOperationExecutionInfoRepository>();
             _operationExecutionInfoRepositoryMock.Setup(s => s.GetOrAddAsync(It.Is<string>(x => x == "AccountsProjection"),
                     It.IsAny<string>(), It.IsAny<Func<IOperationExecutionInfo<OperationData>>>()))
-                .ReturnsAsync(() => new OperationExecutionInfo<OperationData>(
+                .ReturnsAsync(() => (new OperationExecutionInfo<OperationData>(
                     operationName: "AccountsProjection",
                     id: Guid.NewGuid().ToString(),
                     lastModified: DateService.Now(),
                     data: new OperationData {State = OperationState.Initiated}
-                ));
+                ), true));
             
             _logMock = new Mock<ILog>();
             if (failMessage != null)

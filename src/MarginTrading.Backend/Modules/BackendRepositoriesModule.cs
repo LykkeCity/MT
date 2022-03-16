@@ -12,6 +12,7 @@ using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
+using MarginTrading.Backend.Services.Services;
 using MarginTrading.Common.Services;
 using MarginTrading.SqlRepositories.Repositories;
 using MarginTrading.SqlRepositories;
@@ -158,6 +159,8 @@ namespace MarginTrading.Backend.Modules
                     .WithParameter(new NamedParameter("connectionString", 
                         _settings.CurrentValue.Db.SqlConnectionString))
                     .SingleInstance();
+                
+                builder.RegisterDecorator<RfqExecutionPauseRepositoryDecorator, IOperationExecutionPauseRepository>();
             }
             
             builder.RegisterType<MatchingEngineInMemoryRepository>().As<IMatchingEngineRepository>().SingleInstance();

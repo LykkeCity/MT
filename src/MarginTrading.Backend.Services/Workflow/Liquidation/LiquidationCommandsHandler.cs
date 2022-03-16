@@ -116,7 +116,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             
             #endregion
             
-            var executionInfo = await _operationExecutionInfoRepository.GetOrAddAsync(
+            var (executionInfo, _) = await _operationExecutionInfoRepository.GetOrAddAsync(
                 operationName: LiquidationSaga.OperationName,
                 operationId: command.OperationId,
                 factory: () => new OperationExecutionInfo<LiquidationOperationData>(

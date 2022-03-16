@@ -178,7 +178,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 return;
             }
 
-            var executionInfo = await _operationExecutionInfoRepository.GetOrAddAsync(
+            var (executionInfo, _) = await _operationExecutionInfoRepository.GetOrAddAsync(
                 operationName: SpecialLiquidationSaga.OperationName,
                 operationId: command.OperationId,
                 factory: () => new OperationExecutionInfo<SpecialLiquidationOperationData>(
@@ -274,7 +274,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 return;
             }
             
-            var executionInfo = await _operationExecutionInfoRepository.GetOrAddAsync(
+            var (executionInfo, _) = await _operationExecutionInfoRepository.GetOrAddAsync(
                 operationName: SpecialLiquidationSaga.OperationName,
                 operationId: command.OperationId,
                 factory: () => new OperationExecutionInfo<SpecialLiquidationOperationData>(

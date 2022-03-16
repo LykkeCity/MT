@@ -45,7 +45,7 @@ namespace MarginTrading.Backend.Services.Workflow
         [UsedImplicitly]
         private async Task Handle(FreezeAmountForWithdrawalCommand command, IEventPublisher publisher)
         {
-            var executionInfo = await _operationExecutionInfoRepository.GetOrAddAsync(
+            var (executionInfo, _) = await _operationExecutionInfoRepository.GetOrAddAsync(
                 operationName: OperationName,
                 operationId: command.OperationId,
                 factory: () => new OperationExecutionInfo<WithdrawalFreezeOperationData>(

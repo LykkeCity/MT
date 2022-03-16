@@ -10,7 +10,7 @@ namespace MarginTrading.Backend.Core.Repositories
 {
     public interface IOperationExecutionInfoRepository
     {
-        Task<IOperationExecutionInfo<TData>> GetOrAddAsync<TData>(string operationName,
+        Task<(IOperationExecutionInfo<TData>, bool added)> GetOrAddAsync<TData>(string operationName,
             string operationId, Func<IOperationExecutionInfo<TData>> factory) where TData : class;
 
         [ItemCanBeNull]

@@ -68,7 +68,7 @@ namespace MarginTrading.SqlRepositories.Repositories
             ExecCreateOrAlter(_getPositionsInSpecialLiquidation.FileName);
         }
 
-        public async Task<IOperationExecutionInfo<TData>> GetOrAddAsync<TData>(
+        public async Task<(IOperationExecutionInfo<TData>, bool added)> GetOrAddAsync<TData>(
             string operationName, string operationId, Func<IOperationExecutionInfo<TData>> factory) where TData : class
         {
             try
@@ -86,10 +86,10 @@ namespace MarginTrading.SqlRepositories.Repositories
                         await conn.ExecuteAsync(
                             $"insert into {TableName} ({GetColumns}) values ({GetFields})", entity);
 
-                        return Convert<TData>(entity);
+                        return (Convert<TData>(entity), true);
                     }
 
-                    return Convert<TData>(operationInfo);
+                    return (Convert<TData>(operationInfo), false);
                 }
             }
             catch (Exception ex)
