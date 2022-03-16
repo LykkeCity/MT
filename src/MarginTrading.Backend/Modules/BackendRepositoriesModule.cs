@@ -65,6 +65,8 @@ namespace MarginTrading.Backend.Modules
                     .WithParameter(new NamedParameter("connectionStringManager",
                         _settings.Nested(x => x.Db.MarginTradingConnString)))
                     .SingleInstance();
+
+                builder.RegisterDecorator<RfqExecutionInfoRepositoryDecorator, IOperationExecutionInfoRepository>();
                 
                 builder.RegisterType<AzureRepositories.OpenPositionsRepository>()
                     .As<IOpenPositionsRepository>()
@@ -106,6 +108,8 @@ namespace MarginTrading.Backend.Modules
                     .WithParameter(new NamedParameter("connectionString", 
                         _settings.CurrentValue.Db.SqlConnectionString))
                     .SingleInstance();
+
+                builder.RegisterDecorator<RfqExecutionInfoRepositoryDecorator, IOperationExecutionInfoRepository>();
 
                 builder.RegisterType<SqlRepositories.Repositories.OpenPositionsRepository>()
                     .As<IOpenPositionsRepository>()
