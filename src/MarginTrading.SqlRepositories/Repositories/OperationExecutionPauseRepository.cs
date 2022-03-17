@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
@@ -42,6 +43,11 @@ create table [dbo].[{0}]
         
         public const string TableName = "MarginTradingExecutionPause";
         
+        static OperationExecutionPauseRepository()
+        {
+            SqlMapper.AddTypeMap(typeof(Initiator), DbType.String);
+        }
+        
         public OperationExecutionPauseRepository(
             string connectionString,
             ILog log) : base(connectionString)
@@ -70,7 +76,7 @@ create table [dbo].[{0}]
                 {
                     await conn.ExecuteAsync(@$"
 insert into [dbo].[{TableName}] (OperationId, OperationName, Source, CreatedAt, State, Initiator)
-values (@OperationId, @OperationName, @Source, @CreatedAt, @State, @Initiator)", pause.ToParameters());
+values (@OperationId, @OperationName, @Source, @CreatedAt, @State, @Initiator)", pause);
                 }
             }
             catch (Exception ex)
