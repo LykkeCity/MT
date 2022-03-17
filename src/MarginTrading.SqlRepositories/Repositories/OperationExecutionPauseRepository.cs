@@ -159,13 +159,13 @@ where OperationId = @OperationId AND OperationName = @OperationName", new {Opera
                             o.OperationName,
                             o.CreatedAt,
                             o.EffectiveSince,
-                            o.State,
-                            o.Source,
-                            o.Initiator,
+                            Enum.Parse<PauseState>(o.State),
+                            Enum.Parse<PauseSource>(o.Source),
+                            (Initiator)o.Initiator,
                             o.CancelledAt,
                             o.CancellationEffectiveSince,
-                            o.CancellationInitiator,
-                            o.CancellationSource));
+                            o.CancellationInitiator == null ? null : new Initiator(o.CancellationInitiator),
+                            o.CancellationSource == null ? null : Enum.Parse<PauseCancellationSource>(o.CancellationSource)));
                     
                     if (filter != null)
                         result = result.Where(filter);
@@ -195,13 +195,13 @@ where Oid = @oid", new { oid });
                         entity.OperationName,
                         entity.CreatedAt,
                         entity.EffectiveSince,
-                        entity.State,
-                        entity.Source,
-                        entity.Initiator,
+                        Enum.Parse<PauseState>(entity.State),
+                        Enum.Parse<PauseSource>(entity.Source),
+                        (Initiator)entity.Initiator,
                         entity.CancelledAt,
                         entity.CancellationEffectiveSince,
-                        entity.CancellationInitiator,
-                        entity.CancellationSource);
+                        entity.CancellationInitiator == null ? null : new Initiator(entity.CancellationInitiator),
+                        entity.CancellationSource == null ? null : Enum.Parse<PauseCancellationSource>(entity.CancellationSource));
                 }
             }
             catch (Exception ex)
