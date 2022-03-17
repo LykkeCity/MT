@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
@@ -67,9 +68,12 @@ create table [dbo].[{0}]
             {
                 using (var conn = new SqlConnection(ConnectionString))
                 {
+                    var p = new DynamicParameters(pause);
+                    p.Add("@Initiator", pause.Initiator.ToString(), DbType.String);
+                    
                     await conn.ExecuteAsync(@$"
 insert into [dbo].[{TableName}] (OperationId, OperationName, Source, CreatedAt, State, Initiator)
-values (@OperationId, @OperationName, @Source, @CreatedAt, @State, @Initiator)", pause);
+values (@OperationId, @OperationName, @Source, @CreatedAt, @State, @Initiator)", p);
                 }
             }
             catch (Exception ex)
