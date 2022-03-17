@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
@@ -11,7 +10,6 @@ using Common.Log;
 using Dapper;
 using Lykke.Snow.Common;
 using MarginTrading.Backend.Contracts.Common;
-using MarginTrading.Backend.Core.Extensions;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Rfq;
 using Microsoft.Data.SqlClient;
@@ -42,15 +40,7 @@ create table [dbo].[{0}]
         private readonly ILog _log;
         
         public const string TableName = "MarginTradingExecutionPause";
-        
-        static OperationExecutionPauseRepository()
-        {
-            SqlMapper.AddTypeMap(typeof(Initiator), DbType.String);
-            SqlMapper.AddTypeMap(typeof(PauseState), DbType.String);
-            SqlMapper.AddTypeMap(typeof(PauseSource), DbType.String);
-            SqlMapper.AddTypeMap(typeof(PauseCancellationSource), DbType.String);
-        }
-        
+
         public OperationExecutionPauseRepository(
             string connectionString,
             ILog log) : base(connectionString)
@@ -79,7 +69,7 @@ create table [dbo].[{0}]
                 {
                     await conn.ExecuteAsync(@$"
 insert into [dbo].[{TableName}] (OperationId, OperationName, Source, CreatedAt, State, Initiator)
-values (@OperationId, @OperationName, @Source, @CreatedAt, @State, @Initiator)", pause);
+values (@OperationId, @OperationName, @Source, @CreatedAt, @State, @Initiator)", pause.ToParameters());
                 }
             }
             catch (Exception ex)

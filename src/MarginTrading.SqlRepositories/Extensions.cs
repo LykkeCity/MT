@@ -4,6 +4,7 @@
 using System.Data;
 using Microsoft.Data.SqlClient;
 using Dapper;
+using MarginTrading.Backend.Core.Rfq;
 
 namespace MarginTrading.SqlRepositories
 {
@@ -28,6 +29,19 @@ namespace MarginTrading.SqlRepositories
             {
                 connection.Close();
             }
+        }
+        
+        public static object ToParameters(this Pause pause)
+        {
+            return new
+            {
+                pause.OperationId,
+                pause.OperationName,
+                Source = pause.Source.ToString(),
+                pause.CreatedAt,
+                State = pause.State.ToString(),
+                Initiator = pause.Initiator.ToString()
+            };
         }
     }
 }
