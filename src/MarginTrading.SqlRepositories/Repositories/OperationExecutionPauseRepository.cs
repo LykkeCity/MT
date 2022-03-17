@@ -46,6 +46,9 @@ create table [dbo].[{0}]
         static OperationExecutionPauseRepository()
         {
             SqlMapper.AddTypeMap(typeof(Initiator), DbType.String);
+            SqlMapper.AddTypeMap(typeof(PauseState), DbType.String);
+            SqlMapper.AddTypeMap(typeof(PauseSource), DbType.String);
+            SqlMapper.AddTypeMap(typeof(PauseCancellationSource), DbType.String);
         }
         
         public OperationExecutionPauseRepository(
