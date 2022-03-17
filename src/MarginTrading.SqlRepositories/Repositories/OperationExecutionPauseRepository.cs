@@ -153,8 +153,8 @@ where Oid = @Oid", new
 select Oid, OperationId, OperationName, Source, CancellationSource, CreatedAt, EffectiveSince, State, Initiator, CancelledAt, CancellationEffectiveSince, CancellationInitiator from [dbo].[MarginTradingExecutionPause]
 where OperationId = @OperationId AND OperationName = @OperationName", new {OperationId = operationId, OperationName = operationName});
 
-                    _log.WriteInfoAsync(nameof(OperationExecutionPauseRepository), nameof(AddAsync),
-                        $"Object: {entities.Single().ToJson()}");
+                    await _log.WriteInfoAsync(nameof(OperationExecutionPauseRepository), nameof(AddAsync),
+                        $"Object: {(entities == null || entities.Count() == 0 ? "empty": entities.ToJson())}");
 
                     var result = entities
                         .Select<dynamic, Pause>(o => Pause.Initialize(o));
