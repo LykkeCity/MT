@@ -12,6 +12,7 @@ using Lykke.Snow.Common;
 using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Rfq;
+using MarginTrading.SqlRepositories.Entities;
 using Microsoft.Data.SqlClient;
 
 namespace MarginTrading.SqlRepositories.Repositories
@@ -69,7 +70,7 @@ create table [dbo].[{0}]
                 {
                     await conn.ExecuteAsync(@$"
 insert into [dbo].[{TableName}] (OperationId, OperationName, Source, CreatedAt, State, Initiator)
-values (@OperationId, @OperationName, @Source, @CreatedAt, @State, @Initiator)", pause.ToParameters());
+values (@OperationId, @OperationName, @Source, @CreatedAt, @State, @Initiator)", PauseEntity.Create(pause));
                 }
             }
             catch (Exception ex)
@@ -149,12 +150,11 @@ where Oid = @Oid", new
             {
                 using (var conn = new SqlConnection(ConnectionString))
                 {
-                    var entities = await conn.QueryAsync(@$"
+                    var entities = await conn.QueryAsync<PauseEntity>(@$"
 select Oid, OperationId, OperationName, Source, CancellationSource, CreatedAt, EffectiveSince, State, Initiator, CancelledAt, CancellationEffectiveSince, CancellationInitiator from [dbo].[MarginTradingExecutionPause]
 where OperationId = @OperationId AND OperationName = @OperationName", new {OperationId = operationId, OperationName = operationName});
 
-                    var result = entities
-                        .Select<dynamic, Pause>(o => Pause.Initialize(o));
+                    var result = entities.Select(Convert);
                     
                     if (filter != null)
                         result = result.Where(filter);
@@ -175,11 +175,11 @@ where OperationId = @OperationId AND OperationName = @OperationName", new {Opera
             {
                 using (var conn = new SqlConnection(ConnectionString))
                 {
-                    var entity = await conn.QuerySingleAsync($@"
+                    var entity = await conn.QuerySingleAsync<PauseEntity>($@"
 select Oid, OperationId, OperationName, Source, CancellationSource, CreatedAt, EffectiveSince, State, Initiator, CancelledAt, CancellationEffectiveSince, CancellationInitiator from [dbo].[MarginTradingExecutionPause]
 where Oid = @oid", new { oid });
 
-                    return Pause.Initialize(entity);
+                    return Convert(entity);
                 }
             }
             catch (Exception ex)
@@ -187,6 +187,25 @@ where Oid = @oid", new { oid });
                 await _log.WriteErrorAsync(nameof(OperationExecutionPauseRepository), nameof(FindAsync), ex);
                 throw;
             }
+        }
+
+        private static Pause Convert(PauseEntity entity)
+        {
+            if (entity == null)
+                return null;
+            
+            return Pause.Initialize(entity.Oid,
+                entity.OperationId,
+                entity.OperationName,
+                entity.CreatedAt,
+                entity.EffectiveSince,
+                Enum.Parse<PauseState>(entity.State),
+                Enum.Parse<PauseSource>(entity.Source),
+                entity.Initiator,
+                entity.CancelledAt,
+                entity.CancellationEffectiveSince,
+                string.IsNullOrEmpty(entity.CancellationInitiator) ? null : (Initiator)entity.CancellationInitiator,
+                string.IsNullOrEmpty(entity.CancellationSource) ? (PauseCancellationSource?) null : Enum.Parse<PauseCancellationSource>(entity.CancellationSource));
         }
     }
 }

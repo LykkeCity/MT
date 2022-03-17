@@ -2,6 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using JetBrains.Annotations;
 using MarginTrading.Backend.Contracts.Common;
 
 namespace MarginTrading.Backend.Core.Rfq
@@ -11,7 +12,7 @@ namespace MarginTrading.Backend.Core.Rfq
     /// </summary>
     public class Pause
     {
-        public int? Oid { get; }
+        public long? Oid { get; }
 
         public string OperationId { get; }
 
@@ -35,7 +36,7 @@ namespace MarginTrading.Backend.Core.Rfq
 
         public PauseCancellationSource? CancellationSource { get; }
 
-        private Pause(int? oid,
+        private Pause(long? oid,
             string operationId,
             string operationName,
             DateTime createdAt,
@@ -45,7 +46,7 @@ namespace MarginTrading.Backend.Core.Rfq
             Initiator initiator,
             DateTime? cancelledAt,
             DateTime? cancellationEffectiveSince,
-            Initiator cancellationInitiator,
+            [CanBeNull] Initiator cancellationInitiator,
             PauseCancellationSource? cancellationSource)
         {
             Oid = oid;
@@ -87,7 +88,7 @@ namespace MarginTrading.Backend.Core.Rfq
                 cancellationInitiator,
                 cancellationSource);
 
-        public static Pause Initialize(int? oid,
+        public static Pause Initialize(long? oid,
             string operationId,
             string operationName,
             DateTime createdAt,
