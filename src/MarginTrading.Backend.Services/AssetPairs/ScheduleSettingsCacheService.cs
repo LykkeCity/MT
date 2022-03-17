@@ -266,7 +266,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 return false;
             }
 
-            return marketState.IsEnabled;
+            return !assetPair.TradingDisabled && marketState.IsEnabled;
         }
 
         private bool GetTradingEnabled(IEnumerable<CompiledScheduleTimeInterval> timeIntervals,

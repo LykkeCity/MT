@@ -700,7 +700,7 @@ namespace MarginTradingTests
         }
         
         private void SetupAssetPair(string id, bool isDiscontinued = false, bool isFrozen = false,
-            bool isSuspended = false)
+            bool isSuspended = false, bool tradingDisabled = false)
         {
             var pair = _assetPairsCache.GetAssetPairById(id);
             
@@ -708,7 +708,7 @@ namespace MarginTradingTests
                 new AssetPair(pair.Id, pair.Name, pair.BaseAssetId, pair.QuoteAssetId,
                     pair.Accuracy, pair.MarketId, pair.LegalEntity, pair.BaseAssetId, pair.MatchingEngineMode,
                     pair.StpMultiplierMarkupAsk, pair.StpMultiplierMarkupBid,
-                    isSuspended, isFrozen, isDiscontinued, pair.AssetType));
+                    isSuspended, isFrozen, isDiscontinued, pair.AssetType, tradingDisabled));
             
             var quote = new InstrumentBidAskPair { Instrument = id, Bid = 1.55M, Ask = 1.57M };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));
