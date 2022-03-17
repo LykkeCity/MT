@@ -153,19 +153,11 @@ where Oid = @Oid", new
 select Oid, OperationId, OperationName, Source, CancellationSource, CreatedAt, EffectiveSince, State, Initiator, CancelledAt, CancellationEffectiveSince, CancellationInitiator from [dbo].[MarginTradingExecutionPause]
 where OperationId = @OperationId AND OperationName = @OperationName", new {OperationId = operationId, OperationName = operationName});
 
+                    _log.WriteInfoAsync(nameof(OperationExecutionPauseRepository), nameof(AddAsync),
+                        $"Object: {entities.Single().ToJson()}");
+
                     var result = entities
-                        .Select<dynamic, Pause>(o => Pause.Initialize(o.Oid,
-                            o.OperationId,
-                            o.OperationName,
-                            o.CreatedAt,
-                            o.EffectiveSince,
-                            Enum.Parse<PauseState>(o.State),
-                            Enum.Parse<PauseSource>(o.Source),
-                            (Initiator)o.Initiator,
-                            o.CancelledAt,
-                            o.CancellationEffectiveSince,
-                            o.CancellationInitiator == null ? null : new Initiator(o.CancellationInitiator),
-                            o.CancellationSource == null ? null : Enum.Parse<PauseCancellationSource>(o.CancellationSource)));
+                        .Select<dynamic, Pause>(o => Pause.Initialize(o));
                     
                     if (filter != null)
                         result = result.Where(filter);
@@ -190,18 +182,7 @@ where OperationId = @OperationId AND OperationName = @OperationName", new {Opera
 select Oid, OperationId, OperationName, Source, CancellationSource, CreatedAt, EffectiveSince, State, Initiator, CancelledAt, CancellationEffectiveSince, CancellationInitiator from [dbo].[MarginTradingExecutionPause]
 where Oid = @oid", new { oid });
 
-                    return Pause.Initialize(entity.Oid,
-                        entity.OperationId,
-                        entity.OperationName,
-                        entity.CreatedAt,
-                        entity.EffectiveSince,
-                        Enum.Parse<PauseState>(entity.State),
-                        Enum.Parse<PauseSource>(entity.Source),
-                        (Initiator)entity.Initiator,
-                        entity.CancelledAt,
-                        entity.CancellationEffectiveSince,
-                        entity.CancellationInitiator == null ? null : new Initiator(entity.CancellationInitiator),
-                        entity.CancellationSource == null ? null : Enum.Parse<PauseCancellationSource>(entity.CancellationSource));
+                    return Pause.Initialize(entity);
                 }
             }
             catch (Exception ex)

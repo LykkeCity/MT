@@ -117,5 +117,21 @@ namespace MarginTrading.Backend.Core.Rfq
                 cancellationInitiator,
                 cancellationSource);
         }
+
+        public static Pause Initialize(dynamic o)
+        {
+            return Initialize(o.Oid,
+                o.OperationId,
+                o.OperationName,
+                o.CreatedAt,
+                o.EffectiveSince,
+                Enum.Parse<PauseState>(o.State),
+                Enum.Parse<PauseSource>(o.Source),
+                (Initiator)o.Initiator,
+                o.CancelledAt,
+                o.CancellationEffectiveSince,
+                o.CancellationInitiator == null ? null : new Initiator(o.CancellationInitiator),
+                o.CancellationSource == null ? null : Enum.Parse<PauseCancellationSource>(o.CancellationSource));
+        }
     }
 }
