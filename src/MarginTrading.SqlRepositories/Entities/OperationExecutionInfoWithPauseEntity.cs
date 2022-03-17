@@ -21,12 +21,12 @@ namespace MarginTrading.SqlRepositories.Entities
         
         public PauseState? State { get; set; }
         
-        public Initiator? Initiator { get; set; }
+        public Initiator Initiator { get; set; }
         
         public DateTime? CancelledAt { get; set; }
         
         public DateTime? CancellationEffectiveSince { get; set; }
         
-        public Initiator? CancellationInitiator { get; set; }
+        public Initiator CancellationInitiator { get; set; }
     }
 }

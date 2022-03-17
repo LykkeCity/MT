@@ -240,7 +240,7 @@ SELECT COUNT(*) FROM [{TableName}] i {whereClause}";
                     CreatedAt = entity.CreatedAt.Value,
                     EffectiveSince = entity.EffectiveSince,
                     State = entity.State.Value,
-                    Initiator = entity.Initiator.Value,
+                    Initiator = entity.Initiator,
                     CancelledAt = entity.CancelledAt,
                     CancellationEffectiveSince = entity.CancellationEffectiveSince,
                     CancellationInitiator = entity.CancellationInitiator

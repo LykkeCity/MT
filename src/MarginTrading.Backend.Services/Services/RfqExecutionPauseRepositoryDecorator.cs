@@ -66,7 +66,7 @@ namespace MarginTrading.Backend.Services.Services
             PauseState state,
             DateTime? cancelledAt,
             DateTime? cancellationEffectiveSince,
-            Initiator? cancellationInitiator,
+            Initiator cancellationInitiator,
             PauseCancellationSource? cancellationSource)
         {
             var updated = await _decoratee.UpdateAsync(oid,

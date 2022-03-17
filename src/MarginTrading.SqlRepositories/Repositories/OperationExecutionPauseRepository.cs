@@ -87,7 +87,7 @@ values (@OperationId, @OperationName, @Source, @CreatedAt, @State, @Initiator)",
             PauseState state,
             DateTime? cancelledAt,
             DateTime? cancellationEffectiveSince,
-            Initiator? cancellationInitiator,
+            Initiator cancellationInitiator,
             PauseCancellationSource? cancellationSource)
         {
             int affectedRows = 0;

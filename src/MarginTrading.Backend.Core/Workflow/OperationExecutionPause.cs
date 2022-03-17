@@ -27,6 +27,6 @@ namespace MarginTrading.Backend.Core
         
         public DateTime? CancellationEffectiveSince { get; set; }
         
-        public Initiator? CancellationInitiator { get; set; }
+        public Initiator CancellationInitiator { get; set; }
     }
 }

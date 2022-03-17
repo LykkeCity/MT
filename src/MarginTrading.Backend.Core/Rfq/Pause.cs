@@ -31,7 +31,7 @@ namespace MarginTrading.Backend.Core.Rfq
 
         public DateTime? CancellationEffectiveSince { get; }
 
-        public Initiator? CancellationInitiator { get; }
+        public Initiator CancellationInitiator { get; }
 
         public PauseCancellationSource? CancellationSource { get; }
 
@@ -45,7 +45,7 @@ namespace MarginTrading.Backend.Core.Rfq
             Initiator initiator,
             DateTime? cancelledAt,
             DateTime? cancellationEffectiveSince,
-            Initiator? cancellationInitiator,
+            Initiator cancellationInitiator,
             PauseCancellationSource? cancellationSource)
         {
             Oid = oid;
@@ -71,7 +71,7 @@ namespace MarginTrading.Backend.Core.Rfq
             Initiator initiator,
             DateTime? cancelledAt,
             DateTime? cancellationEffectiveSince,
-            Initiator? cancellationInitiator,
+            Initiator cancellationInitiator,
             PauseCancellationSource? cancellationSource) =>
             new Pause(
                 null,
@@ -97,7 +97,7 @@ namespace MarginTrading.Backend.Core.Rfq
             Initiator initiator,
             DateTime? cancelledAt,
             DateTime? cancellationEffectiveSince,
-            Initiator? cancellationInitiator,
+            Initiator cancellationInitiator,
             PauseCancellationSource? cancellationSource)
         {
             if (!oid.HasValue)

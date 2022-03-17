@@ -146,7 +146,7 @@ namespace MarginTradingTests
                     It.IsAny<PauseState>(),
                     It.IsAny<DateTime?>(),
                     It.IsAny<DateTime?>(),
-                    It.IsAny<Initiator?>(),
+                    It.IsAny<Initiator>(),
                     It.IsAny<PauseCancellationSource?>()))
                 .ReturnsAsync(true);
 
@@ -206,7 +206,7 @@ namespace MarginTradingTests
                     PauseState.Cancelled,
                     It.IsAny<DateTime?>(),
                     It.IsAny<DateTime?>(),
-                    It.IsAny<Initiator?>(),
+                    It.IsAny<Initiator>(),
                     It.IsAny<PauseCancellationSource?>()),
                 Times.Once);
         }
@@ -230,7 +230,7 @@ namespace MarginTradingTests
                     It.IsAny<PauseState>(),
                     It.IsAny<DateTime?>(),
                     It.IsAny<DateTime?>(),
-                    It.IsAny<Initiator?>(),
+                    It.IsAny<Initiator>(),
                     It.IsAny<PauseCancellationSource?>()))
                 .ReturnsAsync(true);
 
@@ -244,7 +244,7 @@ namespace MarginTradingTests
                     PauseState.Cancelled,
                     It.IsAny<DateTime?>(),
                     It.IsAny<DateTime?>(),
-                    It.IsAny<Initiator?>(),
+                    It.IsAny<Initiator>(),
                     It.IsAny<PauseCancellationSource?>()),
                 Times.Once);
             
@@ -341,7 +341,7 @@ namespace MarginTradingTests
                     It.IsAny<PauseState>(),
                     It.IsAny<DateTime?>(),
                     It.IsAny<DateTime?>(),
-                    It.IsAny<Initiator?>(),
+                    It.IsAny<Initiator>(),
                     It.IsAny<PauseCancellationSource?>()))
                 .ReturnsAsync(true);
             
@@ -355,7 +355,7 @@ namespace MarginTradingTests
                     PauseState.PendingCancellation,
                     It.IsAny<DateTime?>(),
                     It.IsAny<DateTime?>(),
-                    It.IsAny<Initiator?>(),
+                    It.IsAny<Initiator>(),
                     It.IsAny<PauseCancellationSource?>()),
                 Times.Once);
             

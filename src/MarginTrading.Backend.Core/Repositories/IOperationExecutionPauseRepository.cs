@@ -22,7 +22,7 @@ namespace MarginTrading.Backend.Core.Repositories
             PauseState state,
             DateTime? cancelledAt,
             DateTime? cancellationEffectiveSince,
-            Initiator? cancellationInitiator,
+            Initiator cancellationInitiator,
             PauseCancellationSource? cancellationSource);
     }
 }

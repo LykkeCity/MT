@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 namespace MarginTrading.Backend.Contracts.Common
 {
     [JsonConverter(typeof(InitiatorConverter))]
-    public readonly struct Initiator : IEquatable<Initiator>
+    public class Initiator : IEquatable<Initiator>
     {
         private readonly string _value;
 
@@ -27,7 +27,7 @@ namespace MarginTrading.Backend.Contracts.Common
 
         public bool Equals(Initiator other)
         {
-            return _value == other._value;
+            return _value == other?._value;
         }
 
         public override bool Equals(object obj)
