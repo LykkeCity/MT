@@ -29,5 +29,10 @@ namespace MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Commands
         /// </summary>
         [Key(3)]
         public string Instrument { get; set; }
+
+        /// <summary>
+        /// Is triggered by a corporate action
+        /// </summary>
+        public bool IsTriggeredByCa { get; set; }
     }
 }

@@ -88,6 +88,11 @@ namespace MarginTrading.Backend.Core
         /// Asset pair is blocked by API call, for all time in most cases
         /// </summary>
         bool IsDiscontinued { get; }
+        
+        /// <summary>
+        /// Trading of this asset is temporally disabled
+        /// </summary>
+        bool TradingDisabled { get; }
 
         string AssetType { get; }
 
@@ -98,7 +103,7 @@ namespace MarginTrading.Backend.Core
         public AssetPair(string id, string name, string baseAssetId, string quoteAssetId, int accuracy, string marketId,
             string legalEntity, [CanBeNull] string basePairId, MatchingEngineMode matchingEngineMode,
             decimal stpMultiplierMarkupBid, decimal stpMultiplierMarkupAsk, bool isSuspended, bool isFrozen,
-            bool isDiscontinued, string assetType)
+            bool isDiscontinued, string assetType, bool tradingDisabled)
         {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Name = name ?? throw new ArgumentNullException(nameof(name));
@@ -116,6 +121,7 @@ namespace MarginTrading.Backend.Core
             IsFrozen = isFrozen;
             IsDiscontinued = isDiscontinued;
             AssetType = assetType;
+            TradingDisabled = tradingDisabled;
         }
 
         public string Id { get; }
@@ -134,6 +140,7 @@ namespace MarginTrading.Backend.Core
         public bool IsSuspended { get; set; }
         public bool IsFrozen { get; }
         public bool IsDiscontinued { get; }
+        public bool TradingDisabled { get; }
         public string AssetType { get; }
 
         protected bool Equals(AssetPair other)
@@ -145,7 +152,9 @@ namespace MarginTrading.Backend.Core
                    StpMultiplierMarkupBid == other.StpMultiplierMarkupBid &&
                    StpMultiplierMarkupAsk == other.StpMultiplierMarkupAsk && IsSuspended == other.IsSuspended &&
                    IsFrozen == other.IsFrozen && IsDiscontinued == other.IsDiscontinued &&
-                   AssetType == other.AssetType;
+                   AssetType == other.AssetType 
+                   && TradingDisabled == other.TradingDisabled
+                   ;
         }
 
         public override bool Equals(object obj)
@@ -178,7 +187,8 @@ namespace MarginTrading.Backend.Core
                 isSuspended: product.IsSuspended,
                 isFrozen: product.IsFrozen,
                 isDiscontinued: product.IsDiscontinued,
-                assetType: product.AssetType
+                assetType: product.AssetType,
+                tradingDisabled: product.TradingDisabled
             );
         }
 
@@ -201,7 +211,8 @@ namespace MarginTrading.Backend.Core
                 isSuspended: false,
                 isFrozen: false,
                 isDiscontinued: false,
-                assetType: null
+                assetType: null,
+                tradingDisabled: false
                 );
         }
     }

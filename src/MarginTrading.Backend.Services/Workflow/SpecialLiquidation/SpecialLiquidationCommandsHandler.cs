@@ -289,7 +289,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                         ExternalProviderId = externalProviderId,
                         OriginatorType = OriginatorType.System,
                         AdditionalInfo = LykkeConstants.LiquidationByCaAdditionalInfo,
-                        RequestedFromCorporateActions = true
+                        RequestedFromCorporateActions = command.IsTriggeredByCa,
                     }
                 ));
 
