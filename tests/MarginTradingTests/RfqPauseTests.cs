@@ -14,6 +14,7 @@ using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Services;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation;
 using MarginTrading.Common.Services;
+using MarginTrading.SqlRepositories.Entities;
 using Moq;
 using NUnit.Framework;
 
