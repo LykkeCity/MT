@@ -48,7 +48,7 @@ namespace MarginTrading.SqlRepositories.Entities
                 Initiator = pause.Initiator,
                 CancelledAt = pause.CancelledAt,
                 CancellationEffectiveSince = pause.CancellationEffectiveSince,
-                CancellationInitiator = pause.CancellationInitiator
+                CancellationInitiator = pause.CancellationInitiator == null ? null : (string)pause.CancellationInitiator
             };
         }
     }

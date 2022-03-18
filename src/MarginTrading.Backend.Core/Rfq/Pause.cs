@@ -26,12 +26,14 @@ namespace MarginTrading.Backend.Core.Rfq
 
         public PauseSource Source { get; }
 
+        [NotNull]
         public Initiator Initiator  { get; }
 
         public DateTime? CancelledAt { get; }
 
         public DateTime? CancellationEffectiveSince { get; }
 
+        [CanBeNull]
         public Initiator CancellationInitiator { get; }
 
         public PauseCancellationSource? CancellationSource { get; }
