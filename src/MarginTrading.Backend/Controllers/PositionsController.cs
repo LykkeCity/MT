@@ -283,7 +283,7 @@ namespace MarginTrading.Backend.Controllers
         {
             foreach (var instrument in assetPairIds)
             {
-                if (_assetDayOffService.IsDayOff(instrument))
+                if (_assetDayOffService.IsAssetTradingDisabled(instrument))
                 {
                     throw new InvalidOperationException($"Trades for {instrument} are not available");
                 }

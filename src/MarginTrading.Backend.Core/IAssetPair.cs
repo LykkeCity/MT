@@ -88,14 +88,13 @@ namespace MarginTrading.Backend.Core
         /// Asset pair is blocked by API call, for all time in most cases
         /// </summary>
         bool IsDiscontinued { get; }
-        
+
         /// <summary>
         /// Trading of this asset is temporally disabled
         /// </summary>
         bool TradingDisabled { get; }
 
         string AssetType { get; }
-
     }
 
     public class AssetPair : IAssetPair
@@ -104,6 +103,18 @@ namespace MarginTrading.Backend.Core
             string legalEntity, [CanBeNull] string basePairId, MatchingEngineMode matchingEngineMode,
             decimal stpMultiplierMarkupBid, decimal stpMultiplierMarkupAsk, bool isSuspended, bool isFrozen,
             bool isDiscontinued, string assetType, bool tradingDisabled)
+            : this(id, name, baseAssetId, quoteAssetId, accuracy, marketId,
+                legalEntity, basePairId, matchingEngineMode,
+                stpMultiplierMarkupBid, stpMultiplierMarkupAsk, isSuspended, isFrozen,
+                isDiscontinued, assetType)
+        {
+            TradingDisabled = tradingDisabled;
+        }
+
+        public AssetPair(string id, string name, string baseAssetId, string quoteAssetId, int accuracy, string marketId,
+            string legalEntity, [CanBeNull] string basePairId, MatchingEngineMode matchingEngineMode,
+            decimal stpMultiplierMarkupBid, decimal stpMultiplierMarkupAsk, bool isSuspended, bool isFrozen,
+            bool isDiscontinued, string assetType)
         {
             Id = id ?? throw new ArgumentNullException(nameof(id));
             Name = name ?? throw new ArgumentNullException(nameof(name));
@@ -121,7 +132,6 @@ namespace MarginTrading.Backend.Core
             IsFrozen = isFrozen;
             IsDiscontinued = isDiscontinued;
             AssetType = assetType;
-            TradingDisabled = tradingDisabled;
         }
 
         public string Id { get; }
@@ -152,9 +162,9 @@ namespace MarginTrading.Backend.Core
                    StpMultiplierMarkupBid == other.StpMultiplierMarkupBid &&
                    StpMultiplierMarkupAsk == other.StpMultiplierMarkupAsk && IsSuspended == other.IsSuspended &&
                    IsFrozen == other.IsFrozen && IsDiscontinued == other.IsDiscontinued &&
-                   AssetType == other.AssetType 
+                   AssetType == other.AssetType
                    && TradingDisabled == other.TradingDisabled
-                   ;
+                ;
         }
 
         public override bool Equals(object obj)
@@ -213,7 +223,7 @@ namespace MarginTrading.Backend.Core
                 isDiscontinued: false,
                 assetType: null,
                 tradingDisabled: false
-                );
+            );
         }
     }
 }

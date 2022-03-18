@@ -1161,7 +1161,7 @@ namespace MarginTrading.Backend.Services
             {
                 var price = pair.GetPriceForOrderDirection(order.Direction);
 
-                if (!_assetPairDayOffService.IsDayOff(order.AssetPairId) //!_assetPairDayOffService.ArePendingOrdersDisabled(order.AssetPairId))
+                if (!_assetPairDayOffService.IsAssetTradingDisabled(order.AssetPairId) //!_assetPairDayOffService.ArePendingOrdersDisabled(order.AssetPairId))
                     && order.IsSuitablePriceForPendingOrder(price))
                 {
                     _ordersCache.Active.Remove(order);

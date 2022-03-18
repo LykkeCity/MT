@@ -62,7 +62,7 @@ namespace MarginTrading.Backend.Services.Quotes
             
             foreach (var quote in quotes)
             {
-                if (_dayOffService.IsDayOff(quote.Key))
+                if (_dayOffService.IsAssetTradingDisabled(quote.Key))
                     continue;
                 
                 if (quote.Value.Date <= minQuoteDateTime)

@@ -8,23 +8,21 @@ using System.Text.RegularExpressions;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core.DayOffSettings;
 using MarginTrading.Backend.Services.Infrastructure;
-using MarginTrading.Common.Services;
+
 // ReSharper disable PossibleInvalidOperationException
 
 namespace MarginTrading.Backend.Services.AssetPairs
 {
     public class AssetPairDayOffService : IAssetPairDayOffService
     {
-        private readonly IDateService _dateService;
         private readonly IScheduleSettingsCacheService _scheduleSettingsCacheService;
 
-        public AssetPairDayOffService(IDateService dateService, IScheduleSettingsCacheService scheduleSettingsCacheService)
+        public AssetPairDayOffService(IScheduleSettingsCacheService scheduleSettingsCacheService)
         {
-            _dateService = dateService;
             _scheduleSettingsCacheService = scheduleSettingsCacheService;
         }
 
-        public bool IsDayOff(string assetPairId)
+        public bool IsAssetTradingDisabled(string assetPairId)
         {
             return IsNowNotInSchedule(assetPairId, TimeSpan.Zero);
         }

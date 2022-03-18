@@ -170,7 +170,7 @@ namespace MarginTradingTests
             var dayOffService = ArrangeDayOffService(dateTime, new[] {ScheduleSettings[1]});
 
             //act
-            return dayOffService.IsDayOff(asset);
+            return dayOffService.IsAssetTradingDisabled(asset);
         }
 
         private static IEnumerable DailyOffTestCases
@@ -209,7 +209,7 @@ namespace MarginTradingTests
             var dayOffService = ArrangeDayOffService(dateTime, new[] {ScheduleSettings[3]});
 
             //act
-            return dayOffService.IsDayOff(asset);
+            return dayOffService.IsAssetTradingDisabled(asset);
         }
 
         private static IEnumerable IntersectedSpecialHigherTestCases
@@ -232,7 +232,7 @@ namespace MarginTradingTests
             var dayOffService = ArrangeDayOffService(dateTime, new[] {ScheduleSettings[0], ScheduleSettings[1]});
             
             //act
-            return dayOffService.IsDayOff(asset);
+            return dayOffService.IsAssetTradingDisabled(asset);
         }
 
         private static IEnumerable IntersectedSpecialLowerTestCases
@@ -255,7 +255,7 @@ namespace MarginTradingTests
             var dayOffService = ArrangeDayOffService(dateTime, new[] {ScheduleSettings[1], ScheduleSettings[2]});
             
             //act
-            return dayOffService.IsDayOff(asset);
+            return dayOffService.IsAssetTradingDisabled(asset);
         }
 
         private IAssetPairDayOffService ArrangeDayOffService(DateTime dateTime,
@@ -294,7 +294,7 @@ namespace MarginTradingTests
                 assetPairsCacheMock.Object, dateService.Object, new EmptyLog(), new OvernightMarginSettings());
             
             scheduleSettingsCacheService.UpdateAllSettingsAsync().GetAwaiter().GetResult();
-            return new AssetPairDayOffService(dateService.Object, scheduleSettingsCacheService);
+            return new AssetPairDayOffService(scheduleSettingsCacheService);
         }
         
         

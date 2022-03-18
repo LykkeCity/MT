@@ -230,7 +230,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             
             //Validate that market is closed for instrument .. only in ExchangeConnector == Real mode
             if (_marginTradingSettings.ExchangeConnector == ExchangeConnectorType.RealExchangeConnector 
-                && !_assetPairDayOffService.IsDayOff(command.Instrument))
+                && !_assetPairDayOffService.IsAssetTradingDisabled(command.Instrument))
             {
                 publisher.PublishEvent(new SpecialLiquidationFailedEvent
                 {

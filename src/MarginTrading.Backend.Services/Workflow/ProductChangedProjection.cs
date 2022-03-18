@@ -190,7 +190,7 @@ namespace MarginTrading.Backend.Services.Workflow
             }
         }
 
-        private async Task<List<Rfq>> RetrieveAllRfq(string instrumentId, bool? canBePaused= null, bool? canBeResumed = null)
+        private async Task<List<Rfq>> RetrieveAllRfq(string instrumentId, bool? canBePaused = null, bool? canBeResumed = null)
         {
             var result = new List<Rfq>();
             PaginatedResponse<Rfq> resp;
@@ -215,7 +215,10 @@ namespace MarginTrading.Backend.Services.Workflow
 
             } while (resp.Size > 0);
 
-            return result.Where(x => !x.RequestedFromCorporateActions).ToList();
+            return result
+                .Where(x => !x.RequestedFromCorporateActions // ignore rfq from corporate actions
+                            && x.PauseSummary?.PauseReason != PauseSource.Manual.ToString()) // ignore manually paused rfq
+                .ToList();
         }
     }
 }

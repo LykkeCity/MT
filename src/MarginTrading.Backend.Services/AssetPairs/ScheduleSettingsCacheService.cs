@@ -257,7 +257,8 @@ namespace MarginTrading.Backend.Services.AssetPairs
                     $"AssetPair [{assetPairId}] does not exist in cache. Trading is disabled.").GetAwaiter().GetResult();
                 return false;
             }
-                
+
+            if (assetPair.TradingDisabled) return false;
 
             if (!_marketStates.TryGetValue(assetPair.MarketId, out var marketState))
             {
@@ -266,7 +267,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 return false;
             }
 
-            return !assetPair.TradingDisabled && marketState.IsEnabled;
+            return marketState.IsEnabled;
         }
 
         private bool GetTradingEnabled(IEnumerable<CompiledScheduleTimeInterval> timeIntervals,

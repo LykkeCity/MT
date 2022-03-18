@@ -72,7 +72,7 @@ namespace MarginTrading.Backend.Controllers
         {
             _assetPairsCache.GetAssetPairById(assetPairId);
 
-            var isEnabled = !_assetPairDayOffService.IsDayOff(assetPairId);
+            var isEnabled = !_assetPairDayOffService.IsAssetTradingDisabled(assetPairId);
             
             return Task.FromResult(isEnabled);
         }
@@ -87,7 +87,7 @@ namespace MarginTrading.Backend.Controllers
         {
             var assetPairIds = _assetPairsCache.GetAllIds();
 
-            var areEnabled = assetPairIds.ToDictionary(x => x, x => !_assetPairDayOffService.IsDayOff(x));
+            var areEnabled = assetPairIds.ToDictionary(x => x, x => !_assetPairDayOffService.IsAssetTradingDisabled(x));
             
             return Task.FromResult(areEnabled);
         }
