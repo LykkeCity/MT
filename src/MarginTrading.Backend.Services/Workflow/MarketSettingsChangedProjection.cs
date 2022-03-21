@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Common;
+using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.AssetService.Contracts.Enums;
 using MarginTrading.AssetService.Contracts.MarketSettings;
@@ -14,20 +16,26 @@ namespace MarginTrading.Backend.Services.Workflow
         private readonly IScheduleSettingsCacheService _scheduleSettingsCache;
         private readonly IOvernightMarginService _overnightMarginService;
         private readonly IScheduleControlService _scheduleControlService;
+        private readonly ILog _log;
 
         public MarketSettingsChangedProjection(
             IScheduleSettingsCacheService scheduleSettingsCache,
             IOvernightMarginService overnightMarginService,
-            IScheduleControlService scheduleControlService)
+            IScheduleControlService scheduleControlService,
+            ILog log)
         {
             _scheduleSettingsCache = scheduleSettingsCache;
             _overnightMarginService = overnightMarginService;
             _scheduleControlService = scheduleControlService;
+            _log = log;
         }
 
         [UsedImplicitly]
         public async Task Handle(MarketSettingsChangedEvent e)
         {
+            await _log.WriteInfoAsync(nameof(MarketSettingsChangedProjection), nameof(Handle), e.ToJson(),
+                $"Handled {nameof(MarketSettingsChangedEvent)}");
+            
             switch (e.ChangeType)
             {
                 case ChangeType.Creation:

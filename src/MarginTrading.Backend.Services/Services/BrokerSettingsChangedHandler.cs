@@ -4,6 +4,8 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Common;
+using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Snow.Mdm.Contracts.Models.Contracts;
 using Lykke.Snow.Mdm.Contracts.Models.Events;
@@ -19,22 +21,28 @@ namespace MarginTrading.Backend.Services.Services
         private readonly IScheduleSettingsCacheService _scheduleSettingsCache;
         private readonly IOvernightMarginService _overnightMarginService;
         private readonly IScheduleControlService _scheduleControlService;
+        private readonly ILog _log;
 
         public BrokerSettingsChangedHandler(
             MarginTradingSettings settings,
             IScheduleSettingsCacheService scheduleSettingsCache,
             IOvernightMarginService overnightMarginService,
-            IScheduleControlService scheduleControlService)
+            IScheduleControlService scheduleControlService,
+            ILog log)
         {
             _settings = settings;
             _scheduleSettingsCache = scheduleSettingsCache;
             _overnightMarginService = overnightMarginService;
             _scheduleControlService = scheduleControlService;
+            _log = log;
         }
 
         [UsedImplicitly]
         public async Task Handle(BrokerSettingsChangedEvent e)
         {
+            await _log.WriteInfoAsync(nameof(BrokerSettingsChangedHandler), nameof(Handle), e.ToJson(),
+                $"Handled {nameof(BrokerSettingsChangedEvent)}");
+            
             switch (e.ChangeType)
             {
                 case ChangeType.Creation:
