@@ -16,26 +16,20 @@ namespace MarginTrading.Backend.Services.Workflow
         private readonly IScheduleSettingsCacheService _scheduleSettingsCache;
         private readonly IOvernightMarginService _overnightMarginService;
         private readonly IScheduleControlService _scheduleControlService;
-        private readonly ILog _log;
 
         public MarketSettingsChangedProjection(
             IScheduleSettingsCacheService scheduleSettingsCache,
             IOvernightMarginService overnightMarginService,
-            IScheduleControlService scheduleControlService,
-            ILog log)
+            IScheduleControlService scheduleControlService)
         {
             _scheduleSettingsCache = scheduleSettingsCache;
             _overnightMarginService = overnightMarginService;
             _scheduleControlService = scheduleControlService;
-            _log = log;
         }
 
         [UsedImplicitly]
         public async Task Handle(MarketSettingsChangedEvent e)
         {
-            await _log.WriteInfoAsync(nameof(MarketSettingsChangedProjection), nameof(Handle), e.ToJson(),
-                $"Handled {nameof(MarketSettingsChangedEvent)}");
-            
             switch (e.ChangeType)
             {
                 case ChangeType.Creation:
