@@ -184,8 +184,17 @@ namespace MarginTrading.Backend.Services.AssetPairs
                     EventTimestamp = _dateService.Now(),
                 });
 
+                if (marketId == "PlatformScheduleMarketId" && newState.IsEnabled == false)
+                {
+                    _log.WriteInfoAsync(nameof(ScheduleSettingsCacheService),
+                        nameof(HandleMarketStateChangesUnsafe), $"StackTrace: {Environment.StackTrace}", "Platform closure message has been published").GetAwaiter().GetResult();
+                }
+
                 _marketStates[marketId] = newState;
             }
+            
+            _log.WriteInfoAsync(nameof(ScheduleSettingsCacheService),
+                nameof(HandleMarketStateChangesUnsafe), null, "HandleMarketStateChangesUnsafe foreach completed").GetAwaiter().GetResult();
         }
 
         /// <inheritdoc cref="IScheduleSettingsCacheService"/>
