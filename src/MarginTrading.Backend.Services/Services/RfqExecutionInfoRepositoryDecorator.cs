@@ -23,6 +23,8 @@ namespace MarginTrading.Backend.Services.Services
         private readonly IRabbitMqNotifyService _notifyService;
         private readonly ILog _log;
 
+        private static readonly Type SpecialLiquidationDataType = typeof(SpecialLiquidationOperationData);
+
         public RfqExecutionInfoRepositoryDecorator(IOperationExecutionInfoRepository decoratee, ILog log, IRabbitMqNotifyService notifyService)
         {
             _decoratee = decoratee;
@@ -34,7 +36,7 @@ namespace MarginTrading.Backend.Services.Services
         {
             var (executionInfo, added) = await _decoratee.GetOrAddAsync(operationName, operationId, factory);
 
-            if (added)
+            if (added && typeof(TData) == SpecialLiquidationDataType)
             {
                 await _log.WriteInfoAsync(nameof(RfqExecutionInfoRepositoryDecorator),
                     nameof(GetOrAddAsync),
@@ -70,15 +72,18 @@ namespace MarginTrading.Backend.Services.Services
         public async Task Save<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class
         {
             await _decoratee.Save(executionInfo);
-            
-            await _log.WriteInfoAsync(nameof(RfqExecutionInfoRepositoryDecorator),
-                nameof(GetOrAddAsync),
-                new { Id = executionInfo.Id, Name = executionInfo.OperationName }.ToJson(),
-                $"RFQ has been updated therefore {nameof(RfqChangedEvent)} is about to be published");
 
-            var rfq = await GetRfqByIdAsync(executionInfo.Id);
+            if (typeof(TData) == SpecialLiquidationDataType)
+            {
+                await _log.WriteInfoAsync(nameof(RfqExecutionInfoRepositoryDecorator),
+                    nameof(GetOrAddAsync),
+                    new { Id = executionInfo.Id, Name = executionInfo.OperationName }.ToJson(),
+                    $"RFQ has been updated therefore {nameof(RfqChangedEvent)} is about to be published");
 
-            await _notifyService.RfqChanged(rfq.ToEventContract());
+                var rfq = await GetRfqByIdAsync(executionInfo.Id);
+
+                await _notifyService.RfqChanged(rfq.ToEventContract());
+            }
         }
 
         public Task<IEnumerable<string>> FilterPositionsInSpecialLiquidationAsync(IEnumerable<string> positionIds)
