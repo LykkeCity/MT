@@ -47,6 +47,8 @@ namespace MarginTrading.Backend.Services.Extensions
                 RequestNumber = o.Data.RequestNumber,
                 State = (RfqOperationState) o.Data.State,
                 LastModified = o.LastModified,
+                AccountId = o.Data.AccountId,
+                InstrumentId = o.Data.Instrument,
                 PauseSummary = IRfqPauseService.CalculatePauseSummary(o).ToEventContract()
             };
         }

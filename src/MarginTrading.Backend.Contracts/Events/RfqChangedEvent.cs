@@ -17,6 +17,10 @@ namespace MarginTrading.Backend.Contracts.Events
         public RfqOperationState State { get; set; }
         public DateTime LastModified { get; set; }
         
+        public string AccountId { get; set; }
+        
+        public string InstrumentId { get; set; }
+        
         public RfqPauseSummaryChangedContract PauseSummary { get; set; }
     }
 }
