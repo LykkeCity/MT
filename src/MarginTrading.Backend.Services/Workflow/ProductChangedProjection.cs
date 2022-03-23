@@ -123,7 +123,7 @@ namespace MarginTrading.Backend.Services.Workflow
                     await _scheduleSettingsCacheService.UpdateScheduleSettingsAsync();
 
                 if (@event.ChangeType == ChangeType.Edition &&
-                    @event.OldValue.TradingDisabled != @event.NewValue.TradingDisabled)
+                    @event.OldValue.IsTradingDisabled != @event.NewValue.IsTradingDisabled)
                 {
                     await HandleTradingDisabled(@event.NewValue, @event.Username);
                 }
@@ -168,7 +168,7 @@ namespace MarginTrading.Backend.Services.Workflow
 
         private async Task HandleTradingDisabled(ProductContract product, string username)
         {
-            if (product.TradingDisabled)
+            if (product.IsTradingDisabled)
             {
                 var allRfq = await RetrieveAllRfq(product.ProductId, canBePaused: true);
 

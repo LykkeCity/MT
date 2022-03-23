@@ -258,7 +258,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
                 return false;
             }
 
-            if (assetPair.TradingDisabled) return false;
+            if (assetPair.IsTradingDisabled) return false;
 
             if (!_marketStates.TryGetValue(assetPair.MarketId, out var marketState))
             {

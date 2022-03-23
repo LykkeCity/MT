@@ -50,7 +50,7 @@ namespace MarginTradingTests
                 isFrozen: false,
                 isDiscontinued: false,
                 assetType: null,
-                tradingDisabled: false
+                isTradingDisabled: false
             );
         }
     }

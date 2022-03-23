@@ -629,7 +629,7 @@ namespace MarginTrading.Backend.Services
                     $"Trading for the instrument {assetPairId} is discontinued");
             }
 
-            if (assetPair.TradingDisabled)
+            if (assetPair.IsTradingDisabled)
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, 
                     $"Trading for the instrument {assetPairId} is disabled");
