@@ -26,7 +26,7 @@ namespace MarginTrading.Backend.Services.Extensions
                 CausationOperationId = o.Data.CausationOperationId,
                 CreatedBy = string.IsNullOrEmpty(o.Data.AdditionalInfo)
                     ? null
-                    : JsonConvert.DeserializeObject<RfqAdditionalInfo>(o.Data.AdditionalInfo)?.CreatedBy,
+                    : Deserialize(o.Data.AdditionalInfo)?.CreatedBy,
                 OriginatorType = o.Data.OriginatorType,
                 RequestNumber = o.Data.RequestNumber,
                 RequestedFromCorporateActions = o.Data.RequestedFromCorporateActions,
@@ -34,6 +34,18 @@ namespace MarginTrading.Backend.Services.Extensions
                 LastModified = o.LastModified,
                 PauseSummary = IRfqPauseService.CalculatePauseSummary(o)
             };
+            
+            RfqAdditionalInfo Deserialize(string source)
+            {
+                try
+                {
+                    return JsonConvert.DeserializeObject<RfqAdditionalInfo>(source);
+                }
+                catch (JsonReaderException)
+                {
+                    return null;
+                }
+            }
         }
 
         public static RfqChangedEvent ToEventContract(this OperationExecutionInfoWithPause<SpecialLiquidationOperationData> o)
