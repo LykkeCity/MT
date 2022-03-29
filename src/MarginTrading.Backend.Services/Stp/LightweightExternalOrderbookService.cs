@@ -181,16 +181,22 @@ namespace MarginTrading.Backend.Services.Stp
             if (_orderbookValidation.ValidateInstrumentStatusForEodQuotes && isEodOrderbook ||
                 _orderbookValidation.ValidateInstrumentStatusForTradingQuotes && !isEodOrderbook)
             {
-                var isAssetTradingDisabled = _assetPairDayOffService.IsAssetTradingDisabled(orderbook.AssetPairId);
-            
+                var instrumentTradingStatus = _assetPairDayOffService.IsAssetTradingDisabled(orderbook.AssetPairId);
+
+                if (instrumentTradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentTradingDisabled &&
+                    !instrumentTradingStatus.TradingEnabled)
+                {
+                    return;
+                }
+                
                 // we should process normal orderbook only if instrument is currently tradable
-                if (_orderbookValidation.ValidateInstrumentStatusForTradingQuotes && isAssetTradingDisabled && !isEodOrderbook)    
+                if (_orderbookValidation.ValidateInstrumentStatusForTradingQuotes && instrumentTradingStatus && !isEodOrderbook)    
                 {
                     return;
                 }
 
                 // and process EOD orderbook only if instrument is currently not tradable
-                if (_orderbookValidation.ValidateInstrumentStatusForEodQuotes && !isAssetTradingDisabled && isEodOrderbook)
+                if (_orderbookValidation.ValidateInstrumentStatusForEodQuotes && !instrumentTradingStatus && isEodOrderbook)
                 {
                     //log current schedule for the instrument
                     var schedule = _scheduleSettingsCache.GetMarketTradingScheduleByAssetPair(orderbook.AssetPairId);
