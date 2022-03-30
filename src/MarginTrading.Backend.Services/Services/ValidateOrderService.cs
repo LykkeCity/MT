@@ -600,8 +600,8 @@ namespace MarginTrading.Backend.Services
             return true;
         }
         
-        public IAssetPair GetAssetPairIfAvailableForTrading(string assetPairId, OrderType orderType, 
-            bool shouldOpenNewPosition, bool isPreTradeValidation)
+        public IAssetPair GetAssetPairIfAvailableForTrading(string assetPairId, OrderType orderType,
+            bool shouldOpenNewPosition, bool isPreTradeValidation, bool validateForEdit = false)
         {
             if (isPreTradeValidation || orderType == OrderType.Market)
             {
@@ -630,7 +630,7 @@ namespace MarginTrading.Backend.Services
                     $"Trading for the instrument {assetPairId} is discontinued");
             }
 
-            if (assetPair.IsTradingDisabled)
+            if (assetPair.IsTradingDisabled && !validateForEdit)
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, 
                     $"Trading for the instrument {assetPairId} is disabled. Error code: {CommonErrorCodes.InstrumentTradingDisabled}");

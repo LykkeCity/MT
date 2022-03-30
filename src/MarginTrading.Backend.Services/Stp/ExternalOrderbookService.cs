@@ -179,17 +179,17 @@ namespace MarginTrading.Backend.Services.Stp
         {
             var isEodOrderbook = orderbook.ExchangeName == EodExternalExchange;
 
+            var instrumentTradingStatus = _assetPairDayOffService.IsAssetTradingDisabled(orderbook.AssetPairId);
+
+            if (instrumentTradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentTradingDisabled &&
+                !instrumentTradingStatus.TradingEnabled)
+            {
+                return;
+            }
+
             if (_marginTradingSettings.OrderbookValidation.ValidateInstrumentStatusForEodQuotes && isEodOrderbook ||
                 _marginTradingSettings.OrderbookValidation.ValidateInstrumentStatusForTradingQuotes && !isEodOrderbook)
             {
-                var instrumentTradingStatus = _assetPairDayOffService.IsAssetTradingDisabled(orderbook.AssetPairId);
-
-                if (instrumentTradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentTradingDisabled &&
-                    !instrumentTradingStatus.TradingEnabled)
-                {
-                    return;
-                }
-
                 // we should process normal orderbook only if asset is currently tradeable
                 if (_marginTradingSettings.OrderbookValidation.ValidateInstrumentStatusForTradingQuotes &&
                     instrumentTradingStatus &&
