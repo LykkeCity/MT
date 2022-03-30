@@ -116,9 +116,17 @@ namespace MarginTrading.Backend.Services.Services
 
         public void CheckIsEnoughBalance(Order order, IMatchingEngineBase matchingEngine, decimal additionalMargin)
         {
+            _log.WriteInfo(nameof(CheckIsEnoughBalance), new { Order = order, additionalMargin }.ToJson(),
+                "Start checking if account balance is enough ...");
+            
             var orderMargin = _fplService.GetInitMarginForOrder(order);
+            _log.WriteInfo(nameof(CheckIsEnoughBalance), new {Order = order, orderMargin }.ToJson(),
+                "Order margin calculated");
+            
             var account =_accountsProvider.GetAccountById(order.AccountId);
             var accountMarginAvailable = account.GetMarginAvailable() + additionalMargin;
+            _log.WriteInfo(nameof(CheckIsEnoughBalance), new {Order = order, Account = account, accountMarginAvailable }.ToJson(),
+                "Account margin available calculated");
 
             var quote = _quoteCacheService.GetQuote(order.AssetPairId);
 
@@ -148,6 +156,9 @@ namespace MarginTrading.Backend.Services.Services
                 openPrice = openPriceInfo.price.Value;
 
             }
+            _log.WriteInfo(nameof(CheckIsEnoughBalance), new {Order = order, Quote = quote, openPrice, closePrice }.ToJson(),
+                "Open and close prices calculated");
+            
 
             var pnlInTradingCurrency = (closePrice - openPrice) * order.Volume;
             var fxRate = _cfdCalculatorService.GetQuoteRateForQuoteAsset(order.AccountAssetId,
@@ -162,6 +173,8 @@ namespace MarginTrading.Backend.Services.Services
                     $"Theoretical PnL at the moment of order execution is positive");
                 pnl = 0;
             }
+            _log.WriteInfo(nameof(CheckIsEnoughBalance), new {Order = order, pnlInTradingCurrency, fxRate, pnl }.ToJson(),
+                "PNL calculated");
             
             var assetType = _assetPairsCache.GetAssetPairById(order.AssetPairId).AssetType;
             if (!_clientProfileSettingsCache.TryGetValue(account.TradingConditionId, assetType, out var clientProfileSettings))
@@ -180,6 +193,16 @@ namespace MarginTrading.Backend.Services.Services
                 tradingInstrument.HedgeCost,
                 _marginTradingSettings.BrokerDefaultCcVolume,
                 _marginTradingSettings.BrokerDonationShare);
+
+            _log.WriteInfo(nameof(CheckIsEnoughBalance),
+                new
+                {
+                    OrderPrice = order.Price, OrderDirection = order.Direction, quote.Ask, quote.Bid, fxRate,
+                    tradingInstrument.Spread, tradingInstrument.HedgeCost, _marginTradingSettings.BrokerDefaultCcVolume,
+                    _marginTradingSettings.BrokerDonationShare, CalculatedEntryCost = entryCost
+                }.ToJson(),
+                "Entry cost calculated");
+            
             var exitCost = CostHelper.CalculateExitCost(
                 order.Price,
                 order.Direction == OrderDirection.Buy ? Lykke.Snow.Common.Costs.OrderDirection.Buy : Lykke.Snow.Common.Costs.OrderDirection.Sell,
@@ -190,12 +213,24 @@ namespace MarginTrading.Backend.Services.Services
                 tradingInstrument.HedgeCost,
                 _marginTradingSettings.BrokerDefaultCcVolume,
                 _marginTradingSettings.BrokerDonationShare);
+            
+            _log.WriteInfo(nameof(CheckIsEnoughBalance),
+                new
+                {
+                    OrderPrice = order.Price, OrderDirection = order.Direction, quote.Ask, quote.Bid, fxRate,
+                    tradingInstrument.Spread, tradingInstrument.HedgeCost, _marginTradingSettings.BrokerDefaultCcVolume,
+                    _marginTradingSettings.BrokerDonationShare, CalculatedExitCost = exitCost
+                }.ToJson(),
+                "Exit cost calculated");
 
             if (accountMarginAvailable + pnl - entryCost - exitCost < orderMargin)
                 throw new ValidateOrderException(OrderRejectReason.NotEnoughBalance,
                     MtMessages.Validation_NotEnoughBalance,
                     $"Account available margin: {accountMarginAvailable}, order margin: {orderMargin}, pnl: {pnl}, entry cost: {entryCost}, exit cost: {exitCost} " +
                     $"(open price: {openPrice}, close price: {closePrice}, fx rate: {fxRate})");
+            
+            _log.WriteInfo(nameof(CheckIsEnoughBalance), new { Order = order,  accountMarginAvailable, pnl, entryCost, exitCost, orderMargin}.ToJson(),
+                "Account balance is enough, validation succeeded.");
         }
 
         public void RemoveLiquidationStateIfNeeded(string accountId, string reason,
