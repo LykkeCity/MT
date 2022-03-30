@@ -84,6 +84,8 @@ namespace MarginTradingTests.OrderBooks
             _identityGeneratorMock = new Mock<IIdentityGenerator>();
             _logMock = new Mock<ILog>();
             _assetPairDayOffMock = new Mock<IAssetPairDayOffService>();
+            _assetPairDayOffMock.Setup(x => x.IsAssetTradingDisabled(It.IsAny<string>()))
+                .Returns(InstrumentTradingStatus.Enabled);
             _schedulteSettingsMock = new Mock<IScheduleSettingsCacheService>();
         }
         
