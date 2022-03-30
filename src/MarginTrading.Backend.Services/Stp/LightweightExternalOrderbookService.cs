@@ -180,8 +180,9 @@ namespace MarginTrading.Backend.Services.Stp
 
             var instrumentTradingStatus = _assetPairDayOffService.IsAssetTradingDisabled(orderbook.AssetPairId);
 
-            if (instrumentTradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentTradingDisabled &&
-                !instrumentTradingStatus.TradingEnabled)
+            if (!isEodOrderbook &&
+                !instrumentTradingStatus.TradingEnabled &&
+                instrumentTradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentTradingDisabled)
             {
                 return;
             }

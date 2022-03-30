@@ -181,8 +181,9 @@ namespace MarginTrading.Backend.Services.Stp
 
             var instrumentTradingStatus = _assetPairDayOffService.IsAssetTradingDisabled(orderbook.AssetPairId);
 
-            if (instrumentTradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentTradingDisabled &&
-                !instrumentTradingStatus.TradingEnabled)
+            if (!isEodOrderbook &&
+                !instrumentTradingStatus.TradingEnabled &&
+                instrumentTradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentTradingDisabled)
             {
                 return;
             }
@@ -258,10 +259,10 @@ namespace MarginTrading.Backend.Services.Stp
         {
             try
             {
+                orderbook.RequiredNotNull(nameof(orderbook));
                 orderbook.AssetPairId.RequiredNotNullOrWhiteSpace("orderbook.AssetPairId");
                 orderbook.ExchangeName.RequiredNotNullOrWhiteSpace("orderbook.ExchangeName");
-                orderbook.RequiredNotNull(nameof(orderbook));
-                
+
                 orderbook.Bids.RequiredNotNullOrEmpty("orderbook.Bids");
                 orderbook.Bids = orderbook.Bids.Where(e => e != null && e.Price > 0 && e.Volume != 0).ToArray();
                 //ValidatePricesSorted(orderbook.Bids, false);
