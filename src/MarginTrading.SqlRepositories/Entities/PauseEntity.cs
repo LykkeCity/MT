@@ -3,6 +3,7 @@
 
 using System;
 using JetBrains.Annotations;
+using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Core.Rfq;
 
 namespace MarginTrading.SqlRepositories.Entities
@@ -25,13 +26,13 @@ namespace MarginTrading.SqlRepositories.Entities
         
         public string State { get; set; }
         
-        public string Initiator { get; set; }
+        public Initiator Initiator { get; set; }
         
         public DateTime? CancelledAt { get; set; }
         
         public DateTime? CancellationEffectiveSince { get; set; }
         
-        [CanBeNull] public string CancellationInitiator { get; set; }
+        [CanBeNull] public Initiator CancellationInitiator { get; set; }
 
         public static PauseEntity Create(Pause pause)
         {
@@ -48,7 +49,7 @@ namespace MarginTrading.SqlRepositories.Entities
                 Initiator = pause.Initiator,
                 CancelledAt = pause.CancelledAt,
                 CancellationEffectiveSince = pause.CancellationEffectiveSince,
-                CancellationInitiator = pause.CancellationInitiator == null ? null : (string)pause.CancellationInitiator
+                CancellationInitiator = pause.CancellationInitiator
             };
         }
     }

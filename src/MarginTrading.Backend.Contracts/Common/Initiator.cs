@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 namespace MarginTrading.Backend.Contracts.Common
 {
     [JsonConverter(typeof(InitiatorConverter))]
-    public class Initiator : IEquatable<Initiator>
+    public sealed class Initiator : IEquatable<Initiator>
     {
         private readonly string _value;
 
@@ -19,7 +19,7 @@ namespace MarginTrading.Backend.Contracts.Common
             _value = value;
         }
 
-        public static implicit operator string(Initiator source) => source._value;
+        public static implicit operator string(Initiator source) => source?._value;
 
         public static implicit operator Initiator(string source) => new Initiator(source);
 

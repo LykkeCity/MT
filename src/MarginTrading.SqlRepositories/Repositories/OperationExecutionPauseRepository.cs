@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Common;
@@ -41,6 +42,11 @@ create table [dbo].[{0}]
         private readonly ILog _log;
         
         public const string TableName = "MarginTradingExecutionPause";
+
+        static OperationExecutionPauseRepository()
+        {
+            SqlMapper.AddTypeMap(typeof(Initiator), DbType.String);
+        }
 
         public OperationExecutionPauseRepository(
             string connectionString,
@@ -204,7 +210,7 @@ where Oid = @oid", new { oid });
                 entity.Initiator,
                 entity.CancelledAt,
                 entity.CancellationEffectiveSince,
-                string.IsNullOrEmpty(entity.CancellationInitiator) ? null : (Initiator)entity.CancellationInitiator,
+                string.IsNullOrEmpty(entity.CancellationInitiator) ? null : entity.CancellationInitiator,
                 string.IsNullOrEmpty(entity.CancellationSource) ? (PauseCancellationSource?) null : Enum.Parse<PauseCancellationSource>(entity.CancellationSource));
         }
     }
