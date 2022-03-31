@@ -46,6 +46,9 @@ create table [dbo].[{0}]
         static OperationExecutionPauseRepository()
         {
             SqlMapper.AddTypeMap(typeof(Initiator), DbType.String);
+            SqlMapper.AddTypeMap(typeof(PauseState), DbType.String);
+            SqlMapper.AddTypeMap(typeof(PauseSource), DbType.String);
+            SqlMapper.AddTypeMap(typeof(PauseCancellationSource), DbType.String);
         }
 
         public OperationExecutionPauseRepository(
@@ -199,19 +202,19 @@ where Oid = @oid", new { oid });
         {
             if (entity == null)
                 return null;
-            
+
             return Pause.Initialize(entity.Oid,
                 entity.OperationId,
                 entity.OperationName,
                 entity.CreatedAt,
                 entity.EffectiveSince,
-                Enum.Parse<PauseState>(entity.State),
-                Enum.Parse<PauseSource>(entity.Source),
+                entity.State,
+                entity.Source,
                 entity.Initiator,
                 entity.CancelledAt,
                 entity.CancellationEffectiveSince,
                 string.IsNullOrEmpty(entity.CancellationInitiator) ? null : entity.CancellationInitiator,
-                string.IsNullOrEmpty(entity.CancellationSource) ? (PauseCancellationSource?) null : Enum.Parse<PauseCancellationSource>(entity.CancellationSource));
+                entity.CancellationSource);
         }
     }
 }
