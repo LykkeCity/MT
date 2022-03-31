@@ -26,13 +26,13 @@ namespace MarginTrading.SqlRepositories.Entities
         
         public string State { get; set; }
         
-        public Initiator Initiator { get; set; }
+        public string Initiator { get; set; }
         
         public DateTime? CancelledAt { get; set; }
         
         public DateTime? CancellationEffectiveSince { get; set; }
         
-        [CanBeNull] public Initiator CancellationInitiator { get; set; }
+        [CanBeNull] public string CancellationInitiator { get; set; }
 
         public static PauseEntity Create(Pause pause)
         {

@@ -15,7 +15,7 @@ namespace MarginTrading.Backend.Contracts.Common
         {
             if (string.IsNullOrWhiteSpace(value))
                 throw new ArgumentNullException(nameof(value));
-            
+
             _value = value;
         }
 
