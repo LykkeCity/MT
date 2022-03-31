@@ -16,15 +16,15 @@ namespace MarginTrading.SqlRepositories.Entities
         
         public string OperationName { get; set; }
         
-        public PauseSource Source { get; set; }
+        public string Source { get; set; }
         
-        [CanBeNull] public PauseCancellationSource? CancellationSource { get; set; }
+        [CanBeNull] public string CancellationSource { get; set; }
         
         public DateTime CreatedAt { get; set; }
         
         public DateTime? EffectiveSince { get; set; }
         
-        public PauseState State { get; set; }
+        public string State { get; set; }
         
         public Initiator Initiator { get; set; }
         
@@ -41,15 +41,15 @@ namespace MarginTrading.SqlRepositories.Entities
                 Oid = pause.Oid ?? 0,
                 OperationId = pause.OperationId,
                 OperationName = pause.OperationName,
-                Source = pause.Source,
-                CancellationSource = pause.CancellationSource,
+                Source = pause.Source.ToString(),
+                CancellationSource = pause.CancellationSource?.ToString(),
                 CreatedAt = pause.CreatedAt,
                 EffectiveSince = pause.EffectiveSince,
-                State = pause.State,
+                State = pause.State.ToString(),
                 Initiator = pause.Initiator,
                 CancelledAt = pause.CancelledAt,
                 CancellationEffectiveSince = pause.CancellationEffectiveSince,
-                CancellationInitiator = pause.CancellationInitiator
+                CancellationInitiator = pause.CancellationInitiator == null ? null : (string)pause.CancellationInitiator
             };
         }
     }

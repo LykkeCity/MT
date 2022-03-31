@@ -40,7 +40,7 @@ namespace MarginTrading.Backend.Services.Services
 
         public static readonly Func<Pause, bool> NotCancelledPredicate = p => p.State != PauseState.Cancelled;
         
-        public static readonly Func<Pause, bool> PendingCancellationPredicate = p => p.State == PauseState.Cancelled;
+        public static readonly Func<Pause, bool> PendingCancellationPredicate = p => p.State == PauseState.PendingCancellation;
 
         private readonly ConcurrentDictionary<string, SemaphoreSlim> _lock =
             new ConcurrentDictionary<string, SemaphoreSlim>();

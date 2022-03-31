@@ -46,9 +46,6 @@ create table [dbo].[{0}]
         static OperationExecutionPauseRepository()
         {
             SqlMapper.AddTypeMap(typeof(Initiator), DbType.String);
-            SqlMapper.AddTypeMap(typeof(PauseState), DbType.String);
-            SqlMapper.AddTypeMap(typeof(PauseSource), DbType.String);
-            SqlMapper.AddTypeMap(typeof(PauseCancellationSource), DbType.String);
         }
 
         public OperationExecutionPauseRepository(
@@ -117,11 +114,11 @@ set EffectiveSince = @EffectiveSince,
 where Oid = @Oid", new
                     {
                         EffectiveSince = effectiveSince,
-                        State = state,
+                        State = state.ToString(),
                         CancelledAt = cancelledAt,
                         CancellationEffectiveSince = cancellationEffectiveSince,
                         CancellationInitiator = cancellationInitiator,
-                        CancellationSource = cancellationSource,
+                        CancellationSource = cancellationSource?.ToString(),
                         Oid = oid
                     });
                 }
@@ -208,13 +205,13 @@ where Oid = @oid", new { oid });
                 entity.OperationName,
                 entity.CreatedAt,
                 entity.EffectiveSince,
-                entity.State,
-                entity.Source,
+                Enum.Parse<PauseState>(entity.State),
+                Enum.Parse<PauseSource>(entity.Source),
                 entity.Initiator,
                 entity.CancelledAt,
                 entity.CancellationEffectiveSince,
-                string.IsNullOrEmpty(entity.CancellationInitiator) ? null : entity.CancellationInitiator,
-                entity.CancellationSource);
+                string.IsNullOrEmpty(entity.CancellationInitiator) ? null : (Initiator)entity.CancellationInitiator,
+                string.IsNullOrEmpty(entity.CancellationSource) ? (PauseCancellationSource?) null : Enum.Parse<PauseCancellationSource>(entity.CancellationSource));
         }
     }
 }
