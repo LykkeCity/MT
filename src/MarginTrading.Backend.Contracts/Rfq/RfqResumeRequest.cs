@@ -11,11 +11,6 @@ namespace MarginTrading.Backend.Contracts.Rfq
     public class RfqResumeRequest
     {
         /// <summary>
-        /// The reason for resume
-        /// </summary>
-        public string Reason { get; set; }
-        
-        /// <summary>
         /// The author of resume request
         /// </summary>
         [Required]
