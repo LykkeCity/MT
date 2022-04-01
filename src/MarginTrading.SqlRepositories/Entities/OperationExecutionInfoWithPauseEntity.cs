@@ -21,8 +21,8 @@ namespace MarginTrading.SqlRepositories.Entities
                 new OperationExecutionInfoWithPauseEntity
                 {
                     ExecutionInfo = executionInfo,
-                    CurrentPause = currentPause.Oid.HasValue ? currentPause : null,
-                    LatestCancelledPause = latestCancelledPause.Oid.HasValue ? latestCancelledPause : null
+                    CurrentPause = currentPause?.Oid.HasValue ?? false ? currentPause : null,
+                    LatestCancelledPause = latestCancelledPause?.Oid.HasValue ?? false ? latestCancelledPause : null
                 };
 
         public static readonly string DapperSplitOn = "Oid,Oid";
