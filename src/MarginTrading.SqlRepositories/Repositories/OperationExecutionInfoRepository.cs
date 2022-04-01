@@ -145,7 +145,7 @@ SELECT COUNT(*) FROM [{TableName}] i {whereClause}";
                         CurrentPause = currentPause,
                         LatestCancelledPause = latestCancelledPause
                     },
-                    "currentPause.Oid,latestCancelledPause.Oid")
+                    "Oid,Oid")
                 .ToList();
             
             var totalCount = await gridReader.ReadSingleAsync<int>();
