@@ -14,7 +14,6 @@ using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.Services;
 using MarginTrading.Backend.Services.Workflow.SpecialLiquidation;
 using MarginTrading.Common.Services;
-using MarginTrading.SqlRepositories.Entities;
 using Moq;
 using NUnit.Framework;
 
@@ -370,7 +369,7 @@ namespace MarginTradingTests
                     "name",
                     "id",
                     DateTime.UtcNow,
-                    new SpecialLiquidationOperationData { State = GetRandomOperationState(true) }) { Pause = null });
+                    new SpecialLiquidationOperationData { State = GetRandomOperationState(true) }) { CurrentPause = null});
             
             Assert.IsTrue(pauseSummary.CanBePaused);
         }
@@ -383,7 +382,7 @@ namespace MarginTradingTests
                     "name",
                     "id",
                     DateTime.UtcNow,
-                    new SpecialLiquidationOperationData { State = GetRandomOperationState(false) }) { Pause = null });
+                    new SpecialLiquidationOperationData { State = GetRandomOperationState(false) }) { CurrentPause = null });
             
             Assert.IsFalse(pauseSummary.CanBePaused);
         }
@@ -399,7 +398,7 @@ namespace MarginTradingTests
                     new SpecialLiquidationOperationData
                     {
                         State = GetRandomOperationState()
-                    }) { Pause = new OperationExecutionPause { State = PauseState.Active } });
+                    }) { CurrentPause = new OperationExecutionPause { State = PauseState.Active } });
             
             Assert.IsFalse(pauseSummary.CanBePaused);
         }
@@ -415,7 +414,7 @@ namespace MarginTradingTests
                     new SpecialLiquidationOperationData
                     {
                         State = GetRandomOperationState(true)
-                    }) { Pause = new OperationExecutionPause { State = PauseState.Cancelled } });
+                    }) { CurrentPause = null, LatestCancelledPause = new OperationExecutionPause { State = PauseState.Cancelled } });
             
             Assert.IsTrue(pauseSummary.CanBePaused);
         }
@@ -432,7 +431,7 @@ namespace MarginTradingTests
                     new SpecialLiquidationOperationData
                     {
                         State = GetRandomOperationState()
-                    }) { Pause = new OperationExecutionPause { State = pauseState } });
+                    }) { CurrentPause = null});
             
             Assert.IsFalse(pauseSummary.CanBeResumed);
         }
@@ -450,7 +449,7 @@ namespace MarginTradingTests
                     new SpecialLiquidationOperationData
                     {
                         State = GetRandomOperationState()
-                    }) { Pause = new OperationExecutionPause { State = pauseState } });
+                    }) { CurrentPause = new OperationExecutionPause { State = pauseState } });
             
             Assert.IsTrue(pauseSummary.IsPaused);
         }

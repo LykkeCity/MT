@@ -5,9 +5,9 @@ using System;
 using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Core.Rfq;
 
-namespace MarginTrading.Backend.Core
+namespace MarginTrading.SqlRepositories.Entities
 {
-    public class OperationExecutionPause
+    public class OperationExecutionPauseEntity
     {
         public PauseSource Source { get; set; }
         

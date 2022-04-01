@@ -122,12 +122,12 @@ namespace MarginTrading.SqlRepositories.Repositories
 
             using var conn = new SqlConnection(ConnectionString);
             var sql = $@"
-SELECT i.*, pause.*, cancelledPause.CancellationSource as LatestCancellationSource 
+SELECT i.Id as Id, i.LastModified as LastModified, i.OperationName as OperationName, i.Data as Data, currentPause.*, latestCancelledPause.* 
 FROM [{TableName}] i 
-LEFT JOIN [{OperationExecutionPauseRepository.TableName}] pause 
-ON (pause.OperationId = i.Id AND pause.OperationName = i.OperationName AND pause.State != 'Cancelled')
-LEFT JOIN [{OperationExecutionPauseRepository.TableName}] cancelledPause
-ON (cancelledPause.Oid = 
+LEFT JOIN [{OperationExecutionPauseRepository.TableName}] currentPause 
+ON (currentPause.OperationId = i.Id AND currentPause.OperationName = i.OperationName AND currentPause.State != 'Cancelled')
+LEFT JOIN [{OperationExecutionPauseRepository.TableName}] latestCancelledPause
+ON (latestCancelledPause.Oid = 
     (SELECT MAX(Oid) 
     FROM [{OperationExecutionPauseRepository.TableName}] 
     WHERE OperationId = i.Id AND OperationName = i.OperationName AND [State] = 'Cancelled')) 
@@ -137,11 +137,21 @@ SELECT COUNT(*) FROM [{TableName}] i {whereClause}";
             
             var gridReader = await conn.QueryMultipleAsync(sql, new { rfqId, instrumentId, accountId, from, to });
 
-            var contents = (await gridReader.ReadAsync<OperationExecutionInfoWithPauseEntity>()).ToList();
+            var contents = gridReader
+                .Read<OperationExecutionInfoEntity, OperationExecutionPauseEntity, OperationExecutionPauseEntity, OperationExecutionInfoWithPauseEntity>(
+                    (executionInfo, currentPause, latestCancelledPause) => new OperationExecutionInfoWithPauseEntity
+                    {
+                        ExecutionInfo = executionInfo,
+                        CurrentPause = currentPause,
+                        LatestCancelledPause = latestCancelledPause
+                    },
+                    "currentPause.Oid,latestCancelledPause.Oid")
+                .ToList();
+            
             var totalCount = await gridReader.ReadSingleAsync<int>();
 
             return new PaginatedResponse<OperationExecutionInfoWithPause<SpecialLiquidationOperationData>>(
-                    contents: contents.Select(x=>Convert<SpecialLiquidationOperationData>(x)).ToArray(),
+                    contents: contents.Select(Convert<SpecialLiquidationOperationData>).ToArray(),
                     start: skip,
                     size: contents.Count,
                     totalSize: totalCount
@@ -222,28 +232,42 @@ SELECT COUNT(*) FROM [{TableName}] i {whereClause}";
             where TData : class
         {
             var result = new OperationExecutionInfoWithPause<TData>(
-                operationName: entity.OperationName,
-                id: entity.Id,
-                lastModified: entity.LastModified,
-                data: entity.Data is string dataStr
+                entity.ExecutionInfo.OperationName,
+                entity.ExecutionInfo.Id, 
+                entity.ExecutionInfo.LastModified,
+                entity.ExecutionInfo.Data is string dataStr
                     ? JsonConvert.DeserializeObject<TData>(dataStr)
-                    : ((JToken)entity.Data).ToObject<TData>());
+                    : ((JToken)entity.ExecutionInfo.Data).ToObject<TData>());
 
-            // if there is information on pause
-            if (entity.Source.HasValue)
+            if (entity.CurrentPause != null)
             {
-                result.Pause = new OperationExecutionPause
+                result.CurrentPause = new OperationExecutionPause
                 {
-                    Source = entity.Source.Value,
-                    CancellationSource = entity.CancellationSource,
-                    LatestCancellationSource = entity.LatestCancellationSource,
-                    CreatedAt = entity.CreatedAt.Value,
-                    EffectiveSince = entity.EffectiveSince,
-                    State = entity.State.Value,
-                    Initiator = entity.Initiator,
-                    CancelledAt = entity.CancelledAt,
-                    CancellationEffectiveSince = entity.CancellationEffectiveSince,
-                    CancellationInitiator = entity.CancellationInitiator
+                    Source = entity.CurrentPause.Source,
+                    CancellationSource = entity.CurrentPause.CancellationSource,
+                    CreatedAt = entity.CurrentPause.CreatedAt,
+                    EffectiveSince = entity.CurrentPause.EffectiveSince,
+                    CancellationEffectiveSince = entity.CurrentPause.CancellationEffectiveSince,
+                    Initiator = entity.CurrentPause.Initiator,
+                    CancellationInitiator = entity.CurrentPause.CancellationInitiator,
+                    CancelledAt = entity.CurrentPause.CancelledAt,
+                    State = entity.CurrentPause.State
+                };
+            }
+
+            if (entity.LatestCancelledPause != null)
+            {
+                result.LatestCancelledPause = new OperationExecutionPause
+                {
+                    Source = entity.LatestCancelledPause.Source,
+                    CancellationSource = entity.LatestCancelledPause.CancellationSource,
+                    CreatedAt = entity.LatestCancelledPause.CreatedAt,
+                    EffectiveSince = entity.LatestCancelledPause.EffectiveSince,
+                    CancellationEffectiveSince = entity.LatestCancelledPause.CancellationEffectiveSince,
+                    Initiator = entity.LatestCancelledPause.Initiator,
+                    CancellationInitiator = entity.LatestCancelledPause.CancellationInitiator,
+                    CancelledAt = entity.LatestCancelledPause.CancelledAt,
+                    State = entity.LatestCancelledPause.State
                 };
             }
             

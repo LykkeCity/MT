@@ -29,7 +29,7 @@ namespace MarginTrading.Backend.Services.Services
         private readonly IOperationExecutionInfoRepository _operationExecutionInfoRepository;
         private readonly ILog _log;
 
-        private ConcurrentDictionary<string, GetPriceForSpecialLiquidationCommand> _requests = new ConcurrentDictionary<string, GetPriceForSpecialLiquidationCommand>();
+        private readonly ConcurrentDictionary<string, GetPriceForSpecialLiquidationCommand> _requests = new ConcurrentDictionary<string, GetPriceForSpecialLiquidationCommand>();
 
         public ManualRfqService(
             ICqrsSender cqrsSender,
@@ -86,7 +86,7 @@ namespace MarginTrading.Backend.Services.Services
             
             if (!_requests.TryGetValue(operationId, out var command))
             {
-                throw new Exception($"Command with operation ID {operationId} does not exist");
+                throw new InvalidOperationException($"Command with operation ID {operationId} does not exist");
             }
             
             if (price == null)

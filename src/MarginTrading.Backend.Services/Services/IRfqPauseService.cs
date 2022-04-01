@@ -70,13 +70,13 @@ namespace MarginTrading.Backend.Services.Services
         {
             return new RfqPauseSummary
             {
-                CanBePaused = (operationExecutionInfo.Pause == null || operationExecutionInfo.Pause.State == PauseState.Cancelled) &&
+                CanBePaused = (operationExecutionInfo.CurrentPause == null || operationExecutionInfo.CurrentPause.State == PauseState.Cancelled) &&
                               RfqPauseService.AllowedOperationStatesToPauseIn.Contains(operationExecutionInfo.Data.State),
-                CanBeResumed = operationExecutionInfo.Pause?.State == PauseState.Active,
-                IsPaused = operationExecutionInfo.Pause?.State == PauseState.Active ||
-                           operationExecutionInfo.Pause?.State == PauseState.PendingCancellation,
-                PauseReason = operationExecutionInfo.Pause?.Source.ToString(),
-                ResumeReason = operationExecutionInfo.Pause?.LatestCancellationSource?.ToString()
+                CanBeResumed = operationExecutionInfo.CurrentPause?.State == PauseState.Active,
+                IsPaused = operationExecutionInfo.CurrentPause?.State == PauseState.Active ||
+                           operationExecutionInfo.CurrentPause?.State == PauseState.PendingCancellation,
+                PauseReason = operationExecutionInfo.CurrentPause?.Source.ToString(),
+                ResumeReason = operationExecutionInfo.LatestCancelledPause?.CancellationSource?.ToString()
             };
         }
     }

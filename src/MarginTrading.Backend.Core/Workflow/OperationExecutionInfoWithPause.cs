@@ -8,7 +8,15 @@ namespace MarginTrading.Backend.Core
 {
     public class OperationExecutionInfoWithPause<T> : OperationExecutionInfo<T> where T : class
     {
-        public OperationExecutionPause Pause { get; set; }
+        /// <summary>
+        /// Current non-cancelled pause (either pending, or active or pending cancellation)
+        /// </summary>
+        public OperationExecutionPause CurrentPause { get; set; }
+        
+        /// <summary>
+        /// Latest cancelled pause
+        /// </summary>
+        public OperationExecutionPause LatestCancelledPause { get; set; }
         
         public OperationExecutionInfoWithPause([NotNull] string operationName, [NotNull] string id, DateTime lastModified, [NotNull] T data) : base(operationName, id, lastModified, data)
         {
