@@ -605,8 +605,14 @@ namespace MarginTrading.Backend.Services
         {
             if (isPreTradeValidation || orderType == OrderType.Market)
             {
-                if (_assetDayOffService.IsAssetTradingDisabled(assetPairId))
+                var tradingStatus = _assetDayOffService.IsAssetTradingDisabled(assetPairId);
+                if (tradingStatus)
                 {
+                    if (tradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentTradingDisabled)
+                    {
+                        throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, 
+                            $"Trading for the instrument {assetPairId} is disabled. Error code: {CommonErrorCodes.InstrumentTradingDisabled}");
+                    }
                     throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
                         $"Trades for instrument {assetPairId} are not available due to trading is closed");
                 }
