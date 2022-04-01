@@ -175,7 +175,7 @@ namespace MarginTrading.Backend.Services.Workflow
                     $"Trading disabled for product {product.ProductId}");
                 var allRfq = await RetrieveAllRfq(product.ProductId, canBePaused: true);
                 _log.WriteInfo(nameof(ProductChangedProjection), nameof(HandleTradingDisabled),
-                    $"Found rfqs to pause: {allRfq.ToJson()}");
+                    $"Found rfqs to pause: {allRfq.Select(x => x.Id).ToJson()}");
 
                 foreach (var rfq in allRfq)
                 {
@@ -192,7 +192,7 @@ namespace MarginTrading.Backend.Services.Workflow
                     $"Trading enabled for product {product.ProductId}");
                 var allRfq = await RetrieveAllRfq(product.ProductId, canBeResumed: true);
                 _log.WriteInfo(nameof(ProductChangedProjection), nameof(HandleTradingDisabled),
-                    $"Found rfqs to resume: {allRfq.ToJson()}");
+                    $"Found rfqs to resume: {allRfq.Select(x => x.Id).ToJson()}");
 
                 foreach (var rfq in allRfq)
                 {
