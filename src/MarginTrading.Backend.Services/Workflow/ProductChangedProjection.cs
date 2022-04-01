@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Core;
@@ -170,20 +171,33 @@ namespace MarginTrading.Backend.Services.Workflow
         {
             if (product.IsTradingDisabled)
             {
+                _log.WriteInfo(nameof(ProductChangedProjection), nameof(HandleTradingDisabled),
+                    $"Trading disabled for product {product.ProductId}");
                 var allRfq = await RetrieveAllRfq(product.ProductId, canBePaused: true);
+                _log.WriteInfo(nameof(ProductChangedProjection), nameof(HandleTradingDisabled),
+                    $"Found rfqs to pause: {allRfq.ToJson()}");
 
                 foreach (var rfq in allRfq)
                 {
+                    _log.WriteInfo(nameof(ProductChangedProjection), nameof(HandleTradingDisabled),
+                        $"Trying to pause rfq: {rfq.Id}");
                     await _rfqPauseService.AddAsync(rfq.Id, PauseSource.TradingDisabled,
                         new Initiator(username));
+                    await _rfqPauseService.AcknowledgeAsync(rfq.Id);
                 }
             }
             else
             {
+                _log.WriteInfo(nameof(ProductChangedProjection), nameof(HandleTradingDisabled),
+                    $"Trading enabled for product {product.ProductId}");
                 var allRfq = await RetrieveAllRfq(product.ProductId, canBeResumed: true);
+                _log.WriteInfo(nameof(ProductChangedProjection), nameof(HandleTradingDisabled),
+                    $"Found rfqs to resume: {allRfq.ToJson()}");
 
                 foreach (var rfq in allRfq)
                 {
+                    _log.WriteInfo(nameof(ProductChangedProjection), nameof(HandleTradingDisabled),
+                        $"Trying to resume rfq: {rfq.Id}");
                     await _rfqPauseService.ResumeAsync(rfq.Id, PauseCancellationSource.TradingDisabledChanged,
                         new Initiator(username));
                 }
@@ -206,6 +220,8 @@ namespace MarginTrading.Backend.Services.Workflow
                     States = new RfqOperationState[]
                     {
                         RfqOperationState.Started,
+                        RfqOperationState.Initiated,
+                        RfqOperationState.PriceRequested,
                     }
                     
                 }, skip, take);
