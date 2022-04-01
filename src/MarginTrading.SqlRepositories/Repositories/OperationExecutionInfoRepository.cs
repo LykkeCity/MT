@@ -138,14 +138,7 @@ SELECT COUNT(*) FROM [{TableName}] i {whereClause}";
             var gridReader = await conn.QueryMultipleAsync(sql, new { rfqId, instrumentId, accountId, from, to });
 
             var contents = gridReader
-                .Read<OperationExecutionInfoEntity, OperationExecutionPauseEntity, OperationExecutionPauseEntity, OperationExecutionInfoWithPauseEntity>(
-                    (executionInfo, currentPause, latestCancelledPause) => new OperationExecutionInfoWithPauseEntity
-                    {
-                        ExecutionInfo = executionInfo,
-                        CurrentPause = currentPause.Oid.HasValue ? currentPause : null,
-                        LatestCancelledPause = latestCancelledPause.Oid.HasValue ? latestCancelledPause : null
-                    },
-                    "Oid,Oid")
+                .Read(OperationExecutionInfoWithPauseEntity.ComposeFunc, OperationExecutionInfoWithPauseEntity.DapperSplitOn)
                 .ToList();
             
             var totalCount = await gridReader.ReadSingleAsync<int>();
@@ -238,41 +231,33 @@ SELECT COUNT(*) FROM [{TableName}] i {whereClause}";
                 entity.ExecutionInfo.Data is string dataStr
                     ? JsonConvert.DeserializeObject<TData>(dataStr)
                     : ((JToken)entity.ExecutionInfo.Data).ToObject<TData>());
-
+            
             if (entity.CurrentPause != null)
             {
-                result.CurrentPause = new OperationExecutionPause
-                {
-                    Source = entity.CurrentPause.Source,
-                    CancellationSource = entity.CurrentPause.CancellationSource,
-                    CreatedAt = entity.CurrentPause.CreatedAt,
-                    EffectiveSince = entity.CurrentPause.EffectiveSince,
-                    CancellationEffectiveSince = entity.CurrentPause.CancellationEffectiveSince,
-                    Initiator = entity.CurrentPause.Initiator,
-                    CancellationInitiator = entity.CurrentPause.CancellationInitiator,
-                    CancelledAt = entity.CurrentPause.CancelledAt,
-                    State = entity.CurrentPause.State
-                };
+                result.CurrentPause = Convert(entity.CurrentPause);
             }
 
             if (entity.LatestCancelledPause != null)
             {
-                result.LatestCancelledPause = new OperationExecutionPause
-                {
-                    Source = entity.LatestCancelledPause.Source,
-                    CancellationSource = entity.LatestCancelledPause.CancellationSource,
-                    CreatedAt = entity.LatestCancelledPause.CreatedAt,
-                    EffectiveSince = entity.LatestCancelledPause.EffectiveSince,
-                    CancellationEffectiveSince = entity.LatestCancelledPause.CancellationEffectiveSince,
-                    Initiator = entity.LatestCancelledPause.Initiator,
-                    CancellationInitiator = entity.LatestCancelledPause.CancellationInitiator,
-                    CancelledAt = entity.LatestCancelledPause.CancelledAt,
-                    State = entity.LatestCancelledPause.State
-                };
+                result.LatestCancelledPause = Convert(entity.LatestCancelledPause);
             }
             
             return result;
         }
+
+        private static OperationExecutionPause Convert(OperationExecutionPauseEntity entity) =>
+            new OperationExecutionPause
+            {
+                Source = entity.Source,
+                CancellationSource = entity.CancellationSource,
+                CreatedAt = entity.CreatedAt,
+                EffectiveSince = entity.EffectiveSince,
+                CancellationEffectiveSince = entity.CancellationEffectiveSince,
+                Initiator = entity.Initiator,
+                CancellationInitiator = entity.CancellationInitiator,
+                CancelledAt = entity.CancelledAt,
+                State = entity.State
+            };
 
         private static OperationExecutionInfo<TData> Convert<TData>(OperationExecutionInfoEntity entity)
             where TData : class
