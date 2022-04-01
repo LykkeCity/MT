@@ -29,6 +29,7 @@ namespace MarginTradingTests
         private const string AssetWithoutDayOffMarket = "AssetWithoutDayOff_Market";
         private const string AssetWithoutSchedule = "AssetWithoutSchedule";
         private const string AssetWithoutScheduleMarket = "AssetWithoutSchedule_Market";
+        private const string AssetWithTradingDisabled = "AssetWithTradingDisabled";
         
         private static readonly ScheduleSettingsContract[] ScheduleSettings = {
             new ScheduleSettingsContract
@@ -257,6 +258,31 @@ namespace MarginTradingTests
             //act
             return dayOffService.IsAssetTradingDisabled(asset);
         }
+        
+        private static IEnumerable TradingDisabledTestCases
+        {
+            [UsedImplicitly]
+            get
+            {
+                yield return new TestCaseData(new DateTime(2017, 6, 23, 20, 29, 59), AssetWithTradingDisabled).Returns(true);
+                yield return new TestCaseData(new DateTime(2017, 6, 23, 8, 0, 0), AssetWithTradingDisabled).Returns(true);
+                yield return new TestCaseData(new DateTime(2017, 6, 23, 11, 30, 0), AssetWithTradingDisabled).Returns(true);
+                yield return new TestCaseData(new DateTime(2017, 6, 24), AssetWithTradingDisabled).Returns(true);
+                yield return new TestCaseData(new DateTime(2017, 6, 25, 19, 59, 59), AssetWithTradingDisabled).Returns(true);
+                yield return new TestCaseData(new DateTime(2017, 6, 25, 8, 0, 0), AssetWithTradingDisabled).Returns(true);
+            }
+        }
+        
+        [Test]
+        [TestCaseSource(nameof(TradingDisabledTestCases))]
+        public bool TestTradingDisabled(DateTime dateTime, string asset)
+        {
+            //arrange
+            var dayOffService = ArrangeDayOffService(dateTime, new[] {AlwaysOnMarketSchedule});
+
+            //act
+            return dayOffService.IsAssetTradingDisabled(asset);
+        }
 
         private IAssetPairDayOffService ArrangeDayOffService(DateTime dateTime,
             IEnumerable<ScheduleSettingsContract> withDayOffSchedules)
@@ -282,6 +308,12 @@ namespace MarginTradingTests
             assetPair3Mock.Setup(p => p.Id).Returns(AssetWithoutSchedule);
             assetPair3Mock.Setup(p => p.MarketId).Returns(AssetWithoutScheduleMarket);
             assetPairsCacheMock.Setup(s => s.GetAssetPairByIdOrDefault(AssetWithoutSchedule)).Returns(assetPair3Mock.Object);
+            
+            var assetPair4Mock = new Mock<IAssetPair>();
+            assetPair4Mock.Setup(p => p.Id).Returns(AssetWithTradingDisabled);
+            assetPair4Mock.Setup(p => p.MarketId).Returns(AssetWithoutDayOff);
+            assetPair4Mock.Setup(p => p.IsTradingDisabled).Returns(true);
+            assetPairsCacheMock.Setup(s => s.GetAssetPairByIdOrDefault(AssetWithTradingDisabled)).Returns(assetPair4Mock.Object);
             
             var scheduleSettingsApiMock = new Mock<IScheduleSettingsApi>();
             scheduleSettingsApiMock.Setup(s => s.List(It.IsAny<string>()))
