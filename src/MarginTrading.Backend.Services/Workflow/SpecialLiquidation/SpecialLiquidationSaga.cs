@@ -108,6 +108,10 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             if (executionInfo?.Data == null)
                 return;
 
+            var pause = await _rfqPauseService.GetCurrentAsync(e.OperationId);
+            if (pause?.State == PauseState.Active)
+                return;
+
             if (executionInfo.Data.SwitchState(SpecialLiquidationOperationState.PriceRequested,
                 SpecialLiquidationOperationState.PriceReceived))
             {
