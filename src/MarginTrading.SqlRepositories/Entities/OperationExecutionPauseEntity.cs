@@ -9,6 +9,8 @@ namespace MarginTrading.SqlRepositories.Entities
 {
     public class OperationExecutionPauseEntity
     {
+        public long? Oid { get; set; }
+        
         public PauseSource Source { get; set; }
         
         public PauseCancellationSource? CancellationSource { get; set; }

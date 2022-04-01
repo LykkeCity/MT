@@ -142,8 +142,8 @@ SELECT COUNT(*) FROM [{TableName}] i {whereClause}";
                     (executionInfo, currentPause, latestCancelledPause) => new OperationExecutionInfoWithPauseEntity
                     {
                         ExecutionInfo = executionInfo,
-                        CurrentPause = currentPause,
-                        LatestCancelledPause = latestCancelledPause
+                        CurrentPause = currentPause.Oid.HasValue ? currentPause : null,
+                        LatestCancelledPause = latestCancelledPause.Oid.HasValue ? latestCancelledPause : null
                     },
                     "Oid,Oid")
                 .ToList();

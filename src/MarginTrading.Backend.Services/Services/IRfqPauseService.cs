@@ -70,8 +70,7 @@ namespace MarginTrading.Backend.Services.Services
         {
             return new RfqPauseSummary
             {
-                CanBePaused = (operationExecutionInfo.CurrentPause == null || operationExecutionInfo.CurrentPause.State == PauseState.Cancelled) &&
-                              RfqPauseService.AllowedOperationStatesToPauseIn.Contains(operationExecutionInfo.Data.State),
+                CanBePaused = operationExecutionInfo.CurrentPause == null && RfqPauseService.AllowedOperationStatesToPauseIn.Contains(operationExecutionInfo.Data.State),
                 CanBeResumed = operationExecutionInfo.CurrentPause?.State == PauseState.Active,
                 IsPaused = operationExecutionInfo.CurrentPause?.State == PauseState.Active ||
                            operationExecutionInfo.CurrentPause?.State == PauseState.PendingCancellation,
