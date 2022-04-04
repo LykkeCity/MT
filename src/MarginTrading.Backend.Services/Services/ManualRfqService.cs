@@ -129,15 +129,33 @@ namespace MarginTrading.Backend.Services.Services
 
             var pauseFilterAppliedRfq = filteredRfq.Contents
                 .Select(o => o.ToRfq())
-                .Where(o =>
-                    (filter?.CanBePaused == null || o.PauseSummary.CanBePaused == filter.CanBePaused) &&
-                    (filter?.CanBeResumed == null || o.PauseSummary.CanBeResumed == filter.CanBeResumed));
+                .Where(GetApplyPauseFilterFunc(filter));
 
             return new PaginatedResponse<Rfq>(
                 pauseFilterAppliedRfq.ToList(),
                 filteredRfq.Start,
                 filteredRfq.Size,
                 filteredRfq.TotalSize);
+        }
+
+        private static Func<Rfq, bool> GetApplyPauseFilterFunc(RfqFilter filter)
+        {
+            return o =>
+            {
+                if (filter == null)
+                    return true;
+
+                // when both flags passed, combine them with OR
+                if (filter.CanBePaused.HasValue && filter.CanBeResumed.HasValue)
+                {
+                    return o.PauseSummary.CanBePaused == filter.CanBePaused ||
+                           o.PauseSummary.CanBeResumed == filter.CanBeResumed;
+                }
+
+                // otherwise, combine them with AND
+                return (filter.CanBePaused == null || o.PauseSummary.CanBePaused == filter.CanBePaused) &&
+                       (filter.CanBeResumed == null || o.PauseSummary.CanBeResumed == filter.CanBeResumed);
+            };
         }
     }
 }
