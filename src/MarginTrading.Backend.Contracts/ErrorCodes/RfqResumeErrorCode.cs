@@ -26,6 +26,11 @@ namespace MarginTrading.Backend.Contracts.ErrorCodes
         /// <summary>
         /// Database issue
         /// </summary>
-        Persistence
+        Persistence,
+        
+        /// <summary>
+        /// The RFQ can not be resumed manually
+        /// </summary>
+        ManualResumeDenied
     }
 }

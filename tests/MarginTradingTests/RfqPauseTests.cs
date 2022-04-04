@@ -313,6 +313,33 @@ namespace MarginTradingTests
         }
 
         [Test]
+        public async Task Resume_Manually_When_Paused_Not_Manually_Returns_Error()
+        {
+            var executionInfo = GetExecutionInfoWithState();
+            
+            // configure repository to find execution info
+            _repositoryInfoMock
+                .Setup(x => x.GetAsync<SpecialLiquidationOperationData>(
+                    It.IsAny<string>(),
+                    It.IsAny<string>()))
+                .ReturnsAsync(executionInfo);
+            
+            // configure repository to return active pause
+            _repositoryPauseMock
+                .Setup(x => x.FindAsync(
+                    "active",
+                    SpecialLiquidationSaga.OperationName,
+                    RfqPauseService.ActivePredicate))
+                .ReturnsAsync(new[] { GetPersistedPause(PauseState.Active, PauseSource.TradingDisabled) });
+            
+            var pauseService = GetSut();
+            
+            var errorCode = await pauseService.ResumeAsync("active", PauseCancellationSource.Manual, "whatever");
+            
+            Assert.AreEqual(RfqResumeErrorCode.ManualResumeDenied, errorCode);
+        }
+
+        [Test]
         public async Task Resume_When_ActivePauseExists_Updates_It_And_Returns_Success()
         {
             var executionInfo = GetExecutionInfoWithState();
@@ -463,25 +490,25 @@ namespace MarginTradingTests
             _dateServiceMock.Object,
             _cqrsSenderMock.Object);
 
-        private static Pause GetPause(PauseState? state = null) => Pause.Create("Id",
+        private static Pause GetPause(PauseState? state = null, PauseSource? source = PauseSource.Manual) => Pause.Create("Id",
             "Name",
             DateTime.UtcNow,
             DateTime.UtcNow, 
             state ?? PauseState.Pending,
-            PauseSource.Manual,
+            source ?? PauseSource.Manual,
             "initiator",
             null,
             null,
             "cancellationInitiator",
             null);
 
-        private static Pause GetPersistedPause(PauseState? state = null) => Pause.Initialize(1,
+        private static Pause GetPersistedPause(PauseState? state = null, PauseSource? source = PauseSource.Manual) => Pause.Initialize(1,
             "id",
             "Name",
             DateTime.UtcNow,
             DateTime.UtcNow, 
             state ?? PauseState.Pending,
-            PauseSource.Manual,
+            source ?? PauseSource.Manual,
             "initiator",
             null,
             null,

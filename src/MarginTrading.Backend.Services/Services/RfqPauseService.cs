@@ -309,6 +309,15 @@ namespace MarginTrading.Backend.Services.Services
                     return RfqResumeErrorCode.NotPaused;
                 }
 
+                // Manual resume is allowed for manually paused RFQ only
+                if (source == PauseCancellationSource.Manual && activePause.Source != PauseSource.Manual)
+                {
+                    await _log.WriteWarningAsync(nameof(RfqPauseService), nameof(ResumeAsync), null,
+                        $"Manual resume is allowed for manually paused RFQ only");
+
+                    return RfqResumeErrorCode.ManualResumeDenied;
+                }
+
                 var updated = await _pauseRepository.UpdateAsync(
                     activePause.Oid ?? throw new InvalidOperationException("Pause oid is required to update"), 
                     activePause.EffectiveSince ?? throw new InvalidOperationException("Activated pause must have an [Effective Since] value"), 
