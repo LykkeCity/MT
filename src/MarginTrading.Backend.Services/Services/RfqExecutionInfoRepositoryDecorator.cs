@@ -56,17 +56,17 @@ namespace MarginTrading.Backend.Services.Services
             return _decoratee.GetAsync<TData>(operationName, id);
         }
 
-        public Task<PaginatedResponse<OperationExecutionInfoWithPause<SpecialLiquidationOperationData>>> GetRfqAsync(string rfqId,
-            string instrumentId,
-            string accountId,
-            List<SpecialLiquidationOperationState> states,
-            DateTime? @from,
-            DateTime? to,
-            int skip,
+        public Task<PaginatedResponse<OperationExecutionInfoWithPause<SpecialLiquidationOperationData>>> GetRfqAsync(int skip,
             int take,
+            string rfqId = null,
+            string instrumentId = null,
+            string accountId = null,
+            List<SpecialLiquidationOperationState> states = null,
+            DateTime? @from = null,
+            DateTime? to = null,
             bool isAscendingOrder = false)
         {
-            return _decoratee.GetRfqAsync(rfqId, instrumentId, accountId, states, @from, to, skip, take, isAscendingOrder);
+            return _decoratee.GetRfqAsync(skip, take, rfqId, instrumentId, accountId, states, @from, to, isAscendingOrder);
         }
 
         public async Task Save<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class
@@ -94,7 +94,7 @@ namespace MarginTrading.Backend.Services.Services
         private async Task<OperationExecutionInfoWithPause<SpecialLiquidationOperationData>> GetRfqByIdAsync(string id)
         {
             return (await _decoratee
-                    .GetRfqAsync(id, null, null, null, null, null, 0, 1))
+                    .GetRfqAsync(0, 1, id))
                 .Contents
                 .Single();
         }

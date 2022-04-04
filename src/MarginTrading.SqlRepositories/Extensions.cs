@@ -1,6 +1,7 @@
 ﻿// Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Data;
 using Microsoft.Data.SqlClient;
 using Dapper;
@@ -9,6 +10,7 @@ namespace MarginTrading.SqlRepositories
 {
     public static class Extensions
     {
+        [Obsolete("Please use another approach")]
         public static void CreateTableIfDoesntExists(this IDbConnection connection, string createQuery,
             string tableName)
         {

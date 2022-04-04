@@ -4,7 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using MarginTrading.Backend.Contracts.Common;
+using Lykke.Snow.Common;
 using MarginTrading.Backend.Core.Rfq;
 
 namespace MarginTrading.Backend.Core.Repositories

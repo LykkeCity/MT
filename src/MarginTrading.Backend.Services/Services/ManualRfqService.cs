@@ -118,14 +118,14 @@ namespace MarginTrading.Backend.Services.Services
                 .ToList();
 
             var filteredRfq = await _operationExecutionInfoRepository
-                .GetRfqAsync(filter?.OperationId,
+                .GetRfqAsync(skip,
+                    take,
+                    filter?.OperationId,
                     filter?.InstrumentId,
                     filter?.AccountId,
                     specialLiquidationStates,
                     filter?.DateFrom,
-                    filter?.DateTo,
-                    skip,
-                    take);
+                    filter?.DateTo);
 
             var pauseFilterAppliedRfq = filteredRfq.Contents
                 .Select(o => o.ToRfq())

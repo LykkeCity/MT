@@ -62,6 +62,19 @@ namespace MarginTrading.AzureRepositories
             return Convert<TData>(obj);
         }
 
+        public async Task<PaginatedResponse<OperationExecutionInfoWithPause<SpecialLiquidationOperationData>>> GetRfqAsync(int skip,
+            int take,
+            string rfqId = null,
+            string instrumentId = null,
+            string accountId = null,
+            List<SpecialLiquidationOperationState> states = null,
+            DateTime? @from = null,
+            DateTime? to = null,
+            bool isAscendingOrder = false)
+        {
+            throw new NotSupportedException("Azure is not supported");
+        }
+
         public async Task Save<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class
         {
             var entity = Convert(executionInfo);
@@ -95,11 +108,6 @@ namespace MarginTrading.AzureRepositories
                 OperationName = model.OperationName,
                 Data = model.Data.ToJson(),
             };
-        }
-
-        public Task<PaginatedResponse<OperationExecutionInfoWithPause<SpecialLiquidationOperationData>>> GetRfqAsync(string rfqId, string instrumetnId, string accountId, List<SpecialLiquidationOperationState> states, DateTime? from, DateTime? to, int skip, int take, bool isAscendingOrder = false)
-        {
-            throw new NotSupportedException("Azure is not supported");
         }
     }
 }

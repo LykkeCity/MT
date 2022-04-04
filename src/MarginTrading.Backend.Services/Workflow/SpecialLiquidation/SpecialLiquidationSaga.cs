@@ -403,7 +403,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 return;
 
             await _log.WriteWarningAsync(nameof(SpecialLiquidationSaga),
-                nameof(ResumePausedSpecialLiquidationFailedEvent), $"Pause cancellation failed. Reason: {e.Reason}");
+                nameof(ResumePausedSpecialLiquidationFailedEvent), $"Pause cancellation failed. Reason: {e.Reason.ToString()}");
         }
         
         [UsedImplicitly]

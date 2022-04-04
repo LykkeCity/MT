@@ -8,7 +8,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Common.Log;
-using MarginTrading.Backend.Contracts.Common;
+using Lykke.Snow.Common;
 using MarginTrading.Backend.Contracts.ErrorCodes;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
@@ -98,15 +98,9 @@ namespace MarginTrading.Backend.Services.Services
                 var pause = Pause.Create(
                     operationId,
                     SpecialLiquidationSaga.OperationName,
-                    _dateService.Now(),
-                    null,
-                    PauseState.Pending,
                     source,
                     initiator,
-                    null,
-                    null,
-                    null,
-                    null);
+                    _dateService.Now());
                 
                 await _pauseRepository.AddAsync(pause);
 
@@ -162,8 +156,11 @@ namespace MarginTrading.Backend.Services.Services
 
                 if (pendingPause != null)
                 {
+                    if (pendingPause.Oid == null)
+                        throw new InvalidOperationException("Pause oid is required to update");
+                    
                     var updated = await _pauseRepository.UpdateAsync(
-                        pendingPause.Oid ?? throw new InvalidOperationException("Pause oid is required to update"), 
+                        pendingPause.Oid.Value, 
                         _dateService.Now(), 
                         PauseState.Active, 
                         null,
@@ -208,8 +205,11 @@ namespace MarginTrading.Backend.Services.Services
 
                 if (pendingPause != null)
                 {
+                    if (pendingPause.Oid == null)
+                        throw new InvalidOperationException("Pause oid is required to update");
+                    
                     var updated = await _pauseRepository.UpdateAsync(
-                        pendingPause.Oid ?? throw new InvalidOperationException("Pause oid is required to update"),
+                        pendingPause.Oid.Value,
                         pendingPause.EffectiveSince,
                         PauseState.Cancelled,
                         _dateService.Now(),
@@ -248,8 +248,11 @@ namespace MarginTrading.Backend.Services.Services
 
                 if (pendingCancellationPause != null)
                 {
+                    if (pendingCancellationPause.Oid == null)
+                        throw new InvalidOperationException("Pause oid is required to update");
+                    
                     var updated = await _pauseRepository.UpdateAsync(
-                        pendingCancellationPause.Oid ?? throw new InvalidOperationException("Pause oid is required to update"), 
+                        pendingCancellationPause.Oid.Value, 
                         pendingCancellationPause.EffectiveSince, 
                         PauseState.Cancelled,
                         pendingCancellationPause.CancelledAt,
@@ -317,9 +320,12 @@ namespace MarginTrading.Backend.Services.Services
 
                     return RfqResumeErrorCode.ManualResumeDenied;
                 }
+                
+                if (activePause.Oid == null)
+                    throw new InvalidOperationException("Pause oid is required to update");
 
                 var updated = await _pauseRepository.UpdateAsync(
-                    activePause.Oid ?? throw new InvalidOperationException("Pause oid is required to update"), 
+                    activePause.Oid.Value, 
                     activePause.EffectiveSince ?? throw new InvalidOperationException("Activated pause must have an [Effective Since] value"), 
                     PauseState.PendingCancellation,
                     _dateService.Now(),

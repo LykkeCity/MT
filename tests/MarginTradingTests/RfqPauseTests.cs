@@ -5,7 +5,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Common.Log;
-using MarginTrading.Backend.Contracts.Common;
+using Lykke.Snow.Common;
 using MarginTrading.Backend.Contracts.ErrorCodes;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
@@ -492,15 +492,11 @@ namespace MarginTradingTests
 
         private static Pause GetPause(PauseState? state = null, PauseSource? source = PauseSource.Manual) => Pause.Create("Id",
             "Name",
-            DateTime.UtcNow,
-            DateTime.UtcNow, 
-            state ?? PauseState.Pending,
             source ?? PauseSource.Manual,
             "initiator",
-            null,
-            null,
-            "cancellationInitiator",
-            null);
+            DateTime.UtcNow,
+            state: state ?? PauseState.Pending, 
+            cancellationInitiator: "cancellationInitiator");
 
         private static Pause GetPersistedPause(PauseState? state = null, PauseSource? source = PauseSource.Manual) => Pause.Initialize(1,
             "id",

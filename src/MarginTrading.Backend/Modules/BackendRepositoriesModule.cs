@@ -1,10 +1,13 @@
 ﻿// Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System.Data;
 using Autofac;
 using AzureStorage.Tables;
 using Common.Log;
+using Dapper;
 using Lykke.SettingsReader;
+using Lykke.Snow.Common;
 using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
@@ -184,6 +187,13 @@ namespace MarginTrading.Backend.Modules
             builder.RegisterType<AccountMarginUnconfirmedRepository>()
                 .As<IAccountMarginUnconfirmedRepository>()
                 .SingleInstance();
+            
+            InitializeDapper();
+        }
+
+        private static void InitializeDapper()
+        {
+            SqlMapper.AddTypeMap(typeof(Initiator), DbType.String);
         }
     }
 }

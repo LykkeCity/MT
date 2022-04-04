@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
-using MarginTrading.Backend.Contracts.Common;
+using Lykke.Snow.Common;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
@@ -100,7 +100,7 @@ namespace MarginTrading.Backend.Services.Services
         private async Task<OperationExecutionInfoWithPause<SpecialLiquidationOperationData>> GetRfqByIdAsync(string id)
         {
             return (await _executionInfoRepository
-                    .GetRfqAsync(id, null, null, null, null, null, 0, 1))
+                    .GetRfqAsync(0, 1, id))
                 .Contents
                 .Single();
         }

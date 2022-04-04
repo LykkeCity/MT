@@ -683,7 +683,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 publisher.PublishEvent(new ResumePausedSpecialLiquidationFailedEvent
                 {
                     OperationId = command.OperationId,
-                    Reason = $"Couldn't acknowledge pause cancellation for operation id [{command.OperationId}] and name [{SpecialLiquidationSaga.OperationName}]"
+                    Reason = SpecialLiquidationResumePausedFailureReason.AcknowledgeError
                 });
 
                 return;
@@ -692,7 +692,7 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
             publisher.PublishEvent(new ResumePausedSpecialLiquidationFailedEvent
             {
                 OperationId = command.OperationId,
-                Reason = $"There is no active pause for operation id [{command.OperationId}] and name [{SpecialLiquidationSaga.OperationName}]"
+                Reason = SpecialLiquidationResumePausedFailureReason.NoActivePause
             });
         }
     }

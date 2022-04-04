@@ -2,7 +2,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using MarginTrading.Backend.Contracts.Common;
+using Lykke.Snow.Common;
 using MarginTrading.Backend.Core.Rfq;
 
 namespace MarginTrading.SqlRepositories.Entities

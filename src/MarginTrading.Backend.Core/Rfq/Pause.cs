@@ -3,7 +3,7 @@
 
 using System;
 using JetBrains.Annotations;
-using MarginTrading.Backend.Contracts.Common;
+using Lykke.Snow.Common;
 
 namespace MarginTrading.Backend.Core.Rfq
 {
@@ -67,15 +67,15 @@ namespace MarginTrading.Backend.Core.Rfq
 
         public static Pause Create(string operationId,
             string operationName,
-            DateTime createdAt,
-            DateTime? effectiveSince,
-            PauseState state,
             PauseSource source,
             Initiator initiator,
-            DateTime? cancelledAt,
-            DateTime? cancellationEffectiveSince,
-            Initiator cancellationInitiator,
-            PauseCancellationSource? cancellationSource) =>
+            DateTime createdAt,
+            DateTime? effectiveSince = null,
+            PauseState state = PauseState.Pending,
+            DateTime? cancelledAt = null,
+            DateTime? cancellationEffectiveSince = null,
+            Initiator cancellationInitiator = null,
+            PauseCancellationSource? cancellationSource = null) =>
             new Pause(
                 null,
                 operationId,

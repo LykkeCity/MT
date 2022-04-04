@@ -21,6 +21,6 @@ namespace MarginTrading.Backend.Contracts.Workflow.SpecialLiquidation.Events
         /// The reason of failure to resume paused special liquidation
         /// </summary>
         [Key(1)]
-        public string Reason { get; set; }
+        public SpecialLiquidationResumePausedFailureReason Reason { get; set; }
     }
 }

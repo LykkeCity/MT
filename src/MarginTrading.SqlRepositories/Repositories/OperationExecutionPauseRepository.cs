@@ -10,7 +10,6 @@ using Common;
 using Common.Log;
 using Dapper;
 using Lykke.Snow.Common;
-using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Rfq;
 using MarginTrading.SqlRepositories.Entities;
@@ -21,23 +20,26 @@ namespace MarginTrading.SqlRepositories.Repositories
     public class OperationExecutionPauseRepository : SqlRepositoryBase, IOperationExecutionPauseRepository
     {
         private const string CreateTableScript = @"
-create table [dbo].[{0}]
-(
-    Oid                        bigint unique identity(1, 1)    not null,
-    OperationId                nvarchar(128)                   not null,
-    OperationName              nvarchar(64),
-    Source                     nvarchar(64)                    not null,
-    CancellationSource         nvarchar(64),
-    CreatedAt                  datetime2                       not null,
-    EffectiveSince             datetime2,
-    State                      nvarchar(32) default 'Pending'  not null,
-    Initiator                  nvarchar(64)                    not null,
-    CancelledAt                datetime2,
-    CancellationEffectiveSince datetime2,
-    CancellationInitiator      nvarchar(64),
-    primary key (Oid),
-    foreign key (OperationId, OperationName) references [dbo].[MarginTradingExecutionInfo] (Id, OperationName)
-);";
+IF NOT EXISTS (SELECT 1 FROM sys.objects WHERE [name] = '{0}' AND schema_id = schema_id('dbo'))
+BEGIN
+    CREATE TABLE [dbo].[{0}]
+    (
+        Oid                        bigint unique identity(1, 1)    not null,
+        OperationId                nvarchar(128)                   not null,
+        OperationName              nvarchar(64),
+        Source                     nvarchar(64)                    not null,
+        CancellationSource         nvarchar(64),
+        CreatedAt                  datetime2                       not null,
+        EffectiveSince             datetime2,
+        State                      nvarchar(32) default 'Pending'  not null,
+        Initiator                  nvarchar(64)                    not null,
+        CancelledAt                datetime2,
+        CancellationEffectiveSince datetime2,
+        CancellationInitiator      nvarchar(64),
+        primary key (Oid),
+        foreign key (OperationId, OperationName) references [dbo].[MarginTradingExecutionInfo] (Id, OperationName)
+    );
+END";
         
         private readonly ILog _log;
         
@@ -58,11 +60,11 @@ create table [dbo].[{0}]
             {
                 try
                 {
-                    conn.CreateTableIfDoesntExists(CreateTableScript, TableName);
+                    conn.Execute(string.Format(CreateTableScript, TableName));
                 }
                 catch (Exception ex)
                 {
-                    _log.WriteErrorAsync(nameof(OperationExecutionPauseRepository), "CreateTableIfDoesntExists", null, ex);
+                    _log.WriteErrorAsync(nameof(OperationExecutionPauseRepository), $"Executing {nameof(CreateTableScript)}", null, ex);
                     throw;
                 }
             }

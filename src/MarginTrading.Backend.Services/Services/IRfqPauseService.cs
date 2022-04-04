@@ -3,7 +3,7 @@
 
 using System.Linq;
 using System.Threading.Tasks;
-using MarginTrading.Backend.Contracts.Common;
+using Lykke.Snow.Common;
 using MarginTrading.Backend.Contracts.ErrorCodes;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Rfq;

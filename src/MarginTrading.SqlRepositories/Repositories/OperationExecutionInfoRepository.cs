@@ -98,9 +98,27 @@ namespace MarginTrading.SqlRepositories.Repositories
                 throw;
             }
         }
-        
-        public async Task<PaginatedResponse<OperationExecutionInfoWithPause<SpecialLiquidationOperationData>>> GetRfqAsync(string rfqId, string instrumentId,
-            string accountId, List<SpecialLiquidationOperationState> states, DateTime? from, DateTime? to, int skip, int take,
+
+        public async Task<IOperationExecutionInfo<TData>> GetAsync<TData>(string operationName, string id) where TData : class
+        {
+            using (var conn = new SqlConnection(ConnectionString))
+            {
+                var operationInfo = await conn.QuerySingleOrDefaultAsync<OperationExecutionInfoEntity>(
+                    $"SELECT * FROM {TableName} WHERE Id = @id and OperationName=@operationName",
+                    new { id, operationName });
+
+                return operationInfo == null ? null : Convert<TData>(operationInfo);
+            }
+        }
+
+        public async Task<PaginatedResponse<OperationExecutionInfoWithPause<SpecialLiquidationOperationData>>> GetRfqAsync(int skip,
+            int take,
+            string rfqId = null,
+            string instrumentId = null,
+            string accountId = null,
+            List<SpecialLiquidationOperationState> states = null,
+            DateTime? @from = null,
+            DateTime? to = null,
             bool isAscendingOrder = false)
         {
             const string whereRfq = "WHERE i.OperationName = 'SpecialLiquidation'";
@@ -149,18 +167,6 @@ SELECT COUNT(*) FROM [{TableName}] i {whereClause}";
                     size: contents.Count,
                     totalSize: totalCount
                 );
-        }
-
-        public async Task<IOperationExecutionInfo<TData>> GetAsync<TData>(string operationName, string id) where TData : class
-        {
-            using (var conn = new SqlConnection(ConnectionString))
-            {
-                var operationInfo = await conn.QuerySingleOrDefaultAsync<OperationExecutionInfoEntity>(
-                    $"SELECT * FROM {TableName} WHERE Id = @id and OperationName=@operationName",
-                    new { id, operationName });
-
-                return operationInfo == null ? null : Convert<TData>(operationInfo);
-            }
         }
 
         public async Task Save<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class
