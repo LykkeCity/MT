@@ -184,7 +184,6 @@ namespace MarginTrading.Backend.Services.Workflow
                         $"Trying to pause rfq: {rfq.Id}");
                     await _rfqPauseService.AddAsync(rfq.Id, PauseSource.TradingDisabled,
                         new Initiator(username));
-                    await _rfqPauseService.AcknowledgeAsync(rfq.Id);
                 }
             }
             else

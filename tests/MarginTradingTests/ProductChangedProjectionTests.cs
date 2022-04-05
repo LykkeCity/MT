@@ -86,7 +86,6 @@ namespace MarginTradingTests
                     PauseSource.TradingDisabled,
                     It.IsAny<Initiator>()),
                 Times.Once);
-            _rfqPauseService.Verify(x => x.AcknowledgeAsync(rfqId), Times.Once);
         }
 
         [Test]
