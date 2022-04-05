@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Common.Log;
+using Lykke.Snow.Common;
 using MarginTrading.AssetService.Contracts.Enums;
 using MarginTrading.AssetService.Contracts.Products;
 using MarginTrading.Backend.Contracts.Common;

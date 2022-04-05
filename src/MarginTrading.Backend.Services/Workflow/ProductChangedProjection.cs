@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Common;
 using Common.Log;
 using JetBrains.Annotations;
+using Lykke.Snow.Common;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services.AssetPairs;
