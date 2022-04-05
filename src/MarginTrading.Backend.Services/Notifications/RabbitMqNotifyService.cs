@@ -105,9 +105,9 @@ namespace MarginTrading.Backend.Services.Notifications
                 _settings.RabbitMqQueues.PositionHistory.LogEventPublishing);
         }
 
-        public Task RfqChanged(RfqChangedEvent rfqChangedEvent)
+        public Task Rfq(RfqEvent rfqEvent)
         {
-            return TryProduceMessageAsync(_settings.RabbitMqQueues.RfqChanged.ExchangeName, rfqChangedEvent,
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.RfqChanged.ExchangeName, rfqEvent,
                 _settings.RabbitMqQueues.RfqChanged.LogEventPublishing);
         }
 

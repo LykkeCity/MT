@@ -41,11 +41,11 @@ namespace MarginTrading.Backend.Services.Services
                 await _log.WriteInfoAsync(nameof(RfqExecutionInfoRepositoryDecorator),
                     nameof(GetOrAddAsync),
                     new { Id = operationId, Name = operationName }.ToJson(),
-                    $"New RFQ has been added therefore {nameof(RfqChangedEvent)} is about to be published");
+                    $"New RFQ has been added therefore {nameof(RfqEvent)} is about to be published");
 
                 var rfq = await GetRfqByIdAsync(operationId);
 
-                await _notifyService.RfqChanged(rfq.ToEventContract());
+                await _notifyService.Rfq(rfq.ToEventContract(RfqTypeContract.New));
             }
             
             return (executionInfo, added);
@@ -77,12 +77,12 @@ namespace MarginTrading.Backend.Services.Services
             {
                 await _log.WriteInfoAsync(nameof(RfqExecutionInfoRepositoryDecorator),
                     nameof(GetOrAddAsync),
-                    new { Id = executionInfo.Id, Name = executionInfo.OperationName }.ToJson(),
-                    $"RFQ has been updated therefore {nameof(RfqChangedEvent)} is about to be published");
+                    new { executionInfo.Id, Name = executionInfo.OperationName }.ToJson(),
+                    $"RFQ has been updated therefore {nameof(RfqEvent)} is about to be published");
 
                 var rfq = await GetRfqByIdAsync(executionInfo.Id);
 
-                await _notifyService.RfqChanged(rfq.ToEventContract());
+                await _notifyService.Rfq(rfq.ToEventContract(RfqTypeContract.Update));
             }
         }
 
