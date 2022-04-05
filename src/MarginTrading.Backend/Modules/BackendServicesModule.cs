@@ -138,6 +138,10 @@ namespace MarginTrading.Backend.Modules
                 .As<IFakeSnapshotService>()
                 .SingleInstance();
 
+            builder.RegisterType<RfqPauseService>()
+                .As<IRfqPauseService>()
+                .SingleInstance();
+
             RegisterPublishers(builder, consoleWriter);
         }
 

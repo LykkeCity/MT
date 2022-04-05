@@ -9,9 +9,7 @@ using Common;
 using Common.Log;
 using JetBrains.Annotations;
 using Lykke.Common.Chaos;
-using Lykke.Common.Log;
 using Lykke.Cqrs;
-using Lykke.Snow.Common.Correlation;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Contracts.Workflow.Liquidation;
 using MarginTrading.Backend.Contracts.Workflow.Liquidation.Events;
@@ -118,7 +116,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
             
             #endregion
             
-            var executionInfo = await _operationExecutionInfoRepository.GetOrAddAsync(
+            var (executionInfo, _) = await _operationExecutionInfoRepository.GetOrAddAsync(
                 operationName: LiquidationSaga.OperationName,
                 operationId: command.OperationId,
                 factory: () => new OperationExecutionInfo<LiquidationOperationData>(

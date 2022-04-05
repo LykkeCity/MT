@@ -114,7 +114,7 @@ namespace MarginTrading.SqlRepositories.Entities
 
         public string ToString(IFormatProvider? provider)
         {
-            return this._value;
+            return _value;
         }
 
         public object ToType(Type conversionType, IFormatProvider? provider)

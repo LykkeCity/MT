@@ -56,5 +56,10 @@ namespace MarginTradingTests
         {
             _container.Add(historyEvent);
         }
+
+        public async Task RfqChanged(RfqChangedEvent rfqChangedEvent)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

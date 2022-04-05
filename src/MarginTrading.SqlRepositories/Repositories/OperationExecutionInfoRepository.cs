@@ -68,7 +68,7 @@ namespace MarginTrading.SqlRepositories.Repositories
             ExecCreateOrAlter(_getPositionsInSpecialLiquidation.FileName);
         }
 
-        public async Task<IOperationExecutionInfo<TData>> GetOrAddAsync<TData>(
+        public async Task<(IOperationExecutionInfo<TData>, bool added)> GetOrAddAsync<TData>(
             string operationName, string operationId, Func<IOperationExecutionInfo<TData>> factory) where TData : class
         {
             try
@@ -86,10 +86,10 @@ namespace MarginTrading.SqlRepositories.Repositories
                         await conn.ExecuteAsync(
                             $"insert into {TableName} ({GetColumns}) values ({GetFields})", entity);
 
-                        return Convert<TData>(entity);
+                        return (Convert<TData>(entity), true);
                     }
 
-                    return Convert<TData>(operationInfo);
+                    return (Convert<TData>(operationInfo), false);
                 }
             }
             catch (Exception ex)
@@ -97,42 +97,6 @@ namespace MarginTrading.SqlRepositories.Repositories
                 await _log.WriteErrorAsync(nameof(OperationExecutionInfoRepository), nameof(GetOrAddAsync), ex);
                 throw;
             }
-        }
-
-        public async Task<PaginatedResponse<OperationExecutionInfo<SpecialLiquidationOperationData>>> GetRfqAsync(string rfqId, string instrumentId,
-            string accountId, List<SpecialLiquidationOperationState> states, DateTime? from, DateTime? to, int skip, int take,
-            bool isAscendingOrder = false)
-        {
-            const string whereRfq = "WHERE [OperationName] = 'SpecialLiquidation' ";
-
-            var whereFields = (string.IsNullOrWhiteSpace(rfqId) ? "" : " AND [Id] = @rfqId")
-                            + (from == null ? "" : " AND [LastModified] >= @from")
-                            + (to == null ? "" : " AND [LastModified] < @to");
-
-            var whereJson = (string.IsNullOrWhiteSpace(instrumentId) ? "" : " AND JSON_VALUE([Data], '$.Instrument') = @instrumentId")
-                          + (string.IsNullOrWhiteSpace(accountId) ? "" : " AND JSON_VALUE([Data], '$.AccountId') = @accountId")
-                          + (states == null || states.Count == 0 ? "" : $" AND JSON_VALUE([Data], '$.State') in ({string.Join(",", states.Select(x => $"'{x}'"))})");
-
-            var whereClause = whereRfq + whereFields + whereJson;
-
-            const int MaxResults = 100;
-            var sorting = isAscendingOrder ? "ASC" : "DESC";
-            take = take <= 0 ? MaxResults : Math.Min(take, MaxResults);
-            var paginationClause = $"ORDER BY [LastModified] {sorting} OFFSET {skip} ROWS FETCH NEXT {take} ROWS ONLY";
-
-            using var conn = new SqlConnection(ConnectionString);
-            var sql = $"SELECT * FROM [{TableName}] {whereClause} {paginationClause}; SELECT COUNT(*) FROM [{TableName}] {whereClause}";
-            var gridReader = await conn.QueryMultipleAsync(sql, new { rfqId, instrumentId, accountId, from, to });
-
-            var contents = (await gridReader.ReadAsync<OperationExecutionInfoEntity>()).ToList();
-            var totalCount = await gridReader.ReadSingleAsync<int>();
-
-            return new PaginatedResponse<OperationExecutionInfo<SpecialLiquidationOperationData>>(
-                    contents: contents.Select(x=>Convert<SpecialLiquidationOperationData>(x)).ToArray(),
-                    start: skip,
-                    size: contents.Count,
-                    totalSize: totalCount
-                );
         }
 
         public async Task<IOperationExecutionInfo<TData>> GetAsync<TData>(string operationName, string id) where TData : class
@@ -145,6 +109,64 @@ namespace MarginTrading.SqlRepositories.Repositories
 
                 return operationInfo == null ? null : Convert<TData>(operationInfo);
             }
+        }
+
+        public async Task<PaginatedResponse<OperationExecutionInfoWithPause<SpecialLiquidationOperationData>>> GetRfqAsync(int skip,
+            int take,
+            string rfqId = null,
+            string instrumentId = null,
+            string accountId = null,
+            List<SpecialLiquidationOperationState> states = null,
+            DateTime? @from = null,
+            DateTime? to = null,
+            bool isAscendingOrder = false)
+        {
+            const string whereRfq = "WHERE i.OperationName = 'SpecialLiquidation'";
+
+            var whereFields = (string.IsNullOrWhiteSpace(rfqId) ? "" : " AND i.Id = @rfqId")
+                            + (from == null ? "" : " AND i.LastModified >= @from")
+                            + (to == null ? "" : " AND i.LastModified < @to");
+
+            var whereJson = (string.IsNullOrWhiteSpace(instrumentId) ? "" : " AND JSON_VALUE(i.Data, '$.Instrument') = @instrumentId")
+                          + (string.IsNullOrWhiteSpace(accountId) ? "" : " AND JSON_VALUE(i.Data, '$.AccountId') = @accountId")
+                          + (states == null || states.Count == 0 ? "" : $" AND JSON_VALUE(i.Data, '$.State') in ({string.Join(",", states.Select(x => $"'{x}'"))})");
+
+            var whereClause = whereRfq + whereFields + whereJson;
+
+            const int MaxResults = 100;
+            var sorting = isAscendingOrder ? "ASC" : "DESC";
+            take = take <= 0 ? MaxResults : Math.Min(take, MaxResults);
+            var paginationClause = $"ORDER BY i.LastModified {sorting} OFFSET {skip} ROWS FETCH NEXT {take} ROWS ONLY";
+
+            using var conn = new SqlConnection(ConnectionString);
+            var sql = $@"
+SELECT i.Id as Id, i.LastModified as LastModified, i.OperationName as OperationName, i.Data as Data, currentPause.*, latestCancelledPause.* 
+FROM [{TableName}] i 
+LEFT JOIN [{OperationExecutionPauseRepository.TableName}] currentPause 
+ON (currentPause.OperationId = i.Id AND currentPause.OperationName = i.OperationName AND currentPause.State != 'Cancelled')
+LEFT JOIN [{OperationExecutionPauseRepository.TableName}] latestCancelledPause
+ON (latestCancelledPause.Oid = 
+    (SELECT MAX(Oid) 
+    FROM [{OperationExecutionPauseRepository.TableName}] 
+    WHERE OperationId = i.Id AND OperationName = i.OperationName AND [State] = 'Cancelled')) 
+{whereClause} {paginationClause}; 
+
+SELECT COUNT(*) FROM [{TableName}] i {whereClause}";
+            
+            var gridReader = await conn.QueryMultipleAsync(sql, new { rfqId, instrumentId, accountId, from, to });
+
+            var contents = gridReader
+                .Read(OperationExecutionInfoWithPauseEntity.ComposeFunc, OperationExecutionInfoWithPauseEntity.DapperSplitOn)
+                .ToList();
+            
+            var totalCount = await gridReader.ReadSingleAsync<int>();
+
+            return new PaginatedResponse<OperationExecutionInfoWithPause<SpecialLiquidationOperationData>>(
+                    contents: contents.Select(Convert<SpecialLiquidationOperationData>).ToArray(),
+                    start: skip,
+                    size: contents.Count,
+                    totalSize: totalCount
+                );
         }
 
         public async Task Save<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class
@@ -204,6 +226,44 @@ namespace MarginTrading.SqlRepositories.Repositories
                     }
                 }, MapPositionId);
         }
+
+        private static OperationExecutionInfoWithPause<TData> Convert<TData>(OperationExecutionInfoWithPauseEntity entity)
+            where TData : class
+        {
+            var result = new OperationExecutionInfoWithPause<TData>(
+                entity.ExecutionInfo.OperationName,
+                entity.ExecutionInfo.Id, 
+                entity.ExecutionInfo.LastModified,
+                entity.ExecutionInfo.Data is string dataStr
+                    ? JsonConvert.DeserializeObject<TData>(dataStr)
+                    : ((JToken)entity.ExecutionInfo.Data).ToObject<TData>());
+            
+            if (entity.CurrentPause != null)
+            {
+                result.CurrentPause = Convert(entity.CurrentPause);
+            }
+
+            if (entity.LatestCancelledPause != null)
+            {
+                result.LatestCancelledPause = Convert(entity.LatestCancelledPause);
+            }
+            
+            return result;
+        }
+
+        private static OperationExecutionPause Convert(OperationExecutionPauseEntity entity) =>
+            new OperationExecutionPause
+            {
+                Source = entity.Source,
+                CancellationSource = entity.CancellationSource,
+                CreatedAt = entity.CreatedAt,
+                EffectiveSince = entity.EffectiveSince,
+                CancellationEffectiveSince = entity.CancellationEffectiveSince,
+                Initiator = entity.Initiator,
+                CancellationInitiator = entity.CancellationInitiator,
+                CancelledAt = entity.CancelledAt,
+                State = entity.State
+            };
 
         private static OperationExecutionInfo<TData> Convert<TData>(OperationExecutionInfoEntity entity)
             where TData : class

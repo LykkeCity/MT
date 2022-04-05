@@ -109,7 +109,7 @@ namespace MarginTrading.Backend
             {
                 options.DefaultLykkeConfiguration("v1", $"MarginTradingEngine_Api_{Configuration.ServerType()}");
                 options.AddApiKeyAwareness();
-            });
+            }).AddSwaggerGenNewtonsoftSupport();
 
             _mtSettingsManager = Configuration.LoadSettings<MtBackendSettings>(
                     throwExceptionOnCheckError: !Configuration.NotThrowExceptionsOnServiceValidation())

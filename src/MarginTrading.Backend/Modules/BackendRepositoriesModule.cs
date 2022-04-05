@@ -1,10 +1,13 @@
 ﻿// Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System.Data;
 using Autofac;
 using AzureStorage.Tables;
 using Common.Log;
+using Dapper;
 using Lykke.SettingsReader;
+using Lykke.Snow.Common;
 using MarginTrading.AzureRepositories;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.MatchingEngines;
@@ -12,6 +15,7 @@ using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Infrastructure;
 using MarginTrading.Backend.Services.MatchingEngines;
+using MarginTrading.Backend.Services.Services;
 using MarginTrading.Common.Services;
 using MarginTrading.SqlRepositories.Repositories;
 using MarginTrading.SqlRepositories;
@@ -65,6 +69,8 @@ namespace MarginTrading.Backend.Modules
                     .WithParameter(new NamedParameter("connectionStringManager",
                         _settings.Nested(x => x.Db.MarginTradingConnString)))
                     .SingleInstance();
+
+                builder.RegisterDecorator<RfqExecutionInfoRepositoryDecorator, IOperationExecutionInfoRepository>();
                 
                 builder.RegisterType<AzureRepositories.OpenPositionsRepository>()
                     .As<IOpenPositionsRepository>()
@@ -107,6 +113,8 @@ namespace MarginTrading.Backend.Modules
                         _settings.CurrentValue.Db.SqlConnectionString))
                     .SingleInstance();
 
+                builder.RegisterDecorator<RfqExecutionInfoRepositoryDecorator, IOperationExecutionInfoRepository>();
+
                 builder.RegisterType<SqlRepositories.Repositories.OpenPositionsRepository>()
                     .As<IOpenPositionsRepository>()
                     .WithParameter(new NamedParameter("connectionString", 
@@ -148,6 +156,14 @@ namespace MarginTrading.Backend.Modules
                 builder.RegisterType<SqlRepositories.Repositories.TradingEngineSnapshotsRepository>()
                     .As<ITradingEngineSnapshotsRepository>()
                     .SingleInstance();
+                
+                builder.RegisterType<SqlRepositories.Repositories.OperationExecutionPauseRepository>()
+                    .As<IOperationExecutionPauseRepository>()
+                    .WithParameter(new NamedParameter("connectionString", 
+                        _settings.CurrentValue.Db.SqlConnectionString))
+                    .SingleInstance();
+                
+                builder.RegisterDecorator<RfqExecutionPauseRepositoryDecorator, IOperationExecutionPauseRepository>();
             }
             
             builder.RegisterType<MatchingEngineInMemoryRepository>().As<IMatchingEngineRepository>().SingleInstance();
@@ -171,6 +187,13 @@ namespace MarginTrading.Backend.Modules
             builder.RegisterType<AccountMarginUnconfirmedRepository>()
                 .As<IAccountMarginUnconfirmedRepository>()
                 .SingleInstance();
+            
+            InitializeDapper();
+        }
+
+        private static void InitializeDapper()
+        {
+            SqlMapper.AddTypeMap(typeof(Initiator), DbType.String);
         }
     }
 }

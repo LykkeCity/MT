@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
-using Lykke.RabbitMqBroker.Publisher;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Contracts.ExchangeConnector;
 using MarginTrading.Backend.Core;
@@ -106,6 +105,12 @@ namespace MarginTrading.Backend.Services.Notifications
                 _settings.RabbitMqQueues.PositionHistory.LogEventPublishing);
         }
 
+        public Task RfqChanged(RfqChangedEvent rfqChangedEvent)
+        {
+            return TryProduceMessageAsync(_settings.RabbitMqQueues.RfqChanged.ExchangeName, rfqChangedEvent,
+                _settings.RabbitMqQueues.RfqChanged.LogEventPublishing);
+        }
+
         private async Task TryProduceMessageAsync(string exchangeName, object message, bool logEvent)
         {
             string messageStr = null;
@@ -137,6 +142,7 @@ namespace MarginTrading.Backend.Services.Notifications
                 _settings.RabbitMqQueues.Trades.ExchangeName,
                 _settings.RabbitMqQueues.PositionHistory.ExchangeName,
                 _settings.RabbitMqQueues.ExternalOrder.ExchangeName,
+                _settings.RabbitMqQueues.RfqChanged.ExchangeName
             };
 
             var bytesSerializer = new BytesStringSerializer();
@@ -145,8 +151,8 @@ namespace MarginTrading.Backend.Services.Notifications
             {
                 var settings = new RabbitMqSettings
                 {
-                    ConnectionString = _settings.MtRabbitMqConnString, ExchangeName
-                        = exchangeName
+                    ConnectionString = _settings.MtRabbitMqConnString, 
+                    ExchangeName = exchangeName
                 };
                 _publishers[exchangeName] = rabbitMqService.GetProducer(settings, bytesSerializer);
             }

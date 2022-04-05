@@ -6,11 +6,9 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
-using Dapper;
 using Lykke.Snow.Common;
 using Lykke.Snow.Common.Model;
 using MarginTrading.Backend.Core.Repositories;
-using MarginTrading.SqlRepositories.Entities;
 using Microsoft.Data.SqlClient;
 
 namespace MarginTrading.SqlRepositories.Repositories

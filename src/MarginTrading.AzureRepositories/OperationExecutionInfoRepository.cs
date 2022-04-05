@@ -34,7 +34,7 @@ namespace MarginTrading.AzureRepositories
             _dateService = dateService;
         }
         
-        public async Task<IOperationExecutionInfo<TData>> GetOrAddAsync<TData>(
+        public async Task<(IOperationExecutionInfo<TData>, bool added)> GetOrAddAsync<TData>(
             string operationName, string operationId, Func<IOperationExecutionInfo<TData>> factory) where TData : class
         {
             var entity = await _tableStorage.GetOrInsertAsync(
@@ -47,7 +47,8 @@ namespace MarginTrading.AzureRepositories
                     return result;
                 });
                 
-            return Convert<TData>(entity);
+            // todo: Azure implementation is not used so far but it will be required to think on proper implementation if case Azure implementation is needed
+            return (Convert<TData>(entity), false);
         }
 
         public async Task<IOperationExecutionInfo<TData>> GetAsync<TData>(string operationName, string id)
@@ -59,6 +60,19 @@ namespace MarginTrading.AzureRepositories
                           $"Operation execution info for {operationName} #{id} not yet exists");
             
             return Convert<TData>(obj);
+        }
+
+        public async Task<PaginatedResponse<OperationExecutionInfoWithPause<SpecialLiquidationOperationData>>> GetRfqAsync(int skip,
+            int take,
+            string rfqId = null,
+            string instrumentId = null,
+            string accountId = null,
+            List<SpecialLiquidationOperationState> states = null,
+            DateTime? @from = null,
+            DateTime? to = null,
+            bool isAscendingOrder = false)
+        {
+            throw new NotSupportedException("Azure is not supported");
         }
 
         public async Task Save<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class
@@ -94,11 +108,6 @@ namespace MarginTrading.AzureRepositories
                 OperationName = model.OperationName,
                 Data = model.Data.ToJson(),
             };
-        }
-
-        public Task<PaginatedResponse<OperationExecutionInfo<SpecialLiquidationOperationData>>> GetRfqAsync(string rfqId, string instrumetnId, string accountId, List<SpecialLiquidationOperationState> states, DateTime? from, DateTime? to, int skip, int take, bool isAscendingOrder = false)
-        {
-            throw new NotSupportedException("Azure is not supported");
         }
     }
 }

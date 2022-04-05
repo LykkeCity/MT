@@ -6,6 +6,7 @@ using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Contracts.Rfq;
 using Refit;
 using System.Threading.Tasks;
+using MarginTrading.Backend.Contracts.ErrorCodes;
 
 namespace MarginTrading.Backend.Contracts
 {
@@ -19,6 +20,32 @@ namespace MarginTrading.Backend.Contracts
         /// Returns RFQs
         /// </summary>
         [Get("/api/rfq")]
-        Task<PaginatedResponseContract<RfqContract>> GetAsync([Query, CanBeNull] GetRfqRequest getRfqRequest, [Query] int skip = 0, [Query] int take = 20);
+        Task<PaginatedResponseContract<RfqContract>> GetAsync([Query, CanBeNull] ListRfqRequest listRfqRequest, [Query] int skip = 0, [Query] int take = 20);
+
+        /// <summary>
+        /// Pauses RFQ workflow
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [Post("/api/rfq/{id}/pause")]
+        Task<RfqPauseErrorCode> PauseAsync(string id, [Body] RfqPauseRequest request);
+        
+        /// <summary>
+        /// Get information on pause 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [Get("/api/rfq/{id}/pause")]
+        Task<RfqPauseInfoContract> GetPauseInfoAsync(string id);
+
+        /// <summary>
+        /// Resumes RFQ workflow
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        [Post("/api/rfq/{id}/resume")]
+        Task<RfqResumeErrorCode> ResumeAsync(string id, [Body] RfqResumeRequest request);
     }
 }
