@@ -6,7 +6,7 @@ namespace MarginTrading.Backend.Contracts.Events
     /// <summary>
     /// RFQ event type
     /// </summary>
-    public enum RfqTypeContract
+    public enum RfqEventTypeContract
     {
         /// <summary>
         /// New RFQ appeared

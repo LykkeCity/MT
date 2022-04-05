@@ -36,10 +36,10 @@ namespace MarginTrading.Backend.Services.Extensions
             };
         }
 
-        public static RfqEvent ToEventContract(this OperationExecutionInfoWithPause<SpecialLiquidationOperationData> o, RfqTypeContract type) =>
+        public static RfqEvent ToEventContract(this OperationExecutionInfoWithPause<SpecialLiquidationOperationData> o, RfqEventTypeContract eventType) =>
             new RfqEvent
             {
-                EventType = type,
+                EventType = eventType,
                 RfqSnapshot = new RfqContract
                 {
                     Id = o.Id,

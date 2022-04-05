@@ -45,7 +45,7 @@ namespace MarginTrading.Backend.Services.Services
 
                 var rfq = await GetRfqByIdAsync(operationId);
 
-                await _notifyService.Rfq(rfq.ToEventContract(RfqTypeContract.New));
+                await _notifyService.Rfq(rfq.ToEventContract(RfqEventTypeContract.New));
             }
             
             return (executionInfo, added);
@@ -82,7 +82,7 @@ namespace MarginTrading.Backend.Services.Services
 
                 var rfq = await GetRfqByIdAsync(executionInfo.Id);
 
-                await _notifyService.Rfq(rfq.ToEventContract(RfqTypeContract.Update));
+                await _notifyService.Rfq(rfq.ToEventContract(RfqEventTypeContract.Update));
             }
         }
 

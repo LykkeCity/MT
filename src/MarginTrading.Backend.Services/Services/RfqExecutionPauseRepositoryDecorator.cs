@@ -48,7 +48,7 @@ namespace MarginTrading.Backend.Services.Services
 
             var rfq = await GetRfqByIdAsync(pause.OperationId);
             
-            await _notifyService.Rfq(rfq.ToEventContract(RfqTypeContract.Update));
+            await _notifyService.Rfq(rfq.ToEventContract(RfqEventTypeContract.Update));
         }
 
         public Task<IEnumerable<Pause>> FindAsync(string operationId, string operationName, Func<Pause, bool> filter = null)
@@ -90,7 +90,7 @@ namespace MarginTrading.Backend.Services.Services
                 {
                     var rfq = await GetRfqByIdAsync(pause.OperationId);
 
-                    await _notifyService.Rfq(rfq.ToEventContract(RfqTypeContract.Update));
+                    await _notifyService.Rfq(rfq.ToEventContract(RfqEventTypeContract.Update));
                 }
             }
 
