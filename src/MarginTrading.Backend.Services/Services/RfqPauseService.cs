@@ -30,6 +30,8 @@ namespace MarginTrading.Backend.Services.Services
 
         public static readonly IEnumerable<SpecialLiquidationOperationState> AllowedOperationStatesToPauseIn = new[]
         {
+            SpecialLiquidationOperationState.Initiated,
+            SpecialLiquidationOperationState.Started,
             SpecialLiquidationOperationState.PriceRequested,
             SpecialLiquidationOperationState.PriceReceived
         };
