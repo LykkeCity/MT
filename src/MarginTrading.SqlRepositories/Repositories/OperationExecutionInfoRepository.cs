@@ -355,6 +355,9 @@ namespace MarginTrading.SqlRepositories.Repositories
 
         private static OperationExecutionInfoWithPauseEntity MapRfqExecutionInfoWithPause(SqlDataReader reader)
         {
+            var currenPauseOid = reader["currentPauseOid"] as long?;
+            var latestCancelledPauseOid = reader["latestCancelledPauseOid"] as long?;
+
             return new OperationExecutionInfoWithPauseEntity
             {
                 ExecutionInfo = new OperationExecutionInfoEntity
@@ -365,33 +368,33 @@ namespace MarginTrading.SqlRepositories.Repositories
                     OperationName = "SpecialLiquidation"
                 },
 
-                CurrentPause = reader["currentPauseOid"] == null
-                    ? null
-                    : new OperationExecutionPauseEntity
+                CurrentPause = currenPauseOid.HasValue
+                    ? new OperationExecutionPauseEntity
                     {
-                        Oid = reader["currentPauseOid"] as long?,
-                        Source = Enum.Parse<PauseSource>(reader["currentPauseSource"] as string ?? throw new ArgumentOutOfRangeException(message: @$"Current pause source value is not recognized. Oid = {reader["currentPauseOid"]}", null)),
+                        Oid = currenPauseOid,
+                        Source = Enum.Parse<PauseSource>(reader["currentPauseSource"] as string ?? throw new ArgumentOutOfRangeException(message: @$"Current pause source value is empty. Oid = {reader["currentPauseOid"]}", null)),
                         CreatedAt = (reader["currentPauseCreatedAt"] as DateTime?).GetValueOrDefault(),
                         EffectiveSince = reader["currentPauseEffectiveSince"] as DateTime?,
-                        State = Enum.Parse<PauseState>(reader["currentPauseState"] as string ?? throw new ArgumentOutOfRangeException(message: @$"Current pause state value is not recognized. Oid = {reader["currentPauseOid"]}", null)),
+                        State = Enum.Parse<PauseState>(reader["currentPauseState"] as string ?? throw new ArgumentOutOfRangeException(message: @$"Current pause state value is empty. Oid = {reader["currentPauseOid"]}", null)),
                         Initiator = reader["currentPauseInitiator"] as string
-                    },
+                    }
+                    : null,
 
-                LatestCancelledPause = reader["latestCancelledPauseOid"] == null
-                    ? null
-                    : new OperationExecutionPauseEntity
+                LatestCancelledPause = latestCancelledPauseOid.HasValue
+                    ? new OperationExecutionPauseEntity
                     {
-                        Oid = reader["latestCancelledPauseOid"] as long?,
-                        Source = Enum.Parse<PauseSource>(reader["latestCancelledPauseSource"] as string ?? throw new ArgumentOutOfRangeException(message: @$"Latest cancelled pause source value is not recognized. Oid = {reader["latestCancelledPauseOid"]}", null)),
-                        CancellationSource = Enum.Parse<PauseCancellationSource>(reader["latestCancelledPauseCancellationSource"] as string ?? throw new ArgumentOutOfRangeException(message: @$"Latest cancelled pause cancellation source value is not recognized. Oid = {reader["latestCancelledPauseOid"]}", null)),
+                        Oid = latestCancelledPauseOid,
+                        Source = Enum.Parse<PauseSource>(reader["latestCancelledPauseSource"] as string ?? throw new ArgumentOutOfRangeException(message: @$"Latest cancelled pause source value is empty. Oid = {reader["latestCancelledPauseOid"]}", null)),
+                        CancellationSource = Enum.Parse<PauseCancellationSource>(reader["latestCancelledPauseCancellationSource"] as string ?? throw new ArgumentOutOfRangeException(message: @$"Latest cancelled pause cancellation source value is empty. Oid = {reader["latestCancelledPauseOid"]}", null)),
                         CreatedAt = (reader["latestCancelledPauseCreatedAt"] as DateTime?).GetValueOrDefault(),
                         EffectiveSince = reader["latestCancelledPauseEffectiveSince"] as DateTime?,
-                        State = Enum.Parse<PauseState>(reader["latestCancelledPauseState"] as string ?? throw new ArgumentOutOfRangeException(message: @$"Latest cancelled pause state value is not recognized. Oid = {reader["latestCancelledPauseOid"]}", null)),
+                        State = Enum.Parse<PauseState>(reader["latestCancelledPauseState"] as string ?? throw new ArgumentOutOfRangeException(message: @$"Latest cancelled pause state value is empty. Oid = {reader["latestCancelledPauseOid"]}", null)),
                         Initiator = reader["latestCancelledPauseInitiator"] as string,
                         CancelledAt = reader["latestCancelledPauseCancelledAt"] as DateTime?,
                         CancellationEffectiveSince = reader["latestCancelledPauseCancellationEffectiveSince"] as DateTime?,
                         CancellationInitiator = reader["latestCancelledPauseCancellationInitiator"] as string
-                    },
+                    }
+                : null,
 
                 TotalCount = (reader["TotalCount"] as long?).GetValueOrDefault()
             };
