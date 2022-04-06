@@ -112,7 +112,7 @@ namespace MarginTradingTests
 
             //Assert
             _rfqPauseService.Verify(x => x.ResumeAsync(rfqId,
-                    PauseCancellationSource.TradingDisabledChanged,
+                    PauseCancellationSource.TradingEnabled,
                     It.IsAny<Initiator>()),
                 Times.Once);
         }

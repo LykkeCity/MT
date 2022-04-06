@@ -198,7 +198,7 @@ namespace MarginTrading.Backend.Services.Workflow
                 {
                     _log.WriteInfo(nameof(ProductChangedProjection), nameof(HandleTradingDisabled),
                         $"Trying to resume rfq: {rfq.Id}");
-                    await _rfqPauseService.ResumeAsync(rfq.Id, PauseCancellationSource.TradingDisabledChanged,
+                    await _rfqPauseService.ResumeAsync(rfq.Id, PauseCancellationSource.TradingEnabled,
                         new Initiator(username));
                 }
             }

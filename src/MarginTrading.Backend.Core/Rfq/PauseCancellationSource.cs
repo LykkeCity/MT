@@ -11,6 +11,6 @@ namespace MarginTrading.Backend.Core.Rfq
     {
         Manual = 0,
         PriceReceived,
-        TradingDisabledChanged,
+        TradingEnabled,
     }
 }
