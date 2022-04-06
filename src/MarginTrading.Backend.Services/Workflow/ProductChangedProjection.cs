@@ -195,9 +195,9 @@ namespace MarginTrading.Backend.Services.Workflow
             {
                 _log.WriteInfo(nameof(ProductChangedProjection), nameof(HandleTradingDisabled),
                     $"Trading enabled for product {product.ProductId}");
-                var allRfq = await RetrieveAllRfq(product.ProductId, canBeResumed: true);
+                var allRfq = await RetrieveAllRfq(product.ProductId, canBeResumed: true, canBeStopped: true);
                 _log.WriteInfo(nameof(ProductChangedProjection), nameof(HandleTradingDisabled),
-                    $"Found rfqs to resume: {allRfq.Select(x => x.Id).ToJson()}");
+                    $"Found rfqs to resume or stop: {allRfq.Select(x => x.Id).ToJson()}");
 
                 foreach (var rfq in allRfq)
                 {
@@ -229,7 +229,7 @@ namespace MarginTrading.Backend.Services.Workflow
         private async Task<List<Rfq>> RetrieveAllRfq(string instrumentId,
             bool? canBePaused = null,
             bool? canBeResumed = null,
-            bool? canBeCancelled = null)
+            bool? canBeStopped = null)
         {
             var result = new List<Rfq>();
             PaginatedResponse<Rfq> resp;
@@ -242,7 +242,7 @@ namespace MarginTrading.Backend.Services.Workflow
                     InstrumentId = instrumentId,
                     CanBePaused = canBePaused,
                     CanBeResumed = canBeResumed,
-                    CanBeStopped = canBeCancelled,
+                    CanBeStopped = canBeStopped,
                     States = new RfqOperationState[]
                     {
                         RfqOperationState.Started,

@@ -29,5 +29,10 @@ namespace MarginTrading.Backend.Contracts.Rfq
         /// Flag, if RFQ can be resumed
         /// </summary>
         public bool CanBeResumed { get; set; }
+        
+        /// <summary>
+        /// Flag, if pending RFQ pause can be stopped
+        /// </summary>
+        public bool CanBeStopped { get; set; }
     }
 }
