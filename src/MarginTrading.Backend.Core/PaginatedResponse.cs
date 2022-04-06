@@ -16,9 +16,9 @@ namespace MarginTrading.Backend.Core
         
         public int Size { get; }
         
-        public int TotalSize { get; }
+        public long TotalSize { get; }
 
-        public PaginatedResponse([NotNull] IReadOnlyList<T> contents, int start, int size, int totalSize)
+        public PaginatedResponse([NotNull] IReadOnlyList<T> contents, int start, int size, long totalSize)
         {
             Contents = contents ?? throw new ArgumentNullException(nameof(contents));
             Start = start;

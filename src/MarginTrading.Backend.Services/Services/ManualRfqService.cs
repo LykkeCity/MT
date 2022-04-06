@@ -130,7 +130,7 @@ namespace MarginTrading.Backend.Services.Services
             var pauseFilterAppliedRfq = filteredRfq.Contents
                 .Select(o => o.ToRfq())
                 .Where(GetApplyPauseFilterFunc(filter));
-
+            
             return new PaginatedResponse<Rfq>(
                 pauseFilterAppliedRfq.ToList(),
                 filteredRfq.Start,

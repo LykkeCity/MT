@@ -58,15 +58,14 @@ namespace MarginTrading.Backend.Services.Services
 
         public Task<PaginatedResponse<OperationExecutionInfoWithPause<SpecialLiquidationOperationData>>> GetRfqAsync(int skip,
             int take,
-            string rfqId = null,
+            string id = null,
             string instrumentId = null,
             string accountId = null,
             List<SpecialLiquidationOperationState> states = null,
             DateTime? @from = null,
-            DateTime? to = null,
-            bool isAscendingOrder = false)
+            DateTime? to = null)
         {
-            return _decoratee.GetRfqAsync(skip, take, rfqId, instrumentId, accountId, states, @from, to, isAscendingOrder);
+            return _decoratee.GetRfqAsync(skip, take, id, instrumentId, accountId, states, @from, to);
         }
 
         public async Task Save<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class

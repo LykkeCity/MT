@@ -18,6 +18,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Lykke.Snow.Common;
 using Lykke.Snow.Common.Model;
+using MarginTrading.Backend.Core.Rfq;
 
 namespace MarginTrading.SqlRepositories.Repositories
 {
@@ -43,6 +44,7 @@ namespace MarginTrading.SqlRepositories.Repositories
         private readonly ILog _log;
         private readonly IDateService _dateService;
         private readonly StoredProcedure _getPositionsInSpecialLiquidation = new StoredProcedure("getPositionsInSpecialLiquidation", "dbo");
+        private readonly StoredProcedure _getRfqExecutionInfoWithPause = new StoredProcedure("getRfqExecutionInfoWithPause", "dbo");
 
         public OperationExecutionInfoRepository(
             string connectionString,
@@ -66,6 +68,7 @@ namespace MarginTrading.SqlRepositories.Repositories
             }
 
             ExecCreateOrAlter(_getPositionsInSpecialLiquidation.FileName);
+            ExecCreateOrAlter(_getRfqExecutionInfoWithPause.FileName);
         }
 
         public async Task<(IOperationExecutionInfo<TData>, bool added)> GetOrAddAsync<TData>(
@@ -111,62 +114,117 @@ namespace MarginTrading.SqlRepositories.Repositories
             }
         }
 
-        public async Task<PaginatedResponse<OperationExecutionInfoWithPause<SpecialLiquidationOperationData>>> GetRfqAsync(int skip,
-            int take,
-            string rfqId = null,
-            string instrumentId = null,
-            string accountId = null,
-            List<SpecialLiquidationOperationState> states = null,
-            DateTime? @from = null,
-            DateTime? to = null,
-            bool isAscendingOrder = false)
+        public async Task<PaginatedResponse<OperationExecutionInfoWithPause<SpecialLiquidationOperationData>>>
+            GetRfqAsync(int skip,
+                int take,
+                string id = null,
+                string instrumentId = null,
+                string accountId = null,
+                List<SpecialLiquidationOperationState> states = null,
+                DateTime? @from = null,
+                DateTime? to = null)
         {
-            const string whereRfq = "WHERE i.OperationName = 'SpecialLiquidation'";
-
-            var whereFields = (string.IsNullOrWhiteSpace(rfqId) ? "" : " AND i.Id = @rfqId")
-                            + (from == null ? "" : " AND i.LastModified >= @from")
-                            + (to == null ? "" : " AND i.LastModified < @to");
-
-            var whereJson = (string.IsNullOrWhiteSpace(instrumentId) ? "" : " AND JSON_VALUE(i.Data, '$.Instrument') = @instrumentId")
-                          + (string.IsNullOrWhiteSpace(accountId) ? "" : " AND JSON_VALUE(i.Data, '$.AccountId') = @accountId")
-                          + (states == null || states.Count == 0 ? "" : $" AND JSON_VALUE(i.Data, '$.State') in ({string.Join(",", states.Select(x => $"'{x}'"))})");
-
-            var whereClause = whereRfq + whereFields + whereJson;
-
-            const int MaxResults = 100;
-            var sorting = isAscendingOrder ? "ASC" : "DESC";
-            take = take <= 0 ? MaxResults : Math.Min(take, MaxResults);
-            var paginationClause = $"ORDER BY i.LastModified {sorting} OFFSET {skip} ROWS FETCH NEXT {take} ROWS ONLY";
-
-            using var conn = new SqlConnection(ConnectionString);
-            var sql = $@"
-SELECT i.Id as Id, i.LastModified as LastModified, i.OperationName as OperationName, i.Data as Data, currentPause.*, latestCancelledPause.* 
-FROM [{TableName}] i 
-LEFT JOIN [{OperationExecutionPauseRepository.TableName}] currentPause 
-ON (currentPause.OperationId = i.Id AND currentPause.OperationName = i.OperationName AND currentPause.State != 'Cancelled')
-LEFT JOIN [{OperationExecutionPauseRepository.TableName}] latestCancelledPause
-ON (latestCancelledPause.Oid = 
-    (SELECT MAX(Oid) 
-    FROM [{OperationExecutionPauseRepository.TableName}] 
-    WHERE OperationId = i.Id AND OperationName = i.OperationName AND [State] = 'Cancelled')) 
-{whereClause} {paginationClause}; 
-
-SELECT COUNT(*) FROM [{TableName}] i {whereClause}";
-            
-            var gridReader = await conn.QueryMultipleAsync(sql, new { rfqId, instrumentId, accountId, from, to });
-
-            var contents = gridReader
-                .Read(OperationExecutionInfoWithPauseEntity.ComposeFunc, OperationExecutionInfoWithPauseEntity.DapperSplitOn)
+            var entities = (await GetAllAsync(
+                    _getRfqExecutionInfoWithPause.FullyQualifiedName,
+                    BuildSqlParameters(),
+                    MapRfqExecutionInfoWithPause))
                 .ToList();
-            
-            var totalCount = await gridReader.ReadSingleAsync<int>();
+
+            var contents = entities
+                .Select(Convert<SpecialLiquidationOperationData>)
+                .ToList();
 
             return new PaginatedResponse<OperationExecutionInfoWithPause<SpecialLiquidationOperationData>>(
-                    contents: contents.Select(Convert<SpecialLiquidationOperationData>).ToArray(),
-                    start: skip,
-                    size: contents.Count,
-                    totalSize: totalCount
-                );
+                contents: contents,
+                start: skip,
+                size: contents.Count,
+                totalSize: entities.FirstOrDefault()?.TotalCount ?? 0
+            );
+
+            SqlParameter[] BuildSqlParameters()
+            {
+                var sqlParams = new List<SqlParameter>();
+
+                var stateNamesCollection = new SpecialLiquidationStateNamesCollection();
+                if (states?.Any() ?? false)
+                {
+                    stateNamesCollection.AddRange(states.Select(x => new StateName { Name = x.ToString() }));
+                }
+
+                sqlParams.Add(new SqlParameter
+                {
+                    ParameterName = "@states",
+                    SqlDbType = SqlDbType.Structured,
+                    TypeName = "dbo.SpecialLiquidationStateListDataType",
+                    Value = stateNamesCollection.Count > 0 ? stateNamesCollection : null
+                });
+
+                sqlParams.Add(new SqlParameter
+                {
+                    ParameterName = "@skip",
+                    SqlDbType = SqlDbType.Int,
+                    Value = skip
+                });
+
+                sqlParams.Add(new SqlParameter
+                {
+                    ParameterName = "@take",
+                    SqlDbType = SqlDbType.Int,
+                    Value = take
+                });
+
+                if (id != null)
+                {
+                    sqlParams.Add(new SqlParameter
+                    {
+                        ParameterName = "@id",
+                        SqlDbType = SqlDbType.NVarChar,
+                        Value = id
+                    });
+                }
+
+                if (instrumentId != null)
+                {
+                    sqlParams.Add(new SqlParameter
+                    {
+                        ParameterName = "@instrumentId",
+                        SqlDbType = SqlDbType.NVarChar,
+                        Value = instrumentId
+                    });
+                }
+
+                if (accountId != null)
+                {
+                    sqlParams.Add(new SqlParameter
+                    {
+                        ParameterName = "@accountId",
+                        SqlDbType = SqlDbType.NVarChar,
+                        Value = accountId
+                    });
+                }
+
+                if (@from != null)
+                {
+                    sqlParams.Add(new SqlParameter
+                    {
+                        ParameterName = "@from",
+                        SqlDbType = SqlDbType.DateTime,
+                        Value = @from
+                    });
+                }
+
+                if (to != null)
+                {
+                    sqlParams.Add(new SqlParameter
+                    {
+                        ParameterName = "@to",
+                        SqlDbType = SqlDbType.DateTime,
+                        Value = to
+                    });
+                }
+
+                return sqlParams.ToArray();
+            }
         }
 
         public async Task Save<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class
@@ -293,6 +351,50 @@ SELECT COUNT(*) FROM [{TableName}] i {whereClause}";
         private static string MapPositionId(SqlDataReader reader)
         {
             return reader?["PositionId"] as string;
+        }
+
+        private static OperationExecutionInfoWithPauseEntity MapRfqExecutionInfoWithPause(SqlDataReader reader)
+        {
+            return new OperationExecutionInfoWithPauseEntity
+            {
+                ExecutionInfo = new OperationExecutionInfoEntity
+                {
+                    Id = reader["Id"] as string,
+                    Data = reader["Data"] as string,
+                    LastModified = (reader["LastModified"] as DateTime?).GetValueOrDefault(),
+                    OperationName = "SpecialLiquidation"
+                },
+
+                CurrentPause = reader["currentPauseOid"] == null
+                    ? null
+                    : new OperationExecutionPauseEntity
+                    {
+                        Oid = reader["currentPauseOid"] as long?,
+                        Source = Enum.Parse<PauseSource>(reader["currentPauseSource"] as string ?? throw new ArgumentOutOfRangeException(message: @"Current pause source value is not recognized", null)),
+                        CreatedAt = (reader["currentPauseCreatedAt"] as DateTime?).GetValueOrDefault(),
+                        EffectiveSince = reader["currentPauseEffectiveSince"] as DateTime?,
+                        State = Enum.Parse<PauseState>(reader["currentPauseState"] as string ?? throw new ArgumentOutOfRangeException(message: @"Current pause state value is not recognized", null)),
+                        Initiator = reader["currentPauseInitiator"] as string
+                    },
+
+                LatestCancelledPause = reader["latestCancelledPauseOid"] == null
+                    ? null
+                    : new OperationExecutionPauseEntity
+                    {
+                        Oid = reader["latestCancelledPauseOid"] as long?,
+                        Source = Enum.Parse<PauseSource>(reader["latestCancelledPauseSource"] as string ?? throw new ArgumentOutOfRangeException(message: @"Latest cancelled pause source value is not recognized", null)),
+                        CancellationSource = Enum.Parse<PauseCancellationSource>(reader["latestCancelledPauseCancellationSource"] as string ?? throw new ArgumentOutOfRangeException(message: @"Latest cancelled pause cancellation source value is not recognized", null)),
+                        CreatedAt = (reader["latestCancelledPauseCreatedAt"] as DateTime?).GetValueOrDefault(),
+                        EffectiveSince = reader["latestCancelledPauseEffectiveSince"] as DateTime?,
+                        State = Enum.Parse<PauseState>(reader["latestCancelledPauseState"] as string ?? throw new ArgumentOutOfRangeException(message: @"Latest cancelled pause state value is not recognized", null)),
+                        Initiator = reader["latestCancelledPauseInitiator"] as string,
+                        CancelledAt = reader["latestCancelledPauseCancelledAt"] as DateTime?,
+                        CancellationEffectiveSince = reader["latestCancelledPauseCancellationEffectiveSince"] as DateTime?,
+                        CancellationInitiator = reader["latestCancelledPauseCancellationInitiator"] as string
+                    },
+
+                TotalCount = (reader["TotalCount"] as long?).GetValueOrDefault()
+            };
         }
     }
 }
