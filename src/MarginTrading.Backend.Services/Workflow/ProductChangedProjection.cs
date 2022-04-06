@@ -209,10 +209,10 @@ namespace MarginTrading.Backend.Services.Workflow
                             PauseCancellationSource.TradingEnabled,
                             username);
                     }
-                    else if (rfq.PauseSummary.CanBeCanceled)
+                    else if (rfq.PauseSummary.CanBeStopped)
                     {
                         _log.WriteInfo(nameof(ProductChangedProjection), nameof(HandleTradingDisabled),
-                            $"Trying to cancel pending pause for rfq: {rfq.Id}");
+                            $"Trying to stop pending pause for rfq: {rfq.Id}");
                         await _rfqPauseService.StopPendingAsync(rfq.Id,
                             PauseCancellationSource.TradingEnabled,
                             username);
@@ -242,7 +242,7 @@ namespace MarginTrading.Backend.Services.Workflow
                     InstrumentId = instrumentId,
                     CanBePaused = canBePaused,
                     CanBeResumed = canBeResumed,
-                    CanBeCanceled = canBeCancelled,
+                    CanBeStopped = canBeCancelled,
                     States = new RfqOperationState[]
                     {
                         RfqOperationState.Started,
