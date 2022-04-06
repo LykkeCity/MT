@@ -10,6 +10,7 @@ using Common.Log;
 using JetBrains.Annotations;
 using MarginTrading.Backend.Contracts;
 using MarginTrading.Backend.Contracts.Common;
+using MarginTrading.Backend.Contracts.ErrorCodes;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Contracts.Positions;
 using MarginTrading.Backend.Core;
@@ -93,7 +94,23 @@ namespace MarginTrading.Backend.Controllers
 
             ValidationHelper.ValidateAccountId(position, accountId);
 
-            ValidateDayOff(position.AssetPairId);
+            try
+            {
+                ValidateDayOff(position.AssetPairId);
+            }
+            catch (Exception e)
+            {
+                if (e.Message.Contains(CommonErrorCodes.InstrumentTradingDisabled))
+                {
+                    return new PositionCloseResponse()
+                    {
+                        PositionId = positionId,
+                        Result = PositionCloseResultContract.FailedToClose,
+                        ErrorCode = CommonErrorCodes.InstrumentTradingDisabled,
+                    };
+                }
+                throw;
+            }
 
             var originator = GetOriginator(request?.Originator);
 
@@ -283,8 +300,13 @@ namespace MarginTrading.Backend.Controllers
         {
             foreach (var instrument in assetPairIds)
             {
-                if (_assetDayOffService.IsDayOff(instrument))
+                var instrumentTradingStatus = _assetDayOffService.IsAssetTradingDisabled(instrument);
+                if (!instrumentTradingStatus.TradingEnabled)
                 {
+                    if (instrumentTradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentTradingDisabled)
+                    {
+                        throw new InvalidOperationException($"Trades for {instrument} are disabled. Error code: {CommonErrorCodes.InstrumentTradingDisabled}");
+                    }
                     throw new InvalidOperationException($"Trades for {instrument} are not available");
                 }
             }

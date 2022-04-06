@@ -2,18 +2,25 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Common;
 using Common.Log;
 using JetBrains.Annotations;
+using Lykke.Snow.Common;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orders;
 using MarginTrading.Backend.Services.AssetPairs;
 using MarginTrading.AssetService.Contracts.AssetPair;
 using MarginTrading.AssetService.Contracts.Enums;
 using MarginTrading.AssetService.Contracts.Products;
+using MarginTrading.Backend.Contracts.Common;
+using MarginTrading.Backend.Contracts.Rfq;
 using MarginTrading.Backend.Core.Quotes;
+using MarginTrading.Backend.Core.Rfq;
 using MarginTrading.Backend.Core.Settings;
+using MarginTrading.Backend.Services.Services;
 using MarginTrading.Backend.Services.TradingConditions;
 
 namespace MarginTrading.Backend.Services.Workflow
@@ -30,6 +37,8 @@ namespace MarginTrading.Backend.Services.Workflow
         private readonly IOrderReader _orderReader;
         private readonly IScheduleSettingsCacheService _scheduleSettingsCacheService;
         private readonly ITradingInstrumentsManager _tradingInstrumentsManager;
+        private readonly IRfqService _rfqService;
+        private readonly IRfqPauseService _rfqPauseService;
         private readonly MarginTradingSettings _mtSettings;
         private readonly IQuoteCacheService _quoteCache;
         private readonly ILog _log;
@@ -40,6 +49,8 @@ namespace MarginTrading.Backend.Services.Workflow
             IOrderReader orderReader,
             IScheduleSettingsCacheService scheduleSettingsCacheService,
             ITradingInstrumentsManager tradingInstrumentsManager,
+            IRfqService rfqService,
+            IRfqPauseService rfqPauseService,
             MarginTradingSettings mtSettings,
             ILog log,
             IQuoteCacheService quoteCache)
@@ -49,6 +60,8 @@ namespace MarginTrading.Backend.Services.Workflow
             _orderReader = orderReader;
             _scheduleSettingsCacheService = scheduleSettingsCacheService;
             _tradingInstrumentsManager = tradingInstrumentsManager;
+            _rfqService = rfqService;
+            _rfqPauseService = rfqPauseService;
             _mtSettings = mtSettings;
             _log = log;
             _quoteCache = quoteCache;
@@ -110,6 +123,12 @@ namespace MarginTrading.Backend.Services.Workflow
                 //only for product
                 if (isAdded)
                     await _scheduleSettingsCacheService.UpdateScheduleSettingsAsync();
+
+                if (@event.ChangeType == ChangeType.Edition &&
+                    @event.OldValue.IsTradingDisabled != @event.NewValue.IsTradingDisabled)
+                {
+                    await HandleTradingDisabled(@event.NewValue, @event.Username);
+                }
             }
 
             void RemoveQuoteFromCache()
@@ -147,6 +166,75 @@ namespace MarginTrading.Backend.Services.Workflow
                         new Exception($"{positions.Length} positions are opened for [{assetPairId}], first: [{positions.First().Id}]."));
                 }
             }
+        }
+
+        private async Task HandleTradingDisabled(ProductContract product, string username)
+        {
+            if (product.IsTradingDisabled)
+            {
+                _log.WriteInfo(nameof(ProductChangedProjection), nameof(HandleTradingDisabled),
+                    $"Trading disabled for product {product.ProductId}");
+                var allRfq = await RetrieveAllRfq(product.ProductId, canBePaused: true);
+                _log.WriteInfo(nameof(ProductChangedProjection), nameof(HandleTradingDisabled),
+                    $"Found rfqs to pause: {allRfq.Select(x => x.Id).ToJson()}");
+
+                foreach (var rfq in allRfq)
+                {
+                    _log.WriteInfo(nameof(ProductChangedProjection), nameof(HandleTradingDisabled),
+                        $"Trying to pause rfq: {rfq.Id}");
+                    await _rfqPauseService.AddAsync(rfq.Id, PauseSource.TradingDisabled,
+                        new Initiator(username));
+                }
+            }
+            else
+            {
+                _log.WriteInfo(nameof(ProductChangedProjection), nameof(HandleTradingDisabled),
+                    $"Trading enabled for product {product.ProductId}");
+                var allRfq = await RetrieveAllRfq(product.ProductId, canBeResumed: true);
+                _log.WriteInfo(nameof(ProductChangedProjection), nameof(HandleTradingDisabled),
+                    $"Found rfqs to resume: {allRfq.Select(x => x.Id).ToJson()}");
+
+                foreach (var rfq in allRfq)
+                {
+                    _log.WriteInfo(nameof(ProductChangedProjection), nameof(HandleTradingDisabled),
+                        $"Trying to resume rfq: {rfq.Id}");
+                    await _rfqPauseService.ResumeAsync(rfq.Id, PauseCancellationSource.TradingEnabled,
+                        new Initiator(username));
+                }
+            }
+        }
+
+        private async Task<List<Rfq>> RetrieveAllRfq(string instrumentId, bool? canBePaused = null, bool? canBeResumed = null)
+        {
+            var result = new List<Rfq>();
+            PaginatedResponse<Rfq> resp;
+            var skip = 0;
+            var take = 20;
+            do
+            {
+                resp = await _rfqService.GetAsync(new RfqFilter()
+                {
+                    InstrumentId = instrumentId,
+                    CanBePaused = canBePaused,
+                    CanBeResumed = canBeResumed,
+                    States = new RfqOperationState[]
+                    {
+                        RfqOperationState.Started,
+                        RfqOperationState.Initiated,
+                        RfqOperationState.PriceRequested,
+                    }
+                    
+                }, skip, take);
+
+                result.AddRange(resp.Contents);
+                skip += take;
+
+            } while (resp.Size > 0);
+
+            return result
+                .Where(x => !x.RequestedFromCorporateActions // ignore rfq from corporate actions
+                            && x.PauseSummary?.PauseReason != PauseSource.Manual.ToString()) // ignore manually paused rfq
+                .ToList();
         }
     }
 }

@@ -293,7 +293,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                 var targetPositionsByPnlSign = positionsOnAccount
                     .Where(p => !data.ProcessedPositionIds.Contains(p.Id))
                     .GroupBy(p => (p.AssetPairId, p.GetUnrealisedFpl() >= 0))
-                    .Where(gr => !_assetPairDayOffService.IsDayOff(gr.Key.AssetPairId))
+                    .Where(gr => !_assetPairDayOffService.IsAssetTradingDisabled(gr.Key.AssetPairId))
                     .OrderByDescending(gr => gr.Key.Item2)
                     .FirstOrDefault();
 
@@ -309,7 +309,7 @@ namespace MarginTrading.Backend.Services.Workflow.Liquidation
                             (string.IsNullOrEmpty(data.AssetPairId) || p.AssetPairId == data.AssetPairId) &&
                             (data.Direction == null || p.Direction == data.Direction))
                 .GroupBy(p => p.AssetPairId)
-                .Where(gr => !_assetPairDayOffService.IsDayOff(gr.Key))
+                .Where(gr => !_assetPairDayOffService.IsAssetTradingDisabled(gr.Key))
                 .ToArray();
 
   

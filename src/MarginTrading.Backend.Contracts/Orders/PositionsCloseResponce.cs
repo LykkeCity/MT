@@ -10,5 +10,7 @@ namespace MarginTrading.Backend.Contracts.Orders
         public PositionCloseResultContract Result { get; set; }
         
         public string OrderId { get; set; }
+
+        public string ErrorCode { get; set; }
     }
 }

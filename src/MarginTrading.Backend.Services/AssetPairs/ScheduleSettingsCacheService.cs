@@ -247,26 +247,29 @@ namespace MarginTrading.Backend.Services.AssetPairs
             return !GetTradingEnabled(platformSchedule, out disabledInterval);
         }
 
-        public bool AssetPairTradingEnabled(string assetPairId, TimeSpan scheduleCutOff)
+        public InstrumentTradingStatus GetInstrumentTradingStatus(string assetPairId, TimeSpan scheduleCutOff)
         {
             var assetPair = _assetPairsCache.GetAssetPairByIdOrDefault(assetPairId);
 
             if (assetPair == null)
             {
-                _log.WriteWarningAsync(nameof(ScheduleSettingsCacheService), nameof(AssetPairTradingEnabled),
+                _log.WriteWarningAsync(nameof(ScheduleSettingsCacheService), nameof(GetInstrumentTradingStatus),
                     $"AssetPair [{assetPairId}] does not exist in cache. Trading is disabled.").GetAwaiter().GetResult();
-                return false;
+                return InstrumentTradingStatus.Disabled(InstrumentTradingDisabledReason.InstrumentNotFound);
             }
-                
+
+            if (assetPair.IsTradingDisabled) return InstrumentTradingStatus.Disabled(InstrumentTradingDisabledReason.InstrumentTradingDisabled);
 
             if (!_marketStates.TryGetValue(assetPair.MarketId, out var marketState))
             {
-                _log.WriteWarningAsync(nameof(ScheduleSettingsCacheService), nameof(AssetPairTradingEnabled),
+                _log.WriteWarningAsync(nameof(ScheduleSettingsCacheService), nameof(GetInstrumentTradingStatus),
                     $"Market status of market [{assetPair.MarketId}] for asset pair [{assetPairId}] does not exist in cache. Trading is disabled.").GetAwaiter().GetResult();
-                return false;
+                return InstrumentTradingStatus.Disabled(InstrumentTradingDisabledReason.MarketStateNotFound);
             }
 
-            return marketState.IsEnabled;
+            return marketState.IsEnabled 
+                ? InstrumentTradingStatus.Enabled() 
+                : InstrumentTradingStatus.Disabled(InstrumentTradingDisabledReason.MarketDisabled);
         }
 
         private bool GetTradingEnabled(IEnumerable<CompiledScheduleTimeInterval> timeIntervals,

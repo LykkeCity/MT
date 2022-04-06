@@ -10,6 +10,7 @@ namespace MarginTrading.Backend.Core.Rfq
     public enum PauseCancellationSource
     {
         Manual = 0,
-        PriceReceived
+        PriceReceived,
+        TradingEnabled,
     }
 }

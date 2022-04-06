@@ -30,7 +30,7 @@ namespace BenchmarkScenarios
         public ExternalOrderbookServicesBenchmark()
         {
             var doMock = new Mock<IAssetPairDayOffService>();
-            doMock.Setup(a => a.IsDayOff(It.IsAny<string>())).Returns(true);
+            doMock.Setup(a => a.IsAssetTradingDisabled(It.IsAny<string>())).Returns(InstrumentTradingStatus.Enabled());
 
             _service = new ExternalOrderbookService(
                 Mock.Of<IEventChannel<BestPriceChangeEventArgs>>(),

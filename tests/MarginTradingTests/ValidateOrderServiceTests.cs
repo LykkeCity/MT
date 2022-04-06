@@ -4,6 +4,7 @@
 using System;
 using System.Threading.Tasks;
 using Autofac;
+using MarginTrading.Backend.Contracts.ErrorCodes;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
@@ -189,6 +190,69 @@ namespace MarginTradingTests
                 _validateOrderService.MakePreTradeValidation(order, true, _me, 0));
             
             Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
+        }
+        
+        [Test]
+        public void Is_TradingDisabled_MarketOrder_Instrument_Invalid()
+        {
+            const string instrument = "EURUSD";
+
+            SetupAssetPair(instrument, tradingDisabled: true);
+            
+            var request = new OrderPlaceRequest
+            {
+                AccountId = Accounts[0].Id,
+                Direction = OrderDirectionContract.Buy,
+                InstrumentId = instrument,
+                Type = OrderTypeContract.Market,
+                Volume = 10
+            };
+
+            var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
+                await _validateOrderService.ValidateRequestAndCreateOrders(request));
+
+            Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
+            Assert.That(ex.Message.Contains(CommonErrorCodes.InstrumentTradingDisabled));
+        }
+        
+        [Test]
+        public void Is_TradingDisabled_LimitOrder_Instrument_Invalid()
+        {
+            const string instrument = "EURUSD";
+
+            SetupAssetPair(instrument, tradingDisabled: true);
+            
+            var request = new OrderPlaceRequest
+            {
+                AccountId = Accounts[0].Id,
+                Direction = OrderDirectionContract.Buy,
+                InstrumentId = instrument,
+                Type = OrderTypeContract.Limit,
+                Volume = 10
+            };
+
+            var ex = Assert.ThrowsAsync<ValidateOrderException>(async () =>
+                await _validateOrderService.ValidateRequestAndCreateOrders(request));
+
+            Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
+            Assert.That(ex.Message.Contains(CommonErrorCodes.InstrumentTradingDisabled));
+        }
+        
+        [Test]
+        public void Is_TradingDisabled_Instrument_Invalid_Pre_Trade()
+        {
+            const string instrument = "EURUSD";
+
+            SetupAssetPair(instrument, tradingDisabled: true);
+            
+            var order = TestObjectsFactory.CreateNewOrder(OrderType.Limit, instrument, Accounts[0],
+                MarginTradingTestsUtils.TradingConditionId, 10);
+
+            var ex = Assert.Throws<ValidateOrderException>(() =>
+                _validateOrderService.MakePreTradeValidation(order, true, _me, 0));
+            
+            Assert.That(ex.RejectReason == OrderRejectReason.InvalidInstrument);
+            Assert.That(ex.Message.Contains(CommonErrorCodes.InstrumentTradingDisabled));
         }
         
         [Test]
@@ -700,7 +764,7 @@ namespace MarginTradingTests
         }
         
         private void SetupAssetPair(string id, bool isDiscontinued = false, bool isFrozen = false,
-            bool isSuspended = false)
+            bool isSuspended = false, bool tradingDisabled = false)
         {
             var pair = _assetPairsCache.GetAssetPairById(id);
             
@@ -708,7 +772,7 @@ namespace MarginTradingTests
                 new AssetPair(pair.Id, pair.Name, pair.BaseAssetId, pair.QuoteAssetId,
                     pair.Accuracy, pair.MarketId, pair.LegalEntity, pair.BaseAssetId, pair.MatchingEngineMode,
                     pair.StpMultiplierMarkupAsk, pair.StpMultiplierMarkupBid,
-                    isSuspended, isFrozen, isDiscontinued, pair.AssetType));
+                    isSuspended, isFrozen, isDiscontinued, pair.AssetType, tradingDisabled));
             
             var quote = new InstrumentBidAskPair { Instrument = id, Bid = 1.55M, Ask = 1.57M };
             _bestPriceConsumer.SendEvent(this, new BestPriceChangeEventArgs(quote));

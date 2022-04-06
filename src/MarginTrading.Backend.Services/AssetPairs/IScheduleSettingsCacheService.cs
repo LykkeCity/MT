@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.DayOffSettings;
 
 namespace MarginTrading.Backend.Services.AssetPairs
@@ -34,7 +35,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
         
         bool TryGetPlatformCurrentDisabledInterval(out CompiledScheduleTimeInterval disabledInterval);
 
-        bool AssetPairTradingEnabled(string assetPairId, TimeSpan scheduleCutOff);
+        InstrumentTradingStatus GetInstrumentTradingStatus(string assetPairId, TimeSpan scheduleCutOff);
 
         /// <inheritdoc cref="IScheduleSettingsCacheService"/>
         List<CompiledScheduleTimeInterval> GetMarketTradingScheduleByAssetPair(string assetPairId);

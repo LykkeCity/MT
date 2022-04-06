@@ -179,14 +179,21 @@ namespace MarginTrading.Backend.Services.Stp
         {
             var isEodOrderbook = orderbook.ExchangeName == EodExternalExchange;
 
+            var instrumentTradingStatus = _assetPairDayOffService.IsAssetTradingDisabled(orderbook.AssetPairId);
+
+            if (!isEodOrderbook &&
+                !instrumentTradingStatus.TradingEnabled &&
+                instrumentTradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentTradingDisabled)
+            {
+                return;
+            }
+
             if (_marginTradingSettings.OrderbookValidation.ValidateInstrumentStatusForEodQuotes && isEodOrderbook ||
                 _marginTradingSettings.OrderbookValidation.ValidateInstrumentStatusForTradingQuotes && !isEodOrderbook)
             {
-                var isDayOff = _assetPairDayOffService.IsDayOff(orderbook.AssetPairId);
-
                 // we should process normal orderbook only if asset is currently tradeable
                 if (_marginTradingSettings.OrderbookValidation.ValidateInstrumentStatusForTradingQuotes &&
-                    isDayOff &&
+                    instrumentTradingStatus &&
                     !isEodOrderbook)
                 {
                     return;
@@ -194,7 +201,7 @@ namespace MarginTrading.Backend.Services.Stp
 
                 // and process EOD orderbook only if instrument is currently not tradable
                 if (_marginTradingSettings.OrderbookValidation.ValidateInstrumentStatusForEodQuotes &&
-                    !isDayOff &&
+                    !instrumentTradingStatus &&
                     isEodOrderbook)
                 {
                     //log current schedule for the instrument
@@ -252,10 +259,10 @@ namespace MarginTrading.Backend.Services.Stp
         {
             try
             {
+                orderbook.RequiredNotNull(nameof(orderbook));
                 orderbook.AssetPairId.RequiredNotNullOrWhiteSpace("orderbook.AssetPairId");
                 orderbook.ExchangeName.RequiredNotNullOrWhiteSpace("orderbook.ExchangeName");
-                orderbook.RequiredNotNull(nameof(orderbook));
-                
+
                 orderbook.Bids.RequiredNotNullOrEmpty("orderbook.Bids");
                 orderbook.Bids = orderbook.Bids.Where(e => e != null && e.Price > 0 && e.Volume != 0).ToArray();
                 //ValidatePricesSorted(orderbook.Bids, false);

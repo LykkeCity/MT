@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Lykke.Snow.Common.Correlation;
 using Lykke.Snow.Mdm.Contracts.BrokerFeatures;
 using MarginTrading.AccountsManagement.Contracts.Models.AdditionalInfo;
+using MarginTrading.Backend.Contracts.ErrorCodes;
 using MarginTrading.Backend.Contracts.Orders;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Exceptions;
@@ -599,13 +600,19 @@ namespace MarginTrading.Backend.Services
             return true;
         }
         
-        public IAssetPair GetAssetPairIfAvailableForTrading(string assetPairId, OrderType orderType, 
-            bool shouldOpenNewPosition, bool isPreTradeValidation)
+        public IAssetPair GetAssetPairIfAvailableForTrading(string assetPairId, OrderType orderType,
+            bool shouldOpenNewPosition, bool isPreTradeValidation, bool validateForEdit = false)
         {
             if (isPreTradeValidation || orderType == OrderType.Market)
             {
-                if (_assetDayOffService.IsDayOff(assetPairId))
+                var tradingStatus = _assetDayOffService.IsAssetTradingDisabled(assetPairId);
+                if (tradingStatus)
                 {
+                    if (tradingStatus.Reason == InstrumentTradingDisabledReason.InstrumentTradingDisabled)
+                    {
+                        throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, 
+                            $"Trading for the instrument {assetPairId} is disabled. Error code: {CommonErrorCodes.InstrumentTradingDisabled}");
+                    }
                     throw new ValidateOrderException(OrderRejectReason.InvalidInstrument,
                         $"Trades for instrument {assetPairId} are not available due to trading is closed");
                 }
@@ -627,6 +634,12 @@ namespace MarginTrading.Backend.Services
             {
                 throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, 
                     $"Trading for the instrument {assetPairId} is discontinued");
+            }
+
+            if (assetPair.IsTradingDisabled && !validateForEdit)
+            {
+                throw new ValidateOrderException(OrderRejectReason.InvalidInstrument, 
+                    $"Trading for the instrument {assetPairId} is disabled. Error code: {CommonErrorCodes.InstrumentTradingDisabled}");
             }
 
             if (assetPair.IsSuspended && shouldOpenNewPosition)

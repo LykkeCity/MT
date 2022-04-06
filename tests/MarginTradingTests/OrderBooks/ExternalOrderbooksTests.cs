@@ -6,6 +6,7 @@ using System.Collections;
 using System.Linq;
 using Common.Log;
 using Lykke.MarginTrading.OrderBookService.Contracts;
+using MarginTrading.Backend.Contracts.ErrorCodes;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Orderbooks;
 using MarginTrading.Backend.Core.Orders;
@@ -30,6 +31,7 @@ namespace MarginTradingTests.OrderBooks
         #region Test Data
 
         private const string AssetPairId = "assetPairId";
+        private const string TradingDisabledAssetPair = "tradingDisabledAssetPairId";
         
         private readonly ExternalOrderBook _orderBook1 = new ExternalOrderBook("exchange1", AssetPairId, DateTime.Now,
             new[]
@@ -59,6 +61,34 @@ namespace MarginTradingTests.OrderBooks
                 new VolumePrice {Price = 70, Volume = 10}
             });
 
+        private readonly ExternalOrderBook _orderBookTradingDisabled = new ExternalOrderBook("exchange1", TradingDisabledAssetPair, DateTime.Now,
+            new[]
+            {
+                new VolumePrice {Price = 10, Volume = 10},
+                new VolumePrice {Price = 11, Volume = 10},
+                new VolumePrice {Price = 12, Volume = 10}
+            },
+            new[]
+            {
+                new VolumePrice {Price = 9, Volume = 10},
+                new VolumePrice {Price = 8, Volume = 10},
+                new VolumePrice {Price = 7, Volume = 10}
+            });
+        
+        private readonly ExternalOrderBook _orderBookEodTradingDisabled = new ExternalOrderBook(ExternalOrderbookService.EodExternalExchange, TradingDisabledAssetPair, DateTime.Now,
+            new[]
+            {
+                new VolumePrice {Price = 10, Volume = 10},
+                new VolumePrice {Price = 11, Volume = 10},
+                new VolumePrice {Price = 12, Volume = 10}
+            },
+            new[]
+            {
+                new VolumePrice {Price = 9, Volume = 10},
+                new VolumePrice {Price = 8, Volume = 10},
+                new VolumePrice {Price = 7, Volume = 10}
+            });
+
         private Mock<IEventChannel<BestPriceChangeEventArgs>> _bestPricesChannelMock;
         private Mock<IDateService> _dateServiceMock;
         private Mock<IAssetPairsCache> _assetPairsCacheMock;
@@ -84,6 +114,11 @@ namespace MarginTradingTests.OrderBooks
             _identityGeneratorMock = new Mock<IIdentityGenerator>();
             _logMock = new Mock<ILog>();
             _assetPairDayOffMock = new Mock<IAssetPairDayOffService>();
+            _assetPairDayOffMock.Setup(x => x.IsAssetTradingDisabled(It.IsAny<string>()))
+                .Returns(InstrumentTradingStatus.Enabled);
+            
+            _assetPairDayOffMock.Setup(x => x.IsAssetTradingDisabled(It.Is<string>(x => x == TradingDisabledAssetPair)))
+                .Returns(InstrumentTradingStatus.Disabled(InstrumentTradingDisabledReason.InstrumentTradingDisabled));
             _schedulteSettingsMock = new Mock<IScheduleSettingsCacheService>();
         }
         
@@ -278,6 +313,44 @@ namespace MarginTradingTests.OrderBooks
                 Times.Never);
             
             
+        }
+
+        /// <summary>
+        /// When an instrument is disabled and the system receives an orderbook, it is ignored
+        /// </summary>
+        [Test]
+        public void Test_ExternalOrderBooksList_Set_InstrumentDisabled_OrderbookIgnored()
+        {
+            //Arrange
+            var orderbooks = GetNewOrderbooksList();
+            
+            //Act
+            orderbooks.SetOrderbook(_orderBookTradingDisabled);
+
+            //Assert
+            _bestPricesChannelMock.Verify(
+                log => log.SendEvent(orderbooks,
+                    It.IsAny<BestPriceChangeEventArgs>()),
+                Times.Never());
+        }
+
+        /// <summary>
+        /// When an instrument is disabled and the system receives an End of Day orderbook, it is processed as usual
+        /// </summary>
+        [Test]
+        public void Test_ExternalOrderBooksList_Set_EodOrderbook_InstrumentDisabled_OrderbookReceived()
+        {
+            //Arrange
+            var orderbooks = GetNewOrderbooksList();
+            
+            //Act
+            orderbooks.SetOrderbook(_orderBookEodTradingDisabled);
+
+            //Assert
+            _bestPricesChannelMock.Verify(
+                log => log.SendEvent(orderbooks,
+                    It.IsAny<BestPriceChangeEventArgs>()),
+                Times.Once());
         }
         
         #endregion

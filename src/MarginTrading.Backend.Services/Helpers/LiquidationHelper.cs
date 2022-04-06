@@ -117,7 +117,7 @@ namespace MarginTrading.Backend.Services.Helpers
             foreach (var group in openPositions.GroupBy(p => p.AssetPairId))
             {
                 // if asset pair is not available for trading, we will not try to close these positions
-                if (_assetPairDayOffService.IsDayOff(group.Key))
+                if (_assetPairDayOffService.IsAssetTradingDisabled(group.Key))
                     continue;
                 
                 var positionGroup = group.ToArray();

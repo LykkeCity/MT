@@ -87,16 +87,16 @@ namespace MarginTrading.Backend.Services.Quotes
             if (_marginTradingSettings.OrderbookValidation.ValidateInstrumentStatusForEodFx && isEodOrderbook ||
                 _marginTradingSettings.OrderbookValidation.ValidateInstrumentStatusForTradingFx && !isEodOrderbook)
             {
-                var isDayOff = _assetPairDayOffService.IsDayOff(orderBookMessage.AssetPairId);
+                var isAssetTradingDisabled = _assetPairDayOffService.IsAssetTradingDisabled(orderBookMessage.AssetPairId);
             
                 // we should process normal orderbook only if asset is currently tradable
-                if (_marginTradingSettings.OrderbookValidation.ValidateInstrumentStatusForTradingFx && isDayOff && !isEodOrderbook)
+                if (_marginTradingSettings.OrderbookValidation.ValidateInstrumentStatusForTradingFx && isAssetTradingDisabled && !isEodOrderbook)
                 {
                     return Task.CompletedTask;
                 }
             
                 // and process EOD orderbook only if asset is currently not tradable
-                if (_marginTradingSettings.OrderbookValidation.ValidateInstrumentStatusForEodFx && !isDayOff && isEodOrderbook)
+                if (_marginTradingSettings.OrderbookValidation.ValidateInstrumentStatusForEodFx && !isAssetTradingDisabled && isEodOrderbook)
                 {
                     _log.WriteWarning("EOD FX quotes processing", "",
                         $"EOD FX quote for {orderBookMessage.AssetPairId} is skipped, because instrument is within trading hours");
