@@ -81,6 +81,7 @@ namespace MarginTrading.Backend.Services.Workflow
                             $"ProductChangedEvent received for productId: {@event.NewValue.ProductId}, but it was ignored because it has not been started yet.");
                         return;
                     }
+
                     break;
                 case ChangeType.Deletion:
                     if (!@event.OldValue.IsStarted)
@@ -90,17 +91,18 @@ namespace MarginTrading.Backend.Services.Workflow
                             $"ProductChangedEvent received for productId: {@event.OldValue.ProductId}, but it was ignored because it has not been started yet.");
                         return;
                     }
+
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            
-            if(@event.ChangeType == ChangeType.Deletion)
+
+            if (@event.ChangeType == ChangeType.Deletion)
             {
                 CloseAllOrders();
 
                 ValidatePositions(@event.OldValue.ProductId);
-                
+
                 _assetPairsCache.Remove(@event.OldValue.ProductId);
             }
             else
@@ -144,9 +146,10 @@ namespace MarginTrading.Backend.Services.Workflow
             {
                 try
                 {
-                    foreach (var order in _orderReader.GetPending().Where(x => x.AssetPairId == @event.OldValue.ProductId))
+                    foreach (var order in _orderReader.GetPending()
+                                 .Where(x => x.AssetPairId == @event.OldValue.ProductId))
                     {
-                        _tradingEngine.CancelPendingOrder(order.Id, null, 
+                        _tradingEngine.CancelPendingOrder(order.Id, null,
                             null, OrderCancellationReason.InstrumentInvalidated);
                     }
                 }
@@ -156,14 +159,15 @@ namespace MarginTrading.Backend.Services.Workflow
                     throw;
                 }
             }
-            
+
             void ValidatePositions(string assetPairId)
             {
                 var positions = _orderReader.GetPositions(assetPairId);
                 if (positions.Any())
                 {
-                    _log.WriteFatalError(nameof(ProductChangedProjection), nameof(ValidatePositions), 
-                        new Exception($"{positions.Length} positions are opened for [{assetPairId}], first: [{positions.First().Id}]."));
+                    _log.WriteFatalError(nameof(ProductChangedProjection), nameof(ValidatePositions),
+                        new Exception(
+                            $"{positions.Length} positions are opened for [{assetPairId}], first: [{positions.First().Id}]."));
                 }
             }
         }
@@ -182,8 +186,9 @@ namespace MarginTrading.Backend.Services.Workflow
                 {
                     _log.WriteInfo(nameof(ProductChangedProjection), nameof(HandleTradingDisabled),
                         $"Trying to pause rfq: {rfq.Id}");
-                    await _rfqPauseService.AddAsync(rfq.Id, PauseSource.TradingDisabled,
-                        new Initiator(username));
+                    await _rfqPauseService.AddAsync(rfq.Id,
+                        PauseSource.TradingDisabled,
+                        username);
                 }
             }
             else
@@ -196,15 +201,35 @@ namespace MarginTrading.Backend.Services.Workflow
 
                 foreach (var rfq in allRfq)
                 {
-                    _log.WriteInfo(nameof(ProductChangedProjection), nameof(HandleTradingDisabled),
-                        $"Trying to resume rfq: {rfq.Id}");
-                    await _rfqPauseService.ResumeAsync(rfq.Id, PauseCancellationSource.TradingEnabled,
-                        new Initiator(username));
+                    if (rfq.PauseSummary.CanBeResumed)
+                    {
+                        _log.WriteInfo(nameof(ProductChangedProjection), nameof(HandleTradingDisabled),
+                            $"Trying to resume rfq: {rfq.Id}");
+                        await _rfqPauseService.ResumeAsync(rfq.Id,
+                            PauseCancellationSource.TradingEnabled,
+                            username);
+                    }
+                    else if (rfq.PauseSummary.CanBeCanceled)
+                    {
+                        _log.WriteInfo(nameof(ProductChangedProjection), nameof(HandleTradingDisabled),
+                            $"Trying to cancel pending pause for rfq: {rfq.Id}");
+                        await _rfqPauseService.StopPendingAsync(rfq.Id,
+                            PauseCancellationSource.TradingEnabled,
+                            username);
+                    }
+                    else
+                    {
+                        _log.WriteWarning(nameof(ProductChangedProjection), nameof(HandleTradingDisabled),
+                            $"Unexpected state for rfq: {rfq.Id}, {rfq.ToJson()}");
+                    }
                 }
             }
         }
 
-        private async Task<List<Rfq>> RetrieveAllRfq(string instrumentId, bool? canBePaused = null, bool? canBeResumed = null)
+        private async Task<List<Rfq>> RetrieveAllRfq(string instrumentId,
+            bool? canBePaused = null,
+            bool? canBeResumed = null,
+            bool? canBeCancelled = null)
         {
             var result = new List<Rfq>();
             PaginatedResponse<Rfq> resp;
@@ -217,23 +242,23 @@ namespace MarginTrading.Backend.Services.Workflow
                     InstrumentId = instrumentId,
                     CanBePaused = canBePaused,
                     CanBeResumed = canBeResumed,
+                    CanBeCanceled = canBeCancelled,
                     States = new RfqOperationState[]
                     {
                         RfqOperationState.Started,
                         RfqOperationState.Initiated,
                         RfqOperationState.PriceRequested,
                     }
-                    
                 }, skip, take);
 
                 result.AddRange(resp.Contents);
                 skip += take;
-
             } while (resp.Size > 0);
 
             return result
                 .Where(x => !x.RequestedFromCorporateActions // ignore rfq from corporate actions
-                            && x.PauseSummary?.PauseReason != PauseSource.Manual.ToString()) // ignore manually paused rfq
+                            && x.PauseSummary?.PauseReason !=
+                            PauseSource.Manual.ToString()) // ignore manually paused rfq
                 .ToList();
         }
     }

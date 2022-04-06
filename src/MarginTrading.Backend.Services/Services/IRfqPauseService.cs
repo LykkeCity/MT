@@ -74,6 +74,7 @@ namespace MarginTrading.Backend.Services.Services
                 CanBeResumed = operationExecutionInfo.CurrentPause?.State == PauseState.Active,
                 IsPaused = operationExecutionInfo.CurrentPause?.State == PauseState.Active ||
                            operationExecutionInfo.CurrentPause?.State == PauseState.PendingCancellation,
+                CanBeCanceled = operationExecutionInfo.CurrentPause?.State == PauseState.Pending,
                 PauseReason = operationExecutionInfo.CurrentPause?.Source.ToString(),
                 ResumeReason = operationExecutionInfo.LatestCancelledPause?.CancellationSource?.ToString()
             };

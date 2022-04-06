@@ -6,13 +6,15 @@ namespace MarginTrading.Backend.Core.Rfq
     public class RfqPauseSummary
     {
         public bool IsPaused { get; set; }
-        
+
         public string PauseReason { get; set; }
-        
+
         public string ResumeReason { get; set; }
-        
+
         public bool CanBePaused { get; set; }
-        
+
         public bool CanBeResumed { get; set; }
+
+        public bool CanBeCanceled { get; set; }
     }
 }
