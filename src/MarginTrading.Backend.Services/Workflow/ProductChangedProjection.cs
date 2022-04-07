@@ -201,7 +201,7 @@ namespace MarginTrading.Backend.Services.Workflow
 
                 foreach (var rfq in allRfq)
                 {
-                    if (rfq.PauseSummary.CanBeResumed)
+                    if (rfq.PauseSummary?.CanBeResumed ?? false)
                     {
                         _log.WriteInfo(nameof(ProductChangedProjection), nameof(HandleTradingDisabled),
                             $"Trying to resume rfq: {rfq.Id}");
@@ -209,7 +209,7 @@ namespace MarginTrading.Backend.Services.Workflow
                             PauseCancellationSource.TradingEnabled,
                             username);
                     }
-                    else if (rfq.PauseSummary.CanBeStopped)
+                    else if (rfq.PauseSummary?.CanBeStopped ?? false)
                     {
                         _log.WriteInfo(nameof(ProductChangedProjection), nameof(HandleTradingDisabled),
                             $"Trying to stop pending pause for rfq: {rfq.Id}");

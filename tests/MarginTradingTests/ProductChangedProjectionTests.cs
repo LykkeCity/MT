@@ -98,6 +98,10 @@ namespace MarginTradingTests
             var rfq = new Rfq()
             {
                 Id = rfqId,
+                PauseSummary = new RfqPauseSummary()
+                {
+                    CanBeResumed = true,
+                }
             };
             _rfqService.SetupSequence(x => x.GetAsync(It.IsAny<RfqFilter>(),
                     It.IsAny<int>(),
@@ -112,6 +116,39 @@ namespace MarginTradingTests
 
             //Assert
             _rfqPauseService.Verify(x => x.ResumeAsync(rfqId,
+                    PauseCancellationSource.TradingEnabled,
+                    It.IsAny<Initiator>()),
+                Times.Once);
+        }
+        
+        [Test]
+        public async Task TradingEnabled_RfqPauseStopped()
+        {
+            //Arrange
+            var projection = InitProjection();
+
+            var rfqId = Guid.NewGuid().ToString();
+            var rfq = new Rfq()
+            {
+                Id = rfqId,
+                PauseSummary = new RfqPauseSummary()
+                {
+                    CanBeStopped = true,
+                }
+            };
+            _rfqService.SetupSequence(x => x.GetAsync(It.IsAny<RfqFilter>(),
+                    It.IsAny<int>(),
+                    It.IsAny<int>()))
+                .ReturnsAsync(new PaginatedResponse<Rfq>(new List<Rfq>() {rfq}, 0, 1, 1))
+                .ReturnsAsync(new PaginatedResponse<Rfq>(new List<Rfq>(), 0, 0, 1));
+
+            var @event = GetTradingDisabledChangedEvent(true, false);
+
+            //Action
+            await projection.Handle(@event);
+
+            //Assert
+            _rfqPauseService.Verify(x => x.StopPendingAsync(rfqId,
                     PauseCancellationSource.TradingEnabled,
                     It.IsAny<Initiator>()),
                 Times.Once);
