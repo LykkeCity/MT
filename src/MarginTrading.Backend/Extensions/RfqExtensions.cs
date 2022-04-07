@@ -48,6 +48,7 @@ namespace MarginTrading.Backend.Extensions
                     {
                         CanBePaused = rfq.PauseSummary.CanBePaused,
                         CanBeResumed = rfq.PauseSummary.CanBeResumed,
+                        CanBeStopped = rfq.PauseSummary.CanBeStopped,
                         IsPaused = rfq.PauseSummary.IsPaused,
                         PauseReason = rfq.PauseSummary.PauseReason,
                         ResumeReason = rfq.PauseSummary.ResumeReason

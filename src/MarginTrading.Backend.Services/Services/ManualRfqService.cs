@@ -145,16 +145,17 @@ namespace MarginTrading.Backend.Services.Services
                 if (filter == null)
                     return true;
 
-                // when both flags passed, combine them with OR
-                if (filter.CanBePaused.HasValue && filter.CanBeResumed.HasValue)
+                if (!filter.CanBePaused.HasValue &&
+                    !filter.CanBeResumed.HasValue &&
+                    !filter.CanBeStopped.HasValue
+                   )
                 {
-                    return o.PauseSummary.CanBePaused == filter.CanBePaused ||
-                           o.PauseSummary.CanBeResumed == filter.CanBeResumed;
+                    return true;
                 }
 
-                // otherwise, combine them with AND
-                return (filter.CanBePaused == null || o.PauseSummary.CanBePaused == filter.CanBePaused) &&
-                       (filter.CanBeResumed == null || o.PauseSummary.CanBeResumed == filter.CanBeResumed);
+                return (filter.CanBePaused.HasValue && o.PauseSummary.CanBePaused == filter.CanBePaused) ||
+                       (filter.CanBeResumed.HasValue && o.PauseSummary.CanBeResumed == filter.CanBeResumed) ||
+                       (filter.CanBeStopped.HasValue && o.PauseSummary.CanBeStopped == filter.CanBeStopped);
             };
         }
     }
