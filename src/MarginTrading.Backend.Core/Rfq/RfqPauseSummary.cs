@@ -14,7 +14,7 @@ namespace MarginTrading.Backend.Core.Rfq
         public bool CanBePaused { get; set; }
 
         public bool CanBeResumed { get; set; }
-
+        
         public bool CanBeStopped { get; set; }
     }
 }

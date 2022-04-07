@@ -1,6 +1,9 @@
 // Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Contracts.Rfq;
 using MarginTrading.Backend.Core;
@@ -12,9 +15,9 @@ namespace MarginTrading.Backend.Services.Extensions
 {
     public static class RfqExtensions
     {
-        public static Rfq ToRfq(this OperationExecutionInfoWithPause<SpecialLiquidationOperationData> o)
+        public static RfqWithPauseSummary ToRfqWithPauseSummary(this OperationExecutionInfoWithPause<SpecialLiquidationOperationData> o)
         {
-            return new Rfq
+            return new RfqWithPauseSummary
             {
                 Id = o.Id,
                 InstrumentId = o.Data.Instrument,
@@ -61,6 +64,33 @@ namespace MarginTrading.Backend.Services.Extensions
                     Pause = IRfqPauseService.CalculatePauseSummary(o).ToEventContract()
                 }
             };
+
+        public static List<SpecialLiquidationOperationState> MapStates(this RfqFilter filter) =>
+            filter?
+                .States?
+                .Select(x => (SpecialLiquidationOperationState)x)
+                .ToList();
+
+        public static Func<RfqWithPauseSummary, bool> GetApplyPauseFilterFunc(this RfqFilter filter)
+        {
+            return o =>
+            {
+                if (filter == null)
+                    return true;
+
+                if (!filter.CanBePaused.HasValue &&
+                    !filter.CanBeResumed.HasValue &&
+                    !filter.CanBeStopped.HasValue
+                   )
+                {
+                    return true;
+                }
+
+                return (filter.CanBePaused.HasValue && o.PauseSummary.CanBePaused == filter.CanBePaused) ||
+                       (filter.CanBeResumed.HasValue && o.PauseSummary.CanBeResumed == filter.CanBeResumed) ||
+                       (filter.CanBeStopped.HasValue && o.PauseSummary.CanBeStopped == filter.CanBeStopped);
+            };
+        }
 
         private static RfqPauseSummaryContract ToEventContract(this RfqPauseSummary o) =>
             new RfqPauseSummaryContract

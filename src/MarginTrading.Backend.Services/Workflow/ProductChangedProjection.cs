@@ -226,13 +226,13 @@ namespace MarginTrading.Backend.Services.Workflow
             }
         }
 
-        private async Task<List<Rfq>> RetrieveAllRfq(string instrumentId,
+        private async Task<List<RfqWithPauseSummary>> RetrieveAllRfq(string instrumentId,
             bool? canBePaused = null,
             bool? canBeResumed = null,
             bool? canBeStopped = null)
         {
-            var result = new List<Rfq>();
-            PaginatedResponse<Rfq> resp;
+            var result = new List<RfqWithPauseSummary>();
+            PaginatedResponse<RfqWithPauseSummary> resp;
             var skip = 0;
             var take = 20;
             do
