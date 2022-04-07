@@ -396,7 +396,7 @@ namespace MarginTrading.SqlRepositories.Repositories
                     }
                 : null,
 
-                TotalCount = (reader["TotalCount"] as long?).GetValueOrDefault()
+                TotalCount = (reader["TotalCount"] as int?).GetValueOrDefault()
             };
         }
     }

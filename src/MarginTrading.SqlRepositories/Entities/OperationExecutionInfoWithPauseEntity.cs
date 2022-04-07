@@ -13,6 +13,6 @@ namespace MarginTrading.SqlRepositories.Entities
         
         [CanBeNull] public OperationExecutionPauseEntity LatestCancelledPause { get; set; }
         
-        public long TotalCount { get; set; }
+        public int TotalCount { get; set; }
     }
 }

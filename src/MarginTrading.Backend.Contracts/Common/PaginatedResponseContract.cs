@@ -32,9 +32,9 @@ namespace MarginTrading.Backend.Contracts.Common
         /// <summary>
         /// Total size of all the contents
         /// </summary>
-        public long TotalSize { get; }
+        public int TotalSize { get; }
 
-        public PaginatedResponseContract([NotNull] IReadOnlyList<T> contents, int start, int size, long totalSize)
+        public PaginatedResponseContract([NotNull] IReadOnlyList<T> contents, int start, int size, int totalSize)
         {
             Contents = contents ?? throw new ArgumentNullException(nameof(contents));
             Start = start;
