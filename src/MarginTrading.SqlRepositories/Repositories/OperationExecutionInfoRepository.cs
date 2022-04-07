@@ -67,8 +67,8 @@ namespace MarginTrading.SqlRepositories.Repositories
                 }
             }
 
-            ExecCreateOrAlter(_getPositionsInSpecialLiquidation.FileName);
-            ExecCreateOrAlter(_getRfqExecutionInfoWithPause.FileName);
+            ExecCreateOrAlter(_getPositionsInSpecialLiquidation);
+            ExecCreateOrAlter(_getRfqExecutionInfoWithPause);
         }
 
         public async Task<(IOperationExecutionInfo<TData>, bool added)> GetOrAddAsync<TData>(

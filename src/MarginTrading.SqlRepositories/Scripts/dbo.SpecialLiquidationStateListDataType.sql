@@ -1,8 +1,5 @@
 -- Copyright (c) 2021 BNP Paribas Arbitrage. All rights reserved.
 
-USE [nova]
-GO
-
 -- =====================================================================================
 -- Create SpecialLiquidationStateListDataType Type Table to be used by stored procedure for filtering
 -- =====================================================================================
@@ -14,4 +11,3 @@ CREATE TYPE [dbo].[SpecialLiquidationStateListDataType] AS TABLE
         [Name] nvarchar(64) NOT NULL
     )
 END
-GO
