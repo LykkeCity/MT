@@ -110,53 +110,36 @@ namespace MarginTrading.Backend.Services.Services
         {
             return _requests.Values.ToList();
         }
-
-        public async Task<PaginatedResponse<Rfq>> GetAsync(RfqFilter filter, int skip, int take)
+        
+        public async Task<PaginatedResponse<RfqWithPauseSummary>> GetAsync(RfqFilter filter, int skip, int take)
         {
-            var specialLiquidationStates = filter?.States?
-                .Select(x => (SpecialLiquidationOperationState)x)
-                .ToList();
-
-            var filteredRfq = await _operationExecutionInfoRepository
-                .GetRfqAsync(skip,
-                    take,
-                    filter?.OperationId,
-                    filter?.InstrumentId,
-                    filter?.AccountId,
-                    specialLiquidationStates,
-                    filter?.DateFrom,
-                    filter?.DateTo);
-
-            var pauseFilterAppliedRfq = filteredRfq.Contents
-                .Select(o => o.ToRfq())
-                .Where(GetApplyPauseFilterFunc(filter));
-
-            return new PaginatedResponse<Rfq>(
-                pauseFilterAppliedRfq.ToList(),
-                filteredRfq.Start,
-                filteredRfq.Size,
-                filteredRfq.TotalSize);
-        }
-
-        private static Func<Rfq, bool> GetApplyPauseFilterFunc(RfqFilter filter)
-        {
-            return o =>
+            var taken = new List<RfqWithPauseSummary>();
+            PaginatedResponse<OperationExecutionInfoWithPause<SpecialLiquidationOperationData>> currentBatch;
+            int totalFetched = 0;
+            do
             {
-                if (filter == null)
-                    return true;
+                currentBatch = await _operationExecutionInfoRepository.GetRfqAsync(
+                    skip + totalFetched,
+                        take - taken.Count,
+                        filter?.OperationId,
+                        filter?.InstrumentId,
+                        filter?.AccountId,
+                        filter?.MapStates(),
+                        filter?.DateFrom,
+                        filter?.DateTo);
 
-                if (!filter.CanBePaused.HasValue &&
-                    !filter.CanBeResumed.HasValue &&
-                    !filter.CanBeStopped.HasValue
-                   )
-                {
-                    return true;
-                }
+                totalFetched += currentBatch.Size;
 
-                return (filter.CanBePaused.HasValue && o.PauseSummary.CanBePaused == filter.CanBePaused) ||
-                       (filter.CanBeResumed.HasValue && o.PauseSummary.CanBeResumed == filter.CanBeResumed) ||
-                       (filter.CanBeStopped.HasValue && o.PauseSummary.CanBeStopped == filter.CanBeStopped);
-            };
+                var currentBatchFilteredWithPause = currentBatch
+                    .Contents
+                    .Select(o => o.ToRfqWithPauseSummary())
+                    .Where(filter.GetApplyPauseFilterFunc());
+
+                taken.AddRange(currentBatchFilteredWithPause);
+
+            } while (taken.Count < take && currentBatch.Size > 0);
+
+            return new PaginatedResponse<RfqWithPauseSummary>(taken, skip, taken.Count, currentBatch.TotalSize);
         }
     }
 }

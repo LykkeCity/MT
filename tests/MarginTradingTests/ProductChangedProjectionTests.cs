@@ -8,7 +8,6 @@ using Common.Log;
 using Lykke.Snow.Common;
 using MarginTrading.AssetService.Contracts.Enums;
 using MarginTrading.AssetService.Contracts.Products;
-using MarginTrading.Backend.Contracts.Common;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Rfq;
 using MarginTrading.Backend.Core.Settings;
@@ -66,15 +65,15 @@ namespace MarginTradingTests
             var projection = InitProjection();
 
             var rfqId = Guid.NewGuid().ToString();
-            var rfq = new Rfq()
+            var rfq = new RfqWithPauseSummary()
             {
                 Id = rfqId,
             };
             _rfqService.SetupSequence(x => x.GetAsync(It.IsAny<RfqFilter>(),
                     It.IsAny<int>(),
                     It.IsAny<int>()))
-                .ReturnsAsync(new PaginatedResponse<Rfq>(new List<Rfq>() {rfq}, 0, 1, 1))
-                .ReturnsAsync(new PaginatedResponse<Rfq>(new List<Rfq>(), 0, 0, 1));
+                .ReturnsAsync(new PaginatedResponse<RfqWithPauseSummary>(new List<RfqWithPauseSummary>() {rfq}, 0, 1, 1))
+                .ReturnsAsync(new PaginatedResponse<RfqWithPauseSummary>(new List<RfqWithPauseSummary>(), 0, 0, 1));
 
             var @event = GetTradingDisabledChangedEvent(false, true);
 
@@ -95,7 +94,7 @@ namespace MarginTradingTests
             var projection = InitProjection();
 
             var rfqId = Guid.NewGuid().ToString();
-            var rfq = new Rfq()
+            var rfq = new RfqWithPauseSummary()
             {
                 Id = rfqId,
                 PauseSummary = new RfqPauseSummary()
@@ -106,8 +105,8 @@ namespace MarginTradingTests
             _rfqService.SetupSequence(x => x.GetAsync(It.IsAny<RfqFilter>(),
                     It.IsAny<int>(),
                     It.IsAny<int>()))
-                .ReturnsAsync(new PaginatedResponse<Rfq>(new List<Rfq>() {rfq}, 0, 1, 1))
-                .ReturnsAsync(new PaginatedResponse<Rfq>(new List<Rfq>(), 0, 0, 1));
+                .ReturnsAsync(new PaginatedResponse<RfqWithPauseSummary>(new List<RfqWithPauseSummary>() {rfq}, 0, 1, 1))
+                .ReturnsAsync(new PaginatedResponse<RfqWithPauseSummary>(new List<RfqWithPauseSummary>(), 0, 0, 1));
 
             var @event = GetTradingDisabledChangedEvent(true, false);
 
@@ -128,7 +127,7 @@ namespace MarginTradingTests
             var projection = InitProjection();
 
             var rfqId = Guid.NewGuid().ToString();
-            var rfq = new Rfq()
+            var rfq = new RfqWithPauseSummary()
             {
                 Id = rfqId,
                 PauseSummary = new RfqPauseSummary()
@@ -139,8 +138,8 @@ namespace MarginTradingTests
             _rfqService.SetupSequence(x => x.GetAsync(It.IsAny<RfqFilter>(),
                     It.IsAny<int>(),
                     It.IsAny<int>()))
-                .ReturnsAsync(new PaginatedResponse<Rfq>(new List<Rfq>() {rfq}, 0, 1, 1))
-                .ReturnsAsync(new PaginatedResponse<Rfq>(new List<Rfq>(), 0, 0, 1));
+                .ReturnsAsync(new PaginatedResponse<RfqWithPauseSummary>(new List<RfqWithPauseSummary>() {rfq}, 0, 1, 1))
+                .ReturnsAsync(new PaginatedResponse<RfqWithPauseSummary>(new List<RfqWithPauseSummary>(), 0, 0, 1));
 
             var @event = GetTradingDisabledChangedEvent(true, false);
 

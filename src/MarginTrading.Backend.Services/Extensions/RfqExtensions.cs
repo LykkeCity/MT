@@ -1,6 +1,9 @@
 // Copyright (c) 2019 Lykke Corp.
 // See the LICENSE file in the project root for more information.
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Contracts.Rfq;
 using MarginTrading.Backend.Core;
@@ -12,9 +15,9 @@ namespace MarginTrading.Backend.Services.Extensions
 {
     public static class RfqExtensions
     {
-        public static Rfq ToRfq(this OperationExecutionInfoWithPause<SpecialLiquidationOperationData> o)
+        public static RfqWithPauseSummary ToRfqWithPauseSummary(this OperationExecutionInfoWithPause<SpecialLiquidationOperationData> o)
         {
-            return new Rfq
+            return new RfqWithPauseSummary
             {
                 Id = o.Id,
                 InstrumentId = o.Data.Instrument,
@@ -34,40 +37,63 @@ namespace MarginTrading.Backend.Services.Extensions
                 LastModified = o.LastModified,
                 PauseSummary = IRfqPauseService.CalculatePauseSummary(o)
             };
-            
-            RfqAdditionalInfo Deserialize(string source)
-            {
-                try
-                {
-                    return JsonConvert.DeserializeObject<RfqAdditionalInfo>(source);
-                }
-                catch (JsonReaderException)
-                {
-                    return null;
-                }
-            }
         }
 
-        public static RfqChangedEvent ToEventContract(this OperationExecutionInfoWithPause<SpecialLiquidationOperationData> o)
-        {
-            return new RfqChangedEvent
+        public static RfqEvent ToEventContract(this OperationExecutionInfoWithPause<SpecialLiquidationOperationData> o, RfqEventTypeContract eventType) =>
+            new RfqEvent
             {
-                Id = o.Id,
-                PositionIds = o.Data.PositionIds,
-                Volume = o.Data.Volume,
-                Price = o.Data.Price,
-                RequestNumber = o.Data.RequestNumber,
-                State = (RfqOperationState) o.Data.State,
-                LastModified = o.LastModified,
-                AccountId = o.Data.AccountId,
-                InstrumentId = o.Data.Instrument,
-                PauseSummary = IRfqPauseService.CalculatePauseSummary(o).ToEventContract()
+                EventType = eventType,
+                RfqSnapshot = new RfqContract
+                {
+                    Id = o.Id,
+                    InstrumentId = o.Data.Instrument,
+                    PositionIds = o.Data.PositionIds,
+                    Volume = o.Data.Volume,
+                    Price = o.Data.Price,
+                    ExternalProviderId = o.Data.ExternalProviderId,
+                    AccountId = o.Data.AccountId,
+                    CausationOperationId = o.Data.CausationOperationId,
+                    CreatedBy = string.IsNullOrEmpty(o.Data.AdditionalInfo)
+                        ? null
+                        : Deserialize(o.Data.AdditionalInfo)?.CreatedBy,
+                    OriginatorType = (RfqOriginatorType)o.Data.OriginatorType,
+                    RequestNumber = o.Data.RequestNumber,
+                    RequestedFromCorporateActions = o.Data.RequestedFromCorporateActions,
+                    State = (RfqOperationState)o.Data.State,
+                    LastModified = o.LastModified,
+                    Pause = IRfqPauseService.CalculatePauseSummary(o).ToEventContract()
+                }
+            };
+
+        public static List<SpecialLiquidationOperationState> MapStates(this RfqFilter filter) =>
+            filter?
+                .States?
+                .Select(x => (SpecialLiquidationOperationState)x)
+                .ToList();
+
+        public static Func<RfqWithPauseSummary, bool> GetApplyPauseFilterFunc(this RfqFilter filter)
+        {
+            return o =>
+            {
+                if (filter == null)
+                    return true;
+
+                if (!filter.CanBePaused.HasValue &&
+                    !filter.CanBeResumed.HasValue &&
+                    !filter.CanBeStopped.HasValue
+                   )
+                {
+                    return true;
+                }
+
+                return (filter.CanBePaused.HasValue && o.PauseSummary.CanBePaused == filter.CanBePaused) ||
+                       (filter.CanBeResumed.HasValue && o.PauseSummary.CanBeResumed == filter.CanBeResumed) ||
+                       (filter.CanBeStopped.HasValue && o.PauseSummary.CanBeStopped == filter.CanBeStopped);
             };
         }
 
-        private static RfqPauseSummaryChangedContract ToEventContract(this RfqPauseSummary o)
-        {
-            return new RfqPauseSummaryChangedContract
+        private static RfqPauseSummaryContract ToEventContract(this RfqPauseSummary o) =>
+            new RfqPauseSummaryContract
             {
                 CanBePaused = o.CanBePaused,
                 CanBeResumed = o.CanBeResumed,
@@ -75,6 +101,17 @@ namespace MarginTrading.Backend.Services.Extensions
                 PauseReason = o.PauseReason,
                 ResumeReason = o.ResumeReason
             };
+
+        private static RfqAdditionalInfo Deserialize(string source)
+        {
+            try
+            {
+                return JsonConvert.DeserializeObject<RfqAdditionalInfo>(source);
+            }
+            catch (JsonReaderException)
+            {
+                return null;
+            }
         }
     }
 }

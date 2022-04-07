@@ -20,6 +20,6 @@ namespace MarginTrading.Backend.Services.Notifications
 		Task NewTrade(TradeContract trade);
 		Task ExternalOrder(ExecutionReport trade);
 		Task PositionHistory(PositionHistoryEvent historyEvent);
-		Task RfqChanged(RfqChangedEvent rfqChangedEvent);
+		Task Rfq(RfqEvent rfqEvent);
 	}
 } 

@@ -44,11 +44,11 @@ namespace MarginTrading.Backend.Services.Services
             await _log.WriteInfoAsync(nameof(RfqExecutionPauseRepositoryDecorator),
                 nameof(AddAsync),
                 pause.ToJson(),
-                $"New RFQ pause has been added therefore {nameof(RfqChangedEvent)} is about to be published");
+                $"New RFQ pause has been added therefore {nameof(RfqEvent)} is about to be published");
 
             var rfq = await GetRfqByIdAsync(pause.OperationId);
-
-            await _notifyService.RfqChanged(rfq.ToEventContract());
+            
+            await _notifyService.Rfq(rfq.ToEventContract(RfqEventTypeContract.Update));
         }
 
         public Task<IEnumerable<Pause>> FindAsync(string operationId, string operationName, Func<Pause, bool> filter = null)
@@ -82,7 +82,7 @@ namespace MarginTrading.Backend.Services.Services
                 await _log.WriteInfoAsync(nameof(RfqExecutionPauseRepositoryDecorator),
                     nameof(UpdateAsync),
                     new { Oid = oid }.ToJson(),
-                    $"RFQ pause has been updated therefore {nameof(RfqChangedEvent)} is about to be published");
+                    $"RFQ pause has been updated therefore {nameof(RfqEvent)} is about to be published");
 
                 var pause = await _decoratee.FindAsync(oid);
 
@@ -90,7 +90,7 @@ namespace MarginTrading.Backend.Services.Services
                 {
                     var rfq = await GetRfqByIdAsync(pause.OperationId);
 
-                    await _notifyService.RfqChanged(rfq.ToEventContract());
+                    await _notifyService.Rfq(rfq.ToEventContract(RfqEventTypeContract.Update));
                 }
             }
 

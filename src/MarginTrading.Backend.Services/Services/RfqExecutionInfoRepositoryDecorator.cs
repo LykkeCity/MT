@@ -41,11 +41,11 @@ namespace MarginTrading.Backend.Services.Services
                 await _log.WriteInfoAsync(nameof(RfqExecutionInfoRepositoryDecorator),
                     nameof(GetOrAddAsync),
                     new { Id = operationId, Name = operationName }.ToJson(),
-                    $"New RFQ has been added therefore {nameof(RfqChangedEvent)} is about to be published");
+                    $"New RFQ has been added therefore {nameof(RfqEvent)} is about to be published");
 
                 var rfq = await GetRfqByIdAsync(operationId);
 
-                await _notifyService.RfqChanged(rfq.ToEventContract());
+                await _notifyService.Rfq(rfq.ToEventContract(RfqEventTypeContract.New));
             }
             
             return (executionInfo, added);
@@ -58,15 +58,14 @@ namespace MarginTrading.Backend.Services.Services
 
         public Task<PaginatedResponse<OperationExecutionInfoWithPause<SpecialLiquidationOperationData>>> GetRfqAsync(int skip,
             int take,
-            string rfqId = null,
+            string id = null,
             string instrumentId = null,
             string accountId = null,
             List<SpecialLiquidationOperationState> states = null,
             DateTime? @from = null,
-            DateTime? to = null,
-            bool isAscendingOrder = false)
+            DateTime? to = null)
         {
-            return _decoratee.GetRfqAsync(skip, take, rfqId, instrumentId, accountId, states, @from, to, isAscendingOrder);
+            return _decoratee.GetRfqAsync(skip, take, id, instrumentId, accountId, states, @from, to);
         }
 
         public async Task Save<TData>(IOperationExecutionInfo<TData> executionInfo) where TData : class
@@ -77,12 +76,12 @@ namespace MarginTrading.Backend.Services.Services
             {
                 await _log.WriteInfoAsync(nameof(RfqExecutionInfoRepositoryDecorator),
                     nameof(GetOrAddAsync),
-                    new { Id = executionInfo.Id, Name = executionInfo.OperationName }.ToJson(),
-                    $"RFQ has been updated therefore {nameof(RfqChangedEvent)} is about to be published");
+                    new { executionInfo.Id, Name = executionInfo.OperationName }.ToJson(),
+                    $"RFQ has been updated therefore {nameof(RfqEvent)} is about to be published");
 
                 var rfq = await GetRfqByIdAsync(executionInfo.Id);
 
-                await _notifyService.RfqChanged(rfq.ToEventContract());
+                await _notifyService.Rfq(rfq.ToEventContract(RfqEventTypeContract.Update));
             }
         }
 

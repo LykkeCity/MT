@@ -3,8 +3,8 @@
 
 namespace MarginTrading.SqlRepositories
 {
-    public sealed class PositionId
+    public sealed class StateName 
     {
-        public string Id { get; set; }
+        public string Name { get; set; }
     }
 }

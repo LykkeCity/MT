@@ -13,7 +13,6 @@ using MarginTrading.AzureRepositories.Entities;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Common.Services;
-using Microsoft.Extensions.Internal;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -64,13 +63,12 @@ namespace MarginTrading.AzureRepositories
 
         public async Task<PaginatedResponse<OperationExecutionInfoWithPause<SpecialLiquidationOperationData>>> GetRfqAsync(int skip,
             int take,
-            string rfqId = null,
+            string id = null,
             string instrumentId = null,
             string accountId = null,
             List<SpecialLiquidationOperationState> states = null,
             DateTime? @from = null,
-            DateTime? to = null,
-            bool isAscendingOrder = false)
+            DateTime? to = null)
         {
             throw new NotSupportedException("Azure is not supported");
         }

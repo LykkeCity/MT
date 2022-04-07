@@ -7,7 +7,7 @@ using MarginTrading.Backend.Core.Orders;
 
 namespace MarginTrading.Backend.Core.Rfq
 {
-    public class Rfq
+    public class RfqWithPauseSummary
     {
         public string Id { get; set; }
         public string InstrumentId { get; set; }

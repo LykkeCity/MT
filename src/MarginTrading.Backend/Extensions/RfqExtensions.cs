@@ -20,38 +20,38 @@ namespace MarginTrading.Backend.Extensions
                     DateTo = request.DateTo,
                     States = request.States,
                     CanBePaused = request.CanBePaused,
-                    CanBeResumed = request.CanBeResumed
+                    CanBeResumed = request.CanBeResumed,
                 }
                 : null;
         }
 
-        public static RfqContract ToContract(this Rfq rfq)
+        public static RfqContract ToContract(this RfqWithPauseSummary rfqWithPauseSummary)
         {
             return new RfqContract
             {
-                Id = rfq.Id,
-                InstrumentId = rfq.InstrumentId,
-                PositionIds = rfq.PositionIds,
-                Volume = rfq.Volume,
-                Price = rfq.Price,
-                ExternalProviderId = rfq.ExternalProviderId,
-                AccountId = rfq.AccountId,
-                CausationOperationId = rfq.CausationOperationId,
-                CreatedBy = rfq.CreatedBy,
-                OriginatorType = (RfqOriginatorType)rfq.OriginatorType,
-                RequestNumber = rfq.RequestNumber,
-                RequestedFromCorporateActions = rfq.RequestedFromCorporateActions,
-                State = (RfqOperationState)rfq.State,
-                LastModified = rfq.LastModified,
-                Pause = rfq.PauseSummary != null
+                Id = rfqWithPauseSummary.Id,
+                InstrumentId = rfqWithPauseSummary.InstrumentId,
+                PositionIds = rfqWithPauseSummary.PositionIds,
+                Volume = rfqWithPauseSummary.Volume,
+                Price = rfqWithPauseSummary.Price,
+                ExternalProviderId = rfqWithPauseSummary.ExternalProviderId,
+                AccountId = rfqWithPauseSummary.AccountId,
+                CausationOperationId = rfqWithPauseSummary.CausationOperationId,
+                CreatedBy = rfqWithPauseSummary.CreatedBy,
+                OriginatorType = (RfqOriginatorType)rfqWithPauseSummary.OriginatorType,
+                RequestNumber = rfqWithPauseSummary.RequestNumber,
+                RequestedFromCorporateActions = rfqWithPauseSummary.RequestedFromCorporateActions,
+                State = (RfqOperationState)rfqWithPauseSummary.State,
+                LastModified = rfqWithPauseSummary.LastModified,
+                Pause = rfqWithPauseSummary.PauseSummary != null
                     ? new RfqPauseSummaryContract
                     {
-                        CanBePaused = rfq.PauseSummary.CanBePaused,
-                        CanBeResumed = rfq.PauseSummary.CanBeResumed,
-                        CanBeStopped = rfq.PauseSummary.CanBeStopped,
-                        IsPaused = rfq.PauseSummary.IsPaused,
-                        PauseReason = rfq.PauseSummary.PauseReason,
-                        ResumeReason = rfq.PauseSummary.ResumeReason
+                        CanBePaused = rfqWithPauseSummary.PauseSummary.CanBePaused,
+                        CanBeResumed = rfqWithPauseSummary.PauseSummary.CanBeResumed,
+                        CanBeStopped = rfqWithPauseSummary.PauseSummary.CanBeStopped,
+                        IsPaused = rfqWithPauseSummary.PauseSummary.IsPaused,
+                        PauseReason = rfqWithPauseSummary.PauseSummary.PauseReason,
+                        ResumeReason = rfqWithPauseSummary.PauseSummary.ResumeReason
                     }
                     : null
             };
