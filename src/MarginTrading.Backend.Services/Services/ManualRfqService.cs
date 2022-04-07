@@ -145,6 +145,14 @@ namespace MarginTrading.Backend.Services.Services
                 if (filter == null)
                     return true;
 
+                if (!filter.CanBePaused.HasValue &&
+                    !filter.CanBeResumed.HasValue &&
+                    !filter.CanBeStopped.HasValue
+                   )
+                {
+                    return true;
+                }
+
                 return (filter.CanBePaused.HasValue && o.PauseSummary.CanBePaused == filter.CanBePaused) ||
                        (filter.CanBeResumed.HasValue && o.PauseSummary.CanBeResumed == filter.CanBeResumed) ||
                        (filter.CanBeStopped.HasValue && o.PauseSummary.CanBeStopped == filter.CanBeStopped);
