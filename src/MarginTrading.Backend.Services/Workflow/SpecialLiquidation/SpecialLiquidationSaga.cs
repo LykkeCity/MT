@@ -90,7 +90,6 @@ namespace MarginTrading.Backend.Services.Workflow.SpecialLiquidation
                 executionInfo.Data.Volume = positionsVolume;
                 executionInfo.Data.RequestNumber = 1;
 
-                // todo: probably, we'll need to acknowledge pending pause here and not request price if acknowledged
                 RequestPrice(sender, executionInfo);
                 
                 _chaosKitty.Meow(e.OperationId);
