@@ -19,5 +19,10 @@ namespace MarginTrading.Backend.Contracts.Events
         /// The event type
         /// </summary>
         public RfqEventTypeContract EventType { get; set; }
+        
+        /// <summary>
+        /// The broker identifier
+        /// </summary>
+        public string BrokerId { get; set; }
     }
 }
