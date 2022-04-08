@@ -39,7 +39,7 @@ namespace MarginTrading.Backend.Services.Extensions
             };
         }
 
-        public static RfqEvent ToEventContract(this OperationExecutionInfoWithPause<SpecialLiquidationOperationData> o, RfqEventTypeContract eventType) =>
+        public static RfqEvent ToEventContract(this OperationExecutionInfoWithPause<SpecialLiquidationOperationData> o, RfqEventTypeContract eventType, string brokerId) =>
             new RfqEvent
             {
                 EventType = eventType,
@@ -62,7 +62,8 @@ namespace MarginTrading.Backend.Services.Extensions
                     State = (RfqOperationState)o.Data.State,
                     LastModified = o.LastModified,
                     Pause = IRfqPauseService.CalculatePauseSummary(o).ToEventContract()
-                }
+                },
+                BrokerId = brokerId
             };
 
         public static List<SpecialLiquidationOperationState> MapStates(this RfqFilter filter) =>

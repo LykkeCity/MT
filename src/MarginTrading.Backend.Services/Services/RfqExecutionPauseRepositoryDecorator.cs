@@ -13,6 +13,7 @@ using MarginTrading.Backend.Contracts.Events;
 using MarginTrading.Backend.Core;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Rfq;
+using MarginTrading.Backend.Core.Settings;
 using MarginTrading.Backend.Services.Extensions;
 using MarginTrading.Backend.Services.Notifications;
 
@@ -24,17 +25,20 @@ namespace MarginTrading.Backend.Services.Services
         private readonly IOperationExecutionPauseRepository _decoratee;
         private readonly IOperationExecutionInfoRepository _executionInfoRepository;
         private readonly IRabbitMqNotifyService _notifyService;
+        private readonly string _brokerId;
         private readonly ILog _log;
 
         public RfqExecutionPauseRepositoryDecorator(IOperationExecutionPauseRepository decoratee,
             IRabbitMqNotifyService notifyService,
             IOperationExecutionInfoRepository executionInfoRepository,
+            MarginTradingSettings settings,
             ILog log)
         {
             _decoratee = decoratee;
             _notifyService = notifyService;
             _executionInfoRepository = executionInfoRepository;
             _log = log;
+            _brokerId = settings.BrokerId;
         }
 
         public async Task AddAsync(Pause pause)
@@ -48,7 +52,7 @@ namespace MarginTrading.Backend.Services.Services
 
             var rfq = await GetRfqByIdAsync(pause.OperationId);
             
-            await _notifyService.Rfq(rfq.ToEventContract(RfqEventTypeContract.Update));
+            await _notifyService.Rfq(rfq.ToEventContract(RfqEventTypeContract.Update, _brokerId));
         }
 
         public Task<IEnumerable<Pause>> FindAsync(string operationId, string operationName, Func<Pause, bool> filter = null)
@@ -90,7 +94,7 @@ namespace MarginTrading.Backend.Services.Services
                 {
                     var rfq = await GetRfqByIdAsync(pause.OperationId);
 
-                    await _notifyService.Rfq(rfq.ToEventContract(RfqEventTypeContract.Update));
+                    await _notifyService.Rfq(rfq.ToEventContract(RfqEventTypeContract.Update, _brokerId));
                 }
             }
 
