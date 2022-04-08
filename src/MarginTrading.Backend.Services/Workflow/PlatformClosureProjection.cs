@@ -4,6 +4,7 @@
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
+using JetBrains.Annotations;
 using MarginTrading.Backend.Contracts.TradingSchedule;
 using MarginTrading.Backend.Core.Repositories;
 using MarginTrading.Backend.Core.Services;
@@ -25,6 +26,7 @@ namespace MarginTrading.Backend.Services.Workflow
             _identityGenerator = identityGenerator;
         }
 
+        [UsedImplicitly]
         public async Task Handle(MarketStateChangedEvent e)
         {
             if (!e.IsPlatformClosureEvent())

@@ -19,15 +19,15 @@ namespace MarginTrading.Backend.Services.Services
 {
     public class ScheduleControlService : IScheduleControlService
     {
-        private readonly IScheduleSettingsCacheService _scheduleSettingsCacheService;
+        private readonly IScheduleSettingsCacheService _scheduleSettingsCache;
         private readonly ILog _log;
         private readonly IDateService _dateService;
         
         private static readonly object LockObj = new object();
 
-        public ScheduleControlService(IScheduleSettingsCacheService scheduleSettingsCacheService, ILog log, IDateService dateService)
+        public ScheduleControlService(IScheduleSettingsCacheService scheduleSettingsCache, ILog log, IDateService dateService)
         {
-            _scheduleSettingsCacheService = scheduleSettingsCacheService;
+            _scheduleSettingsCache = scheduleSettingsCache;
             _log = log;
             _dateService = dateService;
         }
@@ -40,7 +40,7 @@ namespace MarginTrading.Backend.Services.Services
                 var currentDateTime = _dateService.Now();
 
                 //need to know in which OvernightMarginJobType we are now and the moment of next change
-                var marketsSchedule = _scheduleSettingsCacheService.GetMarketsTradingSchedule();
+                var marketsSchedule = _scheduleSettingsCache.GetMarketsTradingSchedule();
 
                 var nextStart = TryGetClosestPoint(marketsSchedule, currentDateTime);
 
@@ -48,7 +48,7 @@ namespace MarginTrading.Backend.Services.Services
                     $"Planning next check to [{nextStart:s}]."
                     + $" Check time: [{currentDateTime:s}].");
 
-                _scheduleSettingsCacheService.HandleMarketStateChanges(currentDateTime);
+                _scheduleSettingsCache.HandleMarketStateChanges(currentDateTime);
 
                 JobManager.RemoveJob(nameof(ScheduleControlService));
                 JobManager.AddJob(ScheduleNext, s => s

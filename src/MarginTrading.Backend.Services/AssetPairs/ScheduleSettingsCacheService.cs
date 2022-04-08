@@ -140,9 +140,7 @@ namespace MarginTrading.Backend.Services.AssetPairs
 
                 _rawMarketScheduleCache = newMarketsScheduleSettings;
 
-                var now = MarketsCacheWarmUpUnsafe();
-
-                HandleMarketStateChangesUnsafe(now, newMarketsScheduleSettings.Keys.ToArray());
+                MarketsCacheWarmUpUnsafe();
             }
             finally
             {
